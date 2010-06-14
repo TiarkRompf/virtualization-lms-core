@@ -59,26 +59,36 @@ trait BlockExpEffect extends BlockExp with Effects {
 }
 
 
-trait BlockCompile extends ScalaCodegen with BlockExpEffect {
-  
-  override def emitScalaSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
-    super.emitScalaSource[A,B](x => reifyEffects(f(x)), className, stream)
+trait ScalaCodegenBlockEffect extends ScalaNestedCodegen with BlockExpEffect {
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c, t, e) if shallow => syms(c) // in shallow mode, don't count deps from nested blocks
+    case _ => super.syms(e)
   }
+  override def emitNode(sym: Sym[_], rhs: Def[_], stream: PrintWriter) = rhs match {
+    case IfThenElse(c,a,b) =>  
+      stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
+      emitBlock(a, stream)
+      stream.println(quote(getBlockResult(a)))
+      stream.println("} else {")
+      emitBlock(b, stream)
+      stream.println(quote(getBlockResult(b)))
+      stream.println("}")
+    case _ => super.emitNode(sym, rhs, stream)
+  }
+}
+
+
+
+trait GenericNestedCodegen extends GenericCodegen with BlockExpEffect {
 
   var shallow = false
-
-  override def dep(e: Exp[Any]): List[Sym[Any]] = e match {
-    case Def(IfThenElse(c, t, e)) if shallow => syms(c) // in shallow mode, don't count deps from nested blocks
-    case Def(Reflect(IfThenElse(c, t, e), effects)) if shallow => syms(c) ::: effects.flatMap(syms)
-    case Def(Reflect(d: Product, effects)) => syms(d) ::: effects.flatMap(syms)
-//    case Def(Reify(s, effects)) => syms(s) ::: effects.flatMap(dep) // don't count effects, but do count their params
-    case _ => super.dep(e)
-  }
 
   var scope: List[TP[_]] = Nil
 
   override def emitBlock(start: Exp[_], stream: PrintWriter): Unit = {
+    // try to push stuff as far down into more control-dependent parts as
+    // possible. this is the right thing to do for conditionals, but
+    // for loops we'll need to do it the other way round (hoist stuff out). 
 
     val e1 = buildScheduleForResult(start) // deep list of deps
     shallow = true
@@ -100,57 +110,60 @@ trait BlockCompile extends ScalaCodegen with BlockExpEffect {
     for (TP(sym, rhs) <- e4) {
       emitNode(sym, rhs, stream)
     }
-    
+
     start match {
       case Def(Reify(x, effects0)) =>
-        
         // with the current implementation the code below is not
         // really necessary. all effects should have been emitted
         // because of the Reflect dependencies. it's still a good
         // sanity check though
-        
+
         val effects = effects0.map { case s: Sym[a] => findDefinition(s).get }
         val actual = e4.filter(effects contains _)
 
         // actual must be a prefix of effects!
         assert(effects.take(actual.length) == actual, 
             "violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
-        
+
         val e5 = effects.drop(actual.length)
-        
+
         for (TP(_, rhs) <- e5) {
           emitNode(Sym(-1), rhs, stream)
         }
-        
-        stream.println(quote(x))
-      case x =>
-        stream.println(quote(x))
+      case _ =>
     }
-    
+
     scope = save
   }
-  
 
-  override def quote(x: Exp[_]) = x match {
-    case Sym(-1) => "_"
-    case Const(s: String) => "\""+s+"\""  // TODO: more principled check elsewhere
-    case _ => super.quote(x)
+
+  override def getBlockResult[A](s: Exp[A]): Exp[A] = s match {
+    case Def(Reify(x, _)) => x
+    case _ => super.getBlockResult(s)
   }
+  
 
   override def emitNode(sym: Sym[_], rhs: Def[_], stream: PrintWriter) = rhs match {
     case Reflect(s, effects) =>
       emitNode(sym, s, stream)
     case Reify(s, effects) =>
       // just ignore -- effects are accounted for in emitBlock
-      //stream.println("val " + quote(sym) + " = " + quote(s))
-    case IfThenElse(c,a,b) =>  
-      stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
-      emitBlock(a, stream)
-      stream.println("} else {")
-      emitBlock(b, stream)
-      stream.println("}")
     case _ => super.emitNode(sym, rhs, stream)
   }
 
+}
+
+
+trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
+  
+  override def emitScalaSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
+      (implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+    super.emitScalaSource[A,B](x => reifyEffects(f(x)), className, stream)
+  }
+
+  override def quote(x: Exp[_]) = x match { // TODO: quirk!
+    case Sym(-1) => "_"
+    case _ => super.quote(x)
+  }
   
 }

@@ -77,7 +77,7 @@ trait ScalaCompile extends Expressions with Compile { self: ScalaCodegen =>
 }
 
 
-trait ScalaCodegen extends Expressions with Scheduling {
+trait ScalaCodegen extends GenericCodegen {
 
   def emitScalaSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
 
@@ -91,6 +91,7 @@ trait ScalaCodegen extends Expressions with Scheduling {
     stream.println("def apply("+quote(x)+":"+sA+"): "+sB+" = {")
     
     emitBlock(y, stream)
+    stream.println(quote(getBlockResult(y)))
     
     stream.println("}")
     stream.println("}")
@@ -98,27 +99,8 @@ trait ScalaCodegen extends Expressions with Scheduling {
   }
 
 
-  def emitBlock(y: Exp[_], stream: PrintWriter): Unit = {
-    val deflist = buildScheduleForResult(y)
-    
-    for (TP(sym, rhs) <- deflist) {
-      emitNode(sym, rhs, stream)
-    }
-        
-    stream.println(quote(y))
-  }
-
-  def emitNode(sym: Sym[_], rhs: Def[_], stream: PrintWriter): Unit = {
-    throw new Exception("don't know how to generate Scala code for: " + rhs)
-  }
-  
   def emitValDef(sym: Sym[_], rhs: String, stream: PrintWriter): Unit = {
     stream.println("val " + quote(sym) + " = " + rhs)
-  }
-
-  def quote(x: Exp[_]) = x match {
-    case Const(z) => z.toString
-    case Sym(n) => "x"+n
   }
 
 }

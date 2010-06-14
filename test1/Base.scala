@@ -1,6 +1,7 @@
 package test1
 
 import util.GraphUtil
+import java.io.PrintWriter
 
 trait Base extends EmbeddedControls {
   type Rep[+T]
@@ -109,6 +110,32 @@ trait Scheduling extends Expressions {
         findDefinition(e).toList
       }
     }).flatten.reverse // inefficient!
+  }
+}
+
+
+trait GenericCodegen extends Expressions with Scheduling {
+  
+  def emitBlock(y: Exp[_], stream: PrintWriter): Unit = {
+    val deflist = buildScheduleForResult(y)
+    
+    for (TP(sym, rhs) <- deflist) {
+      emitNode(sym, rhs, stream)
+    }
+  }
+
+  def getBlockResult[A](s: Exp[A]): Exp[A] = s
+  
+  def emitNode(sym: Sym[_], rhs: Def[_], stream: PrintWriter): Unit = {
+    throw new Exception("don't know how to generate code for: " + rhs)
+  }
+  
+  def emitValDef(sym: Sym[_], rhs: String, stream: PrintWriter): Unit
+
+  def quote(x: Exp[_]) = x match {
+    case Const(s: String) => "\""+s+"\""
+    case Const(z) => z.toString
+    case Sym(n) => "x"+n
   }
 }
 
