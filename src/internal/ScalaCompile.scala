@@ -25,7 +25,7 @@ trait ScalaCompile extends Expressions { self: ScalaCodegen =>
     val settings = new Settings()
 
   //      settings.Xcodebase.value = codebasePath.toString()
-    settings.classpath.value = ""
+    settings.classpath.value = System.getProperty("java.class.path")
     settings.bootclasspath.value = ""
     settings.encoding.value = "UTF-8"
     settings.outdir.value = "."

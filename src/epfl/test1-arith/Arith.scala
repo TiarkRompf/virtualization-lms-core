@@ -7,7 +7,9 @@ import common._
 import java.io.PrintWriter
 
 trait Arith extends Base {
-  implicit def unit(x: Double): Rep[Double]
+  //todo removed this, I can see now that having these implicits replicated everywhere can force us to control the
+  //types that are allowed to be lifted more explicitly
+  //implicit def unit(x: Double): Rep[Double]
 
   def __ext__+(x: Rep[Double], y: Rep[Double]): Rep[Double]
   def __ext__-(x: Rep[Double], y: Rep[Double]): Rep[Double]
@@ -17,8 +19,8 @@ trait Arith extends Base {
 
 
 trait ArithExp extends Arith with BaseExp {
-  
-  implicit def unit(x: Double) = Const(x)
+  //todo removed below as now handled in Base traits
+  //implicit def unit(x: Double) = Const(x)
   
   case class Plus(x: Exp[Double], y: Exp[Double]) extends Def[Double]
   case class Minus(x: Exp[Double], y: Exp[Double]) extends Def[Double]

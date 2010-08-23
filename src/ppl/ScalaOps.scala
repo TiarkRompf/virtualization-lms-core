@@ -145,8 +145,7 @@ trait ScalaOps extends Base with OverloadHack {
 
 
 trait ScalaOpsExp extends ScalaOps with BaseExp { this: FunctionsExp with EffectExp =>
-  implicit def unit[T](x:T): Exp[T] = Const(x)
-  
+    
   case class Convert[X,Y](x: Exp[X])(implicit c : X => Y) extends Def[Y]
   case class Until(start: Exp[Int], end: Exp[Int]) extends Def[Range]
   case class IntLT(a: Rep[Int], b: Rep[Int]) extends Def[Boolean]

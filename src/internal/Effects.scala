@@ -19,11 +19,27 @@ trait Effects extends Expressions {
     context = Nil
     
     val result = block
-    val resultR = if (context.isEmpty) result else Reify(result, context): Exp[A]
+    val resultR = if(context.isEmpty) result else Reify(result, context): Exp[A]
     context = save
     resultR
   }
-  
-  case class Reflect[A](x: Def[A], effects: List[Exp[Any]]) extends Def[A]
-  case class Reify[A](x: Exp[A], effects: List[Exp[Any]]) extends Def[A]
+
+  case class Reflect[A](x:Def[A], effects: List[Exp[Any]]) extends Def[A] {
+    override def toString = "Reflect(" + x + ", " + effectsStr(effects) + ")"
+  }
+  case class Reify[A](x: Exp[A], effects: List[Exp[Any]]) extends Def[A] {
+    override def toString = "Reify(" + x + ", " + effectsStr(effects) + ")"
+  }
+
+  // this allows printing nested contexts without blowing out the heap (there is a factorial explosion
+  // in contexts when nesting effects currently)
+  private def effectsStr(effects: List[Exp[Any]]) : String = {
+    effects.map( e =>
+      e match {
+        case Def(Reflect(x, _)) => "Reflect(" + x + ")"
+        case Def(Reify(x, _)) => "Reify(" + x + ")"
+        case _ => e.toString
+      }
+    ).toString
+  }
 }

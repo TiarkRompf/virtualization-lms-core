@@ -1,32 +1,45 @@
 package scala.virtualization.lms
 package internal
 
+/**
+ * The Expressions trait houses common AST nodes. It also manages a list of encountered Definitions which
+ * allows for common sub-expression elimination (CSE).  
+ * 
+ * @since 0.1
+ */
 trait Expressions {
-  
-  // expressions
-  abstract class Exp[+T]
 
-  case class Const[T](x: T) extends Exp[T]
-  case class Sym[T](n: Int) extends Exp[T]
+  abstract class Exp[+T] // constants/symbols (atomic)
+
+  case class Const[T](x: T) extends Exp[T]  {
+    override def toString = x.toString
+  }
+
+  case class Sym[T](val id: Int) extends Exp[T] {
+    override def toString = findDefinition(this) match {
+      case Some(x) => x.toString
+      case _ => "sym " + id + " = not found (no rhs?)"
+    }
+  }
 
   var nVars = 0
   def fresh[T] = Sym[T] { nVars += 1; nVars -1 }
 
-  // definitions
-  abstract class Def[T]
+  abstract class Def[+T] // operations (composite)
 
   case class TP[T](sym: Sym[T], rhs: Def[T]) {
-    override def toString() = sym + " = " + rhs
+    override def toString() = "\" + " + "x"+sym.id + " + \""
+    //override def toString() = "sym " + sym.id + " = " + rhs
   }
-  
+
   var globalDefs: List[TP[_]] = Nil
 
-  def findDefinition[T](s: Sym[T]): Option[TP[T]] = 
+  def findDefinition[T](s: Sym[T]): Option[TP[T]] =
     globalDefs.find(_.sym == s).asInstanceOf[Option[TP[T]]]
-    
+
   def findDefinition[T](d: Def[T]): Option[TP[T]] =
     globalDefs.find(_.rhs == d).asInstanceOf[Option[TP[T]]]
-  
+
   def findOrCreateDefinition[T](d: Def[T]): TP[T] =
     findDefinition[T](d).getOrElse {
       createDefinition(fresh[T], d)
@@ -44,34 +57,20 @@ trait Expressions {
 
   object Def {
     def unapply[T](e: Exp[T]): Option[Def[T]] = e match { // really need to test for sym?
-      case s @ Sym(_) => 
+      case s @ Sym(_) =>
         findDefinition(s).map(_.rhs)
       case _ =>
         None
     }
   }
-  
-  // dependencies
-  
-/*
-  def syms(d: Product): List[Sym[Any]] = { // TODO: cleanup
-    for {
-      e <- d.productIterator.toList
-      f <- (e match {
-        case s: Sym[Any] => List(s)
-        case p: Product => syms(p)
-        case _ => Nil
-      })
-    } yield f
-  }
-*/
 
+  // dependencies
   def syms(e: Any): List[Sym[Any]] = e match {
     case s: Sym[Any] => List(s)
     case p: Product => p.productIterator.toList.flatMap(syms(_))
     case _ => Nil
   }
-  
+
   def dep(e: Exp[Any]): List[Sym[Any]] = e match {
     case Def(d: Product) => syms(d)
     case _ => Nil

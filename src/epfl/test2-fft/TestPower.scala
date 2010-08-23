@@ -22,10 +22,13 @@ trait TestPower2 { this: Arith =>
 
 trait BaseStr extends Base {
   type Rep[+T] = String
+  //todo added this to provide required unit implicit conversion
+  implicit def unit[T](x: T): Rep[T] = x.toString
 }
 
 trait ArithStr extends Arith with BaseStr {
-  implicit def unit(x: Double) = x.toString
+  //todo removed below
+  //implicit def unit(x: Double) = x.toString
 
   def __ext__+(x: Rep[Double], y: Rep[Double]) = "(%s+%s)".format(x,y)
   def __ext__-(x: Rep[Double], y: Rep[Double]) = "(%s-%s)".format(x,y)

@@ -119,14 +119,14 @@ trait MatchingExtractorsExp extends FunctionsExp with Effects with Control {
   def tuple[A,B](x: Rep[A], y: Rep[B]): Rep[(A,B)] = TupleR(x, y)
   def fst[A,B](x: Rep[(A,B)]): Rep[A] = First(x)
   def snd[A,B](x: Rep[(A,B)]): Rep[B] = Second(x)
-  
+
+  //todo had to insert a unit here to remove ambiguous implicit conversion
   def test[A](x: Rep[A], y: A) = {
-    reflectEffect(Test(x, y))
+    reflectEffect(unit(Test(x, y)))
     true
   }
   
-  def unit[A](x: A): Rep[A] = Const(x)
-  
+    
 //  def andAlso[A](x: Rep[A], effects: List[Rep[_]]): Rep[A] = AndAlso(x, effects)
 
 //  def orElse[A](xs: List[Rep[Effectful[A]]]): Rep[A] = reflectEffect(OrElse(xs))

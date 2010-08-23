@@ -14,6 +14,9 @@ trait ScalaCodegen extends GenericCodegen {
     val sA = mA.toString
     val sB = mB.toString
 
+    stream.println("/*****************************************\n"+
+                   "  Emitting Generated Code                  \n"+
+                   "*******************************************/")
     stream.println("class "+className+" extends (("+sA+")=>("+sB+")) {")
     stream.println("def apply("+quote(x)+":"+sA+"): "+sB+" = {")
     
@@ -22,6 +25,10 @@ trait ScalaCodegen extends GenericCodegen {
     
     stream.println("}")
     stream.println("}")
+    stream.println("/*****************************************\n"+
+                   "  End of Generated Code                  \n"+
+                   "*******************************************/")
+
     stream.flush
   }
 

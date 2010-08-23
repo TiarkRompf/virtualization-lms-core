@@ -2,9 +2,13 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
+import scala.virtualization.lms.util.OverloadHack
 
-trait Equal extends Base {
+trait Equal extends Base with OverloadHack {
   def __equal(a: Rep[Any], b: Rep[Any]): Rep[Boolean]
+  //todo this is required of things like if(a:Rep[T] == true) won't work
+  def __equal(a: Rep[Any], b: Any)(implicit o: Overloaded1): Rep[Boolean] = __equal(a, unit(b))
+  def __equal(a: Any, b: Rep[Any])(implicit o: Overloaded2): Rep[Boolean] = __equal(unit(a), b)
 }
 
 trait EqualExp extends Equal with BaseExp {

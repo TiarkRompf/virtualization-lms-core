@@ -6,7 +6,8 @@ import common._
 
 trait Trig extends Base {
 
-  implicit def unit(x: Double): Rep[Double]
+  //todo removed
+  //implicit def unit(x: Double): Rep[Double]
 
   def sin(x: Rep[Double]): Rep[Double]
   def cos(x: Rep[Double]): Rep[Double]

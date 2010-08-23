@@ -20,9 +20,6 @@ object GraphUtil {
      List(List(A, B, C), List(D))
 
      stronglyConnectedComponents[String](List("A","B","C"), { case "A" => List("B") case "B" => List("C") case "C" => List("A","D") case "D" => Nil})
-
-  
-   
   */
 
   /** 

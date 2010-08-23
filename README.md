@@ -1,1 +1,1 @@
-read me
+This is the common embedding framework portion of the collaboration effort between PPL and EPFL. 
