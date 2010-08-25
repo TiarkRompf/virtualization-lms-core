@@ -5,11 +5,35 @@ package test6
 import common._
 import test1._
 
+import util.OverloadHack
+
 import java.io.PrintWriter
 import java.io.FileOutputStream
 
+trait Utils extends Base with OverloadHack {
+  
+  def __ext__+(a: Rep[String], b: Rep[Any])(implicit x: Overloaded1): Rep[String]
+  def __ext__+(a: Rep[Any], b: Rep[String])(implicit x: Overloaded2): Rep[String]
+  def __ext__+(a: String, b: Rep[Any])(implicit x: Overloaded4): Rep[String]
+  def __ext__+(a: Rep[Any], b: String)(implicit x: Overloaded5): Rep[String]
+  
+  implicit def unit(x:String): Rep[String]
+  implicit def unit(x:Int): Rep[Int]
+  
+}
 
-trait UtilExp extends BaseExp {
+
+trait UtilExp extends BaseExp with Utils {
+
+  implicit def unit(x:Int): Rep[Int] = Const(x)
+  implicit def unit(x:String): Rep[String] = Const(x)
+  
+  def __ext__+(a: Rep[String], b: Rep[Any])(implicit x: Overloaded1): Rep[String] = StrCat(a,b)
+  def __ext__+(a: Rep[Any], b: Rep[String])(implicit x: Overloaded2): Rep[String] = StrCat(a,b)
+  def __ext__+(a: String, b: Rep[Any])(implicit x: Overloaded4): Rep[String] = StrCat(Const(a),b)
+  def __ext__+(a: Rep[Any], b: String)(implicit x: Overloaded5): Rep[String] = StrCat(a,Const(b))
+
+  case class StrCat(a: Exp[Any],b: Exp[Any]) extends Def[String]
 
   case class Tup[A,B](a: Exp[A],b: Exp[B]) extends Def[(A,B)]
   
@@ -20,6 +44,8 @@ trait UtilExp extends BaseExp {
 trait ScalaGenUtil extends ScalaGenBase with UtilExp {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case StrCat(a,b) =>
+      emitValDef(sym, quote(a) + ".toString + " + quote(b) + ".toString")
     case Tup(a,b) =>
       emitValDef(sym, "("+ quote(a) + "," + quote(b) + ")")
     case _ => super.emitNode(sym, rhs)
@@ -33,27 +59,23 @@ trait ScalaGenUtil extends ScalaGenBase with UtilExp {
 
 }
 
-trait Vectors extends Base {
-
-  implicit def unit(x:Int): Rep[Int]
+trait Vectors extends Utils {
 
   type Vector
 
   def ZeroVector(n: Rep[Int]): Rep[Vector]
   def RandomVector(n: Rep[Int]): Rep[Vector]
-  def __ext__+(a: Rep[Vector], b: Rep[Vector]): Rep[Vector]
+  def __ext__+(a: Rep[Vector], b: Rep[Vector])(implicit x: Overloaded3): Rep[Vector]
 }
 
 trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
-
-  implicit def unit(x:Int) = Const(x)
 
   // use Apply directly (instead of doApply) to signal that operations are pure
 
   def ZeroVector(n: Exp[Int]) = Apply(vectorZero, n)
   def RandomVector(n: Exp[Int]) = doApply(vectorRandom, n) // random vectors are different...
 
-  def __ext__+(a: Exp[Vector], b: Exp[Vector]) = (a,b) match {
+  def __ext__+(a: Exp[Vector], b: Exp[Vector])(implicit x: Overloaded3) = (a,b) match {
     case (Def(ZeroVector(_)), b) => b
     case (a, Def(ZeroVector(_))) => a
     case _ => Apply(vectorPlus, Tup(a, b))
@@ -144,6 +166,16 @@ trait TestVectors extends Vectors {
   
 }
 
+trait TestStrings extends Vectors {
+  
+  def test(x: Rep[Any]) = {
+    val s: Rep[Any] = "hi " + "yo " + x + " done"
+    s
+  }
+  
+}
+
+
 
 object TestTestVectors {
   
@@ -160,6 +192,14 @@ object TestTestVectors {
       println(g())
     }
     
+    new TestStrings with VectorsExp with VectorsImplExternal
+    with CompileScala 
+    with ScalaGenFunctions with ScalaGenUtil
+    {
+      emitScalaSource(test, "Test", new PrintWriter(System.out))
+      val g = compile(test)
+      println(g(0))
+    }
 /*
     new TestConditional with ArithExpOpt with EqualExp with PrintExp
     with JSGenIfThenElse
