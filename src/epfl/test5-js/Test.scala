@@ -85,7 +85,7 @@ trait TestConditional { this: Arith with Equal with Print with IfThenElse =>
 
 
 
-object Test {
+object TestTestConditional {
   
   def main(args: Array[String]) = {
 
