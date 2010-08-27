@@ -11,26 +11,16 @@ trait Expressions {
 
   abstract class Exp[+T] // constants/symbols (atomic)
 
-  case class Const[T](x: T) extends Exp[T]  {
-    override def toString = x.toString
-  }
+  case class Const[T](x: T) extends Exp[T]
 
-  case class Sym[T](val id: Int) extends Exp[T] {
-    override def toString = findDefinition(this) match {
-      case Some(x) => x.toString
-      case _ => "sym " + id + " = not found (no rhs?)"
-    }
-  }
+  case class Sym[T](val id: Int) extends Exp[T]
 
   var nVars = 0
   def fresh[T] = Sym[T] { nVars += 1; nVars -1 }
 
   abstract class Def[+T] // operations (composite)
 
-  case class TP[T](sym: Sym[T], rhs: Def[T]) {
-    override def toString() = "\" + " + "x"+sym.id + " + \""
-    //override def toString() = "sym " + sym.id + " = " + rhs
-  }
+  case class TP[T](sym: Sym[T], rhs: Def[T]) 
 
   var globalDefs: List[TP[_]] = Nil
 
