@@ -31,7 +31,7 @@ trait ScalaGenArray extends ScalaGenEffect { this: ArrayOpsExp =>
 
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {    
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
-    case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + ".apply(" + n + ")")
+    case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
     case _ => super.emitNode(sym, rhs)
   }
 }
