@@ -78,9 +78,20 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
   def __ext__+(a: Exp[Vector], b: Exp[Vector])(implicit x: Overloaded3) = (a,b) match {
     case (Def(ZeroVector(_)), b) => b
     case (a, Def(ZeroVector(_))) => a
-    case _ => Apply(vectorPlus, Tup(a, b))
+    case _ => Apply(vectorPlus, toAtom(Tup(a, b)))
   }
   
+  class ApplyExtractor[A,B](f: Exp[A => B]) {
+    def apply(x: Exp[A]): Exp[B] = Apply(f,x)
+    def unapply(e: Def[B]): Option[Exp[A]] = e match {
+      case Apply(`f`, x: Exp[A]) => Some(x)
+      case _ => None
+    }
+  }
+
+  object ZeroVector extends ApplyExtractor[Int,Vector](vectorZero)
+  
+/*  
   object ZeroVector {
     def unapply(e: Def[Vector]): Option[Exp[Int]] = e match {
       case Apply(`vectorZero`, n: Exp[Int]) => Some(n)
@@ -88,7 +99,7 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
         None
     }
   }
-  
+*/  
   
 }
 
