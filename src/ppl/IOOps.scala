@@ -46,7 +46,7 @@ trait IOOpsExp extends IOOps with BaseExp {
 
 }
 
-trait ScalaGenIO extends ScalaGenEffect { this: IOOpsExp =>
+trait ScalaGenIO extends ScalaGenEffect with IOOpsExp {
 
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     // TODO: fill out

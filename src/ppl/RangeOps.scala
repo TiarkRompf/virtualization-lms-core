@@ -25,7 +25,7 @@ trait RangeOps extends Base {
   def range_foreach(r: Rep[Range], f: (Rep[Int]) => Rep[Unit]): Rep[Unit]
 }
 
-trait RangeOpsExp extends RangeOps with BaseExp { this: FunctionsExp =>  
+trait RangeOpsExp extends RangeOps with FunctionsExp {   
   case class Until(start: Exp[Int], end: Exp[Int]) extends Def[Range]
   case class RangeStart(r: Exp[Range]) extends Def[Int]
   case class RangeStep(r: Exp[Range]) extends Def[Int]
@@ -40,7 +40,7 @@ trait RangeOpsExp extends RangeOps with BaseExp { this: FunctionsExp =>
 
 }
 
-trait ScalaGenRange extends ScalaGenEffect { this: RangeOpsExp =>
+trait ScalaGenRange extends ScalaGenEffect with RangeOpsExp {
 
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
 

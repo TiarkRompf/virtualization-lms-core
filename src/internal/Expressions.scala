@@ -15,6 +15,8 @@ trait Expressions {
 
   case class Sym[T](val id: Int) extends Exp[T]
 
+  case class External[A](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
+      
   var nVars = 0
   def fresh[T] = Sym[T] { nVars += 1; nVars -1 }
 

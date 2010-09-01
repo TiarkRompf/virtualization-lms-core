@@ -21,10 +21,11 @@ trait GenericCodegen extends Expressions with Scheduling {
   
   def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
 
-  def quote(x: Exp[_]) = x match {
+  def quote(x: Exp[_]) : String = x match {
     case Const(s: String) => "\""+s+"\""
     case Const(z) => z.toString
     case Sym(n) => "x"+n
+    case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)        
   }
 }
 

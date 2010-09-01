@@ -35,7 +35,7 @@ trait StringOpsExp extends StringOps with BaseExp {
   def string_split(s: Exp[String], separators: Exp[String]) : Rep[Array[String]] = StringSplit(s, separators)
 }
 
-trait ScalaGenString extends ScalaGenBase  { this: StringOpsExp =>
+trait ScalaGenString extends ScalaGenBase with StringOpsExp {
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case StringPlus(s1,s2) => emitValDef(sym, "%s+%s".format(quote(s1), quote(s2)))
     case _ => super.emitNode(sym, rhs)

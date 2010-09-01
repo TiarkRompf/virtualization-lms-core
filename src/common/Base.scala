@@ -25,7 +25,6 @@ trait BaseExp extends Base with Expressions {
 
   type Rep[+T] = Exp[T]
   implicit def unit[T](x: T) = Const(x)
-  
 }
 
 trait ScalaGenBase extends ScalaCodegen with BaseExp {

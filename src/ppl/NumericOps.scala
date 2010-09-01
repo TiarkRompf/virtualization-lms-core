@@ -34,7 +34,7 @@ trait NumericOpsExp extends NumericOps with BaseExp {
   def numeric_times[T](lhs: Exp[T], rhs: Exp[T])(implicit n: Numeric[T]) : Rep[T] = NumericTimes(lhs, rhs, n)
 }
 
-trait ScalaGenNumeric extends ScalaGenBase  { this: NumericOpsExp =>
+trait ScalaGenNumeric extends ScalaGenBase with NumericOpsExp { 
 
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case NumericPlus(a,b,n) => emitValDef(sym, quote(a) + " + " + quote(b))

@@ -37,7 +37,7 @@ trait UtilExp extends BaseExp with Utils {
 
   case class Tup[A,B](a: Exp[A],b: Exp[B]) extends Def[(A,B)]
   
-  case class External[A](s: String) extends Exp[A]
+  //case class External[A](s: String) extends Exp[A]
   
 }
 
@@ -52,7 +52,7 @@ trait ScalaGenUtil extends ScalaGenBase with UtilExp {
   }
 
   override def quote(x: Exp[_]) = x match {
-    case External(s) => s
+    case External(s, args) => s.format(args: _*)
     case _ => super.quote(x)
   }
 

@@ -6,6 +6,8 @@ import java.io.PrintWriter
 trait Functions extends Base {
 
   implicit def doLambda[A,B](fun: Rep[A] => Rep[B])(implicit mA: Manifest[A]): Rep[A => B]
+  implicit def toLambdaOps[A,B](fun: Rep[A => B]) = new LambdaOps(fun)
+  
   class LambdaOps[A,B](f: Rep[A => B]) {
     def apply(x: Rep[A]): Rep[B] = doApply(f,x)
   }
@@ -14,6 +16,13 @@ trait Functions extends Base {
 }
 
 trait FunctionsExp extends Functions with EffectExp {
+  class ApplyExtractor[A,B](f: Exp[A => B]) {
+    def apply(x: Exp[A]): Exp[B] = Apply(f,x)
+    def unapply(e: Def[B]): Option[Exp[A]] = e match {
+      case Apply(`f`, x: Exp[A]) => Some(x)
+      case _ => None
+    }
+  }
 
   case class Lambda[A,B](f: Exp[A] => Exp[B], x: Sym[A], y: Exp[B])(implicit val mA: Manifest[A]) extends Def[A => B]
   case class Apply[A,B](f: Exp[A => B], arg: Exp[A]) extends Def[B]

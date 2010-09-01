@@ -27,7 +27,7 @@ trait FractionalOpsExp extends FractionalOps with BaseExp {
   def fractional_divide[T](lhs: Exp[T], rhs: Exp[T])(implicit f: Fractional[T]) : Rep[T] = FractionalDivide(lhs, rhs, f)
 }
 
-trait ScalaGenFractional extends ScalaGenBase  { this: FractionalOpsExp =>
+trait ScalaGenFractional extends ScalaGenBase with FractionalOpsExp { 
 
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case FractionalDivide(a,b,f) => emitValDef(sym, quote(a) + " / " + quote(b))

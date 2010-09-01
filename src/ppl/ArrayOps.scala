@@ -27,7 +27,7 @@ trait ArrayOpsExp extends ArrayOps with BaseExp {
   def array_length[T](a: Exp[Array[T]]) : Rep[Int] = ArrayLength(a)
 }
 
-trait ScalaGenArray extends ScalaGenEffect { this: ArrayOpsExp =>
+trait ScalaGenArray extends ScalaGenEffect with ArrayOpsExp {
 
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {    
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")

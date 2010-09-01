@@ -24,7 +24,7 @@ trait ScalaOps extends Base with OverloadHack {
 
 
 
-trait ScalaOpsExp extends ScalaOps with BaseExp { this: FunctionsExp =>
+trait ScalaOpsExp extends ScalaOps with FunctionsExp { 
 
   case class Print(x: Exp[Any]) extends Def[Unit]
   case class Exit(s: Exp[Int]) extends Def[Nothing]
@@ -35,7 +35,7 @@ trait ScalaOpsExp extends ScalaOps with BaseExp { this: FunctionsExp =>
 }
 
   
-trait ScalaGenScalaOps extends ScalaGenEffect  { this: ScalaOpsExp =>
+trait ScalaGenScalaOps extends ScalaGenEffect with ScalaOpsExp {
 
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Print(s) => emitValDef(sym, "println(" + quote(s) + ")")
