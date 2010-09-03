@@ -16,10 +16,14 @@ trait DSLOpsExp extends FunctionsExp {
 }
 
 trait ScalaGenDSL extends ScalaGenEffect with DSLOpsExp  {
-  abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case DSLOp(func, arg) if shallow => Nil // in shallow mode, don't count deps from nested blocks
+    case _ => super.syms(e)
+  }
 
+  abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {    
     case op@DSLOp(func, arg) =>
-      val b = op.representation
+      val b = op.representation      
       stream.println("val " + quote(sym) + " = { ")
       emitBlock(b)
       stream.println(quote(getBlockResult(b)))

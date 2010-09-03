@@ -12,6 +12,8 @@ import internal.{Expressions, Effects, ScalaCodegen, ScalaNestedCodegen }
 trait Base extends EmbeddedControls {
 
   type Rep[+T]
+  type Var[+T]
+  
   implicit def unit[T](x: T): Rep[T]
 
 }
@@ -22,7 +24,7 @@ trait Base extends EmbeddedControls {
  * @since 0.1
  */
 trait BaseExp extends Base with Expressions {
-
+  type Var[+T] = EVar[T]    
   type Rep[+T] = Exp[T]
   implicit def unit[T](x: T) = Const(x)
 }

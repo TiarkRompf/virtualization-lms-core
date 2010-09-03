@@ -25,7 +25,9 @@ trait StringOps extends Base with OverloadHack {
   def string_split(s: Rep[String], separators: Rep[String]) : Rep[Array[String]]
 }
 
-trait StringOpsExp extends StringOps with BaseExp {
+trait StringOpsExp extends StringOps with BaseExp with VariablesExp {
+  implicit def varToRepStrOps(s: Var[String]) = new RepStrOpsCls(varToRep(s))
+
   case class StringPlus(s: Exp[Any], o: Exp[Any]) extends Def[String]
   case class StringTrim(s: Exp[String]) extends Def[String]
   case class StringSplit(s: Exp[String], separators: Exp[String]) extends Def[Array[String]]
@@ -38,6 +40,8 @@ trait StringOpsExp extends StringOps with BaseExp {
 trait ScalaGenString extends ScalaGenBase with StringOpsExp {
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case StringPlus(s1,s2) => emitValDef(sym, "%s+%s".format(quote(s1), quote(s2)))
+    case StringTrim(s) => emitValDef(sym, "%s.trim()".format(quote(s)))
+    case StringSplit(s, sep) => emitValDef(sym, "%s.split(%s)".format(quote(s), quote(sep)))
     case _ => super.emitNode(sym, rhs)
   }
 }

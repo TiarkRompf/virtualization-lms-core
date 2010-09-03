@@ -23,9 +23,12 @@ trait GenericCodegen extends Expressions with Scheduling {
 
   def quote(x: Exp[_]) : String = x match {
     case Const(s: String) => "\""+s+"\""
+    case Const(v@EVar(e)) => quote(e)
     case Const(z) => z.toString
     case Sym(n) => "x"+n
-    case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)        
+    case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
+    case null => "null"
+    case _ => throw new RuntimeException("could not quote " + x)
   }
 }
 

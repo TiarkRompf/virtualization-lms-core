@@ -33,23 +33,27 @@ trait IOOps extends Base {
   def obj_fr_apply(s: Rep[String]) : Rep[FileReader]
 }
 
-trait IOOpsExp extends IOOps with BaseExp {
-  case class ObjBrApply(f: Exp[FileReader]) extends Def[BufferedReader]
+trait IOOpsExp extends IOOps with EffectExp with DSLOpsExp {
+  case class ObjBrApply(f: Exp[FileReader])
+    extends DSLOp[FileReader,BufferedReader](f => External[BufferedReader]("new java.io.BufferedReader(%s)", List(f)), f)
+
+  case class ObjFrApply(s: Exp[String])
+    extends DSLOp[String,FileReader](s => External[FileReader]("new java.io.FileReader(%s)", List(s)), s)
+
   case class BrReadline(b: Exp[BufferedReader]) extends Def[String]
   case class BrClose(b: Exp[BufferedReader]) extends Def[Unit]
-  case class ObjFrApply(f: Exp[String]) extends Def[FileReader]
 
-  def obj_br_apply(f: Exp[FileReader]) : Rep[BufferedReader] = ObjBrApply(f)
-  def br_readline(b: Exp[BufferedReader]) : Rep[String] = BrReadline(b)
-  def br_close(b: Exp[BufferedReader]) : Rep[Unit] = BrClose(b)
-  def obj_fr_apply(s: Exp[String]) : Rep[FileReader] = ObjFrApply(s)
-
+  def obj_br_apply(f: Exp[FileReader]) : Rep[BufferedReader] = reflectEffect(ObjBrApply(f))
+  def obj_fr_apply(s: Exp[String]) : Rep[FileReader] = reflectEffect(ObjFrApply(s))
+  def br_readline(b: Exp[BufferedReader]) : Rep[String] = reflectEffect(BrReadline(b))
+  def br_close(b: Exp[BufferedReader]) : Rep[Unit] = reflectEffect(BrClose(b))
 }
 
 trait ScalaGenIO extends ScalaGenEffect with IOOpsExp {
 
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    // TODO: fill out
+    case BrReadline(b) => emitValDef(sym, quote(b) + ".readLine()")
+    case BrClose(b) => emitValDef(sym, quote(b) + ".close()")
     case _ => super.emitNode(sym, rhs)
   }
 }

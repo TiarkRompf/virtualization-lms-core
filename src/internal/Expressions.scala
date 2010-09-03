@@ -11,6 +11,8 @@ trait Expressions {
 
   abstract class Exp[+T] // constants/symbols (atomic)
 
+  case class EVar[+T](exp: Exp[T])
+  
   case class Const[T](x: T) extends Exp[T]
 
   case class Sym[T](val id: Int) extends Exp[T]

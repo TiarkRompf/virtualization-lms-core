@@ -19,7 +19,9 @@ trait ArrayOps extends Base {
 
 }
 
-trait ArrayOpsExp extends ArrayOps with BaseExp {
+trait ArrayOpsExp extends ArrayOps with BaseExp with VariablesExp {
+  implicit def varToRepArrayOps[A](x: Var[Array[A]]) = new RepArrayOpsCls(varToRep(x))
+
   case class ArrayLength[T](a: Exp[Array[T]]) extends Def[Int]
   case class ArrayApply[T](x: Exp[Array[T]], n: Exp[Int]) extends Def[T]
 

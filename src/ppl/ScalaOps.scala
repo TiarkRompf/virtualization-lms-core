@@ -27,10 +27,11 @@ trait ScalaOps extends Base with OverloadHack {
 trait ScalaOpsExp extends ScalaOps with FunctionsExp { 
 
   case class Print(x: Exp[Any]) extends Def[Unit]
+  case class PrintLn(x: Exp[Any]) extends Def[Unit]
   case class Exit(s: Exp[Int]) extends Def[Nothing]
 
   def print(x: Rep[Any]) = reflectEffect(Print(x))
-  def println(x: Rep[Any]) = reflectEffect(Print(x))
+  def println(x: Rep[Any]) = reflectEffect(PrintLn(x))
   def exit(s: Rep[Int]) = reflectEffect(Exit(s))
 }
 
@@ -38,7 +39,8 @@ trait ScalaOpsExp extends ScalaOps with FunctionsExp {
 trait ScalaGenScalaOps extends ScalaGenEffect with ScalaOpsExp {
 
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case Print(s) => emitValDef(sym, "println(" + quote(s) + ")")
+    case Print(s) => emitValDef(sym, "print(" + quote(s) + ")")
+    case PrintLn(s) => emitValDef(sym, "println(" + quote(s) + ")")        
     case Exit(a) => emitValDef(sym, "exit(" + quote(a) + ")")
 
     case _ => super.emitNode(sym, rhs)
