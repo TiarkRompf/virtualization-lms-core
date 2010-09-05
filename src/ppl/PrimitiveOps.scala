@@ -4,7 +4,6 @@ package common
 import java.io.PrintWriter
 
 trait PrimitiveOps extends Base {
-
   object Double {
     def parseDouble(s: Rep[String]) = obj_double_parse_double(s)
   }

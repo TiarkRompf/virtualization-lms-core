@@ -156,14 +156,17 @@ trait TupleOpsExp extends TupleOps with BaseExp {
 trait ScalaGenTuple extends ScalaGenBase with TupleOpsExp {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+
+    // TODO: ETuple accesses return their components without requiring generation. This is all kind of
+    // weird, and should be cleaned up.
     case ETuple2(a,b)  =>
-      emitValDef(sym, "("+ quote(a) + "," + quote(b) + ")")
+      //emitValDef(sym, "("+ quote(a) + "," + quote(b) + ")")
     case ETuple3(a,b,c)  =>
-      emitValDef(sym, "("+ quote(a) + "," + quote(b) + "," + quote(c) + ")")
+      //emitValDef(sym, "("+ quote(a) + "," + quote(b) + "," + quote(c) + ")")
     case ETuple4(a,b,c,d)  =>
-      emitValDef(sym, "("+ quote(a) + "," + quote(b) + "," + quote(c) + "," + quote(d) + ")")
+      //emitValDef(sym, "("+ quote(a) + "," + quote(b) + "," + quote(c) + "," + quote(d) + ")")
     case ETuple5(a,b,c,d,e)  =>
-      emitValDef(sym, "("+ quote(a) + "," + quote(b) + "," + quote(c) + "," + quote(d) + "," + quote(e) + ")")
+      //emitValDef(sym, "("+ quote(a) + "," + quote(b) + "," + quote(c) + "," + quote(d) + "," + quote(e) + ")")
     case _ => super.emitNode(sym, rhs)
   }
 

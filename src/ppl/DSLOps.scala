@@ -10,14 +10,16 @@ import scala.virtualization.lms.common.{ScalaGenEffect, FunctionsExp}
 trait DSLOpsExp extends FunctionsExp {
 
   case class DSLOp[A,B](task: Exp[A] => Exp[B], arg: Exp[A]) extends Def[B] {
-    lazy val representation = reifyEffects(task(arg))//doApply(doLambda[A,B](task), arg)    
+    lazy val representation = reifyEffects(task(arg))
   }
 
 }
 
 trait ScalaGenDSL extends ScalaGenEffect with DSLOpsExp  {
   override def syms(e: Any): List[Sym[Any]] = e match {
-    case DSLOp(func, arg) if shallow => Nil // in shallow mode, don't count deps from nested blocks
+    case DSLOp(func, arg) if shallow => syms(arg) // in shallow mode, don't count deps from nested blocks
+    // this is needed to prevent potential forward reference errors; not clear to me why this is different then super.syms(e) 
+    case op@DSLOp(func, arg) => syms(arg) ++ syms(op.representation)
     case _ => super.syms(e)
   }
 
@@ -29,8 +31,6 @@ trait ScalaGenDSL extends ScalaGenEffect with DSLOpsExp  {
       stream.println(quote(getBlockResult(b)))
       stream.println("}")
 
-      //emitValDef(sym, quote(op.representation))
-      
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -5,7 +5,7 @@ trait Effects extends Expressions {
   
   type State = List[Exp[_]]
   
-  var context: State = List()
+  var context: State = _
   
   def reflectEffect[A](x: Def[A]): Exp[A] = {
      // don't do CSE on effectful computations

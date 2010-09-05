@@ -24,10 +24,8 @@ trait ScalaGenWhile extends ScalaGenEffect with WhileExp {
     case _ => super.syms(e)
   }
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    // TODO: things are being emitted twice inside the while loop
-    // TODO: or maybe things are just being emitted multiple times everywhere
     case While(c,b) =>
-      val c_blk = c()            
+      val c_blk = reifyEffects(c())
       stream.print("while ({")
       emitBlock(c_blk)
       stream.print(quote(getBlockResult(c_blk)))

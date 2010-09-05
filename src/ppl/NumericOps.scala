@@ -7,6 +7,7 @@ import java.io.PrintWriter
 
 
 trait NumericOps extends Base with OverloadHack {
+  implicit def varNumericToNumericOps[T](x: Var[T])(implicit n: Numeric[T]) : NumericOpsCls[T]
   implicit def repNumericToNumericOps[T](x: Rep[T])(implicit n: Numeric[T]) = new NumericOpsCls(x,n)
   implicit def numericToNumericOps[T](x: T)(implicit n: Numeric[T]) = new NumericOpsCls(x,n)
 
@@ -24,7 +25,9 @@ trait NumericOps extends Base with OverloadHack {
   //def numeric_signum[T](x: T)(implicit n: Numeric[T]): Rep[Int]
 }
 
-trait NumericOpsExp extends NumericOps with BaseExp {
+trait NumericOpsExp extends NumericOps with VariablesExp {
+  implicit def varNumericToNumericOps[T](x: Var[T])(implicit n: Numeric[T]) = new NumericOpsCls(varToRep(x), n)
+
   case class NumericPlus[T](lhs: Exp[T], rhs: Exp[T], implicit val n: Numeric[T]) extends Def[T]
   case class NumericMinus[T](lhs: Exp[T], rhs: Exp[T], implicit val n: Numeric[T]) extends Def[T]
   case class NumericTimes[T](lhs: Exp[T], rhs: Exp[T], implicit val n: Numeric[T]) extends Def[T]
