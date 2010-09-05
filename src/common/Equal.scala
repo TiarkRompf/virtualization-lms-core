@@ -5,25 +5,32 @@ import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 
 trait Equal extends Base with Variables with OverloadHack {
-  def __equal(a: Rep[Any], b: Rep[Any]): Rep[Boolean]
-  //todo this is required of things like if(a:Rep[T] == true) won't work
-  def __equal(a: Rep[Any], b: Any)(implicit o: Overloaded1): Rep[Boolean] = __equal(a, unit(b))
-  def __equal(a: Any, b: Rep[Any])(implicit o: Overloaded2): Rep[Boolean] = __equal(unit(a), b)
+  // TODO: we need a better way of handling this, too many combinations
+  def __equal[A,B](a: Rep[A], b: Rep[B]) : Rep[Boolean] = equals(a,b)
+  def __equal[A,B](a: Rep[A], b: Var[B])(implicit o: Overloaded1) : Rep[Boolean] = equals(a, varToRep(b))
+  def __equal[A,B](a: Var[A], b: Rep[B])(implicit o: Overloaded2) : Rep[Boolean] = equals(varToRep(a), b)
+  def __equal[A,B](a: Rep[A], b: B)(implicit o: Overloaded3): Rep[Boolean] = equals(a, unit(b))
+  def __equal[A,B](a: A, b: Rep[B])(implicit o: Overloaded4): Rep[Boolean] = equals(unit(a), b)
+  //def __equal[A,B](a: Var[A], b: B)(implicit o: Overloaded3): Rep[Boolean] = __equal(a, varToRep(b))
+  //def __equal[A,B](a: A, b: Var[B])(implicit o: Overloaded4): Rep[Boolean] = __equal(varToRep(a), b)
 
   def __ext__!=[A,B](a: Rep[A], b: Rep[B]) : Rep[Boolean] = notequals(a,b)
   def __ext__!=[A,B](a: Rep[A], b: Var[B])(implicit o: Overloaded1) : Rep[Boolean] = notequals(a, varToRep(b))
   def __ext__!=[A,B](a: Var[A], b: Rep[B])(implicit o: Overloaded2) : Rep[Boolean] = notequals(varToRep(a), b)
-//  def __ext__!=[A,B](a: Rep[A], b: B)(implicit o: Overloaded3) : Rep[Boolean] = __ext__!=(a, unit(b))
-//  def __ext__!=[A,B](a: A, b: Rep[B])(implicit o: Overloaded4) : Rep[Boolean] = __ext__!=(unit(a), b)
+  def __ext__!=[A,B](a: Rep[A], b: B)(implicit o: Overloaded3) : Rep[Boolean] = __ext__!=(a, unit(b))
+  def __ext__!=[A,B](a: A, b: Rep[B])(implicit o: Overloaded4) : Rep[Boolean] = __ext__!=(unit(a), b)
+  //def __ext__!=[A,B](a: Var[A], b: B)(implicit o: Overloaded3) : Rep[Boolean] = __ext__!=(a, varToRep(b))
+  //def __ext__!=[A,B](a: A, b: Var[B])(implicit o: Overloaded4) : Rep[Boolean] = __ext__!=(varToRep(a), b)
 
+  def equals[A,B](a: Rep[A], b: Rep[B]) : Rep[Boolean]
   def notequals[A,B](a: Rep[A], b: Rep[B]) : Rep[Boolean]
 }
 
 trait EqualExp extends Equal with BaseExp with VariablesExp {
-  case class Equal(a: Exp[Any], b: Exp[Any]) extends Def[Boolean]
+  case class Equal[A,B](a: Exp[A], b: Exp[B]) extends Def[Boolean]
   case class NotEqual[A,B](a: Exp[A], b: Exp[B]) extends Def[Boolean]
 
-  def __equal(a: Rep[Any], b: Rep[Any]): Rep[Boolean] = Equal(a,b)
+  def equals[A,B](a: Rep[A], b: Rep[B]): Rep[Boolean] = Equal(a,b)
   def notequals[A,B](a: Rep[A], b: Rep[B]): Rep[Boolean] = NotEqual(a,b)
 }
 

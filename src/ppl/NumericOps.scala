@@ -6,7 +6,7 @@ import scala.virtualization.lms.util.OverloadHack
 import java.io.PrintWriter
 
 
-trait NumericOps extends Base with OverloadHack {
+trait NumericOps extends Base with Variables with OverloadHack {
   implicit def varNumericToNumericOps[T](x: Var[T])(implicit n: Numeric[T]) : NumericOpsCls[T]
   implicit def repNumericToNumericOps[T](x: Rep[T])(implicit n: Numeric[T]) = new NumericOpsCls(x,n)
   implicit def numericToNumericOps[T](x: T)(implicit n: Numeric[T]) = new NumericOpsCls(x,n)

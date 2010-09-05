@@ -5,6 +5,8 @@ import util.OverloadHack
 import java.io.PrintWriter
 
 trait Variables extends Base with OverloadHack {
+  type Var[T]
+
   implicit def varToRep[T](v: Var[T]) : Rep[T]
 
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1): Var[T]
@@ -14,6 +16,13 @@ trait Variables extends Base with OverloadHack {
 }
 
 trait VariablesExp extends Variables with EffectExp {
+  type Var[+T] = Variable[T]
+  // TODO: make a design decision here.
+  // defining Var[T] as Sym[T] is dangerous. If someone forgets to define a more-specific implicit conversion from
+  // Var[T] to Ops, e.g. implicit def varToRepStrOps(s: Var[String]) = new RepStrOpsCls(varToRep(s))
+  // then the existing implicit from Rep to Ops will be used, and the ReadVar operation will be lost.
+  // Defining Vars as separate from Exps will always cause a compile-time error if the implicit is missing.
+  //type Var[T] = Sym[T]
 
   // read operation
   implicit def varToRep[T](v: Var[T]) : Exp[T] = reflectEffect(ReadVar(v))

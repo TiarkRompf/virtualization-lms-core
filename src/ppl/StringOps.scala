@@ -2,20 +2,21 @@ package scala.virtualization.lms
 package common
 
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.ppl.ScalaOps
 import java.io.PrintWriter
 
-trait StringOps extends Base with OverloadHack {
+trait StringOps extends Base with Variables with OverloadHack {
+  implicit def varToRepStrOps(s: Var[String]) : RepStrOpsCls
   implicit def repStrToRepStrOps(s: Rep[String]) = new RepStrOpsCls(s)
   implicit def strToRepStrOps(s: String) = new RepStrOpsCls(s)
 
+  // NOTE: with infix methods, if something doesn't get lifted, this won't give you a compile time error,
+  //       since string concat is defined on all objects
   def __ext__+(s1: String, s2: Rep[Any]) = string_plus(s1,s2)
   def __ext__+(s1: Rep[Any], s2: String)(implicit o: Overloaded1) = string_plus(s1,s2)
-  def __ext__+(s1: Rep[String], s2: Rep[Any])(implicit o: Overloaded2) = string_plus(s1,s2)
-  def __ext__+(s1: Rep[Any], s2: Rep[String])(implicit o: Overloaded3) = string_plus(s1,s2)
+  def __ext__+(s1: String, s2: Var[Any])(implicit o: Overloaded4) = string_plus(s1,varToRep(s2))
+  def __ext__+(s1: Var[Any], s2: String)(implicit o: Overloaded5) = string_plus(varToRep(s1),s2)
 
   class RepStrOpsCls(s: Rep[String]) {
-    def +(o: Rep[Any]) = string_plus(s,o)
     def trim() = string_trim(s);
     def split(separators: String) = string_split(s, separators);
   }
