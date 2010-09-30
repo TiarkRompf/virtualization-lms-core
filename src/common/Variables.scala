@@ -5,14 +5,14 @@ import util.OverloadHack
 import java.io.PrintWriter
 
 trait Variables extends Base with OverloadHack {
-  type Var[T]
+  type Var[+T]
 
-  implicit def varToRep[T](v: Var[T]) : Rep[T]
+  implicit def readVar[T](v: Var[T]) : Rep[T]
+  //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
 
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1): Var[T]
   def __assign[T](lhs: Var[T], rhs: Rep[T]) : Rep[Unit]
 
-//  implicit def readVar[T](v: Var[Rep[T]]): Rep[T]
 }
 
 trait VariablesExp extends Variables with EffectExp {
@@ -25,7 +25,7 @@ trait VariablesExp extends Variables with EffectExp {
   //type Var[T] = Sym[T]
 
   // read operation
-  implicit def varToRep[T](v: Var[T]) : Exp[T] = reflectEffect(ReadVar(v))
+  implicit def readVar[T](v: Var[T]) : Exp[T] = reflectEffect(ReadVar(v))
 
   case class ReadVar[T](v: Var[T]) extends Def[T]
   case class NewVar[T](init: Exp[T]) extends Def[T]

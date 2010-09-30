@@ -35,10 +35,10 @@ trait IOOps extends Base {
 
 trait IOOpsExp extends IOOps with EffectExp with DSLOpsExp {
   case class ObjBrApply(f: Exp[FileReader])
-    extends DSLOp[FileReader,BufferedReader](f => External[BufferedReader]("new java.io.BufferedReader(%s)", List(f)), f)
+    extends DSLOp(reifyEffects(External[BufferedReader]("new java.io.BufferedReader(%s)", List(f))))
 
   case class ObjFrApply(s: Exp[String])
-    extends DSLOp[String,FileReader](s => External[FileReader]("new java.io.FileReader(%s)", List(s)), s)
+    extends DSLOp(reifyEffects(External[FileReader]("new java.io.FileReader(%s)", List(s))))
 
   case class BrReadline(b: Exp[BufferedReader]) extends Def[String]
   case class BrClose(b: Exp[BufferedReader]) extends Def[Unit]

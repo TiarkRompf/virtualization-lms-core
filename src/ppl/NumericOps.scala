@@ -7,42 +7,49 @@ import java.io.PrintWriter
 
 
 trait NumericOps extends Base with Variables with OverloadHack {
-  implicit def varNumericToNumericOps[T](x: Var[T])(implicit n: Numeric[T]) : NumericOpsCls[T]
-  implicit def repNumericToNumericOps[T](x: Rep[T])(implicit n: Numeric[T]) = new NumericOpsCls(x,n)
-  implicit def numericToNumericOps[T](x: T)(implicit n: Numeric[T]) = new NumericOpsCls(x,n)
+  // TODO: fix or investigate -- this causes a compiler bug
+  //implicit val repDoubleToNumericOps : Rep[Double] => NumericOpsCls[Double] = x => new NumericOpsCls[Double](x)
+  implicit def varNumericToNumericOps[T:Numeric](x: Var[T]) : NumericOpsCls[T]
+  implicit def repNumericToNumericOps[T:Numeric](x: Rep[T]) = new NumericOpsCls(x)
+  //implicit def numericToNumericOps[T:Numeric](x: T) = new NumericOpsCls(x)
 
-  class NumericOpsCls[T](lhs: Rep[T], implicit val n: Numeric[T]) {
+  def __ext__*[T:Numeric](lhs: Rep[T], rhs: Rep[T]) = numeric_times(lhs,rhs)
+  def __ext__+(lhs: Rep[Double], rhs: Rep[Double]) = numeric_plus(lhs,rhs)
+  //def __ext__+[T:Numeric](lhs: Rep[T], rhs: Rep[T]) = numeric_plus(lhs,rhs)
+  def __ext__-[T:Numeric](lhs: Rep[T], rhs: Rep[T]) = numeric_minus(lhs,rhs)
+
+  class NumericOpsCls[T:Numeric](lhs: Rep[T]) {
     def +(rhs: Rep[T]) = numeric_plus(lhs,rhs)
     def -(rhs: Rep[T]) = numeric_minus(lhs,rhs)
     def *(rhs: Rep[T]) = numeric_times(lhs,rhs)
   }
 
-  def numeric_plus[T](lhs: Rep[T], rhs: Rep[T])(implicit n: Numeric[T]): Rep[T]
-  def numeric_minus[T](lhs: Rep[T], rhs: Rep[T])(implicit n: Numeric[T]): Rep[T]
-  def numeric_times[T](lhs: Rep[T], rhs: Rep[T])(implicit n: Numeric[T]): Rep[T]
-  //def numeric_negate[T](x: T)(implicit n: Numeric[T]): Rep[T]
-  //def numeric_abs[T](x: T)(implicit n: Numeric[T]): Rep[T]
-  //def numeric_signum[T](x: T)(implicit n: Numeric[T]): Rep[Int]
+  def numeric_plus[T:Numeric](lhs: Rep[T], rhs: Rep[T]): Rep[T]
+  def numeric_minus[T:Numeric](lhs: Rep[T], rhs: Rep[T]): Rep[T]
+  def numeric_times[T:Numeric](lhs: Rep[T], rhs: Rep[T]): Rep[T]
+  //def numeric_negate[T:Numeric](x: T): Rep[T]
+  //def numeric_abs[T:Numeric](x: T): Rep[T]
+  //def numeric_signum[T:Numeric](x: T): Rep[Int]
 }
 
 trait NumericOpsExp extends NumericOps with VariablesExp {
-  implicit def varNumericToNumericOps[T](x: Var[T])(implicit n: Numeric[T]) = new NumericOpsCls(varToRep(x), n)
+  implicit def varNumericToNumericOps[T:Numeric](x: Var[T]) = new NumericOpsCls(readVar(x))
 
-  case class NumericPlus[T](lhs: Exp[T], rhs: Exp[T], implicit val n: Numeric[T]) extends Def[T]
-  case class NumericMinus[T](lhs: Exp[T], rhs: Exp[T], implicit val n: Numeric[T]) extends Def[T]
-  case class NumericTimes[T](lhs: Exp[T], rhs: Exp[T], implicit val n: Numeric[T]) extends Def[T]
+  case class NumericPlus[T:Numeric](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
+  case class NumericMinus[T:Numeric](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
+  case class NumericTimes[T:Numeric](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
 
-  def numeric_plus[T](lhs: Exp[T], rhs: Exp[T])(implicit n: Numeric[T]) : Rep[T] = NumericPlus(lhs, rhs, n)
-  def numeric_minus[T](lhs: Exp[T], rhs: Exp[T])(implicit n: Numeric[T]) : Rep[T] = NumericMinus(lhs, rhs, n)
-  def numeric_times[T](lhs: Exp[T], rhs: Exp[T])(implicit n: Numeric[T]) : Rep[T] = NumericTimes(lhs, rhs, n)
+  def numeric_plus[T:Numeric](lhs: Exp[T], rhs: Exp[T]) : Rep[T] = NumericPlus(lhs, rhs)
+  def numeric_minus[T:Numeric](lhs: Exp[T], rhs: Exp[T]) : Rep[T] = NumericMinus(lhs, rhs)
+  def numeric_times[T:Numeric](lhs: Exp[T], rhs: Exp[T]) : Rep[T] = NumericTimes(lhs, rhs)
 }
 
 trait ScalaGenNumeric extends ScalaGenBase with NumericOpsExp { 
 
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case NumericPlus(a,b,n) => emitValDef(sym, quote(a) + " + " + quote(b))
-    case NumericMinus(a,b,n) => emitValDef(sym, quote(a) + " - " + quote(b))
-    case NumericTimes(a,b,n) => emitValDef(sym, quote(a) + " * " + quote(b))
+    case NumericPlus(a,b) => emitValDef(sym, quote(a) + " + " + quote(b))
+    case NumericMinus(a,b) => emitValDef(sym, quote(a) + " - " + quote(b))
+    case NumericTimes(a,b) => emitValDef(sym, quote(a) + " * " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 }

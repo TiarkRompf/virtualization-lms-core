@@ -2,10 +2,10 @@ package scala.virtualization.lms
 package ppl
 
 import scala.virtualization.lms.common._
-import java.io.{BufferedReader, FileReader, PrintWriter}
+import java.io.PrintWriter
 
-trait ArrayOps extends Base {
-
+trait ArrayOps extends Base with Variables {
+  implicit def varToRepArrayOps[A](x: Var[Array[A]]) = new RepArrayOpsCls(readVar(x))
   implicit def repArrayToRepArrayOps[T](a: Rep[Array[T]]) = new RepArrayOpsCls(a)
   implicit def arrayToRepArrayOps[T](a: Array[T]) = new RepArrayOpsCls(a)
 
@@ -19,9 +19,7 @@ trait ArrayOps extends Base {
 
 }
 
-trait ArrayOpsExp extends ArrayOps with BaseExp with VariablesExp {
-  implicit def varToRepArrayOps[A](x: Var[Array[A]]) = new RepArrayOpsCls(varToRep(x))
-
+trait ArrayOpsExp extends ArrayOps with BaseExp {
   case class ArrayLength[T](a: Exp[Array[T]]) extends Def[Int]
   case class ArrayApply[T](x: Exp[Array[T]], n: Exp[Int]) extends Def[T]
 
