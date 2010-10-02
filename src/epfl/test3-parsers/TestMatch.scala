@@ -21,7 +21,7 @@ trait TestMatch { this: Matching with Extractors =>
     def unapply[A](x: Rep[::[A]]) = deconstruct(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
   }
   
-  def __ext__unapply(o: SuccessR.type, x: Rep[Success]): Option[Rep[Int]] = deconstruct(classOf[Success], Success.unapply, x)
+  def infix_unapply(o: SuccessR.type, x: Rep[Success]): Option[Rep[Int]] = deconstruct(classOf[Success], Success.unapply, x)
   // doesn't work...
   
   def unit[A](x: A): Rep[A]

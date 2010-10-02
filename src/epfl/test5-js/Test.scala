@@ -53,7 +53,7 @@ trait Dom extends Base {
   type DOMObjectInternal
   type DOMObject = Rep[DOMObjectInternal]
   def document: DOMObject
-  def __ext__getElementById(s: Rep[String])
+  def infix_getElementById(s: Rep[String])
 }
 
 

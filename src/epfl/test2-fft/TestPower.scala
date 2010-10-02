@@ -30,10 +30,10 @@ trait ArithStr extends Arith with BaseStr {
   //todo removed below
   //implicit def unit(x: Double) = x.toString
 
-  def __ext__+(x: Rep[Double], y: Rep[Double]) = "(%s+%s)".format(x,y)
-  def __ext__-(x: Rep[Double], y: Rep[Double]) = "(%s-%s)".format(x,y)
-  def __ext__*(x: Rep[Double], y: Rep[Double]) = "(%s*%s)".format(x,y)
-  def __ext__/(x: Rep[Double], y: Rep[Double]) = "(%s/%s)".format(x,y)
+  def infix_+(x: Rep[Double], y: Rep[Double]) = "(%s+%s)".format(x,y)
+  def infix_-(x: Rep[Double], y: Rep[Double]) = "(%s-%s)".format(x,y)
+  def infix_*(x: Rep[Double], y: Rep[Double]) = "(%s*%s)".format(x,y)
+  def infix_/(x: Rep[Double], y: Rep[Double]) = "(%s/%s)".format(x,y)
 }
 
 object TestTestPower {
@@ -68,14 +68,14 @@ object TestTestPower {
       val o = new TestPower1 with ArithStr
       import o._
 
-      val r = power(__ext__+("x0","x1"),4)
+      val r = power(infix_+("x0","x1"),4)
       println(r)
     }
     {
       val o = new TestPower2 with ArithStr
       import o._
 
-      val r = power(__ext__+("x0","x1"),4)
+      val r = power(infix_+("x0","x1"),4)
       println(r)
     }
     {

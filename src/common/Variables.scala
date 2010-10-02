@@ -13,6 +13,12 @@ trait Variables extends Base with OverloadHack {
   def __assign[T](lhs: Var[Rep[T]], rhs: Rep[T]) : Rep[Unit]
   
 //  implicit def readVar[T](v: Var[Rep[T]]): Rep[T]
+
+  // TODO: need only one of the two or both?
+
+//  implicit def readVar[T](v: Var[T]): Rep[T]
+//  implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
+
 }
 
 trait VariablesExp extends Variables with EffectExp {

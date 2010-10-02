@@ -9,10 +9,10 @@ trait StringOps extends Base with OverloadHack {
   implicit def repStrToRepStrOps(s: Rep[String]) = new RepStrOpsCls(s)
   implicit def strToRepStrOps(s: String) = new RepStrOpsCls(s)
 
-  def __ext__+(s1: String, s2: Rep[Any]) = string_plus(s1,s2)
-  def __ext__+(s1: Rep[Any], s2: String)(implicit o: Overloaded1) = string_plus(s1,s2)
-  def __ext__+(s1: Rep[String], s2: Rep[Any])(implicit o: Overloaded2) = string_plus(s1,s2)
-  def __ext__+(s1: Rep[Any], s2: Rep[String])(implicit o: Overloaded3) = string_plus(s1,s2)
+  def infix_+(s1: String, s2: Rep[Any]) = string_plus(s1,s2)
+  def infix_+(s1: Rep[Any], s2: String)(implicit o: Overloaded1) = string_plus(s1,s2)
+  def infix_+(s1: Rep[String], s2: Rep[Any])(implicit o: Overloaded2) = string_plus(s1,s2)
+  def infix_+(s1: Rep[Any], s2: Rep[String])(implicit o: Overloaded3) = string_plus(s1,s2)
 
   class RepStrOpsCls(s: Rep[String]) {
     def +(o: Rep[Any]) = string_plus(s,o)
