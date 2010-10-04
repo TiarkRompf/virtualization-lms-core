@@ -1,285 +1,280 @@
 digraph G {
-"Sym(13)" [
-label="Sym(13) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(12))"
+"Sym(15)" [
+label="Sym(15) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(14))"
 shape=box
 color=red
 ]
-"Sym(12)" -> "Sym(13)"
-"Sym(14)" [
-label="Sym(14) \n First(Sym(13))"
-shape=box
-]
-"Sym(13)" -> "Sym(14)"
+"Sym(14)" -> "Sym(15)"
 "Sym(16)" [
-label="Sym(16) \n Reify(Const(true),List(Sym(13), Const(Test(Sym(14),B))))"
+label="Sym(16) \n First(Sym(15))"
 shape=box
 ]
-"Sym(14)" -> "Sym(16)"
-"Sym(13)" -> "Sym(16)" [color=red]
-"Const(Test(Sym(14),B))" -> "Sym(16)" [color=red]
-"Sym(11)" [
-label="Sym(11) \n DefineFun(Sym(16))"
+"Sym(15)" -> "Sym(16)"
+"Sym(18)" [
+label="Sym(18) \n Test(Sym(16),B)"
+shape=box
+color=red
+color=red
+]
+"Sym(16)" -> "Sym(18)"
+"Sym(19)" [
+label="Sym(19) \n Reify(Const(true),List(Sym(15), Sym(18)))"
+shape=box
+]
+"Sym(15)" -> "Sym(19)" [color=red]
+"Sym(18)" -> "Sym(19)" [color=red]
+"Sym(13)" [
+label="Sym(13) \n DefineFun(Sym(19))"
 shape=box
 color=green
 style=filled
 ]
-"Sym(16)" -> "Sym(11)"
-"Sym(8)" [
-label="Sym(8) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(7))"
+"Sym(19)" -> "Sym(13)"
+"Sym(9)" [
+label="Sym(9) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(8))"
 shape=box
 color=red
 ]
-"Sym(7)" -> "Sym(8)"
-"Sym(10)" [
-label="Sym(10) \n Second(Sym(8))"
+"Sym(8)" -> "Sym(9)"
+"Sym(11)" [
+label="Sym(11) \n Second(Sym(9))"
 shape=box
 ]
-"Sym(8)" -> "Sym(10)"
-"Sym(18)" [
-label="Sym(18) \n Apply(Sym(11),Sym(10))"
+"Sym(9)" -> "Sym(11)"
+"Sym(21)" [
+label="Sym(21) \n Apply(Sym(13),Sym(11))"
 shape=box
 color=blue
 style=filled
 ]
-"Sym(11)" -> "Sym(18)"
-"Sym(10)" -> "Sym(18)"
-"Sym(41)" [
-label="Sym(41) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(40))"
+"Sym(13)" -> "Sym(21)"
+"Sym(11)" -> "Sym(21)"
+"Sym(46)" [
+label="Sym(46) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(45))"
 shape=box
 color=red
+]
+"Sym(45)" -> "Sym(46)"
+"Sym(47)" [
+label="Sym(47) \n First(Sym(46))"
+shape=box
+]
+"Sym(46)" -> "Sym(47)"
+"Sym(49)" [
+label="Sym(49) \n Test(Sym(47),B)"
+shape=box
+color=red
+color=red
+]
+"Sym(47)" -> "Sym(49)"
+"Sym(50)" [
+label="Sym(50) \n Reify(Const(true),List(Sym(46), Sym(49)))"
+shape=box
+]
+"Sym(46)" -> "Sym(50)" [color=red]
+"Sym(49)" -> "Sym(50)" [color=red]
+"Sym(44)" [
+label="Sym(44) \n DefineFun(Sym(50))"
+shape=box
+color=green
+style=filled
+]
+"Sym(50)" -> "Sym(44)"
+"Sym(40)" [
+label="Sym(40) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(39))"
+shape=box
+color=red
+]
+"Sym(39)" -> "Sym(40)"
+"Sym(42)" [
+label="Sym(42) \n Second(Sym(40))"
+shape=box
+]
+"Sym(40)" -> "Sym(42)"
+"Sym(52)" [
+label="Sym(52) \n Apply(Sym(44),Sym(42))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(44)" -> "Sym(52)"
+"Sym(42)" -> "Sym(52)"
+"Sym(29)" [
+label="Sym(29) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(28))"
+shape=box
+color=red
+]
+"Sym(28)" -> "Sym(29)"
+"Sym(31)" [
+label="Sym(31) \n Second(Sym(29))"
+shape=box
+]
+"Sym(29)" -> "Sym(31)"
+"Sym(60)" [
+label="Sym(60) \n DefineFun(Pure(Const(false)))"
+shape=box
+color=green
+style=filled
+]
+"Sym(63)" [
+label="Sym(63) \n Apply(Sym(60),Sym(31))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(60)" -> "Sym(63)"
+"Sym(31)" -> "Sym(63)"
+"Sym(55)" [
+label="Sym(55) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(54))"
+shape=box
+color=red
+]
+"Sym(54)" -> "Sym(55)"
+"Sym(68)" [
+label="Sym(68) \n DefineFun(Pure(Const(false)))"
+shape=box
+color=green
+style=filled
+]
+"Sym(71)" [
+label="Sym(71) \n Apply(Sym(68),Sym(42))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(68)" -> "Sym(71)"
+"Sym(42)" -> "Sym(71)"
+"Sym(41)" [
+label="Sym(41) \n First(Sym(40))"
+shape=box
 ]
 "Sym(40)" -> "Sym(41)"
-"Sym(42)" [
-label="Sym(42) \n First(Sym(41))"
-shape=box
-]
-"Sym(41)" -> "Sym(42)"
-"Sym(44)" [
-label="Sym(44) \n Reify(Const(true),List(Sym(41), Const(Test(Sym(42),B))))"
-shape=box
-]
-"Sym(42)" -> "Sym(44)"
-"Sym(41)" -> "Sym(44)" [color=red]
-"Const(Test(Sym(42),B))" -> "Sym(44)" [color=red]
-"Sym(39)" [
-label="Sym(39) \n DefineFun(Sym(44))"
-shape=box
-color=green
-style=filled
-]
-"Sym(44)" -> "Sym(39)"
-"Sym(36)" [
-label="Sym(36) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(35))"
+"Sym(43)" [
+label="Sym(43) \n Test(Sym(41),A)"
 shape=box
 color=red
-]
-"Sym(35)" -> "Sym(36)"
-"Sym(38)" [
-label="Sym(38) \n Second(Sym(36))"
-shape=box
-]
-"Sym(36)" -> "Sym(38)"
-"Sym(46)" [
-label="Sym(46) \n Apply(Sym(39),Sym(38))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(39)" -> "Sym(46)"
-"Sym(38)" -> "Sym(46)"
-"Sym(26)" [
-label="Sym(26) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(25))"
-shape=box
 color=red
 ]
-"Sym(25)" -> "Sym(26)"
-"Sym(28)" [
-label="Sym(28) \n Second(Sym(26))"
-shape=box
-]
-"Sym(26)" -> "Sym(28)"
-"Sym(54)" [
-label="Sym(54) \n DefineFun(Pure(Const(false)))"
-shape=box
-color=green
-style=filled
-]
-"Sym(57)" [
-label="Sym(57) \n Apply(Sym(54),Sym(28))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(54)" -> "Sym(57)"
-"Sym(28)" -> "Sym(57)"
-"Sym(49)" [
-label="Sym(49) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(48))"
-shape=box
-color=red
-]
-"Sym(48)" -> "Sym(49)"
-"Sym(62)" [
-label="Sym(62) \n DefineFun(Pure(Const(false)))"
-shape=box
-color=green
-style=filled
-]
-"Sym(65)" [
-label="Sym(65) \n Apply(Sym(62),Sym(38))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(62)" -> "Sym(65)"
-"Sym(38)" -> "Sym(65)"
-"Sym(37)" [
-label="Sym(37) \n First(Sym(36))"
-shape=box
-]
-"Sym(36)" -> "Sym(37)"
-"Sym(31)" [
-label="Sym(31) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(30))"
-shape=box
-color=red
-]
-"Sym(30)" -> "Sym(31)"
-"Sym(33)" [
-label="Sym(33) \n Second(Sym(31))"
-shape=box
-]
-"Sym(31)" -> "Sym(33)"
-"Sym(71)" [
-label="Sym(71) \n Apply(Sym(62),Sym(33))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(62)" -> "Sym(71)"
-"Sym(33)" -> "Sym(71)"
-"Sym(32)" [
-label="Sym(32) \n First(Sym(31))"
-shape=box
-]
-"Sym(31)" -> "Sym(32)"
-"Sym(77)" [
-label="Sym(77) \n Apply(Sym(62),Sym(28))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(62)" -> "Sym(77)"
-"Sym(28)" -> "Sym(77)"
-"Sym(76)" [
-label="Sym(76) \n Apply(Sym(47),Sym(28))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(47)" -> "Sym(76)"
-"Sym(28)" -> "Sym(76)"
-"Sym(70)" [
-label="Sym(70) \n Apply(Sym(47),Sym(33))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(47)" -> "Sym(70)"
-"Sym(33)" -> "Sym(70)"
-"Sym(53)" [
-label="Sym(53) \n Apply(Sym(24),Sym(28))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(24)" -> "Sym(53)"
-"Sym(28)" -> "Sym(53)"
-"Sym(58)" [
-label="Sym(58) \n OrElse(List(Sym(53), Sym(57)))"
-shape=box
-]
-"Sym(53)" -> "Sym(58)"
-"Sym(57)" -> "Sym(58)"
-"Sym(59)" [
-label="Sym(59) \n Reify(Sym(58),List(Sym(49)))"
-shape=box
-]
-"Sym(58)" -> "Sym(59)"
-"Sym(49)" -> "Sym(59)" [color=red]
-"Sym(47)" [
-label="Sym(47) \n DefineFun(Sym(59))"
-shape=box
-color=green
-style=filled
-]
-"Sym(59)" -> "Sym(47)"
-"Sym(61)" [
-label="Sym(61) \n Apply(Sym(47),Sym(38))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(47)" -> "Sym(61)"
-"Sym(38)" -> "Sym(61)"
-"Sym(66)" [
-label="Sym(66) \n OrElse(List(Sym(46), Sym(61), Sym(65)))"
-shape=box
-]
-"Sym(46)" -> "Sym(66)"
-"Sym(61)" -> "Sym(66)"
-"Sym(65)" -> "Sym(66)"
-"Sym(67)" [
-label="Sym(67) \n Reify(Sym(66),List(Sym(36), Const(Test(Sym(37),A))))"
-shape=box
-]
-"Sym(66)" -> "Sym(67)"
-"Sym(37)" -> "Sym(67)"
-"Sym(36)" -> "Sym(67)" [color=red]
-"Const(Test(Sym(37),A))" -> "Sym(67)" [color=red]
+"Sym(41)" -> "Sym(43)"
 "Sym(34)" [
-label="Sym(34) \n DefineFun(Sym(67))"
+label="Sym(34) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(33))"
 shape=box
-color=green
-style=filled
+color=red
 ]
-"Sym(67)" -> "Sym(34)"
-"Sym(69)" [
-label="Sym(69) \n Apply(Sym(34),Sym(33))"
+"Sym(33)" -> "Sym(34)"
+"Sym(36)" [
+label="Sym(36) \n Second(Sym(34))"
+shape=box
+]
+"Sym(34)" -> "Sym(36)"
+"Sym(77)" [
+label="Sym(77) \n Apply(Sym(68),Sym(36))"
 shape=box
 color=blue
 style=filled
 ]
-"Sym(34)" -> "Sym(69)"
-"Sym(33)" -> "Sym(69)"
-"Sym(72)" [
-label="Sym(72) \n OrElse(List(Sym(69), Sym(70), Sym(71)))"
+"Sym(68)" -> "Sym(77)"
+"Sym(36)" -> "Sym(77)"
+"Sym(35)" [
+label="Sym(35) \n First(Sym(34))"
 shape=box
 ]
-"Sym(69)" -> "Sym(72)"
-"Sym(70)" -> "Sym(72)"
+"Sym(34)" -> "Sym(35)"
+"Sym(37)" [
+label="Sym(37) \n Test(Sym(35),A)"
+shape=box
+color=red
+color=red
+]
+"Sym(35)" -> "Sym(37)"
+"Sym(83)" [
+label="Sym(83) \n Apply(Sym(68),Sym(31))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(68)" -> "Sym(83)"
+"Sym(31)" -> "Sym(83)"
+"Sym(82)" [
+label="Sym(82) \n Apply(Sym(53),Sym(31))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(53)" -> "Sym(82)"
+"Sym(31)" -> "Sym(82)"
+"Sym(76)" [
+label="Sym(76) \n Apply(Sym(53),Sym(36))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(53)" -> "Sym(76)"
+"Sym(36)" -> "Sym(76)"
+"Sym(59)" [
+label="Sym(59) \n Apply(Sym(27),Sym(31))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(27)" -> "Sym(59)"
+"Sym(31)" -> "Sym(59)"
+"Sym(64)" [
+label="Sym(64) \n OrElse(List(Sym(59), Sym(63)))"
+shape=box
+]
+"Sym(59)" -> "Sym(64)"
+"Sym(63)" -> "Sym(64)"
+"Sym(65)" [
+label="Sym(65) \n Reify(Sym(64),List(Sym(55)))"
+shape=box
+]
+"Sym(64)" -> "Sym(65)"
+"Sym(55)" -> "Sym(65)" [color=red]
+"Sym(53)" [
+label="Sym(53) \n DefineFun(Sym(65))"
+shape=box
+color=green
+style=filled
+]
+"Sym(65)" -> "Sym(53)"
+"Sym(67)" [
+label="Sym(67) \n Apply(Sym(53),Sym(42))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(53)" -> "Sym(67)"
+"Sym(42)" -> "Sym(67)"
+"Sym(72)" [
+label="Sym(72) \n OrElse(List(Sym(52), Sym(67), Sym(71)))"
+shape=box
+]
+"Sym(52)" -> "Sym(72)"
+"Sym(67)" -> "Sym(72)"
 "Sym(71)" -> "Sym(72)"
 "Sym(73)" [
-label="Sym(73) \n Reify(Sym(72),List(Sym(31), Const(Test(Sym(32),A))))"
+label="Sym(73) \n Reify(Sym(72),List(Sym(40), Sym(43)))"
 shape=box
 ]
 "Sym(72)" -> "Sym(73)"
-"Sym(32)" -> "Sym(73)"
-"Sym(31)" -> "Sym(73)" [color=red]
-"Const(Test(Sym(32),A))" -> "Sym(73)" [color=red]
-"Sym(29)" [
-label="Sym(29) \n DefineFun(Sym(73))"
+"Sym(40)" -> "Sym(73)" [color=red]
+"Sym(43)" -> "Sym(73)" [color=red]
+"Sym(38)" [
+label="Sym(38) \n DefineFun(Sym(73))"
 shape=box
 color=green
 style=filled
 ]
-"Sym(73)" -> "Sym(29)"
+"Sym(73)" -> "Sym(38)"
 "Sym(75)" [
-label="Sym(75) \n Apply(Sym(29),Sym(28))"
+label="Sym(75) \n Apply(Sym(38),Sym(36))"
 shape=box
 color=blue
 style=filled
 ]
-"Sym(29)" -> "Sym(75)"
-"Sym(28)" -> "Sym(75)"
+"Sym(38)" -> "Sym(75)"
+"Sym(36)" -> "Sym(75)"
 "Sym(78)" [
 label="Sym(78) \n OrElse(List(Sym(75), Sym(76), Sym(77)))"
 shape=box
@@ -288,102 +283,137 @@ shape=box
 "Sym(76)" -> "Sym(78)"
 "Sym(77)" -> "Sym(78)"
 "Sym(79)" [
-label="Sym(79) \n Reify(Sym(78),List(Sym(26)))"
+label="Sym(79) \n Reify(Sym(78),List(Sym(34), Sym(37)))"
 shape=box
 ]
 "Sym(78)" -> "Sym(79)"
-"Sym(26)" -> "Sym(79)" [color=red]
-"Sym(24)" [
-label="Sym(24) \n DefineFun(Sym(79))"
+"Sym(34)" -> "Sym(79)" [color=red]
+"Sym(37)" -> "Sym(79)" [color=red]
+"Sym(32)" [
+label="Sym(32) \n DefineFun(Sym(79))"
 shape=box
 color=green
 style=filled
 ]
-"Sym(79)" -> "Sym(24)"
-"Sym(80)" [
-label="Sym(80) \n Apply(Sym(24),Sym(0))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(24)" -> "Sym(80)"
-"Sym(0)" -> "Sym(80)"
+"Sym(79)" -> "Sym(32)"
 "Sym(81)" [
-label="Sym(81) \n Apply(Sym(54),Sym(0))"
+label="Sym(81) \n Apply(Sym(32),Sym(31))"
 shape=box
 color=blue
 style=filled
 ]
-"Sym(54)" -> "Sym(81)"
-"Sym(0)" -> "Sym(81)"
-"Sym(82)" [
-label="Sym(82) \n OrElse(List(Sym(80), Sym(81)))"
+"Sym(32)" -> "Sym(81)"
+"Sym(31)" -> "Sym(81)"
+"Sym(84)" [
+label="Sym(84) \n OrElse(List(Sym(81), Sym(82), Sym(83)))"
 shape=box
 ]
-"Sym(80)" -> "Sym(82)"
-"Sym(81)" -> "Sym(82)"
-"Sym(21)" [
-label="Sym(21) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(20))"
+"Sym(81)" -> "Sym(84)"
+"Sym(82)" -> "Sym(84)"
+"Sym(83)" -> "Sym(84)"
+"Sym(85)" [
+label="Sym(85) \n Reify(Sym(84),List(Sym(29)))"
+shape=box
+]
+"Sym(84)" -> "Sym(85)"
+"Sym(29)" -> "Sym(85)" [color=red]
+"Sym(27)" [
+label="Sym(27) \n DefineFun(Sym(85))"
+shape=box
+color=green
+style=filled
+]
+"Sym(85)" -> "Sym(27)"
+"Sym(86)" [
+label="Sym(86) \n Apply(Sym(27),Sym(0))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(27)" -> "Sym(86)"
+"Sym(0)" -> "Sym(86)"
+"Sym(87)" [
+label="Sym(87) \n Apply(Sym(60),Sym(0))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(60)" -> "Sym(87)"
+"Sym(0)" -> "Sym(87)"
+"Sym(88)" [
+label="Sym(88) \n OrElse(List(Sym(86), Sym(87)))"
+shape=box
+]
+"Sym(86)" -> "Sym(88)"
+"Sym(87)" -> "Sym(88)"
+"Sym(24)" [
+label="Sym(24) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(23))"
 shape=box
 color=red
 ]
-"Sym(20)" -> "Sym(21)"
-"Sym(83)" [
-label="Sym(83) \n Reify(Sym(82),List(Sym(21)))"
+"Sym(23)" -> "Sym(24)"
+"Sym(89)" [
+label="Sym(89) \n Reify(Sym(88),List(Sym(24)))"
 shape=box
 ]
-"Sym(82)" -> "Sym(83)"
-"Sym(21)" -> "Sym(83)" [color=red]
-"Sym(19)" [
-label="Sym(19) \n DefineFun(Sym(83))"
-shape=box
-color=green
-style=filled
-]
-"Sym(83)" -> "Sym(19)"
-"Sym(85)" [
-label="Sym(85) \n Apply(Sym(19),Sym(10))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(19)" -> "Sym(85)"
-"Sym(10)" -> "Sym(85)"
-"Sym(86)" [
-label="Sym(86) \n Apply(Sym(62),Sym(10))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(62)" -> "Sym(86)"
-"Sym(10)" -> "Sym(86)"
-"Sym(87)" [
-label="Sym(87) \n OrElse(List(Sym(18), Sym(85), Sym(86)))"
-shape=box
-]
-"Sym(18)" -> "Sym(87)"
-"Sym(85)" -> "Sym(87)"
-"Sym(86)" -> "Sym(87)"
-"Sym(9)" [
-label="Sym(9) \n First(Sym(8))"
-shape=box
-]
-"Sym(8)" -> "Sym(9)"
-"Sym(88)" [
-label="Sym(88) \n Reify(Sym(87),List(Sym(8), Const(Test(Sym(9),A))))"
-shape=box
-]
-"Sym(87)" -> "Sym(88)"
-"Sym(9)" -> "Sym(88)"
-"Sym(8)" -> "Sym(88)" [color=red]
-"Const(Test(Sym(9),A))" -> "Sym(88)" [color=red]
-"Sym(6)" [
-label="Sym(6) \n DefineFun(Sym(88))"
+"Sym(88)" -> "Sym(89)"
+"Sym(24)" -> "Sym(89)" [color=red]
+"Sym(22)" [
+label="Sym(22) \n DefineFun(Sym(89))"
 shape=box
 color=green
 style=filled
 ]
-"Sym(88)" -> "Sym(6)"
+"Sym(89)" -> "Sym(22)"
+"Sym(91)" [
+label="Sym(91) \n Apply(Sym(22),Sym(11))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(22)" -> "Sym(91)"
+"Sym(11)" -> "Sym(91)"
+"Sym(92)" [
+label="Sym(92) \n Apply(Sym(68),Sym(11))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(68)" -> "Sym(92)"
+"Sym(11)" -> "Sym(92)"
+"Sym(93)" [
+label="Sym(93) \n OrElse(List(Sym(21), Sym(91), Sym(92)))"
+shape=box
+]
+"Sym(21)" -> "Sym(93)"
+"Sym(91)" -> "Sym(93)"
+"Sym(92)" -> "Sym(93)"
+"Sym(10)" [
+label="Sym(10) \n First(Sym(9))"
+shape=box
+]
+"Sym(9)" -> "Sym(10)"
+"Sym(12)" [
+label="Sym(12) \n Test(Sym(10),A)"
+shape=box
+color=red
+color=red
+]
+"Sym(10)" -> "Sym(12)"
+"Sym(94)" [
+label="Sym(94) \n Reify(Sym(93),List(Sym(9), Sym(12)))"
+shape=box
+]
+"Sym(93)" -> "Sym(94)"
+"Sym(9)" -> "Sym(94)" [color=red]
+"Sym(12)" -> "Sym(94)" [color=red]
+"Sym(7)" [
+label="Sym(7) \n DefineFun(Sym(94))"
+shape=box
+color=green
+style=filled
+]
+"Sym(94)" -> "Sym(7)"
 "Sym(3)" [
 label="Sym(3) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(2))"
 shape=box
@@ -395,81 +425,30 @@ label="Sym(5) \n Second(Sym(3))"
 shape=box
 ]
 "Sym(3)" -> "Sym(5)"
-"Sym(90)" [
-label="Sym(90) \n Apply(Sym(6),Sym(5))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(6)" -> "Sym(90)"
-"Sym(5)" -> "Sym(90)"
-"Sym(91)" [
-label="Sym(91) \n Apply(Sym(19),Sym(5))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(19)" -> "Sym(91)"
-"Sym(5)" -> "Sym(91)"
-"Sym(92)" [
-label="Sym(92) \n Apply(Sym(62),Sym(5))"
-shape=box
-color=blue
-style=filled
-]
-"Sym(62)" -> "Sym(92)"
-"Sym(5)" -> "Sym(92)"
-"Sym(93)" [
-label="Sym(93) \n OrElse(List(Sym(90), Sym(91), Sym(92)))"
-shape=box
-]
-"Sym(90)" -> "Sym(93)"
-"Sym(91)" -> "Sym(93)"
-"Sym(92)" -> "Sym(93)"
-"Sym(4)" [
-label="Sym(4) \n First(Sym(3))"
-shape=box
-]
-"Sym(3)" -> "Sym(4)"
-"Sym(94)" [
-label="Sym(94) \n Reify(Sym(93),List(Sym(3), Const(Test(Sym(4),A))))"
-shape=box
-]
-"Sym(93)" -> "Sym(94)"
-"Sym(4)" -> "Sym(94)"
-"Sym(3)" -> "Sym(94)" [color=red]
-"Const(Test(Sym(4),A))" -> "Sym(94)" [color=red]
-"Sym(1)" [
-label="Sym(1) \n DefineFun(Sym(94))"
-shape=box
-color=green
-style=filled
-]
-"Sym(94)" -> "Sym(1)"
 "Sym(96)" [
-label="Sym(96) \n Apply(Sym(1),Sym(0))"
+label="Sym(96) \n Apply(Sym(7),Sym(5))"
 shape=box
 color=blue
 style=filled
 ]
-"Sym(1)" -> "Sym(96)"
-"Sym(0)" -> "Sym(96)"
+"Sym(7)" -> "Sym(96)"
+"Sym(5)" -> "Sym(96)"
 "Sym(97)" [
-label="Sym(97) \n Apply(Sym(19),Sym(0))"
+label="Sym(97) \n Apply(Sym(22),Sym(5))"
 shape=box
 color=blue
 style=filled
 ]
-"Sym(19)" -> "Sym(97)"
-"Sym(0)" -> "Sym(97)"
+"Sym(22)" -> "Sym(97)"
+"Sym(5)" -> "Sym(97)"
 "Sym(98)" [
-label="Sym(98) \n Apply(Sym(62),Sym(0))"
+label="Sym(98) \n Apply(Sym(68),Sym(5))"
 shape=box
 color=blue
 style=filled
 ]
-"Sym(62)" -> "Sym(98)"
-"Sym(0)" -> "Sym(98)"
+"Sym(68)" -> "Sym(98)"
+"Sym(5)" -> "Sym(98)"
 "Sym(99)" [
 label="Sym(99) \n OrElse(List(Sym(96), Sym(97), Sym(98)))"
 shape=box
@@ -477,4 +456,61 @@ shape=box
 "Sym(96)" -> "Sym(99)"
 "Sym(97)" -> "Sym(99)"
 "Sym(98)" -> "Sym(99)"
+"Sym(4)" [
+label="Sym(4) \n First(Sym(3))"
+shape=box
+]
+"Sym(3)" -> "Sym(4)"
+"Sym(6)" [
+label="Sym(6) \n Test(Sym(4),A)"
+shape=box
+color=red
+color=red
+]
+"Sym(4)" -> "Sym(6)"
+"Sym(100)" [
+label="Sym(100) \n Reify(Sym(99),List(Sym(3), Sym(6)))"
+shape=box
+]
+"Sym(99)" -> "Sym(100)"
+"Sym(3)" -> "Sym(100)" [color=red]
+"Sym(6)" -> "Sym(100)" [color=red]
+"Sym(1)" [
+label="Sym(1) \n DefineFun(Sym(100))"
+shape=box
+color=green
+style=filled
+]
+"Sym(100)" -> "Sym(1)"
+"Sym(102)" [
+label="Sym(102) \n Apply(Sym(1),Sym(0))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(1)" -> "Sym(102)"
+"Sym(0)" -> "Sym(102)"
+"Sym(103)" [
+label="Sym(103) \n Apply(Sym(22),Sym(0))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(22)" -> "Sym(103)"
+"Sym(0)" -> "Sym(103)"
+"Sym(104)" [
+label="Sym(104) \n Apply(Sym(68),Sym(0))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(68)" -> "Sym(104)"
+"Sym(0)" -> "Sym(104)"
+"Sym(105)" [
+label="Sym(105) \n OrElse(List(Sym(102), Sym(103), Sym(104)))"
+shape=box
+]
+"Sym(102)" -> "Sym(105)"
+"Sym(103)" -> "Sym(105)"
+"Sym(104)" -> "Sym(105)"
 }

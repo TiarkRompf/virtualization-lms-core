@@ -120,9 +120,8 @@ trait MatchingExtractorsExp extends FunctionsExp with Effects with Control {
   def fst[A,B](x: Rep[(A,B)]): Rep[A] = First(x)
   def snd[A,B](x: Rep[(A,B)]): Rep[B] = Second(x)
 
-  //todo had to insert a unit here to remove ambiguous implicit conversion
   def test[A](x: Rep[A], y: A) = {
-    reflectEffect(unit(Test(x, y)))
+    reflectEffect(toAtom(Test(x, y)))
     true
   }
   

@@ -1,45 +1,57 @@
 digraph G {
 "Sym(2)" [
-label="Sym(2) \n Reify(Const(1.0),List(Const(Test(Sym(0),0.0))))"
+label="Sym(2) \n Test(Sym(0),0.0)"
 shape=box
+color=red
+color=red
 ]
 "Sym(0)" -> "Sym(2)"
-"Const(Test(Sym(0),0.0))" -> "Sym(2)" [color=red]
-"Sym(4)" [
-label="Sym(4) \n Minus(Sym(0),Const(1.0))"
+"Sym(3)" [
+label="Sym(3) \n Reify(Const(1.0),List(Sym(2)))"
 shape=box
 ]
-"Sym(0)" -> "Sym(4)"
+"Sym(2)" -> "Sym(3)" [color=red]
 "Sym(5)" [
-label="Sym(5) \n Reify(Const(1.0),List(Const(Test(Sym(4),0.0))))"
+label="Sym(5) \n Minus(Sym(0),Const(1.0))"
 shape=box
 ]
-"Sym(4)" -> "Sym(5)"
-"Const(Test(Sym(4),0.0))" -> "Sym(5)" [color=red]
+"Sym(0)" -> "Sym(5)"
 "Sym(6)" [
-label="Sym(6) \n Apply(Sym(-2),Sym(4))"
+label="Sym(6) \n Test(Sym(5),0.0)"
+shape=box
+color=red
+color=red
+]
+"Sym(5)" -> "Sym(6)"
+"Sym(7)" [
+label="Sym(7) \n Reify(Const(1.0),List(Sym(6)))"
+shape=box
+]
+"Sym(6)" -> "Sym(7)" [color=red]
+"Sym(8)" [
+label="Sym(8) \n Apply(Sym(-2),Sym(5))"
 shape=box
 color=blue
 style=filled
 ]
-"Sym(-2)" -> "Sym(6)"
-"Sym(4)" -> "Sym(6)"
-"Sym(7)" [
-label="Sym(7) \n OrElse(List(Sym(5), Sym(6)))"
-shape=box
-]
-"Sym(5)" -> "Sym(7)"
-"Sym(6)" -> "Sym(7)"
-"Sym(8)" [
-label="Sym(8) \n Times(Sym(0),Sym(7))"
-shape=box
-]
-"Sym(0)" -> "Sym(8)"
-"Sym(7)" -> "Sym(8)"
+"Sym(-2)" -> "Sym(8)"
+"Sym(5)" -> "Sym(8)"
 "Sym(9)" [
-label="Sym(9) \n OrElse(List(Sym(2), Pure(Sym(8))))"
+label="Sym(9) \n OrElse(List(Sym(7), Sym(8)))"
 shape=box
 ]
-"Sym(2)" -> "Sym(9)"
+"Sym(7)" -> "Sym(9)"
 "Sym(8)" -> "Sym(9)"
+"Sym(10)" [
+label="Sym(10) \n Times(Sym(0),Sym(9))"
+shape=box
+]
+"Sym(0)" -> "Sym(10)"
+"Sym(9)" -> "Sym(10)"
+"Sym(11)" [
+label="Sym(11) \n OrElse(List(Sym(3), Pure(Sym(10))))"
+shape=box
+]
+"Sym(3)" -> "Sym(11)"
+"Sym(10)" -> "Sym(11)"
 }

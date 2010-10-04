@@ -6,31 +6,37 @@ color=red
 ]
 "Sym(0)" -> "Sym(2)"
 "Sym(3)" [
-label="Sym(3) \n Reify(Const(yes),List(Sym(2), Const(Test(Sym(2),7))))"
-shape=box
-]
-"Sym(2)" -> "Sym(3)" [color=red]
-"Const(Test(Sym(2),7))" -> "Sym(3)" [color=red]
-"Sym(5)" [
-label="Sym(5) \n Deconstruct(class scala.virtualization.lms.epfl.test3.MatchProg$Success,Sym(0))"
+label="Sym(3) \n Test(Sym(2),7)"
 shape=box
 color=red
 ]
-"Sym(0)" -> "Sym(5)"
+"Sym(2)" -> "Sym(3)"
+"Sym(4)" [
+label="Sym(4) \n Reify(Const(yes),List(Sym(2), Sym(3)))"
+shape=box
+]
+"Sym(2)" -> "Sym(4)" [color=red]
+"Sym(3)" -> "Sym(4)" [color=red]
 "Sym(6)" [
-label="Sym(6) \n Reify(Const(maybe),List(Sym(5)))"
+label="Sym(6) \n Deconstruct(class scala.virtualization.lms.epfl.test3.MatchProg$Success,Sym(0))"
+shape=box
+color=red
+]
+"Sym(0)" -> "Sym(6)"
+"Sym(7)" [
+label="Sym(7) \n Reify(Const(maybe),List(Sym(6)))"
 shape=box
 ]
-"Sym(5)" -> "Sym(6)" [color=red]
-"Sym(8)" [
-label="Sym(8) \n OrElse(List(Sym(3), Sym(6), Pure(Const(no))))"
-shape=box
-]
-"Sym(3)" -> "Sym(8)"
-"Sym(6)" -> "Sym(8)"
+"Sym(6)" -> "Sym(7)" [color=red]
 "Sym(9)" [
-label="Sym(9) \n Result(Pure(Sym(8)))"
+label="Sym(9) \n OrElse(List(Sym(4), Sym(7), Pure(Const(no))))"
 shape=box
 ]
-"Sym(8)" -> "Sym(9)"
+"Sym(4)" -> "Sym(9)"
+"Sym(7)" -> "Sym(9)"
+"Sym(10)" [
+label="Sym(10) \n Result(Pure(Sym(9)))"
+shape=box
+]
+"Sym(9)" -> "Sym(10)"
 }
