@@ -1,0 +1,30 @@
+digraph G {
+"Sym(2)" [
+label="Sym(2) \n Deconstruct(class scala.virtualization.lms.epfl.test3.MatchProg$Success,Sym(0))"
+shape=box
+color=red
+]
+"Sym(0)" -> "Sym(2)"
+"Sym(3)" [
+label="Sym(3) \n Reify(Const(yes),List(Sym(2), Const(Test(Sym(2),7))))"
+shape=box
+]
+"Sym(2)" -> "Sym(3)" [color=red]
+"Const(Test(Sym(2),7))" -> "Sym(3)" [color=red]
+"Sym(5)" [
+label="Sym(5) \n Reify(Const(maybe),List(Sym(2)))"
+shape=box
+]
+"Sym(2)" -> "Sym(5)" [color=red]
+"Sym(7)" [
+label="Sym(7) \n OrElse(List(Sym(3), Sym(5), Pure(Const(no))))"
+shape=box
+]
+"Sym(3)" -> "Sym(7)"
+"Sym(5)" -> "Sym(7)"
+"Sym(8)" [
+label="Sym(8) \n Result(Pure(Sym(7)))"
+shape=box
+]
+"Sym(7)" -> "Sym(8)"
+}

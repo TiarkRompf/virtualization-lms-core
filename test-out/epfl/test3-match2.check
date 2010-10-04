@@ -1,0 +1,8 @@
+TP(Sym(1),Lambda(<function1>))
+TP(Sym(2),Deconstruct(class scala.virtualization.lms.epfl.test3.MatchProg$Success,Sym(0)))
+TP(Sym(3),Reify(Const(yes),List(Sym(2), Const(Test(Sym(2),7)))))
+TP(Sym(4),Lambda(<function1>))
+TP(Sym(5),Reify(Const(maybe),List(Sym(2))))
+TP(Sym(6),Lambda(<function1>))
+TP(Sym(7),OrElse(List(Sym(3), Sym(5), Pure(Const(no)))))
+Pure(Sym(7))

@@ -4,7 +4,7 @@ package common
 import internal.{Expressions, Effects, ScalaCodegen, ScalaNestedCodegen }
 
 /**
- * The Base trait defines the type Rep, which is the higher-ordered kind that allows for other DSL types to be
+ * The Base trait defines the type constructor Rep, which is the higher-kinded type that allows for other DSL types to be
  * polymorphically embedded.
  *
  * @since 0.1 

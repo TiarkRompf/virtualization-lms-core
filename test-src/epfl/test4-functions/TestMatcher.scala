@@ -17,7 +17,7 @@ trait ListMatch extends Extractors {
 }
 
 
-trait TestMatcher { this: Matching with ListMatch =>
+trait MatcherProg { this: Matching with ListMatch =>
   
   def unit[A](x: A): Rep[A]
   
@@ -91,23 +91,25 @@ trait ExtractorsGraphViz2 extends ExtractorsGraphViz { this: MatchingExtractorsE
 }
 
 
-object TestTestMatcher {
+class TestMatcher extends FileDiffSuite {
   
-  def main(args: Array[String]) = {
-    
-    println {
-      object TestMatcherExp extends TestMatcher with Matching with Extractors with ListMatch
+  val prefix = "test-out/epfl/test4-"
+  
+  def testMatcher1 = {
+    withOutFile(prefix+"matcher1") {
+      object MatcherProgExp extends MatcherProg with Matching with Extractors with ListMatch
         with MatchingExtractorsExpOpt
         with FunctionExpUnfoldRecursion with FunctionsExternalDef2
         with ExtractorsGraphViz2
-      import TestMatcherExp._
+      import MatcherProgExp._
 
       val r = find("AAB".toList, fresh)
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, "test4-matcher1-dot")
+      emitDepGraph(r, prefix+"matcher1-dot")
     }
-
+    assertFileEqualsCheck(prefix+"matcher1")
+    assertFileEqualsCheck(prefix+"matcher1-dot")
   }
 
 }

@@ -27,7 +27,13 @@ class Project(info: ProjectInfo) extends DefaultProject(info)
   override def testScalaSourcePath = "test-src"
   override def testResourcesPath = "test-resources"
 
-  // target directory layout
+  // target directory layout (standard for now)
   
+  // dependencies
+  val scalatest = "org.scalatest" % "scalatest" % "1.2" % "test"
+
+//  val scalac = "org.scala-lang" % "scala-compiler" % "2.8.0" % "test"
+//  val scala = "org.scala-lang" % "scala-library" % "2.8.0" % "test"
+
 
 }

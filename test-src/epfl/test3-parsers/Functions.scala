@@ -11,7 +11,7 @@ import test2._
 
 trait FunctionsExp extends Functions with BaseExp { // shadow trait with same name in core package
     
-  // FIXME: there might be a conflict since this pull ins internal.Effects which is different from test1.Effects
+  // FIXME: there might be a conflict since this pulls in internal.Effects which is different from test1.Effects
     
   case class Lambda[A,B](fun: Exp[A] => Exp[B]) extends Def[A => B]
   case class Apply[A,B](fun: Exp[A => B], arg: Exp[A]) extends Def[B]

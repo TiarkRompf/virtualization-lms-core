@@ -1,0 +1,1113 @@
+digraph G {
+"Sym(2)" [
+label="Sym(2) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(0))"
+shape=box
+color=red
+]
+"Sym(0)" -> "Sym(2)"
+"Sym(4)" [
+label="Sym(4) \n Second(Sym(2))"
+shape=box
+]
+"Sym(2)" -> "Sym(4)"
+"Sym(5)" [
+label="Sym(5) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(4))"
+shape=box
+]
+"Sym(4)" -> "Sym(5)"
+"Sym(3)" [
+label="Sym(3) \n First(Sym(2))"
+shape=box
+]
+"Sym(2)" -> "Sym(3)"
+"Sym(6)" [
+label="Sym(6) \n Reify(Sym(5),List(Sym(2), Const(Test(Sym(3),s))))"
+shape=box
+]
+"Sym(5)" -> "Sym(6)"
+"Sym(3)" -> "Sym(6)"
+"Sym(2)" -> "Sym(6)" [color=red]
+"Const(Test(Sym(3),s))" -> "Sym(6)" [color=red]
+"Sym(8)" [
+label="Sym(8) \n OrElse(List(Sym(6), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(6)" -> "Sym(8)"
+"Sym(10)" [
+label="Sym(10) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(8))"
+shape=box
+color=red
+]
+"Sym(8)" -> "Sym(10)"
+"Sym(12)" [
+label="Sym(12) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(10))"
+shape=box
+color=red
+]
+"Sym(10)" -> "Sym(12)"
+"Sym(14)" [
+label="Sym(14) \n Second(Sym(12))"
+shape=box
+]
+"Sym(12)" -> "Sym(14)"
+"Sym(15)" [
+label="Sym(15) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(14))"
+shape=box
+]
+"Sym(14)" -> "Sym(15)"
+"Sym(13)" [
+label="Sym(13) \n First(Sym(12))"
+shape=box
+]
+"Sym(12)" -> "Sym(13)"
+"Sym(16)" [
+label="Sym(16) \n Reify(Sym(15),List(Sym(12), Const(Test(Sym(13),c))))"
+shape=box
+]
+"Sym(15)" -> "Sym(16)"
+"Sym(13)" -> "Sym(16)"
+"Sym(12)" -> "Sym(16)" [color=red]
+"Const(Test(Sym(13),c))" -> "Sym(16)" [color=red]
+"Sym(18)" [
+label="Sym(18) \n OrElse(List(Sym(16), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(16)" -> "Sym(18)"
+"Sym(19)" [
+label="Sym(19) \n Reify(Sym(18),List(Sym(10)))"
+shape=box
+]
+"Sym(18)" -> "Sym(19)"
+"Sym(10)" -> "Sym(19)" [color=red]
+"Sym(21)" [
+label="Sym(21) \n OrElse(List(Sym(19), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(19)" -> "Sym(21)"
+"Sym(23)" [
+label="Sym(23) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(21))"
+shape=box
+color=red
+]
+"Sym(21)" -> "Sym(23)"
+"Sym(25)" [
+label="Sym(25) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(23))"
+shape=box
+color=red
+]
+"Sym(23)" -> "Sym(25)"
+"Sym(27)" [
+label="Sym(27) \n Second(Sym(25))"
+shape=box
+]
+"Sym(25)" -> "Sym(27)"
+"Sym(28)" [
+label="Sym(28) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(27))"
+shape=box
+]
+"Sym(27)" -> "Sym(28)"
+"Sym(26)" [
+label="Sym(26) \n First(Sym(25))"
+shape=box
+]
+"Sym(25)" -> "Sym(26)"
+"Sym(29)" [
+label="Sym(29) \n Reify(Sym(28),List(Sym(25), Const(Test(Sym(26),a))))"
+shape=box
+]
+"Sym(28)" -> "Sym(29)"
+"Sym(26)" -> "Sym(29)"
+"Sym(25)" -> "Sym(29)" [color=red]
+"Const(Test(Sym(26),a))" -> "Sym(29)" [color=red]
+"Sym(31)" [
+label="Sym(31) \n OrElse(List(Sym(29), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(29)" -> "Sym(31)"
+"Sym(32)" [
+label="Sym(32) \n Reify(Sym(31),List(Sym(23)))"
+shape=box
+]
+"Sym(31)" -> "Sym(32)"
+"Sym(23)" -> "Sym(32)" [color=red]
+"Sym(34)" [
+label="Sym(34) \n OrElse(List(Sym(32), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(32)" -> "Sym(34)"
+"Sym(36)" [
+label="Sym(36) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(34))"
+shape=box
+color=red
+]
+"Sym(34)" -> "Sym(36)"
+"Sym(38)" [
+label="Sym(38) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(36))"
+shape=box
+color=red
+]
+"Sym(36)" -> "Sym(38)"
+"Sym(40)" [
+label="Sym(40) \n Second(Sym(38))"
+shape=box
+]
+"Sym(38)" -> "Sym(40)"
+"Sym(41)" [
+label="Sym(41) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(40))"
+shape=box
+]
+"Sym(40)" -> "Sym(41)"
+"Sym(39)" [
+label="Sym(39) \n First(Sym(38))"
+shape=box
+]
+"Sym(38)" -> "Sym(39)"
+"Sym(42)" [
+label="Sym(42) \n Reify(Sym(41),List(Sym(38), Const(Test(Sym(39),l))))"
+shape=box
+]
+"Sym(41)" -> "Sym(42)"
+"Sym(39)" -> "Sym(42)"
+"Sym(38)" -> "Sym(42)" [color=red]
+"Const(Test(Sym(39),l))" -> "Sym(42)" [color=red]
+"Sym(44)" [
+label="Sym(44) \n OrElse(List(Sym(42), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(42)" -> "Sym(44)"
+"Sym(45)" [
+label="Sym(45) \n Reify(Sym(44),List(Sym(36)))"
+shape=box
+]
+"Sym(44)" -> "Sym(45)"
+"Sym(36)" -> "Sym(45)" [color=red]
+"Sym(47)" [
+label="Sym(47) \n OrElse(List(Sym(45), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(45)" -> "Sym(47)"
+"Sym(49)" [
+label="Sym(49) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(47))"
+shape=box
+color=red
+]
+"Sym(47)" -> "Sym(49)"
+"Sym(51)" [
+label="Sym(51) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(49))"
+shape=box
+color=red
+]
+"Sym(49)" -> "Sym(51)"
+"Sym(53)" [
+label="Sym(53) \n Second(Sym(51))"
+shape=box
+]
+"Sym(51)" -> "Sym(53)"
+"Sym(54)" [
+label="Sym(54) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(53))"
+shape=box
+]
+"Sym(53)" -> "Sym(54)"
+"Sym(52)" [
+label="Sym(52) \n First(Sym(51))"
+shape=box
+]
+"Sym(51)" -> "Sym(52)"
+"Sym(55)" [
+label="Sym(55) \n Reify(Sym(54),List(Sym(51), Const(Test(Sym(52),a))))"
+shape=box
+]
+"Sym(54)" -> "Sym(55)"
+"Sym(52)" -> "Sym(55)"
+"Sym(51)" -> "Sym(55)" [color=red]
+"Const(Test(Sym(52),a))" -> "Sym(55)" [color=red]
+"Sym(57)" [
+label="Sym(57) \n OrElse(List(Sym(55), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(55)" -> "Sym(57)"
+"Sym(58)" [
+label="Sym(58) \n Reify(Sym(57),List(Sym(49)))"
+shape=box
+]
+"Sym(57)" -> "Sym(58)"
+"Sym(49)" -> "Sym(58)" [color=red]
+"Sym(60)" [
+label="Sym(60) \n OrElse(List(Sym(58), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(58)" -> "Sym(60)"
+"Sym(62)" [
+label="Sym(62) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(60))"
+shape=box
+color=red
+]
+"Sym(60)" -> "Sym(62)"
+"Sym(64)" [
+label="Sym(64) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(62))"
+shape=box
+color=red
+]
+"Sym(62)" -> "Sym(64)"
+"Sym(66)" [
+label="Sym(66) \n Second(Sym(64))"
+shape=box
+]
+"Sym(64)" -> "Sym(66)"
+"Sym(67)" [
+label="Sym(67) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(66))"
+shape=box
+]
+"Sym(66)" -> "Sym(67)"
+"Sym(65)" [
+label="Sym(65) \n First(Sym(64))"
+shape=box
+]
+"Sym(64)" -> "Sym(65)"
+"Sym(68)" [
+label="Sym(68) \n Reify(Sym(67),List(Sym(64), Const(Test(Sym(65), ))))"
+shape=box
+]
+"Sym(67)" -> "Sym(68)"
+"Sym(65)" -> "Sym(68)"
+"Sym(64)" -> "Sym(68)" [color=red]
+"Const(Test(Sym(65), ))" -> "Sym(68)" [color=red]
+"Sym(70)" [
+label="Sym(70) \n OrElse(List(Sym(68), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(68)" -> "Sym(70)"
+"Sym(72)" [
+label="Sym(72) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(70))"
+shape=box
+color=red
+]
+"Sym(70)" -> "Sym(72)"
+"Sym(74)" [
+label="Sym(74) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(72))"
+shape=box
+color=red
+]
+"Sym(72)" -> "Sym(74)"
+"Sym(76)" [
+label="Sym(76) \n Second(Sym(74))"
+shape=box
+]
+"Sym(74)" -> "Sym(76)"
+"Sym(77)" [
+label="Sym(77) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(76))"
+shape=box
+]
+"Sym(76)" -> "Sym(77)"
+"Sym(75)" [
+label="Sym(75) \n First(Sym(74))"
+shape=box
+]
+"Sym(74)" -> "Sym(75)"
+"Sym(78)" [
+label="Sym(78) \n Reify(Sym(77),List(Sym(74), Const(Test(Sym(75),r))))"
+shape=box
+]
+"Sym(77)" -> "Sym(78)"
+"Sym(75)" -> "Sym(78)"
+"Sym(74)" -> "Sym(78)" [color=red]
+"Const(Test(Sym(75),r))" -> "Sym(78)" [color=red]
+"Sym(80)" [
+label="Sym(80) \n OrElse(List(Sym(78), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(78)" -> "Sym(80)"
+"Sym(82)" [
+label="Sym(82) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(80))"
+shape=box
+color=red
+]
+"Sym(80)" -> "Sym(82)"
+"Sym(84)" [
+label="Sym(84) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(82))"
+shape=box
+color=red
+]
+"Sym(82)" -> "Sym(84)"
+"Sym(86)" [
+label="Sym(86) \n Second(Sym(84))"
+shape=box
+]
+"Sym(84)" -> "Sym(86)"
+"Sym(87)" [
+label="Sym(87) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(86))"
+shape=box
+]
+"Sym(86)" -> "Sym(87)"
+"Sym(85)" [
+label="Sym(85) \n First(Sym(84))"
+shape=box
+]
+"Sym(84)" -> "Sym(85)"
+"Sym(88)" [
+label="Sym(88) \n Reify(Sym(87),List(Sym(84), Const(Test(Sym(85),u))))"
+shape=box
+]
+"Sym(87)" -> "Sym(88)"
+"Sym(85)" -> "Sym(88)"
+"Sym(84)" -> "Sym(88)" [color=red]
+"Const(Test(Sym(85),u))" -> "Sym(88)" [color=red]
+"Sym(90)" [
+label="Sym(90) \n OrElse(List(Sym(88), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(88)" -> "Sym(90)"
+"Sym(91)" [
+label="Sym(91) \n Reify(Sym(90),List(Sym(82)))"
+shape=box
+]
+"Sym(90)" -> "Sym(91)"
+"Sym(82)" -> "Sym(91)" [color=red]
+"Sym(93)" [
+label="Sym(93) \n OrElse(List(Sym(91), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(91)" -> "Sym(93)"
+"Sym(95)" [
+label="Sym(95) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(93))"
+shape=box
+color=red
+]
+"Sym(93)" -> "Sym(95)"
+"Sym(97)" [
+label="Sym(97) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(95))"
+shape=box
+color=red
+]
+"Sym(95)" -> "Sym(97)"
+"Sym(99)" [
+label="Sym(99) \n Second(Sym(97))"
+shape=box
+]
+"Sym(97)" -> "Sym(99)"
+"Sym(100)" [
+label="Sym(100) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(99))"
+shape=box
+]
+"Sym(99)" -> "Sym(100)"
+"Sym(98)" [
+label="Sym(98) \n First(Sym(97))"
+shape=box
+]
+"Sym(97)" -> "Sym(98)"
+"Sym(101)" [
+label="Sym(101) \n Reify(Sym(100),List(Sym(97), Const(Test(Sym(98),l))))"
+shape=box
+]
+"Sym(100)" -> "Sym(101)"
+"Sym(98)" -> "Sym(101)"
+"Sym(97)" -> "Sym(101)" [color=red]
+"Const(Test(Sym(98),l))" -> "Sym(101)" [color=red]
+"Sym(103)" [
+label="Sym(103) \n OrElse(List(Sym(101), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(101)" -> "Sym(103)"
+"Sym(104)" [
+label="Sym(104) \n Reify(Sym(103),List(Sym(95)))"
+shape=box
+]
+"Sym(103)" -> "Sym(104)"
+"Sym(95)" -> "Sym(104)" [color=red]
+"Sym(106)" [
+label="Sym(106) \n OrElse(List(Sym(104), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(104)" -> "Sym(106)"
+"Sym(108)" [
+label="Sym(108) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(106))"
+shape=box
+color=red
+]
+"Sym(106)" -> "Sym(108)"
+"Sym(110)" [
+label="Sym(110) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(108))"
+shape=box
+color=red
+]
+"Sym(108)" -> "Sym(110)"
+"Sym(112)" [
+label="Sym(112) \n Second(Sym(110))"
+shape=box
+]
+"Sym(110)" -> "Sym(112)"
+"Sym(113)" [
+label="Sym(113) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(112))"
+shape=box
+]
+"Sym(112)" -> "Sym(113)"
+"Sym(111)" [
+label="Sym(111) \n First(Sym(110))"
+shape=box
+]
+"Sym(110)" -> "Sym(111)"
+"Sym(114)" [
+label="Sym(114) \n Reify(Sym(113),List(Sym(110), Const(Test(Sym(111),e))))"
+shape=box
+]
+"Sym(113)" -> "Sym(114)"
+"Sym(111)" -> "Sym(114)"
+"Sym(110)" -> "Sym(114)" [color=red]
+"Const(Test(Sym(111),e))" -> "Sym(114)" [color=red]
+"Sym(116)" [
+label="Sym(116) \n OrElse(List(Sym(114), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(114)" -> "Sym(116)"
+"Sym(117)" [
+label="Sym(117) \n Reify(Sym(116),List(Sym(108)))"
+shape=box
+]
+"Sym(116)" -> "Sym(117)"
+"Sym(108)" -> "Sym(117)" [color=red]
+"Sym(119)" [
+label="Sym(119) \n OrElse(List(Sym(117), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(117)" -> "Sym(119)"
+"Sym(121)" [
+label="Sym(121) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(119))"
+shape=box
+color=red
+]
+"Sym(119)" -> "Sym(121)"
+"Sym(123)" [
+label="Sym(123) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(121))"
+shape=box
+color=red
+]
+"Sym(121)" -> "Sym(123)"
+"Sym(125)" [
+label="Sym(125) \n Second(Sym(123))"
+shape=box
+]
+"Sym(123)" -> "Sym(125)"
+"Sym(126)" [
+label="Sym(126) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(125))"
+shape=box
+]
+"Sym(125)" -> "Sym(126)"
+"Sym(124)" [
+label="Sym(124) \n First(Sym(123))"
+shape=box
+]
+"Sym(123)" -> "Sym(124)"
+"Sym(127)" [
+label="Sym(127) \n Reify(Sym(126),List(Sym(123), Const(Test(Sym(124),s))))"
+shape=box
+]
+"Sym(126)" -> "Sym(127)"
+"Sym(124)" -> "Sym(127)"
+"Sym(123)" -> "Sym(127)" [color=red]
+"Const(Test(Sym(124),s))" -> "Sym(127)" [color=red]
+"Sym(129)" [
+label="Sym(129) \n OrElse(List(Sym(127), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(127)" -> "Sym(129)"
+"Sym(130)" [
+label="Sym(130) \n Reify(Sym(129),List(Sym(121)))"
+shape=box
+]
+"Sym(129)" -> "Sym(130)"
+"Sym(121)" -> "Sym(130)" [color=red]
+"Sym(132)" [
+label="Sym(132) \n OrElse(List(Sym(130), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(130)" -> "Sym(132)"
+"Sym(133)" [
+label="Sym(133) \n Reify(Sym(132),List(Sym(72)))"
+shape=box
+]
+"Sym(132)" -> "Sym(133)"
+"Sym(72)" -> "Sym(133)" [color=red]
+"Sym(135)" [
+label="Sym(135) \n OrElse(List(Sym(133), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(133)" -> "Sym(135)"
+"Sym(136)" [
+label="Sym(136) \n Reify(Sym(135),List(Sym(62)))"
+shape=box
+]
+"Sym(135)" -> "Sym(136)"
+"Sym(62)" -> "Sym(136)" [color=red]
+"Sym(138)" [
+label="Sym(138) \n OrElse(List(Sym(136), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(136)" -> "Sym(138)"
+"Sym(140)" [
+label="Sym(140) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(138))"
+shape=box
+color=red
+]
+"Sym(138)" -> "Sym(140)"
+"Sym(141)" [
+label="Sym(141) \n Reify(Sym(138),List(Sym(140)))"
+shape=box
+]
+"Sym(138)" -> "Sym(141)"
+"Sym(140)" -> "Sym(141)" [color=red]
+"Sym(144)" [
+label="Sym(144) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(0))"
+shape=box
+color=red
+]
+"Sym(0)" -> "Sym(144)"
+"Sym(146)" [
+label="Sym(146) \n Second(Sym(144))"
+shape=box
+]
+"Sym(144)" -> "Sym(146)"
+"Sym(147)" [
+label="Sym(147) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(146))"
+shape=box
+]
+"Sym(146)" -> "Sym(147)"
+"Sym(145)" [
+label="Sym(145) \n First(Sym(144))"
+shape=box
+]
+"Sym(144)" -> "Sym(145)"
+"Sym(148)" [
+label="Sym(148) \n Reify(Sym(147),List(Sym(144), Const(Test(Sym(145),s))))"
+shape=box
+]
+"Sym(147)" -> "Sym(148)"
+"Sym(145)" -> "Sym(148)"
+"Sym(144)" -> "Sym(148)" [color=red]
+"Const(Test(Sym(145),s))" -> "Sym(148)" [color=red]
+"Sym(150)" [
+label="Sym(150) \n OrElse(List(Sym(148), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(148)" -> "Sym(150)"
+"Sym(152)" [
+label="Sym(152) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(150))"
+shape=box
+color=red
+]
+"Sym(150)" -> "Sym(152)"
+"Sym(154)" [
+label="Sym(154) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(152))"
+shape=box
+color=red
+]
+"Sym(152)" -> "Sym(154)"
+"Sym(156)" [
+label="Sym(156) \n Second(Sym(154))"
+shape=box
+]
+"Sym(154)" -> "Sym(156)"
+"Sym(157)" [
+label="Sym(157) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(156))"
+shape=box
+]
+"Sym(156)" -> "Sym(157)"
+"Sym(155)" [
+label="Sym(155) \n First(Sym(154))"
+shape=box
+]
+"Sym(154)" -> "Sym(155)"
+"Sym(158)" [
+label="Sym(158) \n Reify(Sym(157),List(Sym(154), Const(Test(Sym(155),c))))"
+shape=box
+]
+"Sym(157)" -> "Sym(158)"
+"Sym(155)" -> "Sym(158)"
+"Sym(154)" -> "Sym(158)" [color=red]
+"Const(Test(Sym(155),c))" -> "Sym(158)" [color=red]
+"Sym(160)" [
+label="Sym(160) \n OrElse(List(Sym(158), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(158)" -> "Sym(160)"
+"Sym(161)" [
+label="Sym(161) \n Reify(Sym(160),List(Sym(152)))"
+shape=box
+]
+"Sym(160)" -> "Sym(161)"
+"Sym(152)" -> "Sym(161)" [color=red]
+"Sym(163)" [
+label="Sym(163) \n OrElse(List(Sym(161), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(161)" -> "Sym(163)"
+"Sym(165)" [
+label="Sym(165) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(163))"
+shape=box
+color=red
+]
+"Sym(163)" -> "Sym(165)"
+"Sym(167)" [
+label="Sym(167) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(165))"
+shape=box
+color=red
+]
+"Sym(165)" -> "Sym(167)"
+"Sym(169)" [
+label="Sym(169) \n Second(Sym(167))"
+shape=box
+]
+"Sym(167)" -> "Sym(169)"
+"Sym(170)" [
+label="Sym(170) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(169))"
+shape=box
+]
+"Sym(169)" -> "Sym(170)"
+"Sym(168)" [
+label="Sym(168) \n First(Sym(167))"
+shape=box
+]
+"Sym(167)" -> "Sym(168)"
+"Sym(171)" [
+label="Sym(171) \n Reify(Sym(170),List(Sym(167), Const(Test(Sym(168),a))))"
+shape=box
+]
+"Sym(170)" -> "Sym(171)"
+"Sym(168)" -> "Sym(171)"
+"Sym(167)" -> "Sym(171)" [color=red]
+"Const(Test(Sym(168),a))" -> "Sym(171)" [color=red]
+"Sym(173)" [
+label="Sym(173) \n OrElse(List(Sym(171), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(171)" -> "Sym(173)"
+"Sym(174)" [
+label="Sym(174) \n Reify(Sym(173),List(Sym(165)))"
+shape=box
+]
+"Sym(173)" -> "Sym(174)"
+"Sym(165)" -> "Sym(174)" [color=red]
+"Sym(176)" [
+label="Sym(176) \n OrElse(List(Sym(174), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(174)" -> "Sym(176)"
+"Sym(178)" [
+label="Sym(178) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(176))"
+shape=box
+color=red
+]
+"Sym(176)" -> "Sym(178)"
+"Sym(180)" [
+label="Sym(180) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(178))"
+shape=box
+color=red
+]
+"Sym(178)" -> "Sym(180)"
+"Sym(182)" [
+label="Sym(182) \n Second(Sym(180))"
+shape=box
+]
+"Sym(180)" -> "Sym(182)"
+"Sym(183)" [
+label="Sym(183) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(182))"
+shape=box
+]
+"Sym(182)" -> "Sym(183)"
+"Sym(181)" [
+label="Sym(181) \n First(Sym(180))"
+shape=box
+]
+"Sym(180)" -> "Sym(181)"
+"Sym(184)" [
+label="Sym(184) \n Reify(Sym(183),List(Sym(180), Const(Test(Sym(181),l))))"
+shape=box
+]
+"Sym(183)" -> "Sym(184)"
+"Sym(181)" -> "Sym(184)"
+"Sym(180)" -> "Sym(184)" [color=red]
+"Const(Test(Sym(181),l))" -> "Sym(184)" [color=red]
+"Sym(186)" [
+label="Sym(186) \n OrElse(List(Sym(184), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(184)" -> "Sym(186)"
+"Sym(187)" [
+label="Sym(187) \n Reify(Sym(186),List(Sym(178)))"
+shape=box
+]
+"Sym(186)" -> "Sym(187)"
+"Sym(178)" -> "Sym(187)" [color=red]
+"Sym(189)" [
+label="Sym(189) \n OrElse(List(Sym(187), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(187)" -> "Sym(189)"
+"Sym(191)" [
+label="Sym(191) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(189))"
+shape=box
+color=red
+]
+"Sym(189)" -> "Sym(191)"
+"Sym(193)" [
+label="Sym(193) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(191))"
+shape=box
+color=red
+]
+"Sym(191)" -> "Sym(193)"
+"Sym(195)" [
+label="Sym(195) \n Second(Sym(193))"
+shape=box
+]
+"Sym(193)" -> "Sym(195)"
+"Sym(196)" [
+label="Sym(196) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(195))"
+shape=box
+]
+"Sym(195)" -> "Sym(196)"
+"Sym(194)" [
+label="Sym(194) \n First(Sym(193))"
+shape=box
+]
+"Sym(193)" -> "Sym(194)"
+"Sym(197)" [
+label="Sym(197) \n Reify(Sym(196),List(Sym(193), Const(Test(Sym(194),a))))"
+shape=box
+]
+"Sym(196)" -> "Sym(197)"
+"Sym(194)" -> "Sym(197)"
+"Sym(193)" -> "Sym(197)" [color=red]
+"Const(Test(Sym(194),a))" -> "Sym(197)" [color=red]
+"Sym(199)" [
+label="Sym(199) \n OrElse(List(Sym(197), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(197)" -> "Sym(199)"
+"Sym(200)" [
+label="Sym(200) \n Reify(Sym(199),List(Sym(191)))"
+shape=box
+]
+"Sym(199)" -> "Sym(200)"
+"Sym(191)" -> "Sym(200)" [color=red]
+"Sym(202)" [
+label="Sym(202) \n OrElse(List(Sym(200), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(200)" -> "Sym(202)"
+"Sym(204)" [
+label="Sym(204) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(202))"
+shape=box
+color=red
+]
+"Sym(202)" -> "Sym(204)"
+"Sym(206)" [
+label="Sym(206) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(204))"
+shape=box
+color=red
+]
+"Sym(204)" -> "Sym(206)"
+"Sym(208)" [
+label="Sym(208) \n Second(Sym(206))"
+shape=box
+]
+"Sym(206)" -> "Sym(208)"
+"Sym(209)" [
+label="Sym(209) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(208))"
+shape=box
+]
+"Sym(208)" -> "Sym(209)"
+"Sym(207)" [
+label="Sym(207) \n First(Sym(206))"
+shape=box
+]
+"Sym(206)" -> "Sym(207)"
+"Sym(210)" [
+label="Sym(210) \n Reify(Sym(209),List(Sym(206), Const(Test(Sym(207), ))))"
+shape=box
+]
+"Sym(209)" -> "Sym(210)"
+"Sym(207)" -> "Sym(210)"
+"Sym(206)" -> "Sym(210)" [color=red]
+"Const(Test(Sym(207), ))" -> "Sym(210)" [color=red]
+"Sym(212)" [
+label="Sym(212) \n OrElse(List(Sym(210), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(210)" -> "Sym(212)"
+"Sym(214)" [
+label="Sym(214) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(212))"
+shape=box
+color=red
+]
+"Sym(212)" -> "Sym(214)"
+"Sym(216)" [
+label="Sym(216) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(214))"
+shape=box
+color=red
+]
+"Sym(214)" -> "Sym(216)"
+"Sym(218)" [
+label="Sym(218) \n Second(Sym(216))"
+shape=box
+]
+"Sym(216)" -> "Sym(218)"
+"Sym(219)" [
+label="Sym(219) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(218))"
+shape=box
+]
+"Sym(218)" -> "Sym(219)"
+"Sym(217)" [
+label="Sym(217) \n First(Sym(216))"
+shape=box
+]
+"Sym(216)" -> "Sym(217)"
+"Sym(220)" [
+label="Sym(220) \n Reify(Sym(219),List(Sym(216), Const(Test(Sym(217),r))))"
+shape=box
+]
+"Sym(219)" -> "Sym(220)"
+"Sym(217)" -> "Sym(220)"
+"Sym(216)" -> "Sym(220)" [color=red]
+"Const(Test(Sym(217),r))" -> "Sym(220)" [color=red]
+"Sym(222)" [
+label="Sym(222) \n OrElse(List(Sym(220), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(220)" -> "Sym(222)"
+"Sym(224)" [
+label="Sym(224) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(222))"
+shape=box
+color=red
+]
+"Sym(222)" -> "Sym(224)"
+"Sym(226)" [
+label="Sym(226) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(224))"
+shape=box
+color=red
+]
+"Sym(224)" -> "Sym(226)"
+"Sym(228)" [
+label="Sym(228) \n Second(Sym(226))"
+shape=box
+]
+"Sym(226)" -> "Sym(228)"
+"Sym(229)" [
+label="Sym(229) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(228))"
+shape=box
+]
+"Sym(228)" -> "Sym(229)"
+"Sym(227)" [
+label="Sym(227) \n First(Sym(226))"
+shape=box
+]
+"Sym(226)" -> "Sym(227)"
+"Sym(230)" [
+label="Sym(230) \n Reify(Sym(229),List(Sym(226), Const(Test(Sym(227),o))))"
+shape=box
+]
+"Sym(229)" -> "Sym(230)"
+"Sym(227)" -> "Sym(230)"
+"Sym(226)" -> "Sym(230)" [color=red]
+"Const(Test(Sym(227),o))" -> "Sym(230)" [color=red]
+"Sym(232)" [
+label="Sym(232) \n OrElse(List(Sym(230), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(230)" -> "Sym(232)"
+"Sym(233)" [
+label="Sym(233) \n Reify(Sym(232),List(Sym(224)))"
+shape=box
+]
+"Sym(232)" -> "Sym(233)"
+"Sym(224)" -> "Sym(233)" [color=red]
+"Sym(235)" [
+label="Sym(235) \n OrElse(List(Sym(233), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(233)" -> "Sym(235)"
+"Sym(237)" [
+label="Sym(237) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(235))"
+shape=box
+color=red
+]
+"Sym(235)" -> "Sym(237)"
+"Sym(239)" [
+label="Sym(239) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(237))"
+shape=box
+color=red
+]
+"Sym(237)" -> "Sym(239)"
+"Sym(241)" [
+label="Sym(241) \n Second(Sym(239))"
+shape=box
+]
+"Sym(239)" -> "Sym(241)"
+"Sym(242)" [
+label="Sym(242) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(241))"
+shape=box
+]
+"Sym(241)" -> "Sym(242)"
+"Sym(240)" [
+label="Sym(240) \n First(Sym(239))"
+shape=box
+]
+"Sym(239)" -> "Sym(240)"
+"Sym(243)" [
+label="Sym(243) \n Reify(Sym(242),List(Sym(239), Const(Test(Sym(240),c))))"
+shape=box
+]
+"Sym(242)" -> "Sym(243)"
+"Sym(240)" -> "Sym(243)"
+"Sym(239)" -> "Sym(243)" [color=red]
+"Const(Test(Sym(240),c))" -> "Sym(243)" [color=red]
+"Sym(245)" [
+label="Sym(245) \n OrElse(List(Sym(243), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(243)" -> "Sym(245)"
+"Sym(246)" [
+label="Sym(246) \n Reify(Sym(245),List(Sym(237)))"
+shape=box
+]
+"Sym(245)" -> "Sym(246)"
+"Sym(237)" -> "Sym(246)" [color=red]
+"Sym(248)" [
+label="Sym(248) \n OrElse(List(Sym(246), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(246)" -> "Sym(248)"
+"Sym(250)" [
+label="Sym(250) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(248))"
+shape=box
+color=red
+]
+"Sym(248)" -> "Sym(250)"
+"Sym(252)" [
+label="Sym(252) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(250))"
+shape=box
+color=red
+]
+"Sym(250)" -> "Sym(252)"
+"Sym(254)" [
+label="Sym(254) \n Second(Sym(252))"
+shape=box
+]
+"Sym(252)" -> "Sym(254)"
+"Sym(255)" [
+label="Sym(255) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(254))"
+shape=box
+]
+"Sym(254)" -> "Sym(255)"
+"Sym(253)" [
+label="Sym(253) \n First(Sym(252))"
+shape=box
+]
+"Sym(252)" -> "Sym(253)"
+"Sym(256)" [
+label="Sym(256) \n Reify(Sym(255),List(Sym(252), Const(Test(Sym(253),k))))"
+shape=box
+]
+"Sym(255)" -> "Sym(256)"
+"Sym(253)" -> "Sym(256)"
+"Sym(252)" -> "Sym(256)" [color=red]
+"Const(Test(Sym(253),k))" -> "Sym(256)" [color=red]
+"Sym(258)" [
+label="Sym(258) \n OrElse(List(Sym(256), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(256)" -> "Sym(258)"
+"Sym(259)" [
+label="Sym(259) \n Reify(Sym(258),List(Sym(250)))"
+shape=box
+]
+"Sym(258)" -> "Sym(259)"
+"Sym(250)" -> "Sym(259)" [color=red]
+"Sym(261)" [
+label="Sym(261) \n OrElse(List(Sym(259), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(259)" -> "Sym(261)"
+"Sym(263)" [
+label="Sym(263) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(261))"
+shape=box
+color=red
+]
+"Sym(261)" -> "Sym(263)"
+"Sym(265)" [
+label="Sym(265) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(263))"
+shape=box
+color=red
+]
+"Sym(263)" -> "Sym(265)"
+"Sym(267)" [
+label="Sym(267) \n Second(Sym(265))"
+shape=box
+]
+"Sym(265)" -> "Sym(267)"
+"Sym(268)" [
+label="Sym(268) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(267))"
+shape=box
+]
+"Sym(267)" -> "Sym(268)"
+"Sym(266)" [
+label="Sym(266) \n First(Sym(265))"
+shape=box
+]
+"Sym(265)" -> "Sym(266)"
+"Sym(269)" [
+label="Sym(269) \n Reify(Sym(268),List(Sym(265), Const(Test(Sym(266),s))))"
+shape=box
+]
+"Sym(268)" -> "Sym(269)"
+"Sym(266)" -> "Sym(269)"
+"Sym(265)" -> "Sym(269)" [color=red]
+"Const(Test(Sym(266),s))" -> "Sym(269)" [color=red]
+"Sym(271)" [
+label="Sym(271) \n OrElse(List(Sym(269), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(269)" -> "Sym(271)"
+"Sym(272)" [
+label="Sym(272) \n Reify(Sym(271),List(Sym(263)))"
+shape=box
+]
+"Sym(271)" -> "Sym(272)"
+"Sym(263)" -> "Sym(272)" [color=red]
+"Sym(274)" [
+label="Sym(274) \n OrElse(List(Sym(272), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(272)" -> "Sym(274)"
+"Sym(275)" [
+label="Sym(275) \n Reify(Sym(274),List(Sym(214)))"
+shape=box
+]
+"Sym(274)" -> "Sym(275)"
+"Sym(214)" -> "Sym(275)" [color=red]
+"Sym(277)" [
+label="Sym(277) \n OrElse(List(Sym(275), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(275)" -> "Sym(277)"
+"Sym(278)" [
+label="Sym(278) \n Reify(Sym(277),List(Sym(204)))"
+shape=box
+]
+"Sym(277)" -> "Sym(278)"
+"Sym(204)" -> "Sym(278)" [color=red]
+"Sym(280)" [
+label="Sym(280) \n OrElse(List(Sym(278), Pure(Const(Failure()))))"
+shape=box
+]
+"Sym(278)" -> "Sym(280)"
+"Sym(281)" [
+label="Sym(281) \n OrElse(List(Sym(141), Pure(Sym(280))))"
+shape=box
+]
+"Sym(141)" -> "Sym(281)"
+"Sym(280)" -> "Sym(281)"
+"Sym(282)" [
+label="Sym(282) \n Result(Pure(Sym(281)))"
+shape=box
+]
+"Sym(281)" -> "Sym(282)"
+}

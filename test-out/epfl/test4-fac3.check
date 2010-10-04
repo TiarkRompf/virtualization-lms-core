@@ -1,0 +1,13 @@
+-- found fun: scala.virtualization.lms.epfl.test3.MatchingExtractorsExp$$anonfun$liftAlt$1$1
+-- found fun: scala.virtualization.lms.epfl.test3.MatchingExtractorsExp$$anonfun$liftAlt$1$1
+-- hit recursion: class scala.virtualization.lms.epfl.test3.MatchingExtractorsExp$$anonfun$liftAlt$1$1 Sym(4) <- Sym(0)
+TP(Sym(1),Lambda(<function1>))
+TP(Sym(2),Reify(Const(1.0),List(Const(Test(Sym(0),0.0)))))
+TP(Sym(3),Lambda(<function1>))
+TP(Sym(4),Minus(Sym(0),Const(1.0)))
+TP(Sym(5),Reify(Const(1.0),List(Const(Test(Sym(4),0.0)))))
+TP(Sym(6),Apply(Sym(-2),Sym(4)))
+TP(Sym(7),OrElse(List(Sym(5), Sym(6))))
+TP(Sym(8),Times(Sym(0),Sym(7)))
+TP(Sym(9),OrElse(List(Sym(2), Pure(Sym(8)))))
+Sym(9)

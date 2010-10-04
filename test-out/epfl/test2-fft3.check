@@ -1,0 +1,38 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class FFT4 extends ((Array[Double])=>(Array[Double])) {
+def apply(x0:Array[Double]): Array[Double] = {
+val x1 = x0.apply(0)
+val x5 = x0.apply(4)
+val x9 = x1+x5
+val x3 = x0.apply(2)
+val x7 = x0.apply(6)
+val x13 = x3+x7
+val x17 = x9+x13
+val x2 = x0.apply(1)
+val x6 = x0.apply(5)
+val x10 = x2+x6
+val x4 = x0.apply(3)
+val x8 = x0.apply(7)
+val x14 = x4+x8
+val x18 = x10+x14
+val x11 = x1-x5
+val x16 = x4-x8
+val x23 = x11+x16
+val x12 = x2-x6
+val x15 = x3-x7
+val x24 = x12-x15
+val x19 = x9-x13
+val x20 = x10-x14
+val x25 = x11-x16
+val x26 = x12+x15
+val x27 = Array(x17,x18,x23,x24,x19,x20,x25,x26)
+x27
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+compilation: ok
+6.0,0.0,-1.0,1.0,0.0,0.0,-1.0,-1.0

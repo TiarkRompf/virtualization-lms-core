@@ -169,7 +169,7 @@ trait VectorImplInternal extends VectorImpl {
 */
 
 
-trait TestVectors extends Vectors {
+trait VectorsProg extends Vectors {
   
   def test(x: Rep[Unit]) = {
     RandomVector(7) + (ZeroVector(7) + RandomVector(7))
@@ -177,7 +177,7 @@ trait TestVectors extends Vectors {
   
 }
 
-trait TestStrings extends Vectors {
+trait StringsProg extends Vectors {
   
   def test(x: Rep[Any]) = {
     val s: Rep[Any] = "hi " + "yo " + x + " done"
@@ -188,40 +188,46 @@ trait TestStrings extends Vectors {
 
 
 
-object TestTestVectors {
+class TestVectors extends FileDiffSuite {
   
-  def main(args: Array[String]) = {
-
-    println("-- begin")
-
-    new TestVectors with VectorsExp with VectorsImplExternal
-    with CompileScala 
-    with ScalaGenFunctions with ScalaGenUtil
-    {
-      emitScalaSource(test, "Test", new PrintWriter(System.out))
-      val g = compile(test)
-      println(g())
-    }
+  val prefix = "test-out/epfl/test6-"
+  
+  def testVectors = {
+    withOutFile(prefix+"vectors") {
     
-    new TestStrings with VectorsExp with VectorsImplExternal
-    with CompileScala 
-    with ScalaGenFunctions with ScalaGenUtil
-    {
-      emitScalaSource(test, "Test", new PrintWriter(System.out))
-      val g = compile(test)
-      println(g(0))
-    }
-/*
-    new TestConditional with ArithExpOpt with EqualExp with PrintExp
-    with JSGenIfThenElse
-    with JSGenArith with JSGenEqual with JSGenPrint
-    {
-      val f = (x: Rep[Double]) => test(x)
-      emitJSSource(f, "main", new PrintWriter(System.out))
-      emitHTMLPage(() => f(7), new PrintWriter(new FileOutputStream("test5.html")))
-    }
+      println("-- begin")
 
-*/
-    println("-- end")
+      new VectorsProg with VectorsExp with VectorsImplExternal
+      with CompileScala 
+      with ScalaGenFunctions with ScalaGenUtil
+      {
+        emitScalaSource(test, "Test", new PrintWriter(System.out))
+        val g = compile(test)
+        println(g().mkString(","))
+      }
+    
+      new StringsProg with VectorsExp with VectorsImplExternal
+      with CompileScala 
+      with ScalaGenFunctions with ScalaGenUtil
+      {
+        emitScalaSource(test, "Test", new PrintWriter(System.out))
+        val g = compile(test)
+        println(g(0))
+      }
+  /*
+      new TestConditional with ArithExpOpt with EqualExp with PrintExp
+      with JSGenIfThenElse
+      with JSGenArith with JSGenEqual with JSGenPrint
+      {
+        val f = (x: Rep[Double]) => test(x)
+        emitJSSource(f, "main", new PrintWriter(System.out))
+        emitHTMLPage(() => f(7), new PrintWriter(new FileOutputStream("test5.html")))
+      }
+
+  */
+      println("-- end")
+    }
+    assertFileEqualsCheck(prefix+"vectors")
+    
   }
 }

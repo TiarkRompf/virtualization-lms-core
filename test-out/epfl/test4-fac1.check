@@ -1,0 +1,6 @@
+TP(Sym(1),Lambda(<function1>))
+TP(Sym(2),Apply(Sym(1),Sym(0)))
+TP(Sym(3),Lambda(<function1>))
+TP(Sym(4),Apply(Sym(3),Sym(0)))
+TP(Sym(5),OrElse(List(Sym(2), Sym(4))))
+Sym(5)
