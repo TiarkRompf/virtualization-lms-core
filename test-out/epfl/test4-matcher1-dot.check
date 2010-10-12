@@ -14,7 +14,6 @@ shape=box
 label="Sym(18) \n Test(Sym(16),B)"
 shape=box
 color=red
-color=red
 ]
 "Sym(16)" -> "Sym(18)"
 "Sym(19)" [
@@ -63,7 +62,6 @@ shape=box
 "Sym(49)" [
 label="Sym(49) \n Test(Sym(47),B)"
 shape=box
-color=red
 color=red
 ]
 "Sym(47)" -> "Sym(49)"
@@ -153,7 +151,6 @@ shape=box
 label="Sym(43) \n Test(Sym(41),A)"
 shape=box
 color=red
-color=red
 ]
 "Sym(41)" -> "Sym(43)"
 "Sym(34)" [
@@ -183,7 +180,6 @@ shape=box
 "Sym(37)" [
 label="Sym(37) \n Test(Sym(35),A)"
 shape=box
-color=red
 color=red
 ]
 "Sym(35)" -> "Sym(37)"
@@ -397,7 +393,6 @@ shape=box
 label="Sym(12) \n Test(Sym(10),A)"
 shape=box
 color=red
-color=red
 ]
 "Sym(10)" -> "Sym(12)"
 "Sym(94)" [
@@ -464,7 +459,6 @@ shape=box
 "Sym(6)" [
 label="Sym(6) \n Test(Sym(4),A)"
 shape=box
-color=red
 color=red
 ]
 "Sym(4)" -> "Sym(6)"

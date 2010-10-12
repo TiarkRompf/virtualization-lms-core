@@ -3,7 +3,6 @@ digraph G {
 label="Sym(2) \n Test(Sym(0),0.0)"
 shape=box
 color=red
-color=red
 ]
 "Sym(0)" -> "Sym(2)"
 "Sym(3)" [
@@ -19,7 +18,6 @@ shape=box
 "Sym(6)" [
 label="Sym(6) \n Test(Sym(5),0.0)"
 shape=box
-color=red
 color=red
 ]
 "Sym(5)" -> "Sym(6)"

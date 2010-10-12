@@ -4,7 +4,7 @@ package test4
 
 // unused code -- just a sanity check to make sure it compiles
 
-trait A {
+trait FooA {
   type Rep[T] = Option[T]
 
   def decons[A](x: Rep[scala.::[A]]): Some[(Rep[A], Rep[List[A]])]
@@ -20,7 +20,7 @@ trait A {
 }
 
 
-trait B {
+trait FooB {
 
   sealed abstract class Exp[+T]
 
