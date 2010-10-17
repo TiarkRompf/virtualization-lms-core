@@ -14,13 +14,13 @@ trait Equal extends Base with Variables with OverloadHack {
   //def __equal[A,B](a: Var[A], b: B)(implicit o: Overloaded3): Rep[Boolean] = __equal(a, readVar(b))
   //def __equal[A,B](a: A, b: Var[B])(implicit o: Overloaded4): Rep[Boolean] = __equal(readVar(a), b)
 
-  def __ext__!=[A,B](a: Rep[A], b: Rep[B]) : Rep[Boolean] = notequals(a,b)
-  def __ext__!=[A,B](a: Rep[A], b: Var[B])(implicit o: Overloaded1) : Rep[Boolean] = notequals(a,readVar(b))
-  def __ext__!=[A,B](a: Var[A], b: Rep[B])(implicit o: Overloaded2) : Rep[Boolean] = notequals(readVar(a), b)
-  def __ext__!=[A,B](a: Rep[A], b: B)(implicit o: Overloaded3) : Rep[Boolean] = __ext__!=(a, unit(b))
-  def __ext__!=[A,B](a: A, b: Rep[B])(implicit o: Overloaded4) : Rep[Boolean] = __ext__!=(unit(a), b)
-  //def __ext__!=[A,B](a: Var[A], b: B)(implicit o: Overloaded3) : Rep[Boolean] = __ext__!=(a, readVar(b))
-  //def __ext__!=[A,B](a: A, b: Var[B])(implicit o: Overloaded4) : Rep[Boolean] = __ext__!=(readVar(a), b)
+  def infix_!=[A,B](a: Rep[A], b: Rep[B]) : Rep[Boolean] = notequals(a,b)
+  def infix_!=[A,B](a: Rep[A], b: Var[B])(implicit o: Overloaded1) : Rep[Boolean] = notequals(a,readVar(b))
+  def infix_!=[A,B](a: Var[A], b: Rep[B])(implicit o: Overloaded2) : Rep[Boolean] = notequals(readVar(a), b)
+  def infix_!=[A,B](a: Rep[A], b: B)(implicit o: Overloaded3) : Rep[Boolean] = infix_!=(a, unit(b))
+  def infix_!=[A,B](a: A, b: Rep[B])(implicit o: Overloaded4) : Rep[Boolean] = infix_!=(unit(a), b)
+  //def infix_!=[A,B](a: Var[A], b: B)(implicit o: Overloaded3) : Rep[Boolean] = infix_!=(a, readVar(b))
+  //def infix_!=[A,B](a: A, b: Var[B])(implicit o: Overloaded4) : Rep[Boolean] = infix_!=(readVar(a), b)
 
   def equals[A,B](a: Rep[A], b: Rep[B]) : Rep[Boolean]
   def notequals[A,B](a: Rep[A], b: Rep[B]) : Rep[Boolean]

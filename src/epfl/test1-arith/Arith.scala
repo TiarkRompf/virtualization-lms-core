@@ -11,10 +11,10 @@ trait Arith extends Base {
   //types that are allowed to be lifted more explicitly
   //implicit def unit(x: Double): Rep[Double]
 
-  def __ext__+(x: Rep[Double], y: Rep[Double]): Rep[Double]
-  def __ext__-(x: Rep[Double], y: Rep[Double]): Rep[Double]
-  def __ext__*(x: Rep[Double], y: Rep[Double]): Rep[Double]
-  def __ext__/(x: Rep[Double], y: Rep[Double]): Rep[Double]
+  def infix_+(x: Rep[Double], y: Rep[Double]): Rep[Double]
+  def infix_-(x: Rep[Double], y: Rep[Double]): Rep[Double]
+  def infix_*(x: Rep[Double], y: Rep[Double]): Rep[Double]
+  def infix_/(x: Rep[Double], y: Rep[Double]): Rep[Double]
 }
 
 
@@ -27,40 +27,40 @@ trait ArithExp extends Arith with BaseExp {
   case class Times(x: Exp[Double], y: Exp[Double]) extends Def[Double]
   case class Div(x: Exp[Double], y: Exp[Double]) extends Def[Double]
 
-  def __ext__+(x: Exp[Double], y: Exp[Double]) = Plus(x, y)
-  def __ext__-(x: Exp[Double], y: Exp[Double]) = Minus(x, y)
-  def __ext__*(x: Exp[Double], y: Exp[Double]) = Times(x, y)
-  def __ext__/(x: Exp[Double], y: Exp[Double]) = Div(x, y)
+  def infix_+(x: Exp[Double], y: Exp[Double]) = Plus(x, y)
+  def infix_-(x: Exp[Double], y: Exp[Double]) = Minus(x, y)
+  def infix_*(x: Exp[Double], y: Exp[Double]) = Times(x, y)
+  def infix_/(x: Exp[Double], y: Exp[Double]) = Div(x, y)
 }
 
 trait ArithExpOpt extends ArithExp {
 
-  override def __ext__+(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_+(x: Exp[Double], y: Exp[Double]) = (x, y) match {
     case (Const(x), Const(y)) => Const(x + y)
     case (x, Const(0.0) | Const(-0.0)) => x
     case (Const(0.0) | Const(-0.0), y) => y
-    case _ => super.__ext__+(x, y)
+    case _ => super.infix_+(x, y)
   }
 
-  override def __ext__-(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_-(x: Exp[Double], y: Exp[Double]) = (x, y) match {
     case (Const(x), Const(y)) => Const(x - y)
     case (x, Const(0.0) | Const(-0.0)) => x
-    case _ => super.__ext__-(x, y)
+    case _ => super.infix_-(x, y)
   }
 
-  override def __ext__*(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_*(x: Exp[Double], y: Exp[Double]) = (x, y) match {
     case (Const(x), Const(y)) => Const(x * y)
     case (x, Const(1.0)) => x
     case (Const(1.0), y) => y
     case (x, Const(0.0) | Const(-0.0)) => Const(0.0)
     case (Const(0.0) | Const(-0.0), y) => Const(0.0)
-    case _ => super.__ext__*(x, y)
+    case _ => super.infix_*(x, y)
   }
 
-  override def __ext__/(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_/(x: Exp[Double], y: Exp[Double]) = (x, y) match {
     case (Const(x), Const(y)) => Const(x / y)
     case (x, Const(1.0)) => x
-    case _ => super.__ext__/(x, y)
+    case _ => super.infix_/(x, y)
   }
 
 }
