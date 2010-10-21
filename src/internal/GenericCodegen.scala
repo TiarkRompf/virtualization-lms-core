@@ -3,7 +3,10 @@ package internal
 
 import java.io.PrintWriter
 
-trait GenericCodegen extends Expressions with Scheduling {
+trait GenericCodegen extends Scheduling {
+  val IR: Expressions
+  import IR._
+
   
   def emitBlock(y: Exp[_])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
@@ -29,7 +32,9 @@ trait GenericCodegen extends Expressions with Scheduling {
 }
 
 
-trait GenericNestedCodegen extends GenericCodegen with Effects {
+trait GenericNestedCodegen extends GenericCodegen {
+  val IR: Expressions with Effects
+  import IR._
 
   var shallow = false
 

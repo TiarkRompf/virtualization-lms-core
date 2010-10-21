@@ -15,6 +15,8 @@ trait ScalaOpsPkgExp extends ScalaOpsPkg with BaseExp with FunctionsExp
         with ImplicitOpsExp with NumericOpsExp with FractionalOpsExp with OrderingOpsExp with StringOpsExp
         with RangeOpsExp with IOOpsExp with ArrayOpsExp with ScalaOpsExp
 
-trait ScalaGenScalaOpsPkg extends ScalaOpsPkgExp with ScalaGenBase
+trait ScalaGenScalaOpsPkg extends ScalaGenBase
         with ScalaGenImplicit with ScalaGenNumeric with ScalaGenFractional with ScalaGenOrdering with ScalaGenString
-        with ScalaGenRange with ScalaGenIO with ScalaGenArray with ScalaGenScalaOps
+        with ScalaGenRange with ScalaGenIO with ScalaGenArray with ScalaGenScalaOps {
+          val IR: ScalaOpsPkgExp
+        }

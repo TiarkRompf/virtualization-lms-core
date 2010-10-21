@@ -11,7 +11,9 @@ import scala.tools.nsc.io._
 import scala.tools.nsc.interpreter.AbstractFileClassLoader
 
 
-trait ScalaCompile extends Expressions { self: ScalaCodegen =>
+trait ScalaCompile extends Expressions {
+
+  val codegen: ScalaCodegen { val IR: ScalaCompile.this.type }
 
   var compiler: Global = _
   var reporter: ConsoleReporter = _
@@ -51,7 +53,7 @@ trait ScalaCompile extends Expressions { self: ScalaCodegen =>
     compileCount += 1
     
     val source = new StringWriter()
-    emitScalaSource(f, className, new PrintWriter(source))
+    codegen.emitScalaSource(f, className, new PrintWriter(source))
 
     val compiler = this.compiler
     val run = new compiler.Run

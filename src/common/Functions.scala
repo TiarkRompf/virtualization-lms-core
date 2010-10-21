@@ -39,7 +39,10 @@ trait FunctionsExp extends Functions with EffectExp {
 
 }
 
-trait ScalaGenFunctions extends ScalaGenEffect with FunctionsExp {
+trait ScalaGenFunctions extends ScalaGenEffect {
+  val IR: FunctionsExp
+  import IR._
+  
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)

@@ -9,6 +9,6 @@ trait Compile extends Base {
   
 }
 
-trait CompileScala extends Compile with ScalaCompile { this: ScalaGenBase =>
+trait CompileScala extends Compile with BaseExp with ScalaCompile {
   
 }
