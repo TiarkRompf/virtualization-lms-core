@@ -33,7 +33,7 @@ class TestParsers extends FileDiffSuite {
     withOutFile(prefix+"parse1") {
       object ParsersProgExp extends ParsersProg with Matching with Extractors
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll // with ControlOpt
-        with ExtractorsGraphViz with DisableCSE {
+        with DisableCSE {
           type Elem = Char
           def toElem(c: Char) = c
         }
@@ -44,7 +44,8 @@ class TestParsers extends FileDiffSuite {
       val r = reifyEffects(head(fresh))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), prefix+"parse1-dot")
+      val p = new ExtractorsGraphViz { val IR: ParsersProgExp.type = ParsersProgExp }
+      p.emitDepGraph(toAtom(Result(r)), prefix+"parse1-dot")
     }
     assertFileEqualsCheck(prefix+"parse1")
     assertFileEqualsCheck(prefix+"parse1-dot")
@@ -54,7 +55,7 @@ class TestParsers extends FileDiffSuite {
     withOutFile(prefix+"parse2") {
       object ParsersProgExp extends ParsersProg with Matching with Extractors 
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll // with ControlOpt
-        with ExtractorsGraphViz {
+        {
           type Elem = Char
           def toElem(c: Char) = c
         }
@@ -65,7 +66,8 @@ class TestParsers extends FileDiffSuite {
       val r = reifyEffects(head(fresh))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), prefix+"parse2-dot")
+      val p = new ExtractorsGraphViz { val IR: ParsersProgExp.type = ParsersProgExp }
+      p.emitDepGraph(toAtom(Result(r)), prefix+"parse2-dot")
     }
     assertFileEqualsCheck(prefix+"parse2")
     assertFileEqualsCheck(prefix+"parse2-dot")

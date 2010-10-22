@@ -61,7 +61,7 @@ class TestMatch extends FileDiffSuite {
     withOutFile(prefix+"match1") {
       object MatchProgExp extends MatchProg with Matching with Extractors
         with MatchingExtractorsExp with FunctionsExpUnfoldAll
-        with ExtractorsGraphViz with DisableCSE
+        with DisableCSE
       import MatchProgExp._
 
       case class Result(x:Any) extends Def[Any]
@@ -69,7 +69,8 @@ class TestMatch extends FileDiffSuite {
       val r = reifyEffects(test(fresh))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), prefix+"match1-dot")
+      val p = new ExtractorsGraphViz { val IR: MatchProgExp.type = MatchProgExp }
+      p.emitDepGraph(toAtom(Result(r)), prefix+"match1-dot")
     }
     assertFileEqualsCheck(prefix+"match1")
     assertFileEqualsCheck(prefix+"match1-dot")
@@ -79,7 +80,6 @@ class TestMatch extends FileDiffSuite {
     withOutFile(prefix+"match2") {
       object MatchProgExp extends MatchProg with Matching with Extractors
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll
-        with ExtractorsGraphViz
       import MatchProgExp._
 
       case class Result(x:Any) extends Def[Any]
@@ -87,7 +87,8 @@ class TestMatch extends FileDiffSuite {
       val r = reifyEffects(test(fresh))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), prefix+"match2-dot")
+      val p = new ExtractorsGraphViz { val IR: MatchProgExp.type = MatchProgExp }
+      p.emitDepGraph(toAtom(Result(r)), prefix+"match2-dot")
     }
     assertFileEqualsCheck(prefix+"match2")
     assertFileEqualsCheck(prefix+"match2-dot")

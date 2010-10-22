@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package epfl
 package test4
 
-import common.ScalaGenEffect // don't import FunctionsExp
+import common.{ScalaGenEffect,EffectExp} // don't import FunctionsExp
 import test2._
 import test3._
 import util.ClosureCompare
@@ -178,7 +178,10 @@ trait FunctionsExternalDef2 extends FunctionsCanonical with FunctionsExternalDef
 
 }
 
-trait ScalaGenFunctionsExternal extends ScalaGenEffect with FunctionsExternalDef0 {
+trait ScalaGenFunctionsExternal extends ScalaGenEffect {
+  val IR: FunctionsExternalDef0 with EffectExp
+  import IR._
+  
   override def syms(e: Any): List[Sym[Any]] = e match {
     case DefineFun(y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)

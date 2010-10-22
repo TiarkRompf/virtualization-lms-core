@@ -44,13 +44,14 @@ class TestFac extends FileDiffSuite {
     withOutFile(prefix+"fac1") {
       object FacProgExp extends FacProg with Matching with Extractors
         with ArithExpOpt with MatchingExtractorsExpOpt
-        with ExtractorsGraphViz with FunctionsGraphViz with FunctionsExternalDef0
+        with FunctionsExternalDef0
       import FacProgExp._
 
       val r = fac(fresh)
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, prefix+"fac1-dot")
+      val p = new ExtractorsGraphViz with FunctionsGraphViz { val IR: FacProgExp.type = FacProgExp }
+      p.emitDepGraph(r, prefix+"fac1-dot")
     }
     assertFileEqualsCheck(prefix+"fac1")
     assertFileEqualsCheck(prefix+"fac1-dot")
@@ -62,13 +63,14 @@ class TestFac extends FileDiffSuite {
         with ArithExpOpt with MatchingExtractorsExpOpt
         with FunctionExpUnfoldAll with FunctionsExternalDef2
 //        with FunctionsExternalDef01
-        with ExtractorsGraphViz with FunctionsGraphViz with FunctionsExternalDef0
+        with FunctionsExternalDef0
       import FacProgExp._
 
       val r = fac(fresh)
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, prefix+"fac2-dot")
+      val p = new ExtractorsGraphViz with FunctionsGraphViz { val IR: FacProgExp.type = FacProgExp }
+      p.emitDepGraph(r, prefix+"fac2-dot")
     }
     assertFileEqualsCheck(prefix+"fac2")
     assertFileEqualsCheck(prefix+"fac2-dot")
@@ -79,13 +81,14 @@ class TestFac extends FileDiffSuite {
       object FacProgExp extends FacProg with Matching with Extractors
         with ArithExpOpt with MatchingExtractorsExpOpt
         with FunctionExpUnfoldRecursion 
-        with ExtractorsGraphViz with FunctionsGraphViz with FunctionsExternalDef0
+        with FunctionsExternalDef0
       import FacProgExp._
 
       val r = fac(fresh)
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, prefix+"fac3-dot")
+      val p = new ExtractorsGraphViz with FunctionsGraphViz { val IR: FacProgExp.type = FacProgExp }
+      p.emitDepGraph(r, prefix+"fac3-dot")
     }
     assertFileEqualsCheck(prefix+"fac3")
     assertFileEqualsCheck(prefix+"fac3-dot")
@@ -97,13 +100,13 @@ class TestFac extends FileDiffSuite {
         with ArithExpOpt with EqualExp with IfThenElseExp 
         with FunctionExpUnfoldRecursion 
         with FunctionsExternalDef2 with FunctionsExternalDef0
-        with FunctionsGraphViz
       import FacProgExp._
 
       val r = { val x = fresh; fac(x) + fac(2*x) }
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, prefix+"fac4-dot")
+      val p = new FunctionsGraphViz { val IR: FacProgExp.type = FacProgExp }
+      p.emitDepGraph(r, prefix+"fac4-dot")
     }
     assertFileEqualsCheck(prefix+"fac4")
     assertFileEqualsCheck(prefix+"fac4-dot")
@@ -115,14 +118,14 @@ class TestFac extends FileDiffSuite {
         with ArithExpOpt with EqualExp with IfThenElseExp 
         with FunctionExpUnfoldRecursion 
         with FunctionsExternalDef2 with FunctionsExternalDef0
-        with CompileScala with ScalaGenArith with ScalaGenEqual with ScalaGenIfThenElse
-        with ScalaGenFunctionsExternal
       import FacProgExp._
 
       val f = (x:Rep[Double]) => fac(x) + fac(2*x)
       println(globalDefs.mkString("\n"))
       println(f)
-      emitScalaSource(f, "Fac", new java.io.PrintWriter(System.out))
+      val p = new ScalaGenArith with ScalaGenEqual with 
+        ScalaGenIfThenElse with ScalaGenFunctionsExternal { val IR: FacProgExp.type = FacProgExp }
+      p.emitScalaSource(f, "Fac", new java.io.PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"fac5")
   }

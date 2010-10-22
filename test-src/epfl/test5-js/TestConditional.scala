@@ -9,7 +9,9 @@ import java.io.PrintWriter
 import java.io.FileOutputStream
 
 
-trait JSGenEqual extends JSGenBase with EqualExp {
+trait JSGenEqual extends JSGenBase {
+  val IR: EqualExp
+  import IR._
   
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Equal(a,b) =>  emitValDef(sym, "" + quote(a) + "==" + quote(b))
@@ -30,14 +32,20 @@ trait PrintExp extends Print with EffectExp {
   def print(s: Rep[Any]) = reflectEffect(Print(s))
 }
 
-trait ScalaGenPrint extends ScalaGenEffect with PrintExp {
+trait ScalaGenPrint extends ScalaGenEffect {
+  val IR: PrintExp
+  import IR._
+  
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Print(s) =>  emitValDef(sym, "println(" + quote(s) + ")")
     case _ => super.emitNode(sym, rhs)
   }
 }
 
-trait JSGenPrint extends JSGenEffect with PrintExp {
+trait JSGenPrint extends JSGenEffect {
+  val IR: PrintExp
+  import IR._
+  
   // TODO: should have a function for this
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Print(s) =>  emitValDef(sym, "document.body.appendChild(document.createElement(\"div\"))"+
@@ -95,22 +103,24 @@ class TestConditional extends FileDiffSuite {
       println("-- begin")
 
       new ConditionalProg with ArithExpOpt with EqualExp with PrintExp
-      with CompileScala with ScalaGenIfThenElse
-      with ScalaGenArith with ScalaGenEqual with ScalaGenPrint
-      {
+      with IfThenElseExp with CompileScala { self =>
+        val codegen = new ScalaGenIfThenElse with ScalaGenArith 
+        with ScalaGenEqual with ScalaGenPrint { val IR: self.type = self }
+        
         val f = (x: Rep[Double]) => test(x)
-        emitScalaSource(f, "Test", new PrintWriter(System.out))
+        codegen.emitScalaSource(f, "Test", new PrintWriter(System.out))
         val g = compile(f)
         println(g(7))
       }
     
-      new ConditionalProg with ArithExpOpt with EqualExp with PrintExp
-      with JSGenIfThenElse
-      with JSGenArith with JSGenEqual with JSGenPrint
-      {
+      new ConditionalProg with IfThenElseExp with ArithExpOpt with EqualExp 
+      with PrintExp { self =>
+        val codegen = new JSGenIfThenElse with JSGenArith 
+        with JSGenEqual with JSGenPrint { val IR: self.type = self }
+        
         val f = (x: Rep[Double]) => test(x)
-        emitJSSource(f, "main", new PrintWriter(System.out))
-        emitHTMLPage(() => f(7), new PrintWriter(new FileOutputStream(prefix+"conditional.html")))
+        codegen.emitJSSource(f, "main", new PrintWriter(System.out))
+        codegen.emitHTMLPage(() => f(7), new PrintWriter(new FileOutputStream(prefix+"conditional.html")))
       }
 
       println("-- end")
