@@ -54,6 +54,7 @@ trait Expressions {
     }
   }
 
+/*
   // dependencies
   def syms(e: Any): List[Sym[Any]] = e match {
     case s: Sym[Any] => List(s)
@@ -65,5 +66,5 @@ trait Expressions {
     case Def(d: Product) => syms(d)
     case _ => Nil
   }
-
+*/
 }
