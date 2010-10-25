@@ -1,0 +1,239 @@
+digraph G {
+rankdir=LR
+"Sym(8)" [
+label="Sym(8) \n Times(Const(1.0),Sym(4))"
+shape=box
+]
+"Sym(4)" -> "Sym(8)"
+"Sym(9)" [
+label="Sym(9) \n Times(Const(-0.0),Sym(5))"
+shape=box
+]
+"Sym(5)" -> "Sym(9)"
+"Sym(10)" [
+label="Sym(10) \n Minus(Sym(8),Sym(9))"
+shape=box
+]
+"Sym(8)" -> "Sym(10)"
+"Sym(9)" -> "Sym(10)"
+"Sym(11)" [
+label="Sym(11) \n Times(Const(1.0),Sym(5))"
+shape=box
+]
+"Sym(5)" -> "Sym(11)"
+"Sym(12)" [
+label="Sym(12) \n Times(Const(-0.0),Sym(4))"
+shape=box
+]
+"Sym(4)" -> "Sym(12)"
+"Sym(13)" [
+label="Sym(13) \n Plus(Sym(11),Sym(12))"
+shape=box
+]
+"Sym(11)" -> "Sym(13)"
+"Sym(12)" -> "Sym(13)"
+"Sym(14)" [
+label="Sym(14) \n Plus(Sym(0),Sym(10))"
+shape=box
+]
+"Sym(0)" -> "Sym(14)"
+"Sym(10)" -> "Sym(14)"
+"Sym(15)" [
+label="Sym(15) \n Plus(Sym(1),Sym(13))"
+shape=box
+]
+"Sym(1)" -> "Sym(15)"
+"Sym(13)" -> "Sym(15)"
+"Sym(16)" [
+label="Sym(16) \n Minus(Sym(0),Sym(10))"
+shape=box
+]
+"Sym(0)" -> "Sym(16)"
+"Sym(10)" -> "Sym(16)"
+"Sym(17)" [
+label="Sym(17) \n Minus(Sym(1),Sym(13))"
+shape=box
+]
+"Sym(1)" -> "Sym(17)"
+"Sym(13)" -> "Sym(17)"
+"Sym(18)" [
+label="Sym(18) \n Times(Const(1.0),Sym(6))"
+shape=box
+]
+"Sym(6)" -> "Sym(18)"
+"Sym(19)" [
+label="Sym(19) \n Times(Const(-0.0),Sym(7))"
+shape=box
+]
+"Sym(7)" -> "Sym(19)"
+"Sym(20)" [
+label="Sym(20) \n Minus(Sym(18),Sym(19))"
+shape=box
+]
+"Sym(18)" -> "Sym(20)"
+"Sym(19)" -> "Sym(20)"
+"Sym(21)" [
+label="Sym(21) \n Times(Const(1.0),Sym(7))"
+shape=box
+]
+"Sym(7)" -> "Sym(21)"
+"Sym(22)" [
+label="Sym(22) \n Times(Const(-0.0),Sym(6))"
+shape=box
+]
+"Sym(6)" -> "Sym(22)"
+"Sym(23)" [
+label="Sym(23) \n Plus(Sym(21),Sym(22))"
+shape=box
+]
+"Sym(21)" -> "Sym(23)"
+"Sym(22)" -> "Sym(23)"
+"Sym(24)" [
+label="Sym(24) \n Plus(Sym(2),Sym(20))"
+shape=box
+]
+"Sym(2)" -> "Sym(24)"
+"Sym(20)" -> "Sym(24)"
+"Sym(25)" [
+label="Sym(25) \n Plus(Sym(3),Sym(23))"
+shape=box
+]
+"Sym(3)" -> "Sym(25)"
+"Sym(23)" -> "Sym(25)"
+"Sym(26)" [
+label="Sym(26) \n Minus(Sym(2),Sym(20))"
+shape=box
+]
+"Sym(2)" -> "Sym(26)"
+"Sym(20)" -> "Sym(26)"
+"Sym(27)" [
+label="Sym(27) \n Minus(Sym(3),Sym(23))"
+shape=box
+]
+"Sym(3)" -> "Sym(27)"
+"Sym(23)" -> "Sym(27)"
+"Sym(28)" [
+label="Sym(28) \n Times(Const(1.0),Sym(24))"
+shape=box
+]
+"Sym(24)" -> "Sym(28)"
+"Sym(29)" [
+label="Sym(29) \n Times(Const(-0.0),Sym(25))"
+shape=box
+]
+"Sym(25)" -> "Sym(29)"
+"Sym(30)" [
+label="Sym(30) \n Minus(Sym(28),Sym(29))"
+shape=box
+]
+"Sym(28)" -> "Sym(30)"
+"Sym(29)" -> "Sym(30)"
+"Sym(31)" [
+label="Sym(31) \n Times(Const(1.0),Sym(25))"
+shape=box
+]
+"Sym(25)" -> "Sym(31)"
+"Sym(32)" [
+label="Sym(32) \n Times(Const(-0.0),Sym(24))"
+shape=box
+]
+"Sym(24)" -> "Sym(32)"
+"Sym(33)" [
+label="Sym(33) \n Plus(Sym(31),Sym(32))"
+shape=box
+]
+"Sym(31)" -> "Sym(33)"
+"Sym(32)" -> "Sym(33)"
+"Sym(34)" [
+label="Sym(34) \n Plus(Sym(14),Sym(30))"
+shape=box
+]
+"Sym(14)" -> "Sym(34)"
+"Sym(30)" -> "Sym(34)"
+"Sym(35)" [
+label="Sym(35) \n Plus(Sym(15),Sym(33))"
+shape=box
+]
+"Sym(15)" -> "Sym(35)"
+"Sym(33)" -> "Sym(35)"
+"Sym(36)" [
+label="Sym(36) \n Minus(Sym(14),Sym(30))"
+shape=box
+]
+"Sym(14)" -> "Sym(36)"
+"Sym(30)" -> "Sym(36)"
+"Sym(37)" [
+label="Sym(37) \n Minus(Sym(15),Sym(33))"
+shape=box
+]
+"Sym(15)" -> "Sym(37)"
+"Sym(33)" -> "Sym(37)"
+"Sym(38)" [
+label="Sym(38) \n Times(Const(6.123233995736766E-17),Sym(26))"
+shape=box
+]
+"Sym(26)" -> "Sym(38)"
+"Sym(39)" [
+label="Sym(39) \n Times(Const(-1.0),Sym(27))"
+shape=box
+]
+"Sym(27)" -> "Sym(39)"
+"Sym(40)" [
+label="Sym(40) \n Minus(Sym(38),Sym(39))"
+shape=box
+]
+"Sym(38)" -> "Sym(40)"
+"Sym(39)" -> "Sym(40)"
+"Sym(41)" [
+label="Sym(41) \n Times(Const(6.123233995736766E-17),Sym(27))"
+shape=box
+]
+"Sym(27)" -> "Sym(41)"
+"Sym(42)" [
+label="Sym(42) \n Times(Const(-1.0),Sym(26))"
+shape=box
+]
+"Sym(26)" -> "Sym(42)"
+"Sym(43)" [
+label="Sym(43) \n Plus(Sym(41),Sym(42))"
+shape=box
+]
+"Sym(41)" -> "Sym(43)"
+"Sym(42)" -> "Sym(43)"
+"Sym(44)" [
+label="Sym(44) \n Plus(Sym(16),Sym(40))"
+shape=box
+]
+"Sym(16)" -> "Sym(44)"
+"Sym(40)" -> "Sym(44)"
+"Sym(45)" [
+label="Sym(45) \n Plus(Sym(17),Sym(43))"
+shape=box
+]
+"Sym(17)" -> "Sym(45)"
+"Sym(43)" -> "Sym(45)"
+"Sym(46)" [
+label="Sym(46) \n Minus(Sym(16),Sym(40))"
+shape=box
+]
+"Sym(16)" -> "Sym(46)"
+"Sym(40)" -> "Sym(46)"
+"Sym(47)" [
+label="Sym(47) \n Minus(Sym(17),Sym(43))"
+shape=box
+]
+"Sym(17)" -> "Sym(47)"
+"Sym(43)" -> "Sym(47)"
+"Sym(48)" [
+label="Sym(48) \n Result(List(Complex(Sym(34),Sym(35)), Complex(Sym(44),Sym(45)), Complex(Sym(36),Sym(37)), Complex(Sym(46),Sym(47))))"
+shape=box
+]
+"Sym(34)" -> "Sym(48)"
+"Sym(35)" -> "Sym(48)"
+"Sym(44)" -> "Sym(48)"
+"Sym(45)" -> "Sym(48)"
+"Sym(36)" -> "Sym(48)"
+"Sym(37)" -> "Sym(48)"
+"Sym(46)" -> "Sym(48)"
+"Sym(47)" -> "Sym(48)"
+}

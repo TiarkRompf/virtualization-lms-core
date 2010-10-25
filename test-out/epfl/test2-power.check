@@ -1,0 +1,62 @@
+((x0+x1)*((x0+x1)*((x0+x1)*((x0+x1)*1.0))))
+((((x0+x1)*1.0)*((x0+x1)*1.0))*(((x0+x1)*1.0)*((x0+x1)*1.0)))
+TP(Sym(2),Plus(Sym(0),Sym(1)))
+TP(Sym(3),Times(Sym(2),Const(1.0)))
+TP(Sym(4),Times(Sym(2),Sym(3)))
+TP(Sym(5),Times(Sym(2),Sym(4)))
+TP(Sym(6),Times(Sym(2),Sym(5)))
+Sym(6)
+TP(Sym(2),Plus(Sym(0),Sym(1)))
+TP(Sym(3),Times(Sym(2),Sym(2)))
+TP(Sym(4),Times(Sym(2),Sym(3)))
+TP(Sym(5),Times(Sym(2),Sym(4)))
+Sym(5)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Power2 extends ((Double)=>(Double)) {
+def apply(x0:Double): Double = {
+val x1 = x0+x0
+val x2 = x1*x1
+val x3 = x1*x2
+val x4 = x1*x3
+x4
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+TP(Sym(2),Plus(Sym(0),Sym(1)))
+TP(Sym(3),Times(Sym(2),Sym(2)))
+TP(Sym(4),Times(Sym(3),Sym(3)))
+Sym(4)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Power3 extends ((Double)=>(Double)) {
+def apply(x0:Double): Double = {
+val x1 = x0+x0
+val x2 = x1*x1
+val x3 = x2*x2
+x3
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Power4 extends ((Double)=>(Double)) {
+def apply(x0:Double): Double = {
+val x1 = x0*x0
+val x2 = x0*x1
+val x3 = x0*x2
+x3
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+compilation: ok
+16.0

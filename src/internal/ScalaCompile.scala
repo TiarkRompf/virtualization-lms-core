@@ -24,9 +24,14 @@ trait ScalaCompile extends Expressions { self: ScalaCodegen =>
     */
     val settings = new Settings()
 
-  //      settings.Xcodebase.value = codebasePath.toString()
-    settings.classpath.value = System.getProperty("java.class.path")
-    settings.bootclasspath.value = ""
+    settings.classpath.value = this.getClass.getClassLoader match {
+      case ctx: java.net.URLClassLoader => ctx.getURLs.map(_.getPath).mkString(":")
+      case _ => System.getProperty("java.class.path")
+    }
+    settings.bootclasspath.value = Predef.getClass.getClassLoader match {
+      case ctx: java.net.URLClassLoader => ctx.getURLs.map(_.getPath).mkString(":")
+      case _ => System.getProperty("sun.boot.class.path")
+    }
     settings.encoding.value = "UTF-8"
     settings.outdir.value = "."
     settings.extdirs.value = ""

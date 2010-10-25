@@ -1,0 +1,20 @@
+digraph G {
+"Sym(2)" [
+label="Sym(2) \n Plus(Sym(0),Sym(1))"
+shape=box
+]
+"Sym(0)" -> "Sym(2)"
+"Sym(1)" -> "Sym(2)"
+"Sym(3)" [
+label="Sym(3) \n Times(Sym(2),Sym(2))"
+shape=box
+]
+"Sym(2)" -> "Sym(3)"
+"Sym(2)" -> "Sym(3)"
+"Sym(4)" [
+label="Sym(4) \n Times(Sym(3),Sym(3))"
+shape=box
+]
+"Sym(3)" -> "Sym(4)"
+"Sym(3)" -> "Sym(4)"
+}
