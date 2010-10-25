@@ -6,7 +6,7 @@ import test1._
 import test2._
 
 
-trait ParsersProg extends Parsers { this: Matching with Extractors =>
+trait TestParsers extends Parsers { this: Matching with Extractors =>
   
   def toElem(c: Char): Elem
   
@@ -25,50 +25,43 @@ trait ParsersProg extends Parsers { this: Matching with Extractors =>
   
 }
 
-class TestParsers extends FileDiffSuite {
+object TestTestParsers {
   
-  val prefix = "test-out/epfl/test3-"
-  
-  def testParse1 = {
-    withOutFile(prefix+"parse1") {
-      object ParsersProgExp extends ParsersProg with Matching with Extractors
+  def main(args: Array[String]) = {
+    
+    println {
+      object TestParsersExp extends TestParsers with Matching with Extractors
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll // with ControlOpt
         with ExtractorsGraphViz with DisableCSE {
           type Elem = Char
           def toElem(c: Char) = c
         }
-      import ParsersProgExp._
+      import TestParsersExp._
 
       case class Result(x:Any) extends Def[Any]
 
       val r = reifyEffects(head(fresh))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), prefix+"parse1-dot")
+      emitDepGraph(toAtom(Result(r)), "test3-parse1-dot")
     }
-    assertFileEqualsCheck(prefix+"parse1")
-    assertFileEqualsCheck(prefix+"parse1-dot")
-  }
 
-  def testParse2 = {
-    withOutFile(prefix+"parse2") {
-      object ParsersProgExp extends ParsersProg with Matching with Extractors 
+    println {
+      object TestParsersExp extends TestParsers with Matching with Extractors 
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll // with ControlOpt
         with ExtractorsGraphViz {
           type Elem = Char
           def toElem(c: Char) = c
         }
-      import ParsersProgExp._
+      import TestParsersExp._
 
       case class Result(x:Any) extends Def[Any]
 
       val r = reifyEffects(head(fresh))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), prefix+"parse2-dot")
+      emitDepGraph(toAtom(Result(r)), "test3-parse2-dot")
     }
-    assertFileEqualsCheck(prefix+"parse2")
-    assertFileEqualsCheck(prefix+"parse2-dot")
   }
 
 }

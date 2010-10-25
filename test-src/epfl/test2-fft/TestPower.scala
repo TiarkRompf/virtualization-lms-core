@@ -7,12 +7,12 @@ import test1._
 
 import java.io.PrintWriter
 
-trait Power1 { this: Arith =>
+trait TestPower1 { this: Arith =>
   def power(b: Rep[Double], x: Int): Rep[Double] = 
     if (x == 0) 1.0 else b * power(b, x - 1)
 }
 
-trait Power2 { this: Arith =>
+trait TestPower2 { this: Arith =>
   def power(b: Rep[Double], x: Int): Rep[Double] = 
     if (x == 0) 1.0
     else if ((x&1) == 0) { val y = power(b, x/2); y * y }
@@ -30,18 +30,15 @@ trait ArithStr extends Arith with BaseStr {
   //todo removed below
   //implicit def unit(x: Double) = x.toString
 
-  def infix_+(x: Rep[Double], y: Rep[Double]) = "(%s+%s)".format(x,y)
-  def infix_-(x: Rep[Double], y: Rep[Double]) = "(%s-%s)".format(x,y)
-  def infix_*(x: Rep[Double], y: Rep[Double]) = "(%s*%s)".format(x,y)
-  def infix_/(x: Rep[Double], y: Rep[Double]) = "(%s/%s)".format(x,y)
+  def __ext__+(x: Rep[Double], y: Rep[Double]) = "(%s+%s)".format(x,y)
+  def __ext__-(x: Rep[Double], y: Rep[Double]) = "(%s-%s)".format(x,y)
+  def __ext__*(x: Rep[Double], y: Rep[Double]) = "(%s*%s)".format(x,y)
+  def __ext__/(x: Rep[Double], y: Rep[Double]) = "(%s/%s)".format(x,y)
 }
 
-class TestPower extends FileDiffSuite {
+object TestTestPower {
   
-  val prefix = "test-out/epfl/test2-"
-
-  def testPower = {
-    withOutFile(prefix+"power") {
+  def main(args: Array[String]) = {
 /*    
     println {
       val o = new TestPower with ArithRepDirect
@@ -68,64 +65,65 @@ class TestPower extends FileDiffSuite {
     }
 */
     {
-      val o = new Power1 with ArithStr
+      val o = new TestPower1 with ArithStr
       import o._
 
-      val r = power(infix_+("x0","x1"),4)
+      val r = power(__ext__+("x0","x1"),4)
       println(r)
     }
     {
-      val o = new Power2 with ArithStr
+      val o = new TestPower2 with ArithStr
       import o._
 
-      val r = power(infix_+("x0","x1"),4)
+      val r = power(__ext__+("x0","x1"),4)
       println(r)
     }
     {
-      val o = new Power1 with ArithExp with ExportGraph
-      import o._
-
-      val r = power(fresh[Double] + fresh[Double],4)
-      println(globalDefs.mkString("\n"))
-      println(r)
-      emitDepGraph(r, prefix+"power1-dot")
-    }
-
-    {
-      val o = new Power1 with ArithExpOpt with ExportGraph
+      val o = new TestPower1 with ArithExp with ExportGraph
       import o._
 
       val r = power(fresh[Double] + fresh[Double],4)
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, prefix+"power2-dot")
+      emitDepGraph(r, "test2-power1-dot")
+    }
+
+    {
+      val o = new TestPower1 with ArithExpOpt with ExportGraph
+      import o._
+
+      val r = power(fresh[Double] + fresh[Double],4)
+      println(globalDefs.mkString("\n"))
+      println(r)
+      emitDepGraph(r, "test2-power2-dot")
     }
     {
-      val o = new Power1 with ArithExpOpt with CompileScala with ScalaGenArith
+      val o = new TestPower1 with ArithExpOpt with CompileScala with ScalaGenArith
       import o._
       val f = (x: Rep[Double]) => power(x + x, 4)
       emitScalaSource(f, "Power2", new PrintWriter(System.out))
     }
 
     {
-      val o = new Power2 with ArithExpOpt with ExportGraph
+      val o = new TestPower2 with ArithExpOpt with ExportGraph
       import o._
 
       val r = power(fresh[Double] + fresh[Double],4)
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, prefix+"power3-dot")
+      emitDepGraph(r, "test2-power3-dot")
     }
     {
-      val o = new Power2 with ArithExpOpt with CompileScala with ScalaGenArith
+      val o = new TestPower2 with ArithExpOpt with CompileScala with ScalaGenArith
       import o._
       val f = (x: Rep[Double]) => power(x + x, 4)
       emitScalaSource(f, "Power3", new PrintWriter(System.out))
     }
 
 
+
     {
-      val o = new Power1 with ArithExpOpt with CompileScala with ScalaGenArith
+      val o = new TestPower1 with ArithExpOpt with CompileScala with ScalaGenArith
       import o._
 
       val power4 = (x:Rep[Double]) => power(x,4)
@@ -133,10 +131,5 @@ class TestPower extends FileDiffSuite {
       val power4c = compile(power4)
       println(power4c(2))
     }
-    }
-    assertFileEqualsCheck(prefix+"power")
-    assertFileEqualsCheck(prefix+"power1-dot")
-    assertFileEqualsCheck(prefix+"power2-dot")
-    assertFileEqualsCheck(prefix+"power3-dot")
   }
 }

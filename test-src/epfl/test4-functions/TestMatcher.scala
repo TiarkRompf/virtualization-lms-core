@@ -17,7 +17,7 @@ trait ListMatch extends Extractors {
 }
 
 
-trait MatcherProg { this: Matching with ListMatch =>
+trait TestMatcher { this: Matching with ListMatch =>
   
   def unit[A](x: A): Rep[A]
   
@@ -52,27 +52,62 @@ trait MatcherProg { this: Matching with ListMatch =>
 
 
 
+trait ExtractorsGraphViz2 extends ExtractorsGraphViz { this: MatchingExtractorsExp with FunctionsExternalDef0 =>
+  
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: java.io.PrintWriter) = rhs match {
+/*
+    case Result(x) =>
+      super.emitNode(sym, rhs)
+      stream.println("shape=point")
+*/
+    case Test(x, y) =>
+      super.emitNode(sym, rhs)
+      stream.println("color=red")
+    case DefineFun(x) =>
+      super.emitNode(sym, rhs)
+      stream.println("color=green")
+      stream.println("style=filled")
+    case Apply(x, y) =>
+      super.emitNode(sym, rhs)
+      stream.println("color=blue")
+      stream.println("style=filled")
+    case _ =>
+      super.emitNode(sym, rhs)
+//      stream.println("shape=point")
+  }
+  
+/*
+  override def emitDeps(sym: Sym[_], rhs: Def[_], deps: List[Sym[Any]], stream: java.io.PrintWriter) = rhs match {
+    case AndAlso(x, effects) =>
+      super.emitDeps(sym, rhs, deps -- effects.asInstanceOf[List[Sym[Any]]]) // TODO: cast
+      for (dep <- effects) {
+        stream.println("\"" + dep + "\" -> \"" + sym + "\"" + " [color=red]")
+      }
+    case _ =>
+      super.emitDeps(sym, rhs, deps)
+  }
+*/
+
+}
 
 
-class TestMatcher extends FileDiffSuite {
+object TestTestMatcher {
   
-  val prefix = "test-out/epfl/test4-"
-  
-  def testMatcher1 = {
-    withOutFile(prefix+"matcher1") {
-      object MatcherProgExp extends MatcherProg with Matching with Extractors with ListMatch
+  def main(args: Array[String]) = {
+    
+    println {
+      object TestMatcherExp extends TestMatcher with Matching with Extractors with ListMatch
         with MatchingExtractorsExpOpt
         with FunctionExpUnfoldRecursion with FunctionsExternalDef2
-        with ExtractorsGraphViz with FunctionsGraphViz
-      import MatcherProgExp._
+        with ExtractorsGraphViz2
+      import TestMatcherExp._
 
       val r = find("AAB".toList, fresh)
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, prefix+"matcher1-dot")
+      emitDepGraph(r, "test4-matcher1-dot")
     }
-    assertFileEqualsCheck(prefix+"matcher1")
-    assertFileEqualsCheck(prefix+"matcher1-dot")
+
   }
 
 }

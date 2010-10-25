@@ -5,6 +5,8 @@ import java.io.PrintWriter
 
 
 trait ScalaCodegen extends GenericCodegen {
+  val IR: Expressions
+  import IR._
 
   def emitScalaSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
 
@@ -46,6 +48,8 @@ trait ScalaCodegen extends GenericCodegen {
 }
 
 trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
+  val IR: Expressions with Effects
+  import IR._
   
   override def emitScalaSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
       (implicit mA: Manifest[A], mB: Manifest[B]): Unit = {

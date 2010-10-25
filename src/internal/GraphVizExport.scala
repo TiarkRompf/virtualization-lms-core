@@ -3,7 +3,9 @@ package internal
 
 import java.io.{PrintWriter, FileOutputStream}
 
-trait GraphVizExport extends Expressions with Scheduling {
+trait GraphVizExport extends Scheduling {
+  val IR: Expressions
+  import IR._
 
   def quote(x: Any) = "\""+x+"\""
   

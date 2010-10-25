@@ -3,7 +3,22 @@ package internal
 
 import util.GraphUtil
 
-trait Scheduling extends Expressions {
+trait Scheduling {
+  val IR: Expressions
+  import IR._
+  
+  // these were previously in Expressions
+  def syms(e: Any): List[Sym[Any]] = e match {
+    case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(syms(_))
+    case _ => Nil
+  }
+
+  def dep(e: Exp[Any]): List[Sym[Any]] = e match {
+    case Def(d: Product) => syms(d)
+    case _ => Nil
+  }
+
   def buildScheduleForResult(start: Exp[_]): List[TP[_]] = {
     val st = syms(start)
     GraphUtil.stronglyConnectedComponents[TP[_]](st.flatMap(e => findDefinition(e).toList), { d =>

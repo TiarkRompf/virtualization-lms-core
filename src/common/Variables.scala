@@ -12,7 +12,6 @@ trait Variables extends Base with OverloadHack {
 
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1): Var[T]
   def __assign[T](lhs: Var[T], rhs: Rep[T]) : Rep[Unit]
-
 }
 
 trait VariablesExp extends Variables with EffectExp {
@@ -43,7 +42,10 @@ trait VariablesExp extends Variables with EffectExp {
 }
 
 
-trait ScalaGenVariables extends ScalaGenEffect with VariablesExp {
+trait ScalaGenVariables extends ScalaGenEffect {
+  val IR: VariablesExp
+  import IR._
+  
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
     case NewVar(init) => emitVarDef(sym, quote(init))

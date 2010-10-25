@@ -7,10 +7,10 @@ import test1._
 
 import java.io.PrintWriter
 
-import org.scalatest._
 
 
-trait FFT { this: Arith with Trig =>
+
+trait TestFFT { this: Arith with Trig =>
   
   def omega(k: Int, N: Int): Complex = {
     val kth = -2.0 * k * math.Pi / N
@@ -61,20 +61,20 @@ trait FFT { this: Arith with Trig =>
 
 trait ArithExpOptFFT extends ArithExpOpt {
 
-  override def infix_+(x: Exp[Double], y: Exp[Double]) = (x, y) match {
-    case (x, Def(Minus(Const(0.0) | Const(-0.0), y))) => infix_-(x, y)
-    case _ => super.infix_+(x, y)
+  override def __ext__+(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+    case (x, Def(Minus(Const(0.0) | Const(-0.0), y))) => __ext__-(x, y)
+    case _ => super.__ext__+(x, y)
   }
 
-  override def infix_-(x: Exp[Double], y: Exp[Double]) = (x, y) match {
-    case (x, Def(Minus(Const(0.0) | Const(-0.0), y))) => infix_+(x, y)
-    case _ => super.infix_-(x, y)
+  override def __ext__-(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+    case (x, Def(Minus(Const(0.0) | Const(-0.0), y))) => __ext__+(x, y)
+    case _ => super.__ext__-(x, y)
   }
 
-  override def infix_*(x: Exp[Double], y: Exp[Double]) = (x, y) match {
-    case (x, Const(-1.0)) => infix_-(0.0, x)
-    case (Const(-1.0), y) => infix_-(0.0, y)
-    case _ => super.infix_*(x, y)
+  override def __ext__*(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+    case (x, Const(-1.0)) => __ext__-(0.0, x)
+    case (Const(-1.0), y) => __ext__-(0.0, y)
+    case _ => super.__ext__*(x, y)
   }
 }
 
@@ -88,14 +88,11 @@ trait TrigExpOptFFT extends TrigExpOpt {
 }
 
 
-
-class TestFFT extends FileDiffSuite {
+object TestTestFFT {
   
-  val prefix = "test-out/epfl/test2-"
-  
-  def testFFT1 = {
-    withOutFile(prefix+"fft1") {
-      val o = new FFT with ArithExp with TrigExpOpt with ExportGraph with DisableCSE with DisableDCE
+  def main(args: Array[String]) = {
+    {
+      val o = new TestFFT with ArithExp with TrigExpOpt with ExportGraph with DisableCSE with DisableDCE
       import o._
 
       case class Result(x:Any) extends Def[Any]
@@ -103,15 +100,11 @@ class TestFFT extends FileDiffSuite {
       val r = fft(List.tabulate(4)(_ => Complex(fresh, fresh)))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), prefix+"fft1-dot", true)
+      emitDepGraph(toAtom(Result(r)), "test2-fft1-dot", true)
     }
-    assertFileEqualsCheck(prefix+"fft1")
-    assertFileEqualsCheck(prefix+"fft1-dot")
-  }
 
-  def testFFT2 = {
-    withOutFile(prefix+"fft2") {
-      val o = new FFT with ArithExpOptFFT with TrigExpOptFFT with ExportGraph
+    {
+      val o = new TestFFT with ArithExpOptFFT with TrigExpOptFFT with ExportGraph
       import o._
 
       case class Result(x:Any) extends Def[Any]
@@ -119,15 +112,11 @@ class TestFFT extends FileDiffSuite {
       val r = fft(List.tabulate(4)(_ => Complex(fresh, fresh)))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), prefix+"fft2-dot", true)
+      emitDepGraph(toAtom(Result(r)), "test2-fft2-dot", true)
     }
-    assertFileEqualsCheck(prefix+"fft2")
-    assertFileEqualsCheck(prefix+"fft2-dot")
-  }
 
-  def testFFT3 = {
-    withOutFile(prefix+"fft3") {
-      class FooBar extends FFT
+    {
+      class FooBar extends TestFFT
         with ArithExpOptFFT with TrigExpOptFFT with ArraysExp
         with CompileScala with ScalaGenArith with ScalaGenArrays {
 
@@ -140,13 +129,15 @@ class TestFFT extends FileDiffSuite {
       }
       val o = new FooBar
       import o._
-    
+
+
       val fft4 = (input: Rep[Array[Double]]) => ffts(input, 4)
       emitScalaSource(fft4, "FFT4", new PrintWriter(System.out))
       val fft4c = compile(fft4)
       println(fft4c(Array(1.0,0.0, 1.0,0.0, 2.0,0.0, 2.0,0.0, 1.0,0.0, 1.0,0.0, 0.0,0.0, 0.0,0.0)).mkString(","))
+  
     }
-    assertFileEqualsCheck(prefix+"fft3")
+    
   }
   
 }

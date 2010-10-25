@@ -34,7 +34,9 @@ trait EqualExp extends Equal with BaseExp with VariablesExp {
   def notequals[A,B](a: Rep[A], b: Rep[B]): Rep[Boolean] = NotEqual(a,b)
 }
 
-trait ScalaGenEqual extends ScalaGenBase with EqualExp {
+trait ScalaGenEqual extends ScalaGenBase {
+  val IR: EqualExp
+  import IR._
   
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Equal(a,b) =>  emitValDef(sym, quote(a) + " == " + quote(b))

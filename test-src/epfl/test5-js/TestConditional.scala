@@ -53,14 +53,14 @@ trait Dom extends Base {
   type DOMObjectInternal
   type DOMObject = Rep[DOMObjectInternal]
   def document: DOMObject
-  def infix_getElementById(s: Rep[String])
+  def __ext__getElementById(s: Rep[String])
 }
 
 
 
 
 
-trait ConditionalProg { this: Arith with Equal with Print with IfThenElse =>
+trait TestConditional { this: Arith with Equal with Print with IfThenElse =>
   
   def test(x: Rep[Double]): Rep[Double] = {
     
@@ -85,37 +85,33 @@ trait ConditionalProg { this: Arith with Equal with Print with IfThenElse =>
 
 
 
-class TestConditional extends FileDiffSuite {
+object TestTestConditional {
   
-  val prefix = "test-out/epfl/test5-"
-  
-  def testConditional = {
-    withOutFile(prefix+"conditional") {
-    
-      println("-- begin")
+  def main(args: Array[String]) = {
 
-      new ConditionalProg with ArithExpOpt with EqualExp with PrintExp
-      with CompileScala with ScalaGenIfThenElse
-      with ScalaGenArith with ScalaGenEqual with ScalaGenPrint
-      {
-        val f = (x: Rep[Double]) => test(x)
-        emitScalaSource(f, "Test", new PrintWriter(System.out))
-        val g = compile(f)
-        println(g(7))
-      }
-    
-      new ConditionalProg with ArithExpOpt with EqualExp with PrintExp
-      with JSGenIfThenElse
-      with JSGenArith with JSGenEqual with JSGenPrint
-      {
-        val f = (x: Rep[Double]) => test(x)
-        emitJSSource(f, "main", new PrintWriter(System.out))
-        emitHTMLPage(() => f(7), new PrintWriter(new FileOutputStream(prefix+"conditional.html")))
-      }
+    println("-- begin")
 
-      println("-- end")
+    new TestConditional with ArithExpOpt with EqualExp with PrintExp
+    with CompileScala with ScalaGenIfThenElse
+    with ScalaGenArith with ScalaGenEqual with ScalaGenPrint
+    {
+      val f = (x: Rep[Double]) => test(x)
+      emitScalaSource(f, "Test", new PrintWriter(System.out))
+      val g = compile(f)
+      println(g(7))
     }
-    assertFileEqualsCheck(prefix+"conditional")
-    assertFileEqualsCheck(prefix+"conditional.html")
+    
+
+    new TestConditional with ArithExpOpt with EqualExp with PrintExp
+    with JSGenIfThenElse
+    with JSGenArith with JSGenEqual with JSGenPrint
+    {
+      val f = (x: Rep[Double]) => test(x)
+      emitJSSource(f, "main", new PrintWriter(System.out))
+      emitHTMLPage(() => f(7), new PrintWriter(new FileOutputStream("test5.html")))
+    }
+
+
+    println("-- end")
   }
 }
