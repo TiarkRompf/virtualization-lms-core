@@ -12,10 +12,10 @@ import java.io.FileOutputStream
 
 trait Utils extends Base with OverloadHack {
   
-  def __ext__+(a: Rep[String], b: Rep[Any])(implicit x: Overloaded1): Rep[String]
-  def __ext__+(a: Rep[Any], b: Rep[String])(implicit x: Overloaded2): Rep[String]
-  def __ext__+(a: String, b: Rep[Any])(implicit x: Overloaded4): Rep[String]
-  def __ext__+(a: Rep[Any], b: String)(implicit x: Overloaded5): Rep[String]
+  def infix_+(a: Rep[String], b: Rep[Any])(implicit x: Overloaded1): Rep[String]
+  def infix_+(a: Rep[Any], b: Rep[String])(implicit x: Overloaded2): Rep[String]
+  def infix_+(a: String, b: Rep[Any])(implicit x: Overloaded4): Rep[String]
+  def infix_+(a: Rep[Any], b: String)(implicit x: Overloaded5): Rep[String]
   
   implicit def unit(x:String): Rep[String]
   implicit def unit(x:Int): Rep[Int]
@@ -28,10 +28,10 @@ trait UtilExp extends BaseExp with Utils {
   implicit def unit(x:Int): Rep[Int] = Const(x)
   implicit def unit(x:String): Rep[String] = Const(x)
   
-  def __ext__+(a: Rep[String], b: Rep[Any])(implicit x: Overloaded1): Rep[String] = StrCat(a,b)
-  def __ext__+(a: Rep[Any], b: Rep[String])(implicit x: Overloaded2): Rep[String] = StrCat(a,b)
-  def __ext__+(a: String, b: Rep[Any])(implicit x: Overloaded4): Rep[String] = StrCat(Const(a),b)
-  def __ext__+(a: Rep[Any], b: String)(implicit x: Overloaded5): Rep[String] = StrCat(a,Const(b))
+  def infix_+(a: Rep[String], b: Rep[Any])(implicit x: Overloaded1): Rep[String] = StrCat(a,b)
+  def infix_+(a: Rep[Any], b: Rep[String])(implicit x: Overloaded2): Rep[String] = StrCat(a,b)
+  def infix_+(a: String, b: Rep[Any])(implicit x: Overloaded4): Rep[String] = StrCat(Const(a),b)
+  def infix_+(a: Rep[Any], b: String)(implicit x: Overloaded5): Rep[String] = StrCat(a,Const(b))
 
   case class StrCat(a: Exp[Any],b: Exp[Any]) extends Def[String]
 
@@ -41,8 +41,10 @@ trait UtilExp extends BaseExp with Utils {
   
 }
 
-trait ScalaGenUtil extends ScalaGenBase with UtilExp {
-
+trait ScalaGenUtil extends ScalaGenBase {
+  val IR: UtilExp
+  import IR._
+  
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case StrCat(a,b) =>
       emitValDef(sym, quote(a) + ".toString + " + quote(b) + ".toString")
@@ -65,7 +67,7 @@ trait Vectors extends Utils {
 
   def ZeroVector(n: Rep[Int]): Rep[Vector]
   def RandomVector(n: Rep[Int]): Rep[Vector]
-  def __ext__+(a: Rep[Vector], b: Rep[Vector])(implicit x: Overloaded3): Rep[Vector]
+  def infix_+(a: Rep[Vector], b: Rep[Vector])(implicit x: Overloaded3): Rep[Vector]
 }
 
 trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
@@ -75,7 +77,7 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
   def ZeroVector(n: Exp[Int]) = Apply(vectorZero, n)
   def RandomVector(n: Exp[Int]) = doApply(vectorRandom, n) // random vectors are different...
 
-  def __ext__+(a: Exp[Vector], b: Exp[Vector])(implicit x: Overloaded3) = (a,b) match {
+  def infix_+(a: Exp[Vector], b: Exp[Vector])(implicit x: Overloaded3) = (a,b) match {
     case (Def(ZeroVector(_)), b) => b
     case (a, Def(ZeroVector(_))) => a
     case _ => Apply(vectorPlus, toAtom(Tup(a, b)))
@@ -89,7 +91,7 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
     }
   }
 
-  object ZeroVector extends ApplyExtractor[Int,Vector](vectorZero)
+  object ZeroVector extends ApplyExtractor[Int,Vector](vectorZero)  
   
 /*  
   object ZeroVector {
@@ -169,7 +171,7 @@ trait VectorImplInternal extends VectorImpl {
 */
 
 
-trait TestVectors extends Vectors {
+trait VectorsProg extends Vectors {
   
   def test(x: Rep[Unit]) = {
     RandomVector(7) + (ZeroVector(7) + RandomVector(7))
@@ -177,7 +179,7 @@ trait TestVectors extends Vectors {
   
 }
 
-trait TestStrings extends Vectors {
+trait StringsProg extends Vectors {
   
   def test(x: Rep[Any]) = {
     val s: Rep[Any] = "hi " + "yo " + x + " done"
@@ -188,40 +190,44 @@ trait TestStrings extends Vectors {
 
 
 
-object TestTestVectors {
+class TestVectors extends FileDiffSuite {
   
-  def main(args: Array[String]) = {
-
-    println("-- begin")
-
-    new TestVectors with VectorsExp with VectorsImplExternal
-    with CompileScala 
-    with ScalaGenFunctions with ScalaGenUtil
-    {
-      emitScalaSource(test, "Test", new PrintWriter(System.out))
-      val g = compile(test)
-      println(g())
-    }
+  val prefix = "test-out/epfl/test6-"
+  
+  def testVectors = {
+    withOutFile(prefix+"vectors") {
     
-    new TestStrings with VectorsExp with VectorsImplExternal
-    with CompileScala 
-    with ScalaGenFunctions with ScalaGenUtil
-    {
-      emitScalaSource(test, "Test", new PrintWriter(System.out))
-      val g = compile(test)
-      println(g(0))
-    }
-/*
-    new TestConditional with ArithExpOpt with EqualExp with PrintExp
-    with JSGenIfThenElse
-    with JSGenArith with JSGenEqual with JSGenPrint
-    {
-      val f = (x: Rep[Double]) => test(x)
-      emitJSSource(f, "main", new PrintWriter(System.out))
-      emitHTMLPage(() => f(7), new PrintWriter(new FileOutputStream("test5.html")))
-    }
+      println("-- begin")
 
-*/
-    println("-- end")
+      new VectorsProg with VectorsExp with VectorsImplExternal
+      with CompileScala { self =>
+        val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
+        codegen.emitScalaSource(test, "Test", new PrintWriter(System.out))
+        val g = compile(test)
+        println(g().mkString(","))
+      }
+    
+      new StringsProg with VectorsExp with VectorsImplExternal
+      with CompileScala { self =>
+        val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
+        codegen.emitScalaSource(test, "Test", new PrintWriter(System.out))
+        val g = compile(test)
+        println(g(0))
+      }
+  /*
+      new TestConditional with ArithExpOpt with EqualExp with PrintExp
+      with JSGenIfThenElse
+      with JSGenArith with JSGenEqual with JSGenPrint
+      {
+        val f = (x: Rep[Double]) => test(x)
+        emitJSSource(f, "main", new PrintWriter(System.out))
+        emitHTMLPage(() => f(7), new PrintWriter(new FileOutputStream("test5.html")))
+      }
+
+  */
+      println("-- end")
+    }
+    assertFileEqualsCheck(prefix+"vectors")
+    
   }
 }

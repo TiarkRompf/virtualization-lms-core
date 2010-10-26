@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package epfl
 package test4
 
+import common.{ScalaGenEffect,EffectExp} // don't import FunctionsExp
 import test2._
 import test3._
 import util.ClosureCompare
@@ -77,7 +78,7 @@ trait FunctionsCanonical extends FunctionsExp with ClosureCompare {
 
   var funTable: List[(Function[_,_], Any)] = List()
   
-  def lookupFun[A,B](f: Exp[A]=>Exp[B]): (Exp[A]=>Exp[B]) = {
+  def lookupFun[A:Manifest,B](f: Exp[A]=>Exp[B]): (Exp[A]=>Exp[B]) = {
     var can = canonicalize(f)
 
     funTable.find(_._2 == can) match {
@@ -98,7 +99,7 @@ trait FunctionsCanonical extends FunctionsExp with ClosureCompare {
 
 
 trait FunctionsExternalDef0 extends FunctionsExp {
-  case class DefineFun[A,B](res: Exp[B]) extends Def[A=>B]
+  case class DefineFun[A,B](res: Exp[B])(val arg: Exp[A], val mA: Manifest[A]) extends Def[A=>B]
 }
 
 trait FunctionsExternalDef01 extends FunctionsExternalDef0 { // not used
@@ -107,7 +108,7 @@ trait FunctionsExternalDef01 extends FunctionsExternalDef0 { // not used
     var funSym = fresh[A=>B]
     var argSym = fresh[A]//Sym(-1)
       
-    createDefinition(funSym, DefineFun[A,B](f(argSym)))
+    createDefinition(funSym, DefineFun[A,B](f(argSym))(argSym, mA))
     funSym
   }
 
@@ -138,7 +139,7 @@ trait FunctionsExternalDef1 extends FunctionsExternalDef0 with ClosureCompare { 
             funTable = (g,can)::funTable // ok?
             Lambda(g)
           case e => 
-            createDefinition(funSym, DefineFun[A,B](e))
+            createDefinition(funSym, DefineFun[A,B](e)(argSym,mA))
             funSym
         }
     }
@@ -148,7 +149,7 @@ trait FunctionsExternalDef1 extends FunctionsExternalDef0 with ClosureCompare { 
 
 trait FunctionsExternalDef2 extends FunctionsCanonical with FunctionsExternalDef0 {
 
-  override def lookupFun[A,B](f: Exp[A]=>Exp[B]): (Exp[A]=>Exp[B]) = {
+  override def lookupFun[A:Manifest,B](f: Exp[A]=>Exp[B]): (Exp[A]=>Exp[B]) = {
     var can = canonicalize(f)
 
     funTable.find(_._2 == can) match {
@@ -169,10 +170,30 @@ trait FunctionsExternalDef2 extends FunctionsCanonical with FunctionsExternalDef
             funTable = (g,can)::funTable // ok?
             g
           case e => 
-            createDefinition(funSym, DefineFun[A,B](e))
+            createDefinition(funSym, DefineFun[A,B](e)(argSym,implicitly))
             g
         }
     }
   }
 
+}
+
+trait ScalaGenFunctionsExternal extends ScalaGenEffect {
+  val IR: FunctionsExternalDef0 with EffectExp
+  import IR._
+  
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case DefineFun(y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
+    case _ => super.syms(e)
+  }
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: java.io.PrintWriter) = rhs match {
+    case e@DefineFun(y) =>
+      stream.println("val " + quote(sym) + " = {" + quote(e.arg) + ": (" + e.mA + ") => ")
+      emitBlock(y)
+      stream.println(quote(getBlockResult(y)))
+      stream.println("}")
+    case Apply(fun, arg) => 
+      emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
+    case _ => super.emitNode(sym, rhs)
+  }
 }

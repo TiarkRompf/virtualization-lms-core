@@ -6,7 +6,7 @@ import test1._
 import test2._
 
 
-trait TestMatch { this: Matching with Extractors =>
+trait MatchProg { this: Matching with Extractors =>
   
   case class Success(x: Int)
   
@@ -21,7 +21,7 @@ trait TestMatch { this: Matching with Extractors =>
     def unapply[A](x: Rep[::[A]]) = deconstruct(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
   }
   
-  def __ext__unapply(o: SuccessR.type, x: Rep[Success]): Option[Rep[Int]] = deconstruct(classOf[Success], Success.unapply, x)
+  def infix_unapply(o: SuccessR.type, x: Rep[Success]): Option[Rep[Int]] = deconstruct(classOf[Success], Success.unapply, x)
   // doesn't work...
   
   def unit[A](x: A): Rep[A]
@@ -45,46 +45,53 @@ trait TestMatch { this: Matching with Extractors =>
 
 
 
-object TestTestMatch {
+class TestMatch extends FileDiffSuite {
   
-  def main(args: Array[String]) = {
-    
-/*
-    println {
-      object TestMatchString extends TestMatch with Matching with Extractors with MatchingExtractorsRepString
-      import TestMatchString._
-      test(SuccessR("7"))
-    }
-*/    
+  val prefix = "test-out/epfl/test3-"
+  
+  /*
+      println {
+        object TestMatchString extends TestMatch with Matching with Extractors with MatchingExtractorsRepString
+        import TestMatchString._
+        test(SuccessR("7"))
+      }
+  */    
 
-    println {
-      object TestMatchExp extends TestMatch with Matching with Extractors
+  def testMatch1 = {
+    withOutFile(prefix+"match1") {
+      object MatchProgExp extends MatchProg with Matching with Extractors
         with MatchingExtractorsExp with FunctionsExpUnfoldAll
-        with ExtractorsGraphViz with DisableCSE
-      import TestMatchExp._
+        with DisableCSE
+      import MatchProgExp._
 
       case class Result(x:Any) extends Def[Any]
 
       val r = reifyEffects(test(fresh))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), "test3-match1-dot")
+      val p = new ExtractorsGraphViz { val IR: MatchProgExp.type = MatchProgExp }
+      p.emitDepGraph(toAtom(Result(r)), prefix+"match1-dot")
     }
-    
-    println {
-      object TestMatchExp extends TestMatch with Matching with Extractors
+    assertFileEqualsCheck(prefix+"match1")
+    assertFileEqualsCheck(prefix+"match1-dot")
+  }
+  
+  def testMatch2 = { 
+    withOutFile(prefix+"match2") {
+      object MatchProgExp extends MatchProg with Matching with Extractors
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll
-        with ExtractorsGraphViz
-      import TestMatchExp._
+      import MatchProgExp._
 
       case class Result(x:Any) extends Def[Any]
 
       val r = reifyEffects(test(fresh))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), "test3-match2-dot")
+      val p = new ExtractorsGraphViz { val IR: MatchProgExp.type = MatchProgExp }
+      p.emitDepGraph(toAtom(Result(r)), prefix+"match2-dot")
     }
-
+    assertFileEqualsCheck(prefix+"match2")
+    assertFileEqualsCheck(prefix+"match2-dot")
   }
 
 }

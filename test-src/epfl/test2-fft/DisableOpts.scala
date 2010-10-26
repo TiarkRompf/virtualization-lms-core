@@ -10,6 +10,7 @@ trait DisableCSE extends Expressions {
 
 
 trait DisableDCE extends Scheduling {
+  import IR._
   override def buildScheduleForResult(start: Exp[_]): List[TP[_]] =
     globalDefs
 }
