@@ -29,7 +29,7 @@ trait Scheduling {
     val st = syms(start)
     GraphUtil.stronglyConnectedComponents[TP[_]](st.flatMap(e => findDefinition(e).toList), { d =>
       //println("dep"+d +"="+dep(d.rhs))
-      dep(d.rhs).flatMap { e => // TODO: what is dep(d.rhs), really? d.rhs is a Def, not an Exp! should it be syms(d.rhs) ?
+      syms(d.rhs).flatMap { e =>
         //println(d + "->" + e)
         findDefinition(e).toList
       }
