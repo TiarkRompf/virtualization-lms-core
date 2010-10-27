@@ -42,11 +42,22 @@ trait FunctionsExp extends Functions with EffectExp {
 trait ScalaGenFunctions extends ScalaGenEffect {
   val IR: FunctionsExp
   import IR._
-  
+
+/*  
+  // TODO: right now were trying to hoist as much as we can out of functions. that might not always be appropriate!
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
   }
+*/
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match { // treat effects as bound symbols, just like the fun param
+    case Lambda(f, x, Def(Reify(y, es))) => x :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y) // i.e. they must live inside
+    case Lambda(f, x, y) => x :: boundSyms(y)
+    case _ => super.boundSyms(e)
+  }
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case e@Lambda(fun, x, y) =>
       stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + e.mA + ") => ")
