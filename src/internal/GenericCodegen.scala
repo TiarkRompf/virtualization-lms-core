@@ -8,6 +8,8 @@ trait GenericCodegen extends Scheduling {
   import IR._
 
   
+  def prepareCodegenForRoot(y: Exp[_]): Unit = ()
+  
   def emitBlock(y: Exp[_])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
     
@@ -37,8 +39,19 @@ trait GenericNestedCodegen extends GenericCodegen {
   import IR._
 
   var shallow = false
+  var computeLiveness = false
 
   var scope: List[TP[_]] = Nil
+
+
+  var defuse: List[(Sym[_],Sym[_])] = Nil
+
+  var tightGlobalDefs: List[TP[_]] = Nil
+
+  override def prepareCodegenForRoot(start: Exp[_]): Unit = {
+    tightGlobalDefs = buildScheduleForResult(start)
+  }
+
 
   override def emitBlock(start: Exp[_])(implicit stream: PrintWriter): Unit = {
     // try to push stuff as far down into more control-dependent parts as
@@ -81,10 +94,72 @@ trait GenericNestedCodegen extends GenericCodegen {
 
     // TODO: loop fusion, look for patterns in e4
 
-    for (TP(sym, rhs) <- e4) {
-      emitNode(sym, rhs)
+
+    // -------------- liveness stuff below (preliminary!!!)
+
+    def usesOf(s: Sym[_]): List[TP[_]] = tightGlobalDefs.flatMap { // TODO: 
+      case TP(s1, Reify(rhs1, _)) => // reify nodes are eliminated, so we need to find all uses of the reified thing
+        if (syms(rhs1).contains(s)) usesOf(s1) else Nil
+      case d@TP(_, rhs1) =>
+        if (syms(rhs1).contains(s)) List(d) else Nil
     }
 
+    // but we also want to know when stuff gets killed! (or would be killed unless reused)
+    // for all syms used by this node, if the use is transient, decrement use count
+    
+    def usedBy(s: Exp[_]): List[Sym[_]] = s match { // assume for now that all uses are transient
+      case Def(Reify(rhs1, _)) => 
+        usedBy(rhs1)
+      case Def(rhs) =>
+        syms(rhs).flatMap {
+          case Def(Reify(rhs1, _)) => syms(rhs1)
+          case r => List(r)
+        }
+    }
+    
+    if (computeLiveness) {
+      defuse = e4.flatMap {
+        case TP(sym, Reify(_, _)) => Nil
+        case TP(sym, rhs) =>
+          usesOf(sym).map(d => (sym,d.sym):(Sym[_],Sym[_]))
+      }
+
+      //stream.println("// def->use: " + defuse.map(p=>quote(p._1)+"->"+quote(p._2)).mkString(", "))    
+    }
+
+    // -------------- emitNode loop
+    
+    for (TP(sym, rhs) <- e4) {
+      emitNode(sym, rhs)
+      
+      if (computeLiveness) {
+        rhs match {
+          case Reify(s, effects) =>
+          case _ =>
+
+            // remove everything only used here from defuse
+            // output dealloc for stuff that goes away
+            
+            val livebefore = defuse.map(_._1).distinct
+            defuse = defuse.filterNot(_._2 == sym)
+            val liveafter = defuse.map(_._1).distinct
+            val killed = livebefore diff liveafter
+            if (killed.nonEmpty) stream.println("// kill: " + killed.map(quote).mkString(", "))
+            //stream.println("// def->use: " + defuse.map(p=>quote(p._1)+"->"+quote(p._2)).mkString(", "))
+
+/*
+            val u = defuse.filter(_._1 == sym)
+            val v = defuse.filter(_._2 == sym)
+            stream.println("// used in: " + u.mkString(","))
+            stream.println("// decrement usecount of: " + v.mkString(","))
+*/            
+        }
+      }
+      
+    }
+
+    // -------------- check effects and clean up
+    
     start match {
       case Def(Reify(x, effects0)) =>
         // with the current implementation the code below is not

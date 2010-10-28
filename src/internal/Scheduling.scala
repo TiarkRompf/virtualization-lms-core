@@ -20,7 +20,7 @@ trait Scheduling {
   }
 
 
-  def dep(e: Exp[Any]): List[Sym[Any]] = e match {
+  def dep(e: Exp[Any]): List[Sym[Any]] = e match { // only used by GraphVizExport currently
     case Def(d: Product) => syms(d)
     case _ => Nil
   }

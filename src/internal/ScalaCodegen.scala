@@ -16,6 +16,8 @@ trait ScalaCodegen extends GenericCodegen {
     val sA = mA.toString
     val sB = mB.toString
 
+    prepareCodegenForRoot(y)
+
     stream.println("/*****************************************\n"+
                    "  Emitting Generated Code                  \n"+
                    "*******************************************/")
