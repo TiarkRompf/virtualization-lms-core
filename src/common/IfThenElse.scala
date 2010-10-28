@@ -1,9 +1,9 @@
 package scala.virtualization.lms
 package common
 
-
-
 import java.io.PrintWriter
+import scala.virtualization.lms.common.{EffectExp, Base, BaseExp}
+import scala.virtualization.lms.internal.ScalaGenEffect
 
 trait IfThenElse extends Base {
   def __ifThenElse[T](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]): Rep[T]
@@ -29,19 +29,21 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
       case _ => IfThenElse(cond, thenp, elsep)
     }
   }
+
 }
 
 
 trait ScalaGenIfThenElse extends ScalaGenEffect {
   val IR: IfThenElseExp
   import IR._
-  
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case IfThenElse(c, t, e) if shallow => syms(c) // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
   }
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case IfThenElse(c,a,b) =>  
+    case IfThenElse(c,a,b) =>
       stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
       emitBlock(a)
       stream.println(quote(getBlockResult(a)))
@@ -49,6 +51,7 @@ trait ScalaGenIfThenElse extends ScalaGenEffect {
       emitBlock(b)
       stream.println(quote(getBlockResult(b)))
       stream.println("}")
+    
     case _ => super.emitNode(sym, rhs)
   }
 }

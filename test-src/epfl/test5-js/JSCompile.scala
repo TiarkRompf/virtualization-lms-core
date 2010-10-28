@@ -11,17 +11,17 @@ import java.io.PrintWriter
 trait JSCodegen extends GenericCodegen {
   import IR._
   
-  def emitHTMLPage[B](f: () => Exp[B], stream: PrintWriter): Unit = {
+  def emitHTMLPage[B](f: () => Exp[B], stream: PrintWriter)(implicit mB: Manifest[B]): Unit = {
     stream.println("<html><head><title>Scala2JS</title><script type=\"text/JavaScript\">")
     
-    emitJSSource((x:Exp[Int]) => f(), "main", stream)
+    emitSource((x:Exp[Int]) => f(), "main", stream)
     
     stream.println("</script><body onload=\"main(0)\">")
     stream.println("</body></html>")
     stream.flush
   }
 
-  def emitJSSource[A,B](f: Exp[A] => Exp[B], methName: String, stream: PrintWriter): Unit = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], methName: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
     val x = fresh
     val y = f(x)
 
@@ -41,8 +41,10 @@ trait JSCodegen extends GenericCodegen {
 trait JSNestedCodegen extends GenericNestedCodegen with JSCodegen {
   import IR._
 
-  override def emitJSSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter): Unit = {
-    super.emitJSSource[A,B](x => reifyEffects(f(x)), className, stream)
+  // TODO: we shouldn't need the manifests here (aks)
+  override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
+      (implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+    super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
   override def quote(x: Exp[_]) = x match { // TODO: quirk!
     case Sym(-1) => error("Sym(-1) not supported")

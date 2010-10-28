@@ -25,7 +25,7 @@ trait FacProg2 { this: Arith with Functions with Equal with IfThenElse =>
     def apply(x:Rep[A]): Rep[B] = doApply(f, x)
   }
   implicit def lam[A:Manifest,B](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
-  implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
+  //implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
 
 
   def fac: Rep[Double=>Double] = lam { n =>
@@ -97,7 +97,7 @@ class TestFac extends FileDiffSuite {
   def testFac4 = {
     withOutFile(prefix+"fac4") {
       object FacProgExp extends FacProg2
-        with ArithExpOpt with EqualExp with IfThenElseExp 
+        with ArithExpOpt with EqualExp with IfThenElseExp
         with FunctionExpUnfoldRecursion 
         with FunctionsExternalDef2 with FunctionsExternalDef0
       import FacProgExp._
@@ -125,7 +125,7 @@ class TestFac extends FileDiffSuite {
       println(f)
       val p = new ScalaGenArith with ScalaGenEqual with 
         ScalaGenIfThenElse with ScalaGenFunctionsExternal { val IR: FacProgExp.type = FacProgExp }
-      p.emitScalaSource(f, "Fac", new java.io.PrintWriter(System.out))
+      p.emitSource(f, "Fac", new java.io.PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"fac5")
   }

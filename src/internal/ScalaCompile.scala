@@ -53,7 +53,7 @@ trait ScalaCompile extends Expressions {
     compileCount += 1
     
     val source = new StringWriter()
-    codegen.emitScalaSource(f, className, new PrintWriter(source))
+    codegen.emitSource(f, className, new PrintWriter(source))
 
     val compiler = this.compiler
     val run = new compiler.Run

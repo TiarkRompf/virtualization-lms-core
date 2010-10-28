@@ -8,7 +8,7 @@ trait ScalaCodegen extends GenericCodegen {
   val IR: Expressions
   import IR._
 
-  def emitScalaSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
 
     val x = fresh
     val y = f(x)
@@ -51,9 +51,9 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   val IR: Expressions with Effects
   import IR._
   
-  override def emitScalaSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
+  override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
       (implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
-    super.emitScalaSource[A,B](x => reifyEffects(f(x)), className, stream)
+    super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
 
   override def quote(x: Exp[_]) = x match { // TODO: quirk!
@@ -61,4 +61,13 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
     case _ => super.quote(x)
   }
   
+}
+
+trait ScalaGenBase extends ScalaCodegen {
+  import IR._
+
+}
+
+trait ScalaGenEffect extends ScalaNestedCodegen with ScalaGenBase {
+
 }

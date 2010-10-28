@@ -7,6 +7,7 @@ import test1._
 
 import java.io.PrintWriter
 import java.io.FileOutputStream
+import scala.virtualization.lms.internal.ScalaGenEffect
 
 
 trait JSGenEqual extends JSGenBase {
@@ -108,7 +109,7 @@ class TestConditional extends FileDiffSuite {
         with ScalaGenEqual with ScalaGenPrint { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)
-        codegen.emitScalaSource(f, "Test", new PrintWriter(System.out))
+        codegen.emitSource(f, "Test", new PrintWriter(System.out))
         val g = compile(f)
         println(g(7))
       }
@@ -119,7 +120,7 @@ class TestConditional extends FileDiffSuite {
         with JSGenEqual with JSGenPrint { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)
-        codegen.emitJSSource(f, "main", new PrintWriter(System.out))
+        codegen.emitSource(f, "main", new PrintWriter(System.out))
         codegen.emitHTMLPage(() => f(7), new PrintWriter(new FileOutputStream(prefix+"conditional.html")))
       }
 

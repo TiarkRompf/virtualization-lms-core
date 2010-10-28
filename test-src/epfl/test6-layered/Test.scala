@@ -9,6 +9,7 @@ import util.OverloadHack
 
 import java.io.PrintWriter
 import java.io.FileOutputStream
+import scala.virtualization.lms.internal.ScalaGenBase
 
 trait Utils extends Base with OverloadHack {
   
@@ -37,7 +38,7 @@ trait UtilExp extends BaseExp with Utils {
 
   case class Tup[A,B](a: Exp[A],b: Exp[B]) extends Def[(A,B)]
   
-  case class External[A](s: String) extends Exp[A]
+  //case class External[A](s: String) extends Exp[A]
   
 }
 
@@ -54,7 +55,7 @@ trait ScalaGenUtil extends ScalaGenBase {
   }
 
   override def quote(x: Exp[_]) = x match {
-    case External(s) => s
+    case External(s,args) => s
     case _ => super.quote(x)
   }
 
@@ -202,7 +203,7 @@ class TestVectors extends FileDiffSuite {
       new VectorsProg with VectorsExp with VectorsImplExternal
       with CompileScala { self =>
         val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
-        codegen.emitScalaSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource(test, "Test", new PrintWriter(System.out))
         val g = compile(test)
         println(g().mkString(","))
       }
@@ -210,7 +211,7 @@ class TestVectors extends FileDiffSuite {
       new StringsProg with VectorsExp with VectorsImplExternal
       with CompileScala { self =>
         val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
-        codegen.emitScalaSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource(test, "Test", new PrintWriter(System.out))
         val g = compile(test)
         println(g(0))
       }

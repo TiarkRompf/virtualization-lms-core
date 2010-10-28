@@ -21,8 +21,11 @@ trait GenericCodegen extends Scheduling {
   def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
     throw new Exception("don't know how to generate code for: " + rhs)
   }
+
+  // TODO: why is this needed here?
+  //def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
   
-  def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
 
   def quote(x: Exp[_]) : String = x match {
     case Const(s: String) => "\""+s+"\""

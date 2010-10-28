@@ -1,8 +1,9 @@
 package scala.virtualization.lms
 package common
 
-import util.OverloadHack
 import java.io.PrintWriter
+import scala.virtualization.lms.util.OverloadHack
+import scala.virtualization.lms.internal.ScalaGenEffect
 
 trait Variables extends Base with OverloadHack {
   type Var[+T]
@@ -12,6 +13,7 @@ trait Variables extends Base with OverloadHack {
 
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1): Var[T]
   def __assign[T](lhs: Var[T], rhs: Rep[T]) : Rep[Unit]
+
 }
 
 trait VariablesExp extends Variables with EffectExp {
@@ -38,14 +40,14 @@ trait VariablesExp extends Variables with EffectExp {
   def __assign[T](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
     reflectEffect(Assign(lhs, rhs))
     Const()
-  }  
+  }
 }
 
 
 trait ScalaGenVariables extends ScalaGenEffect {
   val IR: VariablesExp
   import IR._
-  
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
     case NewVar(init) => emitVarDef(sym, quote(init))

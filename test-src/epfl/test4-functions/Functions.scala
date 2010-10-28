@@ -2,7 +2,8 @@ package scala.virtualization.lms
 package epfl
 package test4
 
-import common.{ScalaGenEffect,EffectExp} // don't import FunctionsExp
+import common.EffectExp
+import scala.virtualization.lms.internal.ScalaGenEffect // don't import FunctionsExp
 import test2._
 import test3._
 import util.ClosureCompare

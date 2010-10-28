@@ -5,6 +5,7 @@ package test1
 import common._
 
 import java.io.PrintWriter
+import scala.virtualization.lms.internal.ScalaGenBase
 
 
 trait Arrays extends Base {

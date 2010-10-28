@@ -148,7 +148,7 @@ class TestFFT extends FileDiffSuite {
       import o._
     
       val fft4 = (input: Rep[Array[Double]]) => ffts(input, 4)
-      codegen.emitScalaSource(fft4, "FFT4", new PrintWriter(System.out))
+      codegen.emitSource(fft4, "FFT4", new PrintWriter(System.out))
       val fft4c = compile(fft4)
       println(fft4c(Array(1.0,0.0, 1.0,0.0, 2.0,0.0, 2.0,0.0, 1.0,0.0, 1.0,0.0, 0.0,0.0, 0.0,0.0)).mkString(","))
     }
