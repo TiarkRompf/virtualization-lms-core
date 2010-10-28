@@ -3,7 +3,6 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.common.{Base, BaseExp}
 import scala.virtualization.lms.internal.ScalaGenBase
 
 trait Equal extends Base with Variables with OverloadHack {

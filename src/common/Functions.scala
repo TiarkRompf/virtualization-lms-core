@@ -2,7 +2,6 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.common.{EffectExp, Base}
 import scala.virtualization.lms.internal.ScalaGenEffect
 
 trait Functions extends Base {

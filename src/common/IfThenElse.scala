@@ -2,7 +2,6 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.common.{EffectExp, Base, BaseExp}
 import scala.virtualization.lms.internal.ScalaGenEffect
 
 trait IfThenElse extends Base {

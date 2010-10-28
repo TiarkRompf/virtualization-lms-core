@@ -22,13 +22,13 @@ trait GenericCodegen extends Scheduling {
     throw new Exception("don't know how to generate code for: " + rhs)
   }
 
-  // TODO: why is this needed here?
   //def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
   
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
 
   def quote(x: Exp[_]) : String = x match {
     case Const(s: String) => "\""+s+"\""
+    case Const(null) => "null" // why is null getting lifted now? something to do with Equal
     case Const(z) => z.toString
     case Sym(n) => "x"+n
     case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
