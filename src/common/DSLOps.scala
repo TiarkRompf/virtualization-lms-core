@@ -1,9 +1,8 @@
 package scala.virtualization.lms
-package common.embedded.scala
+package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.ScalaGenEffect
-import scala.virtualization.lms.common.{EffectExp}
 
 trait DSLOpsExp extends EffectExp {
   // representation must be reified! this places the burden on the caller, but allows the caller to avoid the

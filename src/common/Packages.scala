@@ -1,5 +1,5 @@
 package scala.virtualization.lms
-package common.embedded.scala
+package common
 
 import scala.virtualization.lms.common._
 

@@ -1,8 +1,7 @@
 package scala.virtualization.lms
-package common.embedded.scala
+package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.common.{Base, BaseExp}
 import scala.virtualization.lms.internal.ScalaGenBase
 
 trait BooleanOps extends Base {

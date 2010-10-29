@@ -1,8 +1,7 @@
 package scala.virtualization.lms
-package common.embedded.scala
+package common
 
 import java.io.{FileReader, BufferedReader, PrintWriter}
-import scala.virtualization.lms.common.{EffectExp, Base}
 import scala.virtualization.lms.internal.ScalaGenBase
 
 trait IOOps extends Base {

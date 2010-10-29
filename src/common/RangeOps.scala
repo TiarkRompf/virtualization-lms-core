@@ -1,8 +1,7 @@
 package scala.virtualization.lms
-package common.embedded.scala
+package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.common.{FunctionsExp, Base}
 import scala.virtualization.lms.internal.ScalaGenEffect
 
 trait RangeOps extends Base {
