@@ -24,25 +24,35 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   case class RangeStart(r: Exp[Range]) extends Def[Int]
   case class RangeStep(r: Exp[Range]) extends Def[Int]
   case class RangeEnd(r: Exp[Range]) extends Def[Int]
-  case class RangeForeach(r: Exp[Range], block: Exp[Int => Unit]) extends Def[Unit]
+  case class RangeForeach(r: Exp[Range], i: Exp[Int], body: Exp[Unit]) extends Def[Unit]
 
   def range_until(start: Exp[Int], end: Exp[Int]) : Rep[Range] = Until(start, end)
   def range_start(r: Exp[Range]) : Rep[Int] = RangeStart(r)
   def range_step(r: Exp[Range]) : Rep[Int] = RangeStep(r)
   def range_end(r: Exp[Range]) : Rep[Int] = RangeEnd(r)
-  def range_foreach(x: Exp[Range], block: Exp[Int] => Exp[Unit]) : Rep[Unit] = reflectEffect(RangeForeach(x, doLambda(block)))
+  def range_foreach(r: Exp[Range], block: Exp[Int] => Exp[Unit]) : Rep[Unit] = {
+    val i = fresh[Int]
+    reflectEffect(RangeForeach(r, i, reifyEffects(block(i))))
+  }
 }
 
 trait ScalaGenRangeOps extends ScalaGenEffect {
   val IR: RangeOpsExp
   import IR._
 
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case RangeForeach(r, i, body) if shallow => syms(r) // in shallow mode, don't count deps from nested blocks
+    case _ => super.syms(e)
+  }
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Until(start, end) => emitValDef(sym, "" + quote(start) + " until " + quote(end))
-    case RangeForeach(r,f) => {
-      stream.println("val " + quote(sym) + " = " + quote(r) + ".foreach{ ")
-      emitBlock(f)
-      stream.println(quote(getBlockResult(f)))
+    
+    // could generate as a while loop instead
+    case RangeForeach(r, i, body) => {
+      stream.println("val " + quote(sym) + " = " + quote(r) + ".foreach{ " + quote(i) + ": Int =>")
+      emitBlock(body)
+      stream.println(quote(getBlockResult(body)))
       stream.println("}")
     }
     case _ => super.emitNode(sym, rhs)
