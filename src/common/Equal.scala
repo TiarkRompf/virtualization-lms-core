@@ -49,7 +49,7 @@ trait ScalaGenEqual extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case Equal(a,b) =>  emitValDef(sym, quote(a) + " == " + quote(b))
+    case Equal(a,b) =>  emitValDef(sym, quote(a) + "==" + quote(b))
     case NotEqual(a,b) =>  emitValDef(sym, quote(a) + " != " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }

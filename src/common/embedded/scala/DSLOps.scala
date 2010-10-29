@@ -8,15 +8,18 @@ import scala.virtualization.lms.common.{EffectExp}
 trait DSLOpsExp extends EffectExp {
   // representation must be reified! this places the burden on the caller, but allows the caller to avoid the
   // use of function values (which can be uglier).
-  case class DSLOp[A](val representation: Exp[A]) extends Def[A]
+  class DSLOp[A](val representation: Exp[A]) extends Def[A]
 }
 
 trait ScalaGenDSLOps extends ScalaGenEffect {
   val IR: DSLOpsExp
   import IR._
   
+  // TODO: think about whether this should override syms for DSLOps or not
+  
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case op@DSLOp(b) =>
+    case op: DSLOp[_] =>
+      val b = op.representation
       stream.println("val " + quote(sym) + " = { ")
       emitBlock(b)
       stream.println(quote(getBlockResult(b)))

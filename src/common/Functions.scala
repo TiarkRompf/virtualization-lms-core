@@ -17,14 +17,6 @@ trait Functions extends Base {
 }
 
 trait FunctionsExp extends Functions with EffectExp {
-  class ApplyExtractor[A,B](f: Exp[A => B]) {
-    def apply(x: Exp[A]): Exp[B] = Apply(f,x)
-    def unapply(e: Def[B]): Option[Exp[A]] = e match {
-      case Apply(`f`, x: Exp[A]) => Some(x)
-      case _ => None
-    }
-  }
-
   case class Lambda[A,B](f: Exp[A] => Exp[B], x: Sym[A], y: Exp[B])(implicit val mA: Manifest[A]) extends Def[A => B]
   case class Apply[A,B](f: Exp[A => B], arg: Exp[A]) extends Def[B]
 
