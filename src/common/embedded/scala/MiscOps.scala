@@ -2,8 +2,8 @@ package scala.virtualization.lms
 package common.embedded.scala
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CGenBase, ScalaGenBase, Effects}
 import scala.virtualization.lms.common.{EffectExp, Base}
+import scala.virtualization.lms.internal._
 
 trait MiscOps extends Base {
   /**
@@ -32,7 +32,7 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   def exit(s: Rep[Int]) = reflectEffect(Exit(s))
 }
 
-trait ScalaGenMiscOps extends ScalaGenBase {
+trait ScalaGenMiscOps extends ScalaGenEffect {
   val IR: MiscOpsExp
   import IR._
 
@@ -46,7 +46,7 @@ trait ScalaGenMiscOps extends ScalaGenBase {
 
 
 //todo factor out commonality
-trait CGenMiscOps extends CGenBase {
+trait CGenMiscOps extends CGenEffect {
   val IR: MiscOpsExp
   import IR._
   
