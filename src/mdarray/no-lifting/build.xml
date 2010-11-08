@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="mdarray" default="build" basedir=".">
+
+  <property environment="env"/>
+
+  <!-- Prevents system classpath from being used -->
+  <property name="build.sysclasspath" value="ignore"/>
+
+<!-- ===========================================================================
+PROPERTIES
+============================================================================ -->
+
+  <property name="source.dir" value="src"/>
+
+  <property file="./build.properties"/>
+
+  <!-- the following properties can be set in the above property file -->
+  <property name="scala.dir" value="${env.SCALA_HOME}"/>
+  <property name="build.dir" value="classes"/>
+  <property name="docs.dir" value="docs"/>
+
+<!-- ===========================================================================
+INITIALISATION
+============================================================================ -->
+
+  <target name="init">
+    <available file="${scala.dir}" property="scala.present"/>
+    <fail
+      message="Installed Scala distribution could not be found."
+      unless="scala.present"
+    />
+    <property name="scala-library.jar" value="${scala.dir}/lib/scala-library.jar"/>
+    <property name="scala-compiler.jar" value="${scala.dir}/lib/scala-compiler.jar"/>
+    <path id="scala.classpath">
+      <pathelement location="${scala-library.jar}"/>
+      <pathelement location="${scala-compiler.jar}"/>
+    </path>
+    <taskdef resource="scala/tools/ant/antlib.xml">
+      <classpath>
+        <path refid="scala.classpath"/>
+      </classpath>
+    </taskdef>
+    <path id="build.classpath">
+      <pathelement location="${scala-library.jar}"/>
+      <pathelement location="${build.dir}"/>
+    </path>
+  </target>
+
+<!-- ===========================================================================
+BUILD
+============================================================================ -->
+
+  <target name="build" depends="init">
+    <echo level="verbose" message="build.dir=${build.dir}"/>
+    <mkdir dir="${build.dir}"/>
+    <fsc
+      srcdir="${source.dir}"
+      includes="**/lms/*.scala"
+      destdir="${build.dir}"
+      classpathref="build.classpath"
+      deprecation="yes"
+    />
+  </target>
+
+<!-- ===========================================================================
+CLEAN
+============================================================================ -->
+
+  <macrodef name="remove">
+    <attribute name="dir"/>
+    <sequential>
+      <delete dir="@{dir}" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+    </sequential>
+  </macrodef>
+
+  <target name="clean">
+    <remove dir="${build.dir}"/>
+  </target>
+
+<!-- ===========================================================================
+RUN
+============================================================================ -->
+
+  <target name="run">
+    <java classname="lms.MainObject"
+          classpath="${scala.dir}/lib/scala-library.jar:.:./classes"/>
+  </target>
+
+</project>
+
