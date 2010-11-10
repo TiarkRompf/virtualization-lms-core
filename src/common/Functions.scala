@@ -6,21 +6,21 @@ import scala.virtualization.lms.internal.ScalaGenEffect
 
 trait Functions extends Base {
 
-  implicit def doLambda[A,B](fun: Rep[A] => Rep[B])(implicit mA: Manifest[A]): Rep[A => B]
-  implicit def toLambdaOps[A,B](fun: Rep[A => B]) = new LambdaOps(fun)
+  implicit def doLambda[A,B](fun: Rep[A] => Rep[B])(implicit mA: Manifest[A], mB: Manifest[B]): Rep[A => B]
+  implicit def toLambdaOps[A:Manifest,B:Manifest](fun: Rep[A => B]) = new LambdaOps(fun)
   
-  class LambdaOps[A,B](f: Rep[A => B]) {
+  class LambdaOps[A:Manifest,B:Manifest](f: Rep[A => B]) {
     def apply(x: Rep[A]): Rep[B] = doApply(f,x)
   }
-  def doApply[A,B](fun: Rep[A => B], arg: Rep[A]): Rep[B]
+  def doApply[A:Manifest,B:Manifest](fun: Rep[A => B], arg: Rep[A]): Rep[B]
 
 }
 
 trait FunctionsExp extends Functions with EffectExp {
-  case class Lambda[A,B](f: Exp[A] => Exp[B], x: Sym[A], y: Exp[B])(implicit val mA: Manifest[A]) extends Def[A => B]
-  case class Apply[A,B](f: Exp[A => B], arg: Exp[A]) extends Def[B]
+  case class Lambda[A,B](f: Exp[A] => Exp[B], x: Sym[A], y: Exp[B])(implicit val mA: Manifest[A], val mB: Manifest[B]) extends Def[A => B]
+  case class Apply[A,B](f: Exp[A => B], arg: Exp[A])(implicit val mA: Manifest[A], val mB: Manifest[B]) extends Def[B]
 
-  def doLambda[A,B](f: Exp[A] => Exp[B])(implicit mA: Manifest[A]) : Exp[A => B] = {
+  def doLambda[A,B](f: Exp[A] => Exp[B])(implicit mA: Manifest[A], mB: Manifest[B]) : Exp[A => B] = {
     val x = fresh[A]
     val y = reifyEffects(f(x)) // unfold completely at the definition site. 
                                // TODO: this will not work if f is recursive. 
@@ -28,7 +28,7 @@ trait FunctionsExp extends Functions with EffectExp {
     Lambda(f, x, y)
   }
   
-  def doApply[A,B](f: Exp[A => B], x: Exp[A]): Exp[B] = f match {
+  def doApply[A,B](f: Exp[A => B], x: Exp[A])(implicit mA:Manifest[A], mB:Manifest[B]): Exp[B] = f match {
     case Def(Lambda(_,_,Def(Reify(_,_)))) => 
       // if function result is known to be effectful, so is application
       reflectEffect(Apply(f,x))
