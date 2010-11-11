@@ -8,7 +8,7 @@ import scala.virtualization.lms.internal.ScalaGenEffect
 trait Variables extends Base with OverloadHack {
   type Var[+T]
 
-  implicit def readVar[T:Manifest](v: Var[T]) : Rep[T]
+  implicit def readVar[T](v: Var[T]) : Rep[T]
   //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
 
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T]
@@ -26,9 +26,10 @@ trait VariablesExp extends Variables with EffectExp {
   //type Var[T] = Sym[T]
 
   // read operation
-  implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = reflectEffect(ReadVar(v))
+  implicit def readVar[T](v: Var[T]) : Exp[T] = reflectEffect(ReadVar(v))
 
-  case class ReadVar[T](v: Var[T])(implicit mT: Manifest[T]) extends Def[T]
+ 
+  case class ReadVar[T](v: Var[T]) extends Def[T]
   case class NewVar[T](init: Exp[T])(implicit mT: Manifest[T]) extends Def[T]
   case class Assign[T](lhs: Var[T], rhs: Exp[T])(implicit mT: Manifest[T]) extends Def[Unit]
 
