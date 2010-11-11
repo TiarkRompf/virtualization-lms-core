@@ -40,7 +40,7 @@ trait CudaGenImplicitOps extends CudaGenBase {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     // TODO: this valDef is redundant; we really just want the conversion to be a no-op in the generated code.
     // TODO: but we still need to link the defs together
-    case ImplicitConvert(x) => emitValDef(sym, quote(x))
+    case im@ImplicitConvert(x) => stream.println("%s %s = (%s)%s;".format(im.mY.toString, quote(sym), im.mY.toString, quote(x)))
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -30,8 +30,8 @@ trait VariablesExp extends Variables with EffectExp {
 
  
   case class ReadVar[T](v: Var[T]) extends Def[T]
-  case class NewVar[T](init: Exp[T])(implicit mT: Manifest[T]) extends Def[T]
-  case class Assign[T](lhs: Var[T], rhs: Exp[T])(implicit mT: Manifest[T]) extends Def[Unit]
+  case class NewVar[T](init: Exp[T])(implicit val mT: Manifest[T]) extends Def[T]
+  case class Assign[T](lhs: Var[T], rhs: Exp[T])(implicit val mT: Manifest[T]) extends Def[Unit]
 
   def __newVar[T](init: Exp[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
@@ -63,9 +63,9 @@ trait CudaGenVariables extends CudaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
-    case NewVar(init) => emitVarDef(sym, quote(init))
-    case Assign(Variable(a), b) => emitAssignment(quote(a), quote(b))
+    case rv@ReadVar(Variable(a)) => emitValDef(sym, quote(a))
+    case nv@NewVar(init) => emitVarDef(nv.mT.toString, sym, quote(init))
+    case as@Assign(Variable(a), b) => emitAssignment(as.mT.toString, quote(a), quote(b))
     //case Assign(a, b) => emitAssignment(quote(a), quote(b))
     case _ => super.emitNode(sym, rhs)
   }

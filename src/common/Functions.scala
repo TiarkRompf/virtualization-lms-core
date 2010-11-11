@@ -74,9 +74,11 @@ trait CudaGenFunctions extends CudaGenEffect {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case e@Lambda(fun, x, y) =>
-      stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + e.mA + ") => ")
+      val a = buildScheduleForResult(y)
+      val b = buildScheduleForResult(sym)
+      stream.println("__device__ %s %s(%s %s) {".format(e.mB, quote(sym), e.mA, quote(x)))
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)))
+      stream.println("return %s;".format(quote(getBlockResult(y))))
       stream.println("}")
 
     case Apply(fun, arg) =>
