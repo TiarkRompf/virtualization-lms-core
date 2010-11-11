@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenBase
+import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
 
 trait NumericOps extends Variables {
   def infix_+[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_plus(lhs,rhs)
@@ -39,6 +39,18 @@ trait ScalaGenNumericOps extends ScalaGenBase {
   val IR: NumericOpsExp
   import IR._
   
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case NumericPlus(a,b) => emitValDef(sym, quote(a) + " + " + quote(b))
+    case NumericMinus(a,b) => emitValDef(sym, quote(a) + " - " + quote(b))
+    case NumericTimes(a,b) => emitValDef(sym, quote(a) + " * " + quote(b))
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenNumericOps extends CudaGenBase {
+  val IR: NumericOpsExp
+  import IR._
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case NumericPlus(a,b) => emitValDef(sym, quote(a) + " + " + quote(b))
     case NumericMinus(a,b) => emitValDef(sym, quote(a) + " - " + quote(b))

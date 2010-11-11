@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenBase
+import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
 
 trait ImplicitOps extends Base {
   /**
@@ -22,6 +22,18 @@ trait ImplicitOpsExp extends ImplicitOps with BaseExp {
 }
 
 trait ScalaGenImplicitOps extends ScalaGenBase {
+  val IR: ImplicitOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    // TODO: this valDef is redundant; we really just want the conversion to be a no-op in the generated code.
+    // TODO: but we still need to link the defs together
+    case ImplicitConvert(x) => emitValDef(sym, quote(x))
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenImplicitOps extends CudaGenBase {
   val IR: ImplicitOpsExp
   import IR._
 

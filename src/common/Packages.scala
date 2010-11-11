@@ -36,3 +36,8 @@ trait ScalaCodeGenPkg extends ScalaGenImplicitOps with ScalaGenNumericOps with S
 /////
 // C
 trait CCodeGenPkg extends CGenMiscOps
+
+///////
+// Cuda
+trait CudaCodeGenPkg extends CudaGenNumericOps with CudaGenRangeOps with CudaGenFractionalOps
+    with CudaGenMiscOps with CudaGenFunctions with CudaGenVariables with CudaGenDSLOps with CudaGenImplicitOps { val IR: ScalaOpsPkgExp  }

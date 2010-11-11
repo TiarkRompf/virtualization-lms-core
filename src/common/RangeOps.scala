@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenEffect
+import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
 
 trait RangeOps extends Base {
   def infix_until(start: Rep[Int], end: Rep[Int]) = range_until(start,end)
@@ -47,6 +47,29 @@ trait ScalaGenRangeOps extends ScalaGenEffect {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Until(start, end) => emitValDef(sym, "" + quote(start) + " until " + quote(end))
     
+    // could generate as a while loop instead
+    case RangeForeach(r, i, body) => {
+      stream.println("val " + quote(sym) + " = " + quote(r) + ".foreach{ " + quote(i) + ": Int =>")
+      emitBlock(body)
+      stream.println(quote(getBlockResult(body)))
+      stream.println("}")
+    }
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenRangeOps extends CudaGenEffect {
+  val IR: RangeOpsExp
+  import IR._
+
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case RangeForeach(r, i, body) if shallow => syms(r) // in shallow mode, don't count deps from nested blocks
+    case _ => super.syms(e)
+  }
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case Until(start, end) => emitValDef(sym, "" + quote(start) + " until " + quote(end))
+
     // could generate as a while loop instead
     case RangeForeach(r, i, body) => {
       stream.println("val " + quote(sym) + " = " + quote(r) + ".foreach{ " + quote(i) + ": Int =>")

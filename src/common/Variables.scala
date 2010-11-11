@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.ScalaGenEffect
+import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
 
 trait Variables extends Base with OverloadHack {
   type Var[+T]
@@ -46,6 +46,19 @@ trait VariablesExp extends Variables with EffectExp {
 
 
 trait ScalaGenVariables extends ScalaGenEffect {
+  val IR: VariablesExp
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
+    case NewVar(init) => emitVarDef(sym, quote(init))
+    case Assign(Variable(a), b) => emitAssignment(quote(a), quote(b))
+    //case Assign(a, b) => emitAssignment(quote(a), quote(b))
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenVariables extends CudaGenEffect {
   val IR: VariablesExp
   import IR._
 

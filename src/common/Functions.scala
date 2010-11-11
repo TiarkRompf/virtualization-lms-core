@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenEffect
+import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
 
 trait Functions extends Base {
 
@@ -41,6 +41,29 @@ trait FunctionsExp extends Functions with EffectExp {
 }
 
 trait ScalaGenFunctions extends ScalaGenEffect {
+  val IR: FunctionsExp
+  import IR._
+
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case Lambda(f, x, y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
+    case _ => super.syms(e)
+  }
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case e@Lambda(fun, x, y) =>
+      stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + e.mA + ") => ")
+      emitBlock(y)
+      stream.println(quote(getBlockResult(y)))
+      stream.println("}")
+
+    case Apply(fun, arg) =>
+      emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
+
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenFunctions extends CudaGenEffect {
   val IR: FunctionsExp
   import IR._
 

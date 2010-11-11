@@ -17,9 +17,15 @@ trait GenericCodegen extends Scheduling {
   }
 
   def getBlockResult[A](s: Exp[A]): Exp[A] = s
-  
+
+  // Do not generate exception for now.
+  /*
   def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
     throw new Exception("don't know how to generate code for: " + rhs)
+  }
+  */
+  def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
+    stream.println("Generator Not Found")
   }
 
   //def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
