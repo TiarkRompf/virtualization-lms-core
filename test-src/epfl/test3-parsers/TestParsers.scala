@@ -35,13 +35,15 @@ class TestParsers extends FileDiffSuite {
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll // with ControlOpt
         with DisableCSE {
           type Elem = Char
+          implicit val mE = manifest[Char]
+          //implicit val mI = manifest[List[Char]]
           def toElem(c: Char) = c
         }
       import ParsersProgExp._
 
       case class Result(x:Any) extends Def[Any]
 
-      val r = reifyEffects(head(fresh))
+      val r = reifyEffects(head(fresh[Input]))
       println(globalDefs.mkString("\n"))
       println(r)
       val p = new ExtractorsGraphViz { val IR: ParsersProgExp.type = ParsersProgExp }
@@ -57,13 +59,15 @@ class TestParsers extends FileDiffSuite {
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll // with ControlOpt
         {
           type Elem = Char
+          implicit val mE = manifest[Char]
+          //implicit val mI = manifest[List[Char]]
           def toElem(c: Char) = c
         }
       import ParsersProgExp._
 
       case class Result(x:Any) extends Def[Any]
 
-      val r = reifyEffects(head(fresh))
+      val r = reifyEffects(head(fresh[Input]))
       println(globalDefs.mkString("\n"))
       println(r)
       val p = new ExtractorsGraphViz { val IR: ParsersProgExp.type = ParsersProgExp }

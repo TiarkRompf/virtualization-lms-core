@@ -5,34 +5,39 @@ import java.io.PrintWriter
 import scala.virtualization.lms.internal.ScalaGenBase
 
 trait NumericOps extends Variables {
-  def infix_+[T:Numeric](lhs: Rep[T], rhs: Rep[T]) = numeric_plus(lhs,rhs)
-  def infix_-[T:Numeric](lhs: Rep[T], rhs: Rep[T]) = numeric_minus(lhs,rhs)
-  def infix_*[T:Numeric](lhs: Rep[T], rhs: Rep[T]) = numeric_times(lhs,rhs)
-    
-  class NumericOpsCls[T:Numeric](lhs: Rep[T]) {
+  // workaround for infix not working with manifests
+  implicit def numericToRepNumericCls[T:Numeric:Manifest](n: T) = new NumericOpsCls(n)
+  implicit def repNumericToRepNumericCls[T:Numeric:Manifest](n: Rep[T]) = new NumericOpsCls(n)
+  
+  class NumericOpsCls[T:Numeric:Manifest](lhs: Rep[T]){
+    def +[A](rhs: A)(implicit c: A => T) = numeric_plus(lhs,c(rhs))
     def +(rhs: Rep[T]) = numeric_plus(lhs,rhs)
     def -(rhs: Rep[T]) = numeric_minus(lhs,rhs)
     def *(rhs: Rep[T]) = numeric_times(lhs,rhs)
   }
 
-  def numeric_plus[T:Numeric](lhs: Rep[T], rhs: Rep[T]): Rep[T]
-  def numeric_minus[T:Numeric](lhs: Rep[T], rhs: Rep[T]): Rep[T]
-  def numeric_times[T:Numeric](lhs: Rep[T], rhs: Rep[T]): Rep[T]
+  //def infix_+[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_plus(lhs,rhs)
+  //def infix_-[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_minus(lhs,rhs)
+  //def infix_*[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_times(lhs,rhs)
+
+  def numeric_plus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]): Rep[T]
+  def numeric_minus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]): Rep[T]
+  def numeric_times[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]): Rep[T]
   //def numeric_negate[T:Numeric](x: T): Rep[T]
   //def numeric_abs[T:Numeric](x: T): Rep[T]
   //def numeric_signum[T:Numeric](x: T): Rep[Int]
 }
 
 trait NumericOpsExp extends NumericOps with VariablesExp {
-  implicit def varNumericToNumericOps[T:Numeric](x: Var[T]) = new NumericOpsCls(readVar(x))
+  implicit def varNumericToNumericOps[T:Numeric:Manifest](x: Var[T]) = new NumericOpsCls(readVar(x))
 
-  case class NumericPlus[T:Numeric](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
-  case class NumericMinus[T:Numeric](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
-  case class NumericTimes[T:Numeric](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
+  case class NumericPlus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
+  case class NumericMinus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
+  case class NumericTimes[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
 
-  def numeric_plus[T:Numeric](lhs: Exp[T], rhs: Exp[T]) : Rep[T] = NumericPlus(lhs, rhs)
-  def numeric_minus[T:Numeric](lhs: Exp[T], rhs: Exp[T]) : Rep[T] = NumericMinus(lhs, rhs)
-  def numeric_times[T:Numeric](lhs: Exp[T], rhs: Exp[T]) : Rep[T] = NumericTimes(lhs, rhs)
+  def numeric_plus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) : Rep[T] = NumericPlus(lhs, rhs)
+  def numeric_minus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) : Rep[T] = NumericMinus(lhs, rhs)
+  def numeric_times[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) : Rep[T] = NumericTimes(lhs, rhs)
 }
 
 trait ScalaGenNumericOps extends ScalaGenBase {

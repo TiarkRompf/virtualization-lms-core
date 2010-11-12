@@ -10,7 +10,7 @@ trait ScalaCodegen extends GenericCodegen {
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
 
-    val x = fresh
+    val x = fresh[A]
     val y = f(x)
 
     val sA = mA.toString
@@ -58,8 +58,9 @@ trait ScalaCodegen extends GenericCodegen {
     emitNode(sym, rhs)(kstream)
 
     kstream.println("}}")
+    kstream.close()
 
-    stream.println("embedding.scala-gen." + quote(sym) + "()")
+    stream.println("embedding.scala-gen." + quote(sym) + "()")    
   }
 
 }

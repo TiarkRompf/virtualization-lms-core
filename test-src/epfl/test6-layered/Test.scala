@@ -65,6 +65,7 @@ trait ScalaGenUtil extends ScalaGenBase {
 trait Vectors extends Utils {
 
   type Vector
+  implicit val mV: Manifest[Vector]
 
   def ZeroVector(n: Rep[Int]): Rep[Vector]
   def RandomVector(n: Rep[Int]): Rep[Vector]
@@ -84,7 +85,7 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
     case _ => Apply(vectorPlus, toAtom(Tup(a, b)))
   }
   
-  class ApplyExtractor[A,B](f: Exp[A => B]) {
+  class ApplyExtractor[A:Manifest,B:Manifest](f: Exp[A => B]) {
     def apply(x: Exp[A]): Exp[B] = Apply(f,x)
     def unapply(e: Def[B]): Option[Exp[A]] = e match {
       case Apply(`f`, x: Exp[A]) => Some(x)
@@ -119,14 +120,15 @@ trait VectorsImpl extends Vectors with FunctionsExp with UtilExp {
 trait VectorsImplExternal extends VectorsImpl {
 
   type Vector = Array[Double]
+  implicit val mV = manifest[Array[Double]]
 
   val base = "scala.virtualization.lms.epfl.test6.VectorOps.%s"
   
   // FIXME: using base + "zero" crashes the compiler!
   
-  val vectorZero = External(base format "zero")
-  val vectorRandom = External(base format "random")
-  val vectorPlus = External(base format "plus")
+  val vectorZero = External[Int => Vector](base format "zero")
+  val vectorRandom = External[Int => Vector](base format "random")
+  val vectorPlus = External[((Vector,Vector)) => Vector](base format "plus")
 
 }
 
@@ -145,6 +147,7 @@ object VectorOps {
 trait VectorsImplConst extends VectorsImpl {
 
   type Vector = Array[Double]
+  implicit val mV = manifest[Array[Double]]
 
   // kernels implementations as function-type constants
 

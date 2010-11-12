@@ -9,18 +9,20 @@ package internal
  */
 trait Expressions {
 
-  abstract class Exp[+T] // constants/symbols (atomic)
+  abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
+    def Type : Manifest[_] = manifest
+  }
 
-  case class Const[T](x: T) extends Exp[T]
+  case class Const[T:Manifest](x: T) extends Exp[T]
 
-  case class Sym[T](val id: Int) extends Exp[T]
+  case class Sym[T:Manifest](val id: Int) extends Exp[T]
 
-  case class Variable[+T](e: Exp[T])
+  case class Variable[+T:Manifest](e: Exp[T])
 
-  case class External[A](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
+  case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
       
   var nVars = 0
-  def fresh[T] = Sym[T] { nVars += 1; nVars -1 }
+  def fresh[T:Manifest] = Sym[T] { nVars += 1; nVars -1 }
 
   abstract class Def[+T] // operations (composite)
 
@@ -34,7 +36,7 @@ trait Expressions {
   def findDefinition[T](d: Def[T]): Option[TP[T]] =
     globalDefs.find(_.rhs == d).asInstanceOf[Option[TP[T]]]
 
-  def findOrCreateDefinition[T](d: Def[T]): TP[T] =
+  def findOrCreateDefinition[T:Manifest](d: Def[T]): TP[T] =
     findDefinition[T](d).getOrElse {
       createDefinition(fresh[T], d)
     }
@@ -45,7 +47,7 @@ trait Expressions {
     f
   }
 
-  implicit def toAtom[T](d: Def[T]): Exp[T] = {
+  implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
     findOrCreateDefinition(d).sym
   }
 

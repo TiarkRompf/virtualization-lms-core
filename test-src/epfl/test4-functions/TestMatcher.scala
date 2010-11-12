@@ -9,9 +9,9 @@ import test3._
 trait ListMatch extends Extractors {
   
   object :!: {
-    def apply[A](x: Rep[A], xs: Rep[List[A]]) = construct(classOf[::[A]], (::.apply[A] _).tupled, tuple(x, xs))
+    def apply[A:Manifest](x: Rep[A], xs: Rep[List[A]]) = construct(classOf[::[A]], (::.apply[A] _).tupled, tuple(x, xs))
 //    def unapply[A](x: Rep[::[A]]) = deconstruct2(classOf[::[A]], ::.unapply[A], x) // doesn't work: hd is private in :: !
-    def unapply[A](x: Rep[::[A]]) = deconstruct2(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
+    def unapply[A:Manifest](x: Rep[::[A]]) = deconstruct2(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
   }
 
 }
@@ -19,7 +19,7 @@ trait ListMatch extends Extractors {
 
 trait MatcherProg { this: Matching with ListMatch =>
   
-  def unit[A](x: A): Rep[A]
+  def unit[A:Manifest](x: A): Rep[A]
   
   type Input = List[Char]
   

@@ -8,25 +8,25 @@ trait ArrayOps extends Variables {
 
   // multiple definitions needed because implicits won't chain
   // not using infix here because apply doesn't work with infix methods
-  implicit def varToRepArrayOps[A](x: Var[Array[A]]) = new RepArrayOpsCls(readVar(x))
-  implicit def repArrayToRepArrayOps[T](a: Rep[Array[T]]) = new RepArrayOpsCls(a)
-  implicit def arrayToRepArrayOps[T](a: Array[T]) = new RepArrayOpsCls(a)
+  implicit def varToRepArrayOps[A:Manifest](x: Var[Array[A]]) = new RepArrayOpsCls(readVar(x))
+  implicit def repArrayToRepArrayOps[T:Manifest](a: Rep[Array[T]]) = new RepArrayOpsCls(a)
+  implicit def arrayToRepArrayOps[T:Manifest](a: Array[T]) = new RepArrayOpsCls(a)
 
-  class RepArrayOpsCls[T](a: Rep[Array[T]]){
+  class RepArrayOpsCls[T:Manifest](a: Rep[Array[T]]){
     def apply(n: Rep[Int]) = array_apply(a, n)
     def length = array_length(a)
   }
-    
-  def array_apply[T](x: Rep[Array[T]], n: Rep[Int]): Rep[T]
-  def array_length[T](x: Rep[Array[T]]) : Rep[Int]
+
+  def array_apply[T:Manifest](x: Rep[Array[T]], n: Rep[Int]): Rep[T]
+  def array_length[T:Manifest](x: Rep[Array[T]]) : Rep[Int]
 }
 
 trait ArrayOpsExp extends ArrayOps with VariablesExp {
-  case class ArrayLength[T](a: Exp[Array[T]]) extends Def[Int]
-  case class ArrayApply[T](x: Exp[Array[T]], n: Exp[Int]) extends Def[T]
+  case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int]
+  case class ArrayApply[T:Manifest](x: Exp[Array[T]], n: Exp[Int]) extends Def[T]
 
-  def array_apply[T](x: Exp[Array[T]], n: Exp[Int]): Rep[T] = ArrayApply(x, n)
-  def array_length[T](a: Exp[Array[T]]) : Rep[Int] = ArrayLength(a)
+  def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int]): Rep[T] = ArrayApply(x, n)
+  def array_length[T:Manifest](a: Exp[Array[T]]) : Rep[Int] = ArrayLength(a)
 }
 
 trait ScalaGenArrayOps extends ScalaGenBase {
