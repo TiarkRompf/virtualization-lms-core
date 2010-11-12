@@ -3,6 +3,33 @@ package lms
 import scala.collection.immutable._
 import java.lang.StringBuffer
 
+/*
+
+class MDArray[A](shape: Array[Rep[Int]], content: Rep[Array[T]]) {
+  
+  def dim = shape.length
+
+  def apply(iv: MDArray[Int]): MDArray[A] = {
+    assert(iv.dim == 1)
+    ...
+  }
+
+
+}
+
+  0 0 0 0 0 
+  0 0 0 0 0
+
+  Apply(1)
+  
+  0 0 0 0 0
+
+
+
+
+*/
+
+
 class MDArray[A](shapeIV:IndexVector, contentArray:Array[A]) {
 
   // Built-in functions
