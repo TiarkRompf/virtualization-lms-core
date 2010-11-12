@@ -1,1 +1,5 @@
 *.iml
+local.properties
+project/boot
+project/build/target
+target

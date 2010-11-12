@@ -1,8 +1,8 @@
 package scala.virtualization.lms
 package internal
 
-import java.io.PrintWriter
-
+import com.sun.org.apache.xalan.internal.xsltc.compiler.sym
+import java.io.{File, FileWriter, PrintWriter}
 
 trait ScalaCodegen extends GenericCodegen {
   val IR: Expressions
@@ -43,6 +43,23 @@ trait ScalaCodegen extends GenericCodegen {
   }
   def emitAssignment(lhs: String, rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(lhs + " = " + rhs)
+  }
+
+  override def emitKernel(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
+    val build_path = Config.build_dir + "scala/"
+    val outf = new File(build_path)
+    outf.mkdirs()
+
+    val kstream = new PrintWriter(new FileWriter(build_path + quote(sym)))
+    kstream.println("package embedding.scala-gen")
+    kstream.println("object " + quote(sym) + "{")
+    kstream.println("def apply() = {")
+
+    emitNode(sym, rhs)(kstream)
+
+    kstream.println("}}")
+
+    stream.println("embedding.scala-gen." + quote(sym) + "()")
   }
 
 }

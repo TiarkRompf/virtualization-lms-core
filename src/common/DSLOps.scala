@@ -1,8 +1,8 @@
 package scala.virtualization.lms
 package common
 
-import java.io.PrintWriter
 import scala.virtualization.lms.internal.ScalaGenEffect
+import java.io.PrintWriter
 
 trait DSLOpsExp extends EffectExp {
   // representation must be reified! this places the burden on the caller, but allows the caller to avoid the
@@ -26,4 +26,5 @@ trait ScalaGenDSLOps extends ScalaGenEffect {
 
     case _ => super.emitNode(sym, rhs)
   }
+
 }

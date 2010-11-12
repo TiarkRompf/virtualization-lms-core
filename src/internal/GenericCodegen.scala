@@ -22,6 +22,10 @@ trait GenericCodegen extends Scheduling {
     throw new Exception("don't know how to generate code for: " + rhs)
   }
 
+  def emitKernel(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
+    throw new Exception("don't know how to generate kernel for: " + rhs)
+  }
+
   //def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
   
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
@@ -70,7 +74,12 @@ trait GenericNestedCodegen extends GenericCodegen {
     scope = e4 ::: scope
 
     for (TP(sym, rhs) <- e4) {
-      emitNode(sym, rhs)
+      if (Config.gen_kernels){
+        emitKernel(sym, rhs)
+      }
+      else{
+        emitNode(sym, rhs)
+      }      
     }
 
     start match {
