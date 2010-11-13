@@ -74,12 +74,7 @@ trait GenericNestedCodegen extends GenericCodegen {
     scope = e4 ::: scope
 
     for (TP(sym, rhs) <- e4) {
-      if (Config.gen_kernels){
-        emitKernel(sym, rhs)
-      }
-      else{
-        emitNode(sym, rhs)
-      }      
+      emitNode(sym, rhs)      
     }
 
     start match {
@@ -120,6 +115,14 @@ trait GenericNestedCodegen extends GenericCodegen {
     case Reify(s, effects) =>
       // just ignore -- effects are accounted for in emitBlock
     case _ => super.emitNode(sym, rhs)
+  }
+
+  
+  override def inputs(rhs: Def[_]) : List[Any] = rhs match {
+    case Reify(e, effects) => List(e)
+    case Reflect(s, effects) => inputs(s) // ignore control dependencies here for now
+    case p: Product => p.productIterator.toList
+    case _ => Nil
   }
 
 }

@@ -8,6 +8,8 @@ trait ScalaCodegen extends GenericCodegen {
   val IR: Expressions
   import IR._
 
+  override def toString = "scala"
+
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
 
     val x = fresh[A]
@@ -44,25 +46,6 @@ trait ScalaCodegen extends GenericCodegen {
   def emitAssignment(lhs: String, rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(lhs + " = " + rhs)
   }
-
-  override def emitKernel(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
-    val build_path = Config.build_dir + "scala/"
-    val outf = new File(build_path)
-    outf.mkdirs()
-
-    val kstream = new PrintWriter(new FileWriter(build_path + quote(sym)))
-    kstream.println("package embedding.scala-gen")
-    kstream.println("object " + quote(sym) + "{")
-    kstream.println("def apply() = {")
-
-    emitNode(sym, rhs)(kstream)
-
-    kstream.println("}}")
-    kstream.close()
-
-    stream.println("embedding.scala-gen." + quote(sym) + "()")    
-  }
-
 }
 
 trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
@@ -78,7 +61,7 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
     case Sym(-1) => "_"
     case _ => super.quote(x)
   }
-  
+
 }
 
 trait ScalaGenBase extends ScalaCodegen {

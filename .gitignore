@@ -3,3 +3,5 @@ local.properties
 project/boot
 project/build/target
 target
+lib_managed
+test-out
