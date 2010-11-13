@@ -81,6 +81,7 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   
 }
 
+// TODO: what is the point of these, I suggest to remove them
 trait ScalaGenBase extends ScalaCodegen {
   import IR._
 
