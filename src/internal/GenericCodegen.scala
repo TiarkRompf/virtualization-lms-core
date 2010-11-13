@@ -7,7 +7,9 @@ trait GenericCodegen extends Scheduling {
   val IR: Expressions
   import IR._
 
-  
+  def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
+  def getFreeVarNode(rgs: Def[_]): List[Sym[_]] = { throw new Exception("Method getFreeVarNode should be overriden.") }
+
   def emitBlock(y: Exp[_])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
     
@@ -117,6 +119,43 @@ trait GenericNestedCodegen extends GenericCodegen {
     case Reify(s, effects) =>
       // just ignore -- effects are accounted for in emitBlock
     case _ => super.emitNode(sym, rhs)
+  }
+
+  override def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = {
+    // Do the same things as emitBlock would
+    val e1 = buildScheduleForResult(start) // deep list of deps
+    shallow = true
+    val e2 = buildScheduleForResult(start) // shallow list of deps (exclude stuff only needed by nested blocks)
+    shallow = false
+    val e3 = e1.filter(e2 contains _) // shallow, but with the ordering of deep!!
+    val e4 = e3.filterNot(scope contains _) // remove stuff already emitted
+    val save = scope
+    scope = e4 ::: scope
+
+    // Find local symbols (including those passed as arguments to this method)
+    var localList:List[Sym[_]] = e4.map(_.sym) ::: local.toList
+
+    // Find free variables by subtracting local list from used list (shallow should be turned on)
+    shallow = true
+    var freeList:List[Sym[_]]  = e4.flatMap(syms).filter(!localList.contains(_))
+    shallow = false
+
+    // Iterate nodes to find out free variables in the nested blocks
+    for (TP(sym, rhs) <- e4) {
+      freeList = (getFreeVarNode(rhs) ::: freeList).filter(!localList.contains(_))
+    }
+
+    // restore scope 
+    scope = save
+
+    // return free symbol list
+    freeList.distinct
+  }
+
+  //override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = { Nil }
+  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+    case Reflect(s, effects) => getFreeVarNode(s)
+    case _ => Nil
   }
 
 }

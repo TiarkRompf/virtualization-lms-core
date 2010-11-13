@@ -49,8 +49,40 @@ trait ScalaGenFunctions extends ScalaGenEffect {
     case _ => super.syms(e)
   }
 
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case Lambda(f, x, Def(Reify(y, es))) => x :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y)
+    case Lambda(f, x, y) => x :: boundSyms(y)
+    //case Lambda(f, x, Def(a,lst)) => x :: boundSyms(y)
+    case _ => Nil
+  }
+
+  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+    case Lambda(f, x, y) => getFreeVarBlock(y,List(x.asInstanceOf[Sym[_]]))
+    case _ => super.getFreeVarNode(rhs)
+  }
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case e@Lambda(fun, x, y) =>
+
+      // Subtracting deps of params from full deps
+      /*
+      val fullDeps = buildScheduleForResult(y)  // Entire list of TPs this block depends on
+      val params = boundSyms(e)   // the list of Syms for function parameters
+      val paramDeps = getDependentStuff(params)   // The list of TPs that depends on function parameter
+      val freeSyms = fullDeps.filter(!paramDeps.contains(_)).map(_.sym)    // List of symbols for free variables
+      */
+
+      // Just using local IR nodes dependent on params 
+      /*
+      val params = boundSyms(e)   // the list of Syms for function parameters
+      val paramDeps = getDependentStuff(params)   // The list of TPs that depends on function parameter
+      val localSyms = paramDeps.map(_.sym) ++ params  // The list of Syms for local symbols
+      val freeSyms = paramDeps.flatMap(syms).filter(!localSyms.contains(_))  // List of symbols for free variables
+      */
+
+      // Using additional function that uses current 'scope' variable
+      val freeSyms = getFreeVarBlock(y,boundSyms(e))
+
       stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + e.mA + ") => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
