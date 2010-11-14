@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
+import scala.virtualization.lms.internal.ScalaGenEffect
 
 trait While extends Base {
   def __whileDo(cond: => Rep[Boolean], body: => Rep[Unit])
@@ -27,39 +27,6 @@ trait ScalaGenWhile extends ScalaGenEffect {
     case While(c, b) if shallow => Nil
     case _ => super.syms(e)
   }
-
-  // TODO: What about condition node?
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
-    case While(c,b) => getFreeVarBlock(b,Nil)
-    case _ => super.getFreeVarNode(rhs)
-  }
-  
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case While(c,b) =>
-      val c_blk = reifyEffects(c())
-      stream.print("while ({")
-      emitBlock(c_blk)
-      stream.print(quote(getBlockResult(c_blk)))
-      stream.println("}) {")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
-
-    case _ => super.emitNode(sym, rhs)
-  }
-}
-
-
-trait CudaGenWhile extends CudaGenEffect {
-  val IR: WhileExp
-  import IR._
-
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case While(c, b) if shallow => Nil
-    case _ => super.syms(e)
-  }
-
-
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case While(c,b) =>

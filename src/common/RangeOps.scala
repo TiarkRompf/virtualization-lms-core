@@ -44,11 +44,6 @@ trait ScalaGenRangeOps extends ScalaGenEffect {
     case _ => super.syms(e)
   }
 
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
-      case RangeForeach(r, i, body) => getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
-      case _ => super.getFreeVarNode(rhs)
-  }
-
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Until(start, end) => emitValDef(sym, "" + quote(start) + " until " + quote(end))
     
@@ -71,7 +66,6 @@ trait CudaGenRangeOps extends CudaGenEffect {
     case RangeForeach(r, i, body) if shallow => syms(r) // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
   }
-
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Until(start, end) => emitValDef(sym, "" + quote(start) + " until " + quote(end))
