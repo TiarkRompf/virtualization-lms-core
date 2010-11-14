@@ -3,7 +3,6 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
-import collection.mutable.HashSet
 
 trait DSLOpsExp extends EffectExp {
   // representation must be reified! this places the burden on the caller, but allows the caller to avoid the
@@ -45,25 +44,27 @@ trait CudaGenDSLOps extends CudaGenEffect {
       stream.println(quote(getBlockResult(b)))
       stream.println("}")
 
+    // Currently the generator inlines the __device__ function inside the __global__ function.
+    // Later it will be changed to have a separate device function.
+    // TODO: Need a flag to tell the function generator to determine it.
+    // TODO: How to tell the task graph generator / runtime about the output data structure generation
      case DSLMap(x,y,range,func) =>
-      // Get function argument list
-      val argsSet = HashSet[Sym[_]]()
-      //getUsedIdents(func,argsSet)
-      // Print function
-      emitBlock(func)
-      // Print range
-      //emitBlock(range)(prtWriter)
-      //val length = strWriter.toString.split("<.+;")(1)
-      argsSet.add(findDefinition(x.asInstanceOf[Sym[_]]).get.sym)
-      argsSet.add(findDefinition(y.asInstanceOf[Sym[_]]).get.sym)
-      //var list = argsSet.toList ++ findDefinition(x).get +
-      var str = ""
-      stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),argsSet.toList.map(quote(_)).mkString(",")))
-      stream.println("\tint %s = blockIdx.x*blockDim.x + threadIdx.x;".format("index"))
-      stream.println("\tif(%s < %s) {".format("index", "length"))
-      stream.println("\t\t%s.get(%s) = %s(%s.get(%s));".format(quote(x),"index",quote(func),quote(y),"index"))
-      stream.println("\t}")
-      stream.println("}")
+       // Get free variables of this __global__ GPU function
+       var freeVars = (buildScheduleForResult(x):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
+       val paramList = (x.asInstanceOf[Sym[_]]::y.asInstanceOf[Sym[_]]::freeVars).distinct
+       stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramList.map(quote(_)).mkString(",")))
+       stream.println("\tint %s = blockIdx.x*blockDim.x + threadIdx.x;".format("index"))
+       stream.println("\tif(%s < %s) {".format("index", quote(x)+".length"))
+       // Print the device function (inlined)
+       // put parameters
+       stream.println("%s %s = %s;".format("no_type", quote(func)+"_1", quote(x)+".apply(index)"))
+       emitBlock(func)
+       stream.println("%s.update(%s, %s);".format(quote(y),"index",quote(func)))
+       stream.println("\t}")
+       stream.println("}")
+
+       //The version having separate device function
+       //stream.println("\t\t%s.update(%s, %s(%s.apply(%s)));".format(quote(y),"index",quote(func),quote(x),"index"))
 
     case _ => super.emitNode(sym, rhs)
   }

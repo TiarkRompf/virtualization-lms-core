@@ -74,12 +74,22 @@ trait CudaGenFunctions extends CudaGenEffect {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case e@Lambda(fun, x, y) =>
-      val a = buildScheduleForResult(y)
-      val b = buildScheduleForResult(sym)
+
+      // The version for inlined device function
+      stream.println("%s %s = %s;".format(e.mA, quote(x), quote(sym)+"_1"))
+      emitBlock(y)
+      stream.println("%s %s = %s;".format(e.mB, quote(sym), quote(getBlockResult(y))))
+
+      // The version for separate device function
+      /*
+      //TODO: If function parameter was originally tuple, then each element should be renamed?
+      val freeVars = buildScheduleForResult(y).filter(scope.contains(_)).map(_.sym)
       stream.println("__device__ %s %s(%s %s) {".format(e.mB, quote(sym), e.mA, quote(x)))
       emitBlock(y)
+      stream.println("%s %s = %s;".format(e.mB, quote(sym), quote(getBlockResult(y))))
       stream.println("return %s;".format(quote(getBlockResult(y))))
       stream.println("}")
+      */
 
     case Apply(fun, arg) =>
       emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
