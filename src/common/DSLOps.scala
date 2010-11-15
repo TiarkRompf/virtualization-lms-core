@@ -4,6 +4,7 @@ package common
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
 
+
 trait DSLOpsExp extends EffectExp {
   // representation must be reified! this places the burden on the caller, but allows the caller to avoid the
   // use of function values (which can be uglier).
@@ -28,6 +29,7 @@ trait ScalaGenDSLOps extends ScalaGenEffect {
 
     case _ => super.emitNode(sym, rhs)
   }
+
 }
 
 trait CudaGenDSLOps extends CudaGenEffect {

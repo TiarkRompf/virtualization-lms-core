@@ -8,26 +8,26 @@ import test2._
 
 trait Extractors extends Base {
   
-  def construct[A,B](c: Class[A], f: B => A, x: Rep[B]): Rep[A]
-  def deconstruct[A,B](c: Class[A], f: A => Option[B], x: Rep[A]): Option[Rep[B]]
+  def construct[A:Manifest,B:Manifest](c: Class[A], f: B => A, x: Rep[B]): Rep[A]
+  def deconstruct[A,B:Manifest](c: Class[A], f: A => Option[B], x: Rep[A]): Option[Rep[B]]
 
-  def deconstruct2[A,B,C](c: Class[A], f: A => Option[(B,C)], x: Rep[A]): Option[(Rep[B], Rep[C])] = {
+  def deconstruct2[A,B:Manifest,C:Manifest](c: Class[A], f: A => Option[(B,C)], x: Rep[A]): Option[(Rep[B], Rep[C])] = {
     val s = deconstruct[A,(B,C)](c, f, x).get
     Some((fst(s), snd(s)))
   }
 
-  def tuple[A,B](x: Rep[A], y: Rep[B]): Rep[(A,B)]
-  def fst[A,B](x: Rep[(A,B)]): Rep[A]
-  def snd[A,B](x: Rep[(A,B)]): Rep[B]
+  def tuple[A:Manifest,B:Manifest](x: Rep[A], y: Rep[B]): Rep[(A,B)]
+  def fst[A:Manifest,B:Manifest](x: Rep[(A,B)]): Rep[A]
+  def snd[A:Manifest,B:Manifest](x: Rep[(A,B)]): Rep[B]
 
-  def test[A](x: Rep[A], y: A): Boolean
+  def test[A:Manifest](x: Rep[A], y: A): Boolean
   
   trait GateKeeper[A] { // shouldn't need it ...
-    def guard(y: A): Boolean
+    def guard(y: A)(implicit mA: Manifest[A]): Boolean
   }
   
   implicit def gateKeeper[A](x: Rep[A]) = new GateKeeper[A] { // new {
-    def guard(y: A): Boolean = test(x, y)
+    def guard(y: A)(implicit mA: Manifest[A]): Boolean = test(x, y)
   }
   
 }
@@ -35,25 +35,25 @@ trait Extractors extends Base {
 
 trait Matching extends Base {
   
-  def evalMatch[A,B](x: Rep[A], alts: List[PartialFunction[Rep[A],Rep[B]]])(implicit mA: Manifest[A]): Rep[B]
+  def evalMatch[A:Manifest,B:Manifest](x: Rep[A], alts: List[PartialFunction[Rep[A],Rep[B]]]): Rep[B]
   
-  implicit def switchable[A](x:Rep[A]) = new {
-    def switch[B](f: PartialFunction[Rep[A],Rep[B]]) = new Match[A,B](x, List(f))(null) // FIXME: won't find switch otherwise!!
+  implicit def switchable[A:Manifest](x:Rep[A]) = new {
+    def switch[B:Manifest](f: PartialFunction[Rep[A],Rep[B]]) = new Match[A,B](x, List(f)) // FIXME: won't find switch otherwise!!
   }
   
-  class Match[A,B](x: Rep[A], alts: List[PartialFunction[Rep[A],Rep[B]]])(implicit mA: Manifest[A]) {
-    def orElse[D>:B](f: PartialFunction[Rep[A],Rep[D]]) = {
+  class Match[A:Manifest,B:Manifest](x: Rep[A], alts: List[PartialFunction[Rep[A],Rep[B]]]) {
+    def orElse[D>:B](f: PartialFunction[Rep[A],Rep[D]])(implicit mD: Manifest[D]) = {
       new Match[A,D](x, alts ::: List(f))
     }
   
     def end = evalMatch(x, alts)
   }
   
-  implicit def endMatch[B](m: Match[_, B]) = m.end
+  implicit def endMatch[B:Manifest](m: Match[_, B]) = m.end
   
   
-  def _match[A,B](x: Rep[A])(cases: PartialFunction[Rep[A],Rep[B]]*)(implicit mA: Manifest[A]): Rep[B] = {
-    evalMatch(x, List())
+  def _match[A:Manifest,B:Manifest](x: Rep[A])(cases: PartialFunction[Rep[A],Rep[B]]*): Rep[B] = {
+    evalMatch[A,B](x, List())
   }
 }
 
@@ -100,27 +100,27 @@ trait MatchingExtractorsRepString {
 
 trait MatchingExtractorsExp extends FunctionsExp with Effects with Control {
 
-  case class Construct[A,B](c: Class[A], x: Rep[B]) extends Def[A]
-  case class Deconstruct[A,B](c: Class[A], x: Rep[A]) extends Def[B]
-  case class TupleR[A,B](x: Exp[A], y: Exp[B]) extends Def[(A,B)]
-  case class First[A,B](x: Exp[(A,B)]) extends Def[A]
-  case class Second[A,B](x: Exp[(A,B)]) extends Def[B]
-  case class Test[A](x: Exp[A], y: A) extends Def[Unit]
+  case class Construct[A:Manifest,B:Manifest](c: Class[A], x: Rep[B]) extends Def[A]
+  case class Deconstruct[A,B:Manifest](c: Class[A], x: Rep[A]) extends Def[B]
+  case class TupleR[A:Manifest,B:Manifest](x: Exp[A], y: Exp[B]) extends Def[(A,B)]
+  case class First[A:Manifest,B:Manifest](x: Exp[(A,B)]) extends Def[A]
+  case class Second[A:Manifest,B:Manifest](x: Exp[(A,B)]) extends Def[B]
+  case class Test[A:Manifest](x: Exp[A], y: A) extends Def[Unit]
 
 //  case class OrElse[A](x: List[Exp[Effectful[A]]]) extends Def[A]
 //  case class AndAlso[A](x: Exp[A], effects: List[Exp[_]]) extends Def[A]
 
-  def construct[A,B](c: Class[A], f: B => A, x: Rep[B]): Rep[A] = Construct(c, x)
-  def deconstruct[A,B](c: Class[A], f: A => Option[B], x: Rep[A]): Option[Rep[B]] = {
+  def construct[A:Manifest,B:Manifest](c: Class[A], f: B => A, x: Rep[B]): Rep[A] = Construct(c, x)
+  def deconstruct[A,B:Manifest](c: Class[A], f: A => Option[B], x: Rep[A]): Option[Rep[B]] = {
     val s = Deconstruct(c, x)
     Some(reflectEffect(s))
   }
 
-  def tuple[A,B](x: Rep[A], y: Rep[B]): Rep[(A,B)] = TupleR(x, y)
-  def fst[A,B](x: Rep[(A,B)]): Rep[A] = First(x)
-  def snd[A,B](x: Rep[(A,B)]): Rep[B] = Second(x)
+  def tuple[A:Manifest,B:Manifest](x: Rep[A], y: Rep[B]): Rep[(A,B)] = TupleR(x, y)
+  def fst[A:Manifest,B:Manifest](x: Rep[(A,B)]): Rep[A] = First(x)
+  def snd[A:Manifest,B:Manifest](x: Rep[(A,B)]): Rep[B] = Second(x)
 
-  def test[A](x: Rep[A], y: A) = {
+  def test[A:Manifest](x: Rep[A], y: A) = {
     reflectEffect(toAtom(Test(x, y)))
     true
   }
@@ -130,7 +130,7 @@ trait MatchingExtractorsExp extends FunctionsExp with Effects with Control {
 
 //  def orElse[A](xs: List[Rep[Effectful[A]]]): Rep[A] = reflectEffect(OrElse(xs))
   
-  def evalMatch[A,B](x: Rep[A], alts: List[PartialFunction[Rep[A],Rep[B]]])(implicit mA: Manifest[A]): Rep[B] = {
+  def evalMatch[A:Manifest,B:Manifest](x: Rep[A], alts: List[PartialFunction[Rep[A],Rep[B]]]): Rep[B] = {
     
     def liftAlt(f: PartialFunction[Rep[A],Rep[B]]) = doLambda { x: Rep[A] =>
       reifyEffects(f(x))
@@ -144,18 +144,18 @@ trait MatchingExtractorsExp extends FunctionsExp with Effects with Control {
 
 
 trait MatchingExtractorsExpOpt extends MatchingExtractorsExp {
-  override def construct[A,B](c: Class[A], f: B => A, x: Rep[B]): Rep[A] = x match {
+  override def construct[A:Manifest,B:Manifest](c: Class[A], f: B => A, x: Rep[B]): Rep[A] = x match {
     case Const(x) => Const(f(x))
     case _ => super.construct(c, f, x)
   }
 
-  override def deconstruct[A,B](c: Class[A], f: A => Option[B], x: Rep[A]) = x match {
+  override def deconstruct[A,B:Manifest](c: Class[A], f: A => Option[B], x: Rep[A]) = x match {
     case Def(Construct(`c`, y)) => Some(y.asInstanceOf[Rep[B]]) // CHECK: `c` was _ : c.type 
 //    case Const(y) if c.isInstance(y) => ...
     case _ => super.deconstruct(c, f, x)
   }
 
-  override def test[A](x: Rep[A], y: A) = x match {
+  override def test[A:Manifest](x: Rep[A], y: A) = x match {
     case Const(x) if x == y =>
       true
     case _ => super.test(x, y)

@@ -8,7 +8,7 @@ import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
 trait Variables extends Base with OverloadHack {
   type Var[+T]
 
-  implicit def readVar[T](v: Var[T]) : Rep[T]
+  implicit def readVar[T:Manifest](v: Var[T]) : Rep[T]
   //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
 
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T]
@@ -26,12 +26,12 @@ trait VariablesExp extends Variables with EffectExp {
   //type Var[T] = Sym[T]
 
   // read operation
-  implicit def readVar[T](v: Var[T]) : Exp[T] = reflectEffect(ReadVar(v))
+  implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = reflectEffect(ReadVar(v))
 
- 
-  case class ReadVar[T](v: Var[T]) extends Def[T]
-  case class NewVar[T](init: Exp[T])(implicit val mT: Manifest[T]) extends Def[T]
-  case class Assign[T](lhs: Var[T], rhs: Exp[T])(implicit val mT: Manifest[T]) extends Def[Unit]
+  case class ReadVar[T:Manifest](v: Var[T]) extends Def[T]
+  case class NewVar[T:Manifest](init: Exp[T]) extends Def[T]
+  case class Assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
+
 
   def __newVar[T](init: Exp[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
@@ -64,8 +64,8 @@ trait CudaGenVariables extends CudaGenEffect {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case rv@ReadVar(Variable(a)) => emitValDef(sym, quote(a))
-    case nv@NewVar(init) => emitVarDef(nv.mT.toString, sym, quote(init))
-    case as@Assign(Variable(a), b) => emitAssignment(as.mT.toString, quote(a), quote(b))
+    case nv@NewVar(init) => emitVarDef(init.Type.toString, sym, quote(init))
+    case as@Assign(Variable(a), b) => emitAssignment(b.Type.toString, quote(a), quote(b))
     //case Assign(a, b) => emitAssignment(quote(a), quote(b))
     case _ => super.emitNode(sym, rhs)
   }

@@ -12,14 +12,17 @@ trait IfThenElse extends Base {
 // but then we would need to give it a different name.
 
 trait IfThenElsePureExp extends IfThenElse with BaseExp {
-  case class IfThenElse[T](cond: Exp[Boolean], thenp: Exp[T], elsep: Exp[T])(implicit val mT: Manifest[T]) extends Def[T]
-  
+
+  case class IfThenElse[T:Manifest](cond: Exp[Boolean], thenp: Exp[T], elsep: Exp[T]) extends Def[T]
+
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]) = IfThenElse(cond, thenp, elsep)
 }
 
 
 trait IfThenElseExp extends IfThenElse with EffectExp {
-  case class IfThenElse[T](cond: Exp[Boolean], thenp: Exp[T], elsep: Exp[T])(implicit val mT: Manifest[T]) extends Def[T]
+
+  case class IfThenElse[T:Manifest](cond: Exp[Boolean], thenp: Exp[T], elsep: Exp[T]) extends Def[T]
+
   override def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]) = {
     val a = reifyEffects(thenp)
     val b = reifyEffects(elsep)

@@ -12,6 +12,17 @@ trait Arith extends Base {
   //types that are allowed to be lifted more explicitly
   //implicit def unit(x: Double): Rep[Double]
 
+  // aks: this is a workaround for the infix methods not intercepting after Manifests were added everywhere
+  implicit def intToArithOps(i: Int) = new arithOps(unit(i))
+  implicit def intToRepDbl(i: Int) : Rep[Double] = unit(i)
+
+  class arithOps(x: Rep[Double]){
+    def +(y: Rep[Double]) = infix_+(x,y)
+    def -(y: Rep[Double]) = infix_-(x,y)
+    def *(y: Rep[Double]) = infix_*(x,y)
+    def /(y: Rep[Double]) = infix_/(x,y)
+  }
+
   def infix_+(x: Rep[Double], y: Rep[Double]): Rep[Double]
   def infix_-(x: Rep[Double], y: Rep[Double]): Rep[Double]
   def infix_*(x: Rep[Double], y: Rep[Double]): Rep[Double]

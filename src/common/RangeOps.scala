@@ -5,11 +5,17 @@ import java.io.PrintWriter
 import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
 
 trait RangeOps extends Base {
+  // workaround for infix not working with manifests
+  implicit def repRangeToRangeOpsCls(r: Rep[Range]) = new rangeOpsCls(r)
+  class rangeOpsCls(r: Rep[Range]){
+    def foreach(f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
+  }
+
   def infix_until(start: Rep[Int], end: Rep[Int]) = range_until(start,end)
   def infix_start(r: Rep[Range]) = range_start(r)
   def infix_step(r: Rep[Range]) = range_step(r)
   def infix_end(r: Rep[Range]) = range_end(r)
-  def infix_foreach(r: Rep[Range], f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
+  //def infix_foreach(r: Rep[Range], f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
 
   def range_until(start: Rep[Int], end: Rep[Int]): Rep[Range]
   def range_start(r: Rep[Range]) : Rep[Int]

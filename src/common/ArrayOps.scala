@@ -16,14 +16,15 @@ trait ArrayOps extends Variables {
     def apply(n: Rep[Int]) = array_apply(a, n)
     def length = array_length(a)
   }
-    
+
   def array_apply[T:Manifest](x: Rep[Array[T]], n: Rep[Int]): Rep[T]
   def array_length[T:Manifest](x: Rep[Array[T]]) : Rep[Int]
 }
 
 trait ArrayOpsExp extends ArrayOps with VariablesExp {
-  case class ArrayLength[T](a: Exp[Array[T]])(implicit val mT: Manifest[T]) extends Def[Int]
-  case class ArrayApply[T](x: Exp[Array[T]], n: Exp[Int])(implicit val mT: Manifest[T]) extends Def[T]
+
+  case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int]
+  case class ArrayApply[T:Manifest](x: Exp[Array[T]], n: Exp[Int]) extends Def[T]
 
   def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int]): Rep[T] = ArrayApply(x, n)
   def array_length[T:Manifest](a: Exp[Array[T]]) : Rep[Int] = ArrayLength(a)

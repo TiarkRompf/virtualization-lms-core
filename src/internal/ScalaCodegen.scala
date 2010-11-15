@@ -1,16 +1,18 @@
 package scala.virtualization.lms
 package internal
 
-import java.io.PrintWriter
-
+import com.sun.org.apache.xalan.internal.xsltc.compiler.sym
+import java.io.{File, FileWriter, PrintWriter}
 
 trait ScalaCodegen extends GenericCodegen {
   val IR: Expressions
   import IR._
 
+  override def toString = "scala"
+
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
 
-    val x = fresh
+    val x = fresh[A]
     val y = f(x)
 
     val sA = mA.toString
@@ -44,7 +46,6 @@ trait ScalaCodegen extends GenericCodegen {
   def emitAssignment(lhs: String, rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(lhs + " = " + rhs)
   }
-
 }
 
 trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
@@ -60,9 +61,10 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
     case Sym(-1) => "_"
     case _ => super.quote(x)
   }
-  
+
 }
 
+// TODO: what is the point of these, I suggest to remove them
 trait ScalaGenBase extends ScalaCodegen {
   import IR._
 

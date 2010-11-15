@@ -8,8 +8,10 @@ trait CCodegen extends GenericCodegen {
   val IR: Expressions
   import IR._
 
+  override def toString = "c"
+
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
-    val x = fresh
+    val x = fresh[A]
     val y = f(x)
 
     val sA = mA.toString

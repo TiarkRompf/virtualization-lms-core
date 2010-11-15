@@ -13,7 +13,7 @@ trait Base extends EmbeddedControls {
 
   type Rep[+T]
 
-  implicit def unit[T](x: T): Rep[T]
+  implicit def unit[T:Manifest](x: T): Rep[T]
 }
 
 /**
@@ -24,7 +24,7 @@ trait Base extends EmbeddedControls {
 trait BaseExp extends Base with Expressions {
   type Rep[+T] = Exp[T]
 
-  implicit def unit[T](x: T) = Const(x)  
+  implicit def unit[T:Manifest](x: T) = Const(x)
 }
 
 trait EffectExp extends BaseExp with Effects {

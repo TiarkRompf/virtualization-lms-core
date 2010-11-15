@@ -28,6 +28,10 @@ trait GenericCodegen extends Scheduling {
     stream.println("Generator Not Found")
   }
 
+  def emitKernel(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
+    throw new Exception("don't know how to generate kernel for: " + rhs)
+  }
+
   //def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
   
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
@@ -76,7 +80,7 @@ trait GenericNestedCodegen extends GenericCodegen {
     scope = e4 ::: scope
 
     for (TP(sym, rhs) <- e4) {
-      emitNode(sym, rhs)
+      emitNode(sym, rhs)      
     }
 
     start match {
@@ -117,6 +121,14 @@ trait GenericNestedCodegen extends GenericCodegen {
     case Reify(s, effects) =>
       // just ignore -- effects are accounted for in emitBlock
     case _ => super.emitNode(sym, rhs)
+  }
+
+  
+  override def inputs(rhs: Def[_]) : List[Any] = rhs match {
+    case Reify(e, effects) => List(e)
+    case Reflect(s, effects) => inputs(s) // ignore control dependencies here for now
+    case p: Product => p.productIterator.toList
+    case _ => Nil
   }
 
 }

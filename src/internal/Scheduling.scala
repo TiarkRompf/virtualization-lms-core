@@ -19,6 +19,11 @@ trait Scheduling {
     case _ => Nil
   }
 
+  def inputs(rhs: Def[_]) : List[Any] = rhs match {
+    case p: Product => p.productIterator.toList
+    case _ => Nil
+  }
+
   def buildScheduleForResult(start: Exp[_]): List[TP[_]] = {
     val st = syms(start)
     GraphUtil.stronglyConnectedComponents[TP[_]](st.flatMap(e => findDefinition(e).toList), { d =>
@@ -29,4 +34,5 @@ trait Scheduling {
       }
     }).flatten.reverse // inefficient!
   }
+    
 }

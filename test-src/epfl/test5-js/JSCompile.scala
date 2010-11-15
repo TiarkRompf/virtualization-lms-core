@@ -22,7 +22,7 @@ trait JSCodegen extends GenericCodegen {
   }
 
   def emitSource[A,B](f: Exp[A] => Exp[B], methName: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
-    val x = fresh
+    val x = fresh[A]
     val y = f(x)
 
     stream.println("function "+methName+"("+quote(x)+") {")

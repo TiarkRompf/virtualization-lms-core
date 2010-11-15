@@ -7,14 +7,14 @@ trait Effects extends Expressions {
   
   var context: State = _
   
-  def reflectEffect[A](x: Def[A]): Exp[A] = {
+  def reflectEffect[A:Manifest](x: Def[A]): Exp[A] = {
      // don't do CSE on effectful computations
     val r: Exp[A] = createDefinition(fresh[A], Reflect(x, context)).sym
     context :+= r
     r
   }
   
-  def reifyEffects[A](block: => Exp[A]): Exp[A] = {
+  def reifyEffects[A:Manifest](block: => Exp[A]): Exp[A] = {
     val save = context
     context = Nil
     

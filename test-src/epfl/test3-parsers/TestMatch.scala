@@ -16,15 +16,15 @@ trait MatchProg { this: Matching with Extractors =>
   }
   
   object :!: {
-    def apply[A](x: Rep[A], xs: Rep[List[A]]) = construct(classOf[::[A]], (::.apply[A] _).tupled, tuple(x, xs))
+    def apply[A:Manifest](x: Rep[A], xs: Rep[List[A]]) = construct(classOf[::[A]], (::.apply[A] _).tupled, tuple(x, xs))
 //    def unapply[A](x: Rep[::[A]]) = deconstruct2(classOf[::[A]], ::.unapply[A], x) // doesn't work: hd is private in :: !
-    def unapply[A](x: Rep[::[A]]) = deconstruct(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
+    def unapply[A:Manifest](x: Rep[::[A]]) = deconstruct(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
   }
   
   def infix_unapply(o: SuccessR.type, x: Rep[Success]): Option[Rep[Int]] = deconstruct(classOf[Success], Success.unapply, x)
   // doesn't work...
   
-  def unit[A](x: A): Rep[A]
+  def unit[A:Manifest](x: A): Rep[A]
   
   def test(x: Rep[Success]): Rep[String] = x switch {
     case SuccessR(x) if x guard 7 => unit("yes")
