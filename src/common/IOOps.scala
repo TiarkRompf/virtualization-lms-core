@@ -54,3 +54,4 @@ trait ScalaGenIOOps extends ScalaGenBase {
     case _ => super.emitNode(sym, rhs)
   }
 }
+

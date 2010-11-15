@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenBase
+import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
 
 trait OrderingOps extends Base {
 
@@ -55,6 +55,23 @@ trait ScalaGenOrderingOps extends ScalaGenBase {
     case OrderingEquiv(a,b) => emitValDef(sym, quote(a) + " equiv " + quote(b))
     case OrderingMax(a,b) => emitValDef(sym, quote(a) + " max " + quote(b))
     case OrderingMin(a,b) => emitValDef(sym, quote(a) + " min " + quote(b))
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenOrderingOps extends CudaGenBase {
+  val IR: OrderingOpsExp
+  import IR._
+  
+  // TODO: Add MIN/MAX macro needs to C-like header file
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case OrderingLT(a,b) => emitValDef("bool", sym, quote(a) + " < " + quote(b))
+    case OrderingLTEQ(a,b) => emitValDef("bool", sym, quote(a) + " <= " + quote(b))
+    case OrderingGT(a,b) => emitValDef("bool", sym, quote(a) + " > " + quote(b))
+    case OrderingGTEQ(a,b) => emitValDef("bool", sym, quote(a) + " >= " + quote(b))
+    case OrderingEquiv(a,b) => emitValDef("bool", sym, quote(a) + " == " + quote(b))
+    case OrderingMax(a,b) => emitValDef(CudaType(a.Type.toString), sym, "MAX(" + quote(a) + ", " + quote(b) + ")")
+    case OrderingMin(a,b) => emitValDef(CudaType(a.Type.toString), sym, "MIN(" + quote(a) + ", " + quote(b) + ")")
     case _ => super.emitNode(sym, rhs)
   }
 }

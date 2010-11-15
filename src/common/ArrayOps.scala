@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenBase
+import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
 
 trait ArrayOps extends Variables {
 
@@ -24,7 +24,7 @@ trait ArrayOps extends Variables {
 trait ArrayOpsExp extends ArrayOps with VariablesExp {
 
   case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int]
-  case class ArrayApply[T:Manifest](x: Exp[Array[T]], n: Exp[Int]) extends Def[T]
+  case class ArrayApply[T](x: Exp[Array[T]], n: Exp[Int])(implicit val mT:Manifest[T]) extends Def[T]
 
   def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int]): Rep[T] = ArrayApply(x, n)
   def array_length[T:Manifest](a: Exp[Array[T]]) : Rep[Int] = ArrayLength(a)
@@ -37,6 +37,17 @@ trait ScalaGenArrayOps extends ScalaGenBase {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
     case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenArrayOps extends CudaGenBase {
+  val IR: ArrayOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case ArrayLength(x) => emitValDef("int", sym, " sizeof(" + quote(x) + ")")
+    case arr@ArrayApply(x,n) => emitValDef(CudaType(arr.mT.toString), sym, "" + quote(x) + "[" + quote(n) + "]")
     case _ => super.emitNode(sym, rhs)
   }
 }

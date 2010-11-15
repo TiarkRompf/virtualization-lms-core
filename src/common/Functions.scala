@@ -7,12 +7,14 @@ import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
 trait Functions extends Base {
 
   implicit def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B]): Rep[A => B]
+  implicit def doLambda2[A1:Manifest,A2:Manifest,B:Manifest](fun: (Rep[A1],Rep[A2]) => Rep[B]): Rep[(A1,A2) => B]
 
   implicit def toLambdaOps[A:Manifest,B:Manifest](fun: Rep[A => B]) = new LambdaOps(fun)
   
   class LambdaOps[A:Manifest,B:Manifest](f: Rep[A => B]) {
     def apply(x: Rep[A]): Rep[B] = doApply(f,x)
   }
+
   def doApply[A:Manifest,B:Manifest](fun: Rep[A => B], arg: Rep[A]): Rep[B]
 
 }
@@ -20,6 +22,8 @@ trait Functions extends Base {
 trait FunctionsExp extends Functions with EffectExp {
 
   case class Lambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B], x: Sym[A], y: Exp[B]) extends Def[A => B]
+  case class Lambda2[A1:Manifest,A2:Manifest,B:Manifest](f: (Exp[A1],Exp[A2]) => Exp[B], x1: Sym[A1], x2: Sym[A2], y: Exp[B]) extends Def[(A1,A2) => B]
+
   case class Apply[A:Manifest,B:Manifest](f: Exp[A => B], arg: Exp[A]) extends Def[B]
 
   def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B]) : Exp[A => B] = {
@@ -29,6 +33,16 @@ trait FunctionsExp extends Functions with EffectExp {
                                // TODO: this will not work if f is recursive. 
                                // need to incorporate the other pieces at some point.
     Lambda(f, x, y)
+  }
+
+  def doLambda2[A1:Manifest,A2:Manifest,B:Manifest](f: (Exp[A1],Exp[A2]) => Exp[B]) : Exp[(A1,A2) => B] = {
+
+    val x1 = fresh[A1]
+    val x2 = fresh[A2]
+    val y = reifyEffects(f(x1,x2)) // unfold completely at the definition site.
+                               // TODO: this will not work if f is recursive.
+                               // need to incorporate the other pieces at some point.
+    Lambda2(f, x1, x2, y)
   }
 
   def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A]): Exp[B] = f match {
@@ -50,6 +64,7 @@ trait ScalaGenFunctions extends ScalaGenEffect {
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
+    case Lambda2(f, x1, x2, y) if shallow => Nil
     case _ => super.syms(e)
   }
 
@@ -73,6 +88,7 @@ trait CudaGenFunctions extends CudaGenEffect {
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
+    case Lambda2(f, x1, x2, y) if shallow => Nil
     case _ => super.syms(e)
   }
 
@@ -80,9 +96,9 @@ trait CudaGenFunctions extends CudaGenEffect {
     case e@Lambda(fun, x, y) =>
 
       // The version for inlined device function
-      stream.println("%s %s = %s;".format(x.Type.toString, quote(x), quote(sym)+"_1"))
+      stream.println(addTab() + "%s %s = %s;".format(CudaType(x.Type.toString), quote(x), quote(sym)+"_1"))
       emitBlock(y)
-      stream.println("%s %s = %s;".format(y.Type.toString, quote(sym), quote(getBlockResult(y))))
+      stream.println(addTab() + "%s %s = %s;".format(CudaType(y.Type.toString), quote(sym), quote(getBlockResult(y))))
 
       // The version for separate device function
       /*
@@ -94,6 +110,14 @@ trait CudaGenFunctions extends CudaGenEffect {
       stream.println("return %s;".format(quote(getBlockResult(y))))
       stream.println("}")
       */
+
+    case e@Lambda2(fun, x1, x2, y) =>
+
+      // The version for inlined device function
+      stream.println(addTab() + "%s %s = %s;".format(CudaType(x1.Type.toString), quote(x1), quote(sym)+"_1"))
+      stream.println(addTab() + "%s %s = %s;".format(CudaType(x2.Type.toString), quote(x2), quote(sym)+"_2"))
+      emitBlock(y)
+      stream.println(addTab() + "%s %s = %s;".format(CudaType(y.Type.toString), quote(sym), quote(getBlockResult(y))))
 
     case Apply(fun, arg) =>
       emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")

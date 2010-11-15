@@ -59,9 +59,9 @@ trait CudaGenNumericOps extends CudaGenBase {
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case NumericPlus(a,b) => emitValDef(sym, quote(a) + " + " + quote(b))
-    case NumericMinus(a,b) => emitValDef(sym, quote(a) + " - " + quote(b))
-    case NumericTimes(a,b) => emitValDef(sym, quote(a) + " * " + quote(b))
+    case NumericPlus(a,b) => emitValDef(CudaType(a.Type.toString), sym, quote(a) + " + " + quote(b))
+    case NumericMinus(a,b) => emitValDef(CudaType(a.Type.toString), sym, quote(a) + " - " + quote(b))
+    case NumericTimes(a,b) => emitValDef(CudaType(a.Type.toString), sym, quote(a) + " * " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 }

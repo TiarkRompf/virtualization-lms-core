@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.ScalaGenBase
+import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
 
 trait Equal extends Base with Variables with OverloadHack {
   // TODO: we need a better way of handling this, too many combinations
@@ -51,6 +51,17 @@ trait ScalaGenEqual extends ScalaGenBase {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Equal(a,b) =>  emitValDef(sym, quote(a) + "==" + quote(b))
     case NotEqual(a,b) =>  emitValDef(sym, quote(a) + " != " + quote(b))
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenEqual extends CudaGenBase {
+  val IR: EqualExp
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case Equal(a,b) =>  emitValDef("bool", sym, quote(a) + "==" + quote(b))
+    case NotEqual(a,b) =>  emitValDef("bool", sym, quote(a) + " != " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 }

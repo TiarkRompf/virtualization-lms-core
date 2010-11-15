@@ -11,6 +11,7 @@ trait DSLOpsExp extends EffectExp {
   class DSLOp[A](val representation: Exp[A]) extends Def[A]
 
   case class DSLMap[A,B,C[_]](val in: Exp[C[A]], out: Exp[C[B]], range: Exp[Range], func:Exp[A=>B]) extends Def[C[B]]
+  case class DSLZipwith[A1,A2,B,C[_]](val in1: Exp[C[A1]], in2: Exp[C[A2]], out: Exp[C[B]], range: Exp[Range], func:Exp[(A1,A2)=>B]) extends Def[C[B]]
 }
 
 trait ScalaGenDSLOps extends ScalaGenEffect {
@@ -50,23 +51,51 @@ trait CudaGenDSLOps extends CudaGenEffect {
     // Later it will be changed to have a separate device function.
     // TODO: Need a flag to tell the function generator to determine it.
     // TODO: How to tell the task graph generator / runtime about the output data structure generation
-     case DSLMap(x,y,range,func) =>
+     case op@DSLMap(x,y,range,func) =>
+       tabWidth = 0
        // Get free variables of this __global__ GPU function
        var freeVars = (buildScheduleForResult(x):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
        val paramList = (x.asInstanceOf[Sym[_]]::y.asInstanceOf[Sym[_]]::freeVars).distinct
-       stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramList.map(quote(_)).mkString(",")))
-       stream.println("\tint %s = blockIdx.x*blockDim.x + threadIdx.x;".format("index"))
-       stream.println("\tif(%s < %s) {".format("index", quote(x)+".length"))
+       val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
+       stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
+       tabWidth += 1
+       stream.println(addTab()+"int %s = blockIdx.x*blockDim.x + threadIdx.x;".format("index"))
+       stream.println(addTab()+"if(%s < %s) {".format("index", quote(x)+".length"))
        // Print the device function (inlined)
        // put parameters
-       stream.println("%s %s = %s;".format("no_type", quote(func)+"_1", quote(x)+".apply(index)"))
+       tabWidth += 1
+       stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x.Type.toString), quote(func)+"_1", quote(x)+".apply(index)"))
        emitBlock(func)
-       stream.println("%s.update(%s, %s);".format(quote(y),"index",quote(func)))
+       stream.println(addTab()+"%s.update(%s, %s);".format(quote(y),"index",quote(func)))
+       tabWidth -= 1
        stream.println("\t}")
+       tabWidth -= 1
        stream.println("}")
 
        //The version having separate device function
        //stream.println("\t\t%s.update(%s, %s(%s.apply(%s)));".format(quote(y),"index",quote(func),quote(x),"index"))
+
+    case op@DSLZipwith(x1,x2,y,range,func) =>
+       tabWidth = 0
+       // Get free variables of this __global__ GPU function
+       var freeVars = (buildScheduleForResult(x1):::buildScheduleForResult(x2):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
+       val paramList = (x1.asInstanceOf[Sym[_]]::x2.asInstanceOf[Sym[_]]::y.asInstanceOf[Sym[_]]::freeVars).distinct
+       val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
+       stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
+       tabWidth += 1
+       stream.println(addTab()+"int %s = blockIdx.x*blockDim.x + threadIdx.x;".format("index"))
+       stream.println(addTab()+"if(%s < %s) {".format("index", quote(x1)+".length"))
+       // Print the device function (inlined)
+       // put parameters
+       tabWidth += 1
+       stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x1.Type.toString), quote(func)+"_1", quote(x1)+".apply(index)"))
+       stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x2.Type.toString), quote(func)+"_2", quote(x1)+".apply(index)"))
+       emitBlock(func)
+       stream.println(addTab()+"%s.update(%s, %s);".format(quote(y),"index",quote(func)))
+       tabWidth -= 1
+       stream.println(addTab()+"}")
+       tabWidth -= 1
+       stream.println(addTab()+"}")
 
     case _ => super.emitNode(sym, rhs)
   }

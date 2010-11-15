@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenBase
+import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
 
 trait BooleanOps extends Base {
   def infix_unary_!(x: Rep[Boolean]) = boolean_negate(x)
@@ -22,6 +22,16 @@ trait ScalaGenBooleanOps extends ScalaGenBase {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case BooleanNegate(b) => emitValDef(sym, "!" + quote(b))
+    case _ => super.emitNode(sym,rhs)
+  }
+}
+
+trait CudaGenBooleanOps extends CudaGenBase {
+  val IR: BooleanOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case BooleanNegate(b) => emitValDef("bool", sym, "!" + quote(b))
     case _ => super.emitNode(sym,rhs)
   }
 }

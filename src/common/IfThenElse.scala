@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenEffect
+import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]): Rep[T]
@@ -54,6 +54,35 @@ trait ScalaGenIfThenElse extends ScalaGenEffect {
       stream.println(quote(getBlockResult(b)))
       stream.println("}")
     
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenIfThenElse extends CudaGenEffect {
+  val IR: IfThenElseExp
+  import IR._
+
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c, t, e) if shallow => syms(c) // in shallow mode, don't count deps from nested blocks
+    case _ => super.syms(e)
+  }
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case IfThenElse(c,a,b) =>
+
+      stream.println(addTab()+"%s %s;".format(CudaType(a.Type.toString),quote(sym)))
+      stream.println(addTab() + "if (" + quote(c) + ") {")
+      tabWidth += 1
+      emitBlock(a)
+      stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
+      tabWidth -= 1
+      stream.println(addTab() + "} else {")
+      tabWidth += 1
+      emitBlock(b)
+      stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
+      tabWidth -= 1
+      stream.println("}")
+
     case _ => super.emitNode(sym, rhs)
   }
 }

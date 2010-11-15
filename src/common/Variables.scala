@@ -63,10 +63,9 @@ trait CudaGenVariables extends CudaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case rv@ReadVar(Variable(a)) => emitValDef(sym, quote(a))
-    case nv@NewVar(init) => emitVarDef(init.Type.toString, sym, quote(init))
-    case as@Assign(Variable(a), b) => emitAssignment(b.Type.toString, quote(a), quote(b))
-    //case Assign(a, b) => emitAssignment(quote(a), quote(b))
+    case ReadVar(Variable(a)) => emitValDef(CudaType(a.Type.toString), sym, quote(a))
+    case NewVar(init) => emitVarDef(CudaType(init.Type.toString), sym, quote(init))
+    case Assign(Variable(a), b) => emitAssignment(quote(a), quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 }

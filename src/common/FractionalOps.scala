@@ -32,7 +32,7 @@ trait CudaGenFractionalOps extends CudaGenBase {
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case fr@FractionalDivide(a,b) => emitValDef(fr.mT.toString, sym, quote(a) + " / " + quote(b))
+    case FractionalDivide(a,b) => emitValDef(CudaType(a.Type.toString), sym, quote(a) + " / " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 }

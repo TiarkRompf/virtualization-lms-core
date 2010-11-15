@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenEffect
+import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
 
 trait While extends Base {
   def __whileDo(cond: => Rep[Boolean], body: => Rep[Unit])
