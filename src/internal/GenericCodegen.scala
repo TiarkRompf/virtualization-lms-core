@@ -7,6 +7,8 @@ trait GenericCodegen extends Scheduling {
   val IR: Expressions
   import IR._
 
+  def kernelFileExt = ""
+
   
   def emitBlock(y: Exp[_])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)

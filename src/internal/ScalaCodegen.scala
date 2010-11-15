@@ -8,6 +8,8 @@ trait ScalaCodegen extends GenericCodegen {
   val IR: Expressions
   import IR._
 
+  override def kernelFileExt = "scala"
+
   override def toString = "scala"
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
