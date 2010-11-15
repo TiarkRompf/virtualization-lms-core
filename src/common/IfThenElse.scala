@@ -67,6 +67,11 @@ trait CudaGenIfThenElse extends CudaGenEffect {
     case _ => super.syms(e)
   }
 
+  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {	
+    case IfThenElse(c, t, e) => getFreeVarBlock(c,Nil) ::: getFreeVarBlock(t,Nil) ::: getFreeVarBlock(e,Nil)
+    case _ => super.getFreeVarNode(rhs)
+  }
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case IfThenElse(c,a,b) =>
 

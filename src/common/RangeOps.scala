@@ -72,13 +72,19 @@ trait CudaGenRangeOps extends CudaGenEffect {
     case RangeForeach(r, i, body) if shallow => syms(r) // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
   }
+  
+  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+      case RangeForeach(r, i, body) => getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
+      case _ => super.getFreeVarNode(rhs)
+  }
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Until(start, end) => // Do nothing: will be handled by RangeForeach
 
     // TODO: What if the range is not continuous integer set?
     case RangeForeach(r, i, body) => {
-      var freeVars = buildScheduleForResult(body).filter(scope.contains(_)).map(_.sym)
+      //var freeVars = buildScheduleForResult(body).filter(scope.contains(_)).map(_.sym)
+      val freeVars = getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
 
       // Add the variables of range to the free variable list if necessary
       var paramList = freeVars

@@ -92,6 +92,20 @@ trait CudaGenFunctions extends CudaGenEffect {
     case _ => super.syms(e)
   }
 
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case Lambda(f, x, Def(Reify(y, es))) => x :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y)
+    case Lambda(f, x, y) => x :: boundSyms(y)
+    case Lambda2(f, x1, x2, Def(Reify(y, es))) => x1 :: x2 :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y)
+    case Lambda2(f, x1, x2, y) => x1 :: x2 :: boundSyms(y)
+    //case Lambda(f, x, Def(a,lst)) => x :: boundSyms(y)
+    case _ => Nil
+  }
+
+  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+    case Lambda(f, x, y) => getFreeVarBlock(y,List(x.asInstanceOf[Sym[_]]))
+    case _ => super.getFreeVarNode(rhs)
+  }
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case e@Lambda(fun, x, y) =>
 

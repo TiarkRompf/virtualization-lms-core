@@ -54,7 +54,8 @@ trait CudaGenDSLOps extends CudaGenEffect {
      case op@DSLMap(x,y,range,func) =>
        tabWidth = 0
        // Get free variables of this __global__ GPU function
-       var freeVars = (buildScheduleForResult(x):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
+       val freeVars = getFreeVarBlock(func,Nil)
+       //var freeVars = (buildScheduleForResult(x):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
        val paramList = (x.asInstanceOf[Sym[_]]::y.asInstanceOf[Sym[_]]::freeVars).distinct
        val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
        stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
@@ -78,7 +79,8 @@ trait CudaGenDSLOps extends CudaGenEffect {
     case op@DSLZipwith(x1,x2,y,range,func) =>
        tabWidth = 0
        // Get free variables of this __global__ GPU function
-       var freeVars = (buildScheduleForResult(x1):::buildScheduleForResult(x2):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
+       val freeVars = getFreeVarBlock(func,Nil)
+       //var freeVars = (buildScheduleForResult(x1):::buildScheduleForResult(x2):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
        val paramList = (x1.asInstanceOf[Sym[_]]::x2.asInstanceOf[Sym[_]]::y.asInstanceOf[Sym[_]]::freeVars).distinct
        val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
        stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
