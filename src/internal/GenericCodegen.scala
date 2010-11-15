@@ -40,7 +40,7 @@ trait GenericCodegen extends Scheduling {
     case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
     case null => "null"
     case _ => throw new RuntimeException("could not quote " + x)
-  }
+  }    
 }
 
 
@@ -125,6 +125,12 @@ trait GenericNestedCodegen extends GenericCodegen {
     case Reflect(s, effects) => inputs(s) // ignore control dependencies here for now
     case p: Product => p.productIterator.toList
     case _ => Nil
+  }
+
+  def reset {
+    scope = Nil
+    shallow = false
+    IR.reset
   }
 
 }

@@ -10,7 +10,7 @@ trait ScalaCodegen extends GenericCodegen {
 
   override def kernelFileExt = "scala"
 
-  override def toString = "scala"
+  override def toString = "Scala"
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
 
