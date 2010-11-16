@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenEffect
+import scala.virtualization.lms.internal.{GenericNestedCodegen, ScalaGenEffect}
 
 trait While extends Base {
   def __whileDo(cond: => Rep[Boolean], body: => Rep[Unit])
@@ -19,7 +19,7 @@ trait WhileExp extends While with FunctionsExp {
 }
 
 
-trait ScalaGenWhile extends ScalaGenEffect {
+trait BaseGenWhile extends GenericNestedCodegen {
   val IR: WhileExp
   import IR._
 
@@ -27,6 +27,9 @@ trait ScalaGenWhile extends ScalaGenEffect {
     case While(c, b) if shallow => Nil
     case _ => super.syms(e)
   }
+}
+trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
+  import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case While(c,b) =>

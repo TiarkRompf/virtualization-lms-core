@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenEffect
+import scala.virtualization.lms.internal.{GenericNestedCodegen, ScalaGenEffect}
 
 trait Functions extends Base {
 
@@ -40,7 +40,7 @@ trait FunctionsExp extends Functions with EffectExp {
   }
 }
 
-trait ScalaGenFunctions extends ScalaGenEffect {
+trait BaseGenFunctions extends GenericNestedCodegen {
   val IR: FunctionsExp
   import IR._
 
@@ -48,6 +48,24 @@ trait ScalaGenFunctions extends ScalaGenEffect {
     case Lambda(f, x, y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
   }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case Lambda(f, x, Def(Reify(y, es))) => x :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y)
+    case Lambda(f, x, y) => x :: boundSyms(y)
+    //case Lambda2(f, x1, x2, Def(Reify(y, es))) => x1 :: x2 :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y)
+    //case Lambda2(f, x1, x2, y) => x1 :: x2 :: boundSyms(y)
+    //case Lambda(f, x, Def(a,lst)) => x :: boundSyms(y)
+    case _ => Nil
+  }
+
+  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+    case Lambda(f, x, y) => getFreeVarBlock(y,List(x.asInstanceOf[Sym[_]]))
+    case _ => super.getFreeVarNode(rhs)
+  }
+}
+
+trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
+  import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case e@Lambda(fun, x, y) =>

@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenEffect
+import scala.virtualization.lms.internal.{GenericNestedCodegen, ScalaGenEffect}
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]): Rep[T]
@@ -31,8 +31,7 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
 
 }
 
-
-trait ScalaGenIfThenElse extends ScalaGenEffect {
+trait BaseGenIfThenElse extends GenericNestedCodegen {
   val IR: IfThenElseExp
   import IR._
 
@@ -41,6 +40,15 @@ trait ScalaGenIfThenElse extends ScalaGenEffect {
     case _ => super.syms(e)
   }
 
+ override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+    case IfThenElse(c, t, e) => getFreeVarBlock(c,Nil) ::: getFreeVarBlock(t,Nil) ::: getFreeVarBlock(e,Nil)
+    case _ => super.getFreeVarNode(rhs)
+  }
+}
+
+trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
+  import IR._
+ 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case IfThenElse(c,a,b) =>
       stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")

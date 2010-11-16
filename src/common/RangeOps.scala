@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenEffect
+import scala.virtualization.lms.internal.{GenericNestedCodegen, ScalaGenEffect}
 
 trait RangeOps extends Base {
   // workaround for infix not working with manifests
@@ -41,7 +41,7 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   }
 }
 
-trait ScalaGenRangeOps extends ScalaGenEffect {
+trait BaseGenRangeOps extends GenericNestedCodegen {
   val IR: RangeOpsExp
   import IR._
 
@@ -49,6 +49,15 @@ trait ScalaGenRangeOps extends ScalaGenEffect {
     case RangeForeach(r, i, body) if shallow => syms(r) // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
   }
+
+  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+    case RangeForeach(r, i, body) => getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
+    case _ => super.getFreeVarNode(rhs)
+  }
+}
+
+trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
+  import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Until(start, end) => emitValDef(sym, "" + quote(start) + " until " + quote(end))
