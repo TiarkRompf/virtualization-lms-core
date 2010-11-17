@@ -14,6 +14,12 @@ trait Scheduling {
     case _ => Nil
   }
 
+  def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
+    case _ => Nil
+  }
+
+
   def dep(e: Exp[Any]): List[Sym[Any]] = e match {
     case Def(d: Product) => syms(d)
     case _ => Nil
@@ -29,4 +35,23 @@ trait Scheduling {
       }
     }).flatten.reverse // inefficient!
   }
+  
+
+  def getDependentStuff(st: List[Sym[_]]): List[TP[_]] = {
+    st.flatMap(getDependentStuff).distinct
+  }
+    
+  def getDependentStuff(st: Sym[_]): List[TP[_]] = {    
+    def uses(s: Sym[_]): List[TP[_]] = {
+      globalDefs.filter { d =>
+        d.sym == s || // include the definition itself
+        syms(d.rhs).contains(s) && !boundSyms(d.rhs).contains(st) // don't extrapolate outside the scope
+      }
+    }
+    
+    GraphUtil.stronglyConnectedComponents[TP[_]](uses(st), { d =>
+      uses(d.sym)
+    }).flatten
+  }
+  
 }
