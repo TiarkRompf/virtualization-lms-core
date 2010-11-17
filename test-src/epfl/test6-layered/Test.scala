@@ -41,8 +41,10 @@ trait UtilExp extends BaseExp with Utils {
   
 }
 
-trait ScalaGenUtil extends ScalaGenBase with UtilExp {
-
+trait ScalaGenUtil extends ScalaGenBase {
+  val IR: UtilExp
+  import IR._
+  
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case StrCat(a,b) =>
       emitValDef(sym, quote(a) + ".toString + " + quote(b) + ".toString")
@@ -198,19 +200,17 @@ class TestVectors extends FileDiffSuite {
       println("-- begin")
 
       new VectorsProg with VectorsExp with VectorsImplExternal
-      with CompileScala 
-      with ScalaGenFunctions with ScalaGenUtil
-      {
-        emitScalaSource(test, "Test", new PrintWriter(System.out))
+      with CompileScala { self =>
+        val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
+        codegen.emitScalaSource(test, "Test", new PrintWriter(System.out))
         val g = compile(test)
         println(g().mkString(","))
       }
     
       new StringsProg with VectorsExp with VectorsImplExternal
-      with CompileScala 
-      with ScalaGenFunctions with ScalaGenUtil
-      {
-        emitScalaSource(test, "Test", new PrintWriter(System.out))
+      with CompileScala { self =>
+        val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
+        codegen.emitScalaSource(test, "Test", new PrintWriter(System.out))
         val g = compile(test)
         println(g(0))
       }

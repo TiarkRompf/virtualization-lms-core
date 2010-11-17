@@ -38,8 +38,10 @@ trait NumericOpsExp extends NumericOps with BaseExp {
   def numeric_toFloat[T](lhs: Rep[T])(implicit n: Numeric[T]): Rep[Float] = NumericToFloat(lhs,n)
 }
 
-trait ScalaGenNumeric extends ScalaGenBase  { this: NumericOpsExp =>
-
+trait ScalaGenNumeric extends ScalaGenBase {
+  val IR: NumericOpsExp
+  import IR._
+  
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case NumericPlus(a,b,n) => emitValDef(sym, quote(a) + " + " + quote(b))
     case NumericMinus(a,b,n) => emitValDef(sym, quote(a) + " - " + quote(b))

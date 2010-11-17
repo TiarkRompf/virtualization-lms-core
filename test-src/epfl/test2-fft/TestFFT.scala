@@ -95,7 +95,7 @@ class TestFFT extends FileDiffSuite {
   
   def testFFT1 = {
     withOutFile(prefix+"fft1") {
-      val o = new FFT with ArithExp with TrigExpOpt with ExportGraph with DisableCSE with DisableDCE
+      val o = new FFT with ArithExp with TrigExpOpt with DisableCSE //with DisableDCE
       import o._
 
       case class Result(x:Any) extends Def[Any]
@@ -103,7 +103,9 @@ class TestFFT extends FileDiffSuite {
       val r = fft(List.tabulate(4)(_ => Complex(fresh, fresh)))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), prefix+"fft1-dot", true)
+      
+      val p = new ExportGraph with DisableDCE { val IR: o.type = o }
+      p.emitDepGraph(toAtom(Result(r)), prefix+"fft1-dot", true)
     }
     assertFileEqualsCheck(prefix+"fft1")
     assertFileEqualsCheck(prefix+"fft1-dot")
@@ -111,7 +113,7 @@ class TestFFT extends FileDiffSuite {
 
   def testFFT2 = {
     withOutFile(prefix+"fft2") {
-      val o = new FFT with ArithExpOptFFT with TrigExpOptFFT with ExportGraph
+      val o = new FFT with ArithExpOptFFT with TrigExpOptFFT
       import o._
 
       case class Result(x:Any) extends Def[Any]
@@ -119,7 +121,9 @@ class TestFFT extends FileDiffSuite {
       val r = fft(List.tabulate(4)(_ => Complex(fresh, fresh)))
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(toAtom(Result(r)), prefix+"fft2-dot", true)
+
+      val p = new ExportGraph { val IR: o.type = o }
+      p.emitDepGraph(toAtom(Result(r)), prefix+"fft2-dot", true)
     }
     assertFileEqualsCheck(prefix+"fft2")
     assertFileEqualsCheck(prefix+"fft2-dot")
@@ -129,7 +133,7 @@ class TestFFT extends FileDiffSuite {
     withOutFile(prefix+"fft3") {
       class FooBar extends FFT
         with ArithExpOptFFT with TrigExpOptFFT with ArraysExp
-        with CompileScala with ScalaGenArith with ScalaGenArrays {
+        with CompileScala {
 
         def ffts(input: Rep[Array[Double]], size: Int) = {
           val list = List.tabulate(size)(i => Complex(input(2*i), input(2*i+1)))
@@ -137,12 +141,14 @@ class TestFFT extends FileDiffSuite {
           // make a new array for now - doing in-place update would be better
           makeArray(r.flatMap { case Complex(re,im) => List(re,im) })
         }
+        
+        val codegen = new ScalaGenArith with ScalaGenArrays { val IR: FooBar.this.type = FooBar.this } // TODO: find a better way...
       }
       val o = new FooBar
       import o._
     
       val fft4 = (input: Rep[Array[Double]]) => ffts(input, 4)
-      emitScalaSource(fft4, "FFT4", new PrintWriter(System.out))
+      codegen.emitScalaSource(fft4, "FFT4", new PrintWriter(System.out))
       val fft4c = compile(fft4)
       println(fft4c(Array(1.0,0.0, 1.0,0.0, 2.0,0.0, 2.0,0.0, 1.0,0.0, 1.0,0.0, 0.0,0.0, 0.0,0.0)).mkString(","))
     }

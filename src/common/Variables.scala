@@ -37,7 +37,10 @@ trait VariablesExp extends Variables with EffectExp {
 }
 
 
-trait ScalaGenVariables extends ScalaGenEffect with VariablesExp {
+trait ScalaGenVariables extends ScalaGenEffect {
+  val IR: VariablesExp
+  import IR._
+  
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case NewVar(init) => emitVarDef(sym, quote(init))
     case Assign(a, b) => emitAssignment(quote(a), quote(b))

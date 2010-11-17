@@ -63,13 +63,13 @@ class TestMatcher extends FileDiffSuite {
       object MatcherProgExp extends MatcherProg with Matching with Extractors with ListMatch
         with MatchingExtractorsExpOpt
         with FunctionExpUnfoldRecursion with FunctionsExternalDef2
-        with ExtractorsGraphViz with FunctionsGraphViz
       import MatcherProgExp._
 
       val r = find("AAB".toList, fresh)
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, prefix+"matcher1-dot")
+      val p = new ExtractorsGraphViz with FunctionsGraphViz { val IR: MatcherProgExp.type = MatcherProgExp }
+      p.emitDepGraph(r, prefix+"matcher1-dot")
     }
     assertFileEqualsCheck(prefix+"matcher1")
     assertFileEqualsCheck(prefix+"matcher1-dot")

@@ -7,7 +7,9 @@ import internal.GraphVizExport
 import test2._
 import test3._
 
-trait FunctionsGraphViz extends GraphVizExport { this: FunctionsExternalDef0 =>
+trait FunctionsGraphViz extends GraphVizExport {
+  val IR: FunctionsExternalDef0
+  import IR._
   
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: java.io.PrintWriter) = rhs match {
 /*

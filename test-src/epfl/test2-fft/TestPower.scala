@@ -82,54 +82,61 @@ class TestPower extends FileDiffSuite {
       println(r)
     }
     {
-      val o = new Power1 with ArithExp with ExportGraph
+      val o = new Power1 with ArithExp
       import o._
 
       val r = power(fresh[Double] + fresh[Double],4)
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, prefix+"power1-dot")
+      val p = new ExportGraph { val IR: o.type = o }
+      p.emitDepGraph(r, prefix+"power1-dot")
     }
 
     {
-      val o = new Power1 with ArithExpOpt with ExportGraph
+      val o = new Power1 with ArithExpOpt
       import o._
 
       val r = power(fresh[Double] + fresh[Double],4)
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, prefix+"power2-dot")
+      val p = new ExportGraph { val IR: o.type = o }
+      p.emitDepGraph(r, prefix+"power2-dot")
     }
     {
-      val o = new Power1 with ArithExpOpt with CompileScala with ScalaGenArith
+      val o = new Power1 with ArithExpOpt
       import o._
       val f = (x: Rep[Double]) => power(x + x, 4)
-      emitScalaSource(f, "Power2", new PrintWriter(System.out))
+      val p = new ScalaGenArith { val IR: o.type = o }
+      p.emitScalaSource(f, "Power2", new PrintWriter(System.out))
     }
 
     {
-      val o = new Power2 with ArithExpOpt with ExportGraph
+      val o = new Power2 with ArithExpOpt
       import o._
 
       val r = power(fresh[Double] + fresh[Double],4)
       println(globalDefs.mkString("\n"))
       println(r)
-      emitDepGraph(r, prefix+"power3-dot")
+      val p = new ExportGraph { val IR: o.type = o }
+      p.emitDepGraph(r, prefix+"power3-dot")
     }
     {
-      val o = new Power2 with ArithExpOpt with CompileScala with ScalaGenArith
+      val o = new Power2 with ArithExpOpt
       import o._
       val f = (x: Rep[Double]) => power(x + x, 4)
-      emitScalaSource(f, "Power3", new PrintWriter(System.out))
+      val p = new ScalaGenArith { val IR: o.type = o }
+      p.emitScalaSource(f, "Power3", new PrintWriter(System.out))
     }
 
 
     {
-      val o = new Power1 with ArithExpOpt with CompileScala with ScalaGenArith
+      val o = new Power1 with ArithExpOpt with CompileScala { self => 
+        val codegen = new ScalaGenArith { val IR: self.type = self }
+      }
       import o._
 
       val power4 = (x:Rep[Double]) => power(x,4)
-      emitScalaSource(power4, "Power4", new PrintWriter(System.out))
+      codegen.emitScalaSource(power4, "Power4", new PrintWriter(System.out))
       val power4c = compile(power4)
       println(power4c(2))
     }

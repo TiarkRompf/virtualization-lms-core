@@ -67,7 +67,9 @@ trait ArithExpOpt extends ArithExp {
 
 
 
-trait ScalaGenArith extends ScalaGenBase with ArithExp {
+trait ScalaGenArith extends ScalaGenBase {
+  val IR: ArithExp
+  import IR._
   
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Plus(a,b) =>  emitValDef(sym, "" + quote(a) + "+" + quote(b))

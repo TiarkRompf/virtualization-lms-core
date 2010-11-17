@@ -48,8 +48,10 @@ trait OrderingOpsExp extends OrderingOps with BaseExp {
   def ordering_min[T](lhs: Exp[T], rhs: Exp[T])(implicit n: Ordering[T]): Rep[T] = OrderingMin(lhs,rhs,n)
 }
 
-trait ScalaGenOrdering extends ScalaGenBase  { this: OrderingOpsExp =>
-
+trait ScalaGenOrdering extends ScalaGenBase {
+  val IR: OrderingOpsExp
+  import IR._
+  
   abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case OrderingLT(a,b,n) => emitValDef(sym, quote(a) + " < " + quote(b))
     case OrderingLTEQ(a,b,n) => emitValDef(sym, quote(a) + " <= " + quote(b))

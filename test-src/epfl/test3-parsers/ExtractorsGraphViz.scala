@@ -9,7 +9,9 @@ import test1._
 import test2._
 
 
-trait ExtractorsGraphViz extends GraphVizExport { this: MatchingExtractorsExp =>
+trait ExtractorsGraphViz extends GraphVizExport {
+  val IR: MatchingExtractorsExp
+  import IR._
   
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: java.io.PrintWriter) = rhs match {
 /*

@@ -32,7 +32,10 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
 }
 
 
-trait ScalaGenIfThenElse extends ScalaGenEffect with IfThenElseExp {
+trait ScalaGenIfThenElse extends ScalaGenEffect {
+  val IR: IfThenElseExp
+  import IR._
+  
   override def syms(e: Any): List[Sym[Any]] = e match {
     case IfThenElse(c, t, e) if shallow => syms(c) // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)

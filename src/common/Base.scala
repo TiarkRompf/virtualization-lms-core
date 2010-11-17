@@ -28,7 +28,8 @@ trait BaseExp extends Base with Expressions {
   
 }
 
-trait ScalaGenBase extends ScalaCodegen with BaseExp {
+trait ScalaGenBase extends ScalaCodegen {
+  import IR._
 
 }
 
@@ -37,6 +38,6 @@ trait EffectExp extends BaseExp with Effects {
   
 }
 
-trait ScalaGenEffect extends ScalaNestedCodegen with ScalaGenBase with EffectExp {
+trait ScalaGenEffect extends ScalaNestedCodegen with ScalaGenBase {
   
 }

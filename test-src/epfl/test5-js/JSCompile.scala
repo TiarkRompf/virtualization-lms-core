@@ -9,6 +9,8 @@ import test1._
 import java.io.PrintWriter
 
 trait JSCodegen extends GenericCodegen {
+  import IR._
+  
   def emitHTMLPage[B](f: () => Exp[B], stream: PrintWriter): Unit = {
     stream.println("<html><head><title>Scala2JS</title><script type=\"text/JavaScript\">")
     
@@ -37,6 +39,8 @@ trait JSCodegen extends GenericCodegen {
 }
 
 trait JSNestedCodegen extends GenericNestedCodegen with JSCodegen {
+  import IR._
+
   override def emitJSSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter): Unit = {
     super.emitJSSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
@@ -46,16 +50,19 @@ trait JSNestedCodegen extends GenericNestedCodegen with JSCodegen {
   }
 }
 
-trait JSGenBase extends JSCodegen with BaseExp {
-  
+trait JSGenBase extends JSCodegen {
+  val IR: BaseExp
 }
 
-trait JSGenEffect extends JSNestedCodegen with JSGenBase with EffectExp {
-  
+trait JSGenEffect extends JSNestedCodegen with JSGenBase {
+  val IR: EffectExp  
 }
 
 
-trait JSGenIfThenElse extends JSGenEffect with IfThenElseExp { // it's more or less generic...
+trait JSGenIfThenElse extends JSGenEffect { // it's more or less generic...
+  val IR: IfThenElseExp
+  import IR._
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case IfThenElse(c, t, e) if shallow => syms(c) // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
@@ -74,7 +81,10 @@ trait JSGenIfThenElse extends JSGenEffect with IfThenElseExp { // it's more or l
   }
 }
 
-trait JSGenArith extends JSGenBase with ArithExp { // TODO: define a generic one
+trait JSGenArith extends JSGenBase { // TODO: define a generic one
+  val IR: ArithExp
+  import IR._
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Plus(a,b) =>  emitValDef(sym, "" + quote(a) + "+" + quote(b))
     case Minus(a,b) => emitValDef(sym, "" + quote(a) + "-" + quote(b))
