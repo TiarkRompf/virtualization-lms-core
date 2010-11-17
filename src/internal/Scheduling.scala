@@ -23,7 +23,7 @@ trait Scheduling {
     val st = syms(start)
     GraphUtil.stronglyConnectedComponents[TP[_]](st.flatMap(e => findDefinition(e).toList), { d =>
       //println("dep"+d +"="+dep(d.rhs))
-      dep(d.rhs).flatMap { e =>
+      syms(d.rhs).flatMap { e =>
         //println(d + "->" + e)
         findDefinition(e).toList
       }
