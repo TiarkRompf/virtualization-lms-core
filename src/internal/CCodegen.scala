@@ -10,7 +10,7 @@ trait CCodegen extends GenericCodegen {
 
   override def kernelFileExt = "cpp"
 
-  override def toString = "C"
+  override def toString = "c"
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
     val x = fresh[A]
