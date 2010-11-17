@@ -10,11 +10,12 @@ trait While extends Base {
 
 
 trait WhileExp extends While with FunctionsExp { 
-  case class While(cond: () => Exp[Boolean], body: Exp[Unit]) extends Def[Unit]
+  case class While(cond: Exp[Boolean], body: Exp[Unit]) extends Def[Unit]
 
   override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
+    val c = reifyEffects(cond)
     val a = reifyEffects(body)
-    reflectEffect(While(() => cond, a))
+    reflectEffect(While(c, a))
   }
 }
 
@@ -30,10 +31,9 @@ trait ScalaGenWhile extends ScalaGenEffect {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case While(c,b) =>
-      val c_blk = reifyEffects(c())
       stream.print("while ({")
-      emitBlock(c_blk)
-      stream.print(quote(getBlockResult(c_blk)))
+      emitBlock(c)
+      stream.print(quote(getBlockResult(c)))
       stream.println("}) {")
       emitBlock(b)
       stream.println(quote(getBlockResult(b)))

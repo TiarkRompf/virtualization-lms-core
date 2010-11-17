@@ -1,0 +1,8 @@
+lib_managed
+local.properties
+project/boot
+project/build/target
+target
+virtualization-lms-core.iml
+.gitingore
+test-out

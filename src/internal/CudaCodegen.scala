@@ -9,6 +9,7 @@ trait CudaCodegen extends GenericCodegen {
   val IR: Expressions
   import IR._
 
+  override def toString = "cuda"
 
   var parallelFor = true
   var tabWidth:Int = 0
