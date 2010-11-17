@@ -60,6 +60,11 @@ trait Expressions {
     }
   }
 
+  def reset {
+    nVars = 0
+    globalDefs = Nil
+  }
+
 /*
   // dependencies
   def syms(e: Any): List[Sym[Any]] = e match {

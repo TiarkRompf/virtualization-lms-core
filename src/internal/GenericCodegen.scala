@@ -7,6 +7,10 @@ trait GenericCodegen extends Scheduling {
   val IR: Expressions
   import IR._
 
+  def kernelFileExt = ""
+
+  // optional type remapping (default is identity)
+  def remap[A](m: Manifest[A]) : String = m.toString
   
   def emitBlock(y: Exp[_])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
@@ -28,10 +32,6 @@ trait GenericCodegen extends Scheduling {
     stream.println("Generator Not Found")
   }
 
-  def emitKernel(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
-    throw new Exception("don't know how to generate kernel for: " + rhs)
-  }
-
   //def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
   
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
@@ -47,8 +47,7 @@ trait GenericCodegen extends Scheduling {
   }
 
   def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
-  def getFreeVarNode(rgs: Def[_]): List[Sym[_]] = { throw new Exception("Method getFreeVarNode should be overriden.") }
-
+  def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = { throw new Exception("Method getFreeVarNode should be overriden.") }
 }
 
 
@@ -129,12 +128,12 @@ trait GenericNestedCodegen extends GenericCodegen {
 
   
   override def inputs(rhs: Def[_]) : List[Any] = rhs match {
-    case Reify(e, effects) => List(e)
+    case Reify(e, effects) => Nil // just ignore -- effects are accounted for in emitBlock //List(e)
     case Reflect(s, effects) => inputs(s) // ignore control dependencies here for now
     case p: Product => p.productIterator.toList
     case _ => Nil
   }
-
+  
   override def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = {
     // Do the same things as emitBlock would
     val e1 = buildScheduleForResult(start) // deep list of deps
@@ -170,6 +169,12 @@ trait GenericNestedCodegen extends GenericCodegen {
   override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
     case Reflect(s, effects) => getFreeVarNode(s)
     case _ => Nil
+  }
+
+  def reset {
+    scope = Nil
+    shallow = false
+    IR.reset
   }
 
 }

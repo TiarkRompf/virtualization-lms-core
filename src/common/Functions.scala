@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
+import scala.virtualization.lms.internal.{CudaGenEffect, GenericNestedCodegen, ScalaGenEffect}
 
 trait Functions extends Base {
 
@@ -58,31 +58,7 @@ trait FunctionsExp extends Functions with EffectExp {
   }
 }
 
-trait ScalaGenFunctions extends ScalaGenEffect {
-  val IR: FunctionsExp
-  import IR._
-
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case Lambda(f, x, y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
-    case Lambda2(f, x1, x2, y) if shallow => Nil
-    case _ => super.syms(e)
-  }
-
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case e@Lambda(fun, x, y) =>
-      stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + x.Type + ") => ")
-      emitBlock(y)
-      stream.println(quote(getBlockResult(y)))
-      stream.println("}")
-
-    case Apply(fun, arg) =>
-      emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
-
-    case _ => super.emitNode(sym, rhs)
-  }
-}
-
-trait CudaGenFunctions extends CudaGenEffect {
+trait BaseGenFunctions extends GenericNestedCodegen {
   val IR: FunctionsExp
   import IR._
 
@@ -105,6 +81,29 @@ trait CudaGenFunctions extends CudaGenEffect {
     case Lambda(f, x, y) => getFreeVarBlock(y,List(x.asInstanceOf[Sym[_]]))
     case _ => super.getFreeVarNode(rhs)
   }
+}
+
+trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case e@Lambda(fun, x, y) =>
+      stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + x.Type + ") => ")
+      emitBlock(y)
+      stream.println(quote(getBlockResult(y)))
+      stream.println("}")
+
+    case Apply(fun, arg) =>
+      emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
+
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
+  val IR: FunctionsExp
+  import IR._
+
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case e@Lambda(fun, x, y) =>
