@@ -1,4 +1,48 @@
 digraph G {
+"Sym(3)" [
+label="Sym(3) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(2))"
+shape=box
+color=red
+]
+"Sym(2)" -> "Sym(3)"
+"Sym(4)" [
+label="Sym(4) \n First(Sym(3))"
+shape=box
+]
+"Sym(3)" -> "Sym(4)"
+"Sym(6)" [
+label="Sym(6) \n Test(Sym(4),A)"
+shape=box
+color=red
+]
+"Sym(4)" -> "Sym(6)"
+"Sym(5)" [
+label="Sym(5) \n Second(Sym(3))"
+shape=box
+]
+"Sym(3)" -> "Sym(5)"
+"Sym(9)" [
+label="Sym(9) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(8))"
+shape=box
+color=red
+]
+"Sym(8)" -> "Sym(9)"
+"Sym(10)" [
+label="Sym(10) \n First(Sym(9))"
+shape=box
+]
+"Sym(9)" -> "Sym(10)"
+"Sym(12)" [
+label="Sym(12) \n Test(Sym(10),A)"
+shape=box
+color=red
+]
+"Sym(10)" -> "Sym(12)"
+"Sym(11)" [
+label="Sym(11) \n Second(Sym(9))"
+shape=box
+]
+"Sym(9)" -> "Sym(11)"
 "Sym(15)" [
 label="Sym(15) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(14))"
 shape=box
@@ -29,17 +73,6 @@ color=green
 style=filled
 ]
 "Sym(19)" -> "Sym(13)"
-"Sym(9)" [
-label="Sym(9) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(8))"
-shape=box
-color=red
-]
-"Sym(8)" -> "Sym(9)"
-"Sym(11)" [
-label="Sym(11) \n Second(Sym(9))"
-shape=box
-]
-"Sym(9)" -> "Sym(11)"
 "Sym(21)" [
 label="Sym(21) \n Apply(Sym(13),Sym(11))"
 shape=box
@@ -48,6 +81,67 @@ style=filled
 ]
 "Sym(13)" -> "Sym(21)"
 "Sym(11)" -> "Sym(21)"
+"Sym(24)" [
+label="Sym(24) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(23))"
+shape=box
+color=red
+]
+"Sym(23)" -> "Sym(24)"
+"Sym(29)" [
+label="Sym(29) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(28))"
+shape=box
+color=red
+]
+"Sym(28)" -> "Sym(29)"
+"Sym(31)" [
+label="Sym(31) \n Second(Sym(29))"
+shape=box
+]
+"Sym(29)" -> "Sym(31)"
+"Sym(34)" [
+label="Sym(34) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(33))"
+shape=box
+color=red
+]
+"Sym(33)" -> "Sym(34)"
+"Sym(35)" [
+label="Sym(35) \n First(Sym(34))"
+shape=box
+]
+"Sym(34)" -> "Sym(35)"
+"Sym(37)" [
+label="Sym(37) \n Test(Sym(35),A)"
+shape=box
+color=red
+]
+"Sym(35)" -> "Sym(37)"
+"Sym(36)" [
+label="Sym(36) \n Second(Sym(34))"
+shape=box
+]
+"Sym(34)" -> "Sym(36)"
+"Sym(40)" [
+label="Sym(40) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(39))"
+shape=box
+color=red
+]
+"Sym(39)" -> "Sym(40)"
+"Sym(41)" [
+label="Sym(41) \n First(Sym(40))"
+shape=box
+]
+"Sym(40)" -> "Sym(41)"
+"Sym(43)" [
+label="Sym(43) \n Test(Sym(41),A)"
+shape=box
+color=red
+]
+"Sym(41)" -> "Sym(43)"
+"Sym(42)" [
+label="Sym(42) \n Second(Sym(40))"
+shape=box
+]
+"Sym(40)" -> "Sym(42)"
 "Sym(46)" [
 label="Sym(46) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(45))"
 shape=box
@@ -78,17 +172,6 @@ color=green
 style=filled
 ]
 "Sym(50)" -> "Sym(44)"
-"Sym(40)" [
-label="Sym(40) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(39))"
-shape=box
-color=red
-]
-"Sym(39)" -> "Sym(40)"
-"Sym(42)" [
-label="Sym(42) \n Second(Sym(40))"
-shape=box
-]
-"Sym(40)" -> "Sym(42)"
 "Sym(52)" [
 label="Sym(52) \n Apply(Sym(44),Sym(42))"
 shape=box
@@ -97,17 +180,12 @@ style=filled
 ]
 "Sym(44)" -> "Sym(52)"
 "Sym(42)" -> "Sym(52)"
-"Sym(29)" [
-label="Sym(29) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(28))"
+"Sym(55)" [
+label="Sym(55) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(54))"
 shape=box
 color=red
 ]
-"Sym(28)" -> "Sym(29)"
-"Sym(31)" [
-label="Sym(31) \n Second(Sym(29))"
-shape=box
-]
-"Sym(29)" -> "Sym(31)"
+"Sym(54)" -> "Sym(55)"
 "Sym(60)" [
 label="Sym(60) \n DefineFun(Pure(Const(false)))"
 shape=box
@@ -122,12 +200,6 @@ style=filled
 ]
 "Sym(60)" -> "Sym(63)"
 "Sym(31)" -> "Sym(63)"
-"Sym(55)" [
-label="Sym(55) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(54))"
-shape=box
-color=red
-]
-"Sym(54)" -> "Sym(55)"
 "Sym(68)" [
 label="Sym(68) \n DefineFun(Pure(Const(false)))"
 shape=box
@@ -142,28 +214,6 @@ style=filled
 ]
 "Sym(68)" -> "Sym(71)"
 "Sym(42)" -> "Sym(71)"
-"Sym(41)" [
-label="Sym(41) \n First(Sym(40))"
-shape=box
-]
-"Sym(40)" -> "Sym(41)"
-"Sym(43)" [
-label="Sym(43) \n Test(Sym(41),A)"
-shape=box
-color=red
-]
-"Sym(41)" -> "Sym(43)"
-"Sym(34)" [
-label="Sym(34) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(33))"
-shape=box
-color=red
-]
-"Sym(33)" -> "Sym(34)"
-"Sym(36)" [
-label="Sym(36) \n Second(Sym(34))"
-shape=box
-]
-"Sym(34)" -> "Sym(36)"
 "Sym(77)" [
 label="Sym(77) \n Apply(Sym(68),Sym(36))"
 shape=box
@@ -172,17 +222,6 @@ style=filled
 ]
 "Sym(68)" -> "Sym(77)"
 "Sym(36)" -> "Sym(77)"
-"Sym(35)" [
-label="Sym(35) \n First(Sym(34))"
-shape=box
-]
-"Sym(34)" -> "Sym(35)"
-"Sym(37)" [
-label="Sym(37) \n Test(Sym(35),A)"
-shape=box
-color=red
-]
-"Sym(35)" -> "Sym(37)"
 "Sym(83)" [
 label="Sym(83) \n Apply(Sym(68),Sym(31))"
 shape=box
@@ -342,12 +381,6 @@ shape=box
 ]
 "Sym(86)" -> "Sym(88)"
 "Sym(87)" -> "Sym(88)"
-"Sym(24)" [
-label="Sym(24) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(23))"
-shape=box
-color=red
-]
-"Sym(23)" -> "Sym(24)"
 "Sym(89)" [
 label="Sym(89) \n Reify(Sym(88),List(Sym(24)))"
 shape=box
@@ -384,17 +417,6 @@ shape=box
 "Sym(21)" -> "Sym(93)"
 "Sym(91)" -> "Sym(93)"
 "Sym(92)" -> "Sym(93)"
-"Sym(10)" [
-label="Sym(10) \n First(Sym(9))"
-shape=box
-]
-"Sym(9)" -> "Sym(10)"
-"Sym(12)" [
-label="Sym(12) \n Test(Sym(10),A)"
-shape=box
-color=red
-]
-"Sym(10)" -> "Sym(12)"
 "Sym(94)" [
 label="Sym(94) \n Reify(Sym(93),List(Sym(9), Sym(12)))"
 shape=box
@@ -409,17 +431,6 @@ color=green
 style=filled
 ]
 "Sym(94)" -> "Sym(7)"
-"Sym(3)" [
-label="Sym(3) \n Deconstruct(class scala.collection.immutable.$colon$colon,Sym(2))"
-shape=box
-color=red
-]
-"Sym(2)" -> "Sym(3)"
-"Sym(5)" [
-label="Sym(5) \n Second(Sym(3))"
-shape=box
-]
-"Sym(3)" -> "Sym(5)"
 "Sym(96)" [
 label="Sym(96) \n Apply(Sym(7),Sym(5))"
 shape=box
@@ -451,17 +462,6 @@ shape=box
 "Sym(96)" -> "Sym(99)"
 "Sym(97)" -> "Sym(99)"
 "Sym(98)" -> "Sym(99)"
-"Sym(4)" [
-label="Sym(4) \n First(Sym(3))"
-shape=box
-]
-"Sym(3)" -> "Sym(4)"
-"Sym(6)" [
-label="Sym(6) \n Test(Sym(4),A)"
-shape=box
-color=red
-]
-"Sym(4)" -> "Sym(6)"
 "Sym(100)" [
 label="Sym(100) \n Reify(Sym(99),List(Sym(3), Sym(6)))"
 shape=box
