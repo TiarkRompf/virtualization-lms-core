@@ -113,6 +113,7 @@ trait Liveness extends internal.GenericNestedCodegen {
 
   override def emitBlock(result: Exp[_])(implicit stream: PrintWriter): Unit = {
     focusBlock(result) {
+      focusExactScope(result) { levelScope => 
       
       // TODO: what is the intended behavior for uses in innerScope?
       // this will likely depend on the node, i.e. ifThenElse vs. loop
@@ -150,6 +151,7 @@ trait Liveness extends internal.GenericNestedCodegen {
         }
 
       }
+    }
     }
   }
 
@@ -236,17 +238,16 @@ class TestAnalysis extends FileDiffSuite {
       
       trait ScalaGenBla extends ScalaGenBase {
         import IR._
-        def emitTopLevel[A,B](name: String, params: List[Exp[_]], x: Exp[A], y: Exp[B])(implicit stream: PrintWriter): Unit
+        def emitFocused[A,B](name: String, params: List[Exp[_]], x: Exp[A], y: Exp[B])(implicit stream: PrintWriter): Unit
       }
       
       new NestProg with ArithExp with FunctionsExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenPrint { 
           val IR: self.type = self
           
-          def boundAndUsedInScope(x: Exp[_], y: Exp[_]): (List[Sym[_]], List[Sym[_]]) = focusBlock(y) {
-            val deep = levelScope:::innerScope
-            val used = (syms(y):::deep.flatMap(t => syms(t.rhs))).distinct
-            val bound = (syms(x):::deep.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
+          def boundAndUsedInScope(x: Exp[_], y: Exp[_]): (List[Sym[_]], List[Sym[_]]) = {
+            val used = (syms(y):::innerScope.flatMap(t => syms(t.rhs))).distinct
+            val bound = (syms(x):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
             (bound, used)
           }
           def freeInScope(x: Exp[_], y: Exp[_]): List[Sym[_]] = {
@@ -256,17 +257,16 @@ class TestAnalysis extends FileDiffSuite {
           
           override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
             case e@Lambda(fun, x, y) =>
-              var free = freeInScope(x,y)
             
-              // TODO: still slighty unnice. freeInScope will focus on y, and then emitBlock in codegenInner again.
-              // both have to agree on the scheduling (although only one level). 
-              // it would be better if focusing could be done just once.
+              focusBlock(y) {
+                var free = freeInScope(x,y)
             
-              val sw = new StringWriter
-              codegenInner.emitTopLevel("Anonfun_"+quote(sym), free, x, y)(new PrintWriter(sw))
-              classes = sw.toString :: classes
+                val sw = new StringWriter
+                codegenInner.emitFocused("Anonfun_"+quote(sym), free, x, y)(new PrintWriter(sw))
+                classes = sw.toString :: classes
             
-              stream.println("val " + quote(sym) + " = new Anonfun_" + quote(sym) + "("+free.map(quote).mkString(",")+")")
+                stream.println("val " + quote(sym) + " = new Anonfun_" + quote(sym) + "("+free.map(quote).mkString(",")+")")
+              }
 
             case _ => super.emitNode(sym, rhs)
           }
@@ -274,13 +274,13 @@ class TestAnalysis extends FileDiffSuite {
         val codegen2 = new ScalaGenBla with ScalaGenArith with ScalaGenFunctions with ScalaGenPrint { 
           val IR: self.type = self
           
-          override def availableDefs = if (innerScope ne null) innerScope else codegen.availableDefs
+          override def initialDefs = codegen.availableDefs
           
-          def emitTopLevel[A,B](name: String, params: List[Exp[_]], x: Exp[A], y: Exp[B])(implicit stream: PrintWriter) = {
+          def emitFocused[A,B](name: String, params: List[Exp[_]], x: Exp[A], y: Exp[B])(implicit stream: PrintWriter) = {
             // TODO: this is not valid Scala code. the types are missing.
             stream.println("class "+name+"("+params.map(quote).mkString(",")+") {")
             stream.println("def apply("+quote(x)+") = {")
-            emitBlock(y)
+            emitBlockFocused(y)
             stream.println(quote(getBlockResult(y)))
             stream.println("}")
             stream.println("}")
