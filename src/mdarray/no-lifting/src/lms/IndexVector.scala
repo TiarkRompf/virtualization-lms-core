@@ -4,9 +4,24 @@ import scala.collection.immutable._
 
 /**
  * IndexVector object
- * TODO: Make this a MDArray and implement the operations in a separate object
  */
 class IndexVector(ivList:List[Int]) extends Ordered[IndexVector] {
+
+  /*
+   * TODO: Make this a MDArray and implement the operations in a separate object
+   * VLAD: The IndexArray is indeed an instance of a 1-dimensional MDArray[Int]. Still, there are two reasons for not
+   *       making the IndexArray an instance of a MDArray
+   *       * the IndexVector contains a set of specific operations, that assume the 1-dimensional property and the
+   *         Int data type
+   *       * creating a MDArray that takes an MDArray as a constructor parameter creates a closed dependency cycle,
+   *         which we can only break by creating another separate class, extending MDArray, which we should represent
+   *         a 1-dimensional version of the MDArray... that's basically going back to square 1, with more complex data
+   *         structures :(
+   *      At this point I see no serious reason to implement the IndexVector as an MDArray
+   *
+   * Feel free to comment if you think there is a good reason to implement the IndexVector as a MDArray 
+   */
+
   def contentSize = ivList.foldLeft(1)((x:Int, y:Int) => x * y )
   def apply(i: Int) = ivList(i)
   def dim = ivList.length
@@ -83,7 +98,6 @@ object IndexVector {
   }
 
   private def nextOp(list: List[Int], lb: List[Int], ub: List[Int]) : Stream[IndexVector] = {
-
     try {
       val nextList = add(list.reverse, lb.reverse, ub.reverse).reverse
       Stream.cons(new IndexVector(nextList), nextOp(nextList, lb, ub))
