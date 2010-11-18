@@ -52,6 +52,11 @@ trait ScalaGenFunctions extends ScalaGenEffect {
   }
 */
 
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case Lambda(f, x, y) => syms(y)
+    case _ => super.syms(e)
+  }
+
   override def boundSyms(e: Any): List[Sym[Any]] = e match { // treat effects as bound symbols, just like the fun param
     case Lambda(f, x, Def(Reify(y, es))) => x :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y) // i.e. they must live inside
     case Lambda(f, x, y) => x :: boundSyms(y)

@@ -20,7 +20,7 @@ trait Scheduling {
   }
 
 
-  def dep(e: Exp[Any]): List[Sym[Any]] = e match {
+  def dep(e: Exp[Any]): List[Sym[Any]] = e match { // only used by GraphVizExport currently
     case Def(d: Product) => syms(d)
     case _ => Nil
   }
@@ -48,9 +48,7 @@ trait Scheduling {
         syms(d.rhs).contains(s) && !boundSyms(d.rhs).contains(st) // don't extrapolate outside the scope
       }
     }
-    GraphUtil.stronglyConnectedComponents[TP[_]](uses(st), { d =>
-      uses(d.sym)
-    }).flatten
+    GraphUtil.stronglyConnectedComponents[TP[_]](uses(st), t => uses(t.sym)).flatten
   }
   
 }
