@@ -38,6 +38,33 @@ trait ScalaCodegen extends GenericCodegen {
     stream.flush
   }
 
+  override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    stream.println("package embedding." + this.toString + ".gen")
+    stream.println("object kernel_" + quote(sym) + "{")
+    stream.print("def apply(")
+    stream.print(vals.map(p => quote(p) + ":" + remap(p.Type)).mkString(","))
+
+    // variable name mangling
+    if (vals.length > 0 && vars.length > 0){
+      stream.print(", ")
+    }
+    if (vars.length > 0){
+      stream.print(vars.map(v => quote(v) + ":" + "generated.Ref[" + remap(v.Type) +"]").mkString(","))
+    }
+    if (resultIsVar){
+      stream.print("): " + "generated.Ref[" + remap(sym.Type) + "] = {")
+    }
+    else {
+      stream.print("): " + remap(sym.Type) + " = {")
+    }
+
+    stream.println("")
+  }
+
+  override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    stream.println(quote(sym))
+    stream.println("}}")
+  }
 
   def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("val " + quote(sym) + " = " + rhs)

@@ -31,11 +31,11 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   case class RangeEnd(r: Exp[Range]) extends Def[Int]
   case class RangeForeach(r: Exp[Range], i: Exp[Int], body: Exp[Unit]) extends Def[Unit]
 
-  def range_until(start: Exp[Int], end: Exp[Int]) : Rep[Range] = Until(start, end)
-  def range_start(r: Exp[Range]) : Rep[Int] = RangeStart(r)
-  def range_step(r: Exp[Range]) : Rep[Int] = RangeStep(r)
-  def range_end(r: Exp[Range]) : Rep[Int] = RangeEnd(r)
-  def range_foreach(r: Exp[Range], block: Exp[Int] => Exp[Unit]) : Rep[Unit] = {
+  def range_until(start: Exp[Int], end: Exp[Int]) : Exp[Range] = Until(start, end)
+  def range_start(r: Exp[Range]) : Exp[Int] = RangeStart(r)
+  def range_step(r: Exp[Range]) : Exp[Int] = RangeStep(r)
+  def range_end(r: Exp[Range]) : Exp[Int] = RangeEnd(r)
+  def range_foreach(r: Exp[Range], block: Exp[Int] => Exp[Unit]) : Exp[Unit] = {
     val i = fresh[Int]
     reflectEffect(RangeForeach(r, i, reifyEffects(block(i))))
   }

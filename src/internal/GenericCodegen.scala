@@ -8,6 +8,8 @@ trait GenericCodegen extends Scheduling {
   import IR._
 
   def kernelFileExt = ""
+  def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
+  def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
 
   // optional type remapping (default is identity)
   def remap[A](m: Manifest[A]) : String = m.toString
@@ -29,7 +31,7 @@ trait GenericCodegen extends Scheduling {
   //def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
   
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
-
+      
   def quote(x: Exp[_]) : String = x match {
     case Const(s: String) => "\""+s+"\""
     case Const(null) => "null" // why is null getting lifted now? something to do with Equal
@@ -120,13 +122,6 @@ trait GenericNestedCodegen extends GenericCodegen {
     case _ => super.emitNode(sym, rhs)
   }
 
-  
-  override def inputs(rhs: Def[_]) : List[Any] = rhs match {
-    case Reify(e, effects) => Nil // just ignore -- effects are accounted for in emitBlock //List(e)
-    case Reflect(s, effects) => inputs(s) // ignore control dependencies here for now
-    case p: Product => p.productIterator.toList
-    case _ => Nil
-  }
   
   override def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = {
     // Do the same things as emitBlock would
