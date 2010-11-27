@@ -62,9 +62,9 @@ trait CudaGenMiscOps extends CudaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case PrintLn(s) => stream.println("printf(\"%s\\n\"," + quote(s) + ");")
-    case Print(s) => stream.println("printf(\"%s\"," + quote(s) + ");")
-    case Exit(a) => stream.println("exit(" + quote(a) + ");")
+    case PrintLn(s) => stream.println(addTab()+"printf(\"%s\\n\"," + quote(s) + ");")
+    case Print(s) => stream.println(addTab()+"printf(\"%s\"," + quote(s) + ");")
+    case Exit(a) => stream.println(addTab()+"exit(" + quote(a) + ");")
     case _ => super.emitNode(sym, rhs)
   }
 }
