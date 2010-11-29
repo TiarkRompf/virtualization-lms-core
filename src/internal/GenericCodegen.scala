@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package internal
 
 import java.io.PrintWriter
+import util.GraphUtil
 
 trait GenericCodegen extends Scheduling {
   val IR: Expressions
@@ -122,7 +123,6 @@ trait GenericNestedCodegen extends GenericCodegen {
     case _ => super.emitNode(sym, rhs)
   }
 
-  
   override def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = {
     // Do the same things as emitBlock would
     val e1 = buildScheduleForResult(start) // deep list of deps
@@ -158,6 +158,43 @@ trait GenericNestedCodegen extends GenericCodegen {
   override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
     case Reflect(s, effects) => getFreeVarNode(s)
     case _ => Nil
+  }
+
+  def getEffectsBlock(start: Exp[_]): List[Sym[_]] = {
+    val save = shallow
+    shallow = false
+    val stDeep = dep(start)
+
+    // deep list of deps
+    val e1 = GraphUtil.stronglyConnectedComponents[TP[_]](stDeep.flatMap(e => findDefinition(e).toList), { d =>
+      dep(d.rhs).flatMap { e =>
+        findDefinition(e).toList
+      }
+    }).flatten.reverse
+
+    // deep on everything except start
+    shallow = true
+    val stShallow = dep(start)
+    shallow = false
+
+    val e2 = GraphUtil.stronglyConnectedComponents[TP[_]](stShallow.flatMap(e => findDefinition(e).toList), { d =>
+      dep(d.rhs).flatMap { e =>
+        findDefinition(e).toList
+      }
+    }).flatten.reverse
+
+    // only the deep dependencies of start
+    val e3 = e1 filterNot { e2 contains _ }
+
+    val e4 = e3 flatMap { e =>
+      e.sym match {
+        case Def(Reflect(x, effects)) => List(e.sym): List[Sym[_]]
+        case _ => Nil
+      }
+    }
+
+    shallow = save
+    e4
   }
 
   def reset {

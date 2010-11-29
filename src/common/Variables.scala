@@ -38,7 +38,7 @@ trait VariablesExp extends Variables with EffectExp {
   }
 
   def __assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
-    reflectEffect(Assign(lhs, rhs))
+    reflectMutation(Assign(lhs, rhs))
     Const()
   }
 }
