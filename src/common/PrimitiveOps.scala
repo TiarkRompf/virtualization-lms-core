@@ -34,8 +34,12 @@ trait CudaGenPrimitiveOps extends CudaGenBase {
   import IR._
 
   //TODO: stdlib.h needs to be included in the common header file
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case ObjDoubleParseDouble(s) => emitValDef("double", sym, "atof(" + quote(s) + ")")
-    case _ => super.emitNode(sym, rhs)
-  }
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+      rhs match {
+        case ObjDoubleParseDouble(s) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef("double", sym, "atof(" + quote(s) + ")")
+        case _ => super.emitNode(sym, rhs)
+      }
+    }
 }

@@ -64,14 +64,30 @@ trait CudaGenOrderingOps extends CudaGenBase {
   import IR._
   
   // TODO: Add MIN/MAX macro needs to C-like header file
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case OrderingLT(a,b) => emitValDef("bool", sym, quote(a) + " < " + quote(b))
-    case OrderingLTEQ(a,b) => emitValDef("bool", sym, quote(a) + " <= " + quote(b))
-    case OrderingGT(a,b) => emitValDef("bool", sym, quote(a) + " > " + quote(b))
-    case OrderingGTEQ(a,b) => emitValDef("bool", sym, quote(a) + " >= " + quote(b))
-    case OrderingEquiv(a,b) => emitValDef("bool", sym, quote(a) + " == " + quote(b))
-    case OrderingMax(a,b) => emitValDef(CudaType(a.Type.toString), sym, "MAX(" + quote(a) + ", " + quote(b) + ")")
-    case OrderingMin(a,b) => emitValDef(CudaType(a.Type.toString), sym, "MIN(" + quote(a) + ", " + quote(b) + ")")
-    case _ => super.emitNode(sym, rhs)
-  }
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+      rhs match {
+        case OrderingLT(a,b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef("bool", sym, quote(a) + " < " + quote(b))
+        case OrderingLTEQ(a,b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef("bool", sym, quote(a) + " <= " + quote(b))
+        case OrderingGT(a,b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef("bool", sym, quote(a) + " > " + quote(b))
+        case OrderingGTEQ(a,b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef("bool", sym, quote(a) + " >= " + quote(b))
+        case OrderingEquiv(a,b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef("bool", sym, quote(a) + " == " + quote(b))
+        case OrderingMax(a,b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef(CudaType(a.Type.toString), sym, "MAX(" + quote(a) + ", " + quote(b) + ")")
+        case OrderingMin(a,b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef(CudaType(a.Type.toString), sym, "MIN(" + quote(a) + ", " + quote(b) + ")")
+        case _ => super.emitNode(sym, rhs)
+      }
+    }
 }

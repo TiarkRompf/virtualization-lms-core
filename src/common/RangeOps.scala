@@ -78,43 +78,49 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case Until(start, end) => // Do nothing: will be handled by RangeForeach
+    case Until(start, end) =>
+      if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+      // Do nothing: will be handled by RangeForeach
 
     // TODO: What if the range is not continuous integer set?
     case RangeForeach(r, i, body) => {
-      //var freeVars = buildScheduleForResult(body).filter(scope.contains(_)).map(_.sym)
-      val freeVars = getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
-
-      // Add the variables of range to the free variable list if necessary
-      var paramList = freeVars
-      val Until(startIdx,endIdx) = findDefinition(r.asInstanceOf[Sym[Range]]).map(_.rhs).get.asInstanceOf[Until]
-      if(startIdx.isInstanceOf[Sym[_]]) paramList = startIdx.asInstanceOf[Sym[_]] :: paramList
-      if(endIdx.isInstanceOf[Sym[_]]) paramList = endIdx.asInstanceOf[Sym[_]] :: paramList
-      paramList = paramList.distinct
-      val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
-
-      if(parallelFor) {
-        stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
-        tabWidth += 1
-        stream.println(addTab()+"int %s = blockIdx.x*blockDim.x + threadIdx.x;".format(quote(i)))
-        stream.println(addTab() + "%s = %s + %s;".format(quote(i), quote(i), quote(startIdx)))
-        stream.println(addTab()+"if(%s < %s) {".format(quote(i), quote(endIdx)))
-        tabWidth += 1
-        // No parallelism in the inner block
-        parallelFor = false
-        emitBlock(body)
-        parallelFor = true
-        tabWidth -= 1
-        stream.println(addTab()+"}")
-        tabWidth -= 1
-        stream.println(addTab()+"}")
-      }
+      if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
       else {
-        stream.println(addTab()+"for(int %s=%s; %s < %s; %s++) {".format(quote(i),quote(startIdx),quote(i),quote(endIdx),quote(i)))
-        tabWidth += 1
-        emitBlock(body)
-        tabWidth -= 1
-        stream.println(addTab() + "}")
+
+        //var freeVars = buildScheduleForResult(body).filter(scope.contains(_)).map(_.sym)
+        val freeVars = getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
+
+        // Add the variables of range to the free variable list if necessary
+        var paramList = freeVars
+        val Until(startIdx,endIdx) = findDefinition(r.asInstanceOf[Sym[Range]]).map(_.rhs).get.asInstanceOf[Until]
+        if(startIdx.isInstanceOf[Sym[_]]) paramList = startIdx.asInstanceOf[Sym[_]] :: paramList
+        if(endIdx.isInstanceOf[Sym[_]]) paramList = endIdx.asInstanceOf[Sym[_]] :: paramList
+        paramList = paramList.distinct
+        val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
+
+        if(parallelFor) {
+          stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
+          tabWidth += 1
+          stream.println(addTab()+"int %s = blockIdx.x*blockDim.x + threadIdx.x;".format(quote(i)))
+          stream.println(addTab() + "%s = %s + %s;".format(quote(i), quote(i), quote(startIdx)))
+          stream.println(addTab()+"if(%s < %s) {".format(quote(i), quote(endIdx)))
+          tabWidth += 1
+          // No parallelism in the inner block
+          parallelFor = false
+          emitBlock(body)
+          parallelFor = true
+          tabWidth -= 1
+          stream.println(addTab()+"}")
+          tabWidth -= 1
+          stream.println(addTab()+"}")
+        }
+        else {
+          stream.println(addTab()+"for(int %s=%s; %s < %s; %s++) {".format(quote(i),quote(startIdx),quote(i),quote(endIdx),quote(i)))
+          tabWidth += 1
+          emitBlock(body)
+          tabWidth -= 1
+          stream.println(addTab() + "}")
+        }
       }
     }
     case _ => super.emitNode(sym, rhs)

@@ -31,8 +31,12 @@ trait CudaGenFractionalOps extends CudaGenBase {
   val IR: FractionalOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case FractionalDivide(a,b) => emitValDef(CudaType(a.Type.toString), sym, quote(a) + " / " + quote(b))
-    case _ => super.emitNode(sym, rhs)
-  }
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+      rhs match {
+        case FractionalDivide(a,b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef(CudaType(a.Type.toString), sym, quote(a) + " / " + quote(b))
+        case _ => super.emitNode(sym, rhs)
+     }
+    }
 }

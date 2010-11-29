@@ -62,10 +62,18 @@ trait CudaGenVariables extends CudaGenEffect {
   val IR: VariablesExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case ReadVar(Variable(a)) => emitValDef(CudaType(a.Type.toString), sym, quote(a))
-    case NewVar(init) => emitVarDef(CudaType(init.Type.toString), sym, quote(init))
-    case Assign(Variable(a), b) => emitAssignment(quote(a), quote(b))
-    case _ => super.emitNode(sym, rhs)
-  }
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+      rhs match {
+        case ReadVar(Variable(a)) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef(CudaType(a.Type.toString), sym, quote(a))
+        case NewVar(init) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitVarDef(CudaType(init.Type.toString), sym, quote(init))
+        case Assign(Variable(a), b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitAssignment(quote(a), quote(b))
+        case _ => super.emitNode(sym, rhs)
+      }
+    }
 }

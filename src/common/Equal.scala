@@ -59,9 +59,15 @@ trait CudaGenEqual extends CudaGenBase {
   val IR: EqualExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case Equal(a,b) =>  emitValDef("bool", sym, quote(a) + "==" + quote(b))
-    case NotEqual(a,b) =>  emitValDef("bool", sym, quote(a) + " != " + quote(b))
-    case _ => super.emitNode(sym, rhs)
-  }
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+      rhs match {
+        case Equal(a,b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef("bool", sym, quote(a) + "==" + quote(b))
+        case NotEqual(a,b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef("bool", sym, quote(a) + " != " + quote(b))
+        case _ => super.emitNode(sym, rhs)
+      }
+    }
 }

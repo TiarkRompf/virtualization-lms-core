@@ -37,10 +37,14 @@ trait CudaGenImplicitOps extends CudaGenBase {
   val IR: ImplicitOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    // TODO: this valDef is redundant; we really just want the conversion to be a no-op in the generated code.
-    // TODO: but we still need to link the defs together
-    case im@ImplicitConvert(x) => stream.println(addTab()+"%s %s = (%s)%s;".format(CudaType(im.mY.toString), quote(sym), CudaType(im.mY.toString), quote(x)))
-    case _ => super.emitNode(sym, rhs)
-  }
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+      rhs match {
+        // TODO: this valDef is redundant; we really just want the conversion to be a no-op in the generated code.
+        // TODO: but we still need to link the defs together
+        case im@ImplicitConvert(x) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else stream.println(addTab()+"%s %s = (%s)%s;".format(CudaType(im.mY.toString), quote(sym), CudaType(im.mY.toString), quote(x)))
+        case _ => super.emitNode(sym, rhs)
+      }
+    }
 }

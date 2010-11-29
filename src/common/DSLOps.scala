@@ -44,66 +44,74 @@ trait CudaGenDSLOps extends CudaGenEffect {
 
   // TODO: think about whether this should override syms for DSLOps or not
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case op: DSLOp[_] =>
-      val b = op.representation
-      stream.println("val " + quote(sym) + " = { ")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+      rhs match {
+        case op: DSLOp[_] =>
+          isGPUable = true
+          val b = op.representation
+          stream.println("val " + quote(sym) + " = { ")
+          emitBlock(b)
+          stream.println(quote(getBlockResult(b)))
+          stream.println("}")
+          isGPUable = false
 
-    // Currently the generator inlines the __device__ function inside the __global__ function.
-    // Later it will be changed to have a separate device function.
-    // TODO: Need a flag to tell the function generator to determine it.
-    // TODO: How to tell the task graph generator / runtime about the output data structure generation
-     case op@DSLMap(x,y,range,func) =>
-       tabWidth = 0
-       // Get free variables of this __global__ GPU function
-       val freeVars = getFreeVarBlock(func,Nil)
-       //var freeVars = (buildScheduleForResult(x):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
-       val paramList = (x.asInstanceOf[Sym[_]]::y.asInstanceOf[Sym[_]]::freeVars).distinct
-       val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
-       stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
-       tabWidth += 1
-       stream.println(addTab()+"int %s = blockIdx.x*blockDim.x + threadIdx.x;".format("index"))
-       stream.println(addTab()+"if(%s < %s) {".format("index", quote(x)+".length"))
-       // Print the device function (inlined)
-       // put parameters
-       tabWidth += 1
-       stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x.Type.toString), quote(func)+"_1", quote(x)+".apply(index)"))
-       emitBlock(func)
-       stream.println(addTab()+"%s.update(%s, %s);".format(quote(y),"index",quote(func)))
-       tabWidth -= 1
-       stream.println("\t}")
-       tabWidth -= 1
-       stream.println("}")
+        // Currently the generator inlines the __device__ function inside the __global__ function.
+        // Later it will be changed to have a separate device function.
+        // TODO: Need a flag to tell the function generator to determine it.
+        // TODO: How to tell the task graph generator / runtime about the output data structure generation
+         case op@DSLMap(x,y,range,func) =>
+           isGPUable = true
+           tabWidth = 0
+           // Get free variables of this __global__ GPU function
+           val freeVars = getFreeVarBlock(func,Nil)
+           //var freeVars = (buildScheduleForResult(x):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
+           val paramList = (x.asInstanceOf[Sym[_]]::y.asInstanceOf[Sym[_]]::freeVars).distinct
+           val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
+           stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
+           tabWidth += 1
+           stream.println(addTab()+"int %s = blockIdx.x*blockDim.x + threadIdx.x;".format("index"))
+           stream.println(addTab()+"if(%s < %s) {".format("index", quote(x)+".length"))
+           // Print the device function (inlined)
+           // put parameters
+           tabWidth += 1
+           stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x.Type.toString), quote(func)+"_1", quote(x)+".apply(index)"))
+           emitBlock(func)
+           stream.println(addTab()+"%s.update(%s, %s);".format(quote(y),"index",quote(func)))
+           tabWidth -= 1
+           stream.println("\t}")
+           tabWidth -= 1
+           stream.println("}")
+           isGPUable = false
 
-       //The version having separate device function
-       //stream.println("\t\t%s.update(%s, %s(%s.apply(%s)));".format(quote(y),"index",quote(func),quote(x),"index"))
+           //The version having separate device function
+           //stream.println("\t\t%s.update(%s, %s(%s.apply(%s)));".format(quote(y),"index",quote(func),quote(x),"index"))
 
-    case op@DSLZipwith(x1,x2,y,range,func) =>
-       tabWidth = 0
-       // Get free variables of this __global__ GPU function
-       val freeVars = getFreeVarBlock(func,Nil)
-       //var freeVars = (buildScheduleForResult(x1):::buildScheduleForResult(x2):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
-       val paramList = (x1.asInstanceOf[Sym[_]]::x2.asInstanceOf[Sym[_]]::y.asInstanceOf[Sym[_]]::freeVars).distinct
-       val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
-       stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
-       tabWidth += 1
-       stream.println(addTab()+"int %s = blockIdx.x*blockDim.x + threadIdx.x;".format("index"))
-       stream.println(addTab()+"if(%s < %s) {".format("index", quote(x1)+".length"))
-       // Print the device function (inlined)
-       // put parameters
-       tabWidth += 1
-       stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x1.Type.toString), quote(func)+"_1", quote(x1)+".apply(index)"))
-       stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x2.Type.toString), quote(func)+"_2", quote(x1)+".apply(index)"))
-       emitBlock(func)
-       stream.println(addTab()+"%s.update(%s, %s);".format(quote(y),"index",quote(func)))
-       tabWidth -= 1
-       stream.println(addTab()+"}")
-       tabWidth -= 1
-       stream.println(addTab()+"}")
+        case op@DSLZipwith(x1,x2,y,range,func) =>
+           isGPUable = true
+           tabWidth = 0
+           // Get free variables of this __global__ GPU function
+           val freeVars = getFreeVarBlock(func,Nil)
+           //var freeVars = (buildScheduleForResult(x1):::buildScheduleForResult(x2):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
+           val paramList = (x1.asInstanceOf[Sym[_]]::x2.asInstanceOf[Sym[_]]::y.asInstanceOf[Sym[_]]::freeVars).distinct
+           val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
+           stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
+           tabWidth += 1
+           stream.println(addTab()+"int %s = blockIdx.x*blockDim.x + threadIdx.x;".format("index"))
+           stream.println(addTab()+"if(%s < %s) {".format("index", quote(x1)+".length"))
+           // Print the device function (inlined)
+           // put parameters
+           tabWidth += 1
+           stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x1.Type.toString), quote(func)+"_1", quote(x1)+".apply(index)"))
+           stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x2.Type.toString), quote(func)+"_2", quote(x1)+".apply(index)"))
+           emitBlock(func)
+           stream.println(addTab()+"%s.update(%s, %s);".format(quote(y),"index",quote(func)))
+           tabWidth -= 1
+           stream.println(addTab()+"}")
+           tabWidth -= 1
+           stream.println(addTab()+"}")
+           isGPUable = false
 
-    case _ => super.emitNode(sym, rhs)
-  }
+        case _ => super.emitNode(sym, rhs)
+      }
+    }
 }

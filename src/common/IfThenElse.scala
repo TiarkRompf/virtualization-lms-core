@@ -70,22 +70,25 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
   val IR: IfThenElseExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case IfThenElse(c,a,b) =>
-
-      stream.println(addTab()+"%s %s;".format(CudaType(a.Type.toString),quote(sym)))
-      stream.println(addTab() + "if (" + quote(c) + ") {")
-      tabWidth += 1
-      emitBlock(a)
-      stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
-      tabWidth -= 1
-      stream.println(addTab() + "} else {")
-      tabWidth += 1
-      emitBlock(b)
-      stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
-      tabWidth -= 1
-      stream.println("}")
-
-    case _ => super.emitNode(sym, rhs)
-  }
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+      rhs match {
+        case IfThenElse(c,a,b) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else {
+            stream.println(addTab()+"%s %s;".format(CudaType(a.Type.toString),quote(sym)))
+            stream.println(addTab() + "if (" + quote(c) + ") {")
+            tabWidth += 1
+            emitBlock(a)
+            stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
+            tabWidth -= 1
+            stream.println(addTab() + "} else {")
+            tabWidth += 1
+            emitBlock(b)
+            stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
+            tabWidth -= 1
+            stream.println("}")
+          }
+        case _ => super.emitNode(sym, rhs)
+      }
+    }
 }

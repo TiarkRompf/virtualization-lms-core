@@ -105,36 +105,42 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
   import IR._
 
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case e@Lambda(fun, x, y) =>
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+      rhs match {
+        case e@Lambda(fun, x, y) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else {
+              // The version for inlined device function
+              stream.println(addTab() + "%s %s = %s;".format(CudaType(x.Type.toString), quote(x), quote(sym)+"_1"))
+              emitBlock(y)
+              stream.println(addTab() + "%s %s = %s;".format(CudaType(y.Type.toString), quote(sym), quote(getBlockResult(y))))
 
-      // The version for inlined device function
-      stream.println(addTab() + "%s %s = %s;".format(CudaType(x.Type.toString), quote(x), quote(sym)+"_1"))
-      emitBlock(y)
-      stream.println(addTab() + "%s %s = %s;".format(CudaType(y.Type.toString), quote(sym), quote(getBlockResult(y))))
+              // The version for separate device function
+              /*
+              //TODO: If function parameter was originally tuple, then each element should be renamed?
+              val freeVars = buildScheduleForResult(y).filter(scope.contains(_)).map(_.sym)
+              stream.println("__device__ %s %s(%s %s) {".format(e.mB, quote(sym), e.mA, quote(x)))
+              emitBlock(y)
+              stream.println("%s %s = %s;".format(e.mB, quote(sym), quote(getBlockResult(y))))
+              stream.println("return %s;".format(quote(getBlockResult(y))))
+              stream.println("}")
+              */
+          }
 
-      // The version for separate device function
-      /*
-      //TODO: If function parameter was originally tuple, then each element should be renamed?
-      val freeVars = buildScheduleForResult(y).filter(scope.contains(_)).map(_.sym)
-      stream.println("__device__ %s %s(%s %s) {".format(e.mB, quote(sym), e.mA, quote(x)))
-      emitBlock(y)
-      stream.println("%s %s = %s;".format(e.mB, quote(sym), quote(getBlockResult(y))))
-      stream.println("return %s;".format(quote(getBlockResult(y))))
-      stream.println("}")
-      */
+        case e@Lambda2(fun, x1, x2, y) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else {
+            // The version for inlined device function
+            stream.println(addTab() + "%s %s = %s;".format(CudaType(x1.Type.toString), quote(x1), quote(sym)+"_1"))
+            stream.println(addTab() + "%s %s = %s;".format(CudaType(x2.Type.toString), quote(x2), quote(sym)+"_2"))
+            emitBlock(y)
+            stream.println(addTab() + "%s %s = %s;".format(CudaType(y.Type.toString), quote(sym), quote(getBlockResult(y))))
+          }
+        case Apply(fun, arg) =>
+          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
+          else emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 
-    case e@Lambda2(fun, x1, x2, y) =>
-
-      // The version for inlined device function
-      stream.println(addTab() + "%s %s = %s;".format(CudaType(x1.Type.toString), quote(x1), quote(sym)+"_1"))
-      stream.println(addTab() + "%s %s = %s;".format(CudaType(x2.Type.toString), quote(x2), quote(sym)+"_2"))
-      emitBlock(y)
-      stream.println(addTab() + "%s %s = %s;".format(CudaType(y.Type.toString), quote(sym), quote(getBlockResult(y))))
-
-    case Apply(fun, arg) =>
-      emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
-
-    case _ => super.emitNode(sym, rhs)
-  }
+        case _ => super.emitNode(sym, rhs)
+      }
+    }
 }

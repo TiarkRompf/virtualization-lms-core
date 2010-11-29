@@ -9,11 +9,26 @@ trait CudaCodegen extends GenericCodegen {
   val IR: Expressions
   import IR._
 
+  override def kernelFileExt = "cu"
+
   override def toString = "cuda"
 
+  var isGPUable = false
   var parallelFor = true
   var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
+
+  /*
+  override def quote(x: Exp[_]) : String = x match {
+    case Const(s: String) => "\""+s+"\""
+    case Const(null) => "null" // why is null getting lifted now? something to do with Equal
+    case Const(z) => z.toString
+    case Sym(n) => "x"+n
+    case External(s: String, args: List[Exp[Any]]) => throw new RuntimeException("could not quote " + x)
+    case null => "null"
+    case _ => throw new RuntimeException("could not quote " + x)
+  }
+  */
   
   // HashMap for Type Conversions
   val TypeTable = HashMap[String,String](
