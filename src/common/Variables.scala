@@ -14,6 +14,9 @@ trait Variables extends Base with OverloadHack {
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T]
   def __assign[T:Manifest](lhs: Var[T], rhs: Rep[T]) : Rep[Unit]
 
+  def infix_+=[T:Numeric:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs,rhs)
+
+  def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: T) : Rep[Unit]
 }
 
 trait VariablesExp extends Variables with EffectExp {
@@ -31,6 +34,7 @@ trait VariablesExp extends Variables with EffectExp {
   case class ReadVar[T:Manifest](v: Var[T]) extends Def[T]
   case class NewVar[T:Manifest](init: Exp[T]) extends Def[T]
   case class Assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
+  case class VarPlusEquals[T:Manifest:Numeric](lhs: Var[T], rhs: T) extends Def[Unit]
 
   def __newVar[T](init: Exp[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
@@ -41,6 +45,8 @@ trait VariablesExp extends Variables with EffectExp {
     reflectMutation(Assign(lhs, rhs))
     Const()
   }
+
+  def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: T) = reflectMutation(VarPlusEquals(lhs, rhs))
 }
 
 
@@ -53,6 +59,7 @@ trait ScalaGenVariables extends ScalaGenEffect {
     case NewVar(init) => emitVarDef(sym, quote(init))
     case Assign(Variable(a), b) => emitAssignment(quote(a), quote(b))
     //case Assign(a, b) => emitAssignment(quote(a), quote(b))
+    case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -114,7 +114,7 @@ class TestConditional extends FileDiffSuite {
         println(g(7))
       }
     
-      new ConditionalProg with IfThenElseExp with ArithExpOpt with EqualExp 
+      new ConditionalProg with IfThenElseExp with ArithExpOpt with EqualExp
       with PrintExp { self =>
         val codegen = new JSGenIfThenElse with JSGenArith 
         with JSGenEqual with JSGenPrint { val IR: self.type = self }
