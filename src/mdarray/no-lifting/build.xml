@@ -57,9 +57,10 @@ BUILD
     <fsc
       srcdir="${source.dir}"
       includes="**/lms/*.scala"
+      deprecation="yes"
+      unchecked="yes"
       destdir="${build.dir}"
       classpathref="build.classpath"
-      deprecation="yes"
     />
   </target>
 

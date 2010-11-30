@@ -1,194 +1,115 @@
 package lms
+import lms.Conversions._
+import lms.Operations._
+import lms.SpecificOperations._
+import lms.MDArray._
 
-import scala.collection.immutable._
-import java.lang.StringBuffer
+class MDArray[A: ClassManifest](_shape: SDArray[Int], _content: Array[A]) {
 
-/*
+  def dim(): Int = _shape.content.length
+  def shape(): SDArray[Int] = _shape
+  def content(): Array[A] = _content
+  def sel(iv: SDArray[Int]): MDArray[A] = {
+    // Check the selection size
+    if (!prefixLt(iv, shape))
+      throw new Exception("MDArray.sel("+iv+") the index vector components are greater or equal to the shape: " + shape)
 
-class MDArray[A](shape: Array[Rep[Int]], content: Rep[Array[T]]) {
-  
-  def dim = shape.length
+    // Compute the new array and iterating
+    val suffix: IndexVector = prefixMinus(iv, this.shape)
+    val arraySize: Int = prod(suffix)
+    val array: Array[A] = new Array[A](arraySize)
 
-  def apply(iv: MDArray[Int]): MDArray[A] = {
-    assert(iv.dim == 1)
-    ...
+    // Compute values in the new array
+    for (i <- iterate(zeros(suffix.content.length), suffix))
+      array(flatten(suffix, i)) = this.content()(flatten(shape, (iv +++ i).asInstanceOf[SDArray[Int]]))
+
+    suffix.content.length match {
+      case 0 =>
+        new Scalar[A](array(0))
+      case 1 =>
+        new SDArray(array)
+      case _ =>
+        new MDArray(suffix, array)
+    }
+  }
+  def apply(iv: SDArray[Int]) = sel(iv)
+
+  // Element-wise operations
+  def +(that: MDArray[A])(implicit numeric: Numeric[A]): MDArray[A] = op(that)(numeric.plus, "+")
+  def -(that: MDArray[A])(implicit numeric: Numeric[A]): MDArray[A] = op(that)(numeric.minus, "-")
+  def *(that: MDArray[A])(implicit numeric: Numeric[A]): MDArray[A] = op(that)(numeric.times, "*")
+  def -()(implicit numeric: Numeric[A]): MDArray[A] = uop(numeric.negate, "-[unary]")
+  def /(that: MDArray[A])(implicit fractional: Fractional[A]): MDArray[A] = op(that)(fractional.div, "/[div]")
+  def div(that: MDArray[A])(implicit integral: Integral[A]): MDArray[A] = op(that)(integral.quot, "/[quot]")
+  def rem(that: MDArray[A])(implicit integral: Integral[A]): MDArray[A] = op(that)(integral.rem, "%[rem]")
+  def <(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.lt, "<")
+  def <=(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.lteq, "<=")
+  def >(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.gt, ">")
+  def >=(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.gteq, ">=")
+  def ==(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.equiv, "==")
+  def !=(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(
+                                                                                  (a, b) => !ordering.equiv(a, b), "!=")
+  def &&(that: MDArray[A])(implicit ev: A =:= Boolean): MDArray[Boolean] = op(that)((a, b) => ev(a) && ev(b), "&&")
+  def ||(that: MDArray[A])(implicit ev: A =:= Boolean): MDArray[Boolean] = op(that)((a, b) => ev(a) || ev(b), "||")
+  def ! ()(implicit ev: A =:= Boolean): MDArray[Boolean] = uop((a) => !(ev(a)), "!")
+
+  // Special purpose definitions
+  /** Greater than definition for min and max */
+  def >(that: MDArray[A], opName: String)(implicit ordering: Ordering[A]): MDArray[Boolean] =
+    op(that)(ordering.gt, opName)
+  /** Reminder with zero */
+  def remwz(that: MDArray[A])(implicit integral: Integral[A]): MDArray[A] = op(that)(
+    (a, b) => if (b == integral.zero) integral.zero else integral.rem(a, b), "%[remwz]")
+
+  // Reducing all array elements, in order, left or right
+  def reduceLeft[B](z: B)(f: (B, A)=>B): B = content.foldLeft(z)(f)
+  def reduceRight[B](z: B)(f: (A, B)=>B): B = content.foldRight(z)(f)
+
+  // Concatenation shortcut (note: it's three pluses instead of two)
+  def +++(that: MDArray[A]): MDArray[A] = cat(0, this, that)
+
+
+  /** Binary element-wise operation */
+  private def op[B: ClassManifest](that:MDArray[A])(op: (A, A) => B, opName: String): MDArray[B] = {
+    if (!shapeEqual(this.shape, that.shape))
+      throw new Exception(opName + ": matrices of different shapes: " + this.shape + " vs " + that.shape)
+
+    val result: Array[B] = new Array[B](this.content.length)
+    for (i:Int <- List.range(0, this.content.length))
+      result(i)= op(this.content()(i), that.content()(i))
+    new MDArray(this.shape, result)
   }
 
-
-}
-
-  0 0 0 0 0 
-  0 0 0 0 0
-
-  Apply(1)
-  
-  0 0 0 0 0
-
-
-
-
-*/
-
-
-class MDArray[A](shapeIV:IndexVector, contentArray:Array[A]) {
-
-  // Built-in functions
-  def dim = shape.dim
-  def shape = shapeIV
-  def content = contentArray
-
-  def apply(iv: IndexVector): A =
-    contentArray(shape flatten iv)
-
-  def update(iv: IndexVector, a: A): A = {
-    val index:Int = shape flatten iv
-    contentArray(index) = a
-    a
+  /** Unary element-wise operation */
+  private def uop[B: ClassManifest](op: A => B, opName: String): MDArray[B] = {
+    val result: Array[B] = new Array[B](this.content.length)
+    for (i:Int <- List.range(0, this.content.length))
+      result(i)= op(this.content()(i))
+    new MDArray(this.shape, result)
   }
 
-  override def toString: String = {
+  override def toString(): String = {
     val sb: StringBuffer = new StringBuffer()
-    sb.append("Array of dim ")
-    sb.append(dim.toString)
-    sb.append(" with shape vector ")
+    sb.append("Array(")
     sb.append(shape.toString)
-    sb.append(":\n")
+    sb.append("):\n")
 
-    if (dim==1) {
-      for (a <- contentArray)
-        sb.append("[" + a.toString + "]  ")
-      sb.append("\n")
-    } else
-      for (i <- List.range(0, shape.shape(0))) {
-        for (j <- List.range(0, shape.shape(1))) {
-          sb.append("[")
-          val bp = i * (shape.contentSize/shape.shape(0)) + j * (shape.contentSize/shape.shape(0)/shape.shape(1)) 
-          for (k <- List.range(0, (shape.contentSize / shape.shape(0) / shape.shape(1)))) {
-            if (k!=0) sb.append(" ")
-            sb.append(contentArray(bp + k).toString)
-          }
-          sb.append("]  ")
+    for (i <- List.range(0, _shape(0))) {
+      for (j <- List.range(0, _shape(1))) {
+        sb.append("<")
+        val bp = i * (_content.length / _shape(0)) + j * (_content.length / _shape(0) / _shape(1))
+        for (k <- List.range(0, (_content.length / _shape(0) / _shape(1)))) {
+          if (k!=0) sb.append(" ")
+          sb.append(_content(bp + k).toString)
         }
-        sb.append("\n")
+        sb.append(">  ")
       }
+      sb.append("\n")
+    }
 
-    
     sb.toString()
   }
-
-  /*
-    Common array operations go here ... :)
-   */
 }
 
-
-/**
- * MDArray companion object for the operations
- */
-object MDArray {
-
-  def dim[A](a: MDArray[A]): Int = a.dim
-  def shape[A](a: MDArray[A]): IndexVector = a.shape
-
-  private def createArray[A: ClassManifest](iv: IndexVector): MDArray[A] =
-    new MDArray(iv, new Array[A](iv.contentSize)) 
-
-  def reshape[A](a: MDArray[A], newShape:IndexVector): MDArray[A] = {
-    if (newShape.contentSize != a.shape.contentSize)
-      throw new Exception("Incorrect size in reshape.")
-
-    // since the arrays are immutable, we can share content between them
-    new MDArray[A](newShape, a.content)
-  }
-
-
-  def genArray[A: ClassManifest](a: MDArray[A], iv: IndexVector): MDArray[A] = {
-
-    val newSize = iv + a.shape
-    val newArray = createArray[A](newSize)
-
-    for (i <- iv.iterate)
-      for (j <- a.shape.iterate)
-        newArray(i+j) = a(j)
-
-    newArray
-  }
-
-
-  def sel[A: ClassManifest](a: MDArray[A], iv: IndexVector): MDArray[A] = {
-
-    val newSize = a.shape - iv
-    val newArray = createArray[A](newSize)
-
-    for (i <- newSize.iterate)
-      newArray(i) = a(iv + i)
-
-    newArray
-  }
-
-
-  def modarray[A: ClassManifest](a: MDArray[A], iv: IndexVector, value: MDArray[A]): MDArray[A] = {
-
-    if (!((a.shape - iv) isElementWiseEqualTo  value.shape))
-      throw new Exception("modarray: Array sizes do not match.")
-
-    val newArray = createArray[A](a.shape)
-
-    for (i <- a.shape.iterate)
-      newArray(i) = a(i)
-
-    for (i <- value.shape.iterate)
-      newArray(iv + i) = value(i)
-
-    newArray
-  }
-
-
-  def take[A: ClassManifest](a: MDArray[A], iv: IndexVector): MDArray[A] = {
-
-    if (a.shape isElementWiseGreaterOrEqualTo iv)
-      throw new Exception("take: Take vector does not match given matrix.")
-
-    val newArray = createArray[A](iv)
-
-    for (i <- iv.iterate)
-      newArray(i) = a(i)
-
-    newArray
-  }
-
-
-  def drop[A: ClassManifest](a: MDArray[A], iv: IndexVector): MDArray[A] = {
-
-    if (!(a.shape isElementWiseGreaterThen iv))
-      throw new Exception("drop: Unable to drop more than the actual size of the matrix.")
-
-    val newSize = a.shape elementWiseDifference iv
-    val newArray = createArray[A](newSize)
-
-    for (i <- newSize.iterate)
-      newArray(i) = a(i elementWiseAdd iv)
-
-    newArray
-  }
-
-
-  def cat[A: ClassManifest](d: Int, a: MDArray[A], b: MDArray[A]): MDArray[A] = {
-
-//    try {
-      val newSize = a.shape.axisConcatenation(b.shape, d)
-      val newArray = createArray[A](newSize)
-      val offset = newSize elementWiseDifference b.shape
-
-      for (i <- a.shape.iterate)
-        newArray(i) = a(i)
-
-      for (i <- b.shape.iterate)
-        newArray(i  elementWiseAdd offset) = b(i)
-
-      newArray
-//    } catch {
-//      case _ => throw new Exception("cat: Incorrect shapes in "+d+"-concatenation.")
-//    }
-  }
+object MDArray{
 }
