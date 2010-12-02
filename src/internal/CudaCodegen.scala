@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package internal
 
-import java.io.PrintWriter
+import java.io.{PrintWriter,File}
 import collection.immutable.HashMap
 
 
@@ -32,16 +32,15 @@ trait CudaCodegen extends GenericCodegen {
   
   // HashMap for Type Conversions
   val TypeTable = HashMap[String,String](
-          "ppl.dsl.optiml.Matrix[Int]" -> "Matrix<Int>",
-          "ppl.dsl.optiml.Matrix[Long]" -> "Matrix<Long>",
-          "ppl.dsl.optiml.Matrix[Float]" -> "Matrix<Float>",
-          "ppl.dsl.optiml.Matrix[Double]" -> "Matrix<Double>",
-          "ppl.dsl.optiml.Vector[Boolean]" -> "Vector<Bool>",
-          "ppl.dsl.optiml.Vector[Int]" -> "Vector<Int>",
-          "ppl.dsl.optiml.Vector[Long]" -> "Vector<Long>",
-          "ppl.dsl.optiml.Vector[Float]" -> "Vector<Float>",
-          "ppl.dsl.optiml.Vector[Double]" -> "Vector<Double>",
-          "ppl.dsl.optiml.Vector[Boolean]" -> "Vector<Bool>",
+          "ppl.dsl.optiml.Matrix[Int]" -> "Matrix<int>",
+          "ppl.dsl.optiml.Matrix[Long]" -> "Matrix<long>",
+          "ppl.dsl.optiml.Matrix[Float]" -> "Matrix<float>",
+          "ppl.dsl.optiml.Matrix[Double]" -> "Matrix<bool>",
+          "ppl.dsl.optiml.Vector[Int]" -> "Vector<int>",
+          "ppl.dsl.optiml.Vector[Long]" -> "Vector<long>",
+          "ppl.dsl.optiml.Vector[Float]" -> "Vector<float>",
+          "ppl.dsl.optiml.Vector[Double]" -> "Vector<double>",
+          "ppl.dsl.optiml.Vector[Boolean]" -> "Vector<bool>",
           "Int" -> "int",
           "Long" -> "long",
           "Float" -> "float",
@@ -126,6 +125,37 @@ trait CudaCodegen extends GenericCodegen {
     stream.println(addTab()+tpe + " " + lhs + " = " + rhs + ";")
   }
   */
+  
+  override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    parallelFor = true
+
+    if((vars.length > 0)  || (resultIsVar)){
+      //println("ERROR: CUDA cannot have var for the input or the result!")
+      throw new RuntimeException("CudaGen: Not GPUable")
+    }
+
+    stream.println("#include <cuda.h>")
+    stream.println("#include \"VectorImpl.h\"")
+    stream.println("#include \"MatrixImpl.h\"")
+    stream.println("")
+
+    val paramListStr = vals.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
+    stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym), paramListStr))
+
+
+  }
+
+  override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    stream.println("}")
+
+    isGPUable = false
+  }
+
+  override def exceptionHandler(filename: String, kstream:PrintWriter): Unit = {
+     super.exceptionHandler(filename, kstream)
+     isGPUable = false
+  }
+
 }
 
 // TODO: do we need this for each target?

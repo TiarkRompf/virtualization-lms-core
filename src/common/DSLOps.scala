@@ -2,8 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
-
+import scala.virtualization.lms.internal.{GenericNestedCodegen, CudaGenEffect, ScalaGenEffect}
 
 trait DSLOpsExp extends EffectExp {
   // representation must be reified! this places the burden on the caller, but allows the caller to avoid the
@@ -14,17 +13,21 @@ trait DSLOpsExp extends EffectExp {
   case class DSLZipwith[A1,A2,B,C[_]](val in1: Exp[C[A1]], in2: Exp[C[A2]], out: Exp[C[B]], range: Exp[Range], func:Exp[(A1,A2)=>B]) extends Def[C[B]]
 }
 
-trait ScalaGenDSLOps extends ScalaGenEffect {
+trait BaseGenDSLOps extends GenericNestedCodegen {
   val IR: DSLOpsExp
   import IR._
-  
-  // TODO: think about whether this should override syms for DSLOps or not
 
+  // TODO: think about whether this should override syms for DSLOps or not
   override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
     case op: DSLOp[_] => getFreeVarBlock(op.representation,Nil)
     case _ => super.getFreeVarNode(rhs)
   }
 
+}
+trait ScalaGenDSLOps extends ScalaGenEffect with BaseGenDSLOps {
+  val IR: DSLOpsExp
+  import IR._
+  
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case op: DSLOp[_] =>
       val b = op.representation
@@ -38,7 +41,7 @@ trait ScalaGenDSLOps extends ScalaGenEffect {
 
 }
 
-trait CudaGenDSLOps extends CudaGenEffect {
+trait CudaGenDSLOps extends CudaGenEffect with BaseGenDSLOps {
   val IR: DSLOpsExp
   import IR._
 
@@ -47,13 +50,14 @@ trait CudaGenDSLOps extends CudaGenEffect {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
       rhs match {
         case op: DSLOp[_] =>
+          //println("HI")
           isGPUable = true
           val b = op.representation
-          stream.println("val " + quote(sym) + " = { ")
+          //stream.println("val " + quote(sym) + " = { ")
           emitBlock(b)
-          stream.println(quote(getBlockResult(b)))
-          stream.println("}")
-          isGPUable = false
+          //stream.println(quote(getBlockResult(b)))
+          //stream.println("}")
+          //isGPUable = false
 
         // Currently the generator inlines the __device__ function inside the __global__ function.
         // Later it will be changed to have a separate device function.
@@ -81,7 +85,7 @@ trait CudaGenDSLOps extends CudaGenEffect {
            stream.println("\t}")
            tabWidth -= 1
            stream.println("}")
-           isGPUable = false
+           //isGPUable = false
 
            //The version having separate device function
            //stream.println("\t\t%s.update(%s, %s(%s.apply(%s)));".format(quote(y),"index",quote(func),quote(x),"index"))
@@ -109,7 +113,7 @@ trait CudaGenDSLOps extends CudaGenEffect {
            stream.println(addTab()+"}")
            tabWidth -= 1
            stream.println(addTab()+"}")
-           isGPUable = false
+           //isGPUable = false
 
         case _ => super.emitNode(sym, rhs)
       }

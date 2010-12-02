@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.ScalaGenBase
+import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
 
 trait StringOps extends Variables with OverloadHack {
   // NOTE: if something doesn't get lifted, this won't give you a compile time error,
@@ -39,6 +39,18 @@ trait ScalaGenStringOps extends ScalaGenBase {
     case StringPlus(s1,s2) => emitValDef(sym, "%s+%s".format(quote(s1), quote(s2)))
     case StringTrim(s) => emitValDef(sym, "%s.trim()".format(quote(s)))
     case StringSplit(s, sep) => emitValDef(sym, "%s.split(%s)".format(quote(s), quote(sep)))
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenStringOps extends CudaGenBase {
+  val IR: StringOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case StringPlus(s1,s2) => throw new RuntimeException("CudaGen: Not GPUable")
+    case StringTrim(s) => throw new RuntimeException("CudaGen: Not GPUable")
+    case StringSplit(s, sep) => throw new RuntimeException("CudaGen: Not GPUable")
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.{FileReader, BufferedReader, PrintWriter}
-import scala.virtualization.lms.internal.ScalaGenBase
+import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
 
 trait IOOps extends Base {
 
@@ -51,6 +51,19 @@ trait ScalaGenIOOps extends ScalaGenBase {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case BrReadline(b) => emitValDef(sym, quote(b) + ".readLine()")
     case BrClose(b) => emitValDef(sym, quote(b) + ".close()")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenIOOps extends CudaGenBase {
+  val IR: IOOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case ObjBrApply(f) => throw new RuntimeException("CudaGen: Not GPUable")
+    case ObjFrApply(s) => throw new RuntimeException("CudaGen: Not GPUable")
+    case BrReadline(b) => throw new RuntimeException("CudaGen: Not GPUable")
+    case BrClose(b) => throw new RuntimeException("CudaGen: Not GPUable")
     case _ => super.emitNode(sym, rhs)
   }
 }

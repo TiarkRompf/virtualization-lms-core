@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package internal
 
-import java.io.PrintWriter
+import java.io.{PrintWriter,File}
 
 trait GenericCodegen extends Scheduling {
   val IR: Expressions
@@ -10,6 +10,12 @@ trait GenericCodegen extends Scheduling {
   def kernelFileExt = ""
   def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
   def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
+
+  // exception handler
+  def exceptionHandler(filename: String, kstream:PrintWriter): Unit = {
+      kstream.close()
+     (new File(filename)).delete
+  }
 
   // optional type remapping (default is identity)
   def remap[A](m: Manifest[A]) : String = m.toString

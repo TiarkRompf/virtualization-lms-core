@@ -39,11 +39,11 @@ trait CCodeGenPkg extends CGenMiscOps
 
 ///////
 // Cuda
-//TODO: CudaGenStringOps, CudaGenIOOps, CudaGenWhile not included
-trait CudaCodeGenPkg extends CudaGenImplicitOps with CudaGenNumericOps with CudaGenFractionalOps with CudaGenOrderingOps
-    with CudaGenRangeOps with CudaGenArrayOps with CudaGenBooleanOps
+// CudaGenDSLOps will be used after all the basic generators are passed
+trait CudaCodeGenPkg extends CudaGenDSLOps with CudaGenImplicitOps with CudaGenNumericOps with CudaGenFractionalOps with CudaGenOrderingOps
+    with CudaGenStringOps with CudaGenRangeOps with CudaGenIOOps with CudaGenArrayOps with CudaGenBooleanOps
     with CudaGenPrimitiveOps with CudaGenMiscOps with CudaGenFunctions with CudaGenEqual with CudaGenIfThenElse
-    with CudaGenVariables with CudaGenDSLOps with CudaGenWhile { val IR: ScalaOpsPkgExp  }     
+    with CudaGenVariables with CudaGenWhile { val IR: ScalaOpsPkgExp  }     
 
 //trait CudaCodeGenPkg extends CudaGenNumericOps with CudaGenRangeOps with CudaGenFractionalOps
 //    with CudaGenMiscOps with CudaGenFunctions with CudaGenVariables with CudaGenDSLOps with CudaGenImplicitOps { val IR: ScalaOpsPkgExp  }

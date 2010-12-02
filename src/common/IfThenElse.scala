@@ -67,7 +67,7 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
 }
 
 trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
-  val IR: IfThenElseExp
+  //val IR: IfThenElseExp
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
