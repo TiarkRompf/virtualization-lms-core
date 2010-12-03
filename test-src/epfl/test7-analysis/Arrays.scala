@@ -10,6 +10,77 @@ import util.OverloadHack
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
+
+trait Loops extends Base with OverloadHack {
+  def array(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Array[Double]]
+  def reduce(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] // TODO: make reduce operation configurable!
+
+  def infix_at(a: Rep[Array[Double]], i: Rep[Int]): Rep[Double]
+}
+
+
+trait LoopsExp extends Loops with EffectExp {
+  
+  case class LoopArray(s: Rep[Int], x: Sym[Int], y: Rep[Double]) extends Def[Array[Double]]
+  case class LoopReduce(s: Rep[Int], x: Sym[Int], y: Rep[Double]) extends Def[Double]
+  case class ArrayIndex(a: Rep[Array[Double]], i: Rep[Int]) extends Def[Double]  
+  
+  def array(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Array[Double]] = {
+    val x = fresh[Int]
+    val y = f(x)
+    LoopArray(shape, x, y)
+  }
+
+  def reduce(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] = {
+    val x = fresh[Int]
+    val y = f(x)
+    LoopReduce(shape, x, y)
+  }
+
+  def infix_at(a: Rep[Array[Double]], i: Rep[Int]): Rep[Double] = ArrayIndex(a, i)
+
+}
+
+trait ScalaGenLoops extends ScalaGenEffect {
+  val IR: LoopsExp
+  import IR._
+  
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case LoopArray(s, x, y) => syms(s):::syms(y)
+    case LoopReduce(s, x, y) => syms(s):::syms(y)
+    case _ => super.syms(e)
+  }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match { // treat effects as bound symbols, just like the fun param
+    case LoopArray(s, x, Def(Reify(y, es))) => x :: es.asInstanceOf[List[Sym[Any]]] // i.e. they must live inside
+    case LoopReduce(s, x, Def(Reify(y, es))) => x :: es.asInstanceOf[List[Sym[Any]]] // i.e. they must live inside
+    case LoopArray(s, x, y) => x :: Nil
+    case LoopReduce(s, x, y) => x :: Nil
+    case _ => super.boundSyms(e)
+  }
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case LoopArray(s,x,y) =>  
+      stream.println("val " + quote(sym) + " = LoopArray {" + quote(x) + " => ")
+      emitBlock(y)
+      stream.println(quote(getBlockResult(y)))
+      stream.println("}")
+    case LoopReduce(s,x,y) =>  
+      stream.println("val " + quote(sym) + " = LoopReduce {" + quote(x) + " => ")
+      emitBlock(y)
+      stream.println(quote(getBlockResult(y)))
+      stream.println("}")
+    case ArrayIndex(a,i) =>  
+      emitValDef(sym, quote(a) + " at " + quote(i) + "")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+
+
+
+
+
 trait Arrays extends Base with OverloadHack {
   def zeroes(n: Rep[Int]): Rep[Array[Int]]
   def infix_update(a: Rep[Array[Int]], x: Rep[Int], v: Rep[Int]): Rep[Array[Int]]
