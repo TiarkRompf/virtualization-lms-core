@@ -78,7 +78,7 @@ trait CudaGenDSLOps extends CudaGenEffect with BaseGenDSLOps {
            // Print the device function (inlined)
            // put parameters
            tabWidth += 1
-           stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x.Type.toString), quote(func)+"_1", quote(x)+".apply(index)"))
+           stream.println(addTab()+"%s %s = %s;".format(CudaType(sym.Type.typeArguments(0).toString), quote(func)+"_1", quote(x)+".apply(index)"))
            emitBlock(func)
            stream.println(addTab()+"%s.update(%s, %s);".format(quote(y),"index",quote(func)))
            tabWidth -= 1
@@ -105,8 +105,8 @@ trait CudaGenDSLOps extends CudaGenEffect with BaseGenDSLOps {
            // Print the device function (inlined)
            // put parameters
            tabWidth += 1
-           stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x1.Type.toString), quote(func)+"_1", quote(x1)+".apply(index)"))
-           stream.println(addTab()+"%s %s = %s;".format(CudaInnerType(x2.Type.toString), quote(func)+"_2", quote(x1)+".apply(index)"))
+           stream.println(addTab()+"%s %s = %s;".format(CudaType(sym.Type.typeArguments(0).toString), quote(func)+"_1", quote(x1)+".apply(index)"))
+           stream.println(addTab()+"%s %s = %s;".format(CudaType(sym.Type.typeArguments(0).toString), quote(func)+"_2", quote(x1)+".apply(index)"))
            emitBlock(func)
            stream.println(addTab()+"%s.update(%s, %s);".format(quote(y),"index",quote(func)))
            tabWidth -= 1

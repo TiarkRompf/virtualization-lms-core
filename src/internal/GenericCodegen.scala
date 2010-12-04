@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package internal
 
-import java.io.{PrintWriter,File}
+import java.io.{FileWriter, PrintWriter, File}
 
 trait GenericCodegen extends Scheduling {
   val IR: Expressions
@@ -12,9 +12,9 @@ trait GenericCodegen extends Scheduling {
   def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
 
   // exception handler
-  def exceptionHandler(filename: String, kstream:PrintWriter): Unit = {
+  def exceptionHandler(outFile:File, kstream:PrintWriter): Unit = {
       kstream.close()
-     (new File(filename)).delete
+      outFile.delete
   }
 
   // optional type remapping (default is identity)
@@ -56,6 +56,8 @@ trait GenericCodegen extends Scheduling {
 
   def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
   def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = { throw new Exception("Method getFreeVarNode should be overriden.") }
+
+  def getMetaData : String = ""
 }
 
 
