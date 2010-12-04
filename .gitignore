@@ -1,4 +1,5 @@
 *.iml
+.DS_Store
 local.properties
 project/boot
 project/build/target

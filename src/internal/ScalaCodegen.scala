@@ -39,7 +39,7 @@ trait ScalaCodegen extends GenericCodegen {
   }
 
   override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
-    stream.println("package embedding." + this.toString + ".gen")
+    stream.println("package generated." + this.toString)
     stream.println("object kernel_" + quote(sym) + "{")
     stream.print("def apply(")
     stream.print(vals.map(p => quote(p) + ":" + remap(p.Type)).mkString(","))
