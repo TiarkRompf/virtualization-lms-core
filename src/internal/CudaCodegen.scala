@@ -30,11 +30,16 @@ trait CudaCodegen extends GenericCodegen {
   // FileWriter for helper functions(TODO: Change to get from Config)
   val buildPath = "generated/delite-gen/cuda/"
   val outDir = new File(buildPath); outDir.mkdirs()
-  val hstream = new PrintWriter(new FileWriter(buildPath + "helperFuncs.cpp"))
+  val hstream = new PrintWriter(new FileWriter(buildPath + "helperFuncs.cu"))
 
+  //TODO: Put all the API declarations somewhere
   hstream.println("#include \"VectorImpl.h\"")
   hstream.println("#include \"MatrixImpl.h\"")
   hstream.println("#include <jni.h>")
+  hstream.println("//Delite Runtime APIs")
+  hstream.println("extern void DeliteCudaMallocHost(void **ptr, int size);")
+  hstream.println("extern void DeliteCudaMalloc(void **ptr, int size);")
+  hstream.println("extern void DeliteCudaMemcpyAsync(void *dptr, void *sptr, int size, enum cudaMemcpyKind kind);")
 
   object MetaData {
     var gpuBlockSizeX: String = ""
@@ -101,13 +106,13 @@ trait CudaCodegen extends GenericCodegen {
     //stream.println("\tjclass cls = env->GetObjectClass(obj);")
     stream.println("\tjmethodID mid_data = env->GetMethodID(cls,\"data\",\"()[%s\");".format(JNITypeDescriptor(sym.Type.typeArguments(0).toString)))
     stream.println("\tj%sArray data = (j%sArray)(%s);".format(typeStr,typeStr,"env->CallObjectMethod(obj,mid_data)"))
-    stream.println("\tj%s *dataPtr = env->GetPrimitiveArrayCritical(data,0);".format(typeStr))
+    stream.println("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical(data,0);".format(typeStr,typeStr))
 
     // Allocate pinned-memory and device memory
     stream.println("\t%s *hostPtr;".format(typeStr))
-    stream.println("\tDeliteCudaMallocHost(%s,%s);".format("&hostPtr",numBytesStr))
+    stream.println("\tDeliteCudaMallocHost((void**)%s,%s);".format("&hostPtr",numBytesStr))
     stream.println("\t%s *devPtr;".format(typeStr))
-    stream.println("\tDeliteCudaMalloc(%s,%s);".format("&devPtr",numBytesStr))
+    stream.println("\tDeliteCudaMalloc((void**)%s,%s);".format("&devPtr",numBytesStr))
 
     // Copy twice (hostMem->pinnedHostMem, pinnedHostMem->devMem)
     stream.println("\tmemcpy(%s, %s, %s);".format("hostPtr","dataPtr",numBytesStr))
@@ -129,13 +134,13 @@ trait CudaCodegen extends GenericCodegen {
     //stream.println("\tjclass cls = env->GetObjectClass(obj);")
     stream.println("\tjmethodID mid_data = env->GetMethodID(cls,\"data\",\"()[%s\");".format(JNITypeDescriptor(sym.Type.typeArguments(0).toString)))
     stream.println("\tj%sArray data = (j%sArray)(%s);".format(typeStr,typeStr,"env->CallObjectMethod(obj,mid_data)"))
-    stream.println("\tj%s *dataPtr = env->GetPrimitiveArrayCritical(data,0);".format(typeStr))
+    stream.println("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical(data,0);".format(typeStr,typeStr))
 
     // Allocate pinned-memory and device memory
     stream.println("\t%s *hostPtr;".format(typeStr))
-    stream.println("\tDeliteCudaMallocHost(%s,%s);".format("&hostPtr",numBytesStr))
+    stream.println("\tDeliteCudaMallocHost((void**)%s,%s);".format("&hostPtr",numBytesStr))
     stream.println("\t%s *devPtr;".format(typeStr))
-    stream.println("\tDeliteCudaMalloc(%s,%s);".format("&devPtr",numBytesStr))
+    stream.println("\tDeliteCudaMalloc((void**)%s,%s);".format("&devPtr",numBytesStr))
 
     // Copy twice (hostMem->pinnedHostMem, pinnedHostMem->devMem)
     stream.println("\tmemcpy(%s, %s, %s);".format("hostPtr","dataPtr",numBytesStr))
