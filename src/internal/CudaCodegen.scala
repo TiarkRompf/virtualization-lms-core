@@ -376,7 +376,7 @@ trait CudaCodegen extends GenericCodegen {
 
       //Register MetaData
       //MetaData.gpuInputs.add("{\"%s\":{\"%s\":\"gpuMemAlloc_%s(%s)\"}}".format(quote(sym),CudaType(sym.Type.toString),quote(sym),gpuInputs.map(quote).mkString(",")))
-      MetaData.gpuInputs.add("{\"%s\":\"gpuMemAlloc_%s(%s)\"}}".format(quote(sym),quote(sym),"env, obj"))
+      MetaData.gpuInputs.add("{\"%s\":\"gpuMemAlloc_%s(%s)\"}".format(quote(sym),quote(sym),"env, obj"))
     }
   }
 
