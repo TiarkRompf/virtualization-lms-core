@@ -13,6 +13,7 @@ trait CudaCodegen extends GenericCodegen {
 
   override def toString = "cuda"
 
+  var kernelSymbol:Sym[_] = null
   var isGPUable = true
   var parallelFor = true
   var tabWidth:Int = 0
@@ -39,8 +40,9 @@ trait CudaCodegen extends GenericCodegen {
   hstream.println("//Delite Runtime APIs")
   hstream.println("extern void DeliteCudaMallocHost(void **ptr, int size);")
   hstream.println("extern void DeliteCudaMalloc(void **ptr, int size);")
-  hstream.println("extern void DeliteCudaMemcpyAsync(void *dptr, void *sptr, int size, enum cudaMemcpyKind kind);")
-
+  hstream.println("extern void DeliteCudaMemcpyHtoDAsync(void *dptr, void *sptr, int size);")
+  hstream.println("extern void DeliteCudaMemcpyDtoHAsync(void *dptr, void *sptr, int size);")
+   
   object MetaData {
     var gpuBlockSizeX: String = ""
     var gpuBlockSizeY: String = ""
@@ -70,37 +72,37 @@ trait CudaCodegen extends GenericCodegen {
       out.append("\"gpuDimSizeX\":"+gpuDimSizeX+",")
       out.append("\"gpuDimSizeY\":"+gpuDimSizeY+",")
       out.append("\"gpuInputs\":%s".format(gpuInputs.toString)+",")
+      if(gpuOutput == "") { println("ERROR:No Output for GPU?"); throw new Exception()}
       out.append("\"gpuOutput\":"+gpuOutput+",")
       out.append("\"gpuTemps\":%s".format(gpuTemps.toString))
       out.toString
     }
-
   }
   override def getMetaData:String = { MetaData.toString }
   
   // DSL data structure functions
   // TODO: Where should these functions located?
   def matrixAllocFunc(sym: Sym[_], stream:PrintWriter): Unit = {
-    stream.println("\t%s *%s = new %s();".format(CudaType(sym.Type.toString),quote(sym),CudaType(sym.Type.toString)))
+    stream.println("\t%s %s;".format(CudaType(sym.Type.toString),quote(sym)))
     stream.println("\tjclass cls = env->GetObjectClass(obj);")
     stream.println("\tjmethodID mid_numRows = env->GetMethodID(cls,\"numRows\",\"()I\");")
     stream.println("\tjmethodID mid_numCols = env->GetMethodID(cls,\"numCols\",\"()I\");")
-    stream.println("\t%s->numRows = %s;".format(quote(sym),"env->CallIntMethod(obj,mid_numRows)"))
-    stream.println("\t%s->numCols = %s;".format(quote(sym),"env->CallIntMethod(obj,mid_numCols)"))
+    stream.println("\t%s.numRows = %s;".format(quote(sym),"env->CallIntMethod(obj,mid_numRows)"))
+    stream.println("\t%s.numCols = %s;".format(quote(sym),"env->CallIntMethod(obj,mid_numCols)"))
   }
 
   def vectorAllocFunc(sym: Sym[_], stream:PrintWriter): Unit = {
-    stream.println("\t%s *%s = new %s();".format(CudaType(sym.Type.toString),quote(sym),CudaType(sym.Type.toString)))
+    stream.println("\t%s %s;".format(CudaType(sym.Type.toString),quote(sym)))
     stream.println("\tjclass cls = env->GetObjectClass(obj);")
     stream.println("\tjmethodID mid_length = env->GetMethodID(cls,\"length\",\"()I\");")
     stream.println("\tjmethodID mid_is_row = env->GetMethodID(cls,\"is_row\",\"()Z\");")
-    stream.println("\t%s->length = %s;".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
-    stream.println("\t%s->is_row = %s;".format(quote(sym),"env->CallBooleanMethod(obj,mid_is_row)"))
+    stream.println("\t%s.length = %s;".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
+    stream.println("\t%s.is_row = %s;".format(quote(sym),"env->CallBooleanMethod(obj,mid_is_row)"))
   }
 
-  def matrixCopyFunc(sym: Sym[_], stream:PrintWriter): Unit = {
+  def matrixCopyHtoDFunc(sym: Sym[_], stream:PrintWriter): Unit = {
     val typeStr = CudaType(sym.Type.typeArguments(0).toString)
-    val numBytesStr = "%s->numRows * %s->numCols * sizeof(%s)".format(quote(sym),quote(sym),CudaType(sym.Type.typeArguments(0).toString))
+    val numBytesStr = "%s.numRows * %s.numCols * sizeof(%s)".format(quote(sym),quote(sym),CudaType(sym.Type.typeArguments(0).toString))
 
     // Get data(array) from scala data structure
     //stream.println("\tjclass cls = env->GetObjectClass(obj);")
@@ -116,19 +118,19 @@ trait CudaCodegen extends GenericCodegen {
 
     // Copy twice (hostMem->pinnedHostMem, pinnedHostMem->devMem)
     stream.println("\tmemcpy(%s, %s, %s);".format("hostPtr","dataPtr",numBytesStr))
-    stream.println("\tDeliteCudaMemcpyAsync(%s, %s, %s, %s);".format("devPtr","hostPtr",numBytesStr,"cudaMemcpyHostToDevice"))
+    stream.println("\tDeliteCudaMemcpyHtoDAsync(%s, %s, %s);".format("devPtr","hostPtr",numBytesStr))
 
     // Store the device pointer to the C data structure
-    stream.println("\t%s->data = %s;".format(quote(sym),"devPtr"))
+    stream.println("\t%s.data = %s;".format(quote(sym),"devPtr"))
 
     // Release
     stream.println("\tenv->ReleasePrimitiveArrayCritical(data, dataPtr, 0);")
 
   }
 
-  def vectorCopyFunc(sym: Sym[_], stream:PrintWriter): Unit = {
+  def vectorCopyHtoDFunc(sym: Sym[_], stream:PrintWriter): Unit = {
     val typeStr = CudaType(sym.Type.typeArguments(0).toString)
-    val numBytesStr = "%s->length * sizeof(%s)".format(quote(sym),CudaType(sym.Type.typeArguments(0).toString))
+    val numBytesStr = "%s.length * sizeof(%s)".format(quote(sym),CudaType(sym.Type.typeArguments(0).toString))
 
     // Get data(array) from scala data structure
     //stream.println("\tjclass cls = env->GetObjectClass(obj);")
@@ -144,33 +146,89 @@ trait CudaCodegen extends GenericCodegen {
 
     // Copy twice (hostMem->pinnedHostMem, pinnedHostMem->devMem)
     stream.println("\tmemcpy(%s, %s, %s);".format("hostPtr","dataPtr",numBytesStr))
-    stream.println("\tDeliteCudaMemcpyAsync(%s, %s, %s, %s);".format("devPtr","hostPtr",numBytesStr,"cudaMemcpyHostToDevice"))
+    stream.println("\tDeliteCudaMemcpyHtoDAsync(%s, %s, %s);".format("devPtr","hostPtr",numBytesStr))
 
     // Store the device pointer to the C data structure
-    stream.println("\t%s->data = %s;".format(quote(sym),"devPtr"))
+    stream.println("\t%s.data = %s;".format(quote(sym),"devPtr"))
 
     // Release
     stream.println("\tenv->ReleasePrimitiveArrayCritical(data, dataPtr, 0);")
 
+  }
+
+  def matrixCopyDtoHFunc(sym: Sym[_], stream:PrintWriter): Unit = {
+    val typeStr = CudaType(sym.Type.typeArguments(0).toString)
+    val numBytesStr = "%s.numRows * %s.numCols * sizeof(%s)".format(quote(sym),CudaType(sym.Type.typeArguments(0).toString))
+
+    // Allocate Scala object for the destination
+    stream.println("\tjclass cls = env->FindClass(\"ppl/dsl/optiml/MatrixImpl\");")
+    stream.println("\tjmethodID mid = env->GetMethodID(cls,\"<init>\",\"(II)V\");")
+    stream.println("\tjobject obj = env->NewObject(cls,mid,%s.numRows,%s.numCols);".format(quote(sym),quote(sym)))
+
+    // Allocate pinned-memory 
+    stream.println("\t%s *hostPtr;".format(typeStr))
+    stream.println("\tDeliteCudaMallocHost((void**)%s,%s);".format("&hostPtr",numBytesStr))
+    
+    // Get data(array) of scala data structure
+    stream.println("\tjmethodID mid_data = env->GetMethodID(cls,\"data\",\"()[%s\");".format(JNITypeDescriptor(sym.Type.typeArguments(0).toString)))
+    stream.println("\tj%sArray data = (j%sArray)(%s);".format(typeStr,typeStr,"env->CallObjectMethod(obj,mid_data)"))
+    stream.println("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical(data,0);".format(typeStr,typeStr))
+
+    // Copy twice (devMem->pinnedHostMem, pinnedHostMem->hostMem)
+    stream.println("\tDeliteCudaMemcpyDtoHAsync(%s, %s.data, %s);".format("hostPtr",quote(sym),numBytesStr))
+    stream.println("\tmemcpy(%s, %s, %s);".format("dataPtr","hostPtr",numBytesStr))
+
+    // Release
+    stream.println("\tenv->ReleasePrimitiveArrayCritical(data, dataPtr, 0);")
+
+    stream.println("\treturn obj;")
+  }
+
+  def vectorCopyDtoHFunc(sym: Sym[_], stream:PrintWriter): Unit = {
+    val typeStr = CudaType(sym.Type.typeArguments(0).toString)
+    val numBytesStr = "%s.length * sizeof(%s)".format(quote(sym),CudaType(sym.Type.typeArguments(0).toString))
+
+    // Allocate Scala object for the destination
+    stream.println("\tjclass cls = env->FindClass(\"ppl/dsl/optiml/VectorImpl\");")
+    stream.println("\tjmethodID mid = env->GetMethodID(cls,\"<init>\",\"(IZ)V\");")
+    stream.println("\tjobject obj = env->NewObject(cls,mid,%s.length,%s.is_row);".format(quote(sym),quote(sym)))
+
+    // Allocate pinned-memory
+    stream.println("\t%s *hostPtr;".format(typeStr))
+    stream.println("\tDeliteCudaMallocHost((void**)%s,%s);".format("&hostPtr",numBytesStr))
+
+    // Get data(array) of scala data structure
+    stream.println("\tjmethodID mid_data = env->GetMethodID(cls,\"data\",\"()[%s\");".format(JNITypeDescriptor(sym.Type.typeArguments(0).toString)))
+    stream.println("\tj%sArray data = (j%sArray)(%s);".format(typeStr,typeStr,"env->CallObjectMethod(obj,mid_data)"))
+    stream.println("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical(data,0);".format(typeStr,typeStr))
+
+    // Copy twice (devMem->pinnedHostMem, pinnedHostMem->hostMem)
+    stream.println("\tDeliteCudaMemcpyDtoHAsync(%s, %s.data, %s);".format("hostPtr",quote(sym),numBytesStr))
+    stream.println("\tmemcpy(%s, %s, %s);".format("dataPtr","hostPtr",numBytesStr))
+
+    // Release
+    stream.println("\tenv->ReleasePrimitiveArrayCritical(data, dataPtr, 0);")
+
+    stream.println("\treturn obj;")
   }
 
   // HashMap for Type Conversions : scalaType -> (CudaType,isObjectType)
-  val TypeTable = HashMap[String,(String,Boolean,(Sym[_],PrintWriter)=>Unit,(Sym[_],PrintWriter)=>Unit)](
-          "ppl.dsl.optiml.Matrix[Int]" -> ("Matrix<int>",true,matrixAllocFunc,matrixCopyFunc),
-          "ppl.dsl.optiml.Matrix[Long]" -> ("Matrix<long>",true,matrixAllocFunc,matrixCopyFunc),
-          "ppl.dsl.optiml.Matrix[Float]" -> ("Matrix<float>",true,matrixAllocFunc,matrixCopyFunc),
-          "ppl.dsl.optiml.Matrix[Double]" -> ("Matrix<double>",true,matrixAllocFunc,matrixCopyFunc),
-          "ppl.dsl.optiml.Matrix[Boolean]" -> ("Matrix<bool>",true,matrixAllocFunc,matrixCopyFunc),
-          "ppl.dsl.optiml.Vector[Int]" -> ("Vector<int>",true,vectorAllocFunc,vectorCopyFunc),
-          "ppl.dsl.optiml.Vector[Long]" -> ("Vector<long>",true,vectorAllocFunc,vectorCopyFunc),
-          "ppl.dsl.optiml.Vector[Float]" -> ("Vector<float>",true,vectorAllocFunc,vectorCopyFunc),
-          "ppl.dsl.optiml.Vector[Double]" -> ("Vector<double>",true,vectorAllocFunc,vectorCopyFunc),
-          "ppl.dsl.optiml.Vector[Boolean]" -> ("Vector<bool>",true,vectorAllocFunc,vectorCopyFunc),
-          "Int" -> ("int",false,null,null),
-          "Long" -> ("long",false,null,null),
-          "Float" -> ("float",false,null,null),
-          "Double" -> ("double",false,null,null),
-          "Boolean" -> ("bool",false,null,null)
+  val TypeTable = HashMap[String,(String,Boolean,(Sym[_],PrintWriter)=>Unit,(Sym[_],PrintWriter)=>Unit,(Sym[_],PrintWriter)=>Unit)](
+          "ppl.dsl.optiml.Matrix[Int]" -> ("Matrix<int>",true,matrixAllocFunc,matrixCopyHtoDFunc,matrixCopyDtoHFunc),
+          "ppl.dsl.optiml.Matrix[Long]" -> ("Matrix<long>",true,matrixAllocFunc,matrixCopyHtoDFunc,matrixCopyDtoHFunc),
+          "ppl.dsl.optiml.Matrix[Float]" -> ("Matrix<float>",true,matrixAllocFunc,matrixCopyHtoDFunc,matrixCopyDtoHFunc),
+          "ppl.dsl.optiml.Matrix[Double]" -> ("Matrix<double>",true,matrixAllocFunc,matrixCopyHtoDFunc,matrixCopyDtoHFunc),
+          "ppl.dsl.optiml.Matrix[Boolean]" -> ("Matrix<bool>",true,matrixAllocFunc,matrixCopyHtoDFunc,matrixCopyDtoHFunc),
+          "ppl.dsl.optiml.Vector[Int]" -> ("Vector<int>",true,vectorAllocFunc,vectorCopyHtoDFunc,vectorCopyDtoHFunc),
+          "ppl.dsl.optiml.Vector[Long]" -> ("Vector<long>",true,vectorAllocFunc,vectorCopyHtoDFunc,vectorCopyDtoHFunc),
+          "ppl.dsl.optiml.Vector[Float]" -> ("Vector<float>",true,vectorAllocFunc,vectorCopyHtoDFunc,vectorCopyDtoHFunc),
+          "ppl.dsl.optiml.Vector[Double]" -> ("Vector<double>",true,vectorAllocFunc,vectorCopyHtoDFunc,vectorCopyDtoHFunc),
+          "ppl.dsl.optiml.Vector[Boolean]" -> ("Vector<bool>",true,vectorAllocFunc,vectorCopyHtoDFunc,vectorCopyDtoHFunc),
+          "Int" -> ("int",false,null,null,null),
+          "Long" -> ("long",false,null,null,null),
+          "Float" -> ("float",false,null,null,null),
+          "Double" -> ("double",false,null,null,null),
+          "Boolean" -> ("bool",false,null,null,null)
   )
 
   
@@ -202,13 +260,20 @@ trait CudaCodegen extends GenericCodegen {
     }
   }
 
-  def copyDataStructure(sym: Sym[_], stream:PrintWriter) : Unit = {
+  def copyDataStructureHtoD(sym: Sym[_], stream:PrintWriter) : Unit = {
     val scalaType = sym.Type.toString
     if(isObjectType(scalaType)) {
       TypeTable.get(scalaType).get._4(sym, stream)
     }
   }
-  
+
+  def copyDataStructureDtoH(sym: Sym[_], stream:PrintWriter) : Unit = {
+    val scalaType = sym.Type.toString
+    if(isObjectType(scalaType)) {
+      TypeTable.get(scalaType).get._5(sym, stream)
+    }
+  }
+
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
     val x = fresh[A]
     val y = f(x)
@@ -268,6 +333,7 @@ trait CudaCodegen extends GenericCodegen {
     if(!isObjectType(sym.Type.toString)) throw new RuntimeException("CudaGen: Not GPUable")
     if((vars.length > 0)  || (resultIsVar)) throw new RuntimeException("CudaGen: Not GPUable")
 
+    kernelSymbol = sym
     MetaData.init
 
     gpuBlockSizeX = null
@@ -308,6 +374,9 @@ trait CudaCodegen extends GenericCodegen {
 
     // Emit input copy helper functions for val type object inputs
     vals.map(emitAllocCopy(_, sym, hstream))
+
+    // Emit output copy helper function
+    emitCopyDtoH(sym, hstream)
 
     // From this point, all the inputs to these helper functions are the C land data structures
     // Emit allocation helper functions
@@ -372,36 +441,39 @@ trait CudaCodegen extends GenericCodegen {
       allocDataStructure(sym, stream)
 
       // Copy from Scala to C
-      copyDataStructure(sym, stream)
+      copyDataStructureHtoD(sym, stream)
 
-      stream.println("\treturn *%s;".format(quote(sym)))
+      stream.println("\treturn %s;".format(quote(sym)))
       stream.println("}")
 
       stream.flush
 
-      //Register MetaData
-      //MetaData.gpuInputs.add("{\"%s\":{\"%s\":\"gpuMemAlloc_%s(%s)\"}}".format(quote(sym),CudaType(sym.Type.toString),quote(sym),gpuInputs.map(quote).mkString(",")))
+      // Register MetaData
       MetaData.gpuInputs.add("{\"%s\":\"gpuMemAlloc_%s(%s)\"}".format(quote(sym),quote(sym),"env, obj"))
     }
   }
 
+  // Function to register temporary datastructures (which could be the output) for GPU kernel
   def emitAlloc(sym: Sym[_], stmts: String) {
-
-    gpuAllocStream.println("%s gpuMemAlloc_%s(%s) {".format(CudaType(sym.Type.toString),quote(sym),gpuInputsStr))
+    gpuAllocStream.println("%s gpuMemAlloc_%s_%s(%s) {".format(CudaType(sym.Type.toString),quote(kernelSymbol),quote(sym),gpuInputsStr))
     gpuAllocStream.println(stmts)
-
-    // TODO: Find out all the necessary IRs to generate this allocation  (needed?)
-    //val listIR:List[TP[_]] = findDefinition(sym).get :: Nil
-    //for(TP(lhs,rhs) <- listIR) {
-      //emitNode(lhs,rhs)(gpuAllocStream)
-    //}
-
     gpuAllocStream.println("}")
     gpuAllocStream.flush
 
-    // Register to the metadata
-    // TODO: Also add gpuTemps
-    MetaData.gpuOutput = "{\"%s\":\"gpuMemAlloc_%s(%s)\"}".format(quote(sym),quote(sym),gpuInputs.map(quote).mkString(","))
+    // Register MetaData
+    if(sym == kernelSymbol)
+      MetaData.gpuOutput = "{\"%s\":[\"gpuMemAlloc_%s_%s(%s)\",COPYFUNC]}".format(quote(sym),quote(kernelSymbol),quote(sym),gpuInputs.map(quote).mkString(","))
+    else
+      MetaData.gpuTemps.add("{\"%s\":{\"%s\":\"gpuMemAlloc_%s_%s(%s)\"}}".format(quote(sym),CudaType(sym.Type.toString),quote(kernelSymbol),quote(sym),gpuInputs.map(quote).mkString(",")))
+  }
+
+  def emitCopyDtoH(sym: Sym[_], stream:PrintWriter) {
+    stream.println("jobject gpuMemCopy_%s_%s(%s,%s) {".format(quote(kernelSymbol), quote(sym),"JNIEnv *env", CudaType(sym.Type.toString)+" "+quote(sym)))
+    copyDataStructureDtoH(sym, stream)
+    stream.println("}")
+
+    //Update the metaData
+    MetaData.gpuOutput = MetaData.gpuOutput.replace("COPYFUNC","\"gpuMemCopy_%s_%s(%s,%s)\"".format(quote(kernelSymbol), quote(sym), "env", quote(sym)))
   }
 
 
