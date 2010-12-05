@@ -13,6 +13,12 @@ trait Effects extends Expressions {
     context :+= r
     r
   }
+
+  def reflectMutation[A:Manifest](x: Def[A]): Exp[A]  = {
+    val r: Exp[A] = createDefinition(fresh[A], Mutation(x, context)).sym
+    context :+= r
+    r
+  }
   
   def reifyEffects[A:Manifest](block: => Exp[A]): Exp[A] = {
     val save = context
@@ -25,5 +31,6 @@ trait Effects extends Expressions {
   }
 
   case class Reflect[A](x:Def[A], effects: List[Exp[Any]]) extends Def[A]
+  case class Mutation[A](override val x: Def[A], override val effects: List[Exp[Any]]) extends Reflect[A](x, effects)
   case class Reify[A](x: Exp[A], effects: List[Exp[Any]]) extends Def[A]
 }

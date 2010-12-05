@@ -3,9 +3,27 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
+import scala.virtualization.lms.util.OverloadHack
 
-trait OrderingOps extends Base {
-
+trait OrderingOps extends Base with Variables with OverloadHack {  
+  // workaround for infix not working with manifests
+  implicit def orderingToRepOrderingCls[T:Ordering:Manifest](n: T) = new OrderingOpsCls(n)
+  implicit def repOrderingToRepOrderingCls[T:Ordering:Manifest](n: Rep[T]) = new OrderingOpsCls(n)
+  implicit def varOrderingToOrderingOps[T:Ordering:Manifest](n: Var[T]) = new OrderingOpsCls(readVar(n))
+  
+  class OrderingOpsCls[T:Ordering:Manifest](lhs: Rep[T]){
+    def <[B](rhs: B)(implicit c: B => Rep[T]) = ordering_lt(lhs, c(rhs))
+    def <=[B](rhs: B)(implicit c: B => Rep[T]) = ordering_lteq(lhs, c(rhs))
+    def >[B](rhs: B)(implicit c: B => Rep[T]) = ordering_gt(lhs, c(rhs))
+    def >=[B](rhs: B)(implicit c: B => Rep[T]) = ordering_gteq(lhs, c(rhs))
+    def equiv[B](rhs: B)(implicit c: B => Rep[T]) = ordering_equiv(lhs, c(rhs))
+    def max[B](rhs: B)(implicit c: B => Rep[T]) = ordering_max(lhs, c(rhs))
+    def min[B](rhs: B)(implicit c: B => Rep[T]) = ordering_min(lhs, c(rhs))
+  }
+  
+  /*
+  def infix_<[T,B](lhs: Var[T], rhs: B)(implicit h: Overloaded1, o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_lt(readVar(lhs),c(rhs))
+>>>>>>> kernel-gen
   def infix_<[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_lt(lhs,c(rhs))
   def infix_<=[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_lteq(lhs,c(rhs))
   def infix_>[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_gt(lhs,c(rhs))
@@ -13,6 +31,7 @@ trait OrderingOps extends Base {
   def infix_equiv[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_equiv(lhs,c(rhs))
   def infix_max[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_max(lhs,c(rhs))
   def infix_min[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_min(lhs,c(rhs))
+  */
 
   def ordering_lt[T:Ordering:Manifest](lhs: Rep[T], rhs: Rep[T]): Rep[Boolean]
   def ordering_lteq[T:Ordering:Manifest](lhs: Rep[T], rhs: Rep[T]): Rep[Boolean]

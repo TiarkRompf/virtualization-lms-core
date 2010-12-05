@@ -1,4 +1,6 @@
 lib_managed
+*.iml
+.DS_Store
 local.properties
 project/boot
 project/build/target
