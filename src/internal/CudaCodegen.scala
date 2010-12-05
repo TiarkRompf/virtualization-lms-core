@@ -104,9 +104,9 @@ trait CudaCodegen extends GenericCodegen {
     stream.println("\tj%s *dataPtr = env->GetPrimitiveArrayCritical(data,0);".format(typeStr))
 
     // Allocate pinned-memory and device memory
-    stream.println("\tvoid *hostPtr;")
+    stream.println("\t%s *hostPtr;".format(typeStr))
     stream.println("\tDeliteCudaMallocHost(%s,%s);".format("&hostPtr",numBytesStr))
-    stream.println("\tvoid *devPtr;")
+    stream.println("\t%s *devPtr;".format(typeStr))
     stream.println("\tDeliteCudaMalloc(%s,%s);".format("&devPtr",numBytesStr))
 
     // Copy twice (hostMem->pinnedHostMem, pinnedHostMem->devMem)
@@ -132,9 +132,9 @@ trait CudaCodegen extends GenericCodegen {
     stream.println("\tj%s *dataPtr = env->GetPrimitiveArrayCritical(data,0);".format(typeStr))
 
     // Allocate pinned-memory and device memory
-    stream.println("\tvoid *hostPtr;")
+    stream.println("\t%s *hostPtr;".format(typeStr))
     stream.println("\tDeliteCudaMallocHost(%s,%s);".format("&hostPtr",numBytesStr))
-    stream.println("\tvoid *devPtr;")
+    stream.println("\t%s *devPtr;".format(typeStr))
     stream.println("\tDeliteCudaMalloc(%s,%s);".format("&devPtr",numBytesStr))
 
     // Copy twice (hostMem->pinnedHostMem, pinnedHostMem->devMem)
