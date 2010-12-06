@@ -29,13 +29,6 @@ trait Scheduling {
   def availableDefs: List[TP[_]] = globalDefs
   
 
-  def getSchedule(scope: List[TP[_]])(result: Any): List[TP[_]] = {
-    def deps(st: List[Sym[_]]): List[TP[_]] =
-      scope.filter(st contains _.sym)
-
-    GraphUtil.stronglyConnectedComponents[TP[_]](deps(syms(result)), t => deps(syms(t.rhs))).flatten.reverse
-  }
-
 
   def buildScheduleForResult(start: Exp[_]): List[TP[_]] = {
     def deps(st: List[Sym[_]]): List[TP[_]] =
