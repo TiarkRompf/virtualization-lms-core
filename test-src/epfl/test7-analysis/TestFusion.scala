@@ -33,9 +33,12 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
   }
   
   
+  
+  
   override def emitBlock(result: Exp[_])(implicit stream: PrintWriter): Unit = {
     focusBlock(result) {
       
+      // find loops at current top level
       var loops = focusExactScope(result) { levelScope => 
         levelScope collect {
           case e @ TP(_, LoopArray(_,_,_)) => e
@@ -43,13 +46,12 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
         }
       }
       
-      var Wloops: List[List[TP[_]]] = loops.map(List(_))
-      
       if (loops.nonEmpty) {
-      
+        var Wloops: List[List[TP[_]]] = loops.map(List(_))
         var currentScope = innerScope
         var done = false
         do {
+          
           // utils
           def getLoopVar(e: TP[_]) = e match {
             case e @ TP(_, LoopArray(_,x,_)) => x
@@ -70,49 +72,28 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
           val WloopVars = Wloops map WgetLoopVar
 
           
-          // find negative dependencies (those that can block fusion)
+          // find negative dependencies (those that block fusion)
           
-          val tableNeg = loops.flatMap { dx => // find non-simple dependencies
-            getSchedule(currentScope)(getLoopRes(dx)) flatMap {
-              case TP(_, ArrayIndex(a, i)) if i == getLoopVar(dx) => Nil
-              case sc =>
-                syms(sc.rhs).intersect(loopSyms).map { otherLoop => (otherLoop, dx.sym) }
-            }
-          }.distinct
-        
-          val tablePos = loops.flatMap { dx => // find simple dependencies
-            getSchedule(currentScope)(getLoopRes(dx)) flatMap {
-              case TP(_, ArrayIndex(a, i)) if i == getLoopVar(dx) && loopSyms.contains(a) => 
-                List((a, dx.sym))
-              case sc => Nil
-            }
-          }.distinct
-
           val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies
             val otherLoopSyms = loopSyms diff (dx map (_.sym))
             getSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-              case e@TP(_, ArrayIndex(a, i)) if (WgetLoopVar(dx) contains i) => Nil              
+              case e@TP(_, ArrayIndex(a, i)) if (WgetLoopVar(dx) contains i) =>
+                Nil
               case sc =>
                 syms(sc.rhs).intersect(otherLoopSyms).flatMap { otherLoop => dx map (d => (otherLoop, d.sym)) }
             }
           }.distinct
         
-          val WtablePos = Wloops.flatMap { dx => // find simple dependencies
-            getSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-              case TP(_, ArrayIndex(a, i)) if WgetLoopVar(dx).contains(i) && loopSyms.contains(a) => // not correct!
-                dx map (d => (a, d.sym))
-              case sc => Nil
-            }
-          }.distinct
-
           println("wtableneg: " + WtableNeg)
-      
+          
           
           // partitioning
           
           def canFuse(a: Sym[Any], b: Sym[Any]): Boolean = (WtableNeg intersect List((a,b),(b,a))).isEmpty
-          def canFuse2(a: List[Sym[Any]], b: List[Sym[Any]]): Boolean = a.forall(x=>b.forall(y=>canFuse(x,y))) // TODO:opt
-      
+          def canFuse2(a: List[Sym[Any]], b: List[Sym[Any]]): Boolean = {
+            val cartesian = a.flatMap(x=>b.flatMap(y=>List((x,y),(y,x))))
+            (WtableNeg intersect cartesian).isEmpty
+          }
 
           var partitionsIn = WloopSyms
           var partitionsOut = Nil:List[List[Sym[Any]]]
@@ -129,10 +110,13 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
         
           println("partitions: " + partitionsOut)
         
-          // actually do the fusion: remove simple edges
+        
+          // actually do the fusion:
         
           if ((partitionsOut intersect partitionsIn) != partitionsOut) {
             Wloops = partitionsOut.map(_ map (s => currentScope.find(_.sym == s).get))
+
+            // equalize loop variables (TODO!)
 
             // within fused loops, remove accesses to outcomes of the fusion
 
@@ -141,8 +125,10 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
                 Wloops.find(_ exists (_.sym == a)) match {
                   case Some(fused) if WgetLoopVar(fused) contains i => 
                     val f = TP(e.sym, Copy(getLoopRes(fused.find(_.sym == a).get)))
-                    println("replace " + e + " by " + f)
-                    f
+                    // replace e.sym by getLoopRes(fused.find(_.sym == a))
+                    println("replace " + e.sym + " by " + (f.rhs match { case Copy(a) => a }) + 
+                      " / " + e + " by " + f)
+                    e//f
                   case _ => e
                 }
               case e => e
@@ -156,30 +142,12 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
         
         } while (!done)
        
-       innerScope = currentScope
-        
+        innerScope = currentScope
       }
   
-      
-/*
-      val allUses = (levelScope ::: innerScope) filter (d => syms(d.rhs).intersect(loopSyms) != Nil)
-      val simpleUses = innerScope collect { 
-        case e @ TP(_, ArrayIndex(a, i)) if loopSyms.contains(a) && loopVars.contains(i) => e
-      }
-    
-    
-      // used nontrivially --> must be created
-      
-    
-      println("loops: " + loopSyms)
-      println("tablePos: " + tablePos)
-      println("tableNeg: " + tableNeg)
-      println("all uses: " + allUses.map(_.sym))
-      println("simple uses: " + simpleUses.map(_.sym))
-*/      
-      
+
+      // do what super does
       focusExactScope(result) { levelScope => 
-        // do what super does
         for (TP(sym, rhs) <- levelScope) {
           emitNode(sym, rhs)
         }
@@ -198,11 +166,13 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
 
 trait FusionProg extends Arith with Loops with Print {
   
+  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+  
   def test(x: Rep[Unit]) = {
     
     val one = array(100) { i => 1 }
 
-    val grow = array(100) { i => 2.0 * one.at(i)/*2.0*i*/ }
+    val grow = array(100) { i => 2*i }
 
     val add = array(100) { i => one.at(i) + grow.at(i) }
     
