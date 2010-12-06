@@ -502,18 +502,17 @@ trait CudaCodegen extends GenericCodegen {
     out.append("\treturn %s;\n".format(quote(newSym)))
     out.append("}\n")
 
-    helperFuncString.append(out.toString)
-
     // Register MetaData
     if(newSym == kernelSymbol) {
       MetaData.gpuOutput = "{\"%s\":[\"gpuMemAlloc_%s_%s(%s)\",\"gpuMemCopy_%s_%s(%s,%s)\"]}".format(quote(newSym),quote(kernelSymbol),quote(newSym),argStr,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
-      emitCopyDtoH(newSym)
+      out.append(emitCopyDtoH(newSym))
 
     }
     else {
       MetaData.gpuTemps.add("{\"%s\":{\"%s\":\"gpuMemAlloc_%s_%s(%s)\"}}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
       gpuTemps = newSym :: gpuTemps
     }
+    helperFuncString.append(out.toString)
   }    
   def emitVectorAllocSym(newSym:Sym[_], sym:Sym[_]): Unit = {
     emitVectorAlloc(newSym, quote(sym)+".length", quote(sym)+".is_row")
@@ -539,17 +538,17 @@ trait CudaCodegen extends GenericCodegen {
     out.append("\t%s.data = devPtr;\n".format(quote(newSym)))
     out.append("\treturn %s;\n".format(quote(newSym)))
     out.append("}\n")
-    helperFuncString.append(out.toString)
-
+    
     // Register MetaData
     if(newSym == kernelSymbol) {
       MetaData.gpuOutput = "{\"%s\":[\"gpuMemAlloc_%s_%s(%s)\",\"gpuMemCopy_%s_%s(%s,%s)\"]}".format(quote(newSym),quote(kernelSymbol),quote(newSym),argStr,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
-      emitCopyDtoH(newSym)
+      out.append(emitCopyDtoH(newSym))
     }
     else {
       MetaData.gpuTemps.add("{\"%s\":{\"%s\":\"gpuMemAlloc_%s_%s(%s)\"}}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
       gpuTemps = newSym :: gpuTemps
     }
+    helperFuncString.append(out.toString)
   }
   def emitMatrixAllocSym(newSym:Sym[_], sym:Sym[_]): Unit = {
     emitMatrixAlloc(newSym, quote(sym)+".numRows", quote(sym)+".numCols")
