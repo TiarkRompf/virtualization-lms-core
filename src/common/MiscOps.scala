@@ -66,16 +66,10 @@ trait CudaGenMiscOps extends CudaGenEffect {
         // TODO: Add support for printing from GPU device
         case PrintLn(s) =>
           throw new RuntimeException("CudaGen: Not GPUable")
-          //if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          //else stream.println(addTab()+"printf(\"%s\\n\"," + quote(s) + ");")
         case Print(s) =>
           throw new RuntimeException("CudaGen: Not GPUable")
-          //if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          //else stream.println(addTab()+"printf(\"%s\"," + quote(s) + ");")
         case Exit(a) =>
           throw new RuntimeException("CudaGen: Not GPUable")
-          //if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          //else stream.println(addTab()+"exit(" + quote(a) + ");")
         case _ => super.emitNode(sym, rhs)
       }
     }

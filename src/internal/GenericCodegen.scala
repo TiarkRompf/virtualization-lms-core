@@ -12,6 +12,9 @@ trait GenericCodegen extends Scheduling {
   def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
   def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
 
+  // Initializer
+  def init(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {}
+
   // exception handler
   def exceptionHandler(outFile:File, kstream:PrintWriter): Unit = {
       kstream.close()

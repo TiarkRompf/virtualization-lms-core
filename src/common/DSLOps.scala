@@ -50,8 +50,6 @@ trait CudaGenDSLOps extends CudaGenEffect with BaseGenDSLOps {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
       rhs match {
         case op: DSLOp[_] =>
-          //println("HI")
-          isGPUable = true
           val b = op.representation
           //stream.println("val " + quote(sym) + " = { ")
           emitBlock(b)
@@ -64,13 +62,12 @@ trait CudaGenDSLOps extends CudaGenEffect with BaseGenDSLOps {
         // TODO: Need a flag to tell the function generator to determine it.
         // TODO: How to tell the task graph generator / runtime about the output data structure generation
          case op@DSLMap(x,y,range,func) =>
-           isGPUable = true
            tabWidth = 0
            // Get free variables of this __global__ GPU function
            val freeVars = getFreeVarBlock(func,Nil)
            //var freeVars = (buildScheduleForResult(x):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
            val paramList = (x.asInstanceOf[Sym[_]]::y.asInstanceOf[Sym[_]]::freeVars).distinct
-           val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
+           val paramListStr = paramList.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
            stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
            tabWidth += 1
            stream.println(addTab()+"int %s = blockIdx.x*blockDim.x + threadIdx.x;".format("index"))
@@ -78,26 +75,24 @@ trait CudaGenDSLOps extends CudaGenEffect with BaseGenDSLOps {
            // Print the device function (inlined)
            // put parameters
            tabWidth += 1
-           stream.println(addTab()+"%s %s = %s;".format(CudaType(sym.Type.typeArguments(0).toString), quote(func)+"_1", quote(x)+".apply(index)"))
+           stream.println(addTab()+"%s %s = %s;".format(remap(sym.Type.typeArguments(0)), quote(func)+"_1", quote(x)+".apply(index)"))
            emitBlock(func)
            stream.println(addTab()+"%s.update(%s, %s);".format(quote(y),"index",quote(func)))
            tabWidth -= 1
            stream.println("\t}")
            tabWidth -= 1
            stream.println("}")
-           //isGPUable = false
 
            //The version having separate device function
            //stream.println("\t\t%s.update(%s, %s(%s.apply(%s)));".format(quote(y),"index",quote(func),quote(x),"index"))
 
         case op@DSLZipwith(x1,x2,y,range,func) =>
-           isGPUable = true
            tabWidth = 0
            // Get free variables of this __global__ GPU function
            val freeVars = getFreeVarBlock(func,Nil)
            //var freeVars = (buildScheduleForResult(x1):::buildScheduleForResult(x2):::buildScheduleForResult(y):::buildScheduleForResult(range):::buildScheduleForResult(func)).filter(scope.contains(_)).map(_.sym)
            val paramList = (x1.asInstanceOf[Sym[_]]::x2.asInstanceOf[Sym[_]]::y.asInstanceOf[Sym[_]]::freeVars).distinct
-           val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
+           val paramListStr = paramList.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
            stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
            tabWidth += 1
            stream.println(addTab()+"int %s = blockIdx.x*blockDim.x + threadIdx.x;".format("index"))
@@ -105,15 +100,14 @@ trait CudaGenDSLOps extends CudaGenEffect with BaseGenDSLOps {
            // Print the device function (inlined)
            // put parameters
            tabWidth += 1
-           stream.println(addTab()+"%s %s = %s;".format(CudaType(sym.Type.typeArguments(0).toString), quote(func)+"_1", quote(x1)+".apply(index)"))
-           stream.println(addTab()+"%s %s = %s;".format(CudaType(sym.Type.typeArguments(0).toString), quote(func)+"_2", quote(x1)+".apply(index)"))
+           stream.println(addTab()+"%s %s = %s;".format(remap(sym.Type.typeArguments(0)), quote(func)+"_1", quote(x1)+".apply(index)"))
+           stream.println(addTab()+"%s %s = %s;".format(remap(sym.Type.typeArguments(0)), quote(func)+"_2", quote(x1)+".apply(index)"))
            emitBlock(func)
            stream.println(addTab()+"%s.update(%s, %s);".format(quote(y),"index",quote(func)))
            tabWidth -= 1
            stream.println(addTab()+"}")
            tabWidth -= 1
            stream.println(addTab()+"}")
-           //isGPUable = false
 
         case _ => super.emitNode(sym, rhs)
       }

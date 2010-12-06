@@ -33,8 +33,7 @@ trait CudaGenBooleanOps extends CudaGenBase {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
       rhs match {
         case BooleanNegate(b) =>
-          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          else emitValDef("bool", sym, "!" + quote(b))
+          emitValDef(sym, "!" + quote(b))
         case _ => super.emitNode(sym,rhs)
       }
     }

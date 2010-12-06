@@ -61,12 +61,10 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
       rhs match {
         case While(c,b) =>
-          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          else {
             // Get free variables list
             val freeVars = getFreeVarBlock(c,Nil)
             val argListStr = if(freeVars.length == 0) freeVars.map(quote(_)).mkString(", ") else ""
-            val paramListStr = if(freeVars.length == 0) freeVars.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ") else ""
+            val paramListStr = if(freeVars.length == 0) freeVars.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ") else ""
 
             // emit function for the condition evaluation
             stream.println("__device__ __host__ %s %s(%s) {".format("bool", "cond_"+quote(sym), paramListStr))
@@ -85,7 +83,6 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
             tabWidth -= 1
             //stream.println(quote(getBlockResult(b)))   //TODO: Is this needed?
             stream.println("}")
-          }
         case _ => super.emitNode(sym, rhs)
       }
     }

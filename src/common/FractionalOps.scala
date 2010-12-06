@@ -34,8 +34,7 @@ trait CudaGenFractionalOps extends CudaGenBase {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
       rhs match {
         case FractionalDivide(a,b) =>
-          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          else emitValDef(CudaType(a.Type.toString), sym, quote(a) + " / " + quote(b))
+          emitValDef(sym, quote(a) + " / " + quote(b))
         case _ => super.emitNode(sym, rhs)
      }
     }

@@ -73,21 +73,24 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
       rhs match {
         case IfThenElse(c,a,b) =>
-          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          else {
-            stream.println(addTab()+"%s %s;".format(CudaType(a.Type.toString),quote(sym)))
+            // Inform about the copy
+            varLink.put(getBlockResult(a).asInstanceOf[Sym[_]] , sym)
             stream.println(addTab() + "if (" + quote(c) + ") {")
             tabWidth += 1
             emitBlock(a)
-            stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
+            varLink.remove(getBlockResult(a).asInstanceOf[Sym[_]])
+            //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
             tabWidth -= 1
             stream.println(addTab() + "} else {")
+            varLink.put(getBlockResult(b).asInstanceOf[Sym[_]] , sym)
             tabWidth += 1
             emitBlock(b)
-            stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
+            //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
             tabWidth -= 1
-            stream.println("}")
-          }
+            varLink.remove(getBlockResult(b).asInstanceOf[Sym[_]])
+            stream.println(addTab()+"}")
+            allocOutput(sym,getBlockResult(a).asInstanceOf[Sym[_]])
+          //}
         case _ => super.emitNode(sym, rhs)
       }
     }

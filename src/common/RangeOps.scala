@@ -79,17 +79,12 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Until(start, end) =>
-      if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-      else {
         stream.println(addTab()+"int %s_start = %s;".format(quote(sym), quote(start)))
         stream.println(addTab()+"int %s_end = %s;".format(quote(sym), quote(end)))
-      }
-      // Do nothing: will be handled by RangeForeach
+        // Do nothing: will be handled by RangeForeach
 
     // TODO: What if the range is not continuous integer set?
     case RangeForeach(r, i, body) => {
-      if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-      else {
         //var freeVars = buildScheduleForResult(body).filter(scope.contains(_)).map(_.sym)
         val freeVars = getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
 
@@ -99,7 +94,7 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
         if(startIdx.isInstanceOf[Sym[_]]) paramList = startIdx.asInstanceOf[Sym[_]] :: paramList
         if(endIdx.isInstanceOf[Sym[_]]) paramList = endIdx.asInstanceOf[Sym[_]] :: paramList
         paramList = paramList.distinct
-        val paramListStr = paramList.map(ele=>CudaType(ele.Type.toString) + " " + quote(ele)).mkString(", ")
+        val paramListStr = paramList.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
 
         if(parallelFor) {
           //stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
@@ -126,7 +121,6 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
           tabWidth -= 1
           stream.println(addTab() + "}")
         }
-      }
     }
     case _ => super.emitNode(sym, rhs)
   }

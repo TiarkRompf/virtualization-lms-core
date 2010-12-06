@@ -48,11 +48,9 @@ trait CudaGenArrayOps extends CudaGenBase {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
       rhs match {
         case ArrayLength(x) =>
-          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          else emitValDef("int", sym, " sizeof(" + quote(x) + ")")
+          emitValDef(sym, " sizeof(" + quote(x) + ")")
         case arr@ArrayApply(x,n) =>
-          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          else emitValDef(CudaType(arr.mT.toString), sym, "" + quote(x) + "[" + quote(n) + "]")
+          emitValDef(sym, "" + quote(x) + "[" + quote(n) + "]")
         case _ => super.emitNode(sym, rhs)
       }
     }

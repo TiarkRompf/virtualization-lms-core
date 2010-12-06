@@ -78,8 +78,7 @@ trait CudaGenPrimitiveOps extends CudaGenBase {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
       rhs match {
         case ObjDoubleParseDouble(s) =>
-          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          else emitValDef("double", sym, "atof(" + quote(s) + ")")
+          emitValDef(sym, "atof(" + quote(s) + ")")
         case _ => super.emitNode(sym, rhs)
       }
     }

@@ -42,8 +42,7 @@ trait CudaGenImplicitOps extends CudaGenBase {
         // TODO: this valDef is redundant; we really just want the conversion to be a no-op in the generated code.
         // TODO: but we still need to link the defs together
         case im@ImplicitConvert(x) =>
-          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          else stream.println(addTab()+"%s %s = (%s)%s;".format(CudaType(im.mY.toString), quote(sym), CudaType(im.mY.toString), quote(x)))
+          stream.println(addTab()+"%s %s = (%s)%s;".format(remap(im.mY), quote(sym), remap(im.mY), quote(x)))
         case _ => super.emitNode(sym, rhs)
       }
     }

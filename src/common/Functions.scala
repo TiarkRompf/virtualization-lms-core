@@ -108,12 +108,10 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
       rhs match {
         case e@Lambda(fun, x, y) =>
-          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          else {
               // The version for inlined device function
-              stream.println(addTab() + "%s %s = %s;".format(CudaType(x.Type.toString), quote(x), quote(sym)+"_1"))
+              stream.println(addTab() + "%s %s = %s;".format(remap(x.Type), quote(x), quote(sym)+"_1"))
               emitBlock(y)
-              stream.println(addTab() + "%s %s = %s;".format(CudaType(y.Type.toString), quote(sym), quote(getBlockResult(y))))
+              stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
 
               // The version for separate device function
               /*
@@ -125,20 +123,15 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
               stream.println("return %s;".format(quote(getBlockResult(y))))
               stream.println("}")
               */
-          }
 
         case e@Lambda2(fun, x1, x2, y) =>
-          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          else {
             // The version for inlined device function
-            stream.println(addTab() + "%s %s = %s;".format(CudaType(x1.Type.toString), quote(x1), quote(sym)+"_1"))
-            stream.println(addTab() + "%s %s = %s;".format(CudaType(x2.Type.toString), quote(x2), quote(sym)+"_2"))
+            stream.println(addTab() + "%s %s = %s;".format(remap(x1.Type), quote(x1), quote(sym)+"_1"))
+            stream.println(addTab() + "%s %s = %s;".format(remap(x2.Type), quote(x2), quote(sym)+"_2"))
             emitBlock(y)
-            stream.println(addTab() + "%s %s = %s;".format(CudaType(y.Type.toString), quote(sym), quote(getBlockResult(y))))
-          }
+            stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
         case Apply(fun, arg) =>
-          if(!isGPUable) throw new RuntimeException("CudaGen: Not GPUable")
-          else emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
+          emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 
         case _ => super.emitNode(sym, rhs)
       }
