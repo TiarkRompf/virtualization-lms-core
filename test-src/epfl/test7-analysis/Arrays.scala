@@ -16,6 +16,7 @@ trait Loops extends Base with OverloadHack {
   def reduce(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] // TODO: make reduce operation configurable!
 
   def infix_at(a: Rep[Array[Double]], i: Rep[Int]): Rep[Double]
+  def infix_length(a: Rep[Array[Double]]): Rep[Int]
 }
 
 
@@ -39,6 +40,12 @@ trait LoopsExp extends Loops with EffectExp {
 
   def infix_at(a: Rep[Array[Double]], i: Rep[Int]): Rep[Double] = ArrayIndex(a, i)
 
+  def infix_length(a: Rep[Array[Double]]): Rep[Int] = a match {
+    case Def(LoopArray(s, x, y)) => s
+    // TODO!
+  }
+
+
 }
 
 trait ScalaGenLoops extends ScalaGenEffect {
@@ -61,12 +68,12 @@ trait ScalaGenLoops extends ScalaGenEffect {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case LoopArray(s,x,y) =>  
-      stream.println("val " + quote(sym) + " = LoopArray {" + quote(x) + " => ")
+      stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") {" + quote(x) + " => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")
     case LoopReduce(s,x,y) =>  
-      stream.println("val " + quote(sym) + " = LoopReduce {" + quote(x) + " => ")
+      stream.println("val " + quote(sym) + " = LoopReduce("+quote(s)+") {" + quote(x) + " => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")
