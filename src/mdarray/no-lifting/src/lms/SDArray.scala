@@ -7,14 +7,15 @@ class SDArray[A: ClassManifest](_content: Array[A]) extends MDArray[A](null, _co
   override def shape(): SDArray[Int] = new SDArray[Int](Array(_content.length))
   override def content() = _content
   override def sel(iv: SDArray[Int]) : Scalar[A] = {
-    if ((iv.dim != 1) || (_content.length >= iv(List(0))))
-      throw new Exception("SDArray.sel("+iv+") is impossible")
+    val opName = "sel"
+    if ((iv.dim != 1) || (_content.length <= iv.content()(0)))
+      throw new Exception(opName + ": SDArray.sel("+iv+") is impossible")
     else
-      sel(0)
+      new Scalar(_content(iv.content()(0)))
   }
   override def apply(iv: SDArray[Int]) = sel(iv)
 
-  // simpler versions of the overrides
+  // simpler versions of the selection
   def sel(index: Int) : A = _content(index)
   def apply(index: Int) = sel(index)
 

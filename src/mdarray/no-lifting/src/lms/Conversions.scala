@@ -23,11 +23,23 @@ object Conversions {
       l.foreach(a => result = result ++ a.content)
 
       // Create the objects
-      val newShape = cat(0, new SDArray(Array(l.length)), l.head.shape).asInstanceOf[SDArray[Int]]
+      val newShape = zeros(l.length) ::: l.head.shape
       val matrix = new MDArray(new SDArray(Array(result.length)), result)
 
       // Reshape the matrix correctly
       reshape(newShape, matrix)
     }
+  }
+  implicit def convertToSDArray[A](a: MDArray[A]): SDArray[A] = a.dim match {
+    case 1 => a.asInstanceOf[SDArray[A]]
+    case _ => throw new Exception("convertToSDArray: The MDArray is not a vector")
+  }
+  implicit def convertToScalar[A](a: MDArray[A]): Scalar[A] = a.dim match {
+    case 0 => a.asInstanceOf[Scalar[A]]
+    case _ => throw new Exception("convertToScalar: The MDArray is not a scalar: " + a)
+  }
+  implicit def convertToRealScalar[A](a: MDArray[A]): A = a.dim match {
+    case 0 => a.asInstanceOf[Scalar[A]].value
+    case _ => throw new Exception("convertToScalar: The MDArray is not a scalar: " + a)
   }
 }
