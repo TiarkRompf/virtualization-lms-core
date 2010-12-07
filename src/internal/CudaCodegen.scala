@@ -1,9 +1,9 @@
 package scala.virtualization.lms
 package internal
 
-import collection.mutable.HashMap
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
+import collection.mutable.{LinkedList, HashMap}
 
 trait CudaCodegen extends GenericCodegen {
   val IR: Expressions
@@ -16,8 +16,8 @@ trait CudaCodegen extends GenericCodegen {
   var parallelFor = true
   var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
-  val varLink = HashMap[Sym[_],Sym[_]]()
-
+  val varLink = HashMap[Sym[_], List[Sym[_]]]()
+  
   var gpuInputs:List[Sym[_]] = Nil
   var gpuOutput: Sym[_] = null
   var gpuTemps:List[Sym[_]] = Nil
@@ -110,6 +110,37 @@ trait CudaCodegen extends GenericCodegen {
     gpuOutputStr = remap(sym.Type) + " " + quote(sym)
     gpuTemps = Nil
     gpuTempsStr = ""
+  }
+
+  // Add variable links across IR nodes
+  def addVarLink(from:Sym[_], to:Sym[_]): Unit = {
+    if(varLink.contains(to)) {
+      val list = varLink.get(to).get
+      val newList = from +: list
+      varLink.remove(to)
+      varLink.put(from,newList)
+    }
+    else {
+      val newList = List[Sym[_]](from,to)
+      varLink.put(from,newList)
+    }
+  }
+
+  def removeVarLink(from:Sym[_], to:Sym[_]): Unit = {
+    if(varLink.contains(from)) {
+      val newList = varLink.get(from).get.tail
+      varLink.remove(from)
+      varLink.put(to,newList)
+    }
+  }
+
+  def getVarLink(sym:Sym[_]): Sym[_] = {
+    if(varLink.contains(sym)) {
+      val out = varLink.get(sym).get.last
+      out
+    }
+    else
+      null
   }
 
   // Maps the scala type to cuda type

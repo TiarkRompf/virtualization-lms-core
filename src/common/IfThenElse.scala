@@ -73,24 +73,23 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
       rhs match {
         case IfThenElse(c,a,b) =>
-            // Inform about the copy
-            varLink.put(getBlockResult(a).asInstanceOf[Sym[_]] , sym)
             stream.println(addTab() + "if (" + quote(c) + ") {")
             tabWidth += 1
+            addVarLink(getBlockResult(a).asInstanceOf[Sym[_]],sym)
             emitBlock(a)
-            varLink.remove(getBlockResult(a).asInstanceOf[Sym[_]])
+            removeVarLink(getBlockResult(a).asInstanceOf[Sym[_]],sym)
             //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
             tabWidth -= 1
             stream.println(addTab() + "} else {")
-            varLink.put(getBlockResult(b).asInstanceOf[Sym[_]] , sym)
             tabWidth += 1
+            addVarLink(getBlockResult(b).asInstanceOf[Sym[_]],sym)
             emitBlock(b)
+            removeVarLink(getBlockResult(b).asInstanceOf[Sym[_]],sym)
             //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
             tabWidth -= 1
-            varLink.remove(getBlockResult(b).asInstanceOf[Sym[_]])
             stream.println(addTab()+"}")
             allocOutput(sym,getBlockResult(a).asInstanceOf[Sym[_]])
-          //}
+        
         case _ => super.emitNode(sym, rhs)
       }
     }
