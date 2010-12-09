@@ -44,7 +44,9 @@ trait CudaCodegen extends GenericCodegen {
   hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
 
   // MetaData structure
-  override def getMetaData:String = { MetaData.toString }
+  override def hasMetaData: Boolean = true
+  override def getMetaData: String = MetaData.toString
+
   object MetaData {
     var gpuBlockSizeX: String = ""
     var gpuBlockSizeY: String = ""
@@ -66,17 +68,19 @@ trait CudaCodegen extends GenericCodegen {
       gpuTemps = new ArrayList[String]
     }
     
-    override def toString:String = {
+    override def toString: String = {
       val out = new StringBuilder
-      out.append("{\"gpuBlockSizeX\":"+gpuBlockSizeX+"},")
-      out.append("{\"gpuBlockSizeY\":"+gpuBlockSizeY+"},")
-      out.append("{\"gpuBlockSizeZ\":"+gpuBlockSizeZ+"},")
-      out.append("{\"gpuDimSizeX\":"+gpuDimSizeX+"},")
-      out.append("{\"gpuDimSizeY\":"+gpuDimSizeY+"},")
-      out.append("{\"gpuInputs\":%s".format(gpuInputs.toString)+"},")
+      out.append('{') //open map
+      out.append("\"gpuBlockSizeX\":"+gpuBlockSizeX+",")
+      out.append("\"gpuBlockSizeY\":"+gpuBlockSizeY+",")
+      out.append("\"gpuBlockSizeZ\":"+gpuBlockSizeZ+",")
+      out.append("\"gpuDimSizeX\":"+gpuDimSizeX+",")
+      out.append("\"gpuDimSizeY\":"+gpuDimSizeY+",")
+      out.append("\"gpuInputs\":" + gpuInputs.toString + ",")
       if(gpuOutput == "") { println("ERROR:No Output for GPU?"); throw new Exception()}
-      out.append("{\"gpuOutput\":"+gpuOutput+"},")
-      out.append("{\"gpuTemps\":%s}".format(gpuTemps.toString))
+      out.append("\"gpuOutput\":"+gpuOutput+",")
+      out.append("\"gpuTemps\":" + gpuTemps.toString)
+      out.append('}') //close map
       out.toString
     }
   }

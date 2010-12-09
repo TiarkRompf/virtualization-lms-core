@@ -61,7 +61,8 @@ trait GenericCodegen extends Scheduling {
   def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
   def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = { throw new Exception("Method getFreeVarNode should be overriden.") }
 
-  def getMetaData : String = ""
+  def hasMetaData: Boolean = false
+  def getMetaData: String = null
 }
 
 
