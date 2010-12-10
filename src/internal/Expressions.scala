@@ -65,6 +65,9 @@ trait Expressions {
     globalDefs = Nil
   }
 
+  // optional type remapping (default is identity)
+  def remap[A](m: Manifest[A]) : String = m.toString    
+
 /*
   // dependencies
   def syms(e: Any): List[Sym[Any]] = e match {

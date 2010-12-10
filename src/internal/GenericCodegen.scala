@@ -11,9 +11,6 @@ trait GenericCodegen extends Scheduling {
   def kernelFileExt = ""
   def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
   def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
-
-  // optional type remapping (default is identity)
-  def remap[A](m: Manifest[A]) : String = m.toString
   
   def emitBlock(y: Exp[_])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
