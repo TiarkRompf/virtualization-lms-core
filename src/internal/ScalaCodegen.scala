@@ -38,7 +38,7 @@ trait ScalaCodegen extends GenericCodegen {
     stream.flush
   }
 
-  override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     stream.println("package generated." + this.toString)
     stream.println("object kernel_" + quote(sym) + "{")
     stream.print("def apply(")
@@ -52,16 +52,16 @@ trait ScalaCodegen extends GenericCodegen {
       stream.print(vars.map(v => quote(v) + ":" + "generated.Ref[" + remap(v.Type) +"]").mkString(","))
     }
     if (resultIsVar){
-      stream.print("): " + "generated.Ref[" + remap(sym.Type) + "] = {")
+      stream.print("): " + "generated.Ref[" + resultType + "] = {")
     }
     else {
-      stream.print("): " + remap(sym.Type) + " = {")
+      stream.print("): " + resultType + " = {")
     }
 
     stream.println("")
   }
 
-  override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     stream.println(quote(sym))
     stream.println("}}")
   }

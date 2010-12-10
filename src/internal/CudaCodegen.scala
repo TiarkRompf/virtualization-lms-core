@@ -147,27 +147,6 @@ trait CudaCodegen extends GenericCodegen {
       null
   }
 
-  // Maps the scala type to cuda type
-  // TODO: The remap has both framework types (primitive types) and DSL types. Need to separate this
-  override def remap[A](m: Manifest[A]) : String = m.toString match {
-    case "ppl.dsl.optiml.Matrix[Int]" => "Matrix<int>"
-    case "ppl.dsl.optiml.Matrix[Long]" => "Matrix<long>"
-    case "ppl.dsl.optiml.Matrix[Float]" => "Matrix<float>"
-    case "ppl.dsl.optiml.Matrix[Double]" => "Matrix<double>"
-    case "ppl.dsl.optiml.Matrix[Boolean]" => "Matrix<bool>"
-    case "ppl.dsl.optiml.Vector[Int]" => "Vector<int>"
-    case "ppl.dsl.optiml.Vector[Long]" => "Vector<long>"
-    case "ppl.dsl.optiml.Vector[Float]" => "Vector<float>"
-    case "ppl.dsl.optiml.Vector[Double]" => "Vector<double>"
-    case "ppl.dsl.optiml.Vector[Boolean]" => "Vector<bool>"
-    case "Int" => "int"
-    case "Long" => "long"
-    case "Float" => "float"
-    case "Double" => "double"
-    case "Boolean" => "bool"
-    case _ => throw new Exception("Undefined CUDA type")
-  }
-
   // Map scala primitive type to JNI type descriptor
   def JNITypeDescriptor(m: Manifest[_]) : String = m.toString match {
     case "Int" => "I"
@@ -266,7 +245,7 @@ trait CudaCodegen extends GenericCodegen {
     stream.println(addTab() + " " + lhs + " = " + rhs + ";")
   }
   
-  override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     
     stream.println("#include <cuda.h>")
     stream.println("#include \"VectorImpl.h\"")
@@ -284,7 +263,7 @@ trait CudaCodegen extends GenericCodegen {
     //stream.println(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;")
   }
 
-  override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     tabWidth -= 1
     stream.println("}")
 

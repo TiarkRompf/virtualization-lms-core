@@ -1,28 +1,28 @@
 package scala.virtualization.lms
 package internal
 
-import java.io.{FileWriter, PrintWriter, File}
 import util.GraphUtil
+import java.io.{File, PrintWriter}
 
 trait GenericCodegen extends Scheduling {
   val IR: Expressions
   import IR._
 
   def kernelFileExt = ""
-  def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
-  def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
-
-  // Initializer
+  def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
+  def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
+  
+    // Initializer
   def init(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {}
+
+  // optional type remapping (default is identity)
+  def remap[A](m: Manifest[A]) : String = m.toString
 
   // exception handler
   def exceptionHandler(outFile:File, kstream:PrintWriter): Unit = {
       kstream.close()
       outFile.delete
   }
-
-  // optional type remapping (default is identity)
-  def remap[A](m: Manifest[A]) : String = m.toString
   
   def emitBlock(y: Exp[_])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
@@ -33,16 +33,10 @@ trait GenericCodegen extends Scheduling {
   }
 
   def getBlockResult[A](s: Exp[A]): Exp[A] = s
-
-  // Do not generate exception for now.
+  
   def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
-    //throw new Exception("don't know how to generate code for: " + rhs)
+    throw new Exception("don't know how to generate code for: " + rhs)
   }
-  /*
-  def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
-    stream.println("Generator Not Found")
-  }
-  */
 
   //def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
   

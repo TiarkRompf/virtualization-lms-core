@@ -63,7 +63,7 @@ trait Expressions {
   def reset {
     nVars = 0
     globalDefs = Nil
-  }
+  }    
 
 /*
   // dependencies
