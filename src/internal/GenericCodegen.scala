@@ -15,15 +15,17 @@ trait GenericCodegen extends Scheduling {
     // Initializer
   def init(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {}
 
-  // optional type remapping (default is identity)
-  def remap[A](m: Manifest[A]) : String = m.toString
-
+  def emitDataStructures(): Unit = {}
+  
   // exception handler
   def exceptionHandler(outFile:File, kstream:PrintWriter): Unit = {
       kstream.close()
       outFile.delete
   }
-  
+
+  // optional type remapping (default is identity)
+  def remap[A](m: Manifest[A]) : String = m.toString
+
   def emitBlock(y: Exp[_])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
     

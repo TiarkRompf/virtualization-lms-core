@@ -49,10 +49,10 @@ trait ScalaCodegen extends GenericCodegen {
       stream.print(", ")
     }
     if (vars.length > 0){
-      stream.print(vars.map(v => quote(v) + ":" + "generated.Ref[" + remap(v.Type) +"]").mkString(","))
+      stream.print(vars.map(v => quote(v) + ":" + "generated.scala.Ref[" + remap(v.Type) +"]").mkString(","))
     }
     if (resultIsVar){
-      stream.print("): " + "generated.Ref[" + resultType + "] = {")
+      stream.print("): " + "generated.scala.Ref[" + resultType + "] = {")
     }
     else {
       stream.print("): " + resultType + " = {")
