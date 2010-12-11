@@ -159,16 +159,16 @@ trait CudaCodegen extends GenericCodegen {
   
   // HashMap for DSL Data structure information (map to specific functions)
   val DSLDataType = HashMap[String,(Sym[_]=>String,Sym[_]=>String,(Sym[_],Sym[_])=>Unit)](
-    "ppl.dsl.optiml.Matrix[Int]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
-    "ppl.dsl.optiml.Matrix[Long]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
-    "ppl.dsl.optiml.Matrix[Float]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
-    "ppl.dsl.optiml.Matrix[Double]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
-    "ppl.dsl.optiml.Matrix[Boolean]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
-    "ppl.dsl.optiml.Vector[Int]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
-    "ppl.dsl.optiml.Vector[Long]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
-    "ppl.dsl.optiml.Vector[Float]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
-    "ppl.dsl.optiml.Vector[Double]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
-    "ppl.dsl.optiml.Vector[Boolean]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym)
+    "ppl.dsl.optiml.datastruct.scala.Matrix[Int]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
+    "ppl.dsl.optiml.datastruct.scala.Matrix[Long]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
+    "ppl.dsl.optiml.datastruct.scala.Matrix[Float]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
+    "ppl.dsl.optiml.datastruct.scala.Matrix[Double]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
+    "ppl.dsl.optiml.datastruct.scala.Matrix[Boolean]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
+    "ppl.dsl.optiml.datastruct.scala.Vector[Int]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
+    "ppl.dsl.optiml.datastruct.scala.Vector[Long]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
+    "ppl.dsl.optiml.datastruct.scala.Vector[Float]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
+    "ppl.dsl.optiml.datastruct.scala.Vector[Double]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
+    "ppl.dsl.optiml.datastruct.scala.Vector[Boolean]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym)
   )
 
   def isObjectType(m: Manifest[_]): Boolean = {
