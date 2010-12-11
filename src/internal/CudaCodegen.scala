@@ -72,17 +72,17 @@ trait CudaCodegen extends GenericCodegen {
     
     override def toString: String = {
       val out = new StringBuilder
-      out.append('[') //open map
-      out.append("{\"gpuBlockSizeX\":"+gpuBlockSizeX+"},")
-      out.append("{\"gpuBlockSizeY\":"+gpuBlockSizeY+"},")
-      out.append("{\"gpuBlockSizeZ\":"+gpuBlockSizeZ+"},")
-      out.append("{\"gpuDimSizeX\":"+gpuDimSizeX+"},")
-      out.append("{\"gpuDimSizeY\":"+gpuDimSizeY+"},")
-      out.append("{\"gpuInputs\":" + gpuInputs.toString + "},")
+      out.append("{")
+      out.append("\"gpuBlockSizeX\":"+gpuBlockSizeX+",")
+      out.append("\"gpuBlockSizeY\":"+gpuBlockSizeY+",")
+      out.append("\"gpuBlockSizeZ\":"+gpuBlockSizeZ+",")
+      out.append("\"gpuDimSizeX\":"+gpuDimSizeX+",")
+      out.append("\"gpuDimSizeY\":"+gpuDimSizeY+",")
+      out.append("\"gpuInputs\":" + gpuInputs.toString + ",")
       if(gpuOutput == "") { println("ERROR:No Output for GPU?"); throw new Exception()}
-      out.append("{\"gpuOutput\":"+gpuOutput+"},")
-      out.append("{\"gpuTemps\":" + gpuTemps.toString+"}")
-      out.append("]") //close map
+      out.append("\"gpuOutput\":"+gpuOutput+",")
+      out.append("\"gpuTemps\":" + gpuTemps.toString)
+      out.append("}")
       out.toString
     }
   }
@@ -281,7 +281,7 @@ trait CudaCodegen extends GenericCodegen {
     hstream.flush
 
     // Print out dsl.h file
-    headerStream.println("#include \"%s.h\"".format(quote(sym)))
+    headerStream.println("#include \"%s.cuda\"".format(quote(sym)))
     headerStream.flush
   }
 
