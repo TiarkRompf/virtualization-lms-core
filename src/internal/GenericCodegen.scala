@@ -25,6 +25,7 @@ trait GenericCodegen extends Scheduling {
 
   // optional type remapping (default is identity)
   def remap[A](m: Manifest[A]) : String = m.toString
+  def remapImpl[A](m: Manifest[A]) : String = remap(m)
 
   def emitBlock(y: Exp[_])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)

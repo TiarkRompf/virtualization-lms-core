@@ -31,7 +31,7 @@ trait CudaCodegen extends GenericCodegen {
   val outDir = new File(buildPath); outDir.mkdirs()
   val hstream = new PrintWriter(new FileWriter(buildPath + "helperFuncs.cu"))
   val headerStream = new PrintWriter(new FileWriter(buildPath + "dsl.h"))
-  headerStream.println("#include \"helperFuncs.h\"")
+  headerStream.println("#include \"helperFuncs.cu\"")
   
   //TODO: Put all the DELITE APIs declarations somewhere
   hstream.print("#include \"VectorImpl.h\"\n")
@@ -281,7 +281,7 @@ trait CudaCodegen extends GenericCodegen {
     hstream.flush
 
     // Print out dsl.h file
-    headerStream.println("#include \"%s.cuda\"".format(quote(sym)))
+    headerStream.println("#include \"%s.cu\"".format(quote(sym)))
     headerStream.flush
   }
 
@@ -295,13 +295,13 @@ trait CudaCodegen extends GenericCodegen {
   def emitCopyHtoD(sym: Sym[_], ksym: Sym[_]) : String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
-      out.append("%s gpuMemAllocAndCopy_%s_%s(%s,%s) {\n".format(remap(sym.Type), quote(ksym), quote(sym),"JNIEnv *env", "jobject obj"))
+      out.append("%s gpuMemAllocAndCopy_%s_%s(%s) {\n".format(remap(sym.Type), quote(ksym), quote(sym),"JNIEnv *env , jobject obj"))
       // Create C data structure and Copy from Scala to C
       out.append(copyDataStructureHtoD(sym))
       out.append("}\n")
 
       // Register MetaData
-      MetaData.gpuInputs.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s\",[%s]]}".format(quote(sym),remap(sym.Type),quote(sym),"\"env\", \"obj\""))
+      MetaData.gpuInputs.add("{\"%s\":[\"%s\",\"gpuMemAllocAndCopy_%s_%s\",[%s]]}".format(quote(sym),remap(sym.Type),quote(ksym),quote(sym),"\"env\", \"obj\""))
       out.toString
     }
     else ""
