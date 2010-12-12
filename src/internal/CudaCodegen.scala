@@ -529,7 +529,7 @@ trait CudaCodegen extends GenericCodegen {
 
     }
     else {
-      MetaData.gpuTemps.add("{\"%s\":[\"%s\":\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
+      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
       gpuTemps = newSym :: gpuTemps
     }
     helperFuncString.append(out.toString)
@@ -565,7 +565,7 @@ trait CudaCodegen extends GenericCodegen {
       out.append(emitCopyDtoH(newSym))
     }
     else {
-      MetaData.gpuTemps.add("{\"%s\":[\"%s\":\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
+      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
       gpuTemps = newSym :: gpuTemps
     }
     helperFuncString.append(out.toString)
