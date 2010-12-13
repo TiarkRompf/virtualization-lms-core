@@ -264,7 +264,7 @@ trait CudaCodegen extends GenericCodegen {
 
     val paramStr = new StringBuilder
     paramStr.append(gpuOutputStr)
-    if(gpuInputs.length>0) paramStr.append(","+gpuInputsStr)
+    if(gpuInputs.length>0) paramStr.append(","+gpuInputsStr)  
     if(gpuTemps.length>0) paramStr.append(","+gpuTemps.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", "))
     
     stream.println("__global__ void kernel_%s(%s) {".format(quote(sym), paramStr.toString))
@@ -561,7 +561,7 @@ trait CudaCodegen extends GenericCodegen {
     }
     else {
       MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrTemp))
-      gpuTemps = newSym :: gpuTemps
+      gpuTemps = gpuTemps :+ newSym
     }
     helperFuncString.append(out.toString)
   }    
@@ -604,7 +604,7 @@ trait CudaCodegen extends GenericCodegen {
     }
     else {
       MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrTemp))
-      gpuTemps = newSym :: gpuTemps
+      gpuTemps = gpuTemps :+ newSym
     }
     helperFuncString.append(out.toString)
   }
