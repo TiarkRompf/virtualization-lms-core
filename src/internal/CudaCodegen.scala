@@ -25,25 +25,9 @@ trait CudaCodegen extends GenericCodegen {
   var gpuOutputStr = ""
   var gpuTempsStr = ""
 
-  // FileWriter for helper functions(TODO: Change to get from Config)
-  val helperFuncString:StringBuilder = new StringBuilder
-  val buildPath = "generated/delite-gen/cuda/"
-  val outDir = new File(buildPath); outDir.mkdirs()
-  val hstream = new PrintWriter(new FileWriter(buildPath + "helperFuncs.cu"))
-  val headerStream = new PrintWriter(new FileWriter(buildPath + "dsl.h"))
-  headerStream.println("#include \"helperFuncs.cu\"")
-  
-  //TODO: Put all the DELITE APIs declarations somewhere
-  hstream.print("#include \"VectorImpl.h\"\n")
-  hstream.print("#include \"MatrixImpl.h\"\n")
-  hstream.print("#include <jni.h>\n\n")
-  hstream.print("//Delite Runtime APIs\n")
-  hstream.print("extern void DeliteCudaMallocHost(void **ptr, int size);\n")
-  hstream.print("extern void DeliteCudaMalloc(void **ptr, int size);\n")
-  hstream.print("extern void DeliteCudaMemcpyHtoDAsync(void *dptr, void *sptr, int size);\n")
-  hstream.print("extern void DeliteCudaMemcpyDtoHAsync(void *dptr, void *sptr, int size);\n")
-  hstream.print("typedef jboolean jbool;\n")              // TODO: Fix this 
-  hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
+  var helperFuncString:StringBuilder = null
+  var hstream: PrintWriter = null
+  var headerStream: PrintWriter = null
 
   // MetaData structure
   override def hasMetaData: Boolean = true
@@ -93,10 +77,33 @@ trait CudaCodegen extends GenericCodegen {
      // TODO: Need to cleanup some data structures
   }
 
-  override def init(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {
+  override def generatorInit(build_dir:String): Unit = {
+    // FileWriter for helper functions(TODO: Change to get from Config)
+    //val outDir = new File(buildPath); outDir.mkdirs()
+    helperFuncString = new StringBuilder
+    hstream = new PrintWriter(new FileWriter(build_dir + "helperFuncs.cu"))
+    headerStream = new PrintWriter(new FileWriter(build_dir + "dsl.h"))
+    headerStream.println("#include \"helperFuncs.cu\"")
+
+    //TODO: Put all the DELITE APIs declarations somewhere
+    hstream.print("#include \"VectorImpl.h\"\n")
+    hstream.print("#include \"MatrixImpl.h\"\n")
+    hstream.print("#include <jni.h>\n\n")
+    hstream.print("//Delite Runtime APIs\n")
+    hstream.print("extern void DeliteCudaMallocHost(void **ptr, int size);\n")
+    hstream.print("extern void DeliteCudaMalloc(void **ptr, int size);\n")
+    hstream.print("extern void DeliteCudaMemcpyHtoDAsync(void *dptr, void *sptr, int size);\n")
+    hstream.print("extern void DeliteCudaMemcpyDtoHAsync(void *dptr, void *sptr, int size);\n")
+    hstream.print("typedef jboolean jbool;\n")              // TODO: Fix this
+    hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
+  }
+
+  override def kernelInit(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {
     // Conditions for not generating CUDA kernels (may be relaxed later)
     if(!isObjectType(sym.Type)) throw new RuntimeException("CudaGen: Not GPUable")
     if((vars.length > 0)  || (resultIsVar)) throw new RuntimeException("CudaGen: Not GPUable")
+
+
 
     // Initialize global variables
     helperFuncString.clear
