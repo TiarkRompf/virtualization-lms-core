@@ -534,11 +534,17 @@ trait CudaCodegen extends GenericCodegen {
 
     val out = new StringBuilder
 
-    val inputs = (gpuOutput :: gpuInputs ::: gpuTemps) filterNot (_==newSym)
-    val paramStr = inputs.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
-    val argStr = inputs.map("\""+quote(_)+"\"").mkString(",")
+    val inputs1 = (gpuOutput :: gpuInputs ::: gpuTemps) filterNot (_==newSym)
+    val inputs2 = (gpuInputs ::: gpuTemps) filterNot (_==newSym)
+    val paramStrOut = inputs1.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
+    val argStrOut = inputs1.map("\""+quote(_)+"\"").mkString(",")
+    val paramStrTemp = inputs2.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
+    val argStrTemp = inputs2.map("\""+quote(_)+"\"").mkString(",")
 
-    out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStr))
+    if(newSym == kernelSymbol)
+      out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStrOut))
+    else
+      out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStrTemp))
     out.append("\t%s %s;\n".format(remap(newSym.Type),quote(newSym)))
     out.append("\t%s *devPtr;\n".format(remap(newSym.Type.typeArguments(0))))
     out.append("\tDeliteCudaMalloc((void**)%s,%s*sizeof(%s));\n".format("&devPtr",length,remap(newSym.Type.typeArguments(0))))
@@ -550,12 +556,11 @@ trait CudaCodegen extends GenericCodegen {
 
     // Register MetaData
     if(newSym == kernelSymbol) {
-      MetaData.gpuOutput = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s],\"gpuMemCopy_%s_%s\",[\"%s\",\"%s\"]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
+      MetaData.gpuOutput = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s],\"gpuMemCopy_%s_%s\",[\"%s\",\"%s\"]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrOut,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
       out.append(emitCopyDtoH(newSym))
-
     }
     else {
-      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
+      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrTemp))
       gpuTemps = newSym :: gpuTemps
     }
     helperFuncString.append(out.toString)
@@ -571,11 +576,18 @@ trait CudaCodegen extends GenericCodegen {
     if(gpuTemps.contains(newSym)) return
     
     val out = new StringBuilder
-    val inputs = (gpuOutput :: gpuInputs ::: gpuTemps) filterNot (_==newSym)
-    val paramStr = inputs.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
-    val argStr = inputs.map("\""+quote(_)+"\"").mkString(",")
 
-    out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStr))
+    val inputs1 = (gpuOutput :: gpuInputs ::: gpuTemps) filterNot (_==newSym)
+    val inputs2 = (gpuInputs ::: gpuTemps) filterNot (_==newSym)
+    val paramStrOut = inputs1.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
+    val argStrOut = inputs1.map("\""+quote(_)+"\"").mkString(",")
+    val paramStrTemp = inputs2.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
+    val argStrTemp = inputs2.map("\""+quote(_)+"\"").mkString(",")
+
+    if(newSym == kernelSymbol)
+      out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStrOut))
+    else
+      out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStrTemp))
     out.append("\t%s %s;\n".format(remap(newSym.Type),quote(newSym)))
     out.append("\t%s *devPtr;\n".format(remap(newSym.Type.typeArguments(0))))
     out.append("\tDeliteCudaMalloc((void**)%s,%s*%s*sizeof(%s));\n".format("&devPtr",numRows,numCols,remap(newSym.Type.typeArguments(0))))
@@ -587,11 +599,11 @@ trait CudaCodegen extends GenericCodegen {
     
     // Register MetaData
     if(newSym == kernelSymbol) {
-      MetaData.gpuOutput = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s],\"gpuMemCopy_%s_%s\",[\"%s\",\"%s\"]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
+      MetaData.gpuOutput = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s],\"gpuMemCopy_%s_%s\",[\"%s\",\"%s\"]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrOut,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
       out.append(emitCopyDtoH(newSym))
     }
     else {
-      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
+      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrTemp))
       gpuTemps = newSym :: gpuTemps
     }
     helperFuncString.append(out.toString)
