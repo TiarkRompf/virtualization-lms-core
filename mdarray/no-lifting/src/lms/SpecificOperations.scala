@@ -65,8 +65,15 @@ object SpecificOperations {
   def iterate(lb: IndexVector, ub: IndexVector, opName: String) : Stream[IndexVector] = {
 
     def nextOp(crt: IndexVector): Stream[IndexVector] = {
-      val result = new Array[Int](crt.content.length)
+      val efficient = true
+      var result: Array[Int] = null
+      var response: IndexVector = null
       var carry  = 1
+
+      if (efficient)
+        result = crt.content()
+      else
+        result = new Array[Int](crt.content.length)
 
       for (i <- List.range(crt.content.length-1, -1, -1))
         if (!(crt(i) + carry <= ub(i)))
@@ -76,7 +83,11 @@ object SpecificOperations {
           carry = 0
         }
 
-      val response = new IndexVector(result)
+      if (efficient)
+        response = crt
+      else
+        response = new IndexVector(result)
+      
       if (carry == 1)
         Stream.empty
       else
@@ -89,7 +100,7 @@ object SpecificOperations {
               lb + " ub:" + ub)
       //Stream.empty
     else {
-      Stream.cons(lb, nextOp(lb))
+      Stream.cons(new IndexVector(lb.content()), nextOp(lb))
     }
   }
 
