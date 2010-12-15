@@ -18,17 +18,22 @@ trait Fusion extends internal.GenericNestedCodegen {
 }
 
 
+trait Traversing extends internal.GenericNestedCodegen { // should be other way round!!
+  
+  
+}
 
 
-trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
-  val IR: LoopsExp with ArithExp with PrintExp // TODO: refactor
+trait Transforming extends Traversing {
   import IR._  
 
 
   class Traverser {
     val subst = new scala.collection.mutable.HashMap[Exp[_], Exp[_]]
     
-    def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { case Some(y) => apply(y.asInstanceOf[Exp[A]]) case None => x }
+    def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
+      case Some(y) => apply(y.asInstanceOf[Exp[A]]) case None => x 
+    }
     
     def transform[A](s: Sym[A], x: Def[A]): Exp[A] = {
       if (subst.contains(s)) return apply(s)
@@ -45,6 +50,15 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
     }
   }
 
+
+  def mirror[A](e: Def[A], f: Traverser): Exp[A] = system.error("don't know how to mirror " + e)
+    
+}
+
+
+trait FatTransforming extends Transforming { // TODO: shouldn't depend on loops?
+  val IR: FatLoopsExp with EffectExp
+  import IR._
   
   def foobar(t: Traverser)(scope: List[TTP]) = scope flatMap {
     case TTP(List(sym), ThinDef(rhs)) =>
@@ -61,13 +75,11 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
           val args2 = x map (t(_))
           List(TTP(lhs2, FatLoop(s,args2.asInstanceOf[List[Sym[Int]]],rhs2)))
       }
-      
   }
 
   def simplify(scope: List[TTP])(results: List[Exp[_]]): (List[TTP], List[Exp[_]]) = {
     
-    val t = new Traverser
-    
+    val t = new Traverser    
     
     val scope2 = foobar(t)(scope) // ugly
     val results2 = results map (t(_))
@@ -75,8 +87,26 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
     (scope2, results2)
   }
 
-  def mirror[A](e: Def[A], f: Traverser): Exp[A] = (e match {
-    case Copy(a) => f(a)
+}
+
+
+trait FatLoopsExp extends FatStuffExp with LoopsExp {
+  
+  case class FatLoop(s: Rep[Int], x: List[Sym[Int]], rhs: List[Def[_]]) extends FatDef(rhs)    
+  
+  case class ArrayElem(y: Exp[Double]) extends Def[Array[Double]]
+  case class ReduceElem(y: Exp[Double]) extends Def[Double]
+  
+}
+
+
+
+trait TransformingStuff extends Transforming {
+  val IR: FatLoopsExp with ArithExp with PrintExp // TODO: refactor
+  import IR._  
+
+  override def mirror[A](e: Def[A], f: Traverser): Exp[A] = (e match {
+    //case Copy(a) => f(a)
     case ArrayElem(y) => toAtom(ArrayElem(f(y)))
     case ReduceElem(y) => toAtom(ReduceElem(f(y)))
     case ArrayIndex(a,i) => toAtom(ArrayIndex(f(a), f(i)))
@@ -87,33 +117,30 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
     case Reflect(Print(x), es) => toAtom(Reflect(Print(f(x)), es map (e => f(e))))
     case Reify(x, es) => toAtom(Reify(f(x), es map (e => f(e))))
   }).asInstanceOf[Exp[A]]
-  
-  
-  
-  case class Copy[A](a: Exp[A]) extends Def[A]
-  
-  case class Combine(a: List[Exp[Any]]) extends Exp[Any]
-  
-  
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case Copy(a) => emitValDef(sym, " <- " + quote(a))
-    case _ => super.emitNode(sym, rhs)
-  }
-  
-  
-  
-  case class ArrayElem(y: Exp[Double]) extends Def[Array[Double]]
-  case class ReduceElem(y: Exp[Double]) extends Def[Double]
-  
+    
+}
 
+
+trait FatStuffExp extends BaseExp {
+  
   class FatDef(val elems: List[Def[_]])
 
   case class TTP(val lhs: List[Sym[_]], val rhs: FatDef)
   
   case class ThinDef(rhs: Def[_]) extends FatDef(List(rhs))
-  case class FatLoop(s: Rep[Int], x: List[Sym[Int]], rhs: List[Def[_]]) extends FatDef(rhs)
+  
+}
+
+
+trait FatScheduling extends internal.Scheduling {
+  val IR: FatStuffExp 
+  import IR._  
   
   import util.GraphUtil
+
+  def fatten(defs: List[TP[_]]): List[TTP] = defs.map {
+    case TP(sym, rhs) => TTP(List(sym), ThinDef(rhs))
+  }
   
   def getSchedule(scope: List[TP[_]])(result: Any): List[TP[_]] = {
     def deps(st: List[Sym[_]]): List[TP[_]] =
@@ -142,193 +169,34 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
     }
     GraphUtil.stronglyConnectedComponents[TTP](uses(st), t => t.lhs flatMap uses).flatten
   }
+    
+}
 
 
+
+trait ScalaGenFatStuff extends ScalaGenEffect with FatScheduling {
+  val IR: FatStuffExp with EffectExp
+  import IR._  
   
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case FatLoop(s, x, rhs) => syms(s):::syms(rhs)
-    case _ => super.syms(e)
+  case class Combine(a: List[Exp[Any]]) extends Exp[Any]
+
+
+  override def emitBlockFocused(result: Exp[_])(implicit stream: PrintWriter): Unit = {
+    var currentScope = fatten(innerScope)
+    currentScope = getFatSchedule(currentScope)(result) // clean things up!
+    emitFatBlockFocused(currentScope)(result)
   }
 
-  override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case FatLoop(s, x, rhs) => x
-    case _ => super.boundSyms(e)
-  }
-
-  
-  def fatten(defs: List[TP[_]]) = defs map {
-    case e @ TP(sym, LoopArray(s,x,y)) => TTP(List(sym), FatLoop(s,List(x),List(ArrayElem(y))))
-    case e @ TP(sym, LoopReduce(s,x,y)) => TTP(List(sym), FatLoop(s,List(x),List(ReduceElem(y))))
-    case TP(sym, rhs) => TTP(List(sym), ThinDef(rhs))
-  }
-  
-  
-  
-  override def emitBlock(result0: Exp[_])(implicit stream: PrintWriter): Unit = {
-    var result: Exp[_] = result0
-    focusBlock(result) {
-      
-      // find loops at current top level
-      var Wloops = focusExactScope(result) { levelScope => 
-        fatten(levelScope) collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
-      }
-      
-      if (Wloops.nonEmpty) {
-        var currentScope = fatten(innerScope)
-        var done = false
-
-        do {
-          // utils
-          def WgetLoopVar(e: TTP): List[Sym[Int]] = e.rhs match { case FatLoop(s,x,rhs) => x }
-          def WgetLoopRes(e: TTP): List[Def[_]] = e.rhs match { case FatLoop(s,x,rhs) => rhs }
-
-          val loopSyms = Wloops flatMap (_.lhs)
-          val loopVars = Wloops flatMap WgetLoopVar
-
-          val WloopSyms = Wloops map (_.lhs)
-          val WloopVars = Wloops map WgetLoopVar
-
-          
-          // find negative dependencies (those that block fusion)
-          
-          val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies
-            val otherLoopSyms = loopSyms diff (dx.lhs)
-            getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-              case TTP(_, ThinDef(ArrayIndex(a, i))) if (WgetLoopVar(dx) contains i) =>
-                Nil
-              case sc =>
-                syms(sc.rhs).intersect(otherLoopSyms).flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
-            }
-          }.distinct
-        
-          println("wtableneg: " + WtableNeg)
-          
-          
-          // partitioning: build maximal sets of loops to be fused
-          
-          def canFuse(a: TTP, b: TTP): Boolean = {
-            val cartesian = a.lhs.flatMap(x=>b.lhs.flatMap(y=>List((x,y),(y,x))))
-            (WtableNeg intersect cartesian).isEmpty
-          }
-
-        
-          val t = new Traverser
-
-          var partitionsIn = Wloops
-          var partitionsOut = Nil:List[TTP]
-        
-          for (b <- partitionsIn) {
-            // try to add to an item in partitionsOut, if not possible add as-is
-            partitionsOut.find(a => canFuse(a,b)) match {
-              case Some(a) => 
-                val shape = a.rhs match { case FatLoop(s,_,_) => s } // TODO!
-                val targetVar = WgetLoopVar(a)(0)
-                //currentScope = currentScope ::: (WgetLoopVar(b) map (v => TTP(List(v), ThinDef(Copy(targetVar))))) // TODO: maybe not here?
-                for (w <- WgetLoopVar(b))
-                  t.subst(w) = targetVar
-                
-                val fused = TTP(a.lhs:::b.lhs, FatLoop(shape, List(targetVar), WgetLoopRes(a):::WgetLoopRes(b)))
-                partitionsOut = fused :: (partitionsOut diff List(a))
-              case None => partitionsOut = b::partitionsOut
-            }
-          }
-        
-          println("partitions: " + partitionsOut)
-        
-        
-          // actually do the fusion: 
-        
-          if ((partitionsOut intersect partitionsIn) != partitionsOut) {
-
-            //currentScope = currentScope diff Wloops
-            //Wloops = partitionsOut
-            //currentScope = currentScope ::: Wloops
-            
-            // equalize loop variables (TODO!)
-
-            // within fused loops, remove accesses to outcomes of the fusion
-
-            //currentScope = currentScope.map { // a(i) where a = Loop { i => ... } (remove those!)
-            currentScope.map {
-              case e@TTP(List(s), ThinDef(ArrayIndex(a, i))) =>
-                println("considering " + e)
-                partitionsOut.find(_.lhs contains a) match {
-                  case Some(fused) if WgetLoopVar(fused) contains t(i) => 
-                    val index = fused.lhs.indexOf(a)
-                    
-                    println("replace " + e + " at " + index + " within " + fused)
-
-                    val rhs = WgetLoopRes(fused)(index) match { case ArrayElem(y) => y }
-                    
-                    t.subst(s) = rhs
-                    
-                    val f = TTP(e.lhs, ThinDef(Copy(rhs)))
-                    // replace e.sym by getLoopRes(fused.find(_.sym == a))
-                    println("replace " + //e.lhs + " by " + (f.rhs match { case Copy(a) => a }) + 
-                      " / " + e + " by " + f)
-                    f
-                  case _ => e
-                }
-              case e => e
-            }
-            
-            currentScope = getFatSchedule(currentScope)(result) // clean things up!
-
-            // SIMPLIFY!
-            
-            currentScope = foobar(t)(currentScope)
-            result = t(result)
-            currentScope = getFatSchedule(currentScope)(result) // clean things up!
-
-            currentScope = foobar(t)(currentScope)
-            result = t(result)
-            currentScope = getFatSchedule(currentScope)(result) // clean things up!
-            
-            //Wloops = currentScope collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
-
-            Wloops = foobar(t)(partitionsOut)
-            
-            println("try once more ...")
-          } else {
-            println("no changes, we're done")
-            done = true
-          }
-        
-        } while (!done)
-       
-        
-        // prune Wloops (some might be no longer necessary!)
-        Wloops = Wloops map {
-          case TTP(lhs, FatLoop(s, x, rhs)) =>
-            val ex = lhs map (s => currentScope exists (_.lhs == List(s)))
-            def select[A](a: List[A], b: List[Boolean]) = (a zip b) collect { case (w, true) => w }
-            TTP(select(lhs, ex), FatLoop(s, x, select(rhs, ex)))
-        }
-        
-        // FIXME: don't throw out all loops, might have some that are *not* in levelScope
-        currentScope = currentScope.filter { case TTP(_, FatLoop(_,_,_)) => false case _ => true } ::: Wloops
-
-        // schedule and emit
-        currentScope = getFatSchedule(currentScope)(result) // clean things up!
-       
-        // do what super does, modulo fat stuff
-        focusExactScopeFat(currentScope)(result) { levelScope => 
-          for (TTP(syms, rhs) <- levelScope) {
-            emitFatNode(syms, rhs)
-          }
-        }
-
-      } else {
-        // do what super does
-        focusExactScope(result) { levelScope => 
-          for (TP(sym, rhs) <- levelScope) {
-            emitNode(sym, rhs)
-          }
-        }
-
+  def emitFatBlockFocused(currentScope: List[TTP])(result: Exp[_])(implicit stream: PrintWriter): Unit = {
+    // do what super does, modulo fat stuff
+    focusExactScopeFat(currentScope)(result) { levelScope => 
+      for (TTP(syms, rhs) <- levelScope) {
+        emitFatNode(syms, rhs)
       }
     }
   }
+  
+  
   
 
   def focusExactScopeFat[A](currentScope: List[TTP])(result: Exp[_])(body: List[TTP] => A): A = {
@@ -344,7 +212,7 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
     // bound is 'must inside'
 
     // find transitive dependencies on bound syms, including their defs (in case of effects)
-    val bound = for (TTP(syms, rhs) <- e1; s <- boundSyms(rhs)) yield s
+    val bound = e1.flatMap(z => boundSyms(z.rhs))
     val g1 = getFatDependentStuff(currentScope)(bound)
     
     val levelScope = e1.filter(z => (e2 contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
@@ -374,11 +242,43 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
   }
 
 
-
-
-
-
   def emitFatNode(sym: List[Sym[_]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+    case ThinDef(a) => emitNode(sym(0), a)
+    case _ => system.error("don't know how to generate code for: "+rhs)
+  }
+
+  def emitFatBlock(rhs: List[Exp[_]])(implicit stream: PrintWriter): Unit = {
+    emitBlock(Combine(rhs))
+  }
+
+  
+}
+
+
+
+
+trait ScalaGenFatLoops extends ScalaGenFatStuff {
+  val IR: FatLoopsExp
+  import IR._
+  
+  
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case FatLoop(s, x, rhs) => syms(s):::syms(rhs)
+    case _ => super.syms(e)
+  }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case FatLoop(s, x, rhs) => x
+    case _ => super.boundSyms(e)
+  }
+
+  override def fatten(defs: List[TP[_]]) = defs map { // TODO: reorg to call super
+    case e @ TP(sym, LoopArray(s,x,y)) => TTP(List(sym), FatLoop(s,List(x),List(ArrayElem(y))))
+    case e @ TP(sym, LoopReduce(s,x,y)) => TTP(List(sym), FatLoop(s,List(x),List(ReduceElem(y))))
+    case TP(sym, rhs) => TTP(List(sym), ThinDef(rhs))
+  }
+  
+  override def emitFatNode(sym: List[Sym[_]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
     case FatLoop(s,x,rhs) => 
       for ((l,r) <- sym zip rhs) {
         r match {
@@ -406,14 +306,167 @@ trait ScalaGenLoopsFusionOpt extends ScalaGenLoops with Fusion {
       }
 //      stream.println(quote(ii)+" += 1")
       stream.println("}")
-    case ThinDef(a) => emitNode(sym(0), a)
-    case _ => error("don't know how to generate code for: "+rhs)
-  }
+    case _ => super.emitFatNode(sym, rhs)
+  }  
+}
 
-  def emitFatBlock(rhs: List[Exp[_]])(implicit stream: PrintWriter): Unit = {
-    emitBlock(Combine(rhs))
-  }
 
+
+trait ScalaGenFatLoopsFusionOpt extends ScalaGenFatLoops with ScalaGenLoops with 
+    TransformingStuff with FatTransforming with Fusion with FatScheduling {
+  val IR: FatLoopsExp with ArithExp with PrintExp  // TODO: refactor
+  import IR._  
+  
+
+  override def focusExactScopeFat[A](currentScope0: List[TTP])(result0: Exp[_])(body: List[TTP] => A): A = {
+    var result: Exp[_] = result0
+    var currentScope = currentScope0
+
+    // find loops at current top level
+    var Wloops = super.focusExactScopeFat(currentScope)(result) { levelScope => 
+      levelScope collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
+    }
+    
+    // FIXME: more than one super call means exponential cost -- is there a better way?
+    // ---> implicit memoization or explicit data structure
+    
+    if (Wloops.nonEmpty) {
+      var done = false
+
+      do {
+        // utils
+        def WgetLoopVar(e: TTP): List[Sym[Int]] = e.rhs match { case FatLoop(s,x,rhs) => x }
+        def WgetLoopRes(e: TTP): List[Def[_]] = e.rhs match { case FatLoop(s,x,rhs) => rhs }
+
+        val loopSyms = Wloops flatMap (_.lhs)
+        val loopVars = Wloops flatMap WgetLoopVar
+
+        val WloopSyms = Wloops map (_.lhs)
+        val WloopVars = Wloops map WgetLoopVar
+
+        
+        // find negative dependencies (those that block fusion)
+        
+        val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies
+          val otherLoopSyms = loopSyms diff (dx.lhs)
+          getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
+            case TTP(_, ThinDef(ArrayIndex(a, i))) if (WgetLoopVar(dx) contains i) =>
+              Nil
+            case sc =>
+              syms(sc.rhs).intersect(otherLoopSyms).flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
+          }
+        }.distinct
+      
+        println("wtableneg: " + WtableNeg)
+        
+        
+        // partitioning: build maximal sets of loops to be fused
+        
+        def canFuse(a: TTP, b: TTP): Boolean = {
+          val cartesian = a.lhs.flatMap(x=>b.lhs.flatMap(y=>List((x,y),(y,x))))
+          (WtableNeg intersect cartesian).isEmpty
+        }
+
+      
+        val t = new Traverser
+
+        var partitionsIn = Wloops
+        var partitionsOut = Nil:List[TTP]
+      
+        for (b <- partitionsIn) {
+          // try to add to an item in partitionsOut, if not possible add as-is
+          partitionsOut.find(a => canFuse(a,b)) match {
+            case Some(a) => 
+              val shape = a.rhs match { case FatLoop(s,_,_) => s } // TODO!
+              val targetVar = WgetLoopVar(a)(0)
+              //currentScope = currentScope ::: (WgetLoopVar(b) map (v => TTP(List(v), ThinDef(Copy(targetVar))))) // TODO: maybe not here?
+              for (w <- WgetLoopVar(b))
+                t.subst(w) = targetVar
+              
+              val fused = TTP(a.lhs:::b.lhs, FatLoop(shape, List(targetVar), WgetLoopRes(a):::WgetLoopRes(b)))
+              partitionsOut = fused :: (partitionsOut diff List(a))
+            case None => partitionsOut = b::partitionsOut
+          }
+        }
+      
+        println("partitions: " + partitionsOut)
+      
+      
+        // actually do the fusion: 
+      
+        if ((partitionsOut intersect partitionsIn) != partitionsOut) {
+
+          //currentScope = currentScope diff Wloops
+          //Wloops = partitionsOut
+          //currentScope = currentScope ::: Wloops
+          
+          // equalize loop variables (TODO!)
+
+          // within fused loops, remove accesses to outcomes of the fusion
+
+          //currentScope = currentScope.map { // a(i) where a = Loop { i => ... } (remove those!)
+          currentScope.foreach {
+            case e@TTP(List(s), ThinDef(ArrayIndex(a, i))) =>
+              println("considering " + e)
+              partitionsOut.find(_.lhs contains a) match {
+                case Some(fused) if WgetLoopVar(fused) contains t(i) => 
+                  val index = fused.lhs.indexOf(a)
+                  
+                  println("replace " + e + " at " + index + " within " + fused)
+
+                  val rhs = WgetLoopRes(fused)(index) match { case ArrayElem(y) => y }
+                  
+                  t.subst(s) = rhs
+                case _ => //e
+              }
+            case _ => //e
+          }
+          
+          currentScope = getFatSchedule(currentScope)(result) // clean things up!
+
+          // SIMPLIFY!
+          
+          currentScope = foobar(t)(currentScope)
+          result = t(result)
+          currentScope = getFatSchedule(currentScope)(result) // clean things up!
+
+          currentScope = foobar(t)(currentScope)
+          result = t(result)
+          currentScope = getFatSchedule(currentScope)(result) // clean things up!
+          
+          //Wloops = currentScope collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
+
+          Wloops = foobar(t)(partitionsOut)
+          
+          println("try once more ...")
+        } else {
+          println("no changes, we're done")
+          done = true
+        }
+      
+      } while (!done)
+     
+      
+      // prune Wloops (some might be no longer necessary!)
+      Wloops = Wloops map {
+        case TTP(lhs, FatLoop(s, x, rhs)) =>
+          val ex = lhs map (s => currentScope exists (_.lhs == List(s)))
+          def select[A](a: List[A], b: List[Boolean]) = (a zip b) collect { case (w, true) => w }
+          TTP(select(lhs, ex), FatLoop(s, x, select(rhs, ex)))
+      }
+      
+      // FIXME: don't throw out all loops, might have some that are *not* in levelScope
+      currentScope = currentScope.filter { case TTP(_, FatLoop(_,_,_)) => false case _ => true } ::: Wloops
+
+      // schedule and emit
+      currentScope = getFatSchedule(currentScope)(result) // clean things up!
+     
+    }
+
+
+    // do what super does ...
+    super.focusExactScopeFat(currentScope)(result)(body)
+  }
 
 }
 
@@ -458,7 +511,7 @@ class TestFusion extends FileDiffSuite {
   def testFusion1 = {
     withOutFile(prefix+"fusion1") {
       new FusionProg with ArithExp with LoopsExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenLoops with ScalaGenPrint with Fusion { val IR: self.type = self }
+        val codegen = new ScalaGenLoops with ScalaGenArith with ScalaGenPrint with Fusion { val IR: self.type = self }
         codegen.emitScalaSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -467,8 +520,9 @@ class TestFusion extends FileDiffSuite {
 
   def testFusion2 = {
     withOutFile(prefix+"fusion2") {
-      new FusionProg with ArithExp with LoopsExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenLoopsFusionOpt with ScalaGenPrint with Fusion { val IR: self.type = self }
+      // LoopsExp2 with ArithExp with PrintExp with FatStuffExp
+      new FusionProg with ArithExp with LoopsExp with PrintExp with FatLoopsExp { self =>
+        val codegen = new ScalaGenFatLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with Fusion { val IR: self.type = self }
         codegen.emitScalaSource(test, "Test", new PrintWriter(System.out))
       }
     }
