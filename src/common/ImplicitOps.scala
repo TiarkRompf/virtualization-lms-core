@@ -17,7 +17,9 @@ trait ImplicitOps extends Base {
 trait ImplicitOpsExp extends ImplicitOps with BaseExp {
   case class ImplicitConvert[X,Y](x: Exp[X])(implicit val mX: Manifest[X], val mY: Manifest[Y]) extends Def[Y]
 
-  def implicit_convert[X,Y](x: Exp[X])(implicit c: X => Y, mX: Manifest[X], mY: Manifest[Y]) : Rep[Y] = ImplicitConvert[X,Y](x)
+  def implicit_convert[X,Y](x: Exp[X])(implicit c: X => Y, mX: Manifest[X], mY: Manifest[Y]) : Rep[Y] = {
+    if (mX == mY) x.asInstanceOf[Rep[Y]] else ImplicitConvert[X,Y](x)
+  }
 
 }
 

@@ -53,6 +53,10 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
   import IR._
  
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    /**
+     * IfThenElse generates methods for each branch due to empirically discovered performance issues in the JVM
+     * when generating long blocks of straight-line code in each branch.
+     */
     case IfThenElse(c,a,b) =>
       stream.println("val " + quote(sym) + " = {")
       stream.println("def " + quote(sym) + "thenb() = {")
