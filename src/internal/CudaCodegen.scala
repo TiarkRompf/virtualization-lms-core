@@ -88,6 +88,7 @@ trait CudaCodegen extends GenericCodegen {
     //TODO: Put all the DELITE APIs declarations somewhere
     hstream.print("#include \"VectorImpl.h\"\n")
     hstream.print("#include \"MatrixImpl.h\"\n")
+    hstream.print("#include \"RangeVectorImpl.h\"\n")
     hstream.print("#include <iostream>\n")
     hstream.print("#include <jni.h>\n\n")
     hstream.print("//Delite Runtime APIs\n")
@@ -368,36 +369,71 @@ trait CudaCodegen extends GenericCodegen {
     val typeStr = remap(sym.Type.typeArguments(0))
     val numBytesStr = "%s.length * sizeof(%s)".format(quote(sym),remap(sym.Type.typeArguments(0)))
 
-    // Get class, method ID and set the fields other than data
-    out.append("\t%s %s;\n".format(remap(sym.Type),quote(sym)))
+    // Get class, method ID
     out.append("\tjclass cls = env->GetObjectClass(obj);\n")
     out.append("\tjmethodID mid_length = env->GetMethodID(cls,\"length\",\"()I\");\n")
-    out.append("\tjmethodID mid_is_row = env->GetMethodID(cls,\"is_row\",\"()Z\");\n")
-    out.append("\t%s.length = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
-    out.append("\t%s.is_row = %s;\n".format(quote(sym),"env->CallBooleanMethod(obj,mid_is_row)"))
+    out.append("\tjmethodID mid_isRow = env->GetMethodID(cls,\"isRow\",\"()Z\");\n")
 
-    // Get data(array) from scala data structure
-    out.append("\tjmethodID mid_data = env->GetMethodID(cls,\"data\",\"()[%s\");\n".format(JNITypeDescriptor(sym.Type.typeArguments(0))))
-    out.append("\tj%sArray data = (j%sArray)(%s);\n".format(typeStr,typeStr,"env->CallObjectMethod(obj,mid_data)"))
-    out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical(data,0);\n".format(typeStr,typeStr))
-
+	out.append("\tjclass rangeCls = env->FindClass(\"generated/scala/RangeVectorImpl\");\n");
+	out.append("\tjboolean isRangeCls = env->IsInstanceOf(obj,rangeCls);\n");
+	
+	// If this is not RangeVector
+	out.append("\tif(!isRangeCls) {\n");
+    out.append("\t\t%s %s;\n".format(remap(sym.Type),quote(sym)))
+    out.append("\t\t%s.length = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
+    out.append("\t\t%s.isRow = %s;\n".format(quote(sym),"env->CallBooleanMethod(obj,mid_isRow)"))
+    out.append("\t\tjmethodID mid_data = env->GetMethodID(cls,\"data\",\"()[%s\");\n".format(JNITypeDescriptor(sym.Type.typeArguments(0))))
+    out.append("\t\tj%sArray data = (j%sArray)(%s);\n".format(typeStr,typeStr,"env->CallObjectMethod(obj,mid_data)"))
+    out.append("\t\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical(data,0);\n".format(typeStr,typeStr))
     // Allocate pinned-memory and device memory
-    out.append("\t%s *hostPtr;\n".format(typeStr))
-    out.append("\tDeliteCudaMallocHost((void**)%s,%s);\n".format("&hostPtr",numBytesStr))
-    out.append("\t%s *devPtr;\n".format(typeStr))
-    out.append("\tDeliteCudaMalloc((void**)%s,%s);\n".format("&devPtr",numBytesStr))
-
+    out.append("\t\t%s *hostPtr;\n".format(typeStr))
+    out.append("\t\tDeliteCudaMallocHost((void**)%s,%s);\n".format("&hostPtr",numBytesStr))
+    out.append("\t\t%s *devPtr;\n".format(typeStr))
+    out.append("\t\tDeliteCudaMalloc((void**)%s,%s);\n".format("&devPtr",numBytesStr))
     // Copy twice (hostMem->pinnedHostMem, pinnedHostMem->devMem)
-    out.append("\tmemcpy(%s, %s, %s);\n".format("hostPtr","dataPtr",numBytesStr))
-    out.append("\tDeliteCudaMemcpyHtoDAsync(%s, %s, %s);\n".format("devPtr","hostPtr",numBytesStr))
-
+    out.append("\t\tmemcpy(%s, %s, %s);\n".format("hostPtr","dataPtr",numBytesStr))
+    out.append("\t\tDeliteCudaMemcpyHtoDAsync(%s, %s, %s);\n".format("devPtr","hostPtr",numBytesStr))
     // Store the device pointer to the C data structure
-    out.append("\t%s.data = %s;\n".format(quote(sym),"devPtr"))
-
+    out.append("\t\t%s.data = %s;\n".format(quote(sym),"devPtr"))
     // Release
-    out.append("\tenv->ReleasePrimitiveArrayCritical(data, dataPtr, 0);\n")
+    out.append("\t\tenv->ReleasePrimitiveArrayCritical(data, dataPtr, 0);\n")
+    out.append("\t\treturn %s;\n".format(quote(sym)))
+	out.append("\t}\n")
 
-    out.append("\treturn %s;\n".format(quote(sym)))
+	// If this is RangeVector
+	out.append("\telse {\n");
+    out.append("\t\t%s %s;\n".format(remap(sym.Type),quote(sym)))
+    out.append("\t\t%s.length = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
+    out.append("\t\t%s.isRow = %s;\n".format(quote(sym),"env->CallBooleanMethod(obj,mid_isRow)"))
+    out.append("\t\tjmethodID mid_data = env->GetMethodID(cls,\"data\",\"()[%s\");\n".format(JNITypeDescriptor(sym.Type.typeArguments(0))))
+    out.append("\t\t%s *hostPtr;\n".format(typeStr))
+    out.append("\t\tDeliteCudaMallocHost((void**)%s,%s);\n".format("&hostPtr",numBytesStr))
+    out.append("\t\t%s *devPtr;\n".format(typeStr))
+    out.append("\t\tDeliteCudaMalloc((void**)%s,%s);\n".format("&devPtr",numBytesStr))
+    out.append("\t\tjmethodID mid_start = env->GetMethodID(cls,\"start\",\"()I\");\n")
+    out.append("\t\tjmethodID mid_stride = env->GetMethodID(cls,\"stride\",\"()I\");\n")
+    out.append("\t\tint start = env->CallIntMethod(obj,mid_start);\n")
+    out.append("\t\tint stride = env->CallIntMethod(obj,mid_stride);\n")
+	out.append("\t\tfor(int i=0; i<%s.length; i++) {\n".format(quote(sym)))
+	out.append("\t\t\thostPtr[i] = start + i * stride;\n".format(quote(sym),quote(sym)))
+	out.append("\t\t}\n")
+    out.append("\t\tDeliteCudaMemcpyHtoDAsync(%s, %s, %s);\n".format("devPtr","hostPtr",numBytesStr))
+    out.append("\t\t%s.data = %s;\n".format(quote(sym),"devPtr"))
+    out.append("\t\treturn %s;\n".format(quote(sym)))
+	/*
+    out.append("\t\tRangeVector<%s> %s;\n".format(remap(sym.Type.typeArguments(0)),quote(sym)))
+    out.append("\t\tjmethodID mid_start = env->GetMethodID(cls,\"start\",\"()I\");\n")
+    out.append("\t\tjmethodID mid_end = env->GetMethodID(cls,\"end\",\"()I\");\n")
+    out.append("\t\tjmethodID mid_stride = env->GetMethodID(cls,\"stride\",\"()I\");\n")
+    out.append("\t\t%s.start = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_start)"))
+    out.append("\t\t%s.end = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_end)"))
+    out.append("\t\t%s.stride = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_stride)"))
+    out.append("\t\t%s.length = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
+    out.append("\t\t%s.isRow = %s;\n".format(quote(sym),"env->CallBooleanMethod(obj,mid_isRow)"))
+    out.append("\t\treturn (%s)%s;\n".format(remap(sym.Type),quote(sym)))
+	*/
+	out.append("\t}\n")
+
     out.toString
 
   }
@@ -455,7 +491,7 @@ trait CudaCodegen extends GenericCodegen {
     out.append("\tif(manifest==NULL) std::cout << \"manifest object NOT found\" << std::endl;\n")
     out.append("\tjmethodID mid = env->GetMethodID(cls,\"<init>\",\"(IZLscala/reflect/ClassManifest;)V\");\n")
     out.append("\tif(mid==NULL) std::cout << \"constructor NOT found\" << std::endl;\n")
-    out.append("\tjobject obj = env->NewObject(cls,mid,%s.length,%s.is_row,manifest);\n".format(quote(sym),quote(sym)))
+    out.append("\tjobject obj = env->NewObject(cls,mid,%s.length,%s.isRow,manifest);\n".format(quote(sym),quote(sym)))
     out.append("\tif(obj==NULL) std::cout << \"new object NOT created\" << std::endl;\n")
 
     // Allocate pinned-memory
@@ -549,7 +585,7 @@ trait CudaCodegen extends GenericCodegen {
     out.append("\t%s *devPtr;\n".format(remap(newSym.Type.typeArguments(0))))
     out.append("\tDeliteCudaMalloc((void**)%s,%s*sizeof(%s));\n".format("&devPtr",length,remap(newSym.Type.typeArguments(0))))
     out.append("\t%s.length = %s;\n".format(quote(newSym),length))
-    out.append("\t%s.is_row = %s;\n".format(quote(newSym),isRow))
+    out.append("\t%s.isRow = %s;\n".format(quote(newSym),isRow))
     out.append("\t%s.data = devPtr;\n".format(quote(newSym)))
     out.append("\treturn %s;\n".format(quote(newSym)))
     out.append("}\n")
@@ -566,7 +602,7 @@ trait CudaCodegen extends GenericCodegen {
     helperFuncString.append(out.toString)
   }    
   def emitVectorAllocSym(newSym:Sym[_], sym:Sym[_]): Unit = {
-    emitVectorAlloc(newSym, quote(sym)+".length", quote(sym)+".is_row")
+    emitVectorAlloc(newSym, quote(sym)+".length", quote(sym)+".isRow")
   }
 
   def emitMatrixAlloc(newSym:Sym[_], numRows:String, numCols:String): Unit = {
