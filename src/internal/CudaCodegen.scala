@@ -88,7 +88,7 @@ trait CudaCodegen extends GenericCodegen {
     //TODO: Put all the DELITE APIs declarations somewhere
     hstream.print("#include \"VectorImpl.h\"\n")
     hstream.print("#include \"MatrixImpl.h\"\n")
-    hstream.print("#include \"RangeVectorImpl.h\"\n")
+    //hstream.print("#include \"RangeVectorImpl.h\"\n")
     hstream.print("#include <iostream>\n")
     hstream.print("#include <jni.h>\n\n")
     hstream.print("//Delite Runtime APIs\n")
