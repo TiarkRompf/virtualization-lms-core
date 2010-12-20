@@ -405,7 +405,6 @@ trait CudaCodegen extends GenericCodegen {
     out.append("\t\t%s %s;\n".format(remap(sym.Type),quote(sym)))
     out.append("\t\t%s.length = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
     out.append("\t\t%s.isRow = %s;\n".format(quote(sym),"env->CallBooleanMethod(obj,mid_isRow)"))
-    out.append("\t\tjmethodID mid_data = env->GetMethodID(cls,\"data\",\"()[%s\");\n".format(JNITypeDescriptor(sym.Type.typeArguments(0))))
     out.append("\t\t%s *hostPtr;\n".format(typeStr))
     out.append("\t\tDeliteCudaMallocHost((void**)%s,%s);\n".format("&hostPtr",numBytesStr))
     out.append("\t\t%s *devPtr;\n".format(typeStr))
