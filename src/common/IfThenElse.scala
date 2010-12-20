@@ -87,22 +87,29 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
       rhs match {
         case IfThenElse(c,a,b) =>
-            stream.println(addTab() + "if (" + quote(c) + ") {")
-            tabWidth += 1
-            addVarLink(getBlockResult(a).asInstanceOf[Sym[_]],sym)
-            emitBlock(a)
-            removeVarLink(getBlockResult(a).asInstanceOf[Sym[_]],sym)
-            //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
-            tabWidth -= 1
-            stream.println(addTab() + "} else {")
-            tabWidth += 1
-            addVarLink(getBlockResult(b).asInstanceOf[Sym[_]],sym)
-            emitBlock(b)
-            removeVarLink(getBlockResult(b).asInstanceOf[Sym[_]],sym)
-            //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
-            tabWidth -= 1
-            stream.println(addTab()+"}")
-            allocOutput(sym,getBlockResult(a).asInstanceOf[Sym[_]])
+          // TODO: Not GPUable if the result is not primitive types.
+          // TODO: Changing the reference of the output is dangerous in general.
+          // TODO: In the future, consider passing the object references to the GPU kernels rather than copying by value.
+          // Below is a safety check related to changing the output reference of the kernel.
+          // This is going to be changed when above TODOs are done.
+          //if( (sym==kernelSymbol) && (isObjectType(sym.Type)) ) throw new RuntimeException("CudaGen: Changing the reference of output is not allowed within GPU kernel.")
+
+          stream.println(addTab() + "if (" + quote(c) + ") {")
+          tabWidth += 1
+          addVarLink(getBlockResult(a).asInstanceOf[Sym[_]],sym)
+          emitBlock(a)
+          removeVarLink(getBlockResult(a).asInstanceOf[Sym[_]],sym)
+          //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
+          tabWidth -= 1
+          stream.println(addTab() + "} else {")
+          tabWidth += 1
+          addVarLink(getBlockResult(b).asInstanceOf[Sym[_]],sym)
+          emitBlock(b)
+          removeVarLink(getBlockResult(b).asInstanceOf[Sym[_]],sym)
+          //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
+          tabWidth -= 1
+          stream.println(addTab()+"}")
+          allocReference(sym,getBlockResult(a).asInstanceOf[Sym[_]])
         
         case _ => super.emitNode(sym, rhs)
       }

@@ -27,11 +27,28 @@ trait CudaCodegen extends GenericCodegen {
 
   var helperFuncString:StringBuilder = null
   var hstream: PrintWriter = null
+  var devFuncString:StringBuilder = null
+  var devStream: PrintWriter = null
   var headerStream: PrintWriter = null
 
   // MetaData structure
   override def hasMetaData: Boolean = true
   override def getMetaData: String = MetaData.toString
+
+
+  def emitDevFunc(func:Exp[Any], outType: Manifest[_], inputs:List[Exp[Any]]) {
+    val tempString = new StringWriter
+    val tempStream = new PrintWriter(tempString, true)
+    val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
+    val currentTab = tabWidth
+    tempStream.println("__device__ %s dev_%s(%s) {".format(remap(outType),quote(func),paramStr))
+    tabWidth = 1
+    emitBlock(func)(tempStream)
+    tempStream.println(addTab()+"return %s;".format(quote(getBlockResult(func))))
+    tempStream.println("}")
+    tabWidth = currentTab
+    devFuncString.append(tempString)
+  }
 
   object MetaData {
     var gpuBlockSizeX: String = ""
@@ -82,6 +99,8 @@ trait CudaCodegen extends GenericCodegen {
     //val outDir = new File(buildPath); outDir.mkdirs()
     helperFuncString = new StringBuilder
     hstream = new PrintWriter(new FileWriter(build_dir + "helperFuncs.cu"))
+    devFuncString = new StringBuilder
+    devStream = new PrintWriter(new FileWriter(build_dir+"devFucns.cu"))
     headerStream = new PrintWriter(new FileWriter(build_dir + "dsl.h"))
     headerStream.println("#include \"helperFuncs.cu\"")
 
@@ -169,17 +188,17 @@ trait CudaCodegen extends GenericCodegen {
   }
   
   // HashMap for DSL Data structure information (map to specific functions)
-  val DSLDataType = HashMap[String,(Sym[_]=>String,Sym[_]=>String,(Sym[_],Sym[_])=>Unit)](
-    "ppl.dsl.optiml.datastruct.scala.Matrix[Int]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
-    "ppl.dsl.optiml.datastruct.scala.Matrix[Long]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
-    "ppl.dsl.optiml.datastruct.scala.Matrix[Float]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
-    "ppl.dsl.optiml.datastruct.scala.Matrix[Double]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
-    "ppl.dsl.optiml.datastruct.scala.Matrix[Boolean]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym),
-    "ppl.dsl.optiml.datastruct.scala.Vector[Int]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
-    "ppl.dsl.optiml.datastruct.scala.Vector[Long]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
-    "ppl.dsl.optiml.datastruct.scala.Vector[Float]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
-    "ppl.dsl.optiml.datastruct.scala.Vector[Double]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym),
-    "ppl.dsl.optiml.datastruct.scala.Vector[Boolean]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym)
+  val DSLDataType = HashMap[String,(Sym[_]=>String,Sym[_]=>String,(Sym[_],Sym[_])=>Unit,(Sym[_],Sym[_])=>Unit)](
+    "ppl.dsl.optiml.datastruct.scala.Matrix[Int]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym, emitMatrixAllocRef),
+    "ppl.dsl.optiml.datastruct.scala.Matrix[Long]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym, emitMatrixAllocRef),
+    "ppl.dsl.optiml.datastruct.scala.Matrix[Float]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym, emitMatrixAllocRef),
+    "ppl.dsl.optiml.datastruct.scala.Matrix[Double]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym, emitMatrixAllocRef),
+    "ppl.dsl.optiml.datastruct.scala.Matrix[Boolean]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym, emitMatrixAllocRef),
+    "ppl.dsl.optiml.datastruct.scala.Vector[Int]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym, emitVectorAllocRef),
+    "ppl.dsl.optiml.datastruct.scala.Vector[Long]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym, emitVectorAllocRef),
+    "ppl.dsl.optiml.datastruct.scala.Vector[Float]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym, emitVectorAllocRef),
+    "ppl.dsl.optiml.datastruct.scala.Vector[Double]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym, emitVectorAllocRef),
+    "ppl.dsl.optiml.datastruct.scala.Vector[Boolean]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym, emitVectorAllocRef)
   )
 
   def isObjectType(m: Manifest[_]): Boolean = {
@@ -206,6 +225,15 @@ trait CudaCodegen extends GenericCodegen {
   def allocOutput(newSym: Sym[_], sym: Sym[_]) : Unit = {
     if(isObjectType(sym.Type)) {
       DSLDataType.get(sym.Type.toString).get._3(newSym, sym)
+    }
+    else {
+      // TODO: What to do if this is called for primitive type?
+    }
+  }
+
+  def allocReference(newSym: Sym[_], sym: Sym[_]) : Unit = {
+    if(isObjectType(sym.Type)) {
+      DSLDataType.get(sym.Type.toString).get._4(newSym, sym)
     }
     else {
       // TODO: What to do if this is called for primitive type?
@@ -292,6 +320,10 @@ trait CudaCodegen extends GenericCodegen {
     // Print out dsl.h file
     headerStream.println("#include \"%s.cu\"".format(quote(sym)))
     headerStream.flush
+
+    // Print out device function
+    devStream.println(devFuncString)
+    devStream.flush
   }
 
   /*******************************************************
@@ -534,7 +566,7 @@ trait CudaCodegen extends GenericCodegen {
     out.append("int gpuBlockSizeX_%s(%s) {\n".format(quote(sym),paramStr))
     out.append("\tif(%s < 512) return %s;\n".format(gpuBlockSizeX, gpuBlockSizeX))
     out.append("\telse return 512;\n")
-    out.append("}")
+    out.append("}\n")
     MetaData.gpuBlockSizeX = "[\"gpuBlockSizeX_%s\",[%s]]".format(quote(sym),argStr)
 
     out.append("int gpuBlockSizeY_%s(%s) {\n".format(quote(sym),paramStr))
@@ -604,6 +636,27 @@ trait CudaCodegen extends GenericCodegen {
     emitVectorAlloc(newSym, quote(sym)+".length", quote(sym)+".isRow")
   }
 
+  def emitVectorAllocRef(newSym:Sym[_], sym:Sym[_]): Unit = {
+    val out = new StringBuilder
+    val paramStr = remap(sym.Type) + " " + quote(sym)
+    val argStr = quote(sym)
+
+    out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStr))
+    out.append("\t%s %s = %s;\n".format(remap(newSym.Type),quote(newSym),quote(sym)))
+    out.append("\treturn %s;\n".format(quote(newSym)))
+    out.append("}\n")
+
+    if(newSym == kernelSymbol) {
+      MetaData.gpuOutput = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s],\"gpuMemCopy_%s_%s\",[\"%s\",\"%s\"]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
+      out.append(emitCopyDtoH(newSym))
+    }
+    else {
+      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
+      gpuTemps = gpuTemps :+ newSym
+    }
+    helperFuncString.append(out.toString)
+  }
+
   def emitMatrixAlloc(newSym:Sym[_], numRows:String, numCols:String): Unit = {
     //TODO: Check if both symbols are Matrices
 
@@ -645,6 +698,27 @@ trait CudaCodegen extends GenericCodegen {
   }
   def emitMatrixAllocSym(newSym:Sym[_], sym:Sym[_]): Unit = {
     emitMatrixAlloc(newSym, quote(sym)+".numRows", quote(sym)+".numCols")
+  }
+
+  def emitMatrixAllocRef(newSym:Sym[_], sym:Sym[_]): Unit = {
+    val out = new StringBuilder
+    val paramStr = remap(sym.Type) + " " + quote(sym)
+    val argStr = quote(sym)
+
+    out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStr))
+    out.append("\t%s %s = %s;\n".format(remap(newSym.Type),quote(newSym),quote(sym)))
+    out.append("\treturn %s;\n".format(quote(newSym)))
+    out.append("}\n")
+
+    if(newSym == kernelSymbol) {
+      MetaData.gpuOutput = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s],\"gpuMemCopy_%s_%s\",[\"%s\",\"%s\"]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
+      out.append(emitCopyDtoH(newSym))
+    }
+    else {
+      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
+      gpuTemps = gpuTemps :+ newSym
+    }
+    helperFuncString.append(out.toString)
   }
 
 }
