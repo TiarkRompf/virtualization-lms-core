@@ -42,6 +42,7 @@ trait CudaCodegen extends GenericCodegen {
     var gpuInputs: ArrayList[String] = new ArrayList[String]
     var gpuOutput: String = ""
     var gpuTemps: ArrayList[String] = new ArrayList[String]
+    var gpuLibCall: String = ""
 
     def init = {
       gpuBlockSizeX = ""
@@ -52,6 +53,7 @@ trait CudaCodegen extends GenericCodegen {
       gpuInputs = new ArrayList[String]
       gpuOutput = ""
       gpuTemps = new ArrayList[String]
+      gpuLibCall = ""
     }
     
     override def toString: String = {
@@ -62,10 +64,11 @@ trait CudaCodegen extends GenericCodegen {
       out.append("\"gpuBlockSizeZ\":"+gpuBlockSizeZ+",")
       out.append("\"gpuDimSizeX\":"+gpuDimSizeX+",")
       out.append("\"gpuDimSizeY\":"+gpuDimSizeY+",")
-      out.append("\"gpuInputs\":" + gpuInputs.toString + ",")
+      out.append("\"gpuInputs\":"+gpuInputs.toString+",")
       if(gpuOutput == "") { println("ERROR:No Output for GPU?"); throw new Exception()}
       out.append("\"gpuOutput\":"+gpuOutput+",")
-      out.append("\"gpuTemps\":" + gpuTemps.toString)
+      out.append("\"gpuTemps\":"+gpuTemps.toString+",")
+      out.append("\"gpuLibCall\":"+gpuLibCall.toString)
       out.append("}")
       out.toString
     }
@@ -88,6 +91,7 @@ trait CudaCodegen extends GenericCodegen {
     //TODO: Put all the DELITE APIs declarations somewhere
     hstream.print("#include \"VectorImpl.h\"\n")
     hstream.print("#include \"MatrixImpl.h\"\n")
+    hstream.print("#include <cublas.h>\n")
     //hstream.print("#include \"RangeVectorImpl.h\"\n")
     hstream.print("#include <iostream>\n")
     hstream.print("#include <jni.h>\n\n")
@@ -374,11 +378,11 @@ trait CudaCodegen extends GenericCodegen {
     out.append("\tjmethodID mid_length = env->GetMethodID(cls,\"length\",\"()I\");\n")
     out.append("\tjmethodID mid_isRow = env->GetMethodID(cls,\"isRow\",\"()Z\");\n")
 
-	out.append("\tjclass rangeCls = env->FindClass(\"generated/scala/RangeVectorImpl\");\n");
-	out.append("\tjboolean isRangeCls = env->IsInstanceOf(obj,rangeCls);\n");
+	  out.append("\tjclass rangeCls = env->FindClass(\"generated/scala/RangeVectorImpl\");\n");
+	  out.append("\tjboolean isRangeCls = env->IsInstanceOf(obj,rangeCls);\n");
 	
-	// If this is not RangeVector
-	out.append("\tif(!isRangeCls) {\n");
+	  // If this is not RangeVector
+	  out.append("\tif(!isRangeCls) {\n");
     out.append("\t\t%s %s;\n".format(remap(sym.Type),quote(sym)))
     out.append("\t\t%s.length = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
     out.append("\t\t%s.isRow = %s;\n".format(quote(sym),"env->CallBooleanMethod(obj,mid_isRow)"))
@@ -398,10 +402,10 @@ trait CudaCodegen extends GenericCodegen {
     // Release
     out.append("\t\tenv->ReleasePrimitiveArrayCritical(data, dataPtr, 0);\n")
     out.append("\t\treturn %s;\n".format(quote(sym)))
-	out.append("\t}\n")
+	  out.append("\t}\n")
 
-	// If this is RangeVector
-	out.append("\telse {\n");
+	  // If this is RangeVector
+	  out.append("\telse {\n");
     out.append("\t\t%s %s;\n".format(remap(sym.Type),quote(sym)))
     out.append("\t\t%s.length = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
     out.append("\t\t%s.isRow = %s;\n".format(quote(sym),"env->CallBooleanMethod(obj,mid_isRow)"))
@@ -414,13 +418,13 @@ trait CudaCodegen extends GenericCodegen {
     out.append("\t\tjmethodID mid_stride = env->GetMethodID(cls,\"stride\",\"()I\");\n")
     out.append("\t\tint start = env->CallIntMethod(obj,mid_start);\n")
     out.append("\t\tint stride = env->CallIntMethod(obj,mid_stride);\n")
-	out.append("\t\tfor(int i=0; i<%s.length; i++) {\n".format(quote(sym)))
-	out.append("\t\t\thostPtr[i] = start + i * stride;\n".format(quote(sym),quote(sym)))
-	out.append("\t\t}\n")
+	  out.append("\t\tfor(int i=0; i<%s.length; i++) {\n".format(quote(sym)))
+	  out.append("\t\t\thostPtr[i] = start + i * stride;\n".format(quote(sym),quote(sym)))
+	  out.append("\t\t}\n")
     out.append("\t\tDeliteCudaMemcpyHtoDAsync(%s, %s, %s);\n".format("devPtr","hostPtr",numBytesStr))
     out.append("\t\t%s.data = %s;\n".format(quote(sym),"devPtr"))
     out.append("\t\treturn %s;\n".format(quote(sym)))
-	/*
+	  /*
     out.append("\t\tRangeVector<%s> %s;\n".format(remap(sym.Type.typeArguments(0)),quote(sym)))
     out.append("\t\tjmethodID mid_start = env->GetMethodID(cls,\"start\",\"()I\");\n")
     out.append("\t\tjmethodID mid_end = env->GetMethodID(cls,\"end\",\"()I\");\n")
@@ -431,8 +435,8 @@ trait CudaCodegen extends GenericCodegen {
     out.append("\t\t%s.length = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
     out.append("\t\t%s.isRow = %s;\n".format(quote(sym),"env->CallBooleanMethod(obj,mid_isRow)"))
     out.append("\t\treturn (%s)%s;\n".format(remap(sym.Type),quote(sym)))
-	*/
-	out.append("\t}\n")
+	  */
+	  out.append("\t}\n")
 
     out.toString
 
@@ -646,6 +650,33 @@ trait CudaCodegen extends GenericCodegen {
   }
   def emitMatrixAllocSym(newSym:Sym[_], sym:Sym[_]): Unit = {
     emitMatrixAlloc(newSym, quote(sym)+".numRows", quote(sym)+".numCols")
+  }
+
+  def emitLibCall(sym: Sym[_], stmts: List[String]) : Unit = {
+    val out = new StringBuilder
+
+    if(sym == kernelSymbol) {
+      // Emit code for library call function
+      val inputs = (gpuOutput :: gpuInputs)
+      val paramStr = inputs.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
+      if(inputs.length != 0)
+        out.append("void gpuLibCall_%s(%s,%s) {\n".format(quote(sym),paramStr,"cudaStream_t stream"))
+      else
+        out.append("void gpuLibCall_%s(%s) {\n".format(quote(sym),"cudaStream_t stream"))
+      
+      for(s <- stmts)
+        out.append("\t"+s+"\n")
+      out.append("}\n")
+      helperFuncString.append(out.toString)
+
+      // Add to metadata
+      //MetaData.gpuLibCall = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrTemp)
+      MetaData.gpuLibCall = "\"gpuLibCall_%s\"".format(quote(sym))
+    }
+    else {
+      throw new RuntimeException("CudaGen: Not GPUable (Only top-level node can use library call)")
+    }
+
   }
 
 }
