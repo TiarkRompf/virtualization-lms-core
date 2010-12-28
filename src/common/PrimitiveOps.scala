@@ -36,6 +36,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
 
   def infix_/(lhs: Rep[Int], rhs: Rep[Int]) = int_divide(lhs, rhs)
 
+
   def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A]) : Rep[A]
   def int_divide(lhs: Rep[Int], rhs: Rep[Int]) : Rep[Int]
 }
