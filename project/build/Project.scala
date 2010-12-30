@@ -34,7 +34,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info)
 
   val scalatest = "org.scalatest" % "scalatest" % "1.4-SNAPSHOT" % "test"
 
-  override def testClasspath = super.testClasspath +++ ("scalatest-1.2" / "scalatest-1.2.jar")
+//  override def testClasspath = super.testClasspath +++ ("scalatest-1.2" / "scalatest-1.2.jar")
 //  val scalac = "org.scala-lang" % "scala-compiler" % "2.8.0" % "test"
 //  val scala = "org.scala-lang" % "scala-library" % "2.8.0" % "test"
 
