@@ -14,7 +14,7 @@ object TestObject{
     println(c)
     println(a(1::1::Nil))
 
-    val it = iterateWithStep(3::3::3::Nil, 3::3::3::Nil, 1::2::2::Nil, 0::1::1::Nil, opName="test")
+    val it = iterateWithStep(3::3::3::Nil, false, 3::3::3::Nil, false, 1::2::2::Nil, 0::1::1::Nil, opName="test")
     for (i <- it)
       println(i)
 

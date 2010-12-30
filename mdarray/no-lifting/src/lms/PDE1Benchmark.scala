@@ -40,14 +40,14 @@ object PDE1Benchmark {
                Relax: (MDArray[Double], MDArray[Double], Double) => MDArray[Double],
                iter: Int): MDArray[Double] = {
 
-    def Where(mask: MDArray[Boolean], a: MDArray[Double], b: MDArray[Double]): MDArray[Double] = {
-      With().GenArray(shape(a), iv => {
-        if (mask(iv))
-          a(iv)
-        else
-          b(iv)
-      })
-    }
+//    def Where(mask: MDArray[Boolean], a: MDArray[Double], b: MDArray[Double]): MDArray[Double] = {
+//      With().GenArray(shape(a), iv => {
+//        if (mask(iv))
+//          a(iv)
+//        else
+//          b(iv)
+//      })
+//    }
 
     val red: MDArray[Boolean] = With(_lb = List(1, 0, 0), _step = List(2,1,1)).
       GenArray(shape(matrix), iv => true)
@@ -55,8 +55,8 @@ object PDE1Benchmark {
     var u = matrix
     val f = matrix
     for (i <- Stream.range(0, iter)) {
-      u = Where(red, Relax(u, f, 1d/10d), u)
-      u = Where(!red, Relax(u, f, 1d/10d), u)
+      u = where(red, Relax(u, f, 1d/10d), u)
+      u = where(!red, Relax(u, f, 1d/10d), u)
     }
     u
   }
@@ -135,3 +135,4 @@ object PDE1Benchmark {
     CombineInnerOuter(u1 * factor, u)
   }
 }
+

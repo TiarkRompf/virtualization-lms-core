@@ -51,13 +51,13 @@ object SpecificOperations {
     val result: Array[A] = new Array[A](a.content.length)
     for (i:Int <- List.range(0, a.content.length))
       result(i) = if (p.content()(i)) a.content()(i) else b.content()(i)
-    new MDArray(this.shape, result)
+    new MDArray(a.shape, result)
   }
 
   /** Iterating through array sizes */
   def iterateShape(maxBound: IndexVector, opName: String): Stream[IndexVector] = {
     if (any((maxBound - 1) < 0))
-      throw new Exception(opName+": Incorrect size of iterating array: " + maxBound)
+      throw new Exception(opName + ": Incorrect size of iterating array: " + maxBound)
     iterate(zeros(maxBound.content.length), (maxBound - 1), opName)
   }
 
@@ -65,7 +65,8 @@ object SpecificOperations {
   def iterate(lb: IndexVector, ub: IndexVector, opName: String) : Stream[IndexVector] = {
 
     def nextOp(crt: IndexVector): Stream[IndexVector] = {
-      val efficient = true
+      // XXX: Do not turn efficiency on until the lb deep copy is functional!
+      val efficient = false
       var result: Array[Int] = null
       var response: IndexVector = null
       var carry  = 1
@@ -75,8 +76,11 @@ object SpecificOperations {
       else
         result = new Array[Int](crt.content.length)
 
+//      // Check if lb is affected 
+//      println("lb = " + lb)
+
       for (i <- List.range(crt.content.length-1, -1, -1))
-        if (!(crt(i) + carry <= ub(i)))
+        if (crt(i) + carry > ub(i))
           result(i) = lb(i)
         else {
           result(i) = crt(i) + carry
@@ -95,20 +99,27 @@ object SpecificOperations {
     }
 
     if (any(lb > ub))
-      // TODO: Decide if it is okay to throw an exception here... maybe it's better to just return an empty stream
-      throw new Exception(opName + ": Lower bound components are greater than their counterparts in ub: lb:" +
-              lb + " ub:" + ub)
-      //Stream.empty
+      // TODO: Everyone must guard against empty streams
+      // DONE: Decide if it is okay to throw an exception here... maybe it's better to just return an empty stream
+      //throw new Exception(opName + ": Lower bound components are greater than their counterparts in ub: lb:" +
+      //        lb + " ub:" + ub)
+      Stream.empty
     else {
-      Stream.cons(new IndexVector(lb.content()), nextOp(lb))
+//      TODO: Do the correct deep copying, so that lb is not affected by the optimization (efficient = true)
+//      def deepCopy[A](a: A)(implicit m: reflect.Manifest[A]): A =
+//        util.Marshal.load[A](util.Marshal.dump(a))
+//      Stream.cons(new IndexVector(deepCopy(lb.content)), nextOp(lb))
+      Stream.cons(new IndexVector(lb.content), nextOp(lb))
     }
   }
 
   /** iteration with step and width */
-  def iterateWithStep(lb: IndexVector, ub: IndexVector, step: IndexVector, width: IndexVector, opName: String) : Stream[IndexVector] = {
+  def iterateWithStep(_lb: IndexVector, lbStrict: Boolean, _ub: IndexVector, ubStrict: Boolean, step: IndexVector, width: IndexVector, opName: String) : Stream[IndexVector] = {
 
     val useStep = any((step - 1) > width)
-    
+    val lb: IndexVector = if (lbStrict) _lb + 1 else _lb
+    val ub: IndexVector = if (ubStrict) _ub - 1 else _ub
+
     // Correctness checks
     if ((lb.content.length != ub.content.length) ||
         (lb.content.length != step.content.length) ||
@@ -121,7 +132,7 @@ object SpecificOperations {
     else {
       def filterStepWidth(baseIterator: Stream[IndexVector]): Stream[IndexVector] = {
         var iterator = baseIterator
-        while ((iterator != Stream.empty) && !(all((iterator.head rem step) <= width)))
+        while ((iterator != Stream.empty) && !(all(((iterator.head - _lb) rem step) <= width)))
           iterator = iterator.tail
         if (iterator == Stream.empty)
           Stream.empty

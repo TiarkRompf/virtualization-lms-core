@@ -18,6 +18,8 @@ class With(_lb: IndexVector = null,
       throw new Exception(opName + ": The index vector cannot be null!")
 
     var iterator = doIteration(shp, opName)
+    if (iterator == Stream.empty)
+      throw new Exception(opName + ": Empty with iteration")
 
     // 1. Create the array, for which we need the second shape:
     val firstIV = iterator.head
@@ -92,9 +94,6 @@ class With(_lb: IndexVector = null,
         }
     }
 
-    if (_lbStrict) lb = lb + 1
-    if (_ubStrict) ub = ub - 1    
-
     val step = _step match {
       case null => ones(lb.content.length)
       case _ => _step
@@ -106,7 +105,7 @@ class With(_lb: IndexVector = null,
     }
 
     // Create the iterator and implicitly check the sizes
-    iterateWithStep(lb, ub, step, width, opName)
+    iterateWithStep(lb, _lbStrict, ub, _ubStrict, step, width, opName)
   }
 
   private def modifyArray[A: ClassManifest](iterator: Stream[Operations.IndexVector],
