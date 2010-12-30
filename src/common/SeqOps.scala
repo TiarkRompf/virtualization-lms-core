@@ -15,7 +15,7 @@ trait SeqOps extends Variables {
   implicit def seqToRepSeqOps[T:Manifest](a: Seq[T]) = new RepSeqOpsCls(a)
 
   class RepSeqOpsCls[T:Manifest](a: Rep[Seq[T]]){
-    def apply(n: Rep[Int]) = seq_apply(a, n)
+    def apply(n: Rep[Int]) = seq_apply(a,n)
     def length = seq_length(a)
   }
 
@@ -30,8 +30,8 @@ trait SeqOpsExp extends SeqOps with EffectExp {
   case class SeqApply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int]) extends Def[T]
   
   def seq_new[A:Manifest](xs: Seq[Rep[A]]) = reflectEffect(SeqNew(xs))  
-  def seq_apply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int]): Rep[T] = SeqApply(x, n)
-  def seq_length[T:Manifest](a: Exp[Seq[T]]): Rep[Int] = SeqLength(a)
+  def seq_apply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int]): Exp[T] = SeqApply(x, n)
+  def seq_length[T:Manifest](a: Exp[Seq[T]]): Exp[Int] = SeqLength(a)
 }
 
 trait BaseGenSeqOps extends GenericNestedCodegen {
