@@ -3,7 +3,7 @@ package internal
 
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
-import collection.mutable.{LinkedList, HashMap}
+import collection.mutable.{ArrayBuffer, LinkedList, HashMap}
 
 trait CudaCodegen extends GenericCodegen {
   val IR: Expressions
@@ -17,6 +17,8 @@ trait CudaCodegen extends GenericCodegen {
   var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
   val varLink = HashMap[Sym[_], List[Sym[_]]]()
+
+  val devFuncList = ArrayBuffer[Exp[_]]()
   
   var gpuInputs:List[Sym[_]] = Nil
   var gpuOutput: Sym[_] = null
@@ -35,19 +37,22 @@ trait CudaCodegen extends GenericCodegen {
   override def hasMetaData: Boolean = true
   override def getMetaData: String = MetaData.toString
 
-
   def emitDevFunc(func:Exp[Any], outType: Manifest[_], inputs:List[Exp[Any]]) {
-    val tempString = new StringWriter
-    val tempStream = new PrintWriter(tempString, true)
-    val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
-    val currentTab = tabWidth
-    tempStream.println("__device__ %s dev_%s(%s) {".format(remap(outType),quote(func),paramStr))
-    tabWidth = 1
-    emitBlock(func)(tempStream)
-    tempStream.println(addTab()+"return %s;".format(quote(getBlockResult(func))))
-    tempStream.println("}")
-    tabWidth = currentTab
-    devFuncString.append(tempString)
+    // Check if this device function is already emitted
+    if( !devFuncList.contains(func)) {
+      val tempString = new StringWriter
+      val tempStream = new PrintWriter(tempString, true)
+      val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
+      val currentTab = tabWidth
+      tempStream.println("__device__ %s dev_%s(%s) {".format(remap(outType),quote(func),paramStr))
+      tabWidth = 1
+      emitBlock(func)(tempStream)
+      tempStream.println(addTab()+"return %s;".format(quote(getBlockResult(func))))
+      tempStream.println("}")
+      tabWidth = currentTab
+      devFuncString.append(tempString)
+      devFuncList.append(func)
+    }
   }
 
   object MetaData {
@@ -105,9 +110,7 @@ trait CudaCodegen extends GenericCodegen {
     headerStream.println("#include \"helperFuncs.cu\"")
 
     //TODO: Put all the DELITE APIs declarations somewhere
-    hstream.print("#include \"VectorImpl.h\"\n")
-    hstream.print("#include \"MatrixImpl.h\"\n")
-    //hstream.print("#include \"RangeVectorImpl.h\"\n")
+    hstream.print(getDSLHeaders)
     hstream.print("#include <iostream>\n")
     hstream.print("#include <jni.h>\n\n")
     hstream.print("//Delite Runtime APIs\n")
@@ -123,8 +126,6 @@ trait CudaCodegen extends GenericCodegen {
     // Conditions for not generating CUDA kernels (may be relaxed later)
     if(!isObjectType(sym.Type)) throw new RuntimeException("CudaGen: Not GPUable")
     if((vars.length > 0)  || (resultIsVar)) throw new RuntimeException("CudaGen: Not GPUable")
-
-
 
     // Initialize global variables
     helperFuncString.clear
@@ -186,58 +187,39 @@ trait CudaCodegen extends GenericCodegen {
     case "Boolean" => "Z"
     case _ => throw new Exception("Undefined CUDA type")
   }
-  
-  // HashMap for DSL Data structure information (map to specific functions)
-  val DSLDataType = HashMap[String,(Sym[_]=>String,Sym[_]=>String,(Sym[_],Sym[_])=>Unit,(Sym[_],Sym[_])=>Unit)](
-    "ppl.dsl.optiml.datastruct.scala.Matrix[Int]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym, emitMatrixAllocRef),
-    "ppl.dsl.optiml.datastruct.scala.Matrix[Long]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym, emitMatrixAllocRef),
-    "ppl.dsl.optiml.datastruct.scala.Matrix[Float]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym, emitMatrixAllocRef),
-    "ppl.dsl.optiml.datastruct.scala.Matrix[Double]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym, emitMatrixAllocRef),
-    "ppl.dsl.optiml.datastruct.scala.Matrix[Boolean]" -> (matrixCopyHtoD,matrixCopyDtoH,emitMatrixAllocSym, emitMatrixAllocRef),
-    "ppl.dsl.optiml.datastruct.scala.Vector[Int]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym, emitVectorAllocRef),
-    "ppl.dsl.optiml.datastruct.scala.Vector[Long]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym, emitVectorAllocRef),
-    "ppl.dsl.optiml.datastruct.scala.Vector[Float]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym, emitVectorAllocRef),
-    "ppl.dsl.optiml.datastruct.scala.Vector[Double]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym, emitVectorAllocRef),
-    "ppl.dsl.optiml.datastruct.scala.Vector[Boolean]" -> (vectorCopyHtoD,vectorCopyDtoH,emitVectorAllocSym, emitVectorAllocRef)
-  )
 
-  def isObjectType(m: Manifest[_]): Boolean = {
-    if(DSLDataType.contains(m.toString))
-      true
-    else
-      false
+  def isObjectType(m: Manifest[_]) : Boolean = remap(m) match {
+    case "int" => false
+    case "long" => false
+    case "float" => false
+    case "double" => false
+    case "bool" => false
+    case _ => throw new RuntimeException("CudaGen: isObjectType(m) : Unknown data type (%s)".format(remap(m)))
+  }
+
+  override def remap[A](m: Manifest[A]) : String = m.toString match {
+    case "Int" => "int"
+    case "Long" => "long"
+    case "Float" => "float"
+    case "Double" => "double"
+    case "Boolean" => "bool"
+    case _ => throw new RuntimeException("CudaGen: remap(m) : Unknown data type (%s)".format(m.toString))
   }
 
   def copyDataStructureHtoD(sym: Sym[_]) : String = {
-    if(isObjectType(sym.Type)) {
-      DSLDataType.get(sym.Type.toString).get._1(sym)
-    }
-    else ""
+    throw new RuntimeException("CudaGen: copyDataStructureHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.Type)))
   }
 
   def copyDataStructureDtoH(sym: Sym[_]) : String = {
-    if(isObjectType(sym.Type)) {
-      DSLDataType.get(sym.Type.toString).get._2(sym)
-    }
-    else ""
+    throw new RuntimeException("CudaGen: copyDataStructureDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
   }
 
   def allocOutput(newSym: Sym[_], sym: Sym[_]) : Unit = {
-    if(isObjectType(sym.Type)) {
-      DSLDataType.get(sym.Type.toString).get._3(newSym, sym)
-    }
-    else {
-      // TODO: What to do if this is called for primitive type?
-    }
+    throw new RuntimeException("CudaGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
   }
 
   def allocReference(newSym: Sym[_], sym: Sym[_]) : Unit = {
-    if(isObjectType(sym.Type)) {
-      DSLDataType.get(sym.Type.toString).get._4(newSym, sym)
-    }
-    else {
-      // TODO: What to do if this is called for primitive type?
-    }
+    throw new RuntimeException("CudaGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
   }
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
@@ -285,21 +267,20 @@ trait CudaCodegen extends GenericCodegen {
   }
   
   override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
-    
-    stream.println("#include <cuda.h>")
-    stream.println("#include \"VectorImpl.h\"")
-    stream.println("#include \"MatrixImpl.h\"")
-    stream.println("")
+    val out = new StringBuilder
+
+    out.append("#include <cuda.h>\n\n")
+    out.append(getDSLHeaders)
 
     val paramStr = new StringBuilder
     paramStr.append(gpuOutputStr)
     if(gpuInputs.length>0) paramStr.append(","+gpuInputsStr)  
     if(gpuTemps.length>0) paramStr.append(","+gpuTemps.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", "))
-    
-    stream.println("__global__ void kernel_%s(%s) {".format(quote(sym), paramStr.toString))
 
-    stream.println(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;")
-    //stream.println(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;")
+    out.append("__global__ void kernel_%s(%s) {\n".format(quote(sym), paramStr.toString))
+    out.append(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
+    //out.append(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;")
+    stream.print(out.toString)
   }
 
   override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
@@ -357,196 +338,6 @@ trait CudaCodegen extends GenericCodegen {
     out.toString
   }
 
-  def matrixCopyHtoD(sym: Sym[_]): String = {
-    val out = new StringBuilder
-    val typeStr = remap(sym.Type.typeArguments(0))
-    val numBytesStr = "%s.numRows * %s.numCols * sizeof(%s)".format(quote(sym),quote(sym),remap(sym.Type.typeArguments(0)))
-
-    // Get class, method ID and set the fields other than data
-    out.append("\t%s %s;\n".format(remap(sym.Type),quote(sym)))
-    out.append("\tjclass cls = env->GetObjectClass(obj);\n")
-    out.append("\tjmethodID mid_numRows = env->GetMethodID(cls,\"numRows\",\"()I\");\n")
-    out.append("\tjmethodID mid_numCols = env->GetMethodID(cls,\"numCols\",\"()I\");\n")
-    out.append("\t%s.numRows = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_numRows)"))
-    out.append("\t%s.numCols = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_numCols)"))
-
-    // Get data(array) from scala data structure
-    out.append("\tjmethodID mid_data = env->GetMethodID(cls,\"data\",\"()[%s\");\n".format(JNITypeDescriptor(sym.Type.typeArguments(0))))
-    out.append("\tj%sArray data = (j%sArray)(%s);\n".format(typeStr,typeStr,"env->CallObjectMethod(obj,mid_data)"))
-    out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical(data,0);\n".format(typeStr,typeStr))
-
-    // Allocate pinned-memory and device memory
-    out.append("\t%s *hostPtr;\n".format(typeStr))
-    out.append("\tDeliteCudaMallocHost((void**)%s,%s);\n".format("&hostPtr",numBytesStr))
-    out.append("\t%s *devPtr;\n".format(typeStr))
-    out.append("\tDeliteCudaMalloc((void**)%s,%s);\n".format("&devPtr",numBytesStr))
-
-    // Copy twice (hostMem->pinnedHostMem, pinnedHostMem->devMem)
-    out.append("\tmemcpy(%s, %s, %s);\n".format("hostPtr","dataPtr",numBytesStr))
-    out.append("\tDeliteCudaMemcpyHtoDAsync(%s, %s, %s);\n".format("devPtr","hostPtr",numBytesStr))
-
-    // Store the device pointer to the C data structure
-    out.append("\t%s.data = %s;\n".format(quote(sym),"devPtr"))
-
-    // Release
-    out.append("\tenv->ReleasePrimitiveArrayCritical(data, dataPtr, 0);\n")
-    
-    out.append("\treturn %s;\n".format(quote(sym)))
-    out.toString
-
-  }
-
-  def vectorCopyHtoD(sym: Sym[_]): String = {
-    val out = new StringBuilder
-    val typeStr = remap(sym.Type.typeArguments(0))
-    val numBytesStr = "%s.length * sizeof(%s)".format(quote(sym),remap(sym.Type.typeArguments(0)))
-
-    // Get class, method ID
-    out.append("\tjclass cls = env->GetObjectClass(obj);\n")
-    out.append("\tjmethodID mid_length = env->GetMethodID(cls,\"length\",\"()I\");\n")
-    out.append("\tjmethodID mid_isRow = env->GetMethodID(cls,\"isRow\",\"()Z\");\n")
-
-	out.append("\tjclass rangeCls = env->FindClass(\"generated/scala/RangeVectorImpl\");\n");
-	out.append("\tjboolean isRangeCls = env->IsInstanceOf(obj,rangeCls);\n");
-	
-	// If this is not RangeVector
-	out.append("\tif(!isRangeCls) {\n");
-    out.append("\t\t%s %s;\n".format(remap(sym.Type),quote(sym)))
-    out.append("\t\t%s.length = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
-    out.append("\t\t%s.isRow = %s;\n".format(quote(sym),"env->CallBooleanMethod(obj,mid_isRow)"))
-    out.append("\t\tjmethodID mid_data = env->GetMethodID(cls,\"data\",\"()[%s\");\n".format(JNITypeDescriptor(sym.Type.typeArguments(0))))
-    out.append("\t\tj%sArray data = (j%sArray)(%s);\n".format(typeStr,typeStr,"env->CallObjectMethod(obj,mid_data)"))
-    out.append("\t\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical(data,0);\n".format(typeStr,typeStr))
-    // Allocate pinned-memory and device memory
-    out.append("\t\t%s *hostPtr;\n".format(typeStr))
-    out.append("\t\tDeliteCudaMallocHost((void**)%s,%s);\n".format("&hostPtr",numBytesStr))
-    out.append("\t\t%s *devPtr;\n".format(typeStr))
-    out.append("\t\tDeliteCudaMalloc((void**)%s,%s);\n".format("&devPtr",numBytesStr))
-    // Copy twice (hostMem->pinnedHostMem, pinnedHostMem->devMem)
-    out.append("\t\tmemcpy(%s, %s, %s);\n".format("hostPtr","dataPtr",numBytesStr))
-    out.append("\t\tDeliteCudaMemcpyHtoDAsync(%s, %s, %s);\n".format("devPtr","hostPtr",numBytesStr))
-    // Store the device pointer to the C data structure
-    out.append("\t\t%s.data = %s;\n".format(quote(sym),"devPtr"))
-    // Release
-    out.append("\t\tenv->ReleasePrimitiveArrayCritical(data, dataPtr, 0);\n")
-    out.append("\t\treturn %s;\n".format(quote(sym)))
-	out.append("\t}\n")
-
-	// If this is RangeVector
-	out.append("\telse {\n");
-    out.append("\t\t%s %s;\n".format(remap(sym.Type),quote(sym)))
-    out.append("\t\t%s.length = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
-    out.append("\t\t%s.isRow = %s;\n".format(quote(sym),"env->CallBooleanMethod(obj,mid_isRow)"))
-    out.append("\t\t%s *hostPtr;\n".format(typeStr))
-    out.append("\t\tDeliteCudaMallocHost((void**)%s,%s);\n".format("&hostPtr",numBytesStr))
-    out.append("\t\t%s *devPtr;\n".format(typeStr))
-    out.append("\t\tDeliteCudaMalloc((void**)%s,%s);\n".format("&devPtr",numBytesStr))
-    out.append("\t\tjmethodID mid_start = env->GetMethodID(cls,\"start\",\"()I\");\n")
-    out.append("\t\tjmethodID mid_stride = env->GetMethodID(cls,\"stride\",\"()I\");\n")
-    out.append("\t\tint start = env->CallIntMethod(obj,mid_start);\n")
-    out.append("\t\tint stride = env->CallIntMethod(obj,mid_stride);\n")
-	out.append("\t\tfor(int i=0; i<%s.length; i++) {\n".format(quote(sym)))
-	out.append("\t\t\thostPtr[i] = start + i * stride;\n".format(quote(sym),quote(sym)))
-	out.append("\t\t}\n")
-    out.append("\t\tDeliteCudaMemcpyHtoDAsync(%s, %s, %s);\n".format("devPtr","hostPtr",numBytesStr))
-    out.append("\t\t%s.data = %s;\n".format(quote(sym),"devPtr"))
-    out.append("\t\treturn %s;\n".format(quote(sym)))
-	/*
-    out.append("\t\tRangeVector<%s> %s;\n".format(remap(sym.Type.typeArguments(0)),quote(sym)))
-    out.append("\t\tjmethodID mid_start = env->GetMethodID(cls,\"start\",\"()I\");\n")
-    out.append("\t\tjmethodID mid_end = env->GetMethodID(cls,\"end\",\"()I\");\n")
-    out.append("\t\tjmethodID mid_stride = env->GetMethodID(cls,\"stride\",\"()I\");\n")
-    out.append("\t\t%s.start = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_start)"))
-    out.append("\t\t%s.end = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_end)"))
-    out.append("\t\t%s.stride = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_stride)"))
-    out.append("\t\t%s.length = %s;\n".format(quote(sym),"env->CallIntMethod(obj,mid_length)"))
-    out.append("\t\t%s.isRow = %s;\n".format(quote(sym),"env->CallBooleanMethod(obj,mid_isRow)"))
-    out.append("\t\treturn (%s)%s;\n".format(remap(sym.Type),quote(sym)))
-	*/
-	out.append("\t}\n")
-
-    out.toString
-
-  }
-
-  def matrixCopyDtoH(sym: Sym[_]): String = {
-    val out = new StringBuilder
-    val typeStr = remap(sym.Type.typeArguments(0))
-    val numBytesStr = "%s.numRows * %s.numCols * sizeof(%s)".format(quote(sym),quote(sym),remap(sym.Type.typeArguments(0)))
-
-    // Allocate Scala object for the destination
-    out.append("\tjclass cls = env->FindClass(\"generated/scala/MatrixImpl\");\n")
-    out.append("\tif(cls==NULL) std::cout << \"class NOT found\" << std::endl;\n")
-    out.append("\tjmethodID manID = env->GetStaticMethodID(cls,\"getDoubleManifest\",\"()Lscala/reflect/ClassManifest;\");\n")
-    out.append("\tif(manID==NULL) std::cout << \"getDoubleManifest method NOT found\" << std::endl;\n")
-    out.append("\tjobject manifest = env->CallStaticObjectMethod(cls,manID);\n")
-    out.append("\tif(manifest==NULL) std::cout << \"manifest object NOT found\" << std::endl;\n")
-    out.append("\tjmethodID mid = env->GetMethodID(cls,\"<init>\",\"(IILscala/reflect/ClassManifest;)V\");\n")
-    out.append("\tif(mid==NULL) std::cout << \"constructor NOT found\" << std::endl;\n")
-    out.append("\tjobject obj = env->NewObject(cls,mid,%s.numRows,%s.numCols,manifest);\n".format(quote(sym),quote(sym)))
-    out.append("\tif(obj==NULL) std::cout << \"new object NOT created\" << std::endl;\n")
-
-    // Allocate pinned-memory
-    out.append("\t%s *hostPtr;\n".format(typeStr))
-    out.append("\tDeliteCudaMallocHost((void**)%s,%s);\n".format("&hostPtr",numBytesStr))
-
-    // Get data(array) of scala data structure
-    out.append("\tjmethodID mid_data = env->GetMethodID(cls,\"doubleData\",\"()[%s\");\n".format(JNITypeDescriptor(sym.Type.typeArguments(0))))
-    out.append("\tif(mid_data==NULL) std::cout << \"data access method NOT found\" << std::endl;\n")
-    out.append("\tj%sArray data = (j%sArray)(%s);\n".format(typeStr,typeStr,"env->CallObjectMethod(obj,mid_data)"))
-    out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical(data,0);\n".format(typeStr,typeStr))
-    out.append("\tif(dataPtr==NULL) std::cout << \"GetPrimitiveArrayCritical call failed\" << std::endl;\n")
-
-    // Copy twice (devMem->pinnedHostMem, pinnedHostMem->hostMem)
-    out.append("\tDeliteCudaMemcpyDtoHAsync(%s, %s.data, %s);\n".format("hostPtr",quote(sym),numBytesStr))
-    out.append("\tmemcpy(%s, %s, %s);\n".format("dataPtr","hostPtr",numBytesStr))
-
-    // Release
-    out.append("\tenv->ReleasePrimitiveArrayCritical(data, dataPtr, 0);\n")
-
-    out.append("\treturn obj;\n")
-    out.toString
-  }
-
-  def vectorCopyDtoH(sym: Sym[_]): String = {
-    val out = new StringBuilder
-    val typeStr = remap(sym.Type.typeArguments(0))
-    val numBytesStr = "%s.length * sizeof(%s)".format(quote(sym),remap(sym.Type.typeArguments(0)))
-
-    // Allocate Scala object for the destination
-    out.append("\tjclass cls = env->FindClass(\"generated/scala/VectorImpl\");\n")
-    out.append("\tif(cls==NULL) std::cout << \"class NOT found\" << std::endl;\n")
-    out.append("\tjmethodID manID = env->GetStaticMethodID(cls,\"getDoubleManifest\",\"()Lscala/reflect/ClassManifest;\");\n")
-    out.append("\tif(manID==NULL) std::cout << \"getDoubleManifest method NOT found\" << std::endl;\n")
-    out.append("\tjobject manifest = env->CallStaticObjectMethod(cls,manID);\n")
-    out.append("\tif(manifest==NULL) std::cout << \"manifest object NOT found\" << std::endl;\n")
-    out.append("\tjmethodID mid = env->GetMethodID(cls,\"<init>\",\"(IZLscala/reflect/ClassManifest;)V\");\n")
-    out.append("\tif(mid==NULL) std::cout << \"constructor NOT found\" << std::endl;\n")
-    out.append("\tjobject obj = env->NewObject(cls,mid,%s.length,%s.isRow,manifest);\n".format(quote(sym),quote(sym)))
-    out.append("\tif(obj==NULL) std::cout << \"new object NOT created\" << std::endl;\n")
-
-    // Allocate pinned-memory
-    out.append("\t%s *hostPtr;\n".format(typeStr))
-    out.append("\tDeliteCudaMallocHost((void**)%s,%s);\n".format("&hostPtr",numBytesStr))
-
-    // Get data(array) of scala data structure
-    out.append("\tjmethodID mid_data = env->GetMethodID(cls,\"doubleData\",\"()[%s\");\n".format(JNITypeDescriptor(sym.Type.typeArguments(0))))
-    out.append("\tif(mid_data==NULL) std::cout << \"data access method NOT found\" << std::endl;\n")
-    out.append("\tj%sArray data = (j%sArray)(%s);\n".format(typeStr,typeStr,"env->CallObjectMethod(obj,mid_data)"))
-    out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical(data,0);\n".format(typeStr,typeStr))
-    out.append("\tif(dataPtr==NULL) std::cout << \"GetPrimitiveArrayCritical call FAILED\" << std::endl;\n")
-
-    // Copy twice (devMem->pinnedHostMem, pinnedHostMem->hostMem)
-    out.append("\tDeliteCudaMemcpyDtoHAsync(%s, %s.data, %s);\n".format("hostPtr",quote(sym),numBytesStr))
-    out.append("\tmemcpy(%s, %s, %s);\n".format("dataPtr","hostPtr",numBytesStr))
-
-    // Release
-    out.append("\tenv->ReleasePrimitiveArrayCritical(data, dataPtr, 0);\n")
-
-    out.append("\treturn obj;\n")
-    out.toString
-  }
-
   //TODO: Currently only assume 1D kernel. 2D/3D kernel needs to be utilized.
   var gpuBlockSizeX:String = null
   var gpuBlockSizeY:String = null
@@ -590,135 +381,6 @@ trait CudaCodegen extends GenericCodegen {
     MetaData.gpuDimSizeY = "[\"gpuDimSizeY_%s\",[%s]]".format(quote(sym),argStr)
 
     out.toString
-  }
-
-  // Generate & register temporary data structures (which could be the output) for GPU kernel
-  def emitVectorAlloc(newSym:Sym[_], length:String, isRow:String):Unit = {
-    //TODO: Check if both symbols are Vectors
-
-    //Do not add the same temporary if it already exists
-    if(gpuTemps.contains(newSym)) return
-
-    val out = new StringBuilder
-
-    val inputs1 = (gpuOutput :: gpuInputs ::: gpuTemps) filterNot (_==newSym)
-    val inputs2 = (gpuInputs ::: gpuTemps) filterNot (_==newSym)
-    val paramStrOut = inputs1.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
-    val argStrOut = inputs1.map("\""+quote(_)+"\"").mkString(",")
-    val paramStrTemp = inputs2.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
-    val argStrTemp = inputs2.map("\""+quote(_)+"\"").mkString(",")
-
-    if(newSym == kernelSymbol)
-      out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStrOut))
-    else
-      out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStrTemp))
-    out.append("\t%s %s;\n".format(remap(newSym.Type),quote(newSym)))
-    out.append("\t%s *devPtr;\n".format(remap(newSym.Type.typeArguments(0))))
-    out.append("\tDeliteCudaMalloc((void**)%s,%s*sizeof(%s));\n".format("&devPtr",length,remap(newSym.Type.typeArguments(0))))
-    out.append("\t%s.length = %s;\n".format(quote(newSym),length))
-    out.append("\t%s.isRow = %s;\n".format(quote(newSym),isRow))
-    out.append("\t%s.data = devPtr;\n".format(quote(newSym)))
-    out.append("\treturn %s;\n".format(quote(newSym)))
-    out.append("}\n")
-
-    // Register MetaData
-    if(newSym == kernelSymbol) {
-      MetaData.gpuOutput = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s],\"gpuMemCopy_%s_%s\",[\"%s\",\"%s\"]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrOut,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
-      out.append(emitCopyDtoH(newSym))
-    }
-    else {
-      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrTemp))
-      gpuTemps = gpuTemps :+ newSym
-    }
-    helperFuncString.append(out.toString)
-  }    
-  def emitVectorAllocSym(newSym:Sym[_], sym:Sym[_]): Unit = {
-    emitVectorAlloc(newSym, quote(sym)+".length", quote(sym)+".isRow")
-  }
-
-  def emitVectorAllocRef(newSym:Sym[_], sym:Sym[_]): Unit = {
-    val out = new StringBuilder
-    val paramStr = remap(sym.Type) + " " + quote(sym)
-    val argStr = quote(sym)
-
-    out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStr))
-    out.append("\t%s %s = %s;\n".format(remap(newSym.Type),quote(newSym),quote(sym)))
-    out.append("\treturn %s;\n".format(quote(newSym)))
-    out.append("}\n")
-
-    if(newSym == kernelSymbol) {
-      MetaData.gpuOutput = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s],\"gpuMemCopy_%s_%s\",[\"%s\",\"%s\"]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
-      out.append(emitCopyDtoH(newSym))
-    }
-    else {
-      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
-      gpuTemps = gpuTemps :+ newSym
-    }
-    helperFuncString.append(out.toString)
-  }
-
-  def emitMatrixAlloc(newSym:Sym[_], numRows:String, numCols:String): Unit = {
-    //TODO: Check if both symbols are Matrices
-
-    //Do not add the same temporary if it already exists
-    if(gpuTemps.contains(newSym)) return
-    
-    val out = new StringBuilder
-
-    val inputs1 = (gpuOutput :: gpuInputs ::: gpuTemps) filterNot (_==newSym)
-    val inputs2 = (gpuInputs ::: gpuTemps) filterNot (_==newSym)
-    val paramStrOut = inputs1.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
-    val argStrOut = inputs1.map("\""+quote(_)+"\"").mkString(",")
-    val paramStrTemp = inputs2.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
-    val argStrTemp = inputs2.map("\""+quote(_)+"\"").mkString(",")
-
-    if(newSym == kernelSymbol)
-      out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStrOut))
-    else
-      out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStrTemp))
-    out.append("\t%s %s;\n".format(remap(newSym.Type),quote(newSym)))
-    out.append("\t%s *devPtr;\n".format(remap(newSym.Type.typeArguments(0))))
-    out.append("\tDeliteCudaMalloc((void**)%s,%s*%s*sizeof(%s));\n".format("&devPtr",numRows,numCols,remap(newSym.Type.typeArguments(0))))
-    out.append("\t%s.numRows = %s;\n".format(quote(newSym),numRows))
-    out.append("\t%s.numCols = %s;\n".format(quote(newSym),numCols))
-    out.append("\t%s.data = devPtr;\n".format(quote(newSym)))
-    out.append("\treturn %s;\n".format(quote(newSym)))
-    out.append("}\n")
-    
-    // Register MetaData
-    if(newSym == kernelSymbol) {
-      MetaData.gpuOutput = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s],\"gpuMemCopy_%s_%s\",[\"%s\",\"%s\"]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrOut,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
-      out.append(emitCopyDtoH(newSym))
-    }
-    else {
-      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrTemp))
-      gpuTemps = gpuTemps :+ newSym
-    }
-    helperFuncString.append(out.toString)
-  }
-  def emitMatrixAllocSym(newSym:Sym[_], sym:Sym[_]): Unit = {
-    emitMatrixAlloc(newSym, quote(sym)+".numRows", quote(sym)+".numCols")
-  }
-
-  def emitMatrixAllocRef(newSym:Sym[_], sym:Sym[_]): Unit = {
-    val out = new StringBuilder
-    val paramStr = remap(sym.Type) + " " + quote(sym)
-    val argStr = quote(sym)
-
-    out.append("%s gpuMemAlloc_%s_%s(%s) {\n".format(remap(newSym.Type),quote(kernelSymbol),quote(newSym),paramStr))
-    out.append("\t%s %s = %s;\n".format(remap(newSym.Type),quote(newSym),quote(sym)))
-    out.append("\treturn %s;\n".format(quote(newSym)))
-    out.append("}\n")
-
-    if(newSym == kernelSymbol) {
-      MetaData.gpuOutput = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s],\"gpuMemCopy_%s_%s\",[\"%s\",\"%s\"]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr,quote(kernelSymbol), quote(newSym), "env", quote(newSym))
-      out.append(emitCopyDtoH(newSym))
-    }
-    else {
-      MetaData.gpuTemps.add("{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStr))
-      gpuTemps = gpuTemps :+ newSym
-    }
-    helperFuncString.append(out.toString)
   }
 
 }

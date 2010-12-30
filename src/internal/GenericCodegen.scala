@@ -61,6 +61,8 @@ trait GenericCodegen extends Scheduling {
 
   def hasMetaData: Boolean = false
   def getMetaData: String = null
+
+  def getDSLHeaders: String = null
 }
 
 
