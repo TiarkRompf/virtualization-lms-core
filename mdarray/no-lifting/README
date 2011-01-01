@@ -1,6 +1,0 @@
-A small prototype for multidimensional arrays (concrete computation, no lift)
-
-To run:
-
-ant build
-ant test

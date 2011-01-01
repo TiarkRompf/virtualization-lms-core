@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package epfl
 package test7
+package original
 
 import Conversions._
 import Operations._
@@ -117,7 +118,7 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
       "Scalar: " + _content(0)
     case 1 =>
       "Vector(" + _content.length + "):" + _content.foldLeft("")((b: String, a: A) => b + " " + a.toString())
-    case 2 =>
+    case _ =>
       val sb: StringBuffer = new StringBuffer()
       sb.append("Array(")
       sb.append(shape.toString)
