@@ -105,10 +105,10 @@ object PDE1Benchmark {
     val factor:Double = 1d/6d
     var u1 = f * hsq
 
-    def justOne(size: Int, dim: Int, v: Int): IndexVector = {
+    def justOne(size: Int, dim: Int, v: Int): MDArray[Int] = {
       val array = new Array[Int](size)
       array(dim) = v
-      new SDArray[Int](array)
+      array
     }
 
     for (i <- List.range(0, dim(u))) {
@@ -124,10 +124,10 @@ object PDE1Benchmark {
     val factor:Double = 1d/6d
     val W = reshape(3::3::3::Nil, (0d::0d::0d::0d::1d::0d::0d::0d::0d::Nil):::(0d::1d::0d::1d::0d::1d::0d::1d::0d::Nil):::(0d::0d::0d::0d::1d::0d::0d::0d::0d::Nil))
 
-    def justOne(size: Int, dim: Int, v: Int): IndexVector = {
+    def justOne(size: Int, dim: Int, v: Int): MDArray[Int] = {
       val array = new Array[Int](size)
       array(dim) = v
-      new SDArray[Int](array)
+      array
     }
 
     val u1 = With(_lb=shape(W) * 0, _ub=shape(W)-1).Fold((a:MDArray[Double], b:MDArray[Double]) => a+b, f * hsq, iv => shift(-iv + 1, 0d, u))

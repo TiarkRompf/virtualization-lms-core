@@ -5,40 +5,48 @@ import lms.Operations._
 object SpecificOperations {
 
   /** Reshape implementation */
-  def internalReshape[A: ClassManifest](iv: IndexVector, a: Array[A], opName: String): MDArray[A] = iv.content.length match {
-    case 0 =>
-      if (a.length == 1)
-        new Scalar(a(0))
-      else
-        throw new Exception(opName + ": Can only convert elements of size one to scalars (given size: " + a.length + ")")
-    case x: Int =>
-      if (a.length == prod(iv))
-        if (x==1)
-          new SDArray(a)
-        else
-          new MDArray(iv, a)
-      else
-        throw new Exception(opName + ": Different sizes: iv:" + iv + " size of array:" + a.length)
+  def internalReshape[A: ClassManifest](iv: MDArray[Int], a: Array[A], opName: String): MDArray[A] = {
+
+    if (iv.dim != 1)
+      throw new Exception(opName + ": The shape vector (" + iv + ") must be one-dimensional")
+
+    if (prod(iv) != a.length)
+      throw new Exception(opName + ": Incorrect shape vector (" + iv + ") for the array given (size=" + a.length + ")")
+
+    new MDArray(iv, a)
   }
 
-  /** Simple, hardcoded comparison for SDArray[Int] */
-  def shapeEqual(a: SDArray[Int], b: SDArray[Int]): Boolean =
+  /**
+   * Simple, hardcoded comparison for SDArray[Int]
+   * the programmer is responsible for checking 1-dimensionality of the arrays passed
+   */
+  def shapeEqual(a: MDArray[Int], b: MDArray[Int]): Boolean =
     (a.content.length == b.content.length) &&
     (List.range(0, a.content.length).filter(i => a.content()(i) != b.content()(i)).length == 0)
 
-  /** Prefix operation lt */
-  def prefixLt(iv: SDArray[Int], shape: SDArray[Int], opName: String): Boolean =
+  /**
+   * Prefix operation lt
+   * the programmer is responsible for checking 1-dimensionality of the arrays passed
+   */
+  def prefixLt(iv: MDArray[Int], shape: MDArray[Int], opName: String): Boolean =
     (shape.content.length >= iv.content.length) &&
-    all(shape > (iv ::: zeros(shape.content.length - iv.content.length)))
+    ((shape zip (iv ::: zeros(shape.content.length - iv.content.length))).filter((p) => (p._1 <= p._2)).length == 0)
 
-  /** Prefix operation minus */
-  def prefixMinus(iv: SDArray[Int], shape: SDArray[Int], opName: String): SDArray[Int] =
-    new SDArray[Int](shape.toList.drop(iv.content.length).toArray)
+  /**
+   * Prefix operation minus
+   * the programmer is responsible for checking 1-dimensionality of the arrays passed
+   */
+  def prefixMinus(iv: MDArray[Int], shape: MDArray[Int], opName: String): MDArray[Int] =
+    shape.toList.drop(iv.content.length).toArray
 
   /** Flatten */
-  def flatten(shape: SDArray[Int], iv: SDArray[Int], opName: String) = {
-    if (shape.dim != iv.dim) throw new Exception(opName + ": Internal error, trying to flatten iv: " + iv +
-            " with shape: " + shape)
+  def flatten(shape: MDArray[Int], iv: MDArray[Int], opName: String) = {
+
+    if ((shape.dim != 1) || (iv.dim != 1))
+      throw new Exception(opName + ": The shape vector and/or the index vector are not 1-dimensional (shape=" + shape +
+              " iv=" + iv + ")")      
+    if ((shape.shape zip iv.shape).filter((p) => p._1 != p._2).length != 0)
+      throw new Exception(opName + ": Internal error, trying to flatten iv: " + iv + " with shape: " + shape)
     (shape zip iv).foldLeft(0)((v, p) => v * p._1 + p._2)
   }
 
@@ -54,21 +62,23 @@ object SpecificOperations {
     new MDArray(a.shape, result)
   }
 
-  /** Iterating through array sizes */
-  def iterateShape(maxBound: IndexVector, opName: String): Stream[IndexVector] = {
+  /** Iterating through array sizes
+   * the programmer is responsible for checking 1-dimensionality of the arrays passed
+   */
+  def iterateShape(maxBound: MDArray[Int], opName: String): Stream[MDArray[Int]] = {
     if (any((maxBound - 1) < 0))
       throw new Exception(opName + ": Incorrect size of iterating array: " + maxBound)
     iterate(zeros(maxBound.content.length), (maxBound - 1), opName)
   }
 
   /** Iterating through index vectors */
-  def iterate(lb: IndexVector, ub: IndexVector, opName: String) : Stream[IndexVector] = {
+  def iterate(lb: MDArray[Int], ub: MDArray[Int], opName: String) : Stream[MDArray[Int]] = {
 
-    def nextOp(crt: IndexVector): Stream[IndexVector] = {
+    def nextOp(crt: MDArray[Int]): Stream[MDArray[Int]] = {
       // XXX: Do not turn efficiency on until the lb deep copy is functional!
       val efficient = false
       var result: Array[Int] = null
-      var response: IndexVector = null
+      var response: MDArray[Int] = null
       var carry  = 1
 
       if (efficient)
@@ -80,18 +90,18 @@ object SpecificOperations {
 //      println("lb = " + lb)
 
       for (i <- List.range(crt.content.length-1, -1, -1))
-        if (crt(i) + carry > ub(i))
-          result(i) = lb(i)
+        if (crt.content()(i) + carry > ub.content()(i))
+          result(i) = lb.content()(i)
         else {
-          result(i) = crt(i) + carry
+          result(i) = crt.content()(i) + carry
           carry = 0
         }
 
       if (efficient)
         response = crt
       else
-        response = new IndexVector(result)
-      
+        response = result
+
       if (carry == 1)
         Stream.empty
       else
@@ -100,27 +110,36 @@ object SpecificOperations {
 
     // ops equivalent: any(lb > ub)
     if (lb.zip(ub).foldLeft(false)((a, p) => a || (p._1 > p._2))) {
-      // TODO: Everyone must guard against empty streams
+      // DONE: Everyone must guard against empty streams
       // DONE: Decide if it is okay to throw an exception here... maybe it's better to just return an empty stream
       //throw new Exception(opName + ": Lower bound components are greater than their counterparts in ub: lb:" +
       //        lb + " ub:" + ub)
       Stream.empty
     } else {
-//      TODO: Do the correct deep copying, so that lb is not affected by the optimization (efficient = true)
-//      def deepCopy[A](a: A)(implicit m: reflect.Manifest[A]): A =
-//        util.Marshal.load[A](util.Marshal.dump(a))
-//      Stream.cons(new IndexVector(deepCopy(lb.content)), nextOp(lb))
-      Stream.cons(new IndexVector(lb.content), nextOp(lb))
+      //TODO: Do the correct deep copying, so that lb is not affected by the optimization (efficient = true)
+      //def deepCopy[A](a: A)(implicit m: reflect.Manifest[A]): A =
+      //  util.Marshal.load[A](util.Marshal.dump(a))
+      //Stream.cons(new IndexVector(deepCopy(lb.content)), nextOp(lb))
+      Stream.cons(lb.content, nextOp(lb))
     }
   }
 
   /** iteration with step and width */
-  def iterateWithStep(_lb: IndexVector, lbStrict: Boolean, _ub: IndexVector, ubStrict: Boolean, step: IndexVector, width: IndexVector, opName: String) : Stream[IndexVector] = {
+  def iterateWithStep(_lb: MDArray[Int], lbStrict: Boolean, _ub: MDArray[Int], ubStrict: Boolean, step: MDArray[Int], width: MDArray[Int], opName: String) : Stream[MDArray[Int]] = {
+
+    if (_lb.dim != 1)
+      throw new Exception(opName + ": The lower bound vector (" + _lb + ") must be one-dimensional")
+    if (_ub.dim != 1)
+      throw new Exception(opName + ": The lower bound vector (" + _ub + ") must be one-dimensional")
+    if (step.dim != 1)
+      throw new Exception(opName + ": The step vector (" + step + ") must be one-dimensional")
+    if (width.dim != 1)
+      throw new Exception(opName + ": The width vector (" + width + ") must be one-dimensional")
 
     // ops equivalent: any(step - 1 > width)
     val useStep = (step.zip(width).foldLeft(false)((a, p) => a || ((p._1 - 1) > p._2)))
-    val lb: IndexVector = if (lbStrict) _lb.map(x => x + 1) else _lb
-    val ub: IndexVector = if (ubStrict) _ub.map(x => x - 1) else _ub
+    val lb: MDArray[Int] = if (lbStrict) _lb.map(x => x + 1) else _lb
+    val ub: MDArray[Int] = if (ubStrict) _ub.map(x => x - 1) else _ub
 
     // Correctness checks
     if ((lb.content.length != ub.content.length) ||
@@ -128,11 +147,11 @@ object SpecificOperations {
         (lb.content.length != width.content.length))
       throw new Exception(opName + ": Incorrect sizes for vectors: lb:" + lb + " ub:" + ub + " step:" + step + " width:" + width)
 
-    val baseIterator: Stream[IndexVector] = iterate(lb, ub, opName)
+    val baseIterator: Stream[MDArray[Int]] = iterate(lb, ub, opName)
     if (!useStep)
       baseIterator
     else {
-      def filterStepWidth(baseIterator: Stream[IndexVector]): Stream[IndexVector] = {
+      def filterStepWidth(baseIterator: Stream[MDArray[Int]]): Stream[MDArray[Int]] = {
         var iterator = baseIterator
         while ((iterator != Stream.empty) && !(all(((iterator.head - _lb) rem step) <= width)))
           iterator = iterator.tail

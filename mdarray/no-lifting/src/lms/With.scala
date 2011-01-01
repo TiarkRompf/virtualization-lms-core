@@ -1,21 +1,22 @@
 package lms
-import lms.MDArray._
 import lms.Operations._
 import lms.Conversions._
 import lms.SpecificOperations._
 
-class With(_lb: IndexVector = null,
+class With(_lb: MDArray[Int] = null,
            _lbStrict: Boolean = false,
-           _ub: IndexVector = null,
+           _ub: MDArray[Int] = null,
            _ubStrict: Boolean = false,
-           _step: IndexVector = null,
-           _width: IndexVector = null) {
+           _step: MDArray[Int] = null,
+           _width: MDArray[Int] = null) {
 
-  def GenArray[A: ClassManifest](shp:IndexVector, f: IndexVector => MDArray[A]): MDArray[A] = {
+  def GenArray[A: ClassManifest](shp:MDArray[Int], f: MDArray[Int] => MDArray[A]): MDArray[A] = {
     val opName = "genarray"
 
     if (shp == null)
       throw new Exception(opName + ": The index vector cannot be null!")
+    if (shp.dim != 1)
+      throw new Exception(opName + ": The shape vector (" + shp + ") must be one-dimensional")
 
     val outsideSize = shp.foldLeft(1)((x,y) => x * y) // ops equiv: prod(shp)
     var iterator = doIteration(shp, opName)
@@ -28,7 +29,7 @@ class With(_lb: IndexVector = null,
       // 1. Create the array, for which we need the second shape:
       val firstIV = iterator.head
       val fshape = f(firstIV).shape
-      val shape = shp.content().toList ::: fshape.content.toList
+      val shape: MDArray[Int] = shp.content().toList ::: fshape.content.toList
       val array = new Array(shape.foldLeft(1)((x,y) => x * y)) // ops equiv: prod(shape))
 
       // 2. Populate the array and return it
@@ -39,7 +40,7 @@ class With(_lb: IndexVector = null,
     }
   }
 
-  def ModArray[A: ClassManifest](a: MDArray[A], f: IndexVector => MDArray[A]): MDArray[A] = {
+  def ModArray[A: ClassManifest](a: MDArray[A], f: MDArray[Int] => MDArray[A]): MDArray[A] = {
     val opName = "modarray"
 
     if (a == null)
@@ -58,7 +59,7 @@ class With(_lb: IndexVector = null,
       a
   }
 
-  def Fold[A: ClassManifest](foldFunction: (MDArray[A], MDArray[A]) => MDArray[A], neutral: MDArray[A], f: IndexVector => MDArray[A]): MDArray[A] = {
+  def Fold[A: ClassManifest](foldFunction: (MDArray[A], MDArray[A]) => MDArray[A], neutral: MDArray[A], f: MDArray[Int] => MDArray[A]): MDArray[A] = {
     val opName = "fold"
 
     var iterator = doIteration(null, opName)
@@ -74,10 +75,10 @@ class With(_lb: IndexVector = null,
   }
 
 
-  private def doIteration(mainShape: IndexVector, opName: String): Stream[IndexVector] = {
+  private def doIteration(mainShape: MDArray[Int], opName: String): Stream[MDArray[Int]] = {
 
-    var lb: IndexVector = _lb
-    var ub: IndexVector = _ub
+    var lb: MDArray[Int] = _lb
+    var ub: MDArray[Int] = _ub
 
     mainShape match {
       case null =>
@@ -109,23 +110,23 @@ class With(_lb: IndexVector = null,
       case null => zeros(lb.content.length)
       case _ => _width
     }
-
+    
     // Create the iterator and implicitly check the sizes
     iterateWithStep(lb, _lbStrict, ub, _ubStrict, step, width, opName)
   }
 
-  private def modifyArray[A: ClassManifest](iterator: Stream[Operations.IndexVector],
-                                            f: IndexVector => MDArray[A],
-                                            expectedShape: IndexVector,
+  private def modifyArray[A: ClassManifest](iterator: Stream[MDArray[Int]],
+                                            f: MDArray[Int] => MDArray[A],
+                                            expectedShape: MDArray[Int],
                                             array: Array[A],
-                                            shape: Operations.IndexVector,
+                                            shape: MDArray[Int],
                                             opName: String): MDArray[A] = {
     
     for (i <- iterator) {
       // Compute the application of f
       val localArray = f(i)
       // implicit conversions should do their magic here:
-      val basePointer = flatten(shape, i.content.toList ::: zeros(localArray.content.length), opName)
+      val basePointer = flatten(shape, i.content.toList ::: zeros(localArray.dim), opName)
 
       // Check validity
       if (!shapeEqual(localArray.shape, expectedShape))
@@ -142,12 +143,12 @@ class With(_lb: IndexVector = null,
 }
 
 object With {
-  def apply(_lb: IndexVector = null,
+  def apply(_lb: MDArray[Int] = null,
            _lbStrict: Boolean = false,
-           _ub: IndexVector = null,
+           _ub: MDArray[Int] = null,
            _ubStrict: Boolean = false,
-           _step: IndexVector = null,
-           _width: IndexVector = null): With = {
+           _step: MDArray[Int] = null,
+           _width: MDArray[Int] = null): With = {
     new With(_lb, _lbStrict, _ub, _ubStrict, _step, _width)
   }
 }

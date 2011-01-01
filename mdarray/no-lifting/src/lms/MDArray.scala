@@ -2,32 +2,43 @@ package lms
 import lms.Conversions._
 import lms.Operations._
 import lms.SpecificOperations._
-import lms.MDArray._
 
-class MDArray[A: ClassManifest](_shape: SDArray[Int], _content: Array[A]) {
+class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
+  require(_shape.foldLeft(1)((a,b) => a * b) == _content.length)
 
-  def dim(): Int = _shape.content.length
-  def shape(): SDArray[Int] = _shape
+  def dim(): Int = _shape.length
+  def shape(): MDArray[Int] = _shape
   def content(): Array[A] = _content
-  def sel(iv: SDArray[Int]): MDArray[A] = {
+  def sel(iv: MDArray[Int]): MDArray[A] = {
     val opName = "sel"
 
+    // Check if the array is a vector
+    if (iv.dim != 1)
+      throw new Exception(opName + ": the index vector (" + iv + ") must be one-dimensional")
+    
     // Check the selection size
     if (!prefixLt(iv, shape, opName))
-      throw new Exception(opName + ": MDArray.sel("+iv+") the index vector components are greater or equal to the shape: " + shape)
+      throw new Exception(opName + ": the index vector (" + iv + ") components are greater or equal to the shape: " + shape)
 
-    // Compute the new array and iterating
-    val suffix: IndexVector = prefixMinus(iv, this.shape, opName)
-    val arraySize: Int = prod(suffix)
-    val array: Array[A] = new Array[A](arraySize)
+    _shape.length match {
+      case 0 =>
+        this
+      case 1 =>
+        new MDArray(new Array[Int](0), Array(_content(iv.content()(0))))
+      case _ =>
+        // Compute the new array and iterate
+        val suffix: MDArray[Int] = prefixMinus(iv, this.shape, opName)
+        val arraySize: Int = prod(suffix)
+        val array: Array[A] = new Array[A](arraySize)
 
-    // Compute values in the new array
-    for (i <- iterateShape(suffix, opName))
-      array(flatten(suffix, i, opName)) = this.content()(flatten(shape, (iv ::: i), opName))
+        // Compute values in the new array
+        for (i <- iterateShape(suffix, opName))
+          array(flatten(suffix, i, opName)) = this.content()(flatten(shape, (iv ::: i), opName))
 
-    reshape(suffix, array, opName)
+        reshape(suffix, array, opName)
+    }
   }
-  def apply(iv: SDArray[Int]) = sel(iv)
+  def apply(iv: MDArray[Int]) = sel(iv)
 
   // Element-wise operations
   def +(that: MDArray[A])(implicit numeric: Numeric[A]): MDArray[A] = op(that)(numeric.plus, "+")
@@ -84,6 +95,7 @@ class MDArray[A: ClassManifest](_shape: SDArray[Int], _content: Array[A]) {
   private def op[B: ClassManifest](that:MDArray[A])(op: (A, A) => B, opName: String): MDArray[B] = {
     if (!shapeEqual(this.shape, that.shape))
       throw new Exception(opName + ": matrices of different shapes: " + this.shape + " vs " + that.shape)
+    // for debugging: {println(opName + "("+ this(iv) + "," + that(iv) + ")"); op(this(iv), that(iv))}
     With().GenArray(this.shape, iv => op(this(iv), that(iv)))
   }
 
@@ -96,28 +108,30 @@ class MDArray[A: ClassManifest](_shape: SDArray[Int], _content: Array[A]) {
     With().GenArray(this.shape, iv => op(this(iv)))
   }
 
-  override def toString(): String = {
-    val sb: StringBuffer = new StringBuffer()
-    sb.append("Array(")
-    sb.append(shape.toString)
-    sb.append("):")
+  override def toString(): String = _shape.length match {
+    case 0 =>
+      "Scalar: " + _content(0)
+    case 1 =>
+      "Vector(" + _content.length + "):" + _content.foldLeft("")((b: String, a: A) => b + " " + a.toString())
+    case 2 =>
+      val sb: StringBuffer = new StringBuffer()
+      sb.append("Array(")
+      sb.append(shape.toString)
+      sb.append("):")
 
-    for (i <- List.range(0, _shape(0))) {
-      sb.append("\n")
-      for (j <- List.range(0, _shape(1))) {
-        sb.append("<")
-        val bp = i * (_content.length / _shape(0)) + j * (_content.length / _shape(0) / _shape(1))
-        for (k <- List.range(0, (_content.length / _shape(0) / _shape(1)))) {
-          if (k!=0) sb.append(" ")
-          sb.append(_content(bp + k))
+      for (i <- List.range(0, _shape(0))) {
+        sb.append("\n")
+        for (j <- List.range(0, _shape(1))) {
+          sb.append("<")
+          val bp = i * (_content.length / _shape(0)) + j * (_content.length / _shape(0) / _shape(1))
+          for (k <- List.range(0, (_content.length / _shape(0) / _shape(1)))) {
+            if (k!=0) sb.append(" ")
+            sb.append(_content(bp + k))
+          }
+          sb.append(">  ")
         }
-        sb.append(">  ")
       }
-    }
 
-    sb.toString()
+      sb.toString()
   }
-}
-
-object MDArray{
 }
