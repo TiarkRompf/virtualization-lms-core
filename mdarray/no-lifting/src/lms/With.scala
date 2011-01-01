@@ -17,21 +17,26 @@ class With(_lb: IndexVector = null,
     if (shp == null)
       throw new Exception(opName + ": The index vector cannot be null!")
 
+    val outsideSize = shp.foldLeft(1)((x,y) => x * y) // ops equiv: prod(shp)
     var iterator = doIteration(shp, opName)
-    if (iterator == Stream.empty)
+    if ((iterator == Stream.empty) && (outsideSize != 0))
       throw new Exception(opName + ": Empty with iteration")
 
-    // 1. Create the array, for which we need the second shape:
-    val firstIV = iterator.head
-    val fshape = f(firstIV).shape
-    val shape = shp.content().toList ::: fshape.content.toList
-    val array = new Array(prod(shape)) // Let the implicit conversions do the magic
+    if (outsideSize == 0) {
+      reshape(shp, new Array[A](0))
+    } else {
+      // 1. Create the array, for which we need the second shape:
+      val firstIV = iterator.head
+      val fshape = f(firstIV).shape
+      val shape = shp.content().toList ::: fshape.content.toList
+      val array = new Array(shape.foldLeft(1)((x,y) => x * y)) // ops equiv: prod(shape))
 
-    // 2. Populate the array and return it
-    if (iterator != Stream.empty)
-      modifyArray(iterator, f, fshape, array, shape, opName)    
-    else
-      throw new Exception(opName + ": Nothing to iterate. Please make sure the limits are set correctly.")      
+      // 2. Populate the array and return it
+      if (iterator != Stream.empty)
+        modifyArray(iterator, f, fshape, array, shape, opName)
+      else
+        throw new Exception(opName + ": Nothing to iterate. Please make sure the limits are set correctly.")
+    }
   }
 
   def ModArray[A: ClassManifest](a: MDArray[A], f: IndexVector => MDArray[A]): MDArray[A] = {
@@ -42,7 +47,8 @@ class With(_lb: IndexVector = null,
 
     var iterator = doIteration(a.shape(), opName)
 
-    // 1. Create the array, for which we need the second shape:
+    // 1. Create the array, for which we need the second shape
+    // TODO: Check this is deep copy -- not sure about it
     val array = a.content().clone
 
     // 2. Populate the array and return it
@@ -89,7 +95,7 @@ class With(_lb: IndexVector = null,
           case _ => _lb
         }
         ub = _ub match {
-          case null => (mainShape - 1)
+          case null => mainShape.map(x => x - 1)
           case _ => _ub
         }
     }

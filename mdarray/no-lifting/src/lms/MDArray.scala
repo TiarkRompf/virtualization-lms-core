@@ -73,9 +73,9 @@ class MDArray[A: ClassManifest](_shape: SDArray[Int], _content: Array[A]) {
     else
       integral.plus(b, result)}, "%[rem]")
 
-  // Reducing all array elements, in order, left or right
-  def reduceLeft[B](z: B)(f: (B, A)=>B): B = content.foldLeft(z)(f)
-  def reduceRight[B](z: B)(f: (A, B)=>B): B = content.foldRight(z)(f)
+  // Reducing all array elements, in order
+  def reduce(z: A)(f: (A, A)=>A): A =
+    With(zeros(this.dim), false, this.shape, true).Fold((a:MDArray[A], b:MDArray[A]) => f(a, b), z, iv => this(iv))
 
   // Concatenation shortcut (note: it's three pluses instead of two)
   def +++(that: MDArray[A]): MDArray[A] = cat(0, this, that)
@@ -84,26 +84,16 @@ class MDArray[A: ClassManifest](_shape: SDArray[Int], _content: Array[A]) {
   private def op[B: ClassManifest](that:MDArray[A])(op: (A, A) => B, opName: String): MDArray[B] = {
     if (!shapeEqual(this.shape, that.shape))
       throw new Exception(opName + ": matrices of different shapes: " + this.shape + " vs " + that.shape)
-
-    val result: Array[B] = new Array[B](this.content.length)
-    for (i:Int <- List.range(0, this.content.length))
-      result(i)= op(this.content()(i), that.content()(i))
-    reshape(this.shape, result, opName)
+    With().GenArray(this.shape, iv => op(this(iv), that(iv)))
   }
 
   private def op[B: ClassManifest](that:A)(op: (A, A) => B, opName: String): MDArray[B] = {
-    val result: Array[B] = new Array[B](this.content.length)
-    for (i:Int <- List.range(0, this.content.length))
-      result(i)= op(this.content()(i), that)
-    reshape(this.shape, result, opName)
+    With().GenArray(this.shape, iv => op(this(iv), that))
   }
 
   /** Unary element-wise operation */
   private def uop[B: ClassManifest](op: A => B, opName: String): MDArray[B] = {
-    val result: Array[B] = new Array[B](this.content.length)
-    for (i:Int <- List.range(0, this.content.length))
-      result(i)= op(this.content()(i))
-    reshape(this.shape, result, opName)
+    With().GenArray(this.shape, iv => op(this(iv)))
   }
 
   override def toString(): String = {

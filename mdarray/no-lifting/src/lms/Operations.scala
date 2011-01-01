@@ -19,12 +19,12 @@ object Operations {
   def reshape[A: ClassManifest](iv: IndexVector, a: Array[A], opName: String): MDArray[A] = internalReshape(iv, a, opName)
 
   // Reduction operations on matrices
-  def sum[A](a: MDArray[A])(implicit ev: Numeric[A]): A = a.reduceLeft(ev.zero)((a: A, b: A) => ev.plus(a, b))
-  def prod[A](a: MDArray[A])(implicit ev: Numeric[A]): A = a.reduceLeft(ev.one)((a: A, b: A) => ev.times(a, b))
-  def all(a: MDArray[Boolean]): Boolean = a.reduceLeft(true)((a, b) => a && b)
-  def any(a: MDArray[Boolean]): Boolean = a.reduceLeft(false)((a, b) => a || b)
-  def maxVal[A](a: MDArray[A])(implicit ev: Ordering[A]): A = a.reduceLeft(a.content()(0))((a, b) => if (ev.gt(a, b)) a else b)
-  def minVal[A](a: MDArray[A])(implicit ev: Ordering[A]): A = a.reduceLeft(a.content()(0))((a, b) => if (ev.lt(a, b)) a else b)
+  def sum[A](a: MDArray[A])(implicit ev: Numeric[A], ev2: ClassManifest[A]): A = a.reduce(ev.zero)((a: A, b: A) => ev.plus(a, b))
+  def prod[A](a: MDArray[A])(implicit ev: Numeric[A], ev2: ClassManifest[A]): A = a.reduce(ev.one)((a: A, b: A) => ev.times(a, b))
+  def all(a: MDArray[Boolean]): Boolean = a.reduce(true)((a, b) => a && b)
+  def any(a: MDArray[Boolean]): Boolean = a.reduce(false)((a, b) => a || b)
+  def maxVal[A](a: MDArray[A])(implicit ev: Ordering[A], ev2: ClassManifest[A]): A = a.reduce(a.content()(0))((a, b) => if (ev.gt(a, b)) a else b)
+  def minVal[A](a: MDArray[A])(implicit ev: Ordering[A], ev2: ClassManifest[A]): A = a.reduce(a.content()(0))((a, b) => if (ev.lt(a, b)) a else b)
   
   // Restructuring operations - implemented as with-loops
   def genarray[A: ClassManifest](shp: IndexVector, value: MDArray[A]): MDArray[A] = With().GenArray(shp, iv => value)

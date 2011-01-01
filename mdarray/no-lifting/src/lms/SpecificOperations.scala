@@ -98,13 +98,14 @@ object SpecificOperations {
         Stream.cons(response, nextOp(response))
     }
 
-    if (any(lb > ub))
+    // ops equivalent: any(lb > ub)
+    if (lb.zip(ub).foldLeft(false)((a, p) => a || (p._1 > p._2))) {
       // TODO: Everyone must guard against empty streams
       // DONE: Decide if it is okay to throw an exception here... maybe it's better to just return an empty stream
       //throw new Exception(opName + ": Lower bound components are greater than their counterparts in ub: lb:" +
       //        lb + " ub:" + ub)
       Stream.empty
-    else {
+    } else {
 //      TODO: Do the correct deep copying, so that lb is not affected by the optimization (efficient = true)
 //      def deepCopy[A](a: A)(implicit m: reflect.Manifest[A]): A =
 //        util.Marshal.load[A](util.Marshal.dump(a))
@@ -116,9 +117,10 @@ object SpecificOperations {
   /** iteration with step and width */
   def iterateWithStep(_lb: IndexVector, lbStrict: Boolean, _ub: IndexVector, ubStrict: Boolean, step: IndexVector, width: IndexVector, opName: String) : Stream[IndexVector] = {
 
-    val useStep = any((step - 1) > width)
-    val lb: IndexVector = if (lbStrict) _lb + 1 else _lb
-    val ub: IndexVector = if (ubStrict) _ub - 1 else _ub
+    // ops equivalent: any(step - 1 > width)
+    val useStep = (step.zip(width).foldLeft(false)((a, p) => a || ((p._1 - 1) > p._2)))
+    val lb: IndexVector = if (lbStrict) _lb.map(x => x + 1) else _lb
+    val ub: IndexVector = if (ubStrict) _ub.map(x => x - 1) else _ub
 
     // Correctness checks
     if ((lb.content.length != ub.content.length) ||
