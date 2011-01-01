@@ -4,11 +4,12 @@ package test7
 
 import common._
 import java.io.PrintWriter
+import internal._
 
 trait MDArrayScalaGen extends ScalaGenBase with MDArrayBaseExp {
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    // TODO: Fill in basic operation generation here
-    case _ => throw new Exception("Not implemented!")
-  }
+//  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+//    // TODO: Fill in basic operation generation here
+//    case _ => throw new Exception("Not implemented!")
+//  }
 
 }

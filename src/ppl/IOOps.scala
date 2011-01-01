@@ -3,6 +3,8 @@ package ppl
 
 import scala.virtualization.lms.common._
 import java.io.{BufferedReader, FileReader, PrintWriter}
+import internal.ScalaGenEffect
+import sun.reflect.generics.reflectiveObjects.NotImplementedException
 
 trait IOOps extends Base {
 
@@ -50,8 +52,9 @@ trait IOOpsExp extends IOOps with BaseExp {
 
 trait ScalaGenIO extends ScalaGenEffect { this: IOOpsExp =>
 
-  abstract override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    // TODO: fill out
-    case _ => super.emitNode(sym, rhs)
-  }
+  // TODO: Recover this file, since I modified it to compile the program
+  //abstract def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  //  // TODO: fill out
+  //  case _ => throw new NotImplementedException() // super.emitNode(sym, rhs)
+  //}
 }
