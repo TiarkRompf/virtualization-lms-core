@@ -13,12 +13,10 @@ trait CudaCodegen extends GenericCodegen {
   override def toString = "cuda"
 
   var kernelSymbol:Sym[_] = null
-  var parallelFor = true
+  var parallelFor = false
   var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
   val varLink = HashMap[Sym[_], List[Sym[_]]]()
-
-  val devFuncList = ArrayBuffer[Exp[_]]()
   
   var gpuInputs:List[Sym[_]] = Nil
   var gpuOutput: Sym[_] = null
@@ -29,7 +27,9 @@ trait CudaCodegen extends GenericCodegen {
 
   var helperFuncString:StringBuilder = null
   var hstream: PrintWriter = null
+  val devFuncList = ArrayBuffer[Exp[_]]()
   var devFuncString:StringBuilder = null
+  var devFuncIdx = 0
   var devStream: PrintWriter = null
   var headerStream: PrintWriter = null
 
@@ -44,13 +44,14 @@ trait CudaCodegen extends GenericCodegen {
       val tempStream = new PrintWriter(tempString, true)
       val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
       val currentTab = tabWidth
-      tempStream.println("__device__ %s dev_%s(%s) {".format(remap(outType),quote(func),paramStr))
+      tempStream.println("__device__ %s dev_%s(%s) {".format(remap(outType),devFuncIdx,paramStr))
       tabWidth = 1
       emitBlock(func)(tempStream)
       tempStream.println(addTab()+"return %s;".format(quote(getBlockResult(func))))
       tempStream.println("}")
       tabWidth = currentTab
       devFuncString.append(tempString)
+      devFuncIdx += 1
       devFuncList.append(func)
     }
   }
