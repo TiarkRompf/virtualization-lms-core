@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenEffect, GenericNestedCodegen, ScalaGenEffect}
+import scala.virtualization.lms.internal.{CGenEffect, CudaGenEffect, GenericNestedCodegen, ScalaGenEffect}
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]): Rep[T]
@@ -81,7 +81,6 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
 }
 
 trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
-  //val IR: IfThenElseExp
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
@@ -111,6 +110,55 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
           stream.println(addTab()+"}")
           allocReference(sym,getBlockResult(a).asInstanceOf[Sym[_]])
         
+        case _ => super.emitNode(sym, rhs)
+      }
+    }
+}
+
+trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+      rhs match {
+        case IfThenElse(c,a,b) =>
+          //TODO: using if-else does not work 
+          remap(sym.Type) match {
+            case "void" =>
+              stream.println("if (" + quote(c) + ") {")
+              emitBlock(a)
+              stream.println("} else {")
+              emitBlock(b)
+              stream.println("}")
+            case _ =>
+              stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
+              stream.println("if (" + quote(c) + ") {")
+              emitBlock(a)
+              stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(a))))
+              stream.println("} else {")
+              emitBlock(b)
+              stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(b))))
+              stream.println("}")
+          }
+          /*
+          val booll = remap(sym.Type).equals("void")
+          if(booll) {
+            stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
+            stream.println("if (" + quote(c) + ") {")
+            emitBlock(a)
+            stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(a))))
+            stream.println("} else {")
+            emitBlock(b)
+            stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(b))))
+            stream.println("}")
+          }
+          else {
+            stream.println("if (" + quote(c) + ") {")
+            emitBlock(a)
+            stream.println("} else {")
+            emitBlock(b)
+            stream.println("}")
+          }
+          */
         case _ => super.emitNode(sym, rhs)
       }
     }

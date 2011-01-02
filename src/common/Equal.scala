@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
+import scala.virtualization.lms.internal.{CGenBase, CLikeCodegen, CudaGenBase, ScalaGenBase}
 
 trait Equal extends Base with Variables with OverloadHack {
   // TODO: we need a better way of handling this, too many combinations
@@ -55,7 +55,7 @@ trait ScalaGenEqual extends ScalaGenBase {
   }
 }
 
-trait CudaGenEqual extends CudaGenBase {
+trait CLikeGenEqual extends CLikeCodegen {
   val IR: EqualExp
   import IR._
 
@@ -69,3 +69,6 @@ trait CudaGenEqual extends CudaGenBase {
       }
     }
 }
+
+trait CudaGenEqual extends CudaGenBase with CLikeGenEqual
+trait CGenEqual extends CGenBase with CLikeGenEqual

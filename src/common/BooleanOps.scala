@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
+import scala.virtualization.lms.internal.{CGenBase, CLikeCodegen, CudaGenBase, ScalaGenBase}
 
 trait BooleanOps extends Variables {
   def infix_unary_!(x: Rep[Boolean]) = boolean_negate(x)
@@ -41,15 +41,18 @@ trait ScalaGenBooleanOps extends ScalaGenBase {
   }
 }
 
-trait CudaGenBooleanOps extends CudaGenBase {
+trait CLikeGenBooleanOps extends CLikeCodegen {
   val IR: BooleanOpsExp
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
-      rhs match {
-        case BooleanNegate(b) =>
-          emitValDef(sym, "!" + quote(b))
-        case _ => super.emitNode(sym,rhs)
-      }
+    rhs match {
+      case BooleanNegate(b) =>
+        emitValDef(sym, "!" + quote(b))
+      case _ => super.emitNode(sym,rhs)
     }
+  }
 }
+
+trait CudaGenBooleanOps extends CudaGenBase with CLikeGenBooleanOps
+trait CGenBooleanOps extends CGenBase with CLikeGenBooleanOps

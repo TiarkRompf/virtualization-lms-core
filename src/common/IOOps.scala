@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.{FileReader, BufferedReader, PrintWriter}
-import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
+import scala.virtualization.lms.internal.{CGenBase, CLikeCodegen, CudaGenBase, ScalaGenBase}
 
 trait IOOps extends Base {
 
@@ -55,16 +55,19 @@ trait ScalaGenIOOps extends ScalaGenBase {
   }
 }
 
-trait CudaGenIOOps extends CudaGenBase {
+trait CLikeGenIOOps extends CLikeCodegen {
   val IR: IOOpsExp
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case ObjBrApply(f) => throw new RuntimeException("CudaGen: Not GPUable")
-    case ObjFrApply(s) => throw new RuntimeException("CudaGen: Not GPUable")
-    case BrReadline(b) => throw new RuntimeException("CudaGen: Not GPUable")
-    case BrClose(b) => throw new RuntimeException("CudaGen: Not GPUable")
+    case ObjBrApply(f) => throw new RuntimeException("CLikeGenIOOps: Java IO operations are not supported")
+    case ObjFrApply(s) => throw new RuntimeException("CLikeGenIOOps: Java IO operations are not supported")
+    case BrReadline(b) => throw new RuntimeException("CLikeGenIOOps: Java IO operations are not supported")
+    case BrClose(b) => throw new RuntimeException("CLikeGenIOOps: Java IO operations are not supported")
     case _ => super.emitNode(sym, rhs)
   }
 }
+trait CudaGenIOOps extends CudaGenBase with CLikeGenIOOps
+trait CGenIOOps extends CGenBase with CLikeGenIOOps
+
 

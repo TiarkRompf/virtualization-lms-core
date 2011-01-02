@@ -44,8 +44,25 @@ trait ScalaGenMiscOps extends ScalaGenEffect {
 }
 
 
+trait CLikeGenMiscOps extends CLikeCodegen {
+  val IR: MiscOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case PrintLn(s) => stream.println("printf(\"%s\\n\"," + quote(s) + ");")
+    case Print(s) => stream.println("printf(\"%s\"," + quote(s) + ");")
+    case Exit(a) => stream.println("exit(" + quote(a) + ");")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CGenMiscOps extends CGenEffect with CLikeGenMiscOps
+
+trait CudaGenMiscOps extends CudaGenEffect with CLikeGenMiscOps
+
+/*
 //todo factor out commonality
-trait CGenMiscOps extends CGenEffect {
+trait CGenMiscOps extends CGenEffect with CLikeGenMiscOps {
   val IR: MiscOpsExp
   import IR._
   
@@ -57,7 +74,7 @@ trait CGenMiscOps extends CGenEffect {
   }
 }
 
-trait CudaGenMiscOps extends CudaGenEffect {
+trait CudaGenMiscOps extends CudaGenEffect with CLikeGenMiscOps {
   val IR: MiscOpsExp
   import IR._
 
@@ -74,3 +91,4 @@ trait CudaGenMiscOps extends CudaGenEffect {
       }
     }
 }
+*/

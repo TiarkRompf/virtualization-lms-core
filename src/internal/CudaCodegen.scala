@@ -5,7 +5,7 @@ import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
 import collection.mutable.{ArrayBuffer, LinkedList, HashMap}
 
-trait CudaCodegen extends GenericCodegen {
+trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   val IR: Expressions
   import IR._
 
@@ -249,7 +249,7 @@ trait CudaCodegen extends GenericCodegen {
     stream.flush
   }  
 
-  def emitConstDef(tp: String, sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitConstDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.print("const ")
     emitVarDef(sym, rhs)
   }

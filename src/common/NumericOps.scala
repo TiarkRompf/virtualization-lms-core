@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
+import scala.virtualization.lms.internal.{CLikeCodegen, CGenBase, CudaGenBase, ScalaGenBase}
 
 trait NumericOps extends Variables {
 
@@ -54,7 +54,7 @@ trait ScalaGenNumericOps extends ScalaGenBase {
   }
 }
 
-trait CudaGenNumericOps extends CudaGenBase {
+trait CLikeGenNumericOps extends CLikeCodegen {
   val IR: NumericOpsExp
   import IR._
 
@@ -70,3 +70,7 @@ trait CudaGenNumericOps extends CudaGenBase {
       }
     }
 }
+
+trait CudaGenNumericOps extends CudaGenBase with CLikeGenNumericOps
+trait CGenNumericOps extends CGenBase with CLikeGenNumericOps
+

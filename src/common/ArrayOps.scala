@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
+import scala.virtualization.lms.internal.{CGenBase, CLikeCodegen, CudaGenBase, ScalaGenBase}
 
 trait ArrayOps extends Variables {
 
@@ -41,7 +41,7 @@ trait ScalaGenArrayOps extends ScalaGenBase {
   }
 }
 
-trait CudaGenArrayOps extends CudaGenBase {
+trait CLikeGenArrayOps extends CLikeCodegen {
   val IR: ArrayOpsExp
   import IR._
 
@@ -55,3 +55,7 @@ trait CudaGenArrayOps extends CudaGenBase {
       }
     }
 }
+
+trait CudaGenArrayOps extends CudaGenBase with CLikeGenArrayOps
+trait CGenArrayOps extends CGenBase with CLikeGenArrayOps
+

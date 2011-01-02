@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
+import scala.virtualization.lms.internal.{CGenEffect, CLikeCodegen, CudaGenEffect, ScalaGenEffect}
 
 trait Variables extends Base with OverloadHack {
   type Var[+T]
@@ -65,7 +65,7 @@ trait ScalaGenVariables extends ScalaGenEffect {
   }
 }
 
-trait CudaGenVariables extends CudaGenEffect {
+trait CLikeGenVariables extends CLikeCodegen {
   val IR: VariablesExp
   import IR._
 
@@ -81,3 +81,6 @@ trait CudaGenVariables extends CudaGenEffect {
       }
     }
 }
+
+trait CudaGenVariables extends CudaGenEffect with CLikeGenVariables
+trait CGenVariables extends CGenEffect with CLikeGenVariables

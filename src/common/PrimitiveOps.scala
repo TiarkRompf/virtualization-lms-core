@@ -2,8 +2,8 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
 import scala.virtualization.lms.util.OverloadHack
+import scala.virtualization.lms.internal.{CGenBase, CLikeCodegen, CudaGenBase, ScalaGenBase}
 
 trait PrimitiveOps extends Variables with OverloadHack {
   /**
@@ -70,7 +70,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   }
 }
 
-trait CudaGenPrimitiveOps extends CudaGenBase {
+trait CLikeGenPrimitiveOps extends CLikeCodegen {
   val IR: PrimitiveOpsExp
   import IR._
 
@@ -83,3 +83,7 @@ trait CudaGenPrimitiveOps extends CudaGenBase {
       }
     }
 }
+
+trait CudaGenPrimitiveOps extends CudaGenBase with CLikeGenPrimitiveOps
+trait CGenPrimitiveOps extends CGenBase with CLikeGenPrimitiveOps
+

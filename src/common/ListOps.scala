@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import internal.{GenericNestedCodegen, CudaGenEffect, ScalaGenEffect}
+import scala.virtualization.lms.internal._
 
 trait ListOps extends Base {
 
@@ -40,7 +40,7 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
   }
 }
 
-trait CudaGenListOps extends BaseGenListOps with CudaGenEffect {
+trait CLikeGenListOps extends BaseGenListOps with CLikeCodegen {
   val IR: ListOpsExp
   import IR._
 
@@ -50,3 +50,7 @@ trait CudaGenListOps extends BaseGenListOps with CudaGenEffect {
       }
     }
 }
+
+trait CudaGenListOps extends CudaGenEffect with CLikeGenListOps
+trait CGenListOps extends CGenEffect with CLikeGenListOps
+

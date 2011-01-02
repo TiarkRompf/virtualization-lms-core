@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenEffect, GenericNestedCodegen, ScalaGenEffect}
+import scala.virtualization.lms.internal.{CGenEffect, CudaGenEffect, GenericNestedCodegen, ScalaGenEffect}
 
 trait While extends Base {
   def __whileDo(cond: => Rep[Boolean], body: => Rep[Unit])
@@ -86,4 +86,22 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
         case _ => super.emitNode(sym, rhs)
       }
     }
+}
+
+trait CGenWhile extends CGenEffect with BaseGenWhile {
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+    rhs match {
+      case While(c,b) =>
+        // calculate condition
+        emitBlock(c)
+        stream.println("bool cond_%s = %s;".format(quote(sym),quote(getBlockResult(c))))
+        // Emit while loop
+        stream.print("while (cond_%s) {".format(quote(sym)))
+        emitBlock(b)
+        stream.println("}")
+      case _ => super.emitNode(sym, rhs)
+    }
+  }
 }
