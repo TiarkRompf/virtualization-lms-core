@@ -104,10 +104,10 @@ trait CudaCodegen extends GenericCodegen {
     //val outDir = new File(buildPath); outDir.mkdirs()
     helperFuncString = new StringBuilder
     hstream = new PrintWriter(new FileWriter(build_dir + "helperFuncs.cu"))
-    devFuncString = new StringBuilder
-    devStream = new PrintWriter(new FileWriter(build_dir+"devFucns.cu"))
+    devStream = new PrintWriter(new FileWriter(build_dir+"devFuncs.cu"))
     headerStream = new PrintWriter(new FileWriter(build_dir + "dsl.h"))
     headerStream.println("#include \"helperFuncs.cu\"")
+    headerStream.println("#include \"devFuncs.cu\"")
 
     //TODO: Put all the DELITE APIs declarations somewhere
     hstream.print(getDSLHeaders)
@@ -134,6 +134,7 @@ trait CudaCodegen extends GenericCodegen {
     MetaData.init
     tabWidth = 1
     parallelFor = true
+    devFuncString = new StringBuilder
 
     gpuBlockSizeX = null
     gpuBlockSizeY = null
