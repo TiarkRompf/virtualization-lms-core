@@ -6,28 +6,41 @@ import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
 import scala.virtualization.lms.util.OverloadHack
 
 trait PrimitiveOps extends Variables with OverloadHack {
+  this: ImplicitOps =>
+
   /**
    * Useful chaining implicits
    */
   implicit def intToRepDouble(i: Int) = unit(i.toDouble)
-  
+
 
   /**
-   * Double
+   * Conversions
    */
+  implicit def repIntToRepDouble(x: Rep[Int]) = implicit_convert[Int,Double](x)
+  implicit def repIntToRepFloat(x: Rep[Int]) = implicit_convert[Int,Float](x)
+  implicit def repFloatToRepDbl(x: Rep[Float]) = implicit_convert[Float,Double](x)
+  //implicit def repDblToRepFloat(x: Rep[Double]) = implicit_convert[Double,Float](x)
+
+  /**
+   *  Double
+   */
+  //implicit def doubleToDoubleOpsCls(n: Double) = new DoubleOpsCls(n)
+  //implicit def repDoubleToDoubleOpsCls(n: Rep[Double]) = new DoubleOpsCls(n)
+  //implicit def varDoubleToDoubleOpsCls(n: Var[Double]) = new DoubleOpsCls(readVar(n))
+  
   object Double {
     def parseDouble(s: Rep[String]) = obj_double_parse_double(s)
   }
+
+  //class DoubleOpsCls(lhs: Rep[Double]){}
 
   def obj_double_parse_double(s: Rep[String]) : Rep[Double]
 
   /**
    * Int
    */
-  implicit def intToIntOpsCls(n: Int) = new IntOpsCls(n)
-  implicit def repIntToIntOpsCls(n: Rep[Int]) = new IntOpsCls(n)
-  implicit def varIntToIntOpsCls(n: Var[Int]) = new IntOpsCls(readVar(n))
-
+  
   class IntOpsCls(lhs: Rep[Int]){
     // TODO (tiark): either of these cause scalac to crash        
     //def /[A](rhs: Rep[A])(implicit mA: Manifest[A], f: Fractional[A], o: Overloaded1) = int_divide_frac(lhs, rhs)
@@ -41,6 +54,8 @@ trait PrimitiveOps extends Variables with OverloadHack {
 }
 
 trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
+  this: ImplicitOps =>
+
   /**
    * Double
    */
