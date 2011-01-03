@@ -39,7 +39,8 @@ trait CudaCodegen extends GenericCodegen {
 
   def emitDevFunc(func:Exp[Any], outType: Manifest[_], inputs:List[Exp[Any]]) {
     // Check if this device function is already emitted
-    if( !devFuncList.contains(func)) {
+    //if( !devFuncList.contains(func)) {
+      devFuncIdx += 1
       val tempString = new StringWriter
       val tempStream = new PrintWriter(tempString, true)
       val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
@@ -51,9 +52,9 @@ trait CudaCodegen extends GenericCodegen {
       tempStream.println("}")
       tabWidth = currentTab
       devFuncString.append(tempString)
-      devFuncIdx += 1
+
       devFuncList.append(func)
-    }
+    //}
   }
 
   object MetaData {
