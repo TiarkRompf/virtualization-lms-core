@@ -40,17 +40,28 @@ trait PrimitiveOps extends Variables with OverloadHack {
   /**
    * Int
    */
-  
+
+  object Integer {
+    def parseInt(s: Rep[String]) = obj_integer_parse_int(s)
+  }
+
+  implicit def intToIntOpsCls(n: Int) = new IntOpsCls(n)
+  implicit def repIntToIntOpsCls(n: Rep[Int]) = new IntOpsCls(n)
+  implicit def varIntToIntOpsCls(n: Var[Int]) = new IntOpsCls(readVar(n))
+    
   class IntOpsCls(lhs: Rep[Int]){
     // TODO (tiark): either of these cause scalac to crash        
     //def /[A](rhs: Rep[A])(implicit mA: Manifest[A], f: Fractional[A], o: Overloaded1) = int_divide_frac(lhs, rhs)
     //def /(rhs: Rep[Int]) = int_divide(lhs, rhs)
+    def doubleValue() = int_double_value(lhs)
   }
 
   def infix_/(lhs: Rep[Int], rhs: Rep[Int]) = int_divide(lhs, rhs)
 
-  def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A]) : Rep[A]
-  def int_divide(lhs: Rep[Int], rhs: Rep[Int]) : Rep[Int]
+  def obj_integer_parse_int(s: Rep[String]): Rep[Int]
+  def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A]): Rep[A]
+  def int_divide(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
+  def int_double_value(lhs: Rep[Int]): Rep[Double]
 }
 
 trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
@@ -66,11 +77,15 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   /**
    * Int
    */
+  case class ObjIntegerParseInt(s: Exp[String]) extends Def[Int]
   case class IntDivideFrac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) extends Def[A]
   case class IntDivide(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntDoubleValue(lhs: Exp[Int]) extends Def[Double]
 
+  def obj_integer_parse_int(s: Rep[String]) = ObjIntegerParseInt(s)
   def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) : Exp[A] = IntDivideFrac(lhs, rhs)
   def int_divide(lhs: Exp[Int], rhs: Exp[Int]) : Exp[Int] = IntDivide(lhs, rhs)
+  def int_double_value(lhs: Exp[Int]) = IntDoubleValue(lhs)
 }
 
 trait ScalaGenPrimitiveOps extends ScalaGenBase {
@@ -79,8 +94,10 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case ObjDoubleParseDouble(s) => emitValDef(sym, "java.lang.Double.parseDouble(" + quote(s) + ")")
+    case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")
     case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
+    case IntDoubleValue(lhs) => emitValDef(sym, quote(lhs) + ".doubleValue()")
     case _ => super.emitNode(sym, rhs)    
   }
 }
