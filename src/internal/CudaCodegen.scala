@@ -16,7 +16,7 @@ trait CudaCodegen extends GenericCodegen {
   var parallelFor = false
   var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
-  val varLink = HashMap[Sym[_], List[Sym[_]]]()
+  val varLink = HashMap[Exp[_], List[Exp[_]]]()
   
   var gpuInputs:List[Sym[_]] = Nil
   var gpuOutput: Sym[_] = null
@@ -27,7 +27,6 @@ trait CudaCodegen extends GenericCodegen {
 
   var helperFuncString:StringBuilder = null
   var hstream: PrintWriter = null
-  val devFuncList = ArrayBuffer[Exp[_]]()
   var devFuncString:StringBuilder = null
   var devFuncIdx = 0
   var devStream: PrintWriter = null
@@ -37,24 +36,21 @@ trait CudaCodegen extends GenericCodegen {
   override def hasMetaData: Boolean = true
   override def getMetaData: String = MetaData.toString
 
-  def emitDevFunc(func:Exp[Any], outType: Manifest[_], inputs:List[Exp[Any]]) {
-    // Check if this device function is already emitted
-    //if( !devFuncList.contains(func)) {
+  def emitDevFunc(func:Exp[Any], outType: Manifest[_], inputs:List[Exp[Any]]):String = {
       devFuncIdx += 1
+      val currIdx = devFuncIdx
       val tempString = new StringWriter
       val tempStream = new PrintWriter(tempString, true)
       val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
       val currentTab = tabWidth
-      tempStream.println("__device__ %s dev_%s(%s) {".format(remap(outType),devFuncIdx,paramStr))
+      tempStream.println("__device__ %s dev_%s(%s) {".format(remap(outType),currIdx,paramStr))
       tabWidth = 1
       emitBlock(func)(tempStream)
       tempStream.println(addTab()+"return %s;".format(quote(getBlockResult(func))))
       tempStream.println("}")
       tabWidth = currentTab
       devFuncString.append(tempString)
-
-      devFuncList.append(func)
-    //}
+      "dev_"+currIdx
   }
 
   object MetaData {
@@ -87,7 +83,7 @@ trait CudaCodegen extends GenericCodegen {
       out.append("\"gpuDimSizeX\":"+gpuDimSizeX+",")
       out.append("\"gpuDimSizeY\":"+gpuDimSizeY+",")
       out.append("\"gpuInputs\":" + gpuInputs.toString + ",")
-      if(gpuOutput == "") { println("ERROR:No Output for GPU?"); throw new Exception()}
+      if(gpuOutput == "") { throw new RuntimeException("CudaGen:No output for GPU?")}
       out.append("\"gpuOutput\":"+gpuOutput+",")
       out.append("\"gpuTemps\":" + gpuTemps.toString)
       out.append("}")
@@ -114,6 +110,7 @@ trait CudaCodegen extends GenericCodegen {
     //TODO: Put all the DELITE APIs declarations somewhere
     hstream.print(getDSLHeaders)
     hstream.print("#include <iostream>\n")
+    hstream.print("#include <limits>\n")
     hstream.print("#include <jni.h>\n\n")
     hstream.print("//Delite Runtime APIs\n")
     hstream.print("extern void DeliteCudaMallocHost(void **ptr, int size);\n")
@@ -151,7 +148,7 @@ trait CudaCodegen extends GenericCodegen {
   }
 
   // Add variable links across IR nodes
-  def addVarLink(from:Sym[_], to:Sym[_]): Unit = {
+  def addVarLink(from:Exp[_], to:Exp[_]): Unit = {
     if(varLink.contains(to)) {
       val list = varLink.get(to).get
       val newList = from +: list
@@ -159,12 +156,12 @@ trait CudaCodegen extends GenericCodegen {
       varLink.put(from,newList)
     }
     else {
-      val newList = List[Sym[_]](from,to)
+      val newList = List[Exp[_]](from,to)
       varLink.put(from,newList)
     }
   }
 
-  def removeVarLink(from:Sym[_], to:Sym[_]): Unit = {
+  def removeVarLink(from:Exp[_], to:Exp[_]): Unit = {
     if(varLink.contains(from)) {
       val newList = varLink.get(from).get.tail
       varLink.remove(from)
@@ -172,8 +169,8 @@ trait CudaCodegen extends GenericCodegen {
     }
   }
 
-  def getVarLink(sym:Sym[_]): Sym[_] = {
-    if(varLink.contains(sym)) {
+  def getVarLink(sym:Exp[_]): Exp[_] = {
+    if(sym.isInstanceOf[Sym[_]] && varLink.contains(sym)) {
       val out = varLink.get(sym).get.last
       out
     }
@@ -197,6 +194,7 @@ trait CudaCodegen extends GenericCodegen {
     case "float" => false
     case "double" => false
     case "bool" => false
+    case "void" => false
     case _ => throw new RuntimeException("CudaGen: isObjectType(m) : Unknown data type (%s)".format(remap(m)))
   }
 
@@ -206,6 +204,7 @@ trait CudaCodegen extends GenericCodegen {
     case "Float" => "float"
     case "Double" => "double"
     case "Boolean" => "bool"
+    case "Unit" => "void"
     case _ => throw new RuntimeException("CudaGen: remap(m) : Unknown data type (%s)".format(m.toString))
   }
 
@@ -398,7 +397,18 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
 
+
+  def CudaConsts(x:Exp[_], s:String): String = {
+    s match {
+      case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.Type))
+      case _ => s
+    }
+  }
+  
   override def quote(x: Exp[_]) = x match { // TODO: quirk!
+    case Const(s: String) => "\""+s+"\""
+    case Const(null) => "NULL"
+    case Const(z) => CudaConsts(x, z.toString)
     case Sym(-1) => "_"
     case _ => super.quote(x)
   }
