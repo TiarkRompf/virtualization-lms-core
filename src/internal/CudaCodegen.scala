@@ -88,7 +88,6 @@ trait CudaCodegen extends GenericCodegen {
       out.append("\"gpuDimSizeX\":"+gpuDimSizeX+",")
       out.append("\"gpuDimSizeY\":"+gpuDimSizeY+",")
       out.append("\"gpuInputs\":" + gpuInputs.toString + ",")
-      if(gpuOutput == "") { throw new RuntimeException("CudaGen:No output for GPU?")}
       out.append("\"gpuOutput\":"+gpuOutput+",")
       out.append("\"gpuTemps\":" + gpuTemps.toString)
       out.append("}")
@@ -294,6 +293,8 @@ trait CudaCodegen extends GenericCodegen {
   override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     tabWidth -= 1
     stream.println("}")
+      
+	if(MetaData.gpuOutput == "") { throw new RuntimeException("CudaGen:No output for GPU")}
 
     // Emit input copy helper functions for object type inputs
     for(v <- vals)
