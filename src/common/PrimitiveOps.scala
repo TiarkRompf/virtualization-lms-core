@@ -13,7 +13,6 @@ trait PrimitiveOps extends Variables with OverloadHack {
    */
   implicit def intToRepDouble(i: Int) = unit(i.toDouble)
 
-
   /**
    * Conversions
    */
@@ -25,17 +24,20 @@ trait PrimitiveOps extends Variables with OverloadHack {
   /**
    *  Double
    */
-  //implicit def doubleToDoubleOpsCls(n: Double) = new DoubleOpsCls(n)
-  //implicit def repDoubleToDoubleOpsCls(n: Rep[Double]) = new DoubleOpsCls(n)
-  //implicit def varDoubleToDoubleOpsCls(n: Var[Double]) = new DoubleOpsCls(readVar(n))
+  implicit def doubleToDoubleOpsCls(n: Double) = new DoubleOpsCls(n)
+  implicit def repDoubleToDoubleOpsCls(n: Rep[Double]) = new DoubleOpsCls(n)
+  implicit def varDoubleToDoubleOpsCls(n: Var[Double]) = new DoubleOpsCls(readVar(n))
   
   object Double {
     def parseDouble(s: Rep[String]) = obj_double_parse_double(s)
   }
 
-  //class DoubleOpsCls(lhs: Rep[Double]){}
+  class DoubleOpsCls(lhs: Rep[Double]){
+    def floatValue() = double_float_value(lhs)
+  }
 
-  def obj_double_parse_double(s: Rep[String]) : Rep[Double]
+  def obj_double_parse_double(s: Rep[String]): Rep[Double]
+  def double_float_value(lhs: Rep[Double]): Rep[Float]
 
   /**
    * Int
@@ -57,10 +59,12 @@ trait PrimitiveOps extends Variables with OverloadHack {
   }
 
   def infix_/(lhs: Rep[Int], rhs: Rep[Int]) = int_divide(lhs, rhs)
+  def infix_%(lhs: Rep[Int], rhs: Rep[Int]) = int_mod(lhs, rhs)
 
   def obj_integer_parse_int(s: Rep[String]): Rep[Int]
   def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A]): Rep[A]
   def int_divide(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
+  def int_mod(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
   def int_double_value(lhs: Rep[Int]): Rep[Double]
 }
 
@@ -71,7 +75,9 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
    * Double
    */
   case class ObjDoubleParseDouble(s: Exp[String]) extends Def[Double]
+  case class DoubleFloatValue(lhs: Exp[Double]) extends Def[Float]
 
+  def double_float_value(lhs: Exp[Double]) = DoubleFloatValue(lhs)
   def obj_double_parse_double(s: Exp[String]) = ObjDoubleParseDouble(s)
 
   /**
@@ -80,11 +86,13 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class ObjIntegerParseInt(s: Exp[String]) extends Def[Int]
   case class IntDivideFrac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) extends Def[A]
   case class IntDivide(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntMod(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntDoubleValue(lhs: Exp[Int]) extends Def[Double]
 
   def obj_integer_parse_int(s: Rep[String]) = ObjIntegerParseInt(s)
   def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) : Exp[A] = IntDivideFrac(lhs, rhs)
   def int_divide(lhs: Exp[Int], rhs: Exp[Int]) : Exp[Int] = IntDivide(lhs, rhs)
+  def int_mod(lhs: Exp[Int], rhs: Exp[Int]) = IntMod(lhs, rhs)
   def int_double_value(lhs: Exp[Int]) = IntDoubleValue(lhs)
 }
 
@@ -94,9 +102,11 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case ObjDoubleParseDouble(s) => emitValDef(sym, "java.lang.Double.parseDouble(" + quote(s) + ")")
+    case DoubleFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
     case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")
     case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
+    case IntMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
     case IntDoubleValue(lhs) => emitValDef(sym, quote(lhs) + ".doubleValue()")
     case _ => super.emitNode(sym, rhs)    
   }
