@@ -177,7 +177,9 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   def foldArrayWith[A: ClassManifest](w: With, foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = FoldArrayWith(w, foldFunction, neutral, f)
 
   // ToString
-  def doToString[A](a: Rep[MDArray[A]]) = "Result: " + a.toString()
+  def doToString[A](a: Rep[MDArray[A]]) = {
+    "Result: " + a.toString()
+  }
 
   protected val nothing: Rep[MDArray[Int]] = Nothing
 }
