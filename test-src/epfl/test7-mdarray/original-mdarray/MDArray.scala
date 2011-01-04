@@ -56,8 +56,8 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
   def <=(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.lteq, "<=")
   def >(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.gt, ">")
   def >=(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.gteq, ">=")
-  def ==(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.equiv, "==")
-  def !=(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)((a, b) => !ordering.equiv(a, b), "!=")
+  def ===(that: MDArray[A]): MDArray[Boolean] = op(that)((a, b) => a == b, "===")
+  def !==(that: MDArray[A]): MDArray[Boolean] = op(that)((a, b) => !(a == b), "!==")
 
   def +(that: A)(implicit numeric: Numeric[A]): MDArray[A] = op(that)(numeric.plus, "+")
   def -(that: A)(implicit numeric: Numeric[A]): MDArray[A] = op(that)(numeric.minus, "-")
@@ -69,8 +69,8 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
   def <=(that: A)(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.lteq, "<=")
   def >(that: A)(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.gt, ">")
   def >=(that: A)(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.gteq, ">=")
-  def ==(that: A)(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.equiv, "==")
-  def !=(that: A)(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)((a, b) => !ordering.equiv(a, b), "!=")
+  def ===(that: A): MDArray[Boolean] = op(that)((a, b) => a == b, "===")
+  def !==(that: A): MDArray[Boolean] = op(that)((a, b) => !(a == b), "!==")
 
   def unary_-()(implicit numeric: Numeric[A]): MDArray[A] = uop(numeric.negate, "-[unary]")
 
@@ -139,4 +139,14 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
 
       sb.toString()
   }
+
+  // XXX: Staged MDArrayBaseExp: We need to have a working ==
+  // and we need to get rid of the == override, so we call it ===
+  override def equals(other: Any): Boolean = other match {
+    // TODO: Here we should use manifests - we'll just rely on the generic type's capability to distinguish other types
+    case that: MDArray[_] => that.canEqual(this) && all(this === that)
+    case _ => false
+  }
+
+  override def hashCode = content.foldLeft(41)((b,a) => b + 41 * a.hashCode)
 }

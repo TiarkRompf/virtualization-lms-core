@@ -6,7 +6,9 @@ import common._
 import java.io.PrintWriter
 import original._
 
+
 trait MDArrayBase extends Base with util.OverloadHack {
+  // TODO: What are the implication of having something like MDArray[Rep[T]]? Do the implicits still work?
 
   /**
    * This is a hack to compute MDArray.apply()
@@ -19,7 +21,7 @@ trait MDArrayBase extends Base with util.OverloadHack {
   implicit def toRepMDArray[A: ClassManifest](a: Rep[MDArray[A]]): RepMDArray[A] = new RepMDArray[A](a)
 
   // Element-wise operations
-  def infix_+ [A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit numeric: Numeric[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[A]] = op(o1, o2)(numeric.plus _, "+")
+  def infix_+ [A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit numeric: Numeric[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[A]] = op(o1, o2)(numeric.plus, "+")
   def infix_- [A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit numeric: Numeric[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[A]] = op(o1, o2)(numeric.minus, "-")
   def infix_* [A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit numeric: Numeric[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[A]] = op(o1, o2)(numeric.times, "*")
   def infix_/ [A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit fractional: Fractional[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[A]] = op(o1, o2)(fractional.div, "/[div]")
@@ -29,8 +31,8 @@ trait MDArrayBase extends Base with util.OverloadHack {
   def infix_<=[A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit ordering: Ordering[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[Boolean]] = op(o1, o2)(ordering.lteq, "<=")
   def infix_> [A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit ordering: Ordering[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[Boolean]] = op(o1, o2)(ordering.gt, ">")
   def infix_>=[A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit ordering: Ordering[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[Boolean]] = op(o1, o2)(ordering.gteq, ">=")
-  def infix_==[A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit ordering: Ordering[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[Boolean]] = op(o1, o2)(ordering.equiv, "==")
-  def infix_!=[A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit ordering: Ordering[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[Boolean]] = op(o1, o2)((a, b) => !ordering.equiv(a, b), "!=")
+  def infix_===[A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[Boolean]] = op(o1, o2)((a, b) => a == b, "===")
+  def infix_!==[A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[Boolean]] = op(o1, o2)((a, b) => !(a == b), "!==")
 
   def infix_+ [A](o1: Rep[MDArray[A]], o2: A)(implicit numeric: Numeric[A], mf: ClassManifest[A], ov2: Overloaded2): Rep[MDArray[A]] = op(o1, o2)(numeric.plus _, "+")
   def infix_- [A](o1: Rep[MDArray[A]], o2: A)(implicit numeric: Numeric[A], mf: ClassManifest[A], ov2: Overloaded2): Rep[MDArray[A]] = op(o1, o2)(numeric.minus, "-")
@@ -42,8 +44,8 @@ trait MDArrayBase extends Base with util.OverloadHack {
   def infix_<=[A](o1: Rep[MDArray[A]], o2: A)(implicit ordering: Ordering[A], mf: ClassManifest[A], ov2: Overloaded2): Rep[MDArray[Boolean]] = op(o1, o2)(ordering.lteq, "<=")
   def infix_> [A](o1: Rep[MDArray[A]], o2: A)(implicit ordering: Ordering[A], mf: ClassManifest[A], ov2: Overloaded2): Rep[MDArray[Boolean]] = op(o1, o2)(ordering.gt, ">")
   def infix_>=[A](o1: Rep[MDArray[A]], o2: A)(implicit ordering: Ordering[A], mf: ClassManifest[A], ov2: Overloaded2): Rep[MDArray[Boolean]] = op(o1, o2)(ordering.gteq, ">=")
-  def infix_==[A](o1: Rep[MDArray[A]], o2: A)(implicit ordering: Ordering[A], mf: ClassManifest[A], ov2: Overloaded2): Rep[MDArray[Boolean]] = op(o1, o2)(ordering.equiv, "==")
-  def infix_!=[A](o1: Rep[MDArray[A]], o2: A)(implicit ordering: Ordering[A], mf: ClassManifest[A], ov2: Overloaded2): Rep[MDArray[Boolean]] = op(o1, o2)((a, b) => !ordering.equiv(a, b), "!=")
+  def infix_===[A](o1: Rep[MDArray[A]], o2: A)(implicit mf: ClassManifest[A], ov2: Overloaded2): Rep[MDArray[Boolean]] = op(o1, o2)((a, b) => a == b, "===")
+  def infix_!==[A](o1: Rep[MDArray[A]], o2: A)(implicit mf: ClassManifest[A], ov2: Overloaded2): Rep[MDArray[Boolean]] = op(o1, o2)((a, b) => !(a == b), "!==")
 
   def unary_-[A](o: Rep[MDArray[A]])(implicit numeric: Numeric[A], mf: ClassManifest[A]): Rep[MDArray[A]] = uop(o)(numeric.negate, "-[unary]")
 
@@ -57,7 +59,6 @@ trait MDArrayBase extends Base with util.OverloadHack {
   // toString operation
   def doToString[A](a: Rep[MDArray[A]]): String
 
-  // Implicit conversions
   /*
     Implicit conversions discussion
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,12 +70,11 @@ trait MDArrayBase extends Base with util.OverloadHack {
 
     In the context of the no-constructor assumption, we will consider all MDArray as Rep[MDArray]s. There are two
     categories of Rep[MDArrays]s:
-      - known at compile time (default) -- these automatically are transformed from Lists and Arrays
+      - known at compile time (default) -- these automatically are transformed from Lists and Array
       - known only at runtime           -- are either:
                                            * results of operations
                                            * EXPLICITLY declared as known only at runtime by the programmer
                                            * IMPLICITLY created from Rep[List[T]]s, Rep[Array[T]]s, Rep[T]s
-                                           // TODO: Implement implicit conversions for the above 
 
     The functions used to signal a value is only available at runtime are:
       - knownOnlyAtRuntime(a:Array[A])
@@ -83,20 +83,26 @@ trait MDArrayBase extends Base with util.OverloadHack {
 
     Since the index vectors are also MDArrays, they will be transformed in the same fashion 
    */
-  implicit def convertFromList[A: ClassManifest](a: List[A]): Rep[MDArray[A]]
-  implicit def convertToList[A: ClassManifest](a: Rep[MDArray[A]]): List[A]
-  implicit def convertFromArray[A: ClassManifest](a: Array[A]): Rep[MDArray[A]]
-  implicit def convertToArray[A: ClassManifest](a: Rep[MDArray[A]]): Array[A]
-  implicit def convertFromValue[A: ClassManifest](a: A): Rep[MDArray[A]]
-  implicit def convertToValue[A: ClassManifest](a: Rep[MDArray[A]]): A
-  implicit def convertFromListOfMDArrays[A: ClassManifest](a: List[Rep[MDArray[A]]]): Rep[MDArray[A]]
-  implicit def convertFromArrayOfMDArrays[A: ClassManifest](a: Array[Rep[MDArray[A]]]): Rep[MDArray[A]]
-  implicit def convertToRealScalar[A: ClassManifest](a: Rep[MDArray[A]]): Rep[MDArray[A]]
+  // TODO: Conversions going back to the "real" world are problematic... Decide what to do about them
+  // Implicit conversions
+  implicit def convertFromListRep[A: ClassManifest](a: List[A]): Rep[MDArray[A]]
+  implicit def convertFromArrayRep[A: ClassManifest](a: Array[A]): Rep[MDArray[A]]
+  implicit def convertFromValueRep[A: ClassManifest](a: A): Rep[MDArray[A]]
+  implicit def convertFromListOfMDArraysRep[A: ClassManifest](a: List[Rep[MDArray[A]]]): Rep[MDArray[A]]
+  implicit def convertFromArrayOfMDArraysRep[A: ClassManifest](a: Array[Rep[MDArray[A]]]): Rep[MDArray[A]]
+  implicit def convertToListRep[A: ClassManifest](a: Rep[MDArray[A]]): Rep[List[A]]
+  implicit def convertToArrayRep[A: ClassManifest](a: Rep[MDArray[A]]): Rep[Array[A]]
+  implicit def convertToValueRep[A: ClassManifest](a: Rep[MDArray[A]]): Rep[A]
+
+  // Implicit conversions from unknown elements
+  implicit def convertFromListRepRep[A: ClassManifest](a: Rep[List[A]]): Rep[MDArray[A]]
+  implicit def convertFromArrayRepRep[A: ClassManifest](a: Rep[Array[A]]): Rep[MDArray[A]]
+  implicit def convertFromValueRepRep[A: ClassManifest](a: Rep[A]): Rep[MDArray[A]]
 
   // Explicit conversions for elements known only at runtime
   def knownOnlyAtRuntime[A](a: List[A])(implicit mf: ClassManifest[A], o1: Overloaded1): Rep[MDArray[A]]
   def knownOnlyAtRuntime[A](a: Array[A])(implicit mf: ClassManifest[A], o2: Overloaded2): Rep[MDArray[A]]
-  def knownOnlyAtRuntime[A](a: A)(implicit mf: ClassManifest[A], o3: Overloaded3): RepMDArray[A]
+  def knownOnlyAtRuntime[A](a: A)(implicit mf: ClassManifest[A], o3: Overloaded3): Rep[MDArray[A]]
 
   // Private value to take the place of "null" in the With object
   protected val nothing: Rep[MDArray[Int]]
@@ -109,9 +115,9 @@ trait MDArrayBase extends Base with util.OverloadHack {
              _step: Rep[MDArray[Int]] = nothing,
              _width: Rep[MDArray[Int]] = nothing) {
 
-    def GenArray[A: ClassManifest](shp: Rep[MDArray[Int]], f: Rep[MDArray[Int]]=> Rep[MDArray[A]]): Rep[MDArray[A]] = genArray((this, f)::Nil, shp)
-    def ModArray[A: ClassManifest](a: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = modArray((this, f)::Nil, a)
-    def Fold[A: ClassManifest](foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = foldArray(this, foldFunction, neutral, f)
+    def GenArray[A: ClassManifest](shp: Rep[MDArray[Int]], f: Rep[MDArray[Int]]=> Rep[MDArray[A]]): Rep[MDArray[A]] = genArrayWith((this, f)::Nil, shp)
+    def ModArray[A: ClassManifest](a: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = modArrayWith((this, f)::Nil, a)
+    def Fold[A: ClassManifest](foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = foldArrayWith(this, foldFunction, neutral, f)
   }
   
   object With {
@@ -126,24 +132,28 @@ trait MDArrayBase extends Base with util.OverloadHack {
 
   // Language operations
   // Basic operations
-  def dim[A: ClassManifest](a: Rep[MDArray[A]]): Int
+  def dim[A: ClassManifest](a: Rep[MDArray[A]]): Rep[Int]
   def shape[A: ClassManifest](a: Rep[MDArray[A]]): Rep[MDArray[Int]]
   def sel[A: ClassManifest](iv: Rep[MDArray[Int]], a: Rep[MDArray[A]]): Rep[MDArray[A]]
   def reshape[A: ClassManifest](iv: Rep[MDArray[Int]], a: Rep[MDArray[A]]): Rep[MDArray[A]]
-  def reshape[A: ClassManifest](iv: Rep[MDArray[Int]], a: Array[A], opName: String): Rep[MDArray[A]]
-  def cat[A: ClassManifest](d: Int, one: Rep[MDArray[A]], two: Rep[MDArray[A]]): Rep[MDArray[A]] 
+  def cat[A: ClassManifest](d: Int, one: Rep[MDArray[A]], two: Rep[MDArray[A]]): Rep[MDArray[A]]
 
   // Reduction operations on matrices
-  def sum[A](a: Rep[MDArray[A]])(implicit ev: Numeric[A]): A 
-  def prod[A](a: Rep[MDArray[A]])(implicit ev: Numeric[A]): A 
-  def all(a: Rep[MDArray[Boolean]]): Boolean
-  def any(a: Rep[MDArray[Boolean]]): Boolean
-  def maxVal[A](a: Rep[MDArray[A]])(implicit ev: Ordering[A]): A 
-  def minVal[A](a: Rep[MDArray[A]])(implicit ev: Ordering[A]): A 
+  def sum[A](a: Rep[MDArray[A]])(implicit ev: Numeric[A], mf: ClassManifest[A]): Rep[A]
+  def prod[A](a: Rep[MDArray[A]])(implicit ev: Numeric[A], mf: ClassManifest[A]): Rep[A]
+  def all(a: Rep[MDArray[Boolean]]): Rep[Boolean]
+  def any(a: Rep[MDArray[Boolean]]): Rep[Boolean]
+  def maxVal[A](a: Rep[MDArray[A]])(implicit ev: Ordering[A], mf: ClassManifest[A]): Rep[A]
+  def minVal[A](a: Rep[MDArray[A]])(implicit ev: Ordering[A], mf: ClassManifest[A]): Rep[A]
+
+  // Zeroes, ones and values
+  def values(dim: Rep[Int], value: Rep[Int]): Rep[MDArray[Int]]
+  def zeros(dim: Rep[Int]): Rep[MDArray[Int]] = values(dim, 0)
+  def ones(dim: Rep[Int]): Rep[MDArray[Int]] = values(dim, 1)
 
   // Element-Wise operations on matrices
-  def max[A: Ordering : ClassManifest](a: Rep[MDArray[A]], b: Rep[MDArray[A]]): Rep[MDArray[A]] 
-  def min[A: Ordering : ClassManifest](a: Rep[MDArray[A]], b: Rep[MDArray[A]]): Rep[MDArray[A]] 
+  def max[A](a: Rep[MDArray[A]], b: Rep[MDArray[A]])(implicit mf: ClassManifest[A], or: Ordering[A]): Rep[MDArray[A]] = op(a,b)((a,b) => if (or.gt(a, b)) a else b, "max")
+  def min[A](a: Rep[MDArray[A]], b: Rep[MDArray[A]])(implicit mf: ClassManifest[A], or: Ordering[A]): Rep[MDArray[A]] = op(a,b)((a,b) => if (or.lt(a, b)) a else b, "min")
   def where[A: ClassManifest](p: Rep[MDArray[Boolean]], a: Rep[MDArray[A]], b: Rep[MDArray[A]]): Rep[MDArray[A]]
 
   // Restructuring operations - implemented as with-loops
@@ -161,7 +171,7 @@ trait MDArrayBase extends Base with util.OverloadHack {
   def uop[A, B](a:Rep[MDArray[A]])(op: A => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B]): Rep[MDArray[B]]
 
   // With-comprehensions
-  def genArray[A: ClassManifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], shp: Rep[MDArray[Int]]): Rep[MDArray[A]]
-  def modArray[A: ClassManifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], a: Rep[MDArray[A]]): Rep[MDArray[A]]
-  def foldArray[A: ClassManifest](w: With, foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]]
+  def genArrayWith[A: ClassManifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], shp: Rep[MDArray[Int]]): Rep[MDArray[A]]
+  def modArrayWith[A: ClassManifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], a: Rep[MDArray[A]]): Rep[MDArray[A]]
+  def foldArrayWith[A: ClassManifest](w: With, foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]]
 }
