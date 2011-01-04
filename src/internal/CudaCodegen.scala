@@ -12,6 +12,11 @@ trait CudaCodegen extends GenericCodegen {
   override def kernelFileExt = "cu"
   override def toString = "cuda"
 
+  /*
+   * This flag indicates whether current codegen is for parallel execution or not
+   */
+  var parallelCudagen = false
+
   var kernelSymbol:Sym[_] = null
   var parallelFor = false
   var tabWidth:Int = 0
@@ -127,6 +132,7 @@ trait CudaCodegen extends GenericCodegen {
     if((vars.length > 0)  || (resultIsVar)) throw new RuntimeException("CudaGen: Not GPUable")
 
     // Initialize global variables
+    parallelCudagen = true
     helperFuncString.clear
     varLink.clear
     kernelSymbol = sym
