@@ -102,9 +102,10 @@ object Operations {
     if ((d >= one.shape.content.length) || (d >= two.shape.content.length))
       throw new Exception(opName + ": The concatenation axis is outside the shapes of the two arrays")
 
-    val eq1 = With().ModArray(one.shape, iv => if (iv.content()(0) == d) 0 else one.shape.content()(iv))
-    val eq2 = With().ModArray(two.shape, iv => if (iv.content()(0) == d) 0 else two.shape.content()(iv))
-    if (!(all(eq1 == eq2)))
+    val eq1:MDArray[Int] = With().ModArray(one.shape, iv => if (iv.content()(0) == d) 0 else one.shape.content()(iv))
+    val eq2:MDArray[Int] = With().ModArray(two.shape, iv => if (iv.content()(0) == d) 0 else two.shape.content()(iv))
+
+    if (!(eq1 == eq2))
       throw new Exception(opName + ": The shapes of the two arrays are not compatible for concatenation")
 
     val shape:  MDArray[Int] = With().GenArray(one.shape.shape, iv => if (iv.content()(0) == d) one.shape.content()(iv.content()(0)) + two.shape.content()(iv.content()(0)) else one.shape.content()(iv.content()(0)))

@@ -13,6 +13,7 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
 
   def dim(): Int = _shape.length
   def shape(): MDArray[Int] = _shape
+  private def shapeAsArray(): Array[Int] = _shape
   def content(): Array[A] = _content
   def sel(iv: MDArray[Int]): MDArray[A] = {
     val opName = "sel"
@@ -56,8 +57,8 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
   def <=(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.lteq, "<=")
   def >(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.gt, ">")
   def >=(that: MDArray[A])(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.gteq, ">=")
-  def ===(that: MDArray[A]): MDArray[Boolean] = op(that)((a, b) => a == b, "===")
-  def !==(that: MDArray[A]): MDArray[Boolean] = op(that)((a, b) => !(a == b), "!==")
+  def ===(that: MDArray[A]): MDArray[Boolean] = op(that)((a:A, b:A) => a == b, "===")
+  def !==(that: MDArray[A]): MDArray[Boolean] = op(that)((a:A, b:A) => !(a == b), "!==")
 
   def +(that: A)(implicit numeric: Numeric[A]): MDArray[A] = op(that)(numeric.plus, "+")
   def -(that: A)(implicit numeric: Numeric[A]): MDArray[A] = op(that)(numeric.minus, "-")
@@ -69,8 +70,8 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
   def <=(that: A)(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.lteq, "<=")
   def >(that: A)(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.gt, ">")
   def >=(that: A)(implicit ordering: Ordering[A]): MDArray[Boolean] = op(that)(ordering.gteq, ">=")
-  def ===(that: A): MDArray[Boolean] = op(that)((a, b) => a == b, "===")
-  def !==(that: A): MDArray[Boolean] = op(that)((a, b) => !(a == b), "!==")
+  def ===(that: A): MDArray[Boolean] = op(that)((a:A, b:A) => a == b, "===")
+  def !==(that: A): MDArray[Boolean] = op(that)((a:A, b:A) => !(a == b), "!==")
 
   def unary_-()(implicit numeric: Numeric[A]): MDArray[A] = uop(numeric.negate, "-[unary]")
 
@@ -142,11 +143,41 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
 
   // XXX: Staged MDArrayBaseExp: We need to have a working ==
   // and we need to get rid of the == override, so we call it ===
-  override def equals(other: Any): Boolean = other match {
-    // TODO: Here we should use manifests - we'll just rely on the generic type's capability to distinguish other types
-    case that: MDArray[_] => that.canEqual(this) && all(this === that)
+
+  override def equals(other: Any) = other match {
+    case that: MDArray[_] => that.canEqual(this) &&
+      checkArrayEquality(this.shapeAsArray, that.shapeAsArray) &&
+      checkArrayEquality(this.content, that.content)
     case _ => false
   }
+
+  def canEqual(other: Any): Boolean = other match {
+    case that: MDArray[_] => true
+    case _ => false
+  }
+
+  def checkArrayEquality(a: Array[_], b: Array[_]): Boolean = {
+    if (a.length != b.length)
+      false
+    else {
+      var result = true
+      for (i <- Stream.range(0, a.length))
+        result = result && (a(i) == b(i))
+      result
+    }
+  }
+
+//  TODO: Understand why this is wrong
+//  def equals[B](that: MDArray[B])(implicit mfB: ClassManifest[B]): Boolean = {
+//    val mfA = implicitly[ClassManifest[A]]
+//    println("array == "+mfA.toString+", "+mfB.toString)
+//
+//    if (mfA == mfB)
+//      that.canEqual(this) && this.shape == that.shape && all(this === that.asInstanceOf[MDArray[A]])
+//    else
+//      false
+//  }
+//  override def equals(other: Any): Boolean = {println("simple =="); false}
 
   override def hashCode = content.foldLeft(41)((b,a) => b + 41 * a.hashCode)
 }

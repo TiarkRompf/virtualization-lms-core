@@ -94,7 +94,7 @@ trait MDArrayBase extends Base with util.OverloadHack {
       - knownOnlyAtRuntime(a:List[A])
       - knownOnlyAtRuntime(a:A)
 
-    Since the index vectors are also MDArrays, they will be transformed in the same fashion 
+    Since the index vectors are also MDArrays, they will be transformed in the same fashion
    */
   // TODO: Conversions going back to the "real" world are problematic... Decide what to do about them
   // Implicit conversions
@@ -133,14 +133,14 @@ trait MDArrayBase extends Base with util.OverloadHack {
     def Fold[A: ClassManifest](foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = foldArrayWith(this, foldFunction, neutral, f)
     override def toString() = "With(" + _lb + ", " + _lbStrict + ", " + _ub + ", " + _ubStrict + ", " + _step + ", " + _width + ")"
   }
-  
+
   object With {
     def apply(_lb: Rep[MDArray[Int]] = nothing,
            _lbStrict: Boolean = false,
            _ub: Rep[MDArray[Int]] = nothing,
            _ubStrict: Boolean = false,
            _step: Rep[MDArray[Int]] = nothing,
-           _width: Rep[MDArray[Int]] = nothing): With = 
+           _width: Rep[MDArray[Int]] = nothing): With =
     new With(_lb, _lbStrict, _ub, _ubStrict, _step, _width)
   }
 
