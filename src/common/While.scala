@@ -25,6 +25,8 @@ trait BaseGenWhile extends GenericNestedCodegen {
   import IR._
 
   override def syms(e: Any): List[Sym[Any]] = e match {
+    // we want to hoist things out of the loop if possible, so we count nested free deps as well
+    //case While(c, b) if shallow => getFreeVarBlock(b,Nil).asInstanceOf[List[Sym[Any]]]
     case While(c, b) if shallow => Nil
     case _ => super.syms(e)
   }

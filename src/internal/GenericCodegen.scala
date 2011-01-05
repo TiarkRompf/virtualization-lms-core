@@ -19,7 +19,7 @@ trait GenericCodegen extends Scheduling {
   def emitDataStructures(): Unit = {}
   
   // exception handler
-  def exceptionHandler(outFile:File, kstream:PrintWriter): Unit = {
+  def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
       kstream.close()
       outFile.delete
   }

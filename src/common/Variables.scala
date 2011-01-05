@@ -13,6 +13,7 @@ trait Variables extends Base with OverloadHack {
 
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T]
   def __assign[T:Manifest](lhs: Var[T], rhs: Rep[T]) : Rep[Unit]
+  def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded1, mT: Manifest[T]): Rep[Unit]
 
   def infix_+=[T:Numeric:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs,rhs)
 
@@ -44,6 +45,11 @@ trait VariablesExp extends Variables with EffectExp {
 
   def __assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
     reflectMutation(Assign(lhs, rhs))
+    Const()
+  }
+
+  def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded1, mT: Manifest[T]): Exp[Unit] = {
+    reflectMutation(Assign(lhs, readVar(rhs)))
     Const()
   }
 

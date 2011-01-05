@@ -30,6 +30,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
   
   object Double {
     def parseDouble(s: Rep[String]) = obj_double_parse_double(s)
+    def PositiveInfinity = obj_double_positive_infinity
   }
 
   class DoubleOpsCls(lhs: Rep[Double]){
@@ -37,6 +38,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
   }
 
   def obj_double_parse_double(s: Rep[String]): Rep[Double]
+  def obj_double_positive_infinity: Rep[Double]
   def double_float_value(lhs: Rep[Double]): Rep[Float]
 
   /**
@@ -75,10 +77,12 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
    * Double
    */
   case class ObjDoubleParseDouble(s: Exp[String]) extends Def[Double]
+  case class ObjDoublePositiveInfinity() extends Def[Double]
   case class DoubleFloatValue(lhs: Exp[Double]) extends Def[Float]
 
-  def double_float_value(lhs: Exp[Double]) = DoubleFloatValue(lhs)
   def obj_double_parse_double(s: Exp[String]) = ObjDoubleParseDouble(s)
+  def obj_double_positive_infinity = ObjDoublePositiveInfinity()
+  def double_float_value(lhs: Exp[Double]) = DoubleFloatValue(lhs)
 
   /**
    * Int
@@ -102,6 +106,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case ObjDoubleParseDouble(s) => emitValDef(sym, "java.lang.Double.parseDouble(" + quote(s) + ")")
+    case ObjDoublePositiveInfinity() => emitValDef(sym, "scala.Double.PositiveInfinity")
     case DoubleFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
     case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")
     case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))

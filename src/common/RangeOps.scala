@@ -52,6 +52,8 @@ trait BaseGenRangeOps extends GenericNestedCodegen {
   import IR._
 
   override def syms(e: Any): List[Sym[Any]] = e match {
+    // we want to hoist things out of the loop if possible, so we count nested free deps as well
+    //case RangeForeach(start, end, i, body) if shallow => syms(start) ::: syms(end) ::: getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]])).asInstanceOf[List[Sym[Any]]]// in shallow mode, don't count deps from nested blocks
     case RangeForeach(start, end, i, body) if shallow => syms(start) ::: syms(end) // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
   }

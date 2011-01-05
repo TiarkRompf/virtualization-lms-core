@@ -15,12 +15,12 @@ trait StringOps extends Variables with OverloadHack {
 
   def infix_trim(s: Rep[String]) = string_trim(s)
   def infix_split(s: Rep[String], separators: Rep[String]) = string_split(s, separators)
-  def infix_valueOf(d: Rep[Double]) = string_valueof(d)
+  def infix_valueOf(s: Rep[String], d: Rep[Double]) = string_valueof(d)
 
   def string_plus(s: Rep[Any], o: Rep[Any]): Rep[String]
-  def string_trim(s: Rep[String]) : Rep[String]
-  def string_split(s: Rep[String], separators: Rep[String]) : Rep[Array[String]]
-  def string_valueof(d: Rep[Double]) : Rep[String]
+  def string_trim(s: Rep[String]): Rep[String]
+  def string_split(s: Rep[String], separators: Rep[String]): Rep[Array[String]]
+  def string_valueof(d: Rep[Double]): Rep[String]
 }
 
 trait StringOpsExp extends StringOps with VariablesExp {
