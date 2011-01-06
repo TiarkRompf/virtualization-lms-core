@@ -36,7 +36,7 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   case class ArrayOfMDArrays[A: ClassManifest](value: Array[Exp[MDArray[A]]]) extends Def[MDArray[A]] { override def toString() = "ArrayOfMDArrays(" + value.toString + ")" }
 
   // With
-  case class GenArrayWith[A](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], shp: Exp[MDArray[Int]])(implicit mf: ClassManifest[A]) extends Def[MDArray[A]] { override def toString() = "GenArrayWith(" + shp.toString + " - " + l.foldLeft("")((left, p) => left + "(" + p._1 + " => " + p._2 + ")") + ")" }
+  case class GenArrayWith[A](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], shp: Exp[MDArray[Int]])(implicit mf: ClassManifest[A]) extends Def[MDArray[A]] { override def toString() = "GenArrayWith(" + shp.toString + " - " + l.foldLeft("")((left, p) => left + "(" + p._1 + " iv => " + p._2 + ")") + ")" }
   case class ModArrayWith[A](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], a: Exp[MDArray[A]])(implicit mf: ClassManifest[A]) extends Def[MDArray[A]] { override def toString() = "ModArrayWith(" + a.toString + " - " + l.foldLeft("")((left, p) => left + "(" + p._1 + " => " + p._2 + ")") + ")" }
   case class FoldArrayWith[A](w: With, foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], neutral: Exp[MDArray[A]], f: Exp[MDArray[Int]] => Exp[MDArray[A]])(implicit mf: ClassManifest[A]) extends Def[MDArray[A]] { override def toString() = "FoldArrayWith(" + w.toString + ", " + foldFunction + ", " + neutral + ", " + f }
 
@@ -49,18 +49,21 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   case class Reduce[A: ClassManifest, B](z: B, op: (B,A)=>B, a: Exp[MDArray[A]]) extends Def[A] { override def toString() = "Reduce(" + z + ", " + op + ", " + a + ")" }
 
   // Assertions
-  case class AssertPrefixLt[A: ClassManifest](iv: Exp[MDArray[Int]], shp: Exp[MDArray[Int]], andThen: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "AssertPrefixLt(" + iv + ", " + shp + ", " + andThen + ")" }
-  case class AssertOneDimensional[A: ClassManifest](iv: Exp[MDArray[Int]], andThen: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "AssertOneDimensional(" + iv + ", " + andThen + ")" }
-  case class AssertEqualExcept[A: ClassManifest](d: Exp[Int], shp1: Exp[MDArray[Int]], shp2: Exp[MDArray[Int]], andThen: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "AssertEqualExcept(" + d + ", " + shp1 + ", " + shp2 + ", " + andThen + ")" }
-  case class AssertContentSizeEqual[A: ClassManifest](a: Exp[MDArray[Int]], b: Exp[MDArray[Int]], andThen: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "AssertContentSizeEqual(" + a + ", " + b + ", " + andThen + ")" }
-  case class AssertShapesEqual[A: ClassManifest, B: ClassManifest](a: Exp[MDArray[A]], b: Exp[MDArray[A]], andThen: Exp[MDArray[B]]) extends Def[MDArray[B]] { override def toString() = "AssertShapesEqual(" + a + ", " + b + ", " + andThen + ")" }
-  case class AssertShapeGreater[A: ClassManifest](shpGreater: Exp[MDArray[Int]], shpLower: Exp[MDArray[Int]], andThen: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "AssertShapeGreater(" + shpGreater + ", " + shpLower + ", " + andThen + ")" }
-  case class AssertShapeSameLength[A: ClassManifest](shpA: Exp[MDArray[Int]], shpB: Exp[MDArray[Int]], andThen: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "AssertShapeSameLength(" + shpA + ", " + shpB + ", " + andThen + ")" }
+  case class AssertPrefixLt[A: ClassManifest](iv: Exp[MDArray[Int]], shp: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertPrefixLt(" + iv + ", " + shp + ")" }
+  case class AssertOneDimensional[A: ClassManifest](iv: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertOneDimensional(" + iv + ")" }
+  case class AssertEqualExcept[A: ClassManifest](d: Exp[Int], shp1: Exp[MDArray[Int]], shp2: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertEqualExcept(" + d + ", " + shp1 + ", " + shp2 + ")" }
+  case class AssertContentSizeEqual[A: ClassManifest](a: Exp[MDArray[Int]], b: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertContentSizeEqual(" + a + ", " + b + ")" }
+  case class AssertShapesEqual(a: Exp[MDArray[Int]], b: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertShapesEqual(" + a + ", " + b + ")" }
+  case class AssertShapeGreater[A: ClassManifest](shpGreater: Exp[MDArray[Int]], shpLower: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertShapeGreater(" + shpGreater + ", " + shpLower + ")" }
+  case class AssertShapeSameLength[A: ClassManifest](shpA: Exp[MDArray[Int]], shpB: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertShapeSameLength(" + shpA + ", " + shpB + ")" }
 
   // Conversions within the staged universe
   case class FromList[A: ClassManifest](value: Exp[List[A]]) extends Def[MDArray[A]] { override def toString() = "FromList(" + value.toString + ")" }
   case class FromArray[A: ClassManifest](value: Exp[Array[A]]) extends Def[MDArray[A]] { override def toString() = "FromArray(" + value.toString + ")" }
   case class FromValue[A: ClassManifest](value: Exp[A]) extends Def[MDArray[A]] { override def toString() = "FromValue(" + value.toString + ")" }
+
+  // Values
+  case class Values[A: ClassManifest](dim: Exp[Int], value: Exp[A]) extends  Exp[MDArray[A]] { override def toString() = "Values(" + value + ", " + dim + ")"}
 
   // Going back to the real world
   case class ToList[A: ClassManifest](value: Exp[MDArray[A]]) extends Def[List[A]] { override def toString() = "ToList(" + value.toString + ")" }
@@ -117,42 +120,72 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   // Basic operations
   def dim[A: ClassManifest](a: Exp[MDArray[A]]): Exp[Int] = ToDim(a)
   def shape[A: ClassManifest](a: Exp[MDArray[A]]): Exp[MDArray[Int]] = ToShape(a)
-  def sel[A: ClassManifest](iv: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = AssertPrefixLt(iv, shape(a), toAtom(Sel(iv, a)))
-  def reshape[A: ClassManifest](iv: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = AssertContentSizeEqual(iv, shape(a), toAtom(Reshape(iv, a)))
-  def cat[A: ClassManifest](d: Int, one: Exp[MDArray[A]], two: Exp[MDArray[A]]): Exp[MDArray[A]] = AssertEqualExcept(d:Int, shape(one), shape(two), toAtom(Cat(d, one, two)))
+  def sel[A: ClassManifest](iv: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = {
+    assertPrefixLt(iv, shape(a))
+    Sel(iv, a)
+  }
+  def reshape[A: ClassManifest](iv: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = {
+    assertContentSizeEqual(iv, shape(a))
+    Reshape(iv, a)
+  }
+  def cat[A: ClassManifest](d: Int, one: Exp[MDArray[A]], two: Exp[MDArray[A]]): Exp[MDArray[A]] = {
+    assertEqualExcept(d:Int, shape(one), shape(two))
+    Cat(d, one, two)
+  }
 
   // Zeroes, ones and values
-  def values(dim: Exp[Int], value: Exp[Int]): Exp[MDArray[Int]] = With().GenArray(convertFromValueRepRep(dim), iv => value)
+  def values(dim: Exp[Int], value: Exp[Int]): Exp[MDArray[Int]] = {
+    // XXX: Let's make values a primitive, before with loops
+    // With().GenArray(convertFromValueRepRep(dim), iv => value)
+    Values(dim, value)
+  }
 
   // Where
-  def where[A: ClassManifest](p: Exp[MDArray[Boolean]], a: Exp[MDArray[A]], b: Exp[MDArray[A]]): Exp[MDArray[A]] = AssertShapesEqual(p, a, toAtom(AssertShapesEqual(p, a, With().GenArray(a.shape, iv => if (sel(iv, p)) sel(iv, a) else sel(iv, b)))))
+  def where[A: ClassManifest](p: Exp[MDArray[Boolean]], a: Exp[MDArray[A]], b: Exp[MDArray[A]]): Exp[MDArray[A]] = {
+    assertShapesEqual(shape(p), shape(a))
+    assertShapesEqual(shape(p), shape(b))
+    With().GenArray(a.shape, iv => if (sel(iv, p)) sel(iv, a) else sel(iv, b))
+  }
 
   // Restructuring operations - implemented as with-loops
-  def genarray[A: ClassManifest](shp: Exp[MDArray[Int]], value: Exp[MDArray[A]]): Exp[MDArray[A]] =
+  def genarray[A: ClassManifest](shp: Exp[MDArray[Int]], value: Exp[MDArray[A]]): Exp[MDArray[A]] = {
     With().GenArray(shp, iv => value)
-  def modarray[A: ClassManifest](a: Exp[MDArray[A]], iv: Exp[MDArray[Int]], value: Exp[MDArray[A]]): Exp[MDArray[A]] =
-    AssertPrefixLt(iv, shape(a), With(_lb = iv, _ub = iv).ModArray(a, iv => value))
+  }
+  def modarray[A: ClassManifest](a: Exp[MDArray[A]], iv: Exp[MDArray[Int]], value: Exp[MDArray[A]]): Exp[MDArray[A]] = {
+    assertPrefixLt(iv, shape(a))
+    With(_lb = iv, _ub = iv).ModArray(a, iv => value)
+  }
   // TODO: Redesign these functions for lower dimensions in the given vectors, filling in with zeros or shape elements
-  def take[A: ClassManifest](shp: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] =
-    AssertOneDimensional(shp, toAtom(AssertShapeSameLength(shp, shape(a), toAtom(AssertShapeGreater(shape(a), shp,
-      With().GenArray(shp, iv => sel(iv, a))
-    )))))
-  def drop[A: ClassManifest](shp: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] =
-    AssertOneDimensional(shp, toAtom(AssertShapeSameLength(shp, shape(a), toAtom(AssertShapeGreater(shape(a), shp,
-      With().GenArray(shape(a) - shp, iv => sel(iv + shp, a))
-    )))))
-  def tile[A: ClassManifest](sv: Exp[MDArray[Int]], ov: Exp[MDArray[Int]], a:Exp[MDArray[A]]): Exp[MDArray[A]]  =
-    AssertOneDimensional(sv, toAtom(AssertOneDimensional(ov, toAtom(AssertShapeSameLength(sv, shape(a), toAtom(AssertShapeSameLength(ov, shape(a), toAtom(AssertShapeGreater(shape(a), sv + ov,
-      With().GenArray(sv, iv => sel(iv + ov, a))
-    )))))))))
-  def rotate[A: ClassManifest](ov: Exp[MDArray[Int]], a:Exp[MDArray[A]]): Exp[MDArray[A]] =
-    AssertOneDimensional(ov, toAtom(AssertShapeSameLength(ov, shape(a),
-      With().GenArray(shape(a), iv => a(((iv - ov) + shape(a)) % shape(a)))
-    )))
-  def shift[A: ClassManifest](ov: Exp[MDArray[Int]], expr: A, a: Exp[MDArray[A]]): Exp[MDArray[A]] =
-    AssertOneDimensional(ov, toAtom(AssertShapeSameLength(ov, shape(a),
-      With().GenArray(shape(a), iv => if ((any((iv - ov) < zeros(dim(a)))) || (any((iv - ov) >= shape(a)))) expr else a(iv - ov))
-    )))
+  def take[A: ClassManifest](shp: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = {
+    assertOneDimensional(shp)
+    assertShapeSameLength(shp, shape(a))
+    assertShapeGreater(shape(a), shp)
+    With().GenArray(shp, iv => sel(iv, a))
+  }
+  def drop[A: ClassManifest](shp: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = {
+    assertOneDimensional(shp)
+    assertShapeSameLength(shp, shape(a))
+    assertShapeGreater(shape(a), shp)
+    With().GenArray(shape(a) - shp, iv => sel(iv + shp, a))
+  }
+  def tile[A: ClassManifest](sv: Exp[MDArray[Int]], ov: Exp[MDArray[Int]], a:Exp[MDArray[A]]): Exp[MDArray[A]] = {
+    assertOneDimensional(sv)
+    assertOneDimensional(ov)
+    assertShapeSameLength(sv, shape(a))
+    assertShapeSameLength(ov, shape(a))
+    assertShapeGreater(shape(a), sv + ov)
+    With().GenArray(sv, iv => sel(iv + ov, a))
+  }
+  def rotate[A: ClassManifest](ov: Exp[MDArray[Int]], a:Exp[MDArray[A]]): Exp[MDArray[A]] = {
+    assertOneDimensional(ov)
+    assertShapeSameLength(ov, shape(a))
+    With().GenArray(shape(a), iv => a(((iv - ov) + shape(a)) % shape(a)))
+  }
+  def shift[A: ClassManifest](ov: Exp[MDArray[Int]], expr: A, a: Exp[MDArray[A]]): Exp[MDArray[A]] = {
+    assertOneDimensional(ov)
+    assertShapeSameLength(ov, shape(a))
+    With().GenArray(shape(a), iv => if ((any((iv - ov) < zeros(dim(a)))) || (any((iv - ov) >= shape(a)))) expr else a(iv - ov))
+  }
 
   // Reduction operations on matrices
   def sum[A](a: Exp[MDArray[A]])(implicit ev: Numeric[A], mf: ClassManifest[A]): Exp[A] = reduceA(ev.zero, ev.plus, a, "sum")
@@ -163,12 +196,20 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   def minVal[A](a: Exp[MDArray[A]])(implicit ev: Ordering[A], mf: ClassManifest[A]): Exp[A] = reduceB(sel(zeros(dim(a)),a), (a:A, b:A) => if (ev.lt(a, b)) a else b, a, "minVal")
 
   // Basic operations on matrices - they appear as private here
-  def op[A, B](a:Exp[MDArray[A]], b:Exp[MDArray[A]])(op: (A, A) => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B], ov1: Overloaded4): Exp[MDArray[B]] = AssertShapesEqual(a, b, With().GenArray(shape(a), iv => TwoArgFunctionWrapper(op, opName)(sel(iv, a), sel(iv, b))))
-  def op[A, B](a:Exp[MDArray[A]], b:Exp[A])(op: (A, A) => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B], ov2: Overloaded5): Exp[MDArray[B]] = With().GenArray(shape(a), iv => TwoArgFunctionWrapper(op, opName)(sel(iv, a), b))
-  def uop[A, B](a:Exp[MDArray[A]])(op: A => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B]): Exp[MDArray[B]] = With().GenArray(shape(a), iv => OneArgFunctionWrapper(op, opName)(sel(iv,a)))
-  def reduceA[A](z: A, op: (A, A) => A, a: Exp[MDArray[A]], opName: String)(implicit mfA: ClassManifest[A]): Exp[A] = reduceC(Const(z), TwoArgFunctionWrapperOnMatrices(op, opName), a, opName)
-  def reduceB[A](z: Exp[MDArray[A]], op: (A, A) => A, a: Exp[MDArray[A]], opName: String)(implicit mfA: ClassManifest[A]): Exp[A] = reduceC(z, TwoArgFunctionWrapperOnMatrices(op, opName), a, opName)
-  def reduceC[A](z: Exp[MDArray[A]], op: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], a: Exp[MDArray[A]], opName: String)(implicit mfA: ClassManifest[A]): Exp[A] = With(_lb = zeros(dim(a)), _ub = shape(a), _ubStrict = true).Fold(op, z, iv => sel(iv, a))
+  def op[A, B](a:Exp[MDArray[A]], b:Exp[MDArray[A]])(op: (A, A) => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B], ov1: Overloaded4): Exp[MDArray[B]] = {
+    assertShapesEqual(shape(a), shape(b))
+    With().GenArray(shape(a), iv => TwoArgFunctionWrapper(op, opName)(sel(iv, a), sel(iv, b)))
+  }
+  def op[A, B](a:Exp[MDArray[A]], b:Exp[A])(op: (A, A) => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B], ov2: Overloaded5): Exp[MDArray[B]] =
+    With().GenArray(shape(a), iv => TwoArgFunctionWrapper(op, opName)(sel(iv, a), b))
+  def uop[A, B](a:Exp[MDArray[A]])(op: A => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B]): Exp[MDArray[B]] =
+    With().GenArray(shape(a), iv => OneArgFunctionWrapper(op, opName)(sel(iv,a)))
+  def reduceA[A](z: A, op: (A, A) => A, a: Exp[MDArray[A]], opName: String)(implicit mfA: ClassManifest[A]): Exp[A] =
+    reduceC(Const(z), TwoArgFunctionWrapperOnMatrices(op, opName), a, opName)
+  def reduceB[A](z: Exp[MDArray[A]], op: (A, A) => A, a: Exp[MDArray[A]], opName: String)(implicit mfA: ClassManifest[A]): Exp[A] =
+    reduceC(z, TwoArgFunctionWrapperOnMatrices(op, opName), a, opName)
+  def reduceC[A](z: Exp[MDArray[A]], op: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], a: Exp[MDArray[A]], opName: String)(implicit mfA: ClassManifest[A]): Exp[A] =
+    With(_lb = zeros(dim(a)), _ub = shape(a), _ubStrict = true).Fold(op, z, iv => sel(iv, a))
 
   // With-comprehensions
   def genArrayWith[A: ClassManifest](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], shp: Exp[MDArray[Int]]): Exp[MDArray[A]] = GenArrayWith(l, shp)
@@ -177,6 +218,15 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
 
   // ToString
   def doToString[A](a: Exp[MDArray[A]]) = a.toString()
+
+  // Assertions
+  def assertPrefixLt(iv: Exp[MDArray[Int]], shp: Exp[MDArray[Int]]): Exp[Unit] = AssertPrefixLt(iv, shp)
+  def assertOneDimensional(iv: Exp[MDArray[Int]]): Exp[Unit] = AssertOneDimensional(iv)
+  def assertEqualExcept(d: Exp[Int], shp1: Exp[MDArray[Int]], shp2: Exp[MDArray[Int]]): Exp[Unit] = AssertEqualExcept(d, shp1, shp2)
+  def assertContentSizeEqual(shp1: Exp[MDArray[Int]], shp2: Exp[MDArray[Int]]): Exp[Unit] = AssertContentSizeEqual(shp1, shp2)
+  def assertShapesEqual(shp1: Exp[MDArray[Int]], shp2: Exp[MDArray[Int]]): Exp[Unit] = AssertShapesEqual(shp1, shp2)
+  def assertShapeGreater(shpGreater: Exp[MDArray[Int]], shpLower: Exp[MDArray[Int]]): Exp[Unit] = AssertShapeGreater(shpGreater, shpLower)
+  def assertShapeSameLength(shpA: Exp[MDArray[Int]], shpB: Exp[MDArray[Int]]): Exp[Unit] = AssertShapeSameLength(shpA, shpB)
 
   protected val nothing: Exp[MDArray[Int]] = Nothing
 }

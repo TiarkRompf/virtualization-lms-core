@@ -128,9 +128,21 @@ trait MDArrayBase extends Base with util.OverloadHack {
              _step: Rep[MDArray[Int]] = nothing,
              _width: Rep[MDArray[Int]] = nothing) {
 
-    def GenArray[A: ClassManifest](shp: Rep[MDArray[Int]], f: Rep[MDArray[Int]]=> Rep[MDArray[A]]): Rep[MDArray[A]] = genArrayWith((this, f)::Nil, shp)
-    def ModArray[A: ClassManifest](a: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = modArrayWith((this, f)::Nil, a)
+    def GenArray[A: ClassManifest](shp: Rep[MDArray[Int]], f: Rep[MDArray[Int]]=> Rep[MDArray[A]]): Rep[MDArray[A]] = genArrayWith((fillShape(shp), f)::Nil, shp)
+    def ModArray[A: ClassManifest](a: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = modArrayWith((fillShape(shape(a)), f)::Nil, a)
     def Fold[A: ClassManifest](foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = foldArrayWith(this, foldFunction, neutral, f)
+
+    // This function will fill in the values correctly on construction :)
+    def fillShape(shape: Rep[MDArray[Int]]): With = {
+      val lb = if (_lb == nothing) zeros(dim(shape)) else _lb
+      val lbStrict = if (_lb == nothing) false else _lbStrict
+      val ub = if (_ub == nothing) shape  else _ub
+      val ubStrict = if (_ub == nothing) true else _ubStrict
+      val step = if (_step == nothing) values(dim(shape), 1) else _step
+      val width = if (_width == nothing) values(dim(shape), 0) else _width
+      With(lb, lbStrict, ub, ubStrict, step, width)
+    }
+
     override def toString() = "With(" + _lb + ", " + _lbStrict + ", " + _ub + ", " + _ubStrict + ", " + _step + ", " + _width + ")"
   }
 
@@ -188,4 +200,13 @@ trait MDArrayBase extends Base with util.OverloadHack {
   def genArrayWith[A: ClassManifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], shp: Rep[MDArray[Int]]): Rep[MDArray[A]]
   def modArrayWith[A: ClassManifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], a: Rep[MDArray[A]]): Rep[MDArray[A]]
   def foldArrayWith[A: ClassManifest](w: With, foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]]
+
+  // Assertions
+  def assertPrefixLt(iv: Rep[MDArray[Int]], shp: Rep[MDArray[Int]]): Rep[Unit]
+  def assertOneDimensional(iv: Rep[MDArray[Int]]): Rep[Unit]
+  def assertEqualExcept(d: Rep[Int], shp1: Rep[MDArray[Int]], shp2: Rep[MDArray[Int]]): Rep[Unit]
+  def assertContentSizeEqual(shp1: Rep[MDArray[Int]], shp2: Rep[MDArray[Int]]): Rep[Unit]
+  def assertShapesEqual(shp1: Rep[MDArray[Int]], shp2: Rep[MDArray[Int]]): Rep[Unit]
+  def assertShapeGreater(shpGreater: Rep[MDArray[Int]], shpLower: Rep[MDArray[Int]]): Rep[Unit]
+  def assertShapeSameLength(shpGreater: Rep[MDArray[Int]], shpLower: Rep[MDArray[Int]]): Rep[Unit]
 }
