@@ -330,6 +330,11 @@ trait ScalaGenFatLoopsFusionOpt extends ScalaGenFatLoops with ScalaGenLoops with
     // FIXME: more than one super call means exponential cost -- is there a better way?
     // ---> implicit memoization or explicit data structure
     
+    /* problem: fusion might change currentScope quite drastically
+       is there some kind of strength reduction transformation to go from here
+       to the fused version without recomputing as much as we do now?
+    */   
+    
     if (Wloops.nonEmpty) {
       var done = false
 
@@ -347,15 +352,22 @@ trait ScalaGenFatLoopsFusionOpt extends ScalaGenFatLoops with ScalaGenLoops with
         
         // find negative dependencies (those that block fusion)
         
+        // might be costly: resolve and traverse complete input deps for each loop body
+        // O(nloops*currentScope.length)   assuming schedule is linear (NOT true currently)
+        
         val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies
+          val thisLoopSyms = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
           getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-            case TTP(_, ThinDef(ArrayIndex(a, i))) if (WgetLoopVar(dx) contains i) =>
-              Nil
+            case TTP(_, ThinDef(ArrayIndex(a, i))) if (thisLoopSyms contains i) =>
+              Nil // direct deps on this'loops induction var don't count
             case sc =>
-              syms(sc.rhs).intersect(otherLoopSyms).flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
+              syms(sc.rhs).intersect(otherLoopSyms) flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
           }
         }.distinct
+      
+        // TODO: have WtableNeg keep track of the statements that prevent fusion
+        // then we can later remove the entry and see if the dependency goes away...
       
         println("wtableneg: " + WtableNeg)
         
@@ -396,15 +408,10 @@ trait ScalaGenFatLoopsFusionOpt extends ScalaGenFatLoops with ScalaGenLoops with
       
         if ((partitionsOut intersect partitionsIn) != partitionsOut) {
 
-          //currentScope = currentScope diff Wloops
-          //Wloops = partitionsOut
-          //currentScope = currentScope ::: Wloops
-          
           // equalize loop variables (TODO!)
 
           // within fused loops, remove accesses to outcomes of the fusion
 
-          //currentScope = currentScope.map { // a(i) where a = Loop { i => ... } (remove those!)
           currentScope.foreach {
             case e@TTP(List(s), ThinDef(ArrayIndex(a, i))) =>
               println("considering " + e)
@@ -424,7 +431,7 @@ trait ScalaGenFatLoopsFusionOpt extends ScalaGenFatLoops with ScalaGenLoops with
           
           currentScope = getFatSchedule(currentScope)(result) // clean things up!
 
-          // SIMPLIFY!
+          // SIMPLIFY! <--- multiple steps necessary???
           
           currentScope = foobar(t)(currentScope)
           result = t(result)

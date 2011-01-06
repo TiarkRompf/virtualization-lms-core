@@ -16,9 +16,8 @@ trait Liveness extends internal.GenericNestedCodegen {
 
   var defuse: List[(Sym[_],Sym[_])] = Nil
 
-  override def emitBlock(result: Exp[_])(implicit stream: PrintWriter): Unit = {
-    focusBlock(result) {
-      focusExactScope(result) { levelScope => 
+  override def emitBlockFocused(result: Exp[_])(implicit stream: PrintWriter): Unit = {
+    focusExactScope(result) { levelScope => 
       
       // TODO: what is the intended behavior for uses in innerScope?
       // this will likely depend on the node, i.e. ifThenElse vs. loop
@@ -56,7 +55,6 @@ trait Liveness extends internal.GenericNestedCodegen {
         }
 
       }
-    }
     }
   }
 
