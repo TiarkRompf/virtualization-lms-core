@@ -12,12 +12,16 @@ trait Variables extends Base with OverloadHack {
   //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
 
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T]
-  def __assign[T:Manifest](lhs: Var[T], rhs: Rep[T]) : Rep[Unit]
-  def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded1, mT: Manifest[T]): Rep[Unit]
+  def __assign[T:Manifest](lhs: Var[T], rhs: Rep[T]) = var_assign(lhs, rhs)
+  def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_assign(lhs, readVar(rhs))
 
-  def infix_+=[T:Numeric:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs,rhs)
+  // TODO: why doesn't this implicit kick in automatically?
+  def infix_+=[T:Numeric:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs, rhs)
+  def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T], n: Numeric[T]) = var_plusequals(lhs,rhs)
+  def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T], n: Numeric[T]) = var_plusequals(lhs,readVar(rhs))
 
-  def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: T) : Rep[Unit]
+  def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
+  def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
 }
 
 trait VariablesExp extends Variables with EffectExp {
@@ -35,7 +39,7 @@ trait VariablesExp extends Variables with EffectExp {
   case class ReadVar[T:Manifest](v: Var[T]) extends Def[T]
   case class NewVar[T:Manifest](init: Exp[T]) extends Def[T]
   case class Assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
-  case class VarPlusEquals[T:Manifest:Numeric](lhs: Var[T], rhs: T) extends Def[Unit]
+  case class VarPlusEquals[T:Manifest:Numeric](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
 
 
   def __newVar[T](init: Exp[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T] = {
@@ -43,17 +47,18 @@ trait VariablesExp extends Variables with EffectExp {
     Variable(reflectEffect(NewVar(init)))
   }
 
-  def __assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
+  def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
     reflectMutation(Assign(lhs, rhs))
     Const()
   }
 
-  def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded1, mT: Manifest[T]): Exp[Unit] = {
-    reflectMutation(Assign(lhs, readVar(rhs)))
+  def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
+    reflectMutation(VarPlusEquals(lhs, rhs))
     Const()
   }
-
-  def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: T) = reflectMutation(VarPlusEquals(lhs, rhs))
+  // TODO: not using these due to a problem with getBlockResult() getting an out-of-scope symbol without the Const
+  //def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) = reflectMutation(Assign(lhs, rhs))
+  //def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: Exp[T]) = reflectMutation(VarPlusEquals(lhs, rhs))
 }
 
 
