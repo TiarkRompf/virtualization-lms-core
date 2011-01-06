@@ -12,8 +12,10 @@ trait Variables extends Base with OverloadHack {
   //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
 
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T]
-  def __assign[T:Manifest](lhs: Var[T], rhs: Rep[T]) = var_assign(lhs, rhs)
-  def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_assign(lhs, readVar(rhs))
+
+  def __assign[T:Manifest](lhs: Var[T], rhs: T) = var_assign(lhs, rhs)
+  def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_assign(lhs, rhs)
+  def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_assign(lhs, readVar(rhs))
 
   // TODO: why doesn't this implicit kick in automatically?
   def infix_+=[T:Numeric:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs, rhs)
