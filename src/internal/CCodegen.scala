@@ -60,7 +60,7 @@ trait CCodegen extends CLikeCodegen {
 
   override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
 
-    if( (vars.length>0) || (resultIsVar) ) throw new RuntimeException("Var is not supported for CPP kernels")
+    if( (vars.length>0) || (resultIsVar) ) throw new GenerationFailedException("Var is not supported for CPP kernels")
 
     val paramStr = vals.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
     stream.println("%s kernel_%s(%s) {".format(resultType, quote(sym), paramStr))
@@ -80,7 +80,7 @@ trait CCodegen extends CLikeCodegen {
     case "Boolean" => "bool"
     case "Unit" => "void"
     case "java.lang.String" => "char *"
-    case _ => throw new RuntimeException("CGen: remap(m) : Unknown data type (%s)".format(m.toString))
+    case _ => throw new GenerationFailedException("CGen: remap(m) : Unknown data type (%s)".format(m.toString))
   }
   
 }

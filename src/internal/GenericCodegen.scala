@@ -39,7 +39,7 @@ trait GenericCodegen extends Scheduling {
   def getBlockResult[A](s: Exp[A]): Exp[A] = s
   
   def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
-    throw new Exception("don't know how to generate code for: " + rhs)
+    throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
 
   //def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit

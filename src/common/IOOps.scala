@@ -1,9 +1,9 @@
 package scala.virtualization.lms
 package common
 
-import scala.virtualization.lms.internal.{CGenBase, CLikeCodegen, CudaGenBase, ScalaGenBase}
 import java.io._
 import util.OverloadHack
+import scala.virtualization.lms.internal._
 
 trait IOOps extends Variables with OverloadHack {
 
@@ -105,10 +105,10 @@ trait CLikeGenIOOps extends CLikeCodegen {
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case ObjBrApply(f) => throw new RuntimeException("CLikeGenIOOps: Java IO operations are not supported")
-    case ObjFrApply(s) => throw new RuntimeException("CLikeGenIOOps: Java IO operations are not supported")
-    case BrReadline(b) => throw new RuntimeException("CLikeGenIOOps: Java IO operations are not supported")
-    case BrClose(b) => throw new RuntimeException("CLikeGenIOOps: Java IO operations are not supported")
+    case ObjBrApply(f) => throw new GenerationFailedException("CLikeGenIOOps: Java IO operations are not supported")
+    case ObjFrApply(s) => throw new GenerationFailedException("CLikeGenIOOps: Java IO operations are not supported")
+    case BrReadline(b) => throw new GenerationFailedException("CLikeGenIOOps: Java IO operations are not supported")
+    case BrClose(b) => throw new GenerationFailedException("CLikeGenIOOps: Java IO operations are not supported")
     case _ => super.emitNode(sym, rhs)
   }
 }

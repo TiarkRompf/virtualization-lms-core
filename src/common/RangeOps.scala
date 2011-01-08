@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CGenEffect, CudaGenEffect, GenericNestedCodegen, ScalaGenEffect}
+import scala.virtualization.lms.internal._
 
 trait RangeOps extends Base {
   // workaround for infix not working with manifests
@@ -151,7 +151,7 @@ trait CGenRangeOps extends CGenEffect with BaseGenRangeOps {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case Until(start, end) =>
-      throw new RuntimeException("CGenRangeOps: Range vector is not supported")
+      throw new GenerationFailedException("CGenRangeOps: Range vector is not supported")
     case RangeForeach(start, end, i, body) =>
       stream.println("for(int %s=%s; %s < %s; %s++) {".format(quote(i),quote(start),quote(i),quote(end),quote(i)))
       emitBlock(body)

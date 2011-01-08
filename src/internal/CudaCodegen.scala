@@ -124,8 +124,8 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
 
   override def kernelInit(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {
     // Conditions for not generating CUDA kernels (may be relaxed later)
-    if(!isObjectType(sym.Type)) throw new RuntimeException("CudaGen: Not GPUable")
-    if((vars.length > 0)  || (resultIsVar)) throw new RuntimeException("CudaGen: Not GPUable")
+    if(!isObjectType(sym.Type)) throw new GenerationFailedException("CudaGen: Not GPUable")
+    if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("CudaGen: Not GPUable")
 
     // Initialize global variables
     helperFuncString.clear
@@ -194,7 +194,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     case "float" => false
     case "double" => false
     case "bool" => false
-    case _ => throw new RuntimeException("CudaGen: isObjectType(m) : Unknown data type (%s)".format(remap(m)))
+    case _ => throw new GenerationFailedException("CudaGen: isObjectType(m) : Unknown data type (%s)".format(remap(m)))
   }
 
   override def remap[A](m: Manifest[A]) : String = m.toString match {
@@ -203,7 +203,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     case "Float" => "float"
     case "Double" => "double"
     case "Boolean" => "bool"
-    case _ => throw new RuntimeException("CudaGen: remap(m) : Unknown data type (%s)".format(m.toString))
+    case _ => throw new GenerationFailedException("CudaGen: remap(m) : Unknown data type (%s)".format(m.toString))
   }
 
   def copyDataStructureHtoD(sym: Sym[_]) : String = {

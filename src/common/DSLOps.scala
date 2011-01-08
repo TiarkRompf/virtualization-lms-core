@@ -46,7 +46,7 @@ trait CLikeGenDSLOps extends BaseGenDSLOps with CLikeCodegen {
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case op: DSLOp[_] => throw new RuntimeException("CLikeGenDSLOps: DSLOp is not supported")
+    case op: DSLOp[_] => throw new GenerationFailedException("CLikeGenDSLOps: DSLOp is not supported")
     case _ => super.emitNode(sym, rhs)
   }
 }
