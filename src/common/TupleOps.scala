@@ -2,7 +2,6 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenBase
 
 trait TupleOps extends Base {
   implicit def make_tuple2[A:Manifest,B:Manifest](t: (Rep[A], Rep[B])) : Rep[(A,B)]

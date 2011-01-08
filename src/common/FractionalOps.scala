@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
+
 
 trait FractionalOps extends ImplicitOps {
   def infix_/[A,T](lhs: Rep[T], rhs: Rep[A])(implicit c: A => T, f: Fractional[T], mA: Manifest[A], mT: Manifest[T]) = fractional_divide(lhs,implicit_convert[A,T](rhs))

@@ -47,7 +47,7 @@ trait JSNestedCodegen extends GenericNestedCodegen with JSCodegen {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
   override def quote(x: Exp[_]) = x match { // TODO: quirk!
-    case Sym(-1) => error("Sym(-1) not supported")
+    case Sym(-1) => system.error("Sym(-1) not supported")
     case _ => super.quote(x)
   }
 }

@@ -8,6 +8,8 @@ trait GenericCodegen extends Scheduling {
   val IR: Expressions
   import IR._
 
+  // TODO: should some of the methods be moved into more specific subclasses?
+  
   def kernelFileExt = ""
   def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
   def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
@@ -64,64 +66,87 @@ trait GenericCodegen extends Scheduling {
 }
 
 
+
 trait GenericNestedCodegen extends GenericCodegen {
   val IR: Expressions with Effects
   import IR._
 
   var shallow = false
 
-  var scope: List[TP[_]] = Nil
+//  var outerScope: List[TP[_]] = Nil
+//  var levelScope: List[TP[_]] = Nil
+  var innerScope: List[TP[_]] = null  // no, it's not a typo
 
-  override def emitBlock(start: Exp[_])(implicit stream: PrintWriter): Unit = {
-    // try to push stuff as far down into more control-dependent parts as
-    // possible. this is the right thing to do for conditionals, but
-    // for loops we'll need to do it the other way round (hoist stuff out). 
-    // for lambda expressions there is no clear general strategy.
+  def initialDefs = super.availableDefs
 
-    val e1 = buildScheduleForResult(start) // deep list of deps
+  override def availableDefs = if (innerScope ne null) innerScope else initialDefs
+
+
+  def focusBlock[A](result: Exp[_])(body: => A): A = {
+//    val saveOuter = outerScope
+//    val saveLevel = levelScope
+    val saveInner = innerScope
+
+//    outerScope = outerScope ::: levelScope
+//    levelScope = Nil
+    innerScope = buildScheduleForResult(result) // deep list of deps
+    
+    val rval = body
+    
+//    outerScope = saveOuter
+//    levelScope = saveLevel
+    innerScope = saveInner
+    
+    rval
+  }
+
+
+  def focusExactScope[A](result: Exp[_])(body: List[TP[_]] => A): A = {
+    
+    val saveInner = innerScope
+    
+    val e1 = availableDefs
     shallow = true
-    val e2 = buildScheduleForResult(start) // shallow list of deps (exclude stuff only needed by nested blocks)
+    val e2 = buildScheduleForResult(result) // shallow list of deps (exclude stuff only needed by nested blocks)
     shallow = false
 
-    //println("==== deep")
-    //e1.foreach(println)
-    //println("==== shallow")
-    //e2.foreach(println)
+    // shallow is 'must outside + should outside' <--- currently shallow == deep for lambdas, meaning everything 'should outside'
+    // bound is 'must inside'
 
-    val e3 = e1.filter(e2 contains _) // shallow, but with the ordering of deep!!
+    // find transitive dependencies on bound syms, including their defs (in case of effects)
+    val bound = for (TP(sym, rhs) <- e1; s <- boundSyms(rhs)) yield s
+    val g1 = getDependentStuff(bound)
+    
+    val levelScope = e1.filter(z => (e2 contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
 
-    val e4 = e3.filterNot(scope contains _) // remove stuff already emitted
-
-    val save = scope
-    scope = e4 ::: scope
-
-    for (TP(sym, rhs) <- e4) {
-      emitNode(sym, rhs)      
-    }
-
-    start match {
-      case Def(Reify(x, effects0)) =>
-        // with the current implementation the code below is not
-        // really necessary. all effects should have been emitted
-        // because of the Reflect dependencies. it's still a good
-        // sanity check though
-
-        val effects = effects0.map { case s: Sym[a] => findDefinition(s).get }
-        val actual = e4.filter(effects contains _)
-
-        // actual must be a prefix of effects!
-        assert(effects.take(actual.length) == actual, 
-            "violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
-
-        val e5 = effects.drop(actual.length)
-
-        for (TP(_, rhs) <- e5) {
-          emitNode(Sym(-1), rhs)
-        }
+    // sanity check to make sure all effects are accounted for
+    result match {
+      case Def(Reify(x, effects)) =>
+        val actual = levelScope.filter(effects contains _.sym)
+        assert(effects == actual.map(_.sym), "violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
       case _ =>
     }
 
-    scope = save
+    innerScope = e1 diff levelScope // delay everything that remains
+
+    val rval = body(levelScope)
+    
+    innerScope = saveInner
+    rval
+  }
+
+
+  override def emitBlock(result: Exp[_])(implicit stream: PrintWriter): Unit = {
+    focusBlock(result) {
+      emitBlockFocused(result)
+    }
+  }
+  
+  def emitBlockFocused(result: Exp[_])(implicit stream: PrintWriter): Unit = {
+    focusExactScope(result) { levelScope =>
+      for (TP(sym, rhs) <- levelScope)
+        emitNode(sym, rhs)
+    }
   }
 
 
@@ -139,39 +164,27 @@ trait GenericNestedCodegen extends GenericCodegen {
     case _ => super.emitNode(sym, rhs)
   }
 
+
+  // bound/used/free variables in current scope, with result y (used!) and input vars x (bound!)
+  def boundAndUsedInScope(x: List[Exp[_]], y: Exp[_]): (List[Sym[_]], List[Sym[_]]) = {
+    val used = (syms(y):::innerScope.flatMap(t => syms(t.rhs))).distinct
+    val bound = (x.flatMap(syms):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
+    (bound, used)
+  }
+  def freeInScope(x: List[Exp[_]], y: Exp[_]): List[Sym[_]] = {
+    val (bound, used) = boundAndUsedInScope(x,y)
+    used diff bound
+  }
+
+
   override def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = {
-    // Do the same things as emitBlock would
-    val e1 = buildScheduleForResult(start) // deep list of deps
-    shallow = true
-    val e2 = buildScheduleForResult(start) // shallow list of deps (exclude stuff only needed by nested blocks)
-    shallow = false
-    val e3 = e1.filter(e2 contains _) // shallow, but with the ordering of deep!!
-    val e4 = e3.filterNot(scope contains _) // remove stuff already emitted
-    val save = scope
-    scope = e4 ::: scope
-
-    // Find local symbols (including those passed as arguments to this method)
-    var localList:List[Sym[_]] = e4.map(_.sym) ::: local.toList
-
-    // Find free variables by subtracting local list from used list (shallow should be turned on)
-    shallow = true
-    var freeList:List[Sym[_]]  = e4.flatMap(syms).filter(!localList.contains(_))
-    shallow = false
-
-    // Iterate nodes to find out free variables in the nested blocks
-    for (TP(sym, rhs) <- e4) {
-      freeList = (getFreeVarNode(rhs) ::: freeList).filter(!localList.contains(_))
+    focusBlock(start) {
+      freeInScope(local, start)
     }
-
-    // restore scope
-    scope = save
-
-    // return free symbol list
-    freeList.distinct
   }
 
   //override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = { Nil }
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match { // getFreeVarBlock(syms(rhs), boundSyms(rhs))
     case Reflect(s, effects) => getFreeVarNode(s)
     case _ => Nil
   }
@@ -213,8 +226,8 @@ trait GenericNestedCodegen extends GenericCodegen {
     e4
   }
 
-  def reset {
-    scope = Nil
+  def reset { // used anywhere?
+    innerScope = null
     shallow = false
     IR.reset
   }

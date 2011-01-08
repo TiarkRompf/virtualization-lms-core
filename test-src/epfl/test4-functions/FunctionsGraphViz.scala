@@ -20,7 +20,7 @@ trait FunctionsGraphViz extends GraphVizExport {
       super.emitNode(sym, rhs)
       stream.println("color=red")
 */
-    case DefineFun(x,arg) =>
+    case DefineFun(x) =>
       super.emitNode(sym, rhs)
       stream.println("color=green")
       stream.println("style=filled")

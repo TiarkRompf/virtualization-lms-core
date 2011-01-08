@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.{FileReader, BufferedReader, PrintWriter}
-import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
+
 
 trait IOOps extends Base {
 

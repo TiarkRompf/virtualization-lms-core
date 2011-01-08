@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
+
 import scala.virtualization.lms.util.OverloadHack
 
 trait PrimitiveOps extends Variables with OverloadHack {

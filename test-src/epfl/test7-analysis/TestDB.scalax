@@ -1,0 +1,114 @@
+package scala.virtualization.lms
+package epfl
+package test7
+
+import common._
+import test1._
+
+import util.OverloadHack
+
+import java.io.{PrintWriter,StringWriter,FileOutputStream}
+
+
+
+// trait NestLambdaProg extends Arith with Functions with Print 
+// --> from TestCodeMotion.scala
+
+trait DB extends Base {
+
+  def field[A](a: Rep[_], table: String, name: String): Rep[A]
+
+}
+
+trait DBExp extends DB with BaseExp {
+
+  def field[A](a: Rep[_], table: String, name: String): Rep[A] = error("arg")
+
+}
+
+
+
+trait DBProg extends Arith with Loops with Print with DB with OverloadHack {
+  
+  trait Facilities0
+  trait Features0
+  trait Meanings0
+  
+  
+  type Facilities = Rep[Facilities0]
+  type Features = Rep[Features0]
+  type Meanings = Rep[Meanings0]
+  
+  case class Table[T](name: String)
+  
+  val Facilities: Rep[Table[Facilities0]] = Table[Facilities0]("Facilities")
+  val Features: Rep[Table[Features0]] = Table[Features0]("Facilities")
+  val Meanings: Rep[Table[Meanings0]] = Table[Meanings0]("Facilities")
+  
+  
+  implicit def table2ops[T](t: Rep[Table[T]]) = new {
+    def map[A](f: Rep[T] => Rep[A]): Rep[Table[A]] = error("boom!")
+    def filter(f: Rep[T] => Rep[Boolean]): Rep[Table[T]] = error("boom!")
+    def distinct(): Rep[Table[T]] = error("boom!")
+    def nonEmpty: Rep[Boolean] = error("boom!")
+  }
+  
+  def infix_fac(a: Facilities)(implicit z: Overloaded1): Rep[String] = field[String](a, "Facilities", "fac")
+  def infix_cat(a: Facilities): Rep[String] = field[String](a, "Facilities", "cat")
+
+  def infix_fac(a: Features)(implicit z: Overloaded2): Rep[String] = field[String](a, "Features", "fac")
+  def infix_feature(a: Features)(implicit z: Overloaded1): Rep[String] = field[String](a, "Features", "feature")
+  
+  def infix_feature(a: Meanings)(implicit z: Overloaded2): Rep[String] = field[String](a, "Meanings", "meaning")
+  def infix_meaning(a: Meanings): Rep[String] = field[String](a, "Meanings", "feature")
+
+  def infix_===(a: Rep[Any], b: Rep[Any]): Rep[Boolean] = error("boom!")
+ 
+ 
+  def test() = {
+    
+    def hasFeatures(fac: Facilities) = Features.filter(b => b.fac === fac).map(b => ())
+    
+    def cats = Facilities.map (b => b.cat).distinct()
+    
+    for (a <- cats) yield {
+      
+      val facilities = Facilities.filter(d => d.cat === a)
+      
+      val features = Features.filter (b => facilities.filter(d => b.fac === d.fac).nonEmpty)
+      
+      val meanings = features.map (b => Meanings.filter (c => c.feature === b.feature))
+      
+      (a, meanings)
+    }
+    
+  }
+  
+}
+
+
+class TestDB extends FileDiffSuite {
+  
+  val prefix = "test-out/epfl/test7-"
+  
+  def testDB1 = {
+    withOutFile(prefix+"db1") {
+      new DBProg with DBExp with ArithExp with LoopsExp with PrintExp { self =>
+        //val codegen = new ScalaGenArith with ScalaGenPrint  { val IR: self.type = self }
+        //codegen.emitSource(test, "Test", new PrintWriter(System.out))
+      }
+    }
+    assertFileEqualsCheck(prefix+"db1")
+  }
+
+  def testDB2 = {
+    withOutFile(prefix+"db2") {
+      new DBProg with DBExp with ArithExp with LoopsExp with PrintExp { self =>
+        //val codegen = new ScalaGenArith with ScalaGenPrint  { val IR: self.type = self }
+        //codegen.emitSource(test, "Test", new PrintWriter(System.out))
+      }
+    }
+    assertFileEqualsCheck(prefix+"db2")
+  }
+ 
+}

@@ -5,7 +5,7 @@ package test1
 import common._
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenBase
+
 
 trait Arith extends Base {
   //todo removed this, I can see now that having these implicits replicated everywhere can force us to control the

@@ -25,7 +25,7 @@ trait Effects extends Expressions {
     context = Nil
     
     val result = block
-    val resultR = if(context.isEmpty) result else Reify(result, context): Exp[A]
+    val resultR = if (context.isEmpty) result else Reify(result, context): Exp[A]
     context = save
     resultR
   }

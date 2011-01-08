@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenEffect, GenericNestedCodegen, ScalaGenEffect}
+import scala.virtualization.lms.internal.GenericNestedCodegen
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]): Rep[T]
@@ -53,6 +53,21 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
   import IR._
  
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case IfThenElse(c,a,b) =>
+      stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
+      emitBlock(a)
+      stream.println(quote(getBlockResult(a)))
+      stream.println("} else {")
+      emitBlock(b)
+      stream.println(quote(getBlockResult(b)))
+      stream.println("}")
+    
+    case _ => super.emitNode(sym, rhs)
+  }
+
+/* TR: I think this should belong into delite
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     /**
      * IfThenElse generates methods for each branch due to empirically discovered performance issues in the JVM
      * when generating long blocks of straight-line code in each branch.
@@ -78,6 +93,7 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
     
     case _ => super.emitNode(sym, rhs)
   }
+*/
 }
 
 trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
@@ -85,26 +101,26 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
   import IR._
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
-      rhs match {
-        case IfThenElse(c,a,b) =>
-            stream.println(addTab() + "if (" + quote(c) + ") {")
-            tabWidth += 1
-            addVarLink(getBlockResult(a).asInstanceOf[Sym[_]],sym)
-            emitBlock(a)
-            removeVarLink(getBlockResult(a).asInstanceOf[Sym[_]],sym)
-            //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
-            tabWidth -= 1
-            stream.println(addTab() + "} else {")
-            tabWidth += 1
-            addVarLink(getBlockResult(b).asInstanceOf[Sym[_]],sym)
-            emitBlock(b)
-            removeVarLink(getBlockResult(b).asInstanceOf[Sym[_]],sym)
-            //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
-            tabWidth -= 1
-            stream.println(addTab()+"}")
-            allocOutput(sym,getBlockResult(a).asInstanceOf[Sym[_]])
-        
-        case _ => super.emitNode(sym, rhs)
-      }
+    rhs match {
+      case IfThenElse(c,a,b) =>
+        stream.println(addTab() + "if (" + quote(c) + ") {")
+        tabWidth += 1
+        addVarLink(getBlockResult(a).asInstanceOf[Sym[_]],sym)
+        emitBlock(a)
+        removeVarLink(getBlockResult(a).asInstanceOf[Sym[_]],sym)
+        //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
+        tabWidth -= 1
+        stream.println(addTab() + "} else {")
+        tabWidth += 1
+        addVarLink(getBlockResult(b).asInstanceOf[Sym[_]],sym)
+        emitBlock(b)
+        removeVarLink(getBlockResult(b).asInstanceOf[Sym[_]],sym)
+        //stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
+        tabWidth -= 1
+        stream.println(addTab()+"}")
+        allocOutput(sym,getBlockResult(a).asInstanceOf[Sym[_]])
+      
+      case _ => super.emitNode(sym, rhs)
     }
+  }
 }

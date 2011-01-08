@@ -3,7 +3,6 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.{CudaGenEffect, ScalaGenEffect}
 
 trait Variables extends Base with OverloadHack {
   type Var[+T]

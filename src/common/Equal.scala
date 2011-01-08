@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
+
 
 trait Equal extends Base with Variables with OverloadHack {
   // TODO: we need a better way of handling this, too many combinations

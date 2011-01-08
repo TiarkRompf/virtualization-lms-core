@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenBase, ScalaGenBase}
+
 
 trait BooleanOps extends Variables {
   def infix_unary_!(x: Rep[Boolean]) = boolean_negate(x)

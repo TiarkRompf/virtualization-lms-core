@@ -7,7 +7,6 @@ import test1._
 
 import java.io.PrintWriter
 import java.io.FileOutputStream
-import scala.virtualization.lms.internal.ScalaGenEffect
 
 
 trait JSGenEqual extends JSGenBase {

@@ -5,16 +5,6 @@ shape=box
 color=red
 ]
 "Sym(0)" -> "Sym(2)"
-"Sym(4)" [
-label="Sym(4) \n Second(Sym(2))"
-shape=box
-]
-"Sym(2)" -> "Sym(4)"
-"Sym(6)" [
-label="Sym(6) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(4))"
-shape=box
-]
-"Sym(4)" -> "Sym(6)"
 "Sym(3)" [
 label="Sym(3) \n First(Sym(2))"
 shape=box
@@ -26,6 +16,16 @@ shape=box
 color=red
 ]
 "Sym(3)" -> "Sym(5)"
+"Sym(4)" [
+label="Sym(4) \n Second(Sym(2))"
+shape=box
+]
+"Sym(2)" -> "Sym(4)"
+"Sym(6)" [
+label="Sym(6) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(4))"
+shape=box
+]
+"Sym(4)" -> "Sym(6)"
 "Sym(7)" [
 label="Sym(7) \n Reify(Sym(6),List(Sym(2), Sym(5)))"
 shape=box
@@ -50,16 +50,6 @@ shape=box
 color=red
 ]
 "Sym(11)" -> "Sym(13)"
-"Sym(15)" [
-label="Sym(15) \n Second(Sym(13))"
-shape=box
-]
-"Sym(13)" -> "Sym(15)"
-"Sym(17)" [
-label="Sym(17) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(15))"
-shape=box
-]
-"Sym(15)" -> "Sym(17)"
 "Sym(14)" [
 label="Sym(14) \n First(Sym(13))"
 shape=box
@@ -71,6 +61,16 @@ shape=box
 color=red
 ]
 "Sym(14)" -> "Sym(16)"
+"Sym(15)" [
+label="Sym(15) \n Second(Sym(13))"
+shape=box
+]
+"Sym(13)" -> "Sym(15)"
+"Sym(17)" [
+label="Sym(17) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(15))"
+shape=box
+]
+"Sym(15)" -> "Sym(17)"
 "Sym(18)" [
 label="Sym(18) \n Reify(Sym(17),List(Sym(13), Sym(16)))"
 shape=box
@@ -106,16 +106,6 @@ shape=box
 color=red
 ]
 "Sym(25)" -> "Sym(27)"
-"Sym(29)" [
-label="Sym(29) \n Second(Sym(27))"
-shape=box
-]
-"Sym(27)" -> "Sym(29)"
-"Sym(31)" [
-label="Sym(31) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(29))"
-shape=box
-]
-"Sym(29)" -> "Sym(31)"
 "Sym(28)" [
 label="Sym(28) \n First(Sym(27))"
 shape=box
@@ -127,6 +117,16 @@ shape=box
 color=red
 ]
 "Sym(28)" -> "Sym(30)"
+"Sym(29)" [
+label="Sym(29) \n Second(Sym(27))"
+shape=box
+]
+"Sym(27)" -> "Sym(29)"
+"Sym(31)" [
+label="Sym(31) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(29))"
+shape=box
+]
+"Sym(29)" -> "Sym(31)"
 "Sym(32)" [
 label="Sym(32) \n Reify(Sym(31),List(Sym(27), Sym(30)))"
 shape=box
@@ -162,16 +162,6 @@ shape=box
 color=red
 ]
 "Sym(39)" -> "Sym(41)"
-"Sym(43)" [
-label="Sym(43) \n Second(Sym(41))"
-shape=box
-]
-"Sym(41)" -> "Sym(43)"
-"Sym(45)" [
-label="Sym(45) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(43))"
-shape=box
-]
-"Sym(43)" -> "Sym(45)"
 "Sym(42)" [
 label="Sym(42) \n First(Sym(41))"
 shape=box
@@ -183,6 +173,16 @@ shape=box
 color=red
 ]
 "Sym(42)" -> "Sym(44)"
+"Sym(43)" [
+label="Sym(43) \n Second(Sym(41))"
+shape=box
+]
+"Sym(41)" -> "Sym(43)"
+"Sym(45)" [
+label="Sym(45) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(43))"
+shape=box
+]
+"Sym(43)" -> "Sym(45)"
 "Sym(46)" [
 label="Sym(46) \n Reify(Sym(45),List(Sym(41), Sym(44)))"
 shape=box
@@ -218,16 +218,6 @@ shape=box
 color=red
 ]
 "Sym(53)" -> "Sym(55)"
-"Sym(57)" [
-label="Sym(57) \n Second(Sym(55))"
-shape=box
-]
-"Sym(55)" -> "Sym(57)"
-"Sym(59)" [
-label="Sym(59) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(57))"
-shape=box
-]
-"Sym(57)" -> "Sym(59)"
 "Sym(56)" [
 label="Sym(56) \n First(Sym(55))"
 shape=box
@@ -239,6 +229,16 @@ shape=box
 color=red
 ]
 "Sym(56)" -> "Sym(58)"
+"Sym(57)" [
+label="Sym(57) \n Second(Sym(55))"
+shape=box
+]
+"Sym(55)" -> "Sym(57)"
+"Sym(59)" [
+label="Sym(59) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(57))"
+shape=box
+]
+"Sym(57)" -> "Sym(59)"
 "Sym(60)" [
 label="Sym(60) \n Reify(Sym(59),List(Sym(55), Sym(58)))"
 shape=box
@@ -274,16 +274,6 @@ shape=box
 color=red
 ]
 "Sym(67)" -> "Sym(69)"
-"Sym(71)" [
-label="Sym(71) \n Second(Sym(69))"
-shape=box
-]
-"Sym(69)" -> "Sym(71)"
-"Sym(73)" [
-label="Sym(73) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(71))"
-shape=box
-]
-"Sym(71)" -> "Sym(73)"
 "Sym(70)" [
 label="Sym(70) \n First(Sym(69))"
 shape=box
@@ -295,6 +285,16 @@ shape=box
 color=red
 ]
 "Sym(70)" -> "Sym(72)"
+"Sym(71)" [
+label="Sym(71) \n Second(Sym(69))"
+shape=box
+]
+"Sym(69)" -> "Sym(71)"
+"Sym(73)" [
+label="Sym(73) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(71))"
+shape=box
+]
+"Sym(71)" -> "Sym(73)"
 "Sym(74)" [
 label="Sym(74) \n Reify(Sym(73),List(Sym(69), Sym(72)))"
 shape=box
@@ -319,16 +319,6 @@ shape=box
 color=red
 ]
 "Sym(78)" -> "Sym(80)"
-"Sym(82)" [
-label="Sym(82) \n Second(Sym(80))"
-shape=box
-]
-"Sym(80)" -> "Sym(82)"
-"Sym(84)" [
-label="Sym(84) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(82))"
-shape=box
-]
-"Sym(82)" -> "Sym(84)"
 "Sym(81)" [
 label="Sym(81) \n First(Sym(80))"
 shape=box
@@ -340,6 +330,16 @@ shape=box
 color=red
 ]
 "Sym(81)" -> "Sym(83)"
+"Sym(82)" [
+label="Sym(82) \n Second(Sym(80))"
+shape=box
+]
+"Sym(80)" -> "Sym(82)"
+"Sym(84)" [
+label="Sym(84) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(82))"
+shape=box
+]
+"Sym(82)" -> "Sym(84)"
 "Sym(85)" [
 label="Sym(85) \n Reify(Sym(84),List(Sym(80), Sym(83)))"
 shape=box
@@ -364,16 +364,6 @@ shape=box
 color=red
 ]
 "Sym(89)" -> "Sym(91)"
-"Sym(93)" [
-label="Sym(93) \n Second(Sym(91))"
-shape=box
-]
-"Sym(91)" -> "Sym(93)"
-"Sym(95)" [
-label="Sym(95) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(93))"
-shape=box
-]
-"Sym(93)" -> "Sym(95)"
 "Sym(92)" [
 label="Sym(92) \n First(Sym(91))"
 shape=box
@@ -385,6 +375,16 @@ shape=box
 color=red
 ]
 "Sym(92)" -> "Sym(94)"
+"Sym(93)" [
+label="Sym(93) \n Second(Sym(91))"
+shape=box
+]
+"Sym(91)" -> "Sym(93)"
+"Sym(95)" [
+label="Sym(95) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(93))"
+shape=box
+]
+"Sym(93)" -> "Sym(95)"
 "Sym(96)" [
 label="Sym(96) \n Reify(Sym(95),List(Sym(91), Sym(94)))"
 shape=box
@@ -420,16 +420,6 @@ shape=box
 color=red
 ]
 "Sym(103)" -> "Sym(105)"
-"Sym(107)" [
-label="Sym(107) \n Second(Sym(105))"
-shape=box
-]
-"Sym(105)" -> "Sym(107)"
-"Sym(109)" [
-label="Sym(109) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(107))"
-shape=box
-]
-"Sym(107)" -> "Sym(109)"
 "Sym(106)" [
 label="Sym(106) \n First(Sym(105))"
 shape=box
@@ -441,6 +431,16 @@ shape=box
 color=red
 ]
 "Sym(106)" -> "Sym(108)"
+"Sym(107)" [
+label="Sym(107) \n Second(Sym(105))"
+shape=box
+]
+"Sym(105)" -> "Sym(107)"
+"Sym(109)" [
+label="Sym(109) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(107))"
+shape=box
+]
+"Sym(107)" -> "Sym(109)"
 "Sym(110)" [
 label="Sym(110) \n Reify(Sym(109),List(Sym(105), Sym(108)))"
 shape=box
@@ -476,16 +476,6 @@ shape=box
 color=red
 ]
 "Sym(117)" -> "Sym(119)"
-"Sym(121)" [
-label="Sym(121) \n Second(Sym(119))"
-shape=box
-]
-"Sym(119)" -> "Sym(121)"
-"Sym(123)" [
-label="Sym(123) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(121))"
-shape=box
-]
-"Sym(121)" -> "Sym(123)"
 "Sym(120)" [
 label="Sym(120) \n First(Sym(119))"
 shape=box
@@ -497,6 +487,16 @@ shape=box
 color=red
 ]
 "Sym(120)" -> "Sym(122)"
+"Sym(121)" [
+label="Sym(121) \n Second(Sym(119))"
+shape=box
+]
+"Sym(119)" -> "Sym(121)"
+"Sym(123)" [
+label="Sym(123) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(121))"
+shape=box
+]
+"Sym(121)" -> "Sym(123)"
 "Sym(124)" [
 label="Sym(124) \n Reify(Sym(123),List(Sym(119), Sym(122)))"
 shape=box
@@ -532,16 +532,6 @@ shape=box
 color=red
 ]
 "Sym(131)" -> "Sym(133)"
-"Sym(135)" [
-label="Sym(135) \n Second(Sym(133))"
-shape=box
-]
-"Sym(133)" -> "Sym(135)"
-"Sym(137)" [
-label="Sym(137) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(135))"
-shape=box
-]
-"Sym(135)" -> "Sym(137)"
 "Sym(134)" [
 label="Sym(134) \n First(Sym(133))"
 shape=box
@@ -553,6 +543,16 @@ shape=box
 color=red
 ]
 "Sym(134)" -> "Sym(136)"
+"Sym(135)" [
+label="Sym(135) \n Second(Sym(133))"
+shape=box
+]
+"Sym(133)" -> "Sym(135)"
+"Sym(137)" [
+label="Sym(137) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(135))"
+shape=box
+]
+"Sym(135)" -> "Sym(137)"
 "Sym(138)" [
 label="Sym(138) \n Reify(Sym(137),List(Sym(133), Sym(136)))"
 shape=box
@@ -651,16 +651,6 @@ shape=box
 color=red
 ]
 "Sym(188)" -> "Sym(190)"
-"Sym(192)" [
-label="Sym(192) \n Second(Sym(190))"
-shape=box
-]
-"Sym(190)" -> "Sym(192)"
-"Sym(194)" [
-label="Sym(194) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(192))"
-shape=box
-]
-"Sym(192)" -> "Sym(194)"
 "Sym(191)" [
 label="Sym(191) \n First(Sym(190))"
 shape=box
@@ -672,6 +662,16 @@ shape=box
 color=red
 ]
 "Sym(191)" -> "Sym(193)"
+"Sym(192)" [
+label="Sym(192) \n Second(Sym(190))"
+shape=box
+]
+"Sym(190)" -> "Sym(192)"
+"Sym(194)" [
+label="Sym(194) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(192))"
+shape=box
+]
+"Sym(192)" -> "Sym(194)"
 "Sym(195)" [
 label="Sym(195) \n Reify(Sym(194),List(Sym(190), Sym(193)))"
 shape=box
@@ -707,16 +707,6 @@ shape=box
 color=red
 ]
 "Sym(202)" -> "Sym(204)"
-"Sym(206)" [
-label="Sym(206) \n Second(Sym(204))"
-shape=box
-]
-"Sym(204)" -> "Sym(206)"
-"Sym(208)" [
-label="Sym(208) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(206))"
-shape=box
-]
-"Sym(206)" -> "Sym(208)"
 "Sym(205)" [
 label="Sym(205) \n First(Sym(204))"
 shape=box
@@ -728,6 +718,16 @@ shape=box
 color=red
 ]
 "Sym(205)" -> "Sym(207)"
+"Sym(206)" [
+label="Sym(206) \n Second(Sym(204))"
+shape=box
+]
+"Sym(204)" -> "Sym(206)"
+"Sym(208)" [
+label="Sym(208) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(206))"
+shape=box
+]
+"Sym(206)" -> "Sym(208)"
 "Sym(209)" [
 label="Sym(209) \n Reify(Sym(208),List(Sym(204), Sym(207)))"
 shape=box
@@ -763,16 +763,6 @@ shape=box
 color=red
 ]
 "Sym(216)" -> "Sym(218)"
-"Sym(220)" [
-label="Sym(220) \n Second(Sym(218))"
-shape=box
-]
-"Sym(218)" -> "Sym(220)"
-"Sym(222)" [
-label="Sym(222) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(220))"
-shape=box
-]
-"Sym(220)" -> "Sym(222)"
 "Sym(219)" [
 label="Sym(219) \n First(Sym(218))"
 shape=box
@@ -784,6 +774,16 @@ shape=box
 color=red
 ]
 "Sym(219)" -> "Sym(221)"
+"Sym(220)" [
+label="Sym(220) \n Second(Sym(218))"
+shape=box
+]
+"Sym(218)" -> "Sym(220)"
+"Sym(222)" [
+label="Sym(222) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(220))"
+shape=box
+]
+"Sym(220)" -> "Sym(222)"
 "Sym(223)" [
 label="Sym(223) \n Reify(Sym(222),List(Sym(218), Sym(221)))"
 shape=box

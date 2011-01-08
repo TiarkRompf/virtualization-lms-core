@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{GenericNestedCodegen, CudaGenEffect, ScalaGenEffect}
+import scala.virtualization.lms.internal.GenericNestedCodegen
 
 trait DSLOpsExp extends EffectExp {
   // representation must be reified! this places the burden on the caller, but allows the caller to avoid the

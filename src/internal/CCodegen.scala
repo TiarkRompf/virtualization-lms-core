@@ -68,11 +68,3 @@ trait CNestedCodegen extends GenericNestedCodegen with CCodegen {
   
 }
 
-trait CGenBase extends CCodegen {
-  import IR._
-
-}
-
-trait CGenEffect extends CNestedCodegen with CGenBase {
-
-}

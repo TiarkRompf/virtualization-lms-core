@@ -665,12 +665,3 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
   }
   
 }
-
-trait CudaGenBase extends CudaCodegen {
-  import IR._
-
-}
-
-trait CudaGenEffect extends CudaNestedCodegen with CudaGenBase {
-
-}

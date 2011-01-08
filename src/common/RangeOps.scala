@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CudaGenEffect, GenericNestedCodegen, ScalaGenEffect}
+import scala.virtualization.lms.internal.GenericNestedCodegen
 
 trait RangeOps extends Base {
   // workaround for infix not working with manifests
@@ -30,7 +30,7 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   case class RangeStep(r: Exp[Range]) extends Def[Int]
   case class RangeEnd(r: Exp[Range]) extends Def[Int]
   //case class RangeForeach(r: Exp[Range], i: Exp[Int], body: Exp[Unit]) extends Def[Unit]
-  case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Exp[Int], body: Exp[Unit]) extends Def[Unit]
+  case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Sym[Int], body: Exp[Unit]) extends Def[Unit]
 
   def range_until(start: Exp[Int], end: Exp[Int]) : Exp[Range] = Until(start, end)
   def range_start(r: Exp[Range]) : Exp[Int] = RangeStart(r)
@@ -51,10 +51,24 @@ trait BaseGenRangeOps extends GenericNestedCodegen {
   val IR: RangeOpsExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match {
+/*
+  override def syms(e: Any): List[Sym[Any]] = e match { //TR TODO!
     case RangeForeach(start, end, i, body) if shallow => syms(start) ::: syms(end) // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
   }
+*/
+
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case RangeForeach(start, end, i, body) => syms(start):::syms(end):::syms(body)
+    case _ => super.syms(e)
+  }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case RangeForeach(start, end, i, Def(Reify(y, es))) => i :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y)
+    case RangeForeach(start, end, i, y) => i :: boundSyms(y)
+    case _ => super.boundSyms(e)
+  }
+
 
   override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
     case RangeForeach(start, end, i, body) => getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
