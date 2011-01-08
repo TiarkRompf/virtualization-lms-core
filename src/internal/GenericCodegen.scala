@@ -88,7 +88,16 @@ trait GenericNestedCodegen extends GenericCodegen {
     //println("==== shallow")
     //e2.foreach(println)
 
-    val e3 = e1.filter(e2 contains _) // shallow, but with the ordering of deep!!
+    // shallow is 'must outside + should outside' <--- currently shallow == deep for lambdas, meaning everything 'should outside'
+    // bound is 'must inside'
+
+    // find transitive dependencies on bound syms, including their defs (in case of effects)
+    val bound = for (TP(sym, rhs) <- e1; s <- boundSyms(rhs)) yield s
+    val g1 = getDependentStuff(bound)
+
+    val e3 = e1.filter(z => (e2 contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
+
+    //val e3 = e1.filter(e2 contains _) // shallow, but with the ordering of deep!!
 
     val e4 = e3.filterNot(scope contains _) // remove stuff already emitted
 
@@ -145,7 +154,12 @@ trait GenericNestedCodegen extends GenericCodegen {
     shallow = true
     val e2 = buildScheduleForResult(start) // shallow list of deps (exclude stuff only needed by nested blocks)
     shallow = false
-    val e3 = e1.filter(e2 contains _) // shallow, but with the ordering of deep!!
+
+    val bound = for (TP(sym, rhs) <- e1; s <- boundSyms(rhs)) yield s
+    val g1 = getDependentStuff(bound)
+    val e3 = e1.filter(z => (e2 contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
+
+    //val e3 = e1.filter(e2 contains _) // shallow, but with the ordering of deep!!
     val e4 = e3.filterNot(scope contains _) // remove stuff already emitted
     val save = scope
     scope = e4 ::: scope
