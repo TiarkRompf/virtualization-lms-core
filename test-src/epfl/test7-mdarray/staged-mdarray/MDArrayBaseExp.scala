@@ -27,68 +27,63 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   case class KnownShapeDim(dim: Int) extends Shape
   case class KnownShape(shape: MDArray[Int]) extends Shape
 
+  // Override the type given by the program
+  // TODO: Make this work
+  //override type Type = Shape
+
   /*
       Basic AST building blocks
    */
-  case class KnownAtRuntime[A: ClassManifest](name: String) extends Def[MDArray[A]] { override def toString() = "KnownAtRuntime(" + name + ")" }
-  case class KnownAtCompileTime[A: ClassManifest](value: MDArray[A]) extends Def[MDArray[A]] { override def toString() = "KnownAtCompileTime(" + value.toString + ")" }
-  case class ListOfMDArrays[A: ClassManifest](value: List[Exp[MDArray[A]]]) extends Def[MDArray[A]] { override def toString() = "ListOfMDArrays(" + value.toString + ")" }
-  case class ArrayOfMDArrays[A: ClassManifest](value: Array[Exp[MDArray[A]]]) extends Def[MDArray[A]] { override def toString() = "ArrayOfMDArrays(" + value.toString + ")" }
+  case class KnownAtRuntime[A: ClassManifest](name: String) extends RichDef[MDArray[A]](Nil) { override def toString() = "KnownAtRuntime(" + name + ")" }
+  case class KnownAtCompileTime[A: ClassManifest](value: MDArray[A]) extends RichDef[MDArray[A]](Nil) { override def toString() = "KnownAtCompileTime(" + value.toString + ")" }
+  case class ListOfMDArrays[A: ClassManifest](value: List[Exp[MDArray[A]]]) extends RichDef[MDArray[A]](value) { override def toString() = "ListOfMDArrays(" + value.toString + ")" }
+  case class ArrayOfMDArrays[A: ClassManifest](value: Array[Exp[MDArray[A]]]) extends RichDef[MDArray[A]](value.toList) { override def toString() = "ArrayOfMDArrays(" + value.toString + ")" }
 
   // With
-  case class GenArrayWith[A](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], shp: Exp[MDArray[Int]])(implicit mf: ClassManifest[A]) extends Def[MDArray[A]] { override def toString() = "GenArrayWith(" + shp.toString + " - " + l.foldLeft("")((left, p) => left + "(" + p._1 + " iv => " + p._2 + ")") + ")" }
-  case class ModArrayWith[A](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], a: Exp[MDArray[A]])(implicit mf: ClassManifest[A]) extends Def[MDArray[A]] { override def toString() = "ModArrayWith(" + a.toString + " - " + l.foldLeft("")((left, p) => left + "(" + p._1 + " => " + p._2 + ")") + ")" }
-  case class FoldArrayWith[A](w: With, foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], neutral: Exp[MDArray[A]], f: Exp[MDArray[Int]] => Exp[MDArray[A]])(implicit mf: ClassManifest[A]) extends Def[MDArray[A]] { override def toString() = "FoldArrayWith(" + w.toString + ", " + foldFunction + ", " + neutral + ", " + f }
+  // TODO: Explain function "execution"
+  case class GenArrayWith[A: ClassManifest](l: List[WithNode[A]], shp: Exp[MDArray[Int]]) extends RichDef[MDArray[A]](shp::l.map(w => toAtom(w))) { override def toString() = "GenArrayWith(" + shp.toString + " - " + l.mkString(", ") + ")" }
+  case class ModArrayWith[A: ClassManifest](l: List[WithNode[A]], a: Exp[MDArray[A]]) extends RichDef[MDArray[A]](a::l.map(w => toAtom(w))) { override def toString() = "ModArrayWith(" + a.toString + " - " + l.mkString(", ") + ")" }
+  // TODO: Important implicit assumption made here -- we assume foldFunction has no outside dependencies. According to the SAC spec, it should indeed be the case, but proving it would be better
+  case class FoldArrayWith[A: ClassManifest](neutral: Exp[MDArray[A]], foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], w: WithNode[A]) extends RichDef[MDArray[A]](neutral::toAtom(w)::Nil) { override def toString() = "FoldArrayWith(" + neutral + ", " + foldFunction + ", " + w + ")" }
+  case class IndexVector(w: With) extends RichDef[MDArray[Int]](w.usedDefs) { override def toString() = "IndexVector(" + w.toString + ")" }
+  case class WithNode[A: ClassManifest](iv: IndexVector, f: Exp[MDArray[Int]] => Exp[MDArray[A]]) extends RichDef[Unit](toAtom(iv)::f(iv)::Nil) { override def toString() = "With(" + iv.toString + " => " + f(iv).toString + ")" }
+
 
   // Base functions
-  case class ToDim[A: ClassManifest](a: Exp[MDArray[A]]) extends Def[Int] { override def toString() = "Dim(" + a + ")" }
-  case class ToShape[A: ClassManifest](a: Exp[MDArray[A]]) extends Def[MDArray[Int]] { override def toString() = "Shape(" + a + ")" }
-  case class Reshape[A: ClassManifest](shp: Exp[MDArray[Int]], a: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "Reshape(" + shp + ", " + a + ")" }
-  case class Sel[A: ClassManifest](iv: Exp[MDArray[Int]], a: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "Sel(" + iv + ", " + a + ")" }
-  case class Cat[A: ClassManifest](d: Exp[Int], a: Exp[MDArray[A]], b: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "Cat(" + d + ", " + a + ", " + b + ")" }
-  case class Reduce[A: ClassManifest, B](z: B, op: (B,A)=>B, a: Exp[MDArray[A]]) extends Def[A] { override def toString() = "Reduce(" + z + ", " + op + ", " + a + ")" }
+  case class ToDim[A: ClassManifest](a: Exp[MDArray[A]]) extends RichDef[Int](a::Nil) { override def toString() = "Dim(" + a + ")" }
+  case class ToShape[A: ClassManifest](a: Exp[MDArray[A]]) extends RichDef[MDArray[Int]](a::Nil) { override def toString() = "Shape(" + a + ")" }
+  case class Reshape[A: ClassManifest](shp: Exp[MDArray[Int]], a: Exp[MDArray[A]]) extends RichDef[MDArray[A]](shp::a::Nil) { override def toString() = "Reshape(" + shp + ", " + a + ")" }
+  case class Sel[A: ClassManifest](iv: Exp[MDArray[Int]], a: Exp[MDArray[A]]) extends RichDef[MDArray[A]](iv::a::Nil) { override def toString() = "Sel(" + iv + ", " + a + ")" }
+  case class Cat[A: ClassManifest](d: Exp[Int], a: Exp[MDArray[A]], b: Exp[MDArray[A]]) extends RichDef[MDArray[A]](d::a::b::Nil) { override def toString() = "Cat(" + d + ", " + a + ", " + b + ")" }
+  case class Reduce[A: ClassManifest, B](z: Exp[B], a: Exp[MDArray[A]], op: (B,A)=>B, opName: String) extends RichDef[A](z::a::Nil) { override def toString() = "Reduce(" + z + ", " + opName + ", " + a + ")" }
 
   // Assertions
-  case class AssertPrefixLt[A: ClassManifest](iv: Exp[MDArray[Int]], shp: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertPrefixLt(" + iv + ", " + shp + ")" }
-  case class AssertOneDimensional[A: ClassManifest](iv: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertOneDimensional(" + iv + ")" }
-  case class AssertEqualExcept[A: ClassManifest](d: Exp[Int], shp1: Exp[MDArray[Int]], shp2: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertEqualExcept(" + d + ", " + shp1 + ", " + shp2 + ")" }
-  case class AssertContentSizeEqual[A: ClassManifest](a: Exp[MDArray[Int]], b: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertContentSizeEqual(" + a + ", " + b + ")" }
-  case class AssertShapesEqual(a: Exp[MDArray[Int]], b: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertShapesEqual(" + a + ", " + b + ")" }
-  case class AssertShapeGreater[A: ClassManifest](shpGreater: Exp[MDArray[Int]], shpLower: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertShapeGreater(" + shpGreater + ", " + shpLower + ")" }
-  case class AssertShapeSameLength[A: ClassManifest](shpA: Exp[MDArray[Int]], shpB: Exp[MDArray[Int]]) extends Def[Unit] { override def toString() = "AssertShapeSameLength(" + shpA + ", " + shpB + ")" }
+  case class AssertPrefixLt[A: ClassManifest](iv: Exp[MDArray[Int]], shp: Exp[MDArray[Int]]) extends RichDef[Unit](iv::shp::Nil) { override def toString() = "AssertPrefixLt(" + iv + ", " + shp + ")" }
+  case class AssertOneDimensional[A: ClassManifest](iv: Exp[MDArray[Int]]) extends RichDef[Unit](iv::Nil) { override def toString() = "AssertOneDimensional(" + iv + ")" }
+  case class AssertEqualExcept[A: ClassManifest](d: Exp[Int], shp1: Exp[MDArray[Int]], shp2: Exp[MDArray[Int]]) extends RichDef[Unit](d::shp1::shp2::Nil) { override def toString() = "AssertEqualExcept(" + d + ", " + shp1 + ", " + shp2 + ")" }
+  case class AssertContentSizeEqual[A: ClassManifest](a: Exp[MDArray[Int]], b: Exp[MDArray[Int]]) extends RichDef[Unit](a::b::Nil) { override def toString() = "AssertContentSizeEqual(" + a + ", " + b + ")" }
+  case class AssertShapesEqual(a: Exp[MDArray[Int]], b: Exp[MDArray[Int]]) extends RichDef[Unit](a::b::Nil) { override def toString() = "AssertShapesEqual(" + a + ", " + b + ")" }
+  case class AssertShapeGreater[A: ClassManifest](shpGreater: Exp[MDArray[Int]], shpLower: Exp[MDArray[Int]]) extends RichDef[Unit](shpGreater::shpLower::Nil) { override def toString() = "AssertShapeGreater(" + shpGreater + ", " + shpLower + ")" }
+  case class AssertShapeSameLength[A: ClassManifest](shpA: Exp[MDArray[Int]], shpB: Exp[MDArray[Int]]) extends RichDef[Unit](shpA::shpB::Nil) { override def toString() = "AssertShapeSameLength(" + shpA + ", " + shpB + ")" }
 
   // Conversions within the staged universe
-  case class FromList[A: ClassManifest](value: Exp[List[A]]) extends Def[MDArray[A]] { override def toString() = "FromList(" + value.toString + ")" }
-  case class FromArray[A: ClassManifest](value: Exp[Array[A]]) extends Def[MDArray[A]] { override def toString() = "FromArray(" + value.toString + ")" }
-  case class FromValue[A: ClassManifest](value: Exp[A]) extends Def[MDArray[A]] { override def toString() = "FromValue(" + value.toString + ")" }
+  case class FromList[A: ClassManifest](value: Exp[List[A]]) extends RichDef[MDArray[A]](value::Nil) { override def toString() = "FromList(" + value.toString + ")" }
+  case class FromArray[A: ClassManifest](value: Exp[Array[A]]) extends RichDef[MDArray[A]](value::Nil) { override def toString() = "FromArray(" + value.toString + ")" }
+  case class FromValue[A: ClassManifest](value: Exp[A]) extends RichDef[MDArray[A]](value::Nil) { override def toString() = "FromValue(" + value.toString + ")" }
 
   // Values
-  case class Values[A: ClassManifest](dim: Exp[Int], value: Exp[A]) extends  Exp[MDArray[A]] { override def toString() = "Values(" + value + ", " + dim + ")"}
+  case class Values[A: ClassManifest](dim: Exp[Int], value: Exp[A]) extends RichDef[MDArray[A]](dim::value::Nil) { override def toString() = "Values(" + value + ", " + dim + ")"}
 
   // Going back to the real world
-  case class ToList[A: ClassManifest](value: Exp[MDArray[A]]) extends Def[List[A]] { override def toString() = "ToList(" + value.toString + ")" }
-  case class ToArray[A: ClassManifest](value: Exp[MDArray[A]]) extends Def[Array[A]] { override def toString() = "ToArray(" + value.toString + ")" }
-  case class ToValue[A: ClassManifest](value: Exp[MDArray[A]]) extends Def[A] { override def toString() = "ToValue(" + value.toString + ")" }
+  case class ToList[A: ClassManifest](value: Exp[MDArray[A]]) extends RichDef[List[A]](value::Nil) { override def toString() = "ToList(" + value.toString + ")" }
+  case class ToArray[A: ClassManifest](value: Exp[MDArray[A]]) extends RichDef[Array[A]](value::Nil) { override def toString() = "ToArray(" + value.toString + ")" }
+  case class ToValue[A: ClassManifest](value: Exp[MDArray[A]]) extends RichDef[A](value::Nil) { override def toString() = "ToValue(" + value.toString + ")" }
 
-  // FunctionWrapper
-  case class TwoArgFunctionWrapper[A, B](f: (A, A) => B, opName: String = "<no name>") extends ((Exp[A], Exp[A]) => Exp[B]) {
-    override def apply(a: Exp[A], b: Exp[A]) = TwoArgApplication(this, a, b)
-    override def toString() = "TwoArgFunctionWrapper(" + opName + ")"
-  }
-  case class OneArgFunctionWrapper[A, B](f: (A) => B, opName: String = "<no name>") extends (Exp[A] => Exp[B]) {
-    override def apply(a: Exp[A]) = OneArgApplication(this, a)
-    override def toString() = "OneArgFunctionWrapper(" + opName + ")"
-  }
-  case class TwoArgFunctionWrapperOnMatrices[A, B](f: (A, A) => B, opName: String = "<no name>") extends ((Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[B]]) {
-    override def apply(a: Exp[MDArray[A]], b: Exp[MDArray[A]]) = TwoArgApplication(this, a, b)
-    override def toString() = "TwoArgFunctionWrapperOnMatrices(" + opName + ")"
-  }
-  case class OneArgFunctionWrapperOnMatrices[A, B](f: (A) => B, opName: String = "<no name>") extends (Exp[MDArray[A]] => Exp[MDArray[B]]) {
-    override def apply(a: Exp[MDArray[A]]) = OneArgApplication(this, a)
-    override def toString() = "OneArgFunctionWrapperOnMatrices(" + opName + ")"
-  }
-  case class TwoArgApplication[A, B, C](f: (Exp[A], Exp[B]) => Exp[C], a1: Exp[A], a2: Exp[B]) extends Def[C] { override def toString() = "TwoArgApplication(" + f + ", " + a1 + ", " + a2 + ")" }
-  case class OneArgApplication[A, B](f: Exp[A] => Exp[B], a1: Exp[A]) extends Def[B] { override def toString() = "OneArgApplication(" + f + ", " + a1 + ")" }
+  // Operations
+  case class InfixOpAA[A: ClassManifest, B: ClassManifest](array1: Exp[MDArray[A]], array2: Exp[MDArray[A]], op: (A, A) => B, opName: String) extends RichDef[MDArray[B]](array1::array2::Nil) { override def toString() = "InfixOpAA(" + opName + ": " + array1 + " and " + array2 + ")" }
+  case class InfixOpAE[A: ClassManifest, B: ClassManifest](array: Exp[MDArray[A]], element: Exp[A], op: (A, A) => B, opName: String) extends RichDef[MDArray[B]](array::element::Nil) { override def toString() = "InfixOpAE(" + opName + ": " + array + " and " + element + ")" }
+  case class UnaryOp[A: ClassManifest, B: ClassManifest](array: Exp[MDArray[A]], op: A => B, opName: String) extends RichDef[MDArray[B]](array::Nil) { override def toString() = "UnaryOp(" + opName + ": " + array + ")" }
+
   case object Nothing extends Def[MDArray[Int]] { override def toString() = "<null>" }
 
   /*
@@ -144,7 +139,7 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   def where[A: ClassManifest](p: Exp[MDArray[Boolean]], a: Exp[MDArray[A]], b: Exp[MDArray[A]]): Exp[MDArray[A]] = {
     assertShapesEqual(shape(p), shape(a))
     assertShapesEqual(shape(p), shape(b))
-    With().GenArray(a.shape, iv => if (sel(iv, p)) sel(iv, a) else sel(iv, b))
+    With().GenArray(shape(a), iv => if (sel(iv, p)) sel(iv, a) else sel(iv, b))
   }
 
   // Restructuring operations - implemented as with-loops
@@ -188,33 +183,29 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   }
 
   // Reduction operations on matrices
-  def sum[A](a: Exp[MDArray[A]])(implicit ev: Numeric[A], mf: ClassManifest[A]): Exp[A] = reduceA(ev.zero, ev.plus, a, "sum")
-  def prod[A](a: Exp[MDArray[A]])(implicit ev: Numeric[A], mf: ClassManifest[A]): Exp[A] = reduceA(ev.one, ev.times, a, "prod")
-  def all(a: Exp[MDArray[Boolean]]): Exp[Boolean] = reduceA(true, (x:Boolean, y:Boolean) => x && y, a, "all")
-  def any(a: Exp[MDArray[Boolean]]): Exp[Boolean] = reduceA(false, (x:Boolean, y:Boolean) => x || y, a, "any")
-  def maxVal[A](a: Exp[MDArray[A]])(implicit ev: Ordering[A], mf: ClassManifest[A]): Exp[A] = reduceB(sel(zeros(dim(a)),a), (a:A, b:A) => if (ev.gt(a, b)) a else b, a, "maxVal")
-  def minVal[A](a: Exp[MDArray[A]])(implicit ev: Ordering[A], mf: ClassManifest[A]): Exp[A] = reduceB(sel(zeros(dim(a)),a), (a:A, b:A) => if (ev.lt(a, b)) a else b, a, "minVal")
+  def sum[A](a: Exp[MDArray[A]])(implicit ev: Numeric[A], mf: ClassManifest[A]): Exp[A] = reduce[A](ev.zero, a, ev.plus, "sum")
+  def prod[A](a: Exp[MDArray[A]])(implicit ev: Numeric[A], mf: ClassManifest[A]): Exp[A] = reduce[A](ev.one, a, ev.times, "prod")
+  def all(a: Exp[MDArray[Boolean]]): Exp[Boolean] = reduce[Boolean](true, a, (x:Boolean, y:Boolean) => x && y, "all")
+  def any(a: Exp[MDArray[Boolean]]): Exp[Boolean] = reduce[Boolean](false, a, (x:Boolean, y:Boolean) => x || y, "any")
+  def maxVal[A](a: Exp[MDArray[A]])(implicit ev: Ordering[A], mf: ClassManifest[A]): Exp[A] = reduce[A](sel(zeros(dim(a)),a), a, (a:A, b:A) => if (ev.gt(a, b)) a else b, "maxVal")
+  def minVal[A](a: Exp[MDArray[A]])(implicit ev: Ordering[A], mf: ClassManifest[A]): Exp[A] = reduce[A](sel(zeros(dim(a)),a), a, (a:A, b:A) => if (ev.lt(a, b)) a else b, "minVal")
 
   // Basic operations on matrices - they appear as private here
   def op[A, B](a:Exp[MDArray[A]], b:Exp[MDArray[A]])(op: (A, A) => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B], ov1: Overloaded4): Exp[MDArray[B]] = {
     assertShapesEqual(shape(a), shape(b))
-    With().GenArray(shape(a), iv => TwoArgFunctionWrapper(op, opName)(sel(iv, a), sel(iv, b)))
+    InfixOpAA(a, b, op, opName)
   }
   def op[A, B](a:Exp[MDArray[A]], b:Exp[A])(op: (A, A) => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B], ov2: Overloaded5): Exp[MDArray[B]] =
-    With().GenArray(shape(a), iv => TwoArgFunctionWrapper(op, opName)(sel(iv, a), b))
+    InfixOpAE(a, b, op, opName)
   def uop[A, B](a:Exp[MDArray[A]])(op: A => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B]): Exp[MDArray[B]] =
-    With().GenArray(shape(a), iv => OneArgFunctionWrapper(op, opName)(sel(iv,a)))
-  def reduceA[A](z: A, op: (A, A) => A, a: Exp[MDArray[A]], opName: String)(implicit mfA: ClassManifest[A]): Exp[A] =
-    reduceC(Const(z), TwoArgFunctionWrapperOnMatrices(op, opName), a, opName)
-  def reduceB[A](z: Exp[MDArray[A]], op: (A, A) => A, a: Exp[MDArray[A]], opName: String)(implicit mfA: ClassManifest[A]): Exp[A] =
-    reduceC(z, TwoArgFunctionWrapperOnMatrices(op, opName), a, opName)
-  def reduceC[A](z: Exp[MDArray[A]], op: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], a: Exp[MDArray[A]], opName: String)(implicit mfA: ClassManifest[A]): Exp[A] =
-    With(_lb = zeros(dim(a)), _ub = shape(a), _ubStrict = true).Fold(op, z, iv => sel(iv, a))
+    UnaryOp(a, op, opName)
+  def reduce[A](z: Exp[A], a: Exp[MDArray[A]], op: (A, A) => A, opName: String)(implicit mfA: ClassManifest[A]): Exp[A] =
+    Reduce(z, a, op, opName)
 
   // With-comprehensions
-  def genArrayWith[A: ClassManifest](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], shp: Exp[MDArray[Int]]): Exp[MDArray[A]] = GenArrayWith(l, shp)
-  def modArrayWith[A: ClassManifest](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = ModArrayWith(l, a)
-  def foldArrayWith[A: ClassManifest](w: With, foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], neutral: Exp[MDArray[A]], f: Exp[MDArray[Int]] => Exp[MDArray[A]]): Exp[MDArray[A]] = FoldArrayWith(w, foldFunction, neutral, f)
+  def genArrayWith[A: ClassManifest](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], shp: Exp[MDArray[Int]]): Exp[MDArray[A]] = GenArrayWith(l.map(p => WithNode(IndexVector(p._1), p._2)), shp)
+  def modArrayWith[A: ClassManifest](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = ModArrayWith(l.map(p => WithNode(IndexVector(p._1), p._2)), a)
+  def foldArrayWith[A: ClassManifest](w: With, foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], neutral: Exp[MDArray[A]], f: Exp[MDArray[Int]] => Exp[MDArray[A]]): Exp[MDArray[A]] = FoldArrayWith(neutral, foldFunction, WithNode(IndexVector(w), f))
 
   // ToString
   def doToString[A](a: Exp[MDArray[A]]) = a.toString()

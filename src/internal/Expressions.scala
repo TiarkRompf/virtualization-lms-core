@@ -65,11 +65,67 @@ trait Expressions {
     }
   }
 
-
   def reset { // used anywhere?
     nVars = 0
     globalDefs = Nil
   }
+
+  // Customizable type
+  type Type = Any
+
+  /**
+   *   Rich Definition object. This can keep a type and a refcount, both of which are required for the MDArray
+   *   optimizations. Moreover, it allows a more scalable dependency system compared to Def/Product.
+   */
+  class RichDef[+T](var used: List[Exp[Any]]) extends Def[T] {
+    var users: List[RichDef[Any]] = Nil
+    var t: Type = null
+
+    def addUser(user: RichDef[Any]): Unit =
+      users = user :: users
+
+    def removeUser(user: RichDef[Any]): Unit =
+      users = users.filterNot(t => t == user)
+
+    for (u <- used.flatMap(t => Def.unapply(t)).filter(t => t.isInstanceOf[RichDef[_]]))
+      u.asInstanceOf[RichDef[Any]].addUser(this)
+
+//    // TODO: Implement removal logic
+//    def used_=(newused: List[Exp[Any]]): Unit = {
+//      for (u <- used.flatMap(t => Def.unapply(t)).filter(t => t.isInstanceOf[RichDef[_]]))
+//        u.asInstanceOf[RichDef[Any]].removeUser(this)
+//
+//      for (u <- newused.flatMap(t => Def.unapply(t)).filter(t => t.isInstanceOf[RichDef[_]]))
+//        u.asInstanceOf[RichDef[Any]].addUser(this)
+//
+//      used = newused
+//    }
+
+    override def equals(other: Any) = other match {
+      case that: RichDef[_] => that.canEqual(this) && used == that.used && t == that.t
+      case _ => false
+    }
+
+    def canEqual(other: Any) = other match {
+      case that: RichDef[_] => true
+      case _ => false
+    }
+  }
+
+  object RichDef {
+     def unapply[T](e: Exp[T]): Option[List[Exp[Any]]] = e match {
+      case s @ Sym(_) =>
+        val rhs = findDefinition(s).toList.map(_.rhs)
+
+        if ((rhs.length != 0) && (rhs(0).isInstanceOf[RichDef[Any]]))
+          Some(rhs(0).asInstanceOf[RichDef[Any]].used)
+        else
+          None
+      case _ =>
+        None
+    }
+  }
+
 
 /*
   // dependencies

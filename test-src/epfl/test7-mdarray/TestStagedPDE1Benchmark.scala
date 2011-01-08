@@ -18,7 +18,7 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
   def testPower = {
     // Perform actual tests:
     val pde1 = new PDE1Benchmark with MDArrayBaseExp with IfThenElseExp
-    val pde1export = new GraphVizExport with DisableDCE {
+    val pde1export = new GraphVizExport {
       val IR: pde1.type = pde1;
     }
 

@@ -143,6 +143,8 @@ trait MDArrayBase extends Base with util.OverloadHack {
       With(lb, lbStrict, ub, ubStrict, step, width)
     }
 
+    def usedDefs(): List[Rep[Any]] = _lb::_ub::_step::_width::Nil
+
     override def toString() = "With(" + _lb + ", " + _lbStrict + ", " + _ub + ", " + _ubStrict + ", " + _step + ", " + _width + ")"
   }
 
