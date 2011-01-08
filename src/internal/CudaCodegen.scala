@@ -94,8 +94,8 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   }
 
   // Exception Handler function
-  override def exceptionHandler(outFile:File, kstream:PrintWriter): Unit = {
-     super.exceptionHandler(outFile, kstream)
+  override def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
+     super.exceptionHandler(e, outFile, kstream)
      // TODO: Need to cleanup some data structures
   }
 

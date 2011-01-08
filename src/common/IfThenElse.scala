@@ -43,7 +43,7 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
     case _ => super.syms(e)
   }
 
- override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
     case IfThenElse(c, t, e) => getFreeVarBlock(c,Nil) ::: getFreeVarBlock(t,Nil) ::: getFreeVarBlock(e,Nil)
     case _ => super.getFreeVarNode(rhs)
   }
@@ -59,12 +59,12 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
      */
     case IfThenElse(c,a,b) =>
       stream.println("val " + quote(sym) + " = {")
-      stream.println("def " + quote(sym) + "thenb() = {")
+      stream.println("def " + quote(sym) + "thenb(): " + remap(getBlockResult(a).Type) + " = {")
       emitBlock(a)
       stream.println(quote(getBlockResult(a)))
       stream.println("}")
 
-      stream.println("def " + quote(sym) + "elseb() = {")
+      stream.println("def " + quote(sym) + "elseb(): " + remap(getBlockResult(b).Type) + " = {")
       emitBlock(b)
       stream.println(quote(getBlockResult(b)))
       stream.println("}")

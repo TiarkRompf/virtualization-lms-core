@@ -4,7 +4,7 @@ package internal
 import java.io.PrintWriter
 
 
-trait CCodegen extends CLikeCodegen with GenericCodegen {
+trait CCodegen extends CLikeCodegen {
   val IR: Expressions
   import IR._
 
