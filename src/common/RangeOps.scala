@@ -82,6 +82,7 @@ trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
     case RangeForeach(start, end, i, body) => {
       stream.println("var " + quote(i) + " : Int = " + quote(start))
       stream.println("val " + quote(sym) + " = " + "while (" + quote(i) + " < " + quote(end) + ") {")
+      nestedEmission = true
       emitBlock(body)
       stream.println(quote(getBlockResult(body)))
       stream.println(quote(i) + " = " + quote(i) + " + 1")

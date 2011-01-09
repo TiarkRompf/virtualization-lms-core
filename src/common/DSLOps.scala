@@ -4,6 +4,7 @@ package common
 import java.io.PrintWriter
 import scala.virtualization.lms.internal._
 
+//TODO rename this to something more meaningful
 trait DSLOpsExp extends EffectExp {
   // representation must be reified! this places the burden on the caller, but allows the caller to avoid the
   // use of function values (which can be uglier).

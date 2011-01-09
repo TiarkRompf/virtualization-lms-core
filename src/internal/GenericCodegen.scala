@@ -73,6 +73,8 @@ trait GenericNestedCodegen extends GenericCodegen {
   var shallow = false
 
   var scope: List[TP[_]] = Nil
+  var lastNodeAttempted: TP[_] = _
+  var nestedEmission = false
 
   override def emitBlock(start: Exp[_])(implicit stream: PrintWriter): Unit = {
     // try to push stuff as far down into more control-dependent parts as
@@ -107,14 +109,14 @@ trait GenericNestedCodegen extends GenericCodegen {
     scope = e4 ::: scope
 
     try {
-      for (TP(sym, rhs) <- e4) {
-        emitNode(sym, rhs)
+      for (n <- e4) {
+        lastNodeAttempted = n
+        emitNode(n.sym, n.rhs)
       }
     }
     catch {
       case e => scope = save
                 throw(e)
-
     }
 
     start match {
