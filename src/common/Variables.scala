@@ -18,12 +18,12 @@ trait Variables extends Base with OverloadHack {
   def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_assign(lhs, readVar(rhs))
 
   // TODO: why doesn't this implicit kick in automatically?
-  def infix_+=[T:Numeric:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs, rhs)
-  def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T], n: Numeric[T]) = var_plusequals(lhs,rhs)
-  def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T], n: Numeric[T]) = var_plusequals(lhs,readVar(rhs))
+  def infix_+=[T:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs, rhs)
+  def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_plusequals(lhs,rhs)
+  def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_plusequals(lhs,readVar(rhs))
 
   def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
-  def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
+  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
 }
 
 trait VariablesExp extends Variables with EffectExp {
@@ -41,7 +41,7 @@ trait VariablesExp extends Variables with EffectExp {
   case class ReadVar[T:Manifest](v: Var[T]) extends Def[T]
   case class NewVar[T:Manifest](init: Exp[T]) extends Def[T]
   case class Assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
-  case class VarPlusEquals[T:Manifest:Numeric](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
+  case class VarPlusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
 
 
   def __newVar[T](init: Exp[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T] = {
@@ -54,7 +54,7 @@ trait VariablesExp extends Variables with EffectExp {
     Const()
   }
 
-  def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
+  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
     reflectMutation(VarPlusEquals(lhs, rhs))
     Const()
   }

@@ -49,6 +49,7 @@ trait GenericCodegen extends Scheduling {
   def quote(x: Exp[_]) : String = x match {
     case Const(s: String) => "\""+s+"\""
     case Const(null) => "null" // why is null getting lifted now? something to do with Equal
+    case Const(f: Float) => f.toString + "f"
     case Const(z) => z.toString
     case Sym(n) => "x"+n
     case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
