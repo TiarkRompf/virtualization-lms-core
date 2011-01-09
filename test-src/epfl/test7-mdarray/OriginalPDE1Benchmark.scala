@@ -22,6 +22,41 @@ class OriginalPDE1Benchmark {
   def range4(matrix: MDArrayDbl, iterations: Int): MDArrayDbl = PDE1impl(matrix, Relax4, iterations)
   def range5(matrix: MDArrayDbl, iterations: Int): MDArrayDbl = PDE1impl(matrix, Relax5, iterations)
 
+  /**
+   * This is used to test the == correctness
+   */
+  def vectorTest() = {
+    var arrays: List[MDArray[_]] = Nil
+
+    arrays = (1::0::0::Nil) :: arrays
+    arrays = (1::0::0::Nil) :: arrays
+    arrays = (0::1::0::Nil) :: arrays
+    arrays = (0::0::1::Nil) :: arrays
+    arrays = (1.0::0.0::0.0::Nil) :: arrays
+    arrays = (true::true::Nil) :: arrays
+    arrays = (true::true::Nil) :: arrays
+    arrays = reshape ((1::2::Nil), (1::0::Nil)) :: arrays
+    arrays = reshape ((1::2::Nil), (1::0::Nil)) :: arrays
+    arrays = reshape ((1::2::Nil), (1.0::0.0::Nil)) :: arrays
+    arrays = reshape ((2::2::Nil), (1::0::1::0::Nil)) :: arrays
+    arrays = reshape ((1::2::Nil), (true::false::Nil)) :: arrays
+    arrays = 7 :: arrays
+    arrays = 7 :: arrays
+    arrays = 7.0 :: arrays
+    arrays = 7.1 :: arrays
+    arrays = true :: arrays
+    arrays = arrays.reverse
+
+    for(i <- Stream.range(0, arrays.length - 1))
+      println("v" + i + "= " + arrays(i))
+
+    for(i <- Stream.range(0, arrays.length - 1)) {
+      for (j <- Stream.range(i+1, arrays.length - 1))
+        println("test v" + i + " vs v" + j + ": " + (arrays(j) == arrays(i)) + (if ((arrays(i) == arrays(j)) != (arrays(j) == arrays(i))) "ASYMETRY DETECTED!" else ""))
+      println("---")
+    }
+  }
+
   // The PDE1Benchmark implementation
   def PDE1impl(matrix: MDArrayDbl,
                Relax: (MDArrayDbl, MDArrayDbl, Dbl) => MDArrayDbl,

@@ -19,6 +19,14 @@ trait PDE1Benchmark { this: MDArrayBase with IfThenElse =>
   //def range4(matrix: MDArrayDbl, iterations: Int): MDArrayDbl = PDE1impl(matrix, Relax4, iterations)
   def range5(matrix: MDArrayDbl, iterations: Int): MDArrayDbl = PDE1impl(matrix, Relax5, iterations)
 
+  def vectorTest() = {
+    val v1: Rep[MDArray[Int]] = 1::0::0::Nil
+    val v2: Rep[MDArray[Int]] = 0::1::0::Nil
+    val v3: Rep[MDArray[Int]] = 0::0::1::Nil
+
+    reshape(1::1::3::Nil, v1 + v2 + v3)
+  }
+
   // The PDE1Benchmark implementation
   def PDE1impl(matrix: MDArrayDbl,
                Relax: (MDArrayDbl, MDArrayDbl, Dbl) => MDArrayDbl,

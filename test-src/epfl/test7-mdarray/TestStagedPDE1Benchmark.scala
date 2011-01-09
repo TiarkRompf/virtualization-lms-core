@@ -18,22 +18,36 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
   def testPower = {
     // Perform actual tests:
     val pde1 = new PDE1Benchmark with MDArrayBaseExp with IfThenElseExp
+//    TODO: Remove at next cleanup. This code was used for debugging the KnownAtCompileTime bug.
+//    {
+//      override def findOrCreateDefinition[T](d: Def[T]): TP[T] = d match {
+//        case that: KnownAtCompileTime[_] => {
+//          println("known " + that + " found => " + findDefinition[T](d).toString)
+//          try {
+//              println(d.toString + " " + findDefinition[T](d).get.rhs + " => " + (d == findDefinition[T](d).get.rhs))
+//          } catch {
+//            case _ => println("not defined")
+//          }
+//          findDefinition[T](d).getOrElse {
+//            createDefinition(fresh[T], d)
+//          }
+//        }
+//        case _ => {
+//          findDefinition[T](d).getOrElse {
+//            createDefinition(fresh[T], d)
+//          }
+//        }
+//      }
+//    }
     val pde1export = new GraphVizExport {
       val IR: pde1.type = pde1;
     }
 
-    pde1export.emitDepGraph(pde1.range1(pde1.fresh, 1), prefix+"range1-dot", false)
-    pde1export.emitDepGraph(pde1.range2(pde1.fresh, 1), prefix+"range2-dot", false)
-    pde1export.emitDepGraph(pde1.range3(pde1.fresh, 1), prefix+"range3-dot", false)
-  //pde1export.emitDepGraph(pde1.range4(pde1.fresh, 1), prefix+"range4-dot", false)
-    pde1export.emitDepGraph(pde1.range5(pde1.fresh, 1), prefix+"range5-dot", false)
-
-    withOutFile(prefix+"global-defs")(pde1.globalDefs.mkString("\n"))
-
-    withOutFile(prefix+"range1")(println(pde1.range1(pde1.fresh[MDArray[Double]], 1).toString))
-    withOutFile(prefix+"range2")(println(pde1.range2(pde1.fresh[MDArray[Double]], 1).toString))
-    withOutFile(prefix+"range3")(println(pde1.range3(pde1.fresh[MDArray[Double]], 1).toString))
-//  withOutFile(prefix+"range4")(println(pde1.range4(pde1.fresh[MDArray[Double]], 1).toString))
-    withOutFile(prefix+"range5")(println(pde1.range5(pde1.fresh[MDArray[Double]], 1).toString))
+//    pde1export.emitDepGraph(pde1.range1(pde1.fresh, 1), prefix+"range1-dot", false)
+//    pde1export.emitDepGraph(pde1.range2(pde1.fresh, 1), prefix+"range2-dot", false)
+//    pde1export.emitDepGraph(pde1.range3(pde1.fresh, 1), prefix+"range3-dot", false)
+//  //pde1export.emitDepGraph(pde1.range4(pde1.fresh, 1), prefix+"range4-dot", false)
+//    pde1export.emitDepGraph(pde1.range5(pde1.fresh, 1), prefix+"range5-dot", false)
+    pde1export.emitDepGraph(pde1.vectorTest, prefix+"vector-test-dot", false)
   }
 }

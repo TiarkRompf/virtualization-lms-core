@@ -35,7 +35,13 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
       Basic AST building blocks
    */
   case class KnownAtRuntime[A: ClassManifest](name: String) extends RichDef[MDArray[A]](Nil) { override def toString() = "KnownAtRuntime(" + name + ")" }
-  case class KnownAtCompileTime[A: ClassManifest](value: MDArray[A]) extends RichDef[MDArray[A]](Nil) { override def toString() = "KnownAtCompileTime(" + value.toString + ")" }
+  case class KnownAtCompileTime[A: ClassManifest](value: MDArray[A]) extends RichDef[MDArray[A]](Nil) {
+    override def toString() = "KnownAtCompileTime(" + value.toString + ")"
+    // TODO: Understand why without this override the definition always collapses to a single value...
+    override def equals(other: Any) = other match {
+      case t: KnownAtCompileTime[_] => var result = t.canEqual(this) && t.value == this.value
+      case _ => false }
+  }
   case class ListOfMDArrays[A: ClassManifest](value: List[Exp[MDArray[A]]]) extends RichDef[MDArray[A]](value) { override def toString() = "ListOfMDArrays(" + value.toString + ")" }
   case class ArrayOfMDArrays[A: ClassManifest](value: Array[Exp[MDArray[A]]]) extends RichDef[MDArray[A]](value.toList) { override def toString() = "ArrayOfMDArrays(" + value.toString + ")" }
 

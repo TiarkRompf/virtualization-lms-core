@@ -24,7 +24,7 @@ trait MDArrayBase extends Base with util.OverloadHack {
   implicit def toRepMDArray[A: ClassManifest](a: Rep[MDArray[A]]): RepMDArray[A] = new RepMDArray[A](a)
 
   // Element-wise operations
-  def infix_+ [A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit numeric: Numeric[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[A]] = op(o1, o2)(numeric.plus, "-")
+  def infix_+ [A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit numeric: Numeric[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[A]] = op(o1, o2)(numeric.plus, "+")
   def infix_- [A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit numeric: Numeric[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[A]] = op(o1, o2)(numeric.minus, "-")
   def infix_* [A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit numeric: Numeric[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[A]] = op(o1, o2)(numeric.times, "*")
   def infix_/ [A](o1: Rep[MDArray[A]], o2: Rep[MDArray[A]])(implicit fractional: Fractional[A], mf: ClassManifest[A], ov1: Overloaded1): Rep[MDArray[A]] = op(o1, o2)(fractional.div, "/[div]")

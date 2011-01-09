@@ -27,10 +27,11 @@ class TestOriginalPDE1Benchmark extends FileDiffSuite {
       arr(i) = rnd.nextDouble()
     val matrix: MDArray[Double] = reshape(size :: size :: size :: Nil, arr)
 
-    withOutFile(prefix+"range1")(println(pde1.range1(matrix, 1).toString))
-    withOutFile(prefix+"range2")(println(pde1.range2(matrix, 1).toString))
-    withOutFile(prefix+"range3")(println(pde1.range3(matrix, 1).toString))
-    withOutFile(prefix+"range4")(println(pde1.range4(matrix, 1).toString))
-    withOutFile(prefix+"range5")(println(pde1.range5(matrix, 1).toString))
+    withOutFile(prefix+"vector-test")(pde1.vectorTest)
+//    withOutFile(prefix+"range1")(println(pde1.range1(matrix, 1).toString))
+//    withOutFile(prefix+"range2")(println(pde1.range2(matrix, 1).toString))
+//    withOutFile(prefix+"range3")(println(pde1.range3(matrix, 1).toString))
+//    withOutFile(prefix+"range4")(println(pde1.range4(matrix, 1).toString))
+//    withOutFile(prefix+"range5")(println(pde1.range5(matrix, 1).toString))
   }
 }
