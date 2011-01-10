@@ -79,13 +79,19 @@ trait Expressions {
    */
   class RichDef[+T](var used: List[Exp[Any]]) extends Def[T] {
     var users: List[RichDef[Any]] = Nil
-    var t: Type = null
+    var assertions: List[Exp[Any]] = Nil
+//    var shape: S
 
     def addUser(user: RichDef[Any]): Unit =
       users = user :: users
 
     def removeUser(user: RichDef[Any]): Unit =
       users = users.filterNot(t => t == user)
+
+    def addAssertions(_assertions: List[Exp[Any]]): RichDef[T] = {
+      assertions = assertions ::: _assertions
+      this
+    }
 
     for (u <- used.flatMap(t => Def.unapply(t)).filter(t => t.isInstanceOf[RichDef[_]]))
       u.asInstanceOf[RichDef[Any]].addUser(this)
@@ -102,7 +108,7 @@ trait Expressions {
 //    }
 
     override def equals(other: Any) = other match {
-      case that: RichDef[_] => that.canEqual(this) && used == that.used && t == that.t
+      case that: RichDef[_] => that.canEqual(this) && used == that.used
       case _ => false
     }
 
@@ -117,9 +123,10 @@ trait Expressions {
       case s @ Sym(_) =>
         val rhs = findDefinition(s).toList.map(_.rhs)
 
-        if ((rhs.length != 0) && (rhs(0).isInstanceOf[RichDef[Any]]))
-          Some(rhs(0).asInstanceOf[RichDef[Any]].used)
-        else
+        if ((rhs.length != 0) && (rhs(0).isInstanceOf[RichDef[Any]])) {
+          val d = rhs(0).asInstanceOf[RichDef[Any]]
+          Some(d.used ::: d.assertions)
+        } else
           None
       case _ =>
         None

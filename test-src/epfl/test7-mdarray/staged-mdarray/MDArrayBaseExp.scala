@@ -15,31 +15,14 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   var nValue: Int = 0
 
   /*
-      The types listed here are copied from SAC
-      TODO: It would be interesting to use a type reconstruction system and infer as much as possible of the type
-      TODO: Decide if the above idea is useful. Would knowing the shape of a matrix is 5:5:5:6:7:...:9:2:3?
-      XXX: It would be useful for type checking and displaying errors as soon as possible - do we want that?
-      TODO: The current implementation of types does not use subtyping correctly. "case class `class KnownShapeDim' has case class ancestor `class AnyShape'.  This has been deprecated for unduly complicating both usage and implementation.  You should instead use extractors for pattern matching on non-leaf nodes."
-   */
-  abstract class Shape
-  case object AnyShape extends Shape
-  case object PlusShape extends Shape
-  case class KnownShapeDim(dim: Int) extends Shape
-  case class KnownShape(shape: MDArray[Int]) extends Shape
-
-  // Override the type given by the program
-  // TODO: Make this work
-  //override type Type = Shape
-
-  /*
       Basic AST building blocks
    */
-  case class KnownAtRuntime[A: ClassManifest](name: String) extends RichDef[MDArray[A]](Nil) { override def toString() = "KnownAtRuntime(" + name + ")" }
+  case class KnownAtRuntime[A: ClassManifest](name: String) extends RichDef[MDArray[A]](Nil) { override def toString() = "KnownAtRuntime(" + name + ") " }
   case class KnownAtCompileTime[A: ClassManifest](value: MDArray[A]) extends RichDef[MDArray[A]](Nil) {
     override def toString() = "KnownAtCompileTime(" + value.toString + ")"
     // TODO: Understand why without this override the definition always collapses to a single value...
     override def equals(other: Any) = other match {
-      case t: KnownAtCompileTime[_] => var result = t.canEqual(this) && t.value == this.value
+      case t: KnownAtCompileTime[_] => t.canEqual(this) && t.value == this.value
       case _ => false }
   }
   case class ListOfMDArrays[A: ClassManifest](value: List[Exp[MDArray[A]]]) extends RichDef[MDArray[A]](value) { override def toString() = "ListOfMDArrays(" + value.toString + ")" }
@@ -122,16 +105,22 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   def dim[A: ClassManifest](a: Exp[MDArray[A]]): Exp[Int] = ToDim(a)
   def shape[A: ClassManifest](a: Exp[MDArray[A]]): Exp[MDArray[Int]] = ToShape(a)
   def sel[A: ClassManifest](iv: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = {
-    assertPrefixLt(iv, shape(a))
-    Sel(iv, a)
+    val a1 = assertPrefixLt(iv, shape(a))
+    val result = Sel(iv, a)
+    addLateAssertions(result, a1::Nil)
+    result
   }
   def reshape[A: ClassManifest](iv: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = {
-    assertContentSizeEqual(iv, shape(a))
-    Reshape(iv, a)
+    val a1: Exp[_] = assertContentSizeEqual(iv, shape(a))
+    val result = Reshape(iv, a)
+    addLateAssertions(result, a1::Nil)
+    result
   }
   def cat[A: ClassManifest](d: Int, one: Exp[MDArray[A]], two: Exp[MDArray[A]]): Exp[MDArray[A]] = {
-    assertEqualExcept(d:Int, shape(one), shape(two))
-    Cat(d, one, two)
+    val a1: Exp[_] = assertEqualExcept(d:Int, shape(one), shape(two))
+    val result = Cat(d, one, two)
+    addLateAssertions(result, a1::Nil)
+    result
   }
 
   // Zeroes, ones and values
@@ -143,9 +132,11 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
 
   // Where
   def where[A: ClassManifest](p: Exp[MDArray[Boolean]], a: Exp[MDArray[A]], b: Exp[MDArray[A]]): Exp[MDArray[A]] = {
-    assertShapesEqual(shape(p), shape(a))
-    assertShapesEqual(shape(p), shape(b))
-    With().GenArray(shape(a), iv => if (sel(iv, p)) sel(iv, a) else sel(iv, b))
+    val a1: Exp[_] = assertShapesEqual(shape(p), shape(a))
+    val a2: Exp[_] = assertShapesEqual(shape(p), shape(b))
+    val result = With().GenArray(shape(a), iv => if (sel(iv, p)) sel(iv, a) else sel(iv, b))
+    addLateAssertions(result, a1::a2::Nil)
+    result
   }
 
   // Restructuring operations - implemented as with-loops
@@ -153,39 +144,51 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
     With().GenArray(shp, iv => value)
   }
   def modarray[A: ClassManifest](a: Exp[MDArray[A]], iv: Exp[MDArray[Int]], value: Exp[MDArray[A]]): Exp[MDArray[A]] = {
-    assertPrefixLt(iv, shape(a))
-    With(_lb = iv, _ub = iv).ModArray(a, iv => value)
+    val a1: Exp[_] = assertPrefixLt(iv, shape(a))
+    val result = With(_lb = iv, _ub = iv).ModArray(a, iv => value)
+    addLateAssertions(result, a1::Nil)
+    result
   }
   // TODO: Redesign these functions for lower dimensions in the given vectors, filling in with zeros or shape elements
   def take[A: ClassManifest](shp: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = {
-    assertOneDimensional(shp)
-    assertShapeSameLength(shp, shape(a))
-    assertShapeGreater(shape(a), shp)
-    With().GenArray(shp, iv => sel(iv, a))
+    val a1: Exp[_] = assertOneDimensional(shp)
+    val a2: Exp[_] = assertShapeSameLength(shp, shape(a))
+    val a3: Exp[_] = assertShapeGreater(shape(a), shp)
+    val result = With().GenArray(shp, iv => sel(iv, a))
+    addLateAssertions(result, a1::a2::a3::Nil)
+    result
   }
   def drop[A: ClassManifest](shp: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = {
-    assertOneDimensional(shp)
-    assertShapeSameLength(shp, shape(a))
-    assertShapeGreater(shape(a), shp)
-    With().GenArray(shape(a) - shp, iv => sel(iv + shp, a))
+    val a1: Exp[_] = assertOneDimensional(shp)
+    val a2: Exp[_] = assertShapeSameLength(shp, shape(a))
+    val a3: Exp[_] = assertShapeGreater(shape(a), shp)
+    val result = With().GenArray(shape(a) - shp, iv => sel(iv + shp, a))
+    addLateAssertions(result, a1::a2::a3::Nil)
+    result
   }
   def tile[A: ClassManifest](sv: Exp[MDArray[Int]], ov: Exp[MDArray[Int]], a:Exp[MDArray[A]]): Exp[MDArray[A]] = {
-    assertOneDimensional(sv)
-    assertOneDimensional(ov)
-    assertShapeSameLength(sv, shape(a))
-    assertShapeSameLength(ov, shape(a))
-    assertShapeGreater(shape(a), sv + ov)
-    With().GenArray(sv, iv => sel(iv + ov, a))
+    val a1: Exp[_] = assertOneDimensional(sv)
+    val a2: Exp[_] = assertOneDimensional(ov)
+    val a3: Exp[_] = assertShapeSameLength(sv, shape(a))
+    val a4: Exp[_] = assertShapeSameLength(ov, shape(a))
+    val a5: Exp[_] = assertShapeGreater(shape(a), sv + ov)
+    val result = With().GenArray(sv, iv => sel(iv + ov, a))
+    addLateAssertions(result, a1::a2::a3::a4::a5::Nil)
+    result
   }
   def rotate[A: ClassManifest](ov: Exp[MDArray[Int]], a:Exp[MDArray[A]]): Exp[MDArray[A]] = {
-    assertOneDimensional(ov)
-    assertShapeSameLength(ov, shape(a))
-    With().GenArray(shape(a), iv => a(((iv - ov) + shape(a)) % shape(a)))
+    val a1: Exp[_] = assertOneDimensional(ov)
+    val a2: Exp[_] = assertShapeSameLength(ov, shape(a))
+    val result = With().GenArray(shape(a), iv => a(((iv - ov) + shape(a)) % shape(a)))
+    addLateAssertions(result, a1::a2::Nil)
+    result
   }
   def shift[A: ClassManifest](ov: Exp[MDArray[Int]], expr: A, a: Exp[MDArray[A]]): Exp[MDArray[A]] = {
-    assertOneDimensional(ov)
-    assertShapeSameLength(ov, shape(a))
-    With().GenArray(shape(a), iv => if ((any((iv - ov) < zeros(dim(a)))) || (any((iv - ov) >= shape(a)))) expr else a(iv - ov))
+    val a1: Exp[_] = assertOneDimensional(ov)
+    val a2: Exp[_] = assertShapeSameLength(ov, shape(a))
+    val result = With().GenArray(shape(a), iv => if ((any((iv - ov) < zeros(dim(a)))) || (any((iv - ov) >= shape(a)))) expr else a(iv - ov))
+    addLateAssertions(result, a1::a2::Nil)
+    result
   }
 
   // Reduction operations on matrices
@@ -198,8 +201,10 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
 
   // Basic operations on matrices - they appear as private here
   def op[A, B](a:Exp[MDArray[A]], b:Exp[MDArray[A]])(op: (A, A) => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B], ov1: Overloaded4): Exp[MDArray[B]] = {
-    assertShapesEqual(shape(a), shape(b))
-    InfixOpAA(a, b, op, opName)
+    val a1: Exp[_] = assertShapesEqual(shape(a), shape(b))
+    val result = InfixOpAA(a, b, op, opName)
+    addLateAssertions(result, a1::Nil)
+    result
   }
   def op[A, B](a:Exp[MDArray[A]], b:Exp[A])(op: (A, A) => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B], ov2: Overloaded5): Exp[MDArray[B]] =
     InfixOpAE(a, b, op, opName)
@@ -226,4 +231,10 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   def assertShapeSameLength(shpA: Exp[MDArray[Int]], shpB: Exp[MDArray[Int]]): Exp[Unit] = AssertShapeSameLength(shpA, shpB)
 
   protected val nothing: Exp[MDArray[Int]] = Nothing
+
+  protected def addLateAssertions(result: Any, assertions: List[Exp[_]]): Unit = result match {
+    case rd: RichDef[_] => rd.addAssertions(assertions)
+    case sym: Sym[_] => addLateAssertions(findDefinition(sym).get.rhs, assertions)
+    case _ => throw new Exception("addDefinition: Not a symbol or a rich definition")
+  }
 }

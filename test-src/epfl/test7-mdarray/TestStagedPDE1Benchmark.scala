@@ -43,11 +43,11 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
       val IR: pde1.type = pde1;
     }
 
-//    pde1export.emitDepGraph(pde1.range1(pde1.fresh, 1), prefix+"range1-dot", false)
-//    pde1export.emitDepGraph(pde1.range2(pde1.fresh, 1), prefix+"range2-dot", false)
-//    pde1export.emitDepGraph(pde1.range3(pde1.fresh, 1), prefix+"range3-dot", false)
-//  //pde1export.emitDepGraph(pde1.range4(pde1.fresh, 1), prefix+"range4-dot", false)
-//    pde1export.emitDepGraph(pde1.range5(pde1.fresh, 1), prefix+"range5-dot", false)
+    pde1export.emitDepGraph(pde1.range1(pde1.fresh, 1), prefix+"range1-dot", false)
+    pde1export.emitDepGraph(pde1.range2(pde1.fresh, 1), prefix+"range2-dot", false)
+    pde1export.emitDepGraph(pde1.range3(pde1.fresh, 1), prefix+"range3-dot", false)
+  //pde1export.emitDepGraph(pde1.range4(pde1.fresh, 1), prefix+"range4-dot", false)
+    pde1export.emitDepGraph(pde1.range5(pde1.fresh, 1), prefix+"range5-dot", false)
     pde1export.emitDepGraph(pde1.vectorTest, prefix+"vector-test-dot", false)
   }
 }
