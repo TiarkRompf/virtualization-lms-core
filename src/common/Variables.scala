@@ -11,7 +11,8 @@ trait Variables extends Base with OverloadHack {
   implicit def readVar[T:Manifest](v: Var[T]) : Rep[T]
   //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
 
-  def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T]
+  def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_new(init)
+  def __newVar[T](init: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_new(init)
 
   def __assign[T:Manifest](lhs: Var[T], rhs: T) = var_assign(lhs, rhs)
   def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_assign(lhs, rhs)
@@ -22,6 +23,7 @@ trait Variables extends Base with OverloadHack {
   def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_plusequals(lhs,rhs)
   def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_plusequals(lhs,readVar(rhs))
 
+  def var_new[T:Manifest](init: Rep[T]): Var[T]
   def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
   def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
 }
@@ -44,7 +46,7 @@ trait VariablesExp extends Variables with EffectExp {
   case class VarPlusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
 
 
-  def __newVar[T](init: Exp[T])(implicit o: Overloaded1, mT: Manifest[T]): Var[T] = {
+  def var_new[T:Manifest](init: Exp[T]): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
     Variable(reflectEffect(NewVar(init)))
   }
