@@ -12,13 +12,16 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   override def kernelFileExt = "cu"
   override def toString = "cuda"
 
+  /*
+   * This flag indicates whether current codegen is for parallel execution or not
+   */
+  var parallelCudagen = false
+
   var kernelSymbol:Sym[_] = null
-  var parallelFor = true
+  var parallelFor = false
   var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
-  val varLink = HashMap[Sym[_], List[Sym[_]]]()
-
-  val devFuncList = ArrayBuffer[Exp[_]]()
+  val varLink = HashMap[Exp[_], List[Exp[_]]]()
   
   var gpuInputs:List[Sym[_]] = Nil
   var gpuOutput: Sym[_] = null
@@ -30,6 +33,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   var helperFuncString:StringBuilder = null
   var hstream: PrintWriter = null
   var devFuncString:StringBuilder = null
+  var devFuncIdx = 0
   var devStream: PrintWriter = null
   var headerStream: PrintWriter = null
 
@@ -37,22 +41,21 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   override def hasMetaData: Boolean = true
   override def getMetaData: String = MetaData.toString
 
-  def emitDevFunc(func:Exp[Any], outType: Manifest[_], inputs:List[Exp[Any]]) {
-    // Check if this device function is already emitted
-    if( !devFuncList.contains(func)) {
+  def emitDevFunc(func:Exp[Any], outType: Manifest[_], inputs:List[Exp[Any]]):String = {
+      devFuncIdx += 1
+      val currIdx = devFuncIdx
       val tempString = new StringWriter
       val tempStream = new PrintWriter(tempString, true)
       val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
       val currentTab = tabWidth
-      tempStream.println("__device__ %s dev_%s(%s) {".format(remap(outType),quote(func),paramStr))
+      tempStream.println("__device__ %s dev_%s(%s) {".format(remap(outType),currIdx,paramStr))
       tabWidth = 1
       emitBlock(func)(tempStream)
       tempStream.println(addTab()+"return %s;".format(quote(getBlockResult(func))))
       tempStream.println("}")
       tabWidth = currentTab
       devFuncString.append(tempString)
-      devFuncList.append(func)
-    }
+      "dev_"+currIdx
   }
 
   object MetaData {
@@ -64,6 +67,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     var gpuInputs: ArrayList[String] = new ArrayList[String]
     var gpuOutput: String = ""
     var gpuTemps: ArrayList[String] = new ArrayList[String]
+    var gpuLibCall: String = ""
 
     def init = {
       gpuBlockSizeX = ""
@@ -74,6 +78,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
       gpuInputs = new ArrayList[String]
       gpuOutput = ""
       gpuTemps = new ArrayList[String]
+      gpuLibCall = ""
     }
     
     override def toString: String = {
@@ -84,10 +89,11 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
       out.append("\"gpuBlockSizeZ\":"+gpuBlockSizeZ+",")
       out.append("\"gpuDimSizeX\":"+gpuDimSizeX+",")
       out.append("\"gpuDimSizeY\":"+gpuDimSizeY+",")
-      out.append("\"gpuInputs\":" + gpuInputs.toString + ",")
-      if(gpuOutput == "") { println("ERROR:No Output for GPU?"); throw new Exception()}
+      out.append("\"gpuInputs\":"+gpuInputs.toString+",")
+      //if(gpuOutput == "") { println("ERROR:No Output for GPU?"); throw new Exception()}
       out.append("\"gpuOutput\":"+gpuOutput+",")
-      out.append("\"gpuTemps\":" + gpuTemps.toString)
+      out.append("\"gpuTemps\":"+gpuTemps.toString)
+      if(gpuLibCall != "") out.append(",\"gpuLibCall\":"+gpuLibCall.toString)
       out.append("}")
       out.toString
     }
@@ -104,14 +110,15 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     //val outDir = new File(buildPath); outDir.mkdirs()
     helperFuncString = new StringBuilder
     hstream = new PrintWriter(new FileWriter(build_dir + "helperFuncs.cu"))
-    devFuncString = new StringBuilder
-    devStream = new PrintWriter(new FileWriter(build_dir+"devFucns.cu"))
+    devStream = new PrintWriter(new FileWriter(build_dir+"devFuncs.cu"))
     headerStream = new PrintWriter(new FileWriter(build_dir + "dsl.h"))
     headerStream.println("#include \"helperFuncs.cu\"")
+    headerStream.println("#include \"devFuncs.cu\"")
 
     //TODO: Put all the DELITE APIs declarations somewhere
     hstream.print(getDSLHeaders)
     hstream.print("#include <iostream>\n")
+    hstream.print("#include <limits>\n")
     hstream.print("#include <jni.h>\n\n")
     hstream.print("//Delite Runtime APIs\n")
     hstream.print("extern void DeliteCudaMallocHost(void **ptr, int size);\n")
@@ -128,12 +135,14 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("CudaGen: Not GPUable")
 
     // Initialize global variables
+    parallelCudagen = true
     helperFuncString.clear
     varLink.clear
     kernelSymbol = sym
     MetaData.init
     tabWidth = 1
     parallelFor = true
+    devFuncString = new StringBuilder
 
     gpuBlockSizeX = null
     gpuBlockSizeY = null
@@ -148,7 +157,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   }
 
   // Add variable links across IR nodes
-  def addVarLink(from:Sym[_], to:Sym[_]): Unit = {
+  def addVarLink(from:Exp[_], to:Exp[_]): Unit = {
     if(varLink.contains(to)) {
       val list = varLink.get(to).get
       val newList = from +: list
@@ -156,12 +165,12 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
       varLink.put(from,newList)
     }
     else {
-      val newList = List[Sym[_]](from,to)
+      val newList = List[Exp[_]](from,to)
       varLink.put(from,newList)
     }
   }
 
-  def removeVarLink(from:Sym[_], to:Sym[_]): Unit = {
+  def removeVarLink(from:Exp[_], to:Exp[_]): Unit = {
     if(varLink.contains(from)) {
       val newList = varLink.get(from).get.tail
       varLink.remove(from)
@@ -169,8 +178,8 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     }
   }
 
-  def getVarLink(sym:Sym[_]): Sym[_] = {
-    if(varLink.contains(sym)) {
+  def getVarLink(sym:Exp[_]): Exp[_] = {
+    if(sym.isInstanceOf[Sym[_]] && varLink.contains(sym)) {
       val out = varLink.get(sym).get.last
       out
     }
@@ -185,7 +194,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     case "Float" => "F"
     case "Double" => "D"
     case "Boolean" => "Z"
-    case _ => throw new Exception("Undefined CUDA type")
+    case _ => throw new GenerationFailedException("Undefined CUDA type")
   }
 
   def isObjectType(m: Manifest[_]) : Boolean = remap(m) match {
@@ -194,6 +203,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     case "float" => false
     case "double" => false
     case "bool" => false
+    case "void" => false
     case _ => throw new GenerationFailedException("CudaGen: isObjectType(m) : Unknown data type (%s)".format(remap(m)))
   }
 
@@ -203,23 +213,24 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     case "Float" => "float"
     case "Double" => "double"
     case "Boolean" => "bool"
+    case "Unit" => "void"
     case _ => throw new GenerationFailedException("CudaGen: remap(m) : Unknown data type (%s)".format(m.toString))
   }
 
   def copyDataStructureHtoD(sym: Sym[_]) : String = {
-    throw new RuntimeException("CudaGen: copyDataStructureHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.Type)))
+    throw new GenerationFailedException("CudaGen: copyDataStructureHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.Type)))
   }
 
   def copyDataStructureDtoH(sym: Sym[_]) : String = {
-    throw new RuntimeException("CudaGen: copyDataStructureDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+    throw new GenerationFailedException("CudaGen: copyDataStructureDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
   }
 
   def allocOutput(newSym: Sym[_], sym: Sym[_]) : Unit = {
-    throw new RuntimeException("CudaGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
+    throw new GenerationFailedException("CudaGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
   }
 
   def allocReference(newSym: Sym[_], sym: Sym[_]) : Unit = {
-    throw new RuntimeException("CudaGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
+    throw new GenerationFailedException("CudaGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
   }
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
@@ -286,6 +297,8 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     tabWidth -= 1
     stream.println("}")
+      
+	if(MetaData.gpuOutput == "") { throw new GenerationFailedException("CudaGen:No output for GPU")}
 
     // Emit input copy helper functions for object type inputs
     for(v <- vals)
@@ -383,6 +396,33 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     out.toString
   }
 
+  def emitLibCall(sym: Sym[_], stmts: List[String]) : Unit = {
+    val out = new StringBuilder
+
+    if(sym == kernelSymbol) {
+      // Emit code for library call function
+      val inputs = (gpuOutput :: gpuInputs)
+      val paramStr = inputs.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
+      if(inputs.length != 0)
+        out.append("void gpuLibCall_%s(%s,%s) {\n".format(quote(sym),paramStr,"cudaStream_t stream"))
+      else
+        out.append("void gpuLibCall_%s(%s) {\n".format(quote(sym),"cudaStream_t stream"))
+      
+      for(s <- stmts)
+        out.append("\t"+s+"\n")
+      out.append("}\n")
+      helperFuncString.append(out.toString)
+
+      // Add to metadata
+      //MetaData.gpuLibCall = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrTemp)
+      MetaData.gpuLibCall = "\"gpuLibCall_%s\"".format(quote(sym))
+    }
+    else {
+      throw new GenerationFailedException("CudaGen: Not GPUable (Only top-level node can use library call)")
+    }
+
+  }
+
 }
 
 // TODO: do we need this for each target?
@@ -395,7 +435,18 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
 
+
+  def CudaConsts(x:Exp[_], s:String): String = {
+    s match {
+      case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.Type))
+      case _ => s
+    }
+  }
+  
   override def quote(x: Exp[_]) = x match { // TODO: quirk!
+    case Const(s: String) => "\""+s+"\""
+    case Const(null) => "NULL"
+    case Const(z) => CudaConsts(x, z.toString)
     case Sym(-1) => "_"
     case _ => super.quote(x)
   }

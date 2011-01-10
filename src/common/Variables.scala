@@ -92,6 +92,8 @@ trait CLikeGenVariables extends CLikeCodegen {
           emitVarDef(sym, quote(init))
         case Assign(Variable(a), b) =>
           emitAssignment(quote(a), quote(b))
+        case VarPlusEquals(Variable(a), b) =>
+          emitAssignment(quote(a), quote(a) + " + " + quote(b))
         case _ => super.emitNode(sym, rhs)
       }
     }

@@ -65,26 +65,20 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
         case While(c,b) =>
             // Get free variables list
             val freeVars = getFreeVarBlock(c,Nil)
-            val argListStr = if(freeVars.length == 0) freeVars.map(quote(_)).mkString(", ") else ""
-            val paramListStr = if(freeVars.length == 0) freeVars.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ") else ""
+            val argListStr = freeVars.map(quote(_)).mkString(", ") 
 
             // emit function for the condition evaluation
-            stream.println("__device__ __host__ %s %s(%s) {".format("bool", "cond_"+quote(sym), paramListStr))
-            tabWidth += 1
-            emitBlock(c)
-            stream.println(addTab()+"return %s;".format(quote(getBlockResult(c))))
-            stream.println("}")
-            tabWidth -= 1
+            val condFunc = emitDevFunc(c, getBlockResult(c).Type, freeVars)
 
             // Emit while loop (only the result variable of condition)
             stream.print(addTab() + "while (")
-            stream.print("cond_"+quote(sym)+"(%s)".format(argListStr))
+            stream.print("%s(%s)".format(condFunc,argListStr))
             stream.println(") {")
             tabWidth += 1
             emitBlock(b)
             tabWidth -= 1
             //stream.println(quote(getBlockResult(b)))   //TODO: Is this needed?
-            stream.println("}")
+            stream.println(addTab() + "}")
         case _ => super.emitNode(sym, rhs)
       }
     }
