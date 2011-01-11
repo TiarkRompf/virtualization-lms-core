@@ -27,6 +27,7 @@ trait Expressions {
   case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
       
   var nVars = 0
+  var nTypes = 0
   def fresh[T:Manifest] = Sym[T] { nVars += 1; nVars -1 }
 
   abstract class Def[+T] // operations (composite)
@@ -80,7 +81,8 @@ trait Expressions {
   class RichDef[+T](var used: List[Exp[Any]]) extends Def[T] {
     var users: List[RichDef[Any]] = Nil
     var assertions: List[Exp[Any]] = Nil
-//    var shape: S
+    // The index used for typing
+    var typeVarIndex: Int = { nTypes += 1; nTypes }
 
     def addUser(user: RichDef[Any]): Unit =
       users = user :: users
@@ -89,9 +91,13 @@ trait Expressions {
       users = users.filterNot(t => t == user)
 
     def addAssertions(_assertions: List[Exp[Any]]): RichDef[T] = {
-      assertions = assertions ::: _assertions
+      // TODO: Completely eliminate assertions, having them here mens mixing separate functionality
+      //assertions = assertions ::: _assertions
       this
     }
+
+    def getString() = "<generic RichDef>"
+    override def toString() = getString + ": (V" + typeVarIndex + ", S" + typeVarIndex + ")"
 
     for (u <- used.flatMap(t => Def.unapply(t)).filter(t => t.isInstanceOf[RichDef[_]]))
       u.asInstanceOf[RichDef[Any]].addUser(this)
