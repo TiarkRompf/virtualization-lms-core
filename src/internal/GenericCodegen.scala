@@ -42,7 +42,7 @@ trait GenericCodegen extends Scheduling {
     throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
 
-  //def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
+  def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
   
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
       
@@ -72,6 +72,11 @@ trait GenericNestedCodegen extends GenericCodegen {
   import IR._
 
   var shallow = false
+
+  // a block should be only emit a dependency if it truly depends on it (as an input),
+  // or if it is an effect that has not been emitted yet by anybody
+  var ignoreEffects = false
+  var effectScope: List[TP[_]] = Nil // global to all blocks
 
   var scope: List[TP[_]] = Nil
   var lastNodeAttempted: TP[_] = _
@@ -109,8 +114,19 @@ trait GenericNestedCodegen extends GenericCodegen {
     val save = scope
     scope = e4 ::: scope
 
+    ignoreEffects = true
+    val e5 = buildScheduleForResult(start)
+    ignoreEffects = false
+
+    //val e6 = e4.filter(z => (e5 contains z) || !(effectScope contains z))
+    val e6 = e4.filter(z => z match {
+      case TP(sym, Reflect(x, es)) => (e5 contains z) || !(effectScope contains z)
+      case _ => e5 contains z
+    })
+    effectScope :::= e6 filter { case TP(sym, Reflect(x, es)) => true; case _ => false }
+
     try {
-      for (n <- e4) {
+      for (n <- e6) {
         lastNodeAttempted = n
         emitNode(n.sym, n.rhs)
       }
@@ -152,7 +168,16 @@ trait GenericNestedCodegen extends GenericCodegen {
   }
   
 
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case Reflect(s, effects) if ignoreEffects => syms(s)
+    case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(syms(_))
+    case _ => Nil
+  }
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case Read(s) =>
+      emitValDef(sym, quote(s))
     case Reflect(s, effects) =>
       emitNode(sym, s)
     case Reify(s, effects) =>
@@ -177,16 +202,26 @@ trait GenericNestedCodegen extends GenericCodegen {
     val save = scope
     scope = e4 ::: scope
 
+    ignoreEffects = true
+    val e5 = buildScheduleForResult(start)
+    ignoreEffects = false
+
+    val e6 = e4.filter(z => z match {
+      case TP(sym, Reflect(x, es)) => (e5 contains z) || !(effectScope contains z)
+      case _ => e5 contains z
+    })
+    effectScope :::= e6 filter { case TP(sym, Reflect(x, es)) => true; case _ => false }
+
     // Find local symbols (including those passed as arguments to this method)
     var localList:List[Sym[_]] = e4.map(_.sym) ::: local.toList
 
     // Find free variables by subtracting local list from used list (shallow should be turned on)
     shallow = true
-    var freeList:List[Sym[_]]  = e4.flatMap(syms).filter(!localList.contains(_))
+    var freeList:List[Sym[_]]  = e6.flatMap(syms).filter(!localList.contains(_))
     shallow = false
 
     // Iterate nodes to find out free variables in the nested blocks
-    for (TP(sym, rhs) <- e4) {
+    for (TP(sym, rhs) <- e6) {
       freeList = (getFreeVarNode(rhs) ::: freeList).filter(!localList.contains(_))
     }
 

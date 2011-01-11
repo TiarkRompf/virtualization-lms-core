@@ -15,7 +15,10 @@ trait Expressions {
 
   case class Const[T:Manifest](x: T) extends Exp[T]
 
-  case class Sym[T:Manifest](val id: Int) extends Exp[T]
+  case class Sym[T:Manifest](val id: Int) extends Exp[T] {
+    var lastRead: Sym[Any] = this.asInstanceOf[Sym[Any]]
+    var version = id
+  }
 
   case class Variable[+T:Manifest](e: Exp[T])
 
