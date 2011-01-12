@@ -59,7 +59,7 @@ trait GenericCodegen extends Scheduling {
   }
 
   def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
-  def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = { throw new Exception("Method getFreeVarNode should be overriden.") }
+  def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = syms(rhs) //{ throw new Exception("Method getFreeVarNode should be overriden.") }
 
   def hasMetaData: Boolean = false
   def getMetaData: String = null
@@ -165,7 +165,7 @@ trait GenericNestedCodegen extends GenericCodegen {
   }
 
 
-  // bound/used/free variables in current scope, with result y (used!) and input vars x (bound!)
+  // bound/used/free variables in current scope, with input vars x (bound!) and result y (used!)
   def boundAndUsedInScope(x: List[Exp[_]], y: Exp[_]): (List[Sym[_]], List[Sym[_]]) = {
     val used = (syms(y):::innerScope.flatMap(t => syms(t.rhs))).distinct
     val bound = (x.flatMap(syms):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
@@ -186,7 +186,7 @@ trait GenericNestedCodegen extends GenericCodegen {
   //override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = { Nil }
   override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match { // getFreeVarBlock(syms(rhs), boundSyms(rhs))
     case Reflect(s, effects) => getFreeVarNode(s)
-    case _ => Nil
+    case _ => super.getFreeVarNode(rhs)
   }
 
   def getEffectsBlock(start: Exp[_]): List[Sym[_]] = {

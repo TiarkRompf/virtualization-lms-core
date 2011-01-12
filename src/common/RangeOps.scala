@@ -71,7 +71,7 @@ trait BaseGenRangeOps extends GenericNestedCodegen {
 
 
   override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
-    case RangeForeach(start, end, i, body) => getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
+    case RangeForeach(start, end, i, body) => /*getFreeVarNode(start) ::: getFreeVarNode(end) ::: */getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
     case _ => super.getFreeVarNode(rhs)
   }
 }

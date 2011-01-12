@@ -44,7 +44,7 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
   }
 
  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
-    case IfThenElse(c, t, e) => getFreeVarBlock(c,Nil) ::: getFreeVarBlock(t,Nil) ::: getFreeVarBlock(e,Nil)
+    case IfThenElse(c, t, e) => /*getFreeVarNode(c) ::: */getFreeVarBlock(t,Nil) ::: getFreeVarBlock(e,Nil)
     case _ => super.getFreeVarNode(rhs)
   }
 }
