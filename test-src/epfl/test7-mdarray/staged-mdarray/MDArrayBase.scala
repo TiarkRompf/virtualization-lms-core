@@ -101,8 +101,6 @@ trait MDArrayBase extends Base with util.OverloadHack {
   implicit def convertFromListRep[A: ClassManifest](a: List[A]): Rep[MDArray[A]]
   implicit def convertFromArrayRep[A: ClassManifest](a: Array[A]): Rep[MDArray[A]]
   implicit def convertFromValueRep[A: ClassManifest](a: A): Rep[MDArray[A]]
-  implicit def convertFromListOfMDArraysRep[A: ClassManifest](a: List[Rep[MDArray[A]]]): Rep[MDArray[A]]
-  implicit def convertFromArrayOfMDArraysRep[A: ClassManifest](a: Array[Rep[MDArray[A]]]): Rep[MDArray[A]]
   implicit def convertToListRep[A: ClassManifest](a: Rep[MDArray[A]]): Rep[List[A]]
   implicit def convertToArrayRep[A: ClassManifest](a: Rep[MDArray[A]]): Rep[Array[A]]
   implicit def convertToValueRep[A: ClassManifest](a: Rep[MDArray[A]]): Rep[A]
@@ -202,13 +200,4 @@ trait MDArrayBase extends Base with util.OverloadHack {
   def genArrayWith[A: ClassManifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], shp: Rep[MDArray[Int]]): Rep[MDArray[A]]
   def modArrayWith[A: ClassManifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], a: Rep[MDArray[A]]): Rep[MDArray[A]]
   def foldArrayWith[A: ClassManifest](w: With, foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]]
-
-  // Assertions
-  def assertPrefixLt(iv: Rep[MDArray[Int]], shp: Rep[MDArray[Int]]): Rep[Unit]
-  def assertOneDimensional(iv: Rep[MDArray[Int]]): Rep[Unit]
-  def assertEqualExcept(d: Rep[Int], shp1: Rep[MDArray[Int]], shp2: Rep[MDArray[Int]]): Rep[Unit]
-  def assertContentSizeEqual(shp1: Rep[MDArray[Int]], shp2: Rep[MDArray[Int]]): Rep[Unit]
-  def assertShapesEqual(shp1: Rep[MDArray[Int]], shp2: Rep[MDArray[Int]]): Rep[Unit]
-  def assertShapeGreater(shpGreater: Rep[MDArray[Int]], shpLower: Rep[MDArray[Int]]): Rep[Unit]
-  def assertShapeSameLength(shpGreater: Rep[MDArray[Int]], shpLower: Rep[MDArray[Int]]): Rep[Unit]
 }
