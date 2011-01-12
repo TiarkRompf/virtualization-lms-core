@@ -121,12 +121,12 @@ trait MDArrayBase extends Base with util.OverloadHack {
   protected val nothing: Rep[MDArray[Int]]
 
   // With operation
-  class With(_lb: Rep[MDArray[Int]] = nothing,
-             _lbStrict: Boolean = false,
-             _ub: Rep[MDArray[Int]] = nothing,
-             _ubStrict: Boolean = false,
-             _step: Rep[MDArray[Int]] = nothing,
-             _width: Rep[MDArray[Int]] = nothing) {
+  class With(val _lb: Rep[MDArray[Int]] = nothing,
+             val _lbStrict: Boolean = false,
+             val _ub: Rep[MDArray[Int]] = nothing,
+             val _ubStrict: Boolean = false,
+             val _step: Rep[MDArray[Int]] = nothing,
+             val _width: Rep[MDArray[Int]] = nothing) {
 
     def GenArray[A: ClassManifest](shp: Rep[MDArray[Int]], f: Rep[MDArray[Int]]=> Rep[MDArray[A]]): Rep[MDArray[A]] = genArrayWith((fillShape(shp), f)::Nil, shp)
     def ModArray[A: ClassManifest](a: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = modArrayWith((fillShape(shape(a)), f)::Nil, a)

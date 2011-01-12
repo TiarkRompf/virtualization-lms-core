@@ -29,14 +29,12 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   case class ArrayOfMDArrays[A: ClassManifest](value: Array[Exp[MDArray[A]]]) extends RichDef[MDArray[A]](value.toList) { override def getString() = "ArrayOfMDArrays(" + value.toString + ")" }
 
   // With
-  // TODO: Explain function "execution"
-  case class GenArrayWith[A: ClassManifest](l: List[WithNode[A]], shp: Exp[MDArray[Int]]) extends RichDef[MDArray[A]](shp::l.map(w => toAtom(w))) { override def getString() = "GenArrayWith(" + shp.toString + " - " + l.mkString(", ") + ")" }
-  case class ModArrayWith[A: ClassManifest](l: List[WithNode[A]], a: Exp[MDArray[A]]) extends RichDef[MDArray[A]](a::l.map(w => toAtom(w))) { override def getString() = "ModArrayWith(" + a.toString + " - " + l.mkString(", ") + ")" }
+  case class GenArrayWith[A: ClassManifest](lExpr: List[Exp[MDArray[A]]], shp: Exp[MDArray[Int]]) extends RichDef[MDArray[A]](shp::lExpr) { override def getString() = "GenArrayWith(" + shp.toString + " - " + lExpr.mkString(", ") + ")" }
+  case class ModArrayWith[A: ClassManifest](lExpr: List[Exp[MDArray[A]]], a: Exp[MDArray[A]]) extends RichDef[MDArray[A]](a::lExpr) { override def getString() = "ModArrayWith(" + a.toString + " - " + lExpr.mkString(", ") + ")" }
   // TODO: Important implicit assumption made here -- we assume foldFunction has no outside dependencies. According to the SAC spec, it should indeed be the case, but proving it would be better
-  case class FoldArrayWith[A: ClassManifest](neutral: Exp[MDArray[A]], foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], w: WithNode[A]) extends RichDef[MDArray[A]](neutral::toAtom(w)::Nil) { override def getString() = "FoldArrayWith(" + neutral + ", " + foldFunction + ", " + w + ")" }
-  case class IndexVector(w: With) extends RichDef[MDArray[Int]](w.usedDefs) { override def getString() = "IndexVector(" + w.toString + ")" }
-  case class WithNode[A: ClassManifest](iv: IndexVector, f: Exp[MDArray[Int]] => Exp[MDArray[A]]) extends RichDef[Unit](toAtom(iv)::f(iv)::Nil) { override def getString() = "With(" + iv.toString + " => " + f(iv).toString + ")" }
-
+  case class FoldArrayWith[A: ClassManifest](wExpr: Exp[MDArray[A]], neutral: Exp[MDArray[A]], foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]]) extends RichDef[MDArray[A]](neutral::wExpr::Nil) { override def getString() = "FoldArrayWith(" + neutral + ", " + foldFunction + ", " + wExpr + ")" }
+  case class IndexVector(lb: Exp[MDArray[Int]], lbStrict: Exp[Boolean], ub: Exp[MDArray[Int]], ubStrict: Exp[Boolean], step: Exp[MDArray[Int]], width: Exp[MDArray[Int]]) extends RichDef[MDArray[Int]](lb::lbStrict::ub::ubStrict::step::width::Nil) { override def getString() = "IndexVector(" + lb + ", " + lbStrict + ", " + ub + ", " + ubStrict + ", " + step + ", " + width + ")" }
+  case class WithNode[A: ClassManifest](iv: Exp[MDArray[Int]], expr: Exp[MDArray[A]]) extends RichDef[MDArray[A]](iv::expr::Nil) { override def getString() = "With(" + iv.toString + " => " + expr.toString + ")" }
 
   // Base functions
   case class ToDim[A: ClassManifest](a: Exp[MDArray[A]]) extends RichDef[Int](a::Nil) { override def getString() = "Dim(" + a + ")" }
@@ -214,9 +212,17 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
     Reduce(z, a, op, opName)
 
   // With-comprehensions
-  def genArrayWith[A: ClassManifest](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], shp: Exp[MDArray[Int]]): Exp[MDArray[A]] = GenArrayWith(l.map(p => WithNode(IndexVector(p._1), p._2)), shp)
-  def modArrayWith[A: ClassManifest](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = ModArrayWith(l.map(p => WithNode(IndexVector(p._1), p._2)), a)
-  def foldArrayWith[A: ClassManifest](w: With, foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], neutral: Exp[MDArray[A]], f: Exp[MDArray[Int]] => Exp[MDArray[A]]): Exp[MDArray[A]] = FoldArrayWith(neutral, foldFunction, WithNode(IndexVector(w), f))
+  def toWithNode[A: ClassManifest](p: (With, Exp[MDArray[Int]] => Exp[MDArray[A]])): Exp[MDArray[A]] = {
+    val withObject: With = p._1
+    val function: Exp[MDArray[Int]] => Exp[MDArray[A]] = p._2
+
+    val iv: Exp[MDArray[Int]] = IndexVector(withObject._lb, withObject._lbStrict, withObject._ub, withObject._ubStrict, withObject._step, withObject._width)
+    WithNode(iv, function(iv))
+  }
+
+  def genArrayWith[A: ClassManifest](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], shp: Exp[MDArray[Int]]): Exp[MDArray[A]] = GenArrayWith(l.map(p => toWithNode(p)), shp)
+  def modArrayWith[A: ClassManifest](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = ModArrayWith(l.map(p => toWithNode(p)), a)
+  def foldArrayWith[A: ClassManifest](w: With, foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], neutral: Exp[MDArray[A]], f: Exp[MDArray[Int]] => Exp[MDArray[A]]): Exp[MDArray[A]] = FoldArrayWith(toWithNode(Pair(w, f)), neutral, foldFunction)
 
   // ToString
   def doToString[A](a: Exp[MDArray[A]]) = a.toString()
