@@ -63,14 +63,18 @@ trait MDArrayBaseTyping {
 
   def createTypingConstraints(r: Exp[_]): List[TypingConstraint] = {
 
-    def richDef(e: Exp[_]): RichDef[_] = e match {
-      case s: Sym[_] => findDefinition(s).get.rhs.asInstanceOf[RichDef[_]]
-      case r: RichDef[_] => r
-      case _ => throw new Exception("internal error")
+    // XXX: These calls should never fail. If they fail it's better to fail quickly rather than hide the error
+    def getSymNumber(e: Any): Int = e match {
+      case s: Sym[_] => s.id
+      case d: Def[_] => findDefinition(d).get.sym.id
+    }
+    def getDefinition(e: Any): Def[_] = e match {
+      case s: Sym[_] => findDefinition(s).get.rhs
+      case d: Def[_] => d
     }
 
-    val result = richDef(r)
-    val nodes = new HashSet[RichDef[_]]()
+    val result = getDefinition(r)
+    val nodes = new HashSet[Def[_]]()
 
     def knownAtCompileTimeConstraints(kc: KnownAtCompileTime[_]): List[TypingConstraint] = {
 
@@ -79,10 +83,12 @@ trait MDArrayBaseTyping {
         case _ => getNewUnknown
       }
 
-      val shapeVar: TypingVariable = Var("S" + kc.typeVarIndex)
+      val symNo: Int = getSymNumber(kc)
+
+      val shapeVar: TypingVariable = Var("S" + symNo)
       val shapeList: List[TypingElement] = kc.value.shape.map(i => bind(i))
       val shapeRHS: TypingVariable = Lst(shapeList)
-      val valueVar: TypingVariable = Var("V" + kc.typeVarIndex)
+      val valueVar: TypingVariable = Var("V" + symNo)
       val valueList: List[TypingElement] = kc.value.content.map((i: Any) => bind(i)).toList
       val valueRHS: TypingVariable = Lst(valueList)
 
@@ -92,32 +98,40 @@ trait MDArrayBaseTyping {
 
     def knownAtRuntimeConstraints(kr: KnownAtRuntime[_]): List[TypingConstraint] =
       if (kr.value)
-        Equality(Var("S" + kr.typeVarIndex), Lst(Nil), false) :: Nil
+        Equality(Var("S" + getSymNumber(kr)), Lst(Nil), false) :: Nil
       else
-        Equality(Var("S" + kr.typeVarIndex), Lst(getNewUnknown::Nil), false) :: Nil
+        Equality(Var("S" + getSymNumber(kr)), Lst(getNewUnknown::Nil), false) :: Nil
 
     def infixOpAAConstraints(in: InfixOpAA[_, _]): List[TypingConstraint] = {
-      val array1def = richDef(in.array1)
-      val array2def = richDef(in.array2)
+      val array1def = getDefinition(in.array1)
+      val array2def = getDefinition(in.array2)
 
-      Equality(Var("S" + array1def.typeVarIndex), Var("S" + array2def.typeVarIndex), true) ::
-      Equality(Var("S" + in.typeVarIndex), Var("S" + array1def.typeVarIndex), false) :: Nil :::
+      val inOpNo = getSymNumber(in)
+      val array1no = getSymNumber(in.array1)
+      val array2no = getSymNumber(in.array2)
+
+      Equality(Var("S" + array1no), Var("S" + array2no), true) ::
+      Equality(Var("S" + inOpNo), Var("S" + array1no), false) :: Nil :::
       gatherConstraints(array1def) :::
       gatherConstraints(array2def)
     }
 
     def reshapeConstraints(rs: Reshape[_]): List[TypingConstraint] = {
-      val shpDef = richDef(rs.shp)
-      val arrDef = richDef(rs.a)
+      val shpDef = getDefinition(rs.shp)
+      val arrDef = getDefinition(rs.a)
 
-      Equality(Var("S" + shpDef.typeVarIndex), Lst(getNewUnknown :: Nil), true) ::
-      EqualProduct(Var("V" + shpDef.typeVarIndex), Var("S" + arrDef.typeVarIndex), true) ::
-      Equality(Var("S" + rs.typeVarIndex), Var("V" + shpDef.typeVarIndex), false) :: Nil :::
+      val rsNo = getSymNumber(rs)
+      val shpNo = getSymNumber(rs.shp)
+      val arrNo = getSymNumber(rs.a)
+
+      Equality(Var("S" + shpNo), Lst(getNewUnknown :: Nil), true) ::
+      EqualProduct(Var("V" + shpNo), Var("S" + arrNo), true) ::
+      Equality(Var("S" + rsNo), Var("V" + shpNo), false) :: Nil :::
       gatherConstraints(shpDef) :::
       gatherConstraints(arrDef)
     }
 
-    def gatherConstraints(node: RichDef[_]): List[TypingConstraint] = nodes.contains(node) match {
+    def gatherConstraints(node: Def[_]): List[TypingConstraint] = nodes.contains(node) match {
       case false =>
         nodes.add(node)
         node match {
