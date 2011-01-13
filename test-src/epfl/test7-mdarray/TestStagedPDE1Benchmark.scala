@@ -31,10 +31,15 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
     import pde1._
 
     pde1export.emitDepGraph(pde1.range1(pde1.knownOnlyAtRuntime(Nil), 1), prefix+"range1-dot", false)
+    withOutFile(prefix+"range1-type")({typing.printTypingConstraints(pde1.range1(pde1.knownOnlyAtRuntime(Nil), 1))})
     pde1export.emitDepGraph(pde1.range2(pde1.knownOnlyAtRuntime(Nil), 1), prefix+"range2-dot", false)
+    withOutFile(prefix+"range2-type")({typing.printTypingConstraints(pde1.range2(pde1.knownOnlyAtRuntime(Nil), 1))})
     pde1export.emitDepGraph(pde1.range3(pde1.knownOnlyAtRuntime(Nil), 1), prefix+"range3-dot", false)
+    withOutFile(prefix+"range3-type")({typing.printTypingConstraints(pde1.range3(pde1.knownOnlyAtRuntime(Nil), 1))})
   //pde1export.emitDepGraph(pde1.range4(pde1.knownOnlyAtRuntime(Nil), 1), prefix+"range4-dot", false)
+  //withOutFile(prefix+"range4-type")({typing.printTypingConstraints(pde1.range4(pde1.knownOnlyAtRuntime(Nil), 1))})
     pde1export.emitDepGraph(pde1.range5(pde1.knownOnlyAtRuntime(Nil), 1), prefix+"range5-dot", false)
+    withOutFile(prefix+"range5-type")({typing.printTypingConstraints(pde1.range5(pde1.knownOnlyAtRuntime(Nil), 1))})
     pde1export.emitDepGraph(pde1.vectorTest, prefix+"vector-test-dot", false)
     withOutFile(prefix+"vector-test-type")({typing.printTypingConstraints(pde1.vectorTest)})
   }

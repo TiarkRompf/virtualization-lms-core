@@ -40,7 +40,7 @@ trait Base extends EmbeddedControls {
 trait BaseExp extends Base with Expressions with Transforming {
   type Rep[+T] = Exp[T]
 
-  protected def unit[T:Manifest](x: T) = Const(x)
+  protected def unit[T:Manifest](x: T) = { val c = Const(x); nVars += 1; c.id = nVars -1; c }
 }
 
 trait EffectExp extends BaseExp with Effects {

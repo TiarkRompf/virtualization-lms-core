@@ -122,7 +122,7 @@ trait PDE1Benchmark { this: MDArrayBase with IfThenElse =>
       array
     }
 
-    val u1 = With(_lb=shape(W) * 0, _ub=shape(W)-1).Fold((a:MDArrayDbl, b:MDArrayDbl) => a+b, f * hsq, iv => shift(-iv + 1, 0d, u))
+    val u1: MDArrayDbl = With(_lb=shape(W) * 0, _ub=shape(W)-1).Fold((a:MDArrayDbl, b:MDArrayDbl) => a+b, f * hsq, iv => shift(-iv + 1, 0.0, u))
 
     CombineInnerOuter(u1 * factor, u)
   }

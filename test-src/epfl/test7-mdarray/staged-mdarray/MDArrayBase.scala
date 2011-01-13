@@ -128,7 +128,7 @@ trait MDArrayBase extends Base with util.OverloadHack {
 
     def GenArray[A: ClassManifest](shp: Rep[MDArray[Int]], f: Rep[MDArray[Int]]=> Rep[MDArray[A]]): Rep[MDArray[A]] = genArrayWith((fillShape(shp), f)::Nil, shp)
     def ModArray[A: ClassManifest](a: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = modArrayWith((fillShape(shape(a)), f)::Nil, a)
-    def Fold[A: ClassManifest](foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = foldArrayWith(this, foldFunction, neutral, f)
+    def Fold[A: ClassManifest](foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = foldArrayWith(fillShapeForFold(), foldFunction, neutral, f)
 
     // This function will fill in the values correctly on construction :)
     def fillShape(shape: Rep[MDArray[Int]]): With = {
@@ -139,6 +139,14 @@ trait MDArrayBase extends Base with util.OverloadHack {
       val step = if (_step == nothing) values(dim(shape), 1) else _step
       val width = if (_width == nothing) values(dim(shape), 0) else _width
       With(lb, lbStrict, ub, ubStrict, step, width)
+    }
+
+    def fillShapeForFold(): With = {
+      if (_lb == nothing) throw new Exception("fold: lower bound must be specified")
+      if (_ub == nothing) throw new Exception("fold: upper bound must be specified")
+      val step = if (_step == nothing) values(shape(_lb), 1) else _step
+      val width = if (_width == nothing) values(shape(_lb), 0) else _width
+      With(_lb, _lbStrict, _ub, _ubStrict, step, width)
     }
 
     def usedDefs(): List[Rep[Any]] = _lb::_ub::_step::_width::Nil
@@ -189,7 +197,7 @@ trait MDArrayBase extends Base with util.OverloadHack {
   def drop[A: ClassManifest](shp: Rep[MDArray[Int]], a: Rep[MDArray[A]]): Rep[MDArray[A]]
   def tile[A: ClassManifest](sv: Rep[MDArray[Int]], ov: Rep[MDArray[Int]], a:Rep[MDArray[A]]): Rep[MDArray[A]]
   def rotate[A: ClassManifest](ov: Rep[MDArray[Int]], a:Rep[MDArray[A]]): Rep[MDArray[A]]
-  def shift[A: ClassManifest](ov: Rep[MDArray[Int]], expr: A, a:Rep[MDArray[A]]): Rep[MDArray[A]]
+  def shift[A: ClassManifest](ov: Rep[MDArray[Int]], expr: Rep[A], a:Rep[MDArray[A]]): Rep[MDArray[A]]
 
   // Basic operations on matrices - they appear as private here
   def op[A, B](a:Rep[MDArray[A]], b:Rep[MDArray[A]])(op: (A, A) => B, opName: String)(implicit mfA: ClassManifest[A], mfB: ClassManifest[B], ov1: Overloaded4): Rep[MDArray[B]]
