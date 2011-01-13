@@ -148,7 +148,7 @@ trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
      sel.iv::sel.a::Nil)
 
   def catConstraints(cat: Cat[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (LengthEqualityAeqB(ShapeVar(cat.a), ShapeVar(cat.a), preReq)::
+    (LengthEqualityAeqB(ShapeVar(cat.a), ShapeVar(cat.b), preReq)::
      LessThan(ValueVar(cat.d), Lst(LengthOf(ShapeVar(cat.a))::Nil), preReq)::
      EqualityExceptFor(ValueVar(cat.d), ShapeVar(cat.a), ShapeVar(cat.b), preReq)::
      // TODO: Replace LengthEqualityAeqB with a node that contains more information - which could infer the exact shape
