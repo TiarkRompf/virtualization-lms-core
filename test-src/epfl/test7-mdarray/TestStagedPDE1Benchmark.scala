@@ -30,17 +30,24 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
 
     import pde1._
 
-    pde1export.emitDepGraph(pde1.range1(pde1.knownOnlyAtRuntime(Nil), 1), prefix+"range1-dot", false)
-    withOutFile(prefix+"range1-type")({typing.printTypingConstraints(pde1.range1(pde1.knownOnlyAtRuntime(Nil), 1))})
-    pde1export.emitDepGraph(pde1.range2(pde1.knownOnlyAtRuntime(Nil), 1), prefix+"range2-dot", false)
-    withOutFile(prefix+"range2-type")({typing.printTypingConstraints(pde1.range2(pde1.knownOnlyAtRuntime(Nil), 1))})
-    pde1export.emitDepGraph(pde1.range3(pde1.knownOnlyAtRuntime(Nil), 1), prefix+"range3-dot", false)
-    withOutFile(prefix+"range3-type")({typing.printTypingConstraints(pde1.range3(pde1.knownOnlyAtRuntime(Nil), 1))})
-  //pde1export.emitDepGraph(pde1.range4(pde1.knownOnlyAtRuntime(Nil), 1), prefix+"range4-dot", false)
-  //withOutFile(prefix+"range4-type")({typing.printTypingConstraints(pde1.range4(pde1.knownOnlyAtRuntime(Nil), 1))})
-    pde1export.emitDepGraph(pde1.range5(pde1.knownOnlyAtRuntime(Nil), 1), prefix+"range5-dot", false)
-    withOutFile(prefix+"range5-type")({typing.printTypingConstraints(pde1.range5(pde1.knownOnlyAtRuntime(Nil), 1))})
-    pde1export.emitDepGraph(pde1.vectorTest, prefix+"vector-test-dot", false)
-    withOutFile(prefix+"vector-test-type")({typing.printTypingConstraints(pde1.vectorTest)})
+    val range1 = pde1.range1(pde1.knownOnlyAtRuntime(Nil), 1)
+    val range2 = pde1.range2(pde1.knownOnlyAtRuntime(Nil), 1)
+    val range3 = pde1.range3(pde1.knownOnlyAtRuntime(Nil), 1)
+    //val range4 = pde1.range4(pde1.knownOnlyAtRuntime(Nil), 1)
+    val range5 = pde1.range5(pde1.knownOnlyAtRuntime(Nil), 1)
+    val vector = pde1.vectorTest
+
+    pde1export.emitDepGraph(range1, prefix+"range1-dot", false)
+    withOutFile(prefix+"range1-type")({typing.printTypingConstraints(range1)})
+    pde1export.emitDepGraph(range2, prefix+"range2-dot", false)
+    withOutFile(prefix+"range2-type")({typing.printTypingConstraints(range2)})
+    pde1export.emitDepGraph(range3, prefix+"range3-dot", false)
+    withOutFile(prefix+"range3-type")({typing.printTypingConstraints(range3)})
+  //pde1export.emitDepGraph(range4, prefix+"range4-dot", false)
+  //withOutFile(prefix+"range4-type")({typing.printTypingConstraints(range4)})
+    pde1export.emitDepGraph(range5, prefix+"range5-dot", false)
+    withOutFile(prefix+"range5-type")({typing.printTypingConstraints(range5)})
+    pde1export.emitDepGraph(vector, prefix+"vector-test-dot", false)
+    withOutFile(prefix+"vector-test-type")({typing.printTypingConstraints(vector)})
   }
 }

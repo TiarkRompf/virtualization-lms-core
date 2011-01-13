@@ -124,7 +124,7 @@ trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
     (Equality(ShapeVar(getSymNumber(ta)), Lst(getNewUnknown::Nil), preReq)::Nil, ta.value::Nil)
 
   def toValueConstraints(tv: ToValue[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(tv)), Lst(getNewUnknown::Nil), preReq)::Nil, tv.value::Nil)
+    (Equality(ShapeVar(getSymNumber(tv)), Lst(Nil), preReq)::Nil, tv.value::Nil)
 
   def toDimConstraints(td: ToDim[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (Equality(ShapeVar(td), Lst(Nil), postReq) ::

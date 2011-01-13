@@ -16,7 +16,7 @@ trait Expressions {
     def Type : Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
   }
 
-  case class Const[+T:Manifest](x: T) extends Exp[T] {var id: Int = 0}
+  case class Const[+T:Manifest](x: T) extends Exp[T] {var id: Int = 0; override def toString = "Const(" + id + ": " + x.toString+ ")"}
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
