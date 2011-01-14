@@ -6,7 +6,33 @@ trait Effects extends Expressions {
   type State = List[Exp[_]]
   
   var context: State = _
-  
+
+  def reflectRead[A:Manifest](x: Exp[A]): Exp[A] = x match {
+    case y:Sym[A] =>
+      if (y.lastRead.id < y.version){
+        val s = reflectEffect(Read(x)).asInstanceOf[Sym[A]]
+        y.lastRead = findDefinition(s).get.sym.asInstanceOf[Sym[Any]]
+        s
+      }
+      else {
+        y.lastRead.asInstanceOf[Sym[A]]
+      }
+    case _ =>  x
+  }
+
+  def reflectWrite[A:Manifest](x: Exp[A]): Exp[A] = {
+    x match {
+      case y:Sym[A] => y.version = nVars+1; y
+      case _ => x
+    }
+  }
+
+  def reflectReadWrite[A:Manifest](x: Exp[A]): Exp[A] = {
+    val y = reflectRead(x)
+    reflectWrite(x)
+    y
+  }
+
   def reflectEffect[A:Manifest](x: Def[A]): Exp[A] = {
      // don't do CSE on effectful computations
     val r: Exp[A] = createDefinition(fresh[A], Reflect(x, context)).sym
@@ -14,6 +40,8 @@ trait Effects extends Expressions {
     r
   }
 
+  // TODO: think about creting a Write node, so that we could remove reflectMutation. We would then
+  // infer a mutation from a reflectEffect containing Writes.
   def reflectMutation[A:Manifest](x: Def[A]): Exp[A]  = {
     val r: Exp[A] = createDefinition(fresh[A], Mutation(x, context)).sym
     context :+= r
@@ -30,6 +58,7 @@ trait Effects extends Expressions {
     resultR
   }
 
+  case class Read[A](x: Exp[A]) extends Def[A]
   case class Reflect[A](x:Def[A], effects: List[Exp[Any]]) extends Def[A]
   case class Mutation[A](override val x: Def[A], override val effects: List[Exp[Any]]) extends Reflect[A](x, effects)
   case class Reify[A](x: Exp[A], effects: List[Exp[Any]]) extends Def[A]
