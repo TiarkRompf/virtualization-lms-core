@@ -49,7 +49,7 @@ trait ScalaGenMiscOps extends ScalaGenEffect {
 }
 
 
-trait CLikeGenMiscOps extends CLikeCodegen {
+trait CGenMiscOps extends CGenEffect {
   val IR: MiscOpsExp
   import IR._
 
@@ -61,39 +61,11 @@ trait CLikeGenMiscOps extends CLikeCodegen {
   }
 }
 
-trait CGenMiscOps extends CGenEffect with CLikeGenMiscOps
-
-trait CudaGenMiscOps extends CudaGenEffect with CLikeGenMiscOps
-
-/*
-//todo factor out commonality
-trait CGenMiscOps extends CGenEffect with CLikeGenMiscOps {
+trait CudaGenMiscOps extends CudaGenEffect {
   val IR: MiscOpsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case PrintLn(s) => stream.println("printf(\"%s\\n\"," + quote(s) + ");")
-    case Print(s) => stream.println("printf(\"%s\"," + quote(s) + ");")
-    case Exit(a) => stream.println("exit(" + quote(a) + ");")
     case _ => super.emitNode(sym, rhs)
   }
 }
-
-trait CudaGenMiscOps extends CudaGenEffect with CLikeGenMiscOps {
-  val IR: MiscOpsExp
-  import IR._
-
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
-      rhs match {
-        // TODO: Add support for printing from GPU device
-        case PrintLn(s) =>
-          throw new RuntimeException("CudaGen: Not GPUable")
-        case Print(s) =>
-          throw new RuntimeException("CudaGen: Not GPUable")
-        case Exit(a) =>
-          throw new RuntimeException("CudaGen: Not GPUable")
-        case _ => super.emitNode(sym, rhs)
-      }
-    }
-}
-*/
