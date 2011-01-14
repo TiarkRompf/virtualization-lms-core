@@ -19,25 +19,25 @@ trait MDArrayBaseTypingPrimitives {
   abstract class TypingVariable
   abstract class Var(name: String) extends TypingVariable { override def toString = name }
   case class ShapeVar(i: Int) extends Var("S" + i)
-  case class ValueVar(i: Int) extends Var("S" + i)
+  case class ValueVar(i: Int) extends Var("V" + i)
   case class Lst(list: List[TypingElement]) extends TypingVariable { override def toString = list.map(elt => elt.toString).mkString("[", "  ", "]") }
 
   abstract class TypingElement
   case class Value(n: Int) extends TypingElement { override def toString = n.toString }
   case class Unknown(i: Int) extends TypingElement { override def toString = "U" + i.toString}
-  case class LengthOf(v: TypingVariable) extends TypingElement { override def toString = "dim(" + v.toString + ")" }
+  case class LengthOf(v: Var) extends TypingElement { override def toString = "dim(" + v.toString + ")" }
   def getNewUnknown(): Unknown = Unknown({ unknownIndex += 1; unknownIndex })
 
-  abstract class TypingConstraint(val prereq: Boolean) { override def toString = getConstraintString(this) }
-  case class Equality(a: TypingVariable, b: TypingVariable, _prereq: Boolean) extends TypingConstraint(_prereq)
-  case class EqualityExceptFor(d: TypingVariable, a: TypingVariable, b: TypingVariable, _prereq: Boolean) extends TypingConstraint(_prereq)
-  case class LessThan(a: TypingVariable, b: TypingVariable, _prereq: Boolean) extends TypingConstraint(_prereq)
-  case class PrefixLt(main: TypingVariable, prefix: TypingVariable, suffix: TypingVariable, _prereq: Boolean) extends TypingConstraint(_prereq)
-  case class SuffixEq(main: TypingVariable, prefix: TypingVariable, suffix: TypingVariable, _prereq: Boolean) extends TypingConstraint(_prereq)
-  case class EqualityAeqBcatC(a: TypingVariable, b: TypingVariable, c: TypingVariable, _prereq: Boolean) extends TypingConstraint(_prereq)
-  case class LengthEqualityAeqB(a: TypingVariable, b: TypingVariable, _prereq: Boolean) extends TypingConstraint(_prereq)
-  case class CommonDenominator(a: TypingVariable, b: TypingVariable, c: TypingVariable, _prereq: Boolean) extends TypingConstraint(_prereq)
-  case class EqualProduct(a: TypingVariable, b: TypingVariable, _prereq: Boolean) extends TypingConstraint(_prereq)
+  abstract class TypingConstraint(val prereq: Boolean, val node: Any) { override def toString = getConstraintString(this) }
+  case class Equality(a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
+  case class EqualityExceptFor(d: TypingVariable, a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
+  case class LessThan(a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
+  case class PrefixLt(main: TypingVariable, prefix: TypingVariable, suffix: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
+  case class SuffixEq(main: TypingVariable, prefix: TypingVariable, suffix: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
+  case class EqualityAeqBcatC(a: TypingVariable, b: TypingVariable, c: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
+  case class LengthEqualityAeqB(a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
+  case class CommonDenominator(a: TypingVariable, b: TypingVariable, c: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
+  case class EqualProduct(a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
 
   private def getConstraintString(constraint: TypingConstraint): String = {
     val body = constraint match {
@@ -49,13 +49,13 @@ trait MDArrayBaseTypingPrimitives {
       case eq: EqualityAeqBcatC => eq.a.toString + " = " + eq.b.toString + " ::: " + eq.c.toString
       case le: LengthEqualityAeqB => "length(" + le.a.toString + ") = length(" + le.b.toString + ")"
       case cd: CommonDenominator => cd.a.toString + " = common(" + cd.b.toString + ", " + cd.c.toString + ")"
-      case ep: EqualProduct => "@runtime => prod(" + ep.a.toString + ") = prod(" + ep.b.toString + ")"
+      case ep: EqualProduct => "prod(" + ep.a.toString + ") = prod(" + ep.b.toString + ")"
       case _ => "unknown constraint"
     }
 
     if (constraint.prereq)
-      "PRE:  " + body
+      "PRE:    " + String.format("%-30s", body) + "     from " + constraint.node
     else
-      "POST: " + body
+      "POST:   " + String.format("%-30s", body) + "     from " + constraint.node
   }
 }

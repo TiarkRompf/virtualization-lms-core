@@ -95,143 +95,143 @@ trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
   }
 
   def constConstraints(ct: Const[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(ct), Lst(Nil), postReq) ::
-     Equality(ValueVar(ct), Lst(toValue(ct.x)::Nil), postReq)::Nil, Nil)
+    (Equality(ShapeVar(ct), Lst(Nil), postReq, ct) ::
+     Equality(ValueVar(ct), Lst(toValue(ct.x)::Nil), postReq, ct)::Nil, Nil)
 
   def knownAtCompileTimeConstraints(kc: KnownAtCompileTime[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(kc), Lst(kc.value.shape.map(i => toValue(i))), postReq) ::
-     Equality(ValueVar(kc), Lst(kc.value.content.map((i: Any) => toValue(i)).toList), postReq) :: Nil, Nil)
+    (Equality(ShapeVar(kc), Lst(kc.value.shape.map(i => toValue(i))), postReq, kc) ::
+     Equality(ValueVar(kc), Lst(kc.value.content.map((i: Any) => toValue(i)).toList), postReq, kc) :: Nil, Nil)
 
   def knownAtRuntimeListArrayConstraints(kr: KnownAtRuntimeListArray[_]) =
-    (Equality(ShapeVar(getSymNumber(kr)), Lst(getNewUnknown::Nil), postReq) :: Nil, Nil)
+    (Equality(ShapeVar(getSymNumber(kr)), Lst(getNewUnknown::Nil), postReq, kr) :: Nil, Nil)
 
   def knownAtRuntimeValueConstraints(kr: KnownAtRuntimeValue[_]) =
-    (Equality(ShapeVar(getSymNumber(kr)), Lst(Nil), postReq) :: Nil, Nil)
+    (Equality(ShapeVar(getSymNumber(kr)), Lst(Nil), postReq, kr) :: Nil, Nil)
 
   def fromListConstraints(fl: FromList[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(fl)), Lst(getNewUnknown::Nil), postReq)::Nil, Nil)
+    (Equality(ShapeVar(getSymNumber(fl)), Lst(getNewUnknown::Nil), postReq, fl)::Nil, Nil)
 
   def fromArrayConstraints(fa: FromArray[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(fa)), Lst(getNewUnknown::Nil), postReq)::Nil, Nil)
+    (Equality(ShapeVar(getSymNumber(fa)), Lst(getNewUnknown::Nil), postReq, fa)::Nil, Nil)
 
   def fromValueConstraints(fv: FromValue[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(fv)), Lst(Nil), postReq)::Nil, Nil)
+    (Equality(ShapeVar(getSymNumber(fv)), Lst(Nil), postReq, fv)::Nil, Nil)
 
   def toListConstraints(tl: ToList[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(tl)), Lst(getNewUnknown::Nil), preReq)::Nil, tl.value::Nil)
+    (Equality(ShapeVar(getSymNumber(tl)), Lst(getNewUnknown::Nil), preReq, tl)::Nil, tl.value::Nil)
 
   def toArrayConstraints(ta: ToArray[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(ta)), Lst(getNewUnknown::Nil), preReq)::Nil, ta.value::Nil)
+    (Equality(ShapeVar(getSymNumber(ta)), Lst(getNewUnknown::Nil), preReq, ta)::Nil, ta.value::Nil)
 
   def toValueConstraints(tv: ToValue[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(tv)), Lst(Nil), preReq)::Nil, tv.value::Nil)
+    (Equality(ShapeVar(getSymNumber(tv)), Lst(Nil), preReq, tv)::Nil, tv.value::Nil)
 
   def toDimConstraints(td: ToDim[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(td), Lst(Nil), postReq) ::
-     Equality(ValueVar(td), Lst(LengthOf(ShapeVar(td.a))::Nil), postReq)::Nil, td.a::Nil)
+    (Equality(ShapeVar(td), Lst(Nil), postReq, td) ::
+     Equality(ValueVar(td), Lst(LengthOf(ShapeVar(td.a))::Nil), postReq, td)::Nil, td.a::Nil)
 
   def toShapeConstraints(ts: ToShape[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ValueVar(ts), ShapeVar(ts.a), postReq)::
-     Equality(ShapeVar(ts), Lst(getNewUnknown::Nil), postReq)::Nil,
+    (Equality(ValueVar(ts), ShapeVar(ts.a), postReq, ts)::
+     Equality(ShapeVar(ts), Lst(getNewUnknown::Nil), postReq, ts)::Nil,
      ts.a::Nil)
 
   def reshapeConstraints(rs: Reshape[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(rs.shp), Lst(getNewUnknown :: Nil), preReq)::
-     EqualProduct(ValueVar(rs.shp), ShapeVar(rs.a), preReq)::
-     Equality(ShapeVar(rs), ValueVar(rs.shp), postReq)::Nil,
+    (Equality(ShapeVar(rs.shp), Lst(getNewUnknown :: Nil), preReq, rs)::
+     EqualProduct(ValueVar(rs.shp), ShapeVar(rs.a), preReq, rs)::
+     Equality(ShapeVar(rs), ValueVar(rs.shp), postReq, rs)::Nil,
      rs.shp::rs.a::Nil)
 
   def selConstraints(sel: Sel[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(sel.iv), Lst(getNewUnknown::Nil), preReq)::
-     PrefixLt(ShapeVar(sel.a), ValueVar(sel.iv), ShapeVar(sel), preReq)::
-     SuffixEq(ShapeVar(sel.a), ValueVar(sel.iv), ShapeVar(sel), postReq)::Nil,
+    (Equality(ShapeVar(sel.iv), Lst(getNewUnknown::Nil), preReq, sel)::
+     PrefixLt(ShapeVar(sel.a), ValueVar(sel.iv), ShapeVar(sel), preReq, sel)::
+     SuffixEq(ShapeVar(sel.a), ValueVar(sel.iv), ShapeVar(sel), postReq, sel)::Nil,
      sel.iv::sel.a::Nil)
 
   def catConstraints(cat: Cat[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (LengthEqualityAeqB(ShapeVar(cat.a), ShapeVar(cat.b), preReq)::
-     LessThan(ValueVar(cat.d), Lst(LengthOf(ShapeVar(cat.a))::Nil), preReq)::
-     EqualityExceptFor(ValueVar(cat.d), ShapeVar(cat.a), ShapeVar(cat.b), preReq)::
+    (LengthEqualityAeqB(ShapeVar(cat.a), ShapeVar(cat.b), preReq, cat)::
+     LessThan(ValueVar(cat.d), Lst(LengthOf(ShapeVar(cat.a))::Nil), preReq, cat)::
+     EqualityExceptFor(ValueVar(cat.d), ShapeVar(cat.a), ShapeVar(cat.b), preReq, cat)::
      // TODO: Replace LengthEqualityAeqB with a node that contains more information - which could infer the exact shape
      // something like EquailtyAeqBcatC would do :)
-     LengthEqualityAeqB(ShapeVar(cat), ShapeVar(cat.a), postReq)::Nil,
+     LengthEqualityAeqB(ShapeVar(cat), ShapeVar(cat.a), postReq, cat)::Nil,
      cat.d::cat.a::cat.b::Nil)
 
   def reduceConstraints(red: Reduce[_,_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(red), Lst(Nil), postReq)::
-     Equality(ValueVar(red), Lst(getNewUnknown::Nil), postReq)::Nil,
+    (Equality(ShapeVar(red), Lst(Nil), postReq, red)::
+     Equality(ValueVar(red), Lst(getNewUnknown::Nil), postReq, red)::Nil,
      red.a::Nil)
 
   def valuesConstraints(values: Values[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(values), ValueVar(values.dim), postReq)::Nil,
+    (Equality(ShapeVar(values), ValueVar(values.dim), postReq, values)::Nil,
      // TODO: We can add more information here for cases where we know dim and value
      values.value::values.dim::Nil)
 
   def infixOpAAConstraints(in: InfixOpAA[_, _]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(in.array1), ShapeVar(in.array2), preReq)::
-     Equality(ShapeVar(in), ShapeVar(in.array1), postReq)::Nil,
+    (Equality(ShapeVar(in.array1), ShapeVar(in.array2), preReq, in)::
+     Equality(ShapeVar(in), ShapeVar(in.array1), postReq, in)::Nil,
      in.array1::in.array2::Nil)
 
   def infixOpAEConstraints(in: InfixOpAE[_, _]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(in), ShapeVar(in.array), postReq)::Nil,
+    (Equality(ShapeVar(in), ShapeVar(in.array), postReq, in)::Nil,
      in.array::in.element::Nil)
 
   def unaryOpConstraints(un: UnaryOp[_, _]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(un), ShapeVar(un.array), postReq)::Nil,
+    (Equality(ShapeVar(un), ShapeVar(un.array), postReq, un)::Nil,
      un.array::Nil)
 
   def whereConstraints(wh: Where[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(wh.cond), ShapeVar(wh.array1), preReq)::
-     Equality(ShapeVar(wh.cond), ShapeVar(wh.array2), preReq)::
-     Equality(ShapeVar(wh), ShapeVar(wh.array1), postReq)::Nil,
+    (Equality(ShapeVar(wh.cond), ShapeVar(wh.array1), preReq, wh)::
+     Equality(ShapeVar(wh.cond), ShapeVar(wh.array2), preReq, wh)::
+     Equality(ShapeVar(wh), ShapeVar(wh.array1), postReq, wh)::Nil,
      // TODO: Understand why wh.array1::wh.array2::wh.cond::Nil here produces a type mismatch
      List(wh.array1, wh.array2, wh.cond))
 
   def indexVectorConstraints(iv: IndexVector): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(iv.lb), Lst(getNewUnknown::Nil), preReq)::
-     Equality(ShapeVar(iv.ub), ShapeVar(iv.lb), preReq)::
-     Equality(ShapeVar(iv.step), ShapeVar(iv.lb), preReq)::
-     Equality(ShapeVar(iv.width), ShapeVar(iv.lb), preReq)::
-     Equality(ShapeVar(iv), ShapeVar(iv.ub), postReq)::Nil,
+    (Equality(ShapeVar(iv.lb), Lst(getNewUnknown::Nil), preReq, iv)::
+     Equality(ShapeVar(iv.ub), ShapeVar(iv.lb), preReq, iv)::
+     Equality(ShapeVar(iv.step), ShapeVar(iv.lb), preReq, iv)::
+     Equality(ShapeVar(iv.width), ShapeVar(iv.lb), preReq, iv)::
+     Equality(ShapeVar(iv), ShapeVar(iv.ub), postReq, iv)::Nil,
      iv.lb::iv.lbStrict::iv.ub::iv.ubStrict::iv.step::iv.width::Nil)
 
   def withNodeConstraints(w: WithNode[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(w), ShapeVar(w.expr), postReq)::Nil,
+    (Equality(ShapeVar(w), ShapeVar(w.expr), postReq, w)::Nil,
      w.expr::w.iv::Nil)
 
   def recoverWithNode(e: Exp[MDArray[_]]): WithNode[_] =
     getDefinition(e).asInstanceOf[WithNode[_]]
 
-  def withNodeListConstraints(withNodeList: List[Exp[MDArray[_]]]): List[TypingConstraint] = {
+  def withNodeListConstraints(node: Any, withNodeList: List[Exp[MDArray[_]]]): List[TypingConstraint] = {
     val f = withNodeList(0) // first node
 
     // and map the rest of the nodes
-    withNodeList.tail.map(e => Equality(ShapeVar(getSymNumber(recoverWithNode(f).iv)), ShapeVar(getSymNumber(recoverWithNode(e).iv)), preReq)) :::
-    withNodeList.tail.map(e => Equality(ShapeVar(getSymNumber(f)), ShapeVar(getSymNumber(e)), preReq))
+    withNodeList.tail.map(e => Equality(ShapeVar(getSymNumber(recoverWithNode(f).iv)), ShapeVar(getSymNumber(recoverWithNode(e).iv)), preReq, node)) :::
+    withNodeList.tail.map(e => Equality(ShapeVar(getSymNumber(f)), ShapeVar(getSymNumber(e)), preReq, node))
   }
 
   def genArrayConstraints(ga: GenArrayWith[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (withNodeListConstraints(ga.lExpr):::
-     Equality(ValueVar(ga.shp), Lst(getNewUnknown::Nil), preReq)::
-     Equality(ValueVar(ga.shp), ShapeVar(getSymNumber(recoverWithNode(ga.lExpr.head).iv)), preReq)::
-     EqualityAeqBcatC(ShapeVar(ga), ValueVar(ga.shp), ShapeVar(getSymNumber(ga.lExpr.head)), postReq)::Nil,
+    (withNodeListConstraints(ga, ga.lExpr):::
+     Equality(ValueVar(ga.shp), Lst(getNewUnknown::Nil), preReq, ga)::
+     Equality(ValueVar(ga.shp), ShapeVar(getSymNumber(recoverWithNode(ga.lExpr.head).iv)), preReq, ga)::
+     EqualityAeqBcatC(ShapeVar(ga), ValueVar(ga.shp), ShapeVar(getSymNumber(ga.lExpr.head)), postReq, ga)::Nil,
      ga.shp::ga.lExpr)
 
   def modArrayConstraints(ma: ModArrayWith[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (withNodeListConstraints(ma.lExpr) :::
+    (withNodeListConstraints(ma, ma.lExpr) :::
      ma.lExpr.flatMap(wn =>
-       PrefixLt(ShapeVar(ma.a), ValueVar(getSymNumber(recoverWithNode(wn).iv)), ShapeVar(getSymNumber(wn)), preReq) ::
-       SuffixEq(ShapeVar(ma.a), ValueVar(getSymNumber(recoverWithNode(wn).iv)), ShapeVar(getSymNumber(wn)), preReq) :: Nil
+       PrefixLt(ShapeVar(ma.a), ValueVar(getSymNumber(recoverWithNode(wn).iv)), ShapeVar(getSymNumber(wn)), preReq, ma) ::
+       SuffixEq(ShapeVar(ma.a), ValueVar(getSymNumber(recoverWithNode(wn).iv)), ShapeVar(getSymNumber(wn)), preReq, ma) :: Nil
      ) :::
-     Equality(ShapeVar(ma), ShapeVar(ma.a), postReq)::Nil,
+     Equality(ShapeVar(ma), ShapeVar(ma.a), postReq, ma)::Nil,
      ma.a::ma.lExpr)
 
   def foldArrayConstraints(fa: FoldArrayWith[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(fa.neutral), ShapeVar(fa.wExpr), preReq)::
-     Equality(ShapeVar(fa), ShapeVar(fa.neutral), postReq)::Nil,
+    (Equality(ShapeVar(fa.neutral), ShapeVar(fa.wExpr), preReq, fa)::
+     Equality(ShapeVar(fa), ShapeVar(fa.neutral), postReq, fa)::Nil,
      fa.neutral::fa.wExpr::Nil)
 
   def ifThenElseConstraint(ite: IfThenElse[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(ite.cond), Lst(Nil), preReq)::
-     CommonDenominator(ShapeVar(ite), ShapeVar(ite.thenp), ShapeVar(ite.elsep), postReq)::Nil,
+    (Equality(ShapeVar(ite.cond), Lst(Nil), preReq, ite)::
+     CommonDenominator(ShapeVar(ite), ShapeVar(ite.thenp), ShapeVar(ite.elsep), postReq, ite)::Nil,
      ite.thenp::ite.elsep::ite.cond::Nil)
 }

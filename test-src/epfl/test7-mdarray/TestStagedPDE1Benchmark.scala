@@ -15,39 +15,31 @@ sbt 'test-only scala.virtualization.lms.epfl.test7.TestStagedPDE1Benchmark'
 class TestStagedPDE1Benchmark extends FileDiffSuite {
 
   val prefix = "test-out/epfl/test7-staged-"
+  var typeFunction: Int => String = (i:Int) => ""
 
   def testPower = {
     // Perform actual tests:
     val pde1 = new PDE1Benchmark with MDArrayBaseExp with IfThenElseExp
-
-    val pde1export = new GraphVizExport {
-      val IR: pde1.type = pde1
-    }
-
-    val typing = new MDArrayBaseTyping {
-      val IR: pde1.type = pde1
-    }
-
     import pde1._
 
-    val range1 = pde1.range1(pde1.knownOnlyAtRuntime(Nil), 1)
-    val range2 = pde1.range2(pde1.knownOnlyAtRuntime(Nil), 1)
-    val range3 = pde1.range3(pde1.knownOnlyAtRuntime(Nil), 1)
-    //val range4 = pde1.range4(pde1.knownOnlyAtRuntime(Nil), 1)
-    val range5 = pde1.range5(pde1.knownOnlyAtRuntime(Nil), 1)
-    val vector = pde1.vectorTest
+//    performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime(Nil), 1), prefix + "range1-test")
+//    performExperiment(pde1, pde1.range2(pde1.knownOnlyAtRuntime(Nil), 1), prefix + "range2-test")
+//    performExperiment(pde1, pde1.range3(pde1.knownOnlyAtRuntime(Nil), 1), prefix + "range3-test")
+//    //performExperiment(pde1, pde1.range4(pde1.knownOnlyAtRuntime(Nil), 1), prefix + "range4-test")
+//    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime(Nil), 1), prefix + "range5-test")
+    performExperiment(pde1, pde1.vectorTest, prefix + "vector-test")
+  }
 
-    pde1export.emitDepGraph(range1, prefix+"range1-dot", false)
-    withOutFile(prefix+"range1-type")({typing.printTypingConstraints(range1)})
-    pde1export.emitDepGraph(range2, prefix+"range2-dot", false)
-    withOutFile(prefix+"range2-type")({typing.printTypingConstraints(range2)})
-    pde1export.emitDepGraph(range3, prefix+"range3-dot", false)
-    withOutFile(prefix+"range3-type")({typing.printTypingConstraints(range3)})
-  //pde1export.emitDepGraph(range4, prefix+"range4-dot", false)
-  //withOutFile(prefix+"range4-type")({typing.printTypingConstraints(range4)})
-    pde1export.emitDepGraph(range5, prefix+"range5-dot", false)
-    withOutFile(prefix+"range5-type")({typing.printTypingConstraints(range5)})
-    pde1export.emitDepGraph(vector, prefix+"vector-test-dot", false)
-    withOutFile(prefix+"vector-test-type")({typing.printTypingConstraints(vector)})
+  def performExperiment(pde1: PDE1Benchmark with MDArrayBaseExp with IfThenElseExp, expr: Any, fileName: String) {
+
+    withOutFile(fileName + "-type-inference") {
+      val typing = new MDArrayBaseTypingUnifier { val IR: pde1.type = pde1 }
+      val fullSubst = typing.obtainSubstitutions(expr, true)._2
+      val export = new MDArrayGraphExport {
+        val IR: pde1.type = pde1
+        override def emitTypingString(i: Int) = typing.getTypingString(i, fullSubst)
+      }
+      export.emitDepGraph(expr.asInstanceOf[pde1.Exp[_]], fileName + "-dot", false)
+    }
   }
 }
