@@ -211,8 +211,8 @@ trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
 
   def genArrayConstraints(ga: GenArrayWith[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (withNodeListConstraints(ga, ga.lExpr):::
-     Equality(ValueVar(ga.shp), Lst(getNewUnknown::Nil), preReq, ga)::
-     Equality(ValueVar(ga.shp), ShapeVar(getSymNumber(recoverWithNode(ga.lExpr.head).iv)), preReq, ga)::
+     Equality(ShapeVar(ga.shp), Lst(getNewUnknown::Nil), preReq, ga)::
+     //Equality(ValueVar(ga.shp), ShapeVar(getSymNumber(recoverWithNode(ga.lExpr.head).iv)), preReq, ga)::
      EqualityAeqBcatC(ShapeVar(ga), ValueVar(ga.shp), ShapeVar(getSymNumber(ga.lExpr.head)), postReq, ga)::Nil,
      ga.shp::ga.lExpr)
 

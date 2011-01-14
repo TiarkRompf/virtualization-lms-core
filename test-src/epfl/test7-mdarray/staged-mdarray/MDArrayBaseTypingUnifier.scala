@@ -140,8 +140,8 @@ trait MDArrayBaseTypingUnifier extends MDArrayBaseTyping {
           if (countUnknowns(mainPref) + countUnknowns(prefix) == 0) {
             // We can do a check and eliminate the prefix :)
             val greaterOrEqual = List.range(0, prefix.list.length).filter(i => prefix.list(i).asInstanceOf[Value].n >= mainPref.list(i).asInstanceOf[Value].n)
-            if (greaterOrEqual > 0)
-              throw new Exception("unification: Prefix lower than assertion proved false: " + mainPref.toString + " < " + prefix.toString)
+            if (greaterOrEqual.length > 0)
+              throw new Exception("unification: Prefix lower than assertion proved false: " + mainPref.toString + " < " + prefix.toString + " main=" + main + ", prefix=" + prefix + ", suffix=" + suffix)
             else
               (true, Nil)
           } else

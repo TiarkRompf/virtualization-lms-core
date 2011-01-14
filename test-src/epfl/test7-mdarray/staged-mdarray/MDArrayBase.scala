@@ -131,13 +131,13 @@ trait MDArrayBase extends Base with util.OverloadHack {
     def Fold[A: ClassManifest](foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = foldArrayWith(fillShapeForFold(), foldFunction, neutral, f)
 
     // This function will fill in the values correctly on construction :)
-    def fillShape(shape: Rep[MDArray[Int]]): With = {
-      val lb = if (_lb == nothing) zeros(dim(shape)) else _lb
+    def fillShape(shp: Rep[MDArray[Int]]): With = {
+      val lb = if (_lb == nothing) zeros(sel(0::Nil, shape(shp))) else _lb
       val lbStrict = if (_lb == nothing) false else _lbStrict
-      val ub = if (_ub == nothing) shape  else _ub
+      val ub = if (_ub == nothing) shp  else _ub
       val ubStrict = if (_ub == nothing) true else _ubStrict
-      val step = if (_step == nothing) values(dim(shape), 1) else _step
-      val width = if (_width == nothing) values(dim(shape), 0) else _width
+      val step = if (_step == nothing) values(sel(0::Nil, shape(shp)), 1) else _step
+      val width = if (_width == nothing) values(sel(0::Nil, shape(shp)), 0) else _width
       With(lb, lbStrict, ub, ubStrict, step, width)
     }
 
