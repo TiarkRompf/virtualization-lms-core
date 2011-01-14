@@ -111,9 +111,7 @@ trait MDArrayBase extends Base with util.OverloadHack {
   implicit def convertFromValueRepRep[A: ClassManifest](a: Rep[A]): Rep[MDArray[A]]
 
   // Explicit conversions for elements known only at runtime
-  def knownOnlyAtRuntime[A](a: List[A])(implicit mf: ClassManifest[A], o1: Overloaded1): Rep[MDArray[A]]
-  def knownOnlyAtRuntime[A](a: Array[A])(implicit mf: ClassManifest[A], o2: Overloaded2): Rep[MDArray[A]]
-  def knownOnlyAtRuntime[A](a: A)(implicit mf: ClassManifest[A], o3: Overloaded3): Rep[MDArray[A]]
+  def knownOnlyAtRuntime[A](name: String)(implicit mf: ClassManifest[A]): Rep[MDArray[A]]
 
   // Private value to take the place of "null" in the With object
   protected val nothing: Rep[MDArray[Int]]

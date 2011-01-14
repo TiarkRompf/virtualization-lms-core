@@ -61,8 +61,7 @@ trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
   def gatherConstraints(node: Any): Pair[List[TypingConstraint], List[Exp[_]]] = node match {
     case ct: Const[_] => constConstraints(ct)
     case kc: KnownAtCompileTime[_] => knownAtCompileTimeConstraints(kc)
-    case kr: KnownAtRuntimeListArray[_] => knownAtRuntimeListArrayConstraints(kr)
-    case kr: KnownAtRuntimeValue[_] => knownAtRuntimeValueConstraints(kr)
+    case kr: KnownAtRuntime[_] => knownAtRuntimeConstraints(kr)
     case fl: FromList[_] => fromListConstraints(fl)
     case fa: FromArray[_] => fromArrayConstraints(fa)
     case fv: FromValue[_] => fromValueConstraints(fv)
@@ -102,11 +101,8 @@ trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
     (Equality(ShapeVar(kc), Lst(kc.value.shape.map(i => toValue(i))), postReq, kc) ::
      Equality(ValueVar(kc), Lst(kc.value.content.map((i: Any) => toValue(i)).toList), postReq, kc) :: Nil, Nil)
 
-  def knownAtRuntimeListArrayConstraints(kr: KnownAtRuntimeListArray[_]) =
-    (Equality(ShapeVar(getSymNumber(kr)), Lst(getNewUnknown::Nil), postReq, kr) :: Nil, Nil)
-
-  def knownAtRuntimeValueConstraints(kr: KnownAtRuntimeValue[_]) =
-    (Equality(ShapeVar(getSymNumber(kr)), Lst(Nil), postReq, kr) :: Nil, Nil)
+  def knownAtRuntimeConstraints(kr: KnownAtRuntime[_]) =
+    (Nil, Nil) // Unfortunately we know nothing about it...
 
   def fromListConstraints(fl: FromList[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (Equality(ShapeVar(getSymNumber(fl)), Lst(getNewUnknown::Nil), postReq, fl)::Nil, Nil)
@@ -132,7 +128,7 @@ trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
 
   def toShapeConstraints(ts: ToShape[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (Equality(ValueVar(ts), ShapeVar(ts.a), postReq, ts)::
-     Equality(ShapeVar(ts), Lst(getNewUnknown::Nil), postReq, ts)::Nil,
+     Equality(ShapeVar(ts), Lst(LengthOf(ShapeVar(ts.a))::Nil), postReq, ts)::Nil,
      ts.a::Nil)
 
   def reshapeConstraints(rs: Reshape[_]): Pair[List[TypingConstraint], List[Exp[_]]] =

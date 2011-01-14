@@ -8,20 +8,10 @@ import original.Conversions._
 
 trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   /*
-      Some counters
-   */
-  var nList: Int = 0
-  var nArray: Int = 0
-  var nValue: Int = 0
-
-  /*
       Basic AST building blocks
    */
-  case class KnownAtRuntimeListArray[A: ClassManifest](name: String, value: Boolean) extends Def[MDArray[A]] { override def toString() = "KnownAtRuntimeListArray(" + name + ") " }
-  case class KnownAtRuntimeValue[A: ClassManifest](name: String, value: Boolean) extends Def[MDArray[A]] { override def toString() = "KnownAtRuntimeValue(" + name + ") " }
+  case class KnownAtRuntime[A: ClassManifest](name: String) extends Def[MDArray[A]] { override def toString() = "KnownAtRuntime(" + name + ") " }
   case class KnownAtCompileTime[A: ClassManifest](value: MDArray[A]) extends Def[MDArray[A]] {override def toString() = "KnownAtCompileTime(" + value.toString + ")" }
-//  case class ConstWithDef[A](x: A) extends Def[A] {override def toString() = "Const(" + x.toString + ")"}
-//  implicit def unitWithDef[T](x: T): Exp[T] = ConstWithDef[T](x)
 
   // Conversions within the staged universe
   case class FromList[A: ClassManifest](value: Exp[List[A]]) extends Def[MDArray[A]] { override def toString() = "FromList(" + value.toString + ")" }
@@ -58,7 +48,7 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   case class Where[A: ClassManifest](cond: Exp[MDArray[Boolean]], array1: Exp[MDArray[A]], array2: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "Where(" + cond + ", " + array1 + ", " + array2 + ")" }
   case class Values[A: ClassManifest](dim: Exp[Int], value: Exp[A]) extends Def[MDArray[A]] { override def toString() = "Values(" + value + ", " + dim + ")"}
 
-  // Nothing
+  // Nothing (a replacement for the null)
   case object Nothing extends Def[MDArray[Int]] { override def toString() = "<nothing>" }
 
   /*
@@ -80,10 +70,9 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   implicit def convertToArrayRep[A: ClassManifest](a: Exp[MDArray[A]]): Exp[Array[A]] = ToArray(a)
   implicit def convertToValueRep[A: ClassManifest](a: Exp[MDArray[A]]): Exp[A] = ToValue(a)
 
-  // Explicit conversions for elements known only at runtime
-  def knownOnlyAtRuntime[A](a: List[A])(implicit mf: ClassManifest[A], o1: Overloaded1): Exp[MDArray[A]] = KnownAtRuntimeListArray[A]("list " + {nList = nList + 1; nList}, false)
-  def knownOnlyAtRuntime[A](a: Array[A])(implicit mf: ClassManifest[A], o2: Overloaded2): Exp[MDArray[A]] = KnownAtRuntimeListArray[A]("array " + {nArray = nArray + 1; nArray}, false)
-  def knownOnlyAtRuntime[A](a: A)(implicit mf: ClassManifest[A], o3: Overloaded3): Exp[MDArray[A]] = KnownAtRuntimeValue[A]("value " + {nValue = nValue + 1; nValue}, true)
+  // Explicit conversion for elements known only at runtime, including shape
+  // To create an element with known shape, use reshape(<known shape>, knownOnlyAtRuntime(...))
+  def knownOnlyAtRuntime[A](name: String)(implicit mf: ClassManifest[A]): Exp[MDArray[A]] = KnownAtRuntime[A](name)
 
   // Basic operations
   def dim[A: ClassManifest](a: Exp[MDArray[A]]): Exp[Int] = ToDim(a)

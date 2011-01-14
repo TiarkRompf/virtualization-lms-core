@@ -22,11 +22,11 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
     val pde1 = new PDE1Benchmark with MDArrayBaseExp with IfThenElseExp
     import pde1._
 
-    performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime(Nil), 1), prefix + "range1-test")
-    performExperiment(pde1, pde1.range2(pde1.knownOnlyAtRuntime(Nil), 1), prefix + "range2-test")
-    performExperiment(pde1, pde1.range3(pde1.knownOnlyAtRuntime(Nil), 1), prefix + "range3-test")
-    //performExperiment(pde1, pde1.range4(pde1.knownOnlyAtRuntime(Nil), 1), prefix + "range4-test")
-    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime(Nil), 1), prefix + "range5-test")
+    performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime("matrix-1"), 1), prefix + "range1-test")
+    performExperiment(pde1, pde1.range2(pde1.knownOnlyAtRuntime("matrix-2"), 1), prefix + "range2-test")
+    performExperiment(pde1, pde1.range3(pde1.knownOnlyAtRuntime("matrix-3"), 1), prefix + "range3-test")
+    //performExperiment(pde1, pde1.range4(pde1.knownOnlyAtRuntime("matrix-4"), 1), prefix + "range4-test")
+    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime("matrix-5"), 1), prefix + "range5-test")
     performExperiment(pde1, pde1.vectorTest, prefix + "vector-test")
   }
 
