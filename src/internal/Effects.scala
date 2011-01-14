@@ -30,7 +30,14 @@ trait Effects extends Expressions {
     resultR
   }
 
+
+  def effectSyms(x: Exp[Any]): List[Sym[Any]] = x match {  //TODO: move to scheduling/codegen?
+    case Def(Reify(y, es)) => es.asInstanceOf[List[Sym[Any]]]
+    case _ => Nil
+  }
+
+
   case class Reflect[A](x:Def[A], effects: List[Exp[Any]]) extends Def[A]
-  case class Mutation[A](override val x: Def[A], override val effects: List[Exp[Any]]) extends Reflect[A](x, effects)
+  case class Mutation[A](override val x: Def[A], override val effects: List[Exp[Any]]) extends Reflect[A](x, effects) //FIXME: case class inheritance!
   case class Reify[A](x: Exp[A], effects: List[Exp[Any]]) extends Def[A]
 }

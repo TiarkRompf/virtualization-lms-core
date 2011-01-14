@@ -64,8 +64,7 @@ trait BaseGenRangeOps extends GenericNestedCodegen {
   }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case RangeForeach(start, end, i, Def(Reify(y, es))) => i :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y)
-    case RangeForeach(start, end, i, y) => i :: boundSyms(y)
+    case RangeForeach(start, end, i, y) => i :: effectSyms(y)
     case _ => super.boundSyms(e)
   }
 

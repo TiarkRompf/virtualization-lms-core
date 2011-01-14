@@ -62,8 +62,9 @@ trait BaseGenFunctions extends GenericNestedCodegen {
   val IR: FunctionsExp
   import IR._
 
-
-  // TODO: right now were trying to hoist as much as we can out of functions. that might not always be appropriate!
+  // TODO: right now were trying to hoist as much as we can out of functions. 
+  // That might not always be appropriate. A promising strategy would be to have
+  // explicit 'hot' and 'cold' functions. 
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => syms(y)
@@ -72,11 +73,8 @@ trait BaseGenFunctions extends GenericNestedCodegen {
   }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case Lambda(f, x, Def(Reify(y, es))) => x :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y)
-    case Lambda(f, x, y) => x :: boundSyms(y)
-    case Lambda2(f, x1, x2, Def(Reify(y, es))) => x1 :: x2 :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y)
-    case Lambda2(f, x1, x2, y) => x1 :: x2 :: boundSyms(y)
-    //case Lambda(f, x, Def(a,lst)) => x :: boundSyms(y)
+    case Lambda(f, x, y) => x :: effectSyms(y)
+    case Lambda2(f, x1, x2, y) => x1 :: x2 :: effectSyms(y)
     case _ => super.boundSyms(e)
   }
 

@@ -68,3 +68,6 @@ trait CNestedCodegen extends GenericNestedCodegen with CCodegen {
   
 }
 
+trait CFatCodegen extends GenericFatCodegen with CCodegen {
+  val IR: Expressions with Effects with FatExpressions
+}

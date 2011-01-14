@@ -665,3 +665,7 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
   }
   
 }
+
+trait CudaFatCodegen extends GenericFatCodegen with CudaCodegen {
+  val IR: Expressions with Effects with FatExpressions
+}

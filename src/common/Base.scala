@@ -1,8 +1,10 @@
 package scala.virtualization.lms
 package common
 
-import internal.{Expressions, Effects}
-import internal.{ScalaCodegen, ScalaNestedCodegen, CudaCodegen, CudaNestedCodegen, CCodegen, CNestedCodegen}
+import internal.{Expressions, Effects, Traversing, FatExpressions}
+import internal.{ScalaCodegen, ScalaNestedCodegen, ScalaFatCodegen, 
+  CudaCodegen, CudaNestedCodegen, CudaFatCodegen, 
+  CCodegen, CNestedCodegen, CFatCodegen}
 
 /**
  * The Base trait defines the type constructor Rep, which is the higher-kinded type that allows for other DSL types to be
@@ -22,44 +24,39 @@ trait Base extends EmbeddedControls {
  *
  * @since 0.1
  */
-trait BaseExp extends Base with Expressions {
+trait BaseExp extends Base with Expressions with Traversing {
   type Rep[+T] = Exp[T]
 
   implicit def unit[T:Manifest](x: T) = Const(x)
 }
 
-trait EffectExp extends BaseExp with Effects {
+trait EffectExp extends BaseExp with Effects
 
-}
+trait BaseFatExp extends BaseExp with FatExpressions
 
 
 // TODO: what is the point of these, I suggest to remove them 
 // Answer: provide an interface to codegen without depending on internal._
 
-trait ScalaGenBase extends ScalaCodegen {
-  import IR._
+trait ScalaGenBase extends ScalaCodegen
 
-}
+trait ScalaGenEffect extends ScalaNestedCodegen with ScalaGenBase
 
-trait ScalaGenEffect extends ScalaNestedCodegen with ScalaGenBase {
-
-}
+trait ScalaGenFat extends ScalaFatCodegen with ScalaGenBase
 
 
-trait CudaGenBase extends CudaCodegen {
-  import IR._
 
-}
 
-trait CudaGenEffect extends CudaNestedCodegen with CudaGenBase {
+trait CudaGenBase extends CudaCodegen
 
-}
+trait CudaGenEffect extends CudaNestedCodegen with CudaGenBase
 
-trait CGenBase extends CCodegen {
-  import IR._
+trait CudaGenFat extends CudaFatCodegen with CudaGenBase
 
-}
 
-trait CGenEffect extends CNestedCodegen with CGenBase {
 
-}
+trait CGenBase extends CCodegen
+
+trait CGenEffect extends CNestedCodegen with CGenBase
+
+trait CGenFat extends CFatCodegen with CGenBase

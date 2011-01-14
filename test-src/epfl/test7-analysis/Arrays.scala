@@ -59,10 +59,8 @@ trait ScalaGenLoops extends ScalaGenEffect {
   }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match { // treat effects as bound symbols, just like the fun param
-    case LoopArray(s, x, Def(Reify(y, es))) => x :: es.asInstanceOf[List[Sym[Any]]] // i.e. they must live inside
-    case LoopReduce(s, x, Def(Reify(y, es))) => x :: es.asInstanceOf[List[Sym[Any]]] // i.e. they must live inside
-    case LoopArray(s, x, y) => x :: Nil
-    case LoopReduce(s, x, y) => x :: Nil
+    case LoopArray(s, x, y) => x :: effectSyms(y)
+    case LoopReduce(s, x, y) => x :: effectSyms(y)
     case _ => super.boundSyms(e)
   }
 

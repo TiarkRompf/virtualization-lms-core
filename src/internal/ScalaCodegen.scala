@@ -92,3 +92,8 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   }
 
 }
+
+
+trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
+  val IR: Expressions with Effects with FatExpressions
+}

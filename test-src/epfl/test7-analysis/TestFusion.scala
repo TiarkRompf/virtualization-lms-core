@@ -18,50 +18,11 @@ trait Fusion extends internal.GenericNestedCodegen {
 }
 
 
-trait Traversing extends internal.GenericNestedCodegen { // should be other way round!!
-  
-  
-}
-
-
-trait Transforming extends Traversing {
-  import IR._  
-
-
-  class Traverser {
-    val subst = new scala.collection.mutable.HashMap[Exp[_], Exp[_]]
-    
-    def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
-      case Some(y) => apply(y.asInstanceOf[Exp[A]]) case None => x 
-    }
-    
-    def transform[A](s: Sym[A], x: Def[A]): Exp[A] = {
-      if (subst.contains(s)) return apply(s)
-      implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
-      
-      val y = mirror(x, this)
-      if (s != y) {
-        if (y.isInstanceOf[Sym[_]] && findDefinition(y.asInstanceOf[Sym[_]]).nonEmpty)
-          println("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[_]]).get.rhs)
-        else
-          println("--> replace " + s+"="+x + " by " + y)
-        subst(s) = y
-      }
-      y
-    }
-  }
-
-
-  def mirror[A:Manifest](e: Def[A], f: Traverser): Exp[A] = system.error("don't know how to mirror " + e)
-    
-}
-
-
-trait FatTransforming extends Transforming { // TODO: shouldn't depend on loops?
-  val IR: FatLoopsExp with EffectExp
+trait FatTransforming extends internal.GenericNestedCodegen { // TODO: shouldn't depend on loops?
+  val IR: FatLoopsExp with EffectExp with internal.Transforming
   import IR._
   
-  def foobar(t: Traverser)(scope: List[TTP]) = scope flatMap {
+  def foobar(t: SubstTransformer)(scope: List[TTP]) = scope flatMap {
     case TTP(List(sym), ThinDef(rhs)) =>
       t.transform(sym, rhs) match {
         case s @ Def(r) => List(TTP(List(s.asInstanceOf[Sym[_]]), ThinDef(r)))
@@ -80,7 +41,7 @@ trait FatTransforming extends Transforming { // TODO: shouldn't depend on loops?
 
   def simplify(scope: List[TTP])(results: List[Exp[_]]): (List[TTP], List[Exp[_]]) = {
     
-    val t = new Traverser    
+    val t = new SubstTransformer    
     
     val scope2 = foobar(t)(scope) // ugly
     val results2 = results map (t(_))
@@ -91,7 +52,7 @@ trait FatTransforming extends Transforming { // TODO: shouldn't depend on loops?
 }
 
 
-trait FatLoopsExp extends FatStuffExp with LoopsExp {
+trait FatLoopsExp extends BaseFatExp with LoopsExp {
   
   case class FatLoop(s: Rep[Int], x: List[Sym[Int]], rhs: List[Def[_]]) extends FatDef(rhs)    
   
@@ -102,9 +63,7 @@ trait FatLoopsExp extends FatStuffExp with LoopsExp {
 
 
 
-trait TransformingStuff extends Transforming {
-  val IR: FatLoopsExp with ArithExp with PrintExp // TODO: refactor
-  import IR._  
+trait TransformingStuff extends internal.Transforming with FatLoopsExp with ArithExp with PrintExp {
 
   override def mirror[A:Manifest](e: Def[A], f: Traverser): Exp[A] = (e match {
     //case Copy(a) => f(a)
@@ -122,143 +81,8 @@ trait TransformingStuff extends Transforming {
 }
 
 
-trait FatStuffExp extends BaseExp {
-  
-  class FatDef(val elems: List[Def[_]])
 
-  case class TTP(val lhs: List[Sym[_]], val rhs: FatDef)
-  
-  case class ThinDef(rhs: Def[_]) extends FatDef(List(rhs))
-  
-}
-
-
-trait FatScheduling extends internal.Scheduling {
-  val IR: FatStuffExp 
-  import IR._  
-  
-  import util.GraphUtil
-
-  def fatten(defs: List[TP[_]]): List[TTP] = defs.map {
-    case TP(sym, rhs) => TTP(List(sym), ThinDef(rhs))
-  }
-  
-  def getSchedule(scope: List[TP[_]])(result: Any): List[TP[_]] = {
-    def deps(st: List[Sym[_]]): List[TP[_]] =
-      scope.filter(st contains _.sym)
-
-    GraphUtil.stronglyConnectedComponents[TP[_]](deps(syms(result)), t => deps(syms(t.rhs))).flatten.reverse
-  }
-
-  def getFatSchedule(scope: List[TTP])(result: Any): List[TTP] = {
-    def deps(st: List[Sym[_]]): List[TTP] =
-      scope.filter(d => (st intersect d.lhs).nonEmpty)
-
-    GraphUtil.stronglyConnectedComponents[TTP](deps(syms(result)), t => deps(syms(t.rhs))).flatten.reverse
-  }
-
-  def getFatDependentStuff(scope: List[TTP])(st: List[Sym[_]]): List[TTP] = {
-    st.flatMap(getFatDependentStuff0(scope)(_)).distinct
-  }
-    
-  def getFatDependentStuff0(scope: List[TTP])(st: Sym[_]): List[TTP] = {
-    def uses(s: Sym[_]): List[TTP] = {
-      scope.filter { d =>
-        (d.lhs contains s) || // include the definition itself
-        syms(d.rhs).contains(s) && !boundSyms(d.rhs).contains(st) // don't extrapolate outside the scope
-      }
-    }
-    GraphUtil.stronglyConnectedComponents[TTP](uses(st), t => t.lhs flatMap uses).flatten
-  }
-    
-}
-
-
-
-trait ScalaGenFatStuff extends ScalaGenEffect with FatScheduling {
-  val IR: FatStuffExp with EffectExp
-  import IR._  
-  
-  case class Combine(a: List[Exp[Any]]) extends Exp[Any]
-
-
-  override def emitBlockFocused(result: Exp[_])(implicit stream: PrintWriter): Unit = {
-    var currentScope = fatten(innerScope)
-    currentScope = getFatSchedule(currentScope)(result) // clean things up!
-    emitFatBlockFocused(currentScope)(result)
-  }
-
-  def emitFatBlockFocused(currentScope: List[TTP])(result: Exp[_])(implicit stream: PrintWriter): Unit = {
-    // do what super does, modulo fat stuff
-    focusExactScopeFat(currentScope)(result) { levelScope => 
-      for (TTP(syms, rhs) <- levelScope) {
-        emitFatNode(syms, rhs)
-      }
-    }
-  }
-  
-  
-  
-
-  def focusExactScopeFat[A](currentScope: List[TTP])(result: Exp[_])(body: List[TTP] => A): A = {
-    
-    val saveInner = innerScope
-    
-    val e1 = currentScope
-    shallow = true
-    val e2 = getFatSchedule(currentScope)(result) // shallow list of deps (exclude stuff only needed by nested blocks)
-    shallow = false
-
-    // shallow is 'must outside + should outside' <--- currently shallow == deep for lambdas, meaning everything 'should outside'
-    // bound is 'must inside'
-
-    // find transitive dependencies on bound syms, including their defs (in case of effects)
-    val bound = e1.flatMap(z => boundSyms(z.rhs))
-    val g1 = getFatDependentStuff(currentScope)(bound)
-    
-    val levelScope = e1.filter(z => (e2 contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
-
-/*
-    // sanity check to make sure all effects are accounted for
-    result match {
-      case Def(Reify(x, effects)) =>
-        val actual = levelScope.filter(effects contains _.sym)
-        assert(effects == actual.map(_.sym), "violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
-      case _ =>
-    }
-*/
-    val innerScope2 = e1 diff levelScope // delay everything that remains
-
-    innerScope = innerScope2 flatMap { 
-      case TTP(List(sym), ThinDef(rhs)) => List(TP(sym, rhs))
-      case e => 
-      println("ignore: " + e)
-      Nil
-    }
-
-    val rval = body(levelScope)
-    
-    innerScope = saveInner
-    rval
-  }
-
-
-  def emitFatNode(sym: List[Sym[_]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
-    case ThinDef(a) => emitNode(sym(0), a)
-    case _ => system.error("don't know how to generate code for: "+rhs)
-  }
-
-  def emitFatBlock(rhs: List[Exp[_]])(implicit stream: PrintWriter): Unit = {
-    emitBlock(Combine(rhs))
-  }
-
-  
-}
-
-
-
-
-trait ScalaGenFatLoops extends ScalaGenFatStuff {
+trait ScalaGenFatLoops extends ScalaGenFat {
   val IR: FatLoopsExp
   import IR._
   
@@ -273,10 +97,10 @@ trait ScalaGenFatLoops extends ScalaGenFatStuff {
     case _ => super.boundSyms(e)
   }
 
-  override def fatten(defs: List[TP[_]]) = defs map { // TODO: reorg to call super
+  override def fatten(e: TP[_]) = e match {
     case e @ TP(sym, LoopArray(s,x,y)) => TTP(List(sym), FatLoop(s,List(x),List(ArrayElem(y))))
     case e @ TP(sym, LoopReduce(s,x,y)) => TTP(List(sym), FatLoop(s,List(x),List(ReduceElem(y))))
-    case TP(sym, rhs) => TTP(List(sym), ThinDef(rhs))
+    case _ => super.fatten(e)
   }
   
   override def emitFatNode(sym: List[Sym[_]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
@@ -314,8 +138,8 @@ trait ScalaGenFatLoops extends ScalaGenFatStuff {
 
 
 trait ScalaGenFatLoopsFusionOpt extends ScalaGenFatLoops with ScalaGenLoops with 
-    TransformingStuff with FatTransforming with Fusion with FatScheduling {
-  val IR: FatLoopsExp with ArithExp with PrintExp  // TODO: refactor
+    FatTransforming with Fusion with internal.FatScheduling {
+  val IR: FatLoopsExp with ArithExp with PrintExp with internal.Transforming // TODO: refactor
   import IR._  
   
 
@@ -360,7 +184,7 @@ trait ScalaGenFatLoopsFusionOpt extends ScalaGenFatLoops with ScalaGenLoops with
           val thisLoopSyms = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
           getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-            case TTP(_, ThinDef(ArrayIndex(a, i))) if (thisLoopSyms contains i) =>
+            case TTP(_, ThinDef(ArrayIndex(a, i))) if (thisLoopSyms contains i) => // we know that otherLoopSyms contains a
               Nil // direct deps on this'loops induction var don't count
             case sc =>
               syms(sc.rhs).intersect(otherLoopSyms) flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
@@ -381,7 +205,7 @@ trait ScalaGenFatLoopsFusionOpt extends ScalaGenFatLoops with ScalaGenLoops with
         }
 
       
-        val t = new Traverser
+        val t = new SubstTransformer
 
         var partitionsIn = Wloops
         var partitionsOut = Nil:List[TTP]
@@ -528,8 +352,8 @@ class TestFusion extends FileDiffSuite {
 
   def testFusion2 = {
     withOutFile(prefix+"fusion2") {
-      // LoopsExp2 with ArithExp with PrintExp with FatStuffExp
-      new FusionProg with ArithExp with LoopsExp with PrintExp with FatLoopsExp { self =>
+      // LoopsExp2 with ArithExp with PrintExp with BaseFatExp
+      new FusionProg with ArithExp with LoopsExp with PrintExp with FatLoopsExp with TransformingStuff { self =>
         val codegen = new ScalaGenFatLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with Fusion { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
