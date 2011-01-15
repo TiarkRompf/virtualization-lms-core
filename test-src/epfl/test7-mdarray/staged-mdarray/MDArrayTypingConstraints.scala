@@ -8,7 +8,7 @@ import original._
 import original.Conversions._
 import collection.mutable.{Queue, HashSet}
 
-trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
+trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
 
   import IR._
 

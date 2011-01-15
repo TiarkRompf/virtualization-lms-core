@@ -8,7 +8,7 @@ import original._
 import original.Conversions._
 import collection.mutable.{Queue, HashSet}
 
-trait MDArrayBaseTypingUnifier extends MDArrayBaseTyping {
+trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
 
   def getTypingString(index: Int, subst: SubstitutionList): String = {
     val shapeVar = ShapeVar(index)
@@ -99,6 +99,13 @@ trait MDArrayBaseTypingUnifier extends MDArrayBaseTyping {
     substitutions
   }
 
+  /*
+    TODO: Understand why I get the following match warning (only here...)
+    [warn] .../virtualization-lms-core/test-src/epfl/test7-mdarray/staged-mdarray/MDArrayTypingUnifier.scala:102: match is not exhaustive!
+    [warn] missing combination            Nil             *             *
+    [warn]   def unifyConstraint(tc: TypingConstraint): (Boolean, List[Substitution]) = tc match {
+    [warn]       ^
+   */
   def unifyConstraint(tc: TypingConstraint): (Boolean, List[Substitution]) = tc match {
     case eq: Equality =>
       (eq.a, eq.b) match {

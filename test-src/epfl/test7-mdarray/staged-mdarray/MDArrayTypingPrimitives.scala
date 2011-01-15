@@ -9,7 +9,7 @@ import original.Conversions._
 import collection.mutable.HashSet
 
 
-trait MDArrayBaseTypingPrimitives {
+trait MDArrayTypingPrimitives {
   var unknownIndex = 0
   val IR: MDArrayBaseExp
   // Just to make the code look better :)

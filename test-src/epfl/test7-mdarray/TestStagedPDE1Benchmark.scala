@@ -33,7 +33,7 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
   def performExperiment(pde1: PDE1Benchmark with MDArrayBaseExp with IfThenElseExp, expr: Any, fileName: String) {
 
     withOutFile(fileName + "-type-inference") {
-      val typing = new MDArrayBaseTypingUnifier { val IR: pde1.type = pde1 }
+      val typing = new MDArrayTypingUnifier { val IR: pde1.type = pde1 }
       try {
         val fullSubst = typing.obtainSubstitutions(expr, true)._2
         val export = new MDArrayGraphExport {
