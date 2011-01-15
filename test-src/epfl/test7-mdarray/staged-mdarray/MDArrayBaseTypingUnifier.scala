@@ -16,9 +16,14 @@ trait MDArrayBaseTypingUnifier extends MDArrayBaseTyping {
     val shapeVarValue: TypingVariable = subst(shapeVar)
     val valueVarValue: TypingVariable = subst(valueVar)
 
+    // need to limit the value size so we don't overcrowd the graph
+    var valueString = valueVarValue.toString
+    if (valueString.length > 40)
+      valueString = valueString.substring(0, 18) + " ... " + valueString.substring(valueString.length - 18)
+
     (valueVar != valueVarValue, shapeVar != shapeVarValue) match {
-      case (true, true) => valueVar.toString + "=" + valueVarValue.toString + " and " + shapeVar.toString + "=" + shapeVarValue.toString
-      case (true, false) => valueVar.toString + "=" + valueVarValue.toString
+      case (true, true) => valueVar.toString + "=" + valueString + " and " + shapeVar.toString + "=" + shapeVarValue.toString
+      case (true, false) => valueVar.toString + "=" + valueString
       case (false, true) => shapeVar.toString + "=" + shapeVarValue.toString
       case (false, false) => "?!?"
     }
@@ -259,7 +264,49 @@ trait MDArrayBaseTypingUnifier extends MDArrayBaseTyping {
         case _ =>
           (false, Nil)
       }
-    case _ => (false, Nil)
+    case rv: ReconstructValueFromShape =>
+      (rv.shape, rv.value) match {
+        case (s: Lst, v:Var) if (countUnknowns(s) == 0) =>
+          (true, new SubstituteVarToLst(v, makeUnknowns(s.list.foldLeft(1)((v, elt) => v * elt.asInstanceOf[Value].n)))::Nil)
+        case _ =>
+          (false, Nil)
+      }
+    case eq: EqualityAeqDimTimesValue =>
+      (eq.dim, eq.value) match {
+        case (dim: Lst, value: Lst) if (countUnknowns(dim) == 0) =>
+          if ((dim.list.length != 1) || (value.list.length != 1))
+            throw new Exception("unification: a=values(dim, value) with incorrect dim/value: a=" + eq.a.toString + " dim=" + dim.toString + " value=" + value.toString)
+          val vector: Lst = Lst(List.range(0, dim.list.head.asInstanceOf[Value].n).map(i => value.list.head))
+          eq.a match {
+            case a: Var =>
+              (true, new SubstituteVarToLst(a, vector)::Nil)
+            case a: Lst =>
+              unifyLists(a, vector)
+          }
+        case _ =>
+          (false, Nil)
+      }
+    case eq: EqualityShAeqShBplusShCalongD =>
+      (eq.b, eq.c, eq.d) match {
+        case (b: Lst, c: Lst, d: Lst) if (countUnknowns(d) == 0) =>
+          if ((d.list.length != 1) || (b.list.length != c.list.length))
+            throw new Exception("unification: a = b <cat> c <along> d failed: a=" + eq.a.toString + " b=" + b.toString + " c=" + c.toString + " d=" + d.toString)
+          val dval = d.list.head.asInstanceOf[Value].n
+          if ((b.list(dval).isInstanceOf[Value]) && (c.list(dval).isInstanceOf[Value])) {
+            val sum = b.list(dval).asInstanceOf[Value].n + c.list(dval).asInstanceOf[Value].n
+            val vector = Lst(List.range(0, b.list.length).map(i => if (i==dval) Value(sum) else b.list(i)))
+            // prepare the substitution
+            eq.a match {
+              case a: Var =>
+                (true, new SubstituteVarToLst(a, vector)::Nil)
+              case a: Lst =>
+                unifyLists(a, vector)
+            }
+          } else
+            (false, Nil) // sorry, can't unify that, I'm sound but not complete!
+      }
+    //XXX: Let the match fail fast if we forgot a condition
+    //case _ => (false, Nil)
   }
 
 
@@ -328,6 +375,10 @@ trait MDArrayBaseTypingUnifier extends MDArrayBaseTyping {
       case le: LengthEqualityAeqB => LengthEqualityAeqB(updateVariable(le.a), updateVariable(le.b), le._prereq, le._node)
       case cd: CommonDenominator => CommonDenominator(updateVariable(cd.a), updateVariable(cd.b), updateVariable(cd.c), cd._prereq, cd._node)
       case ep: EqualProduct => EqualProduct(updateVariable(ep.a), updateVariable(ep.b), ep._prereq, ep._node)
+      case rv: ReconstructValueFromShape => ReconstructValueFromShape(updateVariable(rv.value), updateVariable(rv.shape), rv._prereq, rv._node)
+      case eq: EqualityShAeqShBplusShCalongD => EqualityShAeqShBplusShCalongD(updateVariable(eq.a), updateVariable(eq.b), updateVariable(eq.c), updateVariable(eq.d), eq._prereq, eq._node)
+      case eq: EqualityAeqDimTimesValue => EqualityAeqDimTimesValue(updateVariable(eq.a), updateVariable(eq.dim), updateVariable(eq.value), eq._prereq, eq._node)
+      // XXX: No _ case here, if the substitution doesn't know the constraint it better fail as soon as possible!
     }
   }
 

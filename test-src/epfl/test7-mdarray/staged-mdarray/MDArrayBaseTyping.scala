@@ -58,34 +58,39 @@ trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
     constraints
   }
 
-  def gatherConstraints(node: Any): Pair[List[TypingConstraint], List[Exp[_]]] = node match {
-    case ct: Const[_] => constConstraints(ct)
-    case kc: KnownAtCompileTime[_] => knownAtCompileTimeConstraints(kc)
-    case kr: KnownAtRuntime[_] => knownAtRuntimeConstraints(kr)
-    case fl: FromList[_] => fromListConstraints(fl)
-    case fa: FromArray[_] => fromArrayConstraints(fa)
-    case fv: FromValue[_] => fromValueConstraints(fv)
-    case tl: ToList[_] => toListConstraints(tl)
-    case ta: ToArray[_] => toArrayConstraints(ta)
-    case tv: ToValue[_] => toValueConstraints(tv)
-    case td: ToDim[_] => toDimConstraints(td)
-    case ts: ToShape[_] => toShapeConstraints(ts)
-    case rs: Reshape[_] => reshapeConstraints(rs)
-    case sel: Sel[_] => selConstraints(sel)
-    case cat: Cat[_] => catConstraints(cat)
-    case red: Reduce[_,_] => reduceConstraints(red)
-    case vs: Values[_] => valuesConstraints(vs)
-    case io: InfixOpAA[_, _] => infixOpAAConstraints(io)
-    case io: InfixOpAE[_, _] => infixOpAEConstraints(io)
-    case uo: UnaryOp[_, _] => unaryOpConstraints(uo)
-    case wh: Where[_] => whereConstraints(wh)
-    case iv: IndexVector => indexVectorConstraints(iv)
-    case wn: WithNode[_] => withNodeConstraints(wn)
-    case ga: GenArrayWith[_] => genArrayConstraints(ga)
-    case ma: ModArrayWith[_] => modArrayConstraints(ma)
-    case fa: FoldArrayWith[_] => foldArrayConstraints(fa)
-    case ite: IfThenElse[_] => ifThenElseConstraint(ite)
-    case _ => throw new RuntimeException("Unknown node: " + node.toString)
+  def gatherConstraints(node: Any): Pair[List[TypingConstraint], List[Exp[_]]] = {
+    val result = node match {
+      case ct: Const[_] => constConstraints(ct)
+      case kc: KnownAtCompileTime[_] => knownAtCompileTimeConstraints(kc)
+      case kr: KnownAtRuntime[_] => knownAtRuntimeConstraints(kr)
+      case fl: FromList[_] => fromListConstraints(fl)
+      case fa: FromArray[_] => fromArrayConstraints(fa)
+      case fv: FromValue[_] => fromValueConstraints(fv)
+      case tl: ToList[_] => toListConstraints(tl)
+      case ta: ToArray[_] => toArrayConstraints(ta)
+      case tv: ToValue[_] => toValueConstraints(tv)
+      case td: ToDim[_] => toDimConstraints(td)
+      case ts: ToShape[_] => toShapeConstraints(ts)
+      case rs: Reshape[_] => reshapeConstraints(rs)
+      case sel: Sel[_] => selConstraints(sel)
+      case cat: Cat[_] => catConstraints(cat)
+      case red: Reduce[_,_] => reduceConstraints(red)
+      case vs: Values[_] => valuesConstraints(vs)
+      case io: InfixOpAA[_, _] => infixOpAAConstraints(io)
+      case io: InfixOpAE[_, _] => infixOpAEConstraints(io)
+      case uo: UnaryOp[_, _] => unaryOpConstraints(uo)
+      case wh: Where[_] => whereConstraints(wh)
+      case iv: IndexVector => indexVectorConstraints(iv)
+      case wn: WithNode[_] => withNodeConstraints(wn)
+      case ga: GenArrayWith[_] => genArrayConstraints(ga)
+      case ma: ModArrayWith[_] => modArrayConstraints(ma)
+      case fa: FoldArrayWith[_] => foldArrayConstraints(fa)
+      case ite: IfThenElse[_] => ifThenElseConstraint(ite)
+      case _ => throw new RuntimeException("Unknown node: " + node.toString)
+    }
+    // Adding the default operation of reconstructing the value from shape: if the value
+    // is a variable and the shape is known, the value var is replaced by unknowns
+    (ReconstructValueFromShape(ValueVar(getSymNumber(node)), ShapeVar(getSymNumber(node)), postReq, node)::result._1, result._2)
   }
 
   def toValue(i: Any): TypingElement = i match {
@@ -147,9 +152,8 @@ trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
     (LengthEqualityAeqB(ShapeVar(cat.a), ShapeVar(cat.b), preReq, cat)::
      LessThan(ValueVar(cat.d), Lst(LengthOf(ShapeVar(cat.a))::Nil), preReq, cat)::
      EqualityExceptFor(ValueVar(cat.d), ShapeVar(cat.a), ShapeVar(cat.b), preReq, cat)::
-     // TODO: Replace LengthEqualityAeqB with a node that contains more information - which could infer the exact shape
-     // something like EquailtyAeqBcatC would do :)
-     LengthEqualityAeqB(ShapeVar(cat), ShapeVar(cat.a), postReq, cat)::Nil,
+     LengthEqualityAeqB(ShapeVar(cat), ShapeVar(cat.a), postReq, cat)::
+     EqualityShAeqShBplusShCalongD(ShapeVar(cat), ShapeVar(cat.a), ShapeVar(cat.b), ValueVar(cat.d), postReq, cat)::Nil,
      cat.d::cat.a::cat.b::Nil)
 
   def reduceConstraints(red: Reduce[_,_]): Pair[List[TypingConstraint], List[Exp[_]]] =
@@ -158,8 +162,8 @@ trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
      red.a::Nil)
 
   def valuesConstraints(values: Values[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(values), ValueVar(values.dim), postReq, values)::Nil,
-     // TODO: We can add more information here for cases where we know dim and value
+    (Equality(ShapeVar(values), ValueVar(values.dim), postReq, values)::
+     EqualityAeqDimTimesValue(ValueVar(values), ValueVar(values.dim), ValueVar(values.value), postReq, values)::Nil,
      values.value::values.dim::Nil)
 
   def infixOpAAConstraints(in: InfixOpAA[_, _]): Pair[List[TypingConstraint], List[Exp[_]]] =
@@ -208,7 +212,7 @@ trait MDArrayBaseTyping extends MDArrayBaseTypingPrimitives {
   def genArrayConstraints(ga: GenArrayWith[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (withNodeListConstraints(ga, ga.lExpr):::
      Equality(ShapeVar(ga.shp), Lst(getNewUnknown::Nil), preReq, ga)::
-     //Equality(ValueVar(ga.shp), ShapeVar(getSymNumber(recoverWithNode(ga.lExpr.head).iv)), preReq, ga)::
+     Equality(ShapeVar(ga.shp), ShapeVar(getSymNumber(recoverWithNode(ga.lExpr.head).iv)), preReq, ga)::
      EqualityAeqBcatC(ShapeVar(ga), ValueVar(ga.shp), ShapeVar(getSymNumber(ga.lExpr.head)), postReq, ga)::Nil,
      ga.shp::ga.lExpr)
 

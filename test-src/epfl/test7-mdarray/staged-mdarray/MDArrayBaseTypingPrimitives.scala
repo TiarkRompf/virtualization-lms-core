@@ -38,6 +38,9 @@ trait MDArrayBaseTypingPrimitives {
   case class LengthEqualityAeqB(a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
   case class CommonDenominator(a: TypingVariable, b: TypingVariable, c: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
   case class EqualProduct(a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
+  case class ReconstructValueFromShape(value: TypingVariable, shape: TypingVariable, _prereq: Boolean, _node:Any) extends TypingConstraint(_prereq, _node)
+  case class EqualityAeqDimTimesValue(a: TypingVariable, dim: TypingVariable, value: TypingVariable, _prereq: Boolean, _node:Any) extends TypingConstraint(_prereq, _node)
+  case class EqualityShAeqShBplusShCalongD(a: TypingVariable, b: TypingVariable, c: TypingVariable, d: TypingVariable, _prereq: Boolean, _node:Any) extends TypingConstraint(_prereq, _node)
 
   private def getConstraintString(constraint: TypingConstraint): String = {
     val body = constraint match {
@@ -50,6 +53,9 @@ trait MDArrayBaseTypingPrimitives {
       case le: LengthEqualityAeqB => "length(" + le.a.toString + ") = length(" + le.b.toString + ")"
       case cd: CommonDenominator => cd.a.toString + " = common(" + cd.b.toString + ", " + cd.c.toString + ")"
       case ep: EqualProduct => "prod(" + ep.a.toString + ") = prod(" + ep.b.toString + ")"
+      case rv: ReconstructValueFromShape => "reconstruct " + rv.value + " from shape " + rv.shape
+      case eq: EqualityAeqDimTimesValue => eq.a.toString + " = " + eq.dim.toString + " x [" + eq.value.toString + "]"
+      case eq: EqualityShAeqShBplusShCalongD => eq.a.toString + " = " + eq.b.toString + " <cat> " + eq.c.toString + " along dimension " + eq.d.toString
       case _ => "unknown constraint"
     }
 
