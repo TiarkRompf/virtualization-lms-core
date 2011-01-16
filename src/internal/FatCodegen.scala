@@ -69,7 +69,8 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
   }
 
 
-  def emitFatNode(sym: List[Sym[_]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+  def emitFatNode(sym: List[Sym[_]], rhs: FatDef)(implicit stream: PrintWriter): Unit = rhs match {
+    case ThinDef(Reflect(s, effects)) => emitFatNode(sym, ThinDef(s)) // call back into emitFatNode, not emitNode
     case ThinDef(a) => emitNode(sym(0), a)
     case _ => system.error("don't know how to generate code for: "+rhs)
   }

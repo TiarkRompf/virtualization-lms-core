@@ -100,8 +100,11 @@ trait CudaCodegen extends GenericCodegen {
     hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
   }
 
-  override def kernelInit(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {
+  override def kernelInit(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {
     // Conditions for not generating CUDA kernels (may be relaxed later)
+    assert(syms.length == 1, "TODO: implement cuda gen for fat exps")
+    val List(sym) = syms
+    
     if(!isObjectType(sym.Type)) throw new RuntimeException("CudaGen: Not GPUable")
     if((vars.length > 0)  || (resultIsVar)) throw new RuntimeException("CudaGen: Not GPUable")
 
@@ -256,7 +259,9 @@ trait CudaCodegen extends GenericCodegen {
     stream.println(addTab() + " " + lhs + " = " + rhs + ";")
   }
   
-  override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultTypes: List[String], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    val List(sym) = syms // TODO
+    val List(resultType) = resultTypes
     
     stream.println("#include <cuda.h>")
     stream.println("#include \"VectorImpl.h\"")
@@ -274,7 +279,10 @@ trait CudaCodegen extends GenericCodegen {
     //stream.println(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;")
   }
 
-  override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultTypes: List[String], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    val List(sym) = syms // TODO
+    val List(resultType) = resultTypes
+    
     tabWidth -= 1
     stream.println("}")
 

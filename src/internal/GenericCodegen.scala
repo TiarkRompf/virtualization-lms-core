@@ -11,12 +11,12 @@ trait GenericCodegen extends Scheduling {
   // TODO: should some of the methods be moved into more specific subclasses?
   
   def kernelFileExt = ""
-  def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
-  def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
+  def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultTypes: List[String], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
+  def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultTypes: List[String], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
   
   // Initializer
   def generatorInit(build_dir:String): Unit = {}
-  def kernelInit(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {}
+  def kernelInit(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {}
 
   def emitDataStructures(): Unit = {}
   
@@ -176,19 +176,21 @@ trait GenericNestedCodegen extends GenericCodegen {
     used diff bound
   }
 
-
+  // TODO: remove
   override def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = {
     focusBlock(start) {
       freeInScope(local, start)
     }
   }
 
+  // TODO: remove
   //override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = { Nil }
   override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match { // getFreeVarBlock(syms(rhs), boundSyms(rhs))
     case Reflect(s, effects) => getFreeVarNode(s)
     case _ => super.getFreeVarNode(rhs)
   }
 
+  // TODO: necessary? does it actually do the right thing? <-- boundSyms?
   def getEffectsBlock(start: Exp[_]): List[Sym[_]] = {
     val save = shallow
     shallow = false
