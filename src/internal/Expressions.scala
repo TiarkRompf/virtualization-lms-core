@@ -17,7 +17,7 @@ trait Expressions {
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T]
 
-  case class Variable[+T:Manifest](e: Exp[T]) // TODO: decide whether it should stay ...
+  case class Variable[+T:Manifest](e: Exp[T]) // TODO: decide whether it should stay here ...
 
   case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
       

@@ -54,7 +54,7 @@ trait FatTransforming extends internal.GenericNestedCodegen { // TODO: shouldn't
 
 trait FatLoopsExp extends BaseFatExp with LoopsExp {
   
-  case class FatLoop(s: Rep[Int], x: List[Sym[Int]], rhs: List[Def[_]]) extends FatDef(rhs)    
+  case class FatLoop(s: Rep[Int], x: List[Sym[Int]], rhs: List[Def[_]]) extends FatDef
   
   case class ArrayElem(y: Exp[Double]) extends Def[Array[Double]]
   case class ReduceElem(y: Exp[Double]) extends Def[Double]

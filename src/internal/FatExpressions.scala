@@ -3,10 +3,10 @@ package internal
 
 trait FatExpressions extends Expressions {
   
-  class FatDef(val elems: List[Def[_]])
+  abstract class FatDef
 
-  case class ThinDef(rhs: Def[_]) extends FatDef(List(rhs))
+  case class ThinDef(rhs: Def[Any]) extends FatDef
 
-  case class TTP(val lhs: List[Sym[_]], val rhs: FatDef)  
+  case class TTP(val lhs: List[Sym[Any]], val rhs: FatDef)
   
 }
