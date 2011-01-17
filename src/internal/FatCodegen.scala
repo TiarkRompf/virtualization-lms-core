@@ -55,11 +55,14 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
 */
     val innerScope2 = e1 diff levelScope // delay everything that remains
 
+
     innerScope = innerScope2 flatMap { 
       case TTP(List(sym), ThinDef(rhs)) => List(TP(sym, rhs))
       case e => 
-      println("ignore: " + e)
-      Nil
+        val z = innerScope.filter(e.lhs contains _.sym)
+        if (z.length != e.lhs.length)
+          println("TROUBLE: couldn't get syms " + e.lhs + ", found only " + z)
+        z
     }
 
     val rval = body(levelScope)
