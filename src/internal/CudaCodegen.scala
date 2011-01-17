@@ -386,7 +386,8 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   // Prints out the helper functions for getting the threadBlcok size and grid size
   def emitSizeFuncs(sym: Sym[_]): String = {
     val out = new StringBuilder
-    if (gpuBlockSizeX == null) gpuBlockSizeX = "1"
+    //if (gpuBlockSizeX == null) gpuBlockSizeX = "1"
+    if (gpuBlockSizeX == null) throw new GenerationFailedException("GPU Codegen: gpuBlockSizeX is not set")
     if (gpuBlockSizeY == null) gpuBlockSizeY = "1"
     if (gpuBlockSizeZ == null) gpuBlockSizeZ = "1"
 

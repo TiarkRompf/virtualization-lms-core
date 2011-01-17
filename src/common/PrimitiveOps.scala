@@ -126,6 +126,7 @@ trait CLikeGenPrimitiveOps extends CLikeCodegen {
       rhs match {
         case ObjDoubleParseDouble(s) =>
           emitValDef(sym, "atof(" + quote(s) + ")")
+    	case ObjDoublePositiveInfinity() => emitValDef(sym, "DBL_MAX")
         case _ => super.emitNode(sym, rhs)
       }
     }
