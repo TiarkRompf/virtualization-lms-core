@@ -10,6 +10,10 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
   
   case class Combine(a: List[Exp[Any]]) extends Exp[Any]
 
+  // these are needed by loop fusion. they should live elsewhere.
+  def unapplySimpleIndex(e: Def[Any]): Option[(Exp[Any], Exp[Int])] = None
+  def unapplySimpleCollect(e: Def[Any]): Option[Exp[Any]] = None
+
 
   override def emitBlockFocused(result: Exp[_])(implicit stream: PrintWriter): Unit = {
     var currentScope = innerScope.map(fatten)

@@ -11,66 +11,65 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 
-trait Loops extends Base with OverloadHack {
+trait ArrayLoops extends Loops with OverloadHack {
   def array(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Array[Double]]
-  def reduce(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] // TODO: make reduce operation configurable!
+  def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] // TODO: make reduce operation configurable!
 
   def infix_at(a: Rep[Array[Double]], i: Rep[Int]): Rep[Double]
   def infix_length(a: Rep[Array[Double]]): Rep[Int]
 }
 
 
-trait LoopsExp extends Loops with EffectExp {
+trait ArrayLoopsExp extends LoopsExp {
   
-  case class LoopArray(s: Rep[Int], x: Sym[Int], y: Rep[Double]) extends Def[Array[Double]]
-  case class LoopReduce(s: Rep[Int], x: Sym[Int], y: Rep[Double]) extends Def[Double]
+  case class ArrayElem(y: Exp[Double]) extends Def[Array[Double]]
+  case class ReduceElem(y: Exp[Double]) extends Def[Double]
+
   case class ArrayIndex(a: Rep[Array[Double]], i: Rep[Int]) extends Def[Double]  
   
   def array(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Array[Double]] = {
     val x = fresh[Int]
     val y = f(x)
-    LoopArray(shape, x, y)
+    SimpleLoop(shape, x, ArrayElem(y))
   }
 
-  def reduce(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] = {
+  def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] = {
     val x = fresh[Int]
     val y = f(x)
-    LoopReduce(shape, x, y)
+    SimpleLoop(shape, x, ReduceElem(y))
   }
 
   def infix_at(a: Rep[Array[Double]], i: Rep[Int]): Rep[Double] = ArrayIndex(a, i)
 
   def infix_length(a: Rep[Array[Double]]): Rep[Int] = a match {
-    case Def(LoopArray(s, x, y)) => s
+    case Def(SimpleLoop(s, x, y)) => s
     // TODO!
   }
 
-
 }
 
-trait ScalaGenLoops extends ScalaGenEffect {
-  val IR: LoopsExp
+trait ArrayLoopsFatExp extends ArrayLoopsExp with LoopsFatExp
+
+
+
+
+trait ScalaGenArrayLoops extends ScalaGenLoops {
+  val IR: ArrayLoopsExp
   import IR._
   
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case LoopArray(s, x, y) => syms(s):::syms(y)
-    case LoopReduce(s, x, y) => syms(s):::syms(y)
-    case _ => super.syms(e)
-  }
-
-  override def boundSyms(e: Any): List[Sym[Any]] = e match { // treat effects as bound symbols, just like the fun param
-    case LoopArray(s, x, y) => x :: effectSyms(y)
-    case LoopReduce(s, x, y) => x :: effectSyms(y)
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case ArrayElem(y) => effectSyms(y)
+    case ReduceElem(y) => effectSyms(y)
     case _ => super.boundSyms(e)
   }
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
-    case LoopArray(s,x,y) =>  
+    case SimpleLoop(s,x,ArrayElem(y)) =>  
       stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") {" + quote(x) + " => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")
-    case LoopReduce(s,x,y) =>  
+    case SimpleLoop(s,x,ReduceElem(y)) =>  
       stream.println("val " + quote(sym) + " = LoopReduce("+quote(s)+") {" + quote(x) + " => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
@@ -80,6 +79,44 @@ trait ScalaGenLoops extends ScalaGenEffect {
     case _ => super.emitNode(sym, rhs)
   }
 }
+
+trait ScalaGenArrayLoopsFat extends ScalaGenLoopsFat {
+  val IR: ArrayLoopsFatExp
+  import IR._
+  
+  override def emitFatNode(sym: List[Sym[_]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+    case SimpleFatLoop(s,x,rhs) => 
+      for ((l,r) <- sym zip rhs) {
+        r match {
+          case ArrayElem(y) =>
+            stream.println("var " + quote(l) + " = new Array[]("+quote(s)+")")
+          case ReduceElem(y) =>
+            stream.println("var " + quote(l) + " = 0")
+        }
+      }
+      val ii = x // was: x(i)
+//      stream.println("var " + quote(ii) + " = 0")
+//      stream.println("while ("+quote(ii)+" < "+quote(s)+") {")
+      stream.println("for ("+quote(ii)+" <- 0 until "+quote(s)+") {")
+//      for (jj <- x.drop(1)) {
+//        stream.println(quote(jj)+" = "+quote(ii))
+//      }
+      emitFatBlock(syms(rhs))
+      for ((l,r) <- sym zip rhs) {
+        r match {
+          case ArrayElem(y) =>
+            stream.println(quote(l) + "("+quote(ii)+") = " + quote(getBlockResult(y)))
+          case ReduceElem(y) =>
+            stream.println(quote(l) + " += " + quote(getBlockResult(y)))
+        }
+      }
+//      stream.println(quote(ii)+" += 1")
+      stream.println("}")
+    case _ => super.emitFatNode(sym, rhs)
+  }  
+}
+
+
 
 
 

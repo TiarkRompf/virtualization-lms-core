@@ -3,9 +3,17 @@ package internal
 
 import scala.collection.mutable.HashMap
 
-trait Transforming extends Traversing {
+trait Transforming extends Expressions {
   
-  class SubstTransformer extends Traverser {
+  abstract class Transformer { // a polymorphic function, basically...
+    def apply[A](x: Exp[A]): Exp[A]
+  }
+
+  def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = system.error("don't know how to mirror " + e)
+
+
+
+  class SubstTransformer extends Transformer {
     val subst = new HashMap[Exp[Any], Exp[Any]]
     
     def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
@@ -30,6 +38,11 @@ trait Transforming extends Traversing {
     }
   }
   
-  
+}
+
+
+trait FatTransforming extends Transforming with FatExpressions {
+
+  //def mirror[A:Manifest](e: FatDef, f: Transformer): Exp[A] = system.error("don't know how to mirror " + e)  
   
 }

@@ -22,8 +22,6 @@ trait OrderingOps extends Base with Variables with OverloadHack {
   }
   
   /*
-  def infix_<[T,B](lhs: Var[T], rhs: B)(implicit h: Overloaded1, o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_lt(readVar(lhs),c(rhs))
->>>>>>> kernel-gen
   def infix_<[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_lt(lhs,c(rhs))
   def infix_<=[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_lteq(lhs,c(rhs))
   def infix_>[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_gt(lhs,c(rhs))

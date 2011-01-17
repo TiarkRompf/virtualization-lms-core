@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package common
 
-import internal.{Expressions, Effects, Traversing, FatExpressions}
+import internal.{Expressions, Effects, Transforming, FatExpressions, FatTransforming}
 import internal.{ScalaCodegen, ScalaNestedCodegen, ScalaFatCodegen, 
   CudaCodegen, CudaNestedCodegen, CudaFatCodegen, 
   CCodegen, CNestedCodegen, CFatCodegen}
@@ -24,7 +24,7 @@ trait Base extends EmbeddedControls {
  *
  * @since 0.1
  */
-trait BaseExp extends Base with Expressions with Traversing {
+trait BaseExp extends Base with Expressions with Transforming {
   type Rep[+T] = Exp[T]
 
   implicit def unit[T:Manifest](x: T) = Const(x)
@@ -32,7 +32,7 @@ trait BaseExp extends Base with Expressions with Traversing {
 
 trait EffectExp extends BaseExp with Effects
 
-trait BaseFatExp extends BaseExp with FatExpressions
+trait BaseFatExp extends BaseExp with FatExpressions with FatTransforming
 
 
 // TODO: what is the point of these, I suggest to remove them 

@@ -1,20 +1,20 @@
 wtableneg: List((Sym(2),Sym(13)), (Sym(5),Sym(13)), (Sym(2),Sym(18)), (Sym(5),Sym(18)), (Sym(2),Sym(22)), (Sym(5),Sym(22)))
-partitions: List(TTP(List(Sym(13), Sym(18), Sym(22)),FatLoop(Const(100),List(Sym(11)),List(ReduceElem(Sym(12)), ReduceElem(Sym(17)), ReduceElem(Sym(21))))), TTP(List(Sym(2), Sym(5), Sym(10)),FatLoop(Const(100),List(Sym(1)),List(ArrayElem(Const(1.0)), ArrayElem(Sym(4)), ArrayElem(Sym(9))))))
+partitions: List(TTP(List(Sym(13), Sym(18), Sym(22)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(12)), ReduceElem(Sym(17)), ReduceElem(Sym(21))))), TTP(List(Sym(2), Sym(5), Sym(10)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Const(1.0)), ArrayElem(Sym(4)), ArrayElem(Sym(9))))))
 considering TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6))))
-replace TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) at 0 within TTP(List(Sym(2), Sym(5), Sym(10)),FatLoop(Const(100),List(Sym(1)),List(ArrayElem(Const(1.0)), ArrayElem(Sym(4)), ArrayElem(Sym(9)))))
+replace TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) at 0 within TTP(List(Sym(2), Sym(5), Sym(10)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Const(1.0)), ArrayElem(Sym(4)), ArrayElem(Sym(9)))))
 considering TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6))))
-replace TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) at 1 within TTP(List(Sym(2), Sym(5), Sym(10)),FatLoop(Const(100),List(Sym(1)),List(ArrayElem(Const(1.0)), ArrayElem(Sym(4)), ArrayElem(Sym(9)))))
+replace TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) at 1 within TTP(List(Sym(2), Sym(5), Sym(10)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Const(1.0)), ArrayElem(Sym(4)), ArrayElem(Sym(9)))))
 considering TTP(List(Sym(12)),ThinDef(ArrayIndex(Sym(10),Sym(11))))
 considering TTP(List(Sym(16)),ThinDef(ArrayIndex(Sym(10),Sym(15))))
 considering TTP(List(Sym(21)),ThinDef(ArrayIndex(Sym(10),Sym(20))))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(35), Sym(39), Sym(29), Sym(31), Sym(33)),FatLoop(Const(100),List(Sym(11)),List(ReduceElem(Sym(34)), ReduceElem(Sym(38)), ArrayElem(Const(1.0)), ArrayElem(Sym(30)), ArrayElem(Sym(32))))))
+partitions: List(TTP(List(Sym(35), Sym(39), Sym(29), Sym(31), Sym(33)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(34)), ReduceElem(Sym(38)), ArrayElem(Const(1.0)), ArrayElem(Sym(30)), ArrayElem(Sym(32))))))
 considering TTP(List(Sym(34)),ThinDef(ArrayIndex(Sym(33),Sym(11))))
-replace TTP(List(Sym(34)),ThinDef(ArrayIndex(Sym(33),Sym(11)))) at 4 within TTP(List(Sym(35), Sym(39), Sym(29), Sym(31), Sym(33)),FatLoop(Const(100),List(Sym(11)),List(ReduceElem(Sym(34)), ReduceElem(Sym(38)), ArrayElem(Const(1.0)), ArrayElem(Sym(30)), ArrayElem(Sym(32)))))
+replace TTP(List(Sym(34)),ThinDef(ArrayIndex(Sym(33),Sym(11)))) at 4 within TTP(List(Sym(35), Sym(39), Sym(29), Sym(31), Sym(33)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(34)), ReduceElem(Sym(38)), ArrayElem(Const(1.0)), ArrayElem(Sym(30)), ArrayElem(Sym(32)))))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(48), Sym(52), Sym(29), Sym(58), Sym(47)),FatLoop(Const(100),List(Sym(11)),List(ReduceElem(Sym(46)), ReduceElem(Sym(51)), ArrayElem(Const(1.0)), ArrayElem(Sym(45)), ArrayElem(Sym(46))))))
+partitions: List(TTP(List(Sym(48), Sym(52), Sym(29), Sym(58), Sym(47)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(46)), ReduceElem(Sym(51)), ArrayElem(Const(1.0)), ArrayElem(Sym(45)), ArrayElem(Sym(46))))))
 no changes, we're done
 /*****************************************
   Emitting Generated Code                  
