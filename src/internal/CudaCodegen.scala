@@ -259,9 +259,8 @@ trait CudaCodegen extends GenericCodegen {
     stream.println(addTab() + " " + lhs + " = " + rhs + ";")
   }
   
-  override def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultTypes: List[String], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     val List(sym) = syms // TODO
-    val List(resultType) = resultTypes
     
     stream.println("#include <cuda.h>")
     stream.println("#include \"VectorImpl.h\"")
@@ -279,15 +278,14 @@ trait CudaCodegen extends GenericCodegen {
     //stream.println(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;")
   }
 
-  override def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultTypes: List[String], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     val List(sym) = syms // TODO
-    val List(resultType) = resultTypes
     
     tabWidth -= 1
     stream.println("}")
 
     // Emit input copy helper functions for object type inputs
-    for(v <- vals)
+    for (v <- vals)
       helperFuncString.append(emitCopyHtoD(v, sym))
 
     // Emit kerenl size calculation helper functions

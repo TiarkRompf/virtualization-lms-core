@@ -11,8 +11,8 @@ trait GenericCodegen extends Scheduling {
   // TODO: should some of the methods be moved into more specific subclasses?
   
   def kernelFileExt = ""
-  def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultTypes: List[String], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
-  def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultTypes: List[String], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
+  def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
+  def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
   
   // Initializer
   def generatorInit(build_dir:String): Unit = {}

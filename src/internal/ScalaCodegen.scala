@@ -38,12 +38,15 @@ trait ScalaCodegen extends GenericCodegen {
     stream.flush
   }
 
-  override def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultTypes: List[String], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
-    val List(sym) = syms // TODO
-    val List(resultType) = resultTypes
+  override def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    val kernelName = syms.map(quote).mkString("")
     
     stream.println("package generated." + this.toString)
-    stream.println("object kernel_" + quote(sym) + "{")
+    stream.println("final class activation_" + kernelName + " { // generated even if not used")
+    for (s <- syms)
+      stream.println("var " + quote(s) + ": " + remap(s.Type) + " = _")
+    stream.println("}")
+    stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
     stream.print(vals.map(p => quote(p) + ":" + remap(p.Type)).mkString(","))
 
@@ -64,11 +67,9 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println("")
   }
 
-  override def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultTypes: List[String], resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
-    val List(sym) = syms // TODO
-    val List(resultType) = resultTypes
-    
-    stream.println(quote(sym))
+  override def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    val kernelName = syms.map(quote).mkString("")
+    stream.println(kernelName)
     stream.println("}}")
   }
 
