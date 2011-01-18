@@ -7,14 +7,35 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
   val IR: LoopsFatExp
   import IR._
   
+  def transformOne[A](s: Sym[A], x: Def[A], t: SubstTransformer): Exp[A] = {
+    if (t.subst.contains(s)) return t(s)
+    implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
+
+    //if (!syms(x).exists(t.subst contains _)) return s   <---- should be safe to prune but test fails (??)
+
+    val y = try { mirror(x, t) } catch { case e => println(e); s }
+    if (y != s) {
+/*
+    if (y.isInstanceOf[Sym[_]] && findDefinition(y.asInstanceOf[Sym[_]]).nonEmpty)
+      println("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[_]]).get.rhs)
+    else
+      println("--> replace " + s+"="+x + " by " + y)
+*/
+      t.subst(s) = y // TODO: move out of conditional
+    }
+    y
+  }
+  
+  
+  
   def transformAll(scope: List[TTP], t: SubstTransformer): List[TTP] = scope flatMap {
     case TTP(List(sym), ThinDef(rhs)) =>
-      t.transform(sym, rhs) match {
+      transformOne(sym, rhs, t) match {
         case s @ Def(r) => List(TTP(List(s.asInstanceOf[Sym[_]]), ThinDef(r)))
         case _ => Nil
       }
     case TTP(lhs, SimpleFatLoop(s,x,rhs)) =>
-      val lhs2 = (lhs zip rhs).map(p=>t.transform(p._1,p._2)).collect { case s: Sym[_] => s }.distinct.asInstanceOf[List[Sym[_]]]
+      val lhs2 = (lhs zip rhs).map(p=>transformOne(p._1,p._2,t)).collect { case s: Sym[_] => s }.distinct.asInstanceOf[List[Sym[_]]]
       lhs2 match {
         case Nil => Nil
         case _ => 
@@ -199,7 +220,9 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
       }
       
       // FIXME: don't throw out all loops, might have some that are *not* in levelScope
-      currentScope = currentScope.filter { case TTP(_, _: AbstractFatLoop) => false case _ => true } ::: Wloops
+      currentScope = currentScope.filter { case e@TTP(_, _: AbstractFatLoop) => 
+        println("dropping: " + e)
+        false case _ => true } ::: Wloops
 
       // schedule (and emit)
       currentScope = getFatSchedule(currentScope)(result) // clean things up!

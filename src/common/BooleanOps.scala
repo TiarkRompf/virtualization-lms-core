@@ -28,6 +28,12 @@ trait BooleanOpsExp extends BooleanOps with BaseExp {
 
   def boolean_negate(lhs: Exp[Boolean]) : Exp[Boolean] = BooleanNegate(lhs)
   def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean]) : Exp[Boolean] = BooleanAnd(lhs,rhs)
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case BooleanNegate(x) => boolean_negate(f(x))
+    case BooleanAnd(x,y) => boolean_and(f(x),f(y))
+    case _ => super.mirror(e, f)
+  }).asInstanceOf[Exp[A]] // why??
 }
 
 trait ScalaGenBooleanOps extends ScalaGenBase {

@@ -25,7 +25,7 @@ trait Transforming extends Expressions {
       implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
       
       val y = mirror(x, this)
-      if (s != y) {
+      if (y != s) {
 /*
         if (y.isInstanceOf[Sym[_]] && findDefinition(y.asInstanceOf[Sym[_]]).nonEmpty)
           println("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[_]]).get.rhs)

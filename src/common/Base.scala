@@ -30,7 +30,15 @@ trait BaseExp extends Base with Expressions with Transforming {
   implicit def unit[T:Manifest](x: T) = Const(x)
 }
 
-trait EffectExp extends BaseExp with Effects
+trait EffectExp extends BaseExp with Effects {
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+//    case Reflect(Print(x), es) => Reflect(Print(f(x)), es map (e => f(e)))
+    case Reify(x, es) => Reify(f(x), es map (e => f(e)))
+    case _ => super.mirror(e,f)
+  }
+    
+}
 
 trait BaseFatExp extends BaseExp with FatExpressions with FatTransforming
 

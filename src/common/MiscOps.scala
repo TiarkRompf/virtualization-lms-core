@@ -29,6 +29,13 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   def print(x: Rep[Any]) = reflectEffect(Print(x))
   def println(x: Rep[Any]) = reflectEffect(PrintLn(x))
   def exit(s: Rep[Int]) = reflectEffect(Exit(s))
+  
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case Reflect(Print(x), es) => toAtom(Reflect(Print(f(x)), es map (e => f(e))))
+    case Reflect(PrintLn(x), es) => toAtom(Reflect(PrintLn(f(x)), es map (e => f(e))))
+    case Reflect(Exit(x), es) => toAtom(Reflect(Exit(f(x)), es map (e => f(e))))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
 }
 
 trait ScalaGenMiscOps extends ScalaGenEffect {

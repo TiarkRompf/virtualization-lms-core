@@ -32,6 +32,13 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     }
   }
 
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case Reflect(IfThenElse(c,a,b), es) => toAtom(Reflect(IfThenElse(f(c),f(a),f(b)), es map (e => f(e))))
+    case IfThenElse(c,a,b) => toAtom(IfThenElse(f(c),f(a),f(b)))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]] // ergo toAtom ...
+
+
 }
 
 trait BaseGenIfThenElse extends GenericNestedCodegen {
