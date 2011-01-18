@@ -47,9 +47,9 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   }
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
-    case Reflect(RangeForeach(s,e,i,b), es) => toAtom(Reflect(RangeForeach(f(s),f(e),i,f(b)), es map (e => f(e))))
+    case Reflect(RangeForeach(s,e,i,b), es) => toAtom(Reflect(RangeForeach(f(s),f(e),f(i).asInstanceOf[Sym[Int]],f(b)), es map (e => f(e))))
     case _ => super.mirror(e,f)
-  }).asInstanceOf[Exp[A]] // ergo toAtom ...
+  }).asInstanceOf[Exp[A]]
 }
 
 trait BaseGenRangeOps extends GenericNestedCodegen {

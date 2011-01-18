@@ -15,13 +15,13 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
 
     val y = try { mirror(x, t) } catch { case e => println(e); s }
     if (y != s) {
-/*
+
     if (y.isInstanceOf[Sym[_]] && findDefinition(y.asInstanceOf[Sym[_]]).nonEmpty)
       println("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[_]]).get.rhs)
     else
       println("--> replace " + s+"="+x + " by " + y)
-*/
-      t.subst(s) = y // TODO: move out of conditional
+
+      t.subst(s) = y // TODO: move out of conditional?
     }
     y
   }
@@ -35,14 +35,15 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
         case _ => Nil
       }
     case TTP(lhs, SimpleFatLoop(s,x,rhs)) =>
-      val lhs2 = (lhs zip rhs).map(p=>transformOne(p._1,p._2,t)).collect { case s: Sym[_] => s }.distinct.asInstanceOf[List[Sym[_]]]
-      lhs2 match {
-        case Nil => Nil
-        case _ => 
+      // potential problem: calling toAtom on a SimpleCollect (which does not have any symbol so far!)
+      val lhs2 = (lhs zip rhs).map(p=>transformOne(p._1,p._2,t)).map { case s: Sym[_] => s }.distinct.asInstanceOf[List[Sym[_]]]
+//      lhs2 match {
+//        case Nil => Nil 
+//        case _ => 
           val rhs2 = lhs2 map (findDefinition(_).get.rhs)
           val args2 = t(x) // x map (t(_))
-          List(TTP(lhs2, SimpleFatLoop(s,args2.asInstanceOf[Sym[Int]],rhs2)))
-      }
+          List(TTP(lhs2, SimpleFatLoop(t(s),args2.asInstanceOf[Sym[Int]],rhs2)))
+//      }
   }
 
   def simplify(scope: List[TTP])(results: List[Exp[_]]): (List[TTP], List[Exp[_]]) = {
@@ -91,10 +92,21 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
        to the fused version without recomputing as much as we do now?
     */   
     
+    var lcount = 0
+    
     if (Wloops.nonEmpty) {
       var done = false
 
       do {
+        lcount += 1
+        println("--- loop fusion: currentScope " + lcount)
+
+        currentScope.foreach(println)
+
+        println("--- loop fusion: Wloops " + lcount)
+
+        Wloops.foreach(println)
+
         // utils
         def WgetLoopVar(e: TTP): List[Sym[Int]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => List(x) }
         def WgetLoopRes(e: TTP): List[Def[_]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => rhs }
@@ -115,9 +127,9 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           val thisLoopSyms = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
           getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-            case TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopSyms contains i) => 
-              // remove any SimpleIndex(a, i) where i is in thisLoopSyms
-              Nil // direct deps on this'loops induction var don't count
+            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopSyms contains i) => 
+              println("ignoring simple dependency " + e + " on loop var " + thisLoopSyms)
+              Nil // direct deps on this loop's induction var don't count
             case sc =>
               syms(sc.rhs).intersect(otherLoopSyms) flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
           }

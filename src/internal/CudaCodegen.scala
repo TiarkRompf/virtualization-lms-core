@@ -102,7 +102,11 @@ trait CudaCodegen extends GenericCodegen {
 
   override def kernelInit(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {
     // Conditions for not generating CUDA kernels (may be relaxed later)
-    assert(syms.length == 1, "TODO: implement cuda gen for fat exps")
+    if(syms.length != 1) {
+      println("TODO: implement cuda gen for fat exps!")
+      throw new RuntimeException("TODO: implement cuda gen for fat exps!")
+    }
+    
     val List(sym) = syms
     
     if(!isObjectType(sym.Type)) throw new RuntimeException("CudaGen: Not GPUable")

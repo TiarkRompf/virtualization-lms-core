@@ -19,7 +19,8 @@ trait Transforming extends Expressions {
     def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
       case Some(y) => apply(y.asInstanceOf[Exp[A]]) case None => x 
     }
-    
+
+/*    
     def transform[A](s: Sym[A], x: Def[A]): Exp[A] = {
       if (subst.contains(s)) return apply(s)
       implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
@@ -36,6 +37,7 @@ trait Transforming extends Expressions {
       }
       y
     }
+*/    
   }
   
 }
