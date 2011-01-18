@@ -124,6 +124,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     hstream.print(getDSLHeaders)
     hstream.print("#include <iostream>\n")
     hstream.print("#include <limits>\n")
+    hstream.print("#include <cublas.h>\n\n")
     hstream.print("#include <jni.h>\n\n")
     hstream.print("//Delite Runtime APIs\n")
     hstream.print("extern void DeliteCudaMallocHost(void **ptr, int size);\n")
@@ -387,7 +388,8 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   def emitSizeFuncs(sym: Sym[_]): String = {
     val out = new StringBuilder
     //if (gpuBlockSizeX == null) gpuBlockSizeX = "1"
-    if (gpuBlockSizeX == null) throw new GenerationFailedException("GPU Codegen: gpuBlockSizeX is not set")
+    if ((gpuBlockSizeX==null) && (MetaData.gpuLibCall=="")) throw new GenerationFailedException("GPU Codegen: gpuBlockSizeX is not set")
+    if (gpuBlockSizeX == null) gpuBlockSizeX = "1"
     if (gpuBlockSizeY == null) gpuBlockSizeY = "1"
     if (gpuBlockSizeZ == null) gpuBlockSizeZ = "1"
 
