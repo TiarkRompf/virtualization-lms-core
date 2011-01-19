@@ -24,7 +24,7 @@ trait BaseGenWhile extends GenericNestedCodegen {
   val IR: WhileExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match {
+  override def syms(e: Any): List[Sym[Any]] = e match { // FIXME!!
     case While(c, b) if shallow => Nil
     case _ => super.syms(e)
   }

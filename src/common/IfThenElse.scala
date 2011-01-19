@@ -38,8 +38,11 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // ergo toAtom ...
 
-
 }
+
+trait IfThenElseOpt extends IfThenElse with EffectExp { //TODO!
+}
+
 
 trait BaseGenIfThenElse extends GenericNestedCodegen {
   val IR: IfThenElseExp
