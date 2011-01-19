@@ -2,10 +2,9 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-
 import scala.virtualization.lms.util.OverloadHack
 
-trait OrderingOps extends Base with Variables with OverloadHack {  
+trait OrderingOps extends Base with Variables with OverloadHack {
   // workaround for infix not working with manifests
   implicit def orderingToRepOrderingCls[T:Ordering:Manifest](n: T) = new OrderingOpsCls(n)
   implicit def repOrderingToRepOrderingCls[T:Ordering:Manifest](n: Rep[T]) = new OrderingOpsCls(n)
@@ -76,7 +75,7 @@ trait ScalaGenOrderingOps extends ScalaGenBase {
   }
 }
 
-trait CudaGenOrderingOps extends CudaGenBase {
+trait CLikeGenOrderingOps extends CLikeGenBase {
   val IR: OrderingOpsExp
   import IR._
   
@@ -101,3 +100,7 @@ trait CudaGenOrderingOps extends CudaGenBase {
       }
     }
 }
+
+trait CudaGenOrderingOps extends CudaGenBase with CLikeGenOrderingOps
+trait CGenOrderingOps extends CGenBase with CLikeGenOrderingOps
+

@@ -2,7 +2,8 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.GenericNestedCodegen
+
+import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
 
 trait Functions extends Base {
 
@@ -130,6 +131,24 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
         stream.println(addTab() + "%s %s = %s;".format(remap(x2.Type), quote(x2), quote(sym)+"_2"))
         emitBlock(y)
         stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
+      case Apply(fun, arg) =>
+        emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
+
+      case _ => super.emitNode(sym, rhs)
+    }
+  }
+}
+
+trait CGenFunctions extends CGenEffect with BaseGenFunctions {
+  val IR: FunctionsExp
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+    rhs match {
+      case e@Lambda(fun, x, y) =>
+        throw new GenerationFailedException("CGenFunctions: Lambda is not supported yet")
+      case e@Lambda2(fun, x1, x2, y) =>
+        throw new GenerationFailedException("CGenFunctions: Lambda2 is not supported yet")
       case Apply(fun, arg) =>
         emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 

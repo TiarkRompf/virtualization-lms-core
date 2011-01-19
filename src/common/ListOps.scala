@@ -40,7 +40,7 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
   }
 }
 
-trait CudaGenListOps extends BaseGenListOps with CudaGenEffect {
+trait CLikeGenListOps extends BaseGenListOps with CLikeGenBase {
   val IR: ListOpsExp
   import IR._
 
@@ -50,3 +50,7 @@ trait CudaGenListOps extends BaseGenListOps with CudaGenEffect {
       }
     }
 }
+
+trait CudaGenListOps extends CudaGenEffect with CLikeGenListOps
+trait CGenListOps extends CGenEffect with CLikeGenListOps
+

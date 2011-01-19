@@ -12,6 +12,12 @@ trait ScalaCodegen extends GenericCodegen {
 
   override def toString = "scala"
 
+  override def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
+      e.printStackTrace()
+      kstream.close()
+      outFile.delete
+  }
+
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
 
     val x = fresh[A]

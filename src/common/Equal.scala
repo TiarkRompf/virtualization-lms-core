@@ -4,7 +4,6 @@ package common
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 
-
 trait Equal extends Base with Variables with OverloadHack {
   // TODO: we need a better way of handling this, too many combinations
   // this occurs because Rep is an object, so it has an == and != method defined by default,
@@ -55,7 +54,7 @@ trait ScalaGenEqual extends ScalaGenBase {
   }
 }
 
-trait CudaGenEqual extends CudaGenBase {
+trait CLikeGenEqual extends CLikeGenBase {
   val IR: EqualExp
   import IR._
 
@@ -69,3 +68,6 @@ trait CudaGenEqual extends CudaGenBase {
       }
     }
 }
+
+trait CudaGenEqual extends CudaGenBase with CLikeGenEqual
+trait CGenEqual extends CGenBase with CLikeGenEqual

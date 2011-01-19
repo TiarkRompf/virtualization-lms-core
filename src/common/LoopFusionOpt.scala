@@ -67,11 +67,12 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
     def unapply(a: Def[Any]): Option[Exp[Any]] = unapplySimpleCollect(a)
   }
 
-
   override def focusExactScopeFat[A](currentScope0: List[TTP])(result0: Exp[_])(body: List[TTP] => A): A = {
     var result: Exp[_] = result0
     var currentScope = currentScope0
 
+    if (!shouldApplyFusion(currentScope)(result))
+      return super.focusExactScopeFat(currentScope)(result)(body)
 /*
     println("--- pre-pre-loop fusion: getFatSchedule")
     shallow = true

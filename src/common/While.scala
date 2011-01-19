@@ -24,9 +24,14 @@ trait BaseGenWhile extends GenericNestedCodegen {
   val IR: WhileExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match { // FIXME!!
-    case While(c, b) if shallow => Nil
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case While(c, b) => syms(c):::syms(b) // wouldn't need to override...
     case _ => super.syms(e)
+  }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case While(c, b) => effectSyms(c):::effectSyms(b)
+    case _ => super.boundSyms(e)
   }
 
   // TODO: What about condition node?
@@ -42,7 +47,7 @@ trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case While(c,b) =>
-      stream.print("while ({")
+      stream.print("val " + quote(sym) + " = while ({")
       emitBlock(c)
       stream.print(quote(getBlockResult(c)))
       stream.println("}) {")
@@ -63,27 +68,39 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
         case While(c,b) =>
             // Get free variables list
             val freeVars = getFreeVarBlock(c,Nil)
-            val argListStr = if(freeVars.length == 0) freeVars.map(quote(_)).mkString(", ") else ""
-            val paramListStr = if(freeVars.length == 0) freeVars.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ") else ""
+            val argListStr = freeVars.map(quote(_)).mkString(", ") 
 
             // emit function for the condition evaluation
-            stream.println("__device__ __host__ %s %s(%s) {".format("bool", "cond_"+quote(sym), paramListStr))
-            tabWidth += 1
-            emitBlock(c)
-            stream.println(addTab()+"return %s;".format(quote(getBlockResult(c))))
-            stream.println("}")
-            tabWidth -= 1
+            val condFunc = emitDevFunc(c, getBlockResult(c).Type, freeVars)
 
             // Emit while loop (only the result variable of condition)
             stream.print(addTab() + "while (")
-            stream.print("cond_"+quote(sym)+"(%s)".format(argListStr))
+            stream.print("%s(%s)".format(condFunc,argListStr))
             stream.println(") {")
             tabWidth += 1
             emitBlock(b)
             tabWidth -= 1
             //stream.println(quote(getBlockResult(b)))   //TODO: Is this needed?
-            stream.println("}")
+            stream.println(addTab() + "}")
         case _ => super.emitNode(sym, rhs)
       }
     }
+}
+
+trait CGenWhile extends CGenEffect with BaseGenWhile {
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+    rhs match {
+      case While(c,b) =>
+        // calculate condition
+        emitBlock(c)
+        stream.println("bool cond_%s = %s;".format(quote(sym),quote(getBlockResult(c))))
+        // Emit while loop
+        stream.print("while (cond_%s) {".format(quote(sym)))
+        emitBlock(b)
+        stream.println("}")
+      case _ => super.emitNode(sym, rhs)
+    }
+  }
 }

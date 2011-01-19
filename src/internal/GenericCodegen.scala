@@ -21,7 +21,7 @@ trait GenericCodegen extends Scheduling {
   def emitDataStructures(): Unit = {}
   
   // exception handler
-  def exceptionHandler(outFile:File, kstream:PrintWriter): Unit = {
+  def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
       kstream.close()
       outFile.delete
   }
@@ -41,16 +41,17 @@ trait GenericCodegen extends Scheduling {
   def getBlockResult[A](s: Exp[A]): Exp[A] = s
   
   def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
-    throw new Exception("don't know how to generate code for: " + rhs)
+    throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
 
-  //def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
+  def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
   
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
       
   def quote(x: Exp[_]) : String = x match {
     case Const(s: String) => "\""+s+"\""
     case Const(null) => "null" // why is null getting lifted now? something to do with Equal
+    case Const(f: Float) => f.toString + "f"
     case Const(z) => z.toString
     case Sym(n) => "x"+n
     case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
@@ -63,6 +64,8 @@ trait GenericCodegen extends Scheduling {
 
   def hasMetaData: Boolean = false
   def getMetaData: String = null
+
+  def getDSLHeaders: String = null
 }
 
 
@@ -156,7 +159,16 @@ trait GenericNestedCodegen extends GenericCodegen {
   }
   
 
+  override def syms(e: Any): List[Sym[Any]] = e match {
+//    case Reflect(s, effects) if ignoreEffects => syms(s) // TODO what about ignoreEffects business?
+    case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(syms(_))
+    case _ => Nil
+  }
+
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case Read(s) =>
+      emitValDef(sym, quote(s))
     case Reflect(s, effects) =>
       emitNode(sym, s)
     case Reify(s, effects) =>

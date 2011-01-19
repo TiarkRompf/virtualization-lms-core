@@ -40,7 +40,7 @@ trait ScalaGenArrayOps extends ScalaGenBase {
   }
 }
 
-trait CudaGenArrayOps extends CudaGenBase {
+trait CLikeGenArrayOps extends CLikeGenBase {
   val IR: ArrayOpsExp
   import IR._
 
@@ -54,3 +54,7 @@ trait CudaGenArrayOps extends CudaGenBase {
       }
     }
 }
+
+trait CudaGenArrayOps extends CudaGenBase with CLikeGenArrayOps
+trait CGenArrayOps extends CGenBase with CLikeGenArrayOps
+

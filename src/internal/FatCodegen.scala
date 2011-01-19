@@ -13,6 +13,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
   // these are needed by loop fusion. they should live elsewhere.
   def unapplySimpleIndex(e: Def[Any]): Option[(Exp[Any], Exp[Int])] = None
   def unapplySimpleCollect(e: Def[Any]): Option[Exp[Any]] = None
+  def shouldApplyFusion(currentScope: List[TTP])(result: Exp[Any]): Boolean = true
 
 
   override def emitBlockFocused(result: Exp[_])(implicit stream: PrintWriter): Unit = {
@@ -86,5 +87,6 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     emitBlock(Combine(rhs))
   }
 
+  //TODO: focusFatBlock
   
 }

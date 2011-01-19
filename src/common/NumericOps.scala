@@ -3,7 +3,6 @@ package common
 
 import java.io.PrintWriter
 
-
 trait NumericOps extends Variables {
 
   // workaround for infix not working with manifests
@@ -54,7 +53,7 @@ trait ScalaGenNumericOps extends ScalaGenBase {
   }
 }
 
-trait CudaGenNumericOps extends CudaGenBase {
+trait CLikeGenNumericOps extends CLikeGenBase {
   val IR: NumericOpsExp
   import IR._
 
@@ -70,3 +69,7 @@ trait CudaGenNumericOps extends CudaGenBase {
       }
     }
 }
+
+trait CudaGenNumericOps extends CudaGenBase with CLikeGenNumericOps
+trait CGenNumericOps extends CGenBase with CLikeGenNumericOps
+

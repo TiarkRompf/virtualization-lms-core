@@ -4,7 +4,8 @@ package common
 import internal.{Expressions, Effects, Transforming, FatExpressions, FatTransforming}
 import internal.{ScalaCodegen, ScalaNestedCodegen, ScalaFatCodegen, 
   CudaCodegen, CudaNestedCodegen, CudaFatCodegen, 
-  CCodegen, CNestedCodegen, CFatCodegen}
+  CCodegen, CNestedCodegen, CFatCodegen,
+  CLikeCodegen}
 
 /**
  * The Base trait defines the type constructor Rep, which is the higher-kinded type that allows for other DSL types to be
@@ -53,6 +54,7 @@ trait ScalaGenEffect extends ScalaNestedCodegen with ScalaGenBase
 trait ScalaGenFat extends ScalaFatCodegen with ScalaGenBase
 
 
+trait CLikeGenBase extends CLikeCodegen
 
 
 trait CudaGenBase extends CudaCodegen

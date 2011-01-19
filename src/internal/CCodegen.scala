@@ -4,7 +4,7 @@ package internal
 import java.io.PrintWriter
 
 
-trait CCodegen extends GenericCodegen {
+trait CCodegen extends CLikeCodegen {
   val IR: Expressions
   import IR._
 
@@ -41,14 +41,51 @@ trait CCodegen extends GenericCodegen {
     stream.flush
   }  
 
-  def emitConstDef(tp: String, sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitConstDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.print("const ")
-    emitVarDef(tp, sym, rhs)
+    emitVarDef(sym, rhs)
   }
 
-  def emitVarDef(tp: String, sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println(tp + " " + quote(sym) + " = " + rhs + ";")
+  def emitVarDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+    stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
+
+  def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+    stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+  }
+
+  def emitAssignment(lhs:String, rhs: String)(implicit stream: PrintWriter): Unit = {
+    stream.println(lhs + " = " + rhs + ";")
+  }
+
+  override def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    val List(sym) = syms // TODO
+
+    if( (vars.length>0) || (resultIsVar) ) throw new GenerationFailedException("Var is not supported for CPP kernels")
+
+    val paramStr = vals.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
+    stream.println("%s kernel_%s(%s) {".format(resultType, quote(sym), paramStr))
+  }
+
+  override def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    val List(sym) = syms // TODO
+    
+    if(resultType != "void")
+      stream.println("return " + quote(sym) + ";")
+    stream.println("}")
+  }
+
+  override def remap[A](m: Manifest[A]) : String = m.toString match {
+    case "Int" => "int"
+    case "Long" => "long"
+    case "Float" => "float"
+    case "Double" => "double"
+    case "Boolean" => "bool"
+    case "Unit" => "void"
+    case "java.lang.String" => "char *"
+    case _ => throw new GenerationFailedException("CGen: remap(m) : Unknown data type (%s)".format(m.toString))
+  }
+  
 }
 
 // TODO: do we need this for each target?

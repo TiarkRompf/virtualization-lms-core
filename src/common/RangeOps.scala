@@ -2,7 +2,8 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.GenericNestedCodegen
+
+import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
 
 trait RangeOps extends Base {
   // workaround for infix not working with manifests
@@ -56,13 +57,6 @@ trait BaseGenRangeOps extends GenericNestedCodegen {
   val IR: RangeOpsExp
   import IR._
 
-/*
-  override def syms(e: Any): List[Sym[Any]] = e match { //TR TODO!
-    case RangeForeach(start, end, i, body) if shallow => syms(start) ::: syms(end) // in shallow mode, don't count deps from nested blocks
-    case _ => super.syms(e)
-  }
-*/
-
   override def syms(e: Any): List[Sym[Any]] = e match {
     case RangeForeach(start, end, i, body) => syms(start):::syms(end):::syms(body)
     case _ => super.syms(e)
@@ -98,6 +92,7 @@ trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
     case RangeForeach(start, end, i, body) => {
       stream.println("var " + quote(i) + " : Int = " + quote(start))
       stream.println("val " + quote(sym) + " = " + "while (" + quote(i) + " < " + quote(end) + ") {")
+      //nestedEmission = true TODO nestedEmission??
       emitBlock(body)
       stream.println(quote(getBlockResult(body)))
       stream.println(quote(i) + " = " + quote(i) + " + 1")
@@ -157,6 +152,22 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
           stream.println(addTab() + "}")
         }
     }
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CGenRangeOps extends CGenEffect with BaseGenRangeOps {
+  val IR: RangeOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+    case Until(start, end) =>
+      throw new GenerationFailedException("CGenRangeOps: Range vector is not supported")
+    case RangeForeach(start, end, i, body) =>
+      stream.println("for(int %s=%s; %s < %s; %s++) {".format(quote(i),quote(start),quote(i),quote(end),quote(i)))
+      emitBlock(body)
+      stream.println("}")
+
     case _ => super.emitNode(sym, rhs)
   }
 }
