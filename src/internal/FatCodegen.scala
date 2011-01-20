@@ -16,13 +16,13 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
   def shouldApplyFusion(currentScope: List[TTP])(result: Exp[Any]): Boolean = true
 
 
-  override def emitBlockFocused(result: Exp[_])(implicit stream: PrintWriter): Unit = {
+  override def emitBlockFocused(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
     var currentScope = innerScope.map(fatten)
     currentScope = getFatSchedule(currentScope)(result) // clean things up!
     emitFatBlockFocused(currentScope)(result)
   }
 
-  def emitFatBlockFocused(currentScope: List[TTP])(result: Exp[_])(implicit stream: PrintWriter): Unit = {
+  def emitFatBlockFocused(currentScope: List[TTP])(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
     // do what super does, modulo fat stuff
     focusExactScopeFat(currentScope)(result) { levelScope => 
       for (TTP(syms, rhs) <- levelScope) {
@@ -31,7 +31,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     }
   }
 
-  def focusExactScopeFat[A](currentScope: List[TTP])(result: Exp[_])(body: List[TTP] => A): A = {
+  def focusExactScopeFat[A](currentScope: List[TTP])(result: Exp[Any])(body: List[TTP] => A): A = {
     
     val saveInner = innerScope
     
@@ -77,13 +77,13 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
   }
 
 
-  def emitFatNode(sym: List[Sym[_]], rhs: FatDef)(implicit stream: PrintWriter): Unit = rhs match {
+  def emitFatNode(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter): Unit = rhs match {
     case ThinDef(Reflect(s, effects)) => emitFatNode(sym, ThinDef(s)) // call back into emitFatNode, not emitNode
     case ThinDef(a) => emitNode(sym(0), a)
     case _ => system.error("don't know how to generate code for: "+rhs)
   }
 
-  def emitFatBlock(rhs: List[Exp[_]])(implicit stream: PrintWriter): Unit = {
+  def emitFatBlock(rhs: List[Exp[Any]])(implicit stream: PrintWriter): Unit = {
     emitBlock(Combine(rhs))
   }
 

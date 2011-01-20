@@ -128,7 +128,7 @@ trait ScalaGenTupleOps extends ScalaGenBase {
   val IR: TupleOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ETuple2(a,b)  =>
       emitValDef(sym, "("+ quote(a) + "," + quote(b) + ")")
     case Tuple2Access1(t) => emitValDef(sym, quote(t) + "._1")

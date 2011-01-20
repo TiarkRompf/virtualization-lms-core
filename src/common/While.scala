@@ -35,7 +35,7 @@ trait BaseGenWhile extends GenericNestedCodegen {
   }
 
   // TODO: What about condition node?
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
     case While(c,b) => getFreeVarBlock(c,Nil) ::: getFreeVarBlock(b,Nil)
     case _ => super.getFreeVarNode(rhs)
   }
@@ -45,7 +45,7 @@ trait BaseGenWhile extends GenericNestedCodegen {
 trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case While(c,b) =>
       stream.print("val " + quote(sym) + " = while ({")
       emitBlock(c)
@@ -63,7 +63,7 @@ trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
 trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case While(c,b) =>
             // Get free variables list
@@ -90,7 +90,7 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
 trait CGenWhile extends CGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     rhs match {
       case While(c,b) =>
         // calculate condition

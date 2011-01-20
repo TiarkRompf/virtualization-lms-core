@@ -187,7 +187,7 @@ trait ScalaGenFunctionsExternal extends ScalaGenEffect {
     case DefineFun(y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
   }
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: java.io.PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
     case e@DefineFun(y) =>
       stream.println("val " + quote(sym) + " = {" + quote(e.arg) + ": (" + e.arg.Type + ") => ")
       emitBlock(y)

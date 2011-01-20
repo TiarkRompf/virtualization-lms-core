@@ -20,7 +20,7 @@ trait ScalaGenFractionalOps extends ScalaGenBase {
   val IR: FractionalOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case FractionalDivide(a,b) => emitValDef(sym, quote(a) + " / " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
@@ -30,7 +30,7 @@ trait CLikeGenFractionalOps extends CLikeGenBase {
   val IR: FractionalOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case FractionalDivide(a,b) =>
           emitValDef(sym, quote(a) + " / " + quote(b))

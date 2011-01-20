@@ -104,7 +104,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   val IR: PrimitiveOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ObjDoubleParseDouble(s) => emitValDef(sym, "java.lang.Double.parseDouble(" + quote(s) + ")")
     case ObjDoublePositiveInfinity() => emitValDef(sym, "scala.Double.PositiveInfinity")
     case DoubleFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
@@ -122,7 +122,7 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
   import IR._
 
   //TODO: stdlib.h needs to be included in the common header file
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case ObjDoubleParseDouble(s) =>
           emitValDef(sym, "atof(" + quote(s) + ")")

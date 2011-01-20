@@ -20,7 +20,7 @@ trait BaseGenDSLOps extends GenericNestedCodegen {
   import IR._
 
   // TODO: think about whether this should override syms for DSLOps or not
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
     case op: DSLOp[_] => getFreeVarBlock(op.representation,Nil)
     case _ => super.getFreeVarNode(rhs)
   }
@@ -30,7 +30,7 @@ trait ScalaGenDSLOps extends ScalaGenEffect with BaseGenDSLOps {
   val IR: DSLOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case op: DSLOp[_] =>
       val b = op.representation
       stream.println("val " + quote(sym) + " = { ")
@@ -47,7 +47,7 @@ trait CLikeGenDSLOps extends BaseGenDSLOps with CLikeGenBase {
   val IR: DSLOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case op: DSLOp[_] => throw new GenerationFailedException("CLikeGenDSLOps: DSLOp is not supported")
     case _ => super.emitNode(sym, rhs)
   }

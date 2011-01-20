@@ -34,7 +34,7 @@ trait ScalaGenCastingOps extends ScalaGenBase {
   val IR: CastingOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case RepIsInstanceOf(x,mA,mB) => emitValDef(sym, quote(x) + ".isInstanceOf[" + remap(mB) + "]")
     case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, quote(x) + ".asInstanceOf[" + remap(mB) + "]")
     case _ => super.emitNode(sym, rhs)
@@ -45,7 +45,7 @@ trait CudaGenCastingOps extends CudaGenBase {
   val IR: CastingOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         //TODO: How about carrying the dynamic type information in C datastructure?
         case RepIsInstanceOf(x,mA,mB) => throw new RuntimeException("CudaGen: Cannot check runtime type")

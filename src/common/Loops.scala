@@ -62,7 +62,7 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
     case _ => super.boundSyms(e)
   }
 
-  override def fatten(e: TP[_]): TTP = e.rhs match {
+  override def fatten(e: TP[Any]): TTP = e.rhs match {
     case op: AbstractLoop[_] => 
       TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
     case _ => super.fatten(e)

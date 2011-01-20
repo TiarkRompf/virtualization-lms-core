@@ -69,7 +69,7 @@ trait ScalaGenVariables extends ScalaGenEffect {
   val IR: VariablesExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
     case NewVar(init) => emitVarDef(sym, quote(init))
     case Assign(Variable(a), b) => emitAssignment(quote(a), quote(b))
@@ -83,7 +83,7 @@ trait CLikeGenVariables extends CLikeGenBase {
   val IR: VariablesExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case ReadVar(Variable(a)) =>
           emitValDef(sym, quote(a))

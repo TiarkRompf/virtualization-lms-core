@@ -44,7 +44,7 @@ trait ScalaGenBooleanOps extends ScalaGenBase {
   val IR: BooleanOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case BooleanNegate(b) => emitValDef(sym, "!" + quote(b))
     case BooleanAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " && " + quote(rhs))
     case BooleanOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " || " + quote(rhs))
@@ -56,7 +56,7 @@ trait CLikeGenBooleanOps extends CLikeGenBase {
   val IR: BooleanOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     rhs match {
       case BooleanNegate(b) =>
         emitValDef(sym, "!" + quote(b))

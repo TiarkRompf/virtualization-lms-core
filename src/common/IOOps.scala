@@ -87,7 +87,7 @@ trait ScalaGenIOOps extends ScalaGenBase {
   val IR: IOOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ObjBrApply(f) => emitValDef(sym, "new java.io.BufferedReader(" + quote(f) + ")")
     case ObjBwApply(f) => emitValDef(sym, "new java.io.BufferedWriter(" + quote(f) + ")")
     case ObjFrApply(s) => emitValDef(sym, "new java.io.FileReader(" + quote(s) + ")")
@@ -104,7 +104,7 @@ trait CLikeGenIOOps extends CLikeGenBase {
   val IR: IOOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ObjBrApply(f) => throw new GenerationFailedException("CLikeGenIOOps: Java IO operations are not supported")
     case ObjFrApply(s) => throw new GenerationFailedException("CLikeGenIOOps: Java IO operations are not supported")
     case BrReadline(b) => throw new GenerationFailedException("CLikeGenIOOps: Java IO operations are not supported")

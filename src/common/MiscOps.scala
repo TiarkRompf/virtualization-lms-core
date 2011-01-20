@@ -46,7 +46,7 @@ trait ScalaGenMiscOps extends ScalaGenEffect {
   val IR: MiscOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case PrintLn(s) => emitValDef(sym, "println(" + quote(s) + ")")
     case Print(s) => emitValDef(sym, "print(" + quote(s) + ")")
     case Exit(a) => emitValDef(sym, "exit(" + quote(a) + ")")
@@ -60,7 +60,7 @@ trait CGenMiscOps extends CGenEffect {
   val IR: MiscOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case PrintLn(s) => stream.println("printf(\"%s\\n\"," + quote(s) + ");")
     case Print(s) => stream.println("printf(\"%s\"," + quote(s) + ");")
     case Exit(a) => stream.println("exit(" + quote(a) + ");")
@@ -72,7 +72,7 @@ trait CudaGenMiscOps extends CudaGenEffect {
   val IR: MiscOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case _ => super.emitNode(sym, rhs)
   }
 }

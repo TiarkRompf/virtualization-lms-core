@@ -41,16 +41,16 @@ trait CCodegen extends CLikeCodegen {
     stream.flush
   }  
 
-  def emitConstDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitConstDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.print("const ")
     emitVarDef(sym, rhs)
   }
 
-  def emitVarDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitVarDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
@@ -58,7 +58,7 @@ trait CCodegen extends CLikeCodegen {
     stream.println(lhs + " = " + rhs + ";")
   }
 
-  override def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     val List(sym) = syms // TODO
 
     if( (vars.length>0) || (resultIsVar) ) throw new GenerationFailedException("Var is not supported for CPP kernels")
@@ -67,7 +67,7 @@ trait CCodegen extends CLikeCodegen {
     stream.println("%s kernel_%s(%s) {".format(resultType, quote(sym), paramStr))
   }
 
-  override def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     val List(sym) = syms // TODO
     
     if(resultType != "void")
@@ -98,7 +98,7 @@ trait CNestedCodegen extends GenericNestedCodegen with CCodegen {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
 
-  override def quote(x: Exp[_]) = x match { // TODO: quirk!
+  override def quote(x: Exp[Any]) = x match { // TODO: quirk!
     case Sym(-1) => "_"
     case _ => super.quote(x)
   }

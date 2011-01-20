@@ -3,7 +3,7 @@ package internal
 
 trait Effects extends Expressions {
   
-  type State = List[Exp[_]]
+  type State = List[Exp[Any]]
   
   var context: State = _
 

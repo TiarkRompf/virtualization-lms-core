@@ -108,7 +108,7 @@ trait MatchingExtractorsExp extends FunctionsExp with Effects with Control {
   case class Test[A:Manifest](x: Exp[A], y: A) extends Def[Unit]
 
 //  case class OrElse[A](x: List[Exp[Effectful[A]]]) extends Def[A]
-//  case class AndAlso[A](x: Exp[A], effects: List[Exp[_]]) extends Def[A]
+//  case class AndAlso[A](x: Exp[A], effects: List[Exp[Any]]) extends Def[A]
 
   def construct[A:Manifest,B:Manifest](c: Class[A], f: B => A, x: Rep[B]): Rep[A] = Construct(c, x)
   def deconstruct[A,B:Manifest](c: Class[A], f: A => Option[B], x: Rep[A]): Option[Rep[B]] = {
@@ -126,7 +126,7 @@ trait MatchingExtractorsExp extends FunctionsExp with Effects with Control {
   }
   
     
-//  def andAlso[A](x: Rep[A], effects: List[Rep[_]]): Rep[A] = AndAlso(x, effects)
+//  def andAlso[A](x: Rep[A], effects: List[Rep[Any]]): Rep[A] = AndAlso(x, effects)
 
 //  def orElse[A](xs: List[Rep[Effectful[A]]]): Rep[A] = reflectEffect(OrElse(xs))
   
@@ -162,7 +162,7 @@ trait MatchingExtractorsExpOpt extends MatchingExtractorsExp {
   }
 
 /*  
-  override def andAlso[A](x: Rep[A], effects: List[Rep[_]]): Rep[A] = effects match {
+  override def andAlso[A](x: Rep[A], effects: List[Rep[Any]]): Rep[A] = effects match {
     case Nil => x
     case _ => super.andAlso(x, effects)
   }

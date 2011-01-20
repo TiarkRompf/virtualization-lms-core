@@ -79,8 +79,8 @@ trait BaseGenFunctions extends GenericNestedCodegen {
     case _ => super.boundSyms(e)
   }
 
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
-    case Lambda(f, x, y) => getFreeVarBlock(y,List(x.asInstanceOf[Sym[_]]))
+  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
+    case Lambda(f, x, y) => getFreeVarBlock(y,List(x.asInstanceOf[Sym[Any]]))
     case _ => super.getFreeVarNode(rhs)
   }
 }
@@ -88,7 +88,7 @@ trait BaseGenFunctions extends GenericNestedCodegen {
 trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case e@Lambda(fun, x, y) =>
       stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + x.Type + ") => ")
       emitBlock(y)
@@ -106,7 +106,7 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         // The version for inlined device function
@@ -143,7 +143,7 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         throw new GenerationFailedException("CGenFunctions: Lambda is not supported yet")

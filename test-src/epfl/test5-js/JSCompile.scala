@@ -33,7 +33,7 @@ trait JSCodegen extends GenericCodegen {
     stream.println("}")
     stream.flush
   }
-  def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("var " + quote(sym) + " = " + rhs)
   }
 }
@@ -46,7 +46,7 @@ trait JSNestedCodegen extends GenericNestedCodegen with JSCodegen {
       (implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
-  override def quote(x: Exp[_]) = x match { // TODO: quirk!
+  override def quote(x: Exp[Any]) = x match { // TODO: quirk!
     case Sym(-1) => system.error("Sym(-1) not supported")
     case _ => super.quote(x)
   }
@@ -69,7 +69,7 @@ trait JSGenIfThenElse extends JSGenEffect { // it's more or less generic...
     case IfThenElse(c, t, e) if shallow => syms(c) // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
   }
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case IfThenElse(c,a,b) =>  
       stream.println("var " + quote(sym))
       stream.println("if (" + quote(c) + ") {")
@@ -87,7 +87,7 @@ trait JSGenArith extends JSGenBase { // TODO: define a generic one
   val IR: ArithExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Plus(a,b) =>  emitValDef(sym, "" + quote(a) + "+" + quote(b))
     case Minus(a,b) => emitValDef(sym, "" + quote(a) + "-" + quote(b))
     case Times(a,b) => emitValDef(sym, "" + quote(a) + "*" + quote(b))

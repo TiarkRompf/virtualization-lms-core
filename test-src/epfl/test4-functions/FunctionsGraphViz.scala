@@ -11,7 +11,7 @@ trait FunctionsGraphViz extends GraphVizExport {
   val IR: FunctionsExternalDef0
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: java.io.PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
 /*
     case Result(x) =>
       super.emitNode(sym, rhs)
@@ -34,7 +34,7 @@ trait FunctionsGraphViz extends GraphVizExport {
   }
   
 /*
-  override def emitDeps(sym: Sym[_], rhs: Def[_], deps: List[Sym[Any]], stream: java.io.PrintWriter) = rhs match {
+  override def emitDeps(sym: Sym[Any], rhs: Def[Any], deps: List[Sym[Any]], stream: java.io.PrintWriter) = rhs match {
     case AndAlso(x, effects) =>
       super.emitDeps(sym, rhs, deps -- effects.asInstanceOf[List[Sym[Any]]]) // TODO: cast
       for (dep <- effects) {

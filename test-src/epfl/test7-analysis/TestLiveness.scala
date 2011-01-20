@@ -14,9 +14,9 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 trait Liveness extends internal.GenericNestedCodegen {
   import IR._
 
-  var defuse: List[(Sym[_],Sym[_])] = Nil
+  var defuse: List[(Sym[Any],Sym[Any])] = Nil
 
-  override def emitBlockFocused(result: Exp[_])(implicit stream: PrintWriter): Unit = {
+  override def emitBlockFocused(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
     focusExactScope(result) { levelScope => 
       
       // TODO: what is the intended behavior for uses in innerScope?
@@ -25,7 +25,7 @@ trait Liveness extends internal.GenericNestedCodegen {
       // a possible first step: handle only straightline code and mark
       // everything used by innerScope as escaping (plus the result) 
       
-      def usesOf(s: Sym[_]): List[TP[_]] = levelScope.flatMap {
+      def usesOf(s: Sym[Any]): List[TP[Any]] = levelScope.flatMap {
         case TP(s1, Reify(rhs1, _)) => // reify nodes are eliminated, so we need to find all uses of the reified thing
           if (syms(rhs1).contains(s)) usesOf(s1) else Nil
         case d@TP(_, rhs1) =>
@@ -34,7 +34,7 @@ trait Liveness extends internal.GenericNestedCodegen {
       defuse = levelScope.flatMap {
         case TP(sym, Reify(_, _)) => Nil
         case TP(sym, rhs) =>
-          usesOf(sym).map(d => (sym,d.sym):(Sym[_],Sym[_]))
+          usesOf(sym).map(d => (sym,d.sym):(Sym[Any],Sym[Any]))
       }
 
       for (TP(sym, rhs) <- levelScope) {
@@ -66,18 +66,18 @@ trait ScalaGenArraysLiveOpt extends ScalaGenArrays with Liveness {
   val IR: ArraysExp
   import IR._
   
-  def canKill(e: Exp[_], u: Sym[_]) = {
+  def canKill(e: Exp[Any], u: Sym[Any]) = {
     !defuse.exists(p => p._1 == e && p._2 != u)
   }
 
-  def tryKill(e: Exp[_], u: Sym[_]) = {
+  def tryKill(e: Exp[Any], u: Sym[Any]) = {
     if (!defuse.exists(p => p._1 == e && p._2 != u)) {
       defuse = defuse.filterNot(p => p._1 == e)
       true
     } else false
   }
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ArrayZero(n) =>  
       emitValDef(sym, "new Array[Int](" + quote(n) + ")")
     case ArrayUpdate(a,x,v) =>  

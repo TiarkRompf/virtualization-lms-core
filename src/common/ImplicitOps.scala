@@ -26,7 +26,7 @@ trait ScalaGenImplicitOps extends ScalaGenBase {
   val IR: ImplicitOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     // TODO: this valDef is redundant; we really just want the conversion to be a no-op in the generated code.
     // TODO: but we still need to link the defs together
     case ImplicitConvert(x) => emitValDef(sym, quote(x))
@@ -38,7 +38,7 @@ trait CLikeGenImplicitOps extends CLikeGenBase {
   val IR: ImplicitOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case im@ImplicitConvert(x) =>
           stream.println("%s %s = (%s)%s;".format(remap(im.mY), quote(sym), remap(im.mY), quote(x)))

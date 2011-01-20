@@ -13,7 +13,7 @@ trait JSGenEqual extends JSGenBase {
   val IR: EqualExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Equal(a,b) =>  emitValDef(sym, "" + quote(a) + "==" + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
@@ -36,7 +36,7 @@ trait ScalaGenPrint extends ScalaGenEffect {
   val IR: PrintExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Print(s) =>  emitValDef(sym, "println(" + quote(s) + ")")
     case _ => super.emitNode(sym, rhs)
   }
@@ -47,7 +47,7 @@ trait JSGenPrint extends JSGenEffect {
   import IR._
   
   // TODO: should have a function for this
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Print(s) =>  emitValDef(sym, "document.body.appendChild(document.createElement(\"div\"))"+
         ".appendChild(document.createTextNode("+quote(s)+"))")
     case _ => super.emitNode(sym, rhs)

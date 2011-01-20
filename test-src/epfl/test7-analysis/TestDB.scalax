@@ -16,13 +16,13 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 trait DB extends Base {
 
-  def field[A](a: Rep[_], table: String, name: String): Rep[A]
+  def field[A](a: Rep[Any], table: String, name: String): Rep[A]
 
 }
 
 trait DBExp extends DB with BaseExp {
 
-  def field[A](a: Rep[_], table: String, name: String): Rep[A] = error("arg")
+  def field[A](a: Rep[Any], table: String, name: String): Rep[A] = error("arg")
 
 }
 

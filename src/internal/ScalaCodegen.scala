@@ -44,7 +44,7 @@ trait ScalaCodegen extends GenericCodegen {
     stream.flush
   }
 
-  override def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     val kernelName = syms.map(quote).mkString("")
     
     stream.println("package generated." + this.toString)
@@ -73,16 +73,16 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println("")
   }
 
-  override def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     val kernelName = syms.map(quote).mkString("")
     stream.println(kernelName)
     stream.println("}}")
   }
 
-  def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("val " + quote(sym) + " = " + rhs)
   }
-  def emitVarDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitVarDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("var " + quote(sym) + " = " + rhs)
   }
   def emitAssignment(lhs: String, rhs: String)(implicit stream: PrintWriter): Unit = {
@@ -99,7 +99,7 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
 
-  override def quote(x: Exp[_]) = x match { // TODO: quirk!
+  override def quote(x: Exp[Any]) = x match { // TODO: quirk!
     case Sym(-1) => "_"
     case _ => super.quote(x)
   }

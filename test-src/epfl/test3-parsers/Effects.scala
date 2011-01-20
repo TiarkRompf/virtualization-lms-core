@@ -79,10 +79,10 @@ trait Control extends Effects with BaseExp {
   
   // stuff below could be separated
   
-  type State = List[Rep[_]]
+  type State = List[Rep[Any]]
   abstract class Effectful[A]
   
-  case class Reify[A:Manifest](x: Rep[A], es: List[Rep[_]]) extends Def[Effectful[A]]
+  case class Reify[A:Manifest](x: Rep[A], es: List[Rep[Any]]) extends Def[Effectful[A]]
   case class Pure[A:Manifest](x: Rep[A]) extends Exp[Effectful[A]] 
   
   def noEffect: State = Nil
@@ -98,8 +98,8 @@ trait ControlOpt extends Control {
   
   abstract class Branch
   
-  case class IfTrue(x: Rep[_]) extends Branch
-  case class IfFalse(x: Rep[_]) extends Branch
+  case class IfTrue(x: Rep[Any]) extends Branch
+  case class IfFalse(x: Rep[Any]) extends Branch
 
   case class State(pred: List[Branch], yes: List[Branch], no: List[Branch]) extends Def[Effect]
   

@@ -1,6 +1,8 @@
 package scala.virtualization.lms
 package internal
 
+import scala.annotation.unchecked.uncheckedVariance
+
 /**
  * The Expressions trait houses common AST nodes. It also manages a list of encountered Definitions which
  * allows for common sub-expression elimination (CSE).  
@@ -10,7 +12,7 @@ package internal
 trait Expressions {
 
   abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
-    def Type : Manifest[_] = manifest
+    def Type : Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
   }
 
   case class Const[+T:Manifest](x: T) extends Exp[T]
@@ -29,9 +31,9 @@ trait Expressions {
 
   abstract class Def[+T] // operations (composite)
 
-  case class TP[T](sym: Sym[T], rhs: Def[T]) 
+  case class TP[+T](sym: Sym[T], rhs: Def[T]) 
 
-  var globalDefs: List[TP[_]] = Nil
+  var globalDefs: List[TP[Any]] = Nil
 
   def findDefinition[T](s: Sym[T]): Option[TP[T]] =
     globalDefs.find(_.sym == s).asInstanceOf[Option[TP[T]]]

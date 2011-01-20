@@ -72,24 +72,24 @@ class TestLambdalift extends FileDiffSuite {
       
       trait ScalaGenBla extends ScalaGenBase {
         import IR._
-        def emitFocused[A,B](name: String, params: List[Exp[_]], x: Exp[A], y: Exp[B])(implicit stream: PrintWriter): Unit
+        def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Exp[B])(implicit stream: PrintWriter): Unit
       }
       
       new NestLambdaProg with ArithExp with FunctionsExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenPrint { 
           val IR: self.type = self
           
-          def boundAndUsedInScope(x: Exp[_], y: Exp[_]): (List[Sym[_]], List[Sym[_]]) = {
+          def boundAndUsedInScope(x: Exp[Any], y: Exp[Any]): (List[Sym[Any]], List[Sym[Any]]) = {
             val used = (syms(y):::innerScope.flatMap(t => syms(t.rhs))).distinct
             val bound = (syms(x):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
             (bound, used)
           }
-          def freeInScope(x: Exp[_], y: Exp[_]): List[Sym[_]] = {
+          def freeInScope(x: Exp[Any], y: Exp[Any]): List[Sym[Any]] = {
             val (bound, used) = boundAndUsedInScope(x,y)
             used diff bound
           }
           
-          override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+          override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
             case e@Lambda(fun, x, y) =>
             
               focusBlock(y) {
@@ -110,7 +110,7 @@ class TestLambdalift extends FileDiffSuite {
           
           override def initialDefs = codegen.availableDefs
           
-          def emitFocused[A,B](name: String, params: List[Exp[_]], x: Exp[A], y: Exp[B])(implicit stream: PrintWriter) = {
+          def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Exp[B])(implicit stream: PrintWriter) = {
             // TODO: this is not valid Scala code. the types are missing.
             stream.println("class "+name+"("+params.map(quote).mkString(",")+") {")
             stream.println("def apply("+quote(x)+") = {")

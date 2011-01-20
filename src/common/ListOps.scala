@@ -34,7 +34,7 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
   val IR: ListOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ListNew(xs) => emitValDef(sym, "List(" + (xs map {quote}).mkString(",") + ")")
     case _ => super.emitNode(sym, rhs)
   }
@@ -44,7 +44,7 @@ trait CLikeGenListOps extends BaseGenListOps with CLikeGenBase {
   val IR: ListOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case _ => super.emitNode(sym, rhs)
       }

@@ -11,12 +11,12 @@ trait GenericCodegen extends Scheduling {
   // TODO: should some of the methods be moved into more specific subclasses?
   
   def kernelFileExt = ""
-  def emitKernelHeader(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
-  def emitKernelFooter(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
+  def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
+  def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
   
   // Initializer
   def generatorInit(build_dir:String): Unit = {}
-  def kernelInit(syms: List[Sym[_]], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {}
+  def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
 
   def emitDataStructures(): Unit = {}
   
@@ -30,7 +30,7 @@ trait GenericCodegen extends Scheduling {
   def remap[A](m: Manifest[A]) : String = m.toString
   def remapImpl[A](m: Manifest[A]) : String = remap(m)
 
-  def emitBlock(y: Exp[_])(implicit stream: PrintWriter): Unit = {
+  def emitBlock(y: Exp[Any])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
     
     for (TP(sym, rhs) <- deflist) {
@@ -40,15 +40,15 @@ trait GenericCodegen extends Scheduling {
 
   def getBlockResult[A](s: Exp[A]): Exp[A] = s
   
-  def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter): Unit = {
+  def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter): Unit = {
     throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
 
-  def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit
+  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit
   
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
       
-  def quote(x: Exp[_]) : String = x match {
+  def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s+"\""
     case Const(null) => "null" // why is null getting lifted now? something to do with Equal
     case Const(f: Float) => f.toString + "f"
@@ -59,8 +59,8 @@ trait GenericCodegen extends Scheduling {
     case _ => throw new RuntimeException("could not quote " + x)
   }
 
-  def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
-  def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = syms(rhs) //{ throw new Exception("Method getFreeVarNode should be overriden.") }
+  def getFreeVarBlock(start: Exp[Any], local: List[Sym[Any]]): List[Sym[Any]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
+  def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = syms(rhs) //{ throw new Exception("Method getFreeVarNode should be overriden.") }
 
   def hasMetaData: Boolean = false
   def getMetaData: String = null
@@ -76,16 +76,16 @@ trait GenericNestedCodegen extends GenericCodegen {
 
   var shallow = false
 
-//  var outerScope: List[TP[_]] = Nil
-//  var levelScope: List[TP[_]] = Nil
-  var innerScope: List[TP[_]] = null  // no, it's not a typo
+//  var outerScope: List[TP[Any]] = Nil
+//  var levelScope: List[TP[Any]] = Nil
+  var innerScope: List[TP[Any]] = null  // no, it's not a typo
 
   def initialDefs = super.availableDefs
 
   override def availableDefs = if (innerScope ne null) innerScope else initialDefs
 
 
-  def focusBlock[A](result: Exp[_])(body: => A): A = {
+  def focusBlock[A](result: Exp[Any])(body: => A): A = {
 //    val saveOuter = outerScope
 //    val saveLevel = levelScope
     val saveInner = innerScope
@@ -104,7 +104,7 @@ trait GenericNestedCodegen extends GenericCodegen {
   }
 
 
-  def focusExactScope[A](result: Exp[_])(body: List[TP[_]] => A): A = {
+  def focusExactScope[A](result: Exp[Any])(body: List[TP[Any]] => A): A = {
     
     val saveInner = innerScope
     
@@ -139,13 +139,13 @@ trait GenericNestedCodegen extends GenericCodegen {
   }
 
 
-  override def emitBlock(result: Exp[_])(implicit stream: PrintWriter): Unit = {
+  override def emitBlock(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
     focusBlock(result) {
       emitBlockFocused(result)
     }
   }
   
-  def emitBlockFocused(result: Exp[_])(implicit stream: PrintWriter): Unit = {
+  def emitBlockFocused(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
     focusExactScope(result) { levelScope =>
       for (TP(sym, rhs) <- levelScope)
         emitNode(sym, rhs)
@@ -166,7 +166,7 @@ trait GenericNestedCodegen extends GenericCodegen {
     case _ => Nil
   }
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Read(s) =>
       emitValDef(sym, quote(s))
     case Reflect(s, effects) =>
@@ -178,38 +178,38 @@ trait GenericNestedCodegen extends GenericCodegen {
 
 
   // bound/used/free variables in current scope, with input vars x (bound!) and result y (used!)
-  def boundAndUsedInScope(x: List[Exp[_]], y: Exp[_]): (List[Sym[_]], List[Sym[_]]) = {
+  def boundAndUsedInScope(x: List[Exp[Any]], y: Exp[Any]): (List[Sym[Any]], List[Sym[Any]]) = {
     val used = (syms(y):::innerScope.flatMap(t => syms(t.rhs))).distinct
     val bound = (x.flatMap(syms):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
     (bound, used)
   }
-  def freeInScope(x: List[Exp[_]], y: Exp[_]): List[Sym[_]] = {
+  def freeInScope(x: List[Exp[Any]], y: Exp[Any]): List[Sym[Any]] = {
     val (bound, used) = boundAndUsedInScope(x,y)
     used diff bound
   }
 
   // TODO: remove
-  override def getFreeVarBlock(start: Exp[_], local: List[Sym[_]]): List[Sym[_]] = {
+  override def getFreeVarBlock(start: Exp[Any], local: List[Sym[Any]]): List[Sym[Any]] = {
     focusBlock(start) {
       freeInScope(local, start)
     }
   }
 
   // TODO: remove
-  //override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = { Nil }
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match { // getFreeVarBlock(syms(rhs), boundSyms(rhs))
+  //override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = { Nil }
+  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match { // getFreeVarBlock(syms(rhs), boundSyms(rhs))
     case Reflect(s, effects) => getFreeVarNode(s)
     case _ => super.getFreeVarNode(rhs)
   }
 
   // TODO: necessary? does it actually do the right thing? <-- boundSyms?
-  def getEffectsBlock(start: Exp[_]): List[Sym[_]] = {
+  def getEffectsBlock(start: Exp[Any]): List[Sym[Any]] = {
     val save = shallow
     shallow = false
     val stDeep = dep(start)
 
     // deep list of deps
-    val e1 = GraphUtil.stronglyConnectedComponents[TP[_]](stDeep.flatMap(e => findDefinition(e).toList), { d =>
+    val e1 = GraphUtil.stronglyConnectedComponents[TP[Any]](stDeep.flatMap(e => findDefinition(e).toList), { d =>
       dep(d.rhs).flatMap { e =>
         findDefinition(e).toList
       }
@@ -220,7 +220,7 @@ trait GenericNestedCodegen extends GenericCodegen {
     val stShallow = dep(start)
     shallow = false
 
-    val e2 = GraphUtil.stronglyConnectedComponents[TP[_]](stShallow.flatMap(e => findDefinition(e).toList), { d =>
+    val e2 = GraphUtil.stronglyConnectedComponents[TP[Any]](stShallow.flatMap(e => findDefinition(e).toList), { d =>
       dep(d.rhs).flatMap { e =>
         findDefinition(e).toList
       }
@@ -231,7 +231,7 @@ trait GenericNestedCodegen extends GenericCodegen {
 
     val e4 = e3 flatMap { e =>
       e.sym match {
-        case Def(Reflect(x, effects)) => List(e.sym): List[Sym[_]]
+        case Def(Reflect(x, effects)) => List(e.sym): List[Sym[Any]]
         case _ => Nil
       }
     }

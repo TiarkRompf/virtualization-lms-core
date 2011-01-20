@@ -39,7 +39,7 @@ trait ScalaGenStringOps extends ScalaGenBase {
   val IR: StringOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case StringPlus(s1,s2) => emitValDef(sym, "%s+%s".format(quote(s1), quote(s2)))
     case StringTrim(s) => emitValDef(sym, "%s.trim()".format(quote(s)))
     case StringSplit(s, sep) => emitValDef(sym, "%s.split(%s)".format(quote(s), quote(sep)))
@@ -52,7 +52,7 @@ trait CudaGenStringOps extends CudaGenBase {
   val IR: StringOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case StringPlus(s1,s2) => throw new GenerationFailedException("CudaGen: Not GPUable")
     case StringTrim(s) => throw new GenerationFailedException("CudaGen: Not GPUable")
     case StringSplit(s, sep) => throw new GenerationFailedException("CudaGen: Not GPUable")
@@ -64,7 +64,7 @@ trait CGenStringOps extends CGenBase {
   val IR: StringOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case StringPlus(s1,s2) => emitValDef(sym,"strcat(%s,%s);".format(quote(s1),quote(s2)))
     case StringTrim(s) => throw new GenerationFailedException("CGenStringOps: StringTrim not implemented yet")
     case StringSplit(s, sep) => throw new GenerationFailedException("CGenStringOps: StringSplit not implemented yet")

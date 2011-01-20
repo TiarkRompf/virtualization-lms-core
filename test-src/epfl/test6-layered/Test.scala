@@ -46,7 +46,7 @@ trait ScalaGenUtil extends ScalaGenBase {
   val IR: UtilExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case StrCat(a,b) =>
       emitValDef(sym, quote(a) + ".toString + " + quote(b) + ".toString")
     case Tup(a,b) =>
@@ -54,7 +54,7 @@ trait ScalaGenUtil extends ScalaGenBase {
     case _ => super.emitNode(sym, rhs)
   }
 
-  override def quote(x: Exp[_]) = x match {
+  override def quote(x: Exp[Any]) = x match {
     case External(s,args) => s
     case _ => super.quote(x)
   }

@@ -16,8 +16,8 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     val y = try { mirror(x, t) } catch { case e => println(e); s }
     if (y != s) {
 /*
-      if (y.isInstanceOf[Sym[_]] && findDefinition(y.asInstanceOf[Sym[_]]).nonEmpty)
-        println("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[_]]).get.rhs)
+      if (y.isInstanceOf[Sym[Any]] && findDefinition(y.asInstanceOf[Sym[Any]]).nonEmpty)
+        println("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[Any]]).get.rhs)
       else
         println("--> replace " + s+"="+x + " by " + y)
 */
@@ -29,17 +29,17 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
   def transformAll(scope: List[TTP], t: SubstTransformer): List[TTP] = scope flatMap {
     case TTP(List(sym), ThinDef(rhs)) =>
       transformOne(sym, rhs, t) match {
-        case s @ Def(r) => List(TTP(List(s.asInstanceOf[Sym[_]]), ThinDef(r)))
+        case s @ Def(r) => List(TTP(List(s.asInstanceOf[Sym[Any]]), ThinDef(r)))
         case _ => Nil
       }
     case TTP(lhs, SimpleFatLoop(s,x,rhs)) =>
       // potential problem: calling toAtom on a SimpleCollect (which does not have any symbol so far!)
-      val lhs2 = (lhs zip rhs).map(p=>transformOne(p._1,p._2,t)).map { case s: Sym[_] => s }.distinct.asInstanceOf[List[Sym[_]]]
+      val lhs2 = (lhs zip rhs).map(p=>transformOne(p._1,p._2,t)).map { case s: Sym[Any] => s }.distinct.asInstanceOf[List[Sym[Any]]]
       val rhs2 = lhs2 map (findDefinition(_).get.rhs)
       List(TTP(lhs2, SimpleFatLoop(t(s),t(x).asInstanceOf[Sym[Int]],rhs2)))
   }
 
-  def simplify(scope: List[TTP])(results: List[Exp[_]]): (List[TTP], List[Exp[_]]) = {
+  def simplify(scope: List[TTP])(results: List[Exp[Any]]): (List[TTP], List[Exp[Any]]) = {
     val t = new SubstTransformer    
     val scope2 = transformAll(scope, t)
     val results2 = results map (t apply _)
@@ -67,8 +67,8 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
     def unapply(a: Def[Any]): Option[Exp[Any]] = unapplySimpleCollect(a)
   }
 
-  override def focusExactScopeFat[A](currentScope0: List[TTP])(result0: Exp[_])(body: List[TTP] => A): A = {
-    var result: Exp[_] = result0
+  override def focusExactScopeFat[A](currentScope0: List[TTP])(result0: Exp[Any])(body: List[TTP] => A): A = {
+    var result: Exp[Any] = result0
     var currentScope = currentScope0
 
     if (!shouldApplyFusion(currentScope)(result))
@@ -125,7 +125,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
 */
         // utils
         def WgetLoopVar(e: TTP): List[Sym[Int]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => List(x) }
-        def WgetLoopRes(e: TTP): List[Def[_]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => rhs }
+        def WgetLoopRes(e: TTP): List[Def[Any]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => rhs }
 
         val loopSyms = Wloops flatMap (_.lhs)
         val loopVars = Wloops flatMap WgetLoopVar

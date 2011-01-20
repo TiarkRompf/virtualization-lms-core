@@ -58,7 +58,7 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
     case _ => super.boundSyms(e)
   }
   
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
     case IfThenElse(c, t, e) => getFreeVarBlock(c,Nil) ::: getFreeVarBlock(t,Nil) ::: getFreeVarBlock(e,Nil)
     case _ => super.getFreeVarNode(rhs)
   }
@@ -67,7 +67,7 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
 trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
   import IR._
  
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case IfThenElse(c,a,b) =>
       stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
       emitBlock(a)
@@ -82,7 +82,7 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
 
 /* TR: I think this should belong into delite
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     /**
      * IfThenElse generates methods for each branch due to empirically discovered performance issues in the JVM
      * when generating long blocks of straight-line code in each branch.
@@ -114,7 +114,7 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
 trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case IfThenElse(c,a,b) =>
           // TODO: Not GPUable if the result is not primitive types.
@@ -154,7 +154,7 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
               tabWidth -= 1
               stream.println(addTab()+"}")
               isObjectType(sym.Type) match {
-                case true => allocReference(sym,getBlockResult(a).asInstanceOf[Sym[_]])
+                case true => allocReference(sym,getBlockResult(a).asInstanceOf[Sym[Any]])
                 case _ =>
               }
           }
@@ -167,7 +167,7 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
 trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     rhs match {
       case IfThenElse(c,a,b) =>
         //TODO: using if-else does not work 

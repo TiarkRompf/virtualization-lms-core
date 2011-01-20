@@ -13,7 +13,7 @@ trait ExtractorsGraphViz extends GraphVizExport {
   val IR: MatchingExtractorsExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: java.io.PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
 /*
     case Result(x) =>
       super.emitNode(sym, rhs)
@@ -32,7 +32,7 @@ trait ExtractorsGraphViz extends GraphVizExport {
       super.emitNode(sym, rhs)
   }
   
-  override def emitDeps(sym: Sym[_], rhs: Def[_], deps: List[Sym[Any]])(implicit stream: java.io.PrintWriter) = rhs match {
+  override def emitDeps(sym: Sym[Any], rhs: Def[Any], deps: List[Sym[Any]])(implicit stream: java.io.PrintWriter) = rhs match {
 
     case Reify(x, effects) =>
       super.emitDeps(sym, rhs, deps filterNot (effects.contains(_))) // TODO: use diff, but might have duplicates

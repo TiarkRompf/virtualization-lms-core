@@ -49,7 +49,7 @@ trait ScalaGenSeqOps extends BaseGenSeqOps with ScalaGenEffect {
   val IR: SeqOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case SeqNew(xs) => emitValDef(sym, "Seq(" + (xs map {quote}).mkString(",") + ")")
     case SeqLength(x) => emitValDef(sym, "" + quote(x) + ".length")
     case SeqApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
@@ -61,7 +61,7 @@ trait CLikeGenSeqOps extends BaseGenSeqOps with CLikeGenBase  {
   val IR: SeqOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     rhs match {
       case _ => super.emitNode(sym, rhs)
     }

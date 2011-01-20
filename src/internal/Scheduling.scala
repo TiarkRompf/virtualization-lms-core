@@ -9,7 +9,7 @@ trait Scheduling {
   
   // these were previously in Expressions
   def syms(e: Any): List[Sym[Any]] = e match {
-    case s: Sym[_] => List(s)
+    case s: Sym[Any] => List(s)
     case p: Product => p.productIterator.toList.flatMap(syms(_))
     case _ => Nil
   }
@@ -26,30 +26,30 @@ trait Scheduling {
   }
 
 
-  def availableDefs: List[TP[_]] = globalDefs
+  def availableDefs: List[TP[Any]] = globalDefs
   
 
 
-  def buildScheduleForResult(start: Exp[_]): List[TP[_]] = {
-    def deps(st: List[Sym[_]]): List[TP[_]] =
+  def buildScheduleForResult(start: Exp[Any]): List[TP[Any]] = {
+    def deps(st: List[Sym[Any]]): List[TP[Any]] =
       availableDefs.filter(st contains _.sym)
       //syms(e).flatMap(d => findDefinition(d).toList)
 
-    GraphUtil.stronglyConnectedComponents[TP[_]](deps(syms(start)), t => deps(syms(t.rhs))).flatten.reverse
+    GraphUtil.stronglyConnectedComponents[TP[Any]](deps(syms(start)), t => deps(syms(t.rhs))).flatten.reverse
   }  
 
-  def getDependentStuff(st: List[Sym[_]]): List[TP[_]] = {
+  def getDependentStuff(st: List[Sym[Any]]): List[TP[Any]] = {
     st.flatMap(getDependentStuff).distinct
   }
     
-  def getDependentStuff(st: Sym[_]): List[TP[_]] = {
-    def uses(s: Sym[_]): List[TP[_]] = {
+  def getDependentStuff(st: Sym[Any]): List[TP[Any]] = {
+    def uses(s: Sym[Any]): List[TP[Any]] = {
       availableDefs.filter { d =>
         d.sym == s || // include the definition itself
         syms(d.rhs).contains(s) && !boundSyms(d.rhs).contains(st) // don't extrapolate outside the scope
       }
     }
-    GraphUtil.stronglyConnectedComponents[TP[_]](uses(st), t => uses(t.sym)).flatten
+    GraphUtil.stronglyConnectedComponents[TP[Any]](uses(st), t => uses(t.sym)).flatten
   }
 
 }

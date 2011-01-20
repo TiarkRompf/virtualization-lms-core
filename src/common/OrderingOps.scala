@@ -63,7 +63,7 @@ trait ScalaGenOrderingOps extends ScalaGenBase {
   val IR: OrderingOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case OrderingLT(a,b) => emitValDef(sym, quote(a) + " < " + quote(b))
     case OrderingLTEQ(a,b) => emitValDef(sym, quote(a) + " <= " + quote(b))
     case OrderingGT(a,b) => emitValDef(sym, quote(a) + " > " + quote(b))
@@ -80,7 +80,7 @@ trait CLikeGenOrderingOps extends CLikeGenBase {
   import IR._
   
   // TODO: Add MIN/MAX macro needs to C-like header file
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case OrderingLT(a,b) =>
           emitValDef(sym, quote(a) + " < " + quote(b))
