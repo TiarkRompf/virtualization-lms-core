@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package internal
 
 import util.GraphUtil
-
+import scala.collection.mutable.HashMap
 
 trait FatScheduling extends Scheduling {
   val IR: FatExpressions
@@ -26,8 +26,39 @@ trait FatScheduling extends Scheduling {
     GraphUtil.stronglyConnectedComponents[TTP](deps(syms(result)), t => deps(syms(t.rhs))).flatten.reverse
   }
 
-  def getFatDependentStuff(scope: List[TTP])(st: List[Sym[Any]]): List[TTP] = {
-    st.flatMap(getFatDependentStuff0(scope)(_)).distinct
+  def getFatDependentStuff(scope: List[TTP])(sts: List[Sym[Any]]): List[TTP] = {
+    /*
+     precompute:
+     s => all d in scope such that: d.lhs contains s || syms(d.rhs).contains(s)
+     st => all d in scope such that: boundSyms(d.rhs) contains st
+    */
+    
+    val lhsCache = new HashMap[Sym[Any], List[TTP]]
+    val symsCache = new HashMap[Sym[Any], List[TTP]]
+    val boundSymsCache = new HashMap[Sym[Any], List[TTP]]
+    
+    def putDef(map: HashMap[Sym[Any], List[TTP]], s: Sym[Any], d: TTP): Unit = {
+      map.getOrElse(s, Nil) match {
+        case `d`::ds =>
+        case ds => map(s) = d::ds
+      }
+    }
+    
+    for (d <- scope) {
+      d.lhs.foreach(s => putDef(lhsCache, s, d))
+      syms(d.rhs).foreach(s => putDef(symsCache, s, d))
+      boundSyms(d.rhs).foreach(st => putDef(boundSymsCache, st, d))
+    }
+    
+    sts.distinct.flatMap { st =>
+      // could precompute uses as well...
+      def uses(s: Sym[Any]): List[TTP] = {
+        lhsCache.getOrElse(s, Nil) ++ (symsCache.getOrElse(s, Nil) filterNot (boundSymsCache.getOrElse(st, Nil) contains _))
+      }
+      GraphUtil.stronglyConnectedComponents[TTP](uses(st), t => t.lhs flatMap uses).flatten
+    }.distinct
+
+//    st.distinct.flatMap(getFatDependentStuff0(scope)(_)).distinct // this is expensive!!
   }
     
   def getFatDependentStuff0(scope: List[TTP])(st: Sym[Any]): List[TTP] = {

@@ -201,7 +201,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   }
 
   // Map scala primitive type to JNI type descriptor
-  def JNITypeDescriptor(m: Manifest[_]) : String = m.toString match {
+  def JNITypeDescriptor[A](m: Manifest[A]) : String = m.toString match {
     case "Int" => "I"
     case "Long" => "J"
     case "Float" => "F"
@@ -210,7 +210,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     case _ => throw new GenerationFailedException("Undefined CUDA type")
   }
 
-  def isObjectType(m: Manifest[_]) : Boolean = remap(m) match {
+  def isObjectType[A](m: Manifest[A]) : Boolean = remap(m) match {
     case "int" => false
     case "long" => false
     case "float" => false

@@ -39,7 +39,8 @@ trait Scheduling {
   }  
 
   def getDependentStuff(st: List[Sym[Any]]): List[TP[Any]] = {
-    st.flatMap(getDependentStuff).distinct
+    // TODO: expensive! should do scc calculation only once
+    st.distinct.flatMap(getDependentStuff).distinct
   }
     
   def getDependentStuff(st: Sym[Any]): List[TP[Any]] = {
