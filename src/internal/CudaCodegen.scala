@@ -343,7 +343,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   def emitCopyHtoD(sym: Sym[_], ksym: Sym[_]) : String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
-      out.append("%s gpuMemAllocAndCopy_%s_%s(%s) {\n".format(remap(sym.Type), quote(ksym), quote(sym),"JNIEnv *env , jobject obj"))
+      out.append("%s *gpuMemAllocAndCopy_%s_%s(%s) {\n".format(remap(sym.Type), quote(ksym), quote(sym),"JNIEnv *env , jobject obj"))
       // Create C data structure and Copy from Scala to C
       out.append(copyDataStructureHtoD(sym))
       out.append("}\n")
@@ -359,7 +359,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   // Generate copy functions for the DSL Type outputs (Device -> Host)
   def emitCopyDtoH(sym: Sym[_]): String = {
     val out = new StringBuilder
-    out.append("jobject gpuMemCopy_%s_%s(%s,%s) {\n".format(quote(kernelSymbol), quote(sym),"JNIEnv *env", remap(sym.Type)+" "+quote(sym)))
+    out.append("jobject gpuMemCopy_%s_%s(%s,%s) {\n".format(quote(kernelSymbol), quote(sym),"JNIEnv *env", remap(sym.Type)+" *"+quote(sym)))
     out.append(copyDataStructureDtoH(sym))
     out.append("}\n")
     out.toString
@@ -368,7 +368,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   def emitCopyDtoHBack(sym: Sym[_], ksym: Sym[_]): String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
-      out.append("void gpuMemCopyBack_%s_%s(%s) {\n".format(quote(ksym), quote(sym),"JNIEnv *env , jobject obj, "+remap(sym.Type)+" "+quote(sym)))
+      out.append("void gpuMemCopyBack_%s_%s(%s) {\n".format(quote(ksym), quote(sym),"JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)))
       out.append(copyDataStructureDtoHBack(sym))
       out.append("}\n")
 
@@ -394,7 +394,10 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     if (gpuBlockSizeZ == null) gpuBlockSizeZ = "1"
 
     val inputs = (gpuOutputs ::: gpuInputs ::: gpuTemps)
-    val paramStr = inputs.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
+    val paramStr = inputs.map(ele=>
+			if(isObjectType(ele.Type)) remap(ele.Type) + " *" + quote(ele)
+			else remap(ele.Type) + " " + quote(ele)
+	).mkString(",")
     val argStr = inputs.map("\""+quote(_)+"\"").mkString(",")
     
     out.append("int gpuBlockSizeX_%s(%s) {\n".format(quote(sym),paramStr))
