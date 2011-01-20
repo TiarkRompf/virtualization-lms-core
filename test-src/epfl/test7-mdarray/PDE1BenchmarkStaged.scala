@@ -7,7 +7,7 @@ import original.MDArray
 import common._
 import test1.Arith
 
-trait PDE1Benchmark { this: MDArrayBase with IfThenElse =>
+trait PDE1BenchmarkStaged { this: MDArrayBase with IfThenElse =>
   type MDArrayBool = Rep[MDArray[Boolean]]
   type MDArrayDbl  = Rep[MDArray[Double]]
   type MDArrayInt  = Rep[MDArray[Int]]
@@ -27,7 +27,7 @@ trait PDE1Benchmark { this: MDArrayBase with IfThenElse =>
     reshape(1::1::3::Nil, v1 + v2 + v3)
   }
 
-  // The PDE1Benchmark implementation
+  // The PDE1BenchmarkStaged implementation
   def PDE1impl(matrix: MDArrayDbl,
                Relax: (MDArrayDbl, MDArrayDbl, Dbl) => MDArrayDbl,
                iterations: Int): MDArrayDbl = {

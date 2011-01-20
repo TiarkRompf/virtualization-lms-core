@@ -1,0 +1,67 @@
+use StdIO: all;
+use Array: all;
+use Math : all;
+
+int main()
+{
+  size = 10;
+  x = [1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0];
+  
+  result=reshape([size, size], x);
+
+  for (i=1; i<1000; i++)
+    result = gameOfLife(result);
+  
+  print(result);
+  return(0);
+}
+
+int computeIfDead(int neigh, int alive) {
+  result = 0;
+
+  if (alive == 1) {
+    if (neigh - alive < 2)
+      result = 1; /* Rule1: Any live cell with fewer than two live neighbours dies, as if caused by under-population. */
+    else if (neigh - alive < 4)
+      result = 0; /* Rule2: Any live cell with two or three live neighbours lives on to the next generation. */
+    else
+      result = 1; /* Rule3: Any live cell with more than three live neighbours dies, as if by overcrowding. */
+  }
+  else
+    result = 0;
+
+  return(result);
+}
+
+int computeIfReborn(int neigh, int dead) {
+  result = 0;
+
+  if (dead == 1) {
+    if (neigh == 3)
+      result = 1;
+    else
+      result = 0;
+  } else
+    result = 0;
+
+  return(result);
+}
+
+int[*] value(int dim, int val) {
+  result = with { ( [0] <= iv < [dim] ) : val; } : genarray([dim]);
+  return(result);
+}
+
+int[*] gameOfLife(int[*] alive) {
+
+  dead = with { (. < iv < .) { 
+         temp = computeIfDead(sum(tile(value(dim(alive), 3), iv-1, alive)), sel(iv, alive));}: temp;}: genarray(shape(alive));
+  reborn = with { (. < iv < .) { 
+         temp = computeIfReborn(sum(tile(value(dim(alive), 3), iv-1, alive)) - 
+                                sum(tile(value(dim(alive), 3), iv-1, dead)), sel(iv, dead));}: temp;}: genarray(shape(alive));
+
+  result = alive - dead + reborn;
+  return(result);
+}
+
+

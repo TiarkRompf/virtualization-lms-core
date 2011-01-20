@@ -46,7 +46,7 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   case class InfixOpAE[A: ClassManifest, B: ClassManifest](array: Exp[MDArray[A]], element: Exp[A], op: (A, A) => B, opName: String) extends Def[MDArray[B]] { override def toString() = "InfixOpAE(" + opName + ": " + array + " and " + element + ")" }
   case class UnaryOp[A: ClassManifest, B: ClassManifest](array: Exp[MDArray[A]], op: A => B, opName: String) extends Def[MDArray[B]] { override def toString() = "UnaryOp(" + opName + ": " + array + ")" }
   case class Where[A: ClassManifest](cond: Exp[MDArray[Boolean]], array1: Exp[MDArray[A]], array2: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "Where(" + cond + ", " + array1 + ", " + array2 + ")" }
-  case class Values[A: ClassManifest](dim: Exp[Int], value: Exp[A]) extends Def[MDArray[A]] { override def toString() = "Values(" + value + ", " + dim + ")"}
+  case class Values[A: ClassManifest](dim: Exp[Int], value: Exp[A]) extends Def[MDArray[A]] { override def toString() = "Values(" + value + ", " + dim + ")" }
 
   // Nothing (a replacement for the null)
   case object Nothing extends Def[MDArray[Int]] { override def toString() = "<nothing>" }
@@ -146,4 +146,14 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   def doToString[A](a: Exp[MDArray[A]]) = a.toString()
 
   protected val nothing: Exp[MDArray[Int]] = Nothing
+
+  // Integer operations for Game of Life, NumericOps is too much
+  case class IntPlus(a: Exp[Int], b: Exp[Int]) extends Def[Int] { override def toString() = a.toString + ":Int + " + b.toString + ":Int" }
+  case class IntMinus(a: Exp[Int], b: Exp[Int]) extends Def[Int] { override def toString() = a.toString + ":Int - " + b.toString + ":Int" }
+  case class IntEqual(a: Exp[Int], b: Exp[Int]) extends Def[Boolean] { override def toString() = a.toString + ":Int == " + b.toString + ":Int" }
+  case class IntLess(a: Exp[Int], b: Exp[Int]) extends Def[Boolean] { override def toString() = a.toString + ":Int < " + b.toString + ":Int" }
+  def infix_+(a: Exp[Int], b: Exp[Int]): Exp[Int] = IntPlus(a, b)
+  def infix_-(a: Exp[Int], b: Exp[Int]): Exp[Int] = IntMinus(a, b)
+  def infix_===(a: Exp[Int], b: Exp[Int]): Exp[Boolean] = IntEqual(a, b)
+  def infix_<<(a: Exp[Int], b: Exp[Int]): Exp[Boolean] = IntLess(a, b)
 }

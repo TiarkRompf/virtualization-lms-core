@@ -10,7 +10,7 @@ import original.With
 import common._
 import test1.Arith
 
-class OriginalPDE1Benchmark {
+class PDE1BenchmarkOriginal {
   type MDArrayBool = MDArray[Boolean]
   type MDArrayDbl = MDArray[Double]
   type MDArrayInt = MDArray[Int]
@@ -57,10 +57,13 @@ class OriginalPDE1Benchmark {
     }
   }
 
-  // The PDE1Benchmark implementation
+  // The PDE1BenchmarkStaged implementation
   def PDE1impl(matrix: MDArrayDbl,
                Relax: (MDArrayDbl, MDArrayDbl, Dbl) => MDArrayDbl,
                iterations: Int): MDArrayDbl = {
+
+    val startTime: Long = System.currentTimeMillis
+
     val red: MDArrayBool = With(_lb = List(1, 0, 0), _step = List(2,1,1)).
       GenArray(shape(matrix), iv => true)
 
@@ -71,6 +74,9 @@ class OriginalPDE1Benchmark {
       u = where(red, Relax(u, f, 1d/10d), u)
       u = where(!red, Relax(u, f, 1d/10d), u)
     }
+    val finishTime: Long = System.currentTimeMillis
+    println("Time: " + (finishTime-startTime).toString + "ms")
+
     u
   }
 

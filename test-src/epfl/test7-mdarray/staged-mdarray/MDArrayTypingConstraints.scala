@@ -86,6 +86,10 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
       case ma: ModArrayWith[_] => modArrayConstraints(ma)
       case fa: FoldArrayWith[_] => foldArrayConstraints(fa)
       case ite: IfThenElse[_] => ifThenElseConstraint(ite)
+      case ip: IntPlus => intPlusConstraints(ip)
+      case im: IntMinus => intMinusConstraints(im)
+      case ie: IntEqual => intEqualConstraints(ie)
+      case il: IntLess => intLessConstraints(il)
       case _ => throw new RuntimeException("Unknown node: " + node.toString)
     }
     // Adding the default operation of reconstructing the value from shape: if the value
@@ -110,13 +114,13 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
     (Nil, Nil) // Unfortunately we know nothing about it...
 
   def fromListConstraints(fl: FromList[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(fl)), Lst(getNewUnknown::Nil), postReq, fl)::Nil, Nil)
+    (Equality(ShapeVar(getSymNumber(fl)), Lst(getNewUnknown::Nil), postReq, fl)::Nil, fl.value::Nil)
 
   def fromArrayConstraints(fa: FromArray[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(fa)), Lst(getNewUnknown::Nil), postReq, fa)::Nil, Nil)
+    (Equality(ShapeVar(getSymNumber(fa)), Lst(getNewUnknown::Nil), postReq, fa)::Nil, fa.value::Nil)
 
   def fromValueConstraints(fv: FromValue[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(fv)), Lst(Nil), postReq, fv)::Nil, Nil)
+    (Equality(ShapeVar(getSymNumber(fv)), Lst(Nil), postReq, fv)::Nil, fv.value::Nil)
 
   def toListConstraints(tl: ToList[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (Equality(ShapeVar(getSymNumber(tl)), Lst(getNewUnknown::Nil), preReq, tl)::Nil, tl.value::Nil)
@@ -172,7 +176,8 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
      in.array1::in.array2::Nil)
 
   def infixOpAEConstraints(in: InfixOpAE[_, _]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(in), ShapeVar(in.array), postReq, in)::Nil,
+    (Equality(ShapeVar(in.element), Lst(Nil), preReq, in)::
+     Equality(ShapeVar(in), ShapeVar(in.array), postReq, in)::Nil,
      in.array::in.element::Nil)
 
   def unaryOpConstraints(un: UnaryOp[_, _]): Pair[List[TypingConstraint], List[Exp[_]]] =
@@ -234,4 +239,17 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
     (Equality(ShapeVar(ite.cond), Lst(Nil), preReq, ite)::
      CommonDenominator(ShapeVar(ite), ShapeVar(ite.thenp), ShapeVar(ite.elsep), postReq, ite)::Nil,
      ite.thenp::ite.elsep::ite.cond::Nil)
+
+
+  // Integer operations for Game of Life, NumericOps is too much
+  def intPlusConstraints(ip: IntPlus): Pair[List[TypingConstraint], List[Exp[_]]] = intConstraints(ip, ip.a, ip.b)
+  def intMinusConstraints(ip: IntMinus): Pair[List[TypingConstraint], List[Exp[_]]] = intConstraints(ip, ip.a, ip.b)
+  def intLessConstraints(ip: IntLess): Pair[List[TypingConstraint], List[Exp[_]]] = intConstraints(ip, ip.a, ip.b)
+  def intEqualConstraints(ip: IntEqual): Pair[List[TypingConstraint], List[Exp[_]]] = intConstraints(ip, ip.a, ip.b)
+
+  def intConstraints(op: Def[_], a: Exp[Int], b: Exp[Int]): Pair[List[TypingConstraint], List[Exp[_]]] =
+    (Equality(ShapeVar(a), Lst(Nil), preReq, op) ::
+     Equality(ShapeVar(b), Lst(Nil), preReq, op) ::
+     Equality(ShapeVar(op), Lst(Nil), postReq, op) :: Nil, a :: b :: Nil)
+
 }

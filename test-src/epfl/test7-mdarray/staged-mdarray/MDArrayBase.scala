@@ -78,7 +78,7 @@ trait MDArrayBase extends Base with util.OverloadHack {
 
     Initial assumption: We don't want the user to call the MDArray constructor directly, we only want to let him use
     lists and arrays that automatically get transformed to MDArrays
-    TODO: Check if this is a sane assumption. It worked for the PDE1Benchmark, does it always work?
+    TODO: Check if this is a sane assumption. It worked for the PDE1BenchmarkStaged, does it always work?
     TODO: If the assumption is sane, enforce it by making MDArray private, so the constructor cannot be called
 
     In the context of the no-constructor assumption, we will consider all MDArray as Rep[MDArray]s. There are two
@@ -207,4 +207,10 @@ trait MDArrayBase extends Base with util.OverloadHack {
   def genArrayWith[A: ClassManifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], shp: Rep[MDArray[Int]]): Rep[MDArray[A]]
   def modArrayWith[A: ClassManifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], a: Rep[MDArray[A]]): Rep[MDArray[A]]
   def foldArrayWith[A: ClassManifest](w: With, foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]]
+
+  // Integer operations for Game of Life, NumericOps is too much
+  def infix_+(a: Rep[Int], b: Rep[Int]): Rep[Int]
+  def infix_-(a: Rep[Int], b: Rep[Int]): Rep[Int]
+  def infix_===(a: Rep[Int], b: Rep[Int]): Rep[Boolean]
+  def infix_<<(a: Rep[Int], b: Rep[Int]): Rep[Boolean]
 }

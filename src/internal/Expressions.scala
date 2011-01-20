@@ -16,6 +16,8 @@ trait Expressions {
     def Type : Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
   }
 
+  // TODO: The fact that we label Consts crashes all the dot tests in the testsuite. In case you need those tests and
+  // don't care about typing MDArrays, simply revert this Const labeling :)
   case class Const[+T:Manifest](x: T) extends Exp[T] {var id: Int = 0; override def toString = "Const(" + id + ": " + x.toString+ ")"}
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
