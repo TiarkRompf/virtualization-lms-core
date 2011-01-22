@@ -44,8 +44,11 @@ trait Effects extends Expressions {
 
   // TODO: think about creating a Write node, so that we could remove reflectMutation. We would then
   // infer a mutation from a reflectEffect containing Writes.
+  // Question: what about Reflect(IfThenElse(...))? how to track writes there?
+  // Alternative: add a field to Reflect that describes what it modifies
   def reflectMutation[A:Manifest](x: Def[A]): Exp[A]  = {
-    val r: Exp[A] = createDefinition(fresh[A], Reflect/*Mutation*/(x, context)).sym
+//    val r: Exp[A] = createDefinition(fresh[A], Reflect/*Mutation*/(x, context)).sym
+    val r: Exp[A] = createDefinition(fresh[A], Mutation(x, context)).sym
     context :+= r
     r
   }
