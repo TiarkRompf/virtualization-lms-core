@@ -61,6 +61,13 @@ trait FatScheduling extends Scheduling {
 //    st.distinct.flatMap(getFatDependentStuff0(scope)(_)).distinct // this is expensive!!
   }
     
+  def getFatDependentStuff1(scope: List[TTP])(sts: List[Sym[Any]]): List[TTP] = {
+    sts.distinct.flatMap({ st => val res = getFatDependentStuff0(scope)(st) 
+      println("--- dep on " + st)
+      res.foreach(println)
+      res
+    }).distinct // this is expensive!!
+  }
   def getFatDependentStuff0(scope: List[TTP])(st: Sym[Any]): List[TTP] = {
     def uses(s: Sym[Any]): List[TTP] = {
       scope.filter { d =>

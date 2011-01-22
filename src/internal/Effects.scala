@@ -8,23 +8,25 @@ trait Effects extends Expressions {
   var context: State = _
 
   def reflectRead[A:Manifest](x: Exp[A]): Exp[A] = x match {
-    case y:Sym[A] =>
-      if (y.lastRead.id < y.version){
-        val s = reflectEffect(Read(x)).asInstanceOf[Sym[A]]
-        y.lastRead = findDefinition(s).get.sym.asInstanceOf[Sym[Any]]
-        s
-      }
-      else {
-        y.lastRead.asInstanceOf[Sym[A]]
-      }
+    case x: Sym[A] =>
+/*
+      TODO: 
+      look at context. 
+      if there is no access to sym create a read.
+      if the last access to sym is a read, return that.
+      if the last access to sym is a write a) return the rhs b) create a read
+*/
+      if (x.lastRead.id < x.version || !context.contains(x.lastRead))
+        x.lastRead = reflectEffect(Read(x)).asInstanceOf[Sym[A]]
+      x.lastRead
     case _ =>  x
   }
 
-  def reflectWrite[A:Manifest](x: Exp[A]): Exp[A] = {
-    x match {
-      case y:Sym[A] => y.version = nVars+1; y
-      case _ => x
-    }
+   //TODO: connect to mutation node? a write should depend on the last read of the sym
+  
+  def reflectWrite[A:Manifest](x: Exp[A]): Exp[A] = x match {
+    case x: Sym[A] => x.version = nVars+1; x
+    case _ => x
   }
 
   def reflectReadWrite[A:Manifest](x: Exp[A]): Exp[A] = {
@@ -40,10 +42,10 @@ trait Effects extends Expressions {
     r
   }
 
-  // TODO: think about creting a Write node, so that we could remove reflectMutation. We would then
+  // TODO: think about creating a Write node, so that we could remove reflectMutation. We would then
   // infer a mutation from a reflectEffect containing Writes.
   def reflectMutation[A:Manifest](x: Def[A]): Exp[A]  = {
-    val r: Exp[A] = createDefinition(fresh[A], Mutation(x, context)).sym
+    val r: Exp[A] = createDefinition(fresh[A], Reflect/*Mutation*/(x, context)).sym
     context :+= r
     r
   }
@@ -64,7 +66,8 @@ trait Effects extends Expressions {
   }
 
   case class Read[A](x: Exp[A]) extends Def[A]
-  case class Reflect[A](x:Def[A], effects: List[Exp[Any]]) extends Def[A]
   case class Mutation[A](override val x: Def[A], override val effects: List[Exp[Any]]) extends Reflect[A](x, effects) //FIXME: case class inheritance!
+
+  case class Reflect[A](x:Def[A], effects: List[Exp[Any]]) extends Def[A]
   case class Reify[A](x: Exp[A], effects: List[Exp[Any]]) extends Def[A]
 }

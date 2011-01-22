@@ -87,6 +87,9 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     emitBlock(Combine(rhs))
   }
 
-  //TODO: focusFatBlock
-  
+  def focusFatBlock[A](rhs: List[Exp[Any]])(body: => A): A = {
+    focusBlock(Combine(rhs))(body)
+  }
+
+
 }
