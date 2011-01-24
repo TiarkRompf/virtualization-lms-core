@@ -3,7 +3,7 @@ package internal
 
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
-import collection.mutable.{ArrayBuffer, LinkedList, HashMap}
+import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
 
 trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   val IR: Expressions
@@ -16,6 +16,9 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
    * This flag indicates whether current codegen is for parallel execution or not
    */
   var parallelCudagen = false
+
+  var helperFuncIdx = 0
+  var kernelsList = ListBuffer[Exp[_]]()
 
   var kernelSymbol:Sym[_] = null
   var parallelFor = false
@@ -113,6 +116,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   override def generatorInit(build_dir:String): Unit = {
     // FileWriter for helper functions(TODO: Change to get from Config)
     //val outDir = new File(buildPath); outDir.mkdirs()
+	helperFuncIdx = 0
     helperFuncString = new StringBuilder
     hstream = new PrintWriter(new FileWriter(build_dir + "helperFuncs.cu"))
     devStream = new PrintWriter(new FileWriter(build_dir+"devFuncs.cu"))
@@ -325,7 +329,10 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     hstream.flush
 
     // Print out dsl.h file
-    headerStream.println("#include \"%s.cu\"".format(quote(sym)))
+	if(!kernelsList.contains(sym)) {
+    	headerStream.println("#include \"%s.cu\"".format(quote(sym)))
+		kernelsList += sym
+	}
     headerStream.flush
 
     // Print out device function
@@ -343,14 +350,15 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   def emitCopyHtoD(sym: Sym[_], ksym: Sym[_]) : String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
-      out.append("%s *gpuMemAllocAndCopy_%s_%s(%s) {\n".format(remap(sym.Type), quote(ksym), quote(sym),"JNIEnv *env , jobject obj"))
+	  helperFuncIdx += 1
+      out.append("%s *gpuMemAllocAndCopy_%s_%s_%s(%s) {\n".format(remap(sym.Type), quote(ksym), quote(sym),helperFuncIdx, "JNIEnv *env , jobject obj"))
       // Create C data structure and Copy from Scala to C
       out.append(copyDataStructureHtoD(sym))
       out.append("}\n")
 
       // Register MetaData
       //MetaData.gpuInputs.add("{\"%s\":[\"%s\",\"gpuMemAllocAndCopy_%s_%s\",[%s]]}".format(quote(sym),remap(sym.Type),quote(ksym),quote(sym),"\"env\", \"obj\""))
-      MetaData.gpuInputs.add("{\"%s\":[\"%s\",\"gpuMemAllocAndCopy_%s_%s\"".format(quote(sym),remap(sym.Type),quote(ksym),quote(sym)))
+      MetaData.gpuInputs.add("{\"%s\":[\"%s\",\"gpuMemAllocAndCopy_%s_%s_%s\"".format(quote(sym),remap(sym.Type),quote(ksym),quote(sym),helperFuncIdx))
       out.toString
     }
     else ""
@@ -359,7 +367,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   // Generate copy functions for the DSL Type outputs (Device -> Host)
   def emitCopyDtoH(sym: Sym[_]): String = {
     val out = new StringBuilder
-    out.append("jobject gpuMemCopy_%s_%s(%s,%s) {\n".format(quote(kernelSymbol), quote(sym),"JNIEnv *env", remap(sym.Type)+" *"+quote(sym)))
+    out.append("jobject gpuMemCopy_%s_%s_%s(%s,%s) {\n".format(quote(kernelSymbol), quote(sym),helperFuncIdx,"JNIEnv *env", remap(sym.Type)+" *"+quote(sym)))
     out.append(copyDataStructureDtoH(sym))
     out.append("}\n")
     out.toString
@@ -368,12 +376,13 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   def emitCopyDtoHBack(sym: Sym[_], ksym: Sym[_]): String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
-      out.append("void gpuMemCopyBack_%s_%s(%s) {\n".format(quote(ksym), quote(sym),"JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)))
+	  helperFuncIdx += 1
+      out.append("void gpuMemCopyBack_%s_%s_%s(%s) {\n".format(quote(ksym), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)))
       out.append(copyDataStructureDtoHBack(sym))
       out.append("}\n")
 
       // Register MetaData
-      MetaData.gpuInputs.add("\"gpuMemCopyBack_%s_%s\"]}".format(quote(ksym),quote(sym)))
+      MetaData.gpuInputs.add("\"gpuMemCopyBack_%s_%s_%s\"]}".format(quote(ksym),quote(sym),helperFuncIdx))
       out.toString
     }
     else ""    
@@ -386,6 +395,8 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
 
   // Prints out the helper functions for getting the threadBlcok size and grid size
   def emitSizeFuncs(sym: Sym[_]): String = {
+	helperFuncIdx += 1
+
     val out = new StringBuilder
     //if (gpuBlockSizeX == null) gpuBlockSizeX = "1"
     if ((gpuBlockSizeX==null) && (MetaData.gpuLibCall=="")) throw new GenerationFailedException("GPU Codegen: gpuBlockSizeX is not set")
@@ -400,31 +411,31 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
 	).mkString(",")
     val argStr = inputs.map("\""+quote(_)+"\"").mkString(",")
     
-    out.append("int gpuBlockSizeX_%s(%s) {\n".format(quote(sym),paramStr))
+    out.append("int gpuBlockSizeX_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
     out.append("\tif(%s < 512) return %s;\n".format(gpuBlockSizeX, gpuBlockSizeX))
     out.append("\telse return 512;\n")
     out.append("}\n")
-    MetaData.gpuBlockSizeX = "[\"gpuBlockSizeX_%s\",[%s]]".format(quote(sym),argStr)
+    MetaData.gpuBlockSizeX = "[\"gpuBlockSizeX_%s_%s\",[%s]]".format(quote(sym),helperFuncIdx,argStr)
 
-    out.append("int gpuBlockSizeY_%s(%s) {\n".format(quote(sym),paramStr))
+    out.append("int gpuBlockSizeY_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
     out.append("\treturn 1;\n")
     out.append("}\n")
-    MetaData.gpuBlockSizeY = "[\"gpuBlockSizeY_%s\",[%s]]".format(quote(sym),argStr)
+    MetaData.gpuBlockSizeY = "[\"gpuBlockSizeY_%s_%s\",[%s]]".format(quote(sym),helperFuncIdx,argStr)
 
-    out.append("int gpuBlockSizeZ_%s(%s) {\n".format(quote(sym),paramStr))
+    out.append("int gpuBlockSizeZ_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
     out.append("\treturn 1;\n")
     out.append("}\n")
-    MetaData.gpuBlockSizeZ = "[\"gpuBlockSizeZ_%s\",[%s]]".format(quote(sym),argStr)
+    MetaData.gpuBlockSizeZ = "[\"gpuBlockSizeZ_%s_%s\",[%s]]".format(quote(sym),helperFuncIdx,argStr)
 
-    out.append("int gpuDimSizeX_%s(%s) {\n".format(quote(sym),paramStr))
+    out.append("int gpuDimSizeX_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
     out.append("\treturn 1+((%s-1)/512);\n".format(gpuBlockSizeX))
     out.append("}\n")
-    MetaData.gpuDimSizeX = "[\"gpuDimSizeX_%s\",[%s]]".format(quote(sym),argStr)
+    MetaData.gpuDimSizeX = "[\"gpuDimSizeX_%s_%s\",[%s]]".format(quote(sym),helperFuncIdx,argStr)
     
-    out.append("int gpuDimSizeY_%s(%s) {\n".format(quote(sym),paramStr))
+    out.append("int gpuDimSizeY_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
     out.append("\treturn 1;\n")
     out.append("}\n")
-    MetaData.gpuDimSizeY = "[\"gpuDimSizeY_%s\",[%s]]".format(quote(sym),argStr)
+    MetaData.gpuDimSizeY = "[\"gpuDimSizeY_%s_%s\",[%s]]".format(quote(sym),helperFuncIdx,argStr)
 
     out.toString
   }
