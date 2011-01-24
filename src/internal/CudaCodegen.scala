@@ -60,24 +60,32 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   override def hasMetaData: Boolean = true
   override def getMetaData: String = MetaData.toString
 
-  def emitDevFunc(func:Exp[Any], inputs:List[Exp[Any]]):String = {
+  def emitDevFunc(func:Exp[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
     devFuncIdx += 1
     val currIdx = devFuncIdx
     val tempString = new StringWriter
     val tempStream = new PrintWriter(tempString, true)
-    val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
+    val header = new StringWriter
+    val footer = new StringWriter
+
     val currentTab = tabWidth
-    tempStream.println("__device__ %s dev_%s(%s) {".format(remap(func.Type),currIdx,paramStr))
     tabWidth = 1
-    tempStream.println(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;")
-    tempStream.println(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;")
     emitBlock(func)(tempStream)
-    if(remap(func.Type) != "void")
-      tempStream.println(addTab()+"return %s;".format(quote(getBlockResult(func))))
-    tempStream.println("}")
     tabWidth = currentTab
+
+    val inputs = (getFreeVarBlock(func,Nil).filterNot(ele => locals.contains(ele))++gpuTemps).distinct
+    val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
+    header.append("__device__ %s dev_%s(%s) {\n".format(remap(func.Type),currIdx,paramStr))
+    header.append("\tint idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
+    header.append("\tint idxY = blockIdx.y*blockDim.y + threadIdx.y;\n")
+    if(remap(func.Type) != "void")
+      footer.append("\treturn %s;\n".format(quote(getBlockResult(func))))
+    footer.append("}\n")
+    devFuncString.append(header)
     devFuncString.append(tempString)
-    "dev_"+currIdx
+    devFuncString.append(footer)
+
+    ("dev_"+currIdx,inputs)
   }
 
   object MetaData {
