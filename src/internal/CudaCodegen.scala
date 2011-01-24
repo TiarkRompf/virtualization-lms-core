@@ -388,7 +388,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     val out = new StringBuilder
     out.append("int %s = 1;\n".format(varName))
     if(lst.size > 0) {
-      out.append("int %s = %s;\n".format(varName,lst(0)))
+      out.append("%s = %s;\n".format(varName,lst(0)))
       for(size <- lst) {
         out.append("if(%s != %s) printf(\"ERROR: GPU kernel sizes for %s are not the same\\n\");\n".format(varName,size,varName))
         out.append("%s = %s;\n".format(varName,size))
@@ -407,6 +407,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     val inputs = (gpuOutputs ::: gpuInputs ::: gpuTemps)
     val paramStr = inputs.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
     val argStr = inputs.map("\""+quote(_)+"\"").mkString(",")
+    val argInputStr = inputs.map(quote(_)).mkString(",")
     
     out.append("int gpuBlockSizeX_%s(%s) {\n".format(quote(sym),paramStr))
     out.append(emitCheckSize("X",xDimList))
@@ -416,9 +417,10 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     MetaData.gpuBlockSizeX = "[\"gpuBlockSizeX_%s\",[%s]]".format(quote(sym),argStr)
 
     out.append("int gpuBlockSizeY_%s(%s) {\n".format(quote(sym),paramStr))
-    out.append("\tint X = gpuBlockSizeX_%s(%s);\n".format(quote(sym),argStr))
+    out.append("\tint X = gpuBlockSizeX_%s(%s);\n".format(quote(sym),argInputStr))
     out.append(emitCheckSize("Y",yDimList))
-    out.append("\tif(X == %s) return 1;\n".format(MAX_THREADS_PER_BLOCK))
+	out.append("\tif(Y == 1) return 1;\n")
+    out.append("\telse if(X == %s) return 1;\n".format(MAX_THREADS_PER_BLOCK))
     out.append("\telse return (%s / X);\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
     MetaData.gpuBlockSizeY = "[\"gpuBlockSizeY_%s\",[%s]]".format(quote(sym),argStr)
@@ -429,13 +431,19 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     MetaData.gpuBlockSizeZ = "[\"gpuBlockSizeZ_%s\",[%s]]".format(quote(sym),argStr)
 
     out.append("int gpuDimSizeX_%s(%s) {\n".format(quote(sym),paramStr))
-    out.append("\tint X = gpuBlockSizeX_%s(%s);\n".format(quote(sym),argStr))
+	if(xDimList.length==0)
+    	out.append("\tint X = 1;\n")
+	else
+    	out.append("\tint X = %s;\n".format(xDimList(0)))
     out.append("\treturn 1+((X-1)/%s);\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
     MetaData.gpuDimSizeX = "[\"gpuDimSizeX_%s\",[%s]]".format(quote(sym),argStr)
     
     out.append("int gpuDimSizeY_%s(%s) {\n".format(quote(sym),paramStr))
-    out.append("\tint Y = gpuBlockSizeY_%s(%s);".format(quote(sym),argStr))
+	if(yDimList.length==0)
+    	out.append("\tint Y = 1;")
+	else
+    	out.append("\tint Y = %s;".format(yDimList(0)))
     out.append("\treturn 1+((Y-1)/%s);\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
     MetaData.gpuDimSizeY = "[\"gpuDimSizeY_%s\",[%s]]".format(quote(sym),argStr)
