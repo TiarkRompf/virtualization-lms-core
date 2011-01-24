@@ -3,7 +3,7 @@ package internal
 
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
-import collection.mutable.{ArrayBuffer, LinkedList, HashMap}
+import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
 
 trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   val IR: Expressions
@@ -12,16 +12,35 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   override def kernelFileExt = "cu"
   override def toString = "cuda"
 
-  /*
-   * This flag indicates whether current codegen is for parallel execution or not
-   */
-  var parallelCudagen = false
+  /* Indicates current dimension of work threads */
+  var currDim = 0
+  val xDimList =  ListBuffer[String]()
+  val yDimList =  ListBuffer[String]()
+  def getCurrDimStr():String = currDim match {
+    case 0 => throw new RuntimeException("CudaGen: Cannot get current dimension string when the dimension is 0.")
+    case 1 => "idxX"
+    case 2 => "idxY"
+    case _ => throw new GenerationFailedException("CudaGen: Maximum 2 dimensions for GPU kernels.")
+  }
+  def getPrevDimStr():String = currDim match {
+    case 0 => throw new RuntimeException("CudaGen: Cannot get previous dimension string when the dimension is 0.")
+    case 1 => throw new RuntimeException("CudaGen: Cannot get previous dimension string when the dimension is 1.")
+    case 2 => "idxX"
+    case 3 => "idxY"
+    case _ => throw new GenerationFailedException("CudaGen: Maximum 2 dimensions for GPU kernels.")
+  }
+  def setCurrDimLength(length: String) {
+    currDim match {
+      case 0 => throw new RuntimeException("CudaGen: Cannot set dimension length when the dimension is 0.")
+      case 1 => xDimList += length
+      case 2 => yDimList += length
+      case _ => throw new GenerationFailedException("CudaGen: Maximum 2 dimensions for GPU kernels.")
+    }
+  }
 
   var kernelSymbol:Sym[_] = null
-  var parallelFor = false
   var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
-  val varLink = HashMap[Exp[_], List[Exp[_]]]()
   
   var gpuInputs:List[Sym[_]] = Nil
   var gpuOutputs:List[Sym[_]] = Nil
@@ -41,25 +60,24 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   override def hasMetaData: Boolean = true
   override def getMetaData: String = MetaData.toString
 
-  def emitDevFunc(func:Exp[Any], outType: Manifest[_], inputs:List[Exp[Any]]):String = {
-      devFuncIdx += 1
-      val currIdx = devFuncIdx
-      val tempString = new StringWriter
-      val tempStream = new PrintWriter(tempString, true)
-      val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
-      val currentTab = tabWidth
-      if(outType != null)
-        tempStream.println("__device__ %s dev_%s(%s) {".format(remap(outType),currIdx,paramStr))
-       else
-        tempStream.println("__device__ void dev_%s(%s) {".format(currIdx,paramStr))
-      tabWidth = 1
-      emitBlock(func)(tempStream)
-      if(outType != null)
-        tempStream.println(addTab()+"return %s;".format(quote(getBlockResult(func))))
-      tempStream.println("}")
-      tabWidth = currentTab
-      devFuncString.append(tempString)
-      "dev_"+currIdx
+  def emitDevFunc(func:Exp[Any], inputs:List[Exp[Any]]):String = {
+    devFuncIdx += 1
+    val currIdx = devFuncIdx
+    val tempString = new StringWriter
+    val tempStream = new PrintWriter(tempString, true)
+    val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
+    val currentTab = tabWidth
+    tempStream.println("__device__ %s dev_%s(%s) {".format(remap(func.Type),currIdx,paramStr))
+    tabWidth = 1
+    tempStream.println(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;")
+    tempStream.println(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;")
+    emitBlock(func)(tempStream)
+    if(remap(func.Type) != "void")
+      tempStream.println(addTab()+"return %s;".format(quote(getBlockResult(func))))
+    tempStream.println("}")
+    tabWidth = currentTab
+    devFuncString.append(tempString)
+    "dev_"+currIdx
   }
 
   object MetaData {
@@ -141,18 +159,15 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("CudaGen: Not GPUable")
 
     // Initialize global variables
-    parallelCudagen = true
+    currDim = 0
+    xDimList.clear
+    yDimList.clear
+
     helperFuncString.clear
-    varLink.clear
     kernelSymbol = sym
     MetaData.init
     tabWidth = 1
-    parallelFor = true
     devFuncString = new StringBuilder
-
-    gpuBlockSizeX = null
-    gpuBlockSizeY = null
-    gpuBlockSizeZ = null
 
     gpuInputs = vals
     //gpuInputsStr = vals.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
@@ -160,37 +175,6 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     //gpuOutputStr = vals.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
     gpuTemps = Nil
     //gpuTempsStr = ""
-  }
-
-  // Add variable links across IR nodes
-  def addVarLink(from:Exp[_], to:Exp[_]): Unit = {
-    if(varLink.contains(to)) {
-      val list = varLink.get(to).get
-      val newList = from +: list
-      varLink.remove(to)
-      varLink.put(from,newList)
-    }
-    else {
-      val newList = List[Exp[_]](from,to)
-      varLink.put(from,newList)
-    }
-  }
-
-  def removeVarLink(from:Exp[_], to:Exp[_]): Unit = {
-    if(varLink.contains(from)) {
-      val newList = varLink.get(from).get.tail
-      varLink.remove(from)
-      varLink.put(to,newList)
-    }
-  }
-
-  def getVarLink(sym:Exp[_]): Exp[_] = {
-    if(sym.isInstanceOf[Sym[_]] && varLink.contains(sym)) {
-      val out = varLink.get(sym).get.last
-      out
-    }
-    else
-      null
   }
 
   // Map scala primitive type to JNI type descriptor
@@ -211,6 +195,20 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     case "bool" => false
     case "void" => false
     case _ => throw new GenerationFailedException("CudaGen: isObjectType(m) : Unknown data type (%s)".format(remap(m)))
+  }
+
+  def isPrimitiveType(m: Manifest[_]) : Boolean = remap(m) match {
+    case "int" => true
+    case "long" => true
+    case "float" => true
+    case "double" => true
+    case "bool" => true
+    case _ => false
+  }
+
+  def isVoidType(m: Manifest[_]) : Boolean = remap(m) match {
+    case "void" => true
+    case _ => false
   }
 
   override def remap[A](m: Manifest[A]) : String = m.toString match {
@@ -301,7 +299,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
 
     out.append("__global__ void kernel_%s(%s) {\n".format(quote(sym), paramStr))
     out.append(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
-    //out.append(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;")
+    out.append(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;\n")
     stream.print(out.toString)
   }
 
@@ -379,32 +377,49 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     else ""    
   }
 
-  //TODO: Currently only assume 1D kernel. 2D/3D kernel needs to be utilized.
-  var gpuBlockSizeX:String = null
-  var gpuBlockSizeY:String = null
-  var gpuBlockSizeZ:String = null
+
+  /**********************************************************
+   * Calculation and Emission of GPU kernel size functions
+   *********************************************************/
+
+  val MAX_THREADS_PER_BLOCK = 512
+
+  def emitCheckSize(varName: String, lst: ListBuffer[String]):String = {
+    val out = new StringBuilder
+    out.append("int %s = 1;\n".format(varName))
+    if(lst.size > 0) {
+      out.append("int %s = %s;\n".format(varName,lst(0)))
+      for(size <- lst) {
+        out.append("if(%s != %s) printf(\"ERROR: GPU kernel sizes for %s are not the same\\n\");\n".format(varName,size,varName))
+        out.append("%s = %s;\n".format(varName,size))
+      }
+    }
+    out.toString
+  }
 
   // Prints out the helper functions for getting the threadBlcok size and grid size
   def emitSizeFuncs(sym: Sym[_]): String = {
     val out = new StringBuilder
-    //if (gpuBlockSizeX == null) gpuBlockSizeX = "1"
-    if ((gpuBlockSizeX==null) && (MetaData.gpuLibCall=="")) throw new GenerationFailedException("GPU Codegen: gpuBlockSizeX is not set")
-    if (gpuBlockSizeX == null) gpuBlockSizeX = "1"
-    if (gpuBlockSizeY == null) gpuBlockSizeY = "1"
-    if (gpuBlockSizeZ == null) gpuBlockSizeZ = "1"
+
+    if((xDimList.size == 0) && (MetaData.gpuLibCall==""))
+      throw new GenerationFailedException("CudaGen: No dimension specified for this kernel.")
 
     val inputs = (gpuOutputs ::: gpuInputs ::: gpuTemps)
     val paramStr = inputs.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
     val argStr = inputs.map("\""+quote(_)+"\"").mkString(",")
     
     out.append("int gpuBlockSizeX_%s(%s) {\n".format(quote(sym),paramStr))
-    out.append("\tif(%s < 512) return %s;\n".format(gpuBlockSizeX, gpuBlockSizeX))
-    out.append("\telse return 512;\n")
+    out.append(emitCheckSize("X",xDimList))
+    out.append("\tif(X < %s) return X;\n".format(MAX_THREADS_PER_BLOCK))
+    out.append("\telse return %s;\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
     MetaData.gpuBlockSizeX = "[\"gpuBlockSizeX_%s\",[%s]]".format(quote(sym),argStr)
 
     out.append("int gpuBlockSizeY_%s(%s) {\n".format(quote(sym),paramStr))
-    out.append("\treturn 1;\n")
+    out.append("\tint X = gpuBlockSizeX_%s(%s);\n".format(quote(sym),argStr))
+    out.append(emitCheckSize("Y",yDimList))
+    out.append("\tif(X == %s) return 1;\n".format(MAX_THREADS_PER_BLOCK))
+    out.append("\telse return (%s / X);\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
     MetaData.gpuBlockSizeY = "[\"gpuBlockSizeY_%s\",[%s]]".format(quote(sym),argStr)
 
@@ -414,12 +429,14 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     MetaData.gpuBlockSizeZ = "[\"gpuBlockSizeZ_%s\",[%s]]".format(quote(sym),argStr)
 
     out.append("int gpuDimSizeX_%s(%s) {\n".format(quote(sym),paramStr))
-    out.append("\treturn 1+((%s-1)/512);\n".format(gpuBlockSizeX))
+    out.append("\tint X = gpuBlockSizeX_%s(%s);\n".format(quote(sym),argStr))
+    out.append("\treturn 1+((X-1)/%s);\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
     MetaData.gpuDimSizeX = "[\"gpuDimSizeX_%s\",[%s]]".format(quote(sym),argStr)
     
     out.append("int gpuDimSizeY_%s(%s) {\n".format(quote(sym),paramStr))
-    out.append("\treturn 1;\n")
+    out.append("\tint Y = gpuBlockSizeY_%s(%s);".format(quote(sym),argStr))
+    out.append("\treturn 1+((Y-1)/%s);\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
     MetaData.gpuDimSizeY = "[\"gpuDimSizeY_%s\",[%s]]".format(quote(sym),argStr)
 

@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CGenEffect, CudaGenEffect, GenericNestedCodegen, ScalaGenEffect}
+import internal._
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]): Rep[T]
@@ -93,9 +93,23 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
           // This is going to be changed when above TODOs are done.
           //if( (sym==kernelSymbol) && (isObjectType(sym.Type)) ) throw new RuntimeException("CudaGen: Changing the reference of output is not allowed within GPU kernel.")
 
-          val hasPrimitiveRet = (remap(sym.Type)!="void") && (!isObjectType(sym.Type))
-          hasPrimitiveRet match {
+          val objRetType = (!isVoidType(sym.Type)) && (!isPrimitiveType(sym.Type))
+          objRetType match {
+            case true => throw new GenerationFailedException("CudaGen: If-Else cannot return object type.")
+            case _ =>
+          }
+          isVoidType(sym.Type) match {
             case true =>
+              stream.println(addTab() + "if (" + quote(c) + ") {")
+              tabWidth += 1
+              emitBlock(a)
+              tabWidth -= 1
+              stream.println(addTab() + "} else {")
+              tabWidth += 1
+              emitBlock(b)
+              tabWidth -= 1
+              stream.println(addTab()+"}")
+            case false =>
               stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
               stream.println(addTab() + "if (" + quote(c) + ") {")
               tabWidth += 1
@@ -108,24 +122,6 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
               stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
               tabWidth -= 1
               stream.println(addTab()+"}")
-            case false =>
-              stream.println(addTab() + "if (" + quote(c) + ") {")
-              tabWidth += 1
-              addVarLink(getBlockResult(a),sym)
-              emitBlock(a)
-              removeVarLink(getBlockResult(a),sym)
-              tabWidth -= 1
-              stream.println(addTab() + "} else {")
-              tabWidth += 1
-              addVarLink(getBlockResult(b),sym)
-              emitBlock(b)
-              removeVarLink(getBlockResult(b),sym)
-              tabWidth -= 1
-              stream.println(addTab()+"}")
-              isObjectType(sym.Type) match {
-                case true => allocReference(sym,getBlockResult(a).asInstanceOf[Sym[_]])
-                case _ =>
-              }
           }
 
         case _ => super.emitNode(sym, rhs)
