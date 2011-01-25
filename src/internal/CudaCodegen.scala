@@ -37,6 +37,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
       case _ => throw new GenerationFailedException("CudaGen: Maximum 2 dimensions for GPU kernels.")
     }
   }
+  val multDimInputs = ListBuffer[Sym[_]]()
 
   var kernelSymbol:Sym[_] = null
   var tabWidth:Int = 0
@@ -74,7 +75,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     tabWidth = currentTab
 
     val inputs = (getFreeVarBlock(func,Nil).filterNot(ele => locals.contains(ele))++gpuTemps).distinct
-    val paramStr = inputs.map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
+    val paramStr = (locals++inputs).map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
     header.append("__device__ %s dev_%s(%s) {\n".format(remap(func.Type),currIdx,paramStr))
     header.append("\tint idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
     header.append("\tint idxY = blockIdx.y*blockDim.y + threadIdx.y;\n")
@@ -170,6 +171,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     currDim = 0
     xDimList.clear
     yDimList.clear
+	multDimInputs.clear
 
     helperFuncString.clear
     kernelSymbol = sym
@@ -249,6 +251,11 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     throw new GenerationFailedException("CudaGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
   }
 
+  def positionMultDimInputs(sym: Sym[_]) : String = {
+    throw new GenerationFailedException("CudaGen: positionMultDimInputs(sym) : Cannot reposition GPU memory (%s)".format(remap(sym.Type)))
+
+  }
+
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
     val x = fresh[A]
     val y = f(x)
@@ -308,6 +315,9 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     out.append("__global__ void kernel_%s(%s) {\n".format(quote(sym), paramStr))
     out.append(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
     out.append(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;\n")
+	for(in <- multDimInputs) {
+		out.append(addTab()+positionMultDimInputs(in))
+	}
     stream.print(out.toString)
   }
 
