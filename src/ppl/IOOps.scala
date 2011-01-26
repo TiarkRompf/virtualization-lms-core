@@ -3,7 +3,7 @@ package ppl
 
 import scala.virtualization.lms.common._
 import java.io.{BufferedReader, FileReader, PrintWriter}
-import internal.ScalaGenEffect
+//import internal.ScalaGenEffect
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
 
 trait IOOps extends Base {

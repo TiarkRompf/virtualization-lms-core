@@ -23,20 +23,20 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
     val gol = new GameOfLifeStaged with MDArrayBaseExp with IfThenElseExp
 
     // PDE1 experiments
-    performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime("matrix-1"), 1), prefix + "range1-test")
-    performExperiment(pde1, pde1.range2(pde1.knownOnlyAtRuntime("matrix-2"), 1), prefix + "range2-test")
-    performExperiment(pde1, pde1.range3(pde1.knownOnlyAtRuntime("matrix-3"), 1), prefix + "range3-test")
+    performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime[Double]("matrix-1"), 1), prefix + "range1-test")
+    performExperiment(pde1, pde1.range2(pde1.knownOnlyAtRuntime[Double]("matrix-2"), 1), prefix + "range2-test")
+    performExperiment(pde1, pde1.range3(pde1.knownOnlyAtRuntime[Double]("matrix-3"), 1), prefix + "range3-test")
     // TODO: Include ranges to make this work
-    //performExperiment(pde1, pde1.range4(pde1.knownOnlyAtRuntime("matrix-4"), 1), prefix + "range4-test")
-    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime("matrix-5"), 1), prefix + "range5-test")
+    //performExperiment(pde1, pde1.range4(pde1.knownOnlyAtRuntime[Double]("matrix-4"), 1), prefix + "range4-test")
+    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime[Double]("matrix-5"), 1), prefix + "range5-test")
 
     // Some old test attached to PDE1 TODO: Remove at some point
     performExperiment(pde1, pde1.vectorTest, prefix + "vector-test")
 
     // Game of Life experiments
     performExperiment(gol, gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input")), prefix + "reshape")
-    performExperiment(gol, gol.gameOfLife(gol.knownOnlyAtRuntime("input")), prefix + "game-of-life-generic")
-    performExperiment(gol, gol.gameOfLife(gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime("input"))), prefix + "game-of-life-10-by-10")
+    performExperiment(gol, gol.gameOfLife(gol.knownOnlyAtRuntime[Int]("input")), prefix + "game-of-life-generic")
+    performExperiment(gol, gol.gameOfLife(gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input"))), prefix + "game-of-life-10-by-10")
   }
 
   def performExperiment(pde1: MDArrayBaseExp with IfThenElseExp, expr: Any, fileName: String) {

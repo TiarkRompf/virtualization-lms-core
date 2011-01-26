@@ -11,7 +11,7 @@ trait MDArrayGraphExport extends GraphVizExport {
 
   def emitTypingString(i: Int): String
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     stream.println("label=" + quote(sym + " with " + emitTypingString(sym.id) + " \\n " + rhs))
     stream.println("shape=box")
   }
