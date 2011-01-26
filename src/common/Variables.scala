@@ -48,16 +48,16 @@ trait VariablesExp extends Variables with EffectExp {
 
   def var_new[T:Manifest](init: Exp[T]): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
-    Variable(reflectEffect(NewVar(init)))
+    Variable(reflectEffect(NewVar(reflectRead(init))))
   }
 
   def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
-    reflectMutation(Assign(lhs, rhs))
+    reflectMutation(Assign(lhs, reflectRead(rhs)))
     Const()
   }
 
   def var_plusequals[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
-    reflectMutation(VarPlusEquals(lhs, rhs))
+    reflectMutation(VarPlusEquals(lhs, reflectRead(rhs)))
     Const()
   }
   // TODO: not using these due to a problem with getBlockResult() getting an out-of-scope symbol without the Const
