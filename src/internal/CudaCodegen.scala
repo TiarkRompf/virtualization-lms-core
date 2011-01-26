@@ -19,14 +19,14 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   def getCurrDimStr():String = currDim match {
     case 0 => throw new RuntimeException("CudaGen: Cannot get current dimension string when the dimension is 0.")
     case 1 => "idxX"
-    case 2 => "idxY"
+    //case 2 => "idxY"
     case _ => throw new GenerationFailedException("CudaGen: Maximum 2 dimensions for GPU kernels.")
   }
   def getPrevDimStr():String = currDim match {
     case 0 => throw new RuntimeException("CudaGen: Cannot get previous dimension string when the dimension is 0.")
     case 1 => throw new RuntimeException("CudaGen: Cannot get previous dimension string when the dimension is 1.")
     case 2 => "idxX"
-    case 3 => "idxY"
+    //case 3 => "idxY"
     case _ => throw new GenerationFailedException("CudaGen: Maximum 2 dimensions for GPU kernels.")
   }
   def setCurrDimLength(length: String) {
