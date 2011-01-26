@@ -48,7 +48,7 @@ trait FunctionsExp extends Functions with EffectExp {
 
   def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A]): Exp[B] = f match {
 
-    case Def(Lambda(_,_,Def(Reify(_,_)))) => 
+    case Def(Lambda(_,_,Def(Reify(_,_,_)))) => 
       // if function result is known to be effectful, so is application
       reflectEffect(Apply(f,x))
     case Def(Lambda(_,_,_)) => 

@@ -36,8 +36,31 @@ trait VariablesExp extends Variables with EffectExp {
   // Defining Vars as separate from Exps will always cause a compile-time error if the implicit is missing.
   //type Var[T] = Sym[T]
 
+  // REMARK: Var[T] should (probably) be different from Rep[T] in Rep-world
+  // but in Exp-world the situation is less clear. Another thing is that in general, 
+  // programs should live in Rep-world.
+  // Currently DeliteApplication extends DeliteOpsExp and therefore
+  // all DSL programs live in Exp-world.
+
   // read operation
-  implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = reflectEffect(ReadVar(v))
+  implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = { // carefule with implicits...
+/*
+    //reflectRead(/*v*/)(ReadVar(v)) // FIXME!!
+    //reflectEffect(ReadVar(v))
+    
+    // do cse *in context*
+    
+    context.reverse.dropWhile { e => 
+      e match { case Def(Reflect(ReadVar(w), _)) if w != v => true case _ => false }
+    } match {
+      case (e @ Def(Reflect(ReadVar(`v`), _)))::es => e.asInstanceOf[Exp[T]]
+      case es =>
+        val r = createDefinition(fresh[T], Reflect(ReadVar(v), es)).sym
+        context = context :+ r
+        r
+    }*/
+    toAtom(ReadVar(v))
+  }
 
   case class ReadVar[T:Manifest](v: Var[T]) extends Def[T]
   case class NewVar[T:Manifest](init: Exp[T]) extends Def[T]
@@ -47,16 +70,16 @@ trait VariablesExp extends Variables with EffectExp {
 
   def var_new[T:Manifest](init: Exp[T]): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
-    Variable(reflectEffect(NewVar(init)))
+    Variable(reflectMutable(NewVar(init)))
   }
 
   def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
-    reflectMutation(Assign(lhs, rhs))
+    reflectWrite(lhs.e)()(Assign(lhs, rhs))
     Const()
   }
 
   def var_plusequals[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
-    reflectMutation(VarPlusEquals(lhs, rhs))
+    reflectWrite(lhs.e)()(VarPlusEquals(lhs, rhs))
     Const()
   }
   // TODO: not using these due to a problem with getBlockResult() getting an out-of-scope symbol without the Const

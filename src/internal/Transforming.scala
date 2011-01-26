@@ -9,6 +9,8 @@ trait Transforming extends Expressions {
     def apply[A](x: Exp[A]): Exp[A]
   }
 
+  // FIXME: mirroring for effects!
+
   def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = system.error("don't know how to mirror " + e)
 
 
@@ -19,6 +21,9 @@ trait Transforming extends Expressions {
     def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
       case Some(y) => apply(y.asInstanceOf[Exp[A]]) case None => x 
     }
+
+    def apply[A](xs: List[Exp[A]]): List[Exp[A]] = xs map (e => apply(e))
+
 
 /*    
     def transform[A](s: Sym[A], x: Def[A]): Exp[A] = {

@@ -124,7 +124,7 @@ trait GenericNestedCodegen extends GenericCodegen {
 
     // sanity check to make sure all effects are accounted for
     result match {
-      case Def(Reify(x, effects)) =>
+      case Def(Reify(x, u, effects)) =>
         val actual = levelScope.filter(effects contains _.sym)
         assert(effects == actual.map(_.sym), "violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
       case _ =>
@@ -154,7 +154,7 @@ trait GenericNestedCodegen extends GenericCodegen {
 
 
   override def getBlockResult[A](s: Exp[A]): Exp[A] = s match {
-    case Def(Reify(x, _)) => x
+    case Def(Reify(x, _, _)) => x
     case _ => super.getBlockResult(s)
   }
   
@@ -167,11 +167,11 @@ trait GenericNestedCodegen extends GenericCodegen {
   }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
-    case Read(s) =>
-      emitValDef(sym, quote(s))
-    case Reflect(s, effects) =>
+//    case Read(s) =>
+//      emitValDef(sym, quote(s))
+    case Reflect(s, u, effects) =>
       emitNode(sym, s)
-    case Reify(s, effects) =>
+    case Reify(s, u, effects) =>
       // just ignore -- effects are accounted for in emitBlock
     case _ => super.emitNode(sym, rhs)
   }
@@ -198,7 +198,7 @@ trait GenericNestedCodegen extends GenericCodegen {
   // TODO: remove
   //override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = { Nil }
   override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match { // getFreeVarBlock(syms(rhs), boundSyms(rhs))
-    case Reflect(s, effects) => getFreeVarNode(s)
+    case Reflect(s, u, effects) => getFreeVarNode(s)
     case _ => super.getFreeVarNode(rhs)
   }
 
@@ -231,7 +231,7 @@ trait GenericNestedCodegen extends GenericCodegen {
 
     val e4 = e3 flatMap { e =>
       e.sym match {
-        case Def(Reflect(x, effects)) => List(e.sym): List[Sym[Any]]
+        case Def(Reflect(x, u, effects)) => List(e.sym): List[Sym[Any]]
         case _ => Nil
       }
     }

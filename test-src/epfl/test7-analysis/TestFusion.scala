@@ -21,8 +21,8 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
     case Minus(x,y) => infix_-(f(x), f(y))
     case Times(x,y) => infix_*(f(x), f(y))
     case Div(x,y) => infix_/(f(x), f(y))
-    case Reflect(Print(x), es) => toAtom(Reflect(Print(f(x)), es map (e => f(e))))
-    case Reify(x, es) => toAtom(Reify(f(x), es map (e => f(e))))
+    case Reflect(Print(x), u, es) => toAtom(Reflect(Print(f(x)), u, es map (e => f(e))))
+    case Reify(x, u, es) => toAtom(Reify(f(x), u, es map (e => f(e))))
   }).asInstanceOf[Exp[A]]
     
 }

@@ -40,6 +40,8 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     val e2 = getFatSchedule(currentScope)(result) // shallow list of deps (exclude stuff only needed by nested blocks)
     shallow = false
 
+    // TODO: make sure currentScope schedule respects antidependencies
+
     // shallow is 'must outside + should outside' <--- currently shallow == deep for lambdas, meaning everything 'should outside'
     // bound is 'must inside'
 
@@ -52,7 +54,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
 /*
     // sanity check to make sure all effects are accounted for
     result match {
-      case Def(Reify(x, effects)) =>
+      case Def(Reify(x, u, effects)) =>
         val actual = levelScope.filter(effects contains _.sym)
         assert(effects == actual.map(_.sym), "violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
       case _ =>
@@ -78,7 +80,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
 
 
   def emitFatNode(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter): Unit = rhs match {
-    case ThinDef(Reflect(s, effects)) => emitFatNode(sym, ThinDef(s)) // call back into emitFatNode, not emitNode
+    case ThinDef(Reflect(s, u, effects)) => emitFatNode(sym, ThinDef(s)) // call back into emitFatNode, not emitNode
     case ThinDef(a) => emitNode(sym(0), a)
     case _ => system.error("don't know how to generate code for: "+rhs)
   }

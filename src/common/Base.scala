@@ -34,8 +34,8 @@ trait BaseExp extends Base with Expressions with Transforming {
 trait EffectExp extends BaseExp with Effects {
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
-//    case Reflect(Print(x), es) => Reflect(Print(f(x)), es map (e => f(e)))
-    case Reify(x, es) => Reify(f(x), es map (e => f(e)))
+//    case Reflect(Print(x), u, es) => Reflect(Print(f(x)), es map (e => f(e)))
+    case Reify(x, u, es) => Reify(f(x), u, es map (e => f(e)))
     case _ => super.mirror(e,f)
   }
     

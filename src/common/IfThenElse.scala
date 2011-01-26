@@ -27,13 +27,13 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     val a = reifyEffects(thenp)
     val b = reifyEffects(elsep)
     (a,b) match {
-      case (Def(Reify(_,_)), _) | (_, Def(Reify(_,_))) => reflectEffect(IfThenElse(cond,a,b))
+      case (Def(Reify(_,_,_)), _) | (_, Def(Reify(_,_,_))) => reflectEffect(IfThenElse(cond,a,b)) //TODO u
       case _ => IfThenElse(cond, thenp, elsep)
     }
   }
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
-    case Reflect(IfThenElse(c,a,b), es) => toAtom(Reflect(IfThenElse(f(c),f(a),f(b)), es map (e => f(e))))
+    case Reflect(IfThenElse(c,a,b), u, es) => toAtom(Reflect(IfThenElse(f(c),f(a),f(b)), u, es map (e => f(e))))
     case IfThenElse(c,a,b) => toAtom(IfThenElse(f(c),f(a),f(b)))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // ergo toAtom ...

@@ -1,0 +1,289 @@
+package scala.virtualization.lms
+package internal
+
+trait Effects extends Expressions {
+  
+  type State = List[Exp[Any]]
+  
+  var context: State = _
+
+  /* readVar: reuse if it is in context and only followed by other reads (or writes to other vars)
+      --> after if/then/else, have to read anew
+  
+     a write which mentions a read should come after all other uses of the read!
+  */
+
+  var writeAfterRead: List[(Sym[Any],Sym[Any],Sym[Any])] = Nil // list of (write, read, alloc)
+  var writes: List[(Sym[Any],Sym[Any])] = Nil // list of (write, alloc)
+  var readAfterWrite: List[(Sym[Any],Sym[Any],Sym[Any])] = Nil // list of (read, write, alloc)
+
+  // TODO: fix up scheduling!!
+  // TODO: reads should depend on writes!
+
+  override implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
+    //findOrCreateDefinition(d).sym
+    var wasRefused = false
+    
+    globalDefs.filter(_.rhs == d) filter { t =>
+      val writeAfter = writeAfterRead filter (_._2 == t.sym)
+      if (writeAfter.nonEmpty) {
+        println("not cseable "+t+" because of writes " + writeAfter)
+        wasRefused = true
+        false
+      } else {
+        true
+      }
+    } match {
+      case t::_ =>
+        // found something, use first
+        if (wasRefused) println("safely reusing " + t)        
+        t.sym.asInstanceOf[Exp[T]]
+      case _ =>
+        // TODO: has any of our inputs been written to?
+        // if so, depend on writes...
+        // nothing found
+        val r = fresh[T]
+        if (wasRefused) println("creating new sym " + r)
+        val forceBefore = writes.filter(wa => readSyms(d) contains wa._2)
+        readAfterWrite ++= forceBefore.map(wa=>(r,wa._1,wa._2))
+        for (wa <- forceBefore)
+          println("read after write: "+r+","+wa._1+","+wa._2)
+        createDefinition(r, d).sym
+    }
+  }
+
+
+  def reflectRead[A:Manifest](read: Exp[Any]*)(x: Def[A]): Exp[A] = {
+    //reflectEffect(x)
+    toAtom(x)
+  }
+
+  def reflectNew[A:Manifest](read: Exp[Any]*)(x: Def[A]): Exp[A] = {
+    toAtom(x) //reflectEffect(x)
+  }
+  
+    
+  def readSyms(e: Any): List[Sym[Any]] = e match {
+    case s: Sym[Any] => List(s)
+    case Reflect(x, es) => readSyms(x) // ignore effect deps!
+    case p: Product => p.productIterator.toList.flatMap(readSyms(_))
+    case _ => Nil
+  }
+
+  def reflectWrite[A:Manifest](write0: Exp[Any]*)(read: Exp[Any]*)(x: Def[A]): Exp[A] = {
+    val write = write0.toList
+    
+    // make sure write goes to an alloc (reflect, need better check)
+    
+    val w: Sym[A] = fresh[A]
+
+    for (a <- write) {
+      writes :+= (w,a.asInstanceOf[Sym[Any]])
+
+      val forceBefore = globalDefs.withFilter(d => (readSyms(d.rhs) contains a)).map(_.sym)
+      writeAfterRead ++= forceBefore.map(r => (w, r, a.asInstanceOf[Sym[A]]))
+      
+      for (r <- forceBefore)
+        println("write after read: "+w+","+r+","+a+"  " + x + "/" + 
+          findDefinition(r.asInstanceOf[Sym[A]]).get)
+    }
+    
+    createDefinition(w, Reflect(x, context /*++ forceBefore*/)).sym // add to list!
+    context :+= w
+
+    /*
+      make sure writes go to alloc ops!!!
+    */  
+/*
+    write.foreach { w => 
+      if (!context.contains(w)) {
+        println("write depends on read out of context: ")
+        println("    " + findDefinition(r.asInstanceOf[Sym[A]]).get)
+        println("    writes to " + write.mkString(","))
+        println("    forcing " + forceBefore.mkString(","))
+        println("    but " + findDefinition(w.asInstanceOf[Sym[A]]).get)
+        println("    is not part of context " + context.mkString(","))
+      }
+    }
+*/
+    w
+  }
+
+
+/*
+  def reflectWrite[A:Manifest](write0: Exp[Any]*)(read: Exp[Any]*)(x: Def[A]): Exp[A] = {
+    val write = write0.toList
+    
+    def syms(e: Any): List[Sym[Any]] = e match {
+      case s: Sym[Any] => List(s)
+      case p: Product => p.productIterator.toList.flatMap(syms(_))
+      case _ => Nil
+    }
+    
+    val forceBefore = globalDefs.withFilter(d => (syms(d.rhs) intersect write).nonEmpty).map(_.sym)
+
+    val r: Exp[A] = createDefinition(fresh[A], Reflect(x, context /*++ forceBefore*/)).sym
+    context :+= r
+    
+    /*
+      make sure writes go to read ops in context!!!
+    */  
+
+    write.foreach { w => 
+      if (!context.contains(w)) {
+        println("write depends on read out of context: ")
+        println("    " + findDefinition(r.asInstanceOf[Sym[A]]).get)
+        println("    writes to " + write.mkString(","))
+        println("    forcing " + forceBefore.mkString(","))
+        println("    but " + findDefinition(w.asInstanceOf[Sym[A]]).get)
+        println("    is not part of context " + context.mkString(","))
+      }
+    }
+    
+    
+    
+    r
+  }
+*/  
+
+  /*
+  alternative: link each read to last write, and each write to last read (1-1 correspondence)
+  writes must then weakly depend on all uses of its read 
+  
+  assume symbol carries all writes
+  
+  override def toAtom(x: Def[A]): Exp[A] = {
+    val readSyms = syms(x)
+    check all writes to readSyms
+      - which are actually valid? not those from then part if we are in else
+        - there must be a path from the write to us
+      - do cse lookup, but result must not be older than last write, and not written to itself
+    
+  }
+  
+  */
+
+
+  /* 
+  
+  1) must not introduce deps on things that are overwritten
+      - regular node creation: args might have been written to
+        - bring up to date before doing cse
+      - cse: result may have been written to
+  
+  2) writes must (weakly) depend on all previous reads
+  
+  def reflectWrite[A:Manifest](write: Exp[Any]*)(x: Def[A]): Exp[A] = {
+    
+  }
+  
+  override def toAtom(x: Def[A]): Exp[A] = {
+    //problem using mirror: it calls toAtom itself!
+    
+    mirror(x)(subst syms -> values)
+    
+  }
+  
+  */
+
+
+
+/*
+
+  BIG PROBLEM: anti-dependence / REAL PROBLEM: readVar has copy semantics (*)
+  
+  val z = newVar(some_large_vector)
+
+  val x = readVar(z) // let's say it reflectEffects...
+  
+  val y = vector_plus(x, other_vector)   <---
+                                            |  nothing prevents schedule to swap these two!!!
+  vector_plus_eq(z, yet_another_vector) <---
+  
+  all is well if z is a Var[Int] (by-value semantics) but not for a Var[Vector[Int]]:
+  readVar will not copy the whole data, so plus_eq modifying the data will be ovserved
+  by vector_plus
+  
+  1) reflectEffect vector_plus (sledgehammer approach)
+      can no longer match on it, no cse, no dce, no hoisting, ...
+  2) just make plus_eq depend on vector_plus
+      but should be able to dce it if no one else depends on it 
+      ---> make conditional deps explicit in schedule?
+      ---> reuse 'shallow' flag, 'shallow but with ordering of deep' will do the right thing!!
+           weakDeps field in Reflect
+     
+
+  3) make copying on modification the default and rely on liveness analysis to remove copy
+      might still end up with more copies than desired, unless schedules optimizes live ranges
+  
+  last line is equal to: writeVar(z, vector_plus(readVar(z), yet_another_vector))
+  readVar(z) is just the same as x!
+  
+  val u = vector_plus(x, yet_another_vector)
+  writeVar(z, u)
+  
+  can z be overwritten? yes, if u is x is no longer live
+  
+  escape is writeVar and returning from function
+  
+*/
+
+  
+
+
+
+  def reflectEffect[A:Manifest](x: Def[A]): Exp[A] = {
+     // don't do CSE on effectful computations
+//    val r: Exp[A] = findOrCreateDefinition(Reflect(x, context)).sym
+/*
+    def syms(e: Any): List[Sym[Any]] = e match {
+      case s: Sym[Any] => List(s)
+      case p: Product => p.productIterator.toList.flatMap(syms(_))
+      case _ => Nil
+    }
+*/    //val forceBefore = globalDefs.withFilter(d => (syms(d.rhs) intersect context).nonEmpty).map(_.sym)
+
+    // force depend on all uses of anything in context!! too conservative, but hey...
+    // things can still be moved *up*, but no longer *down* (into conditionals, say, or after us)
+
+    // reason is that direct uses of ReadVar may alias with the data stored in the var
+
+    // ----> cannot do that because the nodes in question might actually be defined in 
+    // sub blocks and depend on effects that must live in there!
+    
+    val r: Exp[A] = createDefinition(fresh[A], Reflect(x, context)).sym
+    context :+= r
+    r
+  }
+
+  // TODO: think about creating a Write node, so that we could remove reflectMutation. We would then
+  // infer a mutation from a reflectEffect containing Writes.
+  // Question: what about Reflect(IfThenElse(...))? how to track writes there?
+  // Alternative: add a field to Reflect that describes what it modifies
+/*
+  def reflectMutation[A:Manifest](x: Def[A]): Exp[A]  = {
+//    val r: Exp[A] = createDefinition(fresh[A], Reflect/*Mutation*/(x, context)).sym
+    val r: Exp[A] = createDefinition(fresh[A], Mutation(x, context)).sym
+    context :+= r
+    r
+  }
+*/
+  
+  def reifyEffects[A:Manifest](block: => Exp[A]): Exp[A] = {
+    val save = context
+    context = Nil
+    
+    val result = block
+    val resultR = if (context.isEmpty) result else Reify(result, context): Exp[A]
+    context = save
+    resultR
+  }
+
+  def effectSyms(x: Exp[Any]): List[Sym[Any]] = x match {  //TODO: move to scheduling/codegen?
+    case Def(Reify(y, es)) => es.asInstanceOf[List[Sym[Any]]]
+    case _ => Nil
+  }
+
+  case class Reflect[A](x:Def[A], deps: List[Exp[Any]]) extends Def[A]
+  case class Reify[A](x: Exp[A], effects: List[Exp[Any]]) extends Def[A]
+}

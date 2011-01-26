@@ -26,13 +26,13 @@ trait Liveness extends internal.GenericNestedCodegen {
       // everything used by innerScope as escaping (plus the result) 
       
       def usesOf(s: Sym[Any]): List[TP[Any]] = levelScope.flatMap {
-        case TP(s1, Reify(rhs1, _)) => // reify nodes are eliminated, so we need to find all uses of the reified thing
+        case TP(s1, Reify(rhs1,_,_)) => // reify nodes are eliminated, so we need to find all uses of the reified thing
           if (syms(rhs1).contains(s)) usesOf(s1) else Nil
         case d@TP(_, rhs1) =>
           if (syms(rhs1).contains(s)) List(d) else Nil
       }
       defuse = levelScope.flatMap {
-        case TP(sym, Reify(_, _)) => Nil
+        case TP(sym, Reify(_,_,_)) => Nil
         case TP(sym, rhs) =>
           usesOf(sym).map(d => (sym,d.sym):(Sym[Any],Sym[Any]))
       }
@@ -41,7 +41,7 @@ trait Liveness extends internal.GenericNestedCodegen {
         emitNode(sym, rhs)
 
         rhs match {
-          case Reify(s, effects) =>
+          case Reify(s, u, effects) =>
           case _ =>
             // remove everything only used here from defuse
             // output dealloc for stuff that goes away

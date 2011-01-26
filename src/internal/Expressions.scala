@@ -22,7 +22,7 @@ trait Expressions {
     var version = id
   }
 
-  case class Variable[+T:Manifest](e: Exp[T]) // TODO: decide whether it should stay here ...
+  case class Variable[+T:Manifest](val e: Exp[T]) // TODO: decide whether it should stay here ...
 
   case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
       
