@@ -73,14 +73,14 @@ trait GenericNestedCodegen extends GenericCodegen {
 
   var shallow = false
 
-  // a block should be only emit a dependency if it truly depends on it (as an input),
+  // a block should only emit a dependency if it truly depends on it (as an input),
   // or if it is an effect that has not been emitted yet by anybody
   var ignoreEffects = false
   var effectScope: List[TP[_]] = Nil // global to all blocks
 
   var scope: List[TP[_]] = Nil
+  var nested = 0
   var lastNodeAttempted: TP[_] = _
-  var nestedEmission = false
 
   override def emitBlock(start: Exp[_])(implicit stream: PrintWriter): Unit = {
     // try to push stuff as far down into more control-dependent parts as
@@ -113,6 +113,7 @@ trait GenericNestedCodegen extends GenericCodegen {
 
     val save = scope
     scope = e4 ::: scope
+    nested += 1
 
     ignoreEffects = true
     val e5 = buildScheduleForResult(start)
@@ -159,6 +160,7 @@ trait GenericNestedCodegen extends GenericCodegen {
     }
 
     scope = save
+    nested -= 1
   }
 
 
