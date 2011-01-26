@@ -17,7 +17,7 @@ trait MiscOps extends Base {
   def exit(status: Int): Rep[Nothing] = exit(unit(status))
   def exit(): Rep[Nothing] = exit(0)
   def exit(status: Rep[Int]): Rep[Nothing]
-
+  def error(s: Rep[String]): Rep[Nothing]
   def returnL(x: Rep[Any]): Rep[Unit]
 }
 
@@ -27,11 +27,13 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   case class Print(x: Exp[Any]) extends Def[Unit]
   case class PrintLn(x: Exp[Any]) extends Def[Unit]
   case class Exit(s: Exp[Int]) extends Def[Nothing]
+  case class Error(s: Exp[String]) extends Def[Nothing]
   case class Return(x: Exp[Any]) extends Def[Unit]
 
   def print(x: Exp[Any]) = reflectEffect(Print(x))
   def println(x: Exp[Any]) = reflectEffect(PrintLn(x))
   def exit(s: Exp[Int]) = reflectEffect(Exit(s))
+  def error(s: Exp[String]) = reflectEffect(Error(s))
   def returnL(x: Exp[Any]) = reflectEffect(Return(x))
 }
 
@@ -44,6 +46,7 @@ trait ScalaGenMiscOps extends ScalaGenEffect {
     case Print(s) => emitValDef(sym, "print(" + quote(s) + ")")
     case Exit(a) => emitValDef(sym, "exit(" + quote(a) + ")")
     case Return(x) => emitValDef(sym, "return " + quote(x))
+    case Error(s) => emitValDef(sym, "error(" + quote(s) + ")")
     case _ => super.emitNode(sym, rhs)
   }
 }
