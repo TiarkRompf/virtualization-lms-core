@@ -17,10 +17,6 @@ trait MathOps extends Base {
     def min[A:Manifest:Numeric](x: Rep[A], y: Rep[A]) = math_min(x,y)
   }
 
-  object Random {
-    def nextGaussian() = random_next_gaussian()
-  }
-
   def math_ceil(x: Rep[Double]) : Rep[Double]
   def math_floor(x: Rep[Double]) : Rep[Double]
   def math_exp(x: Rep[Double]) : Rep[Double]
@@ -29,8 +25,6 @@ trait MathOps extends Base {
   def math_abs[A:Manifest:Numeric](x: Rep[A]) : Rep[A]
   def math_max[A:Manifest:Numeric](x: Rep[A], y: Rep[A]): Rep[A]
   def math_min[A:Manifest:Numeric](x: Rep[A], y: Rep[A]): Rep[A]
-
-  def random_next_gaussian() : Rep[Double]
 }
 
 trait MathOpsExp extends MathOps with EffectExp {
@@ -43,8 +37,6 @@ trait MathOpsExp extends MathOps with EffectExp {
   case class MathMax[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
   case class MathMin[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
 
-  case class RandomNextGaussian() extends Def[Double]
-
   def math_ceil(x: Exp[Double]) = MathCeil(x)
   def math_floor(x: Exp[Double]) = MathFloor(x)
   def math_exp(x: Exp[Double]) = MathExp(x)
@@ -53,8 +45,6 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_abs[A:Manifest:Numeric](x: Exp[A]) = MathAbs(x)
   def math_max[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMax(x, y)
   def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMin(x, y)
-
-  def random_next_gaussian() = RandomNextGaussian()
 }
 
 trait BaseGenMathOps extends GenericNestedCodegen {
@@ -80,7 +70,6 @@ trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {
     case MathAbs(x) => emitValDef(sym, "Math.abs(" + quote(x) + ")")
     case MathMax(x,y) => emitValDef(sym, "Math.max(" + quote(x) + ", " + quote(y) + ")")
     case MathMin(x,y) => emitValDef(sym, "Math.min(" + quote(x) + ", " + quote(y) + ")")
-    case RandomNextGaussian() => emitValDef(sym, "Random.nextGaussian()")
     case _ => super.emitNode(sym, rhs)
   }
 }
