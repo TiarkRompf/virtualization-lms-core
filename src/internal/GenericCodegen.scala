@@ -103,6 +103,17 @@ trait GenericNestedCodegen extends GenericCodegen {
     rval
   }
 
+/* fom delite-develop:
+  // a block should only emit a dependency if it truly depends on it (as an input),
+  // or if it is an effect that has not been emitted yet by anybody
+  var ignoreEffects = false
+  var effectScope: List[TP[_]] = Nil // global to all blocks
+
+  var scope: List[TP[_]] = Nil
+  var nested = 0
+  var lastNodeAttempted: TP[_] = _
+*/
+
 
   def focusExactScope[A](result: Exp[Any])(body: List[TP[Any]] => A): A = {
     

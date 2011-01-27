@@ -67,11 +67,11 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
       rhs match {
         case While(c,b) =>
             // Get free variables list
-            val freeVars = getFreeVarBlock(c,Nil)
-            val argListStr = freeVars.map(quote(_)).mkString(", ") 
+            //val freeVars = getFreeVarBlock(c,Nil)
 
             // emit function for the condition evaluation
-            val condFunc = emitDevFunc(c, getBlockResult(c).Type, freeVars)
+            val (condFunc,freeVars) = emitDevFunc(c, Nil)
+            val argListStr = freeVars.map(quote(_)).mkString(", ")
 
             // Emit while loop (only the result variable of condition)
             stream.print(addTab() + "while (")
