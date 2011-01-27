@@ -3,7 +3,7 @@ package internal
 
 trait Effects extends Expressions {
   
-  type State = List[Exp[Any]]
+  type State = List[Exp[Any]] // TODO: maybe use TP instead to save lookup
   
   var context: State = _
 
@@ -100,6 +100,8 @@ trait Effects extends Expressions {
     if (mutableInputs.nonEmpty)
       println("error: write "+x+" has read-only mutable inputs "+mutableInputs.mkString(","))
     
+    // TODO: write-deps should be weak (unless the var is also read! i.e. += )
+    
     val deps = context filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || mayRead(u, write) || write.contains(e) }
     
     val z = fresh[A]
@@ -136,10 +138,30 @@ trait Effects extends Expressions {
     context = Nil
     
     val result = block
-    val resultR = if (context.isEmpty) result else Reify(result, Global(), context): Exp[A]
+    val summary = Global() // TODO: summarize
+    val resultR = if (context.isEmpty) result else Reify(result, summary, context): Exp[A] // calls toAtom...
     context = save
     resultR
   }
+
+  def reifyEffectsHere[A:Manifest](block: => Exp[A]): Exp[A] = {
+    val save = context
+    if (save eq null)
+    context = Nil
+    
+    val result = block
+
+    if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
+      println("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
+
+    val deps = if ((save eq null) || (context eq null)) context else context.drop(save.length)
+    
+    val summary = Global() // TODO: summarize
+    val resultR = if (deps.isEmpty) result else Reify(result, summary, deps): Exp[A] // calls toAtom...
+    context = save
+    resultR
+  }
+
 
   def effectSyms(x: Exp[Any]): List[Sym[Any]] = x match {  //TODO: move to scheduling/codegen?
     case Def(Reify(y, u, es)) => es.asInstanceOf[List[Sym[Any]]]

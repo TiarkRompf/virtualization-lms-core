@@ -24,8 +24,8 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
   case class IfThenElse[T:Manifest](cond: Exp[Boolean], thenp: Exp[T], elsep: Exp[T]) extends Def[T]
 
   override def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]) = {
-    val a = reifyEffects(thenp)
-    val b = reifyEffects(elsep)
+    val a = reifyEffectsHere(thenp)
+    val b = reifyEffectsHere(elsep)
     (a,b) match {
       case (Def(Reify(_,_,_)), _) | (_, Def(Reify(_,_,_))) => reflectEffect(IfThenElse(cond,a,b)) //TODO u
       case _ => IfThenElse(cond, thenp, elsep)
