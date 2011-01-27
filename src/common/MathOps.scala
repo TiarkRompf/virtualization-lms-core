@@ -14,6 +14,7 @@ trait MathOps extends Base {
     def sqrt(x: Rep[Double]) = math_sqrt(x)
     def atan(x: Rep[Double]) = math_atan(x)
     def atan2(x: Rep[Double], y: Rep[Double]) = math_atan2(x,y)
+    def pow(x: Rep[Double], y: Rep[Double]) = math_pow(x,y)
     def abs[A:Manifest:Numeric](x: Rep[A]) = math_abs(x)
     def max[A:Manifest:Numeric](x: Rep[A], y: Rep[A]) = math_max(x,y)
     def min[A:Manifest:Numeric](x: Rep[A], y: Rep[A]) = math_min(x,y)
@@ -27,6 +28,7 @@ trait MathOps extends Base {
   def math_sqrt(x: Rep[Double]) : Rep[Double]
   def math_atan(x: Rep[Double]) : Rep[Double]
   def math_atan2(x: Rep[Double], y: Rep[Double]) : Rep[Double]
+  def math_pow(x: Rep[Double], y: Rep[Double]): Rep[Double]
   def math_abs[A:Manifest:Numeric](x: Rep[A]) : Rep[A]
   def math_max[A:Manifest:Numeric](x: Rep[A], y: Rep[A]): Rep[A]
   def math_min[A:Manifest:Numeric](x: Rep[A], y: Rep[A]): Rep[A]
@@ -41,6 +43,7 @@ trait MathOpsExp extends MathOps with EffectExp {
   case class MathSqrt(x: Exp[Double]) extends Def[Double]
   case class MathAtan(x: Exp[Double]) extends Def[Double]
   case class MathAtan2(x: Exp[Double], y: Exp[Double]) extends Def[Double]
+  case class MathPow(x: Exp[Double], y: Exp[Double]) extends Def[Double]
   case class MathAbs[A:Manifest:Numeric](x: Exp[A]) extends Def[A]
   case class MathMax[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
   case class MathMin[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
@@ -53,6 +56,7 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_sqrt(x: Exp[Double]) = MathSqrt(x)
   def math_atan(x: Exp[Double]) = MathAtan(x)
   def math_atan2(x: Exp[Double], y: Exp[Double]) = MathAtan2(x,y)
+  def math_pow(x: Exp[Double], y: Exp[Double]) = MathPow(x,y)
   def math_abs[A:Manifest:Numeric](x: Exp[A]) = MathAbs(x)
   def math_max[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMax(x, y)
   def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMin(x, y)
@@ -81,6 +85,7 @@ trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {
     case MathSqrt(x) => emitValDef(sym, "Math.sqrt(" + quote(x) + ")")
     case MathAtan(x) => emitValDef(sym, "Math.atan(" + quote(x) + ")")
     case MathAtan2(x,y) => emitValDef(sym, "Math.atan2(" + quote(x) + ", " + quote(y) + ")")
+    case MathPow(x,y) => emitValDef(sym, "Math.pow(" + quote(x) + "," + quote(y) + ")")
     case MathAbs(x) => emitValDef(sym, "Math.abs(" + quote(x) + ")")
     case MathMax(x,y) => emitValDef(sym, "Math.max(" + quote(x) + ", " + quote(y) + ")")
     case MathMin(x,y) => emitValDef(sym, "Math.min(" + quote(x) + ", " + quote(y) + ")")
