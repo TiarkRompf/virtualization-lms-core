@@ -13,9 +13,9 @@ trait Expressions {
     def Type : Manifest[_] = manifest
   }
 
-  case class Const[T:Manifest](x: T) extends Exp[T]
+  case class Const[+T:Manifest](x: T) extends Exp[T]
 
-  case class Sym[T:Manifest](val id: Int) extends Exp[T] {
+  case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var lastRead: Sym[Any] = this.asInstanceOf[Sym[Any]]
     var version = id
   }

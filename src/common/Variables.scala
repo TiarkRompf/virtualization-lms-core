@@ -48,16 +48,16 @@ trait VariablesExp extends Variables with EffectExp {
 
   def var_new[T:Manifest](init: Exp[T]): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
-    Variable(reflectEffect(NewVar(init)))
+    Variable(reflectEffect(NewVar(reflectRead(init))))
   }
 
   def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
-    reflectMutation(Assign(lhs, rhs))
+    reflectMutation(Assign(lhs, reflectRead(rhs)))
     Const()
   }
 
   def var_plusequals[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
-    reflectMutation(VarPlusEquals(lhs, rhs))
+    reflectMutation(VarPlusEquals(lhs, reflectRead(rhs)))
     Const()
   }
   // TODO: not using these due to a problem with getBlockResult() getting an out-of-scope symbol without the Const
@@ -72,10 +72,10 @@ trait ScalaGenVariables extends ScalaGenEffect {
 
   override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
-    case NewVar(init) => emitVarDef(sym, quote(init))
-    case Assign(Variable(a), b) => emitAssignment(quote(a), quote(b))
+    case NewVar(init) => emitVarDef(sym, quote(getBlockResult(init)))
+    case Assign(Variable(a), b) => emitAssignment(quote(a), quote(getBlockResult(b)))
     //case Assign(a, b) => emitAssignment(quote(a), quote(b))
-    case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(b))
+    case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(getBlockResult(b)))
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -89,11 +89,11 @@ trait CLikeGenVariables extends CLikeCodegen {
         case ReadVar(Variable(a)) =>
           emitValDef(sym, quote(a))
         case NewVar(init) =>
-          emitVarDef(sym, quote(init))
+          emitVarDef(sym, quote(getBlockResult(init)))
         case Assign(Variable(a), b) =>
-          emitAssignment(quote(a), quote(b))
+          emitAssignment(quote(a), quote(getBlockResult(b)))
         case VarPlusEquals(Variable(a), b) =>
-          emitAssignment(quote(a), quote(a) + " + " + quote(b))
+          emitAssignment(quote(a), quote(a) + " + " + quote(getBlockResult(b)))
         case _ => super.emitNode(sym, rhs)
       }
     }
