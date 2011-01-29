@@ -46,13 +46,13 @@ trait Effects extends Expressions {
   }
 
   // REMARK: making toAtom context-dependent is quite a departure from the 
-  // earlier design. there are a number of implications especially for mirroring
+  // earlier design. there are a number of implications especially for mirroring.
 
   override implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
     // are we depending on a variable? then we need to be serialized -> effect
     
     if (d.isInstanceOf[Reflect[Any]]) {
-      println("error: toAtom won't work on " + d)
+      println("error: toAtom won't work on " + d + ". if this is a result of a mirror operation try reflectMirrored.")
     }
     
     val mutableInputs = readSyms(d) filter { case Def(Reflect(_, u, _)) => mustAlloc(u) case _ => false }
@@ -73,6 +73,11 @@ trait Effects extends Expressions {
     } else
       super.toAtom(d)
   }
+
+  def reflectMirrored[A:Manifest](d: Reflect[A]): Exp[A] = {
+    createDefinition(fresh[A], d).sym
+  }
+
 
 
   def reflectRead[A:Manifest](read: Exp[Any]*)(x: Def[A]): Exp[A] = {
@@ -168,6 +173,6 @@ trait Effects extends Expressions {
     case _ => Nil
   }
 
-  case class Reflect[A](x:Def[A], summary: Summary, deps: List[Exp[Any]]) extends Def[A]
+  case class Reflect[+A](x:Def[A], summary: Summary, deps: List[Exp[Any]]) extends Def[A]
   case class Reify[A](x: Exp[A], summary: Summary, effects: List[Exp[Any]]) extends Def[A]
 }

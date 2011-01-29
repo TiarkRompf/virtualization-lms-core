@@ -41,6 +41,12 @@ trait EqualExp extends Equal with VariablesExp {
 
   def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = Equal(a,b)
   def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = NotEqual(a,b)
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case Equal(a, b) => equals(f(a),f(b))
+    case NotEqual(a, b) => equals(f(a),f(b))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
 }
 
 trait ScalaGenEqual extends ScalaGenBase {

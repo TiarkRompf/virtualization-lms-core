@@ -13,30 +13,60 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
 
     //if (!syms(x).exists(t.subst contains _)) return s   <---- should be safe to prune but test fails (??)
 
-    val y = try { mirror(x, t) } catch { case e => println(e); s }
+    val y = try { 
+      val ss = syms(x)
+      if (ss != t(ss))
+        mirror(x, t) 
+      else
+        s
+    } catch { case e => println("Exception during mirroring of "+x+": "+ e); e.printStackTrace; s }
     if (y != s) {
-/*
+
       if (y.isInstanceOf[Sym[Any]] && findDefinition(y.asInstanceOf[Sym[Any]]).nonEmpty)
         println("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[Any]]).get.rhs)
       else
         println("--> replace " + s+"="+x + " by " + y)
-*/
+
       t.subst(s) = y // TODO: move out of conditional?
     }
     y
   }
+
+  def transformLoopBody[A](s: Sym[A], x: Def[A], t: SubstTransformer): Def[A] = {
+    implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
+    mirrorFatDef(x, t)
+  }
+/*
+  def transformOnePiece[A](s: Sym[A], x: Def[A], t: SubstTransformer): Def[A] = {
+    mirror
+  }
+*/
   
   def transformAll(scope: List[TTP], t: SubstTransformer): List[TTP] = scope flatMap {
     case TTP(List(sym), ThinDef(rhs)) =>
       transformOne(sym, rhs, t) match {
-        case s @ Def(r) => List(TTP(List(s.asInstanceOf[Sym[Any]]), ThinDef(r)))
+        case s: Sym[Any] => List(fatten(findDefinition(s).get))
         case _ => Nil
       }
     case TTP(lhs, SimpleFatLoop(s,x,rhs)) =>
+      // alternate strategy: transform thin def, then fatten again (a little detour)
+      println("need to transform rhs of fat loop: " + lhs + ", " + rhs)
+      val lhs2 = lhs.map { case s @ Def(r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
+      if (lhs != lhs2) println("lhs changed!")
+      val rhs2 = lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r))) => transformLoopBody(s,r,t) }}
+      println("came up with: " + lhs2 + ", " + rhs2 + " with subst " + t.subst.mkString(","))
+      List(TTP(lhs2, SimpleFatLoop(t(s),t(x).asInstanceOf[Sym[Int]],rhs2)))
+      // still problem: VectorSum(a,b) = SimpleLoop(i, ReduceElem(f(i))) 
+      // might need to translate f(i), but looking up VectorSum will not be changed at all!!!
+      // --> change rhs nonetheless???
+      
+      
+/*      
       // potential problem: calling toAtom on a SimpleCollect (which does not have any symbol so far!)
       val lhs2 = (lhs zip rhs).map(p=>transformOne(p._1,p._2,t)).map { case s: Sym[Any] => s }.distinct.asInstanceOf[List[Sym[Any]]]
-      val rhs2 = lhs2 map (findDefinition(_).get.rhs)
+      val rhs2 = lhs2 map (findDefinition(_).get.rhs) //FIXME: will lookup old sym (ie VectorTrans) in case of AbstractCollect
       List(TTP(lhs2, SimpleFatLoop(t(s),t(x).asInstanceOf[Sym[Int]],rhs2)))
+*/      
   }
 
   def simplify(scope: List[TTP])(results: List[Exp[Any]]): (List[TTP], List[Exp[Any]]) = {
@@ -148,7 +178,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
               Nil // direct deps on this loop's induction var don't count
             case sc =>
               val pr = syms(sc.rhs).intersect(otherLoopSyms) flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
-              if (pr.nonEmpty) println("fusion of "+pr+" prevented by " + sc + " in body of " + dx.lhs)
+              if (pr.nonEmpty) println("fusion of "+pr+" prevented by " + sc + " which is required by body of " + dx.lhs)
               pr
           }
         }.distinct

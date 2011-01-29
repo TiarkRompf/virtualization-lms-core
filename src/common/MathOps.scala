@@ -45,6 +45,15 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_abs[A:Manifest:Numeric](x: Exp[A]) = MathAbs(x)
   def math_max[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMax(x, y)
   def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMin(x, y)
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
+    implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
+    e match {
+      case MathAbs(x) => math_abs(f(x))
+      case _ => super.mirror(e,f)
+    }
+  }
+
 }
 
 trait BaseGenMathOps extends GenericNestedCodegen {

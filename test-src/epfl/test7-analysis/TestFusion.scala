@@ -14,16 +14,21 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     //case Copy(a) => f(a)
-    case ArrayElem(y) => toAtom(ArrayElem(f(y)))
-    case ReduceElem(y) => toAtom(ReduceElem(f(y)))
+    case SimpleLoop(s,i, ArrayElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(y))))
+    case SimpleLoop(s,i, ReduceElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(y))))
     case ArrayIndex(a,i) => toAtom(ArrayIndex(f(a), f(i)))
     case Plus(x,y) => infix_+(f(x), f(y))
     case Minus(x,y) => infix_-(f(x), f(y))
     case Times(x,y) => infix_*(f(x), f(y))
     case Div(x,y) => infix_/(f(x), f(y))
-    case Reflect(Print(x), u, es) => toAtom(Reflect(Print(f(x)), u, es map (e => f(e))))
-    case Reify(x, u, es) => toAtom(Reify(f(x), u, es map (e => f(e))))
+    case Reflect(Print(x), Global(), es) => reflectMirrored(Reflect(Print(f(x)), Global(), f(es)))
+    case Reify(x, Global(), es) => toAtom(Reify(f(x), Global(), f(es)))
   }).asInstanceOf[Exp[A]]
+
+  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer): Def[A] = (e match {
+    case ArrayElem(y) => ArrayElem(f(y))
+    case ReduceElem(y) => ReduceElem(f(y))
+  }).asInstanceOf[Def[A]]
     
 }
 

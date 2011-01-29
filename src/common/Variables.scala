@@ -82,6 +82,15 @@ trait VariablesExp extends Variables with EffectExp {
     reflectWrite(lhs.e)()(VarPlusEquals(lhs, rhs))
     Const()
   }
+  
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case Reflect(NewVar(a), Alloc(), es) => reflectMirrored(Reflect(NewVar(f(a)), Alloc(), f(es)))
+    case Reflect(ReadVar(Variable(a)), Read(rs), es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), Read(f onlySyms rs), f(es)))
+    case Reflect(Assign(Variable(a),b), Write(ws), es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b)), Write(f onlySyms ws), f(es)))
+    case Reflect(VarPlusEquals(Variable(a),b), Write(ws), es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b)), Write(f onlySyms ws), f(es)))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
+  
   // TODO: not using these due to a problem with getBlockResult() getting an out-of-scope symbol without the Const
   //def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) = reflectMutation(Assign(lhs, rhs))
   //def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: Exp[T]) = reflectMutation(VarPlusEquals(lhs, rhs))

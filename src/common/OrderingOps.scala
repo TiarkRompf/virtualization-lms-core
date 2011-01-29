@@ -57,6 +57,21 @@ trait OrderingOpsExp extends OrderingOps with BaseExp {
   def ordering_equiv[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[Boolean] = OrderingEquiv(lhs,rhs)
   def ordering_max[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[T] = OrderingMax(lhs,rhs)
   def ordering_min[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[T] = OrderingMin(lhs,rhs)
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
+    implicit val z1: Ordering[Any] = null // hack!! need to store it in Def instances??
+    implicit val z2: Ordering[A] = null // hack!! need to store it in Def instances??
+    (e match {
+    case OrderingLT(a,b) => ordering_lt(f(a),f(b))
+    case OrderingLTEQ(a,b) => ordering_lteq(f(a),f(b))
+    case OrderingGT(a,b) => ordering_gt(f(a),f(b))
+    case OrderingGTEQ(a,b) => ordering_gteq(f(a),f(b))
+    case OrderingEquiv(a,b) => ordering_equiv(f(a),f(b))
+    case OrderingMax(a,b) => ordering_max(f(a),f(b))
+    case OrderingMin(a,b) => ordering_min(f(a),f(b))
+    case _ => super.mirror(e, f)
+    }).asInstanceOf[Exp[A]]
+  }
 }
 
 trait ScalaGenOrderingOps extends ScalaGenBase {

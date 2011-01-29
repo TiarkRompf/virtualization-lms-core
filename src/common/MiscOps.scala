@@ -35,9 +35,9 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   def returnL(x: Exp[Any]) = reflectEffect(Return(x))
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
-    case Reflect(Print(x), u, es) => toAtom(Reflect(Print(f(x)), u, es map (e => f(e))))
-    case Reflect(PrintLn(x), u, es) => toAtom(Reflect(PrintLn(f(x)), u, es map (e => f(e))))
-    case Reflect(Exit(x), u, es) => toAtom(Reflect(Exit(f(x)), u, es map (e => f(e))))
+    case Reflect(Print(x), Global(), es) => reflectMirrored(Reflect(Print(f(x)), Global(), f(es)))
+    case Reflect(PrintLn(x), Global(), es) => reflectMirrored(Reflect(PrintLn(f(x)), Global(), f(es)))
+    case Reflect(Exit(x), Global(), es) => reflectMirrored(Reflect(Exit(f(x)), Global(), f(es)))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
