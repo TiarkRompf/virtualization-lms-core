@@ -248,7 +248,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     throw new GenerationFailedException("CudaGen: copyDataStructureDtoHBack(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
   }
 
-  def allocOutput(newSym: Sym[_], sym: Sym[_]) : Unit = {
+  def allocOutput(newSym: Sym[_], sym: Sym[_], reset: Boolean = false) : Unit = {
     throw new GenerationFailedException("CudaGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
   }
 
