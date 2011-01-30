@@ -52,7 +52,11 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
       // alternate strategy: transform thin def, then fatten again (a little detour)
       println("need to transform rhs of fat loop: " + lhs + ", " + rhs)
       val lhs2 = lhs.map { case s @ Def(r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
-      if (lhs != lhs2) println("lhs changed!")
+      if (lhs != lhs2) {
+        val missing = (lhs2.map(s => findDefinition(s).get) diff innerScope)
+        println("lhs changed! will add to innerScope: "+missing.mkString(","))
+        innerScope = innerScope ::: missing
+      }
       val rhs2 = lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r))) => transformLoopBody(s,r,t) }}
       println("came up with: " + lhs2 + ", " + rhs2 + " with subst " + t.subst.mkString(","))
       List(TTP(lhs2, SimpleFatLoop(t(s),t(x).asInstanceOf[Sym[Int]],rhs2)))
