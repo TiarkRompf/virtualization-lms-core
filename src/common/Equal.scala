@@ -39,7 +39,7 @@ trait EqualExp extends Equal with VariablesExp {
   case class Equal[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
   case class NotEqual[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
 
-  def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = Equal(a,b)
+  def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = if (a == b) Const(true) else Equal(a,b) // TODO: move to EqualExpOpt??
   def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = NotEqual(a,b)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
