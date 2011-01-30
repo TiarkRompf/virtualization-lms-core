@@ -108,6 +108,7 @@ trait GenericNestedCodegen extends GenericCodegen {
   // or if it is an effect that has not been emitted yet by anybody
   var ignoreEffects = false
   var effectScope: List[TP[_]] = Nil // global to all blocks
+  var freeVarEffectScope: List[TP[_]] = Nil // global to all blocks
 
   var scope: List[TP[_]] = Nil
   var nested = 0
