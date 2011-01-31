@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal._
+import scala.collection.mutable.Set
 
 trait SetOps extends Base {
   object Set {
