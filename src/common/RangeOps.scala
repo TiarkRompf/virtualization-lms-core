@@ -82,7 +82,6 @@ trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
     case RangeForeach(start, end, i, body) => {
       stream.println("var " + quote(i) + " : Int = " + quote(start))
       stream.println("val " + quote(sym) + " = " + "while (" + quote(i) + " < " + quote(end) + ") {")
-      nestedEmission = true
       emitBlock(body)
       stream.println(quote(getBlockResult(body)))
       stream.println(quote(i) + " = " + quote(i) + " + 1")
@@ -105,9 +104,9 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
 
     // TODO: What if the range is not continuous integer set?
     case RangeForeach(start, end, i, body) => {
+      /*
         //var freeVars = buildScheduleForResult(body).filter(scope.contains(_)).map(_.sym)
         val freeVars = getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
-
         // Add the variables of range to the free variable list if necessary
         var paramList = freeVars
         //val Until(startIdx,endIdx) = findDefinition(r.asInstanceOf[Sym[Range]]).map(_.rhs).get.asInstanceOf[Until]
@@ -115,32 +114,12 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
         if(end.isInstanceOf[Sym[_]]) paramList = end.asInstanceOf[Sym[_]] :: paramList
         paramList = paramList.distinct
         val paramListStr = paramList.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
-
-        if(parallelFor) {
-          //stream.println("__global__ gpuKernel_%s(%s) {".format(quote(sym),paramListStr))
-          tabWidth += 1
-          stream.println(addTab()+"int %s = blockIdx.x*blockDim.x + threadIdx.x;".format(quote(i)))
-          //stream.println(addTab() + "%s = %s + %s;".format(quote(i), quote(i), quote(startIdx)))
-          //stream.println(addTab()+"if(%s < %s) {".format(quote(i), quote(endIdx)))
-          stream.println(addTab() + "%s = %s + %s;".format(quote(i), quote(i), quote(start)))
-          stream.println(addTab()+"if(%s < %s) {".format(quote(i), quote(end)))
-          tabWidth += 1
-          // No parallelism in the inner block
-          parallelFor = true
-          emitBlock(body)
-          parallelFor = false
-          tabWidth -= 1
-          stream.println(addTab()+"}")
-          tabWidth -= 1
-          stream.println(addTab()+"}")
-        }
-        else {
-          stream.println(addTab()+"for(int %s=%s; %s < %s; %s++) {".format(quote(i),quote(start),quote(i),quote(end),quote(i)))
-          tabWidth += 1
-          emitBlock(body)
-          tabWidth -= 1
-          stream.println(addTab() + "}")
-        }
+        */
+        stream.println(addTab()+"for(int %s=%s; %s < %s; %s++) {".format(quote(i),quote(start),quote(i),quote(end),quote(i)))
+        tabWidth += 1
+        emitBlock(body)
+        tabWidth -= 1
+        stream.println(addTab() + "}")
     }
     case _ => super.emitNode(sym, rhs)
   }

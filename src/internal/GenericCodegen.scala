@@ -73,14 +73,15 @@ trait GenericNestedCodegen extends GenericCodegen {
 
   var shallow = false
 
-  // a block should be only emit a dependency if it truly depends on it (as an input),
+  // a block should only emit a dependency if it truly depends on it (as an input),
   // or if it is an effect that has not been emitted yet by anybody
   var ignoreEffects = false
   var effectScope: List[TP[_]] = Nil // global to all blocks
+  var freeVarEffectScope: List[TP[_]] = Nil // global to all blocks
 
   var scope: List[TP[_]] = Nil
+  var nested = 0
   var lastNodeAttempted: TP[_] = _
-  var nestedEmission = false
 
   override def emitBlock(start: Exp[_])(implicit stream: PrintWriter): Unit = {
     // try to push stuff as far down into more control-dependent parts as
@@ -113,6 +114,7 @@ trait GenericNestedCodegen extends GenericCodegen {
 
     val save = scope
     scope = e4 ::: scope
+    nested += 1
 
     ignoreEffects = true
     val e5 = buildScheduleForResult(start)
@@ -159,6 +161,7 @@ trait GenericNestedCodegen extends GenericCodegen {
     }
 
     scope = save
+    nested -= 1
   }
 
 
@@ -207,10 +210,10 @@ trait GenericNestedCodegen extends GenericCodegen {
     ignoreEffects = false
 
     val e6 = e4.filter(z => z match {
-      case TP(sym, Reflect(x, es)) => (e5 contains z) || !(effectScope contains z)
+      case TP(sym, Reflect(x, es)) => (e5 contains z) || !(freeVarEffectScope contains z)
       case _ => e5 contains z
     })
-    effectScope :::= e6 filter { case TP(sym, Reflect(x, es)) => true; case _ => false }
+    freeVarEffectScope :::= e6 filter { case TP(sym, Reflect(x, es)) => true; case _ => false }
 
     // Find local symbols (including those passed as arguments to this method)
     var localList:List[Sym[_]] = e4.map(_.sym) ::: local.toList
