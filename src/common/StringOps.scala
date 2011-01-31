@@ -15,24 +15,27 @@ trait StringOps extends Variables with OverloadHack {
 
   def infix_trim(s: Rep[String]) = string_trim(s)
   def infix_split(s: Rep[String], separators: Rep[String]) = string_split(s, separators)
-  def infix_valueOf(s: Rep[String], d: Rep[Double]) = string_valueof(d)
+
+  object String {
+    def valueOfL(a: Rep[Any]) = string_valueof(a)
+  }
 
   def string_plus(s: Rep[Any], o: Rep[Any]): Rep[String]
   def string_trim(s: Rep[String]): Rep[String]
   def string_split(s: Rep[String], separators: Rep[String]): Rep[Array[String]]
-  def string_valueof(d: Rep[Double]): Rep[String]
+  def string_valueof(d: Rep[Any]): Rep[String]
 }
 
 trait StringOpsExp extends StringOps with VariablesExp {
   case class StringPlus(s: Exp[Any], o: Exp[Any]) extends Def[String]
   case class StringTrim(s: Exp[String]) extends Def[String]
   case class StringSplit(s: Exp[String], separators: Exp[String]) extends Def[Array[String]]
-  case class StringValueOf(d: Exp[Double]) extends Def[String]
+  case class StringValueOf(a: Exp[Any]) extends Def[String]
 
   def string_plus(s: Exp[Any], o: Exp[Any]): Rep[String] = StringPlus(s,o)
   def string_trim(s: Exp[String]) : Rep[String] = StringTrim(s)
   def string_split(s: Exp[String], separators: Exp[String]) : Rep[Array[String]] = StringSplit(s, separators)
-  def string_valueof(d: Exp[Double]) = StringValueOf(d)
+  def string_valueof(a: Exp[Any]) = StringValueOf(a)
 }
 
 trait ScalaGenStringOps extends ScalaGenBase {
@@ -43,7 +46,7 @@ trait ScalaGenStringOps extends ScalaGenBase {
     case StringPlus(s1,s2) => emitValDef(sym, "%s+%s".format(quote(s1), quote(s2)))
     case StringTrim(s) => emitValDef(sym, "%s.trim()".format(quote(s)))
     case StringSplit(s, sep) => emitValDef(sym, "%s.split(%s)".format(quote(s), quote(sep)))
-    case StringValueOf(d) => emitValDef(sym, "java.lang.String.valueOf(%s)".format(quote(d)))
+    case StringValueOf(a) => emitValDef(sym, "java.lang.String.valueOf(%s)".format(quote(a)))
     case _ => super.emitNode(sym, rhs)
   }
 }
