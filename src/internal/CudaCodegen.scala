@@ -475,7 +475,11 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
 
     //TODO: Restore safety check for the dimension sizes
     out.append("int gpuBlockSizeX_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
-    out.append("\tif(%s < %s) return %s;\n".format(xDimList(xDimList.length-1),MAX_THREADS_PER_BLOCK,xDimList(xDimList.length-1)))
+	if(xDimList.length==0)
+      out.append("\tint X = 1;\n")
+	else
+	  out.append("\tint X = %s;\n".format(xDimList(xDimList.length-1)))
+    out.append("\tif(X < %s) return X;\n".format(MAX_THREADS_PER_BLOCK))
     out.append("\telse return %s;\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
     MetaData.gpuBlockSizeX = "[\"gpuBlockSizeX_%s_%s\",[%s]]".format(quote(sym),helperFuncIdx,argStr)
