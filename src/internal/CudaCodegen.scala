@@ -13,6 +13,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   override def toString = "cuda"
 
   /* For using GPU local variables */
+  var useLocalVar:Boolean = false
   val indexMap = HashMap[Exp[Any],String]()
   private val cudaVarMap = HashMap[Tuple2[Exp[Any],String],String]()
   private var localVarIdx = 0
@@ -198,6 +199,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("CudaGen: Not GPUable")
 
     // Initialize global variables
+    useLocalVar = false
     cudaVarMap.clear
     indexMap.clear
 
