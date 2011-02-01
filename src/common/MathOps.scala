@@ -39,10 +39,10 @@ trait MathOpsExp extends MathOps with EffectExp {
 
   def math_ceil(x: Exp[Double]) = MathCeil(x)
   def math_floor(x: Exp[Double]) = MathFloor(x)
-  def math_exp(x: Exp[Double]) = MathExp(x)
-  def math_log(x: Exp[Double]) = MathLog(x)
+  def math_exp(x: Exp[Double]) = reflectEffect(MathExp(x))
+  def math_log(x: Exp[Double]) = reflectEffect(MathLog(x))
   def math_sqrt(x: Exp[Double]) = MathSqrt(x)
-  def math_abs[A:Manifest:Numeric](x: Exp[A]) = MathAbs(x)
+  def math_abs[A:Manifest:Numeric](x: Exp[A]) = reflectEffect(MathAbs(x))
   def math_max[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMax(x, y)
   def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMin(x, y)
 }
