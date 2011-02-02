@@ -1,9 +1,9 @@
 package scala.virtualization.lms
 package common
 
-import java.io._
+import java.io.{FileReader, FileWriter, BufferedReader, BufferedWriter, PrintWriter}
+import scala.virtualization.lms.internal.{GenerationFailedException}
 import util.OverloadHack
-import scala.virtualization.lms.internal._
 
 trait IOOps extends Variables with OverloadHack {
 
@@ -87,7 +87,7 @@ trait ScalaGenIOOps extends ScalaGenBase {
   val IR: IOOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ObjBrApply(f) => emitValDef(sym, "new java.io.BufferedReader(" + quote(f) + ")")
     case ObjBwApply(f) => emitValDef(sym, "new java.io.BufferedWriter(" + quote(f) + ")")
     case ObjFrApply(s) => emitValDef(sym, "new java.io.FileReader(" + quote(s) + ")")
@@ -100,11 +100,11 @@ trait ScalaGenIOOps extends ScalaGenBase {
   }
 }
 
-trait CLikeGenIOOps extends CLikeCodegen {
+trait CLikeGenIOOps extends CLikeGenBase {
   val IR: IOOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ObjBrApply(f) => throw new GenerationFailedException("CLikeGenIOOps: Java IO operations are not supported")
     case ObjFrApply(s) => throw new GenerationFailedException("CLikeGenIOOps: Java IO operations are not supported")
     case BrReadline(b) => throw new GenerationFailedException("CLikeGenIOOps: Java IO operations are not supported")

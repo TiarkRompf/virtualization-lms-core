@@ -9,7 +9,7 @@ import util.OverloadHack
 
 import java.io.PrintWriter
 import java.io.FileOutputStream
-import scala.virtualization.lms.internal.ScalaGenBase
+
 
 trait Utils extends Base with OverloadHack {
   
@@ -46,7 +46,7 @@ trait ScalaGenUtil extends ScalaGenBase {
   val IR: UtilExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case StrCat(a,b) =>
       emitValDef(sym, quote(a) + ".toString + " + quote(b) + ".toString")
     case Tup(a,b) =>
@@ -54,7 +54,7 @@ trait ScalaGenUtil extends ScalaGenBase {
     case _ => super.emitNode(sym, rhs)
   }
 
-  override def quote(x: Exp[_]) = x match {
+  override def quote(x: Exp[Any]) = x match {
     case External(s,args) => s
     case _ => super.quote(x)
   }
@@ -65,7 +65,7 @@ trait ScalaGenUtil extends ScalaGenBase {
 trait Vectors extends Utils {
 
   type Vector
-  implicit val mV: Manifest[Vector]
+  implicit def mV: Manifest[Vector]
 
   def ZeroVector(n: Rep[Int]): Rep[Vector]
   def RandomVector(n: Rep[Int]): Rep[Vector]
@@ -120,7 +120,7 @@ trait VectorsImpl extends Vectors with FunctionsExp with UtilExp {
 trait VectorsImplExternal extends VectorsImpl {
 
   type Vector = Array[Double]
-  implicit val mV = manifest[Array[Double]]
+  def mV = manifest[Array[Double]]
 
   val base = "scala.virtualization.lms.epfl.test6.VectorOps.%s"
   
@@ -147,7 +147,7 @@ object VectorOps {
 trait VectorsImplConst extends VectorsImpl {
 
   type Vector = Array[Double]
-  implicit val mV = manifest[Array[Double]]
+  def mV = manifest[Array[Double]]
 
   // kernels implementations as function-type constants
 
@@ -177,7 +177,7 @@ trait VectorImplInternal extends VectorImpl {
 
 trait VectorsProg extends Vectors {
   
-  def test(x: Rep[Unit]) = {
+  def test(x: Rep[Unit]): Rep[Vector] = {
     RandomVector(7) + (ZeroVector(7) + RandomVector(7))
   }
   

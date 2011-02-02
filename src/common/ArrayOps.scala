@@ -2,7 +2,6 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CGenBase, CLikeCodegen, CudaGenBase, ScalaGenBase}
 
 trait ArrayOps extends Variables {
 
@@ -34,18 +33,18 @@ trait ScalaGenArrayOps extends ScalaGenBase {
   val IR: ArrayOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
     case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
     case _ => super.emitNode(sym, rhs)
   }
 }
 
-trait CLikeGenArrayOps extends CLikeCodegen {
+trait CLikeGenArrayOps extends CLikeGenBase {
   val IR: ArrayOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case ArrayLength(x) =>
           emitValDef(sym, " sizeof(" + quote(x) + ")")

@@ -9,12 +9,12 @@ trait GraphVizExport extends Scheduling {
 
   def quote(x: Any) = "\""+x+"\""
   
-  def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     stream.println("label=" + quote(sym + " \\n " + rhs))
     stream.println("shape=box")
   }
 
-  def emitDeps(sym: Sym[_], rhs: Def[_], deps: List[Sym[Any]])(implicit stream: PrintWriter) = {
+  def emitDeps(sym: Sym[Any], rhs: Def[Any], deps: List[Sym[Any]])(implicit stream: PrintWriter) = {
     for (dep <- deps) {
       stream.println("\"" + dep + "\" -> \"" + sym + "\"")
     }

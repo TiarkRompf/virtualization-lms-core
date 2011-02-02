@@ -37,18 +37,18 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
       case _ => throw new GenerationFailedException("CudaGen: Maximum 2 dimensions for GPU kernels.")
     }
   }
-  val multDimInputs = ListBuffer[Sym[_]]()
+  val multDimInputs = ListBuffer[Sym[Any]]()
 
   var helperFuncIdx = 0
-  var kernelsList = ListBuffer[Exp[_]]()
+  var kernelsList = ListBuffer[Exp[Any]]()
 
-  var kernelSymbol:Sym[_] = null
+  var kernelSymbol:Sym[Any] = null
   var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
   
-  var gpuInputs:List[Sym[_]] = Nil
-  var gpuOutputs:List[Sym[_]] = Nil
-  var gpuTemps:List[Sym[_]] = Nil
+  var gpuInputs:List[Sym[Any]] = Nil
+  var gpuOutputs:List[Sym[Any]] = Nil
+  var gpuTemps:List[Sym[Any]] = Nil
   var gpuInputsStr = ""
   var gpuOutputStr = ""
   var gpuTempsStr = ""
@@ -166,7 +166,14 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
   }
 
-  override def kernelInit(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultIsVar: Boolean): Unit = {
+  override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
+    if(syms.length != 1) {
+      println("TODO: implement cuda gen for fat exps!")
+      throw new GenerationFailedException("TODO: implement cuda gen for fat exps!")
+    }
+    
+    val List(sym) = syms
+
     // Conditions for not generating CUDA kernels (may be relaxed later)
     if((!isObjectType(sym.Type)) && (remap(sym.Type)!="void")) throw new GenerationFailedException("CudaGen: Not GPUable")
     if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("CudaGen: Not GPUable")
@@ -192,8 +199,9 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     //gpuTempsStr = ""
   }
 
+
   // Map scala primitive type to JNI type descriptor
-  def JNITypeDescriptor(m: Manifest[_]) : String = m.toString match {
+  def JNITypeDescriptor[A](m: Manifest[A]) : String = m.toString match {
     case "Int" => "I"
     case "Long" => "J"
     case "Float" => "F"
@@ -202,7 +210,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     case _ => throw new GenerationFailedException("Undefined CUDA type")
   }
 
-  def isObjectType(m: Manifest[_]) : Boolean = remap(m) match {
+  def isObjectType[A](m: Manifest[A]) : Boolean = remap(m) match {
     case "int" => false
     case "long" => false
     case "float" => false
@@ -212,7 +220,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     case _ => throw new GenerationFailedException("CudaGen: isObjectType(m) : Unknown data type (%s)".format(remap(m)))
   }
 
-  def isPrimitiveType(m: Manifest[_]) : Boolean = remap(m) match {
+  def isPrimitiveType[A](m: Manifest[A]) : Boolean = remap(m) match {
     case "int" => true
     case "long" => true
     case "float" => true
@@ -221,7 +229,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     case _ => false
   }
 
-  def isVoidType(m: Manifest[_]) : Boolean = remap(m) match {
+  def isVoidType[A](m: Manifest[A]) : Boolean = remap(m) match {
     case "void" => true
     case _ => false
   }
@@ -236,27 +244,27 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     case _ => throw new GenerationFailedException("CudaGen: remap(m) : Unknown data type (%s)".format(m.toString))
   }
 
-  def copyDataStructureHtoD(sym: Sym[_]) : String = {
+  def copyDataStructureHtoD(sym: Sym[Any]) : String = {
     throw new GenerationFailedException("CudaGen: copyDataStructureHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.Type)))
   }
 
-  def copyDataStructureDtoH(sym: Sym[_]) : String = {
+  def copyDataStructureDtoH(sym: Sym[Any]) : String = {
     throw new GenerationFailedException("CudaGen: copyDataStructureDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
   }
 
-  def copyDataStructureDtoHBack(sym: Sym[_]) : String = {
+  def copyDataStructureDtoHBack(sym: Sym[Any]) : String = {
     throw new GenerationFailedException("CudaGen: copyDataStructureDtoHBack(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
   }
 
-  def allocOutput(newSym: Sym[_], sym: Sym[_]) : Unit = {
+  def allocOutput(newSym: Sym[Any], sym: Sym[Any]) : Unit = {
     throw new GenerationFailedException("CudaGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
   }
 
-  def allocReference(newSym: Sym[_], sym: Sym[_]) : Unit = {
+  def allocReference(newSym: Sym[Any], sym: Sym[Any]) : Unit = {
     throw new GenerationFailedException("CudaGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
   }
 
-  def positionMultDimInputs(sym: Sym[_]) : String = {
+  def positionMultDimInputs(sym: Sym[Any]) : String = {
     throw new GenerationFailedException("CudaGen: positionMultDimInputs(sym) : Cannot reposition GPU memory (%s)".format(remap(sym.Type)))
 
   }
@@ -288,16 +296,16 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     stream.flush
   }  
 
-  def emitConstDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitConstDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.print("const ")
     emitVarDef(sym, rhs)
   }
 
-  def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(addTab() + remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitVarDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitVarDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(addTab()+ remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
@@ -305,7 +313,9 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     stream.println(addTab() + " " + lhs + " = " + rhs + ";")
   }
   
-  override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    val List(sym) = syms // TODO
+
     val out = new StringBuilder
 
     out.append("#include <cuda.h>\n\n")
@@ -326,7 +336,9 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     stream.print(out.toString)
   }
 
-  override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    val List(sym) = syms // TODO
+    
     tabWidth -= 1
     stream.println("}")
       
@@ -364,7 +376,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
    *******************************************************/
 
   // Generate allocation & copy functions for the DSL Type inputs (Host -> Device)
-  def emitCopyHtoD(sym: Sym[_], ksym: Sym[_]) : String = {
+  def emitCopyHtoD(sym: Sym[Any], ksym: Sym[Any]) : String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
 	  helperFuncIdx += 1
@@ -382,7 +394,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   }
 
   // Generate copy functions for the DSL Type outputs (Device -> Host)
-  def emitCopyDtoH(sym: Sym[_]): String = {
+  def emitCopyDtoH(sym: Sym[Any]): String = {
     val out = new StringBuilder
     out.append("jobject gpuMemCopy_%s_%s_%s(%s,%s) {\n".format(quote(kernelSymbol), quote(sym),helperFuncIdx,"JNIEnv *env", remap(sym.Type)+" *"+quote(sym)))
     out.append(copyDataStructureDtoH(sym))
@@ -390,7 +402,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     out.toString
   }
 
-  def emitCopyDtoHBack(sym: Sym[_], ksym: Sym[_]): String = {
+  def emitCopyDtoHBack(sym: Sym[Any], ksym: Sym[Any]): String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
 	  helperFuncIdx += 1
@@ -426,8 +438,8 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
   }
 
   // Prints out the helper functions for getting the threadBlcok size and grid size
-  def emitSizeFuncs(sym: Sym[_]): String = {
-	helperFuncIdx += 1
+  def emitSizeFuncs(sym: Sym[Any]): String = {
+    helperFuncIdx += 1
 
     val out = new StringBuilder
 
@@ -438,7 +450,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     val paramStr = inputs.map(ele=>
 			if(isObjectType(ele.Type)) remap(ele.Type) + " *" + quote(ele)
 			else remap(ele.Type) + " " + quote(ele)
-	).mkString(",")
+    ).mkString(",")
     val argStr = inputs.map("\""+quote(_)+"\"").mkString(",")
     val argInputStr = inputs.map(quote(_)).mkString(",")
     
@@ -484,7 +496,7 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     out.toString
   }
 
-  def emitLibCall(sym: Sym[_], stmts: List[String]) : Unit = {
+  def emitLibCall(sym: Sym[Any], stmts: List[String]) : Unit = {
     val out = new StringBuilder
 
     if(sym == kernelSymbol) {
@@ -524,14 +536,14 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
   }
 
 
-  def CudaConsts(x:Exp[_], s:String): String = {
+  def CudaConsts(x:Exp[Any], s:String): String = {
     s match {
       case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.Type))
       case _ => s
     }
   }
   
-  override def quote(x: Exp[_]) = x match { // TODO: quirk!
+  override def quote(x: Exp[Any]) = x match { // TODO: quirk!
     case Const(s: String) => "\""+s+"\""
     case Const(null) => "NULL"
     case Const(z) => CudaConsts(x, z.toString)
@@ -541,11 +553,6 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
   
 }
 
-trait CudaGenBase extends CudaCodegen {
-  import IR._
-
-}
-
-trait CudaGenEffect extends CudaNestedCodegen with CudaGenBase {
-
+trait CudaFatCodegen extends GenericFatCodegen with CudaCodegen {
+  val IR: Expressions with Effects with FatExpressions
 }

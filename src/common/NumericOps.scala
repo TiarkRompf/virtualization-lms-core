@@ -2,7 +2,6 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CLikeCodegen, CGenBase, CudaGenBase, ScalaGenBase}
 
 trait NumericOps extends Variables {
 
@@ -46,7 +45,7 @@ trait ScalaGenNumericOps extends ScalaGenBase {
   val IR: NumericOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case NumericPlus(a,b) => emitValDef(sym, quote(a) + " + " + quote(b))
     case NumericMinus(a,b) => emitValDef(sym, quote(a) + " - " + quote(b))
     case NumericTimes(a,b) => emitValDef(sym, quote(a) + " * " + quote(b))
@@ -54,11 +53,11 @@ trait ScalaGenNumericOps extends ScalaGenBase {
   }
 }
 
-trait CLikeGenNumericOps extends CLikeCodegen {
+trait CLikeGenNumericOps extends CLikeGenBase {
   val IR: NumericOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case NumericPlus(a,b) =>
           emitValDef(sym, quote(a) + " + " + quote(b))

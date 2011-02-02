@@ -5,7 +5,7 @@ package test1
 import common._
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.ScalaGenBase
+
 
 trait Arith extends Base {
   //todo removed this, I can see now that having these implicits replicated everywhere can force us to control the
@@ -83,7 +83,7 @@ trait ScalaGenArith extends ScalaGenBase {
   val IR: ArithExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Plus(a,b) =>  emitValDef(sym, "" + quote(a) + "+" + quote(b))
     case Minus(a,b) => emitValDef(sym, "" + quote(a) + "-" + quote(b))
     case Times(a,b) => emitValDef(sym, "" + quote(a) + "*" + quote(b))

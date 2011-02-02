@@ -44,9 +44,15 @@ trait ScalaCodegen extends GenericCodegen {
     stream.flush
   }
 
-  override def emitKernelHeader(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    val kernelName = syms.map(quote).mkString("")
+    
     stream.println("package generated." + this.toString)
-    stream.println("object kernel_" + quote(sym) + "{")
+    stream.println("final class activation_" + kernelName + " { // generated even if not used")
+    for (s <- syms)
+      stream.println("var " + quote(s) + ": " + remap(s.Type) + " = _")
+    stream.println("}")
+    stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
     stream.print(vals.map(p => quote(p) + ":" + remap(p.Type)).mkString(","))
 
@@ -67,15 +73,16 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println("")
   }
 
-  override def emitKernelFooter(sym: Sym[_], vals: List[Sym[_]], vars: List[Sym[_]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
-    stream.println(quote(sym))
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+    val kernelName = syms.map(quote).mkString("")
+    stream.println(kernelName)
     stream.println("}}")
   }
 
-  def emitValDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println("val " + quote(sym) + " = " + rhs)
+  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
+    stream.println("val " + quote(sym) + " = " + rhs) // + "        //" + sym.Type.debugInfo)
   }
-  def emitVarDef(sym: Sym[_], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitVarDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("var " + quote(sym) + " = " + rhs)
   }
   def emitAssignment(lhs: String, rhs: String)(implicit stream: PrintWriter): Unit = {
@@ -92,19 +99,14 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
 
-  override def quote(x: Exp[_]) = x match { // TODO: quirk!
+  override def quote(x: Exp[Any]) = x match { // TODO: quirk!
     case Sym(-1) => "_"
     case _ => super.quote(x)
   }
 
 }
 
-// TODO: what is the point of these, I suggest to remove them
-trait ScalaGenBase extends ScalaCodegen {
-  import IR._
 
-}
-
-trait ScalaGenEffect extends ScalaNestedCodegen with ScalaGenBase {
-
+trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
+  val IR: Expressions with Effects with FatExpressions
 }

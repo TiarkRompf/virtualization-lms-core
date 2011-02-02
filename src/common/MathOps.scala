@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import internal.{GenericNestedCodegen, CudaGenEffect, ScalaGenEffect}
+import internal.{GenericNestedCodegen}
 
 trait MathOps extends Base {
 
@@ -45,6 +45,15 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_abs[A:Manifest:Numeric](x: Exp[A]) = reflectEffect(MathAbs(x))
   def math_max[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMax(x, y)
   def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMin(x, y)
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
+    implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
+    e match {
+      case MathAbs(x) => math_abs(f(x))
+      case _ => super.mirror(e,f)
+    }
+  }
+
 }
 
 trait BaseGenMathOps extends GenericNestedCodegen {
@@ -61,7 +70,7 @@ trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {
   val IR: MathOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case MathCeil(x) => emitValDef(sym, "Math.ceil(" + quote(x) + ")")
     case MathFloor(x) => emitValDef(sym, "Math.floor(" + quote(x) + ")")
     case MathExp(x) => emitValDef(sym, "Math.exp(" + quote(x) + ")")
@@ -78,7 +87,7 @@ trait CudaGenMathOps extends BaseGenMathOps with CudaGenEffect {
   val IR: MathOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case MathCeil(x) => emitValDef(sym, "ceil(" + quote(x) + ")")
     case MathFloor(x) => emitValDef(sym, "floor(" + quote(x) + ")")
     case MathExp(x) => emitValDef(sym, "exp(" + quote(x) + ")")

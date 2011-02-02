@@ -2,8 +2,8 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
+
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.{CGenBase, CLikeCodegen, CudaGenBase, ScalaGenBase}
 
 trait PrimitiveOps extends Variables with OverloadHack {
   this: ImplicitOps =>
@@ -112,7 +112,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   val IR: PrimitiveOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ObjDoubleParseDouble(s) => emitValDef(sym, "java.lang.Double.parseDouble(" + quote(s) + ")")
     case ObjDoublePositiveInfinity() => emitValDef(sym, "scala.Double.PositiveInfinity")
     case ObjDoubleMinValue() => emitValDef(sym, "scala.Double.MinValue")
@@ -127,12 +127,12 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   }
 }
 
-trait CLikeGenPrimitiveOps extends CLikeCodegen {
+trait CLikeGenPrimitiveOps extends CLikeGenBase {
   val IR: PrimitiveOpsExp
   import IR._
 
   //TODO: stdlib.h needs to be included in the common header file
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case ObjDoubleParseDouble(s) =>
           emitValDef(sym, "atof(" + quote(s) + ")")

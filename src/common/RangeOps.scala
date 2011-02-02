@@ -2,7 +2,8 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal._
+
+import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
 
 trait RangeOps extends Base {
   // workaround for infix not working with manifests
@@ -30,7 +31,7 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   case class RangeStep(r: Exp[Range]) extends Def[Int]
   case class RangeEnd(r: Exp[Range]) extends Def[Int]
   //case class RangeForeach(r: Exp[Range], i: Exp[Int], body: Exp[Unit]) extends Def[Unit]
-  case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Exp[Int], body: Exp[Unit]) extends Def[Unit]
+  case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Sym[Int], body: Exp[Unit]) extends Def[Unit]
 
   def range_until(start: Exp[Int], end: Exp[Int]) : Exp[Range] = Until(start, end)
   def range_start(r: Exp[Range]) : Exp[Int] = RangeStart(r)
@@ -45,6 +46,11 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
     }
     reflectEffect(RangeForeach(start, end, i, reifyEffects(block(i))))
   }
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case Reflect(RangeForeach(s,e,i,b), Global(), es) => reflectMirrored(Reflect(RangeForeach(f(s),f(e),f(i).asInstanceOf[Sym[Int]],f(b)), Global(), f(es)))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
 }
 
 trait BaseGenRangeOps extends GenericNestedCodegen {
@@ -52,14 +58,18 @@ trait BaseGenRangeOps extends GenericNestedCodegen {
   import IR._
 
   override def syms(e: Any): List[Sym[Any]] = e match {
-    // we want to hoist things out of the loop if possible, so we count nested free deps as well
-    //case RangeForeach(start, end, i, body) if shallow => syms(start) ::: syms(end) ::: getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]])).asInstanceOf[List[Sym[Any]]]// in shallow mode, don't count deps from nested blocks
-    case RangeForeach(start, end, i, body) if shallow => syms(start) ::: syms(end) // in shallow mode, don't count deps from nested blocks
+    case RangeForeach(start, end, i, body) => syms(start):::syms(end):::syms(body)
     case _ => super.syms(e)
   }
 
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
-    case RangeForeach(start, end, i, body) => getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case RangeForeach(start, end, i, y) => i :: effectSyms(y)
+    case _ => super.boundSyms(e)
+  }
+
+
+  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
+    case RangeForeach(start, end, i, body) => /*getFreeVarNode(start) ::: getFreeVarNode(end) ::: */getFreeVarBlock(body,List(i.asInstanceOf[Sym[Any]]))
     case _ => super.getFreeVarNode(rhs)
   }
 }
@@ -67,7 +77,7 @@ trait BaseGenRangeOps extends GenericNestedCodegen {
 trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Until(start, end) => emitValDef(sym, "" + quote(start) + " until " + quote(end))
 
     /*
@@ -96,7 +106,7 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
   val IR: RangeOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Until(start, end) =>
         stream.println(addTab()+"int %s_start = %s;".format(quote(sym), quote(start)))
         stream.println(addTab()+"int %s_end = %s;".format(quote(sym), quote(end)))
@@ -106,12 +116,12 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
     case RangeForeach(start, end, i, body) => {
       /*
         //var freeVars = buildScheduleForResult(body).filter(scope.contains(_)).map(_.sym)
-        val freeVars = getFreeVarBlock(body,List(i.asInstanceOf[Sym[_]]))
+        val freeVars = getFreeVarBlock(body,List(i.asInstanceOf[Sym[Any]]))
         // Add the variables of range to the free variable list if necessary
         var paramList = freeVars
         //val Until(startIdx,endIdx) = findDefinition(r.asInstanceOf[Sym[Range]]).map(_.rhs).get.asInstanceOf[Until]
-        if(start.isInstanceOf[Sym[_]]) paramList = start.asInstanceOf[Sym[_]] :: paramList
-        if(end.isInstanceOf[Sym[_]]) paramList = end.asInstanceOf[Sym[_]] :: paramList
+        if(start.isInstanceOf[Sym[Any]]) paramList = start.asInstanceOf[Sym[Any]] :: paramList
+        if(end.isInstanceOf[Sym[Any]]) paramList = end.asInstanceOf[Sym[Any]] :: paramList
         paramList = paramList.distinct
         val paramListStr = paramList.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
         */
@@ -129,7 +139,7 @@ trait CGenRangeOps extends CGenEffect with BaseGenRangeOps {
   val IR: RangeOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Until(start, end) =>
       throw new GenerationFailedException("CGenRangeOps: Range vector is not supported")
     case RangeForeach(start, end, i, body) =>
