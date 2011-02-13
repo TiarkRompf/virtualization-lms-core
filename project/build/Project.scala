@@ -14,7 +14,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info)
   
   // use the local scala-virtualized compiler and library
   override def localScala =
-    defineScala("2.8.x-virtualized-SNAPSHOT", new File(local.scalaVirtualizedHome.get.getOrElse {
+    defineScala("2.9.x-virtualized-SNAPSHOT", new File(local.scalaVirtualizedHome.get.getOrElse {
       log.error("scala.virtualized.home needs to be defined in local.properties and "+
       "must point to a valid scala-virtualized home directory"); "<undefined>"
     }))::Nil
@@ -30,14 +30,15 @@ class Project(info: ProjectInfo) extends DefaultProject(info)
   // target directory layout (standard for now)
   
   // dependencies
-  val scalatest = "org.scalatest" % "scalatest" % "1.2" % "test"
+  val scalaToolsSnapshots = ScalaToolsSnapshots
+
+  val scalatest = "org.scalatest" % "scalatest" % "1.4-SNAPSHOT" % "test"
 
 //  val scalac = "org.scala-lang" % "scala-compiler" % "2.8.0" % "test"
 //  val scala = "org.scala-lang" % "scala-library" % "2.8.0" % "test"
 
 
   // compile options
-  
-//  override def compileOptions = super.compileOptions ++ Seq(Unchecked, Deprecation)
+  override def compileOptions = super.compileOptions ++ Seq(/*Unchecked, */Deprecation)
 
 }
