@@ -62,11 +62,15 @@ trait PrimitiveOps extends Variables with OverloadHack {
 
   def infix_/(lhs: Rep[Int], rhs: Rep[Int]) = int_divide(lhs, rhs)
   def infix_%(lhs: Rep[Int], rhs: Rep[Int]) = int_mod(lhs, rhs)
+  def infix_&(lhs: Rep[Int], rhs: Rep[Int]) = int_binaryand(lhs, rhs)
+  def infix_|(lhs: Rep[Int], rhs: Rep[Int]) = int_binaryor(lhs, rhs)
 
   def obj_integer_parse_int(s: Rep[String]): Rep[Int]
   def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A]): Rep[A]
   def int_divide(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
   def int_mod(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
+  def int_binaryor(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
+  def int_binaryand(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
   def int_double_value(lhs: Rep[Int]): Rep[Double]
 }
 
@@ -91,12 +95,16 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class IntDivideFrac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) extends Def[A]
   case class IntDivide(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntMod(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntBinaryOr(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntBinaryAnd(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntDoubleValue(lhs: Exp[Int]) extends Def[Double]
 
   def obj_integer_parse_int(s: Rep[String]) = ObjIntegerParseInt(s)
   def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) : Exp[A] = IntDivideFrac(lhs, rhs)
   def int_divide(lhs: Exp[Int], rhs: Exp[Int]) : Exp[Int] = IntDivide(lhs, rhs)
   def int_mod(lhs: Exp[Int], rhs: Exp[Int]) = IntMod(lhs, rhs)
+  def int_binaryor(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryOr(lhs, rhs)
+  def int_binaryand(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryAnd(lhs, rhs)
   def int_double_value(lhs: Exp[Int]) = IntDoubleValue(lhs)
 }
 
@@ -112,6 +120,8 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
+    case IntBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
+    case IntBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
     case IntDoubleValue(lhs) => emitValDef(sym, quote(lhs) + ".doubleValue()")
     case _ => super.emitNode(sym, rhs)    
   }

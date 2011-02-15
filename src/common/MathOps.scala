@@ -12,9 +12,13 @@ trait MathOps extends Base {
     def exp(x: Rep[Double]) = math_exp(x)
     def log(x: Rep[Double]) = math_log(x)
     def sqrt(x: Rep[Double]) = math_sqrt(x)
+    def atan(x: Rep[Double]) = math_atan(x)
+    def atan2(x: Rep[Double], y: Rep[Double]) = math_atan2(x,y)
+    def pow(x: Rep[Double], y: Rep[Double]) = math_pow(x,y)
     def abs[A:Manifest:Numeric](x: Rep[A]) = math_abs(x)
     def max[A:Manifest:Numeric](x: Rep[A], y: Rep[A]) = math_max(x,y)
     def min[A:Manifest:Numeric](x: Rep[A], y: Rep[A]) = math_min(x,y)
+    def Pi = math_pi
   }
 
   def math_ceil(x: Rep[Double]) : Rep[Double]
@@ -22,9 +26,13 @@ trait MathOps extends Base {
   def math_exp(x: Rep[Double]) : Rep[Double]
   def math_log(x: Rep[Double]) : Rep[Double]
   def math_sqrt(x: Rep[Double]) : Rep[Double]
+  def math_atan(x: Rep[Double]) : Rep[Double]
+  def math_atan2(x: Rep[Double], y: Rep[Double]) : Rep[Double]
+  def math_pow(x: Rep[Double], y: Rep[Double]): Rep[Double]
   def math_abs[A:Manifest:Numeric](x: Rep[A]) : Rep[A]
   def math_max[A:Manifest:Numeric](x: Rep[A], y: Rep[A]): Rep[A]
   def math_min[A:Manifest:Numeric](x: Rep[A], y: Rep[A]): Rep[A]
+  def math_pi: Rep[Double]
 }
 
 trait MathOpsExp extends MathOps with EffectExp {
@@ -33,18 +41,26 @@ trait MathOpsExp extends MathOps with EffectExp {
   case class MathExp(x: Exp[Double]) extends Def[Double]
   case class MathLog(x: Exp[Double]) extends Def[Double]
   case class MathSqrt(x: Exp[Double]) extends Def[Double]
+  case class MathAtan(x: Exp[Double]) extends Def[Double]
+  case class MathAtan2(x: Exp[Double], y: Exp[Double]) extends Def[Double]
+  case class MathPow(x: Exp[Double], y: Exp[Double]) extends Def[Double]
   case class MathAbs[A:Manifest:Numeric](x: Exp[A]) extends Def[A]
   case class MathMax[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
   case class MathMin[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
+  case class MathPi() extends Def[Double]
 
   def math_ceil(x: Exp[Double]) = MathCeil(x)
   def math_floor(x: Exp[Double]) = MathFloor(x)
   def math_exp(x: Exp[Double]) = MathExp(x)
   def math_log(x: Exp[Double]) = MathLog(x)
   def math_sqrt(x: Exp[Double]) = MathSqrt(x)
+  def math_atan(x: Exp[Double]) = MathAtan(x)
+  def math_atan2(x: Exp[Double], y: Exp[Double]) = MathAtan2(x,y)
+  def math_pow(x: Exp[Double], y: Exp[Double]) = MathPow(x,y)
   def math_abs[A:Manifest:Numeric](x: Exp[A]) = MathAbs(x)
   def math_max[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMax(x, y)
   def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMin(x, y)
+  def math_pi = MathPi()
 }
 
 trait BaseGenMathOps extends GenericNestedCodegen {
@@ -67,9 +83,13 @@ trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {
     case MathExp(x) => emitValDef(sym, "Math.exp(" + quote(x) + ")")
     case MathLog(x) => emitValDef(sym, "Math.log(" + quote(x) + ")")
     case MathSqrt(x) => emitValDef(sym, "Math.sqrt(" + quote(x) + ")")
+    case MathAtan(x) => emitValDef(sym, "Math.atan(" + quote(x) + ")")
+    case MathAtan2(x,y) => emitValDef(sym, "Math.atan2(" + quote(x) + ", " + quote(y) + ")")
+    case MathPow(x,y) => emitValDef(sym, "Math.pow(" + quote(x) + "," + quote(y) + ")")
     case MathAbs(x) => emitValDef(sym, "Math.abs(" + quote(x) + ")")
     case MathMax(x,y) => emitValDef(sym, "Math.max(" + quote(x) + ", " + quote(y) + ")")
     case MathMin(x,y) => emitValDef(sym, "Math.min(" + quote(x) + ", " + quote(y) + ")")
+    case MathPi() => emitValDef(sym, "Math.Pi")
     case _ => super.emitNode(sym, rhs)
   }
 }
