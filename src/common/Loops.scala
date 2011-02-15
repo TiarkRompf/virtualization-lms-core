@@ -38,7 +38,7 @@ trait BaseGenLoops extends GenericNestedCodegen {
   import IR._
 
   override def syms(e: Any): List[Sym[Any]] = e match {
-    case e: AbstractLoop[_] => syms(e.size) ::: syms(e.body)
+    case e: AbstractLoop[_] => syms(e.size) ::: syms(e.body) // should add super.syms(e) ??
     case _ => super.syms(e)
   }
 

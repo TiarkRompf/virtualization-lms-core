@@ -15,10 +15,12 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
 
     val y = try { 
       val ss = syms(x)
-      if (ss != t(ss))
+      if (ss != t(ss)) {
         mirror(x, t) 
-      else
+      } else {
+        println("skipping mirror operation "+s+"="+x+" syms " + ss.mkString(",") + " subst " + t.subst.mkString(","))
         s
+      }
     } catch { case e => println("Exception during mirroring of "+x+": "+ e); e.printStackTrace; s }
     if (y != s) {
 
@@ -57,7 +59,15 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
         println("lhs changed! will add to innerScope: "+missing.mkString(","))
         innerScope = innerScope ::: missing
       }
-      val rhs2 = lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r))) => transformLoopBody(s,r,t) }}
+      val rhs2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r))) => transformLoopBody(s,r,t) }}
+                 else (lhs zip rhs) map { case (s,r) => transformLoopBody(s,r,t) }
+      
+      //TODO: update innerScope
+      innerScope = innerScope map {
+        case TP(l,_) if lhs2 contains l => TP(l, SimpleLoop(t(s),t(x).asInstanceOf[Sym[Int]],rhs2(lhs2.indexOf(l)))) 
+        case d => d
+      }
+      
       println("came up with: " + lhs2 + ", " + rhs2 + " with subst " + t.subst.mkString(","))
       List(TTP(lhs2, SimpleFatLoop(t(s),t(x).asInstanceOf[Sym[Int]],rhs2)))
       // still problem: VectorSum(a,b) = SimpleLoop(i, ReduceElem(f(i))) 
