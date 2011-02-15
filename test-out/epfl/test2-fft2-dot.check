@@ -36,6 +36,18 @@ shape=box
 ]
 "Sym(9)" -> "Sym(17)"
 "Sym(13)" -> "Sym(17)"
+"Sym(18)" [
+label="Sym(18) \n Minus(Sym(8),Sym(12))"
+shape=box
+]
+"Sym(8)" -> "Sym(18)"
+"Sym(12)" -> "Sym(18)"
+"Sym(19)" [
+label="Sym(19) \n Minus(Sym(9),Sym(13))"
+shape=box
+]
+"Sym(9)" -> "Sym(19)"
+"Sym(13)" -> "Sym(19)"
 "Sym(10)" [
 label="Sym(10) \n Minus(Sym(0),Sym(4))"
 shape=box
@@ -72,18 +84,6 @@ shape=box
 ]
 "Sym(11)" -> "Sym(23)"
 "Sym(14)" -> "Sym(23)"
-"Sym(18)" [
-label="Sym(18) \n Minus(Sym(8),Sym(12))"
-shape=box
-]
-"Sym(8)" -> "Sym(18)"
-"Sym(12)" -> "Sym(18)"
-"Sym(19)" [
-label="Sym(19) \n Minus(Sym(9),Sym(13))"
-shape=box
-]
-"Sym(9)" -> "Sym(19)"
-"Sym(13)" -> "Sym(19)"
 "Sym(24)" [
 label="Sym(24) \n Minus(Sym(10),Sym(15))"
 shape=box

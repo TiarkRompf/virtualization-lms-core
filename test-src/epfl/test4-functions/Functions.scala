@@ -3,7 +3,7 @@ package epfl
 package test4
 
 import common.EffectExp
-import scala.virtualization.lms.internal.ScalaGenEffect // don't import FunctionsExp
+import common.ScalaGenEffect // don't import FunctionsExp
 import test2._
 import test3._
 import util.ClosureCompare
@@ -100,7 +100,7 @@ trait FunctionsCanonical extends FunctionsExp with ClosureCompare {
 
 
 trait FunctionsExternalDef0 extends FunctionsExp {
-  case class DefineFun[A:Manifest,B:Manifest](res: Exp[B], val arg: Exp[A]) extends Def[A=>B]
+  case class DefineFun[A,B](res: Exp[B])(val arg: Sym[A]) extends Def[A=>B]
 }
 
 trait FunctionsExternalDef01 extends FunctionsExternalDef0 { // not used
@@ -109,7 +109,7 @@ trait FunctionsExternalDef01 extends FunctionsExternalDef0 { // not used
     var funSym = fresh[A=>B]
     var argSym = fresh[A]//Sym(-1)
       
-    createDefinition(funSym, DefineFun[A,B](f(argSym), argSym))
+    createDefinition(funSym, DefineFun[A,B](f(argSym))(argSym))
     funSym
   }
 
@@ -140,7 +140,7 @@ trait FunctionsExternalDef1 extends FunctionsExternalDef0 with ClosureCompare { 
             funTable = (g,can)::funTable // ok?
             Lambda(g)
           case e => 
-            createDefinition(funSym, DefineFun[A,B](e,argSym))
+            createDefinition(funSym, DefineFun[A,B](e)(argSym))
             funSym
         }
     }
@@ -171,7 +171,7 @@ trait FunctionsExternalDef2 extends FunctionsCanonical with FunctionsExternalDef
             funTable = (g,can)::funTable // ok?
             g
           case e => 
-            createDefinition(funSym, DefineFun[A,B](e,argSym))
+            createDefinition(funSym, DefineFun[A,B](e)(argSym))
             g
         }
     }
@@ -184,12 +184,12 @@ trait ScalaGenFunctionsExternal extends ScalaGenEffect {
   import IR._
   
   override def syms(e: Any): List[Sym[Any]] = e match {
-    case DefineFun(y,arg) if shallow => Nil // in shallow mode, don't count deps from nested blocks
+    case DefineFun(y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
     case _ => super.syms(e)
   }
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: java.io.PrintWriter) = rhs match {
-    case DefineFun(y,arg) =>
-      stream.println("val " + quote(sym) + " = {" + quote(arg) + ": (" + arg.Type + ") => ")
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
+    case e@DefineFun(y) =>
+      stream.println("val " + quote(sym) + " = {" + quote(e.arg) + ": (" + e.arg.Type + ") => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")

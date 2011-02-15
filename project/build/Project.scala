@@ -36,4 +36,8 @@ class Project(info: ProjectInfo) extends DefaultProject(info)
 //  val scala = "org.scala-lang" % "scala-library" % "2.8.0" % "test"
 
 
+  // compile options
+  
+//  override def compileOptions = super.compileOptions ++ Seq(Unchecked, Deprecation)
+
 }

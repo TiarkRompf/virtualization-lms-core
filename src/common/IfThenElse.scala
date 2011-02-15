@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import internal._
+import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]): Rep[T]
@@ -24,15 +24,25 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
   case class IfThenElse[T:Manifest](cond: Exp[Boolean], thenp: Exp[T], elsep: Exp[T]) extends Def[T]
 
   override def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]) = {
-    val a = reifyEffects(thenp)
-    val b = reifyEffects(elsep)
+    val a = reifyEffectsHere(thenp)
+    val b = reifyEffectsHere(elsep)
     (a,b) match {
-      case (Def(Reify(_,_)), _) | (_, Def(Reify(_,_))) => reflectEffect(IfThenElse(cond,a,b))
-      case _ => IfThenElse(cond, thenp, elsep)
+      case (Def(Reify(_,_,_)), _) | (_, Def(Reify(_,_,_))) => reflectEffect(IfThenElse(cond,a,b)) //TODO u
+      case _ => IfThenElse(cond, a, b)
     }
   }
 
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+    case Reflect(IfThenElse(c,a,b), Global(), es) => reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), Global(), es map (e => f(e))))
+    case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b))
+    case _ => super.mirror(e,f)
+  }
+
 }
+
+trait IfThenElseOpt extends IfThenElse with EffectExp { //TODO!
+}
+
 
 trait BaseGenIfThenElse extends GenericNestedCodegen {
   val IR: IfThenElseExp
@@ -43,7 +53,12 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
     case _ => super.syms(e)
   }
 
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)
+    case _ => super.boundSyms(e)
+  }
+  
+  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
     case IfThenElse(c, t, e) => getFreeVarBlock(c,Nil) ::: getFreeVarBlock(t,Nil) ::: getFreeVarBlock(e,Nil)
     case _ => super.getFreeVarNode(rhs)
   }
@@ -52,7 +67,22 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
 trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
   import IR._
  
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+    case IfThenElse(c,a,b) =>
+      stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
+      emitBlock(a)
+      stream.println(quote(getBlockResult(a)))
+      stream.println("} else {")
+      emitBlock(b)
+      stream.println(quote(getBlockResult(b)))
+      stream.println("}")
+    
+    case _ => super.emitNode(sym, rhs)
+  }
+
+/* TR: I think this should belong into delite
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     /**
      * IfThenElse generates methods for each branch due to empirically discovered performance issues in the JVM
      * when generating long blocks of straight-line code in each branch.
@@ -78,12 +108,13 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
     
     case _ => super.emitNode(sym, rhs)
   }
+*/
 }
 
 trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case IfThenElse(c,a,b) =>
           // TODO: Not GPUable if the result is not primitive types.
@@ -132,30 +163,18 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
 trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
-      rhs match {
-        case IfThenElse(c,a,b) =>
-          //TODO: using if-else does not work 
-          remap(sym.Type) match {
-            case "void" =>
-              stream.println("if (" + quote(c) + ") {")
-              emitBlock(a)
-              stream.println("} else {")
-              emitBlock(b)
-              stream.println("}")
-            case _ =>
-              stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
-              stream.println("if (" + quote(c) + ") {")
-              emitBlock(a)
-              stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(a))))
-              stream.println("} else {")
-              emitBlock(b)
-              stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(b))))
-              stream.println("}")
-          }
-          /*
-          val booll = remap(sym.Type).equals("void")
-          if(booll) {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+    rhs match {
+      case IfThenElse(c,a,b) =>
+        //TODO: using if-else does not work 
+        remap(sym.Type) match {
+          case "void" =>
+            stream.println("if (" + quote(c) + ") {")
+            emitBlock(a)
+            stream.println("} else {")
+            emitBlock(b)
+            stream.println("}")
+          case _ =>
             stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
             stream.println("if (" + quote(c) + ") {")
             emitBlock(a)
@@ -164,16 +183,28 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
             emitBlock(b)
             stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(b))))
             stream.println("}")
-          }
-          else {
-            stream.println("if (" + quote(c) + ") {")
-            emitBlock(a)
-            stream.println("} else {")
-            emitBlock(b)
-            stream.println("}")
-          }
-          */
-        case _ => super.emitNode(sym, rhs)
-      }
+        }
+        /*
+        val booll = remap(sym.Type).equals("void")
+        if(booll) {
+          stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
+          stream.println("if (" + quote(c) + ") {")
+          emitBlock(a)
+          stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(a))))
+          stream.println("} else {")
+          emitBlock(b)
+          stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(b))))
+          stream.println("}")
+        }
+        else {
+          stream.println("if (" + quote(c) + ") {")
+          emitBlock(a)
+          stream.println("} else {")
+          emitBlock(b)
+          stream.println("}")
+        }
+        */
+      case _ => super.emitNode(sym, rhs)
     }
+  }
 }

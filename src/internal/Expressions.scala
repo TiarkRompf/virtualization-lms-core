@@ -1,6 +1,8 @@
 package scala.virtualization.lms
 package internal
 
+import scala.annotation.unchecked.uncheckedVariance
+
 /**
  * The Expressions trait houses common AST nodes. It also manages a list of encountered Definitions which
  * allows for common sub-expression elimination (CSE).  
@@ -10,17 +12,17 @@ package internal
 trait Expressions {
 
   abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
-    def Type : Manifest[_] = manifest
+    def Type : Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
   }
 
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
-    var lastRead: Sym[Any] = this.asInstanceOf[Sym[Any]]
+    var lastRead: Sym[T @uncheckedVariance] = this // TODO
     var version = id
   }
 
-  case class Variable[+T:Manifest](e: Exp[T])
+  case class Variable[+T:Manifest](val e: Exp[T]) // TODO: decide whether it should stay here ...
 
   case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
       
@@ -29,9 +31,9 @@ trait Expressions {
 
   abstract class Def[+T] // operations (composite)
 
-  case class TP[T](sym: Sym[T], rhs: Def[T]) 
+  case class TP[+T](sym: Sym[T], rhs: Def[T]) 
 
-  var globalDefs: List[TP[_]] = Nil
+  var globalDefs: List[TP[Any]] = Nil
 
   def findDefinition[T](s: Sym[T]): Option[TP[T]] =
     globalDefs.find(_.sym == s).asInstanceOf[Option[TP[T]]]
@@ -63,10 +65,11 @@ trait Expressions {
     }
   }
 
-  def reset {
+
+  def reset { // used anywhere?
     nVars = 0
     globalDefs = Nil
-  }    
+  }
 
 /*
   // dependencies

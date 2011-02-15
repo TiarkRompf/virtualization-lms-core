@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CGenEffect, CudaGenEffect, GenericNestedCodegen, ScalaGenEffect}
+import scala.virtualization.lms.internal.GenericNestedCodegen
 
 trait While extends Base {
   def __whileDo(cond: => Rep[Boolean], body: => Rep[Unit])
@@ -25,14 +25,17 @@ trait BaseGenWhile extends GenericNestedCodegen {
   import IR._
 
   override def syms(e: Any): List[Sym[Any]] = e match {
-    // we want to hoist things out of the loop if possible, so we count nested free deps as well
-    //case While(c, b) if shallow => getFreeVarBlock(b,Nil).asInstanceOf[List[Sym[Any]]]
-    case While(c, b) if shallow => Nil
+    case While(c, b) => syms(c):::syms(b) // wouldn't need to override...
     case _ => super.syms(e)
   }
 
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case While(c, b) => effectSyms(c):::effectSyms(b)
+    case _ => super.boundSyms(e)
+  }
+
   // TODO: What about condition node?
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
+  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
     case While(c,b) => getFreeVarBlock(c,Nil) ::: getFreeVarBlock(b,Nil)
     case _ => super.getFreeVarNode(rhs)
   }
@@ -42,7 +45,7 @@ trait BaseGenWhile extends GenericNestedCodegen {
 trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case While(c,b) =>
       stream.print("val " + quote(sym) + " = while ({")
       emitBlock(c)
@@ -60,7 +63,7 @@ trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
 trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case While(c,b) =>
             // Get free variables list
@@ -87,7 +90,7 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
 trait CGenWhile extends CGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     rhs match {
       case While(c,b) =>
         // calculate condition

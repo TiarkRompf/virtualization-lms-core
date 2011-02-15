@@ -2,7 +2,8 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal._
+
+import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
 
 trait Functions extends Base {
 
@@ -47,7 +48,7 @@ trait FunctionsExp extends Functions with EffectExp {
 
   def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A]): Exp[B] = f match {
 
-    case Def(Lambda(_,_,Def(Reify(_,_)))) => 
+    case Def(Lambda(_,_,Def(Reify(_,_,_)))) => 
       // if function result is known to be effectful, so is application
       reflectEffect(Apply(f,x))
     case Def(Lambda(_,_,_)) => 
@@ -62,23 +63,24 @@ trait BaseGenFunctions extends GenericNestedCodegen {
   val IR: FunctionsExp
   import IR._
 
+  // TODO: right now were trying to hoist as much as we can out of functions. 
+  // That might not always be appropriate. A promising strategy would be to have
+  // explicit 'hot' and 'cold' functions. 
+
   override def syms(e: Any): List[Sym[Any]] = e match {
-    case Lambda(f, x, y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
-    case Lambda2(f, x1, x2, y) if shallow => Nil
+    case Lambda(f, x, y) => syms(y)
+    case Lambda2(f, x1, x2, y) => syms(y)
     case _ => super.syms(e)
   }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case Lambda(f, x, Def(Reify(y, es))) => x :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y)
-    case Lambda(f, x, y) => x :: boundSyms(y)
-    case Lambda2(f, x1, x2, Def(Reify(y, es))) => x1 :: x2 :: es.asInstanceOf[List[Sym[Any]]] ::: boundSyms(y)
-    case Lambda2(f, x1, x2, y) => x1 :: x2 :: boundSyms(y)
-    //case Lambda(f, x, Def(a,lst)) => x :: boundSyms(y)
-    case _ => Nil
+    case Lambda(f, x, y) => x :: effectSyms(y)
+    case Lambda2(f, x1, x2, y) => x1 :: x2 :: effectSyms(y)
+    case _ => super.boundSyms(e)
   }
 
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
-    case Lambda(f, x, y) => getFreeVarBlock(y,List(x.asInstanceOf[Sym[_]]))
+  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
+    case Lambda(f, x, y) => getFreeVarBlock(y,List(x.asInstanceOf[Sym[Any]]))
     case _ => super.getFreeVarNode(rhs)
   }
 }
@@ -86,7 +88,7 @@ trait BaseGenFunctions extends GenericNestedCodegen {
 trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case e@Lambda(fun, x, y) =>
       stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + x.Type + ") => ")
       emitBlock(y)
@@ -104,44 +106,44 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+    rhs match {
+      case e@Lambda(fun, x, y) =>
+        // The version for inlined device function
+        stream.println(addTab() + "%s %s = %s;".format(remap(x.Type), quote(x), quote(sym)+"_1"))
+        emitBlock(y)
+        stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
-      rhs match {
-        case e@Lambda(fun, x, y) =>
-              // The version for inlined device function
-              stream.println(addTab() + "%s %s = %s;".format(remap(x.Type), quote(x), quote(sym)+"_1"))
-              emitBlock(y)
-              stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
+        // The version for separate device function
+        /*
+        //TODO: If function parameter was originally tuple, then each element should be renamed?
+        val freeVars = buildScheduleForResult(y).filter(scope.contains(_)).map(_.sym)
+        stream.println("__device__ %s %s(%s %s) {".format(e.mB, quote(sym), e.mA, quote(x)))
+        emitBlock(y)
+        stream.println("%s %s = %s;".format(e.mB, quote(sym), quote(getBlockResult(y))))
+        stream.println("return %s;".format(quote(getBlockResult(y))))
+        stream.println("}")
+        */
 
-              // The version for separate device function
-              /*
-              //TODO: If function parameter was originally tuple, then each element should be renamed?
-              val freeVars = buildScheduleForResult(y).filter(scope.contains(_)).map(_.sym)
-              stream.println("__device__ %s %s(%s %s) {".format(e.mB, quote(sym), e.mA, quote(x)))
-              emitBlock(y)
-              stream.println("%s %s = %s;".format(e.mB, quote(sym), quote(getBlockResult(y))))
-              stream.println("return %s;".format(quote(getBlockResult(y))))
-              stream.println("}")
-              */
+      case e@Lambda2(fun, x1, x2, y) =>
+        // The version for inlined device function
+        stream.println(addTab() + "%s %s = %s;".format(remap(x1.Type), quote(x1), quote(sym)+"_1"))
+        stream.println(addTab() + "%s %s = %s;".format(remap(x2.Type), quote(x2), quote(sym)+"_2"))
+        emitBlock(y)
+        stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
+      case Apply(fun, arg) =>
+        emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 
-        case e@Lambda2(fun, x1, x2, y) =>
-            // The version for inlined device function
-            stream.println(addTab() + "%s %s = %s;".format(remap(x1.Type), quote(x1), quote(sym)+"_1"))
-            stream.println(addTab() + "%s %s = %s;".format(remap(x2.Type), quote(x2), quote(sym)+"_2"))
-            emitBlock(y)
-            stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
-        case Apply(fun, arg) =>
-          emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
-
-        case _ => super.emitNode(sym, rhs)
-      }
+      case _ => super.emitNode(sym, rhs)
     }
+  }
 }
+
 trait CGenFunctions extends CGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         throw new GenerationFailedException("CGenFunctions: Lambda is not supported yet")

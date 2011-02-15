@@ -2,7 +2,6 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{CLikeCodegen, CGenBase, CudaGenBase, ScalaGenBase}
 
 trait ImplicitOps extends Base {
   /**
@@ -27,7 +26,7 @@ trait ScalaGenImplicitOps extends ScalaGenBase {
   val IR: ImplicitOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     // TODO: this valDef is redundant; we really just want the conversion to be a no-op in the generated code.
     // TODO: but we still need to link the defs together
     case ImplicitConvert(x) => emitValDef(sym, quote(x))
@@ -35,11 +34,11 @@ trait ScalaGenImplicitOps extends ScalaGenBase {
   }
 }
 
-trait CLikeGenImplicitOps extends CLikeCodegen {
+trait CLikeGenImplicitOps extends CLikeGenBase {
   val IR: ImplicitOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case im@ImplicitConvert(x) =>
           stream.println("%s %s = (%s)%s;".format(remap(im.mY), quote(sym), remap(im.mY), quote(x)))
@@ -52,7 +51,7 @@ trait CudaGenImplicitOps extends CudaGenBase {
   val IR: ImplicitOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case im@ImplicitConvert(x) =>
           stream.println(addTab()+"%s %s = (%s)%s;".format(remap(im.mY), quote(sym), remap(im.mY), quote(x)))

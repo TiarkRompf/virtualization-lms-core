@@ -52,11 +52,11 @@ trait BaseGenArrayOps extends GenericNestedCodegen {
   }
 }
 
-trait ScalaGenArrayOps extends ScalaGenBase with BaseGenArrayOps {
+trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
   val IR: ArrayOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
     case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
     case ArrayForeach(a,x,block) => stream.println("val " + quote(sym) + "=" + quote(a) + ".foreach{")
@@ -68,11 +68,11 @@ trait ScalaGenArrayOps extends ScalaGenBase with BaseGenArrayOps {
   }
 }
 
-trait CLikeGenArrayOps extends CLikeCodegen with BaseGenArrayOps {
+trait CLikeGenArrayOps extends BaseGenArrayOps with CLikeGenBase {
   val IR: ArrayOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case ArrayLength(a) =>
           emitValDef(sym, " sizeof(" + quote(a) + ")")

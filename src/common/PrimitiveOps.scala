@@ -2,8 +2,8 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
+
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.{CGenBase, CLikeCodegen, CudaGenBase, ScalaGenBase}
 
 trait PrimitiveOps extends Variables with OverloadHack {
   this: ImplicitOps =>
@@ -31,15 +31,19 @@ trait PrimitiveOps extends Variables with OverloadHack {
   object Double {
     def parseDouble(s: Rep[String]) = obj_double_parse_double(s)
     def PositiveInfinity = obj_double_positive_infinity
+    def MinValue = obj_double_min_value
   }
 
   class DoubleOpsCls(lhs: Rep[Double]){
     def floatValue() = double_float_value(lhs)
+    def toStringL() = double_tostring(lhs)
   }
 
   def obj_double_parse_double(s: Rep[String]): Rep[Double]
   def obj_double_positive_infinity: Rep[Double]
+  def obj_double_min_value: Rep[Double]
   def double_float_value(lhs: Rep[Double]): Rep[Float]
+  def double_tostring(lhs: Rep[Double]): Rep[String]
 
   /**
    * Int
@@ -82,11 +86,15 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
    */
   case class ObjDoubleParseDouble(s: Exp[String]) extends Def[Double]
   case class ObjDoublePositiveInfinity() extends Def[Double]
+  case class ObjDoubleMinValue() extends Def[Double]
   case class DoubleFloatValue(lhs: Exp[Double]) extends Def[Float]
+  case class DoubleToString(lhs: Exp[Double]) extends Def[String]
 
   def obj_double_parse_double(s: Exp[String]) = ObjDoubleParseDouble(s)
   def obj_double_positive_infinity = ObjDoublePositiveInfinity()
+  def obj_double_min_value = ObjDoubleMinValue()
   def double_float_value(lhs: Exp[Double]) = DoubleFloatValue(lhs)
+  def double_tostring(lhs: Exp[Double]) = DoubleToString(lhs)
 
   /**
    * Int
@@ -112,10 +120,12 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   val IR: PrimitiveOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ObjDoubleParseDouble(s) => emitValDef(sym, "java.lang.Double.parseDouble(" + quote(s) + ")")
     case ObjDoublePositiveInfinity() => emitValDef(sym, "scala.Double.PositiveInfinity")
+    case ObjDoubleMinValue() => emitValDef(sym, "scala.Double.MinValue")
     case DoubleFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
+    case DoubleToString(lhs) => emitValDef(sym, quote(lhs) + ".toString()")
     case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")
     case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
@@ -127,12 +137,12 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   }
 }
 
-trait CLikeGenPrimitiveOps extends CLikeCodegen {
+trait CLikeGenPrimitiveOps extends CLikeGenBase {
   val IR: PrimitiveOpsExp
   import IR._
 
   //TODO: stdlib.h needs to be included in the common header file
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case ObjDoubleParseDouble(s) =>
           emitValDef(sym, "atof(" + quote(s) + ")")

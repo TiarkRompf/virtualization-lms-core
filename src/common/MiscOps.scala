@@ -35,13 +35,20 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   def exit(s: Exp[Int]) = reflectEffect(Exit(s))
   def error(s: Exp[String]) = reflectEffect(Error(s))
   def returnL(x: Exp[Any]) = reflectEffect(Return(x))
+  
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case Reflect(Print(x), Global(), es) => reflectMirrored(Reflect(Print(f(x)), Global(), f(es)))
+    case Reflect(PrintLn(x), Global(), es) => reflectMirrored(Reflect(PrintLn(f(x)), Global(), f(es)))
+    case Reflect(Exit(x), Global(), es) => reflectMirrored(Reflect(Exit(f(x)), Global(), f(es)))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
 }
 
 trait ScalaGenMiscOps extends ScalaGenEffect {
   val IR: MiscOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case PrintLn(s) => emitValDef(sym, "println(" + quote(s) + ")")
     case Print(s) => emitValDef(sym, "print(" + quote(s) + ")")
     case Exit(a) => emitValDef(sym, "exit(" + quote(a) + ")")
@@ -56,7 +63,7 @@ trait CGenMiscOps extends CGenEffect {
   val IR: MiscOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case PrintLn(s) => stream.println("printf(\"%s\\n\"," + quote(s) + ");")
     case Print(s) => stream.println("printf(\"%s\"," + quote(s) + ");")
     case Exit(a) => stream.println("exit(" + quote(a) + ");")
@@ -68,7 +75,7 @@ trait CudaGenMiscOps extends CudaGenEffect {
   val IR: MiscOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case _ => super.emitNode(sym, rhs)
   }
 }

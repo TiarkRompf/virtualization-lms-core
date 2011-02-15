@@ -3,7 +3,6 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.{CGenBase, CLikeCodegen, CudaGenBase, ScalaGenBase}
 
 trait OrderingOps extends Base with Variables with OverloadHack {
   // workaround for infix not working with manifests
@@ -22,8 +21,6 @@ trait OrderingOps extends Base with Variables with OverloadHack {
   }
   
   /*
-  def infix_<[T,B](lhs: Var[T], rhs: B)(implicit h: Overloaded1, o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_lt(readVar(lhs),c(rhs))
->>>>>>> kernel-gen
   def infix_<[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_lt(lhs,c(rhs))
   def infix_<=[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_lteq(lhs,c(rhs))
   def infix_>[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => T, mT: Manifest[T]) = ordering_gt(lhs,c(rhs))
@@ -60,13 +57,28 @@ trait OrderingOpsExp extends OrderingOps with BaseExp {
   def ordering_equiv[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[Boolean] = OrderingEquiv(lhs,rhs)
   def ordering_max[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[T] = OrderingMax(lhs,rhs)
   def ordering_min[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[T] = OrderingMin(lhs,rhs)
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
+    implicit val z1: Ordering[Any] = null // hack!! need to store it in Def instances??
+    implicit val z2: Ordering[A] = null // hack!! need to store it in Def instances??
+    (e match {
+    case OrderingLT(a,b) => ordering_lt(f(a),f(b))
+    case OrderingLTEQ(a,b) => ordering_lteq(f(a),f(b))
+    case OrderingGT(a,b) => ordering_gt(f(a),f(b))
+    case OrderingGTEQ(a,b) => ordering_gteq(f(a),f(b))
+    case OrderingEquiv(a,b) => ordering_equiv(f(a),f(b))
+    case OrderingMax(a,b) => ordering_max(f(a),f(b))
+    case OrderingMin(a,b) => ordering_min(f(a),f(b))
+    case _ => super.mirror(e, f)
+    }).asInstanceOf[Exp[A]]
+  }
 }
 
 trait ScalaGenOrderingOps extends ScalaGenBase {
   val IR: OrderingOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case OrderingLT(a,b) => emitValDef(sym, quote(a) + " < " + quote(b))
     case OrderingLTEQ(a,b) => emitValDef(sym, quote(a) + " <= " + quote(b))
     case OrderingGT(a,b) => emitValDef(sym, quote(a) + " > " + quote(b))
@@ -78,12 +90,12 @@ trait ScalaGenOrderingOps extends ScalaGenBase {
   }
 }
 
-trait CLikeGenOrderingOps extends CLikeCodegen {
+trait CLikeGenOrderingOps extends CLikeGenBase {
   val IR: OrderingOpsExp
   import IR._
   
   // TODO: Add MIN/MAX macro needs to C-like header file
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case OrderingLT(a,b) =>
           emitValDef(sym, quote(a) + " < " + quote(b))

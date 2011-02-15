@@ -3,7 +3,6 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.{CGenEffect, CLikeCodegen, CudaGenEffect, ScalaGenEffect}
 
 trait Variables extends Base with OverloadHack {
   type Var[+T]
@@ -37,8 +36,31 @@ trait VariablesExp extends Variables with EffectExp {
   // Defining Vars as separate from Exps will always cause a compile-time error if the implicit is missing.
   //type Var[T] = Sym[T]
 
+  // REMARK: Var[T] should (probably) be different from Rep[T] in Rep-world
+  // but in Exp-world the situation is less clear. Another thing is that in general, 
+  // programs should live in Rep-world.
+  // Currently DeliteApplication extends DeliteOpsExp and therefore
+  // all DSL programs live in Exp-world.
+
   // read operation
-  implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = reflectEffect(ReadVar(v))
+  implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = { // carefule with implicits...
+/*
+    //reflectRead(/*v*/)(ReadVar(v)) // FIXME!!
+    //reflectEffect(ReadVar(v))
+    
+    // do cse *in context*
+    
+    context.reverse.dropWhile { e => 
+      e match { case Def(Reflect(ReadVar(w), _)) if w != v => true case _ => false }
+    } match {
+      case (e @ Def(Reflect(ReadVar(`v`), _)))::es => e.asInstanceOf[Exp[T]]
+      case es =>
+        val r = createDefinition(fresh[T], Reflect(ReadVar(v), es)).sym
+        context = context :+ r
+        r
+    }*/
+    toAtom(ReadVar(v))
+  }
 
   case class ReadVar[T:Manifest](v: Var[T]) extends Def[T]
   case class NewVar[T:Manifest](init: Exp[T]) extends Def[T]
@@ -48,18 +70,27 @@ trait VariablesExp extends Variables with EffectExp {
 
   def var_new[T:Manifest](init: Exp[T]): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
-    Variable(reflectEffect(NewVar(reflectRead(init))))
+    Variable(reflectMutable(NewVar(init)))
   }
 
   def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
-    reflectMutation(Assign(lhs, reflectRead(rhs)))
+    reflectWrite(lhs.e)()(Assign(lhs, rhs))
     Const()
   }
 
   def var_plusequals[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
-    reflectMutation(VarPlusEquals(lhs, reflectRead(rhs)))
+    reflectWrite(lhs.e)()(VarPlusEquals(lhs, rhs))
     Const()
   }
+  
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case Reflect(NewVar(a), Alloc(), es) => reflectMirrored(Reflect(NewVar(f(a)), Alloc(), f(es)))
+    case Reflect(ReadVar(Variable(a)), Read(rs), es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), Read(f onlySyms rs), f(es)))
+    case Reflect(Assign(Variable(a),b), Write(ws), es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b)), Write(f onlySyms ws), f(es)))
+    case Reflect(VarPlusEquals(Variable(a),b), Write(ws), es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b)), Write(f onlySyms ws), f(es)))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
+  
   // TODO: not using these due to a problem with getBlockResult() getting an out-of-scope symbol without the Const
   //def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) = reflectMutation(Assign(lhs, rhs))
   //def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: Exp[T]) = reflectMutation(VarPlusEquals(lhs, rhs))
@@ -70,7 +101,7 @@ trait ScalaGenVariables extends ScalaGenEffect {
   val IR: VariablesExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
     case NewVar(init) => emitVarDef(sym, quote(getBlockResult(init)))
     case Assign(Variable(a), b) => emitAssignment(quote(a), quote(getBlockResult(b)))
@@ -80,11 +111,11 @@ trait ScalaGenVariables extends ScalaGenEffect {
   }
 }
 
-trait CLikeGenVariables extends CLikeCodegen {
+trait CLikeGenVariables extends CLikeGenBase {
   val IR: VariablesExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case ReadVar(Variable(a)) =>
           emitValDef(sym, quote(a))

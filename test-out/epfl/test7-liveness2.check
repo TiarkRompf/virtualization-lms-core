@@ -1,0 +1,23 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Unit)=>(Unit)) {
+def apply(x0:Unit): Unit = {
+val x1 = new Array[Int](100)
+val x2 = x1
+x2(7) = 42
+val x3 = x2.clone()
+x3(2) = 42
+val x4 = x2
+x4(4) = 42
+val x5 = x3
+arrayPlus(x5,x3,x4)
+// kill: x4
+val x6 = println(x5)
+// kill: x5
+x6
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

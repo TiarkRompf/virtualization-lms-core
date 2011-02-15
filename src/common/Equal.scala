@@ -3,7 +3,6 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.{CGenBase, CLikeCodegen, CudaGenBase, ScalaGenBase}
 
 trait Equal extends Base with Variables with OverloadHack {
   // TODO: we need a better way of handling this, too many combinations
@@ -40,26 +39,32 @@ trait EqualExp extends Equal with VariablesExp {
   case class Equal[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
   case class NotEqual[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
 
-  def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = Equal(a,b)
+  def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = if (a == b) Const(true) else Equal(a,b) // TODO: move to EqualExpOpt??
   def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = NotEqual(a,b)
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case Equal(a, b) => equals(f(a),f(b))
+    case NotEqual(a, b) => equals(f(a),f(b))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
 }
 
 trait ScalaGenEqual extends ScalaGenBase {
   val IR: EqualExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Equal(a,b) =>  emitValDef(sym, quote(a) + "==" + quote(b))
     case NotEqual(a,b) =>  emitValDef(sym, quote(a) + " != " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 }
 
-trait CLikeGenEqual extends CLikeCodegen {
+trait CLikeGenEqual extends CLikeGenBase {
   val IR: EqualExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
         case Equal(a,b) =>
           emitValDef(sym, quote(a) + "==" + quote(b))

@@ -4,9 +4,9 @@
 *******************************************/
 class Test extends ((Double)=>(Double)) {
 def apply(x0:Double): Double = {
+val x1 = println("yoyo")
 val x2 = x0==x0
 val x6 = x0+4.0
-val x1 = println("yoyo")
 val x9 = if (x2) {
 val x3 = println("yoyo")
 val x4 = println("xxx")
@@ -16,9 +16,9 @@ x6
 val x8 = x0+6.0
 x8
 }
-val x12 = x9+x6
 val x10 = println("yyy")
 val x11 = println("yoyo")
+val x12 = x9+x6
 x12
 }
 }
@@ -34,9 +34,9 @@ yyy
 yoyo
 22.0
 function main(x0) {
+var x1 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
 var x2 = x0==x0
 var x6 = x0+4.0
-var x1 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
 var x9
 if (x2) {
 var x3 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
@@ -47,9 +47,9 @@ x9=x6
 var x8 = x0+6.0
 x9=x8
 }
-var x12 = x9+x6
 var x10 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yyy"))
 var x11 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
+var x12 = x9+x6
 return x12
 }
 -- end
