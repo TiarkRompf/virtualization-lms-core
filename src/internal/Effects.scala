@@ -12,6 +12,8 @@ trait Effects extends Expressions {
   
   case class Global() extends Summary
 
+  case class Simple() extends Summary
+
   case class Alloc() extends Summary //TODO: may also read!
   
   case class Read(v: List[Sym[Any]]) extends Summary
@@ -48,7 +50,7 @@ trait Effects extends Expressions {
   // REMARK: making toAtom context-dependent is quite a departure from the 
   // earlier design. there are a number of implications especially for mirroring.
 
-  override implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
+  protected override implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
     // are we depending on a variable? then we need to be serialized -> effect
     
     if (d.isInstanceOf[Reflect[Any]]) {

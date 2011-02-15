@@ -4,7 +4,7 @@ package common
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 
-trait OrderingOps extends Base with Variables with OverloadHack {
+trait OrderingOps extends Base with VariablesStub with OverloadHack {
   // workaround for infix not working with manifests
   implicit def orderingToRepOrderingCls[T:Ordering:Manifest](n: T) = new OrderingOpsCls(n)
   implicit def repOrderingToRepOrderingCls[T:Ordering:Manifest](n: Rep[T]) = new OrderingOpsCls(n)
@@ -40,7 +40,7 @@ trait OrderingOps extends Base with Variables with OverloadHack {
 }
 
 
-trait OrderingOpsExp extends OrderingOps with BaseExp {
+trait OrderingOpsExp extends OrderingOps with BaseExp with VariablesStubExp {
 
   case class OrderingLT[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[Boolean]
   case class OrderingLTEQ[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[Boolean]

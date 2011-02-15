@@ -66,12 +66,6 @@ trait BaseGenRangeOps extends GenericNestedCodegen {
     case RangeForeach(start, end, i, y) => i :: effectSyms(y)
     case _ => super.boundSyms(e)
   }
-
-
-  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
-    case RangeForeach(start, end, i, body) => /*getFreeVarNode(start) ::: getFreeVarNode(end) ::: */getFreeVarBlock(body,List(i.asInstanceOf[Sym[Any]]))
-    case _ => super.getFreeVarNode(rhs)
-  }
 }
 
 trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {

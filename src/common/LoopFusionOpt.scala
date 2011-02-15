@@ -18,16 +18,16 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
       if (ss != t(ss)) {
         mirror(x, t) 
       } else {
-        println("skipping mirror operation "+s+"="+x+" syms " + ss.mkString(",") + " subst " + t.subst.mkString(","))
+        printdbg("skipping mirror operation "+s+"="+x+" syms " + ss.mkString(",") + " subst " + t.subst.mkString(","))
         s
       }
     } catch { case e => println("Exception during mirroring of "+x+": "+ e); e.printStackTrace; s }
     if (y != s) {
 
       if (y.isInstanceOf[Sym[Any]] && findDefinition(y.asInstanceOf[Sym[Any]]).nonEmpty)
-        println("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[Any]]).get.rhs)
+        printdbg("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[Any]]).get.rhs)
       else
-        println("--> replace " + s+"="+x + " by " + y)
+        printdbg("--> replace " + s+"="+x + " by " + y)
 
       t.subst(s) = y // TODO: move out of conditional?
     }
@@ -52,11 +52,11 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
       }
     case TTP(lhs, SimpleFatLoop(s,x,rhs)) =>
       // alternate strategy: transform thin def, then fatten again (a little detour)
-      println("need to transform rhs of fat loop: " + lhs + ", " + rhs)
+      printdbg("need to transform rhs of fat loop: " + lhs + ", " + rhs)
       val lhs2 = lhs.map { case s @ Def(r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
       if (lhs != lhs2) {
         val missing = (lhs2.map(s => findDefinition(s).get) diff innerScope)
-        println("lhs changed! will add to innerScope: "+missing.mkString(","))
+        printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
         innerScope = innerScope ::: missing
       }
       val rhs2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r))) => transformLoopBody(s,r,t) }}
@@ -68,7 +68,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
         case d => d
       }
       
-      println("came up with: " + lhs2 + ", " + rhs2 + " with subst " + t.subst.mkString(","))
+      printdbg("came up with: " + lhs2 + ", " + rhs2 + " with subst " + t.subst.mkString(","))
       List(TTP(lhs2, SimpleFatLoop(t(s),t(x).asInstanceOf[Sym[Int]],rhs2)))
       // still problem: VectorSum(a,b) = SimpleLoop(i, ReduceElem(f(i))) 
       // might need to translate f(i), but looking up VectorSum will not be changed at all!!!
@@ -192,7 +192,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
               Nil // direct deps on this loop's induction var don't count
             case sc =>
               val pr = syms(sc.rhs).intersect(otherLoopSyms) flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
-              if (pr.nonEmpty) println("fusion of "+pr+" prevented by " + sc + " which is required by body of " + dx.lhs)
+              if (pr.nonEmpty) printlog("fusion of "+pr+" prevented by " + sc + " which is required by body of " + dx.lhs)
               pr
           }
         }.distinct
@@ -200,7 +200,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         // TODO: have WtableNeg keep track of the statements that prevent fusion
         // then we can later remove the entry and see if the dependency goes away...
       
-        println("wtableneg: " + WtableNeg)        
+        printlog("wtableneg: " + WtableNeg)        
         
         // partitioning: build maximal sets of loops to be fused
         
@@ -239,7 +239,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           }
         }
       
-        println("partitions: " + partitionsOut)
+        printlog("partitions: " + partitionsOut)
       
       
         // actually do the fusion: 
@@ -252,12 +252,12 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
 
           currentScope.foreach {
             case e@TTP(List(s), ThinDef(SimpleIndex(a, i))) =>
-              println("considering " + e)
+              printlog("considering " + e)
               partitionsOut.find(_.lhs contains a) match {
                 case Some(fused) if WgetLoopVar(fused) contains t(i) => 
                   val index = fused.lhs.indexOf(a)
                   
-                  println("replace " + e + " at " + index + " within " + fused)
+                  printlog("replace " + e + " at " + index + " within " + fused)
 
                   val rhs = WgetLoopRes(fused)(index) match { case SimpleCollect(y) => y }
                   
@@ -283,11 +283,12 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
 
           Wloops = transformAll(partitionsOut, t)
           
-          UloopSyms = UloopSyms map (_ map (e => t(e)) collect { case s: Sym[Any] => s } ) // just lookup the symbols
+          //UloopSyms = UloopSyms map (_ map (e => t(e)) collect { case s: Sym[Any] => s } ) // just lookup the symbols
+          UloopSyms = UloopSyms map (t onlySyms _) // just lookup the symbols
           
-          println("try once more ...")
+          printlog("try once more ...")
         } else {
-          println("no changes, we're done")
+          printlog("no changes, we're done")
           done = true
         }
       
@@ -302,7 +303,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           TTP(select(lhs, ex), SimpleFatLoop(s, x, select(rhs, ex)))
       }
       
-      // FIXME: don't throw out all loops, might have some that are *not* in levelScope
+      // PREVIOUS PROBLEM: don't throw out all loops, might have some that are *not* in levelScope
       // note: if we don't do it here, we will likely see a problem going back to innerScope in 
       // FatCodegen.focusExactScopeFat below. --> how to go back from SimpleFatLoop to VectorPlus??
       // UPDATE: UloopSyms puts a tentative fix in place. check if it is sufficient!!

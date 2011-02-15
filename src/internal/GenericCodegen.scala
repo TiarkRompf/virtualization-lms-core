@@ -30,6 +30,22 @@ trait GenericCodegen extends Scheduling {
   def remap[A](m: Manifest[A]) : String = m.toString
   def remapImpl[A](m: Manifest[A]) : String = remap(m)
 
+  def getFreeVarBlock(start: Exp[Any], local: List[Sym[Any]]): List[Sym[Any]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
+
+  def hasMetaData: Boolean = false
+  def getMetaData: String = null
+
+  def getDSLHeaders: String = null
+
+
+  // ----------
+
+  val verbosity = System.getProperty("codegen.verbosity","0").toInt
+  def printdbg(x: =>Any) = if (verbosity >= 2) println(x)
+  def printlog(x: =>Any) = if (verbosity >= 1) println(x)
+    
+
+
   def emitBlock(y: Exp[Any])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
     
@@ -59,13 +75,6 @@ trait GenericCodegen extends Scheduling {
     case _ => throw new RuntimeException("could not quote " + x)
   }
 
-  def getFreeVarBlock(start: Exp[Any], local: List[Sym[Any]]): List[Sym[Any]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
-  def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = syms(rhs) //{ throw new Exception("Method getFreeVarNode should be overriden.") }
-
-  def hasMetaData: Boolean = false
-  def getMetaData: String = null
-
-  def getDSLHeaders: String = null
 }
 
 
@@ -207,50 +216,6 @@ trait GenericNestedCodegen extends GenericCodegen {
     }
   }
 
-  // TODO: remove
-  //override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = { Nil }
-  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match { // getFreeVarBlock(syms(rhs), boundSyms(rhs))
-    case Reflect(s, u, effects) => getFreeVarNode(s)
-    case _ => super.getFreeVarNode(rhs)
-  }
-
-  // TODO: necessary? does it actually do the right thing? <-- boundSyms?
-  def getEffectsBlock(start: Exp[Any]): List[Sym[Any]] = {
-    val save = shallow
-    shallow = false
-    val stDeep = dep(start)
-
-    // deep list of deps
-    val e1 = GraphUtil.stronglyConnectedComponents[TP[Any]](stDeep.flatMap(e => findDefinition(e).toList), { d =>
-      dep(d.rhs).flatMap { e =>
-        findDefinition(e).toList
-      }
-    }).flatten.reverse
-
-    // deep on everything except start
-    shallow = true
-    val stShallow = dep(start)
-    shallow = false
-
-    val e2 = GraphUtil.stronglyConnectedComponents[TP[Any]](stShallow.flatMap(e => findDefinition(e).toList), { d =>
-      dep(d.rhs).flatMap { e =>
-        findDefinition(e).toList
-      }
-    }).flatten.reverse
-
-    // only the deep dependencies of start
-    val e3 = e1 filterNot { e2 contains _ }
-
-    val e4 = e3 flatMap { e =>
-      e.sym match {
-        case Def(Reflect(x, u, effects)) => List(e.sym): List[Sym[Any]]
-        case _ => Nil
-      }
-    }
-
-    shallow = save
-    e4
-  }
 
   def reset { // used anywhere?
     innerScope = null

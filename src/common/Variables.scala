@@ -4,12 +4,26 @@ package common
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 
-trait Variables extends Base with OverloadHack {
+trait VariablesStub extends Base {
   type Var[+T]
+  implicit def readVar[T:Manifest](v: Var[T]): Rep[T]
+}
 
+trait VariablesStubExp extends VariablesStub with BaseExp {
+  type Var[+T] = Variable[T]
+  def readVar[T:Manifest](v: Var[T]): Exp[T] = sys.error("not implemented")
+}
+
+
+
+trait Variables extends VariablesStub with OverloadHack {
   implicit def readVar[T:Manifest](v: Var[T]) : Rep[T]
   //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
+  def var_new[T:Manifest](init: Rep[T]): Var[T]
+  def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
+  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]  
 
+  def __newVar[T:Manifest](init: T) = var_new(init)
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_new(init)
   def __newVar[T](init: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_new(init)
 
@@ -17,18 +31,13 @@ trait Variables extends Base with OverloadHack {
   def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_assign(lhs, rhs)
   def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_assign(lhs, readVar(rhs))
 
-  // TODO: why doesn't this implicit kick in automatically?
+  // TODO: why doesn't this implicit kick in automatically? <--- do they belong here? maybe better move to NumericOps
   def infix_+=[T:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs, rhs)
   def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_plusequals(lhs,rhs)
   def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_plusequals(lhs,readVar(rhs))
-
-  def var_new[T:Manifest](init: Rep[T]): Var[T]
-  def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
-  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
 }
 
-trait VariablesExp extends Variables with EffectExp {
-  type Var[+T] = Variable[T]
+trait VariablesBridge extends VariablesStubExp with EffectExp {
   // TODO: make a design decision here.
   // defining Var[T] as Sym[T] is dangerous. If someone forgets to define a more-specific implicit conversion from
   // Var[T] to Ops, e.g. implicit def varToRepStrOps(s: Var[String]) = new RepStrOpsCls(varToRep(s))
@@ -43,7 +52,7 @@ trait VariablesExp extends Variables with EffectExp {
   // all DSL programs live in Exp-world.
 
   // read operation
-  implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = { // carefule with implicits...
+  override def readVar[T:Manifest](v: Var[T]) : Exp[T] = { // careful with implicits...
 /*
     //reflectRead(/*v*/)(ReadVar(v)) // FIXME!!
     //reflectEffect(ReadVar(v))
@@ -95,6 +104,8 @@ trait VariablesExp extends Variables with EffectExp {
   //def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) = reflectMutation(Assign(lhs, rhs))
   //def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: Exp[T]) = reflectMutation(VarPlusEquals(lhs, rhs))
 }
+
+trait VariablesExp extends Variables with VariablesBridge
 
 
 trait ScalaGenVariables extends ScalaGenEffect {

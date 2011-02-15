@@ -57,11 +57,6 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
     case IfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)
     case _ => super.boundSyms(e)
   }
-  
-  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
-    case IfThenElse(c, t, e) => getFreeVarBlock(c,Nil) ::: getFreeVarBlock(t,Nil) ::: getFreeVarBlock(e,Nil)
-    case _ => super.getFreeVarNode(rhs)
-  }
 }
 
 trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {

@@ -100,7 +100,7 @@ class TestFusion extends FileDiffSuite {
     withOutFile(prefix+"fusion2") {
       // LoopsExp2 with ArithExp with PrintExp with BaseFatExp
       new FusionProg with ArithExp with ArrayLoopsFatExp with PrintExp with TransformingStuff { self =>
-        val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint { val IR: self.type = self }
+        val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint { val IR: self.type = self; override val verbosity = 1 }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
