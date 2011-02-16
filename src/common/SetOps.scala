@@ -55,7 +55,7 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
   val IR: SetOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case SetNew(xs, mA) => emitValDef(sym, "collection.mutable.HashSet[" + remap(mA) + "](" + (xs map {quote}).mkString(",") + ")")
     case SetContains(s,i) => emitValDef(sym, quote(s) + ".contains(" + quote(i) + ")")
     case SetAdd(s,i) => emitValDef(sym, quote(s) + ".add(" + quote(i) + ")")
@@ -69,11 +69,9 @@ trait CLikeGenSetOps extends BaseGenSetOps with CLikeCodegen {
   val IR: SetOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
-      rhs match {
-        case _ => super.emitNode(sym, rhs)
-      }
-    }
+//  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+//    case _ => super.emitNode(sym, rhs)
+//  }
 }
 
 trait CudaGenSetOps extends CudaGenEffect with CLikeGenSetOps

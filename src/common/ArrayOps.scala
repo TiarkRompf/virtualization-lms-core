@@ -46,8 +46,8 @@ trait BaseGenArrayOps extends GenericNestedCodegen {
     case _ => super.syms(e)
   }
 
-  override def getFreeVarNode(rhs: Def[_]): List[Sym[_]] = rhs match {
-    case ArrayForeach(a,x,block) => getFreeVarBlock(block,List(x.asInstanceOf[Sym[_]]))
+  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
+    case ArrayForeach(a,x,block) => getFreeVarBlock(block,List(x.asInstanceOf[Sym[Any]]))
     case _ => super.getFreeVarNode(rhs)
   }
 }

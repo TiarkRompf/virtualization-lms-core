@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package common
 
-import java.io.{FileReader, FileWriter, BufferedReader, BufferedWriter, PrintWriter}
+import java.io.{File, FileReader, FileWriter, BufferedReader, BufferedWriter, PrintWriter}
 import scala.virtualization.lms.internal.{GenerationFailedException}
 import util.OverloadHack
 
@@ -112,7 +112,7 @@ trait ScalaGenIOOps extends ScalaGenBase {
   val IR: IOOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ObjFileApply(dir) => emitValDef(sym, "new java.io.File(" + quote(dir) + ")")
     case FileGetCanonicalFile(f) => emitValDef(sym, quote(f) + ".getCanonicalFile()")
     case FileGetPath(f) => emitValDef(sym, quote(f) + ".getPath()")
