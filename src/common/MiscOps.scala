@@ -30,16 +30,16 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   case class Error(s: Exp[String]) extends Def[Nothing]
   case class Return(x: Exp[Any]) extends Def[Unit]
 
-  def print(x: Exp[Any]) = reflectEffect(Print(x))
-  def println(x: Exp[Any]) = reflectEffect(PrintLn(x))
+  def print(x: Exp[Any]) = reflectEffect(Print(x)) // TODO: simple effect
+  def println(x: Exp[Any]) = reflectEffect(PrintLn(x)) // TODO: simple effect
   def exit(s: Exp[Int]) = reflectEffect(Exit(s))
   def error(s: Exp[String]) = reflectEffect(Error(s))
   def returnL(x: Exp[Any]) = reflectEffect(Return(x))
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
-    case Reflect(Print(x), Global(), es) => reflectMirrored(Reflect(Print(f(x)), Global(), f(es)))
-    case Reflect(PrintLn(x), Global(), es) => reflectMirrored(Reflect(PrintLn(f(x)), Global(), f(es)))
-    case Reflect(Exit(x), Global(), es) => reflectMirrored(Reflect(Exit(f(x)), Global(), f(es)))
+    case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))
+    case Reflect(PrintLn(x), u, es) => reflectMirrored(Reflect(PrintLn(f(x)), mapOver(f,u), f(es)))
+    case Reflect(Exit(x), u, es) => reflectMirrored(Reflect(Exit(f(x)), mapOver(f,u), f(es)))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }

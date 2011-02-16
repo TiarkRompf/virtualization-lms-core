@@ -5,7 +5,7 @@ import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 import scala.virtualization.lms.internal.{GenerationFailedException}
 
-trait StringOps extends Variables with OverloadHack {
+trait StringOps extends VariablesStub with OverloadHack {
   // NOTE: if something doesn't get lifted, this won't give you a compile time error,
   //       since string concat is defined on all objects
   def infix_+(s1: String, s2: Rep[Any]) = string_plus(s1,s2)
@@ -26,7 +26,7 @@ trait StringOps extends Variables with OverloadHack {
   def string_valueof(d: Rep[Any]): Rep[String]
 }
 
-trait StringOpsExp extends StringOps with VariablesExp {
+trait StringOpsExp extends StringOps with VariablesStubExp {
   case class StringPlus(s: Exp[Any], o: Exp[Any]) extends Def[String]
   case class StringTrim(s: Exp[String]) extends Def[String]
   case class StringSplit(s: Exp[String], separators: Exp[String]) extends Def[Array[String]]

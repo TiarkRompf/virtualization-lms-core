@@ -1,9 +1,9 @@
-fusion of List((Sym(2),Sym(13))) prevented by TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) in body of List(Sym(13))
-fusion of List((Sym(5),Sym(13))) prevented by TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) in body of List(Sym(13))
-fusion of List((Sym(2),Sym(18))) prevented by TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) in body of List(Sym(18))
-fusion of List((Sym(5),Sym(18))) prevented by TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) in body of List(Sym(18))
-fusion of List((Sym(2),Sym(22))) prevented by TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) in body of List(Sym(22))
-fusion of List((Sym(5),Sym(22))) prevented by TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) in body of List(Sym(22))
+fusion of List((Sym(2),Sym(13))) prevented by TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) which is required by body of List(Sym(13))
+fusion of List((Sym(5),Sym(13))) prevented by TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) which is required by body of List(Sym(13))
+fusion of List((Sym(2),Sym(18))) prevented by TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) which is required by body of List(Sym(18))
+fusion of List((Sym(5),Sym(18))) prevented by TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) which is required by body of List(Sym(18))
+fusion of List((Sym(2),Sym(22))) prevented by TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) which is required by body of List(Sym(22))
+fusion of List((Sym(5),Sym(22))) prevented by TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) which is required by body of List(Sym(22))
 wtableneg: List((Sym(2),Sym(13)), (Sym(5),Sym(13)), (Sym(2),Sym(18)), (Sym(5),Sym(18)), (Sym(2),Sym(22)), (Sym(5),Sym(22)))
 partitions: List(TTP(List(Sym(13), Sym(18), Sym(22)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(12)), ReduceElem(Sym(17)), ReduceElem(Sym(21))))), TTP(List(Sym(2), Sym(5), Sym(10)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Const(1.0)), ArrayElem(Sym(4)), ArrayElem(Sym(9))))))
 considering TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6))))
@@ -15,33 +15,33 @@ considering TTP(List(Sym(16)),ThinDef(ArrayIndex(Sym(10),Sym(15))))
 considering TTP(List(Sym(21)),ThinDef(ArrayIndex(Sym(10),Sym(20))))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(35), Sym(39), Sym(29), Sym(31), Sym(33)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(34)), ReduceElem(Sym(38)), ArrayElem(Const(1.0)), ArrayElem(Sym(30)), ArrayElem(Sym(32))))))
-considering TTP(List(Sym(34)),ThinDef(ArrayIndex(Sym(33),Sym(11))))
-replace TTP(List(Sym(34)),ThinDef(ArrayIndex(Sym(33),Sym(11)))) at 4 within TTP(List(Sym(35), Sym(39), Sym(29), Sym(31), Sym(33)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(34)), ReduceElem(Sym(38)), ArrayElem(Const(1.0)), ArrayElem(Sym(30)), ArrayElem(Sym(32)))))
+partitions: List(TTP(List(Sym(34), Sym(38), Sym(2), Sym(30), Sym(32)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(33)), ReduceElem(Sym(37)), ArrayElem(Const(1.0)), ArrayElem(Sym(29)), ArrayElem(Sym(31))))))
+considering TTP(List(Sym(33)),ThinDef(ArrayIndex(Sym(32),Sym(11))))
+replace TTP(List(Sym(33)),ThinDef(ArrayIndex(Sym(32),Sym(11)))) at 4 within TTP(List(Sym(34), Sym(38), Sym(2), Sym(30), Sym(32)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(33)), ReduceElem(Sym(37)), ArrayElem(Const(1.0)), ArrayElem(Sym(29)), ArrayElem(Sym(31)))))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(48), Sym(52), Sym(29), Sym(58), Sym(47)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(46)), ReduceElem(Sym(51)), ArrayElem(Const(1.0)), ArrayElem(Sym(45)), ArrayElem(Sym(46))))))
+partitions: List(TTP(List(Sym(47), Sym(51), Sym(2), Sym(57), Sym(46)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(45)), ReduceElem(Sym(50)), ArrayElem(Const(1.0)), ArrayElem(Sym(44)), ArrayElem(Sym(45))))))
 no changes, we're done
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-var x48 = 0
-var x52 = 0
+var x47 = 0
+var x51 = 0
 for (x11 <- 0 until 100) {
-val x45 = 2.0*x11
-val x46 = 1.0+x45
-val x51 = x46*x46
-x48 += x46
-x52 += x51
+val x44 = 2.0*x11
+val x45 = 1.0+x44
+val x50 = x45*x45
+x47 += x45
+x51 += x50
 }
-val x49 = x48/100
-val x50 = println(x49)
-val x53 = x52/100
-val x54 = x49*x49
-val x55 = x53-x54
-val x56 = println(x55)
+val x48 = x47/100
+val x49 = println(x48)
+val x52 = x51/100
+val x53 = x48*x48
+val x54 = x52-x53
+val x55 = println(x54)
 x27
 }
 }

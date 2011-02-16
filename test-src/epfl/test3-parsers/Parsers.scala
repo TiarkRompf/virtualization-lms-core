@@ -18,9 +18,6 @@ trait Parsers { this: Matching with Extractors =>
 	case class Success(rest: Input) extends ParseResult
 	case class Failure() extends ParseResult
 
-  type Rep[+A]
-  implicit def unit[A:Manifest](x:A): Rep[A]
-
 
   object SuccessR {
     def apply(x: Rep[Input]): Rep[Success] = construct(classOf[Success], Success.apply, x)

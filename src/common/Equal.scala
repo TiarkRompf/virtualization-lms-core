@@ -4,7 +4,7 @@ package common
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 
-trait Equal extends Base with Variables with OverloadHack {
+trait Equal extends Base with VariablesStub with OverloadHack {
   // TODO: we need a better way of handling this, too many combinations
   // this occurs because Rep is an object, so it has an == and != method defined by default,
   // so there is no type error to force the implicit conversions
@@ -30,16 +30,15 @@ trait Equal extends Base with Variables with OverloadHack {
   // TODO: this will probably never get called due to original, equally specific !=
   def infix_!=[A:Manifest,B:Manifest](a: A, b: B) : Rep[Boolean] = notequals(a,b)
 
-
   def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]) : Rep[Boolean]
   def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]) : Rep[Boolean]
 }
 
-trait EqualExp extends Equal with VariablesExp {
+trait EqualBridge extends BaseExp {
   case class Equal[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
   case class NotEqual[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
 
-  def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = if (a == b) Const(true) else Equal(a,b) // TODO: move to EqualExpOpt??
+  def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = Equal(a,b)
   def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = NotEqual(a,b)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
@@ -48,6 +47,15 @@ trait EqualExp extends Equal with VariablesExp {
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
+
+trait EqualBridgeOpt extends EqualBridge {
+  override def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = if (a == b) Const(true) else super.equals(a,b)
+  override def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = if (a == b) Const(false) else super.notequals(a,b)
+}
+
+trait EqualExp extends Equal with EqualBridge with VariablesStubExp
+trait EqualExpOpt extends EqualExp with EqualBridgeOpt
+
 
 trait ScalaGenEqual extends ScalaGenBase {
   val IR: EqualExp

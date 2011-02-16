@@ -78,11 +78,6 @@ trait BaseGenFunctions extends GenericNestedCodegen {
     case Lambda2(f, x1, x2, y) => x1 :: x2 :: effectSyms(y)
     case _ => super.boundSyms(e)
   }
-
-  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
-    case Lambda(f, x, y) => getFreeVarBlock(y,List(x.asInstanceOf[Sym[Any]]))
-    case _ => super.getFreeVarNode(rhs)
-  }
 }
 
 trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {

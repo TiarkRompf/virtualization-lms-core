@@ -5,6 +5,8 @@ import java.io.{File, FileReader, FileWriter, BufferedReader, BufferedWriter, Pr
 import scala.virtualization.lms.internal.{GenerationFailedException}
 import util.OverloadHack
 
+// TODO: fine grained effects
+
 trait IOOps extends Variables with OverloadHack {
 
   /**
