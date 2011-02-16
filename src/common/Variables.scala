@@ -52,7 +52,7 @@ trait VariablesBridge extends VariablesStubExp with EffectExp {
   // all DSL programs live in Exp-world.
 
   // read operation
-  override def readVar[T:Manifest](v: Var[T]) : Exp[T] = { // careful with implicits...
+  override implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = { // careful with implicits...
 /*
     //reflectRead(/*v*/)(ReadVar(v)) // FIXME!!
     //reflectEffect(ReadVar(v))
@@ -83,20 +83,20 @@ trait VariablesBridge extends VariablesStubExp with EffectExp {
   }
 
   def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
-    reflectWrite(lhs.e)()(Assign(lhs, rhs))
+    reflectWrite(lhs.e)(Assign(lhs, rhs))
     Const()
   }
 
   def var_plusequals[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
-    reflectWrite(lhs.e)()(VarPlusEquals(lhs, rhs))
+    reflectWrite(lhs.e)(VarPlusEquals(lhs, rhs))
     Const()
   }
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
-    case Reflect(NewVar(a), Alloc(), es) => reflectMirrored(Reflect(NewVar(f(a)), Alloc(), f(es)))
-    case Reflect(ReadVar(Variable(a)), Read(rs), es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), Read(f onlySyms rs), f(es)))
-    case Reflect(Assign(Variable(a),b), Write(ws), es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b)), Write(f onlySyms ws), f(es)))
-    case Reflect(VarPlusEquals(Variable(a),b), Write(ws), es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b)), Write(f onlySyms ws), f(es)))
+    case Reflect(NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a)), Alloc(), f(es)))
+    case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))
+    case Reflect(Assign(Variable(a),b), u, es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b)), mapOver(f,u), f(es)))
+    case Reflect(VarPlusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
   

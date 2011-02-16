@@ -15,7 +15,9 @@ trait WhileExp extends While with FunctionsExp {
   override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
     val c = reifyEffects(cond)
     val a = reifyEffects(body)
-    reflectEffect(While(c, a))
+    val ce = summarizeEffects(c)
+    val ae = summarizeEffects(a)
+    reflectEffect(While(c, a), ce andThen ((ae andThen ce).star))
   }
 }
 
