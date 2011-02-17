@@ -16,14 +16,14 @@ trait ListOps extends Base {
 trait ListOpsExp extends ListOps with EffectExp {
   case class ListNew[A:Manifest](xs: Seq[Rep[A]]) extends Def[List[A]]
 
-  def list_new[A:Manifest](xs: Seq[Rep[A]]) = reflectEffect(ListNew(xs))
+  def list_new[A:Manifest](xs: Seq[Rep[A]]) = ListNew(xs)
 }
 
 trait BaseGenListOps extends GenericNestedCodegen {
   val IR: ListOpsExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match {
+  override def syms(e: Any): List[Sym[Any]] = e match { // TODO: can do without override?
     case ListNew(xs) => (xs flatMap { syms }).toList
     case _ => super.syms(e)
   }

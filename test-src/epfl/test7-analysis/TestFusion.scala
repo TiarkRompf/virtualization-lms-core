@@ -21,8 +21,8 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
     case Minus(x,y) => infix_-(f(x), f(y))
     case Times(x,y) => infix_*(f(x), f(y))
     case Div(x,y) => infix_/(f(x), f(y))
-    case Reflect(Print(x), Global(), es) => reflectMirrored(Reflect(Print(f(x)), Global(), f(es)))
-    case Reify(x, Global(), es) => toAtom(Reify(f(x), Global(), f(es)))
+    case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))
+    case Reify(x, u, es) => toAtom(Reify(f(x), mapOver(f,u), f(es)))
   }).asInstanceOf[Exp[A]]
 
   override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer): Def[A] = (e match {
@@ -100,7 +100,7 @@ class TestFusion extends FileDiffSuite {
     withOutFile(prefix+"fusion2") {
       // LoopsExp2 with ArithExp with PrintExp with BaseFatExp
       new FusionProg with ArithExp with ArrayLoopsFatExp with PrintExp with TransformingStuff { self =>
-        val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint { val IR: self.type = self }
+        val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint { val IR: self.type = self; override val verbosity = 1 }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }

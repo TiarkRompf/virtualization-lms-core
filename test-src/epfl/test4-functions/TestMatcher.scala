@@ -19,8 +19,6 @@ trait ListMatch extends Extractors {
 
 trait MatcherProg { this: Matching with ListMatch =>
   
-  def unit[A:Manifest](x: A): Rep[A]
-  
   type Input = List[Char]
   
   def find(p: Input, s: Rep[Input]) = loop(p,s,p,s)

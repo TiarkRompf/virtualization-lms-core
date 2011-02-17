@@ -88,6 +88,17 @@ trait TrigExpOptFFT extends TrigExpOpt {
 }
 
 
+trait FlatResult extends BaseExp { // just to make dot output nicer
+
+  case class Result(x: Any) extends Def[Any]
+  
+  def result(x: Any): Exp[Any] = toAtom(Result(x))
+  
+}
+
+
+
+
 
 class TestFFT extends FileDiffSuite {
   
@@ -95,17 +106,15 @@ class TestFFT extends FileDiffSuite {
   
   def testFFT1 = {
     withOutFile(prefix+"fft1") {
-      val o = new FFT with ArithExp with TrigExpOpt with DisableCSE //with DisableDCE
+      val o = new FFT with ArithExp with TrigExpOpt with FlatResult with DisableCSE //with DisableDCE
       import o._
-
-      case class Result(x:Any) extends Def[Any]
 
       val r = fft(List.tabulate(4)(_ => Complex(fresh, fresh)))
       println(globalDefs.mkString("\n"))
       println(r)
       
       val p = new ExportGraph with DisableDCE { val IR: o.type = o }
-      p.emitDepGraph(toAtom(Result(r)), prefix+"fft1-dot", true)
+      p.emitDepGraph(result(r), prefix+"fft1-dot", true)
     }
     assertFileEqualsCheck(prefix+"fft1")
     assertFileEqualsCheck(prefix+"fft1-dot")
@@ -113,17 +122,17 @@ class TestFFT extends FileDiffSuite {
 
   def testFFT2 = {
     withOutFile(prefix+"fft2") {
-      val o = new FFT with ArithExpOptFFT with TrigExpOptFFT
+      val o = new FFT with ArithExpOptFFT with TrigExpOptFFT with FlatResult
       import o._
 
-      case class Result(x:Any) extends Def[Any]
-
+      case class Result(x: Any) extends Exp[Any]
+      
       val r = fft(List.tabulate(4)(_ => Complex(fresh, fresh)))
       println(globalDefs.mkString("\n"))
       println(r)
 
       val p = new ExportGraph { val IR: o.type = o }
-      p.emitDepGraph(toAtom(Result(r)), prefix+"fft2-dot", true)
+      p.emitDepGraph(result(r), prefix+"fft2-dot", true)
     }
     assertFileEqualsCheck(prefix+"fft2")
     assertFileEqualsCheck(prefix+"fft2-dot")

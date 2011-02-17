@@ -56,15 +56,13 @@ trait TestSort { this: Relat =>
 object TestTestSort {
   def main(args: Array[String]) {
       {
-        val o = new TestSort with RelatExpOpt with GraphVizExport
+        val o = new TestSort with RelatExpOpt with GraphVizExport with FlatResult
         import o._
-
-        case class Result(x:Any) extends Def[Any]
 
         val r = sort(List.tabulate(8)(_ => fresh))
         println(globalDefs.mkString("\n"))
         println(r)
-        emitDepGraph(toAtom(Result(r)), "test2-sort1-dot", true)
+        emitDepGraph(result(r)), "test2-sort1-dot", true)
       }
   }
 }

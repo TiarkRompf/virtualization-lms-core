@@ -18,7 +18,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
       but a better approach would be to heap- or stack-alloc only the necessary ones.
       
     - closures should not unnecessarily be heap-allocated as well (currently all
-      nested functions are clusures and heap-allocated).
+      nested functions are closures and heap-allocated).
       
       this complicates the analysis for variables, as witnessed by scalac:
       
@@ -55,6 +55,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
         
       which still allocates the IntRef although the closure record is eliminated 
       and the code inlined.
+      
       Phase ordering bites again!
       
 */

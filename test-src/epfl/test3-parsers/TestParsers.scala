@@ -32,7 +32,7 @@ class TestParsers extends FileDiffSuite {
   def testParse1 = {
     withOutFile(prefix+"parse1") {
       object ParsersProgExp extends ParsersProg with Matching with Extractors
-        with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll // with ControlOpt
+        with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll with FlatResult // with ControlOpt
         with DisableCSE {
           type Elem = Char
           implicit val mE = manifest[Char]
@@ -41,13 +41,11 @@ class TestParsers extends FileDiffSuite {
         }
       import ParsersProgExp._
 
-      case class Result(x:Any) extends Def[Any]
-
       val r = reifyEffects(head(fresh[Input]))
       println(globalDefs.mkString("\n"))
       println(r)
       val p = new ExtractorsGraphViz { val IR: ParsersProgExp.type = ParsersProgExp }
-      p.emitDepGraph(toAtom(Result(r)), prefix+"parse1-dot")
+      p.emitDepGraph(result(r), prefix+"parse1-dot")
     }
     assertFileEqualsCheck(prefix+"parse1")
     assertFileEqualsCheck(prefix+"parse1-dot")
@@ -56,7 +54,7 @@ class TestParsers extends FileDiffSuite {
   def testParse2 = {
     withOutFile(prefix+"parse2") {
       object ParsersProgExp extends ParsersProg with Matching with Extractors 
-        with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll // with ControlOpt
+        with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll with FlatResult // with ControlOpt
         {
           type Elem = Char
           implicit val mE = manifest[Char]
@@ -65,13 +63,11 @@ class TestParsers extends FileDiffSuite {
         }
       import ParsersProgExp._
 
-      case class Result(x:Any) extends Def[Any]
-
       val r = reifyEffects(head(fresh[Input]))
       println(globalDefs.mkString("\n"))
       println(r)
       val p = new ExtractorsGraphViz { val IR: ParsersProgExp.type = ParsersProgExp }
-      p.emitDepGraph(toAtom(Result(r)), prefix+"parse2-dot")
+      p.emitDepGraph(result(r), prefix+"parse2-dot")
     }
     assertFileEqualsCheck(prefix+"parse2")
     assertFileEqualsCheck(prefix+"parse2-dot")

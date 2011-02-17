@@ -24,8 +24,6 @@ trait MatchProg { this: Matching with Extractors =>
   def infix_unapply(o: SuccessR.type, x: Rep[Success]): Option[Rep[Int]] = deconstruct(classOf[Success], Success.unapply, x)
   // doesn't work...
   
-  def unit[A:Manifest](x: A): Rep[A]
-  
   def test(x: Rep[Success]): Rep[String] = x switch {
     case SuccessR(x) if x guard 7 => unit("yes")
   } orElse {
@@ -61,16 +59,14 @@ class TestMatch extends FileDiffSuite {
     withOutFile(prefix+"match1") {
       object MatchProgExp extends MatchProg with Matching with Extractors
         with MatchingExtractorsExp with FunctionsExpUnfoldAll
-        with DisableCSE
+        with FlatResult with DisableCSE
       import MatchProgExp._
-
-      case class Result(x:Any) extends Def[Any]
 
       val r = reifyEffects(test(fresh))
       println(globalDefs.mkString("\n"))
       println(r)
       val p = new ExtractorsGraphViz { val IR: MatchProgExp.type = MatchProgExp }
-      p.emitDepGraph(toAtom(Result(r)), prefix+"match1-dot")
+      p.emitDepGraph(result(r), prefix+"match1-dot")
     }
     assertFileEqualsCheck(prefix+"match1")
     assertFileEqualsCheck(prefix+"match1-dot")
@@ -80,15 +76,14 @@ class TestMatch extends FileDiffSuite {
     withOutFile(prefix+"match2") {
       object MatchProgExp extends MatchProg with Matching with Extractors
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll
+        with FlatResult
       import MatchProgExp._
-
-      case class Result(x:Any) extends Def[Any]
 
       val r = reifyEffects(test(fresh))
       println(globalDefs.mkString("\n"))
       println(r)
       val p = new ExtractorsGraphViz { val IR: MatchProgExp.type = MatchProgExp }
-      p.emitDepGraph(toAtom(Result(r)), prefix+"match2-dot")
+      p.emitDepGraph(result(r), prefix+"match2-dot")
     }
     assertFileEqualsCheck(prefix+"match2")
     assertFileEqualsCheck(prefix+"match2-dot")

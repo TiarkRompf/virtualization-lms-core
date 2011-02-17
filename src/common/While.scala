@@ -15,7 +15,9 @@ trait WhileExp extends While with FunctionsExp {
   override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
     val c = reifyEffects(cond)
     val a = reifyEffects(body)
-    reflectEffect(While(c, a))
+    val ce = summarizeEffects(c)
+    val ae = summarizeEffects(a)
+    reflectEffect(While(c, a), ce andThen ((ae andThen ce).star))
   }
 }
 
@@ -34,12 +36,6 @@ trait BaseGenWhile extends GenericNestedCodegen {
     case _ => super.boundSyms(e)
   }
 
-  // TODO: What about condition node?
-  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
-    case While(c,b) => getFreeVarBlock(c,Nil) ::: getFreeVarBlock(b,Nil)
-    case _ => super.getFreeVarNode(rhs)
-  }
-  
 }
 
 trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {

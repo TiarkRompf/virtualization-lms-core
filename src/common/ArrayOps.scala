@@ -4,7 +4,7 @@ package common
 import java.io.PrintWriter
 import internal._
 
-trait ArrayOps extends Variables {
+trait ArrayOps extends VariablesStub {
 
   // multiple definitions needed because implicits won't chain
   // not using infix here because apply doesn't work with infix methods
@@ -23,7 +23,7 @@ trait ArrayOps extends Variables {
   def array_foreach[T:Manifest](x: Rep[Array[T]], block: Rep[T] => Rep[Unit]): Rep[Unit]
 }
 
-trait ArrayOpsExp extends ArrayOps with VariablesExp {
+trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesStubExp {
 
   case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int]
   case class ArrayApply[T](a: Exp[Array[T]], n: Exp[Int])(implicit val mT:Manifest[T]) extends Def[T]
@@ -33,7 +33,8 @@ trait ArrayOpsExp extends ArrayOps with VariablesExp {
   def array_length[T:Manifest](a: Exp[Array[T]]) : Rep[Int] = ArrayLength(a)
   def array_foreach[T:Manifest](a: Exp[Array[T]], block: Exp[T] => Exp[Unit]): Exp[Unit] = {
     val x = fresh[T]
-    reflectEffect(ArrayForeach(a, x, reifyEffects(block(x))))
+    val b = reifyEffects(block(x))
+    reflectEffect(ArrayForeach(a, x, b), summarizeEffects(b).star)
   }
 }
 
@@ -44,11 +45,6 @@ trait BaseGenArrayOps extends GenericNestedCodegen {
   override def syms(e: Any): List[Sym[Any]] = e match {
     case ArrayForeach(a,x,block) if shallow => syms(a)
     case _ => super.syms(e)
-  }
-
-  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
-    case ArrayForeach(a,x,block) => getFreeVarBlock(block,List(x.asInstanceOf[Sym[Any]]))
-    case _ => super.getFreeVarNode(rhs)
   }
 }
 

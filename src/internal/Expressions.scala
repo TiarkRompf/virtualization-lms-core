@@ -52,7 +52,7 @@ trait Expressions {
     f
   }
 
-  implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
+  protected implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
     findOrCreateDefinition(d).sym
   }
 

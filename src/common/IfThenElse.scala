@@ -26,14 +26,13 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
   override def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]) = {
     val a = reifyEffectsHere(thenp)
     val b = reifyEffectsHere(elsep)
-    (a,b) match {
-      case (Def(Reify(_,_,_)), _) | (_, Def(Reify(_,_,_))) => reflectEffect(IfThenElse(cond,a,b)) //TODO u
-      case _ => IfThenElse(cond, a, b)
-    }
+    val ae = summarizeEffects(a)
+    val be = summarizeEffects(b)
+    reflectEffect(IfThenElse(cond,a,b), ae orElse be)
   }
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
-    case Reflect(IfThenElse(c,a,b), Global(), es) => reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), Global(), es map (e => f(e))))
+    case Reflect(IfThenElse(c,a,b), u, es) => reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))
     case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b))
     case _ => super.mirror(e,f)
   }
@@ -56,11 +55,6 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case IfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)
     case _ => super.boundSyms(e)
-  }
-  
-  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
-    case IfThenElse(c, t, e) => getFreeVarBlock(c,Nil) ::: getFreeVarBlock(t,Nil) ::: getFreeVarBlock(e,Nil)
-    case _ => super.getFreeVarNode(rhs)
   }
 }
 

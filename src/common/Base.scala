@@ -17,7 +17,7 @@ trait Base extends EmbeddedControls {
 
   type Rep[+T]
 
-  implicit def unit[T:Manifest](x: T): Rep[T]
+  protected implicit def unit[T:Manifest](x: T): Rep[T]
 }
 
 /**
@@ -28,14 +28,27 @@ trait Base extends EmbeddedControls {
 trait BaseExp extends Base with Expressions with Transforming {
   type Rep[+T] = Exp[T]
 
-  implicit def unit[T:Manifest](x: T) = Const(x)
+  protected implicit def unit[T:Manifest](x: T) = Const(x)
 }
 
 trait EffectExp extends BaseExp with Effects {
 
+  def mapOver(t: Transformer, u: Summary) = { // TODO: move to effects class?
+    u.copy(mayRead = t.onlySyms(u.mayRead), mstRead = t.onlySyms(u.mstRead),
+      mayWrite = t.onlySyms(u.mayWrite), mstWrite = t.onlySyms(u.mstWrite))
+  }
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+/*
+    case Reflect(x, u, es) =>
+      reifyEffects {
+        context = f(es)
+        mirror(x)
+      }
+    
+*/    
 //    case Reflect(Print(x), u, es) => Reflect(Print(f(x)), es map (e => f(e)))
-    case Reify(x, u, es) => Reify(f(x), u, es map (e => f(e)))
+    case Reify(x, u, es) => Reify(f(x), mapOver(f,u), f(es)) //TODO: u
     case _ => super.mirror(e,f)
   }
     

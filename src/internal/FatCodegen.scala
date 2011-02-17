@@ -51,6 +51,43 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     
     val levelScope = e1.filter(z => (e2 contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
 
+    // sanity check to make sure all effects are accounted for
+    result match {
+      case Def(Reify(x, u, effects)) =>
+        val actual = levelScope.filter(_.lhs exists (effects contains _))
+        if (effects != actual.flatMap(_.lhs)) {
+          val expected = effects.map(d=>fatten(findDefinition(d.asInstanceOf[Sym[Any]]).get))
+          println("error: violated ordering of effects")
+          println("  expected:")
+          expected.foreach(d => println("    "+d))
+          println("  actual:")
+          actual.foreach(d => println("    "+d))
+          // stuff going missing because of stray dependencies is the most likely cause 
+          // so let's print some debugging hints
+          println("  missing:")
+          val missing = expected filterNot (actual contains _)
+          if (missing.isEmpty)
+            println("  note: there is nothing missing so the different order might in fact be ok (artifact of new effect handling? TODO)")          
+          missing.foreach { d => 
+            val inDeep = e1 contains d
+            val inShallow = e2 contains d
+            val inDep = g1 contains d
+            println("    "+d+" <-- inDeep: "+inDeep+", inShallow: "+inShallow+", inDep: "+inDep)
+            if (inDep) e1 foreach { z =>
+              val b = boundSyms(z.rhs)
+              if (b.isEmpty) "" else {
+                val g2 = getFatDependentStuff(currentScope)(b)
+                if (g2 contains d) {
+                  println("    depends on " + z + " (bound: "+b+")")
+                  val path = getFatSchedule(g2)(d)
+                  for (p <- path) println("      "+p)
+                }
+              }
+            }
+          }
+        }
+      case _ =>
+    }
 /*
     // sanity check to make sure all effects are accounted for
     result match {
@@ -82,7 +119,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
   def emitFatNode(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter): Unit = rhs match {
     case ThinDef(Reflect(s, u, effects)) => emitFatNode(sym, ThinDef(s)) // call back into emitFatNode, not emitNode
     case ThinDef(a) => emitNode(sym(0), a)
-    case _ => system.error("don't know how to generate code for: "+rhs)
+    case _ => sys.error("don't know how to generate code for: "+rhs)
   }
 
   def emitFatBlock(rhs: List[Exp[Any]])(implicit stream: PrintWriter): Unit = {
