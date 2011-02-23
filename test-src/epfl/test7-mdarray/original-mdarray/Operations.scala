@@ -29,8 +29,8 @@ object Operations {
   def minVal[A](a: MDArray[A])(implicit ev: Ordering[A], ev2: ClassManifest[A]): A = a.reduce(a.content()(0))((a, b) => if (ev.lt(a, b)) a else b)
   
   // Restructuring operations - implemented as with-loops
-  def genarray[A: ClassManifest](shp: MDArray[Int], value: MDArray[A]): MDArray[A] = With().GenArray(shp, iv => value)
-  def modarray[A: ClassManifest](a: MDArray[A], iv: MDArray[Int], value: MDArray[A]): MDArray[A] = With(iv, false, iv, false).ModArray(a, iv => value)
+  def genarray[A: ClassManifest](shp: MDArray[Int], value: MDArray[A]): MDArray[A] = With(function = iv => value).GenArray(shp)
+  def modarray[A: ClassManifest](a: MDArray[A], iv: MDArray[Int], value: MDArray[A]): MDArray[A] = With(iv, false, false, iv, function = iv => value).ModArray(a)
   def take[A: ClassManifest](shp: MDArray[Int], a: MDArray[A]): MDArray[A] = {
     val opName = "take"
 
@@ -40,7 +40,7 @@ object Operations {
     if ((a.dim != convertToValue(shp.shape.content()(0))) || (any(shp > a.shape)))
       throw new Exception(opName + ": The given shape and array do not match")
 
-    With().GenArray(shp, iv => a(iv))
+    With(function = iv => a(iv)).GenArray(shp)
   }
 
   def drop[A: ClassManifest](shp: MDArray[Int], a: MDArray[A]): MDArray[A] = {
@@ -52,7 +52,7 @@ object Operations {
     if ((a.dim != shp.shape.content()(0)) || (any(shp > a.shape)))
       throw new Exception(opName + ": The given shape and array do not match")
 
-    With().GenArray(a.shape - shp, iv => a(shp + iv))
+    With(function = iv => a(shp + iv)).GenArray(a.shape - shp)
   }
 
   def tile[A: ClassManifest](sv: MDArray[Int], ov: MDArray[Int], a:MDArray[A]): MDArray[A] = {
@@ -70,7 +70,7 @@ object Operations {
     if (any(a.shape < shape +++ zeros(a.dim - shape.shape.content()(0))))
       throw new Exception(opName + ": The size of the tile goes outside the array")
 
-    With().GenArray(sv, iv => a(iv + ov +++ zeros(sv.shape.content()(0) - ov.shape.content()(0))))
+    With(function = iv => a(iv + ov +++ zeros(sv.shape.content()(0) - ov.shape.content()(0)))).GenArray(sv)
   }
 
   def rotate[A: ClassManifest](ov: MDArray[Int], a:MDArray[A]): MDArray[A] = {
@@ -82,7 +82,7 @@ object Operations {
     if (a.dim != ov.shape.content()(0))
       throw new Exception(opName + ": The offset vector does not correspond to the array shape")
 
-    With().GenArray(a.shape, iv => a((iv - ov) remGtZero a.shape))
+    With(function = iv => a((iv - ov) remGtZero a.shape)).GenArray(a.shape)
   }
 
   def shift[A: ClassManifest](ov: MDArray[Int], expr: A, a:MDArray[A]): MDArray[A] = {
@@ -94,7 +94,7 @@ object Operations {
     if (a.dim != ov.shape.content()(0))
       throw new Exception(opName + ": The offset vector does not correspond to the array shape")
 
-    With().GenArray(a.shape, iv => if ((any((iv - ov) < zeros(a.dim))) || (any((iv - ov) >= a.shape))) expr else a(iv - ov))
+    With(function = iv => if ((any((iv - ov) < zeros(a.dim))) || (any((iv - ov) >= a.shape))) expr else a(iv - ov)).GenArray(a.shape)
   }
 
   def cat[A: ClassManifest](d: Int, one: MDArray[A], two: MDArray[A]): MDArray[A] = {
@@ -102,22 +102,22 @@ object Operations {
     if ((d >= one.shape.content.length) || (d >= two.shape.content.length))
       throw new Exception(opName + ": The concatenation axis is outside the shapes of the two arrays")
 
-    val eq1:MDArray[Int] = With().ModArray(one.shape, iv => if (iv.content()(0) == d) 0 else one.shape.content()(iv))
-    val eq2:MDArray[Int] = With().ModArray(two.shape, iv => if (iv.content()(0) == d) 0 else two.shape.content()(iv))
+    val eq1:MDArray[Int] = With(function = iv => if (iv.content()(0) == d) 0 else one.shape.content()(iv)).ModArray(one.shape)
+    val eq2:MDArray[Int] = With(function = iv => if (iv.content()(0) == d) 0 else two.shape.content()(iv)).ModArray(two.shape)
 
     if (!(eq1 == eq2))
       throw new Exception(opName + ": The shapes of the two arrays are not compatible for concatenation")
 
-    val shape:  MDArray[Int] = With().GenArray(one.shape.shape, iv => if (iv.content()(0) == d) one.shape.content()(iv.content()(0)) + two.shape.content()(iv.content()(0)) else one.shape.content()(iv.content()(0)))
-    val offset: MDArray[Int] = With().GenArray(one.shape.shape, iv => if (iv.content()(0) == d) one.shape.content()(iv.content()(0)) else 0)
+    val shape:  MDArray[Int] = With(function = iv => if (iv.content()(0) == d) one.shape.content()(iv.content()(0)) + two.shape.content()(iv.content()(0)) else one.shape.content()(iv.content()(0))).GenArray(one.shape.shape)
+    val offset: MDArray[Int] = With(function = iv => if (iv.content()(0) == d) one.shape.content()(iv.content()(0)) else 0).GenArray(one.shape.shape)
 
-    With().GenArray(shape, iv => if (iv.content()(d) < one.shape.content()(d)) one(iv) else two(iv - offset))
+    With(function = iv => if (iv.content()(d) < one.shape.content()(d)) one(iv) else two(iv - offset)).GenArray(shape)
   }
 
   // Some additional functions
   def zeros(size: Int): MDArray[Int] = new Array[Int](size)
-  def ones(size: Int) = value(size, 1)
-  def value(size: Int, value: Int): MDArray[Int] = {
+  def ones(size: Int) = values(size, 1)
+  def values(size: Int, value: Int): MDArray[Int] = {
     val valArray = new Array[Int](size)
     for (i <- valArray.indices)
       valArray(i) = value

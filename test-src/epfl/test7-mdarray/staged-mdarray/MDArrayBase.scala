@@ -16,7 +16,7 @@ trait MDArrayBase extends Base with util.OverloadHack {
    */
   class RepMDArray[A: Manifest](array: Rep[MDArray[A]]) {
     def apply(iv: Rep[MDArray[Int]]): Rep[MDArray[A]] = sel(iv, array)
-    def unary_-(implicit numeric: Numeric[A]): Rep[MDArray[A]] = uop(array)(numeric.negate, "-[unary]")
+    def unary_-(implicit numeric: Numeric[A]): Rep[MDArray[A]] = uop(array)(numeric.negate, "-")
     def unary_!(implicit ev: A =:= Boolean): Rep[MDArray[Boolean]] = uop(array)((a) => !(ev(a)), "!")
     override def toString() = doToString(array)
     def getString() = doToString(array)
@@ -117,49 +117,49 @@ trait MDArrayBase extends Base with util.OverloadHack {
   protected val nothing: Rep[MDArray[Int]]
 
   // With operation
-  class With(val _lb: Rep[MDArray[Int]] = nothing,
-             val _lbStrict: Boolean = false,
-             val _ub: Rep[MDArray[Int]] = nothing,
-             val _ubStrict: Boolean = false,
-             val _step: Rep[MDArray[Int]] = nothing,
-             val _width: Rep[MDArray[Int]] = nothing) {
+  class With[A: Manifest] (val lb: Rep[MDArray[Int]] = nothing,
+                           val lbStrict: Boolean = false,
+                           val ubStrict: Boolean = false,
+                           val ub: Rep[MDArray[Int]] = nothing,
+                           val step: Rep[MDArray[Int]] = nothing,
+                           val width: Rep[MDArray[Int]] = nothing,
+                           val function: Rep[MDArray[Int]] => Rep[MDArray[A]]) {
 
-    def GenArray[A: Manifest](shp: Rep[MDArray[Int]], f: Rep[MDArray[Int]]=> Rep[MDArray[A]]): Rep[MDArray[A]] = genArrayWith((fillShape(shp), f)::Nil, shp)
-    def ModArray[A: Manifest](a: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = modArrayWith((fillShape(shape(a)), f)::Nil, a)
-    def Fold[A: Manifest](foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]] = foldArrayWith(fillShapeForFold(), foldFunction, neutral, f)
+    def GenArray(shp: Rep[MDArray[Int]]): Rep[MDArray[A]] = genArrayWith(fillShape(shp)::Nil, shp)
+    def ModArray(a: Rep[MDArray[A]]): Rep[MDArray[A]] = modArrayWith(fillShape(shape(a))::Nil, a)
+    def Fold(foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]]): Rep[MDArray[A]] = foldArrayWith(fillShapeForFold(), foldFunction, neutral)
 
     // This function will fill in the values correctly on construction :)
-    def fillShape(shp: Rep[MDArray[Int]]): With = {
-      val lb = if (_lb == nothing) zeros(sel(0::Nil, shape(shp))) else _lb
-      val lbStrict = if (_lb == nothing) false else _lbStrict
-      val ub = if (_ub == nothing) shp  else _ub
-      val ubStrict = if (_ub == nothing) true else _ubStrict
-      val step = if (_step == nothing) values(sel(0::Nil, shape(shp)), 1) else _step
-      val width = if (_width == nothing) values(sel(0::Nil, shape(shp)), 0) else _width
-      With(lb, lbStrict, ub, ubStrict, step, width)
+    def fillShape(shp: Rep[MDArray[Int]]): With[A] = {
+      val _lb = if (lb == nothing) zeros(sel(0::Nil, shape(shp))) else lb
+      val _lbStrict = lbStrict
+      val _ub = if (ub == nothing) shp - 1  else ub
+      val _ubStrict = ubStrict
+      val _step = if (step == nothing) values(sel(0::Nil, shape(shp)), 1) else step
+      val _width = if (width == nothing) values(sel(0::Nil, shape(shp)), 0) else width
+      With(_lb, _lbStrict, _ubStrict, _ub, _step, _width, function)
     }
 
-    def fillShapeForFold(): With = {
-      if (_lb == nothing) throw new Exception("fold: lower bound must be specified")
-      if (_ub == nothing) throw new Exception("fold: upper bound must be specified")
-      val step = if (_step == nothing) values(shape(_lb), 1) else _step
-      val width = if (_width == nothing) values(shape(_lb), 0) else _width
-      With(_lb, _lbStrict, _ub, _ubStrict, step, width)
+    def fillShapeForFold(): With[A] = {
+      if (lb == nothing) throw new Exception("fold: lower bound must be specified")
+      if (ub == nothing) throw new Exception("fold: upper bound must be specified")
+      val _step = if (step == nothing) values(sel(0::Nil, shape(lb)), 1) else step
+      val _width = if (width == nothing) values(sel(0::Nil, shape(lb)), 0) else width
+      With(lb, lbStrict, ubStrict, ub, _step, _width, function)
     }
 
-    def usedDefs(): List[Rep[Any]] = _lb::_ub::_step::_width::Nil
-
-    override def toString() = "With(" + _lb + ", " + _lbStrict + ", " + _ub + ", " + _ubStrict + ", " + _step + ", " + _width + ")"
+    override def toString() = "With(" + lb + ", " + lbStrict + ", " + ub + ", " + ubStrict + ", " + step + ", " + width + ", f= " + function + ")"
   }
 
   object With {
-    def apply(_lb: Rep[MDArray[Int]] = nothing,
-           _lbStrict: Boolean = false,
-           _ub: Rep[MDArray[Int]] = nothing,
-           _ubStrict: Boolean = false,
-           _step: Rep[MDArray[Int]] = nothing,
-           _width: Rep[MDArray[Int]] = nothing): With =
-    new With(_lb, _lbStrict, _ub, _ubStrict, _step, _width)
+    def apply[A: Manifest](lb: Rep[MDArray[Int]] = nothing,
+           lbStrict: Boolean = false,
+           ubStrict: Boolean = false,
+           ub: Rep[MDArray[Int]] = nothing,
+           step: Rep[MDArray[Int]] = nothing,
+           width: Rep[MDArray[Int]] = nothing,
+           function: Rep[MDArray[Int]] => Rep[MDArray[A]]): With[A] =
+    new With[A](lb, lbStrict, ubStrict, ub, step, width, function)
   }
 
   // Language operations
@@ -204,9 +204,9 @@ trait MDArrayBase extends Base with util.OverloadHack {
   def uop[A, B](a:Rep[MDArray[A]])(op: A => B, opName: String)(implicit mfA: Manifest[A], mfB: Manifest[B]): Rep[MDArray[B]]
 
   // With-comprehensions
-  def genArrayWith[A: Manifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], shp: Rep[MDArray[Int]]): Rep[MDArray[A]]
-  def modArrayWith[A: Manifest](l: List[Pair[With, Rep[MDArray[Int]]=> Rep[MDArray[A]]]], a: Rep[MDArray[A]]): Rep[MDArray[A]]
-  def foldArrayWith[A: Manifest](w: With, foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]], f: Rep[MDArray[Int]] => Rep[MDArray[A]]): Rep[MDArray[A]]
+  def genArrayWith[A: Manifest](l: List[With[A]], shp: Rep[MDArray[Int]]): Rep[MDArray[A]]
+  def modArrayWith[A: Manifest](l: List[With[A]], a: Rep[MDArray[A]]): Rep[MDArray[A]]
+  def foldArrayWith[A: Manifest](w: With[A], foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]]): Rep[MDArray[A]]
 
   // Integer operations for Game of Life, NumericOps is too much
   def infix_+(a: Rep[Int], b: Rep[Int]): Rep[Int]

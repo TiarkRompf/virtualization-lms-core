@@ -37,7 +37,7 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   case class Reshape[A: Manifest](shp: Exp[MDArray[Int]], a: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "Reshape(" + shp + ", " + a + ")" }
   case class Sel[A: Manifest](iv: Exp[MDArray[Int]], a: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "Sel(" + iv + ", " + a + ")" }
   case class Cat[A: Manifest](d: Exp[Int], a: Exp[MDArray[A]], b: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "Cat(" + d + ", " + a + ", " + b + ")" }
-  case class Reduce[A: Manifest, B](z: Exp[B], a: Exp[MDArray[A]], op: (B,A)=>B, opName: String) extends Def[A] { override def toString() = "Reduce(" + z + ", " + opName + ", " + a + ")" }
+  case class Reduce[A: Manifest, B](z: Exp[B], a: Exp[MDArray[A]], op: (B,A)=>B, opRepr: String, opName: String) extends Def[A] { override def toString() = "Reduce(" + z + ", " + opName + ", " + a + ")" }
 
   // Operations and Values
   // XXX: In an optimization phase, operations and values will end up as With loops => the only reason to keep them
@@ -93,29 +93,29 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
 
   // Restructuring operations - implemented as with-loops
   def genarray[A: Manifest](shp: Exp[MDArray[Int]], value: Exp[MDArray[A]]): Exp[MDArray[A]] =
-    With().GenArray(shp, iv => value)
+    With(function = iv => value).GenArray(shp)
   def modarray[A: Manifest](a: Exp[MDArray[A]], iv: Exp[MDArray[Int]], value: Exp[MDArray[A]]): Exp[MDArray[A]] =
-    With(_lb = iv, _ub = iv).ModArray(a, iv => value)
+    With(lb = iv, ub = iv, function = iv => value).ModArray(a)
 
   // TODO: Redesign these functions for lower dimensions in the given vectors, filling in with zeros or shape elements
   def take[A: Manifest](shp: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] =
-    With().GenArray(shp, iv => sel(iv, a))
+    With(function = iv => sel(iv, a)).GenArray(shp)
   def drop[A: Manifest](shp: Exp[MDArray[Int]], a: Exp[MDArray[A]]): Exp[MDArray[A]] =
-    With().GenArray(shape(a) - shp, iv => sel(iv + shp, a))
+    With(function = iv => sel(iv + shp, a)).GenArray(shape(a) - shp)
   def tile[A: Manifest](sv: Exp[MDArray[Int]], ov: Exp[MDArray[Int]], a:Exp[MDArray[A]]): Exp[MDArray[A]] =
-    With().GenArray(sv, iv => sel(iv + ov, a))
+    With(function = iv => sel(iv + ov, a)).GenArray(sv)
   def rotate[A: Manifest](ov: Exp[MDArray[Int]], a:Exp[MDArray[A]]): Exp[MDArray[A]] =
-    With().GenArray(shape(a), iv => a(((iv - ov) + shape(a)) % shape(a)))
+    With(function = iv => a(((iv - ov) + shape(a)) % shape(a))).GenArray(shape(a))
   def shift[A: Manifest](ov: Exp[MDArray[Int]], expr: Exp[A], a: Exp[MDArray[A]]): Exp[MDArray[A]] =
-    With().GenArray(shape(a), iv => if ((any((iv - ov) < zeros(dim(a)))) || (any((iv - ov) >= shape(a)))) expr else a(iv - ov))
+    With[A](function = iv => if ((any((iv - ov) < zeros(dim(a)))) || (any((iv - ov) >= shape(a)))) expr else a(iv - ov)).GenArray(shape(a))
 
   // Reduction operations on matrices
-  def sum[A](a: Exp[MDArray[A]])(implicit ev: Numeric[A], mf: Manifest[A]): Exp[A] = reduce[A](ev.zero, a, ev.plus, "sum")
-  def prod[A](a: Exp[MDArray[A]])(implicit ev: Numeric[A], mf: Manifest[A]): Exp[A] = reduce[A](ev.one, a, ev.times, "prod")
-  def all(a: Exp[MDArray[Boolean]]): Exp[Boolean] = reduce[Boolean](true, a, (x:Boolean, y:Boolean) => x && y, "all")
-  def any(a: Exp[MDArray[Boolean]]): Exp[Boolean] = reduce[Boolean](false, a, (x:Boolean, y:Boolean) => x || y, "any")
-  def maxVal[A](a: Exp[MDArray[A]])(implicit ev: Ordering[A], mf: Manifest[A]): Exp[A] = reduce[A](sel(zeros(dim(a)),a), a, (a:A, b:A) => if (ev.gt(a, b)) a else b, "maxVal")
-  def minVal[A](a: Exp[MDArray[A]])(implicit ev: Ordering[A], mf: Manifest[A]): Exp[A] = reduce[A](sel(zeros(dim(a)),a), a, (a:A, b:A) => if (ev.lt(a, b)) a else b, "minVal")
+  def sum[A](a: Exp[MDArray[A]])(implicit ev: Numeric[A], mf: Manifest[A]): Exp[A] = reduce[A](ev.zero, a, ev.plus, "(a, b) => a + b", "sum")
+  def prod[A](a: Exp[MDArray[A]])(implicit ev: Numeric[A], mf: Manifest[A]): Exp[A] = reduce[A](ev.one, a, ev.times, "(a, b) => a * b", "prod")
+  def all(a: Exp[MDArray[Boolean]]): Exp[Boolean] = reduce[Boolean](true, a, (x:Boolean, y:Boolean) => x && y, "(a, b) => a && b", "all")
+  def any(a: Exp[MDArray[Boolean]]): Exp[Boolean] = reduce[Boolean](false, a, (x:Boolean, y:Boolean) => x || y, "(a, b) => a || b", "any")
+  def maxVal[A](a: Exp[MDArray[A]])(implicit ev: Ordering[A], mf: Manifest[A]): Exp[A] = reduce[A](sel(zeros(dim(a)),a), a, (a:A, b:A) => if (ev.gt(a, b)) a else b, "(a, b) => if (a > b) a else b", "max")
+  def minVal[A](a: Exp[MDArray[A]])(implicit ev: Ordering[A], mf: Manifest[A]): Exp[A] = reduce[A](sel(zeros(dim(a)),a), a, (a:A, b:A) => if (ev.lt(a, b)) a else b, "(a, b) => if (a < b) a else b", "min")
 
   // Basic operations on matrices - they appear as private here
   def opAA[A, B](a:Exp[MDArray[A]], b:Exp[MDArray[A]])(op: (A, A) => B, opName: String)(implicit mfA: Manifest[A], mfB: Manifest[B], ov1: Overloaded4): Exp[MDArray[B]] =
@@ -126,21 +126,18 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
     InfixOpAE(a, Const(b), op, opName)
   def uop[A, B](a:Exp[MDArray[A]])(op: A => B, opName: String)(implicit mfA: Manifest[A], mfB: Manifest[B]): Exp[MDArray[B]] =
     UnaryOp(a, op, opName)
-  def reduce[A](z: Exp[A], a: Exp[MDArray[A]], op: (A, A) => A, opName: String)(implicit mfA: Manifest[A]): Exp[A] =
-    Reduce(z, a, op, opName)
+  def reduce[A](z: Exp[A], a: Exp[MDArray[A]], op: (A, A) => A, opRepr:String, opName: String)(implicit mfA: Manifest[A]): Exp[A] =
+    Reduce(z, a, op, opRepr, opName)
 
   // With-comprehensions
-  def toWithNode[A: Manifest](p: (With, Exp[MDArray[Int]] => Exp[MDArray[A]])): Exp[MDArray[A]] = {
-    val withObject: With = p._1
-    val function: Exp[MDArray[Int]] => Exp[MDArray[A]] = p._2
-
-    val iv: Exp[MDArray[Int]] = IndexVector(withObject._lb, withObject._lbStrict, withObject._ub, withObject._ubStrict, withObject._step, withObject._width)
-    WithNode(iv, function(iv))
+  def toWithNode[A: Manifest](withObject: With[A]): Exp[MDArray[A]] = {
+    val iv: Exp[MDArray[Int]] = IndexVector(withObject.lb, withObject.lbStrict, withObject.ub, withObject.ubStrict, withObject.step, withObject.width)
+    WithNode(iv, withObject.function(iv))
   }
 
-  def genArrayWith[A: Manifest](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], shp: Exp[MDArray[Int]]): Exp[MDArray[A]] = GenArrayWith(l.map(p => toWithNode(p)), shp)
-  def modArrayWith[A: Manifest](l: List[Pair[With, Exp[MDArray[Int]]=> Exp[MDArray[A]]]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = ModArrayWith(l.map(p => toWithNode(p)), a)
-  def foldArrayWith[A: Manifest](w: With, foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], neutral: Exp[MDArray[A]], f: Exp[MDArray[Int]] => Exp[MDArray[A]]): Exp[MDArray[A]] = FoldArrayWith(toWithNode(Pair(w, f)), neutral, foldFunction)
+  def genArrayWith[A: Manifest](l: List[With[A]], shp: Exp[MDArray[Int]]): Exp[MDArray[A]] = GenArrayWith(l.map(w => toWithNode(w)), shp)
+  def modArrayWith[A: Manifest](l: List[With[A]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = ModArrayWith(l.map(w => toWithNode(w)), a)
+  def foldArrayWith[A: Manifest](w: With[A], foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], neutral: Exp[MDArray[A]]): Exp[MDArray[A]] = FoldArrayWith(toWithNode(w), neutral, foldFunction)
 
   // ToString
   def doToString[A](a: Exp[MDArray[A]]) = a.toString()

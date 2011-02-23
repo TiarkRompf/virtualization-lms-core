@@ -7,14 +7,17 @@ import internal._
 import original._
 import original.Conversions._
 import collection.mutable.{Queue, HashSet}
+import collection.immutable.{ListSet, HashMap}
 
 trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
 
-  def getTypingString(index: Int, subst: SubstitutionList): String = {
-    val shapeVar = ShapeVar(index)
-    val valueVar = ValueVar(index)
-    val shapeVarValue: TypingVariable = subst(shapeVar)
-    val valueVarValue: TypingVariable = subst(valueVar)
+  import IR.{Exp, TP}
+
+  def getTypingString(index: Int, shapes: Map[Int, TypingVariable], values: Map[Int, TypingVariable]): String = {
+    val shapeVar: TypingVariable = ShapeVar(index)
+    val valueVar: TypingVariable = ValueVar(index)
+    val shapeVarValue: TypingVariable = shapes(index)
+    val valueVarValue: TypingVariable = values(index)
 
     // need to limit the value size so we don't overcrowd the graph
     var valueString = valueVarValue.toString
@@ -29,22 +32,79 @@ trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
     }
   }
 
-  def obtainSubstitutions(result: Any, debug: Boolean = false): (SubstitutionList, SubstitutionList) = {
+  /**
+   * Gather the constraints in a optimizer & code generator-friendly way
+   *
+   * The logic of the entire thing:
+   * 1. Do typing
+   * 2. Do optimization -- this will also alter typing!!!
+   * 3. Do scheduling
+   * 4. Do code generation, along with runtime check elimination
+   */
+  def doTyping(result: Any, debug: Boolean = false): (Map[Int, TypingVariable], Map[Int, TypingVariable], Map[Int, List[(TypingConstraint, TypingConstraint)]]) = {
+
     // 1. Gather constraints
     val constraints: List[TypingConstraint] = createTypingConstraints(result)
-    // 2. Get "pure" substitutions
-    val pureSubst: List[Substitution] = computeSubstitutions(constraints.filter(const => !const.prereq), debug)
-    // 3. Get "full" substitutions
-    val fullSubst: List[Substitution] = computeSubstitutions(constraints, debug)
 
-    (new SubstitutionList(pureSubst), new SubstitutionList(fullSubst))
+    // 2. Get the substitution list & the pre-requirement list
+    val fullSubstitutions = computeSubstitutions(constraints, debug)
+    val pureSubstitutions = computeSubstitutions(constraints.filterNot(constr => constr.prereq), debug)
+
+    // 3. Organize the substitution list
+    var nodeShapeMap = new HashMap[Int, TypingVariable]
+    var nodeValueMap = new HashMap[Int, TypingVariable]
+    var runtimeCheckMap = new HashMap[Int, List[(TypingConstraint, TypingConstraint)]]
+
+    // 4. Shapes and values checks
+    val ids = constraints.map(constr => getSymNumber(constr.node)).distinct
+    for(id <- ids) {
+      nodeShapeMap += new Pair(id, fullSubstitutions(ShapeVar(id)))
+      nodeValueMap += new Pair(id, fullSubstitutions(ValueVar(id)))
+    }
+
+    // 5. Runtime checks
+    for (runtimeCheck <- pureSubstitutions(constraints.filter(constr => constr.prereq))) {
+      val runtimeCheckList: List[(TypingConstraint, TypingConstraint)] = runtimeCheckMap.contains(getSymNumber(runtimeCheck.node)) match {
+        case true => runtimeCheckMap(getSymNumber(runtimeCheck.node))
+        case false => Nil
+      }
+      runtimeCheckMap += new Pair(getSymNumber(runtimeCheck.node), (runtimeCheck, pureSubstitutions(runtimeCheck)) :: runtimeCheckList)
+    }
+
+    (nodeShapeMap, nodeValueMap, runtimeCheckMap)
   }
 
-  def computeSubstitutions(inConstraints: List[TypingConstraint], debug: Boolean): List[Substitution] = {
+  /**
+   *
+   * There are two kinds of constraints:
+   *  * PRE-requirements: In order to execute an operation, this requirement has to be satisfied
+   *  * POST-requirements: After an operation is executed, this constraint must be satisfied
+   *
+   * The unification algorithm may leave constraints *unsatisfied* by a substitution *iff* there is no way to prove
+   * their satisfaction by other substitutions nor find the substitutions necessary to satisfy them. Therefore:
+   *
+   * 1. For each PRE constraint we solve, if the solution contains 1 or more substitutions we *must* add it as a runtime
+   * check.
+   * 2. For each POST constraint we solve, just add the substitution to the list
+   * 3. For each PRE constraint we don't solve, add the constraint to the runtime checks
+   * 4. For each POST constraint we don't solve, do nothing about it -- missed opportunity to get more shape info
+   *
+   * There's a special case for the PRE constraints: The substitutions obtained by solving PRE constraints only
+   * influence the PRE constraints scheduled after their execution. The explanation is: Say we have solved all POST
+   * constraints and only have two PRE constraints left: PRE1 and PRE2. If we solve PRE2, it renders PRE1 identity, so
+   * we only add PRE2 to the runtime checks. If PRE1 is scheduled before PRE2, PRE2 is not checked and therefore PRE1
+   * might not be satisfied, rendering a big hole in the execution correctness! Therefore we need to implement
+   * scheduling-aware substitution application!
+   *
+   * TODO: Decide how this interacts with FatDefs.
+   */
+  def computeSubstitutions(inConstraints: List[TypingConstraint], debug: Boolean): SubstitutionList = {
 
     var finished: Boolean = false
     var substitutions: List[Substitution] = Nil
-    var constraints: List[TypingConstraint] = inConstraints
+
+    // Reorganize the constraints to get the most POST constraints solved before PRE ones
+    var constraints: List[TypingConstraint] = inConstraints.filter(constr => !constr.prereq) ::: inConstraints.filter(constr => constr.prereq)
 
     if (debug)
       println("START computeSubstitutions\n")
@@ -53,6 +113,7 @@ trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
       var index: Int = -1
       var indexSuccessful: Int = -1
       var substSuccessful: List[Substitution] = Nil
+      var constrSuccessful: TypingConstraint = null
 
       if (debug) {
         println()
@@ -74,15 +135,29 @@ trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
             indexSuccessful = index
             substSuccessful = pair._2
             substitutions = substitutions ::: substSuccessful
+            constrSuccessful = constraint
           }
         }
       }
 
       if (indexSuccessful != -1) {
+        // 0. Create substitution list, for easy application
+        val substitutions = new SubstitutionList(substSuccessful)
         // 1. eliminate the constraint
         constraints = constraints.take(indexSuccessful) ::: constraints.drop(indexSuccessful + 1)
         // 2. apply the substitions on the rest of the constraints
-        constraints = new SubstitutionList(substSuccessful)(constraints)
+        // Here is *the* catch: we only apply SubstitutionList to pre constraints "after" the current pre constraint
+        constraints = constraints.map(constr =>
+          substitutions(constr)
+//        TODO: Decide if I'm going the right way with this...
+//          if ((constr.prereq == false) || (constrSuccessful.prereq == false))
+//            substitutions(constr)
+//          else // now, we have a pre constraint => if it's after the current one, don't alter!
+//            if (findIndex(constr.node, schedule) > findIndex(constrSuccessful.node, schedule))
+//              substitutions(constr)
+//            else
+//              constr
+        )
       }
       else
         finished = true
@@ -96,7 +171,7 @@ trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
       println("END computeSubstitutions")
     }
 
-    substitutions
+    new SubstitutionList(substitutions)
   }
 
   /*
@@ -241,6 +316,10 @@ trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
       }
     case eabc: EqualityAeqBcatC =>
       (eabc.a, eabc.b, eabc.c) match {
+        case (a: Var, b: Var, c: Lst) if c.list.length == 0 =>
+          (true, new SubstituteVarToVar(a, b)::Nil)
+        case (a: Var, b: Lst, c: Var) if b.list.length == 0 =>
+          (true, new SubstituteVarToVar(a, c)::Nil)
         case (a: Var, b: Lst, c: Lst) =>
           (true, new SubstituteVarToLst(a, Lst(b.list ::: c.list))::Nil)
         case (a: Lst, b: Var, c: Lst) =>
@@ -328,7 +407,7 @@ trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
       (l1.list(i), l2.list(i)) match {
         case (u: Unknown, v: Value) => substs = new SubstituteUnknown(u, v) :: substs
         case (u: Unknown, l: LengthOf) => substs = new SubstituteUnknown(u, l) :: substs
-        case (u1: Unknown, u2: Unknown) => substs = new SubstituteUnknown(u1, u2) :: substs
+        case (u1: Unknown, u2: Unknown) => substs = if (u1 != u2) new SubstituteUnknown(u1, u2) :: substs else substs // we don't want to generate useless substitutions
         case (v: Value, u: Unknown) => substs = new SubstituteUnknown(u, v) :: substs
         case (v: Value, l: LengthOf) => substs = new SubstituteVarToLst(l.v, makeUnknowns(v.n)) :: substs
         case (v1: Value, v2: Value) =>
@@ -339,97 +418,5 @@ trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
       }
 
     (success, substs.reverse)
-  }
-
-  def makeUnknowns(size: Int): Lst = {
-    var list:List[TypingElement] = Nil
-    List.range(0, size).map(i => list = getNewUnknown :: list)
-    Lst(list)
-  }
-
-  def countUnknowns(l: Lst): Int = {
-    var unks = 0
-    l.list.map(elt => elt match { case v:Value => ; case _ => unks = unks + 1 })
-    unks
-  }
-
-  abstract class Substitution(name: String) extends (TypingConstraint => TypingConstraint) {
-    override def toString = name
-
-    // we only have to override these functions to have a real substitution
-    def updateVar(v: Var): TypingVariable
-    def updateUnknown(uk: Unknown): TypingElement
-    def updateLength(lt: LengthOf): TypingElement
-
-    // the rest is already done :)
-    def updateElement(elt: TypingElement): TypingElement = elt match {
-      case value: Value => value
-      case unknown: Unknown => updateUnknown(unknown)
-      case length: LengthOf => updateLength(length)
-    }
-    def updateVariable(tv: TypingVariable): TypingVariable = tv match {
-      case v: Var => updateVar(v)
-      case l: Lst => Lst(l.list.map(elt => updateElement(elt)))
-    }
-    def apply(tcs: List[TypingConstraint]): List[TypingConstraint] = tcs.map(tc => apply(tc))
-    def apply(tc: TypingConstraint): TypingConstraint = tc match {
-      case eq: Equality => Equality(updateVariable(eq.a), updateVariable(eq.b), eq._prereq, eq._node)
-      case ef: EqualityExceptFor => EqualityExceptFor(updateVariable(ef.d), updateVariable(ef.a), updateVariable(ef.b), ef._prereq, ef._node)
-      case lt: LessThan => LessThan(updateVariable(lt.a), updateVariable(lt.b), lt._prereq, lt._node)
-      case pl: PrefixLt => PrefixLt(updateVariable(pl.main), updateVariable(pl.prefix), updateVariable(pl.suffix), pl._prereq, pl._node)
-      case se: SuffixEq => SuffixEq(updateVariable(se.main), updateVariable(se.prefix), updateVariable(se.suffix), se._prereq, se._node)
-      case eq: EqualityAeqBcatC => EqualityAeqBcatC(updateVariable(eq.a), updateVariable(eq.b), updateVariable(eq.c), eq._prereq, eq._node)
-      case le: LengthEqualityAeqB => LengthEqualityAeqB(updateVariable(le.a), updateVariable(le.b), le._prereq, le._node)
-      case cd: CommonDenominator => CommonDenominator(updateVariable(cd.a), updateVariable(cd.b), updateVariable(cd.c), cd._prereq, cd._node)
-      case ep: EqualProduct => EqualProduct(updateVariable(ep.a), updateVariable(ep.b), ep._prereq, ep._node)
-      case rv: ReconstructValueFromShape => ReconstructValueFromShape(updateVariable(rv.value), updateVariable(rv.shape), rv._prereq, rv._node)
-      case eq: EqualityShAeqShBplusShCalongD => EqualityShAeqShBplusShCalongD(updateVariable(eq.a), updateVariable(eq.b), updateVariable(eq.c), updateVariable(eq.d), eq._prereq, eq._node)
-      case eq: EqualityAeqDimTimesValue => EqualityAeqDimTimesValue(updateVariable(eq.a), updateVariable(eq.dim), updateVariable(eq.value), eq._prereq, eq._node)
-      // XXX: No _ case here, if the substitution doesn't know the constraint it better fail as soon as possible!
-    }
-  }
-
-  /** substitute a variable by another variable */
-  class SubstituteVarToVar(v1: Var, v2: Var) extends Substitution("Substitute " + v1.toString + " by " + v2.toString) {
-    override def updateVar(v: Var): Var = if (v == v1) v2 else v
-    override def updateUnknown(uk: Unknown): TypingElement = uk
-    override def updateLength(lt: LengthOf): TypingElement = LengthOf(updateVar(lt.v))
-  }
-
-  /** substitute a variable by a list */
-  class SubstituteVarToLst(vv: Var, l: Lst) extends Substitution("Substitute " + vv.toString + " by " + l.toString) {
-    override def updateVar(v: Var): TypingVariable = if (v == vv) l else v
-    override def updateUnknown(uk: Unknown): TypingElement = uk
-    override def updateLength(lt: LengthOf): TypingElement = if (lt.v == vv) Value(l.list.length) else lt
-  }
-
-  /** substitute a unknown value by something else */
-  class SubstituteUnknown(u: Unknown, elt: TypingElement) extends Substitution("Substitute unknown " + u.toString + " by " + elt.toString) {
-    override def updateVar(v: Var): TypingVariable = v
-    override def updateUnknown(uk: Unknown): TypingElement = if (uk == u) elt else uk
-    override def updateLength(lt: LengthOf): TypingElement = lt
-  }
-
-  class SubstitutionList(val substList: List[Substitution]) extends Substitution("SubstitutionList:\n" + substList.mkString(" ", "\n ", "\n")) {
-
-    override def apply(tc: TypingConstraint): TypingConstraint = {
-     var res = tc
-     for(subst <- substList)
-       res = subst.apply(res)
-     res
-    }
-
-    def apply(tv: TypingVariable): TypingVariable = {
-      var res = tv
-      for(subst <- substList)
-        res = subst.updateVariable(res)
-      res
-    }
-
-    override def updateVar(v: Var): TypingVariable = v
-    override def updateUnknown(uk: Unknown): TypingElement = uk
-    override def updateLength(lt: LengthOf): TypingElement = lt
-
-    def length = substList.length
   }
 }

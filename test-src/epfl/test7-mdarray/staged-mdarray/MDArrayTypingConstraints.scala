@@ -123,13 +123,16 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
     (Equality(ShapeVar(getSymNumber(fv)), Lst(Nil), postReq, fv)::Nil, fv.value::Nil)
 
   def toListConstraints(tl: ToList[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(tl)), Lst(getNewUnknown::Nil), preReq, tl)::Nil, tl.value::Nil)
+    (LengthEqualityAeqB(ShapeVar(tl.value), Lst(getNewUnknown::Nil), preReq, tl)::
+     Equality(ShapeVar(tl), ShapeVar(tl.value), postReq, tl)::Nil, tl.value::Nil)
 
   def toArrayConstraints(ta: ToArray[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(ta)), Lst(getNewUnknown::Nil), preReq, ta)::Nil, ta.value::Nil)
+    (LengthEqualityAeqB(ShapeVar(ta.value), Lst(getNewUnknown::Nil), preReq, ta)::
+     Equality(ShapeVar(ta), ShapeVar(ta.value), postReq, ta)::Nil, ta.value::Nil)
 
   def toValueConstraints(tv: ToValue[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(getSymNumber(tv)), Lst(Nil), preReq, tv)::Nil, tv.value::Nil)
+    (LengthEqualityAeqB(ShapeVar(tv.value), Lst(Nil), preReq, tv)::
+     Equality(ShapeVar(tv), Lst(Nil), postReq, tv)::Nil, tv.value::Nil)
 
   def toDimConstraints(td: ToDim[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (Equality(ShapeVar(td), Lst(Nil), postReq, td) ::
@@ -141,19 +144,20 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
      ts.a::Nil)
 
   def reshapeConstraints(rs: Reshape[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(rs.shp), Lst(getNewUnknown :: Nil), preReq, rs)::
+    (LengthEqualityAeqB(ShapeVar(rs.shp), Lst(getNewUnknown :: Nil), preReq, rs)::
      EqualProduct(ValueVar(rs.shp), ShapeVar(rs.a), preReq, rs)::
      Equality(ShapeVar(rs), ValueVar(rs.shp), postReq, rs)::Nil,
      rs.shp::rs.a::Nil)
 
   def selConstraints(sel: Sel[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(sel.iv), Lst(getNewUnknown::Nil), preReq, sel)::
+    (LengthEqualityAeqB(ShapeVar(sel.iv), Lst(getNewUnknown::Nil), preReq, sel)::
      PrefixLt(ShapeVar(sel.a), ValueVar(sel.iv), ShapeVar(sel), preReq, sel)::
      SuffixEq(ShapeVar(sel.a), ValueVar(sel.iv), ShapeVar(sel), postReq, sel)::Nil,
      sel.iv::sel.a::Nil)
 
   def catConstraints(cat: Cat[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (LengthEqualityAeqB(ShapeVar(cat.a), ShapeVar(cat.b), preReq, cat)::
+    (LengthEqualityAeqB(ShapeVar(cat.a), Lst(getNewUnknown::Nil), preReq, cat)::
+     LengthEqualityAeqB(ShapeVar(cat.a), ShapeVar(cat.b), preReq, cat)::
      LessThan(ValueVar(cat.d), Lst(LengthOf(ShapeVar(cat.a))::Nil), preReq, cat)::
      EqualityExceptFor(ValueVar(cat.d), ShapeVar(cat.a), ShapeVar(cat.b), preReq, cat)::
      LengthEqualityAeqB(ShapeVar(cat), ShapeVar(cat.a), postReq, cat)::
@@ -166,7 +170,9 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
      red.a::Nil)
 
   def valuesConstraints(values: Values[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(values), ValueVar(values.dim), postReq, values)::
+    (Equality(ShapeVar(values.dim), Lst(Nil), preReq, values)::
+     Equality(ShapeVar(values.value), Lst(Nil), preReq, values)::
+     Equality(ShapeVar(values), ValueVar(values.dim), postReq, values)::
      EqualityAeqDimTimesValue(ValueVar(values), ValueVar(values.dim), ValueVar(values.value), postReq, values)::Nil,
      values.value::values.dim::Nil)
 

@@ -64,8 +64,8 @@ class PDE1BenchmarkOriginal {
 
     val startTime: Long = System.currentTimeMillis
 
-    val red: MDArrayBool = With(_lb = List(1, 0, 0), _step = List(2,1,1)).
-      GenArray(shape(matrix), iv => true)
+    val red: MDArrayBool = With(lb = List(1, 0, 0), step = List(2,1,1), function = iv => true).
+      GenArray(shape(matrix))
 
     var u = matrix
     val f = matrix
@@ -85,13 +85,13 @@ class PDE1BenchmarkOriginal {
 
     val factor:Double = 1d/6d
 
-    With(_lbStrict=true, _ubStrict=true).ModArray(u, iv => {
+    With(lbStrict=true, ubStrict=true, function = iv => {
       // TODO: Fix this forced conversion
       val local_sum = u(iv + List(1, 0, 0)) + u(iv - List(1, 0, 0)) +
                       u(iv + List(0, 1, 0)) + u(iv - List(0, 1, 0)) +
                       u(iv + List(0, 0, 1)) + u(iv - List(0, 0, 1))
       factor * (hsq * f(iv) + local_sum)
-    })
+    }).ModArray(u)
   }
 
   def Relax2(u: MDArrayDbl, f: MDArrayDbl, hsq: Dbl): MDArrayDbl = {
@@ -99,15 +99,15 @@ class PDE1BenchmarkOriginal {
     val factor:Double = 1d/6d
     val W = reshape(3::3::3::Nil, (0d::0d::0d::0d::1d::0d::0d::0d::0d::Nil):::(0d::1d::0d::1d::0d::1d::0d::1d::0d::Nil):::(0d::0d::0d::0d::1d::0d::0d::0d::0d::Nil))
 
-    With(_lbStrict=true, _ubStrict=true).ModArray(u, iv => {
+    With(lbStrict=true, ubStrict=true, function = iv => {
       val block = tile(shape(W), iv-1, u)
       val local_sum = sum(W * block)
       factor * (hsq * f(iv) + local_sum)
-    })
+    }).ModArray(u)
   }
 
   def CombineInnerOuter(inner: MDArrayDbl, outer: MDArrayDbl) =
-    With(_lbStrict=true, _ubStrict=true).ModArray(outer, iv => inner(iv))
+    With(lbStrict=true, ubStrict=true, function = iv => inner(iv)).ModArray(outer)
 
   def Relax3(u: MDArrayDbl, f: MDArrayDbl, hsq: Dbl): MDArrayDbl = {
 
@@ -115,9 +115,9 @@ class PDE1BenchmarkOriginal {
     val u1 = f * hsq
     val W = reshape(3::3::3::Nil, (0d::0d::0d::0d::1d::0d::0d::0d::0d::Nil):::(0d::1d::0d::1d::0d::1d::0d::1d::0d::Nil):::(0d::0d::0d::0d::1d::0d::0d::0d::0d::Nil))
 
-    val u2 = u1 + With(_lbStrict=true, _ubStrict=true).ModArray(u, iv => {
+    val u2 = u1 + With(lbStrict=true, ubStrict=true, function = iv => {
       sum(W * tile(shape(W), iv-1, u))
-    })
+    }).ModArray(u)
     CombineInnerOuter(u2 * factor, u)
   }
 
@@ -151,7 +151,7 @@ class PDE1BenchmarkOriginal {
       array
     }
 
-    val u1 = With(_lb=shape(W) * 0, _ub=shape(W)-1).Fold((a:MDArrayDbl, b:MDArrayDbl) => a+b, f * hsq, iv => shift(-iv + 1, 0d, u))
+    val u1 = With(lb=shape(W) * 0, ub=shape(W)-1, function = iv => shift(-iv + 1, 0d, u)).Fold((a:MDArrayDbl, b:MDArrayDbl) => a+b, f * hsq)
 
     CombineInnerOuter(u1 * factor, u)
   }

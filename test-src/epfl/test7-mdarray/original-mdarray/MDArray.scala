@@ -92,7 +92,7 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
 
   // Reducing all array elements, in order
   def reduce(z: A)(f: (A, A)=>A): A =
-    With(zeros(this.dim), false, this.shape, true).Fold((a:MDArray[A], b:MDArray[A]) => f(a, b), z, iv => this(iv))
+    With(zeros(this.dim), false, true, this.shape, function = iv => this(iv)).Fold((a:MDArray[A], b:MDArray[A]) => f(a, b), z)
 
   // Concatenation shortcut (note: it's three pluses instead of two)
   def +++(that: MDArray[A]): MDArray[A] = cat(0, this, that)
@@ -102,16 +102,16 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
     if (!shapeEqual(this.shape, that.shape))
       throw new Exception(opName + ": matrices of different shapes: " + this.shape + " vs " + that.shape)
     // for debugging: {println(opName + "("+ this(iv) + "," + that(iv) + ")"); op(this(iv), that(iv))}
-    With().GenArray(this.shape, iv => op(this(iv), that(iv)))
+    With(function = iv => op(this(iv), that(iv))).GenArray(this.shape)
   }
 
   private def op[B: ClassManifest](that:A)(op: (A, A) => B, opName: String): MDArray[B] = {
-    With().GenArray(this.shape, iv => op(this(iv), that))
+    With(function = iv => op(this(iv), that)).GenArray(this.shape)
   }
 
   /** Unary element-wise operation */
   private def uop[B: ClassManifest](op: A => B, opName: String): MDArray[B] = {
-    With().GenArray(this.shape, iv => op(this(iv)))
+    With(function = iv => op(this(iv))).GenArray(this.shape)
   }
 
   override def toString(): String = _shape.length match {

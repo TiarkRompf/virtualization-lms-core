@@ -51,12 +51,12 @@ class GameOfLifeOriginal() {
 
   def gameOfLife(alive: MDArray[Int]) = {
 
-    val dead = With(_lbStrict = true, _ubStrict = true).GenArray(shape(alive),
-      iv => computeIfDead(sum(tile(value(dim(alive), 3), iv-1, alive)), alive(iv)))
+    val dead = With(lbStrict = true, ubStrict = true, function =
+      iv => computeIfDead(sum(tile(values(dim(alive), 3), iv-1, alive)), alive(iv))).GenArray(shape(alive))
 
-    val reborn = With(_lbStrict = true, _ubStrict = true).GenArray(shape(alive),
-      iv => computeIfReborn(sum(tile(value(dim(alive), 3), iv-1, alive)) -
-                            sum(tile(value(dim(alive), 3), iv-1, dead)), dead(iv)))
+    val reborn = With(lbStrict = true, ubStrict = true, function =
+      iv => computeIfReborn(sum(tile(values(dim(alive), 3), iv-1, alive)) -
+                            sum(tile(values(dim(alive), 3), iv-1, dead)), dead(iv))).GenArray(shape(alive))
 
     val result = alive - dead + reborn
     result

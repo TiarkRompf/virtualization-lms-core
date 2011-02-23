@@ -5,8 +5,10 @@ package test7
 import test7.original.MDArray
 import internal.GraphVizExport
 import test2.{DisableDCE, DisableCSE}
-import java.io.PrintWriter
 import common._
+import test4.ScalaGenFunctionsExternal
+import test1.ScalaGenArith
+import java.io.{FileWriter, PrintWriter}
 
 /*
 To run only this test use:
@@ -23,12 +25,12 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
     val gol = new GameOfLifeStaged with MDArrayBaseExp with IfThenElseExp
 
     // PDE1 experiments
-    performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime[Double]("matrix-1"), 1), prefix + "range1-test")
-    performExperiment(pde1, pde1.range2(pde1.knownOnlyAtRuntime[Double]("matrix-2"), 1), prefix + "range2-test")
-    performExperiment(pde1, pde1.range3(pde1.knownOnlyAtRuntime[Double]("matrix-3"), 1), prefix + "range3-test")
+    performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime[Double]("matrix1"), 1), prefix + "range1-test")
+    performExperiment(pde1, pde1.range2(pde1.knownOnlyAtRuntime[Double]("matrix2"), 1), prefix + "range2-test")
+    performExperiment(pde1, pde1.range3(pde1.knownOnlyAtRuntime[Double]("matrix3"), 1), prefix + "range3-test")
     // TODO: Include ranges to make this work
-    //performExperiment(pde1, pde1.range4(pde1.knownOnlyAtRuntime[Double]("matrix-4"), 1), prefix + "range4-test")
-    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime[Double]("matrix-5"), 1), prefix + "range5-test")
+    //performExperiment(pde1, pde1.range4(pde1.knownOnlyAtRuntime[Double]("matrix4"), 1), prefix + "range4-test")
+    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime[Double]("matrix5"), 1), prefix + "range5-test")
 
     // Some old test attached to PDE1 TODO: Remove at some point
     performExperiment(pde1, pde1.vectorTest, prefix + "vector-test")
@@ -44,10 +46,14 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
     withOutFile(fileName + "-type-inference") {
       val typing = new MDArrayTypingUnifier { val IR: pde1.type = pde1 }
       try {
-        val fullSubst = typing.obtainSubstitutions(expr, true)._2
+        val scheduleTypesRuntimeChecks = typing.doTyping(expr, true)
+        val shapes = scheduleTypesRuntimeChecks._1
+        val values = scheduleTypesRuntimeChecks._2
+        val runtimeChecks = scheduleTypesRuntimeChecks._3
+
         val export = new MDArrayGraphExport {
           val IR: pde1.type = pde1
-          override def emitTypingString(i: Int) = typing.getTypingString(i, fullSubst)
+          override def emitTypingString(i: Int) = typing.getTypingString(i, shapes, values)
         }
         export.emitDepGraph(expr.asInstanceOf[pde1.Exp[_]], fileName + "-dot", false)
       } catch {
@@ -58,6 +64,15 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
         }
         export.emitDepGraph(expr.asInstanceOf[pde1.Exp[_]], fileName + "-dot", false)
       }
+
+      // Generate the corresponding code :)
+      implicit val printWriter: PrintWriter = IndentWriter.getIndentPrintWriter(new FileWriter(fileName + "-code.scala"))
+      val scalaGen = new ScalaGenMDArray with ScalaGenIfThenElse { val IR: pde1.type = pde1 }
+      expr match {
+        case e: pde1.Exp[_] => scalaGen.emitSource(e, "Experiment")
+        case _ => printWriter.println("cannot generate code")
+      }
+      printWriter.close
     }
   }
 }

@@ -7,14 +7,16 @@ import Operations._
 import Conversions._
 import SpecificOperations._
 
-class With(_lb: MDArray[Int] = null,
-           _lbStrict: Boolean = false,
-           _ub: MDArray[Int] = null,
-           _ubStrict: Boolean = false,
-           _step: MDArray[Int] = null,
-           _width: MDArray[Int] = null) {
+class With[A: ClassManifest](
+           lb: MDArray[Int] = null,
+           lbStrict: Boolean = false,
+           ubStrict: Boolean = false,
+           ub: MDArray[Int] = null,
+           step: MDArray[Int] = null,
+           width: MDArray[Int] = null,
+           function: (MDArray[Int] => MDArray[A])) {
 
-  def GenArray[A: ClassManifest](shp:MDArray[Int], f: MDArray[Int] => MDArray[A]): MDArray[A] = {
+  def GenArray(shp:MDArray[Int]): MDArray[A] = {
     val opName = "genarray"
 
     if (shp == null)
@@ -32,19 +34,19 @@ class With(_lb: MDArray[Int] = null,
     } else {
       // 1. Create the array, for which we need the second shape:
       val firstIV = iterator.head
-      val fshape = f(firstIV).shape
+      val fshape = function(firstIV).shape
       val shape: MDArray[Int] = shp.content().toList ::: fshape.content.toList
       val array = new Array(shape.foldLeft(1)((x,y) => x * y)) // ops equiv: prod(shape))
 
       // 2. Populate the array and return it
       if (iterator != Stream.empty)
-        modifyArray(iterator, f, fshape, array, shape, opName)
+        modifyArray(iterator, function, fshape, array, shape, opName)
       else
         throw new Exception(opName + ": Nothing to iterate. Please make sure the limits are set correctly.")
     }
   }
 
-  def ModArray[A: ClassManifest](a: MDArray[A], f: MDArray[Int] => MDArray[A]): MDArray[A] = {
+  def ModArray(a: MDArray[A]): MDArray[A] = {
     val opName = "modarray"
 
     if (a == null)
@@ -58,12 +60,12 @@ class With(_lb: MDArray[Int] = null,
 
     // 2. Populate the array and return it
     if (iterator != Stream.empty)
-      modifyArray(iterator, f, prefixMinus(iterator.head, a.shape(), opName), array, a.shape, opName)
+      modifyArray(iterator, function, prefixMinus(iterator.head, a.shape(), opName), array, a.shape, opName)
     else
       a
   }
 
-  def Fold[A: ClassManifest](foldFunction: (MDArray[A], MDArray[A]) => MDArray[A], neutral: MDArray[A], f: MDArray[Int] => MDArray[A]): MDArray[A] = {
+  def Fold(foldFunction: (MDArray[A], MDArray[A]) => MDArray[A], neutral: MDArray[A]): MDArray[A] = {
     val opName = "fold"
 
     var iterator = doIteration(null, opName)
@@ -73,7 +75,7 @@ class With(_lb: MDArray[Int] = null,
 
     // 2. Compute the fold
     for (i <- iterator)
-      result = foldFunction(result, f(i))
+      result = foldFunction(result, function(i))
 
     result
   }
@@ -81,12 +83,12 @@ class With(_lb: MDArray[Int] = null,
 
   private def doIteration(mainShape: MDArray[Int], opName: String): Stream[MDArray[Int]] = {
 
-    var lb: MDArray[Int] = _lb
-    var ub: MDArray[Int] = _ub
+    var _lb: MDArray[Int] = lb
+    var _ub: MDArray[Int] = ub
 
     mainShape match {
       case null =>
-        (lb, ub) match {
+        (_lb, _ub) match {
           case (null, _) =>
             throw new Exception(opName+": With lower bound must be specified")
           case (_, null) =>
@@ -95,36 +97,36 @@ class With(_lb: MDArray[Int] = null,
             ; // do nothing, it's fine
         }
       case _ =>
-        lb = _lb match {
+        _lb = lb match {
           case null => zeros(mainShape.content.length)
-          case _ => _lb
+          case _ => lb
         }
-        ub = _ub match {
+        _ub = ub match {
           case null => mainShape.map(x => x - 1)
-          case _ => _ub
+          case _ => ub
         }
     }
 
-    val step = _step match {
-      case null => ones(lb.content.length)
-      case _ => _step
+    val _step = step match {
+      case null => ones(_lb.content.length)
+      case _ => step
     }
 
-    val width = _width match {
-      case null => zeros(lb.content.length)
-      case _ => _width
+    val _width = width match {
+      case null => zeros(_lb.content.length)
+      case _ => width
     }
     
     // Create the iterator and implicitly check the sizes
-    iterateWithStep(lb, _lbStrict, ub, _ubStrict, step, width, opName)
+    iterateWithStep(_lb, lbStrict, ubStrict, _ub, _step, _width, opName)
   }
 
-  private def modifyArray[A: ClassManifest](iterator: Stream[MDArray[Int]],
-                                            f: MDArray[Int] => MDArray[A],
-                                            expectedShape: MDArray[Int],
-                                            array: Array[A],
-                                            shape: MDArray[Int],
-                                            opName: String): MDArray[A] = {
+  private def modifyArray(iterator: Stream[MDArray[Int]],
+                          f: MDArray[Int] => MDArray[A],
+                          expectedShape: MDArray[Int],
+                          array: Array[A],
+                          shape: MDArray[Int],
+                          opName: String): MDArray[A] = {
     
     for (i <- iterator) {
       // Compute the application of f
@@ -147,12 +149,13 @@ class With(_lb: MDArray[Int] = null,
 }
 
 object With {
-  def apply(_lb: MDArray[Int] = null,
-           _lbStrict: Boolean = false,
-           _ub: MDArray[Int] = null,
-           _ubStrict: Boolean = false,
-           _step: MDArray[Int] = null,
-           _width: MDArray[Int] = null): With = {
-    new With(_lb, _lbStrict, _ub, _ubStrict, _step, _width)
+  def apply[A: ClassManifest](lb: MDArray[Int] = null,
+           lbStrict: Boolean = false,
+           ubStrict: Boolean = false,
+           ub: MDArray[Int] = null,
+           step: MDArray[Int] = null,
+           width: MDArray[Int] = null,
+           function: MDArray[Int] => MDArray[A]): With[A] = {
+    new With[A](lb, lbStrict, ubStrict, ub, step, width, function)
   }
 }

@@ -40,7 +40,7 @@ object SpecificOperations {
    * the programmer is responsible for checking 1-dimensionality of the arrays passed
    */
   def prefixMinus(iv: MDArray[Int], shape: MDArray[Int], opName: String): MDArray[Int] =
-    shape.toList.drop(iv.content.length).toArray
+    convertFromList(shape.toList.drop(iv.content.length))
 
   /** Flatten */
   def flatten(shape: MDArray[Int], iv: MDArray[Int], opName: String) = {
@@ -128,7 +128,7 @@ object SpecificOperations {
   }
 
   /** iteration with step and width */
-  def iterateWithStep(_lb: MDArray[Int], lbStrict: Boolean, _ub: MDArray[Int], ubStrict: Boolean, step: MDArray[Int], width: MDArray[Int], opName: String) : Stream[MDArray[Int]] = {
+  def iterateWithStep(_lb: MDArray[Int], lbStrict: Boolean, ubStrict: Boolean, _ub: MDArray[Int], step: MDArray[Int], width: MDArray[Int], opName: String) : Stream[MDArray[Int]] = {
 
     if (_lb.dim != 1)
       throw new Exception(opName + ": The lower bound vector (" + _lb + ") must be one-dimensional")

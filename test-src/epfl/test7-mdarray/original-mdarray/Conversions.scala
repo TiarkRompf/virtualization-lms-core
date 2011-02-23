@@ -28,24 +28,24 @@ object Conversions {
     else
       throw new Exception("convertToValue: The array cannot be converted to a value: "+a)
 
-  implicit def convertFromArrayOfMDArrays[A:ClassManifest](l: Array[MDArray[A]]): MDArray[A] = convertFromListOfMDArrays(l.toList)
-  implicit def convertFromListOfMDArrays[A:ClassManifest](l: List[MDArray[A]]): MDArray[A] = {
-    if (l.length == 0)
-      throw new Exception("convertFromListOfMDArrays: Cannot convert an empty list to a MDArray.")
-    else {
-      // Verify shapes
-      if (l.filter(a => !shapeEqual(a.shape, l.head.shape)).length != 0)
-        throw new Exception("convertFromListOfMDArrays: Unhomogenous shapes in list of MDArray.")
-
-      // Add the content
-      var result:Array[A] = new Array[A](0)
-      l.foreach(a => result = result ++ a.content)
-
-      // Create the objects
-      val newShape = l.length :: l.head.shape
-
-      // Reshape the matrix correctly
-      reshape(newShape, result)
-    }
-  }
+//  implicit def convertFromArrayOfMDArrays[A:ClassManifest](l: Array[MDArray[A]]): MDArray[A] = convertFromListOfMDArrays(l.toList)
+//  implicit def convertFromListOfMDArrays[A:ClassManifest](l: List[MDArray[A]]): MDArray[A] = {
+//    if (l.length == 0)
+//      throw new Exception("convertFromListOfMDArrays: Cannot convert an empty list to a MDArray.")
+//    else {
+//      // Verify shapes
+//      if (l.filter(a => !shapeEqual(a.shape, l.head.shape)).length != 0)
+//        throw new Exception("convertFromListOfMDArrays: Unhomogenous shapes in list of MDArray.")
+//
+//      // Add the content
+//      var result:Array[A] = new Array[A](0)
+//      l.foreach(a => result = result ++ a.content)
+//
+//      // Create the objects
+//      val newShape = l.length :: l.head.shape
+//
+//      // Reshape the matrix correctly
+//      reshape(newShape, result)
+//    }
+//  }
 }

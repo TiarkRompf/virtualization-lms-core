@@ -16,6 +16,11 @@ int main()
   return(0);
 }
 
+int[*] value(int dim, int val) {
+  result = with { ( [0] <= iv < [dim] ) : val; } : genarray([dim]);
+  return(result);
+}
+
 int computeIfDead(int neigh, int alive) {
   result = 0;
 
@@ -38,17 +43,12 @@ int computeIfReborn(int neigh, int dead) {
 
   if (dead == 1) {
     if (neigh == 3)
-      result = 1;
+      result = 1; /* Rule 4: Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction. */
     else
       result = 0;
   } else
     result = 0;
 
-  return(result);
-}
-
-int[*] value(int dim, int val) {
-  result = with { ( [0] <= iv < [dim] ) : val; } : genarray([dim]);
   return(result);
 }
 
