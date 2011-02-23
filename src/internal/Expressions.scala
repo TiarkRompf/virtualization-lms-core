@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package internal
 
 import scala.annotation.unchecked.uncheckedVariance
+import java.lang.{StackTraceElement,Thread}
 
 /**
  * The Expressions trait houses common AST nodes. It also manages a list of encountered Definitions which
@@ -18,8 +19,7 @@ trait Expressions {
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
-    var lastRead: Sym[T @uncheckedVariance] = this // TODO
-    var version = id
+    var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
   }
 
   case class Variable[+T:Manifest](val e: Exp[T]) // TODO: decide whether it should stay here ...
