@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 
-trait NumericOps extends VariablesStub {
+trait NumericOps extends Variables {
 
   // workaround for infix not working with manifests
   implicit def numericToRepNumericCls[T:Numeric:Manifest](n: T) = new NumericOpsCls(n)
@@ -29,7 +29,7 @@ trait NumericOps extends VariablesStub {
   //def numeric_signum[T:Numeric](x: T): Rep[Int]
 }
 
-trait NumericOpsExp extends NumericOps with VariablesStubExp {
+trait NumericOpsExp extends NumericOps with VariablesExp {
   case class NumericPlus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
   case class NumericPlusEquals[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[Unit]
   case class NumericMinus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[T]

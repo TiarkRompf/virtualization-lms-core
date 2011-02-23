@@ -4,7 +4,7 @@ package common
 import java.io.PrintWriter
 import internal._
 
-trait ArrayOps extends VariablesStub {
+trait ArrayOps extends Variables {
 
   // multiple definitions needed because implicits won't chain
   // not using infix here because apply doesn't work with infix methods
@@ -23,7 +23,7 @@ trait ArrayOps extends VariablesStub {
   def array_foreach[T:Manifest](x: Rep[Array[T]], block: Rep[T] => Rep[Unit]): Rep[Unit]
 }
 
-trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesStubExp {
+trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
 
   case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int]
   case class ArrayApply[T](a: Exp[Array[T]], n: Exp[Int])(implicit val mT:Manifest[T]) extends Def[T]
