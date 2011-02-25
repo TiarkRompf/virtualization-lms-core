@@ -5,28 +5,35 @@ import java.io.PrintWriter
 
 import scala.virtualization.lms.util.OverloadHack
 
-trait PrimitiveOps extends Variables with OverloadHack {
+trait LowPriorityPrimitiveImplicits {
+  this: Variables with ImplicitOps =>
+
+  implicit def intToRepDouble(i: Int): Rep[Double] = unit(i.toDouble)
+  implicit def intToRepFloat(i: Int): Rep[Float] = unit(i.toFloat)
+  implicit def floatToRepDouble(f: Float): Rep[Double] = unit(f.toDouble)
+
+  implicit def repIntToRepDouble(x: Rep[Int]): Rep[Double] = implicit_convert[Int,Double](x)
+  implicit def repIntToRepFloat(x: Rep[Int]): Rep[Float] = implicit_convert[Int,Float](x)
+  implicit def repFloatToRepDouble(x: Rep[Float]): Rep[Double] = implicit_convert[Float,Double](x)
+}
+
+trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitiveImplicits {
   this: ImplicitOps =>
 
   /**
-   * Useful chaining implicits
+   * High priority lifting implicits
    */
-  implicit def intToRepDouble(i: Int) = unit(i.toDouble)
+  implicit def intToRepInt(x: Int): Rep[Int] = unit(x)
+  implicit def floatToRepFloat(x: Float): Rep[Float] = unit(x)
+  //implicit def doubleToRepDouble(x: Double): Rep[Double] = unit(x)
 
-  /**
-   * Conversions
-   */
-  implicit def repIntToRepDouble(x: Rep[Int]) = implicit_convert[Int,Double](x)
-  implicit def repIntToRepFloat(x: Rep[Int]) = implicit_convert[Int,Float](x)
-  implicit def repFloatToRepDbl(x: Rep[Float]) = implicit_convert[Float,Double](x)
-  //implicit def repDblToRepFloat(x: Rep[Double]) = implicit_convert[Double,Float](x)
 
   /**
    *  Double
    */
-  implicit def doubleToDoubleOpsCls(n: Double) = new DoubleOpsCls(n)
-  implicit def repDoubleToDoubleOpsCls(n: Rep[Double]) = new DoubleOpsCls(n)
-  implicit def varDoubleToDoubleOpsCls(n: Var[Double]) = new DoubleOpsCls(readVar(n))
+  implicit def doubleToDoubleOps(n: Double) = new DoubleOpsCls(n)
+  implicit def repDoubleToDoubleOps(n: Rep[Double]) = new DoubleOpsCls(n)
+  implicit def varDoubleToDoubleOps(n: Var[Double]) = new DoubleOpsCls(readVar(n))
   
   object Double {
     def parseDouble(s: Rep[String]) = obj_double_parse_double(s)
@@ -53,9 +60,9 @@ trait PrimitiveOps extends Variables with OverloadHack {
     def parseInt(s: Rep[String]) = obj_integer_parse_int(s)
   }
 
-  implicit def intToIntOpsCls(n: Int) = new IntOpsCls(n)
-  implicit def repIntToIntOpsCls(n: Rep[Int]) = new IntOpsCls(n)
-  implicit def varIntToIntOpsCls(n: Var[Int]) = new IntOpsCls(readVar(n))
+  implicit def intToIntOps(n: Int) = new IntOpsCls(n)
+  implicit def repIntToIntOps(n: Rep[Int]) = new IntOpsCls(n)
+  implicit def varIntToIntOps(n: Var[Int]) = new IntOpsCls(readVar(n))
     
   class IntOpsCls(lhs: Rep[Int]){
     // TODO (tiark): either of these cause scalac to crash        

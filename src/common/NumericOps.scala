@@ -6,8 +6,8 @@ import java.io.PrintWriter
 trait NumericOps extends Variables {
 
   // workaround for infix not working with manifests
-  implicit def numericToRepNumericCls[T:Numeric:Manifest](n: T) = new NumericOpsCls(n)
-  implicit def repNumericToRepNumericCls[T:Numeric:Manifest](n: Rep[T]) = new NumericOpsCls(n)
+  implicit def numericToNumericOps[T:Numeric:Manifest](n: T) = new NumericOpsCls(n)
+  implicit def repNumericToNumericOps[T:Numeric:Manifest](n: Rep[T]) = new NumericOpsCls(n)
   implicit def varNumericToNumericOps[T:Numeric:Manifest](n: Var[T]) = new NumericOpsCls(readVar(n))
   
   class NumericOpsCls[T:Numeric:Manifest](lhs: Rep[T]){

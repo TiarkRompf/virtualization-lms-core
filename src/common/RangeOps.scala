@@ -7,7 +7,7 @@ import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailed
 
 trait RangeOps extends Base {
   // workaround for infix not working with manifests
-  implicit def repRangeToRangeOpsCls(r: Rep[Range]) = new rangeOpsCls(r)
+  implicit def repRangeToRangeOps(r: Rep[Range]) = new rangeOpsCls(r)
   class rangeOpsCls(r: Rep[Range]){
     def foreach(f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
   }

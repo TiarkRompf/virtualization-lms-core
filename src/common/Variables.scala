@@ -12,15 +12,45 @@ trait LiftVariables extends Base {
   def __newVar[T](init: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_new(init)
 }
 
-trait Variables extends Base with OverloadHack {
-  type Var[+T]
+// ReadVar is factored out so that it does not have higher priority than VariableImplicits when mixed in
+// (which result in ambiguous conversions)
+trait ReadVarImplicit {
+  this: Variables =>
 
   implicit def readVar[T:Manifest](v: Var[T]) : Rep[T]
+}
+
+trait ReadVarImplicitExp extends EffectExp {
+  this: VariablesExp =>
+
+  implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = {
+    toAtom(ReadVar(v))
+  }
+}
+
+trait LowPriorityVariableImplicits extends ImplicitOps {
+  this: Variables =>
+
+  implicit def varIntToRepDouble(x: Var[Int]): Rep[Double] = implicit_convert[Int,Double](readVar(x))
+  implicit def varIntToRepFloat(x: Var[Int]): Rep[Float] = implicit_convert[Int,Float](readVar(x))
+  implicit def varFloatToRepDouble(x: Var[Float]): Rep[Double] = implicit_convert[Float,Double](readVar(x))
+}
+
+trait VariableImplicits extends LowPriorityVariableImplicits {
+  this: Variables =>
+
+  // we always want to prioritize a direct conversion if any Rep will do
+  implicit def varIntToRepInt(v: Var[Int]): Rep[Int] = readVar(v)
+  implicit def varFloatToRepFloat(v: Var[Float]): Rep[Float] = readVar(v)
+}
+
+trait Variables extends Base with OverloadHack with VariableImplicits with ReadVarImplicit {
+  type Var[+T]
+
   //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
   def var_new[T:Manifest](init: Rep[T]): Var[T]
   def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
-  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]  
-
+  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
 
   def __assign[T:Manifest](lhs: Var[T], rhs: T) = var_assign(lhs, rhs)
   def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_assign(lhs, rhs)
@@ -32,7 +62,7 @@ trait Variables extends Base with OverloadHack {
   def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_plusequals(lhs,readVar(rhs))
 }
 
-trait VariablesExp extends Variables with EffectExp {
+trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits with ReadVarImplicitExp {
   // TODO: make a design decision here.
   // defining Var[T] as Sym[T] is dangerous. If someone forgets to define a more-specific implicit conversion from
   // Var[T] to Ops, e.g. implicit def varToRepStrOps(s: Var[String]) = new RepStrOpsCls(varToRep(s))
@@ -41,7 +71,7 @@ trait VariablesExp extends Variables with EffectExp {
   //type Var[T] = Sym[T]
 
   // REMARK: Var[T] should (probably) be different from Rep[T] in Rep-world
-  // but in Exp-world the situation is less clear. Another thing is that in general, 
+  // but in Exp-world the situation is less clear. Another thing is that in general,
   // programs should live in Rep-world.
   // Currently DeliteApplication extends DeliteOpsExp and therefore
   // all DSL programs live in Exp-world.
@@ -49,14 +79,15 @@ trait VariablesExp extends Variables with EffectExp {
   type Var[+T] = Variable[T]
 
   // read operation
-  override implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = { // careful with implicits...
-/*
+  /*
+  implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = { // careful with implicits...
+
     //reflectRead(/*v*/)(ReadVar(v)) // FIXME!!
     //reflectEffect(ReadVar(v))
-    
+
     // do cse *in context*
-    
-    context.reverse.dropWhile { e => 
+
+    context.reverse.dropWhile { e =>
       e match { case Def(Reflect(ReadVar(w), _)) if w != v => true case _ => false }
     } match {
       case (e @ Def(Reflect(ReadVar(`v`), _)))::es => e.asInstanceOf[Exp[T]]
@@ -64,9 +95,9 @@ trait VariablesExp extends Variables with EffectExp {
         val r = createDefinition(fresh[T], Reflect(ReadVar(v), es)).sym
         context = context :+ r
         r
-    }*/
+    }
     toAtom(ReadVar(v))
-  }
+  }*/
 
   case class ReadVar[T:Manifest](v: Var[T]) extends Def[T]
   case class NewVar[T:Manifest](init: Exp[T]) extends Def[T]
@@ -88,7 +119,7 @@ trait VariablesExp extends Variables with EffectExp {
     reflectWrite(lhs.e)(VarPlusEquals(lhs, rhs))
     Const()
   }
-  
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     case Reflect(NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a)), Alloc(), f(es)))
     case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))
@@ -96,7 +127,7 @@ trait VariablesExp extends Variables with EffectExp {
     case Reflect(VarPlusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
-  
+
   // TODO: not using these due to a problem with getBlockResult() getting an out-of-scope symbol without the Const
   //def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) = reflectMutation(Assign(lhs, rhs))
   //def var_plusequals[T:Numeric:Manifest](lhs: Var[T], rhs: Exp[T]) = reflectMutation(VarPlusEquals(lhs, rhs))

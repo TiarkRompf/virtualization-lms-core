@@ -8,16 +8,6 @@ trait BooleanOps extends Variables {
   def infix_&&(lhs: Rep[Boolean], rhs: Rep[Boolean]) = boolean_and(lhs,rhs)
   def infix_||(lhs: Rep[Boolean], rhs: Rep[Boolean]) = boolean_or(lhs,rhs)
 
-  /*
-  implicit def boolToRepBoolCls(b: Boolean) = new BooleanOpsCls(b)
-  implicit def repBoolToRepBoolCls(b: Rep[Boolean]) = new BooleanOpsCls(b)
-  implicit def varBoolToRepBoolCls(b: Var[Boolean]) = new BooleanOpsCls(readVar(b))
-
-  class BooleanOpsCls(lhs: Rep[Boolean]){
-    def &&(rhs: Rep[Boolean]) = boolean_and(lhs,rhs)
-  }
-  */
-
   def boolean_negate(lhs: Rep[Boolean]): Rep[Boolean]
   def boolean_and(lhs: Rep[Boolean], rhs: Rep[Boolean]): Rep[Boolean]
   def boolean_or(lhs: Rep[Boolean], rhs: Rep[Boolean]): Rep[Boolean]

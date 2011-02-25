@@ -47,16 +47,6 @@ trait IOOps extends Variables with OverloadHack {
   def infix_write(b: Rep[BufferedWriter], s: Rep[String]) = bw_write(b,s)
   def infix_close(b: Rep[BufferedWriter])(implicit o: Overloaded1) = bw_close(b)
 
-  /*
-  implicit def varToRepBufferedWriterOps(x: Var[BufferedWriter]) = new RepBufferedWriterOpsCls(readVar(x))
-  implicit def repBufferedWriterToRepBufferedWriterOps(a: Rep[BufferedWriter]) = new RepBufferedWriterOpsCls(a)
-  implicit def BufferedWriterToRepBufferedWriterOps(a: BufferedWriter) = new RepBufferedWriterOpsCls(a)
-  
-  class RepBufferedWriterOpsCls(b: Rep[BufferedWriter]){
-    def write(s: Rep[String]) = bw_write(b,s)
-  }
-  */
-
   def obj_bw_apply(f: Rep[FileWriter]): Rep[BufferedWriter]
   def bw_write(b: Rep[BufferedWriter], s: Rep[String]): Rep[Unit]
   def bw_close(b: Rep[BufferedWriter]): Rep[Unit]

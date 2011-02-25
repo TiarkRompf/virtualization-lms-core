@@ -7,9 +7,9 @@ import scala.virtualization.lms.util.OverloadHack
 trait CastingOps extends Variables with OverloadHack {
   this: ImplicitOps =>
 
-  //implicit def anyToCastingOpsCls[A:Manifest](lhs: A) = new CastingOpsCls(lhs)
-  implicit def repAnyToCastingOpsCls[A:Manifest](lhs: Rep[A]) = new CastingOpsCls(lhs)
-  implicit def varAnyToCastingOpsCls[A:Manifest](lhs: Var[A]) = new CastingOpsCls(readVar(lhs))
+  //implicit def anyToCastingOps[A:Manifest](lhs: A) = new CastingOpsCls(lhs)
+  implicit def repAnyToCastingOps[A:Manifest](lhs: Rep[A]) = new CastingOpsCls(lhs)
+  implicit def varAnyToCastingOps[A:Manifest](lhs: Var[A]) = new CastingOpsCls(readVar(lhs))
     
   class CastingOpsCls[A:Manifest](lhs: Rep[A]){
     def isInstanceOfL[B:Manifest]: Rep[Boolean] = rep_isinstanceof(lhs, manifest[A], manifest[B])

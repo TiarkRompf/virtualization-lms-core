@@ -8,11 +8,11 @@ trait ArrayOps extends Variables {
 
   // multiple definitions needed because implicits won't chain
   // not using infix here because apply doesn't work with infix methods
-  implicit def varToRepArrayOps[A:Manifest](x: Var[Array[A]]) = new RepArrayOpsCls(readVar(x))
-  implicit def repArrayToRepArrayOps[T:Manifest](a: Rep[Array[T]]) = new RepArrayOpsCls(a)
-  implicit def arrayToRepArrayOps[T:Manifest](a: Array[T]) = new RepArrayOpsCls(a)
+  implicit def varToArrayOps[A:Manifest](x: Var[Array[A]]) = new ArrayOpsCls(readVar(x))
+  implicit def repArrayToArrayOps[T:Manifest](a: Rep[Array[T]]) = new ArrayOpsCls(a)
+  implicit def arrayToArrayOps[T:Manifest](a: Array[T]) = new ArrayOpsCls(a)
 
-  class RepArrayOpsCls[T:Manifest](a: Rep[Array[T]]){
+  class ArrayOpsCls[T:Manifest](a: Rep[Array[T]]){
     def apply(n: Rep[Int]) = array_apply(a, n)
     def length = array_length(a)
     def foreach(block: Rep[T] => Rep[Unit]) = array_foreach(a, block)
