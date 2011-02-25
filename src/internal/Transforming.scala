@@ -13,9 +13,9 @@ trait Transforming extends Expressions {
 
   // FIXME: mirroring for effects!
 
-  def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = system.error("don't know how to mirror " + e)
+  def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = sys.error("don't know how to mirror " + e)
 
-  def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer): Def[A] = system.error("don't know how to mirror " + e) //hm...
+  def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer): Def[A] = sys.error("don't know how to mirror " + e) //hm...
 
 
   class SubstTransformer extends Transformer {
