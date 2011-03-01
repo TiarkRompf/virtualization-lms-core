@@ -5,13 +5,19 @@ import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 import scala.virtualization.lms.internal.{GenerationFailedException}
 
+trait LiftString {
+  this: Base =>
+
+  implicit def strToRepStr(s: String) = unit(s)
+}
+
 trait StringOps extends Variables with OverloadHack {
   // NOTE: if something doesn't get lifted, this won't give you a compile time error,
   //       since string concat is defined on all objects
-  def infix_+(s1: String, s2: Rep[Any]) = string_plus(s1,s2)
-  def infix_+(s1: Rep[Any], s2: String)(implicit o: Overloaded1) = string_plus(s1,s2)
-  def infix_+(s1: String, s2: Var[Any])(implicit o: Overloaded4) = string_plus(s1,s2)
-  def infix_+(s1: Var[Any], s2: String)(implicit o: Overloaded5) = string_plus(s1,s2)
+  def infix_+(s1: String, s2: Rep[Any]) = string_plus(unit(s1),s2)
+  def infix_+(s1: Rep[Any], s2: String)(implicit o: Overloaded1) = string_plus(s1,unit(s2))
+  def infix_+(s1: String, s2: Var[Any])(implicit o: Overloaded4) = string_plus(unit(s1),s2)
+  def infix_+(s1: Var[Any], s2: String)(implicit o: Overloaded5) = string_plus(s1,unit(s2))
 
   def infix_trim(s: Rep[String]) = string_trim(s)
   def infix_split(s: Rep[String], separators: Rep[String]) = string_split(s, separators)

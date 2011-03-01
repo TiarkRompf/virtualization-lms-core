@@ -26,12 +26,12 @@ trait TrigExp extends Trig with BaseExp {
 trait TrigExpOpt extends TrigExp {
 
   override def sin(x: Exp[Double]) = x match {
-    case Const(x) => math.sin(x)
+    case Const(x) => unit(math.sin(x))
     case _ => super.sin(x)
   }
   
   override def cos(x: Exp[Double]) = x match {
-    case Const(x) => math.cos(x)
+    case Const(x) => unit(math.cos(x))
     case _ => super.cos(x)
   }
 

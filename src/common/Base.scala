@@ -7,6 +7,14 @@ import internal.{ScalaCodegen, ScalaNestedCodegen, ScalaFatCodegen,
   CCodegen, CNestedCodegen, CFatCodegen,
   CLikeCodegen}
 
+
+/**
+ * This trait automatically lifts any concrete instance to a representation.
+ */
+trait LiftAll extends Base {
+  protected implicit def __unit[T:Manifest](x: T) = unit(x)
+}
+
 /**
  * The Base trait defines the type constructor Rep, which is the higher-kinded type that allows for other DSL types to be
  * polymorphically embedded.
@@ -17,7 +25,11 @@ trait Base extends EmbeddedControls {
 
   type Rep[+T]
 
-  protected implicit def unit[T:Manifest](x: T): Rep[T]
+  protected def unit[T:Manifest](x: T): Rep[T]
+
+  // always lift Unit and Null (for now)
+  implicit def unitToRepUnit(x: Unit) = unit(x)
+  implicit def nullToRepNull(x: Null) = unit(x)
 }
 
 /**
@@ -28,7 +40,7 @@ trait Base extends EmbeddedControls {
 trait BaseExp extends Base with Expressions with Transforming {
   type Rep[+T] = Exp[T]
 
-  protected implicit def unit[T:Manifest](x: T) = Const(x)
+  protected def unit[T:Manifest](x: T) = Const(x)
 }
 
 trait EffectExp extends BaseExp with Effects {

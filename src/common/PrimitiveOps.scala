@@ -31,7 +31,7 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
   /**
    *  Double
    */
-  implicit def doubleToDoubleOps(n: Double) = new DoubleOpsCls(n)
+  implicit def doubleToDoubleOps(n: Double) = new DoubleOpsCls(unit(n))
   implicit def repDoubleToDoubleOps(n: Rep[Double]) = new DoubleOpsCls(n)
   implicit def varDoubleToDoubleOps(n: Var[Double]) = new DoubleOpsCls(readVar(n))
   

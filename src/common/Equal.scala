@@ -8,8 +8,8 @@ trait LiftEquals extends Base {
   this: Equal =>
 
   // TODO: these will probably never get called due to original, equally specific == and !=
-  def __equal[A:Manifest,B:Manifest](a: A, b: B) : Rep[Boolean] = equals(a,b)
-  def infix_!=[A:Manifest,B:Manifest](a: A, b: B) : Rep[Boolean] = notequals(a,b)
+  def __equal[A:Manifest,B:Manifest](a: A, b: B) : Rep[Boolean] = equals(unit(a),unit(b))
+  def infix_!=[A:Manifest,B:Manifest](a: A, b: B) : Rep[Boolean] = notequals(unit(a),unit(b))
 }
 
 trait Equal extends Base with Variables with OverloadHack {
@@ -19,19 +19,19 @@ trait Equal extends Base with Variables with OverloadHack {
   def __equal[A,B](a: Rep[A], b: Rep[B])(implicit o: Overloaded1, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = equals(a,b)
   def __equal[A,B](a: Rep[A], b: Var[B])(implicit o: Overloaded2, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = equals(a, b)
   def __equal[A,B](a: Var[A], b: Rep[B])(implicit o: Overloaded3, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = equals(a, b)
-  def __equal[A,B](a: Rep[A], b: B)(implicit o: Overloaded4, mA: Manifest[A], mB: Manifest[B]): Rep[Boolean] = equals(a, b)
-  def __equal[A,B](a: A, b: Rep[B])(implicit o: Overloaded5, mA: Manifest[A], mB: Manifest[B]): Rep[Boolean] = equals(a, b)
-  def __equal[A,B](a: Var[A], b: B)(implicit o: Overloaded6, mA: Manifest[A], mB: Manifest[B]): Rep[Boolean] = equals(a, b)
-  def __equal[A,B](a: A, b: Var[B])(implicit o: Overloaded7, mA: Manifest[A], mB: Manifest[B]): Rep[Boolean] = equals(a, b)
+  def __equal[A,B](a: Rep[A], b: B)(implicit o: Overloaded4, mA: Manifest[A], mB: Manifest[B]): Rep[Boolean] = equals(a, unit(b))
+  def __equal[A,B](a: A, b: Rep[B])(implicit o: Overloaded5, mA: Manifest[A], mB: Manifest[B]): Rep[Boolean] = equals(unit(a), b)
+  def __equal[A,B](a: Var[A], b: B)(implicit o: Overloaded6, mA: Manifest[A], mB: Manifest[B]): Rep[Boolean] = equals(a, unit(b))
+  def __equal[A,B](a: A, b: Var[B])(implicit o: Overloaded7, mA: Manifest[A], mB: Manifest[B]): Rep[Boolean] = equals(unit(a), b)
   def __equal[A,B](a: Var[A], b: Var[B])(implicit o: Overloaded8, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = equals(a,b)
 
   def infix_!=[A,B](a: Rep[A], b: Rep[B])(implicit o: Overloaded1, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(a,b)
   def infix_!=[A,B](a: Rep[A], b: Var[B])(implicit o: Overloaded2, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(a, b)
   def infix_!=[A,B](a: Var[A], b: Rep[B])(implicit o: Overloaded3, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(a, b)
-  def infix_!=[A,B](a: Rep[A], b: B)(implicit o: Overloaded4, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(a, b)
-  def infix_!=[A,B](a: A, b: Rep[B])(implicit o: Overloaded5, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(a, b)
-  def infix_!=[A,B](a: Var[A], b: B)(implicit o: Overloaded6, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(a, b)
-  def infix_!=[A,B](a: A, b: Var[B])(implicit o: Overloaded7, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(a, b)
+  def infix_!=[A,B](a: Rep[A], b: B)(implicit o: Overloaded4, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(a, unit(b))
+  def infix_!=[A,B](a: A, b: Rep[B])(implicit o: Overloaded5, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(unit(a), b)
+  def infix_!=[A,B](a: Var[A], b: B)(implicit o: Overloaded6, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(a, unit(b))
+  def infix_!=[A,B](a: A, b: Var[B])(implicit o: Overloaded7, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(unit(a), b)
   def infix_!=[A,B](a: Var[A], b: Var[B])(implicit o: Overloaded8, mA: Manifest[A], mB: Manifest[B]) : Rep[Boolean] = notequals(a,b)
 
   def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]) : Rep[Boolean]

@@ -12,7 +12,7 @@ trait SeqOps extends Variables {
   
   implicit def varToSeqOps[A:Manifest](x: Var[Seq[A]]) = new SeqOpsCls(readVar(x))
   implicit def repSeqToSeqOps[T:Manifest](a: Rep[Seq[T]]) = new SeqOpsCls(a)
-  implicit def seqToSeqOps[T:Manifest](a: Seq[T]) = new SeqOpsCls(a)
+  implicit def seqToSeqOps[T:Manifest](a: Seq[T]) = new SeqOpsCls(unit(a))
 
   class SeqOpsCls[T:Manifest](a: Rep[Seq[T]]){
     def apply(n: Rep[Int]) = seq_apply(a,n)

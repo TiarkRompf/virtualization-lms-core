@@ -25,7 +25,7 @@ trait Parsers { this: Matching with Extractors =>
   }
 
   object FailureR {
-    def apply(): Rep[Failure] = construct(classOf[Failure], (_: Unit) => Failure.apply(), ())
+    def apply(): Rep[Failure] = construct(classOf[Failure], (_: Unit) => Failure.apply(), unit(()))
     def unapply(x: Rep[Failure]): Boolean = deconstruct(classOf[Failure], { x:Failure => if (Failure.unapply(x)) Some(()) else None }, x).isDefined
   } // TODO: not so nice...
 

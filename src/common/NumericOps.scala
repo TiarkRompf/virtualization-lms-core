@@ -3,15 +3,21 @@ package common
 
 import java.io.PrintWriter
 
+trait LiftNumeric {
+  this: Base =>
+
+  implicit def numericToNumericOps[T:Numeric:Manifest](x: T) = unit(x)
+}
+
 trait NumericOps extends Variables {
 
   // workaround for infix not working with manifests
-  implicit def numericToNumericOps[T:Numeric:Manifest](n: T) = new NumericOpsCls(n)
+  implicit def numericToNumericOps[T:Numeric:Manifest](n: T) = new NumericOpsCls(unit(n))
   implicit def repNumericToNumericOps[T:Numeric:Manifest](n: Rep[T]) = new NumericOpsCls(n)
   implicit def varNumericToNumericOps[T:Numeric:Manifest](n: Var[T]) = new NumericOpsCls(readVar(n))
   
   class NumericOpsCls[T:Numeric:Manifest](lhs: Rep[T]){
-    def +[A](rhs: A)(implicit c: A => T) = numeric_plus(lhs,c(rhs))
+    def +[A](rhs: A)(implicit c: A => T) = numeric_plus(lhs,unit(c(rhs)))
     def +(rhs: Rep[T]) = numeric_plus(lhs,rhs)
     def -(rhs: Rep[T]) = numeric_minus(lhs,rhs)
     def *(rhs: Rep[T]) = numeric_times(lhs,rhs)

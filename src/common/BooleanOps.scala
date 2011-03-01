@@ -3,6 +3,12 @@ package common
 
 import java.io.PrintWriter
 
+trait LiftBoolean {
+  this: Base =>
+
+  implicit def boolToBoolRep(b: Boolean) = unit(b)
+}
+
 trait BooleanOps extends Variables {
   def infix_unary_!(x: Rep[Boolean]) = boolean_negate(x)
   def infix_&&(lhs: Rep[Boolean], rhs: Rep[Boolean]) = boolean_and(lhs,rhs)

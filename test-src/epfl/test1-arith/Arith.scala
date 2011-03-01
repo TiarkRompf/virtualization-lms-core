@@ -6,8 +6,13 @@ import common._
 
 import java.io.PrintWriter
 
+trait LiftArith {
+  this: Arith =>
 
-trait Arith extends Base {
+  implicit def numericToRep[T:Numeric:Manifest](x: T) = unit(x)
+}
+
+trait Arith extends Base with LiftArith {
   //todo removed this, I can see now that having these implicits replicated everywhere can force us to control the
   //types that are allowed to be lifted more explicitly
   //implicit def unit(x: Double): Rep[Double]

@@ -7,7 +7,7 @@ import scala.virtualization.lms.util.OverloadHack
 trait LiftVariables extends Base {
   this: Variables =>
 
-  def __newVar[T:Manifest](init: T) = var_new(init)
+  def __newVar[T:Manifest](init: T) = var_new(unit(init))
   def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_new(init)
   def __newVar[T](init: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_new(init)
 }
@@ -52,12 +52,12 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
   def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
   def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
 
-  def __assign[T:Manifest](lhs: Var[T], rhs: T) = var_assign(lhs, rhs)
+  def __assign[T:Manifest](lhs: Var[T], rhs: T) = var_assign(lhs, unit(rhs))
   def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_assign(lhs, rhs)
   def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_assign(lhs, readVar(rhs))
 
   // TODO: why doesn't this implicit kick in automatically? <--- do they belong here? maybe better move to NumericOps
-  def infix_+=[T:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs, rhs)
+  def infix_+=[T:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs, unit(rhs))
   def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_plusequals(lhs,rhs)
   def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_plusequals(lhs,readVar(rhs))
 }
