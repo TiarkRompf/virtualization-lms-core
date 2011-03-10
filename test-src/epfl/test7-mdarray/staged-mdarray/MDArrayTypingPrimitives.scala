@@ -30,6 +30,7 @@ trait MDArrayTypingPrimitives {
 
   abstract class TypingConstraint(val prereq: Boolean, val node: Any) { override def toString = getConstraintString(this) }
   case class Equality(a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
+  case class EqualityOrScalar(a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
   case class EqualityExceptFor(d: TypingVariable, a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
   case class LessThan(a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
   case class PrefixLt(main: TypingVariable, prefix: TypingVariable, suffix: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
@@ -45,6 +46,8 @@ trait MDArrayTypingPrimitives {
   private def getConstraintString(constraint: TypingConstraint): String = {
     val body = constraint match {
       case eq: Equality => eq.a.toString + " = " + eq.b.toString
+      // TODO: Can we encode OR without hard coding it into a constraint?
+      case es: EqualityOrScalar => es.a.toString + " = " + es.b.toString + " OR " + es.b.toString + " = []"
       case eq: EqualityExceptFor => eq.a.toString + "[i] = " + eq.b.toString + "[i] forall i != " + eq.d.toString
       case lt: LessThan => lt.a.toString + " < " + lt.b.toString
       case pl: PrefixLt => pl.main.toString + "(:length(" + pl.prefix.toString + ")) < " + pl.prefix.toString
@@ -98,6 +101,7 @@ trait MDArrayTypingPrimitives {
     def apply(tcs: List[TypingConstraint]): List[TypingConstraint] = tcs.map(tc => apply(tc))
     def apply(tc: TypingConstraint): TypingConstraint = tc match {
       case eq: Equality => Equality(updateVariable(eq.a), updateVariable(eq.b), eq._prereq, eq._node)
+      case es: EqualityOrScalar => EqualityOrScalar(updateVariable(es.a), updateVariable(es.b), es._prereq, es._node)
       case ef: EqualityExceptFor => EqualityExceptFor(updateVariable(ef.d), updateVariable(ef.a), updateVariable(ef.b), ef._prereq, ef._node)
       case lt: LessThan => LessThan(updateVariable(lt.a), updateVariable(lt.b), lt._prereq, lt._node)
       case pl: PrefixLt => PrefixLt(updateVariable(pl.main), updateVariable(pl.prefix), updateVariable(pl.suffix), pl._prereq, pl._node)

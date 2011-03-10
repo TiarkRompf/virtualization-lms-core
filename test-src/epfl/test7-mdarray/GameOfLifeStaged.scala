@@ -15,12 +15,12 @@ trait GameOfLifeStaged { this: MDArrayBase with IfThenElse =>
     alive
   }
 
-  def computeIfDead(neigh: Rep[Int], alive: Rep[Int]): Rep[Int] = {
+  def computeIfDead(neigh: Rep[MDArray[Int]], alive: Rep[MDArray[Int]]): Rep[MDArray[Int]] = {
 
     if (alive === 1) {
-      if ((neigh - alive) << 2)
+      if ((neigh - alive) < 2)
         1 // Rule1: Any live cell with fewer than two live neighbours dies, as if caused by under-population.
-      else if ((neigh - alive) << 4)
+      else if ((neigh - alive) < 4)
         0 // Rule2: Any live cell with two or three live neighbours lives on to the next generation.
       else
         1 // Rule3: Any live cell with more than three live neighbours dies, as if by overcrowding.
@@ -29,7 +29,7 @@ trait GameOfLifeStaged { this: MDArrayBase with IfThenElse =>
       0
   }
 
-  def computeIfReborn(neigh: Rep[Int], dead: Rep[Int]): Rep[Int] = {
+  def computeIfReborn(neigh: Rep[MDArray[Int]], dead: Rep[MDArray[Int]]): Rep[MDArray[Int]] = {
 
     if (dead === 1) {
       if (neigh === 3)

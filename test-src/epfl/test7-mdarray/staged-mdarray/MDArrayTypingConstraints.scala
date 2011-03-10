@@ -31,6 +31,13 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
     case d: Def[_] => d
   }
 
+  //TODO: This needs to be fixed
+  def getElementsInCaseClass(e: Any): List[Exp[_]] = e match {
+    case s: Sym[_] => List(e)
+    case p: Product => p.productIterator.flatMap(s => getElementsInCaseClass(s)).toList
+    case _ => Nil
+  }
+
   // XXX: making the sym function an implicit conversion, I hope Scala's CSE works well enough to eliminate redundant calls
   private implicit def getSymNumberExp(e: Exp[_]): Int = getSymNumber(e)
   private implicit def getSymNumberDef(d: Def[_]): Int = getSymNumber(d)
@@ -74,24 +81,31 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
       case rs: Reshape[_] => reshapeConstraints(rs)
       case sel: Sel[_] => selConstraints(sel)
       case cat: Cat[_] => catConstraints(cat)
-      case red: Reduce[_,_] => reduceConstraints(red)
       case vs: Values[_] => valuesConstraints(vs)
-      case io: InfixOpAA[_, _] => infixOpAAConstraints(io)
-      case io: InfixOpAE[_, _] => infixOpAEConstraints(io)
+      case io: InfixOp[_, _] => infixOpConstraints(io)
       case uo: UnaryOp[_, _] => unaryOpConstraints(uo)
       case wh: Where[_] => whereConstraints(wh)
       case iv: IndexVector => indexVectorConstraints(iv)
       case wn: WithNode[_] => withNodeConstraints(wn)
       case ga: GenArrayWith[_] => genArrayConstraints(ga)
       case ma: ModArrayWith[_] => modArrayConstraints(ma)
+      case ft: FoldTerm[_] => foldTermConstraints(ft)
       case fa: FoldArrayWith[_] => foldArrayConstraints(fa)
+      // TODO: Do something like typing scopes here to account for the fact that both branches cannot be executed at the same time:
+      /*
+        if (...)
+           a + [ 1, 2, 3 ] // shape(a) is [3]
+         else
+           a + [[ 1, 2, 3 ], [ 4, 5, 6 ]] // shape(a) is [2,3]
+       */
       case ite: IfThenElse[_] => ifThenElseConstraint(ite)
-      case ip: IntPlus => intPlusConstraints(ip)
-      case im: IntMinus => intMinusConstraints(im)
-      case ie: IntEqual => intEqualConstraints(ie)
-      case il: IntLess => intLessConstraints(il)
+      case soa: ScalarOperatorApplication[_, _, _] => scalarOpApplicationConstraints(soa)
       case _ => throw new RuntimeException("Unknown node: " + node.toString)
     }
+
+    //TODO: The Scheduling-like getElementsInCaseClass(.) doesn't work correctly. In order to automate the dependency function we need this fixed
+    //println(node.toString + " => " + result._2.mkString(", ") + "   vs   " + getElementsInCaseClass(node).mkString(", "))
+
     // Adding the default operation of reconstructing the value from shape: if the value
     // is a variable and the shape is known, the value var is replaced by unknowns
     (ReconstructValueFromShape(ValueVar(getSymNumber(node)), ShapeVar(getSymNumber(node)), postReq, node)::result._1, result._2)
@@ -156,18 +170,14 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
      sel.iv::sel.a::Nil)
 
   def catConstraints(cat: Cat[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (LengthEqualityAeqB(ShapeVar(cat.a), Lst(getNewUnknown::Nil), preReq, cat)::
+    (LengthEqualityAeqB(ShapeVar(cat.d), Lst(Nil), preReq, cat)::
+     LengthEqualityAeqB(ShapeVar(cat.a), Lst(getNewUnknown::Nil), preReq, cat)::
      LengthEqualityAeqB(ShapeVar(cat.a), ShapeVar(cat.b), preReq, cat)::
      LessThan(ValueVar(cat.d), Lst(LengthOf(ShapeVar(cat.a))::Nil), preReq, cat)::
      EqualityExceptFor(ValueVar(cat.d), ShapeVar(cat.a), ShapeVar(cat.b), preReq, cat)::
      LengthEqualityAeqB(ShapeVar(cat), ShapeVar(cat.a), postReq, cat)::
      EqualityShAeqShBplusShCalongD(ShapeVar(cat), ShapeVar(cat.a), ShapeVar(cat.b), ValueVar(cat.d), postReq, cat)::Nil,
-     cat.d::cat.a::cat.b::Nil)
-
-  def reduceConstraints(red: Reduce[_,_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(red), Lst(Nil), postReq, red)::
-     Equality(ValueVar(red), Lst(getNewUnknown::Nil), postReq, red)::Nil,
-     red.a::Nil)
+     List(cat.d,cat.a,cat.b))
 
   def valuesConstraints(values: Values[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (Equality(ShapeVar(values.dim), Lst(Nil), preReq, values)::
@@ -176,15 +186,10 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
      EqualityAeqDimTimesValue(ValueVar(values), ValueVar(values.dim), ValueVar(values.value), postReq, values)::Nil,
      values.value::values.dim::Nil)
 
-  def infixOpAAConstraints(in: InfixOpAA[_, _]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(in.array1), ShapeVar(in.array2), preReq, in)::
+  def infixOpConstraints(in: InfixOp[_, _]): Pair[List[TypingConstraint], List[Exp[_]]] =
+    (EqualityOrScalar(ShapeVar(in.array1), ShapeVar(in.array2), preReq, in)::
      Equality(ShapeVar(in), ShapeVar(in.array1), postReq, in)::Nil,
      in.array1::in.array2::Nil)
-
-  def infixOpAEConstraints(in: InfixOpAE[_, _]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(in.element), Lst(Nil), preReq, in)::
-     Equality(ShapeVar(in), ShapeVar(in.array), postReq, in)::Nil,
-     in.array::in.element::Nil)
 
   def unaryOpConstraints(un: UnaryOp[_, _]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (Equality(ShapeVar(un), ShapeVar(un.array), postReq, un)::Nil,
@@ -236,26 +241,26 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
      Equality(ShapeVar(ma), ShapeVar(ma.a), postReq, ma)::Nil,
      ma.a::ma.lExpr)
 
+  def foldTermConstraints(ft: FoldTerm[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
+    (Equality(ShapeVar(ft), ShapeVar(ft.like), preReq, ft)::Nil,
+     ft.like::Nil)
+
   def foldArrayConstraints(fa: FoldArrayWith[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (Equality(ShapeVar(fa.neutral), ShapeVar(fa.wExpr), preReq, fa)::
+     Equality(ShapeVar(fa.foldTerm1), ShapeVar(fa.wExpr), preReq, fa):: // for consistency
+     Equality(ShapeVar(fa.foldTerm2), ShapeVar(fa.wExpr), preReq, fa):: // for consistency
+     Equality(ShapeVar(fa.foldExpression), ShapeVar(fa.wExpr), preReq, fa)::
      Equality(ShapeVar(fa), ShapeVar(fa.neutral), postReq, fa)::Nil,
-     fa.neutral::fa.wExpr::Nil)
+     List(fa.neutral, fa.wExpr, fa.foldTerm1, fa.foldTerm2, fa.foldExpression))
 
   def ifThenElseConstraint(ite: IfThenElse[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (Equality(ShapeVar(ite.cond), Lst(Nil), preReq, ite)::
      CommonDenominator(ShapeVar(ite), ShapeVar(ite.thenp), ShapeVar(ite.elsep), postReq, ite)::Nil,
      ite.thenp::ite.elsep::ite.cond::Nil)
 
-
-  // Integer operations for Game of Life, NumericOps is too much
-  def intPlusConstraints(ip: IntPlus): Pair[List[TypingConstraint], List[Exp[_]]] = intConstraints(ip, ip.a, ip.b)
-  def intMinusConstraints(ip: IntMinus): Pair[List[TypingConstraint], List[Exp[_]]] = intConstraints(ip, ip.a, ip.b)
-  def intLessConstraints(ip: IntLess): Pair[List[TypingConstraint], List[Exp[_]]] = intConstraints(ip, ip.a, ip.b)
-  def intEqualConstraints(ip: IntEqual): Pair[List[TypingConstraint], List[Exp[_]]] = intConstraints(ip, ip.a, ip.b)
-
-  def intConstraints(op: Def[_], a: Exp[Int], b: Exp[Int]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(a), Lst(Nil), preReq, op) ::
-     Equality(ShapeVar(b), Lst(Nil), preReq, op) ::
-     Equality(ShapeVar(op), Lst(Nil), postReq, op) :: Nil, a :: b :: Nil)
-
+  def scalarOpApplicationConstraints(soa: ScalarOperatorApplication[_, _, _]): Pair[List[TypingConstraint], List[Exp[_]]] =
+    (Equality(ShapeVar(soa.a), Lst(Nil), preReq, soa)::
+     Equality(ShapeVar(soa.b), Lst(Nil), preReq, soa)::
+     Equality(ShapeVar(soa), Lst(Nil), postReq, soa)::Nil,
+     soa.a::soa.b::Nil)
 }

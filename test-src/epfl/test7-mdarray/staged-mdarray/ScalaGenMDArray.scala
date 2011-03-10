@@ -14,6 +14,7 @@ trait BaseGenMDArray extends GenericNestedCodegen {
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case WithNode(iv, expr) if shallow => syms(iv) // in shallow mode, don't count deps from nested blocks
+    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) if shallow => syms(wExpr):::syms(neutral):::syms(foldTerm1):::syms(foldTerm2)
     case _ => super.syms(e)
   }
 
@@ -22,10 +23,11 @@ trait BaseGenMDArray extends GenericNestedCodegen {
     case _ => super.boundSyms(e)
   }
 
-  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
-    case WithNode(iv, expr) => getFreeVarBlock(iv,Nil) ::: getFreeVarBlock(expr,Nil)
-    case _ => super.getFreeVarNode(rhs)
-  }
+//  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
+//    case WithNode(iv, expr) => getFreeVarBlock(iv,Nil) ::: getFreeVarBlock(expr,Nil)
+//    // TODO: Check whether this is correct:
+//    case _ => super.getFreeVarNode(rhs)
+//  }
 }
 
 
@@ -33,7 +35,7 @@ trait BaseGenMDArray extends GenericNestedCodegen {
 
 trait TypedGenMDArray extends BaseGenMDArray with MDArrayTypingUnifier {
 
-  import IR.{Exp, Sym, Def}
+  import IR.{Exp, Sym}
 
   var shapes: Map[Int, TypingVariable] = new HashMap()
   var values: Map[Int, TypingVariable] = new HashMap()
@@ -53,6 +55,9 @@ trait TypedGenMDArray extends BaseGenMDArray with MDArrayTypingUnifier {
      */
     // TODO: Implement the code generation for constraints
     // TODO: Problem here: following the pureSubstitution, we have variables that don't necessarily respect scheduling
+    // Solution for pureSubstitution referencing variables -- make equivalence classes since this is a problem that
+    // only affects the Equality constraint. -- and from the equivalence class pick only the already scheduled symbols
+    // to reference
     runtimeChecks.contains(expr.id) match {
       case true =>
         for (runtimeCheck <- runtimeChecks(expr.id)) {
@@ -88,10 +93,10 @@ trait TypedGenMDArray extends BaseGenMDArray with MDArrayTypingUnifier {
     }
   }
 
-  def getShapeLength(sym: Sym[_]) = getLength(shapes(sym.id))
-  def getValueLength(sym: Sym[_]) = getLength(values(sym.id))
-  def getShapeValue(sym: Sym[_]) = getValue(shapes(sym.id))
-  def getValueValue(sym: Sym[_]) = getValue(values(sym.id))
+  def getShapeLength(sym: Any) = getLength(shapes(sym.asInstanceOf[Sym[_]].id))
+  def getValueLength(sym: Any) = getLength(values(sym.asInstanceOf[Sym[_]].id))
+  def getShapeValue(sym: Any) = getValue(shapes(sym.asInstanceOf[Sym[_]].id))
+  def getValueValue(sym: Any) = getValue(values(sym.asInstanceOf[Sym[_]].id))
 
   def emitShapeValue(sym: Sym[_])(implicit stream: PrintWriter): Unit =
     stream.println("// " + quote(sym) + ": shape=" + shapes(sym.id) + "    value=" + values(sym.id))
@@ -130,15 +135,12 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
   }
 
   def emitOperationPrologue(sym: Sym[Any], exp: Exp[Any])(implicit stream: PrintWriter) = {
-    emitSymDecl(sym);
-    stream.println("{")
     stream.println("val result = new Array[" + stripMDArray(sym.typeManifest).get + "](shape(" + quote(exp) + ").content().foldLeft(1)((a,b) => a*b))")
     stream.println("for(i <- List.range(0, result.length))")
   }
 
   def emitOperationEpilogue(sym: Sym[Any], exp: Exp[Any], opName: String)(implicit stream: PrintWriter) = {
     stream.println("internalReshape(shape(" + quote(exp) + "), result, \"" + opName + "\")")
-    stream.println("}")
   }
 
   // This makes it easy to get the elements we need
@@ -216,6 +218,31 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
   }
 
 
+  def emitFoldArray(sym: Sym[_], withNode: Exp[MDArray[_]], neutral: Exp[_], foldTerm1: Exp[_], foldTerm2: Exp[_], foldExpr: Exp[_])(implicit stream: PrintWriter) = {
+
+    val neutralSym = neutral.asInstanceOf[Sym[_]]
+    val foldTerm1Sym = foldTerm1.asInstanceOf[Sym[_]]
+    val foldTerm2Sym = foldTerm2.asInstanceOf[Sym[_]]
+    val foldExprSym = foldExpr.asInstanceOf[Sym[_]]
+
+    def emitFoldArrayAction(iv: String, loopElement: String) =
+      stream.println("result = foldFunction(result, " + loopElement + ")")
+
+    emitSymDecl(sym);
+    stream.println("{")
+    stream.println("val opName: String = \"fold\"")
+    stream.println("var result: " + neutralSym.typeManifest.toString + " = " + quote(neutralSym))
+    stream.println("val foldFunction: (" + neutralSym.typeManifest.toString + ", " + neutralSym.typeManifest.toString
+      + ") => " + neutralSym.typeManifest.toString + " = (" + quote(foldTerm1Sym) + ", " + quote(foldTerm2Sym) + ") => {")
+    emitBlock(foldExprSym)
+    stream.println(quote(getBlockResult(foldExprSym)))
+    stream.println("}")
+    // inside the with loop
+    emitWithLoopModifier(withNode.asInstanceOf[Sym[_]], findAndCast[WithNode[_]](withNode).get, emitFoldArrayAction)
+    stream.println("result")
+    stream.println("}")
+  }
+
   def emitWithLoopModifier(withNodeSym: Sym[_], withLoop: WithNode[_], emitAction: (String, String) => Unit)(implicit stream: PrintWriter) = {
     // emit existing constraints
     stream.println("// with: " + withLoop.toString)
@@ -273,28 +300,6 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     }
   }
 
-  def emitWithLoop[A](s: Sym[_], wl: Exp[MDArray[A]], suffix: String)(implicit stream: PrintWriter) = {
-    emitSymDecl(s)
-
-    findAndCast[WithNode[_]](wl) match {
-      case Some(wloop) => findAndCast[IndexVector](wloop.iv) match {
-        case Some(iv) =>
-          // generate code with for loops
-          getShapeLength(wloop.iv.asInstanceOf[Sym[_]]) match {
-            case Some(l) => stream.println("// transform into nested for loop")
-            case _ => stream.println("// keep as with loop")
-          }
-          stream.println("With(lb=" + quote(iv.lb) + ", lbStrict=" + quote(iv.lbStrict) + ", ubStrict=" + quote(iv.ubStrict) + ", ub=" + quote(iv.ub) + ", step=" + quote(iv.step) + ", width=" + quote(iv.width) + ", function = ")
-          stream.println(quote(wloop.iv) + " => {")
-          emitBlock(wloop.expr)
-          stream.println(quote(getBlockResult(wloop.expr)))
-          stream.print("})" + suffix)
-        case None => stream.print("null // Index vector not found!")
-      }
-      case None => stream.print("null // With loop not found!")
-    }
-  }
-
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
 
     case kc: KnownAtCompileTime[_] =>
@@ -344,25 +349,47 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     case cat: Cat[_] =>
       emitSymDecl(sym)
       stream.println("cat(" + quote(cat.d) + ", " + quote(cat.a) + ", " + quote(cat.b) + ")")
-    case red: Reduce[_, _] =>
+    case in: InfixOp[_, _] =>
+      // helper function
+      def emitOperation(scalar: Boolean) = {
+        emitOperationPrologue(sym, in.array1)
+        scalar match {
+          case true => stream.println("result(i) = " + quote(in.array1) + ".content()(i) " + in.opName + "  " + quote(in.array2))
+          case false => stream.println("result(i) = " + quote(in.array1) + ".content()(i) " + in.opName + "  " + quote(in.array2) + ".content()(i)")
+        }
+        emitOperationEpilogue(sym, in.array1, "infixOpAA")
+      }
       emitSymDecl(sym)
-      stream.println(quote(red.a) + ".content().foldLeft(" + quote(red.z) + ")(" + red.opRepr + ")  // reduce: " + red.opName)
-    case in: InfixOpAA[_, _] =>
-      emitOperationPrologue(sym, in.array1)
-      stream.println("result(i) = " + quote(in.array1) + ".content()(i) " + in.opName + "  " + quote(in.array2) + ".content()(i)")
-      emitOperationEpilogue(sym, in.array1, "infixOpAA")
-    case in: InfixOpAE[_, _] =>
-      emitOperationPrologue(sym, in.array)
-      stream.println("result(i) = " + quote(in.array) + ".content()(i) " + in.opName + "  " + quote(in.element))
-      emitOperationEpilogue(sym, in.array, "infixOpAE")
+      stream.println("{")
+      getShapeLength(in.array2) match {
+        case Some(0) => // we have a scalar element
+          emitOperation(true)
+        case Some(_) => // we have an array
+          emitOperation(false)
+        case None => // we don't know what's there
+          //TODO: Find out why this is the most common case
+          stream.println("// WARNING: Operation not specialized on {arrays|scalars}!")
+          stream.println("if (shape(shape(" + quote(in.array2) + ")).content()(0) == 0) {")
+          emitOperation(true)
+          stream.println("} else {")
+          emitOperation(false)
+          stream.println("}")
+      }
+      stream.println("}")
     case un: UnaryOp[_, _] =>
+      emitSymDecl(sym)
+      stream.println("{")
       emitOperationPrologue(sym, un.array)
       stream.println("result(i) = " + un.opName + quote(un.array) + ".content()(i)")
       emitOperationEpilogue(sym, un.array, "unaryOp")
+      stream.println("}")
     case wh: Where[_] =>
+      emitSymDecl(sym)
+      stream.println("{")
       emitOperationPrologue(sym, wh.array1)
       stream.println("result(i) = if (" + quote(wh.cond) + ".content()(i)) " + quote(wh.array1) + ".content()(i) else " + quote(wh.array2) + ".content()(i)")
       emitOperationEpilogue(sym, wh.array1, "where")
+      stream.println("}")
     case va: Values[_] =>
       emitSymDecl(sym); stream.println("{")
       stream.println("val result = new Array[Int](" + quote(va.dim) + ")")
@@ -382,18 +409,16 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
       stream.println
       emitModArray(sym, ma.lExpr, ma.a)
       stream.println
+    case ft: FoldTerm[_] =>
+      ; // nothing to generate at this point
     case fa: FoldArrayWith[_] =>
       stream.println
-      // TODO: Generate code for any fold function
-      // TODO: With loop specialization in fold :)
-      emitWithLoop(sym, fa.wExpr, ".Fold((a, b) => a + b, " + quote(fa.neutral) + ")")
+      emitFoldArray(sym, fa.wExpr, fa.neutral, fa.foldTerm1, fa.foldTerm2, fa.foldExpression)
       stream.println
-    case eq: IntPlus => emitSymDecl(sym); stream.println(quote(eq.a) + " + " + quote(eq.b))
-    case eq: IntMinus => emitSymDecl(sym); stream.println(quote(eq.a) + " - " + quote(eq.b))
-    case eq: IntEqual => emitSymDecl(sym); stream.println(quote(eq.a) + " == " + quote(eq.b))
-    case eq: IntLess => emitSymDecl(sym); stream.println(quote(eq.a) + " < " + quote(eq.b))
-    case x => super.emitNode(sym, rhs) + " // dunno how to generate"
-
+    case soa: ScalarOperatorApplication[_,_,_] =>
+      emitSymDecl(sym)
+      stream.println("((a: " + soa.getMfA.toString + ", b: " + soa.getMfB.toString + ") => a " + soa.operator + " b)(" + quote(soa.a) + ", " + quote(soa.b) + ")")
+    // let error cases be shown at compile time :)
   }
 
   // TODO: Convert this back to if, but if is overridden now, so we can't use it
@@ -422,9 +447,9 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
 
     val inputTypes = inputNodeData.map((p: (String, String)) => p._2).mkString(", ")
     val inputVars  = inputNodeData.map((p: (String, String)) => p._1 + ": " + p._2).mkString(", ")
-    val outputSym: Sym[Any] = expr match {
-      case s: Sym[Any] => s
-      case d: Def[Any] => findOrCreateDefinition(d).sym
+    val outputSym: Sym[_] = expr match {
+      case s: Sym[_] => s
+      case d: Def[_] => findDefinition(d).get.sym
     }
     val outputType = outputSym.typeManifest.toString
 

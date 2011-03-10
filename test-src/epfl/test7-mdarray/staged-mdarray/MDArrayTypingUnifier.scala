@@ -16,6 +16,7 @@ trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
   def getTypingString(index: Int, shapes: Map[Int, TypingVariable], values: Map[Int, TypingVariable]): String = {
     val shapeVar: TypingVariable = ShapeVar(index)
     val valueVar: TypingVariable = ValueVar(index)
+
     val shapeVarValue: TypingVariable = shapes(index)
     val valueVarValue: TypingVariable = values(index)
 
@@ -188,6 +189,18 @@ trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
         case (v: Var, l: Lst) => (true, (new SubstituteVarToLst(v, l))::Nil)
         case (l: Lst, v: Var) => (true, (new SubstituteVarToLst(v, l))::Nil)
         case (l1: Lst, l2: Lst) => unifyLists(l1, l2)
+      }
+    case es: EqualityOrScalar =>
+      (es.b) match {
+        case (b: Lst) =>
+          (b.list.length) match {
+            case 0 => (true, Nil)
+            case _ => es.a match {
+              case v: Var => (true, (new SubstituteVarToLst(v, b))::Nil)
+              case l: Lst => unifyLists(b, l)
+            }
+          }
+        case (l: Var) => (false, Nil)
       }
     case ep: EqualProduct =>
       (ep.a, ep.b) match {

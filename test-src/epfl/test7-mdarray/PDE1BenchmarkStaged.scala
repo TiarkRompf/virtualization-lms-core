@@ -12,7 +12,7 @@ trait PDE1BenchmarkStaged { this: MDArrayBase with IfThenElse =>
   type MDArrayBool = Rep[MDArray[Boolean]]
   type MDArrayDbl  = Rep[MDArray[Double]]
   type MDArrayInt  = Rep[MDArray[Int]]
-  type Dbl         = Rep[Double]
+  type Dbl         = Rep[MDArray[Double]]
 
   def range1(matrix: MDArrayDbl, iterations: Int): MDArrayDbl = PDE1impl(matrix, Relax1, iterations)
   def range2(matrix: MDArrayDbl, iterations: Int): MDArrayDbl = PDE1impl(matrix, Relax2, iterations)

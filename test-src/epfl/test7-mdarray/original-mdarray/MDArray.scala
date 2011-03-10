@@ -145,9 +145,14 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
   // and we need to get rid of the == override, so we call it ===
 
   override def equals(other: Any) = other match {
-    case that: MDArray[_] => that.canEqual(this) &&
+    case that: MDArray[_] => {
+      val mfThis = this.getManifest
+      val mfThat = that.getManifest
+      that.canEqual(this) &&
+      mfThis == mfThat &&  // Also request type equality :)
       checkArrayEquality(this.shapeAsArray, that.shapeAsArray) &&
       checkArrayEquality(this.content, that.content)
+    }
     case _ => false
   }
 
@@ -167,17 +172,7 @@ class MDArray[A: ClassManifest](_shape: Array[Int], _content: Array[A]) {
     }
   }
 
-//  TODO: Understand why this is wrong
-//  def equals[B](that: MDArray[B])(implicit mfB: ClassManifest[B]): Boolean = {
-//    val mfA = implicitly[ClassManifest[A]]
-//    println("array == "+mfA.toString+", "+mfB.toString)
-//
-//    if (mfA == mfB)
-//      that.canEqual(this) && this.shape == that.shape && all(this === that.asInstanceOf[MDArray[A]])
-//    else
-//      false
-//  }
-//  override def equals(other: Any): Boolean = {println("simple =="); false}
+  def getManifest: ClassManifest[A] = implicitly[ClassManifest[A]]
 
   override def hashCode = content.foldLeft(41)((b,a) => b + 41 * a.hashCode)
 }

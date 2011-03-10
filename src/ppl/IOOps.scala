@@ -12,7 +12,7 @@ trait IOOps extends Base {
    * BufferedReader
    */
   implicit def repBrToRepBrOps(b: Rep[BufferedReader]) = new RepBrOpsCls(b)
-  implicit def brToRepBrOps(b: BufferedReader) = new RepBrOpsCls(b)
+  //implicit def brToRepBrOps(b: BufferedReader) = new RepBrOpsCls(b)
 
   object BufferedReader {
     def apply(f: Rep[FileReader]) = obj_br_apply(f)
