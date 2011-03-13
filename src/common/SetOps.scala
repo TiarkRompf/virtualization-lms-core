@@ -34,7 +34,7 @@ trait SetOpsExp extends SetOps with EffectExp {
   case class SetClear[A:Manifest](s: Rep[Set[A]]) extends Def[Unit]
 
   def set_new[A:Manifest](xs: Seq[Rep[A]], mA: Manifest[A]) = reflectEffect(SetNew(xs, mA))
-  def set_contains[A:Manifest](s: Rep[Set[A]], i: Rep[A]) = reflectEffect(SetContains(s, i))
+  def set_contains[A:Manifest](s: Rep[Set[A]], i: Rep[A]) = SetContains(s, i)
   def set_add[A:Manifest](s: Rep[Set[A]], i: Rep[A]) = reflectEffect(SetAdd(s, i))
   def set_remove[A:Manifest](s: Rep[Set[A]], i: Rep[A]) = reflectEffect(SetRemove(s, i))
   def set_clear[A:Manifest](s: Rep[Set[A]]) = reflectEffect(SetClear(s))
