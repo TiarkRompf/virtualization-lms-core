@@ -17,8 +17,9 @@ trait StringOps extends Variables with OverloadHack {
   def infix_+(s1: Rep[String], s2: Rep[Any]) = string_plus(s1, s2)
   def infix_+(s1: Rep[String], s2: Var[Any])(implicit o: Overloaded1) = string_plus(s1, readVar(s2))
   def infix_+(s1: Rep[String], s2: Any)(implicit o: Overloaded2) = string_plus(s1, unit(s2))
-  def infix_+(s1: Rep[Any], s2: String)(implicit o: Overloaded3) = string_plus(s1, unit(s2))
-  def infix_+(s1: Var[Any], s2: String)(implicit o: Overloaded4) = string_plus(readVar(s1), unit(s2))
+  def infix_+(s1: Rep[Any], s2: Rep[String])(implicit o: Overloaded3) = string_plus(s1, s2)
+  def infix_+(s1: Var[Any], s2: Rep[String])(implicit o: Overloaded4) = string_plus(readVar(s1), s2)
+  def infix_+(s1: String, s2: Rep[Any])(implicit o: Overloaded4) = string_plus(unit(s1), s2)
 
   def infix_trim(s: Rep[String]) = string_trim(s)
   def infix_split(s: Rep[String], separators: Rep[String]) = string_split(s, separators)

@@ -90,6 +90,12 @@ trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
       stream.println(quote(getBlockResult(y)))
       stream.println("}")
 
+    case e@Lambda2(fun, x1, x2, y) =>
+      stream.println("val " + quote(sym) + " = { (" + quote(x1) + ": " + x1.Type + ", " + quote(x2) + ": " + x2.Type + ") => ")
+      emitBlock(y)
+      stream.println(quote(getBlockResult(y)))
+      stream.println("}")
+
     case Apply(fun, arg) =>
       emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 
