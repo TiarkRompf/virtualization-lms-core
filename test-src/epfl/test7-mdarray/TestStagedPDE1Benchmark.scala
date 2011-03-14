@@ -24,6 +24,8 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
     val pde1 = new PDE1BenchmarkStaged with MDArrayBaseExp with IfThenElseExp
     val gol = new GameOfLifeStaged with MDArrayBaseExp with IfThenElseExp
 
+    performExperiment(pde1, pde1.testWithLoopExtraction(pde1.knownOnlyAtRuntime("matrix")), prefix + "with-loop-extraction")
+
     // PDE1 experiments
     performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime[Double]("matrix1"), 1), prefix + "range1-test")
     performExperiment(pde1, pde1.range2(pde1.knownOnlyAtRuntime[Double]("matrix2"), 1), prefix + "range2-test")

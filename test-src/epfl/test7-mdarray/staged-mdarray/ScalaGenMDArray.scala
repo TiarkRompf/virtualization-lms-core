@@ -13,21 +13,14 @@ trait BaseGenMDArray extends GenericNestedCodegen {
   import IR._
 
   override def syms(e: Any): List[Sym[Any]] = e match {
-    case WithNode(iv, expr) if shallow => syms(iv) // in shallow mode, don't count deps from nested blocks
-    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) if shallow => syms(wExpr):::syms(neutral):::syms(foldTerm1):::syms(foldTerm2)
     case _ => super.syms(e)
   }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case WithNode(iv, expr) => effectSyms(expr)
+    case WithNode(iv, expr) => syms(iv)
+    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) => syms(foldTerm1):::syms(foldTerm2)
     case _ => super.boundSyms(e)
   }
-
-//  override def getFreeVarNode(rhs: Def[Any]): List[Sym[Any]] = rhs match {
-//    case WithNode(iv, expr) => getFreeVarBlock(iv,Nil) ::: getFreeVarBlock(expr,Nil)
-//    // TODO: Check whether this is correct:
-//    case _ => super.getFreeVarNode(rhs)
-//  }
 }
 
 
@@ -429,7 +422,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     case false => None
   }
 
-  // the emitSource in ScalaCodeGen is not exactly what we need - we need to select the parameters on my own
+  // the emitSource in ScalaCodeGen is not exactly what we need - we need to select the parameters on our own
   def emitSource(expr: Exp[Any], className: String)(implicit stream: PrintWriter): Unit = {
 
     // Do typing!

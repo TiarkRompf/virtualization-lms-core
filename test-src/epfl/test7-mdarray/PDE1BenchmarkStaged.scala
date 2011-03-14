@@ -14,6 +14,10 @@ trait PDE1BenchmarkStaged { this: MDArrayBase with IfThenElse =>
   type MDArrayInt  = Rep[MDArray[Int]]
   type Dbl         = Rep[MDArray[Double]]
 
+  def testWithLoopExtraction(matrix: MDArrayInt): MDArrayInt = {
+    With(function = iv => sel(iv, matrix * 3 - matrix)).GenArray(shape(matrix))
+  }
+
   def range1(matrix: MDArrayDbl, iterations: Int): MDArrayDbl = PDE1impl(matrix, Relax1, iterations)
   def range2(matrix: MDArrayDbl, iterations: Int): MDArrayDbl = PDE1impl(matrix, Relax2, iterations)
   def range3(matrix: MDArrayDbl, iterations: Int): MDArrayDbl = PDE1impl(matrix, Relax3, iterations)
