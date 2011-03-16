@@ -98,8 +98,8 @@ trait MDArrayBase extends Base with util.OverloadHack {
                            val width: Rep[MDArray[Int]],
                            val function: Rep[MDArray[Int]] => Rep[MDArray[A]]) {
 
-    def GenArray(shp: Rep[MDArray[Int]]): Rep[MDArray[A]] = genArrayWith(fillShape(shp)::Nil, shp)
-    def ModArray(a: Rep[MDArray[A]]): Rep[MDArray[A]] = modArrayWith(fillShape(shape(a))::Nil, a)
+    def GenArray(shp: Rep[MDArray[Int]]): Rep[MDArray[A]] = genArrayWith(fillShape(shp), shp)
+    def ModArray(a: Rep[MDArray[A]]): Rep[MDArray[A]] = modArrayWith(fillShape(shape(a)), a)
     def Fold(foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]]): Rep[MDArray[A]] = foldArrayWith(fillShapeForFold(), foldFunction, neutral)
 
     // This function will fill in the values correctly on construction :)
@@ -175,8 +175,8 @@ trait MDArrayBase extends Base with util.OverloadHack {
   def uop[A, B](a:Rep[MDArray[A]])(op: A => B, opName: String)(implicit mfA: Manifest[A], mfB: Manifest[B]): Rep[MDArray[B]]
 
   // With-comprehensions
-  def genArrayWith[A: Manifest](l: List[With[A]], shp: Rep[MDArray[Int]]): Rep[MDArray[A]]
-  def modArrayWith[A: Manifest](l: List[With[A]], a: Rep[MDArray[A]]): Rep[MDArray[A]]
+  def genArrayWith[A: Manifest](w: With[A], shp: Rep[MDArray[Int]]): Rep[MDArray[A]]
+  def modArrayWith[A: Manifest](w: With[A], a: Rep[MDArray[A]]): Rep[MDArray[A]]
   def foldArrayWith[A: Manifest](w: With[A], foldFunction: (Rep[MDArray[A]], Rep[MDArray[A]]) => Rep[MDArray[A]], neutral: Rep[MDArray[A]]): Rep[MDArray[A]]
 
   // Function wrapping for scalar elements to mdarrays

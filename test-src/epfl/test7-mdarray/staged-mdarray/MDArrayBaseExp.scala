@@ -27,14 +27,14 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   case class ToValue[A: Manifest](value: Exp[MDArray[A]]) extends Def[A] { override def toString() = "ToValue(" + value.toString + ")" }
 
   // With
-  case class IndexVector(lb: Exp[MDArray[Int]], lbStrict: Exp[Boolean], ub: Exp[MDArray[Int]], ubStrict: Exp[Boolean], step: Exp[MDArray[Int]], width: Exp[MDArray[Int]]) extends Def[MDArray[Int]] { override def toString() = "IndexVector(" + lb + ", " + lbStrict + ", " + ub + ", " + ubStrict + ", " + step + ", " + width + ")" }
-  case class WithNode[A: Manifest](iv: Exp[MDArray[Int]], expr: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "With(" + iv.toString + " => " + expr.toString + ")" }
+  case class WithNode[A: Manifest](lb: Exp[MDArray[Int]], lbStrict: Exp[Boolean], ub: Exp[MDArray[Int]], ubStrict: Exp[Boolean], step: Exp[MDArray[Int]], width: Exp[MDArray[Int]], sym: Sym[MDArray[Int]], expr: Exp[MDArray[A]]) extends Def[MDArray[A]] {
+    override def toString() = "With(lb=" + lb.toString + " lbStrict=" + lbStrict.toString + " ubStict=" + ubStrict.toString + " ub=" + ub.toString + " step=" + step.toString + " width=" + width.toString + "  " + sym.toString + " => " + expr.toString + ")"
+  }
   case class GenArrayWith[A: Manifest](lExpr: List[Exp[MDArray[A]]], shp: Exp[MDArray[Int]]) extends Def[MDArray[A]] { override def toString() = "GenArrayWith(" + shp.toString + " - " + lExpr.mkString(", ") + ")" }
   case class ModArrayWith[A: Manifest](lExpr: List[Exp[MDArray[A]]], a: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "ModArrayWith(" + a.toString + " - " + lExpr.mkString(", ") + ")" }
-  // TODO: Important implicit assumption made here -- we assume foldFunction has no outside dependencies. According to the SAC spec, it should indeed be the case, but proving it would be better
-  // TODO: Decide if this way of expressing the foldFunction eliminates the "no external dependencies" problem -- maybe this should be checked explicitly
-  case class FoldTerm[A: Manifest](like: Exp[MDArray[A]], id: Int) extends Def[MDArray[A]] { override def toString() = "FoldTerm(" + id + ") like " + like.toString }
-  case class FoldArrayWith[A: Manifest](wExpr: Exp[MDArray[A]], neutral: Exp[MDArray[A]], foldTerm1: Exp[MDArray[A]], foldTerm2: Exp[MDArray[A]], foldExpression: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "FoldArrayWith(" + neutral + ", fold (" + foldTerm1 + ", " + foldTerm2 + ") => " + foldExpression + ", " + wExpr + ")" }
+  // note:     Important implicit assumption made here -- we assume foldFunction has no outside dependencies. According to the SAC spec, it should indeed be the case, but proving it would be better
+  // response: It's the programmer's responsibility to ensure the fold function is associative and has no outside dependencies
+  case class FoldArrayWith[A: Manifest](wExpr: Exp[MDArray[A]], neutral: Exp[MDArray[A]], foldTerm1: Sym[MDArray[A]], foldTerm2: Sym[MDArray[A]], foldExpression: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "FoldArrayWith(" + neutral + ", fold (" + foldTerm1 + ", " + foldTerm2 + ") => " + foldExpression + ", " + wExpr + ")" }
 
   // Base functions
   case class ToDim[A: Manifest](a: Exp[MDArray[A]]) extends Def[Int] { override def toString() = "Dim(" + a + ")" }
@@ -137,22 +137,18 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
     UnaryOp(a, op, opName)
   def reduce[A](z: Exp[MDArray[A]], a: Exp[MDArray[A]], op: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], opName: String)(implicit mfA: Manifest[A]): Exp[MDArray[A]] =
     With[A](lb = zeros(dim(a)), lbStrict = false, ubStrict = true, ub = shape(a), function = (iv) => sel(iv, a)).Fold(op, z)
-  // TODO: Eliminate Reduce completely
-  //  Reduce(z, a, op(ReduceMember[B], ReduceMember[A]), opName)
 
   // With-comprehensions
   def toWithNode[A: Manifest](withObject: With[A]): Exp[MDArray[A]] = {
-    val iv: Exp[MDArray[Int]] = IndexVector(withObject.lb, withObject.lbStrict, withObject.ub, withObject.ubStrict, withObject.step, withObject.width)
-    WithNode(iv, withObject.function(iv))
+    val sym: Sym[MDArray[Int]] = fresh[MDArray[Int]]
+    WithNode(withObject.lb, withObject.lbStrict, withObject.ub, withObject.ubStrict, withObject.step, withObject.width, sym, withObject.function(sym))
   }
 
-  def genArrayWith[A: Manifest](l: List[With[A]], shp: Exp[MDArray[Int]]): Exp[MDArray[A]] = GenArrayWith(l.map(w => toWithNode(w)), shp)
-  def modArrayWith[A: Manifest](l: List[With[A]], a: Exp[MDArray[A]]): Exp[MDArray[A]] = ModArrayWith(l.map(w => toWithNode(w)), a)
+  def genArrayWith[A: Manifest](w: With[A], shp: Exp[MDArray[Int]]): Exp[MDArray[A]] = GenArrayWith(toWithNode(w)::Nil, shp)
+  def modArrayWith[A: Manifest](w: With[A], a: Exp[MDArray[A]]): Exp[MDArray[A]] = ModArrayWith(toWithNode(w)::Nil, a)
   def foldArrayWith[A: Manifest](w: With[A], foldFunction: (Exp[MDArray[A]], Exp[MDArray[A]]) => Exp[MDArray[A]], neutral: Exp[MDArray[A]]): Exp[MDArray[A]] = {
-    val foldTerm1 = toAtom(FoldTerm[A](neutral, foldTermIndex))
-    foldTermIndex = foldTermIndex + 1
-    val foldTerm2 = toAtom(FoldTerm[A](neutral, foldTermIndex))
-    foldTermIndex = foldTermIndex + 2
+    val foldTerm1 = fresh[MDArray[A]]
+    val foldTerm2 = fresh[MDArray[A]]
     val foldExpression = foldFunction(foldTerm1, foldTerm2)
     FoldArrayWith(toWithNode(w), neutral, foldTerm1, foldTerm2, foldExpression)
   }

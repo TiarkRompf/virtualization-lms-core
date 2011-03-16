@@ -45,7 +45,9 @@ trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
   def doTyping(result: Any, debug: Boolean = false): (Map[Int, TypingVariable], Map[Int, TypingVariable], Map[Int, List[(TypingConstraint, TypingConstraint)]]) = {
 
     // 1. Gather constraints
-    val constraints: List[TypingConstraint] = createTypingConstraints(result)
+    val constraintResult = createTypingConstraints(result)
+    val constraints: List[TypingConstraint] = constraintResult._1
+    val ids: List[Int] = constraintResult._2
 
     // 2. Get the substitution list & the pre-requirement list
     val fullSubstitutions = computeSubstitutions(constraints, debug)
@@ -57,7 +59,6 @@ trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
     var runtimeCheckMap = new HashMap[Int, List[(TypingConstraint, TypingConstraint)]]
 
     // 4. Shapes and values checks
-    val ids = constraints.map(constr => getSymNumber(constr.node)).distinct
     for(id <- ids) {
       nodeShapeMap += new Pair(id, fullSubstitutions(ShapeVar(id)))
       nodeValueMap += new Pair(id, fullSubstitutions(ValueVar(id)))

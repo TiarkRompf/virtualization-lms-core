@@ -12,12 +12,6 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
 
   import IR._
 
-  def printTypingConstraints(r: Any): Unit = {
-    val constraints: List[TypingConstraint] = createTypingConstraints(r)
-    for (t: TypingConstraint <- constraints)
-      println(t)
-  }
-
   // XXX: These calls should never fail. If they fail it's better to fail quickly rather than hide the error
   def getSymNumber(e: Any): Int = e match {
     case c: Const[_] => c.id
@@ -25,10 +19,13 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
     case d: Def[_] => findDefinition(d).get.sym.id
   }
 
-  def getDefinition(e: Any): Any = e match {
-    case c: Const[_] => c
-    case s: Sym[_] => findDefinition(s).get.rhs
-    case d: Def[_] => d
+  def getDefinition(e: Any): Option[Any] = e match {
+    case c: Const[_] => Some(c)
+    case s: Sym[_] => findDefinition(s) match {
+      case Some(tp) => Some(tp.rhs)
+      case _ => None
+    }
+    case d: Def[_] => Some(d)
   }
 
   //TODO: This needs to be fixed
@@ -42,27 +39,35 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
   private implicit def getSymNumberExp(e: Exp[_]): Int = getSymNumber(e)
   private implicit def getSymNumberDef(d: Def[_]): Int = getSymNumber(d)
 
-  def createTypingConstraints(r: Any): List[TypingConstraint] = {
+  def createTypingConstraints(r: Any): Pair[List[TypingConstraint], List[Int]] = {
     val nodes = new HashSet[Any]()
     val nodeQueue: Queue[Any] = new Queue()
+    var nodeIds: List[Int] = Nil
     var constraints: List[TypingConstraint] = List()
 
     nodeQueue.enqueue(r)
 
     while (nodeQueue.length != 0) {
-      val node = getDefinition(nodeQueue.dequeue)
-      nodes.contains(node) match {
-        case true =>
-          ;
-        case false =>
-          nodes.add(node)
-          val constr = gatherConstraints(node)
-          constraints = constraints ::: constr._1
-          for (elt <- constr._2)
-            nodeQueue.enqueue(elt)
+      val queueNode = nodeQueue.dequeue
+      getDefinition(queueNode) match {
+        case Some(defNode) =>
+          nodes.contains(defNode) match {
+            case true =>
+              ;
+            case false =>
+              nodes.add(defNode)
+              nodeIds = getSymNumber(defNode)::nodeIds
+              val constr = gatherConstraints(defNode)
+              constraints = constraints ::: constr._1
+              for (elt <- constr._2)
+                nodeQueue.enqueue(elt)
+          }
+        case None =>
+          // we still need to add the element to the list, just to know we looked at it
+          nodeIds = getSymNumber(queueNode)::nodeIds
       }
     }
-    constraints
+    (constraints, nodeIds)
   }
 
   def gatherConstraints(node: Any): Pair[List[TypingConstraint], List[Exp[_]]] = {
@@ -85,11 +90,9 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
       case io: InfixOp[_, _] => infixOpConstraints(io)
       case uo: UnaryOp[_, _] => unaryOpConstraints(uo)
       case wh: Where[_] => whereConstraints(wh)
-      case iv: IndexVector => indexVectorConstraints(iv)
       case wn: WithNode[_] => withNodeConstraints(wn)
       case ga: GenArrayWith[_] => genArrayConstraints(ga)
       case ma: ModArrayWith[_] => modArrayConstraints(ma)
-      case ft: FoldTerm[_] => foldTermConstraints(ft)
       case fa: FoldArrayWith[_] => foldArrayConstraints(fa)
       // TODO: Do something like typing scopes here to account for the fact that both branches cannot be executed at the same time:
       /*
@@ -202,53 +205,47 @@ trait MDArrayTypingConstraints extends MDArrayTypingPrimitives {
      // TODO: Understand why wh.array1::wh.array2::wh.cond::Nil here produces a type mismatch
      List(wh.array1, wh.array2, wh.cond))
 
-  def indexVectorConstraints(iv: IndexVector): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(iv.lb), Lst(getNewUnknown::Nil), preReq, iv)::
-     Equality(ShapeVar(iv.ub), ShapeVar(iv.lb), preReq, iv)::
-     Equality(ShapeVar(iv.step), ShapeVar(iv.lb), preReq, iv)::
-     Equality(ShapeVar(iv.width), ShapeVar(iv.lb), preReq, iv)::
-     Equality(ShapeVar(iv), ShapeVar(iv.ub), postReq, iv)::Nil,
-     iv.lb::iv.lbStrict::iv.ub::iv.ubStrict::iv.step::iv.width::Nil)
-
   def withNodeConstraints(w: WithNode[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(w), ShapeVar(w.expr), postReq, w)::Nil,
-     w.expr::w.iv::Nil)
+    (LengthEqualityAeqB(ShapeVar(w.lb), Lst(getNewUnknown::Nil), preReq, w)::
+     Equality(ShapeVar(w.ub), ShapeVar(w.lb), preReq, w)::
+     Equality(ShapeVar(w.step), ShapeVar(w.lb), preReq, w)::
+     Equality(ShapeVar(w.width), ShapeVar(w.lb), preReq, w)::
+     Equality(ShapeVar(w.sym), ShapeVar(w.lb), postReq, w)::
+     Equality(ShapeVar(w), ShapeVar(w.expr), postReq, w)::Nil,
+     w.lb::w.lbStrict::w.ub::w.ubStrict::w.step::w.width::w.sym::w.expr::Nil)
 
   def recoverWithNode(e: Exp[MDArray[_]]): WithNode[_] =
-    getDefinition(e).asInstanceOf[WithNode[_]]
+    // this must always hold, else crash :)
+    getDefinition(e).get.asInstanceOf[WithNode[_]]
 
   def withNodeListConstraints(node: Any, withNodeList: List[Exp[MDArray[_]]]): List[TypingConstraint] = {
     val f = withNodeList(0) // first node
 
     // and map the rest of the nodes
-    withNodeList.tail.map(e => Equality(ShapeVar(getSymNumber(recoverWithNode(f).iv)), ShapeVar(getSymNumber(recoverWithNode(e).iv)), preReq, node)) :::
+    withNodeList.tail.map(e => Equality(ShapeVar(getSymNumber(recoverWithNode(f).lb)), ShapeVar(getSymNumber(recoverWithNode(e).lb)), preReq, node)) :::
     withNodeList.tail.map(e => Equality(ShapeVar(getSymNumber(f)), ShapeVar(getSymNumber(e)), preReq, node))
   }
 
   def genArrayConstraints(ga: GenArrayWith[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (withNodeListConstraints(ga, ga.lExpr):::
      Equality(ShapeVar(ga.shp), Lst(getNewUnknown::Nil), preReq, ga)::
-     Equality(ShapeVar(ga.shp), ShapeVar(getSymNumber(recoverWithNode(ga.lExpr.head).iv)), preReq, ga)::
+     Equality(ShapeVar(ga.shp), ShapeVar(getSymNumber(recoverWithNode(ga.lExpr.head).lb)), preReq, ga)::
      EqualityAeqBcatC(ShapeVar(ga), ValueVar(ga.shp), ShapeVar(getSymNumber(ga.lExpr.head)), postReq, ga)::Nil,
      ga.shp::ga.lExpr)
 
   def modArrayConstraints(ma: ModArrayWith[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (withNodeListConstraints(ma, ma.lExpr) :::
      ma.lExpr.flatMap(wn =>
-       PrefixLt(ShapeVar(ma.a), ValueVar(getSymNumber(recoverWithNode(wn).iv)), ShapeVar(getSymNumber(wn)), preReq, ma) ::
-       SuffixEq(ShapeVar(ma.a), ValueVar(getSymNumber(recoverWithNode(wn).iv)), ShapeVar(getSymNumber(wn)), preReq, ma) :: Nil
+       PrefixLt(ShapeVar(ma.a), ValueVar(getSymNumber(recoverWithNode(wn).lb)), ShapeVar(getSymNumber(wn)), preReq, ma) ::
+       SuffixEq(ShapeVar(ma.a), ValueVar(getSymNumber(recoverWithNode(wn).lb)), ShapeVar(getSymNumber(wn)), preReq, ma) :: Nil
      ) :::
      Equality(ShapeVar(ma), ShapeVar(ma.a), postReq, ma)::Nil,
      ma.a::ma.lExpr)
 
-  def foldTermConstraints(ft: FoldTerm[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
-    (Equality(ShapeVar(ft), ShapeVar(ft.like), preReq, ft)::Nil,
-     ft.like::Nil)
-
   def foldArrayConstraints(fa: FoldArrayWith[_]): Pair[List[TypingConstraint], List[Exp[_]]] =
     (Equality(ShapeVar(fa.neutral), ShapeVar(fa.wExpr), preReq, fa)::
-     Equality(ShapeVar(fa.foldTerm1), ShapeVar(fa.wExpr), preReq, fa):: // for consistency
-     Equality(ShapeVar(fa.foldTerm2), ShapeVar(fa.wExpr), preReq, fa):: // for consistency
+     Equality(ShapeVar(fa.foldTerm1), ShapeVar(fa.neutral), postReq, fa)::
+     Equality(ShapeVar(fa.foldTerm2), ShapeVar(fa.neutral), postReq, fa)::
      Equality(ShapeVar(fa.foldExpression), ShapeVar(fa.wExpr), preReq, fa)::
      Equality(ShapeVar(fa), ShapeVar(fa.neutral), postReq, fa)::Nil,
      List(fa.neutral, fa.wExpr, fa.foldTerm1, fa.foldTerm2, fa.foldExpression))

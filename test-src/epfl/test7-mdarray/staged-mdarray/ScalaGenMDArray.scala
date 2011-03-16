@@ -13,11 +13,14 @@ trait BaseGenMDArray extends GenericNestedCodegen {
   import IR._
 
   override def syms(e: Any): List[Sym[Any]] = e match {
+    case GenArrayWith(lExpr, shape) if shallow => syms(shape)
+    case ModArrayWith(lExpr, array) if shallow => syms(array)
+    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) if shallow => syms(neutral):::syms(foldTerm1):::syms(foldTerm2):::syms(foldExpression)
     case _ => super.syms(e)
   }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case WithNode(iv, expr) => syms(iv)
+    case WithNode(lb, lbStrict, ub, ubStrict, step, width, sym, expr) => syms(sym)
     case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) => syms(foldTerm1):::syms(foldTerm2)
     case _ => super.boundSyms(e)
   }
@@ -104,6 +107,10 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
   override val IR: MDArrayBaseExp
   import IR._
 
+  // This function stores the action of the innermost with loop
+  var withLoopAction: (String, String)=>Unit = (a, b)=> {}
+
+
   def emitSymDecl(sym: Sym[Any], stripped: Boolean = false, debug: Boolean = false)(implicit stream: PrintWriter) = {
 
     // emit the debug info: shape, value and others
@@ -139,7 +146,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
   // This makes it easy to get the elements we need
   def findAndCast[T](e: Any): Option[T] = e match {
     case s: Sym[_] => findAndCast[T](findDefinition(s).get.rhs)
-    case d: Def[_] => Some(d.asInstanceOf[T]) // hopefully it's the correct type
+    case d: Def[_] => Some(d.asInstanceOf[T]) // hopefully it matches
     case _ => None
   }
 
@@ -168,12 +175,19 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     stream.println("val opName: String = \"genarray\"")
     stream.println("var result: Array[" + stripMDArray(sym.typeManifest).get + "] = null")
     stream.println("var rshape: Array[Int] = null")
+
+    val savedLoopAction = withLoopAction
+    withLoopAction = emitGenArrayAction
+
     for (withNode <- wl)
+      emitBlock(withNode)
       // Let this fail quickly if it's not a WithNode
-      emitWithLoopModifier(withNode.asInstanceOf[Sym[_]], findAndCast[WithNode[_]](withNode).get, emitGenArrayAction)
+      //emitWithLoopModifier(withNode.asInstanceOf[Sym[_]], findAndCast[WithNode[_]](withNode).get, emitGenArrayAction)
 
     stream.println("internalReshape(" + quote(shpSym) + " ::: rshape.toList, result, opName)")
     stream.println("}")
+
+    withLoopAction = savedLoopAction
   }
 
   def emitModArray[A](sym: Sym[_], wl: List[Exp[MDArray[A]]], array: Exp[MDArray[A]])(implicit stream: PrintWriter) = {
@@ -202,9 +216,15 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     stream.println("}")
     stream.println("var rshape: List[Int] = null")
 
+    val savedLoopAction = withLoopAction
+    withLoopAction = emitModArrayAction
+
     for (withNode <- wl)
+      emitBlock(withNode)
       // Let this fail quickly if it's not a WithNode
-      emitWithLoopModifier(withNode.asInstanceOf[Sym[_]], findAndCast[WithNode[_]](withNode).get, emitModArrayAction)
+      //emitWithLoopModifier(withNode.asInstanceOf[Sym[_]], findAndCast[WithNode[_]](withNode).get, emitModArrayAction)
+
+    withLoopAction = savedLoopAction
 
     stream.println("internalReshape(shape(" + quote(arraySym) + ") ::: rshape.toList, result, opName)")
     stream.println("}")
@@ -225,13 +245,21 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     stream.println("{")
     stream.println("val opName: String = \"fold\"")
     stream.println("var result: " + neutralSym.typeManifest.toString + " = " + quote(neutralSym))
+    // Emit the fold expression
     stream.println("val foldFunction: (" + neutralSym.typeManifest.toString + ", " + neutralSym.typeManifest.toString
       + ") => " + neutralSym.typeManifest.toString + " = (" + quote(foldTerm1Sym) + ", " + quote(foldTerm2Sym) + ") => {")
     emitBlock(foldExprSym)
     stream.println(quote(getBlockResult(foldExprSym)))
     stream.println("}")
+
+    // Emit the loop action
+    val savedLoopAction = withLoopAction
+    withLoopAction = emitFoldArrayAction
+    emitBlock(withNode)
+    withLoopAction = savedLoopAction
     // inside the with loop
-    emitWithLoopModifier(withNode.asInstanceOf[Sym[_]], findAndCast[WithNode[_]](withNode).get, emitFoldArrayAction)
+    //emitWithLoopModifier(withNode.asInstanceOf[Sym[_]], findAndCast[WithNode[_]](withNode).get, emitFoldArrayAction)
+
     stream.println("result")
     stream.println("}")
   }
@@ -240,30 +268,25 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     // emit existing constraints
     stream.println("// with: " + withLoop.toString)
     emitRuntimeChecks(withNodeSym)
-    stream.println("// index vector")
-    emitRuntimeChecks(withLoop.iv.asInstanceOf[Sym[_]])
-
-    val iv: IndexVector = findAndCast[IndexVector](withLoop.iv).get // fail fast
-    val ivSym: Sym[_] = findDefinition(iv).get.sym
 
     // emit actual with loop
-    getValueLength(ivSym) match {
+    getValueLength(withLoop.lb) match {
       case Some(l) =>
         // emit loop
         for (index <- List.range(0, l)) {
-          stream.println("val lb" + index + ": Int = " + quote(iv.lb) + ".content()(" + index + ")")
-          stream.println("val ub" + index + ": Int = " + quote(iv.ub) + ".content()(" + index + ")")
-          stream.println("val step" + index + ": Int = " + quote(iv.step) + ".content()(" + index + ")")
-          stream.println("val width" + index + ": Int = " + quote(iv.width) + ".content()(" + index + ")")
-          stream.println("val ll" + index + ": Int = if (" + quote(iv.lbStrict) + ") lb" + index + " + 1 else lb" + index + "")
-          stream.println("val ul" + index + ": Int = if (" + quote(iv.ubStrict) + ") ub" + index + " else ub" + index + " + 1")
+          stream.println("val lb" + index + ": Int = " + quote(withLoop.lb) + ".content()(" + index + ")")
+          stream.println("val ub" + index + ": Int = " + quote(withLoop.ub) + ".content()(" + index + ")")
+          stream.println("val step" + index + ": Int = " + quote(withLoop.step) + ".content()(" + index + ")")
+          stream.println("val width" + index + ": Int = " + quote(withLoop.width) + ".content()(" + index + ")")
+          stream.println("val ll" + index + ": Int = if (" + quote(withLoop.lbStrict) + ") lb" + index + " + 1 else lb" + index + "")
+          stream.println("val ul" + index + ": Int = if (" + quote(withLoop.ubStrict) + ") ub" + index + " else ub" + index + " + 1")
           stream.println("for (iv" + index + " <- List.range(ll" + index + ", ul" + index + ")) {")
           stream.println("if ((iv" + index + " - lb" + index + ") % step" + index + " <= width" + index + ") {")
         }
         // emit loop content
-        stream.print("val " + quote(withLoop.iv) + ": " + getType(ivSym) + " = ")
+        stream.print("val " + quote(withLoop.sym) + ": " + getType(withLoop.sym) + " = ")
         stream.println(List.range(0, l).map(i => "iv" + i).mkString("", "::","::Nil"))
-        stream.println("val iv: " + getType(ivSym) + " = " + quote(withLoop.iv))
+        stream.println("val iv: " + getType(withLoop.sym) + " = " + quote(withLoop.sym))
         stream.println("val feval: " + getType(withNodeSym) + " = {")
         emitBlock(withLoop.expr)
         stream.println(quote(getBlockResult(withLoop.expr)))
@@ -278,10 +301,10 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
         }
       case _ =>
         // emit loop
-        stream.println("for (iv <- iterateWithStep(_lb=" + quote(iv.lb) + ", lbStrict=" + quote(iv.lbStrict) + ", ubStrict=" + quote(iv.ubStrict) + ", _ub=" + quote(iv.ub) + ", step=" + quote(iv.step) + ", width=" + quote(iv.width) + ", opName=opName) {")
+        stream.println("for (iv <- iterateWithStep(_lb=" + quote(withLoop.lb) + ", lbStrict=" + quote(withLoop.lbStrict) + ", ubStrict=" + quote(withLoop.ubStrict) + ", _ub=" + quote(withLoop.ub) + ", step=" + quote(withLoop.step) + ", width=" + quote(withLoop.width) + ", opName=opName)) {")
         // emit loop content
-        stream.println("val " + quote(withLoop.iv) + ": " + getType(ivSym) + " = iv")
-        stream.println("val feval: " + getType(ivSym) + " = {")
+        stream.println("val " + quote(withLoop.sym) + ": " + getType(withLoop.sym) + " = iv")
+        stream.println("val feval: " + getType(withLoop.expr.asInstanceOf[Sym[_]]) + " = {")
         emitBlock(withLoop.expr)
         stream.println(quote(getBlockResult(withLoop.expr)))
         stream.println("}")
@@ -390,10 +413,8 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
       stream.println("result(i) = " + quote(va.value))
       stream.println("internalReshape(" + quote(va.dim) + "::Nil, result, \"values\")")
       stream.println("}")
-    case in: IndexVector =>
-      ; // nothing at this point
     case wn: WithNode[_] =>
-      ; // nothing at this point
+      emitWithLoopModifier(sym, wn, withLoopAction)
     case ga: GenArrayWith[_] =>
       stream.println
       emitGenArray(sym, ga.lExpr, ga.shp)
@@ -402,8 +423,6 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
       stream.println
       emitModArray(sym, ma.lExpr, ma.a)
       stream.println
-    case ft: FoldTerm[_] =>
-      ; // nothing to generate at this point
     case fa: FoldArrayWith[_] =>
       stream.println
       emitFoldArray(sym, fa.wExpr, fa.neutral, fa.foldTerm1, fa.foldTerm2, fa.foldExpression)
