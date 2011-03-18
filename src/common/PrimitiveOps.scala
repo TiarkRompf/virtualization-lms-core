@@ -60,6 +60,10 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
     def parseInt(s: Rep[String]) = obj_integer_parse_int(s)
   }
 
+  object Int {
+    def MaxValue = obj_int_max_value
+  }
+
   implicit def intToIntOps(n: Int) = new IntOpsCls(n)
   implicit def repIntToIntOps(n: Rep[Int]) = new IntOpsCls(n)
   implicit def varIntToIntOps(n: Var[Int]) = new IntOpsCls(readVar(n))
@@ -77,6 +81,7 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
   def infix_|(lhs: Rep[Int], rhs: Rep[Int]) = int_binaryor(lhs, rhs)
 
   def obj_integer_parse_int(s: Rep[String]): Rep[Int]
+  def obj_int_max_value: Rep[Int]
   def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A]): Rep[A]
   def int_divide(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
   def int_mod(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
@@ -107,6 +112,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
    * Int
    */
   case class ObjIntegerParseInt(s: Exp[String]) extends Def[Int]
+  case class ObjIntMaxValue() extends Def[Int]
   case class IntDivideFrac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) extends Def[A]
   case class IntDivide(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntMod(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
@@ -115,6 +121,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class IntDoubleValue(lhs: Exp[Int]) extends Def[Double]
 
   def obj_integer_parse_int(s: Rep[String]) = ObjIntegerParseInt(s)
+  def obj_int_max_value = ObjIntMaxValue()
   def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) : Exp[A] = IntDivideFrac(lhs, rhs)
   def int_divide(lhs: Exp[Int], rhs: Exp[Int]) : Exp[Int] = IntDivide(lhs, rhs)
   def int_mod(lhs: Exp[Int], rhs: Exp[Int]) = IntMod(lhs, rhs)
@@ -134,6 +141,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case DoubleFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
     case DoubleToString(lhs) => emitValDef(sym, quote(lhs) + ".toString()")
     case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")
+    case ObjIntMaxValue() => emitValDef(sym, "scala.Int.MaxValue")
     case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
