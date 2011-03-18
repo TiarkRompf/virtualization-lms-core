@@ -8,13 +8,18 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
   val IR: Expressions with Effects with FatExpressions
   import IR._  
   
-  case class Combine(a: List[Exp[Any]]) extends Exp[Any]
-
-  // these are needed by loop fusion. they should live elsewhere.
+  //  ------------------- these are needed by loop fusion. they should live elsewhere.
   def unapplySimpleIndex(e: Def[Any]): Option[(Exp[Any], Exp[Int])] = None
+  def unapplySimpleDomain(e: Def[Int]): Option[Exp[Any]] = None
   def unapplySimpleCollect(e: Def[Any]): Option[Exp[Any]] = None
+  def unapplySimpleCollectIf(e: Def[Any]): Option[(Exp[Any],List[Exp[Boolean]])] = unapplySimpleCollect(e).map((_,Nil))
+
+  def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]): Def[Any] = sys.error("not implemented")
+
   def shouldApplyFusion(currentScope: List[TTP])(result: Exp[Any]): Boolean = true
 
+  // -------------------
+  
 
   override def emitBlockFocused(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
     var currentScope = innerScope.map(fatten)
@@ -121,6 +126,9 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     case ThinDef(a) => emitNode(sym(0), a)
     case _ => sys.error("don't know how to generate code for: "+rhs)
   }
+
+
+  case class Combine(a: List[Exp[Any]]) extends Exp[Any]
 
   def emitFatBlock(rhs: List[Exp[Any]])(implicit stream: PrintWriter): Unit = {
     emitBlock(Combine(rhs))

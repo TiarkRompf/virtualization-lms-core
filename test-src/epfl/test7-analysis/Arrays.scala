@@ -14,6 +14,9 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 trait ArrayLoops extends Loops with OverloadHack {
   def array(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Array[Double]]
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] // TODO: make reduce operation configurable!
+  def arrayIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Array[Double]]
+  def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] // TODO: make reduce operation configurable!
+  def flatten(shape: Rep[Int])(f: Rep[Int] => Rep[Array[Double]]): Rep[Array[Double]]
 
   def infix_at(a: Rep[Array[Double]], i: Rep[Int]): Rep[Double]
   def infix_length(a: Rep[Array[Double]]): Rep[Int]
@@ -25,7 +28,13 @@ trait ArrayLoopsExp extends LoopsExp {
   case class ArrayElem(y: Exp[Double]) extends Def[Array[Double]]
   case class ReduceElem(y: Exp[Double]) extends Def[Double]
 
+  case class ArrayIfElem(c: Exp[Boolean], y: Exp[Double]) extends Def[Array[Double]]
+  case class ReduceIfElem(c: Exp[Boolean], y: Exp[Double]) extends Def[Double]
+
+  case class FlattenElem(y: Exp[Array[Double]]) extends Def[Array[Double]]
+
   case class ArrayIndex(a: Rep[Array[Double]], i: Rep[Int]) extends Def[Double]  
+  case class ArrayLength(a: Rep[Array[Double]]) extends Def[Int]
   
   def array(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Array[Double]] = {
     val x = fresh[Int]
@@ -39,11 +48,30 @@ trait ArrayLoopsExp extends LoopsExp {
     SimpleLoop(shape, x, ReduceElem(y))
   }
 
+  def arrayIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Array[Double]] = {
+    val x = fresh[Int]
+    val (c,y) = f(x)
+    SimpleLoop(shape, x, ArrayIfElem(c,y)) // TODO: simplify for const true/false
+  }
+
+  def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] = {
+    val x = fresh[Int]
+    val (c,y) = f(x)
+    SimpleLoop(shape, x, ReduceIfElem(c,y)) // TODO: simplify for const true/false
+  }
+
+  def flatten(shape: Rep[Int])(f: Rep[Int] => Rep[Array[Double]]): Rep[Array[Double]] = {
+    val x = fresh[Int]
+    val y = f(x)
+    SimpleLoop(shape, x, FlattenElem(y))
+  }
+
+
   def infix_at(a: Rep[Array[Double]], i: Rep[Int]): Rep[Double] = ArrayIndex(a, i)
 
   def infix_length(a: Rep[Array[Double]]): Rep[Int] = a match {
-    case Def(SimpleLoop(s, x, y)) => s
-    // TODO!
+    case Def(SimpleLoop(s, x, ArrayElem(y))) => s
+    case _ => ArrayLength(a)
   }
 
 }
@@ -60,6 +88,7 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case ArrayElem(y) => effectSyms(y)
     case ReduceElem(y) => effectSyms(y)
+    case FlattenElem(y) => effectSyms(y)
     case _ => super.boundSyms(e)
   }
 
@@ -74,13 +103,21 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")
+    // TODO: conditional variants ...
+    case SimpleLoop(s,x,FlattenElem(y)) =>  
+      stream.println("val " + quote(sym) + " = LoopFlatten("+quote(s)+") {" + quote(x) + " => ")
+      emitBlock(y)
+      stream.println(quote(getBlockResult(y)))
+      stream.println("}")
     case ArrayIndex(a,i) =>  
-      emitValDef(sym, quote(a) + " at " + quote(i) + "")
+      emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
+    case ArrayLength(a) =>  
+      emitValDef(sym, quote(a) + ".length")
     case _ => super.emitNode(sym, rhs)
   }
 }
 
-trait ScalaGenArrayLoopsFat extends ScalaGenLoopsFat {
+trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
   val IR: ArrayLoopsFatExp
   import IR._
   
@@ -92,6 +129,12 @@ trait ScalaGenArrayLoopsFat extends ScalaGenLoopsFat {
             stream.println("var " + quote(l) + " = new Array[]("+quote(s)+")")
           case ReduceElem(y) =>
             stream.println("var " + quote(l) + " = 0")
+          case ArrayIfElem(c,y) =>
+            stream.println("var " + quote(l) + " = new ArrayBuilder[]")
+          case ReduceIfElem(c,y) =>
+            stream.println("var " + quote(l) + " = 0")
+          case FlattenElem(y) =>
+            stream.println("var " + quote(l) + " = new ArrayBuilder[]")
         }
       }
       val ii = x // was: x(i)
@@ -108,12 +151,18 @@ trait ScalaGenArrayLoopsFat extends ScalaGenLoopsFat {
             stream.println(quote(l) + "("+quote(ii)+") = " + quote(getBlockResult(y)))
           case ReduceElem(y) =>
             stream.println(quote(l) + " += " + quote(getBlockResult(y)))
+          case ArrayIfElem(c,y) =>
+            stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
+          case ReduceIfElem(c,y) =>
+            stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
+          case FlattenElem(y) =>
+            stream.println(quote(l) + " ++= " + quote(getBlockResult(y)))
         }
       }
 //      stream.println(quote(ii)+" += 1")
       stream.println("}")
     case _ => super.emitFatNode(sym, rhs)
-  }  
+  }
 }
 
 
