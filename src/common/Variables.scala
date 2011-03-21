@@ -71,10 +71,7 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
   //type Var[T] = Sym[T]
 
   // REMARK: Var[T] should (probably) be different from Rep[T] in Rep-world
-  // but in Exp-world the situation is less clear. Another thing is that in general,
-  // programs should live in Rep-world.
-  // Currently DeliteApplication extends DeliteOpsExp and therefore
-  // all DSL programs live in Exp-world.
+  // but in Exp-world the situation is less clear. 
 
   type Var[+T] = Variable[T]
 

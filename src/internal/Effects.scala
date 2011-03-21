@@ -48,8 +48,10 @@ trait Effects extends Expressions {
   def mayWrite(u: Summary, a: List[Sym[Any]]): Boolean = u.mayGlobal || a.exists(u.mayWrite contains _)
 
   def mustMutable(u: Summary): Boolean = u.resAlloc
-  def mustIdempotent(u: Summary): Boolean = u == Pure().copy(mayRead=u.mayRead, mstRead=u.mstRead) // only reads allowed
   def mustPure(u: Summary): Boolean = u == Pure()
+  def mustOnlyRead(u: Summary): Boolean = u == Pure().copy(mayRead=u.mayRead, mstRead=u.mstRead) // only reads allowed
+  def mustIdempotent(u: Summary): Boolean = mustOnlyRead(u) // currently only reads are treated as idempotent
+
 
 
   def infix_orElse(u: Summary, v: Summary) = new Summary(
@@ -96,7 +98,11 @@ trait Effects extends Expressions {
     case _ => Nil
   }
   
-  def getMutableInputs[A](d: Def[A]): List[Sym[Any]] = readSyms(d) filter { case Def(Reflect(_, u, _)) => mustMutable(u) case _ => false }
+  def aliasSyms(e: Any): List[Sym[Any]] = readSyms(e) // conservative default 
+  
+  def mayAliasSomethingMutable(s: Sym[Any]) = s match { case Def(Reflect(_, u, _)) => mustMutable(u) case _ => false } // TODO: should be transitive via aliasSyms!!
+  
+  def getMutableInputs[A](d: Def[A]): List[Sym[Any]] = readSyms(d) filter (mayAliasSomethingMutable(_))
 
   // --- reflect
 
@@ -191,13 +197,15 @@ trait Effects extends Expressions {
     u
   }
 
+  def pruneContext(ctx: List[Exp[Any]]): List[Exp[Any]] = ctx // TODO this doesn't work yet (because of loops!): filterNot { case Def(Reflect(_,u,_)) => mustOnlyRead(u) }
+
   def reifyEffects[A:Manifest](block: => Exp[A]): Exp[A] = {
     val save = context
     context = Nil
     
     val result = block
     val summary = summarizeAll(context)
-    val resultR = if (context.isEmpty) result else Reify(result, summary, context): Exp[A] // calls toAtom...
+    val resultR = if (context.isEmpty) result else Reify(result, summary, pruneContext(context)): Exp[A] // calls toAtom...
     context = save
     resultR
   }
@@ -215,7 +223,7 @@ trait Effects extends Expressions {
     val deps = if (save eq null) context else context.drop(save.length)
     
     val summary = summarizeAll(deps)
-    val resultR = if (deps.isEmpty) result else Reify(result, summary, deps): Exp[A] // calls toAtom...
+    val resultR = if (deps.isEmpty) result else Reify(result, summary, pruneContext(deps)): Exp[A] // calls toAtom...
     context = save
     resultR
   }

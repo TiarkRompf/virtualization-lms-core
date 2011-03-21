@@ -83,7 +83,7 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println("val " + quote(sym) + " = " + rhs) // + "        //" + sym.Type.debugInfo)
   }
   def emitVarDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println("var " + quote(sym) + " = " + rhs)
+    stream.println("var " + quote(sym) + ": " + remap(sym.Type) + " = " + rhs)
   }
   def emitAssignment(lhs: String, rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(lhs + " = " + rhs)
