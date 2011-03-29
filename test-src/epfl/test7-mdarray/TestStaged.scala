@@ -14,7 +14,7 @@ import java.io.{FileWriter, PrintWriter}
 To run only this test use:
 sbt 'test-only scala.virtualization.lms.epfl.test7.TestStagedPDE1Benchmark'
 */
-class TestStagedPDE1Benchmark extends FileDiffSuite {
+class TestStaged extends FileDiffSuite {
 
   val prefix = "test-out/epfl/test7-staged-"
   var typeFunction: Int => String = (i:Int) => ""
@@ -46,23 +46,20 @@ class TestStagedPDE1Benchmark extends FileDiffSuite {
   def performExperiment(pde1: MDArrayBaseExp with IfThenElseExp, expr: Any, fileName: String) {
 
     withOutFile(fileName + "-type-inference") {
-      val typing = new MDArrayTypingUnifier { val IR: pde1.type = pde1 }
       try {
-        val scheduleTypesRuntimeChecks = typing.doTyping(expr, true)
-        val shapes = scheduleTypesRuntimeChecks._1
-        val values = scheduleTypesRuntimeChecks._2
-        val runtimeChecks = scheduleTypesRuntimeChecks._3
+        val typing = new MDArrayTyping { val IR: pde1.type = pde1 }
+        typing.doTyping(expr, true)
 
         val export = new MDArrayGraphExport {
           val IR: pde1.type = pde1
-          override def emitTypingString(i: Int) = typing.getTypingString(i, shapes, values)
+          override def emitTypingString(i: Any) = typing.getTypingString(i)
         }
         export.emitDepGraph(expr.asInstanceOf[pde1.Exp[_]], fileName + "-dot", false)
       } catch {
         case e: Exception => println(e.printStackTrace)
         val export = new MDArrayGraphExport {
           val IR: pde1.type = pde1
-          override def emitTypingString(i: Int) = "<inference exception>"
+          override def emitTypingString(i: Any) = "<inference exception>"
         }
         export.emitDepGraph(expr.asInstanceOf[pde1.Exp[_]], fileName + "-dot", false)
       }

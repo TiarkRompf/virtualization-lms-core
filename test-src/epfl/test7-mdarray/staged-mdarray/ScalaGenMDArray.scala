@@ -9,6 +9,7 @@ import java.io.PrintWriter
 import collection.immutable.HashMap
 
 trait BaseGenMDArray extends GenericNestedCodegen {
+
   val IR: MDArrayBaseExp
   import IR._
 
@@ -29,73 +30,25 @@ trait BaseGenMDArray extends GenericNestedCodegen {
 
 
 
-trait TypedGenMDArray extends BaseGenMDArray with MDArrayTypingUnifier {
+trait TypedGenMDArray extends BaseGenMDArray {
 
   import IR.{Exp, Sym}
-
-  var shapes: Map[Int, TypingVariable] = new HashMap()
-  var values: Map[Int, TypingVariable] = new HashMap()
-  var runtimeChecks: Map[Int, List[(TypingConstraint, TypingConstraint)]] = new HashMap()
+  var typing: MDArrayTyping = null
 
   def performTyping(expr: Exp[Any]): Unit = {
-    val result = doTyping(expr)
-    shapes = result._1
-    values = result._2
-    runtimeChecks = result._3
+    val IR2 = IR // need to isolate IR from MDArrayTyping.IR
+    typing = new MDArrayTyping { val IR: IR2.type = IR2 }
+    typing.doTyping(expr, false)
   }
 
   def emitRuntimeChecks(expr: Sym[_], debug: Boolean = false)(implicit stream: PrintWriter): Unit = {
-    /*
-     * The logic here: as we generate runtime checks, we solve them and add the result to the other
-     * runtime checks, possibly eliminating them :)
-     */
-    // TODO: Implement the code generation for constraints
-    // TODO: Problem here: following the pureSubstitution, we have variables that don't necessarily respect scheduling
-    // Solution for pureSubstitution referencing variables -- make equivalence classes since this is a problem that
-    // only affects the Equality constraint. -- and from the equivalence class pick only the already scheduled symbols
-    // to reference
-    runtimeChecks.contains(expr.id) match {
-      case true =>
-        for (runtimeCheck <- runtimeChecks(expr.id)) {
-          // 0. Unpack pair
-          val originalConstraint = runtimeCheck._1
-          val pureSubstConstraint = runtimeCheck._2
-          // 1. Solve the runtime check
-          val unifyResult = unifyConstraint(pureSubstConstraint)
-          // 2. Do the correct operation
-          unifyResult match {
-            case (false, _) => // constraint could not be solved
-              stream.println("// " + quote(expr) + ": check    " + originalConstraint.toString + " [ not solvable ]")
-            case (true, Nil) => // constraint solved with no substitution => already checked previously
-              debug match {
-                case true => stream.println("// " + quote(expr) + ": identity " + originalConstraint.toString + " [ solved previously ]")
-                case _ => ;
-              }
-            case (true, substs) => // constraint solved with substitutions => check + apply substitutions
-              stream.println("// " + quote(expr) + ": check    " + originalConstraint.toString + " [ solved ]")
-              val substList = new SubstitutionList(substs)
-              runtimeChecks = runtimeChecks.map {
-                case (index, list) => (index, list.map {case (orig, modif) => (orig, substList(modif))})
-              }
-          }
-        }
-      case false =>
-        debug match {
-          case true =>
-            stream.println("// " + quote(expr) + ": no runtime checks")
-          case false =>
-            ;
-        }
-    }
+    // do nothing :)
   }
 
-  def getShapeLength(sym: Any) = getLength(shapes(sym.asInstanceOf[Sym[_]].id))
-  def getValueLength(sym: Any) = getLength(values(sym.asInstanceOf[Sym[_]].id))
-  def getShapeValue(sym: Any) = getValue(shapes(sym.asInstanceOf[Sym[_]].id))
-  def getValueValue(sym: Any) = getValue(values(sym.asInstanceOf[Sym[_]].id))
-
-  def emitShapeValue(sym: Sym[_])(implicit stream: PrintWriter): Unit =
-    stream.println("// " + quote(sym) + ": shape=" + shapes(sym.id) + "    value=" + values(sym.id))
+  def emitShapeValue(sym: Sym[_])(implicit stream: PrintWriter): Unit = {
+    ; // do nothing :)
+    //stream.println("// " + quote(sym) + ": shape=" + shapes(sym) + "    value=" + values(sym))
+  }
 }
 
 
@@ -104,7 +57,6 @@ trait TypedGenMDArray extends BaseGenMDArray with MDArrayTypingUnifier {
 // TODO: Why are code generators specific? Couldn't we write "ScalaGenMDArray { this: ScalaGenFat => ..." ?
 trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
 
-  override val IR: MDArrayBaseExp
   import IR._
 
   // This function stores the action of the innermost with loop
@@ -270,7 +222,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     emitRuntimeChecks(withNodeSym)
 
     // emit actual with loop
-    getValueLength(withLoop.lb) match {
+    typing.getValueLength(withLoop.lb) match {
       case Some(l) =>
         // emit loop
         for (index <- List.range(0, l)) {
@@ -354,7 +306,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
       stream.println("reshape(" + quote(rs.shp) + ", " + quote(rs.a) + ")")
     case sel: Sel[_] =>
       // Get rid of unnecessary boxing
-      getShapeLength(sym) match {
+      typing.getShapeLength(sym) match {
         case Some(0) =>
           emitSymDecl(sym, true)
           stream.println(quote(sel.a) + ".content()(flatten(shape(" + quote(sel.a) + "), " + quote(sel.iv) + ", \"sel\"))")
@@ -377,7 +329,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
       }
       emitSymDecl(sym)
       stream.println("{")
-      getShapeLength(in.array2) match {
+      typing.getShapeLength(in.array2) match {
         case Some(0) => // we have a scalar element
           emitOperation(true)
         case Some(_) => // we have an array

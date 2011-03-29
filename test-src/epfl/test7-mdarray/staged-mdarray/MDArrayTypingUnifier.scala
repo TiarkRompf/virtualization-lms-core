@@ -9,72 +9,7 @@ import original.Conversions._
 import collection.mutable.{Queue, HashSet}
 import collection.immutable.{ListSet, HashMap}
 
-trait MDArrayTypingUnifier extends MDArrayTypingConstraints {
-
-  import IR.{Exp, TP}
-
-  def getTypingString(index: Int, shapes: Map[Int, TypingVariable], values: Map[Int, TypingVariable]): String = {
-    val shapeVar: TypingVariable = ShapeVar(index)
-    val valueVar: TypingVariable = ValueVar(index)
-
-    val shapeVarValue: TypingVariable = shapes(index)
-    val valueVarValue: TypingVariable = values(index)
-
-    // need to limit the value size so we don't overcrowd the graph
-    var valueString = valueVarValue.toString
-    if (valueString.length > 40)
-      valueString = valueString.substring(0, 18) + " ... " + valueString.substring(valueString.length - 18)
-
-    (valueVar != valueVarValue, shapeVar != shapeVarValue) match {
-      case (true, true) => valueVar.toString + "=" + valueString + " and " + shapeVar.toString + "=" + shapeVarValue.toString
-      case (true, false) => valueVar.toString + "=" + valueString
-      case (false, true) => shapeVar.toString + "=" + shapeVarValue.toString
-      case (false, false) => "?!?"
-    }
-  }
-
-  /**
-   * Gather the constraints in a optimizer & code generator-friendly way
-   *
-   * The logic of the entire thing:
-   * 1. Do typing
-   * 2. Do optimization -- this will also alter typing!!!
-   * 3. Do scheduling
-   * 4. Do code generation, along with runtime check elimination
-   */
-  def doTyping(result: Any, debug: Boolean = false): (Map[Int, TypingVariable], Map[Int, TypingVariable], Map[Int, List[(TypingConstraint, TypingConstraint)]]) = {
-
-    // 1. Gather constraints
-    val constraintResult = createTypingConstraints(result)
-    val constraints: List[TypingConstraint] = constraintResult._1
-    val ids: List[Int] = constraintResult._2
-
-    // 2. Get the substitution list & the pre-requirement list
-    val fullSubstitutions = computeSubstitutions(constraints, debug)
-    val pureSubstitutions = computeSubstitutions(constraints.filterNot(constr => constr.prereq), debug)
-
-    // 3. Organize the substitution list
-    var nodeShapeMap = new HashMap[Int, TypingVariable]
-    var nodeValueMap = new HashMap[Int, TypingVariable]
-    var runtimeCheckMap = new HashMap[Int, List[(TypingConstraint, TypingConstraint)]]
-
-    // 4. Shapes and values checks
-    for(id <- ids) {
-      nodeShapeMap += new Pair(id, fullSubstitutions(ShapeVar(id)))
-      nodeValueMap += new Pair(id, fullSubstitutions(ValueVar(id)))
-    }
-
-    // 5. Runtime checks
-    for (runtimeCheck <- pureSubstitutions(constraints.filter(constr => constr.prereq))) {
-      val runtimeCheckList: List[(TypingConstraint, TypingConstraint)] = runtimeCheckMap.contains(getSymNumber(runtimeCheck.node)) match {
-        case true => runtimeCheckMap(getSymNumber(runtimeCheck.node))
-        case false => Nil
-      }
-      runtimeCheckMap += new Pair(getSymNumber(runtimeCheck.node), (runtimeCheck, pureSubstitutions(runtimeCheck)) :: runtimeCheckList)
-    }
-
-    (nodeShapeMap, nodeValueMap, runtimeCheckMap)
-  }
+trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
 
   /**
    *

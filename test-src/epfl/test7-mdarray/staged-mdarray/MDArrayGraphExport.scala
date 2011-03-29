@@ -9,10 +9,10 @@ trait MDArrayGraphExport extends GraphVizExport {
 
   import IR._
 
-  def emitTypingString(i: Int): String
+  def emitTypingString(i: Any): String
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
-    stream.println("label=" + quote(sym + " with " + emitTypingString(sym.id) + " \\n " + rhs))
+    stream.println("label=" + quote(sym + " with " + emitTypingString(sym) + " \\n " + rhs))
     stream.println("shape=box")
   }
 }

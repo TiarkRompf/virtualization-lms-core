@@ -11,7 +11,7 @@ import scala.util.Random
 To run only this test use:
 sbt 'test-only scala.virtualization.lms.epfl.test7.TestOriginalPDE1Benchmark'
 */
-class TestOriginalPDE1Benchmark extends FileDiffSuite {
+class TestOriginal extends FileDiffSuite {
 
   val prefix = "test-out/epfl/test7-original-"
 

@@ -34,6 +34,7 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   case class ModArrayWith[A: Manifest](lExpr: List[Exp[MDArray[A]]], a: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "ModArrayWith(" + a.toString + " - " + lExpr.mkString(", ") + ")" }
   // note:     Important implicit assumption made here -- we assume foldFunction has no outside dependencies. According to the SAC spec, it should indeed be the case, but proving it would be better
   // response: It's the programmer's responsibility to ensure the fold function is associative and has no outside dependencies
+  // TODO: When folding with loops, Fold will have to include intervals
   case class FoldArrayWith[A: Manifest](wExpr: Exp[MDArray[A]], neutral: Exp[MDArray[A]], foldTerm1: Sym[MDArray[A]], foldTerm2: Sym[MDArray[A]], foldExpression: Exp[MDArray[A]]) extends Def[MDArray[A]] { override def toString() = "FoldArrayWith(" + neutral + ", fold (" + foldTerm1 + ", " + foldTerm2 + ") => " + foldExpression + ", " + wExpr + ")" }
 
   // Base functions

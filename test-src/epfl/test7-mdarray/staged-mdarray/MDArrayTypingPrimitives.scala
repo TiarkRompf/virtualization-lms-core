@@ -11,15 +11,22 @@ import collection.mutable.HashSet
 
 trait MDArrayTypingPrimitives {
   var unknownIndex = 0
-  val IR: MDArrayBaseExp
+
   // Just to make the code look better :)
   val preReq: Boolean = true
   val postReq: Boolean = false
 
+  // Not yet specific
+  type Symbol
+  type Expression
+  def getId(s: Symbol): Int
+
   abstract class TypingVariable
   abstract class Var(name: String) extends TypingVariable { override def toString = name }
-  case class ShapeVar(i: Int) extends Var("S" + i)
-  case class ValueVar(i: Int) extends Var("V" + i)
+  case class ShapeVar(s: Symbol) extends Var("S" + getId(s))
+  case class ValueVar(s: Symbol) extends Var("V" + getId(s))
+  object ShapeVar { def apply(e: Expression)(implicit manifest: Manifest[Int]) = new ShapeVar(e.asInstanceOf[Symbol]) }
+  object ValueVar { def apply(e: Expression)(implicit manifest: Manifest[Int]) = new ValueVar(e.asInstanceOf[Symbol]) }
   case class Lst(list: List[TypingElement]) extends TypingVariable { override def toString = list.map(elt => elt.toString).mkString("[", "  ", "]") }
 
   abstract class TypingElement
