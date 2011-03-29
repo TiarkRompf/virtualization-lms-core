@@ -9,7 +9,7 @@ trait MDArrayGraphExport extends GraphVizExport {
 
   import IR._
 
-  def emitTypingString(i: Any): String
+  def emitTypingString(i: IR.Sym[_]): String
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     stream.println("label=" + quote(sym + " with " + emitTypingString(sym) + " \\n " + rhs))

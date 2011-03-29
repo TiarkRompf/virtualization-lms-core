@@ -75,13 +75,21 @@ trait MDArrayTypingPrimitives {
       "POST:   " + String.format("%-50s", body) + "     from " + constraint.node
   }
 
-  def makeUnknowns(size: Int): Lst = {
+  protected def getSymbols(element: Any): List[Symbol] = element match {
+    case ShapeVar(sym) => sym::Nil
+    case ValueVar(sym) => sym::Nil
+    case LengthOf(v) => getSymbols(v)
+    case p: Product => p.productIterator.toList.flatMap(getSymbols(_))
+    case _ => Nil
+  }
+
+  protected def makeUnknowns(size: Int): Lst = {
     var list:List[TypingElement] = Nil
     List.range(0, size).map(i => list = getNewUnknown :: list)
     Lst(list)
   }
 
-  def countUnknowns(l: Lst): Int = {
+  protected def countUnknowns(l: Lst): Int = {
     var unks = 0
     l.list.map(elt => elt match { case v:Value => ; case _ => unks = unks + 1 })
     unks
@@ -168,12 +176,12 @@ trait MDArrayTypingPrimitives {
     def length = substList.length
   }
 
-  def getLength(v: TypingVariable): Option[Int] = v match {
+  protected def getLength(v: TypingVariable): Option[Int] = v match {
     case l: Lst => Some(l.list.length)
     case _ => None
   }
 
-  def getValue(v: TypingVariable): Option[List[Int]] = v match {
+  protected def getValue(v: TypingVariable): Option[List[Int]] = v match {
     case l: Lst if (countUnknowns(l) == 0) => Some(l.list.map(elt => elt.asInstanceOf[Value].n))
     case _ => None
   }

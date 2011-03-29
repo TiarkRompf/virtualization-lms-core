@@ -45,28 +45,28 @@ class TestStaged extends FileDiffSuite {
 
   def performExperiment(pde1: MDArrayBaseExp with IfThenElseExp, expr: Any, fileName: String) {
 
+    val typing2 = new MDArrayTyping { val IR: pde1.type = pde1 }
+
     withOutFile(fileName + "-type-inference") {
       try {
-        val typing = new MDArrayTyping { val IR: pde1.type = pde1 }
-        typing.doTyping(expr, true)
-
+        typing2.doTyping(expr.asInstanceOf[pde1.Exp[_]], true)
         val export = new MDArrayGraphExport {
           val IR: pde1.type = pde1
-          override def emitTypingString(i: Any) = typing.getTypingString(i)
+          override def emitTypingString(i: pde1.Sym[_]) = typing2.getTypingString(i)
         }
         export.emitDepGraph(expr.asInstanceOf[pde1.Exp[_]], fileName + "-dot", false)
       } catch {
         case e: Exception => println(e.printStackTrace)
         val export = new MDArrayGraphExport {
           val IR: pde1.type = pde1
-          override def emitTypingString(i: Any) = "<inference exception>"
+          override def emitTypingString(i: pde1.Sym[_]) = "<inference exception>"
         }
         export.emitDepGraph(expr.asInstanceOf[pde1.Exp[_]], fileName + "-dot", false)
       }
 
       // Generate the corresponding code :)
       implicit val printWriter: PrintWriter = IndentWriter.getIndentPrintWriter(new FileWriter(fileName + "-code.scala"))
-      val scalaGen = new ScalaGenMDArray with ScalaGenIfThenElse { val IR: pde1.type = pde1 }
+      val scalaGen = new ScalaGenMDArray with ScalaGenIfThenElse { val IR: pde1.type = pde1; override val typing = typing2 }
       expr match {
         case e: pde1.Exp[_] => scalaGen.emitSource(e, "Experiment")
         case _ => printWriter.println("cannot generate code")

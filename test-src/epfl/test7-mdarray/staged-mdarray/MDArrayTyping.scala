@@ -26,9 +26,7 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
   /**
    * Gather the constraints in a optimizer & code generator-friendly way
    */
-  def doTyping(_result: Any, debug: Boolean = false): Unit = {
-
-    val result = _result.asInstanceOf[Sym[_]]
+  def doTyping(result: Exp[_], debug: Boolean = false): Unit = {
 
     (IR eq null) match {
       case true => sys.error("IR: " + IR)
@@ -39,6 +37,7 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
     constraints = Nil
     syms = Nil
     emitBlock(result)(new PrintWriter(System.err)) // shouldn't output anything
+    syms = constraints.flatMap(x => getSymbols(x)).distinct
 
     // 2. Get the substitution list & the pre-requirement list
     val fullSubstitutions = computeSubstitutions(constraints, debug)
@@ -55,11 +54,10 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
   }
 
 
-  def getTypingString(_sym: Any): String = {
-    val sym = _sym.asInstanceOf[Sym[_]]
+  def getTypingString(sym: Sym[_]): String = {
+
     val shapeVar: TypingVariable = ShapeVar(sym)
     val valueVar: TypingVariable = ValueVar(sym)
-
     val shapeVarValue: TypingVariable = shapes(sym)
     val valueVarValue: TypingVariable = values(sym)
 
@@ -72,7 +70,6 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
         ;
     }
 
-
     (valueVar != valueVarValue, shapeVar != shapeVarValue) match {
       case (true, true) => valueVar.toString + "=" + valueString + " and " + shapeVar.toString + "=" + shapeVarValue.toString
       case (true, false) => valueVar.toString + "=" + valueString
@@ -81,10 +78,10 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
     }
   }
 
-  def getShapeLength(sym: Any) = getLength(shapes(sym.asInstanceOf[Sym[_]]))
-  def getValueLength(sym: Any) = getLength(values(sym.asInstanceOf[Sym[_]]))
-  def getShapeValue(sym: Any) = getValue(shapes(sym.asInstanceOf[Sym[_]]))
-  def getValueValue(sym: Any) = getValue(values(sym.asInstanceOf[Sym[_]]))
+  def getShapeLength(sym: Exp[_]) = getLength(shapes(sym.asInstanceOf[Sym[_]]))
+  def getValueLength(sym: Exp[_]) = getLength(values(sym.asInstanceOf[Sym[_]]))
+  def getShapeValue(sym: Exp[_]) = getValue(shapes(sym.asInstanceOf[Sym[_]]))
+  def getValueValue(sym: Exp[_]) = getValue(values(sym.asInstanceOf[Sym[_]]))
 
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter): Unit = {
@@ -152,8 +149,6 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
         case WithNode(lb, lbStrict, ub, ubStrict, step, width, ivSym, expr) =>
           // emit the expression constraints
           emitBlock(expr)
-          // add the syms to their list
-          syms = ivSym::syms
           LengthEqualityAeqB(ShapeVar(lb), Lst(getNewUnknown::Nil), preReq, rhs)::
           // TODO: Enable the scalar condition for lbStrict and ubStrict
           // Equality(ShapeVar(lbStrict), Lst(Nil), preReq, rhs)::
@@ -187,8 +182,6 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
           // emit with loop and fold expression constraints
           emitBlock(withLoop)
           emitBlock(foldExpression)
-          // add the created syms to the list
-          syms = foldTerm1::foldTerm2::syms
           Equality(ShapeVar(neutral), ShapeVar(withLoop), preReq, rhs)::
           Equality(ShapeVar(foldTerm1), ShapeVar(neutral), postReq, rhs)::
           Equality(ShapeVar(foldTerm2), ShapeVar(neutral), postReq, rhs)::
@@ -207,7 +200,6 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
       })
     // now what do we do with these constraints?
     constraints = nodeConstraints ::: constraints
-    syms = sym :: syms
   }
 
   def toValue(i: Any): TypingElement = i match {

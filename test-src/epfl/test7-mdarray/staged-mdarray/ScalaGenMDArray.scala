@@ -6,7 +6,6 @@ import common._
 import internal._
 import original.MDArray
 import java.io.PrintWriter
-import collection.immutable.HashMap
 
 trait BaseGenMDArray extends GenericNestedCodegen {
 
@@ -32,14 +31,9 @@ trait BaseGenMDArray extends GenericNestedCodegen {
 
 trait TypedGenMDArray extends BaseGenMDArray {
 
+  val IR: typing.IR.type
+  val typing: MDArrayTyping
   import IR.{Exp, Sym}
-  var typing: MDArrayTyping = null
-
-  def performTyping(expr: Exp[Any]): Unit = {
-    val IR2 = IR // need to isolate IR from MDArrayTyping.IR
-    typing = new MDArrayTyping { val IR: IR2.type = IR2 }
-    typing.doTyping(expr, false)
-  }
 
   def emitRuntimeChecks(expr: Sym[_], debug: Boolean = false)(implicit stream: PrintWriter): Unit = {
     // do nothing :)
@@ -54,14 +48,12 @@ trait TypedGenMDArray extends BaseGenMDArray {
 
 
 
-// TODO: Why are code generators specific? Couldn't we write "ScalaGenMDArray { this: ScalaGenFat => ..." ?
 trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
 
   import IR._
 
   // This function stores the action of the innermost with loop
-  var withLoopAction: (String, String)=>Unit = (a, b)=> {}
-
+  var withLoopAction: (String, String)=>Unit = (a, b)=> { sys.error("No with loop action set!") }
 
   def emitSymDecl(sym: Sym[Any], stripped: Boolean = false, debug: Boolean = false)(implicit stream: PrintWriter) = {
 
@@ -386,7 +378,6 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
   }
 
   // TODO: Convert this back to if, but if is overridden now, so we can't use it
-  // TODO: Switch back to java.lang.Class comparison, string comparison is so middle ages :)
   def stripMDArray(typeManifest: Manifest[_]): Option[String] =
     ((typeManifest.erasure == classOf[MDArray[_]]) && (typeManifest.typeArguments.length == 1)) match {
     case true => Some(typeManifest.typeArguments.head.toString)
@@ -395,9 +386,6 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
 
   // the emitSource in ScalaCodeGen is not exactly what we need - we need to select the parameters on our own
   def emitSource(expr: Exp[Any], className: String)(implicit stream: PrintWriter): Unit = {
-
-    // Do typing!
-    performTyping(expr)
 
     // We need to build the AST and obtain the input values
     val allNodes: List[TP[Any]] = buildScheduleForResult(expr)
