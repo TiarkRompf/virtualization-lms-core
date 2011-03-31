@@ -12,28 +12,9 @@ import collection.immutable.{ListSet, HashMap}
 trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
 
   /**
-   *
    * There are two kinds of constraints:
    *  * PRE-requirements: In order to execute an operation, this requirement has to be satisfied
    *  * POST-requirements: After an operation is executed, this constraint must be satisfied
-   *
-   * The unification algorithm may leave constraints *unsatisfied* by a substitution *iff* there is no way to prove
-   * their satisfaction by other substitutions nor find the substitutions necessary to satisfy them. Therefore:
-   *
-   * 1. For each PRE constraint we solve, if the solution contains 1 or more substitutions we *must* add it as a runtime
-   * check.
-   * 2. For each POST constraint we solve, just add the substitution to the list
-   * 3. For each PRE constraint we don't solve, add the constraint to the runtime checks
-   * 4. For each POST constraint we don't solve, do nothing about it -- missed opportunity to get more shape info
-   *
-   * There's a special case for the PRE constraints: The substitutions obtained by solving PRE constraints only
-   * influence the PRE constraints scheduled after their execution. The explanation is: Say we have solved all POST
-   * constraints and only have two PRE constraints left: PRE1 and PRE2. If we solve PRE2, it renders PRE1 identity, so
-   * we only add PRE2 to the runtime checks. If PRE1 is scheduled before PRE2, PRE2 is not checked and therefore PRE1
-   * might not be satisfied, rendering a big hole in the execution correctness! Therefore we need to implement
-   * scheduling-aware substitution application!
-   *
-   * TODO: Decide how this interacts with FatDefs.
    */
   def computeSubstitutions(inConstraints: List[TypingConstraint], debug: Boolean): SubstitutionList = {
 
@@ -83,17 +64,7 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
         // 1. eliminate the constraint
         constraints = constraints.take(indexSuccessful) ::: constraints.drop(indexSuccessful + 1)
         // 2. apply the substitions on the rest of the constraints
-        // Here is *the* catch: we only apply SubstitutionList to pre constraints "after" the current pre constraint
-        constraints = constraints.map(constr =>
-          substitutions(constr)
-//        TODO: Decide if I'm going the right way with this...
-//          if ((constr.prereq == false) || (constrSuccessful.prereq == false))
-//            substitutions(constr)
-//          else // now, we have a pre constraint => if it's after the current one, don't alter!
-//            if (findIndex(constr.node, schedule) > findIndex(constrSuccessful.node, schedule))
-//              substitutions(constr)
-//            else
-//              constr
+        constraints = constraints.map(constr => substitutions(constr)
         )
       }
       else

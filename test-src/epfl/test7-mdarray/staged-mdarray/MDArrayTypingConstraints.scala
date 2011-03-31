@@ -10,78 +10,18 @@ import java.io.{Writer, PrintWriter}
 import collection.immutable.HashMap
 
 
-trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
+trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse with MDArrayTypingUnifier {
 
+  val IR: MDArrayBaseExp with IfThenElseExp
   import IR._
-
-  protected var constraints: List[TypingConstraint] = Nil
-  protected var syms: List[Sym[_]] = Nil
-  protected var shapes: Map[Sym[_], TypingVariable] = new HashMap[Sym[_], TypingVariable]
-  protected var values: Map[Sym[_], TypingVariable] = new HashMap[Sym[_], TypingVariable]
 
   override type Symbol = Sym[_]
   override type Expression = Exp[_]
   override def getId(s: Symbol): Int = s.id
 
-  /**
-   * Gather the constraints in a optimizer & code generator-friendly way
-   */
-  def doTyping(result: Exp[_], debug: Boolean = false): Unit = {
-
-    (IR eq null) match {
-      case true => sys.error("IR: " + IR)
-      case false => ;
-    }
-
-    // 1. Gather constraints
-    constraints = Nil
-    syms = Nil
-    emitBlock(result)(new PrintWriter(System.err)) // shouldn't output anything
-    syms = constraints.flatMap(x => getSymbols(x)).distinct
-
-    // 2. Get the substitution list & the pre-requirement list
-    val fullSubstitutions = computeSubstitutions(constraints, debug)
-    val pureSubstitutions = computeSubstitutions(constraints.filterNot(constr => constr.prereq), debug)
-
-    // 3. Shapes and values checks
-    for(sym <- syms) {
-      shapes += new Pair(sym, fullSubstitutions(ShapeVar(sym)))
-      values += new Pair(sym, fullSubstitutions(ValueVar(sym)))
-    }
-
-    // 4. Runtime check map
-    // empty for now, we'll add runtime checks as AST nodes :)
-  }
-
-
-  def getTypingString(sym: Sym[_]): String = {
-
-    val shapeVar: TypingVariable = ShapeVar(sym)
-    val valueVar: TypingVariable = ValueVar(sym)
-    val shapeVarValue: TypingVariable = shapes(sym)
-    val valueVarValue: TypingVariable = values(sym)
-
-    // need to limit the value size so we don't overcrowd the graph
-    var valueString = valueVarValue.toString
-    (valueString.length > 40) match {
-      case true =>
-        valueString = valueString.substring(0, 18) + " ... " + valueString.substring(valueString.length - 18)
-      case _ =>
-        ;
-    }
-
-    (valueVar != valueVarValue, shapeVar != shapeVarValue) match {
-      case (true, true) => valueVar.toString + "=" + valueString + " and " + shapeVar.toString + "=" + shapeVarValue.toString
-      case (true, false) => valueVar.toString + "=" + valueString
-      case (false, true) => shapeVar.toString + "=" + shapeVarValue.toString
-      case (false, false) => "?!?"
-    }
-  }
-
-  def getShapeLength(sym: Exp[_]) = getLength(shapes(sym.asInstanceOf[Sym[_]]))
-  def getValueLength(sym: Exp[_]) = getLength(values(sym.asInstanceOf[Sym[_]]))
-  def getShapeValue(sym: Exp[_]) = getValue(shapes(sym.asInstanceOf[Sym[_]]))
-  def getValueValue(sym: Exp[_]) = getValue(values(sym.asInstanceOf[Sym[_]]))
+  protected def addConstraints(tl: List[TypingConstraint]): Unit
+  protected def addSymbol(sym: Sym[_]): Unit
+  protected def createSubScope(sym: Sym[_])(action: => Unit): Unit
 
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter): Unit = {
@@ -149,6 +89,8 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
         case WithNode(lb, lbStrict, ub, ubStrict, step, width, ivSym, expr) =>
           // emit the expression constraints
           emitBlock(expr)
+          // add symbol
+          addSymbol(ivSym)
           LengthEqualityAeqB(ShapeVar(lb), Lst(getNewUnknown::Nil), preReq, rhs)::
           // TODO: Enable the scalar condition for lbStrict and ubStrict
           // Equality(ShapeVar(lbStrict), Lst(Nil), preReq, rhs)::
@@ -181,6 +123,9 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
         case FoldArrayWith(withLoop, neutral, foldTerm1, foldTerm2, foldExpression) =>
           // emit with loop and fold expression constraints
           emitBlock(withLoop)
+          // add symbols
+          addSymbol(foldTerm1)
+          addSymbol(foldTerm2)
           emitBlock(foldExpression)
           Equality(ShapeVar(neutral), ShapeVar(withLoop), preReq, rhs)::
           Equality(ShapeVar(foldTerm1), ShapeVar(neutral), postReq, rhs)::
@@ -188,9 +133,8 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
           Equality(ShapeVar(foldExpression), ShapeVar(withLoop), preReq, rhs)::
           Equality(ShapeVar(sym), ShapeVar(neutral), postReq, rhs)::Nil
         case IfThenElse(cond, thenp, elsep) =>
-          // TODO: Scoping here
-          emitBlock(thenp)
-          emitBlock(elsep)
+          createSubScope(thenp.asInstanceOf[Sym[_]]) { emitBlock(thenp) }
+          createSubScope(elsep.asInstanceOf[Sym[_]]) { emitBlock(elsep) }
           Equality(ShapeVar(cond), Lst(Nil), preReq, rhs)::
           CommonDenominator(ShapeVar(sym), ShapeVar(thenp), ShapeVar(elsep), postReq, rhs)::Nil
         case ScalarOperatorApplication(function, operator, operand1, operand2) =>
@@ -199,7 +143,8 @@ trait MDArrayTyping extends BaseGenMDArray with MDArrayTypingUnifier {
           Equality(ShapeVar(sym), Lst(Nil), postReq, rhs)::Nil
       })
     // now what do we do with these constraints?
-    constraints = nodeConstraints ::: constraints
+    addConstraints(nodeConstraints)
+    addSymbol(sym)
   }
 
   def toValue(i: Any): TypingElement = i match {

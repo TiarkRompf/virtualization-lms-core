@@ -32,7 +32,7 @@ trait BaseGenMDArray extends GenericNestedCodegen {
 trait TypedGenMDArray extends BaseGenMDArray {
 
   val IR: typing.IR.type
-  val typing: MDArrayTyping
+  val typing: MDArrayTypingWithScope
   import IR.{Exp, Sym}
 
   def emitRuntimeChecks(expr: Sym[_], debug: Boolean = false)(implicit stream: PrintWriter): Unit = {
