@@ -51,15 +51,20 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
   def var_new[T:Manifest](init: Rep[T]): Var[T]
   def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
   def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
+  def var_minusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
 
   def __assign[T:Manifest](lhs: Var[T], rhs: T) = var_assign(lhs, unit(rhs))
   def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_assign(lhs, rhs)
   def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_assign(lhs, readVar(rhs))
 
   // TODO: why doesn't this implicit kick in automatically? <--- do they belong here? maybe better move to NumericOps
+  // we really need to refactor this. +=/-= shouldn't be here or in Arith, but in some other type class, which includes Numeric variables
   def infix_+=[T:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs, unit(rhs))
   def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_plusequals(lhs,rhs)
   def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_plusequals(lhs,readVar(rhs))
+  def infix_-=[T:Manifest](lhs: Var[T], rhs: T) = var_minusequals(lhs, unit(rhs))
+  def infix_-=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_minusequals(lhs,rhs)
+  def infix_-=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_minusequals(lhs,readVar(rhs))
 }
 
 trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits with ReadVarImplicitExp {
@@ -100,7 +105,7 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
   case class NewVar[T:Manifest](init: Exp[T]) extends Def[T]
   case class Assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
   case class VarPlusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
-
+  case class VarMinusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
 
   def var_new[T:Manifest](init: Exp[T]): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
@@ -117,11 +122,17 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
     Const()
   }
 
+  def var_minusequals[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
+    reflectWrite(lhs.e)(VarMinusEquals(lhs, rhs))
+    Const()
+  }
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     case Reflect(NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a)), Alloc(), f(es)))
     case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))
     case Reflect(Assign(Variable(a),b), u, es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b)), mapOver(f,u), f(es)))
     case Reflect(VarPlusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))
+    case Reflect(VarMinusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarMinusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -138,6 +149,7 @@ trait ScalaGenVariables extends ScalaGenEffect {
     case Assign(Variable(a), b) => emitAssignment(quote(a), quote(getBlockResult(b)))
     //case Assign(a, b) => emitAssignment(quote(a), quote(b))
     case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(getBlockResult(b)))
+    case VarMinusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(getBlockResult(b)))
     case _ => super.emitNode(sym, rhs)
   }
 }
