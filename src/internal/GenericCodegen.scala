@@ -40,12 +40,6 @@ trait GenericCodegen extends Scheduling {
 
   // ----------
 
-  val verbosity = System.getProperty("codegen.verbosity","0").toInt
-  def printdbg(x: =>Any) = if (verbosity >= 2) println(x)
-  def printlog(x: =>Any) = if (verbosity >= 1) println(x)
-    
-
-
   def emitBlock(y: Exp[Any])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
     

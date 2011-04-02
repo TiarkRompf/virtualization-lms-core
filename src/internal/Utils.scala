@@ -1,7 +1,13 @@
 package scala.virtualization.lms
 package internal
 
+import Config._
+
   // TODO: add logging, etc.
 trait Utils {  
   def __ = throw new RuntimeException("unsupported embedded dsl operation")
+
+  def printdbg(x: =>Any) { if (verbosity >= 2) println(x) }
+  def printlog(x: =>Any) { if (verbosity >= 1) println(x) }
+  def printerr(x: =>Any) { println(x) }
 }

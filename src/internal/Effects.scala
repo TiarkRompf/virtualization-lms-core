@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package internal
 
-trait Effects extends Expressions {
+trait Effects extends Expressions with Utils {
   
   // --- misc
   def effectSyms(x: Exp[Any]): List[Sym[Any]] = x match {  //TODO: move to scheduling/codegen?
@@ -143,9 +143,9 @@ trait Effects extends Expressions {
       if (mustIdempotent(u)) {
         findDefinition(zd) map (_.sym) filter (context contains _) getOrElse { // local cse
           val z = fresh[A]
-          println("promoting to effect: " + z + "=" + zd)
+          printlog("promoting to effect: " + z + "=" + zd)
           for (w <- u.mayRead)
-            println("depends on  " + w)
+            printlog("depends on  " + w)
           internalReflect(z, zd)
         }
       } else {
@@ -155,8 +155,8 @@ trait Effects extends Expressions {
           findDefinition(w) match {
             case Some(TP(_, Reflect(_, u, _))) if mustMutable(u) => // ok
             case o => 
-              println("error: write to non-mutable " + o)
-              println("at " + z + "=" + zd)
+              printerr("error: write to non-mutable " + o)
+              printerr("at " + z + "=" + zd)
           }
         }
         internalReflect(z, zd)
@@ -218,7 +218,7 @@ trait Effects extends Expressions {
     val result = block
 
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
-      println("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
+      printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
 
     val deps = if (save eq null) context else context.drop(save.length)
     

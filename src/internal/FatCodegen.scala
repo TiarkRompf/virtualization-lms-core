@@ -62,30 +62,30 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
         val actual = levelScope.filter(_.lhs exists (effects contains _))
         if (effects != actual.flatMap(_.lhs)) {
           val expected = effects.map(d=>fatten(findDefinition(d.asInstanceOf[Sym[Any]]).get))
-          println("error: violated ordering of effects")
-          println("  expected:")
-          expected.foreach(d => println("    "+d))
-          println("  actual:")
-          actual.foreach(d => println("    "+d))
+          printerr("error: violated ordering of effects")
+          printerr("  expected:")
+          expected.foreach(d => printerr("    "+d))
+          printerr("  actual:")
+          actual.foreach(d => printerr("    "+d))
           // stuff going missing because of stray dependencies is the most likely cause 
           // so let's print some debugging hints
-          println("  missing:")
+          printerr("  missing:")
           val missing = expected filterNot (actual contains _)
           if (missing.isEmpty)
-            println("  note: there is nothing missing so the different order might in fact be ok (artifact of new effect handling? TODO)")          
+            printerr("  note: there is nothing missing so the different order might in fact be ok (artifact of new effect handling? TODO)")
           missing.foreach { d => 
             val inDeep = e1 contains d
             val inShallow = e2 contains d
             val inDep = g1 contains d
-            println("    "+d+" <-- inDeep: "+inDeep+", inShallow: "+inShallow+", inDep: "+inDep)
+            printerr("    "+d+" <-- inDeep: "+inDeep+", inShallow: "+inShallow+", inDep: "+inDep)
             if (inDep) e1 foreach { z =>
               val b = boundSyms(z.rhs)
               if (b.isEmpty) "" else {
                 val g2 = getFatDependentStuff(currentScope)(b)
                 if (g2 contains d) {
-                  println("    depends on " + z + " (bound: "+b+")")
+                  printerr("    depends on " + z + " (bound: "+b+")")
                   val path = getFatSchedule(g2)(d)
-                  for (p <- path) println("      "+p)
+                  for (p <- path) printerr("      "+p)
                 }
               }
             }
@@ -110,7 +110,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
       case e => 
         val z = innerScope.filter(e.lhs contains _.sym)
         if (z.length != e.lhs.length)
-          println("TROUBLE: couldn't get syms " + e.lhs + ", found only " + z)
+          printerr("TROUBLE: couldn't get syms " + e.lhs + ", found only " + z)
         z
     }
 
