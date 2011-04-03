@@ -43,14 +43,12 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
 
   class DoubleOpsCls(lhs: Rep[Double]){
     def floatValue() = double_float_value(lhs)
-    def toStringL() = double_tostring(lhs)
   }
 
   def obj_double_parse_double(s: Rep[String]): Rep[Double]
   def obj_double_positive_infinity: Rep[Double]
   def obj_double_min_value: Rep[Double]
   def double_float_value(lhs: Rep[Double]): Rep[Float]
-  def double_tostring(lhs: Rep[Double]): Rep[String]
 
   /**
    * Int
@@ -100,13 +98,11 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class ObjDoublePositiveInfinity() extends Def[Double]
   case class ObjDoubleMinValue() extends Def[Double]
   case class DoubleFloatValue(lhs: Exp[Double]) extends Def[Float]
-  case class DoubleToString(lhs: Exp[Double]) extends Def[String]
 
   def obj_double_parse_double(s: Exp[String]) = ObjDoubleParseDouble(s)
   def obj_double_positive_infinity = ObjDoublePositiveInfinity()
   def obj_double_min_value = ObjDoubleMinValue()
   def double_float_value(lhs: Exp[Double]) = DoubleFloatValue(lhs)
-  def double_tostring(lhs: Exp[Double]) = DoubleToString(lhs)
 
   /**
    * Int
@@ -139,7 +135,6 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case ObjDoublePositiveInfinity() => emitValDef(sym, "scala.Double.PositiveInfinity")
     case ObjDoubleMinValue() => emitValDef(sym, "scala.Double.MinValue")
     case DoubleFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
-    case DoubleToString(lhs) => emitValDef(sym, quote(lhs) + ".toString()")
     case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")
     case ObjIntMaxValue() => emitValDef(sym, "scala.Int.MaxValue")
     case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))

@@ -27,7 +27,7 @@ trait StringOps extends Variables with OverloadHack {
   def infix_split(s: Rep[String], separators: Rep[String]) = string_split(s, separators)
 
   object String {
-    def valueOfL(a: Rep[Any]) = string_valueof(a)
+    def valueOf(a: Rep[Any]) = string_valueof(a)
   }
 
   def string_plus(s: Rep[Any], o: Rep[Any]): Rep[String]
