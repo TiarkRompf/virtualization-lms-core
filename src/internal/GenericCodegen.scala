@@ -89,6 +89,9 @@ trait GenericNestedCodegen extends GenericCodegen {
 
 
   def focusBlock[A](result: Exp[Any])(body: => A): A = {
+    val initDef = initialDefs
+    val availDef = availableDefs
+
 //    val saveOuter = outerScope
 //    val saveLevel = levelScope
     val saveInner = innerScope
@@ -96,12 +99,21 @@ trait GenericNestedCodegen extends GenericCodegen {
 //    outerScope = outerScope ::: levelScope
 //    levelScope = Nil
     innerScope = buildScheduleForResult(result) // deep list of deps
-    
-    val rval = body
+
+    var rval = null.asInstanceOf[A]
+    try {
+      rval = body
+    }
+    catch {
+      case e => throw e
+    }
+    finally {
+      innerScope = saveInner
+    }
     
 //    outerScope = saveOuter
 //    levelScope = saveLevel
-    innerScope = saveInner
+//    innerScope = saveInner
     
     rval
   }

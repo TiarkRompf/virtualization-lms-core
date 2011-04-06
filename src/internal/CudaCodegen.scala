@@ -5,7 +5,7 @@ import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
 import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
 
-trait CudaCodegen extends CLikeCodegen with GenericCodegen {
+trait CudaCodegen extends CLikeCodegen {
   val IR: Expressions
   import IR._
 
