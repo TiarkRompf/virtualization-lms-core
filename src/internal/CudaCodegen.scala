@@ -167,14 +167,14 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
      // TODO: Need to cleanup some data structures
   }
 
-  override def generatorInit(build_dir:String): Unit = {
-    // FileWriter for helper functions(TODO: Change to get from Config)
-    //val outDir = new File(buildPath); outDir.mkdirs()
-	  helperFuncIdx = 0
+  override def generatorInit(buildDir:String): Unit = {
+    val outDir = new File(buildDir)
+    outDir.mkdirs
+    helperFuncIdx = 0
     helperFuncString = new StringBuilder
-    hstream = new PrintWriter(new FileWriter(build_dir + "helperFuncs.cu"))
-    devStream = new PrintWriter(new FileWriter(build_dir+"devFuncs.cu"))
-    headerStream = new PrintWriter(new FileWriter(build_dir + "dsl.h"))
+    hstream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cu"))
+    devStream = new PrintWriter(new FileWriter(buildDir+"devFuncs.cu"))
+    headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.h"))
     headerStream.println("#include \"helperFuncs.cu\"")
     headerStream.println("#include \"devFuncs.cu\"")
 
@@ -185,10 +185,10 @@ trait CudaCodegen extends CLikeCodegen with GenericCodegen {
     hstream.print("#include <cublas.h>\n\n")
     hstream.print("#include <jni.h>\n\n")
     hstream.print("//Delite Runtime APIs\n")
-    hstream.print("extern void DeliteCudaMallocHost(void **ptr, int size);\n")
-    hstream.print("extern void DeliteCudaMalloc(void **ptr, int size);\n")
-    hstream.print("extern void DeliteCudaMemcpyHtoDAsync(void *dptr, void *sptr, int size);\n")
-    hstream.print("extern void DeliteCudaMemcpyDtoHAsync(void *dptr, void *sptr, int size);\n")
+    hstream.print("extern void DeliteCudaMallocHost(void **ptr, size_t size);\n")
+    hstream.print("extern void DeliteCudaMalloc(void **ptr, size_t size);\n")
+    hstream.print("extern void DeliteCudaMemcpyHtoDAsync(void *dptr, void *sptr, size_t size);\n")
+    hstream.print("extern void DeliteCudaMemcpyDtoHAsync(void *dptr, void *sptr, size_t size);\n")
     hstream.print("typedef jboolean jbool;\n")              // TODO: Fix this
     hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
   }

@@ -18,7 +18,7 @@ trait GenericCodegen extends Scheduling {
   def generatorInit(build_dir:String): Unit = {}
   def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
 
-  def emitDataStructures(): Unit = {}
+  def emitDataStructures(path: String): Unit = {}
   
   // exception handler
   def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
