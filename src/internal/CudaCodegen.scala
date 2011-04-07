@@ -4,6 +4,7 @@ package internal
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
 import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
+import collection.immutable.List._
 
 trait CudaCodegen extends CLikeCodegen {
   val IR: Expressions
@@ -49,19 +50,19 @@ trait CudaCodegen extends CLikeCodegen {
     case 1 => throw new RuntimeException("CudaGen: Cannot get previous dimension string when the dimension is 1.")
     case 2 => "idxX"
     //case 3 => "idxY"
-    case _ => throw new GenerationFailedException("CudaGen: Maximum 2 dimensions for GPU kernels.")
+    case _ => throw new GenerationFailedException("CudaGen: Maximum 1 dimensions for GPU kernels.")
   }
   def getNextDimStr():String = currDim match {
     case 0 => "idxX"
-    case 1 => throw new RuntimeException("CudaGen: Cannot get next dimension string when the dimension is 1.")
-    case _ => throw new GenerationFailedException("CudaGen: Maximum 2 dimensions for GPU kernels.")
+    //case 1 => throw new RuntimeException("CudaGen: Cannot get next dimension string when the dimension is 1.")
+    case _ => throw new GenerationFailedException("CudaGen: Maximum 1 dimensions for GPU kernels.")
   }
   def setCurrDimLength(length: String) {
     currDim match {
       case 0 => throw new RuntimeException("CudaGen: Cannot set dimension length when the dimension is 0.")
       case 1 => xDimList += length
-      case 2 => yDimList += length
-      case _ => throw new GenerationFailedException("CudaGen: Maximum 2 dimensions for GPU kernels.")
+      //case 2 => yDimList += length
+      case _ => throw new GenerationFailedException("CudaGen: Maximum 1 dimensions for GPU kernels.")
     }
   }
   val multDimInputs = ListBuffer[Sym[Any]]()
@@ -175,6 +176,7 @@ trait CudaCodegen extends CLikeCodegen {
     hstream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cu"))
     devStream = new PrintWriter(new FileWriter(buildDir+"devFuncs.cu"))
     headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.h"))
+    headerStream.println("#include \"CudaArrayList.h\"")
     headerStream.println("#include \"helperFuncs.cu\"")
     headerStream.println("#include \"devFuncs.cu\"")
 
@@ -230,8 +232,11 @@ trait CudaCodegen extends CLikeCodegen {
     //gpuTempsStr = ""
   }
 
+  /****************************************
+   *  Methods for managing GPUable Types
+   *  **************************************/
 
-  // Map scala primitive type to JNI type descriptor
+  // Map a scala primitive type to JNI type descriptor
   def JNITypeDescriptor[A](m: Manifest[A]) : String = m.toString match {
     case "Int" => "I"
     case "Long" => "J"
@@ -241,56 +246,89 @@ trait CudaCodegen extends CLikeCodegen {
     case _ => throw new GenerationFailedException("Undefined CUDA type")
   }
 
-  def isObjectType[A](m: Manifest[A]) : Boolean = remap(m) match {
-    case "int" => false
-    case "long" => false
-    case "float" => false
-    case "double" => false
-    case "bool" => false
-    case "void" => false
-    case _ => throw new GenerationFailedException("CudaGen: isObjectType(m) : Unknown data type (%s)".format(remap(m)))
+  def isObjectType[A](m: Manifest[A]) : Boolean = {
+    m.toString match {
+      case "scala.collection.immutable.List[Int]" => true
+      case _ => false
+    }
   }
 
-  def isPrimitiveType[A](m: Manifest[A]) : Boolean = remap(m) match {
-    case "int" => true
-    case "long" => true
-    case "float" => true
-    case "double" => true
-    case "bool" => true
-    case _ => false
+  def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
+    m.toString match {
+      case "Int" | "Long" | "Float" | "Double" | "Boolean"  => true
+      case _ => false
+    }
   }
 
-  def isVoidType[A](m: Manifest[A]) : Boolean = remap(m) match {
-    case "void" => true
-    case _ => false
+  def isVoidType[A](m: Manifest[A]) : Boolean = {
+    m.toString match {
+      case "Unit" => true
+      case _ => false
+    }
   }
 
-  override def remap[A](m: Manifest[A]) : String = m.toString match {
-    case "Int" => "int"
-    case "Long" => "long"
-    case "Float" => "float"
-    case "Double" => "double"
-    case "Boolean" => "bool"
-    case "Unit" => "void"
-    case _ => throw new GenerationFailedException("CudaGen: remap(m) : Unknown data type (%s)".format(m.toString))
+  // Check the type and generate Exception if the type is not GPUable
+  def checkGPUableType[A](m: Manifest[A]) : Unit = {
+    if(!isGPUableType(m))
+      throw new GenerationFailedException("CudaGen: Type %s is not a GPUable Type.".format(m.toString))
   }
 
-  def copyDataStructureHtoD(sym: Sym[Any]) : String = {
-    throw new GenerationFailedException("CudaGen: copyDataStructureHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.Type)))
+  // All the types supported by CUDA Generation
+  def isGPUableType[A](m : Manifest[A]) : Boolean = {
+    if(!isObjectType(m) && !isPrimitiveType(m) && !isVoidType(m))
+      false
+    else
+      true
   }
 
-  def copyDataStructureDtoH(sym: Sym[Any]) : String = {
-    throw new GenerationFailedException("CudaGen: copyDataStructureDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+  override def remap[A](m: Manifest[A]) : String = {
+    checkGPUableType(m)
+    m.toString match {
+        case "Int" => "int"
+        case "Long" => "long"
+        case "Float" => "float"
+        case "Double" => "double"
+        case "Boolean" => "bool"
+        case "Unit" => "void"
+        case "scala.collection.immutable.List[Int]" => "CudaArrayList<int>"  //TODO: Use C++ list
+        case _ => throw new Exception("CudaGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
+    }
   }
 
-  def copyDataStructureDtoHBack(sym: Sym[Any]) : String = {
-    throw new GenerationFailedException("CudaGen: copyDataStructureDtoHBack(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+  // TODO: Handle general C datastructure
+  def copyInputHtoD(sym: Sym[Any]) : String = {
+    checkGPUableType(sym.Type)
+    remap(sym.Type) match {
+      case "CudaArrayList<int>" => {
+        val out = new StringBuilder
+        out.append("\t%s *%s = new %s();\n".format(remap(sym.Type),quote(sym),remap(sym.Type)))
+        out.append("\treturn %s;\n".format(quote(sym)))
+        out.toString
+      }
+      case _ => throw new Exception("CudaGen: copyInputHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.Type)))
+    }
   }
 
+  def copyOutputDtoH(sym: Sym[Any]) : String = {
+    checkGPUableType(sym.Type)
+    remap(sym.Type) match {
+      case "CudaArrayList<int>" => "\t//TODO: Implement this!\n"
+      case _ => throw new Exception("CudaGen: copyOutputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+    }
+  }
+
+  def copyMutableInputDtoH(sym: Sym[Any]) : String = {
+    checkGPUableType(sym.Type)
+    remap(sym.Type) match {
+      case "CudaArrayList<int>" => "\t//TODO: Implement this!\n"
+      case _ => throw new Exception("CudaGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+    }
+  }
+
+  //TODO: Remove below methods
   def allocOutput(newSym: Sym[_], sym: Sym[_], reset: Boolean = false) : Unit = {
     throw new GenerationFailedException("CudaGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
   }
-
   def allocReference(newSym: Sym[Any], sym: Sym[Any]) : Unit = {
     throw new GenerationFailedException("CudaGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
   }
@@ -361,9 +399,9 @@ trait CudaCodegen extends CLikeCodegen {
     out.append("__global__ void kernel_%s(%s) {\n".format(quote(sym), paramStr))
     out.append(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
     out.append(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;\n")
-	for(in <- multDimInputs) {
-		out.append(addTab()+positionMultDimInputs(in))
-	}
+    for(in <- multDimInputs) {
+      out.append(addTab()+positionMultDimInputs(in))
+    }
     stream.print(out.toString)
   }
 
@@ -377,8 +415,8 @@ trait CudaCodegen extends CLikeCodegen {
 
     // Emit input copy helper functions for object type inputs
     for(v <- vals) {
-      helperFuncString.append(emitCopyHtoD(v, sym))
-      helperFuncString.append(emitCopyDtoHBack(v, sym))
+      helperFuncString.append(emitCopyInputHtoD(v, sym))
+      helperFuncString.append(emitCopyMutableInputDtoH(v, sym))
     }
 
     // Emit kerenl size calculation helper functions
@@ -389,10 +427,10 @@ trait CudaCodegen extends CLikeCodegen {
     hstream.flush
 
     // Print out dsl.h file
-	if(!kernelsList.contains(sym)) {
+	  if(!kernelsList.contains(sym)) {
     	headerStream.println("#include \"%s.cu\"".format(quote(sym)))
-		kernelsList += sym
-	}
+		  kernelsList += sym
+	  }
     headerStream.flush
 
     // Print out device function
@@ -402,50 +440,80 @@ trait CudaCodegen extends CLikeCodegen {
 
   /*******************************************************
    * Methods below are for emitting helper functions
-   * TODO: Needs to be moved to some place else
-   * TODO: Factor out common framework functionality
    *******************************************************/
+  // TODO: Change the metadata function names
 
-  // Generate allocation & copy functions for the DSL Type inputs (Host -> Device)
-  def emitCopyHtoD(sym: Sym[Any], ksym: Sym[Any]) : String = {
+  // For object type inputs, allocate GPU memory and copy from CPU to GPU.
+  def emitCopyInputHtoD(sym: Sym[Any], ksym: Sym[Any]) : String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
-	  helperFuncIdx += 1
-      out.append("%s *gpuMemAllocAndCopy_%s_%s_%s(%s) {\n".format(remap(sym.Type), quote(ksym), quote(sym),helperFuncIdx, "JNIEnv *env , jobject obj"))
-      // Create C data structure and Copy from Scala to C
-      out.append(copyDataStructureHtoD(sym))
+	    helperFuncIdx += 1
+      out.append("%s *copyInputHtoD_%s_%s_%s(%s) {\n".format(remap(sym.Type), quote(ksym), quote(sym),helperFuncIdx, "JNIEnv *env , jobject obj"))
+      out.append(copyInputHtoD(sym))
       out.append("}\n")
-
-      // Register MetaData
-      //MetaData.gpuInputs.add("{\"%s\":[\"%s\",\"gpuMemAllocAndCopy_%s_%s\",[%s]]}".format(quote(sym),remap(sym.Type),quote(ksym),quote(sym),"\"env\", \"obj\""))
-      MetaData.gpuInputs.add("{\"%s\":[\"%s\",\"gpuMemAllocAndCopy_%s_%s_%s\"".format(quote(sym),remap(sym.Type),quote(ksym),quote(sym),helperFuncIdx))
+      MetaData.gpuInputs.add("{\"%s\":[\"%s\",\"copyInputHtoD_%s_%s_%s\"".format(quote(sym),remap(sym.Type),quote(ksym),quote(sym),helperFuncIdx))
       out.toString
     }
     else ""
   }
 
-  // Generate copy functions for the DSL Type outputs (Device -> Host)
-  def emitCopyDtoH(sym: Sym[Any]): String = {
-    val out = new StringBuilder
-    out.append("jobject gpuMemCopy_%s_%s_%s(%s,%s) {\n".format(quote(kernelSymbol), quote(sym),helperFuncIdx,"JNIEnv *env", remap(sym.Type)+" *"+quote(sym)))
-    out.append(copyDataStructureDtoH(sym))
-    out.append("}\n")
-    out.toString
-  }
-
-  def emitCopyDtoHBack(sym: Sym[Any], ksym: Sym[Any]): String = {
+  // For mutable inputs, copy the mutated datastructure from GPU to CPU after the kernel is terminated
+  def emitCopyMutableInputDtoH(sym: Sym[Any], ksym: Sym[Any]): String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
-	  helperFuncIdx += 1
-      out.append("void gpuMemCopyBack_%s_%s_%s(%s) {\n".format(quote(ksym), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)))
-      out.append(copyDataStructureDtoHBack(sym))
+	    helperFuncIdx += 1
+      out.append("void copyMutableInputDtoH_%s_%s_%s(%s) {\n".format(quote(ksym), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)))
+      out.append(copyMutableInputDtoH(sym))
       out.append("}\n")
-
-      // Register MetaData
-      MetaData.gpuInputs.add("\"gpuMemCopyBack_%s_%s_%s\"]}".format(quote(ksym),quote(sym),helperFuncIdx))
+      MetaData.gpuInputs.add("\"copyMutableInputDtoH_%s_%s_%s\"]}".format(quote(ksym),quote(sym),helperFuncIdx))
       out.toString
     }
     else ""    
+  }
+
+  /* emitAllocFunc method emits code for allocating the output memory of a kernel,
+       and copying  it to CPU memory with allocation of new object in CPU */
+  //TODO: Separate output and temporary allocations
+  def emitAllocFunc(sym:Sym[Any], allocFunc:Exp[Any]) {
+    helperFuncIdx += 1
+    val tempString = new StringWriter
+    val tempStream = new PrintWriter(tempString,true)
+
+    // Need to save idx before calling emitBlock, which might recursively call this method
+    val currHelperFuncIdx = helperFuncIdx
+
+    // Get free variables
+    val inputs = getFreeVarBlock(allocFunc,Nil)
+    val paramStr = inputs.map(ele=>
+			if(isObjectType(ele.Type)) remap(ele.Type) + " *_" + quote(ele)
+			else remap(ele.Type) + " " + quote(ele)
+	  ).mkString(",")
+
+    /* Object type inputs of helper functions are pointers, but CUDA generators assume the actual objects,
+           therefore need to dereference the objects before emitting the actual block contents. */
+    val derefParams = inputs.map(ele=>
+      if(isObjectType(ele.Type)) "\t%s %s = *_%s;\n".format(remap(ele.Type),quote(ele),quote(ele))
+      else ""
+    ).mkString("")
+
+    // Generate allocation helper function
+    tempString.append("%s *allocFunc_%s(%s) {\n".format(remap(allocFunc.Type),currHelperFuncIdx,paramStr))
+    tempString.append(derefParams)
+    emitBlock(allocFunc)(tempStream)
+    tempString.append("\treturn %s;\n".format(quote(getBlockResult(allocFunc))))
+    tempString.append("}\n")
+
+    // Generate copy (D->H) helper function
+    tempString.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.Type)+" *"+quote(sym)))
+    tempString.append(copyOutputDtoH(sym))
+    tempString.append("}\n")
+
+    // Register Metadata
+    MetaData.gpuOutput = "{\"%s\":[\"%s\",\"allocFunc_%s\",[%s],\"copyOutputDtoH_%s\",[\"env\",\"%s\"]]}".format(quote(sym),remap(sym.Type),currHelperFuncIdx,inputs.map(quote(_)).mkString(","),currHelperFuncIdx,quote(sym))
+    gpuOutputs = gpuOutputs :+ sym
+
+    // Write to helper function string
+    helperFuncString.append(tempString)
   }
 
 
@@ -453,6 +521,7 @@ trait CudaCodegen extends CLikeCodegen {
    * Calculation and Emission of GPU kernel size functions
    *********************************************************/
 
+  //TODO: Get this information from the environment (Cuda device version)
   val MAX_THREADS_PER_BLOCK = 512
 
   def emitCheckSize(varName: String, lst: ListBuffer[String]):String = {
