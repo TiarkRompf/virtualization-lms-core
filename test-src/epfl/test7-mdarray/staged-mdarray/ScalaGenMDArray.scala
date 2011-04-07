@@ -31,26 +31,33 @@ trait BaseGenMDArray extends GenericNestedCodegen {
 
 trait TypedGenMDArray extends BaseGenMDArray {
 
-  val IR: typing.IR.type
-  val typing: MDArrayTypingWithScope
-  import IR.{Exp, Sym}
+  val IR: TY.IR.type
+  val TY: MDArrayTypingBubbleUp
+  import IR.{Exp, Sym, Def}
+  import TY.TypingConstraint
 
-  def emitRuntimeChecks(expr: Sym[_], debug: Boolean = false)(implicit stream: PrintWriter): Unit = {
-    // do nothing :)
+  def emitChecks(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
+
+    for (constraint <- TY.getRuntimeChecks(sym, rhs))
+      emitConstraint(constraint, "RuntimeCheck ")
+
+    for (constraint <- TY.getBubbleUpConstraints(sym, rhs))
+      emitConstraint(constraint, "BubbleUpCheck")
+  }
+
+  def emitConstraint(expr: TypingConstraint, ctrType: String)(implicit stream: PrintWriter) = {
+    stream.println("// " + ctrType + ": " + expr.toString)
   }
 
   def emitShapeValue(sym: Sym[_])(implicit stream: PrintWriter): Unit = {
-    ; // do nothing :)
-    //stream.println("// " + quote(sym) + ": shape=" + shapes(sym) + "    value=" + values(sym))
+    stream.println("// Shape: " + TY.getTypingString(sym))
   }
 }
-
-
-
 
 trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
 
   import IR._
+  import TY.{getShapeLength, getValueLength, getShapeValue, getValueValue}
 
   // This function stores the action of the innermost with loop
   var withLoopAction: (String, String)=>Unit = (a, b)=> { sys.error("No with loop action set!") }
@@ -65,9 +72,6 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
       case _ =>
         ;
     }
-
-    // emit the runtime checks
-    emitRuntimeChecks(sym, debug)
 
     // emit the definition
     stream.print("val " + quote(sym) + ": " + getType(sym, stripped) + " = ")
@@ -211,10 +215,9 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
   def emitWithLoopModifier(withNodeSym: Sym[_], withLoop: WithNode[_], emitAction: (String, String) => Unit)(implicit stream: PrintWriter) = {
     // emit existing constraints
     stream.println("// with: " + withLoop.toString)
-    emitRuntimeChecks(withNodeSym)
 
     // emit actual with loop
-    typing.getValueLength(withLoop.lb) match {
+    getValueLength(withLoop.lb) match {
       case Some(l) =>
         // emit loop
         for (index <- List.range(0, l)) {
@@ -260,121 +263,134 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     }
   }
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+    emitChecks(sym, rhs)
+    emitShapeValue(sym)
+    rhs match {
 
-    case kc: KnownAtCompileTime[_] =>
-      emitSymDecl(sym)
-      stream.println("internalReshape(" + (kc.value.shape.content.map(t => t.toString).toList ::: ("Nil"::Nil)).mkString("::") + ", Array(" + kc.value.content.mkString(", ") +"), \"knownAtCompileTime\")")
-    case kr: KnownAtRuntime[_] =>
-      emitSymDecl(sym)
-      stream.println(kr.name + " // this is a function argument")
-    case fl: FromList[_] =>
-      emitSymDecl(sym)
-      stream.println("internalReshape(" + quote(fl.value) + ".length::Nil, " + quote(fl.value) + ", \"fromList\")")
-    case fa: FromArray[_] =>
-      emitSymDecl(sym)
-      stream.println("internalReshape(" + quote(fa.value) + ".length::Nil, " + quote(fa.value) + ", \"fromArray\")")
-    case fv: FromValue[_] =>
-      emitSymDecl(sym, stripped = true)
-      stream.println(quote(fv.value))
-    case tl: ToList[_] =>
-      emitSymDecl(sym)
-      stream.println(quote(tl.value) + ".content().toList // toList")
-    case ta: ToArray[_] =>
-      emitSymDecl(sym)
-      stream.println(quote(ta.value) + ".content() // toArray")
-    case tv: ToValue[_] =>
+      case kc: KnownAtCompileTime[_] =>
+        emitSymDecl(sym)
+        stream.println("internalReshape(" + (kc.value.shape.content.map(t => t.toString).toList ::: ("Nil"::Nil)).mkString("::") + ", Array(" + kc.value.content.mkString(", ") +"), \"knownAtCompileTime\")")
+      case kr: KnownAtRuntime[_] =>
+        emitSymDecl(sym)
+        stream.println(kr.name + " // this is a function argument")
+      case fl: FromList[_] =>
+        emitSymDecl(sym)
+        stream.println("internalReshape(" + quote(fl.value) + ".length::Nil, " + quote(fl.value) + ", \"fromList\")")
+      case fa: FromArray[_] =>
+        emitSymDecl(sym)
+        stream.println("internalReshape(" + quote(fa.value) + ".length::Nil, " + quote(fa.value) + ", \"fromArray\")")
+      case fv: FromValue[_] =>
+        emitSymDecl(sym, stripped = true)
+        stream.println(quote(fv.value))
+      case tl: ToList[_] =>
+        emitSymDecl(sym)
+        stream.println(quote(tl.value) + ".content().toList // toList")
+      case ta: ToArray[_] =>
+        emitSymDecl(sym)
+        stream.println(quote(ta.value) + ".content() // toArray")
+      case tv: ToValue[_] =>
       // This will automatically unbox in case there's boxing done...
-      emitSymDecl(sym)
-      stream.println(quote(tv.value))
-    case td: ToDim[_] =>
-      emitSymDecl(sym)
-      stream.println("dim(" + quote(td.a) + ")")
-    case ts: ToShape[_] =>
-      emitSymDecl(sym)
-      stream.println("shape(" + quote(ts.a) + ")")
-    case rs: Reshape[_] =>
-      emitSymDecl(sym)
-      stream.println("reshape(" + quote(rs.shp) + ", " + quote(rs.a) + ")")
-    case sel: Sel[_] =>
+        emitSymDecl(sym)
+        stream.println(quote(tv.value))
+      case td: ToDim[_] =>
+        emitSymDecl(sym)
+        stream.println("dim(" + quote(td.a) + ")")
+      case ts: ToShape[_] =>
+        emitSymDecl(sym)
+        stream.println("shape(" + quote(ts.a) + ")")
+      case rs: Reshape[_] =>
+        emitSymDecl(sym)
+        stream.println("reshape(" + quote(rs.shp) + ", " + quote(rs.a) + ")")
+      case sel: Sel[_] =>
       // Get rid of unnecessary boxing
-      typing.getShapeLength(sym) match {
-        case Some(0) =>
-          emitSymDecl(sym, true)
-          stream.println(quote(sel.a) + ".content()(flatten(shape(" + quote(sel.a) + "), " + quote(sel.iv) + ", \"sel\"))")
-        case _ =>
-          emitSymDecl(sym)
-          stream.println("sel(" + quote(sel.iv) + ", " + quote(sel.a) + ")")
-      }
-    case cat: Cat[_] =>
-      emitSymDecl(sym)
-      stream.println("cat(" + quote(cat.d) + ", " + quote(cat.a) + ", " + quote(cat.b) + ")")
-    case in: InfixOp[_, _] =>
-      // helper function
-      def emitOperation(scalar: Boolean) = {
-        emitOperationPrologue(sym, in.array1)
-        scalar match {
-          case true => stream.println("result(i) = " + quote(in.array1) + ".content()(i) " + in.opName + "  " + quote(in.array2))
-          case false => stream.println("result(i) = " + quote(in.array1) + ".content()(i) " + in.opName + "  " + quote(in.array2) + ".content()(i)")
+        getShapeLength(sym) match {
+          case Some(0) =>
+            emitSymDecl(sym, true)
+            stream.println(quote(sel.a) + ".content()(flatten(shape(" + quote(sel.a) + "), " + quote(sel.iv) + ", \"sel\"))")
+          case _ =>
+            emitSymDecl(sym)
+            stream.println("sel(" + quote(sel.iv) + ", " + quote(sel.a) + ")")
         }
-        emitOperationEpilogue(sym, in.array1, "infixOpAA")
-      }
-      emitSymDecl(sym)
-      stream.println("{")
-      typing.getShapeLength(in.array2) match {
-        case Some(0) => // we have a scalar element
-          emitOperation(true)
-        case Some(_) => // we have an array
-          emitOperation(false)
-        case None => // we don't know what's there
+      case cat: Cat[_] =>
+        emitSymDecl(sym)
+        stream.println("cat(" + quote(cat.d) + ", " + quote(cat.a) + ", " + quote(cat.b) + ")")
+      case in: InfixOp[_, _] =>
+      // helper function
+        def emitOperation(scalar: Boolean) = {
+          emitOperationPrologue(sym, in.array1)
+          scalar match {
+            case true => stream.println("result(i) = " + quote(in.array1) + ".content()(i) " + in.opName + "  " + quote(in.array2))
+            case false => stream.println("result(i) = " + quote(in.array1) + ".content()(i) " + in.opName + "  " + quote(in.array2) + ".content()(i)")
+          }
+          emitOperationEpilogue(sym, in.array1, "infixOpAA")
+        }
+        emitSymDecl(sym)
+        stream.println("{")
+        getShapeLength(in.array2) match {
+          case Some(0) => // we have a scalar element
+            emitOperation(true)
+          case Some(_) => // we have an array
+            emitOperation(false)
+          case None => // we don't know what's there
           //TODO: Find out why this is the most common case
-          stream.println("// WARNING: Operation not specialized on {arrays|scalars}!")
-          stream.println("if (shape(shape(" + quote(in.array2) + ")).content()(0) == 0) {")
-          emitOperation(true)
-          stream.println("} else {")
-          emitOperation(false)
-          stream.println("}")
-      }
-      stream.println("}")
-    case un: UnaryOp[_, _] =>
-      emitSymDecl(sym)
-      stream.println("{")
-      emitOperationPrologue(sym, un.array)
-      stream.println("result(i) = " + un.opName + quote(un.array) + ".content()(i)")
-      emitOperationEpilogue(sym, un.array, "unaryOp")
-      stream.println("}")
-    case wh: Where[_] =>
-      emitSymDecl(sym)
-      stream.println("{")
-      emitOperationPrologue(sym, wh.array1)
-      stream.println("result(i) = if (" + quote(wh.cond) + ".content()(i)) " + quote(wh.array1) + ".content()(i) else " + quote(wh.array2) + ".content()(i)")
-      emitOperationEpilogue(sym, wh.array1, "where")
-      stream.println("}")
-    case va: Values[_] =>
-      emitSymDecl(sym); stream.println("{")
-      stream.println("val result = new Array[Int](" + quote(va.dim) + ")")
-      stream.println("for(i <- List.range(0, result.length))")
-      stream.println("result(i) = " + quote(va.value))
-      stream.println("internalReshape(" + quote(va.dim) + "::Nil, result, \"values\")")
-      stream.println("}")
-    case wn: WithNode[_] =>
-      emitWithLoopModifier(sym, wn, withLoopAction)
-    case ga: GenArrayWith[_] =>
-      stream.println
-      emitGenArray(sym, ga.lExpr, ga.shp)
-      stream.println
-    case ma: ModArrayWith[_] =>
-      stream.println
-      emitModArray(sym, ma.lExpr, ma.a)
-      stream.println
-    case fa: FoldArrayWith[_] =>
-      stream.println
-      emitFoldArray(sym, fa.wExpr, fa.neutral, fa.foldTerm1, fa.foldTerm2, fa.foldExpression)
-      stream.println
-    case soa: ScalarOperatorApplication[_,_,_] =>
-      emitSymDecl(sym)
-      stream.println("((a: " + soa.getMfA.toString + ", b: " + soa.getMfB.toString + ") => a " + soa.operator + " b)(" + quote(soa.a) + ", " + quote(soa.b) + ")")
-    // let error cases be shown at compile time :)
+            stream.println("// WARNING: Operation not specialized on {arrays|scalars}!")
+            stream.println("if (shape(shape(" + quote(in.array2) + ")).content()(0) == 0) {")
+            emitOperation(true)
+            stream.println("} else {")
+            emitOperation(false)
+            stream.println("}")
+        }
+        stream.println("}")
+      case un: UnaryOp[_, _] =>
+        emitSymDecl(sym)
+        stream.println("{")
+        emitOperationPrologue(sym, un.array)
+        stream.println("result(i) = " + un.opName + quote(un.array) + ".content()(i)")
+        emitOperationEpilogue(sym, un.array, "unaryOp")
+        stream.println("}")
+      case wh: Where[_] =>
+        emitSymDecl(sym)
+        stream.println("{")
+        emitOperationPrologue(sym, wh.array1)
+        stream.println("result(i) = if (" + quote(wh.cond) + ".content()(i)) " + quote(wh.array1) + ".content()(i) else " + quote(wh.array2) + ".content()(i)")
+        emitOperationEpilogue(sym, wh.array1, "where")
+        stream.println("}")
+      case va: Values[_] =>
+        emitSymDecl(sym); stream.println("{")
+        stream.println("val result = new Array[Int](" + quote(va.dim) + ")")
+        stream.println("for(i <- List.range(0, result.length))")
+        stream.println("result(i) = " + quote(va.value))
+        stream.println("internalReshape(" + quote(va.dim) + "::Nil, result, \"values\")")
+        stream.println("}")
+      case wn: WithNode[_] =>
+        emitWithLoopModifier(sym, wn, withLoopAction)
+      case ga: GenArrayWith[_] =>
+        stream.println
+        emitGenArray(sym, ga.lExpr, ga.shp)
+        stream.println
+      case ma: ModArrayWith[_] =>
+        stream.println
+        emitModArray(sym, ma.lExpr, ma.a)
+        stream.println
+      case fa: FoldArrayWith[_] =>
+        stream.println
+        emitFoldArray(sym, fa.wExpr, fa.neutral, fa.foldTerm1, fa.foldTerm2, fa.foldExpression)
+        stream.println
+      case soa: ScalarOperatorApplication[_,_,_] =>
+        emitSymDecl(sym)
+        stream.println("((a: " + soa.getMfA.toString + ", b: " + soa.getMfB.toString + ") => a " + soa.operator + " b)(" + quote(soa.a) + ", " + quote(soa.b) + ")")
+      // If must also be translated to account for the scope changes
+      // TODO: Is there an architecture where it's not necessary to do this?
+      case ite: IfThenElse[_] =>
+        emitSymDecl(sym)
+        stream.println(" = if (" + quote(ite.cond) + ") {")
+        TY.withinDifferentScopes(
+          (ite.thenp.asInstanceOf[Sym[_]], () => {emitBlock(ite.thenp); stream.println(quote(getBlockResult(ite.thenp))); stream.println("} else {")})::
+          (ite.elsep.asInstanceOf[Sym[_]], () => {emitBlock(ite.elsep); stream.println(quote(getBlockResult(ite.elsep))); stream.println("}")})::
+          Nil)
+      // let error cases be shown at compile time :)
+    }
   }
 
   // TODO: Convert this back to if, but if is overridden now, so we can't use it

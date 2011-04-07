@@ -133,27 +133,27 @@ trait MDArrayTypingPrimitives {
   }
 
   /** substitute a variable by another variable */
-  class SubstituteVarToVar(v1: Var, v2: Var) extends Substitution("Substitute " + v1.toString + " by " + v2.toString) {
+  case class SubstituteVarToVar(v1: Var, v2: Var) extends Substitution("Substitute " + v1.toString + " by " + v2.toString) {
     override def updateVar(v: Var): Var = if (v == v1) v2 else v
     override def updateUnknown(uk: Unknown): TypingElement = uk
     override def updateLength(lt: LengthOf): TypingElement = LengthOf(updateVar(lt.v))
   }
 
   /** substitute a variable by a list */
-  class SubstituteVarToLst(vv: Var, l: Lst) extends Substitution("Substitute " + vv.toString + " by " + l.toString) {
+  case class SubstituteVarToLst(vv: Var, l: Lst) extends Substitution("Substitute " + vv.toString + " by " + l.toString) {
     override def updateVar(v: Var): TypingVariable = if (v == vv) l else v
     override def updateUnknown(uk: Unknown): TypingElement = uk
     override def updateLength(lt: LengthOf): TypingElement = if (lt.v == vv) Value(l.list.length) else lt
   }
 
   /** substitute a unknown value by something else */
-  class SubstituteUnknown(u: Unknown, elt: TypingElement) extends Substitution("Substitute unknown " + u.toString + " by " + elt.toString) {
+  case class SubstituteUnknown(u: Unknown, elt: TypingElement) extends Substitution("Substitute unknown " + u.toString + " by " + elt.toString) {
     override def updateVar(v: Var): TypingVariable = v
     override def updateUnknown(uk: Unknown): TypingElement = if (uk == u) elt else uk
     override def updateLength(lt: LengthOf): TypingElement = lt
   }
 
-  class SubstitutionList(val substList: List[Substitution]) extends Substitution("SubstitutionList:\n" + substList.mkString(" ", "\n ", "\n")) {
+  case class SubstitutionList(val substList: List[Substitution]) extends Substitution("SubstitutionList:\n" + substList.mkString(" ", "\n ", "\n")) {
 
     override def apply(tc: TypingConstraint): TypingConstraint = {
      var res = tc

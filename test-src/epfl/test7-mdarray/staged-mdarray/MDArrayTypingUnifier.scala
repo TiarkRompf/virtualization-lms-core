@@ -16,7 +16,7 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
    *  * PRE-requirements: In order to execute an operation, this requirement has to be satisfied
    *  * POST-requirements: After an operation is executed, this constraint must be satisfied
    */
-  def computeSubstitutions(inConstraints: List[TypingConstraint], debug: Boolean): SubstitutionList = {
+  def computeSubstitutions(inConstraints: List[TypingConstraint], debug: Boolean): (SubstitutionList, List[TypingConstraint]) = {
 
     var finished: Boolean = false
     var substitutions: List[Substitution] = Nil
@@ -79,7 +79,7 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
       println("END computeSubstitutions")
     }
 
-    new SubstitutionList(substitutions)
+    (new SubstitutionList(substitutions), constraints)
   }
 
   /*

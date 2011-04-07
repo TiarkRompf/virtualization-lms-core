@@ -15,7 +15,6 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
   import IR.{Sym, Exp, Def, TP}
   protected var currentScope: TypingScope = null
 
-
   protected def addConstraints(tl: List[TypingConstraint]): Unit = {
     currentScope.constraints = tl ::: currentScope.constraints
     currentScope.affectedSymbols = currentScope.affectedSymbols ++ getAffectedSymbols(tl)
@@ -36,23 +35,25 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
     currentScope = oldScope
   }
 
-  case class TypingScope(sym: Sym[_],
-                       parent: TypingScope,
-                       var children: List[TypingScope] = Nil,
-                       var constraints: List[TypingConstraint] = Nil,
-                       var constrainedSymbols: Set[Sym[_]] = Set.empty,
-                       var affectedSymbols: Set[Sym[_]] = Set.empty) {
+  case class TypingScope(sym: Sym[_], parent: TypingScope) {
+
+    var children: List[TypingScope] = Nil
+    var constrainedSymbols: Set[Sym[_]] = Set.empty
+    var affectedSymbols: Set[Sym[_]] = Set.empty
+
+    // Different types of constraints...
+    var constraints: List[TypingConstraint] = Nil
+    var bubbleUpConstraints: List[TypingConstraint] = Nil
+    var partialReconciliationConstraints: List[TypingConstraint] = Nil
+
     var fullSubsts: SubstitutionList = new SubstitutionList(Nil)
     var partSubsts: SubstitutionList = new SubstitutionList(Nil)
 
     def getLengthFull(v: TypingVariable) = getLength(fullSubsts(v))
-    def getLengthPart(v: TypingVariable) = getLength(partSubsts(v))
     def getValueFull(v: TypingVariable) = getValue(fullSubsts(v))
-    def getValuePart(v: TypingVariable) = getValue(partSubsts(v))
 
     override def toString = "Scope (" + sym.toString + ")"
   }
-
 
   /**
    * Gather the constraints in a optimizer & code generator-friendly way
@@ -65,9 +66,6 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
 
     // 2. Get the substitution list & the pre-requirement list
     solveScope(currentScope, Nil, true)
-
-    // 3. Runtime check map
-    // empty for now, we'll add runtime checks as AST nodes :)
   }
 
 
@@ -96,52 +94,60 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
   }
 
 
-  def solveScope(current: TypingScope, constraints: List[TypingConstraint], debug: Boolean): Unit = {
+  protected def solveScope(current: TypingScope, parentConstraints: List[TypingConstraint], debug: Boolean): Unit = {
+
+    // Propagate the constraints
+    val currentConstraints = current.constraints
+    current.constraints = current.constraints ::: parentConstraints
+
+    // Solve the inner children
     for (child <- current.children)
-      solveScope(child, current.constraints ::: constraints, debug)
+      solveScope(child, current.constraints, true)
 
     if (debug) {
-      println("Scope solve for " + current.sym.toString)
-      println("Incoming constraints:\n" + constraints.mkString("\t", "\n\t", ""))
-      println("Scope additional constraints:\n" + current.constraints.mkString("\t", "\n\t", ""))
+      println("Solving FULL scope for " + current.sym.toString)
+      println("Incoming constraints:\n" + parentConstraints.mkString("\t", "\n\t", ""))
+      println("Scope additional constraints:\n" + currentConstraints.mkString("\t", "\n\t", ""))
     }
 
-    // Compute the symbols we need to reconcile
-    val childrenSymbols = current.children.map(child => child.affectedSymbols)
-    var reconcileSymbols = Set.empty[Sym[_]]
-
-    if (childrenSymbols.length > 0)
-      reconcileSymbols = childrenSymbols.foldLeft(childrenSymbols.head)((a, b) => b intersect a)
-
-    if (debug)
-      println("Need to reconcile the following symbols: " + reconcileSymbols.mkString(", ") + "\n\n")
-
-    // Compute the reconciling
-    var fullReconcileConstraints: List[TypingConstraint] = Nil
-    var partReconcileConstraints: List[TypingConstraint] = Nil
-
-    for (sym <- reconcileSymbols) {
-      fullReconcileConstraints = reconcileSymbol(ShapeVar(sym), current.children, true) :::
-                                 reconcileSymbol(ValueVar(sym), current.children, true) :::
-                                 fullReconcileConstraints
-      partReconcileConstraints = reconcileSymbol(ShapeVar(sym), current.children, false) :::
-                                 reconcileSymbol(ValueVar(sym), current.children, false) :::
-                                 partReconcileConstraints
-    }
+    // Compute the reconciling - only for full substitutions
+    val fullReconcileConstraints: List[TypingConstraint] =
+      reconcile(current.children.map(_.fullSubsts), "Reconciliation of " + current.children.mkString(" and "))
 
     // Compute the substitutions
-    current.fullSubsts = computeSubstitutions(fullReconcileConstraints ::: current.constraints, debug)
-    current.partSubsts = computeSubstitutions(partReconcileConstraints ::: current.constraints.filterNot(c => c.prereq), debug)
+    current.fullSubsts = computeSubstitutions(fullReconcileConstraints ::: current.constraints, false)._1
   }
 
-  protected def reconcileSymbol(v: TypingVariable, children: List[TypingScope], full: Boolean): List[TypingConstraint] = {
+  protected def reconcile(substitutions: List[SubstitutionList], name: String = "Reconciliation"): List[TypingConstraint] = substitutions.length match {
+    case 0 => Nil
+    case _ =>
+      for (subst <- substitutions)
+        println("S: " + subst.substList.mkString(", "))
 
-    assert(children != 0) // should be already satisfied
+      val childrenSymbols = substitutions.map(getSymbols(_).toSet)
+      var reconcileSymbols = Set.empty[Sym[_]]
+
+      for (childSyms <- childrenSymbols)
+        println("R: " + childSyms.mkString(", "))
+
+      if (childrenSymbols.length > 0)
+        reconcileSymbols = childrenSymbols.foldLeft(childrenSymbols.head)((a, b) => b intersect a)
+
+    println("Reconciling symbols: " + reconcileSymbols.mkString(", "))
+
+    reconcileSymbols.toList.flatMap((sym: Sym[_]) => reconcileSymbol(ShapeVar(sym), substitutions.map(subst => subst(ShapeVar(sym))), name)) :::
+    reconcileSymbols.toList.flatMap((sym: Sym[_]) => reconcileSymbol(ValueVar(sym), substitutions.map(subst => subst(ValueVar(sym))), name))
+  }
+
+
+  protected def reconcileSymbol(v: TypingVariable, values: List[TypingVariable], name: String = "Reconciliation"): List[TypingConstraint] = {
+
+    assert(values != 0) // should be already satisfied
 
     // Reconciliation strategy:
     //  - first:  check if everyone agrees on the length
     //  - second: check each position and see if everyone agrees on the value
-    val lenghts = children.map(child => if (full) child.getLengthFull(v) else child.getLengthPart(v))
+    val lenghts = values.map(getLength(_))
     val length: Int = lenghts.foldLeft(-2)(
       (length, newLen) => newLen match {
         case Some(l) if ((length == -2) || (l == length)) => l
@@ -154,14 +160,13 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
 
       for (n <- List.range(0, length)) {
         var element: TypingElement = null
-        for (child <- children) {
-          val value: TypingVariable = if (full) child.fullSubsts(v) else child.partSubsts(v)
+        for (value <- values) {
           val newElt: TypingElement = value.asInstanceOf[Lst].list(n)
           element = reconcileElement(element, newElt)
         }
         elements = element :: elements
       }
-      Equality(v, Lst(elements.reverse), postReq, "Reconciliation of " + children.mkString("(", " ", ")"))::Nil
+      Equality(v, Lst(elements.reverse), postReq, name)::Nil
     } else
       Nil
   }
