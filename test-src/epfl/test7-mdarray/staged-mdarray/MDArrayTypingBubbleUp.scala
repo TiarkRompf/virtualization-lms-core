@@ -76,7 +76,10 @@ trait MDArrayTypingBubbleUp extends MDArrayTypingWithScope {
       val (sym, action) = pair
       val oldScope = currentScope
       val newScopes = currentScope.children.filter(_.sym == sym)
-      if (newScopes.length == 1) sys.error("There is no scope for the sym or there are multiple scopes for a single sym.")
+      // TODO: Prove that if there are multiple if-s that return the same value the scoping will be the same
+      // example   if (all(A)) 0 else 1; if (all(B)) 1 else 2; // here 1 will add two scopes with the same sym -- is this the same?!?
+      // TODO: Test if (all(A)) 0 else <complex fold of genarray>; if (all(B)) 1 else <same complex fold> generates the complex expression twice
+      if (newScopes.length < 1) sys.error("There is no scope for the sym. CurrentSym: " + currentScope.sym + " NewSym: " + sym + " Available: " + currentScope.children.map(_.sym).mkString(" "))
       val newScope = newScopes.head
 
       scopes = newScope :: scopes

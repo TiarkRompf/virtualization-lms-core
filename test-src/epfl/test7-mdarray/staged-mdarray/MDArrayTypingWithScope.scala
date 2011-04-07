@@ -106,8 +106,8 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
 
     if (debug) {
       println("Solving FULL scope for " + current.sym.toString)
-      println("Incoming constraints:\n" + parentConstraints.mkString("\t", "\n\t", ""))
-      println("Scope additional constraints:\n" + currentConstraints.mkString("\t", "\n\t", ""))
+      //println("Incoming constraints:\n" + parentConstraints.mkString("\t", "\n\t", ""))
+      //println("Scope additional constraints:\n" + currentConstraints.mkString("\t", "\n\t", ""))
     }
 
     // Compute the reconciling - only for full substitutions

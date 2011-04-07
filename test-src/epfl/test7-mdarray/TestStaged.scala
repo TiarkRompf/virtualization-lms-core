@@ -33,33 +33,31 @@ class TestStaged extends FileDiffSuite {
     performExperiment(pde1, pde1.range3(pde1.knownOnlyAtRuntime[Double]("matrix3"), 1), prefix + "range3-test")
     // TODO: Include ranges to make this work
     //performExperiment(pde1, pde1.range4(pde1.knownOnlyAtRuntime[Double]("matrix4"), 1), prefix + "range4-test")
-    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime[Double]("matrix5"), 1), prefix + "range5-test")
+    // TODO: Solve scope problem and retry
+//    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime[Double]("matrix5"), 1), prefix + "range5-test")
 
     // Game of Life experiments
-    performExperiment(gol, gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input")), prefix + "reshape")
-    performExperiment(gol, gol.gameOfLife(gol.knownOnlyAtRuntime[Int]("input")), prefix + "game-of-life-generic")
-    performExperiment(gol, gol.gameOfLife(gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input"))), prefix + "game-of-life-10-by-10")
+//    performExperiment(gol, gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input")), prefix + "reshape")
+//    performExperiment(gol, gol.gameOfLife(gol.knownOnlyAtRuntime[Int]("input")), prefix + "game-of-life-generic")
+//    performExperiment(gol, gol.gameOfLife(gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input"))), prefix + "game-of-life-10-by-10")
   }
 
   def performExperiment(pde1: MDArrayBaseExp with IfThenElseExp, expr: Any, fileName: String) {
 
     val typing = new MDArrayTypingBubbleUp { val IR: pde1.type = pde1 }
 
+    System.err.println("Performing experiment: " + fileName)
+
     withOutFile(fileName + "-type-inference") {
       try {
         typing.doTyping(expr.asInstanceOf[pde1.Exp[_]], false)
         val export = new MDArrayGraphExport {
           val IR: pde1.type = pde1
-          override def emitTypingString(i: pde1.Sym[_]) = typing.getTypingString(i)
+          override val TY = typing
         }
-        export.emitDepGraph(expr.asInstanceOf[pde1.Exp[_]], fileName + "-dot", false)
+        export.emitDepGraph(expr.asInstanceOf[pde1.Exp[_]], new PrintWriter(fileName + "-dot"), false)
       } catch {
-        case e: Exception => println(e.printStackTrace)
-        val export = new MDArrayGraphExport {
-          val IR: pde1.type = pde1
-          override def emitTypingString(i: pde1.Sym[_]) = "<inference exception>"
-        }
-        export.emitDepGraph(expr.asInstanceOf[pde1.Exp[_]], fileName + "-dot", false)
+        case e => throw e
       }
 
       // Generate the corresponding code :)
