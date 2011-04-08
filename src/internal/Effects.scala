@@ -1,6 +1,8 @@
 package scala.virtualization.lms
 package internal
 
+import util.GraphUtil
+
 trait Effects extends Expressions with Utils {
   
   // --- misc
@@ -90,17 +92,37 @@ trait Effects extends Expressions with Utils {
 
   // --- reflect helpers
 
+  /*
+    decisions to be made:
+    1) does alias imply read? or are they separate?
+    2) use a data structure to track transitive aliasing or recompute always?
+  */
+
   def readSyms(e: Any): List[Sym[Any]] = e match {
     case s: Sym[Any] => List(s)
     case Reflect(x, u, es) => readSyms(x) // ignore effect deps (they are not read!)
-    case Reify(x, u, es) => if (es contains x) Nil else readSyms(x) // result of block is not read but passed through!
+    case Reify(x, u, es) => 
+      if (es contains x) Nil // FIXME this piece of logic is not clear. is it a special case for unit??
+      else readSyms(x) // result of block is not read but passed through!
     case p: Product => p.productIterator.toList.flatMap(readSyms(_))
     case _ => Nil
   }
   
   def aliasSyms(e: Any): List[Sym[Any]] = readSyms(e) // conservative default 
   
-  def mayAliasSomethingMutable(s: Sym[Any]) = s match { case Def(Reflect(_, u, _)) => mustMutable(u) case _ => false } // TODO: should be transitive via aliasSyms!!
+  def allTransitiveAliases(start: Any): List[TP[Any]] = {
+    def deps(st: List[Sym[Any]]): List[TP[Any]] =
+      globalDefs.filter(st contains _.sym)
+    GraphUtil.stronglyConnectedComponents[TP[Any]](deps(aliasSyms(start)), t => deps(aliasSyms(t.rhs))).flatten.reverse
+  }
+  
+  // TODO optimization: a mutable object never aliases another mutable object, so its inputs need not be followed
+  
+  def mutableTransitiveAliases(s: Sym[Any]) = {
+    allTransitiveAliases(s) collect { case TP(s2, Reflect(_, u, _)) if mustMutable(u) => s2 }
+  }
+  
+  def mayAliasSomethingMutable(s: Sym[Any]) = mutableTransitiveAliases(s).nonEmpty
   
   def getMutableInputs[A](d: Def[A]): List[Sym[Any]] = readSyms(d) filter (mayAliasSomethingMutable(_))
 
@@ -131,6 +153,9 @@ trait Effects extends Expressions with Utils {
   def reflectWrite[A:Manifest](write0: Exp[Any]*)(d: Def[A]): Exp[A] = {
     val write = write0.toList.asInstanceOf[List[Sym[Any]]] // should check...
     val mutableInputs = getMutableInputs(d)
+    // TODO: enforce no-sharing constraint between mutable things
+    // must not alias any input that aliases anything mutable
+    // i.e. aliasSyms(d) must not alias anything mutable
     reflectEffect(d, Write(write) andAlso Read(mutableInputs))
   }
 
