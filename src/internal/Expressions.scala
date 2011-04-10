@@ -10,7 +10,7 @@ import java.lang.{StackTraceElement,Thread}
  * 
  * @since 0.1
  */
-trait Expressions {
+trait Expressions extends Utils {
 
   abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
     def Type : Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
@@ -53,7 +53,7 @@ trait Expressions {
   }
 
   protected implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
-    findOrCreateDefinition(d).sym
+    findOrCreateDefinition(d).sym // TODO: return Const(()) if type is Unit??
   }
 
   object Def {

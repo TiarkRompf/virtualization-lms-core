@@ -12,31 +12,31 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 trait ArrayLoops extends Loops with OverloadHack {
-  def array(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Array[Double]]
+  def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]]
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] // TODO: make reduce operation configurable!
-  def arrayIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Array[Double]]
+  def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]]
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] // TODO: make reduce operation configurable!
-  def flatten(shape: Rep[Int])(f: Rep[Int] => Rep[Array[Double]]): Rep[Array[Double]]
+  def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
 
-  def infix_at(a: Rep[Array[Double]], i: Rep[Int]): Rep[Double]
-  def infix_length(a: Rep[Array[Double]]): Rep[Int]
+  def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T]
+  def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int]
 }
 
 
 trait ArrayLoopsExp extends LoopsExp {
   
-  case class ArrayElem(y: Exp[Double]) extends Def[Array[Double]]
+  case class ArrayElem[T](y: Exp[T]) extends Def[Array[T]]
   case class ReduceElem(y: Exp[Double]) extends Def[Double]
 
-  case class ArrayIfElem(c: Exp[Boolean], y: Exp[Double]) extends Def[Array[Double]]
+  case class ArrayIfElem[T](c: Exp[Boolean], y: Exp[T]) extends Def[Array[T]]
   case class ReduceIfElem(c: Exp[Boolean], y: Exp[Double]) extends Def[Double]
 
-  case class FlattenElem(y: Exp[Array[Double]]) extends Def[Array[Double]]
+  case class FlattenElem[T](y: Exp[Array[T]]) extends Def[Array[T]]
 
-  case class ArrayIndex(a: Rep[Array[Double]], i: Rep[Int]) extends Def[Double]  
-  case class ArrayLength(a: Rep[Array[Double]]) extends Def[Int]
+  case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
+  case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
   
-  def array(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Array[Double]] = {
+  def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
     val y = f(x)
     SimpleLoop(shape, x, ArrayElem(y))
@@ -48,7 +48,7 @@ trait ArrayLoopsExp extends LoopsExp {
     SimpleLoop(shape, x, ReduceElem(y))
   }
 
-  def arrayIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Array[Double]] = {
+  def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]] = {
     val x = fresh[Int]
     val (c,y) = f(x)
     SimpleLoop(shape, x, ArrayIfElem(c,y)) // TODO: simplify for const true/false
@@ -60,16 +60,16 @@ trait ArrayLoopsExp extends LoopsExp {
     SimpleLoop(shape, x, ReduceIfElem(c,y)) // TODO: simplify for const true/false
   }
 
-  def flatten(shape: Rep[Int])(f: Rep[Int] => Rep[Array[Double]]): Rep[Array[Double]] = {
+  def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]] = {
     val x = fresh[Int]
     val y = f(x)
     SimpleLoop(shape, x, FlattenElem(y))
   }
 
 
-  def infix_at(a: Rep[Array[Double]], i: Rep[Int]): Rep[Double] = ArrayIndex(a, i)
+  def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = ArrayIndex(a, i)
 
-  def infix_length(a: Rep[Array[Double]]): Rep[Int] = a match {
+  def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
     case Def(SimpleLoop(s, x, ArrayElem(y))) => s
     case _ => ArrayLength(a)
   }
@@ -94,18 +94,18 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case SimpleLoop(s,x,ArrayElem(y)) =>  
-      stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") {" + quote(x) + " => ")
+      stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") { " + quote(x) + " => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")
     case SimpleLoop(s,x,ReduceElem(y)) =>  
-      stream.println("val " + quote(sym) + " = LoopReduce("+quote(s)+") {" + quote(x) + " => ")
+      stream.println("val " + quote(sym) + " = LoopReduce("+quote(s)+") { " + quote(x) + " => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")
     // TODO: conditional variants ...
     case SimpleLoop(s,x,FlattenElem(y)) =>  
-      stream.println("val " + quote(sym) + " = LoopFlatten("+quote(s)+") {" + quote(x) + " => ")
+      stream.println("val " + quote(sym) + " = LoopFlatten("+quote(s)+") { " + quote(x) + " => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")

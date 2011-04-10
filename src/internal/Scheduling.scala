@@ -3,7 +3,7 @@ package internal
 
 import util.GraphUtil
 
-trait Scheduling extends Utils {
+trait Scheduling {
   val IR: Expressions
   import IR._
   

@@ -1,0 +1,28 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Unit)=>(scala.Function1[Boolean, scala.Function1[Double, Double]])) {
+def apply(x0:Unit): scala.Function1[Boolean, scala.Function1[Double, Double]] = {
+val x11 = {x4: (Boolean) => 
+val x5 = println("yo")
+val x9 = if (x4) {
+val x3 = {x1: (Double) => 
+val x2 = 2.0*x1
+x2: Double
+}
+x3
+} else {
+val x8 = {x6: (Double) => 
+val x7 = x6+1.0
+x7: Double
+}
+x8
+}
+x9: scala.Function1[Double, Double]
+}
+x11
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

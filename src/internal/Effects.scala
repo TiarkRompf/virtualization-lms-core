@@ -5,14 +5,7 @@ import util.GraphUtil
 
 trait Effects extends Expressions with Utils {
   
-  // --- misc
-  def effectSyms(x: Exp[Any]): List[Sym[Any]] = x match {  //TODO: move to scheduling/codegen?
-    case Def(Reify(y, u, es)) => es.asInstanceOf[List[Sym[Any]]]
-    case _ => Nil
-  }
-  
   // TODO: transform over Summary currently lives in common/Base.scala. move it here?
-  
   
   // --- context
 
@@ -59,7 +52,7 @@ trait Effects extends Expressions with Utils {
   def infix_orElse(u: Summary, v: Summary) = new Summary(
     u.maySimple || v.maySimple, u.mstSimple && v.mstSimple,
     u.mayGlobal || v.mayGlobal, u.mstGlobal && v.mstGlobal,
-    u.resAlloc && v.resAlloc,
+    false, //u.resAlloc && v.resAlloc, <--- if/then/else will not be mutable!
     (u.mayRead ++ v.mayRead).distinct, (u.mstRead intersect v.mstRead),
     (u.mayWrite ++ v.mayWrite).distinct, (u.mstWrite intersect v.mstWrite)
   )
@@ -90,7 +83,13 @@ trait Effects extends Expressions with Utils {
   }
 
 
+
   // --- reflect helpers
+
+  def effectSyms(x: Exp[Any]): List[Sym[Any]] = x match {  // only used by various boundSyms impls -- move to codegen?
+    case Def(Reify(y, u, es)) => es.asInstanceOf[List[Sym[Any]]]
+    case _ => Nil
+  }
 
   /*
     decisions to be made:
@@ -108,7 +107,12 @@ trait Effects extends Expressions with Utils {
     case _ => Nil
   }
   
-  def aliasSyms(e: Any): List[Sym[Any]] = readSyms(e) // conservative default 
+  def aliasSyms(e: Any): List[Sym[Any]] = readSyms(e) filterNot (s => isPrimitiveType(s.Type)) // conservative default 
+  
+  def isPrimitiveType[T](m: Manifest[T]) = m.toString match {
+    case "Byte" | "Char" | "Short" | "Int" | "Long" | "Float" | "Double" | "Boolean" | "Unit" => true
+    case _ => false
+  }
   
   def allTransitiveAliases(start: Any): List[TP[Any]] = {
     def deps(st: List[Sym[Any]]): List[TP[Any]] =
@@ -118,31 +122,44 @@ trait Effects extends Expressions with Utils {
   
   // TODO optimization: a mutable object never aliases another mutable object, so its inputs need not be followed
   
-  def mutableTransitiveAliases(s: Sym[Any]) = {
+  def mutableTransitiveAliases(s: Any) = {
     allTransitiveAliases(s) collect { case TP(s2, Reflect(_, u, _)) if mustMutable(u) => s2 }
   }
   
+  def readMutableData[A](d: Def[A]) = mutableTransitiveAliases(readSyms(d))
+
+
+  // legacy -- remove??
   def mayAliasSomethingMutable(s: Sym[Any]) = mutableTransitiveAliases(s).nonEmpty
-  
   def getMutableInputs[A](d: Def[A]): List[Sym[Any]] = readSyms(d) filter (mayAliasSomethingMutable(_))
+
 
   // --- reflect
 
   // TODO: should reflectEffect try to add Read(mutableInputs) as well ??? or just toAtom ???
 
   def reflectMutable[A:Manifest](d: Def[A]): Exp[A] = {
-    val mutableInputs = getMutableInputs(d)
-    // TODO: check that d's result does not alias another mutable object
-    
+    val mutableInputs = readMutableData(d)    
     reflectEffect(d, Alloc() andAlso Read(mutableInputs))
   }
 
   // REMARK: making toAtom context-dependent is quite a departure from the 
   // earlier design. there are a number of implications especially for mirroring.
 
+  /*
+    wrapping reads in a reflect can also have an unfortunate effect on rewritings.
+    consider 
+      val a = ...       // mutable
+      val b = a.foo     // usually Foo(a) but now Reflect(Foo(a))
+      val c = b.costly  // costly(Foo(a)) would simplify to Cheap(a), 
+                        // but this ends up as Reflect(Costly(Foo(a))) instead of Reflect(Cheap(a))
+    
+    TODO: find a solution ...
+  */
+
   protected override implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
     // are we depending on a variable? then we need to be serialized -> effect
-    val mutableInputs = getMutableInputs(d)
+    val mutableInputs = readMutableData(d)
     reflectEffect(d, Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
   }
 
@@ -152,10 +169,7 @@ trait Effects extends Expressions with Utils {
 
   def reflectWrite[A:Manifest](write0: Exp[Any]*)(d: Def[A]): Exp[A] = {
     val write = write0.toList.asInstanceOf[List[Sym[Any]]] // should check...
-    val mutableInputs = getMutableInputs(d)
-    // TODO: enforce no-sharing constraint between mutable things
-    // must not alias any input that aliases anything mutable
-    // i.e. aliasSyms(d) must not alias anything mutable
+    val mutableInputs = readMutableData(d)    
     reflectEffect(d, Write(write) andAlso Read(mutableInputs))
   }
 
@@ -184,6 +198,15 @@ trait Effects extends Expressions with Utils {
               printerr("at " + z + "=" + zd)
           }
         }
+        // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
+        // make sure no mutable object becomes part of mutable result (in case of allocation)
+        // or is written to another mutable object (in case of write)
+        val mutableAliases = mutableTransitiveAliases(x) filterNot (u.mstWrite contains _)
+        if (mutableAliases.nonEmpty) {
+          printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
+          printerr("at " + z + "=" + zd)
+        }
+        
         internalReflect(z, zd)
       }
     }
