@@ -2,8 +2,6 @@ error: illegal sharing of mutable objects Sym(8)
 at Sym(10)=Reflect(ArrayUpdate(Sym(5),Const(5),Sym(8)),Summary(false,false,false,false,false,List(Sym(5), Sym(8)),List(Sym(5), Sym(8)),List(Sym(5)),List(Sym(5))),List(Sym(5), Sym(8), Sym(9)))
 promoting to effect: Sym(12)=Reflect(ArrayIndex(Sym(5),Const(5)),Summary(false,false,false,false,false,List(Sym(5)),List(Sym(5)),List(),List()),List(Sym(5), Sym(9), Sym(10)))
 depends on  Sym(5)
-promoting to effect: Sym(13)=Reflect(ArrayIndex(Sym(12),Const(50)),Summary(false,false,false,false,false,List(Sym(5)),List(Sym(5)),List(),List()),List(Sym(5), Sym(9), Sym(10)))
-depends on  Sym(5)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/

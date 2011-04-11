@@ -37,6 +37,59 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
   def infix_mutable[T:Manifest](a: Rep[Array[T]]) = reflectMutable(ArrayMutable(a))
   def infix_clone[T:Manifest](a: Rep[Array[T]]) = ArrayClone(a)
   
+  override def aliasSyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleLoop(s,i, ArrayElem(y)) => Nil
+    case SimpleLoop(s,i, ReduceElem(y)) => syms(y) // could also return zero value
+    case SimpleLoop(s,i, ArrayIfElem(c,y)) => Nil
+    case SimpleLoop(s,i, ReduceIfElem(c,y)) => syms(y) // could also return zero value
+    case ArrayIndex(a,i) => Nil
+    case ArrayLength(a) => Nil
+    case ArrayUpdate(a,i,x) => Nil // syms(a) <-- any use to return a?
+    case ArrayMutable(a) => Nil
+    case ArrayClone(a) => Nil
+    case _ => super.aliasSyms(e)
+  }
+
+  override def containSyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleLoop(s,i, ArrayElem(y)) => syms(y)
+    case SimpleLoop(s,i, ReduceElem(y)) => Nil
+    case SimpleLoop(s,i, ArrayIfElem(c,y)) => syms(y)
+    case SimpleLoop(s,i, ReduceIfElem(c,y)) => Nil
+    case ArrayIndex(a,i) => Nil
+    case ArrayLength(a) => Nil
+    case ArrayUpdate(a,i,x) => syms(x)
+    case ArrayMutable(a) => Nil
+    case ArrayClone(a) => Nil
+    case _ => super.containSyms(e)
+  }
+
+  override def extractSyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleLoop(s,i, ArrayElem(y)) => Nil
+    case SimpleLoop(s,i, ReduceElem(y)) => Nil
+    case SimpleLoop(s,i, ArrayIfElem(c,y)) => Nil
+    case SimpleLoop(s,i, ReduceIfElem(c,y)) => Nil
+    case ArrayIndex(a,i) => syms(a)
+    case ArrayLength(a) => Nil
+    case ArrayUpdate(a,i,x) => Nil
+    case ArrayMutable(a) => Nil
+    case ArrayClone(a) => Nil
+    case _ => super.extractSyms(e)
+  }
+
+  override def copySyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleLoop(s,i, ArrayElem(y)) => Nil
+    case SimpleLoop(s,i, ReduceElem(y)) => Nil
+    case SimpleLoop(s,i, ArrayIfElem(c,y)) => Nil
+    case SimpleLoop(s,i, ReduceIfElem(c,y)) => Nil
+    case ArrayIndex(a,i) => Nil
+    case ArrayLength(a) => Nil
+    case ArrayUpdate(a,i,x) => syms(a)
+    case ArrayMutable(a) => syms(a)
+    case ArrayClone(a) => syms(a)
+    case _ => super.copySyms(e)
+  }  
+  
+  
 }
 
 trait ScalaGenArrayMutation extends ScalaGenArrayLoops {
@@ -96,6 +149,26 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation1")
   }
 
+  def testMutation1b = {
+    withOutFile(prefix+"mutation1b") {
+     // a write operation must unambigously identify the object being mutated
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          val vector1 = mzeros(100)
+          val vector2 = mzeros(100)
+          val a = if (x > 7) vector1 else vector2
+          
+          val a2 = a.mutable
+          a2.update(40,40) // ok: we have made a copy
+
+          print(a2.at(50))
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"mutation1b")
+  }
+
   def testMutation2 = {
     withOutFile(prefix+"mutation2") {
       // an operation that might read from mutable data v will be serialized with all writes to v
@@ -120,6 +193,7 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation2")
   }
 
+
   def testMutation3 = {
     withOutFile(prefix+"mutation3") {
       // vars may not reference mutable objects
@@ -140,6 +214,26 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation3")
   }
 
+  def testMutation3b = {
+    withOutFile(prefix+"mutation3b") {
+      // vars may not reference mutable objects
+      trait Prog extends DSL with LiftVariables {
+        def test(x: Rep[Int]) = {
+          var a = zeros(100)
+          val b = mzeros(100)
+          for (i <- 0 until b.length) {
+            val x1 = a.at(i)
+            b.update(i,8)
+            val x2 = a.at(i) // must be cse'd
+            a = b.clone // ok: making a copy
+          }
+        }
+      }      
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"mutation3b")
+  }
+
   def testMutation4 = {
     withOutFile(prefix+"mutation4") {
       // mutable objects cannot be nested
@@ -147,7 +241,7 @@ class TestMutation extends FileDiffSuite {
         def test(x: Rep[Int]) = {
           val a = mzeros(100)
           val b = array(10) { i => a } // nested array
-          val b1 = b.mutable // error: internal arrays are mutable
+          val b1 = b.mutable // error: internal arrays are mutable on their own
           val x1 = b1.at(5).at(50)
           print(x1)
         }
@@ -157,8 +251,45 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation4")
   }
 
+  def testMutation4b = {
+    withOutFile(prefix+"mutation4b") {
+      // mutable objects cannot be nested
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          val a = mzeros(100)
+          val b = array(10) { i => a } // nested array
+          val b1 = b.clone
+          val b2 = b1.mutable // error: internal arrays are *still* mutable, despite shallow clone
+          val x1 = b2.at(5).at(50)
+          print(x1)
+        }
+      }      
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"mutation4b")
+  }
+
+  def testMutation4c = {
+    withOutFile(prefix+"mutation4c") {
+      // mutable objects cannot be nested
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          val a = mzeros(100)
+          val b = array(10) { i => a.clone } // nested array
+          val b1 = b.mutable // ok: internal arrays are immutable
+          val x1 = b1.at(5).at(50)
+          print(x1)
+        }
+      }      
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"mutation4c")
+  }
+
+
   def testMutation5 = {
     withOutFile(prefix+"mutation5") {
+      // mutable objects cannot be nested
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           val a = zeros(100)
@@ -166,7 +297,7 @@ class TestMutation extends FileDiffSuite {
           val b1 = b.mutable
 
           val c = mzeros(20)
-          b1.update(4,a) // ok
+          b1.update(4,a) // ok: insert immutable array
           b1.update(5,c) // error: cannot insert mutable array
           
           c.update(50,50)
@@ -178,6 +309,31 @@ class TestMutation extends FileDiffSuite {
       new Prog with Impl
     }
     assertFileEqualsCheck(prefix+"mutation5")
+  }
+
+  def testMutation6 = {
+    withOutFile(prefix+"mutation6") {
+      // mutate nested object (within an immutable one)
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          val a = mzeros(100)
+          val b = array(10) { i => a } // nested array
+          val u = array(10) { i => zeros(100) }
+          val c = if (x > 7) b else u
+
+          val x1 = c.at(5).at(50)
+
+          a.update(50,50)
+          
+          val x2 = c.at(5).at(50) // no cse, must serialize with update to a
+          
+          print(x2-x1)
+        }
+      }
+      
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"mutation6")
   }
 
 }

@@ -86,6 +86,12 @@ trait Effects extends Expressions with Utils {
 
   // --- reflect helpers
 
+  def syms(e: Any): List[Sym[Any]] = e match {
+    case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(syms(_))
+    case _ => Nil
+  }
+
   def effectSyms(x: Exp[Any]): List[Sym[Any]] = x match {  // only used by various boundSyms impls -- move to codegen?
     case Def(Reify(y, u, es)) => es.asInstanceOf[List[Sym[Any]]]
     case _ => Nil
@@ -107,18 +113,84 @@ trait Effects extends Expressions with Utils {
     case _ => Nil
   }
   
-  def aliasSyms(e: Any): List[Sym[Any]] = readSyms(e) filterNot (s => isPrimitiveType(s.Type)) // conservative default 
+  def aliasSyms(e: Any): List[Sym[Any]] = e match {
+    case Reflect(x, u, es) => aliasSyms(x)
+    case Reify(x, u, es) => aliasSyms(x)
+    case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(aliasSyms(_))
+    case _ => Nil
+  }  
+  
+  def containSyms(e: Any): List[Sym[Any]] = e match {
+    case Reflect(x, u, es) => containSyms(x)
+    case Reify(x, u, es) => containSyms(x)
+    case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(containSyms(_))
+    case _ => Nil
+  }
+  
+  def extractSyms(e: Any): List[Sym[Any]] = e match {
+    case Reflect(x, u, es) => extractSyms(x)
+    case Reify(x, u, es) => extractSyms(x)
+    case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(extractSyms(_))
+    case _ => Nil
+  }
+
+  def copySyms(e: Any): List[Sym[Any]] = e match {
+    case Reflect(x, u, es) => copySyms(x)
+    case Reify(x, u, es) => copySyms(x)
+    case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(copySyms(_))
+    case _ => Nil
+  }
+
+
+  
   
   def isPrimitiveType[T](m: Manifest[T]) = m.toString match {
     case "Byte" | "Char" | "Short" | "Int" | "Long" | "Float" | "Double" | "Boolean" | "Unit" => true
     case _ => false
   }
   
+/*
   def allTransitiveAliases(start: Any): List[TP[Any]] = {
-    def deps(st: List[Sym[Any]]): List[TP[Any]] =
-      globalDefs.filter(st contains _.sym)
+    def deps(st: List[Sym[Any]]): List[TP[Any]] = {
+      val st1 = st filterNot (s => isPrimitiveType(s.Type))
+      globalDefs.filter(st1 contains _.sym)
+    }
     GraphUtil.stronglyConnectedComponents[TP[Any]](deps(aliasSyms(start)), t => deps(aliasSyms(t.rhs))).flatten.reverse
   }
+*/
+  
+  /*
+   TODO: switch back to graph based formulation
+  */
+  
+  def utilLoadSymTP[T](s: Sym[T]) = if (!isPrimitiveType(s.Type)) globalDefs.filter(List(s) contains _.sym) else Nil
+  def utilLoadSym[T](s: Sym[T]) = utilLoadSymTP(s).map(_.rhs)
+  
+  def shallowAliases(start: Any): List[Sym[Any]] = {
+    val alias = aliasSyms(start) flatMap { a => a::shallowAliases(utilLoadSym(a)) }
+    val extract = extractSyms(start) flatMap { a => deepAliases(utilLoadSym(a)) }
+    (alias ++ extract).distinct
+  }
+  
+  def deepAliases(start: Any): List[Sym[Any]] = {
+    val alias = aliasSyms(start) flatMap { a => deepAliases(utilLoadSym(a)) }
+    val copy = copySyms(start) flatMap { a => deepAliases(utilLoadSym(a)) }
+    val contain = containSyms(start) flatMap { a => a::allAliases(utilLoadSym(a)) }
+    (alias ++ copy ++ contain).distinct
+  }
+
+  def allAliases(start: Any): List[Sym[Any]] = {
+    val r = (shallowAliases(start) ++ deepAliases(start)).distinct
+    //printdbg("all aliases of " + start + ": " + r.mkString(", "))
+    r
+  }
+
+  def allTransitiveAliases(start: Any): List[TP[Any]] = allAliases(start).flatMap(utilLoadSymTP)
+  
   
   // TODO optimization: a mutable object never aliases another mutable object, so its inputs need not be followed
   

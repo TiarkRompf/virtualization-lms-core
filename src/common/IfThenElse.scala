@@ -36,7 +36,26 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b))
     case _ => super.mirror(e,f)
   }
+  
+  override def aliasSyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c,a,b) => syms(a):::syms(b)
+    case _ => super.aliasSyms(e)
+  }
 
+  override def containSyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c,a,b) => Nil
+    case _ => super.containSyms(e)
+  }
+
+  override def extractSyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c,a,b) => Nil
+    case _ => super.extractSyms(e)
+  }
+
+  override def copySyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c,a,b) => Nil // could return a,b but implied by aliasSyms
+    case _ => super.copySyms(e)
+  }
 }
 
 trait IfThenElseOpt extends IfThenElse with EffectExp { //TODO!
