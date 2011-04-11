@@ -63,7 +63,7 @@ trait GenericCodegen extends Scheduling {
     case Const(null) => "null" // why is null getting lifted now? something to do with Equal
     case Const(f: Float) => f.toString + "f"
     case Const(z) => z.toString
-    case Sym(n) => "x"+n
+    case sym @ Sym(n) => sym.name
     case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
     case null => "null"
     case _ => throw new RuntimeException("could not quote " + x)

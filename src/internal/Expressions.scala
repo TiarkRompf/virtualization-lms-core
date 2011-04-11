@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package internal
 
+import scala.reflect.SourceContext
 import scala.annotation.unchecked.uncheckedVariance
 import java.lang.{StackTraceElement,Thread}
 
@@ -20,16 +21,60 @@ trait Expressions {
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
+    var name: String = "x" + (if (id == 0) "" else id)
   }
 
-  case class Variable[+T:Manifest](val e: Exp[T]) // TODO: decide whether it should stay here ...
+  case class Variable[+T:Manifest](val e: Exp[T]) { // TODO: decide whether it should stay here ...
+    def context: Option[SourceContext] = None
+  }
 
   case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
-      
-  var nVars = 0
-  def fresh[T:Manifest] = Sym[T] { nVars += 1; nVars -1 }
 
-  abstract class Def[+T] // operations (composite)
+  var nVars = 0
+  var idMap = Map[String, Int]() // next id for variable name
+
+  def nextName(basename: String): (String, Int) = {
+    nVars += 1
+    val id = nVars - 1
+    idMap.get(basename) match {
+      case None =>
+        idMap += (basename -> 1)
+        (basename, id)
+      case Some(varnum) =>
+        idMap += (basename -> (varnum + 1))
+        (basename + varnum, id)
+    }
+  }
+
+  def fresh[T:Manifest] = {
+    val (name, id) = nextName("x")
+    val sym = Sym[T](id)
+    sym.name = name
+    sym
+  }
+
+  def freshWithDef[T:Manifest](d: Def[T]) = {
+    def enclosingVarName(ctxs: List[List[(String, Int)]]): String = ctxs match {
+      case ctx :: rest => ctx match {
+        case (null, _) :: _ => enclosingVarName(rest)
+        case (name, _) :: _ => name
+      }
+      case List() => "x"
+    }
+
+    // create base name from source context of Def
+    val basename = if (!d.context.isEmpty) {
+      enclosingVarName(d.context.get.allContexts)
+    } else "x"
+    val (name, id) = nextName(basename)
+    val sym = Sym[T](id)
+    sym.name = name
+    sym
+  }
+
+  abstract class Def[+T] { // operations (composite)
+    def context: Option[SourceContext] = None
+  }
 
   case class TP[+T](sym: Sym[T], rhs: Def[T]) 
 
@@ -43,7 +88,7 @@ trait Expressions {
 
   def findOrCreateDefinition[T:Manifest](d: Def[T]): TP[T] =
     findDefinition[T](d).getOrElse {
-      createDefinition(fresh[T], d)
+      createDefinition(freshWithDef[T](d), d)
     }
 
   def createDefinition[T](s: Sym[T], d: Def[T]): TP[T] = {

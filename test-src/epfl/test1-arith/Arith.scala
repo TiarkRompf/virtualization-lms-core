@@ -4,6 +4,8 @@ package test1
 
 import common._
 
+import reflect.SourceContext
+
 import java.io.PrintWriter
 
 trait LiftArith {
@@ -28,10 +30,10 @@ trait Arith extends Base with LiftArith {
     def /(y: Rep[Double]) = infix_/(x,y)
   }
 
-  def infix_+(x: Rep[Double], y: Rep[Double]): Rep[Double]
-  def infix_-(x: Rep[Double], y: Rep[Double]): Rep[Double]
-  def infix_*(x: Rep[Double], y: Rep[Double]): Rep[Double]
-  def infix_/(x: Rep[Double], y: Rep[Double]): Rep[Double]
+  def infix_+(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext): Rep[Double]
+  def infix_-(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext): Rep[Double]
+  def infix_*(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext): Rep[Double]
+  def infix_/(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext): Rep[Double]
 }
 
 
@@ -39,33 +41,41 @@ trait ArithExp extends Arith with BaseExp {
   //todo removed below as now handled in Base traits
   //implicit def unit(x: Double) = Const(x)
   
-  case class Plus(x: Exp[Double], y: Exp[Double]) extends Def[Double]
-  case class Minus(x: Exp[Double], y: Exp[Double]) extends Def[Double]
-  case class Times(x: Exp[Double], y: Exp[Double]) extends Def[Double]
-  case class Div(x: Exp[Double], y: Exp[Double]) extends Def[Double]
+  case class Plus(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double] {
+    override def context = Some(ctx)
+  }
+  case class Minus(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double] {
+    override def context = Some(ctx)
+  }
+  case class Times(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double] {
+    override def context = Some(ctx)
+  }
+  case class Div(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double] {
+    override def context = Some(ctx)
+  }
 
-  def infix_+(x: Exp[Double], y: Exp[Double]) = Plus(x, y)
-  def infix_-(x: Exp[Double], y: Exp[Double]) = Minus(x, y)
-  def infix_*(x: Exp[Double], y: Exp[Double]) = Times(x, y)
-  def infix_/(x: Exp[Double], y: Exp[Double]) = Div(x, y)
+  def infix_+(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = Plus(x, y)
+  def infix_-(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = Minus(x, y)
+  def infix_*(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = Times(x, y)
+  def infix_/(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = Div(x, y)
 }
 
 trait ArithExpOpt extends ArithExp {
 
-  override def infix_+(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_+(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = (x, y) match {
     case (Const(x), Const(y)) => Const(x + y)
     case (x, Const(0.0) | Const(-0.0)) => x
     case (Const(0.0) | Const(-0.0), y) => y
     case _ => super.infix_+(x, y)
   }
 
-  override def infix_-(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_-(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = (x, y) match {
     case (Const(x), Const(y)) => Const(x - y)
     case (x, Const(0.0) | Const(-0.0)) => x
     case _ => super.infix_-(x, y)
   }
 
-  override def infix_*(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_*(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = (x, y) match {
     case (Const(x), Const(y)) => Const(x * y)
     case (x, Const(1.0)) => x
     case (Const(1.0), y) => y
@@ -74,7 +84,7 @@ trait ArithExpOpt extends ArithExp {
     case _ => super.infix_*(x, y)
   }
 
-  override def infix_/(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_/(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = (x, y) match {
     case (Const(x), Const(y)) => Const(x / y)
     case (x, Const(1.0)) => x
     case _ => super.infix_/(x, y)
