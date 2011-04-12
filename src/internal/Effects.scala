@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package internal
 
 import util.GraphUtil
+import scala.collection.mutable
 
 trait Effects extends Expressions with Utils {
   
@@ -164,22 +165,26 @@ trait Effects extends Expressions with Utils {
 */
   
   /*
-   TODO: switch back to graph based formulation
+   TODO: switch back to graph based formulation -- this will not work for circular deps
   */
+  
+  val shallowAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
+  val deepAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
+  val allAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   
   def utilLoadSymTP[T](s: Sym[T]) = if (!isPrimitiveType(s.Type)) globalDefs.filter(List(s) contains _.sym) else Nil
   def utilLoadSym[T](s: Sym[T]) = utilLoadSymTP(s).map(_.rhs)
   
   def shallowAliases(start: Any): List[Sym[Any]] = {
-    val alias = aliasSyms(start) flatMap { a => a::shallowAliases(utilLoadSym(a)) }
-    val extract = extractSyms(start) flatMap { a => deepAliases(utilLoadSym(a)) }
+    val alias = aliasSyms(start) flatMap { a => a::shallowAliasCache.getOrElseUpdate(a, shallowAliases(utilLoadSym(a))) }
+    val extract = extractSyms(start) flatMap { a => deepAliasCache.getOrElseUpdate(a, deepAliases(utilLoadSym(a))) }
     (alias ++ extract).distinct
   }
   
   def deepAliases(start: Any): List[Sym[Any]] = {
-    val alias = aliasSyms(start) flatMap { a => deepAliases(utilLoadSym(a)) }
-    val copy = copySyms(start) flatMap { a => deepAliases(utilLoadSym(a)) }
-    val contain = containSyms(start) flatMap { a => a::allAliases(utilLoadSym(a)) }
+    val alias = aliasSyms(start) flatMap { a => deepAliasCache.getOrElseUpdate(a, deepAliases(utilLoadSym(a))) }
+    val copy = copySyms(start) flatMap { a => deepAliasCache.getOrElseUpdate(a, deepAliases(utilLoadSym(a))) }
+    val contain = containSyms(start) flatMap { a => a::allAliasCache.getOrElseUpdate(a, allAliases(utilLoadSym(a))) }
     (alias ++ copy ++ contain).distinct
   }
 
@@ -210,11 +215,6 @@ trait Effects extends Expressions with Utils {
 
   // TODO: should reflectEffect try to add Read(mutableInputs) as well ??? or just toAtom ???
 
-  def reflectMutable[A:Manifest](d: Def[A]): Exp[A] = {
-    val mutableInputs = readMutableData(d)    
-    reflectEffect(d, Alloc() andAlso Read(mutableInputs))
-  }
-
   // REMARK: making toAtom context-dependent is quite a departure from the 
   // earlier design. there are a number of implications especially for mirroring.
 
@@ -239,10 +239,32 @@ trait Effects extends Expressions with Utils {
     createDefinition(fresh[A], d).sym
   }
 
+  def reflectMutable[A:Manifest](d: Def[A]): Exp[A] = {
+    val mutableInputs = readMutableData(d)    
+    val z = reflectEffect(d, Alloc() andAlso Read(mutableInputs))
+
+    val mutableAliases = mutableTransitiveAliases(d)
+    if (mutableAliases.nonEmpty) {
+      val zd = z match { case Def(zd) => zd }
+      printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
+      printerr("at " + z + "=" + zd)
+    }
+    z
+  }
+
   def reflectWrite[A:Manifest](write0: Exp[Any]*)(d: Def[A]): Exp[A] = {
     val write = write0.toList.asInstanceOf[List[Sym[Any]]] // should check...
-    val mutableInputs = readMutableData(d)    
-    reflectEffect(d, Write(write) andAlso Read(mutableInputs))
+    val mutableInputs = readMutableData(d)
+
+    val z = reflectEffect(d, Write(write) andAlso Read(mutableInputs))
+
+    val mutableAliases = mutableTransitiveAliases(d) filterNot (write contains _)
+    if (mutableAliases.nonEmpty) {
+      val zd = z match { case Def(zd) => zd }
+      printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
+      printerr("at " + z + "=" + zd)
+    }
+    z
   }
 
   def reflectEffect[A:Manifest](x: Def[A]): Exp[A] = reflectEffect(x, Global()) // global effect (may anything, must nothing)  
@@ -273,12 +295,31 @@ trait Effects extends Expressions with Utils {
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
         // make sure no mutable object becomes part of mutable result (in case of allocation)
         // or is written to another mutable object (in case of write)
-        val mutableAliases = mutableTransitiveAliases(x) filterNot (u.mstWrite contains _)
+        /*
+          val a = mzeros(100)
+          val b = zeros(100)
+          val c = if (..) {
+            a.update
+            b
+          } else {
+            a
+          }
+        
+          PROBLEM: the whole if expr has summary mayWrite=List(a), mstWrite=Nil and allAliases=List(a,b)
+          
+          what is the right thing?
+          - mutableAliases \ mstWrite <-- first try, but maybe to restrictive?
+          - mutableAliases \ mayWrite <-- too permissive?
+          - something else?
+        
+        */
+        /*
+        val mutableAliases = mutableTransitiveAliases(x) filterNot (u.mayWrite contains _)
         if (mutableAliases.nonEmpty) {
           printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
           printerr("at " + z + "=" + zd)
         }
-        
+        */
         internalReflect(z, zd)
       }
     }
