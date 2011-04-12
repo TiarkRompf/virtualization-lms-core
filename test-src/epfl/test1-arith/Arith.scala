@@ -41,18 +41,10 @@ trait ArithExp extends Arith with BaseExp {
   //todo removed below as now handled in Base traits
   //implicit def unit(x: Double) = Const(x)
   
-  case class Plus(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double] {
-    override def context = Some(ctx)
-  }
-  case class Minus(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double] {
-    override def context = Some(ctx)
-  }
-  case class Times(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double] {
-    override def context = Some(ctx)
-  }
-  case class Div(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double] {
-    override def context = Some(ctx)
-  }
+  case class Plus(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double](Some(ctx))
+  case class Minus(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double](Some(ctx))
+  case class Times(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double](Some(ctx))
+  case class Div(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) extends Def[Double](Some(ctx))
 
   def infix_+(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = Plus(x, y)
   def infix_-(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = Minus(x, y)

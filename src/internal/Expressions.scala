@@ -24,9 +24,7 @@ trait Expressions {
     var name: String = "x" + (if (id == 0) "" else id)
   }
 
-  case class Variable[+T:Manifest](val e: Exp[T]) { // TODO: decide whether it should stay here ...
-    def context: Option[SourceContext] = None
-  }
+  case class Variable[+T:Manifest](val e: Exp[T]) // TODO: decide whether it should stay here ...
 
   case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
 
@@ -53,9 +51,9 @@ trait Expressions {
     sym
   }
 
-  def freshWithDef[T:Manifest](d: Def[T]) = {
+  def fresh[T:Manifest](d: Def[T], ctx: Option[SourceContext]) = {
     def enclosingVarName(ctxs: List[List[(String, Int)]]): String = ctxs match {
-      case ctx :: rest => ctx match {
+      case first :: rest => (first: @unchecked) match {
         case (null, _) :: _ => enclosingVarName(rest)
         case (name, _) :: _ => name
       }
@@ -63,8 +61,8 @@ trait Expressions {
     }
 
     // create base name from source context of Def
-    val basename = if (!d.context.isEmpty) {
-      enclosingVarName(d.context.get.allContexts)
+    val basename = if (!ctx.isEmpty) {
+      enclosingVarName(ctx.get.allContexts)
     } else "x"
     val (name, id) = nextName(basename)
     val sym = Sym[T](id)
@@ -72,8 +70,9 @@ trait Expressions {
     sym
   }
 
-  abstract class Def[+T] { // operations (composite)
-    def context: Option[SourceContext] = None
+  abstract class Def[+T](val context: Option[SourceContext]) { // operations (composite)
+    def this() =
+      this(None)
   }
 
   case class TP[+T](sym: Sym[T], rhs: Def[T]) 
@@ -88,7 +87,7 @@ trait Expressions {
 
   def findOrCreateDefinition[T:Manifest](d: Def[T]): TP[T] =
     findDefinition[T](d).getOrElse {
-      createDefinition(freshWithDef[T](d), d)
+      createDefinition(fresh[T](d, d.context), d)
     }
 
   def createDefinition[T](s: Sym[T], d: Def[T]): TP[T] = {
