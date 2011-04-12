@@ -74,10 +74,7 @@ trait Expressions {
     sym
   }
 
-  abstract class Def[+T](val context: Option[SourceContext]) { // operations (composite)
-    def this() =
-      this(None)
-  }
+  abstract class Def[+T] // operations (composite)
 
   case class TP[+T](sym: Sym[T], rhs: Def[T]) 
 
@@ -91,7 +88,12 @@ trait Expressions {
 
   def findOrCreateDefinition[T:Manifest](d: Def[T]): TP[T] =
     findDefinition[T](d).getOrElse {
-      createDefinition(fresh[T](d, d.context), d)
+      createDefinition(fresh[T](d, None), d)
+    }
+
+  def findOrCreateDefinition[T:Manifest](d: Def[T], ctx: SourceContext): TP[T] =
+    findDefinition[T](d).getOrElse {
+      createDefinition(fresh[T](d, Some(ctx)), d)
     }
 
   def createDefinition[T](s: Sym[T], d: Def[T]): TP[T] = {
@@ -100,8 +102,8 @@ trait Expressions {
     f
   }
 
-  protected implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
-    findOrCreateDefinition(d).sym
+  protected implicit def toAtom[T:Manifest](d: Def[T])(implicit ctx: SourceContext): Exp[T] = {
+    findOrCreateDefinition(d, ctx).sym
   }
 
   object Def {

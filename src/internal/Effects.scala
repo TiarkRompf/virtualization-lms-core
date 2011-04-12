@@ -1,6 +1,8 @@
 package scala.virtualization.lms
 package internal
 
+import scala.reflect.SourceContext
+
 trait Effects extends Expressions with Utils {
   
   // --- misc
@@ -118,7 +120,7 @@ trait Effects extends Expressions with Utils {
   // REMARK: making toAtom context-dependent is quite a departure from the 
   // earlier design. there are a number of implications especially for mirroring.
 
-  protected override implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
+  protected override implicit def toAtom[T:Manifest](d: Def[T])(implicit ctx: SourceContext): Exp[T] = {
     // are we depending on a variable? then we need to be serialized -> effect
     val mutableInputs = getMutableInputs(d)
     reflectEffect(d, Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
