@@ -20,8 +20,9 @@ trait Expressions {
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
-    var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
+    //var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
     var name: String = "x" + (if (id == 0) "" else id)
+    var nameId: Int = id
   }
 
   case class Variable[+T:Manifest](val e: Exp[T]) // TODO: decide whether it should stay here ...
@@ -31,42 +32,45 @@ trait Expressions {
   var nVars = 0
   var idMap = Map[String, Int]() // next id for variable name
 
-  def nextName(basename: String): (String, Int) = {
+  // returns (name, global id, per-name id)
+  def nextName(basename: String): (String, Int, Int) = {
     nVars += 1
     val id = nVars - 1
     idMap.get(basename) match {
       case None =>
         idMap += (basename -> 1)
-        (basename, id)
+        (basename + id, id, 0)
       case Some(varnum) =>
         idMap += (basename -> (varnum + 1))
-        (basename + varnum, id)
+        (basename + id, id, varnum)
     }
   }
 
   def fresh[T:Manifest] = {
-    val (name, id) = nextName("x")
+    val (name, id, nameId) = nextName("x")
     val sym = Sym[T](id)
     sym.name = name
+    sym.nameId = nameId
     sym
   }
 
   def fresh[T:Manifest](d: Def[T], ctx: Option[SourceContext]) = {
-    def enclosingVarName(ctxs: List[List[(String, Int)]]): String = ctxs match {
+    def enclosingVarName(ctxs: List[List[(String, Int)]]): (String, Int) = ctxs match {
       case first :: rest => (first: @unchecked) match {
         case (null, _) :: _ => enclosingVarName(rest)
-        case (name, _) :: _ => name
+        case (name, line) :: _ => (name, line)
       }
-      case List() => "x"
+      case List() => ("x", 0)
     }
 
     // create base name from source context of Def
-    val basename = if (!ctx.isEmpty) {
+    val (basename, line) = if (!ctx.isEmpty) {
       enclosingVarName(ctx.get.allContexts)
-    } else "x"
-    val (name, id) = nextName(basename)
+    } else ("x", 0)
+    val (name, id, nameId) = nextName(basename)
     val sym = Sym[T](id)
-    sym.name = name
+    sym.name = name + (if (line != 0) "_" + line else "")
+    sym.nameId = nameId
     sym
   }
 
