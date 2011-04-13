@@ -71,10 +71,13 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
     case _ => super.syms(e)
   }
 
+/*
+  DISABLED -- code motion currently relies on boundSyms being nonEmpty only for loops 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case IfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)
     case _ => super.boundSyms(e)
   }
+*/  
 }
 
 trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {

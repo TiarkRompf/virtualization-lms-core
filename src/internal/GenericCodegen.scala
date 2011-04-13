@@ -147,7 +147,11 @@ trait GenericNestedCodegen extends GenericCodegen {
     val bound = for (TP(sym, rhs) <- e1; s <- boundSyms(rhs)) yield s
     val g1 = getDependentStuff(bound)
     
-    val levelScope = e1.filter(z => (e2 contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
+    // stuff needed for 'must inside': this will be hoisted as well!
+    //case class Combine(p:List[Exp[Any]]) extends Exp[Any]
+    val g2 = g1.flatMap(z=>syms(z.rhs))//buildScheduleForResult(Combine(g1.map(_.sym)))
+    
+    val levelScope = e1.filter(z => ((e2 contains z) || (g2 contains z.sym)) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
 
     // sanity check to make sure all effects are accounted for
     result match {

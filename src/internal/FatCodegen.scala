@@ -54,7 +54,11 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     val bound = e1.flatMap(z => boundSyms(z.rhs))
     val g1 = getFatDependentStuff(currentScope)(bound)
     
-    val levelScope = e1.filter(z => (e2 contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
+    // stuff needed for 'must inside': this will be hoisted as well!
+    //case class Combine(p:List[Exp[Any]]) extends Exp[Any]
+    val g2 = g1.flatMap(z=>syms(z.rhs))//buildScheduleForResult(Combine(g1.map(_.sym)))
+    
+    val levelScope = e1.filter(z => ((e2 contains z) || (z.lhs exists (g2 contains _))) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
 
     // sanity check to make sure all effects are accounted for
     result match {
