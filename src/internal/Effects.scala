@@ -97,7 +97,7 @@ trait Effects extends Expressions with Utils {
     case p: Product => p.productIterator.toList.flatMap(readSyms(_))
     case _ => Nil
   }
-  
+
   def aliasSyms(e: Any): List[Sym[Any]] = readSyms(e) // conservative default 
   
   def mayAliasSomethingMutable(s: Sym[Any]) = s match { case Def(Reflect(_, u, _)) => mustMutable(u) case _ => false } // TODO: should be transitive via aliasSyms!!
@@ -134,7 +134,7 @@ trait Effects extends Expressions with Utils {
     reflectEffect(d, Write(write) andAlso Read(mutableInputs))
   }
 
-  def reflectEffect[A:Manifest](x: Def[A]): Exp[A] = reflectEffect(x, Global()) // global effect (may anything, must nothing)  
+  def reflectEffect[A:Manifest](x: Def[A]): Exp[A] = reflectEffect(x, Simple()) // simple effect (serialized with respect to other simples)
 
   def reflectEffect[A:Manifest](x: Def[A], u: Summary): Exp[A] = {
     if (mustPure(u)) super.toAtom(x) else {
