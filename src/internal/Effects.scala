@@ -87,33 +87,32 @@ trait Effects extends Expressions with Utils {
 
   // --- reflect helpers
 
-  def syms(e: Any): List[Sym[Any]] = e match {
-    case s: Sym[Any] => List(s)
-    case p: Product => p.productIterator.toList.flatMap(syms(_))
-    case _ => Nil
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case s: Summary => Nil // don't count effect summaries as dependencies!
+    case _ => super.syms(e)
   }
 
-  def effectSyms(x: Exp[Any]): List[Sym[Any]] = x match {  // only used by various boundSyms impls -- move to codegen?
+  override def effectSyms(x: Any): List[Sym[Any]] = x match {
     case Def(Reify(y, u, es)) => es.asInstanceOf[List[Sym[Any]]]
-    case _ => Nil
+    case _ => super.effectSyms(x)
   }
 
+  def readSyms(e: Any): List[Sym[Any]] = e match {
+    case Reflect(x, u, es) => readSyms(x) // ignore effect deps (they are not read!)
+    case Reify(x, u, es) => 
+      if (es contains x) Nil // FIXME this piece of logic is not clear. is it a special case for unit??
+      else readSyms(x) // result of block is not read but passed through!
+    case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(readSyms(_))
+    case _ => Nil
+  }
+  
   /*
     decisions to be made:
     1) does alias imply read? or are they separate?
     2) use a data structure to track transitive aliasing or recompute always?
   */
 
-  def readSyms(e: Any): List[Sym[Any]] = e match {
-    case s: Sym[Any] => List(s)
-    case Reflect(x, u, es) => readSyms(x) // ignore effect deps (they are not read!)
-    case Reify(x, u, es) => 
-      if (es contains x) Nil // FIXME this piece of logic is not clear. is it a special case for unit??
-      else readSyms(x) // result of block is not read but passed through!
-    case p: Product => p.productIterator.toList.flatMap(readSyms(_))
-    case _ => Nil
-  }
-  
   def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case Reflect(x, u, es) => aliasSyms(x)
     case Reify(x, u, es) => aliasSyms(x)
@@ -276,9 +275,11 @@ trait Effects extends Expressions with Utils {
       if (mustIdempotent(u)) {
         findDefinition(zd) map (_.sym) filter (context contains _) getOrElse { // local cse
           val z = fresh[A]
-          printlog("promoting to effect: " + z + "=" + zd)
-          for (w <- u.mayRead)
-            printlog("depends on  " + w)
+          if (!x.toString.startsWith("ReadVar")) { // supress output for ReadVar
+            printlog("promoting to effect: " + z + "=" + zd)
+            for (w <- u.mayRead)
+              printlog("depends on  " + w)
+          }
           internalReflect(z, zd)
         }
       } else {
@@ -387,6 +388,15 @@ trait Effects extends Expressions with Utils {
     val resultR = if (deps.isEmpty) result else Reify(result, summary, pruneContext(deps)): Exp[A] // calls toAtom...
     context = save
     resultR
+  }
+
+  // --- bookkeping
+
+  override def reset = {
+    shallowAliasCache.clear()
+    deepAliasCache.clear()
+    allAliasCache.clear()
+    super.reset
   }
 
 }

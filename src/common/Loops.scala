@@ -17,6 +17,19 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   }
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
+
+
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case e: AbstractLoop[_] => syms(e.size) ::: syms(e.body) // should add super.syms(e) ?? not without a flag ...
+    case _ => super.syms(e)
+  }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case e: AbstractLoop[_] => e.v :: boundSyms(e.body)
+    case _ => super.boundSyms(e)
+  }
+
+  // TODO: hotSyms
 }
 
 trait LoopsFatExp extends LoopsExp with BaseFatExp {
@@ -28,29 +41,7 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
   }
   
   case class SimpleFatLoop(val size: Exp[Int], val v: Sym[Int], val body: List[Def[Any]]) extends AbstractFatLoop
-}
 
-
-
-
-trait BaseGenLoops extends GenericNestedCodegen {
-  val IR: LoopsExp
-  import IR._
-
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case e: AbstractLoop[_] => syms(e.size) ::: syms(e.body) // should add super.syms(e) ?? not without a flag ...
-    case _ => super.syms(e)
-  }
-
-  override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case e: AbstractLoop[_] => e.v :: boundSyms(e.body)
-    case _ => super.boundSyms(e)
-  }
-}
-
-trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
-  val IR: LoopsFatExp
-  import IR._
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => syms(e.size) ::: syms(e.body)
@@ -61,6 +52,23 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
     case e: AbstractFatLoop => e.v :: boundSyms(e.body)
     case _ => super.boundSyms(e)
   }
+
+  // TODO: hotSyms
+
+}
+
+
+
+
+trait BaseGenLoops extends GenericNestedCodegen {
+  val IR: LoopsExp
+  import IR._
+
+}
+
+trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
+  val IR: LoopsFatExp
+  import IR._
 
   override def fatten(e: TP[Any]): TTP = e.rhs match {
     case op: AbstractLoop[_] => 

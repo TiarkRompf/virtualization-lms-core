@@ -66,22 +66,40 @@ trait Expressions extends Utils {
   }
 
 
-  def reset { // used anywhere?
-    nVars = 0
-    globalDefs = Nil
-  }
-
-/*
   // dependencies
+
   def syms(e: Any): List[Sym[Any]] = e match {
     case s: Sym[Any] => List(s)
     case p: Product => p.productIterator.toList.flatMap(syms(_))
     case _ => Nil
   }
 
-  def dep(e: Exp[Any]): List[Sym[Any]] = e match {
-    case Def(d: Product) => syms(d)
+  def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
     case _ => Nil
   }
-*/
+
+  def effectSyms(x: Any): List[Sym[Any]] = x match {
+    case p: Product => p.productIterator.toList.flatMap(effectSyms(_))
+    case _ => Nil
+  }
+
+  def coldSyms(e: Any): List[Sym[Any]] = e match {
+    case p: Product => p.productIterator.toList.flatMap(coldSyms(_))
+    case _ => Nil
+  }
+
+  def hotSyms(e: Any): List[Sym[Any]] = e match {
+    case p: Product => p.productIterator.toList.flatMap(hotSyms(_))
+    case _ => Nil
+  }
+
+
+  // bookkeeping
+
+  def reset { // used by delite?
+    nVars = 0
+    globalDefs = Nil
+  }
+
 }

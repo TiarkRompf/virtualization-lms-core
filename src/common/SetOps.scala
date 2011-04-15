@@ -38,16 +38,18 @@ trait SetOpsExp extends SetOps with EffectExp {
   def set_add[A:Manifest](s: Rep[Set[A]], i: Rep[A]) = reflectEffect(SetAdd(s, i))
   def set_remove[A:Manifest](s: Rep[Set[A]], i: Rep[A]) = reflectEffect(SetRemove(s, i))
   def set_clear[A:Manifest](s: Rep[Set[A]]) = reflectEffect(SetClear(s))
+
+/*
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case SetNew(xs, mA) => (xs flatMap { syms }).toList
+    case _ => super.syms(e)
+  }
+*/
 }
 
 trait BaseGenSetOps extends GenericNestedCodegen {
   val IR: SetOpsExp
   import IR._
-
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case SetNew(xs, mA) => (xs flatMap { syms }).toList
-    case _ => super.syms(e)
-  }
 
 }
 

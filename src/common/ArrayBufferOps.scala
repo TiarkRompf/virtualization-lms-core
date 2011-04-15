@@ -30,17 +30,19 @@ trait ArrayBufferOpsExp extends ArrayBufferOps with EffectExp {
   def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]]) = reflectMutable(ArrayBufferNew(xs))
   def arraybuffer_mkstring[A:Manifest](l: Exp[ArrayBuffer[A]], sep: Exp[String]) = ArrayBufferMkString(l, sep)
   def arraybuffer_append[A:Manifest](l: Exp[ArrayBuffer[A]], e: Exp[A]) = reflectWrite(l)(ArrayBufferAppend(l, e))
+
+  /*
+    override def syms(e: Any): List[Sym[Any]] = e match { // TODO: can do without override?
+      case ArrayBufferNew(xs) => (xs flatMap { syms }).toList
+      case _ => super.syms(e)
+    }
+  */
+
 }
 
 trait BaseGenArrayBufferOps extends GenericNestedCodegen {
   val IR: ArrayBufferOpsExp
   import IR._
-
-  override def syms(e: Any): List[Sym[Any]] = e match { // TODO: can do without override?
-    case ArrayBufferNew(xs) => (xs flatMap { syms }).toList
-    case _ => super.syms(e)
-  }
-
 }
 
 trait ScalaGenArrayBufferOps extends BaseGenArrayBufferOps with ScalaGenEffect {

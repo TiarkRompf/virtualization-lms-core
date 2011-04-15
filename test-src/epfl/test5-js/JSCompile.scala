@@ -61,14 +61,10 @@ trait JSGenEffect extends JSNestedCodegen with JSGenBase {
 }
 
 
-trait JSGenIfThenElse extends JSGenEffect { // it's more or less generic...
+trait JSGenIfThenElse extends BaseGenIfThenElse with JSGenEffect { // it's more or less generic...
   val IR: IfThenElseExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case IfThenElse(c, t, e) if shallow => syms(c) // in shallow mode, don't count deps from nested blocks
-    case _ => super.syms(e)
-  }
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case IfThenElse(c,a,b) =>  
       stream.println("var " + quote(sym))

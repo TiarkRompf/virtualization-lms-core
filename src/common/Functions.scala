@@ -57,12 +57,7 @@ trait FunctionsExp extends Functions with EffectExp {
     case _ => // unknown function, assume it is effectful
       reflectEffect(Apply(f, x))
   }
-}
-
-trait BaseGenFunctions extends GenericNestedCodegen {
-  val IR: FunctionsExp
-  import IR._
-
+  
   // TODO: right now were trying to hoist as much as we can out of functions. 
   // That might not always be appropriate. A promising strategy would be to have
   // explicit 'hot' and 'cold' functions. 
@@ -73,11 +68,24 @@ trait BaseGenFunctions extends GenericNestedCodegen {
     case _ => super.syms(e)
   }
 
+  override def hotSyms(e: Any): List[Sym[Any]] = e match {
+    case Lambda(f, x, y) => syms(y)
+    case Lambda2(f, x1, x2, y) => syms(y)
+    case _ => super.hotSyms(e)
+  }
+
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => x :: effectSyms(y)
     case Lambda2(f, x1, x2, y) => x1 :: x2 :: effectSyms(y)
     case _ => super.boundSyms(e)
-  }
+  }  
+}
+
+trait BaseGenFunctions extends GenericNestedCodegen {
+  val IR: FunctionsExp
+  import IR._
+
+
 }
 
 trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {

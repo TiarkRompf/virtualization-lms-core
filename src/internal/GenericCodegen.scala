@@ -77,7 +77,7 @@ trait GenericNestedCodegen extends GenericCodegen {
   val IR: Expressions with Effects
   import IR._
 
-  var shallow = false
+//  var shallow = false
 
 //  var outerScope: List[TP[Any]] = Nil
 //  var levelScope: List[TP[Any]] = Nil
@@ -136,22 +136,68 @@ trait GenericNestedCodegen extends GenericCodegen {
     val saveInner = innerScope
     
     val e1 = availableDefs
-    shallow = true
-    val e2 = buildScheduleForResult(result) // shallow list of deps (exclude stuff only needed by nested blocks)
-    shallow = false
+    //shallow = true
+    //val e2 = buildScheduleForResult(result) // shallow list of deps (exclude stuff only needed by nested blocks)
+    //shallow = false
 
     // shallow is 'must outside + should outside' <--- currently shallow == deep for lambdas, meaning everything 'should outside'
     // bound is 'must inside'
 
     // find transitive dependencies on bound syms, including their defs (in case of effects)
     val bound = for (TP(sym, rhs) <- e1; s <- boundSyms(rhs)) yield s
-    val g1 = getDependentStuff(bound)
+    val g1 = getDependentStuff(bound) // 'must inside'
     
-    // stuff needed for 'must inside': this will be hoisted as well!
-    //case class Combine(p:List[Exp[Any]]) extends Exp[Any]
-    val g2 = g1.flatMap(z=>syms(z.rhs))//buildScheduleForResult(Combine(g1.map(_.sym)))
+    // e1 = reachable
+    val h1 = e1 filterNot (g1 contains _) // 'may outside'
+    val f1 = g1.flatMap { t => syms(t.rhs) } flatMap { s => h1 filter (_.sym == s) } // fringe: 1 step from g1
     
-    val levelScope = e1.filter(z => ((e2 contains z) || (g2 contains z.sym)) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
+    val e2 = buildScheduleForResultM(e1)(result, false, true)       // (shallow|hot)*  no cold ref on path
+
+    val e3 = buildScheduleForResultM(e1)(result, true, false)       // (shallow|cold)* no hot ref on path
+
+    val f2 = f1 filterNot (e3 contains _)                           // fringe restricted to: any* hot any*
+
+    val h2 = buildScheduleForResultM(e1)(f2, false, true)
+
+    // things that should live on this level:
+    // - not within conditional: no cold ref on path (shallow|hot)*
+    // - on the fringe but outside of mustInside, if on a hot path any* hot any*
+    
+    val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
+
+    if (verbosity > 2) {
+      println("--- e1")
+      e1.foreach(println)
+      println("--- e2 (non-cold)")
+      e2.foreach(println)
+      println("--- g1 (bound)")
+      g1.foreach(println)
+      println("--- fringe")
+      f1.foreach(println)
+      println("--- h2 (fringe; any* hot any*; and non-cold inputs)")
+      h2.foreach(println)
+    }
+
+    // sym->sym->hot->sym->cold->sym  hot --> hoist **** iff the cold is actually inside the loop ****
+    // sym->sym->cold->sym->hot->sym  cold here, hot later --> push down, then hoist
+    
+/*
+
+    loop { i =>                z = *if (x) bla
+      if (i > 0)               loop { i =>
+        *if (x)                  if (i > 0)
+          bla                      z
+    }                          }
+                               
+    loop { i =>                z = *bla
+      if (x)                   loop { i =>
+        if (i > 0)               if (x)
+          *bla                     if (i > 0)
+    }                                z
+                               }
+*/    
+
+    val levelScope = e1.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
 
     // sanity check to make sure all effects are accounted for
     result match {
@@ -190,11 +236,6 @@ trait GenericNestedCodegen extends GenericCodegen {
   }
   
 
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case s: Summary => Nil // don't count effect summaries as dependencies!
-    case _ => super.syms(e)
-  }
-
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
 //    case Read(s) =>
 //      emitValDef(sym, quote(s))
@@ -227,7 +268,7 @@ trait GenericNestedCodegen extends GenericCodegen {
 
   def reset { // used anywhere?
     innerScope = null
-    shallow = false
+    //shallow = false
     IR.reset
   }
 

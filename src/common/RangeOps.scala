@@ -52,11 +52,7 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
     case Reflect(RangeForeach(s,e,i,b), u, es) => reflectMirrored(Reflect(RangeForeach(f(s),f(e),f(i).asInstanceOf[Sym[Int]],f(b)), mapOver(f,u), f(es)))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
-}
 
-trait BaseGenRangeOps extends GenericNestedCodegen {
-  val IR: RangeOpsExp
-  import IR._
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case RangeForeach(start, end, i, body) => syms(start):::syms(end):::syms(body)
@@ -67,6 +63,14 @@ trait BaseGenRangeOps extends GenericNestedCodegen {
     case RangeForeach(start, end, i, y) => i :: effectSyms(y)
     case _ => super.boundSyms(e)
   }
+
+
+}
+
+trait BaseGenRangeOps extends GenericNestedCodegen {
+  val IR: RangeOpsExp
+  import IR._
+
 }
 
 trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {

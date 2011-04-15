@@ -26,6 +26,32 @@ trait FatScheduling extends Scheduling {
     GraphUtil.stronglyConnectedComponents[TTP](deps(syms(result)), t => deps(syms(t.rhs))).flatten.reverse
   }
 
+/*
+  def buildScheduleForResultM(defs: List[TP[Any]])(start: Any, cold: Boolean, hot: Boolean): List[TP[Any]] = {
+    def mysyms(st: Any) = if (cold && hot) syms(st)
+      else if (cold && !hot) syms(st) diff hotSyms(st)
+      else if (!cold && hot) syms(st) diff coldSyms(st)
+      else syms(st) diff coldSyms(st) diff hotSyms(st)
+    
+    def deps(st: List[Sym[Any]]): List[TP[Any]] =
+      defs.filter(st contains _.sym)
+      //syms(e).flatMap(d => findDefinition(d).toList)
+
+    GraphUtil.stronglyConnectedComponents[TP[Any]](deps(mysyms(start,cold,hot)), t => deps(mysyms(t.rhs,cold,hot))).flatten.reverse
+  }  
+*/  
+  def getFatScheduleM(scope: List[TTP])(start: Any, cold: Boolean, hot: Boolean): List[TTP] = {
+    def mysyms(st: Any) = if (cold && hot) syms(st)
+      else if (cold && !hot) syms(st) diff hotSyms(st)
+      else if (!cold && hot) syms(st) diff coldSyms(st)
+      else syms(st) diff coldSyms(st) diff hotSyms(st)
+
+    def deps(st: List[Sym[Any]]): List[TTP] =
+      scope.filter(d => (st intersect d.lhs).nonEmpty)
+
+    GraphUtil.stronglyConnectedComponents[TTP](deps(mysyms(scope,cold,hot)), t => deps(mysyms(t.rhs,cold,hot))).flatten.reverse
+  }
+
   def getFatDependentStuff(scope: List[TTP])(sts: List[Sym[Any]]): List[TTP] = {
     /*
      precompute:

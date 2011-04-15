@@ -56,6 +56,19 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     case IfThenElse(c,a,b) => Nil // could return a,b but implied by aliasSyms
     case _ => super.copySyms(e)
   }
+
+
+
+  override def coldSyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c, t, e) => syms(t) ++ syms(e)
+    case _ => super.coldSyms(e)
+  }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)
+    case _ => super.boundSyms(e)
+  }
+
 }
 
 trait IfThenElseOpt extends IfThenElse with EffectExp { //TODO!
@@ -66,18 +79,6 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
   val IR: IfThenElseExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case IfThenElse(c, t, e) if shallow => syms(c) // in shallow mode, don't count deps from nested blocks
-    case _ => super.syms(e)
-  }
-
-/*
-  DISABLED -- code motion currently relies on boundSyms being nonEmpty only for loops 
-  override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case IfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)
-    case _ => super.boundSyms(e)
-  }
-*/  
 }
 
 trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {

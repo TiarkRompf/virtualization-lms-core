@@ -74,6 +74,14 @@ trait ArrayLoopsExp extends LoopsExp {
     case _ => ArrayLength(a)
   }
 
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case ArrayElem(y) => effectSyms(y)
+    case ReduceElem(y) => effectSyms(y)
+    case FlattenElem(y) => effectSyms(y)
+    case _ => super.boundSyms(e)
+  }
+
 }
 
 trait ArrayLoopsFatExp extends ArrayLoopsExp with LoopsFatExp
@@ -85,13 +93,6 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
   val IR: ArrayLoopsExp
   import IR._
   
-  override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case ArrayElem(y) => effectSyms(y)
-    case ReduceElem(y) => effectSyms(y)
-    case FlattenElem(y) => effectSyms(y)
-    case _ => super.boundSyms(e)
-  }
-
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case SimpleLoop(s,x,ArrayElem(y)) =>  
       stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") { " + quote(x) + " => ")
