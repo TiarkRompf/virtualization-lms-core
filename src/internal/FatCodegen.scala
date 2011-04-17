@@ -60,10 +60,10 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
 
     val e3 = getFatScheduleM(e1)(result, true, false)       // (shallow|cold)* no hot ref on path
 
-    val f2 = f1 filterNot (e3 contains _)                           // fringe restricted to: any* hot any*
+    val f2 = f1 filterNot (e3 contains _)                   // fringe restricted to: any* hot any*
 
-    val h2 = getFatScheduleM(e1)(f2, false, true)
-
+    val h2 = getFatScheduleM(e1)(f2.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
+    
     // things that should live on this level:
     // - not within conditional: no cold ref on path (shallow|hot)*
     // - on the fringe but outside of mustInside, if on a hot path any* hot any*

@@ -76,10 +76,6 @@ trait BaseGenMathOps extends GenericNestedCodegen {
   val IR: MathOpsExp
   import IR._
 
-  //override def syms(e: Any): Math[Sym[Any]] = e match {
-  //  case _ => super.syms(e)
-  //}
-
 }
 
 trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {

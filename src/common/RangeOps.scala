@@ -64,6 +64,11 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
     case _ => super.boundSyms(e)
   }
 
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case RangeForeach(start, end, i, body) => freqNormal(start):::freqNormal(end):::freqHot(body)
+    case _ => super.symsFreq(e)
+  }
+
 
 }
 

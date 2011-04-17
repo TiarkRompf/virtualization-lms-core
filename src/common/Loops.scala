@@ -29,7 +29,11 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case _ => super.boundSyms(e)
   }
 
-  // TODO: hotSyms
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case e: AbstractLoop[_] => freqNormal(e.size) ::: freqHot(e.body) // should add super.syms(e) ?? not without a flag ...
+    case _ => super.symsFreq(e)
+  }
+
 }
 
 trait LoopsFatExp extends LoopsExp with BaseFatExp {
@@ -53,7 +57,10 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     case _ => super.boundSyms(e)
   }
 
-  // TODO: hotSyms
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case e: AbstractFatLoop => freqNormal(e.size) ::: freqHot(e.body)
+    case _ => super.symsFreq(e)
+  }
 
 }
 

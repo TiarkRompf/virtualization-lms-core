@@ -56,8 +56,6 @@ trait NestCondProg extends Arith with Functions with IfThenElse with Print {
 
 trait NestCondProg2 extends Arith with Functions with IfThenElse with Print {
   
-  // FIXME: need unit(true)
-  
   def test(x: Rep[Unit]) = {
     val f = if (unit(true)) doLambda { x: Rep[Double] => 2 * x } else doLambda { x: Rep[Double] => 4 * x }
     
@@ -75,6 +73,23 @@ trait NestCondProg2 extends Arith with Functions with IfThenElse with Print {
   }
   
 }
+
+trait NestCondProg3 extends Arith with Functions with IfThenElse with Print {
+  
+  def test(x: Rep[Unit]) = {
+    val g = doLambda { y: Rep[Double] =>
+      if (unit(true)) {
+        val x = y + 1.0
+        print(x)
+        ()
+      } else {
+      }
+    }
+    g
+  }
+  
+}
+
 
 
 
@@ -114,5 +129,17 @@ class TestCodemotion extends FileDiffSuite {
     }
     assertFileEqualsCheck(prefix+"codemotion3")
   }
+
+  def testCodemotion4 = {
+    // test loop hoisting (should use loops but lambdas will do for now)
+    withOutFile(prefix+"codemotion4") {
+      new NestCondProg3 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+      }
+    }
+    assertFileEqualsCheck(prefix+"codemotion4")
+  }
+
 
 }

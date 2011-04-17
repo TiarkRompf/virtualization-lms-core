@@ -84,15 +84,43 @@ trait Expressions extends Utils {
     case _ => Nil
   }
 
-  def coldSyms(e: Any): List[Sym[Any]] = e match {
-    case p: Product => p.productIterator.toList.flatMap(coldSyms(_))
+
+
+  def rsyms[T](e: Any)(f: Any=>List[T]): List[T] = e match {
+    case s: Sym[Any] => f(s)
+    case p: Product => p.productIterator.toList.flatMap(f)
     case _ => Nil
   }
 
-  def hotSyms(e: Any): List[Sym[Any]] = e match {
-    case p: Product => p.productIterator.toList.flatMap(hotSyms(_))
+  def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case s: Sym[Any] => List((s,1.0))
+//    case _ => rsyms(e)(symsFreq)
+    case p: Product => p.productIterator.toList.flatMap(symsFreq(_))
     case _ => Nil
   }
+
+  def freqNormal(e: Any) = symsFreq(e)
+  def freqHot(e: Any) = symsFreq(e).map(p=>(p._1,p._2*1000.0))
+  def freqCold(e: Any) = symsFreq(e).map(p=>(p._1,p._2*0.5))
+
+
+
+/*
+  def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case s: Sym[Any] => List((s,1.0))
+    case p: Product => p.productIterator.toList.flatMap(symsFreq(_))
+    case _ => Nil
+  }
+*/
+
+/*
+  def symsShare(e: Any): List[(Sym[Any], Int)] = {
+    case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(symsShare(_))
+    case _ => Nil
+  }
+*/
+
 
 
   // bookkeeping

@@ -157,7 +157,7 @@ trait GenericNestedCodegen extends GenericCodegen {
 
     val f2 = f1 filterNot (e3 contains _)                           // fringe restricted to: any* hot any*
 
-    val h2 = buildScheduleForResultM(e1)(f2, false, true)
+    val h2 = buildScheduleForResultM(e1)(f2.map(_.sym), false, true)       // anything that depends non-cold on it...
 
     // things that should live on this level:
     // - not within conditional: no cold ref on path (shallow|hot)*

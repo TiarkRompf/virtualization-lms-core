@@ -6,6 +6,12 @@ import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailed
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]): Rep[T]
+
+  // HACK -- bug in scala-virtualized
+  override def __ifThenElse[T](cond: =>Boolean, thenp: => T, elsep: => T) = cond match {
+    case true => thenp
+    case false => elsep
+  }
 }
 
 // TODO: it would be nice if IfThenElseExp would extend IfThenElsePureExp
@@ -58,11 +64,17 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
   }
 
 
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case IfThenElse(c, t, e) => freqNormal(c) ++ freqCold(t) ++ freqCold(e)
+    case _ => super.symsFreq(e)
+  }
 
+/*
   override def coldSyms(e: Any): List[Sym[Any]] = e match {
     case IfThenElse(c, t, e) => syms(t) ++ syms(e)
     case _ => super.coldSyms(e)
   }
+*/
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case IfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)

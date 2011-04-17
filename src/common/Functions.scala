@@ -68,10 +68,18 @@ trait FunctionsExp extends Functions with EffectExp {
     case _ => super.syms(e)
   }
 
+/*
   override def hotSyms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => syms(y)
     case Lambda2(f, x1, x2, y) => syms(y)
     case _ => super.hotSyms(e)
+  }
+*/
+
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case Lambda(f, x, y) => freqHot(y)
+    case Lambda2(f, x1, x2, y) => freqHot(y)
+    case _ => super.symsFreq(e)
   }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {

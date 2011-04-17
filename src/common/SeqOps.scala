@@ -32,13 +32,6 @@ trait SeqOpsExp extends SeqOps with EffectExp {
   def seq_new[A:Manifest](xs: Seq[Rep[A]]) = SeqNew(xs)
   def seq_apply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int]): Exp[T] = SeqApply(x, n)
   def seq_length[T:Manifest](a: Exp[Seq[T]]): Exp[Int] = SeqLength(a)
-
-/*
-  override def syms(e: Any): List[Sym[Any]] = e match { // TODO: can do without override?
-    case SeqNew(xs) => (xs flatMap { syms }).toList
-    case _ => super.syms(e)
-  }
-*/
 }
 
 trait BaseGenSeqOps extends GenericNestedCodegen {

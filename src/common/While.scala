@@ -30,7 +30,10 @@ trait WhileExp extends While with FunctionsExp {
     case _ => super.boundSyms(e)
   }
   
-  // TODO: hotSyms
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case While(c, b) => freqHot(c):::freqHot(b)
+    case _ => super.symsFreq(e)
+  }
 
 
 }

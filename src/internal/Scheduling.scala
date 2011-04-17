@@ -25,17 +25,21 @@ trait Scheduling {
     GraphUtil.stronglyConnectedComponents[TP[Any]](deps(syms(start)), t => deps(syms(t.rhs))).flatten.reverse
   }  
 
-  def buildScheduleForResultM(defs: List[TP[Any]])(start: Any, cold: Boolean, hot: Boolean): List[TP[Any]] = {
-    def mysyms(st: Any) = if (cold && hot) syms(st)
-      else if (cold && !hot) syms(st) diff hotSyms(st)
-      else if (!cold && hot) syms(st) diff coldSyms(st)
-      else syms(st) diff coldSyms(st) diff hotSyms(st)
+  def buildScheduleForResultM(scope: List[TP[Any]])(start: Any, cold: Boolean, hot: Boolean): List[TP[Any]] = {
+    def mysyms(st: Any) = {
+      val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
+      assert(syms(st).toSet == db.map(_._1).toSet, "different list of syms: "+syms(st)+"!="+db)
+      if (cold && hot) db.map(_._1)
+      else if (cold && !hot) db.withFilter(_._2 < 100.0).map(_._1)
+      else if (!cold && hot) db.withFilter(_._2 > 0.75).map(_._1)
+      else db.withFilter(p=>p._2 > 0.75 && p._2 < 100.0).map(_._1)
+    }
     
     def deps(st: List[Sym[Any]]): List[TP[Any]] =
-      defs.filter(st contains _.sym)
+      scope.filter(st contains _.sym)
       //syms(e).flatMap(d => findDefinition(d).toList)
 
-    GraphUtil.stronglyConnectedComponents[TP[Any]](deps(mysyms(start,cold,hot)), t => deps(mysyms(t.rhs,cold,hot))).flatten.reverse
+    GraphUtil.stronglyConnectedComponents[TP[Any]](deps(mysyms(start)), t => deps(mysyms(t.rhs))).flatten.reverse
   }  
 
 

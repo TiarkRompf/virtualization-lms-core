@@ -92,6 +92,16 @@ trait Effects extends Expressions with Utils {
     case _ => super.syms(e)
   }
 
+  override def rsyms[T](e: Any)(f: Any => List[T]): List[T] = e match { // stack overflow ...
+    case s: Summary => Nil // don't count effect summaries as dependencies!
+    case _ => super.rsyms(e)(f)
+  }
+
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case s: Summary => Nil // don't count effect summaries as dependencies!
+    case _ => super.symsFreq(e)
+  }
+
   override def effectSyms(x: Any): List[Sym[Any]] = x match {
     case Def(Reify(y, u, es)) => es.asInstanceOf[List[Sym[Any]]]
     case _ => super.effectSyms(x)
