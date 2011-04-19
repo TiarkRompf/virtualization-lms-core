@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package internal
 
-import scala.reflect.SourceContext
+import scala.reflect.{SourceContext, SourceLocation}
 import scala.annotation.unchecked.uncheckedVariance
 import java.lang.{StackTraceElement,Thread}
 
@@ -23,6 +23,7 @@ trait Expressions {
     //var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
     var name: String = "x" + (if (id == 0) "" else id)
     var nameId: Int = id
+    var sourceLocation: Option[SourceLocation] = None
   }
 
   case class Variable[+T:Manifest](val e: Exp[T]) // TODO: decide whether it should stay here ...
@@ -71,6 +72,8 @@ trait Expressions {
     val sym = Sym[T](id)
     sym.name = name + (if (line != 0) "_" + line else "")
     sym.nameId = nameId
+    sym.sourceLocation = if (ctx.isEmpty) None
+                         else ctx
     sym
   }
 

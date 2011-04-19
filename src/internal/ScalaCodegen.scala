@@ -80,7 +80,8 @@ trait ScalaCodegen extends GenericCodegen {
   }
 
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println("val " + quote(sym) + " = " + rhs) // + "        //" + sym.Type.debugInfo)
+    stream.println("val " + quote(sym) + " = " + rhs + (if (sym.sourceLocation.isEmpty) ""
+                                                        else "      //" + sym.sourceLocation.get))
   }
   def emitVarDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.Type) + " = " + rhs)
