@@ -59,12 +59,12 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
 
   // TODO: why doesn't this implicit kick in automatically? <--- do they belong here? maybe better move to NumericOps
   // we really need to refactor this. +=/-= shouldn't be here or in Arith, but in some other type class, which includes Numeric variables
-  def infix_+=[T:Manifest](lhs: Var[T], rhs: T) = var_plusequals(lhs, unit(rhs))
-  def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_plusequals(lhs,rhs)
-  def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_plusequals(lhs,readVar(rhs))
-  def infix_-=[T:Manifest](lhs: Var[T], rhs: T) = var_minusequals(lhs, unit(rhs))
-  def infix_-=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_minusequals(lhs,rhs)
-  def infix_-=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_minusequals(lhs,readVar(rhs))
+  def infix_+=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T]) = var_plusequals(lhs, unit(rhs))
+  def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_plusequals(lhs,rhs)
+  def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T]) = var_plusequals(lhs,readVar(rhs))
+  def infix_-=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T]) = var_minusequals(lhs, unit(rhs))
+  def infix_-=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_minusequals(lhs,rhs)
+  def infix_-=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T]) = var_minusequals(lhs,readVar(rhs))
 }
 
 trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits with ReadVarImplicitExp {

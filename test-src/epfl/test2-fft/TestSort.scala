@@ -2,10 +2,10 @@ package scala.virtualization.lms
 package epfl
 package test2
 
+/*
 import common._
 import test1._
 
-/*
 trait TestSort { this: Relat =>
 
   def splitOddEven[T](xs: List[T]): (List[T], List[T]) = (xs: @unchecked) match {
