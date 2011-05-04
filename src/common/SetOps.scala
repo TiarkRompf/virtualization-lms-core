@@ -40,7 +40,7 @@ trait SetOpsExp extends SetOps with EffectExp {
   def set_contains[A:Manifest](s: Exp[Set[A]], i: Exp[A]) = SetContains(s, i)
   def set_add[A:Manifest](s: Exp[Set[A]], i: Exp[A]) = reflectWrite(s)(SetAdd(s, i))
   def set_remove[A:Manifest](s: Exp[Set[A]], i: Exp[A]) = reflectWrite(s)(SetRemove(s, i))
-  def set_size[A:Manifest](s: Exp[Set[A]]) : Exp[Int]
+  def set_size[A:Manifest](s: Exp[Set[A]]) = SetSize(s)
   def set_clear[A:Manifest](s: Exp[Set[A]]) = reflectWrite(s)(SetClear(s))
 }
 
