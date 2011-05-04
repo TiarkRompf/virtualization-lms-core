@@ -7,7 +7,7 @@ import scala.collection.mutable.Set
 
 trait SetOps extends Base {
   object Set {
-    def apply[A:Manifest](xs: Rep[A]*) = set_new(xs, manifest[A])
+    def apply[A:Manifest](xs: Rep[A]*) = set_new[A](xs)
   }
 
   implicit def repSetToSetOps[A:Manifest](v: Rep[Set[A]]) = new setOpsCls(v)
@@ -16,28 +16,32 @@ trait SetOps extends Base {
     def contains(i: Rep[A]) = set_contains(s, i)
     def add(i: Rep[A]) = set_add(s, i)
     def remove(i: Rep[A]) = set_remove(s, i)
+    def size = set_size(s)
     def clear() = set_clear(s)
   }
 
-  def set_new[A:Manifest](xs: Seq[Rep[A]], mA: Manifest[A]) : Rep[Set[A]]
+  def set_new[A:Manifest](xs: Seq[Rep[A]]) : Rep[Set[A]]
   def set_contains[A:Manifest](s: Rep[Set[A]], i: Rep[A]) : Rep[Boolean]
   def set_add[A:Manifest](s: Rep[Set[A]], i: Rep[A]) : Rep[Unit]
   def set_remove[A:Manifest](s: Rep[Set[A]], i: Rep[A]) : Rep[Unit]
+  def set_size[A:Manifest](s: Rep[Set[A]]) : Rep[Int]
   def set_clear[A:Manifest](s: Rep[Set[A]]) : Rep[Unit]
 }
 
 trait SetOpsExp extends SetOps with EffectExp {
-  case class SetNew[A:Manifest](xs: Seq[Rep[A]], mA: Manifest[A]) extends Def[Set[A]]
-  case class SetContains[A:Manifest](s: Rep[Set[A]], i: Rep[A]) extends Def[Boolean]
-  case class SetAdd[A:Manifest](s: Rep[Set[A]], i: Rep[A]) extends Def[Unit]
-  case class SetRemove[A:Manifest](s: Rep[Set[A]], i: Rep[A]) extends Def[Unit]
-  case class SetClear[A:Manifest](s: Rep[Set[A]]) extends Def[Unit]
+  case class SetNew[A:Manifest](xs: Seq[Exp[A]], mA: Manifest[A]) extends Def[Set[A]]
+  case class SetContains[A:Manifest](s: Exp[Set[A]], i: Exp[A]) extends Def[Boolean]
+  case class SetAdd[A:Manifest](s: Exp[Set[A]], i: Exp[A]) extends Def[Unit]
+  case class SetRemove[A:Manifest](s: Exp[Set[A]], i: Exp[A]) extends Def[Unit]
+  case class SetSize[A:Manifest](s: Exp[Set[A]]) extends Def[Int]
+  case class SetClear[A:Manifest](s: Exp[Set[A]]) extends Def[Unit]
 
-  def set_new[A:Manifest](xs: Seq[Rep[A]], mA: Manifest[A]) = reflectEffect(SetNew(xs, mA))
-  def set_contains[A:Manifest](s: Rep[Set[A]], i: Rep[A]) = SetContains(s, i)
-  def set_add[A:Manifest](s: Rep[Set[A]], i: Rep[A]) = reflectEffect(SetAdd(s, i))
-  def set_remove[A:Manifest](s: Rep[Set[A]], i: Rep[A]) = reflectEffect(SetRemove(s, i))
-  def set_clear[A:Manifest](s: Rep[Set[A]]) = reflectEffect(SetClear(s))
+  def set_new[A:Manifest](xs: Seq[Exp[A]]) = reflectMutable(SetNew(xs, manifest[A]))
+  def set_contains[A:Manifest](s: Exp[Set[A]], i: Exp[A]) = SetContains(s, i)
+  def set_add[A:Manifest](s: Exp[Set[A]], i: Exp[A]) = reflectWrite(s)(SetAdd(s, i))
+  def set_remove[A:Manifest](s: Exp[Set[A]], i: Exp[A]) = reflectWrite(s)(SetRemove(s, i))
+  def set_size[A:Manifest](s: Exp[Set[A]]) : Exp[Int]
+  def set_clear[A:Manifest](s: Exp[Set[A]]) = reflectWrite(s)(SetClear(s))
 }
 
 trait BaseGenSetOps extends GenericNestedCodegen {
@@ -60,6 +64,7 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
     case SetContains(s,i) => emitValDef(sym, quote(s) + ".contains(" + quote(i) + ")")
     case SetAdd(s,i) => emitValDef(sym, quote(s) + ".add(" + quote(i) + ")")
     case SetRemove(s,i) => emitValDef(sym, quote(s) + ".remove(" + quote(i) + ")")
+    case SetSize(s) => emitValDef(sym, quote(s) + ".size")
     case SetClear(s) => emitValDef(sym, quote(s) + ".clear()")
     case _ => super.emitNode(sym, rhs)
   }
