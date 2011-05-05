@@ -152,7 +152,7 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
             else
               (true, Nil)
           } else
-            (false, Nil)
+            unifyLists(prefix, makeLessThan(mainPref))
         case _ =>
           (false, Nil)
       }
@@ -190,7 +190,7 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
         case _ =>
           (false, Nil)
       }
-    case lt: LessThan =>
+    case lt: LessThanConstraint =>
       (lt.a, lt.b) match {
         case (l1: Lst, l2:Lst) if (countUnknowns(l1) + countUnknowns(l2) == 0) =>
           if (l1.list.length != l2.list.length)
@@ -201,6 +201,8 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
             if (il1(i) >= il2(i))
               throw new Exception("unification: Less than not satisfied: " + l2.toString + " and " + l1.toString)
           (true, Nil)
+        case (v: Var, l: Lst) =>
+          (true, new SubstituteVarToLst(v, makeLessThan(l))::Nil)
         case _ =>
           (false, Nil)
       }
@@ -335,6 +337,15 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
         case (l: LengthOf, v: Value) => substs = new SubstituteVarToLst(l.v, makeUnknowns(v.n)) :: substs
         case (l: LengthOf, u: Unknown) => substs = new SubstituteUnknown(u, l) :: substs
         case (l1: LengthOf, l2: LengthOf) => if (l1.v != l2.v) success = false // we don't have enough info to do this substitution
+        case (u: Unknown, lt: LessThan) => substs = new SubstituteUnknown(u, lt) :: substs
+        case (lt: LessThan, u: Unknown) => substs = new SubstituteUnknown(u, lt) :: substs
+        case (v: Value, lt: LessThan) => substs = new SubstituteLessThan(lt, v) :: substs // lt behaves like an unknown, just with the LessThan constraint
+        case (lt: LessThan, v: Value) => substs = new SubstituteLessThan(lt, v) :: substs // lt behaves like an unknown, just with the LessThan constraint
+        // TODO: Replace by the condition that is stronger, but we have no way to know which is stronger
+        // TODO: Refine this, there are cases where we know which is stronger
+        case (l: LengthOf, lt: LessThan) => success = false
+        case (lt: LessThan, l: LengthOf) => success = false
+        case (lt1: LessThan, lt2: LessThan) => success = false //substs = new SubstituteLessThan(lt1, lt2)
       }
 
     (success, substs.reverse)

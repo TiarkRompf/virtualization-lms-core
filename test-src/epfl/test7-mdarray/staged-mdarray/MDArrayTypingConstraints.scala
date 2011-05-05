@@ -107,7 +107,7 @@ trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse wit
       LengthEqualityAeqB(ShapeVar(d), Lst(Nil), preReq, rhs)::
       LengthEqualityAeqB(ShapeVar(a), Lst(getNewUnknown::Nil), preReq, rhs)::
       LengthEqualityAeqB(ShapeVar(a), ShapeVar(b), preReq, rhs)::
-      LessThan(ValueVar(d), Lst(LengthOf(ShapeVar(a))::Nil), preReq, rhs)::
+      LessThanConstraint(ValueVar(d), Lst(LengthOf(ShapeVar(a))::Nil), preReq, rhs)::
       EqualityExceptFor(ValueVar(d), ShapeVar(a), ShapeVar(b), preReq, rhs)::
       LengthEqualityAeqB(ShapeVar(sym), ShapeVar(a), postReq, rhs)::
       EqualityShAeqShBplusShCalongD(ShapeVar(sym), ShapeVar(a), ShapeVar(b), ValueVar(d), postReq, rhs)::Nil
