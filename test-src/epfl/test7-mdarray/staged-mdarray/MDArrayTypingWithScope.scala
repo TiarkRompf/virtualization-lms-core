@@ -9,8 +9,9 @@ import original.Conversions._
 import java.io.{Writer, PrintWriter}
 import collection.immutable.HashMap
 
-
 trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
+
+  final val HAVE_SCOPES: Boolean = true
 
   import IR.{Sym, Exp, Def, TP}
   protected var currentScope: TypingScope = null
@@ -24,15 +25,21 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
     currentScope.constrainedSymbols = currentScope.constrainedSymbols + sym
 
   protected def createSubScope(ifSym:Sym[_], sym: Sym[_])(action: => Unit): Unit = {
-    // 1. Create new scope
-    val oldScope = currentScope
-    currentScope = TypingScope(ifSym, sym, oldScope)
-    if (oldScope ne null)
-      oldScope.children = currentScope :: oldScope.children
-    // 2. Perform the action
-    action
-    // 3. Revert to old scope
-    currentScope = oldScope
+
+    if (HAVE_SCOPES) {
+      // 1. Create new scope
+      val oldScope = currentScope
+      currentScope = TypingScope(ifSym, sym, oldScope)
+      if (oldScope ne null)
+        oldScope.children = currentScope :: oldScope.children
+      // 2. Perform the action
+      action
+      // 3. Revert to old scope
+      currentScope = oldScope
+    }
+    else
+      // Just perform the action
+      action
   }
 
   case class TypingScope(ifSym: Sym[_], sym: Sym[_], parent: TypingScope) {
