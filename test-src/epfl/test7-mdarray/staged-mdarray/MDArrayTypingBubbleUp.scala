@@ -64,7 +64,7 @@ trait MDArrayTypingBubbleUp extends MDArrayTypingWithScope {
   }
 
 
-  def withinDifferentScopes(pairs: List[Pair[Sym[_], ()=>Unit]]): Unit = {
+  def withinDifferentScopes(ifSym: Sym[_], pairs: List[Pair[Sym[_], ()=>Unit]]): Unit = {
 
     var scopes: List[TypingScope] = Nil
     var parentScopeSubsts = scopeSubsts
@@ -75,10 +75,7 @@ trait MDArrayTypingBubbleUp extends MDArrayTypingWithScope {
     for (pair <- pairs) {
       val (sym, action) = pair
       val oldScope = currentScope
-      val newScopes = currentScope.children.filter(_.sym == sym)
-      // TODO: Prove that if there are multiple if-s that return the same value the scoping will be the same
-      // example   if (all(A)) 0 else 1; if (all(B)) 1 else 2; // here 1 will add two scopes with the same sym -- is this the same?!?
-      // TODO: Test if (all(A)) 0 else <complex fold of genarray>; if (all(B)) 1 else <same complex fold> generates the complex expression twice
+      val newScopes = currentScope.children.filter(scope => (scope.sym == sym) && (scope.ifSym == ifSym))
       if (newScopes.length < 1) sys.error("There is no scope for the sym. CurrentSym: " + currentScope.sym + " NewSym: " + sym + " Available: " + currentScope.children.map(_.sym).mkString(" "))
       val newScope = newScopes.head
 

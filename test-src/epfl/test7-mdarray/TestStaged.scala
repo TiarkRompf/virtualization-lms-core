@@ -25,7 +25,7 @@ class TestStaged extends FileDiffSuite {
     val gol = new GameOfLifeStaged with MDArrayBaseExp with IfThenElseExp
     val scp = new ScopeTestStaged with MDArrayBaseExp with IfThenElse
 
-    performExperiment(scp, scp.testStaged(scp.knownOnlyAtRuntime[Int]("matrix1"), scp.knownOnlyAtRuntime[Int]("matrix2")), prefix + "scope-test")
+    performExperiment(scp, scp.testStaged(scp.knownOnlyAtRuntime[Boolean]("a"), scp.knownOnlyAtRuntime[Int]("b")), prefix + "scope-test")
 
     // PDE1 experiments
     performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime[Double]("matrix1"), 1), prefix + "range1-test")
@@ -33,13 +33,12 @@ class TestStaged extends FileDiffSuite {
     performExperiment(pde1, pde1.range3(pde1.knownOnlyAtRuntime[Double]("matrix3"), 1), prefix + "range3-test")
     // TODO: Include ranges to make this work
     //performExperiment(pde1, pde1.range4(pde1.knownOnlyAtRuntime[Double]("matrix4"), 1), prefix + "range4-test")
-    // TODO: Solve scope problem and retry
-//    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime[Double]("matrix5"), 1), prefix + "range5-test")
+    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime[Double]("matrix5"), 1), prefix + "range5-test")
 
     // Game of Life experiments
-//    performExperiment(gol, gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input")), prefix + "reshape")
-//    performExperiment(gol, gol.gameOfLife(gol.knownOnlyAtRuntime[Int]("input")), prefix + "game-of-life-generic")
-//    performExperiment(gol, gol.gameOfLife(gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input"))), prefix + "game-of-life-10-by-10")
+    performExperiment(gol, gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input")), prefix + "reshape")
+    performExperiment(gol, gol.gameOfLife(gol.knownOnlyAtRuntime[Int]("input")), prefix + "game-of-life-generic")
+    performExperiment(gol, gol.gameOfLife(gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input"))), prefix + "game-of-life-10-by-10")
   }
 
   def performExperiment(pde1: MDArrayBaseExp with IfThenElseExp, expr: Any, fileName: String) {

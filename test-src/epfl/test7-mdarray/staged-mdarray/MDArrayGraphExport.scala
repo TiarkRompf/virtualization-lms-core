@@ -29,7 +29,7 @@ trait MDArrayGraphExport extends BaseGenIfThenElse with TypedGenMDArray {
       case wn: WithNode[_] =>
         emitBlock(wn.expr)
       case ite: IfThenElse[_] =>
-        TY.withinDifferentScopes(
+        TY.withinDifferentScopes(sym,
           (ite.thenp.asInstanceOf[Sym[_]], () => {emitBlock(ite.thenp)})::
           (ite.elsep.asInstanceOf[Sym[_]], () => {emitBlock(ite.elsep)})::
           Nil)

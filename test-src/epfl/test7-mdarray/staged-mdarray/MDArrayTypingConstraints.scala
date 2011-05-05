@@ -21,7 +21,7 @@ trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse wit
 
   protected def addConstraints(tl: List[TypingConstraint]): Unit
   protected def addSymbol(sym: Sym[_]): Unit
-  protected def createSubScope(sym: Sym[_])(action: => Unit): Unit
+  protected def createSubScope(ifSym: Sym[_], sym: Sym[_])(action: => Unit): Unit
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter): Unit = {
     val nodeConstraints =
@@ -31,8 +31,8 @@ trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse wit
       (rhs match {
         // We only analyze the "special" cases here
         case IfThenElse(cond, thenp, elsep) =>
-          createSubScope(thenp.asInstanceOf[Sym[_]]) { emitBlock(thenp) }
-          createSubScope(elsep.asInstanceOf[Sym[_]]) { emitBlock(elsep) }
+          createSubScope(sym, thenp.asInstanceOf[Sym[_]]) { emitBlock(thenp) }
+          createSubScope(sym, elsep.asInstanceOf[Sym[_]]) { emitBlock(elsep) }
           getConstraints(sym, rhs)
         case WithNode(lb, lbStrict, ub, ubStrict, step, width, ivSym, expr) =>
           // emit the expression constraints

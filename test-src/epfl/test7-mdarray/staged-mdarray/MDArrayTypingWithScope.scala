@@ -23,10 +23,10 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
   protected def addSymbol(sym: Sym[_]): Unit =
     currentScope.constrainedSymbols = currentScope.constrainedSymbols + sym
 
-  protected def createSubScope(sym: Sym[_])(action: => Unit): Unit = {
+  protected def createSubScope(ifSym:Sym[_], sym: Sym[_])(action: => Unit): Unit = {
     // 1. Create new scope
     val oldScope = currentScope
-    currentScope = TypingScope(sym, oldScope)
+    currentScope = TypingScope(ifSym, sym, oldScope)
     if (oldScope ne null)
       oldScope.children = currentScope :: oldScope.children
     // 2. Perform the action
@@ -35,7 +35,7 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
     currentScope = oldScope
   }
 
-  case class TypingScope(sym: Sym[_], parent: TypingScope) {
+  case class TypingScope(ifSym: Sym[_], sym: Sym[_], parent: TypingScope) {
 
     var children: List[TypingScope] = Nil
     var constrainedSymbols: Set[Sym[_]] = Set.empty
@@ -61,7 +61,7 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
   def doTyping(result: Exp[_], debug: Boolean = false): Unit = {
 
     // 1. Gather constraints
-    currentScope = TypingScope(result.asInstanceOf[Sym[_]], null)
+    currentScope = TypingScope(IR.fresh[Any], result.asInstanceOf[Sym[_]], null)
     emitBlock(result)(new PrintWriter(System.err)) // shouldn't output anything
 
     // 2. Get the substitution list & the pre-requirement list

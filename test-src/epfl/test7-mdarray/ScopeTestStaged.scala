@@ -9,11 +9,11 @@ import test1.Arith
 
 class ScopeTestStaged() { this: MDArrayBaseExp with IfThenElseExp =>
 
-  def testStaged(a: Rep[MDArray[Int]], b: Rep[MDArray[Int]]): Rep[MDArray[Int]] = {
+  def testStaged(a: Rep[MDArray[Boolean]], b: Rep[MDArray[Int]]): Rep[MDArray[Int]] = {
 
     // Without scopes, this should fail shape inference
     val constraints =
-      if (sel(0::Nil, a) === 1) {
+      if (sel(0::Nil, a)) {
         val add: Rep[MDArray[Int]] = reshape(1::3::Nil, 1::2::3::Nil)
         sel(0::Nil, (b + add))
       } else {

@@ -385,7 +385,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
       case ite: IfThenElse[_] =>
         emitSymDecl(sym)
         stream.println(" = if (" + quote(ite.cond) + ") {")
-        TY.withinDifferentScopes(
+        TY.withinDifferentScopes(sym,
           (ite.thenp.asInstanceOf[Sym[_]], () => {emitBlock(ite.thenp); stream.println(quote(getBlockResult(ite.thenp))); stream.println("} else {")})::
           (ite.elsep.asInstanceOf[Sym[_]], () => {emitBlock(ite.elsep); stream.println(quote(getBlockResult(ite.elsep))); stream.println("}")})::
           Nil)
