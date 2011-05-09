@@ -6,7 +6,7 @@ import java.io.PrintWriter
 trait LiftNumeric {
   this: Base =>
 
-  implicit def numericToNumericOps[T:Numeric:Manifest](x: T) = unit(x)
+  implicit def numericToNumericRep[T:Numeric:Manifest](x: T) = unit(x)
 }
 
 trait NumericOps extends Variables {
