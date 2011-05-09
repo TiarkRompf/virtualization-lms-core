@@ -64,7 +64,7 @@ trait Expressions {
       case List() => ("x", 0)
     }
 
-    // create base name from source context of Def
+    // create base name from source context
     val (basename, line) = if (!ctx.isEmpty) {
       enclosingVarName(ctx.get.allContexts)
     } else ("x", 0)

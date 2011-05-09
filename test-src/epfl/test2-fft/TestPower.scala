@@ -15,11 +15,6 @@ trait Power1 { this: Arith =>
 
 trait Power2 { this: Arith =>
   def power(b: Rep[Double], x: Int)(implicit ctx: SourceContext): Rep[Double] = {
-/*
-    System.err.println("creating new power op with ")
-    System.err.println("  assigned var: " + ctx.assignedVariable)
-    System.err.println("  first ctx: " + ctx.firstContext)
-*/
     if (x == 0) 1.0
     else if ((x&1) == 0) { val y = power(b, x/2); y * y }
     else b * power(b, x - 1)
