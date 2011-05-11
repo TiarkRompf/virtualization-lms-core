@@ -133,21 +133,27 @@ trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse wit
       Equality(ShapeVar(step), ShapeVar(lb), preReq, rhs)::
       Equality(ShapeVar(width), ShapeVar(lb), preReq, rhs)::
       Equality(ShapeVar(ivSym), ShapeVar(lb), postReq, rhs)::
-      Equality(ShapeVar(sym), ShapeVar(expr), postReq, rhs)::Nil
+      Equality(ShapeVar(sym), ShapeVar(expr), postReq, rhs)::
+      LessThanConstraint(ValueVar(lb), ValueVar(ub), preReq, rhs)::Nil
     case GenArrayWith(withLoops, shape) =>
       assert(withLoops.length >= 1)
       withNodeListConstraints(withLoops, rhs):::
       Equality(ShapeVar(shape), Lst(getNewUnknown::Nil), preReq, rhs)::
-      Equality(ShapeVar(shape), ShapeVar(recoverWithNode(withLoops.head).lb), preReq, rhs)::
+      withLoops.flatMap(wn =>
+        Equality(ShapeVar(shape), ShapeVar(recoverWithNode(wn).lb), preReq, rhs)::
+        PrefixLt(ValueVar(shape), ValueVar(recoverWithNode(wn).lb), ShapeVar(wn), preReq, rhs)::
+        SuffixEq(ValueVar(shape), ValueVar(recoverWithNode(wn).lb), ShapeVar(wn), preReq, rhs)::Nil
+      ) :::
       EqualityAeqBcatC(ShapeVar(sym), ValueVar(shape), ShapeVar(withLoops.head), postReq, rhs)::Nil
     case ModArrayWith(withLoops, array) =>
       assert(withLoops.length >= 1)
       withNodeListConstraints(withLoops, rhs):::
-       withLoops.flatMap(wn =>
-         PrefixLt(ShapeVar(array), ValueVar(recoverWithNode(wn).lb), ShapeVar(wn), preReq, rhs) ::
-         SuffixEq(ShapeVar(array), ValueVar(recoverWithNode(wn).lb), ShapeVar(wn), preReq, rhs) :: Nil
-       ) :::
-       Equality(ShapeVar(sym), ShapeVar(array), postReq, rhs)::Nil
+      withLoops.flatMap(wn =>
+        Equality(Lst(LengthOf(ShapeVar(array))::Nil), ShapeVar(recoverWithNode(wn).lb), preReq, rhs)::
+        PrefixLt(ShapeVar(array), ValueVar(recoverWithNode(wn).lb), ShapeVar(wn), preReq, rhs)::
+        SuffixEq(ShapeVar(array), ValueVar(recoverWithNode(wn).lb), ShapeVar(wn), preReq, rhs)::Nil
+      ) :::
+      Equality(ShapeVar(sym), ShapeVar(array), postReq, rhs)::Nil
     case FoldArrayWith(withLoop, neutral, foldTerm1, foldTerm2, foldExpression) =>
       Equality(ShapeVar(neutral), ShapeVar(withLoop), preReq, rhs)::
       Equality(ShapeVar(foldTerm1), ShapeVar(neutral), postReq, rhs)::
