@@ -339,13 +339,18 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
         case (l1: LengthOf, l2: LengthOf) => if (l1.v != l2.v) success = false // we don't have enough info to do this substitution
         case (u: Unknown, lt: LessThan) => substs = new SubstituteUnknown(u, lt) :: substs
         case (lt: LessThan, u: Unknown) => substs = new SubstituteUnknown(u, lt) :: substs
+        // TODO: Check LessThan relationship holds :)
         case (v: Value, lt: LessThan) => substs = new SubstituteLessThan(lt, v) :: substs // lt behaves like an unknown, just with the LessThan constraint
         case (lt: LessThan, v: Value) => substs = new SubstituteLessThan(lt, v) :: substs // lt behaves like an unknown, just with the LessThan constraint
-        // TODO: Replace by the condition that is stronger, but we have no way to know which is stronger
-        // TODO: Refine this, there are cases where we know which is stronger
-        case (l: LengthOf, lt: LessThan) => success = false
-        case (lt: LessThan, l: LengthOf) => success = false
-        case (lt1: LessThan, lt2: LessThan) => success = false //substs = new SubstituteLessThan(lt1, lt2)
+        // TODO: Decide how to solve the LengthOf - LessThan unification
+        // For exact shape inference, LetgthOf takes precedence
+        // For shape bounding => undefined, as both provide different pieces of information
+        case (l: LengthOf, lt: LessThan) => substs = new SubstituteLessThan(lt, l) :: substs
+        case (lt: LessThan, l: LengthOf) => substs = new SubstituteLessThan(lt, l) :: substs
+        case (lt1: LessThan, lt2: LessThan) => {
+          val lt = getNewLessThan(lt1.tl ::: lt2.tl)
+          substs = new SubstituteLessThan(lt1, lt) :: new SubstituteLessThan(lt2, lt) :: substs
+        }
       }
 
     (success, substs.reverse)

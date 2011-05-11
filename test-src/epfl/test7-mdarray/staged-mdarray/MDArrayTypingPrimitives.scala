@@ -33,9 +33,16 @@ trait MDArrayTypingPrimitives {
   case class Value(n: Int) extends TypingElement { override def toString = n.toString }
   case class Unknown(i: Int) extends TypingElement { override def toString = "U" + i.toString }
   case class LengthOf(v: Var) extends TypingElement { override def toString = "dim(" + v.toString + ")" }
-  case class LessThan(i: Int, t: TypingElement) extends TypingElement { override def toString = "U" + i.toString + "(<" + t.toString + ")" }
+  case class LessThan(i: Int, tl: List[TypingElement]) extends TypingElement {
+    override def toString = "U" + i.toString + (tl.length match {
+      case 0 => "(<incorrect LessThan>)"
+      case 1 => "(<" + tl.head.toString + ")"
+      case _ => "(< min("+tl.mkString(", ") + "))"
+    })
+  }
   def getNewUnknown(): Unknown = Unknown({ unknownIndex += 1; unknownIndex })
-  def getNewLessThan(t: TypingElement): LessThan = LessThan({ unknownIndex += 1; unknownIndex }, t)
+  def getNewLessThan(tl: List[TypingElement]): LessThan = LessThan({ unknownIndex += 1; unknownIndex }, tl)
+  def getNewLessThan(t: TypingElement): LessThan = getNewLessThan(t::Nil)
 
   abstract class TypingConstraint(val prereq: Boolean, val node: Any) { override def toString = getConstraintString(this) }
   case class Equality(a: TypingVariable, b: TypingVariable, _prereq: Boolean, _node: Any) extends TypingConstraint(_prereq, _node)
@@ -144,7 +151,7 @@ trait MDArrayTypingPrimitives {
     override def updateVar(v: Var): Var = if (v == v1) v2 else v
     override def updateUnknown(uk: Unknown): TypingElement = uk
     override def updateLength(lt: LengthOf): TypingElement = LengthOf(updateVar(lt.v))
-    override def updateLessThan(lt: LessThan): TypingElement = LessThan(lt.i, updateElement(lt.t))
+    override def updateLessThan(lt: LessThan): TypingElement = LessThan(lt.i, lt.tl.map(updateElement(_)))
   }
 
   /** substitute a variable by a list */
@@ -152,7 +159,7 @@ trait MDArrayTypingPrimitives {
     override def updateVar(v: Var): TypingVariable = if (v == vv) l else v
     override def updateUnknown(uk: Unknown): TypingElement = uk
     override def updateLength(lt: LengthOf): TypingElement = if (lt.v == vv) Value(l.list.length) else lt
-    override def updateLessThan(lt: LessThan): TypingElement = LessThan(lt.i, updateElement(lt.t))
+    override def updateLessThan(lt: LessThan): TypingElement = LessThan(lt.i, lt.tl.map(updateElement(_)))
   }
 
   /** substitute a unknown value by something else */
@@ -160,11 +167,11 @@ trait MDArrayTypingPrimitives {
     override def updateVar(v: Var): TypingVariable = v
     override def updateUnknown(uk: Unknown): TypingElement = if (uk == u) elt else uk
     override def updateLength(lt: LengthOf): TypingElement = lt
-    override def updateLessThan(lt: LessThan): TypingElement = LessThan(lt.i, updateElement(lt.t))
+    override def updateLessThan(lt: LessThan): TypingElement = LessThan(lt.i, lt.tl.map(updateElement(_)))
   }
 
   /** substitute a less than value by something else */
-  case class SubstituteLessThan(lt: LessThan, elt: TypingElement) extends Substitution("Substitute lessThan( " + lt.i.toString + ", " + lt.t.toString + ") by " + elt.toString) {
+  case class SubstituteLessThan(lt: LessThan, elt: TypingElement) extends Substitution("Substitute lessThan( " + lt.i.toString + ", " + lt.tl.mkString("::") + ") by " + elt.toString) {
     override def updateVar(v: Var): TypingVariable = v
     override def updateUnknown(uk: Unknown): TypingElement = uk
     override def updateLength(lt: LengthOf): TypingElement = lt
