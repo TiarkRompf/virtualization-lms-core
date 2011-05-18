@@ -128,12 +128,6 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
     if (!shouldApplyFusion(currentScope)(result))
       return super.focusExactScopeFat(currentScope)(result)(body)
 /*
-    println("--- pre-pre-loop fusion: getFatSchedule")
-    shallow = true
-    val e2 = getFatSchedule(currentScope)(result)
-    shallow = false
-    e2.foreach(println)
-
     println("--- pre-pre-loop fusion: bound")
     val bound = currentScope.flatMap(z => boundSyms(z.rhs))
     bound.foreach(println)

@@ -38,11 +38,6 @@ trait BaseGenSeqOps extends GenericNestedCodegen {
   val IR: SeqOpsExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match { // TODO: can do without override?
-    case SeqNew(xs) => (xs flatMap { syms }).toList
-    case _ => super.syms(e)
-  }
-
 }
 
 trait ScalaGenSeqOps extends BaseGenSeqOps with ScalaGenEffect {

@@ -127,6 +127,44 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
     Const()
   }
 
+  override def aliasSyms(e: Any): List[Sym[Any]] = e match {
+    case NewVar(a) => Nil
+    case ReadVar(Variable(a)) => Nil
+    case Assign(Variable(a),b) => Nil
+    case VarPlusEquals(Variable(a),b) => Nil
+    case VarMinusEquals(Variable(a),b) => Nil
+    case _ => super.aliasSyms(e)
+  }
+
+  override def containSyms(e: Any): List[Sym[Any]] = e match {
+    case NewVar(a) => syms(a)
+    case ReadVar(Variable(a)) => Nil
+    case Assign(Variable(a),b) => syms(b)
+    case VarPlusEquals(Variable(a),b) => syms(b)
+    case VarMinusEquals(Variable(a),b) => syms(b)
+    case _ => super.containSyms(e)
+  }
+
+  override def extractSyms(e: Any): List[Sym[Any]] = e match {
+    case NewVar(a) => Nil
+    case ReadVar(Variable(a)) => syms(a)
+    case Assign(Variable(a),b) => Nil
+    case VarPlusEquals(Variable(a),b) => syms(a)
+    case VarMinusEquals(Variable(a),b) => syms(a)
+    case _ => super.extractSyms(e)
+  }
+
+  override def copySyms(e: Any): List[Sym[Any]] = e match {
+    case NewVar(a) => Nil
+    case ReadVar(Variable(a)) => Nil
+    case Assign(Variable(a),b) => Nil
+    case VarPlusEquals(Variable(a),b) => Nil
+    case VarMinusEquals(Variable(a),b) => Nil
+    case _ => super.copySyms(e)
+  }
+
+
+    
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     case Reflect(NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a)), Alloc(), f(es)))
     case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))

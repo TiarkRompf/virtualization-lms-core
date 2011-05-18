@@ -48,11 +48,6 @@ trait BaseGenSetOps extends GenericNestedCodegen {
   val IR: SetOpsExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case SetNew(xs, mA) => (xs flatMap { syms }).toList
-    case _ => super.syms(e)
-  }
-
 }
 
 trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {

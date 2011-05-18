@@ -41,11 +41,9 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     val saveInner = innerScope
     
     val e1 = currentScope
-    shallow = true
-    val e2 = getFatSchedule(currentScope)(result) // shallow list of deps (exclude stuff only needed by nested blocks)
-    shallow = false
-
-    // TODO: make sure currentScope schedule respects antidependencies
+    //shallow = true
+    //val e2 = getFatSchedule(currentScope)(result) // shallow list of deps (exclude stuff only needed by nested blocks)
+    //shallow = false
 
     // shallow is 'must outside + should outside' <--- currently shallow == deep for lambdas, meaning everything 'should outside'
     // bound is 'must inside'
@@ -54,7 +52,30 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     val bound = e1.flatMap(z => boundSyms(z.rhs))
     val g1 = getFatDependentStuff(currentScope)(bound)
     
-    val levelScope = e1.filter(z => (e2 contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
+    // e1 = reachable
+    val h1 = e1 filterNot (g1 contains _) // 'may outside'
+    val f1 = g1.flatMap { t => syms(t.rhs) } flatMap { s => h1 filter (_.lhs contains s) } // fringe: 1 step from g1
+    
+    val e2 = getFatScheduleM(e1)(result, false, true)       // (shallow|hot)*  no cold ref on path
+
+    val e3 = getFatScheduleM(e1)(result, true, false)       // (shallow|cold)* no hot ref on path
+
+    val f2 = f1 filterNot (e3 contains _)                   // fringe restricted to: any* hot any*
+
+    val h2 = getFatScheduleM(e1)(f2.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
+    
+    // things that should live on this level:
+    // - not within conditional: no cold ref on path (shallow|hot)*
+    // - on the fringe but outside of mustInside, if on a hot path any* hot any*
+    
+    val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
+
+    val levelScope = e1.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
+
+    // stuff needed for 'must inside': this will be hoisted as well!
+    //case class Combine(p:List[Exp[Any]]) extends Exp[Any]
+    //val g2 = g1.flatMap(z=>syms(z.rhs))//buildScheduleForResult(Combine(g1.map(_.sym)))
+    
 
     // sanity check to make sure all effects are accounted for
     result match {
