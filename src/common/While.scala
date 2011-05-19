@@ -9,7 +9,7 @@ trait While extends Base {
 }
 
 
-trait WhileExp extends While with FunctionsExp { 
+trait WhileExp extends While with EffectExp { 
   case class While(cond: Exp[Boolean], body: Exp[Unit]) extends Def[Unit]
 
   override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {

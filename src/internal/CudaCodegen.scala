@@ -365,17 +365,20 @@ trait CudaCodegen extends CLikeCodegen {
     stream.flush
   }  
 
+/*
+  //TODO: is sym of type Any or Variable[Any] ?
   def emitConstDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.print("const ")
     emitVarDef(sym, rhs)
   }
+*/
 
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(addTab() + remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitVarDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println(addTab()+ remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+  def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
+    stream.println(addTab()+ remapVar(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
   def emitAssignment(lhs:String, rhs: String)(implicit stream: PrintWriter): Unit = {

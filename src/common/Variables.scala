@@ -45,7 +45,7 @@ trait VariableImplicits extends LowPriorityVariableImplicits {
 }
 
 trait Variables extends Base with OverloadHack with VariableImplicits with ReadVarImplicit {
-  type Var[+T]
+  type Var[+T] //FIXME: should be invariant
 
   //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
   def var_new[T:Manifest](init: Rep[T]): Var[T]
@@ -56,6 +56,9 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
   def __assign[T:Manifest](lhs: Var[T], rhs: T) = var_assign(lhs, unit(rhs))
   def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_assign(lhs, rhs)
   def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_assign(lhs, readVar(rhs))
+/*
+  def __assign[T,U](lhs: Var[T], rhs: Rep[U])(implicit o: Overloaded2, mT: Manifest[T], mU: Manifest[U], conv: Rep[U]=>Rep[T]) = var_assign(lhs, conv(rhs))
+*/
 
   // TODO: why doesn't this implicit kick in automatically? <--- do they belong here? maybe better move to NumericOps
   // we really need to refactor this. +=/-= shouldn't be here or in Arith, but in some other type class, which includes Numeric variables
@@ -68,41 +71,16 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
 }
 
 trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits with ReadVarImplicitExp {
-  // TODO: make a design decision here.
+  // REMARK:
   // defining Var[T] as Sym[T] is dangerous. If someone forgets to define a more-specific implicit conversion from
   // Var[T] to Ops, e.g. implicit def varToRepStrOps(s: Var[String]) = new RepStrOpsCls(varToRep(s))
   // then the existing implicit from Rep to Ops will be used, and the ReadVar operation will be lost.
   // Defining Vars as separate from Exps will always cause a compile-time error if the implicit is missing.
-  //type Var[T] = Sym[T]
 
-  // REMARK: Var[T] should (probably) be different from Rep[T] in Rep-world
-  // but in Exp-world the situation is less clear. 
-
-  type Var[+T] = Variable[T]
-
-  // read operation
-  /*
-  implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = { // careful with implicits...
-
-    //reflectRead(/*v*/)(ReadVar(v)) // FIXME!!
-    //reflectEffect(ReadVar(v))
-
-    // do cse *in context*
-
-    context.reverse.dropWhile { e =>
-      e match { case Def(Reflect(ReadVar(w), _)) if w != v => true case _ => false }
-    } match {
-      case (e @ Def(Reflect(ReadVar(`v`), _)))::es => e.asInstanceOf[Exp[T]]
-      case es =>
-        val r = createDefinition(fresh[T], Reflect(ReadVar(v), es)).sym
-        context = context :+ r
-        r
-    }
-    toAtom(ReadVar(v))
-  }*/
+  type Var[+T] = Variable[T] //FIXME: should be invariant
 
   case class ReadVar[T:Manifest](v: Var[T]) extends Def[T]
-  case class NewVar[T:Manifest](init: Exp[T]) extends Def[T]
+  case class NewVar[T:Manifest](init: Exp[T]) extends Def[Variable[T]]
   case class Assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
   case class VarPlusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
   case class VarMinusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
@@ -183,7 +161,7 @@ trait ScalaGenVariables extends ScalaGenEffect {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
-    case NewVar(init) => emitVarDef(sym, quote(getBlockResult(init)))
+    case NewVar(init) => emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(getBlockResult(init)))
     case Assign(Variable(a), b) => emitAssignment(quote(a), quote(getBlockResult(b)))
     //case Assign(a, b) => emitAssignment(quote(a), quote(b))
     case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(getBlockResult(b)))
@@ -201,7 +179,7 @@ trait CLikeGenVariables extends CLikeGenBase {
         case ReadVar(Variable(a)) =>
           emitValDef(sym, quote(a))
         case NewVar(init) =>
-          emitVarDef(sym, quote(getBlockResult(init)))
+          emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(getBlockResult(init)))
         case Assign(Variable(a), b) =>
           emitAssignment(quote(a), quote(getBlockResult(b)))
         case VarPlusEquals(Variable(a), b) =>

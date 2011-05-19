@@ -29,6 +29,7 @@ trait GenericCodegen extends Scheduling {
   // optional type remapping (default is identity)
   def remap[A](m: Manifest[A]) : String = m.toString
   def remapImpl[A](m: Manifest[A]) : String = remap(m)
+  def remapVar[A](m: Manifest[Variable[A]]) : String = remap(m.typeArguments.head)
 
   def getFreeVarBlock(start: Exp[Any], local: List[Sym[Any]]): List[Sym[Any]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
 

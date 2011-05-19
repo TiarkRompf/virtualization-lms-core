@@ -22,7 +22,7 @@ trait Expressions extends Utils {
     var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
   }
 
-  case class Variable[+T:Manifest](val e: Exp[T]) // TODO: decide whether it should stay here ...
+  case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
   case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
       
