@@ -12,9 +12,44 @@ import collection.immutable.HashMap
 
 trait MDArrayTypingBubbleUp extends MDArrayTypingWithScope {
 
-  import IR.{Sym, Def}
+  import IR.{Sym, Exp, Def, TP, findDefinition}
   var remainingConstraints: List[TypingConstraint] = Nil
   var scopeSubsts: SubstitutionList = new SubstitutionList(Nil)
+
+  var runtimeChecks: Map[Sym[_], List[TypingConstraint]] = Map.empty
+
+  def fillInRuntimeChecks(sym: Sym[_]): Unit = findDefinition(sym) match {
+    case None =>
+      runtimeChecks = runtimeChecks + (sym -> Nil)
+    case Some(tp) =>
+      val rhs: Def[_] = tp.rhs
+      val argSyms = syms(rhs)
+      var checks: List[TypingConstraint] = Nil
+
+      // add the runtime checks for prerequisites
+      checks = getConstraints(sym, rhs).filter(_.prereq)
+
+      // add the runtime checks for bubbling up
+      for (argSym <- argSyms) {
+        if (scopeSubsts(ShapeVar(argSym)) != currentScope.fullSubsts(ShapeVar(argSym)))
+          checks = Equality(scopeSubsts(ShapeVar(argSym)), currentScope.fullSubsts(ShapeVar(argSym)), postReq, "Bubble up shape for " + argSym.toString + " <- " + rhs.toString) :: checks
+
+        if (scopeSubsts(ValueVar(argSym)) != currentScope.fullSubsts(ValueVar(argSym)))
+          checks = Equality(scopeSubsts(ValueVar(argSym)), currentScope.fullSubsts(ValueVar(argSym)), postReq, "Bubble up value for " + argSym.toString + " <- " + rhs.toString) :: checks
+      }
+
+      runtimeChecks = runtimeChecks + (sym -> checks)
+      for (argSym <- argSyms)
+        fillInRuntimeChecks(argSym)
+  }
+
+  override def doTyping(result: Exp[_], debug: Boolean = false): Unit = {
+    // Let the bottom layers do their work
+    super.doTyping(result, debug)
+
+    // Create runtimeChecks
+    fillInRuntimeChecks(result.asInstanceOf[Sym[_]])
+  }
 
   // Generate only bubble up constraints, for the runtime constraints we need to
   def getBubbleUpConstraints(sym: Sym[_], rhs: Def[_]): List[TypingConstraint] = {
