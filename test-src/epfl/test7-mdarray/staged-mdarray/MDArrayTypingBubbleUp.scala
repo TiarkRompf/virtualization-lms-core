@@ -75,26 +75,36 @@ trait MDArrayTypingBubbleUp extends MDArrayTypingWithScope {
     for (pair <- pairs) {
       val (sym, action) = pair
       val oldScope = currentScope
-      val newScopes = currentScope.children.filter(scope => (scope.sym == sym) && (scope.ifSym == ifSym))
-      if (newScopes.length < 1) sys.error("There is no scope for the sym. CurrentSym: " + currentScope.sym + " NewSym: " + sym + " Available: " + currentScope.children.map(_.sym).mkString(" "))
-      val newScope = newScopes.head
 
-      scopes = newScope :: scopes
-      // set everything up for the new scope
-      currentScope = newScope
+      if (HAVE_SCOPES) {
+        // find the new scope
+        val newScopes = currentScope.children.filter(scope => (scope.sym == sym) && (scope.ifSym == ifSym))
+        if (newScopes.length < 1) sys.error("There is no scope for the sym. CurrentSym: " + currentScope.sym + " NewSym: " + sym + " Available: " + currentScope.children.map(_.sym).mkString(" "))
+        val newScope = newScopes.head
+
+        scopes = newScope :: scopes
+        // set everything up for the new scope
+        currentScope = newScope
+      }
 
       // emit the code
       action()
 
-      // recover the scope state
-      scopeSubstsList = scopeSubsts :: scopeSubstsList
-      scopeSubsts = parentScopeSubsts
-      remainingConstraints = parentRemainingConstraints
-      currentScope = oldScope
+      if (HAVE_SCOPES) {
+        // recover the scope state
+        scopeSubstsList = scopeSubsts :: scopeSubstsList
+        scopeSubsts = parentScopeSubsts
+        remainingConstraints = parentRemainingConstraints
+        currentScope = oldScope
+      }
     }
 
-    // reconcile scopes
-    remainingConstraints = remainingConstraints ::: scopeSubsts(reconcile(scopeSubstsList))
-    eliminateConstraints()
+    // if we have scopes, we have to reconcile the scope substitutions and join them into the parent scope
+    // if we don't have scoeps, the constraints have been added and eliminated along the way :)
+    if (HAVE_SCOPES) {
+      // reconcile scopes
+      remainingConstraints = remainingConstraints ::: scopeSubsts(reconcile(scopeSubstsList))
+      eliminateConstraints()
+    }
   }
 }

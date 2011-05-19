@@ -11,7 +11,7 @@ import collection.immutable.HashMap
 
 trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
 
-  final val HAVE_SCOPES: Boolean = true
+  final val HAVE_SCOPES: Boolean = false
 
   import IR.{Sym, Exp, Def, TP}
   protected var currentScope: TypingScope = null

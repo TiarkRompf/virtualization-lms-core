@@ -25,7 +25,8 @@ class TestStaged extends FileDiffSuite {
     val gol = new GameOfLifeStaged with MDArrayBaseExp with IfThenElseExp
     val scp = new ScopeTestStaged with MDArrayBaseExp with IfThenElse
 
-    performExperiment(scp, scp.testStaged(scp.knownOnlyAtRuntime[Boolean]("a"), scp.knownOnlyAtRuntime[Int]("b")), prefix + "scope-test")
+    // TODO: Re-enable scope test when scopes are enabled
+    //performExperiment(scp, scp.testStaged(scp.knownOnlyAtRuntime[Boolean]("a"), scp.knownOnlyAtRuntime[Int]("b")), prefix + "scope-test")
 
     // PDE1 experiments
     performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime[Double]("matrix1"), 1), prefix + "range1-test")
