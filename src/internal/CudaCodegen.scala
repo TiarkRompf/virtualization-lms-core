@@ -378,7 +378,7 @@ trait CudaCodegen extends CLikeCodegen {
   }
 
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println(addTab()+ remapVar(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+    stream.println(addTab()+ remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
   def emitAssignment(lhs:String, rhs: String)(implicit stream: PrintWriter): Unit = {

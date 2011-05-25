@@ -49,7 +49,7 @@ trait CCodegen extends CLikeCodegen {
   }
 */
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println(remapVar(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+    stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
