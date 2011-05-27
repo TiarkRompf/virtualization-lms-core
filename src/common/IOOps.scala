@@ -84,20 +84,20 @@ trait IOOpsExp extends IOOps with DSLOpsExp {
   case class BrReadline(b: Exp[BufferedReader]) extends Def[String]
   case class BrClose(b: Exp[BufferedReader]) extends Def[Unit]
 
-  def obj_file_apply(dir: Exp[String]): Exp[File] = reflectMutable(ObjFileApply(dir))
+  def obj_file_apply(dir: Exp[String]): Exp[File] = reflectEffect(ObjFileApply(dir))
   def file_getcanonicalfile(f: Exp[File]) = FileGetCanonicalFile(f)
   def file_getpath(f: Exp[File]) = FileGetPath(f)
   def file_listfiles(f: Exp[File]) = FileListFiles(f)
   
-  def obj_br_apply(f: Exp[FileReader]): Exp[BufferedReader] = reflectMutable(ObjBrApply(f))
-  def obj_bw_apply(f: Exp[FileWriter]): Exp[BufferedWriter] = reflectMutable(ObjBwApply(f))
-  def obj_fr_apply(s: Exp[String]): Exp[FileReader] = reflectMutable(ObjFrApply(s))
-  def obj_fw_apply(s: Exp[String]): Exp[FileWriter] = reflectMutable(ObjFwApply(s))
+  def obj_br_apply(f: Exp[FileReader]): Exp[BufferedReader] = reflectEffect(ObjBrApply(f))
+  def obj_bw_apply(f: Exp[FileWriter]): Exp[BufferedWriter] = reflectEffect(ObjBwApply(f))
+  def obj_fr_apply(s: Exp[String]): Exp[FileReader] = reflectEffect(ObjFrApply(s))
+  def obj_fw_apply(s: Exp[String]): Exp[FileWriter] = reflectEffect(ObjFwApply(s))
 
-  def bw_write(b: Exp[BufferedWriter], s: Exp[String]) = reflectWrite(b)(BwWrite(b,s))
-  def bw_close(b: Exp[BufferedWriter]) = reflectWrite(b)(BwClose(b))
-  def br_readline(b: Exp[BufferedReader]) : Exp[String] = reflectWrite(b)(BrReadline(b))
-  def br_close(b: Exp[BufferedReader]) : Exp[Unit] = reflectWrite(b)(BrClose(b))
+  def bw_write(b: Exp[BufferedWriter], s: Exp[String]) = reflectEffect(BwWrite(b,s))
+  def bw_close(b: Exp[BufferedWriter]) = reflectEffect(BwClose(b))
+  def br_readline(b: Exp[BufferedReader]) : Exp[String] = reflectEffect(BrReadline(b))
+  def br_close(b: Exp[BufferedReader]) : Exp[Unit] = reflectEffect(BrClose(b))
 }
 
 trait ScalaGenIOOps extends ScalaGenBase {
