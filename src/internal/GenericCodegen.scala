@@ -255,16 +255,16 @@ trait GenericNestedCodegen extends GenericCodegen {
   // bound/used/free variables in current scope, with input vars x (bound!) and result y (used!)
   def boundAndUsedInScope(x: List[Exp[Any]], y: List[Exp[Any]]): (List[Sym[Any]], List[Sym[Any]]) = {
     val used = (y.flatMap(syms):::innerScope.flatMap(t => syms(t.rhs))).distinct
-    // aks: freeInScope used to collect effects that are not true input dependencies. TR, any better solution?
-    // readSyms isn't overloaded in the generators, so we are losing some deps - this works if we use a codegen version of readSyms. TODO: discuss
-    //val read = (y.flatMap(syms):::innerScope.flatMap(t => readSyms(t.rhs))).distinct
     val bound = (x.flatMap(syms):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
-    //(bound, read)
     (bound, used)
   }
+
   def freeInScope(x: List[Exp[Any]], y: List[Exp[Any]]): List[Sym[Any]] = {
     val (bound, used) = boundAndUsedInScope(x,y)
-    used diff bound
+    // aks: freeInScope used to collect effects that are not true input dependencies. TR, any better solution?
+    // i would expect read to be a subset of used, but there are cases where read has symbols not in used (TODO: investigate)
+    val read = (y.flatMap(syms):::innerScope.flatMap(t => readSyms(t.rhs))).distinct
+    (used intersect read) diff bound
   }
 
   // TODO: remove
