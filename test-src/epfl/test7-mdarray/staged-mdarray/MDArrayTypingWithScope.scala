@@ -72,7 +72,7 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
     emitBlock(result)(new PrintWriter(System.err)) // shouldn't output anything
 
     // 2. Get the substitution list & the pre-requirement list
-    solveScope(currentScope, Nil, true)
+    solveScope(currentScope, Nil, debug)
   }
 
 

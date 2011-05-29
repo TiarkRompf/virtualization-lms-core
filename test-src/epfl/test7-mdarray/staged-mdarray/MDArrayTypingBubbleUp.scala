@@ -51,45 +51,22 @@ trait MDArrayTypingBubbleUp extends MDArrayTypingWithScope {
     fillInRuntimeChecks(result.asInstanceOf[Sym[_]])
   }
 
-  // Generate only bubble up constraints, for the runtime constraints we need to
-  def getBubbleUpConstraints(sym: Sym[_], rhs: Def[_]): List[TypingConstraint] = {
+  // Gets the exact runtime checks
+  def getRuntimeChecks(sym: Sym[_]) = runtimeChecks(sym)
 
-    var nodeConstraints: List[TypingConstraint] = Nil
-
-    // 1. ensure bubbling up
-    for (sym <- syms(rhs)) {
-      if (scopeSubsts(ShapeVar(sym)) != currentScope.fullSubsts(ShapeVar(sym))) {
-        val shapeConstraint = Equality(scopeSubsts(ShapeVar(sym)), currentScope.fullSubsts(ShapeVar(sym)), postReq, "Bubble up for " + sym.toString + " <- " + rhs.toString)
-        nodeConstraints = shapeConstraint::nodeConstraints
-        assumeConstraint(shapeConstraint)
-      }
-
-      if (scopeSubsts(ValueVar(sym)) != currentScope.fullSubsts(ValueVar(sym))) {
-        val valueConstraint = Equality(scopeSubsts(ValueVar(sym)), currentScope.fullSubsts(ValueVar(sym)), postReq, "Bubble up for " + sym.toString + " <- " + rhs.toString)
-        nodeConstraints = valueConstraint::nodeConstraints
-        assumeConstraint(valueConstraint)
+  def emitRuntimeChecks(sym: Sym[_])(implicit stream: PrintWriter) = {
+    for (check <- runtimeChecks(sym)) {
+      unifyConstraint(scopeSubsts(check)) match {
+        case (true, Nil) =>
+          // Skip this case, the constraint is already assumed
+        case (true, substs) =>
+          scopeSubsts = new SubstitutionList(scopeSubsts.substList ::: substs)
+          print("// TODO: Generate () check for " + check.toString)
+        case (false, _) =>
+          print("// TODO: Generate () check for " + check.toString)
       }
     }
-
-    // 2. assume the postconditions
-    val constraints = getConstraints(sym, rhs).filterNot(_.prereq)
-    for (constraint <- constraints)
-      assumeConstraint(constraint)
-
-    nodeConstraints
   }
-
-  // Generate/check runtime prereqs
-  def getRuntimeChecks(sym: Sym[_], rhs: Def[_]): List[TypingConstraint] =
-    Nil
-
-
-  protected def assumeConstraint(constraint: TypingConstraint): Unit = {
-
-    remainingConstraints = scopeSubsts(constraint) :: remainingConstraints
-    eliminateConstraints()
-  }
-
 
   protected def eliminateConstraints(): Unit = {
 
