@@ -36,14 +36,9 @@ trait TypedGenMDArray extends BaseGenMDArray {
   import IR.{Exp, Sym, Def}
   import TY.TypingConstraint
 
-  def emitChecks(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) = {
-
-    for (constraint <- TY.getRuntimeChecks(sym, rhs))
+  def emitChecks(sym: Sym[_], rhs: Def[_])(implicit stream: PrintWriter) =
+    for (constraint <- TY.getRuntimeChecks(sym))
       emitConstraint(constraint, "RuntimeCheck ")
-
-    for (constraint <- TY.getBubbleUpConstraints(sym, rhs))
-      emitConstraint(constraint, "BubbleUpCheck")
-  }
 
   def emitConstraint(expr: TypingConstraint, ctrType: String)(implicit stream: PrintWriter) = {
     stream.println("// " + ctrType + ": " + expr.toString)

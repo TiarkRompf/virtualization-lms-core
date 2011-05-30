@@ -181,9 +181,8 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
   private def reconcileElement(t1: TypingElement, t2: TypingElement) = (t1, t2) match {
     case (null, _) => t2
     case (Value(v1), Value(v2)) if (v1 == v2) => Value(v1)
-    case (Unknown(u1), Unknown(u2)) if (u1 == u2) => Unknown(u1)
-    case (LengthOf(v1), LengthOf(v2)) if (v1 == v2) => LengthOf(v1)
-    case _ => getNewUnknown
+    case (UnknownElt(u1), UnknownElt(u2)) if (u1 == u2) => UnknownElt(u1)
+    case _ => getNewUnknownElement
   }
 
   def getShapeLength(sym: Exp[_]): Option[Int] = currentScope.getLengthFull(ShapeVar(sym.asInstanceOf[Sym[_]]))

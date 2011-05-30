@@ -75,39 +75,42 @@ trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse wit
     case KnownAtRuntime(name) =>
       Nil
     case FromList(list) =>
-      Equality(ShapeVar(sym), Lst(getNewUnknown::Nil), postReq, rhs)::Nil
+      Equality(ShapeVar(sym), Lst(getNewUnknownElement::Nil), postReq, rhs)::Nil
     case FromArray(array) =>
-      Equality(ShapeVar(sym), Lst(getNewUnknown::Nil), postReq, rhs)::Nil
+      Equality(ShapeVar(sym), Lst(getNewUnknownElement::Nil), postReq, rhs)::Nil
     case FromValue(value) =>
       Equality(ShapeVar(sym), Lst(Nil), postReq, rhs)::Nil
     case ToList(value) =>
-      LengthEqualityAeqB(ShapeVar(value), Lst(getNewUnknown::Nil), preReq, rhs)::
+      LengthEqualityAeqB(ShapeVar(value), Lst(getNewUnknownElement::Nil), preReq, rhs)::
       Equality(ShapeVar(sym), ShapeVar(value), postReq, rhs)::Nil
     case ToArray(value) =>
-      LengthEqualityAeqB(ShapeVar(value), Lst(getNewUnknown::Nil), preReq, rhs)::
+      LengthEqualityAeqB(ShapeVar(value), Lst(getNewUnknownElement::Nil), preReq, rhs)::
       Equality(ShapeVar(sym), ShapeVar(value), postReq, rhs)::Nil
     case ToValue(value) =>
       LengthEqualityAeqB(ShapeVar(value), Lst(Nil), preReq, rhs)::
       Equality(ShapeVar(sym), Lst(Nil), postReq, rhs)::Nil
     case ToDim(array) =>
       Equality(ShapeVar(sym), Lst(Nil), postReq, rhs) ::
-      Equality(ValueVar(sym), Lst(LengthOf(ShapeVar(array))::Nil), postReq, rhs)::Nil
+      Equality(ValueVar(sym), Lst(getNewUnknownElement::Nil), postReq, rhs)::
+      EqualityToLengthOf(ValueVar(sym), ShapeVar(array), postReq, rhs)::Nil
     case ToShape(array) =>
       Equality(ValueVar(sym), ShapeVar(array), postReq, rhs)::
-      Equality(ShapeVar(sym), Lst(LengthOf(ShapeVar(array))::Nil), postReq, rhs)::Nil
+      Equality(ShapeVar(sym), Lst(getNewUnknownElement::Nil), postReq, rhs)::
+      EqualityToLengthOf(ShapeVar(sym), ShapeVar(array), postReq, rhs)::Nil
     case Reshape(shape, array) =>
-      LengthEqualityAeqB(ShapeVar(shape), Lst(getNewUnknown :: Nil), preReq, rhs)::
+      LengthEqualityAeqB(ShapeVar(shape), Lst(getNewUnknownElement :: Nil), preReq, rhs)::
       EqualProduct(ValueVar(shape), ShapeVar(array), preReq, rhs)::
       Equality(ShapeVar(sym), ValueVar(shape), postReq, rhs)::Nil
     case Sel(iv, array) =>
-      LengthEqualityAeqB(ShapeVar(iv), Lst(getNewUnknown::Nil), preReq, rhs)::
+      LengthEqualityAeqB(ShapeVar(iv), Lst(getNewUnknownElement::Nil), preReq, rhs)::
       PrefixLt(ShapeVar(array), ValueVar(iv), ShapeVar(sym), preReq, rhs)::
       SuffixEq(ShapeVar(array), ValueVar(iv), ShapeVar(sym), postReq, rhs)::Nil
     case Cat(d, a, b) =>
       LengthEqualityAeqB(ShapeVar(d), Lst(Nil), preReq, rhs)::
-      LengthEqualityAeqB(ShapeVar(a), Lst(getNewUnknown::Nil), preReq, rhs)::
+      LengthEqualityAeqB(ShapeVar(a), Lst(getNewUnknownElement::Nil), preReq, rhs)::
       LengthEqualityAeqB(ShapeVar(a), ShapeVar(b), preReq, rhs)::
-      LessThanConstraint(ValueVar(d), Lst(LengthOf(ShapeVar(a))::Nil), preReq, rhs)::
+      Equality(ValueVar(d), Lst(getNewUnknownElement::Nil), preReq, rhs)::
+      LessThanLengthOf(ValueVar(d), ShapeVar(a), preReq, rhs)::
       EqualityExceptFor(ValueVar(d), ShapeVar(a), ShapeVar(b), preReq, rhs)::
       LengthEqualityAeqB(ShapeVar(sym), ShapeVar(a), postReq, rhs)::
       EqualityShAeqShBplusShCalongD(ShapeVar(sym), ShapeVar(a), ShapeVar(b), ValueVar(d), postReq, rhs)::Nil
@@ -126,7 +129,7 @@ trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse wit
       Equality(ShapeVar(cond), ShapeVar(array2), preReq, rhs)::
       Equality(ShapeVar(sym), ShapeVar(array1), postReq, rhs)::Nil
     case WithNode(lb, lbStrict, ub, ubStrict, step, width, ivSym, expr) =>
-      LengthEqualityAeqB(ShapeVar(lb), Lst(getNewUnknown::Nil), preReq, rhs)::
+      LengthEqualityAeqB(ShapeVar(lb), Lst(getNewUnknownElement::Nil), preReq, rhs)::
       Equality(ShapeVar(lbStrict), Lst(Nil), preReq, rhs)::
       Equality(ShapeVar(ubStrict), Lst(Nil), preReq, rhs)::
       Equality(ShapeVar(ub), ShapeVar(lb), preReq, rhs)::
@@ -138,7 +141,7 @@ trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse wit
     case GenArrayWith(withLoops, shape) =>
       assert(withLoops.length >= 1)
       withNodeListConstraints(withLoops, rhs):::
-      Equality(ShapeVar(shape), Lst(getNewUnknown::Nil), preReq, rhs)::
+      Equality(ShapeVar(shape), Lst(getNewUnknownElement::Nil), preReq, rhs)::
       withLoops.flatMap(wn =>
         Equality(ShapeVar(shape), ShapeVar(recoverWithNode(wn).lb), preReq, rhs)::
         PrefixLt(ValueVar(shape), ValueVar(recoverWithNode(wn).lb), ShapeVar(wn), preReq, rhs)::
@@ -149,7 +152,8 @@ trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse wit
       assert(withLoops.length >= 1)
       withNodeListConstraints(withLoops, rhs):::
       withLoops.flatMap(wn =>
-        Equality(Lst(LengthOf(ShapeVar(array))::Nil), ShapeVar(recoverWithNode(wn).lb), preReq, rhs)::
+        Equality(ShapeVar(recoverWithNode(wn).lb), Lst(getNewUnknownElement::Nil), preReq, rhs)::
+        EqualityToLengthOf(ShapeVar(recoverWithNode(wn).lb), ShapeVar(array), preReq, rhs)::
         PrefixLt(ShapeVar(array), ValueVar(recoverWithNode(wn).lb), ShapeVar(wn), preReq, rhs)::
         SuffixEq(ShapeVar(array), ValueVar(recoverWithNode(wn).lb), ShapeVar(wn), preReq, rhs)::Nil
       ) :::
@@ -171,7 +175,7 @@ trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse wit
 
   def toValue(i: Any): TypingElement = i match {
     case i: Int => Value(i)
-    case _ => getNewUnknown
+    case _ => getNewUnknownElement
   }
 
   def recoverWithNode(e: Exp[MDArray[_]]): WithNode[_] =

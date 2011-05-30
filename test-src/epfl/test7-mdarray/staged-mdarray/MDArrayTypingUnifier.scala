@@ -219,7 +219,7 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
           if (eliminate)
             Lst(l.list.take(p-1) ::: l.list.drop(p))
           else
-            Lst(l.list.take(p-1) ::: getNewUnknown :: l.list.drop(p))
+            Lst(l.list.take(p-1) ::: getNewUnknownElement :: l.list.drop(p))
         }
       }
       (eef.d, eef.a, eef.d) match {
@@ -313,6 +313,48 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
           } else
             (false, Nil) // sorry, can't unify that, I'm sound but not complete!
       }
+    case el: EqualityToLengthOf =>
+      (el.a, el.b) match {
+        case (a: Var, b: Lst) => (true, SubstituteVarToLst(a, Lst(Value(b.list.length)::Nil))::Nil)
+        case (a: Lst, b: Lst) =>
+          if (a.list.length != 1)
+            throw new Exception("unification: " + tc.toString + " failed: length(a) != 1")
+          a.list.head match {
+            case Value(n) =>
+              if (n != b.list.length)
+                throw new Exception("unification: " + tc.toString + " failed: false")
+              else
+                (true, Nil)
+            case u: UnknownElt => (true, SubstituteUnknown(u, Value(b.list.length))::Nil)
+            case l: LessThan => (true, SubstituteLessThan(l, Value(b.list.length))::Nil)
+          }
+        case _ => (false, Nil)
+      }
+    case ll: LessThanLengthOf =>
+      (ll.a, ll.b) match {
+        case (a: Var, b: Lst) =>
+          (true, SubstituteVarToLst(a, Lst(getNewLessThan(Value(b.list.length))::Nil))::Nil)
+        case (a: Lst, b: Lst) =>
+          if (a.list.length != 1)
+            throw new Exception("unification: " + tc.toString + " failed: length(a) != 1")
+          a.list.head match {
+            case Value(n) =>
+              if (n >= b.list.length)
+                throw new Exception("unification: " + tc.toString + " failed: false")
+              else
+                (true, Nil)
+            case u: UnknownElt => (true, SubstituteUnknown(u, Value(b.list.length))::Nil)
+            case l: LessThan =>
+              var checked = false
+              for (elt <- l.tl)
+                elt match {
+                  case Value(m) if (m <= b.list.length) => checked = true
+                  case _ => ;
+                }
+              (checked, Nil)
+          }
+        case _ => (false, Nil)
+      }
     //XXX: Let the match fail fast if we forgot a condition
     //case _ => (false, Nil)
   }
@@ -327,26 +369,16 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
 
     for (i <- Stream.range(0, l1.list.length))
       (l1.list(i), l2.list(i)) match {
-        case (u: Unknown, v: Value) => substs = new SubstituteUnknown(u, v) :: substs
-        case (u: Unknown, l: LengthOf) => substs = new SubstituteUnknown(u, l) :: substs
-        case (u1: Unknown, u2: Unknown) => substs = if (u1 != u2) new SubstituteUnknown(u1, u2) :: substs else substs // we don't want to generate useless substitutions
-        case (v: Value, u: Unknown) => substs = new SubstituteUnknown(u, v) :: substs
-        case (v: Value, l: LengthOf) => substs = new SubstituteVarToLst(l.v, makeUnknowns(v.n)) :: substs
+        case (u: UnknownElt, v: Value) => substs = new SubstituteUnknown(u, v) :: substs
+        case (u1: UnknownElt, u2: UnknownElt) => substs = if (u1 != u2) new SubstituteUnknown(u1, u2) :: substs else substs // we don't want to generate useless substitutions
+        case (v: Value, u: UnknownElt) => substs = new SubstituteUnknown(u, v) :: substs
         case (v1: Value, v2: Value) =>
           if (v1 != v2) throw new Exception("unification: The following two lists cannot be unified due to different values at position " + i + ": " + l1.toString + " and " + l2.toString)
-        case (l: LengthOf, v: Value) => substs = new SubstituteVarToLst(l.v, makeUnknowns(v.n)) :: substs
-        case (l: LengthOf, u: Unknown) => substs = new SubstituteUnknown(u, l) :: substs
-        case (l1: LengthOf, l2: LengthOf) => if (l1.v != l2.v) success = false // we don't have enough info to do this substitution
-        case (u: Unknown, lt: LessThan) => substs = new SubstituteUnknown(u, lt) :: substs
-        case (lt: LessThan, u: Unknown) => substs = new SubstituteUnknown(u, lt) :: substs
+        case (u: UnknownElt, lt: LessThan) => substs = new SubstituteUnknown(u, lt) :: substs
+        case (lt: LessThan, u: UnknownElt) => substs = new SubstituteUnknown(u, lt) :: substs
         // TODO: Check LessThan relationship holds :)
         case (v: Value, lt: LessThan) => substs = new SubstituteLessThan(lt, v) :: substs // lt behaves like an unknown, just with the LessThan constraint
         case (lt: LessThan, v: Value) => substs = new SubstituteLessThan(lt, v) :: substs // lt behaves like an unknown, just with the LessThan constraint
-        // TODO: Decide how to solve the LengthOf - LessThan unification
-        // For exact shape inference, LetgthOf takes precedence
-        // For shape bounding => undefined, as both provide different pieces of information
-        case (l: LengthOf, lt: LessThan) => substs = new SubstituteLessThan(lt, l) :: substs
-        case (lt: LessThan, l: LengthOf) => substs = new SubstituteLessThan(lt, l) :: substs
         case (lt1: LessThan, lt2: LessThan) => {
           val lt = getNewLessThan(lt1.tl ::: lt2.tl)
           substs = new SubstituteLessThan(lt1, lt) :: new SubstituteLessThan(lt2, lt) :: substs
