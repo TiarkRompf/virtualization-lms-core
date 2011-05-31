@@ -12,6 +12,10 @@ trait Transforming extends Expressions {
     def onlySyms[A](xs: List[Sym[A]]): List[Sym[A]] = xs map (e => apply(e)) collect { case e: Sym[A] => e }
   }
 
+	object IdentityTransformer extends Transformer {
+		def apply[A](x: Exp[A]) = x
+	}
+
   // FIXME: mirroring for effects!
 
   def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = sys.error("don't know how to mirror " + e)
