@@ -92,7 +92,13 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
   def unifyConstraint(tc: TypingConstraint): (Boolean, List[Substitution]) = tc match {
     case eq: Equality =>
       (eq.a, eq.b) match {
-        case (v1: Var, v2: Var) => (true, if (v1 != v2) (new SubstituteVarToVar(v1, v2))::Nil else Nil)
+        case (v1: Var, v2: Var) =>
+          if (v1 == v2)
+            (true, Nil)
+          else {
+            val newVar = getNewUnknownVariable
+            (true, SubstituteVarToVar(v1, newVar)::SubstituteVarToVar(v2, newVar)::Nil)
+          }
         case (v: Var, l: Lst) => (true, (new SubstituteVarToLst(v, l))::Nil)
         case (l: Lst, v: Var) => (true, (new SubstituteVarToLst(v, l))::Nil)
         case (l1: Lst, l2: Lst) => unifyLists(l1, l2)
@@ -238,10 +244,14 @@ trait MDArrayTypingUnifier extends MDArrayTypingPrimitives {
       }
     case eabc: EqualityAeqBcatC =>
       (eabc.a, eabc.b, eabc.c) match {
-        case (a: Var, b: Var, c: Lst) if c.list.length == 0 =>
-          (true, new SubstituteVarToVar(a, b)::Nil)
-        case (a: Var, b: Lst, c: Var) if b.list.length == 0 =>
-          (true, new SubstituteVarToVar(a, c)::Nil)
+        case (a: Var, b: Var, c: Lst) if c.list.length == 0 => {
+          val newVar = getNewUnknownVariable
+          (true, SubstituteVarToVar(a, newVar)::SubstituteVarToVar(b, newVar)::Nil)
+        }
+        case (a: Var, b: Lst, c: Var) if b.list.length == 0 => {
+          val newVar = getNewUnknownVariable
+          (true, SubstituteVarToVar(a, newVar)::SubstituteVarToVar(c, newVar)::Nil)
+        }
         case (a: Var, b: Lst, c: Lst) =>
           (true, new SubstituteVarToLst(a, Lst(b.list ::: c.list))::Nil)
         case (a: Lst, b: Var, c: Lst) =>

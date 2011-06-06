@@ -35,7 +35,7 @@ trait MDArrayTypingPrimitives {
   case class Value(n: Int) extends TypingElement { override def toString = n.toString }
   case class UnknownElt(i: Int) extends TypingElement { override def toString = "u" + i.toString }
   case class LessThan(i: Int, tl: List[TypingElement]) extends TypingElement {
-    override def toString = "U" + i.toString + (tl.length match {
+    override def toString = "u" + i.toString + (tl.length match {
       case 0 => "(<incorrect LessThan>)"
       case 1 => "(<" + tl.head.toString + ")"
       case _ => "(< min("+tl.mkString(", ") + "))"

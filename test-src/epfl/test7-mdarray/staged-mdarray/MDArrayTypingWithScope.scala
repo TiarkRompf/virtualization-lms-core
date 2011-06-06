@@ -109,7 +109,7 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
 
     // Solve the inner children
     for (child <- current.children)
-      solveScope(child, current.constraints, true)
+      solveScope(child, current.constraints, debug)
 
     if (debug) {
       println("Solving FULL scope for " + current.sym.toString)
@@ -122,7 +122,7 @@ trait MDArrayTypingWithScope extends MDArrayTypingConstraints {
       reconcile(current.children.map(_.fullSubsts), "Reconciliation of " + current.children.mkString(" and "))
 
     // Compute the substitutions
-    current.fullSubsts = computeSubstitutions(fullReconcileConstraints ::: current.constraints, false)._1
+    current.fullSubsts = computeSubstitutions(fullReconcileConstraints ::: current.constraints, debug)._1
   }
 
   protected def reconcile(substitutions: List[SubstitutionList], name: String = "Reconciliation"): List[TypingConstraint] = substitutions.length match {

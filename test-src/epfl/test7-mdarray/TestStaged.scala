@@ -27,6 +27,7 @@ class TestStaged extends FileDiffSuite {
 
     // TODO: Re-enable scope test when scopes are enabled
     //performExperiment(scp, scp.testStaged(scp.knownOnlyAtRuntime[Boolean]("a"), scp.knownOnlyAtRuntime[Int]("b")), prefix + "scope-test")
+    performExperiment(scp, scp.testShapes(scp.knownOnlyAtRuntime[Int]("a"), scp.knownOnlyAtRuntime[Int]("b")), prefix + "shape-test")
 
     // PDE1 experiments
     performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime[Double]("matrix1"), 1), prefix + "range1-test")
@@ -50,7 +51,7 @@ class TestStaged extends FileDiffSuite {
 
     withOutFile(fileName + "-type-inference") {
       try {
-        typing.doTyping(expr.asInstanceOf[pde1.Exp[_]], false)
+        typing.doTyping(expr.asInstanceOf[pde1.Exp[_]], true)
         val export = new MDArrayGraphExport {
           val IR: pde1.type = pde1
           override val TY = typing
@@ -59,6 +60,8 @@ class TestStaged extends FileDiffSuite {
       } catch {
         case e => throw e
       }
+
+      //
 
       // Generate the corresponding code :)
       implicit val printWriter: PrintWriter = IndentWriter.getIndentPrintWriter(new FileWriter(fileName + "-code.scala"))

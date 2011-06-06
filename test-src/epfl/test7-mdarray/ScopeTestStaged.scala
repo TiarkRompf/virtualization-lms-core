@@ -24,4 +24,6 @@ class ScopeTestStaged() { this: MDArrayBaseExp with IfThenElseExp =>
     // With reconciliation, this should be specialized
     sel(0::Nil, With(function = iv => 1).ModArray(b)) + constraints
   }
+
+  def testShapes(a: Rep[MDArray[Int]], b: Rep[MDArray[Int]]) = a + b
 }
