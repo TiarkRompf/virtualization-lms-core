@@ -6,6 +6,12 @@ import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailed
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]): Rep[T]
+
+  // HACK -- bug in scala-virtualized
+  override def __ifThenElse[T](cond: =>Boolean, thenp: => T, elsep: => T) = cond match {
+    case true => thenp
+    case false => elsep
+  }
 }
 
 // TODO: it would be nice if IfThenElseExp would extend IfThenElsePureExp
@@ -36,6 +42,44 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b))
     case _ => super.mirror(e,f)
   }
+  
+  override def aliasSyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c,a,b) => syms(a):::syms(b)
+    case _ => super.aliasSyms(e)
+  }
+
+  override def containSyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c,a,b) => Nil
+    case _ => super.containSyms(e)
+  }
+
+  override def extractSyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c,a,b) => Nil
+    case _ => super.extractSyms(e)
+  }
+
+  override def copySyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c,a,b) => Nil // could return a,b but implied by aliasSyms
+    case _ => super.copySyms(e)
+  }
+
+
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case IfThenElse(c, t, e) => freqNormal(c) ++ freqCold(t) ++ freqCold(e)
+    case _ => super.symsFreq(e)
+  }
+
+/*
+  override def coldSyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c, t, e) => syms(t) ++ syms(e)
+    case _ => super.coldSyms(e)
+  }
+*/
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case IfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)
+    case _ => super.boundSyms(e)
+  }
 
 }
 
@@ -47,15 +91,6 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
   val IR: IfThenElseExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case IfThenElse(c, t, e) if shallow => syms(c) // in shallow mode, don't count deps from nested blocks
-    case _ => super.syms(e)
-  }
-
-  override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case IfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)
-    case _ => super.boundSyms(e)
-  }
 }
 
 trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {

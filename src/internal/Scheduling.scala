@@ -7,19 +7,6 @@ trait Scheduling {
   val IR: Expressions
   import IR._
   
-  // these were previously in Expressions
-  def syms(e: Any): List[Sym[Any]] = e match {
-    case s: Sym[Any] => List(s)
-    case p: Product => p.productIterator.toList.flatMap(syms(_))
-    case _ => Nil
-  }
-
-  def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
-    case _ => Nil
-  }
-
-
   def dep(e: Def[Any]): List[Sym[Any]] = e match { // only used by GraphVizExport currently
     case d: Product => syms(d)
     case _ => Nil
@@ -37,6 +24,25 @@ trait Scheduling {
 
     GraphUtil.stronglyConnectedComponents[TP[Any]](deps(syms(start)), t => deps(syms(t.rhs))).flatten.reverse
   }  
+
+  def buildScheduleForResultM(scope: List[TP[Any]])(start: Any, cold: Boolean, hot: Boolean): List[TP[Any]] = {
+    def mysyms(st: Any) = {
+      val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
+      assert(syms(st).toSet == db.map(_._1).toSet, "different list of syms: "+syms(st)+"!="+db)
+      if (cold && hot) db.map(_._1)
+      else if (cold && !hot) db.withFilter(_._2 < 100.0).map(_._1)
+      else if (!cold && hot) db.withFilter(_._2 > 0.75).map(_._1)
+      else db.withFilter(p=>p._2 > 0.75 && p._2 < 100.0).map(_._1)
+    }
+    
+    def deps(st: List[Sym[Any]]): List[TP[Any]] =
+      scope.filter(st contains _.sym)
+      //syms(e).flatMap(d => findDefinition(d).toList)
+
+    GraphUtil.stronglyConnectedComponents[TP[Any]](deps(mysyms(start)), t => deps(mysyms(t.rhs))).flatten.reverse
+  }  
+
+
 
   def getDependentStuff(st: List[Sym[Any]]): List[TP[Any]] = {
     // TODO: expensive! should do scc calculation only once

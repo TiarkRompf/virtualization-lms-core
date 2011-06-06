@@ -10,7 +10,7 @@ import java.lang.{StackTraceElement,Thread}
  * 
  * @since 0.1
  */
-trait Expressions {
+trait Expressions extends Utils {
 
   abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
     def Type : Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
@@ -35,7 +35,7 @@ trait Expressions {
     val typeManifest: Manifest[_] = manifest[T]
   }
 
-  case class Variable[+T:Manifest](val e: Exp[T]) // TODO: decide whether it should stay here ...
+  case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
   case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
       
@@ -67,7 +67,7 @@ trait Expressions {
   }
 
   protected implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
-    findOrCreateDefinition(d).sym
+    findOrCreateDefinition(d).sym // TODO: return Const(()) if type is Unit??
   }
 
   object Def {
@@ -79,22 +79,69 @@ trait Expressions {
     }
   }
 
-  def reset { // used anywhere?
-    nVars = 0
-    globalDefs = Nil
-  }
 
-/*
   // dependencies
+
   def syms(e: Any): List[Sym[Any]] = e match {
     case s: Sym[Any] => List(s)
     case p: Product => p.productIterator.toList.flatMap(syms(_))
     case _ => Nil
   }
 
-  def dep(e: Exp[Any]): List[Sym[Any]] = e match {
-    case Def(d: Product) => syms(d)
+  def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
+    case _ => Nil
+  }
+
+  def effectSyms(x: Any): List[Sym[Any]] = x match {
+    case p: Product => p.productIterator.toList.flatMap(effectSyms(_))
+    case _ => Nil
+  }
+
+
+
+  def rsyms[T](e: Any)(f: Any=>List[T]): List[T] = e match {
+    case s: Sym[Any] => f(s)
+    case p: Product => p.productIterator.toList.flatMap(f)
+    case _ => Nil
+  }
+
+  def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case s: Sym[Any] => List((s,1.0))
+//    case _ => rsyms(e)(symsFreq)
+    case p: Product => p.productIterator.toList.flatMap(symsFreq(_))
+    case _ => Nil
+  }
+
+  def freqNormal(e: Any) = symsFreq(e)
+  def freqHot(e: Any) = symsFreq(e).map(p=>(p._1,p._2*1000.0))
+  def freqCold(e: Any) = symsFreq(e).map(p=>(p._1,p._2*0.5))
+
+
+
+/*
+  def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case s: Sym[Any] => List((s,1.0))
+    case p: Product => p.productIterator.toList.flatMap(symsFreq(_))
     case _ => Nil
   }
 */
+
+/*
+  def symsShare(e: Any): List[(Sym[Any], Int)] = {
+    case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(symsShare(_))
+    case _ => Nil
+  }
+*/
+
+
+
+  // bookkeeping
+
+  def reset { // used by delite?
+    nVars = 0
+    globalDefs = Nil
+  }
+
 }

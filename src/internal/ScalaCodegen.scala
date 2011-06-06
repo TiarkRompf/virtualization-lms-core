@@ -49,8 +49,10 @@ trait ScalaCodegen extends GenericCodegen {
     
     stream.println("package generated." + this.toString)
     stream.println("final class activation_" + kernelName + " { // generated even if not used")
-    for (s <- syms)
+    for (s <- syms) {
+      val x = s.Type
       stream.println("var " + quote(s) + ": " + remap(s.Type) + " = _")
+    }
     stream.println("}")
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
@@ -82,8 +84,8 @@ trait ScalaCodegen extends GenericCodegen {
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("val " + quote(sym) + " = " + rhs) // + "        //" + sym.Type.debugInfo)
   }
-  def emitVarDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println("var " + quote(sym) + " = " + rhs)
+  def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
+    stream.println("var " + quote(sym) + ": " + remap(sym.Type) + " = " + rhs)
   }
   def emitAssignment(lhs: String, rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(lhs + " = " + rhs)

@@ -41,12 +41,14 @@ trait CCodegen extends CLikeCodegen {
     stream.flush
   }  
 
+/*
+  //TODO: is sym of type Any or Variable[Any] ?
   def emitConstDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.print("const ")
     emitVarDef(sym, rhs)
   }
-
-  def emitVarDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
+*/
+  def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 

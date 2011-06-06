@@ -31,8 +31,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info)
   
   // dependencies
   val scalaToolsSnapshots = ScalaToolsSnapshots
-
-  val scalatest = "org.scalatest" % "scalatest" % "1.4-SNAPSHOT" % "test"
+  val scalatest = "org.scalatest" % "scalatest" % "1.4-SNAPSHOT" //% "test"
 
 //  override def testClasspath = super.testClasspath +++ ("scalatest-1.2" / "scalatest-1.2.jar")
 //  val scalac = "org.scala-lang" % "scala-compiler" % "2.8.0" % "test"

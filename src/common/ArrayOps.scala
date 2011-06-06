@@ -42,10 +42,6 @@ trait BaseGenArrayOps extends GenericNestedCodegen {
   val IR: ArrayOpsExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case ArrayForeach(a,x,block) if shallow => syms(a)
-    case _ => super.syms(e)
-  }
 }
 
 trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {

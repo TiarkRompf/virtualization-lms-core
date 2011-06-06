@@ -57,12 +57,7 @@ trait FunctionsExp extends Functions with EffectExp {
     case _ => // unknown function, assume it is effectful
       reflectEffect(Apply(f, x))
   }
-}
-
-trait BaseGenFunctions extends GenericNestedCodegen {
-  val IR: FunctionsExp
-  import IR._
-
+  
   // TODO: right now were trying to hoist as much as we can out of functions. 
   // That might not always be appropriate. A promising strategy would be to have
   // explicit 'hot' and 'cold' functions. 
@@ -73,11 +68,32 @@ trait BaseGenFunctions extends GenericNestedCodegen {
     case _ => super.syms(e)
   }
 
+/*
+  override def hotSyms(e: Any): List[Sym[Any]] = e match {
+    case Lambda(f, x, y) => syms(y)
+    case Lambda2(f, x1, x2, y) => syms(y)
+    case _ => super.hotSyms(e)
+  }
+*/
+
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case Lambda(f, x, y) => freqHot(y)
+    case Lambda2(f, x1, x2, y) => freqHot(y)
+    case _ => super.symsFreq(e)
+  }
+
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => x :: effectSyms(y)
     case Lambda2(f, x1, x2, y) => x1 :: x2 :: effectSyms(y)
     case _ => super.boundSyms(e)
-  }
+  }  
+}
+
+trait BaseGenFunctions extends GenericNestedCodegen {
+  val IR: FunctionsExp
+  import IR._
+
+
 }
 
 trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
@@ -87,7 +103,13 @@ trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
     case e@Lambda(fun, x, y) =>
       stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + x.Type + ") => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)))
+      stream.println(quote(getBlockResult(y)) + ": " + y.Type)
+      stream.println("}")
+
+    case e@Lambda2(fun, x1, x2, y) =>
+      stream.println("val " + quote(sym) + " = { (" + quote(x1) + ": " + x1.Type + ", " + quote(x2) + ": " + x2.Type + ") => ")
+      emitBlock(y)
+      stream.println(quote(getBlockResult(y)) + ": " + y.Type)
       stream.println("}")
 
     case Apply(fun, arg) =>

@@ -9,7 +9,7 @@ trait While extends Base {
 }
 
 
-trait WhileExp extends While with FunctionsExp { 
+trait WhileExp extends While with EffectExp { 
   case class While(cond: Exp[Boolean], body: Exp[Unit]) extends Def[Unit]
 
   override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
@@ -19,12 +19,6 @@ trait WhileExp extends While with FunctionsExp {
     val ae = summarizeEffects(a)
     reflectEffect(While(c, a), ce andThen ((ae andThen ce).star))
   }
-}
-
-
-trait BaseGenWhile extends GenericNestedCodegen {
-  val IR: WhileExp
-  import IR._
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case While(c, b) => syms(c):::syms(b) // wouldn't need to override...
@@ -35,6 +29,19 @@ trait BaseGenWhile extends GenericNestedCodegen {
     case While(c, b) => effectSyms(c):::effectSyms(b)
     case _ => super.boundSyms(e)
   }
+  
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case While(c, b) => freqHot(c):::freqHot(b)
+    case _ => super.symsFreq(e)
+  }
+
+
+}
+
+
+trait BaseGenWhile extends GenericNestedCodegen {
+  val IR: WhileExp
+  import IR._
 
 }
 

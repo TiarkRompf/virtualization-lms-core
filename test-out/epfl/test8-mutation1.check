@@ -1,0 +1,33 @@
+error: write to non-mutable Some(TP(Sym(8),IfThenElse(Sym(7),Sym(3),Sym(6))))
+at Sym(9)=Reflect(ArrayUpdate(Sym(8),Const(40),Const(40.0)),Summary(false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(Sym(8)),List(Sym(8))),List(Sym(3), Sym(6)))
+promoting to effect: Sym(10)=Reflect(ArrayIndex(Sym(8),Const(50)),Summary(false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(),List()),List(Sym(3), Sym(6)))
+depends on  Sym(3)
+depends on  Sym(6)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Any)) {
+def apply(x0:Int): Any = {
+val x2 = LoopArray(100) { x1 => 
+0.0
+}
+val x3 = x2.clone // mutable
+val x5 = LoopArray(100) { x4 => 
+0.0
+}
+val x6 = x5.clone // mutable
+val x7 = x0 > 7
+val x8 = if (x7) {
+x3
+} else {
+x6
+}
+val x9 = x8.update(40, 40.0)
+val x10 = x8.apply(50)
+val x11 = println(x10)
+x11
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
