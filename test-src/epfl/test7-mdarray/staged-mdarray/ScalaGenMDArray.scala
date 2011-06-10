@@ -12,18 +12,18 @@ trait BaseGenMDArray extends GenericNestedCodegen {
   val IR: MDArrayBaseExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case GenArrayWith(lExpr, shape) if shallow => syms(shape)
-    case ModArrayWith(lExpr, array) if shallow => syms(array)
-    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) if shallow => syms(neutral):::syms(foldTerm1):::syms(foldTerm2):::syms(foldExpression)
-    case _ => super.syms(e)
-  }
-
-  override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case WithNode(lb, lbStrict, ub, ubStrict, step, width, sym, expr) => syms(sym)
-    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) => syms(foldTerm1):::syms(foldTerm2)
-    case _ => super.boundSyms(e)
-  }
+//  override def syms(e: Any): List[Sym[Any]] = e match {
+//    case GenArrayWith(lExpr, shape) if shallow => syms(shape)
+//    case ModArrayWith(lExpr, array) if shallow => syms(array)
+//    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) if shallow => syms(neutral):::syms(foldTerm1):::syms(foldTerm2):::syms(foldExpression)
+//    case _ => super.syms(e)
+//  }
+//
+//  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+//    case WithNode(lb, lbStrict, ub, ubStrict, step, width, sym, expr) => syms(sym)
+//    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) => syms(foldTerm1):::syms(foldTerm2)
+//    case _ => super.boundSyms(e)
+//  }
 }
 
 

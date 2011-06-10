@@ -9,10 +9,9 @@ import original.Conversions._
 import java.io.{Writer, PrintWriter}
 import collection.immutable.HashMap
 
-
 trait MDArrayTypingBubbleUp extends MDArrayTypingWithScope {
 
-  import IR.{Sym, Exp, Def, TP, findDefinition}
+  import IR.{Sym, Exp, Def, TP, findDefinition, syms}
   var remainingConstraints: List[TypingConstraint] = Nil
   var scopeSubsts: SubstitutionList = new SubstitutionList(Nil)
 

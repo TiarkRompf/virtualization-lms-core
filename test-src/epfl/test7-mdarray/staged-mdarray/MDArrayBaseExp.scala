@@ -10,6 +10,37 @@ trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
   // needed so that foldTerms are not collected by the CSE
   var foldTermIndex = 0
 
+//  override def syms(e: Any): List[Sym[Any]] = e match {
+//    case GenArrayWith(lExpr, shape) => syms(shape) ::: syms(lExpr)
+//    case ModArrayWith(lExpr, array) => syms(array) ::: syms(lExpr)
+//    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) =>
+//      syms(wExpr) ::: syms(neutral) ::: syms(foldTerm1) ::: syms(foldTerm2) ::: syms(foldExpression)
+//    case _ => super.syms(e)
+//  }
+
+//  override def syms(e: Any) = e match {
+//    case GenArrayWith(lExpr, shape) => syms(shape)
+//    case ModArrayWith(lExpr, array) => syms(array)
+//    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) => syms(neutral)
+//    case _ => super.syms(e)
+//  }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case WithNode(lb, lbStrict, ub, ubStrict, step, width, sym, expr) => sym :: boundSyms(expr)
+    case GenArrayWith(lExpr, shape) => lExpr.flatMap(boundSyms(_))
+    case ModArrayWith(lExpr, array) => lExpr.flatMap(boundSyms(_))
+    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) => foldTerm1 :: foldTerm2 :: boundSyms(wExpr) ::: boundSyms(foldExpression)
+    case _ => super.boundSyms(e)
+  }
+
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case GenArrayWith(lExpr, shape) => freqNormal(shape) ::: lExpr.flatMap(freqCold(_))
+    case ModArrayWith(lExpr, array) => freqNormal(array) ::: lExpr.flatMap(freqCold(_))
+    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) =>
+      freqCold(wExpr) ::: freqNormal(neutral) ::: freqNormal(foldTerm1) ::: freqNormal(foldTerm2)  ::: freqHot(foldExpression)
+    case _ => super.symsFreq(e)
+  }
+
   /*
       Basic AST building blocks
    */
