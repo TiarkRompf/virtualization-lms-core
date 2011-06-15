@@ -12,21 +12,7 @@ trait BaseGenMDArray extends GenericNestedCodegen {
   val IR: MDArrayBaseExp
   import IR._
 
-//  override def syms(e: Any): List[Sym[Any]] = e match {
-//    case GenArrayWith(lExpr, shape) if shallow => syms(shape)
-//    case ModArrayWith(lExpr, array) if shallow => syms(array)
-//    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) if shallow => syms(neutral):::syms(foldTerm1):::syms(foldTerm2):::syms(foldExpression)
-//    case _ => super.syms(e)
-//  }
-//
-//  override def boundSyms(e: Any): List[Sym[Any]] = e match {
-//    case WithNode(lb, lbStrict, ub, ubStrict, step, width, sym, expr) => syms(sym)
-//    case FoldArrayWith(wExpr, neutral, foldTerm1, foldTerm2, foldExpression) => syms(foldTerm1):::syms(foldTerm2)
-//    case _ => super.boundSyms(e)
-//  }
 }
-
-
 
 
 trait TypedGenMDArray extends BaseGenMDArray {
@@ -53,11 +39,21 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
 
   import IR._
   import TY.{getShapeLength, getValueLength, getShapeValue, getValueValue}
+  var stripped: Boolean = false
 
   // This function stores the action of the innermost with loop
   var withLoopAction: (String, String)=>Unit = (a, b)=> { sys.error("No with loop action set!") }
 
-  def emitSymDecl(sym: Sym[Any], stripped: Boolean = false, debug: Boolean = false)(implicit stream: PrintWriter) = {
+  override def remap[A](m: Manifest[A]) : String = {
+    if (m.erasure == classOf[MDArray[Any]])
+      if (stripped)
+        remap(m.typeArguments.head)
+      else
+        "MDArray[" + remap(m.typeArguments.head) + "]"
+    else super.remap[A](m)
+  }
+
+  def emitSymDecl(sym: Sym[Any], _stripped: Boolean = false, debug: Boolean = false)(implicit stream: PrintWriter) = {
 
     // emit the debug info: shape, value and others
     debug match {
@@ -69,12 +65,9 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     }
 
     // emit the definition
-    stream.print("val " + quote(sym) + ": " + getType(sym, stripped) + " = ")
-  }
-
-  def getType(sym: Sym[_], stripped: Boolean = false)(implicit stream: PrintWriter): String = stripped match {
-    case false => sym.typeManifest.toString.replace("scala.virtualization.lms.epfl.test7.original.MDArray", "MDArray")
-    case true => stripMDArray(sym.typeManifest).get // Let it crash at runtime if it's not a MDArray
+    stripped = _stripped
+    stream.print("val " + quote(sym) + ": " + remap(sym.typeManifest) + " = ")
+    stripped = false
   }
 
   def emitOperationPrologue(sym: Sym[Any], exp: Exp[Any])(implicit stream: PrintWriter) = {
@@ -226,10 +219,10 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
           stream.println("if ((iv" + index + " - lb" + index + ") % step" + index + " <= width" + index + ") {")
         }
         // emit loop content
-        stream.print("val " + quote(withLoop.sym) + ": " + getType(withLoop.sym) + " = ")
+        stream.print("val " + quote(withLoop.sym) + ": " + remap(withLoop.sym.typeManifest) + " = ")
         stream.println(List.range(0, l).map(i => "iv" + i).mkString("", "::","::Nil"))
-        stream.println("val iv: " + getType(withLoop.sym) + " = " + quote(withLoop.sym))
-        stream.println("val feval: " + getType(withNodeSym) + " = {")
+        stream.println("val iv: " + remap(withLoop.sym.typeManifest) + " = " + quote(withLoop.sym))
+        stream.println("val feval: " + remap(withNodeSym.typeManifest) + " = {")
         emitBlock(withLoop.expr)
         stream.println(quote(getBlockResult(withLoop.expr)))
         stream.println("}")
@@ -245,8 +238,8 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
         // emit loop
         stream.println("for (iv <- iterateWithStep(_lb=" + quote(withLoop.lb) + ", lbStrict=" + quote(withLoop.lbStrict) + ", ubStrict=" + quote(withLoop.ubStrict) + ", _ub=" + quote(withLoop.ub) + ", step=" + quote(withLoop.step) + ", width=" + quote(withLoop.width) + ", opName=opName)) {")
         // emit loop content
-        stream.println("val " + quote(withLoop.sym) + ": " + getType(withLoop.sym) + " = iv")
-        stream.println("val feval: " + getType(withLoop.expr.asInstanceOf[Sym[_]]) + " = {")
+        stream.println("val " + quote(withLoop.sym) + ": " + remap(withLoop.sym.typeManifest) + " = iv")
+        stream.println("val feval: " + remap(withLoop.expr.asInstanceOf[Sym[_]].typeManifest) + " = {")
         emitBlock(withLoop.expr)
         stream.println(quote(getBlockResult(withLoop.expr)))
         stream.println("}")
@@ -276,7 +269,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
         emitSymDecl(sym)
         stream.println("internalReshape(" + quote(fa.value) + ".length::Nil, " + quote(fa.value) + ", \"fromArray\")")
       case fv: FromValue[_] =>
-        emitSymDecl(sym, stripped = true)
+        emitSymDecl(sym, _stripped = true)
         stream.println(quote(fv.value))
       case tl: ToList[_] =>
         emitSymDecl(sym)
@@ -396,32 +389,8 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
   }
 
   // the emitSource in ScalaCodeGen is not exactly what we need - we need to select the parameters on our own
-  def emitSource(expr: Exp[Any], className: String)(implicit stream: PrintWriter): Unit = {
+  override def emitSource[A: Manifest, B: Manifest](f: Exp[A] => Exp[B], className: String, stream: PrintWriter): Unit = {
 
-    // We need to build the AST and obtain the input values
-    val allNodes: List[TP[Any]] = buildScheduleForResult(expr)
-    val inputNodes: List[TP[Any]] = allNodes.filter(tp => tp.rhs.isInstanceOf[KnownAtRuntime[_]])
-    val inputNodeData: List[(String, String)] = inputNodes.map(tp => {
-      val node: KnownAtRuntime[_] = tp.rhs.asInstanceOf[KnownAtRuntime[_]]
-      val name: String = node.name
-      val stype: String = tp.sym.typeManifest.toString
-      (name, stype)
-    })
-
-    val inputTypes = inputNodeData.map((p: (String, String)) => p._2).mkString(", ")
-    val inputVars  = inputNodeData.map((p: (String, String)) => p._1 + ": " + p._2).mkString(", ")
-    val outputSym: Sym[_] = expr match {
-      case s: Sym[_] => s
-      case d: Def[_] => findDefinition(d).get.sym
-    }
-    val outputType = outputSym.typeManifest.toString
-
-    stream.println("/*****************************************\n"+
-                   "  Emitting Generated Code                  \n"+
-                   "*******************************************/\n")
-
-
-    // TODO: Unhardcode this
     stream.println("package scala.virtualization.lms")
     stream.println("package epfl")
     stream.println("package test7")
@@ -431,16 +400,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     stream.println("import test7.original.Operations._")
     stream.println("import test7.original.SpecificOperations._")
     stream.println()
-    stream.println("class "+className+" extends (("+inputTypes+")=>("+outputType+")) {\n\n")
-    stream.println("def apply("+inputVars+"): "+outputType+" = {\n")
 
-    emitBlock(expr)(stream)
-    stream.println(quote(getBlockResult(expr)))
-
-    stream.println("}")
-    stream.println("}")
-    stream.println("/*****************************************\n"+
-                   "  End of Generated Code                  \n"+
-                   "*******************************************/")
+    super.emitSource(f, className, stream)
   }
 }

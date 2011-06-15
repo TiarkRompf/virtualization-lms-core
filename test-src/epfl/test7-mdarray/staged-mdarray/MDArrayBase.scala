@@ -6,7 +6,7 @@ import common._
 import original._
 
 
-trait MDArrayBase extends Base with util.OverloadHack {
+trait MDArrayBase extends Base with Arguments {
   // TODO: What are the implications of having something like MDArray[Rep[T]]? Do the implicits still work?
 
   /**

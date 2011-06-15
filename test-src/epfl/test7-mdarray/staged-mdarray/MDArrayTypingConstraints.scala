@@ -12,7 +12,7 @@ import collection.immutable.HashMap
 
 trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse with MDArrayTypingUnifier {
 
-  val IR: MDArrayBaseExp with IfThenElseExp
+  val IR: MDArrayBaseExp
   import IR._
 
   override type Symbol = Sym[_]
@@ -171,6 +171,8 @@ trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse wit
       Equality(ShapeVar(operand1), Lst(Nil), preReq, rhs)::
       Equality(ShapeVar(operand2), Lst(Nil), preReq, rhs)::
       Equality(ShapeVar(sym), Lst(Nil), postReq, rhs)::Nil
+    case Argument(base, index) =>
+      Nil // arguments are not constrained in any way
   }
 
   def toValue(i: Any): TypingElement = i match {

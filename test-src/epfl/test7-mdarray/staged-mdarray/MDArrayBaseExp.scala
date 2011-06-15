@@ -6,7 +6,7 @@ import common._
 import original._
 import original.Conversions._
 
-trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp {
+trait MDArrayBaseExp extends MDArrayBase with BaseExp with IfThenElseExp with ArgumentsExp {
   // needed so that foldTerms are not collected by the CSE
   var foldTermIndex = 0
 

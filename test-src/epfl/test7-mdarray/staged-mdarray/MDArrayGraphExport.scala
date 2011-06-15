@@ -4,9 +4,8 @@ package test7
 
 import internal.GraphVizExport
 import java.io.PrintWriter
-import common.BaseGenIfThenElse
 
-trait MDArrayGraphExport extends BaseGenIfThenElse with TypedGenMDArray {
+trait MDArrayGraphExport extends TypedGenMDArray {
 
   import IR._
 

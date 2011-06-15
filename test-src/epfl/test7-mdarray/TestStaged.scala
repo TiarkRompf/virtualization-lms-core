@@ -26,50 +26,61 @@ class TestStaged extends FileDiffSuite {
     val scp = new ScopeTestStaged with MDArrayBaseExp with IfThenElse
 
     // TODO: Re-enable scope test when scopes are enabled
-    //performExperiment(scp, scp.testStaged(scp.knownOnlyAtRuntime[Boolean]("a"), scp.knownOnlyAtRuntime[Int]("b")), prefix + "scope-test")
-    performExperiment(scp, scp.testShapes(scp.knownOnlyAtRuntime[Int]("a"), scp.knownOnlyAtRuntime[Int]("b")), prefix + "shape-test")
+    //(new Experiment { val dsl: scp.type = scp }) ((a: scp.Rep[(MDArray[Boolean], MDArray[Int])]) => scp.testStaged(scp.pairToArgs(a)._1, scp.pairToArgs(a)._2), prefix + "scope-test")
+    (new Experiment { val dsl: scp.type = scp }) ((a: scp.Rep[(MDArray[Int], MDArray[Int])]) => scp.testShapes(scp.pairToArgs(a)._1, scp.pairToArgs(a)._2), prefix + "shape-test")
+    (new Experiment { val dsl: scp.type = scp }) ((a: scp.Rep[(MDArray[Int], MDArray[Int])]) => { import scp._; (a._1 + a._2 + (10::10::10::Nil)) }, prefix + "simple-test")
 
     // PDE1 experiments
-    performExperiment(pde1, pde1.range1(pde1.knownOnlyAtRuntime[Double]("matrix1"), 1), prefix + "range1-test")
-    performExperiment(pde1, pde1.range2(pde1.knownOnlyAtRuntime[Double]("matrix2"), 1), prefix + "range2-test")
-    performExperiment(pde1, pde1.range3(pde1.knownOnlyAtRuntime[Double]("matrix3"), 1), prefix + "range3-test")
+    (new Experiment { val dsl: pde1.type = pde1 })((a: pde1.Rep[MDArray[Double]]) => pde1.range1(a, 1), prefix + "range1-test")
+    (new Experiment { val dsl: pde1.type = pde1 })((a: pde1.Rep[MDArray[Double]]) => pde1.range2(a, 1), prefix + "range2-test")
+    (new Experiment { val dsl: pde1.type = pde1 })((a: pde1.Rep[MDArray[Double]]) => pde1.range3(a, 1), prefix + "range3-test")
     // TODO: Include ranges to make this work
-    //performExperiment(pde1, pde1.range4(pde1.knownOnlyAtRuntime[Double]("matrix4"), 1), prefix + "range4-test")
-    performExperiment(pde1, pde1.range5(pde1.knownOnlyAtRuntime[Double]("matrix5"), 1), prefix + "range5-test")
+    //(new Experiment { val dsl: pde1.type = pde1 })((a: pde1.Rep[MDArray[Double]]) => pde1.range4(a, 1), prefix + "range4-test")
+    (new Experiment { val dsl: pde1.type = pde1 })((a: pde1.Rep[MDArray[Double]]) => pde1.range5(a, 1), prefix + "range5-test")
 
     // Game of Life experiments
-    performExperiment(gol, gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input")), prefix + "reshape")
-    performExperiment(gol, gol.gameOfLife(gol.knownOnlyAtRuntime[Int]("input")), prefix + "game-of-life-generic")
-    performExperiment(gol, gol.gameOfLife(gol.reshape(gol.convertFromListRep(10::10::Nil), gol.knownOnlyAtRuntime[Int]("input"))), prefix + "game-of-life-10-by-10")
+    (new Experiment { val dsl: gol.type = gol })((a: gol.Rep[MDArray[Int]]) => gol.gameOfLife(gol.reshape(gol.convertFromListRep(10::10::Nil), a)), prefix + "game-of-life-10-by-10")
+    (new Experiment { val dsl: gol.type = gol })((a: gol.Rep[MDArray[Int]]) => gol.gameOfLife(a), prefix + "game-of-life-generic")
   }
 
-  def performExperiment(pde1: MDArrayBaseExp with IfThenElseExp, expr: Any, fileName: String) {
+  trait Experiment {
+    val dsl: MDArrayBaseExp
 
-    val typing = new MDArrayTypingBubbleUp { val IR: pde1.type = pde1 }
+    def apply[A: Manifest, B: Manifest](f: dsl.Exp[A] => dsl.Exp[B], fileName: String) = {
+      val typing = new MDArrayTypingBubbleUp { val IR: dsl.type = dsl }
 
-    System.err.println("Performing experiment: " + fileName)
+      /* Problem here: Generating the code creates a new fresh[A] and applies f to it. This leads to partial trashing
+       * of the typing information gathered so far. What we need to do is retype the entire thing just after the
+       * function application.
+       *
+       * Now to do this, we can do the following hack, which couldn't get any uglier:
+       * TODO: Fix this thing, it needs a complete separate typing phase
+       */
+      def ff(arg: dsl.Exp[A]): dsl.Exp[B] = {
+        val res = f(arg)
 
-    withOutFile(fileName + "-type-inference") {
-      try {
-        typing.doTyping(expr.asInstanceOf[pde1.Exp[_]], true)
-        val export = new MDArrayGraphExport {
-          val IR: pde1.type = pde1
-          override val TY = typing
+        System.err.println("Performing experiment: " + fileName)
+
+        withOutFile(fileName + "-type-inference") {
+          try {
+            typing.doTyping(res, true)
+            val export = new MDArrayGraphExport {
+              val IR: dsl.type = dsl
+              override val TY = typing
+            }
+            export.emitDepGraph(res, new PrintWriter(fileName + "-dot"), false)
+          } catch {
+            case e => throw e
+          }
         }
-        export.emitDepGraph(expr.asInstanceOf[pde1.Exp[_]], new PrintWriter(fileName + "-dot"), false)
-      } catch {
-        case e => throw e
-      }
 
-      //
+        res
+      }
 
       // Generate the corresponding code :)
       implicit val printWriter: PrintWriter = IndentWriter.getIndentPrintWriter(new FileWriter(fileName + "-code.scala"))
-      val scalaGen = new ScalaGenMDArray with ScalaGenIfThenElse { val IR: pde1.type = pde1; override val TY = typing }
-      expr match {
-        case e: pde1.Exp[_] => scalaGen.emitSource(e, "Experiment")
-        case _ => printWriter.println("cannot generate code")
-      }
+      val scalaGen = new ScalaGenMDArray with ScalaGenIfThenElse with ScalaGenArguments { val IR: dsl.type = dsl; override val TY = typing }
+      scalaGen.emitSource(ff, "Experiment", printWriter)
       printWriter.close
     }
   }
