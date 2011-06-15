@@ -44,6 +44,13 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
   // This function stores the action of the innermost with loop
   var withLoopAction: (String, String)=>Unit = (a, b)=> { sys.error("No with loop action set!") }
 
+  def strip[A](m: Manifest[A]) = {
+    stripped = true
+    val result = remap(m)
+    stripped = false
+    result
+  }
+
   override def remap[A](m: Manifest[A]) : String = {
     if (m.erasure == classOf[MDArray[Any]])
       if (stripped)
@@ -53,7 +60,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     else super.remap[A](m)
   }
 
-  def emitSymDecl(sym: Sym[Any], _stripped: Boolean = false, debug: Boolean = false)(implicit stream: PrintWriter) = {
+  def emitSymDecl(sym: Sym[Any], debug: Boolean = false)(implicit stream: PrintWriter) = {
 
     // emit the debug info: shape, value and others
     debug match {
@@ -65,13 +72,16 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     }
 
     // emit the definition
-    stripped = _stripped
-    stream.print("val " + quote(sym) + ": " + remap(sym.typeManifest) + " = ")
+    stripped = getShapeLength(sym) match {
+      case Some(0) => true
+      case _ => false
+    }
+    stream.print("val " + quote(sym) + ": " + remap(sym.Type) + " = ")
     stripped = false
   }
 
   def emitOperationPrologue(sym: Sym[Any], exp: Exp[Any])(implicit stream: PrintWriter) = {
-    stream.println("val result = new Array[" + stripMDArray(sym.typeManifest).get + "](shape(" + quote(exp) + ").content().foldLeft(1)((a,b) => a*b))")
+    stream.println("val result = new Array[" + strip(sym.Type) + "](shape(" + quote(exp) + ").content().foldLeft(1)((a,b) => a*b))")
     stream.println("for(i <- List.range(0, result.length))")
   }
 
@@ -93,7 +103,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     def emitGenArrayAction(iv: String, loopResult: String) = {
       stream.println("if (result == null) {")
       stream.println("// create the array and shape")
-      stream.println("result = new Array[" + stripMDArray(sym.typeManifest).get + "](" + quote(shp) + ".content().foldLeft(1)((a,b) => a*b) * " + loopResult + ".content().length)")
+      stream.println("result = new Array[" + strip(sym.Type) + "](" + quote(shp) + ".content().foldLeft(1)((a,b) => a*b) * " + loopResult + ".content().length)")
       stream.println("rshape = shape(" + loopResult + ").content()")
       stream.println("} else {")
       stream.println("// check shape -- this WILL be redundant due to runtime checks")
@@ -109,7 +119,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     emitSymDecl(sym);
     stream.println("{")
     stream.println("val opName: String = \"genarray\"")
-    stream.println("var result: Array[" + stripMDArray(sym.typeManifest).get + "] = null")
+    stream.println("var result: Array[" + strip(sym.Type) + "] = null")
     stream.println("var rshape: Array[Int] = null")
 
     val savedLoopAction = withLoopAction
@@ -146,7 +156,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     emitSymDecl(sym);
     stream.println("{")
     stream.println("val opName: String = \"modarray\"")
-    stream.println("var result: Array[" + stripMDArray(sym.typeManifest).get + "] = new Array[" + stripMDArray(sym.typeManifest).get + "](shape(" + quote(arraySym) + ").content().foldLeft(1)((a,b) => a*b))")
+    stream.println("var result: Array[" + strip(sym.Type) + "] = new Array[" + strip(sym.Type) + "](shape(" + quote(arraySym) + ").content().foldLeft(1)((a,b) => a*b))")
     stream.println("for (i <- List.range(0, result.length)) {")
     stream.println("result(i) = " + quote(arraySym) + ".content()(i)")
     stream.println("}")
@@ -180,10 +190,10 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
     emitSymDecl(sym);
     stream.println("{")
     stream.println("val opName: String = \"fold\"")
-    stream.println("var result: " + neutralSym.typeManifest.toString + " = " + quote(neutralSym))
+    stream.println("var result: " + remap(neutralSym.Type) + " = " + quote(neutralSym))
     // Emit the fold expression
-    stream.println("val foldFunction: (" + neutralSym.typeManifest.toString + ", " + neutralSym.typeManifest.toString
-      + ") => " + neutralSym.typeManifest.toString + " = (" + quote(foldTerm1Sym) + ", " + quote(foldTerm2Sym) + ") => {")
+    stream.println("val foldFunction: (" + remap(neutralSym.Type) + ", " + remap(neutralSym.Type)
+      + ") => " + remap(neutralSym.Type) + " = (" + quote(foldTerm1Sym) + ", " + quote(foldTerm2Sym) + ") => {")
     emitBlock(foldExprSym)
     stream.println(quote(getBlockResult(foldExprSym)))
     stream.println("}")
@@ -219,10 +229,10 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
           stream.println("if ((iv" + index + " - lb" + index + ") % step" + index + " <= width" + index + ") {")
         }
         // emit loop content
-        stream.print("val " + quote(withLoop.sym) + ": " + remap(withLoop.sym.typeManifest) + " = ")
+        stream.print("val " + quote(withLoop.sym) + ": " + remap(withLoop.sym.Type) + " = ")
         stream.println(List.range(0, l).map(i => "iv" + i).mkString("", "::","::Nil"))
-        stream.println("val iv: " + remap(withLoop.sym.typeManifest) + " = " + quote(withLoop.sym))
-        stream.println("val feval: " + remap(withNodeSym.typeManifest) + " = {")
+        stream.println("val iv: " + remap(withLoop.sym.Type) + " = " + quote(withLoop.sym))
+        stream.println("val feval: " + remap(withNodeSym.Type) + " = {")
         emitBlock(withLoop.expr)
         stream.println(quote(getBlockResult(withLoop.expr)))
         stream.println("}")
@@ -238,8 +248,8 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
         // emit loop
         stream.println("for (iv <- iterateWithStep(_lb=" + quote(withLoop.lb) + ", lbStrict=" + quote(withLoop.lbStrict) + ", ubStrict=" + quote(withLoop.ubStrict) + ", _ub=" + quote(withLoop.ub) + ", step=" + quote(withLoop.step) + ", width=" + quote(withLoop.width) + ", opName=opName)) {")
         // emit loop content
-        stream.println("val " + quote(withLoop.sym) + ": " + remap(withLoop.sym.typeManifest) + " = iv")
-        stream.println("val feval: " + remap(withLoop.expr.asInstanceOf[Sym[_]].typeManifest) + " = {")
+        stream.println("val " + quote(withLoop.sym) + ": " + remap(withLoop.sym.Type) + " = iv")
+        stream.println("val feval: " + remap(withLoop.expr.asInstanceOf[Sym[_]].Type) + " = {")
         emitBlock(withLoop.expr)
         stream.println(quote(getBlockResult(withLoop.expr)))
         stream.println("}")
@@ -269,7 +279,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
         emitSymDecl(sym)
         stream.println("internalReshape(" + quote(fa.value) + ".length::Nil, " + quote(fa.value) + ", \"fromArray\")")
       case fv: FromValue[_] =>
-        emitSymDecl(sym, _stripped = true)
+        emitSymDecl(sym)
         stream.println(quote(fv.value))
       case tl: ToList[_] =>
         emitSymDecl(sym)
@@ -379,13 +389,6 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
           Nil)
       // let error cases be shown at compile time :)
     }
-  }
-
-  // TODO: Convert this back to if, but if is overridden now, so we can't use it
-  def stripMDArray(typeManifest: Manifest[_]): Option[String] =
-    ((typeManifest.erasure == classOf[MDArray[_]]) && (typeManifest.typeArguments.length == 1)) match {
-    case true => Some(typeManifest.typeArguments.head.toString)
-    case false => None
   }
 
   // the emitSource in ScalaCodeGen is not exactly what we need - we need to select the parameters on our own
