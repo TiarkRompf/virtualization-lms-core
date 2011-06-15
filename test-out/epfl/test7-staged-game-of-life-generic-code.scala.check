@@ -1,0 +1,1397 @@
+package scala.virtualization.lms
+package epfl
+package test7
+package original
+
+import test7.original.Conversions._
+import test7.original.Operations._
+import test7.original.SpecificOperations._
+
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Experiment extends ((scala.virtualization.lms.epfl.test7.original.MDArray[Int])=>(scala.virtualization.lms.epfl.test7.original.MDArray[Int])) {
+  def apply(x133:scala.virtualization.lms.epfl.test7.original.MDArray[Int]): scala.virtualization.lms.epfl.test7.original.MDArray[Int] = {
+    // RuntimeCheck : POST:   S133 = U171                                            from Bubble up shape for Sym(133) <- Shape(Sym(133))
+    // Shape: V134=U171 and S134=[u12]
+    val x134: MDArray[Int] = shape(x133)
+    // RuntimeCheck : POST:   V134 = U171                                            from Bubble up value for Sym(134) <- GenArrayWith(Sym(134) - Sym(184))
+    // RuntimeCheck : POST:   S134 = [u12]                                           from Bubble up shape for Sym(134) <- GenArrayWith(Sym(134) - Sym(184))
+    // RuntimeCheck : POST:   V184 = [u137]                                          from Bubble up value for Sym(184) <- GenArrayWith(Sym(134) - Sym(184))
+    // RuntimeCheck : POST:   S184 = []                                              from Bubble up shape for Sym(184) <- GenArrayWith(Sym(134) - Sym(184))
+    // RuntimeCheck : PRE:    S134 = [u1592]                                         from GenArrayWith(Sym(134) - Sym(184))
+    // RuntimeCheck : PRE:    S134 = S137                                            from GenArrayWith(Sym(134) - Sym(184))
+    // RuntimeCheck : PRE:    V134(:length(V137)) < V137                             from GenArrayWith(Sym(134) - Sym(184))
+    // RuntimeCheck : PRE:    V134(length(V137):) = S184                             from GenArrayWith(Sym(134) - Sym(184))
+    // Shape: S185=U171
+    
+    val x185: MDArray[Int] = {
+      val opName: String = "genarray"
+      var result: Array[Int] = null
+      var rshape: Array[Int] = null
+      // Shape: V4=[u2] and S4=[]
+      val x4: Boolean = internalReshape(Nil, Array(true), "knownAtCompileTime")
+      // RuntimeCheck : POST:   V4 = [u2]                                              from Bubble up value for Sym(4) <- ToValue(Sym(4))
+      // RuntimeCheck : POST:   S4 = []                                                from Bubble up shape for Sym(4) <- ToValue(Sym(4))
+      // RuntimeCheck : PRE:    length(S4) = length([])                                from ToValue(Sym(4))
+      // Shape: V5=[u133] and S5=[]
+      val x5: Boolean = x4
+      // RuntimeCheck : POST:   V5 = [u133]                                            from Bubble up value for Sym(5) <- FromValue(Sym(5))
+      // RuntimeCheck : POST:   S5 = []                                                from Bubble up shape for Sym(5) <- FromValue(Sym(5))
+      // Shape: V15=[u132] and S15=[]
+      val x15: Boolean = x5
+      // RuntimeCheck : POST:   V15 = [u132]                                           from Bubble up value for Sym(15) <- ToValue(Sym(15))
+      // RuntimeCheck : POST:   S15 = []                                               from Bubble up shape for Sym(15) <- ToValue(Sym(15))
+      // RuntimeCheck : PRE:    length(S15) = length([])                               from ToValue(Sym(15))
+      // Shape: V16=[u131] and S16=[]
+      val x16: Boolean = x15
+      // Shape: V10=[0] and S10=[]
+      val x10: Int = internalReshape(Nil, Array(0), "knownAtCompileTime")
+      // Shape: V7=[0] and S7=[1]
+      val x7: MDArray[Int] = internalReshape(1::Nil, Array(0), "knownAtCompileTime")
+      // RuntimeCheck : POST:   V134 = U171                                            from Bubble up value for Sym(134) <- Shape(Sym(134))
+      // RuntimeCheck : POST:   S134 = [u12]                                           from Bubble up shape for Sym(134) <- Shape(Sym(134))
+      // Shape: V135=[u12] and S135=[1]
+      val x135: MDArray[Int] = shape(x134)
+      // RuntimeCheck : POST:   V135 = [u12]                                           from Bubble up value for Sym(135) <- Sel(Sym(7), Sym(135))
+      // RuntimeCheck : POST:   S135 = [1]                                             from Bubble up shape for Sym(135) <- Sel(Sym(7), Sym(135))
+      // RuntimeCheck : POST:   V7 = [0]                                               from Bubble up value for Sym(7) <- Sel(Sym(7), Sym(135))
+      // RuntimeCheck : POST:   S7 = [1]                                               from Bubble up shape for Sym(7) <- Sel(Sym(7), Sym(135))
+      // RuntimeCheck : PRE:    length(S7) = length([u1603])                           from Sel(Sym(7), Sym(135))
+      // RuntimeCheck : PRE:    S135(:length(V7)) < V7                                 from Sel(Sym(7), Sym(135))
+      // Shape: V136=[u12] and S136=[]
+      
+      // Shape: V136=[u12] and S136=[]
+      val x136: Int = x135.content()(flatten(shape(x135), x7, "sel"))
+      // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- Values(Sym(10), Sym(136))
+      // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- Values(Sym(10), Sym(136))
+      // RuntimeCheck : POST:   V136 = [u12]                                           from Bubble up value for Sym(136) <- Values(Sym(10), Sym(136))
+      // RuntimeCheck : POST:   S136 = []                                              from Bubble up shape for Sym(136) <- Values(Sym(10), Sym(136))
+      // RuntimeCheck : PRE:    S136 = []                                              from Values(Sym(10), Sym(136))
+      // RuntimeCheck : PRE:    S10 = []                                               from Values(Sym(10), Sym(136))
+      // Shape: S137=[u12]
+      val x137: MDArray[Int] = {
+        val result = new Array[Int](x136)
+        for(i <- List.range(0, result.length))
+        result(i) = x10
+        internalReshape(x136::Nil, result, "values")
+      }
+      // Shape: V12=[1] and S12=[]
+      val x12: Int = internalReshape(Nil, Array(1), "knownAtCompileTime")
+      // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- Values(Sym(12), Sym(136))
+      // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- Values(Sym(12), Sym(136))
+      // RuntimeCheck : POST:   V136 = [u12]                                           from Bubble up value for Sym(136) <- Values(Sym(12), Sym(136))
+      // RuntimeCheck : POST:   S136 = []                                              from Bubble up shape for Sym(136) <- Values(Sym(12), Sym(136))
+      // RuntimeCheck : PRE:    S136 = []                                              from Values(Sym(12), Sym(136))
+      // RuntimeCheck : PRE:    S12 = []                                               from Values(Sym(12), Sym(136))
+      // Shape: S139=[u12]
+      val x139: MDArray[Int] = {
+        val result = new Array[Int](x136)
+        for(i <- List.range(0, result.length))
+        result(i) = x12
+        internalReshape(x136::Nil, result, "values")
+      }
+      // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- InfixOp(-: Sym(134) and Sym(12))
+      // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- InfixOp(-: Sym(134) and Sym(12))
+      // RuntimeCheck : POST:   V134 = U171                                            from Bubble up value for Sym(134) <- InfixOp(-: Sym(134) and Sym(12))
+      // RuntimeCheck : POST:   S134 = [u12]                                           from Bubble up shape for Sym(134) <- InfixOp(-: Sym(134) and Sym(12))
+      // RuntimeCheck : PRE:    S134 = S12 OR S12 = []                                 from InfixOp(-: Sym(134) and Sym(12))
+      // Shape: S138=[u12]
+      val x138: MDArray[Int] = {
+        val result = new Array[Int](shape(x134).content().foldLeft(1)((a,b) => a*b))
+        for(i <- List.range(0, result.length))
+        result(i) = x134.content()(i) -  x12
+        internalReshape(shape(x134), result, "infixOpAA")
+      }
+      // RuntimeCheck : POST:   V183 = [u138]                                          from Bubble up value for Sym(183) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : POST:   S183 = []                                              from Bubble up shape for Sym(183) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : POST:   S140 = [u12]                                           from Bubble up shape for Sym(140) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : POST:   S137 = [u12]                                           from Bubble up shape for Sym(137) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : POST:   S139 = [u12]                                           from Bubble up shape for Sym(139) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : POST:   V16 = [u131]                                           from Bubble up value for Sym(16) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : POST:   S16 = []                                               from Bubble up shape for Sym(16) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : POST:   S138 = [u12]                                           from Bubble up shape for Sym(138) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : POST:   V16 = [u131]                                           from Bubble up value for Sym(16) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : POST:   S16 = []                                               from Bubble up shape for Sym(16) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : POST:   S137 = [u12]                                           from Bubble up shape for Sym(137) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : PRE:    length(S137) = length([u1593])                         from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : PRE:    S16 = []                                               from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : PRE:    S16 = []                                               from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : PRE:    S138 = S137                                            from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : PRE:    S139 = S137                                            from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : PRE:    S137 = S137                                            from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // RuntimeCheck : PRE:    V137 < V138                                            from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      // Shape: V184=[u137] and S184=[]
+      // with: With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(138) step=Sym(139) width=Sym(137)  Sym(140) => Sym(183))
+      for (iv <- iterateWithStep(_lb=x137, lbStrict=x16, ubStrict=x16, _ub=x138, step=x139, width=x137, opName=opName)) {
+        val x140: MDArray[Int] = iv
+        val feval: MDArray[Int] = {
+          // RuntimeCheck : POST:   S133 = U171                                            from Bubble up shape for Sym(133) <- Sel(Sym(140), Sym(133))
+          // RuntimeCheck : POST:   S140 = [u12]                                           from Bubble up shape for Sym(140) <- Sel(Sym(140), Sym(133))
+          // RuntimeCheck : PRE:    length(S140) = length([u1792])                         from Sel(Sym(140), Sym(133))
+          // RuntimeCheck : PRE:    S133(:length(V140)) < V140                             from Sel(Sym(140), Sym(133))
+          // Shape: V172=[u181] and S172=[]
+          
+          // Shape: V172=[u181] and S172=[]
+          val x172: Int = x133.content()(flatten(shape(x133), x140, "sel"))
+          // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- InfixOp(===: Sym(172) and Sym(12))
+          // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- InfixOp(===: Sym(172) and Sym(12))
+          // RuntimeCheck : POST:   V172 = [u181]                                          from Bubble up value for Sym(172) <- InfixOp(===: Sym(172) and Sym(12))
+          // RuntimeCheck : POST:   S172 = []                                              from Bubble up shape for Sym(172) <- InfixOp(===: Sym(172) and Sym(12))
+          // RuntimeCheck : PRE:    S172 = S12 OR S12 = []                                 from InfixOp(===: Sym(172) and Sym(12))
+          // Shape: V173=[u180] and S173=[]
+          val x173: Boolean = {
+            val result = new Array[Boolean](shape(x172).content().foldLeft(1)((a,b) => a*b))
+            for(i <- List.range(0, result.length))
+            result(i) = x172.content()(i) ===  x12
+            internalReshape(shape(x172), result, "infixOpAA")
+          }
+          // RuntimeCheck : POST:   V173 = [u180]                                          from Bubble up value for Sym(173) <- ToValue(Sym(173))
+          // RuntimeCheck : POST:   S173 = []                                              from Bubble up shape for Sym(173) <- ToValue(Sym(173))
+          // RuntimeCheck : PRE:    length(S173) = length([])                              from ToValue(Sym(173))
+          // Shape: V174=[u168] and S174=[]
+          val x174: Boolean = x173
+          val x183: scala.virtualization.lms.epfl.test7.original.MDArray[Int] = if (x174) {
+            // Shape: V58=[2] and S58=[]
+            val x58: Int = internalReshape(Nil, Array(2), "knownAtCompileTime")
+            // RuntimeCheck : POST:   V165 = [u155]                                          from Bubble up value for Sym(165) <- FoldArrayWith(Sym(10), fold (Sym(163), Sym(164)) => Sym(165), Sym(168))
+            // RuntimeCheck : POST:   S165 = []                                              from Bubble up shape for Sym(165) <- FoldArrayWith(Sym(10), fold (Sym(163), Sym(164)) => Sym(165), Sym(168))
+            // RuntimeCheck : POST:   S164 = []                                              from Bubble up shape for Sym(164) <- FoldArrayWith(Sym(10), fold (Sym(163), Sym(164)) => Sym(165), Sym(168))
+            // RuntimeCheck : POST:   S163 = []                                              from Bubble up shape for Sym(163) <- FoldArrayWith(Sym(10), fold (Sym(163), Sym(164)) => Sym(165), Sym(168))
+            // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- FoldArrayWith(Sym(10), fold (Sym(163), Sym(164)) => Sym(165), Sym(168))
+            // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- FoldArrayWith(Sym(10), fold (Sym(163), Sym(164)) => Sym(165), Sym(168))
+            // RuntimeCheck : POST:   V168 = [u178]                                          from Bubble up value for Sym(168) <- FoldArrayWith(Sym(10), fold (Sym(163), Sym(164)) => Sym(165), Sym(168))
+            // RuntimeCheck : POST:   S168 = []                                              from Bubble up shape for Sym(168) <- FoldArrayWith(Sym(10), fold (Sym(163), Sym(164)) => Sym(165), Sym(168))
+            // RuntimeCheck : PRE:    S10 = S168                                             from FoldArrayWith(Sym(10), fold (Sym(163), Sym(164)) => Sym(165), Sym(168))
+            // RuntimeCheck : PRE:    S165 = S168                                            from FoldArrayWith(Sym(10), fold (Sym(163), Sym(164)) => Sym(165), Sym(168))
+            // Shape: V169=[u154] and S169=[]
+            
+            val x169: Int = {
+              val opName: String = "fold"
+              var result: MDArray[Int] = x10
+              val foldFunction: (MDArray[Int], MDArray[Int]) => MDArray[Int] = (x163, x164) => {
+                // RuntimeCheck : POST:   S164 = []                                              from Bubble up shape for Sym(164) <- ScalarOperator Sym(163) + Sym(164)
+                // RuntimeCheck : POST:   S163 = []                                              from Bubble up shape for Sym(163) <- ScalarOperator Sym(163) + Sym(164)
+                // RuntimeCheck : PRE:    S163 = []                                              from ScalarOperator Sym(163) + Sym(164)
+                // RuntimeCheck : PRE:    S164 = []                                              from ScalarOperator Sym(163) + Sym(164)
+                // Shape: V165=[u155] and S165=[]
+                val x165: Int = ((a: Int, b: Int) => a + b)(x163, x164)
+                x165
+              }
+              // Shape: V23=[u6] and S23=[]
+              val x23: Boolean = internalReshape(Nil, Array(false), "knownAtCompileTime")
+              // RuntimeCheck : POST:   V23 = [u6]                                             from Bubble up value for Sym(23) <- ToValue(Sym(23))
+              // RuntimeCheck : POST:   S23 = []                                               from Bubble up shape for Sym(23) <- ToValue(Sym(23))
+              // RuntimeCheck : PRE:    length(S23) = length([])                               from ToValue(Sym(23))
+              // Shape: V24=[u88] and S24=[]
+              val x24: Boolean = x23
+              // RuntimeCheck : POST:   V24 = [u88]                                            from Bubble up value for Sym(24) <- FromValue(Sym(24))
+              // RuntimeCheck : POST:   S24 = []                                               from Bubble up shape for Sym(24) <- FromValue(Sym(24))
+              // Shape: V30=[u87] and S30=[]
+              val x30: Boolean = x24
+              // RuntimeCheck : POST:   V30 = [u87]                                            from Bubble up value for Sym(30) <- ToValue(Sym(30))
+              // RuntimeCheck : POST:   S30 = []                                               from Bubble up shape for Sym(30) <- ToValue(Sym(30))
+              // RuntimeCheck : PRE:    length(S30) = length([])                               from ToValue(Sym(30))
+              // Shape: V31=[u86] and S31=[]
+              val x31: Boolean = x30
+              // Shape: V20=[3] and S20=[]
+              val x20: Int = internalReshape(Nil, Array(3), "knownAtCompileTime")
+              // RuntimeCheck : POST:   S133 = U171                                            from Bubble up shape for Sym(133) <- Dim(Sym(133))
+              // Shape: V141=[u7] and S141=[]
+              val x141: Int = dim(x133)
+              // RuntimeCheck : POST:   V141 = [u7]                                            from Bubble up value for Sym(141) <- FromValue(Sym(141))
+              // RuntimeCheck : POST:   S141 = []                                              from Bubble up shape for Sym(141) <- FromValue(Sym(141))
+              // Shape: V142=[u12] and S142=[]
+              val x142: Int = x141
+              // RuntimeCheck : POST:   V20 = [3]                                              from Bubble up value for Sym(20) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : POST:   S20 = []                                               from Bubble up shape for Sym(20) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : POST:   V142 = [u12]                                           from Bubble up value for Sym(142) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : POST:   S142 = []                                              from Bubble up shape for Sym(142) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : PRE:    S142 = []                                              from Values(Sym(20), Sym(142))
+              // RuntimeCheck : PRE:    S20 = []                                               from Values(Sym(20), Sym(142))
+              // Shape: S143=[u12]
+              val x143: MDArray[Int] = {
+                val result = new Array[Int](x142)
+                for(i <- List.range(0, result.length))
+                result(i) = x20
+                internalReshape(x142::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   S143 = [u12]                                           from Bubble up shape for Sym(143) <- GenArrayWith(Sym(143) - Sym(153))
+              // RuntimeCheck : POST:   S153 = U166                                            from Bubble up shape for Sym(153) <- GenArrayWith(Sym(143) - Sym(153))
+              // RuntimeCheck : PRE:    S143 = [u1776]                                         from GenArrayWith(Sym(143) - Sym(153))
+              // RuntimeCheck : PRE:    S143 = S147                                            from GenArrayWith(Sym(143) - Sym(153))
+              // RuntimeCheck : PRE:    V143(:length(V147)) < V147                             from GenArrayWith(Sym(143) - Sym(153))
+              // RuntimeCheck : PRE:    V143(length(V147):) = S153                             from GenArrayWith(Sym(143) - Sym(153))
+              // Shape: S154=U162
+              
+              val x154: MDArray[Int] = {
+                val opName: String = "genarray"
+                var result: Array[Int] = null
+                var rshape: Array[Int] = null
+                // RuntimeCheck : POST:   S143 = [u12]                                           from Bubble up shape for Sym(143) <- Shape(Sym(143))
+                // Shape: V145=[u12] and S145=[1]
+                val x145: MDArray[Int] = shape(x143)
+                // RuntimeCheck : POST:   V145 = [u12]                                           from Bubble up value for Sym(145) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : POST:   S145 = [1]                                             from Bubble up shape for Sym(145) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : POST:   V7 = [0]                                               from Bubble up value for Sym(7) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : POST:   S7 = [1]                                               from Bubble up shape for Sym(7) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : PRE:    length(S7) = length([u1787])                           from Sel(Sym(7), Sym(145))
+                // RuntimeCheck : PRE:    S145(:length(V7)) < V7                                 from Sel(Sym(7), Sym(145))
+                // Shape: V146=[u12] and S146=[]
+                
+                // Shape: V146=[u12] and S146=[]
+                val x146: Int = x145.content()(flatten(shape(x145), x7, "sel"))
+                // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : POST:   V146 = [u12]                                           from Bubble up value for Sym(146) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : POST:   S146 = []                                              from Bubble up shape for Sym(146) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : PRE:    S146 = []                                              from Values(Sym(10), Sym(146))
+                // RuntimeCheck : PRE:    S10 = []                                               from Values(Sym(10), Sym(146))
+                // Shape: S147=[u12]
+                val x147: MDArray[Int] = {
+                  val result = new Array[Int](x146)
+                  for(i <- List.range(0, result.length))
+                  result(i) = x10
+                  internalReshape(x146::Nil, result, "values")
+                }
+                // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- InfixOp(-: Sym(143) and Sym(12))
+                // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- InfixOp(-: Sym(143) and Sym(12))
+                // RuntimeCheck : POST:   S143 = [u12]                                           from Bubble up shape for Sym(143) <- InfixOp(-: Sym(143) and Sym(12))
+                // RuntimeCheck : PRE:    S143 = S12 OR S12 = []                                 from InfixOp(-: Sym(143) and Sym(12))
+                // Shape: S148=[u12]
+                val x148: MDArray[Int] = {
+                  val result = new Array[Int](shape(x143).content().foldLeft(1)((a,b) => a*b))
+                  for(i <- List.range(0, result.length))
+                  result(i) = x143.content()(i) -  x12
+                  internalReshape(shape(x143), result, "infixOpAA")
+                }
+                // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : POST:   V146 = [u12]                                           from Bubble up value for Sym(146) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : POST:   S146 = []                                              from Bubble up shape for Sym(146) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : PRE:    S146 = []                                              from Values(Sym(12), Sym(146))
+                // RuntimeCheck : PRE:    S12 = []                                               from Values(Sym(12), Sym(146))
+                // Shape: S149=[u12]
+                val x149: MDArray[Int] = {
+                  val result = new Array[Int](x146)
+                  for(i <- List.range(0, result.length))
+                  result(i) = x12
+                  internalReshape(x146::Nil, result, "values")
+                }
+                // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- InfixOp(-: Sym(140) and Sym(12))
+                // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- InfixOp(-: Sym(140) and Sym(12))
+                // RuntimeCheck : POST:   S140 = [u12]                                           from Bubble up shape for Sym(140) <- InfixOp(-: Sym(140) and Sym(12))
+                // RuntimeCheck : PRE:    S140 = S12 OR S12 = []                                 from InfixOp(-: Sym(140) and Sym(12))
+                // Shape: S144=[u12]
+                val x144: MDArray[Int] = {
+                  val result = new Array[Int](shape(x140).content().foldLeft(1)((a,b) => a*b))
+                  for(i <- List.range(0, result.length))
+                  result(i) = x140.content()(i) -  x12
+                  internalReshape(shape(x140), result, "infixOpAA")
+                }
+                // RuntimeCheck : POST:   S152 = U166                                            from Bubble up shape for Sym(152) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : POST:   S150 = [u12]                                           from Bubble up shape for Sym(150) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : POST:   S147 = [u12]                                           from Bubble up shape for Sym(147) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : POST:   S149 = [u12]                                           from Bubble up shape for Sym(149) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : POST:   V31 = [u86]                                            from Bubble up value for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : POST:   S31 = []                                               from Bubble up shape for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : POST:   S148 = [u12]                                           from Bubble up shape for Sym(148) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : POST:   V31 = [u86]                                            from Bubble up value for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : POST:   S31 = []                                               from Bubble up shape for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : POST:   S147 = [u12]                                           from Bubble up shape for Sym(147) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : PRE:    length(S147) = length([u1777])                         from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : PRE:    S31 = []                                               from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : PRE:    S31 = []                                               from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : PRE:    S148 = S147                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : PRE:    S149 = S147                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : PRE:    S147 = S147                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // RuntimeCheck : PRE:    V147 < V148                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                // Shape: S153=U166
+                // with: With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(148) step=Sym(149) width=Sym(147)  Sym(150) => Sym(152))
+                for (iv <- iterateWithStep(_lb=x147, lbStrict=x31, ubStrict=x31, _ub=x148, step=x149, width=x147, opName=opName)) {
+                  val x150: MDArray[Int] = iv
+                  val feval: MDArray[Int] = {
+                    // RuntimeCheck : POST:   S144 = [u12]                                           from Bubble up shape for Sym(144) <- InfixOp(+: Sym(150) and Sym(144))
+                    // RuntimeCheck : POST:   S150 = [u12]                                           from Bubble up shape for Sym(150) <- InfixOp(+: Sym(150) and Sym(144))
+                    // RuntimeCheck : PRE:    S150 = S144 OR S144 = []                               from InfixOp(+: Sym(150) and Sym(144))
+                    // Shape: S151=[u12]
+                    val x151: MDArray[Int] = {
+                      val result = new Array[Int](shape(x150).content().foldLeft(1)((a,b) => a*b))
+                      for(i <- List.range(0, result.length))
+                      result(i) = x150.content()(i) +  x144.content()(i)
+                      internalReshape(shape(x150), result, "infixOpAA")
+                    }
+                    // RuntimeCheck : POST:   S133 = U171                                            from Bubble up shape for Sym(133) <- Sel(Sym(151), Sym(133))
+                    // RuntimeCheck : POST:   S151 = [u12]                                           from Bubble up shape for Sym(151) <- Sel(Sym(151), Sym(133))
+                    // RuntimeCheck : PRE:    length(S151) = length([u1790])                         from Sel(Sym(151), Sym(133))
+                    // RuntimeCheck : PRE:    S133(:length(V151)) < V151                             from Sel(Sym(151), Sym(133))
+                    // Shape: S152=U166
+                    val x152: MDArray[Int] = sel(x151, x133)
+                    x152
+                  }
+                  // the action of this loop:
+                  if (result == null) {
+                    // create the array and shape
+                    result = new Array[Int](x143.content().foldLeft(1)((a,b) => a*b) * feval.content().length)
+                    rshape = shape(feval).content()
+                  } else {
+                    // check shape -- this WILL be redundant due to runtime checks
+                    if (shape(feval).content().toList != rshape.toList) throw new Exception(opName + ": Incompatible shapes:" + rshape.toList.toString + " vs " + shape(feval).content().toList.toString)
+                  }
+                  // copy new content
+                  val mainIndex: Int = flatten(x143 ::: rshape.toList, iv ::: zeros(rshape.length), opName)
+                  for (innerIndex <- List.range(0, rshape.length)) {
+                    result(mainIndex + innerIndex) = feval(innerIndex)
+                  }
+                }
+                internalReshape(x143 ::: rshape.toList, result, opName)
+              }
+              
+              // RuntimeCheck : POST:   S154 = U162                                            from Bubble up shape for Sym(154) <- Dim(Sym(154))
+              // Shape: V155=[u13] and S155=[]
+              val x155: Int = dim(x154)
+              // RuntimeCheck : POST:   V155 = [u13]                                           from Bubble up value for Sym(155) <- FromValue(Sym(155))
+              // RuntimeCheck : POST:   S155 = []                                              from Bubble up shape for Sym(155) <- FromValue(Sym(155))
+              // Shape: V156=[u164] and S156=[]
+              val x156: Int = x155
+              // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- Values(Sym(10), Sym(156))
+              // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- Values(Sym(10), Sym(156))
+              // RuntimeCheck : POST:   V156 = [u164]                                          from Bubble up value for Sym(156) <- Values(Sym(10), Sym(156))
+              // RuntimeCheck : POST:   S156 = []                                              from Bubble up shape for Sym(156) <- Values(Sym(10), Sym(156))
+              // RuntimeCheck : PRE:    S156 = []                                              from Values(Sym(10), Sym(156))
+              // RuntimeCheck : PRE:    S10 = []                                               from Values(Sym(10), Sym(156))
+              // Shape: S157=[u164]
+              val x157: MDArray[Int] = {
+                val result = new Array[Int](x156)
+                for(i <- List.range(0, result.length))
+                result(i) = x10
+                internalReshape(x156::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   S154 = U162                                            from Bubble up shape for Sym(154) <- Shape(Sym(154))
+              // Shape: V158=U162 and S158=[u164]
+              val x158: MDArray[Int] = shape(x154)
+              // RuntimeCheck : POST:   S157 = [u164]                                          from Bubble up shape for Sym(157) <- Shape(Sym(157))
+              // Shape: V159=[u164] and S159=[1]
+              val x159: MDArray[Int] = shape(x157)
+              // RuntimeCheck : POST:   V159 = [u164]                                          from Bubble up value for Sym(159) <- Sel(Sym(7), Sym(159))
+              // RuntimeCheck : POST:   S159 = [1]                                             from Bubble up shape for Sym(159) <- Sel(Sym(7), Sym(159))
+              // RuntimeCheck : POST:   V7 = [0]                                               from Bubble up value for Sym(7) <- Sel(Sym(7), Sym(159))
+              // RuntimeCheck : POST:   S7 = [1]                                               from Bubble up shape for Sym(7) <- Sel(Sym(7), Sym(159))
+              // RuntimeCheck : PRE:    length(S7) = length([u1756])                           from Sel(Sym(7), Sym(159))
+              // RuntimeCheck : PRE:    S159(:length(V7)) < V7                                 from Sel(Sym(7), Sym(159))
+              // Shape: V160=[u164] and S160=[]
+              
+              // Shape: V160=[u164] and S160=[]
+              val x160: Int = x159.content()(flatten(shape(x159), x7, "sel"))
+              // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- Values(Sym(12), Sym(160))
+              // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- Values(Sym(12), Sym(160))
+              // RuntimeCheck : POST:   V160 = [u164]                                          from Bubble up value for Sym(160) <- Values(Sym(12), Sym(160))
+              // RuntimeCheck : POST:   S160 = []                                              from Bubble up shape for Sym(160) <- Values(Sym(12), Sym(160))
+              // RuntimeCheck : PRE:    S160 = []                                              from Values(Sym(12), Sym(160))
+              // RuntimeCheck : PRE:    S12 = []                                               from Values(Sym(12), Sym(160))
+              // Shape: S161=[u164]
+              val x161: MDArray[Int] = {
+                val result = new Array[Int](x160)
+                for(i <- List.range(0, result.length))
+                result(i) = x12
+                internalReshape(x160::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- Values(Sym(10), Sym(160))
+              // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- Values(Sym(10), Sym(160))
+              // RuntimeCheck : POST:   V160 = [u164]                                          from Bubble up value for Sym(160) <- Values(Sym(10), Sym(160))
+              // RuntimeCheck : POST:   S160 = []                                              from Bubble up shape for Sym(160) <- Values(Sym(10), Sym(160))
+              // RuntimeCheck : PRE:    S160 = []                                              from Values(Sym(10), Sym(160))
+              // RuntimeCheck : PRE:    S10 = []                                               from Values(Sym(10), Sym(160))
+              // Shape: S162=[u164]
+              val x162: MDArray[Int] = {
+                val result = new Array[Int](x160)
+                for(i <- List.range(0, result.length))
+                result(i) = x10
+                internalReshape(x160::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   V167 = [u179]                                          from Bubble up value for Sym(167) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : POST:   S167 = []                                              from Bubble up shape for Sym(167) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : POST:   S166 = [u164]                                          from Bubble up shape for Sym(166) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : POST:   S162 = [u164]                                          from Bubble up shape for Sym(162) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : POST:   S161 = [u164]                                          from Bubble up shape for Sym(161) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : POST:   V16 = [u131]                                           from Bubble up value for Sym(16) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : POST:   S16 = []                                               from Bubble up shape for Sym(16) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : POST:   V158 = U162                                            from Bubble up value for Sym(158) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : POST:   S158 = [u164]                                          from Bubble up shape for Sym(158) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : POST:   V31 = [u86]                                            from Bubble up value for Sym(31) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : POST:   S31 = []                                               from Bubble up shape for Sym(31) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : POST:   S157 = [u164]                                          from Bubble up shape for Sym(157) <- With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : PRE:    length(S157) = length([u1700])                         from With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : PRE:    S31 = []                                               from With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : PRE:    S16 = []                                               from With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : PRE:    S158 = S157                                            from With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : PRE:    S161 = S157                                            from With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : PRE:    S162 = S157                                            from With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // RuntimeCheck : PRE:    V157 < V158                                            from With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              // Shape: V168=[u178] and S168=[]
+              // with: With(lb=Sym(157) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(158) step=Sym(161) width=Sym(162)  Sym(166) => Sym(167))
+              for (iv <- iterateWithStep(_lb=x157, lbStrict=x31, ubStrict=x16, _ub=x158, step=x161, width=x162, opName=opName)) {
+                val x166: MDArray[Int] = iv
+                val feval: MDArray[Int] = {
+                  // RuntimeCheck : POST:   S154 = U162                                            from Bubble up shape for Sym(154) <- Sel(Sym(166), Sym(154))
+                  // RuntimeCheck : POST:   S166 = [u164]                                          from Bubble up shape for Sym(166) <- Sel(Sym(166), Sym(154))
+                  // RuntimeCheck : PRE:    length(S166) = length([u1775])                         from Sel(Sym(166), Sym(154))
+                  // RuntimeCheck : PRE:    S154(:length(V166)) < V166                             from Sel(Sym(166), Sym(154))
+                  // Shape: V167=[u179] and S167=[]
+                  
+                  // Shape: V167=[u179] and S167=[]
+                  val x167: Int = x154.content()(flatten(shape(x154), x166, "sel"))
+                  x167
+                }
+                // the action of this loop:
+                result = foldFunction(result, feval)
+              }
+              result
+            }
+            
+            // RuntimeCheck : POST:   V169 = [u154]                                          from Bubble up value for Sym(169) <- ToValue(Sym(169))
+            // RuntimeCheck : POST:   S169 = []                                              from Bubble up shape for Sym(169) <- ToValue(Sym(169))
+            // RuntimeCheck : PRE:    length(S169) = length([])                              from ToValue(Sym(169))
+            // Shape: V170=[u153] and S170=[]
+            val x170: Int = x169
+            // RuntimeCheck : POST:   V170 = [u153]                                          from Bubble up value for Sym(170) <- FromValue(Sym(170))
+            // RuntimeCheck : POST:   S170 = []                                              from Bubble up shape for Sym(170) <- FromValue(Sym(170))
+            // Shape: V171=[u152] and S171=[]
+            val x171: Int = x170
+            // RuntimeCheck : POST:   V172 = [u181]                                          from Bubble up value for Sym(172) <- InfixOp(-: Sym(171) and Sym(172))
+            // RuntimeCheck : POST:   S172 = []                                              from Bubble up shape for Sym(172) <- InfixOp(-: Sym(171) and Sym(172))
+            // RuntimeCheck : POST:   V171 = [u152]                                          from Bubble up value for Sym(171) <- InfixOp(-: Sym(171) and Sym(172))
+            // RuntimeCheck : POST:   S171 = []                                              from Bubble up shape for Sym(171) <- InfixOp(-: Sym(171) and Sym(172))
+            // RuntimeCheck : PRE:    S171 = S172 OR S172 = []                               from InfixOp(-: Sym(171) and Sym(172))
+            // Shape: V175=[u151] and S175=[]
+            val x175: Int = {
+              val result = new Array[Int](shape(x171).content().foldLeft(1)((a,b) => a*b))
+              for(i <- List.range(0, result.length))
+              result(i) = x171.content()(i) -  x172
+              internalReshape(shape(x171), result, "infixOpAA")
+            }
+            // RuntimeCheck : POST:   V58 = [2]                                              from Bubble up value for Sym(58) <- InfixOp(<: Sym(175) and Sym(58))
+            // RuntimeCheck : POST:   S58 = []                                               from Bubble up shape for Sym(58) <- InfixOp(<: Sym(175) and Sym(58))
+            // RuntimeCheck : POST:   V175 = [u151]                                          from Bubble up value for Sym(175) <- InfixOp(<: Sym(175) and Sym(58))
+            // RuntimeCheck : POST:   S175 = []                                              from Bubble up shape for Sym(175) <- InfixOp(<: Sym(175) and Sym(58))
+            // RuntimeCheck : PRE:    S175 = S58 OR S58 = []                                 from InfixOp(<: Sym(175) and Sym(58))
+            // Shape: V176=[u150] and S176=[]
+            val x176: Boolean = {
+              val result = new Array[Boolean](shape(x175).content().foldLeft(1)((a,b) => a*b))
+              for(i <- List.range(0, result.length))
+              result(i) = x175.content()(i) <  x58
+              internalReshape(shape(x175), result, "infixOpAA")
+            }
+            // RuntimeCheck : POST:   V176 = [u150]                                          from Bubble up value for Sym(176) <- ToValue(Sym(176))
+            // RuntimeCheck : POST:   S176 = []                                              from Bubble up shape for Sym(176) <- ToValue(Sym(176))
+            // RuntimeCheck : PRE:    length(S176) = length([])                              from ToValue(Sym(176))
+            // Shape: V177=[u145] and S177=[]
+            val x177: Boolean = x176
+            val x182: scala.virtualization.lms.epfl.test7.original.MDArray[Int] = if (x177) {
+              x12
+            } else {
+              // Shape: V62=[4] and S62=[]
+              val x62: Int = internalReshape(Nil, Array(4), "knownAtCompileTime")
+              // RuntimeCheck : POST:   V172 = [u181]                                          from Bubble up value for Sym(172) <- InfixOp(-: Sym(171) and Sym(172))
+              // RuntimeCheck : POST:   S172 = []                                              from Bubble up shape for Sym(172) <- InfixOp(-: Sym(171) and Sym(172))
+              // RuntimeCheck : POST:   V171 = [u152]                                          from Bubble up value for Sym(171) <- InfixOp(-: Sym(171) and Sym(172))
+              // RuntimeCheck : POST:   S171 = []                                              from Bubble up shape for Sym(171) <- InfixOp(-: Sym(171) and Sym(172))
+              // RuntimeCheck : PRE:    S171 = S172 OR S172 = []                               from InfixOp(-: Sym(171) and Sym(172))
+              // Shape: V178=[u149] and S178=[]
+              val x178: Int = {
+                val result = new Array[Int](shape(x171).content().foldLeft(1)((a,b) => a*b))
+                for(i <- List.range(0, result.length))
+                result(i) = x171.content()(i) -  x172
+                internalReshape(shape(x171), result, "infixOpAA")
+              }
+              // RuntimeCheck : POST:   V62 = [4]                                              from Bubble up value for Sym(62) <- InfixOp(<: Sym(178) and Sym(62))
+              // RuntimeCheck : POST:   S62 = []                                               from Bubble up shape for Sym(62) <- InfixOp(<: Sym(178) and Sym(62))
+              // RuntimeCheck : POST:   V178 = [u149]                                          from Bubble up value for Sym(178) <- InfixOp(<: Sym(178) and Sym(62))
+              // RuntimeCheck : POST:   S178 = []                                              from Bubble up shape for Sym(178) <- InfixOp(<: Sym(178) and Sym(62))
+              // RuntimeCheck : PRE:    S178 = S62 OR S62 = []                                 from InfixOp(<: Sym(178) and Sym(62))
+              // Shape: V179=[u148] and S179=[]
+              val x179: Boolean = {
+                val result = new Array[Boolean](shape(x178).content().foldLeft(1)((a,b) => a*b))
+                for(i <- List.range(0, result.length))
+                result(i) = x178.content()(i) <  x62
+                internalReshape(shape(x178), result, "infixOpAA")
+              }
+              // RuntimeCheck : POST:   V179 = [u148]                                          from Bubble up value for Sym(179) <- ToValue(Sym(179))
+              // RuntimeCheck : POST:   S179 = []                                              from Bubble up shape for Sym(179) <- ToValue(Sym(179))
+              // RuntimeCheck : PRE:    length(S179) = length([])                              from ToValue(Sym(179))
+              // Shape: V180=[u141] and S180=[]
+              val x180: Boolean = x179
+              val x181: scala.virtualization.lms.epfl.test7.original.MDArray[Int] = if (x180) {
+                x10
+              } else {
+                x12
+              }
+              x181
+            }
+            x182
+          } else {
+            x10
+          }
+          x183
+        }
+        // the action of this loop:
+        if (result == null) {
+          // create the array and shape
+          result = new Array[Int](x134.content().foldLeft(1)((a,b) => a*b) * feval.content().length)
+          rshape = shape(feval).content()
+        } else {
+          // check shape -- this WILL be redundant due to runtime checks
+          if (shape(feval).content().toList != rshape.toList) throw new Exception(opName + ": Incompatible shapes:" + rshape.toList.toString + " vs " + shape(feval).content().toList.toString)
+        }
+        // copy new content
+        val mainIndex: Int = flatten(x134 ::: rshape.toList, iv ::: zeros(rshape.length), opName)
+        for (innerIndex <- List.range(0, rshape.length)) {
+          result(mainIndex + innerIndex) = feval(innerIndex)
+        }
+      }
+      internalReshape(x134 ::: rshape.toList, result, opName)
+    }
+    
+    // RuntimeCheck : POST:   V134 = U171                                            from Bubble up value for Sym(134) <- GenArrayWith(Sym(134) - Sym(244))
+    // RuntimeCheck : POST:   S134 = [u12]                                           from Bubble up shape for Sym(134) <- GenArrayWith(Sym(134) - Sym(244))
+    // RuntimeCheck : POST:   V244 = [u125]                                          from Bubble up value for Sym(244) <- GenArrayWith(Sym(134) - Sym(244))
+    // RuntimeCheck : POST:   S244 = []                                              from Bubble up shape for Sym(244) <- GenArrayWith(Sym(134) - Sym(244))
+    // RuntimeCheck : PRE:    S134 = [u384]                                          from GenArrayWith(Sym(134) - Sym(244))
+    // RuntimeCheck : PRE:    S134 = S137                                            from GenArrayWith(Sym(134) - Sym(244))
+    // RuntimeCheck : PRE:    V134(:length(V137)) < V137                             from GenArrayWith(Sym(134) - Sym(244))
+    // RuntimeCheck : PRE:    V134(length(V137):) = S244                             from GenArrayWith(Sym(134) - Sym(244))
+    // Shape: S245=U171
+    
+    val x245: MDArray[Int] = {
+      val opName: String = "genarray"
+      var result: Array[Int] = null
+      var rshape: Array[Int] = null
+      // Shape: V4=[u2] and S4=[]
+      val x4: Boolean = internalReshape(Nil, Array(true), "knownAtCompileTime")
+      // RuntimeCheck : POST:   V4 = [u2]                                              from Bubble up value for Sym(4) <- ToValue(Sym(4))
+      // RuntimeCheck : POST:   S4 = []                                                from Bubble up shape for Sym(4) <- ToValue(Sym(4))
+      // RuntimeCheck : PRE:    length(S4) = length([])                                from ToValue(Sym(4))
+      // Shape: V5=[u133] and S5=[]
+      val x5: Boolean = x4
+      // RuntimeCheck : POST:   V5 = [u133]                                            from Bubble up value for Sym(5) <- FromValue(Sym(5))
+      // RuntimeCheck : POST:   S5 = []                                                from Bubble up shape for Sym(5) <- FromValue(Sym(5))
+      // Shape: V15=[u132] and S15=[]
+      val x15: Boolean = x5
+      // RuntimeCheck : POST:   V15 = [u132]                                           from Bubble up value for Sym(15) <- ToValue(Sym(15))
+      // RuntimeCheck : POST:   S15 = []                                               from Bubble up shape for Sym(15) <- ToValue(Sym(15))
+      // RuntimeCheck : PRE:    length(S15) = length([])                               from ToValue(Sym(15))
+      // Shape: V16=[u131] and S16=[]
+      val x16: Boolean = x15
+      // Shape: V10=[0] and S10=[]
+      val x10: Int = internalReshape(Nil, Array(0), "knownAtCompileTime")
+      // Shape: V7=[0] and S7=[1]
+      val x7: MDArray[Int] = internalReshape(1::Nil, Array(0), "knownAtCompileTime")
+      // RuntimeCheck : POST:   V134 = U171                                            from Bubble up value for Sym(134) <- Shape(Sym(134))
+      // RuntimeCheck : POST:   S134 = [u12]                                           from Bubble up shape for Sym(134) <- Shape(Sym(134))
+      // Shape: V135=[u12] and S135=[1]
+      val x135: MDArray[Int] = shape(x134)
+      // RuntimeCheck : POST:   V135 = [u12]                                           from Bubble up value for Sym(135) <- Sel(Sym(7), Sym(135))
+      // RuntimeCheck : POST:   S135 = [1]                                             from Bubble up shape for Sym(135) <- Sel(Sym(7), Sym(135))
+      // RuntimeCheck : POST:   V7 = [0]                                               from Bubble up value for Sym(7) <- Sel(Sym(7), Sym(135))
+      // RuntimeCheck : POST:   S7 = [1]                                               from Bubble up shape for Sym(7) <- Sel(Sym(7), Sym(135))
+      // RuntimeCheck : PRE:    length(S7) = length([u1603])                           from Sel(Sym(7), Sym(135))
+      // RuntimeCheck : PRE:    S135(:length(V7)) < V7                                 from Sel(Sym(7), Sym(135))
+      // Shape: V136=[u12] and S136=[]
+      
+      // Shape: V136=[u12] and S136=[]
+      val x136: Int = x135.content()(flatten(shape(x135), x7, "sel"))
+      // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- Values(Sym(10), Sym(136))
+      // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- Values(Sym(10), Sym(136))
+      // RuntimeCheck : POST:   V136 = [u12]                                           from Bubble up value for Sym(136) <- Values(Sym(10), Sym(136))
+      // RuntimeCheck : POST:   S136 = []                                              from Bubble up shape for Sym(136) <- Values(Sym(10), Sym(136))
+      // RuntimeCheck : PRE:    S136 = []                                              from Values(Sym(10), Sym(136))
+      // RuntimeCheck : PRE:    S10 = []                                               from Values(Sym(10), Sym(136))
+      // Shape: S137=[u12]
+      val x137: MDArray[Int] = {
+        val result = new Array[Int](x136)
+        for(i <- List.range(0, result.length))
+        result(i) = x10
+        internalReshape(x136::Nil, result, "values")
+      }
+      // Shape: V12=[1] and S12=[]
+      val x12: Int = internalReshape(Nil, Array(1), "knownAtCompileTime")
+      // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- Values(Sym(12), Sym(136))
+      // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- Values(Sym(12), Sym(136))
+      // RuntimeCheck : POST:   V136 = [u12]                                           from Bubble up value for Sym(136) <- Values(Sym(12), Sym(136))
+      // RuntimeCheck : POST:   S136 = []                                              from Bubble up shape for Sym(136) <- Values(Sym(12), Sym(136))
+      // RuntimeCheck : PRE:    S136 = []                                              from Values(Sym(12), Sym(136))
+      // RuntimeCheck : PRE:    S12 = []                                               from Values(Sym(12), Sym(136))
+      // Shape: S139=[u12]
+      val x139: MDArray[Int] = {
+        val result = new Array[Int](x136)
+        for(i <- List.range(0, result.length))
+        result(i) = x12
+        internalReshape(x136::Nil, result, "values")
+      }
+      // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- InfixOp(-: Sym(134) and Sym(12))
+      // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- InfixOp(-: Sym(134) and Sym(12))
+      // RuntimeCheck : POST:   V134 = U171                                            from Bubble up value for Sym(134) <- InfixOp(-: Sym(134) and Sym(12))
+      // RuntimeCheck : POST:   S134 = [u12]                                           from Bubble up shape for Sym(134) <- InfixOp(-: Sym(134) and Sym(12))
+      // RuntimeCheck : PRE:    S134 = S12 OR S12 = []                                 from InfixOp(-: Sym(134) and Sym(12))
+      // Shape: S186=[u12]
+      val x186: MDArray[Int] = {
+        val result = new Array[Int](shape(x134).content().foldLeft(1)((a,b) => a*b))
+        for(i <- List.range(0, result.length))
+        result(i) = x134.content()(i) -  x12
+        internalReshape(shape(x134), result, "infixOpAA")
+      }
+      // RuntimeCheck : POST:   V243 = [u126]                                          from Bubble up value for Sym(243) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : POST:   S243 = []                                              from Bubble up shape for Sym(243) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : POST:   S187 = [u12]                                           from Bubble up shape for Sym(187) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : POST:   S137 = [u12]                                           from Bubble up shape for Sym(137) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : POST:   S139 = [u12]                                           from Bubble up shape for Sym(139) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : POST:   V16 = [u131]                                           from Bubble up value for Sym(16) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : POST:   S16 = []                                               from Bubble up shape for Sym(16) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : POST:   S186 = [u12]                                           from Bubble up shape for Sym(186) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : POST:   V16 = [u131]                                           from Bubble up value for Sym(16) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : POST:   S16 = []                                               from Bubble up shape for Sym(16) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : POST:   S137 = [u12]                                           from Bubble up shape for Sym(137) <- With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : PRE:    length(S137) = length([u385])                          from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : PRE:    S16 = []                                               from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : PRE:    S16 = []                                               from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : PRE:    S186 = S137                                            from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : PRE:    S139 = S137                                            from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : PRE:    S137 = S137                                            from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // RuntimeCheck : PRE:    V137 < V186                                            from With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      // Shape: V244=[u125] and S244=[]
+      // with: With(lb=Sym(137) lbStrict=Sym(16) ubStict=Sym(16) ub=Sym(186) step=Sym(139) width=Sym(137)  Sym(187) => Sym(243))
+      for (iv <- iterateWithStep(_lb=x137, lbStrict=x16, ubStrict=x16, _ub=x186, step=x139, width=x137, opName=opName)) {
+        val x187: MDArray[Int] = iv
+        val feval: MDArray[Int] = {
+          // RuntimeCheck : POST:   S185 = U171                                            from Bubble up shape for Sym(185) <- Sel(Sym(187), Sym(185))
+          // RuntimeCheck : POST:   S187 = [u12]                                           from Bubble up shape for Sym(187) <- Sel(Sym(187), Sym(185))
+          // RuntimeCheck : PRE:    length(S187) = length([u398])                          from Sel(Sym(187), Sym(185))
+          // RuntimeCheck : PRE:    S185(:length(V187)) < V187                             from Sel(Sym(187), Sym(185))
+          // Shape: V237=[u177] and S237=[]
+          
+          // Shape: V237=[u177] and S237=[]
+          val x237: Int = x185.content()(flatten(shape(x185), x187, "sel"))
+          // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- InfixOp(===: Sym(237) and Sym(12))
+          // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- InfixOp(===: Sym(237) and Sym(12))
+          // RuntimeCheck : POST:   V237 = [u177]                                          from Bubble up value for Sym(237) <- InfixOp(===: Sym(237) and Sym(12))
+          // RuntimeCheck : POST:   S237 = []                                              from Bubble up shape for Sym(237) <- InfixOp(===: Sym(237) and Sym(12))
+          // RuntimeCheck : PRE:    S237 = S12 OR S12 = []                                 from InfixOp(===: Sym(237) and Sym(12))
+          // Shape: V238=[u176] and S238=[]
+          val x238: Boolean = {
+            val result = new Array[Boolean](shape(x237).content().foldLeft(1)((a,b) => a*b))
+            for(i <- List.range(0, result.length))
+            result(i) = x237.content()(i) ===  x12
+            internalReshape(shape(x237), result, "infixOpAA")
+          }
+          // RuntimeCheck : POST:   V238 = [u176]                                          from Bubble up value for Sym(238) <- ToValue(Sym(238))
+          // RuntimeCheck : POST:   S238 = []                                              from Bubble up shape for Sym(238) <- ToValue(Sym(238))
+          // RuntimeCheck : PRE:    length(S238) = length([])                              from ToValue(Sym(238))
+          // Shape: V239=[u112] and S239=[]
+          val x239: Boolean = x238
+          val x243: scala.virtualization.lms.epfl.test7.original.MDArray[Int] = if (x239) {
+            // Shape: V20=[3] and S20=[]
+            val x20: Int = internalReshape(Nil, Array(3), "knownAtCompileTime")
+            // RuntimeCheck : POST:   V205 = [u97]                                           from Bubble up value for Sym(205) <- FoldArrayWith(Sym(10), fold (Sym(203), Sym(204)) => Sym(205), Sym(208))
+            // RuntimeCheck : POST:   S205 = []                                              from Bubble up shape for Sym(205) <- FoldArrayWith(Sym(10), fold (Sym(203), Sym(204)) => Sym(205), Sym(208))
+            // RuntimeCheck : POST:   S204 = []                                              from Bubble up shape for Sym(204) <- FoldArrayWith(Sym(10), fold (Sym(203), Sym(204)) => Sym(205), Sym(208))
+            // RuntimeCheck : POST:   S203 = []                                              from Bubble up shape for Sym(203) <- FoldArrayWith(Sym(10), fold (Sym(203), Sym(204)) => Sym(205), Sym(208))
+            // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- FoldArrayWith(Sym(10), fold (Sym(203), Sym(204)) => Sym(205), Sym(208))
+            // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- FoldArrayWith(Sym(10), fold (Sym(203), Sym(204)) => Sym(205), Sym(208))
+            // RuntimeCheck : POST:   V208 = [u174]                                          from Bubble up value for Sym(208) <- FoldArrayWith(Sym(10), fold (Sym(203), Sym(204)) => Sym(205), Sym(208))
+            // RuntimeCheck : POST:   S208 = []                                              from Bubble up shape for Sym(208) <- FoldArrayWith(Sym(10), fold (Sym(203), Sym(204)) => Sym(205), Sym(208))
+            // RuntimeCheck : PRE:    S10 = S208                                             from FoldArrayWith(Sym(10), fold (Sym(203), Sym(204)) => Sym(205), Sym(208))
+            // RuntimeCheck : PRE:    S205 = S208                                            from FoldArrayWith(Sym(10), fold (Sym(203), Sym(204)) => Sym(205), Sym(208))
+            // Shape: V209=[u129] and S209=[]
+            
+            val x209: Int = {
+              val opName: String = "fold"
+              var result: MDArray[Int] = x10
+              val foldFunction: (MDArray[Int], MDArray[Int]) => MDArray[Int] = (x203, x204) => {
+                // RuntimeCheck : POST:   S204 = []                                              from Bubble up shape for Sym(204) <- ScalarOperator Sym(203) + Sym(204)
+                // RuntimeCheck : POST:   S203 = []                                              from Bubble up shape for Sym(203) <- ScalarOperator Sym(203) + Sym(204)
+                // RuntimeCheck : PRE:    S203 = []                                              from ScalarOperator Sym(203) + Sym(204)
+                // RuntimeCheck : PRE:    S204 = []                                              from ScalarOperator Sym(203) + Sym(204)
+                // Shape: V205=[u97] and S205=[]
+                val x205: Int = ((a: Int, b: Int) => a + b)(x203, x204)
+                x205
+              }
+              // Shape: V23=[u6] and S23=[]
+              val x23: Boolean = internalReshape(Nil, Array(false), "knownAtCompileTime")
+              // RuntimeCheck : POST:   V23 = [u6]                                             from Bubble up value for Sym(23) <- ToValue(Sym(23))
+              // RuntimeCheck : POST:   S23 = []                                               from Bubble up shape for Sym(23) <- ToValue(Sym(23))
+              // RuntimeCheck : PRE:    length(S23) = length([])                               from ToValue(Sym(23))
+              // Shape: V24=[u88] and S24=[]
+              val x24: Boolean = x23
+              // RuntimeCheck : POST:   V24 = [u88]                                            from Bubble up value for Sym(24) <- FromValue(Sym(24))
+              // RuntimeCheck : POST:   S24 = []                                               from Bubble up shape for Sym(24) <- FromValue(Sym(24))
+              // Shape: V30=[u87] and S30=[]
+              val x30: Boolean = x24
+              // RuntimeCheck : POST:   V30 = [u87]                                            from Bubble up value for Sym(30) <- ToValue(Sym(30))
+              // RuntimeCheck : POST:   S30 = []                                               from Bubble up shape for Sym(30) <- ToValue(Sym(30))
+              // RuntimeCheck : PRE:    length(S30) = length([])                               from ToValue(Sym(30))
+              // Shape: V31=[u86] and S31=[]
+              val x31: Boolean = x30
+              // RuntimeCheck : POST:   S133 = U171                                            from Bubble up shape for Sym(133) <- Dim(Sym(133))
+              // Shape: V141=[u7] and S141=[]
+              val x141: Int = dim(x133)
+              // RuntimeCheck : POST:   V141 = [u7]                                            from Bubble up value for Sym(141) <- FromValue(Sym(141))
+              // RuntimeCheck : POST:   S141 = []                                              from Bubble up shape for Sym(141) <- FromValue(Sym(141))
+              // Shape: V142=[u12] and S142=[]
+              val x142: Int = x141
+              // RuntimeCheck : POST:   V20 = [3]                                              from Bubble up value for Sym(20) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : POST:   S20 = []                                               from Bubble up shape for Sym(20) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : POST:   V142 = [u12]                                           from Bubble up value for Sym(142) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : POST:   S142 = []                                              from Bubble up shape for Sym(142) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : PRE:    S142 = []                                              from Values(Sym(20), Sym(142))
+              // RuntimeCheck : PRE:    S20 = []                                               from Values(Sym(20), Sym(142))
+              // Shape: S143=[u12]
+              val x143: MDArray[Int] = {
+                val result = new Array[Int](x142)
+                for(i <- List.range(0, result.length))
+                result(i) = x20
+                internalReshape(x142::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   S143 = [u12]                                           from Bubble up shape for Sym(143) <- GenArrayWith(Sym(143) - Sym(193))
+              // RuntimeCheck : POST:   S193 = U108                                            from Bubble up shape for Sym(193) <- GenArrayWith(Sym(143) - Sym(193))
+              // RuntimeCheck : PRE:    S143 = [u677]                                          from GenArrayWith(Sym(143) - Sym(193))
+              // RuntimeCheck : PRE:    S143 = S147                                            from GenArrayWith(Sym(143) - Sym(193))
+              // RuntimeCheck : PRE:    V143(:length(V147)) < V147                             from GenArrayWith(Sym(143) - Sym(193))
+              // RuntimeCheck : PRE:    V143(length(V147):) = S193                             from GenArrayWith(Sym(143) - Sym(193))
+              // Shape: S194=U103
+              
+              val x194: MDArray[Int] = {
+                val opName: String = "genarray"
+                var result: Array[Int] = null
+                var rshape: Array[Int] = null
+                // RuntimeCheck : POST:   S143 = [u12]                                           from Bubble up shape for Sym(143) <- Shape(Sym(143))
+                // Shape: V145=[u12] and S145=[1]
+                val x145: MDArray[Int] = shape(x143)
+                // RuntimeCheck : POST:   V145 = [u12]                                           from Bubble up value for Sym(145) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : POST:   S145 = [1]                                             from Bubble up shape for Sym(145) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : POST:   V7 = [0]                                               from Bubble up value for Sym(7) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : POST:   S7 = [1]                                               from Bubble up shape for Sym(7) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : PRE:    length(S7) = length([u1787])                           from Sel(Sym(7), Sym(145))
+                // RuntimeCheck : PRE:    S145(:length(V7)) < V7                                 from Sel(Sym(7), Sym(145))
+                // Shape: V146=[u12] and S146=[]
+                
+                // Shape: V146=[u12] and S146=[]
+                val x146: Int = x145.content()(flatten(shape(x145), x7, "sel"))
+                // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : POST:   V146 = [u12]                                           from Bubble up value for Sym(146) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : POST:   S146 = []                                              from Bubble up shape for Sym(146) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : PRE:    S146 = []                                              from Values(Sym(10), Sym(146))
+                // RuntimeCheck : PRE:    S10 = []                                               from Values(Sym(10), Sym(146))
+                // Shape: S147=[u12]
+                val x147: MDArray[Int] = {
+                  val result = new Array[Int](x146)
+                  for(i <- List.range(0, result.length))
+                  result(i) = x10
+                  internalReshape(x146::Nil, result, "values")
+                }
+                // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : POST:   V146 = [u12]                                           from Bubble up value for Sym(146) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : POST:   S146 = []                                              from Bubble up shape for Sym(146) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : PRE:    S146 = []                                              from Values(Sym(12), Sym(146))
+                // RuntimeCheck : PRE:    S12 = []                                               from Values(Sym(12), Sym(146))
+                // Shape: S149=[u12]
+                val x149: MDArray[Int] = {
+                  val result = new Array[Int](x146)
+                  for(i <- List.range(0, result.length))
+                  result(i) = x12
+                  internalReshape(x146::Nil, result, "values")
+                }
+                // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- InfixOp(-: Sym(143) and Sym(12))
+                // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- InfixOp(-: Sym(143) and Sym(12))
+                // RuntimeCheck : POST:   S143 = [u12]                                           from Bubble up shape for Sym(143) <- InfixOp(-: Sym(143) and Sym(12))
+                // RuntimeCheck : PRE:    S143 = S12 OR S12 = []                                 from InfixOp(-: Sym(143) and Sym(12))
+                // Shape: S189=[u12]
+                val x189: MDArray[Int] = {
+                  val result = new Array[Int](shape(x143).content().foldLeft(1)((a,b) => a*b))
+                  for(i <- List.range(0, result.length))
+                  result(i) = x143.content()(i) -  x12
+                  internalReshape(shape(x143), result, "infixOpAA")
+                }
+                // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- InfixOp(-: Sym(187) and Sym(12))
+                // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- InfixOp(-: Sym(187) and Sym(12))
+                // RuntimeCheck : POST:   S187 = [u12]                                           from Bubble up shape for Sym(187) <- InfixOp(-: Sym(187) and Sym(12))
+                // RuntimeCheck : PRE:    S187 = S12 OR S12 = []                                 from InfixOp(-: Sym(187) and Sym(12))
+                // Shape: S188=[u12]
+                val x188: MDArray[Int] = {
+                  val result = new Array[Int](shape(x187).content().foldLeft(1)((a,b) => a*b))
+                  for(i <- List.range(0, result.length))
+                  result(i) = x187.content()(i) -  x12
+                  internalReshape(shape(x187), result, "infixOpAA")
+                }
+                // RuntimeCheck : POST:   S192 = U108                                            from Bubble up shape for Sym(192) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : POST:   S190 = [u12]                                           from Bubble up shape for Sym(190) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : POST:   S147 = [u12]                                           from Bubble up shape for Sym(147) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : POST:   S149 = [u12]                                           from Bubble up shape for Sym(149) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : POST:   V31 = [u86]                                            from Bubble up value for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : POST:   S31 = []                                               from Bubble up shape for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : POST:   S189 = [u12]                                           from Bubble up shape for Sym(189) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : POST:   V31 = [u86]                                            from Bubble up value for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : POST:   S31 = []                                               from Bubble up shape for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : POST:   S147 = [u12]                                           from Bubble up shape for Sym(147) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : PRE:    length(S147) = length([u678])                          from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : PRE:    S31 = []                                               from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : PRE:    S31 = []                                               from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : PRE:    S189 = S147                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : PRE:    S149 = S147                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : PRE:    S147 = S147                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // RuntimeCheck : PRE:    V147 < V189                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                // Shape: S193=U108
+                // with: With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(189) step=Sym(149) width=Sym(147)  Sym(190) => Sym(192))
+                for (iv <- iterateWithStep(_lb=x147, lbStrict=x31, ubStrict=x31, _ub=x189, step=x149, width=x147, opName=opName)) {
+                  val x190: MDArray[Int] = iv
+                  val feval: MDArray[Int] = {
+                    // RuntimeCheck : POST:   S188 = [u12]                                           from Bubble up shape for Sym(188) <- InfixOp(+: Sym(190) and Sym(188))
+                    // RuntimeCheck : POST:   S190 = [u12]                                           from Bubble up shape for Sym(190) <- InfixOp(+: Sym(190) and Sym(188))
+                    // RuntimeCheck : PRE:    S190 = S188 OR S188 = []                               from InfixOp(+: Sym(190) and Sym(188))
+                    // Shape: S191=[u12]
+                    val x191: MDArray[Int] = {
+                      val result = new Array[Int](shape(x190).content().foldLeft(1)((a,b) => a*b))
+                      for(i <- List.range(0, result.length))
+                      result(i) = x190.content()(i) +  x188.content()(i)
+                      internalReshape(shape(x190), result, "infixOpAA")
+                    }
+                    // RuntimeCheck : POST:   S133 = U171                                            from Bubble up shape for Sym(133) <- Sel(Sym(191), Sym(133))
+                    // RuntimeCheck : POST:   S191 = [u12]                                           from Bubble up shape for Sym(191) <- Sel(Sym(191), Sym(133))
+                    // RuntimeCheck : PRE:    length(S191) = length([u691])                          from Sel(Sym(191), Sym(133))
+                    // RuntimeCheck : PRE:    S133(:length(V191)) < V191                             from Sel(Sym(191), Sym(133))
+                    // Shape: S192=U108
+                    val x192: MDArray[Int] = sel(x191, x133)
+                    x192
+                  }
+                  // the action of this loop:
+                  if (result == null) {
+                    // create the array and shape
+                    result = new Array[Int](x143.content().foldLeft(1)((a,b) => a*b) * feval.content().length)
+                    rshape = shape(feval).content()
+                  } else {
+                    // check shape -- this WILL be redundant due to runtime checks
+                    if (shape(feval).content().toList != rshape.toList) throw new Exception(opName + ": Incompatible shapes:" + rshape.toList.toString + " vs " + shape(feval).content().toList.toString)
+                  }
+                  // copy new content
+                  val mainIndex: Int = flatten(x143 ::: rshape.toList, iv ::: zeros(rshape.length), opName)
+                  for (innerIndex <- List.range(0, rshape.length)) {
+                    result(mainIndex + innerIndex) = feval(innerIndex)
+                  }
+                }
+                internalReshape(x143 ::: rshape.toList, result, opName)
+              }
+              
+              // RuntimeCheck : POST:   S194 = U103                                            from Bubble up shape for Sym(194) <- Dim(Sym(194))
+              // Shape: V195=[u32] and S195=[]
+              val x195: Int = dim(x194)
+              // RuntimeCheck : POST:   V195 = [u32]                                           from Bubble up value for Sym(195) <- FromValue(Sym(195))
+              // RuntimeCheck : POST:   S195 = []                                              from Bubble up shape for Sym(195) <- FromValue(Sym(195))
+              // Shape: V196=[u105] and S196=[]
+              val x196: Int = x195
+              // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- Values(Sym(10), Sym(196))
+              // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- Values(Sym(10), Sym(196))
+              // RuntimeCheck : POST:   V196 = [u105]                                          from Bubble up value for Sym(196) <- Values(Sym(10), Sym(196))
+              // RuntimeCheck : POST:   S196 = []                                              from Bubble up shape for Sym(196) <- Values(Sym(10), Sym(196))
+              // RuntimeCheck : PRE:    S196 = []                                              from Values(Sym(10), Sym(196))
+              // RuntimeCheck : PRE:    S10 = []                                               from Values(Sym(10), Sym(196))
+              // Shape: S197=[u105]
+              val x197: MDArray[Int] = {
+                val result = new Array[Int](x196)
+                for(i <- List.range(0, result.length))
+                result(i) = x10
+                internalReshape(x196::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   S194 = U103                                            from Bubble up shape for Sym(194) <- Shape(Sym(194))
+              // Shape: V198=U103 and S198=[u105]
+              val x198: MDArray[Int] = shape(x194)
+              // RuntimeCheck : POST:   S197 = [u105]                                          from Bubble up shape for Sym(197) <- Shape(Sym(197))
+              // Shape: V199=[u105] and S199=[1]
+              val x199: MDArray[Int] = shape(x197)
+              // RuntimeCheck : POST:   V199 = [u105]                                          from Bubble up value for Sym(199) <- Sel(Sym(7), Sym(199))
+              // RuntimeCheck : POST:   S199 = [1]                                             from Bubble up shape for Sym(199) <- Sel(Sym(7), Sym(199))
+              // RuntimeCheck : POST:   V7 = [0]                                               from Bubble up value for Sym(7) <- Sel(Sym(7), Sym(199))
+              // RuntimeCheck : POST:   S7 = [1]                                               from Bubble up shape for Sym(7) <- Sel(Sym(7), Sym(199))
+              // RuntimeCheck : PRE:    length(S7) = length([u657])                            from Sel(Sym(7), Sym(199))
+              // RuntimeCheck : PRE:    S199(:length(V7)) < V7                                 from Sel(Sym(7), Sym(199))
+              // Shape: V200=[u105] and S200=[]
+              
+              // Shape: V200=[u105] and S200=[]
+              val x200: Int = x199.content()(flatten(shape(x199), x7, "sel"))
+              // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- Values(Sym(12), Sym(200))
+              // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- Values(Sym(12), Sym(200))
+              // RuntimeCheck : POST:   V200 = [u105]                                          from Bubble up value for Sym(200) <- Values(Sym(12), Sym(200))
+              // RuntimeCheck : POST:   S200 = []                                              from Bubble up shape for Sym(200) <- Values(Sym(12), Sym(200))
+              // RuntimeCheck : PRE:    S200 = []                                              from Values(Sym(12), Sym(200))
+              // RuntimeCheck : PRE:    S12 = []                                               from Values(Sym(12), Sym(200))
+              // Shape: S201=[u105]
+              val x201: MDArray[Int] = {
+                val result = new Array[Int](x200)
+                for(i <- List.range(0, result.length))
+                result(i) = x12
+                internalReshape(x200::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- Values(Sym(10), Sym(200))
+              // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- Values(Sym(10), Sym(200))
+              // RuntimeCheck : POST:   V200 = [u105]                                          from Bubble up value for Sym(200) <- Values(Sym(10), Sym(200))
+              // RuntimeCheck : POST:   S200 = []                                              from Bubble up shape for Sym(200) <- Values(Sym(10), Sym(200))
+              // RuntimeCheck : PRE:    S200 = []                                              from Values(Sym(10), Sym(200))
+              // RuntimeCheck : PRE:    S10 = []                                               from Values(Sym(10), Sym(200))
+              // Shape: S202=[u105]
+              val x202: MDArray[Int] = {
+                val result = new Array[Int](x200)
+                for(i <- List.range(0, result.length))
+                result(i) = x10
+                internalReshape(x200::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   V207 = [u175]                                          from Bubble up value for Sym(207) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : POST:   S207 = []                                              from Bubble up shape for Sym(207) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : POST:   S206 = [u105]                                          from Bubble up shape for Sym(206) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : POST:   S202 = [u105]                                          from Bubble up shape for Sym(202) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : POST:   S201 = [u105]                                          from Bubble up shape for Sym(201) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : POST:   V16 = [u131]                                           from Bubble up value for Sym(16) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : POST:   S16 = []                                               from Bubble up shape for Sym(16) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : POST:   V198 = U103                                            from Bubble up value for Sym(198) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : POST:   S198 = [u105]                                          from Bubble up shape for Sym(198) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : POST:   V31 = [u86]                                            from Bubble up value for Sym(31) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : POST:   S31 = []                                               from Bubble up shape for Sym(31) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : POST:   S197 = [u105]                                          from Bubble up shape for Sym(197) <- With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : PRE:    length(S197) = length([u601])                          from With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : PRE:    S31 = []                                               from With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : PRE:    S16 = []                                               from With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : PRE:    S198 = S197                                            from With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : PRE:    S201 = S197                                            from With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : PRE:    S202 = S197                                            from With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // RuntimeCheck : PRE:    V197 < V198                                            from With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              // Shape: V208=[u174] and S208=[]
+              // with: With(lb=Sym(197) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(198) step=Sym(201) width=Sym(202)  Sym(206) => Sym(207))
+              for (iv <- iterateWithStep(_lb=x197, lbStrict=x31, ubStrict=x16, _ub=x198, step=x201, width=x202, opName=opName)) {
+                val x206: MDArray[Int] = iv
+                val feval: MDArray[Int] = {
+                  // RuntimeCheck : POST:   S194 = U103                                            from Bubble up shape for Sym(194) <- Sel(Sym(206), Sym(194))
+                  // RuntimeCheck : POST:   S206 = [u105]                                          from Bubble up shape for Sym(206) <- Sel(Sym(206), Sym(194))
+                  // RuntimeCheck : PRE:    length(S206) = length([u676])                          from Sel(Sym(206), Sym(194))
+                  // RuntimeCheck : PRE:    S194(:length(V206)) < V206                             from Sel(Sym(206), Sym(194))
+                  // Shape: V207=[u175] and S207=[]
+                  
+                  // Shape: V207=[u175] and S207=[]
+                  val x207: Int = x194.content()(flatten(shape(x194), x206, "sel"))
+                  x207
+                }
+                // the action of this loop:
+                result = foldFunction(result, feval)
+              }
+              result
+            }
+            
+            // RuntimeCheck : POST:   V209 = [u129]                                          from Bubble up value for Sym(209) <- ToValue(Sym(209))
+            // RuntimeCheck : POST:   S209 = []                                              from Bubble up shape for Sym(209) <- ToValue(Sym(209))
+            // RuntimeCheck : PRE:    length(S209) = length([])                              from ToValue(Sym(209))
+            // Shape: V210=[u93] and S210=[]
+            val x210: Int = x209
+            // RuntimeCheck : POST:   V210 = [u93]                                           from Bubble up value for Sym(210) <- FromValue(Sym(210))
+            // RuntimeCheck : POST:   S210 = []                                              from Bubble up shape for Sym(210) <- FromValue(Sym(210))
+            // Shape: V211=[u92] and S211=[]
+            val x211: Int = x210
+            // RuntimeCheck : POST:   V229 = [u65]                                           from Bubble up value for Sym(229) <- FoldArrayWith(Sym(10), fold (Sym(227), Sym(228)) => Sym(229), Sym(232))
+            // RuntimeCheck : POST:   S229 = []                                              from Bubble up shape for Sym(229) <- FoldArrayWith(Sym(10), fold (Sym(227), Sym(228)) => Sym(229), Sym(232))
+            // RuntimeCheck : POST:   S228 = []                                              from Bubble up shape for Sym(228) <- FoldArrayWith(Sym(10), fold (Sym(227), Sym(228)) => Sym(229), Sym(232))
+            // RuntimeCheck : POST:   S227 = []                                              from Bubble up shape for Sym(227) <- FoldArrayWith(Sym(10), fold (Sym(227), Sym(228)) => Sym(229), Sym(232))
+            // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- FoldArrayWith(Sym(10), fold (Sym(227), Sym(228)) => Sym(229), Sym(232))
+            // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- FoldArrayWith(Sym(10), fold (Sym(227), Sym(228)) => Sym(229), Sym(232))
+            // RuntimeCheck : POST:   V232 = [u172]                                          from Bubble up value for Sym(232) <- FoldArrayWith(Sym(10), fold (Sym(227), Sym(228)) => Sym(229), Sym(232))
+            // RuntimeCheck : POST:   S232 = []                                              from Bubble up shape for Sym(232) <- FoldArrayWith(Sym(10), fold (Sym(227), Sym(228)) => Sym(229), Sym(232))
+            // RuntimeCheck : PRE:    S10 = S232                                             from FoldArrayWith(Sym(10), fold (Sym(227), Sym(228)) => Sym(229), Sym(232))
+            // RuntimeCheck : PRE:    S229 = S232                                            from FoldArrayWith(Sym(10), fold (Sym(227), Sym(228)) => Sym(229), Sym(232))
+            // Shape: V233=[u128] and S233=[]
+            
+            val x233: Int = {
+              val opName: String = "fold"
+              var result: MDArray[Int] = x10
+              val foldFunction: (MDArray[Int], MDArray[Int]) => MDArray[Int] = (x227, x228) => {
+                // RuntimeCheck : POST:   S228 = []                                              from Bubble up shape for Sym(228) <- ScalarOperator Sym(227) + Sym(228)
+                // RuntimeCheck : POST:   S227 = []                                              from Bubble up shape for Sym(227) <- ScalarOperator Sym(227) + Sym(228)
+                // RuntimeCheck : PRE:    S227 = []                                              from ScalarOperator Sym(227) + Sym(228)
+                // RuntimeCheck : PRE:    S228 = []                                              from ScalarOperator Sym(227) + Sym(228)
+                // Shape: V229=[u65] and S229=[]
+                val x229: Int = ((a: Int, b: Int) => a + b)(x227, x228)
+                x229
+              }
+              // Shape: V23=[u6] and S23=[]
+              val x23: Boolean = internalReshape(Nil, Array(false), "knownAtCompileTime")
+              // RuntimeCheck : POST:   V23 = [u6]                                             from Bubble up value for Sym(23) <- ToValue(Sym(23))
+              // RuntimeCheck : POST:   S23 = []                                               from Bubble up shape for Sym(23) <- ToValue(Sym(23))
+              // RuntimeCheck : PRE:    length(S23) = length([])                               from ToValue(Sym(23))
+              // Shape: V24=[u88] and S24=[]
+              val x24: Boolean = x23
+              // RuntimeCheck : POST:   V24 = [u88]                                            from Bubble up value for Sym(24) <- FromValue(Sym(24))
+              // RuntimeCheck : POST:   S24 = []                                               from Bubble up shape for Sym(24) <- FromValue(Sym(24))
+              // Shape: V30=[u87] and S30=[]
+              val x30: Boolean = x24
+              // RuntimeCheck : POST:   V30 = [u87]                                            from Bubble up value for Sym(30) <- ToValue(Sym(30))
+              // RuntimeCheck : POST:   S30 = []                                               from Bubble up shape for Sym(30) <- ToValue(Sym(30))
+              // RuntimeCheck : PRE:    length(S30) = length([])                               from ToValue(Sym(30))
+              // Shape: V31=[u86] and S31=[]
+              val x31: Boolean = x30
+              // RuntimeCheck : POST:   S133 = U171                                            from Bubble up shape for Sym(133) <- Dim(Sym(133))
+              // Shape: V141=[u7] and S141=[]
+              val x141: Int = dim(x133)
+              // RuntimeCheck : POST:   V141 = [u7]                                            from Bubble up value for Sym(141) <- FromValue(Sym(141))
+              // RuntimeCheck : POST:   S141 = []                                              from Bubble up shape for Sym(141) <- FromValue(Sym(141))
+              // Shape: V142=[u12] and S142=[]
+              val x142: Int = x141
+              // RuntimeCheck : POST:   V20 = [3]                                              from Bubble up value for Sym(20) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : POST:   S20 = []                                               from Bubble up shape for Sym(20) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : POST:   V142 = [u12]                                           from Bubble up value for Sym(142) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : POST:   S142 = []                                              from Bubble up shape for Sym(142) <- Values(Sym(20), Sym(142))
+              // RuntimeCheck : PRE:    S142 = []                                              from Values(Sym(20), Sym(142))
+              // RuntimeCheck : PRE:    S20 = []                                               from Values(Sym(20), Sym(142))
+              // Shape: S143=[u12]
+              val x143: MDArray[Int] = {
+                val result = new Array[Int](x142)
+                for(i <- List.range(0, result.length))
+                result(i) = x20
+                internalReshape(x142::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   S143 = [u12]                                           from Bubble up shape for Sym(143) <- GenArrayWith(Sym(143) - Sym(217))
+              // RuntimeCheck : POST:   S217 = U76                                             from Bubble up shape for Sym(217) <- GenArrayWith(Sym(143) - Sym(217))
+              // RuntimeCheck : PRE:    S143 = [u1577]                                         from GenArrayWith(Sym(143) - Sym(217))
+              // RuntimeCheck : PRE:    S143 = S147                                            from GenArrayWith(Sym(143) - Sym(217))
+              // RuntimeCheck : PRE:    V143(:length(V147)) < V147                             from GenArrayWith(Sym(143) - Sym(217))
+              // RuntimeCheck : PRE:    V143(length(V147):) = S217                             from GenArrayWith(Sym(143) - Sym(217))
+              // Shape: S218=U71
+              
+              val x218: MDArray[Int] = {
+                val opName: String = "genarray"
+                var result: Array[Int] = null
+                var rshape: Array[Int] = null
+                // RuntimeCheck : POST:   S143 = [u12]                                           from Bubble up shape for Sym(143) <- Shape(Sym(143))
+                // Shape: V145=[u12] and S145=[1]
+                val x145: MDArray[Int] = shape(x143)
+                // RuntimeCheck : POST:   V145 = [u12]                                           from Bubble up value for Sym(145) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : POST:   S145 = [1]                                             from Bubble up shape for Sym(145) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : POST:   V7 = [0]                                               from Bubble up value for Sym(7) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : POST:   S7 = [1]                                               from Bubble up shape for Sym(7) <- Sel(Sym(7), Sym(145))
+                // RuntimeCheck : PRE:    length(S7) = length([u1787])                           from Sel(Sym(7), Sym(145))
+                // RuntimeCheck : PRE:    S145(:length(V7)) < V7                                 from Sel(Sym(7), Sym(145))
+                // Shape: V146=[u12] and S146=[]
+                
+                // Shape: V146=[u12] and S146=[]
+                val x146: Int = x145.content()(flatten(shape(x145), x7, "sel"))
+                // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : POST:   V146 = [u12]                                           from Bubble up value for Sym(146) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : POST:   S146 = []                                              from Bubble up shape for Sym(146) <- Values(Sym(10), Sym(146))
+                // RuntimeCheck : PRE:    S146 = []                                              from Values(Sym(10), Sym(146))
+                // RuntimeCheck : PRE:    S10 = []                                               from Values(Sym(10), Sym(146))
+                // Shape: S147=[u12]
+                val x147: MDArray[Int] = {
+                  val result = new Array[Int](x146)
+                  for(i <- List.range(0, result.length))
+                  result(i) = x10
+                  internalReshape(x146::Nil, result, "values")
+                }
+                // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : POST:   V146 = [u12]                                           from Bubble up value for Sym(146) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : POST:   S146 = []                                              from Bubble up shape for Sym(146) <- Values(Sym(12), Sym(146))
+                // RuntimeCheck : PRE:    S146 = []                                              from Values(Sym(12), Sym(146))
+                // RuntimeCheck : PRE:    S12 = []                                               from Values(Sym(12), Sym(146))
+                // Shape: S149=[u12]
+                val x149: MDArray[Int] = {
+                  val result = new Array[Int](x146)
+                  for(i <- List.range(0, result.length))
+                  result(i) = x12
+                  internalReshape(x146::Nil, result, "values")
+                }
+                // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- InfixOp(-: Sym(143) and Sym(12))
+                // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- InfixOp(-: Sym(143) and Sym(12))
+                // RuntimeCheck : POST:   S143 = [u12]                                           from Bubble up shape for Sym(143) <- InfixOp(-: Sym(143) and Sym(12))
+                // RuntimeCheck : PRE:    S143 = S12 OR S12 = []                                 from InfixOp(-: Sym(143) and Sym(12))
+                // Shape: S213=[u12]
+                val x213: MDArray[Int] = {
+                  val result = new Array[Int](shape(x143).content().foldLeft(1)((a,b) => a*b))
+                  for(i <- List.range(0, result.length))
+                  result(i) = x143.content()(i) -  x12
+                  internalReshape(shape(x143), result, "infixOpAA")
+                }
+                // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- InfixOp(-: Sym(187) and Sym(12))
+                // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- InfixOp(-: Sym(187) and Sym(12))
+                // RuntimeCheck : POST:   S187 = [u12]                                           from Bubble up shape for Sym(187) <- InfixOp(-: Sym(187) and Sym(12))
+                // RuntimeCheck : PRE:    S187 = S12 OR S12 = []                                 from InfixOp(-: Sym(187) and Sym(12))
+                // Shape: S212=[u12]
+                val x212: MDArray[Int] = {
+                  val result = new Array[Int](shape(x187).content().foldLeft(1)((a,b) => a*b))
+                  for(i <- List.range(0, result.length))
+                  result(i) = x187.content()(i) -  x12
+                  internalReshape(shape(x187), result, "infixOpAA")
+                }
+                // RuntimeCheck : POST:   S216 = U76                                             from Bubble up shape for Sym(216) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : POST:   S214 = [u12]                                           from Bubble up shape for Sym(214) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : POST:   S147 = [u12]                                           from Bubble up shape for Sym(147) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : POST:   S149 = [u12]                                           from Bubble up shape for Sym(149) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : POST:   V31 = [u86]                                            from Bubble up value for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : POST:   S31 = []                                               from Bubble up shape for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : POST:   S213 = [u12]                                           from Bubble up shape for Sym(213) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : POST:   V31 = [u86]                                            from Bubble up value for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : POST:   S31 = []                                               from Bubble up shape for Sym(31) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : POST:   S147 = [u12]                                           from Bubble up shape for Sym(147) <- With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : PRE:    length(S147) = length([u1578])                         from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : PRE:    S31 = []                                               from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : PRE:    S31 = []                                               from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : PRE:    S213 = S147                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : PRE:    S149 = S147                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : PRE:    S147 = S147                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // RuntimeCheck : PRE:    V147 < V213                                            from With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                // Shape: S217=U76
+                // with: With(lb=Sym(147) lbStrict=Sym(31) ubStict=Sym(31) ub=Sym(213) step=Sym(149) width=Sym(147)  Sym(214) => Sym(216))
+                for (iv <- iterateWithStep(_lb=x147, lbStrict=x31, ubStrict=x31, _ub=x213, step=x149, width=x147, opName=opName)) {
+                  val x214: MDArray[Int] = iv
+                  val feval: MDArray[Int] = {
+                    // RuntimeCheck : POST:   S212 = [u12]                                           from Bubble up shape for Sym(212) <- InfixOp(+: Sym(214) and Sym(212))
+                    // RuntimeCheck : POST:   S214 = [u12]                                           from Bubble up shape for Sym(214) <- InfixOp(+: Sym(214) and Sym(212))
+                    // RuntimeCheck : PRE:    S214 = S212 OR S212 = []                               from InfixOp(+: Sym(214) and Sym(212))
+                    // Shape: S215=[u12]
+                    val x215: MDArray[Int] = {
+                      val result = new Array[Int](shape(x214).content().foldLeft(1)((a,b) => a*b))
+                      for(i <- List.range(0, result.length))
+                      result(i) = x214.content()(i) +  x212.content()(i)
+                      internalReshape(shape(x214), result, "infixOpAA")
+                    }
+                    // RuntimeCheck : POST:   S185 = U171                                            from Bubble up shape for Sym(185) <- Sel(Sym(215), Sym(185))
+                    // RuntimeCheck : POST:   S215 = [u12]                                           from Bubble up shape for Sym(215) <- Sel(Sym(215), Sym(185))
+                    // RuntimeCheck : PRE:    length(S215) = length([u1591])                         from Sel(Sym(215), Sym(185))
+                    // RuntimeCheck : PRE:    S185(:length(V215)) < V215                             from Sel(Sym(215), Sym(185))
+                    // Shape: S216=U76
+                    val x216: MDArray[Int] = sel(x215, x185)
+                    x216
+                  }
+                  // the action of this loop:
+                  if (result == null) {
+                    // create the array and shape
+                    result = new Array[Int](x143.content().foldLeft(1)((a,b) => a*b) * feval.content().length)
+                    rshape = shape(feval).content()
+                  } else {
+                    // check shape -- this WILL be redundant due to runtime checks
+                    if (shape(feval).content().toList != rshape.toList) throw new Exception(opName + ": Incompatible shapes:" + rshape.toList.toString + " vs " + shape(feval).content().toList.toString)
+                  }
+                  // copy new content
+                  val mainIndex: Int = flatten(x143 ::: rshape.toList, iv ::: zeros(rshape.length), opName)
+                  for (innerIndex <- List.range(0, rshape.length)) {
+                    result(mainIndex + innerIndex) = feval(innerIndex)
+                  }
+                }
+                internalReshape(x143 ::: rshape.toList, result, opName)
+              }
+              
+              // RuntimeCheck : POST:   S218 = U71                                             from Bubble up shape for Sym(218) <- Dim(Sym(218))
+              // Shape: V219=[u45] and S219=[]
+              val x219: Int = dim(x218)
+              // RuntimeCheck : POST:   V219 = [u45]                                           from Bubble up value for Sym(219) <- FromValue(Sym(219))
+              // RuntimeCheck : POST:   S219 = []                                              from Bubble up shape for Sym(219) <- FromValue(Sym(219))
+              // Shape: V220=[u73] and S220=[]
+              val x220: Int = x219
+              // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- Values(Sym(10), Sym(220))
+              // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- Values(Sym(10), Sym(220))
+              // RuntimeCheck : POST:   V220 = [u73]                                           from Bubble up value for Sym(220) <- Values(Sym(10), Sym(220))
+              // RuntimeCheck : POST:   S220 = []                                              from Bubble up shape for Sym(220) <- Values(Sym(10), Sym(220))
+              // RuntimeCheck : PRE:    S220 = []                                              from Values(Sym(10), Sym(220))
+              // RuntimeCheck : PRE:    S10 = []                                               from Values(Sym(10), Sym(220))
+              // Shape: S221=[u73]
+              val x221: MDArray[Int] = {
+                val result = new Array[Int](x220)
+                for(i <- List.range(0, result.length))
+                result(i) = x10
+                internalReshape(x220::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   S218 = U71                                             from Bubble up shape for Sym(218) <- Shape(Sym(218))
+              // Shape: V222=U71 and S222=[u73]
+              val x222: MDArray[Int] = shape(x218)
+              // RuntimeCheck : POST:   S221 = [u73]                                           from Bubble up shape for Sym(221) <- Shape(Sym(221))
+              // Shape: V223=[u73] and S223=[1]
+              val x223: MDArray[Int] = shape(x221)
+              // RuntimeCheck : POST:   V223 = [u73]                                           from Bubble up value for Sym(223) <- Sel(Sym(7), Sym(223))
+              // RuntimeCheck : POST:   S223 = [1]                                             from Bubble up shape for Sym(223) <- Sel(Sym(7), Sym(223))
+              // RuntimeCheck : POST:   V7 = [0]                                               from Bubble up value for Sym(7) <- Sel(Sym(7), Sym(223))
+              // RuntimeCheck : POST:   S7 = [1]                                               from Bubble up shape for Sym(7) <- Sel(Sym(7), Sym(223))
+              // RuntimeCheck : PRE:    length(S7) = length([u1355])                           from Sel(Sym(7), Sym(223))
+              // RuntimeCheck : PRE:    S223(:length(V7)) < V7                                 from Sel(Sym(7), Sym(223))
+              // Shape: V224=[u73] and S224=[]
+              
+              // Shape: V224=[u73] and S224=[]
+              val x224: Int = x223.content()(flatten(shape(x223), x7, "sel"))
+              // RuntimeCheck : POST:   V12 = [1]                                              from Bubble up value for Sym(12) <- Values(Sym(12), Sym(224))
+              // RuntimeCheck : POST:   S12 = []                                               from Bubble up shape for Sym(12) <- Values(Sym(12), Sym(224))
+              // RuntimeCheck : POST:   V224 = [u73]                                           from Bubble up value for Sym(224) <- Values(Sym(12), Sym(224))
+              // RuntimeCheck : POST:   S224 = []                                              from Bubble up shape for Sym(224) <- Values(Sym(12), Sym(224))
+              // RuntimeCheck : PRE:    S224 = []                                              from Values(Sym(12), Sym(224))
+              // RuntimeCheck : PRE:    S12 = []                                               from Values(Sym(12), Sym(224))
+              // Shape: S225=[u73]
+              val x225: MDArray[Int] = {
+                val result = new Array[Int](x224)
+                for(i <- List.range(0, result.length))
+                result(i) = x12
+                internalReshape(x224::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   V10 = [0]                                              from Bubble up value for Sym(10) <- Values(Sym(10), Sym(224))
+              // RuntimeCheck : POST:   S10 = []                                               from Bubble up shape for Sym(10) <- Values(Sym(10), Sym(224))
+              // RuntimeCheck : POST:   V224 = [u73]                                           from Bubble up value for Sym(224) <- Values(Sym(10), Sym(224))
+              // RuntimeCheck : POST:   S224 = []                                              from Bubble up shape for Sym(224) <- Values(Sym(10), Sym(224))
+              // RuntimeCheck : PRE:    S224 = []                                              from Values(Sym(10), Sym(224))
+              // RuntimeCheck : PRE:    S10 = []                                               from Values(Sym(10), Sym(224))
+              // Shape: S226=[u73]
+              val x226: MDArray[Int] = {
+                val result = new Array[Int](x224)
+                for(i <- List.range(0, result.length))
+                result(i) = x10
+                internalReshape(x224::Nil, result, "values")
+              }
+              // RuntimeCheck : POST:   V231 = [u173]                                          from Bubble up value for Sym(231) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : POST:   S231 = []                                              from Bubble up shape for Sym(231) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : POST:   S230 = [u73]                                           from Bubble up shape for Sym(230) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : POST:   S226 = [u73]                                           from Bubble up shape for Sym(226) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : POST:   S225 = [u73]                                           from Bubble up shape for Sym(225) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : POST:   V16 = [u131]                                           from Bubble up value for Sym(16) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : POST:   S16 = []                                               from Bubble up shape for Sym(16) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : POST:   V222 = U71                                             from Bubble up value for Sym(222) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : POST:   S222 = [u73]                                           from Bubble up shape for Sym(222) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : POST:   V31 = [u86]                                            from Bubble up value for Sym(31) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : POST:   S31 = []                                               from Bubble up shape for Sym(31) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : POST:   S221 = [u73]                                           from Bubble up shape for Sym(221) <- With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : PRE:    length(S221) = length([u693])                          from With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : PRE:    S31 = []                                               from With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : PRE:    S16 = []                                               from With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : PRE:    S222 = S221                                            from With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : PRE:    S225 = S221                                            from With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : PRE:    S226 = S221                                            from With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // RuntimeCheck : PRE:    V221 < V222                                            from With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              // Shape: V232=[u172] and S232=[]
+              // with: With(lb=Sym(221) lbStrict=Sym(31) ubStict=Sym(16) ub=Sym(222) step=Sym(225) width=Sym(226)  Sym(230) => Sym(231))
+              for (iv <- iterateWithStep(_lb=x221, lbStrict=x31, ubStrict=x16, _ub=x222, step=x225, width=x226, opName=opName)) {
+                val x230: MDArray[Int] = iv
+                val feval: MDArray[Int] = {
+                  // RuntimeCheck : POST:   S218 = U71                                             from Bubble up shape for Sym(218) <- Sel(Sym(230), Sym(218))
+                  // RuntimeCheck : POST:   S230 = [u73]                                           from Bubble up shape for Sym(230) <- Sel(Sym(230), Sym(218))
+                  // RuntimeCheck : PRE:    length(S230) = length([u1576])                         from Sel(Sym(230), Sym(218))
+                  // RuntimeCheck : PRE:    S218(:length(V230)) < V230                             from Sel(Sym(230), Sym(218))
+                  // Shape: V231=[u173] and S231=[]
+                  
+                  // Shape: V231=[u173] and S231=[]
+                  val x231: Int = x218.content()(flatten(shape(x218), x230, "sel"))
+                  x231
+                }
+                // the action of this loop:
+                result = foldFunction(result, feval)
+              }
+              result
+            }
+            
+            // RuntimeCheck : POST:   V233 = [u128]                                          from Bubble up value for Sym(233) <- ToValue(Sym(233))
+            // RuntimeCheck : POST:   S233 = []                                              from Bubble up shape for Sym(233) <- ToValue(Sym(233))
+            // RuntimeCheck : PRE:    length(S233) = length([])                              from ToValue(Sym(233))
+            // Shape: V234=[u61] and S234=[]
+            val x234: Int = x233
+            // RuntimeCheck : POST:   V234 = [u61]                                           from Bubble up value for Sym(234) <- FromValue(Sym(234))
+            // RuntimeCheck : POST:   S234 = []                                              from Bubble up shape for Sym(234) <- FromValue(Sym(234))
+            // Shape: V235=[u60] and S235=[]
+            val x235: Int = x234
+            // RuntimeCheck : POST:   V235 = [u60]                                           from Bubble up value for Sym(235) <- InfixOp(-: Sym(211) and Sym(235))
+            // RuntimeCheck : POST:   S235 = []                                              from Bubble up shape for Sym(235) <- InfixOp(-: Sym(211) and Sym(235))
+            // RuntimeCheck : POST:   V211 = [u92]                                           from Bubble up value for Sym(211) <- InfixOp(-: Sym(211) and Sym(235))
+            // RuntimeCheck : POST:   S211 = []                                              from Bubble up shape for Sym(211) <- InfixOp(-: Sym(211) and Sym(235))
+            // RuntimeCheck : PRE:    S211 = S235 OR S235 = []                               from InfixOp(-: Sym(211) and Sym(235))
+            // Shape: V236=[u91] and S236=[]
+            val x236: Int = {
+              val result = new Array[Int](shape(x211).content().foldLeft(1)((a,b) => a*b))
+              for(i <- List.range(0, result.length))
+              result(i) = x211.content()(i) -  x235
+              internalReshape(shape(x211), result, "infixOpAA")
+            }
+            // RuntimeCheck : POST:   V20 = [3]                                              from Bubble up value for Sym(20) <- InfixOp(===: Sym(236) and Sym(20))
+            // RuntimeCheck : POST:   S20 = []                                               from Bubble up shape for Sym(20) <- InfixOp(===: Sym(236) and Sym(20))
+            // RuntimeCheck : POST:   V236 = [u91]                                           from Bubble up value for Sym(236) <- InfixOp(===: Sym(236) and Sym(20))
+            // RuntimeCheck : POST:   S236 = []                                              from Bubble up shape for Sym(236) <- InfixOp(===: Sym(236) and Sym(20))
+            // RuntimeCheck : PRE:    S236 = S20 OR S20 = []                                 from InfixOp(===: Sym(236) and Sym(20))
+            // Shape: V240=[u90] and S240=[]
+            val x240: Boolean = {
+              val result = new Array[Boolean](shape(x236).content().foldLeft(1)((a,b) => a*b))
+              for(i <- List.range(0, result.length))
+              result(i) = x236.content()(i) ===  x20
+              internalReshape(shape(x236), result, "infixOpAA")
+            }
+            // RuntimeCheck : POST:   V240 = [u90]                                           from Bubble up value for Sym(240) <- ToValue(Sym(240))
+            // RuntimeCheck : POST:   S240 = []                                              from Bubble up shape for Sym(240) <- ToValue(Sym(240))
+            // RuntimeCheck : PRE:    length(S240) = length([])                              from ToValue(Sym(240))
+            // Shape: V241=[u57] and S241=[]
+            val x241: Boolean = x240
+            val x242: scala.virtualization.lms.epfl.test7.original.MDArray[Int] = if (x241) {
+              x12
+            } else {
+              x10
+            }
+            x242
+          } else {
+            x10
+          }
+          x243
+        }
+        // the action of this loop:
+        if (result == null) {
+          // create the array and shape
+          result = new Array[Int](x134.content().foldLeft(1)((a,b) => a*b) * feval.content().length)
+          rshape = shape(feval).content()
+        } else {
+          // check shape -- this WILL be redundant due to runtime checks
+          if (shape(feval).content().toList != rshape.toList) throw new Exception(opName + ": Incompatible shapes:" + rshape.toList.toString + " vs " + shape(feval).content().toList.toString)
+        }
+        // copy new content
+        val mainIndex: Int = flatten(x134 ::: rshape.toList, iv ::: zeros(rshape.length), opName)
+        for (innerIndex <- List.range(0, rshape.length)) {
+          result(mainIndex + innerIndex) = feval(innerIndex)
+        }
+      }
+      internalReshape(x134 ::: rshape.toList, result, opName)
+    }
+    
+    // RuntimeCheck : POST:   S185 = U171                                            from Bubble up shape for Sym(185) <- InfixOp(-: Sym(133) and Sym(185))
+    // RuntimeCheck : POST:   S133 = U171                                            from Bubble up shape for Sym(133) <- InfixOp(-: Sym(133) and Sym(185))
+    // RuntimeCheck : PRE:    S133 = S185 OR S185 = []                               from InfixOp(-: Sym(133) and Sym(185))
+    // Shape: S246=U171
+    val x246: MDArray[Int] = {
+      // WARNING: Operation not specialized on {arrays|scalars}!
+      if (shape(shape(x185)).content()(0) == 0) {
+        val result = new Array[Int](shape(x133).content().foldLeft(1)((a,b) => a*b))
+        for(i <- List.range(0, result.length))
+        result(i) = x133.content()(i) -  x185
+        internalReshape(shape(x133), result, "infixOpAA")
+      } else {
+        val result = new Array[Int](shape(x133).content().foldLeft(1)((a,b) => a*b))
+        for(i <- List.range(0, result.length))
+        result(i) = x133.content()(i) -  x185.content()(i)
+        internalReshape(shape(x133), result, "infixOpAA")
+      }
+    }
+    // RuntimeCheck : POST:   S245 = U171                                            from Bubble up shape for Sym(245) <- InfixOp(+: Sym(246) and Sym(245))
+    // RuntimeCheck : POST:   S246 = U171                                            from Bubble up shape for Sym(246) <- InfixOp(+: Sym(246) and Sym(245))
+    // RuntimeCheck : PRE:    S246 = S245 OR S245 = []                               from InfixOp(+: Sym(246) and Sym(245))
+    // Shape: S247=U171
+    val x247: MDArray[Int] = {
+      // WARNING: Operation not specialized on {arrays|scalars}!
+      if (shape(shape(x245)).content()(0) == 0) {
+        val result = new Array[Int](shape(x246).content().foldLeft(1)((a,b) => a*b))
+        for(i <- List.range(0, result.length))
+        result(i) = x246.content()(i) +  x245
+        internalReshape(shape(x246), result, "infixOpAA")
+      } else {
+        val result = new Array[Int](shape(x246).content().foldLeft(1)((a,b) => a*b))
+        for(i <- List.range(0, result.length))
+        result(i) = x246.content()(i) +  x245.content()(i)
+        internalReshape(shape(x246), result, "infixOpAA")
+      }
+    }
+    x247
+  }
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

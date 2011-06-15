@@ -7,5 +7,4 @@ project/build/target
 target
 virtualization-lms-core.iml
 .gitingore
-test-out
-test-out/epfl/test7-*
+test-out/epfl/test7-original-*
