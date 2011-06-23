@@ -252,18 +252,28 @@ trait GenericNestedCodegen extends GenericCodegen {
     case _ => super.emitNode(sym, rhs)
   }
 
+	def boundInScope(x: List[Exp[Any]]): List[Sym[Any]] = {
+		(x.flatMap(syms):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
+	}
+	
+	def usedInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
+		(y.flatMap(syms):::innerScope.flatMap(t => syms(t.rhs))).distinct
+	}
+	
+	def readInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
+		(y.flatMap(syms):::innerScope.flatMap(t => readSyms(t.rhs))).distinct
+	}
+	
   // bound/used/free variables in current scope, with input vars x (bound!) and result y (used!)
   def boundAndUsedInScope(x: List[Exp[Any]], y: List[Exp[Any]]): (List[Sym[Any]], List[Sym[Any]]) = {
-    val used = (y.flatMap(syms):::innerScope.flatMap(t => syms(t.rhs))).distinct
-    val bound = (x.flatMap(syms):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
-    (bound, used)
+    (boundInScope(x), usedInScope(y))
   }
 
   def freeInScope(x: List[Exp[Any]], y: List[Exp[Any]]): List[Sym[Any]] = {
     val (bound, used) = boundAndUsedInScope(x,y)
     // aks: freeInScope used to collect effects that are not true input dependencies. TR, any better solution?
     // i would expect read to be a subset of used, but there are cases where read has symbols not in used (TODO: investigate)
-    val read = (y.flatMap(syms):::innerScope.flatMap(t => readSyms(t.rhs))).distinct
+    val read = readInScope(y)
     (used intersect read) diff bound
   }
 
