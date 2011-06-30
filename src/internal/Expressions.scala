@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package internal
 
-import scala.reflect.{SourceContext, SourceLocation}
+import scala.reflect.SourceContext
 import scala.annotation.unchecked.uncheckedVariance
 import java.lang.{StackTraceElement,Thread}
 
@@ -23,7 +23,7 @@ trait Expressions {
     //var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
     var name: String = "x" + (if (id == 0) "" else id)
     var nameId: Int = id
-    var sourceLocation: Option[SourceLocation] = None
+    var sourceContext: Option[SourceContext] = None
   }
 
   case class Variable[+T:Manifest](val e: Exp[T]) // TODO: decide whether it should stay here ...
@@ -56,24 +56,35 @@ trait Expressions {
   }
 
   def fresh[T:Manifest](d: Def[T], ctx: Option[SourceContext]) = {
-    def enclosingVarName(ctxs: List[List[(String, Int)]]): (String, Int) = ctxs match {
-      case first :: rest => (first: @unchecked) match {
-        case (null, _) :: _ => enclosingVarName(rest)
-        case (name, line) :: _ => (name, line)
-      }
-      case List() => ("x", 0)
+    def enclosingNamedContext(sc: SourceContext): Option[SourceContext] = sc.bindings match {
+      case (null, _) :: _ =>
+        if (!sc.parent.isEmpty) enclosingNamedContext(sc.parent.get)
+        else None
+      case (name, line) :: _ =>
+        Some(sc)
     }
 
     // create base name from source context
-    val (basename, line) = if (!ctx.isEmpty) {
-      enclosingVarName(ctx.get.allContexts)
-    } else ("x", 0)
+    val (basename, line, srcCtx) = if (!ctx.isEmpty) {
+      enclosingNamedContext(ctx.get) match {
+        case None =>
+          // no enclosing context has variable assignment
+          var outermost = ctx.get
+          while (!outermost.parent.isEmpty) {
+            outermost = outermost.parent.get
+          }
+          ("x", 0, Some(outermost))
+        case Some(sc) => sc.bindings match {
+          case (n, l) :: _ =>
+            (n, l, Some(sc))
+        }
+      }
+    } else ("x", 0, None)
     val (name, id, nameId) = nextName(basename)
     val sym = Sym[T](id)
     sym.name = name + (if (line != 0) "_" + line else "")
     sym.nameId = nameId
-    sym.sourceLocation = if (ctx.isEmpty) None
-                         else ctx
+    sym.sourceContext = srcCtx
     sym
   }
 

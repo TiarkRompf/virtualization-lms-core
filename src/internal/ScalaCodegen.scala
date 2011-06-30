@@ -4,6 +4,8 @@ package internal
 import com.sun.org.apache.xalan.internal.xsltc.compiler.sym
 import java.io.{File, FileWriter, PrintWriter}
 
+import scala.reflect.SourceContext
+
 trait ScalaCodegen extends GenericCodegen {
   val IR: Expressions
   import IR._
@@ -80,8 +82,8 @@ trait ScalaCodegen extends GenericCodegen {
   }
 
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println("val " + quote(sym) + " = " + rhs + (if (sym.sourceLocation.isEmpty) ""
-                                                        else "      //" + sym.sourceLocation.get))
+    stream.println("val " + quote(sym) + " = " + rhs + (if (sym.sourceContext.isEmpty) ""
+                                                        else "      // " + sym.sourceContext.get))
   }
   def emitVarDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.Type) + " = " + rhs)
