@@ -110,7 +110,7 @@ trait Effects extends Expressions with Utils {
 
   // TODO: should reflectEffect try to add Read(mutableInputs) as well ??? or just toAtom ???
 
-  def reflectMutable[A:Manifest](d: Def[A]): Exp[A] = {
+  def reflectMutable[A:Manifest](d: Def[A])(implicit ctx: SourceContext): Exp[A] = {
     val mutableInputs = getMutableInputs(d)
     // TODO: check that d's result does not alias another mutable object
     
@@ -130,15 +130,15 @@ trait Effects extends Expressions with Utils {
     createDefinition(fresh[A], d).sym
   }
 
-  def reflectWrite[A:Manifest](write0: Exp[Any]*)(d: Def[A]): Exp[A] = {
+  def reflectWrite[A:Manifest](write0: Exp[Any]*)(d: Def[A])(implicit ctx: SourceContext): Exp[A] = {
     val write = write0.toList.asInstanceOf[List[Sym[Any]]] // should check...
     val mutableInputs = getMutableInputs(d)
     reflectEffect(d, Write(write) andAlso Read(mutableInputs))
   }
 
-  def reflectEffect[A:Manifest](x: Def[A]): Exp[A] = reflectEffect(x, Simple()) // simple effect (serialized with respect to other simples)
+  def reflectEffect[A:Manifest](x: Def[A])(implicit ctx: SourceContext): Exp[A] = reflectEffect(x, Simple()) // simple effect (serialized with respect to other simples)
 
-  def reflectEffect[A:Manifest](x: Def[A], u: Summary): Exp[A] = {
+  def reflectEffect[A:Manifest](x: Def[A], u: Summary)(implicit ctx: SourceContext): Exp[A] = {
     if (mustPure(u)) super.toAtom(x) else {
       val deps = calculateDependencies(u)
       val zd = Reflect(x,u,deps)
