@@ -4,6 +4,7 @@ package common
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 import scala.virtualization.lms.internal.{GenerationFailedException}
+import scala.reflect.SourceContext
 
 trait LiftString {
   this: Base =>
@@ -30,10 +31,10 @@ trait StringOps extends Variables with OverloadHack {
     def valueOf(a: Rep[Any]) = string_valueof(a)
   }
 
-  def string_plus(s: Rep[Any], o: Rep[Any]): Rep[String]
-  def string_trim(s: Rep[String]): Rep[String]
-  def string_split(s: Rep[String], separators: Rep[String]): Rep[Array[String]]
-  def string_valueof(d: Rep[Any]): Rep[String]
+  def string_plus(s: Rep[Any], o: Rep[Any])(implicit ctx: SourceContext): Rep[String]
+  def string_trim(s: Rep[String])(implicit ctx: SourceContext): Rep[String]
+  def string_split(s: Rep[String], separators: Rep[String])(implicit ctx: SourceContext): Rep[Array[String]]
+  def string_valueof(d: Rep[Any])(implicit ctx: SourceContext): Rep[String]
 }
 
 trait StringOpsExp extends StringOps with VariablesExp {
@@ -42,10 +43,10 @@ trait StringOpsExp extends StringOps with VariablesExp {
   case class StringSplit(s: Exp[String], separators: Exp[String]) extends Def[Array[String]]
   case class StringValueOf(a: Exp[Any]) extends Def[String]
 
-  def string_plus(s: Exp[Any], o: Exp[Any]): Rep[String] = StringPlus(s,o)
-  def string_trim(s: Exp[String]) : Rep[String] = StringTrim(s)
-  def string_split(s: Exp[String], separators: Exp[String]) : Rep[Array[String]] = StringSplit(s, separators)
-  def string_valueof(a: Exp[Any]) = StringValueOf(a)
+  def string_plus(s: Exp[Any], o: Exp[Any])(implicit ctx: SourceContext): Rep[String] = StringPlus(s,o)
+  def string_trim(s: Exp[String])(implicit ctx: SourceContext) : Rep[String] = StringTrim(s)
+  def string_split(s: Exp[String], separators: Exp[String])(implicit ctx: SourceContext) : Rep[Array[String]] = StringSplit(s, separators)
+  def string_valueof(a: Exp[Any])(implicit ctx: SourceContext) = StringValueOf(a)
 }
 
 trait ScalaGenStringOps extends ScalaGenBase {
