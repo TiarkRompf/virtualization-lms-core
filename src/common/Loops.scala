@@ -24,8 +24,8 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case _ => super.syms(e)
   }
 
-  override def readSyms(e: Any): List[Sym[Any]] = e match { 
-    case e: AbstractLoop[_] => readSyms(e.size) ::: readSyms(e.body)
+	override def readSyms(e: Any): List[Sym[Any]] = e match { 
+		case e: AbstractLoop[_] => readSyms(e.size) ::: readSyms(e.body)
     case _ => super.readSyms(e)
   }
 
