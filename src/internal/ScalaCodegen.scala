@@ -26,6 +26,8 @@ trait ScalaCodegen extends GenericCodegen {
     val sA = mA.toString
     val sB = mB.toString
 
+    emitImports(stream)
+
     stream.println("/*****************************************\n"+
                    "  Emitting Generated Code                  \n"+
                    "*******************************************/")
@@ -44,10 +46,15 @@ trait ScalaCodegen extends GenericCodegen {
     stream.flush
   }
 
+  def emitImports(implicit stream:PrintWriter): Unit = { }
+
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     val kernelName = syms.map(quote).mkString("")
     
     stream.println("package generated." + this.toString)
+
+    emitImports(stream)
+
     stream.println("final class activation_" + kernelName + " { // generated even if not used")
     for (s <- syms) {
       val x = s.Type
