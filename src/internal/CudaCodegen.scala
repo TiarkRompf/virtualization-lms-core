@@ -267,6 +267,11 @@ trait CudaCodegen extends CLikeCodegen {
     }
   }
 
+  def isVariableType[A](m: Manifest[A]) : Boolean = {
+    if(m.erasure == classOf[Variable[AnyVal]]) true
+    else false
+  }
+
   // Check the type and generate Exception if the type is not GPUable
   def checkGPUableType[A](m: Manifest[A]) : Unit = {
     if(!isGPUableType(m))
@@ -275,7 +280,7 @@ trait CudaCodegen extends CLikeCodegen {
 
   // All the types supported by CUDA Generation
   def isGPUableType[A](m : Manifest[A]) : Boolean = {
-    if(!isObjectType(m) && !isPrimitiveType(m) && !isVoidType(m))
+    if(!isObjectType(m) && !isPrimitiveType(m) && !isVoidType(m) && !isVariableType(m))
       false
     else
       true
@@ -283,15 +288,19 @@ trait CudaCodegen extends CLikeCodegen {
 
   override def remap[A](m: Manifest[A]) : String = {
     checkGPUableType(m)
-    m.toString match {
-        case "Int" => "int"
-        case "Long" => "long"
-        case "Float" => "float"
-        case "Double" => "double"
-        case "Boolean" => "bool"
-        case "Unit" => "void"
-        case "scala.collection.immutable.List[Int]" => "CudaArrayList<int>"  //TODO: Use C++ list
-        case _ => throw new Exception("CudaGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
+    if (m.erasure == classOf[Variable[AnyVal]])
+      remap(m.typeArguments.head)
+    else {
+      m.toString match {
+          case "Int" => "int"
+          case "Long" => "long"
+          case "Float" => "float"
+          case "Double" => "double"
+          case "Boolean" => "bool"
+          case "Unit" => "void"
+          case "scala.collection.immutable.List[Int]" => "CudaArrayList<int>"  //TODO: Use C++ list
+          case _ => throw new Exception("CudaGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
+      }
     }
   }
 
@@ -512,7 +521,7 @@ trait CudaCodegen extends CLikeCodegen {
     tempString.append("}\n")
 
     // Register Metadata
-    MetaData.gpuOutput = "{\"%s\":[\"%s\",\"allocFunc_%s\",[%s],\"copyOutputDtoH_%s\",[\"env\",\"%s\"]]}".format(quote(sym),remap(sym.Type),currHelperFuncIdx,inputs.map(quote(_)).mkString(","),currHelperFuncIdx,quote(sym))
+    MetaData.gpuOutput = "{\"%s\":[\"%s\",\"allocFunc_%s\",[%s],\"copyOutputDtoH_%s\",[\"env\",\"%s\"]]}".format(quote(sym),remap(sym.Type),currHelperFuncIdx,inputs.map("\""+quote(_)+"\"").mkString(","),currHelperFuncIdx,quote(sym))
     gpuOutputs = gpuOutputs :+ sym
 
     // Write to helper function string
