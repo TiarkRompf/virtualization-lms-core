@@ -37,7 +37,11 @@ trait Matching extends Base {
   
   def evalMatch[A:Manifest,B:Manifest](x: Rep[A], alts: List[PartialFunction[Rep[A],Rep[B]]]): Rep[B]
   
-  implicit def switchable[A:Manifest](x:Rep[A]) = new {
+  trait Switchable[A] { // shouldn't need it ...
+    def switch[B:Manifest](f: PartialFunction[Rep[A],Rep[B]]): Match[A,B]
+  }
+  
+  implicit def switchable[A:Manifest](x:Rep[A]) = new Switchable[A] {
     def switch[B:Manifest](f: PartialFunction[Rep[A],Rep[B]]) = new Match[A,B](x, List(f)) // FIXME: won't find switch otherwise!!
   }
   
