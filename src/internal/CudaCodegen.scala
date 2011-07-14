@@ -540,10 +540,10 @@ trait CudaCodegen extends CLikeCodegen {
 
     /* Object type inputs of helper functions are pointers, but CUDA generators assume the actual objects,
            therefore need to dereference the objects before emitting the actual block contents. */
-    val derefParams = inputs.map(ele=>
-      if(isObjectType(ele.Type)) "\t%s %s = *_%s;\n".format(remap(ele.Type),quote(ele),quote(ele))
-      else ""
-    ).mkString("")
+    //val derefParams = inputs.map(ele=>
+    //  if(isObjectType(ele.Type)) "\t%s %s = *_%s;\n".format(remap(ele.Type),quote(ele),quote(ele))
+    //  else ""
+    //).mkString("")
 
     // Generate allocation helper function
     //tempString.append("%s *allocFunc_%s(%s) {\n".format(remap(allocFunc.Type),currHelperFuncIdx,paramStr))
@@ -553,7 +553,7 @@ trait CudaCodegen extends CLikeCodegen {
     //tempString.append("}\n")
     
     // Generate allocation helper function
-	tempString.append(derefParams)
+	//tempString.append(derefParams)
     emitBlock(allocFunc)(tempStream)
     tempString.append("\treturn %s;\n".format(quote(getBlockResult(allocFunc))))
     val allocOutputStr = emitAllocOutput(sym, null, tempString.toString, inputs)
