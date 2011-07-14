@@ -148,6 +148,9 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     case _ => sys.error("don't know how to generate code for: "+rhs)
   }
 
+  // DELITE SPECIFIC METHOD -- used for kernel activation records
+  def emitFatNodeKernelExtra(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter): Unit = { }
+
 
   case class Combine(a: List[Exp[Any]]) extends Exp[Any]
 
