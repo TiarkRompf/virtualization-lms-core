@@ -79,6 +79,11 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     case e: AbstractFatLoop => syms(e.size) ::: syms(e.body)
     case _ => super.syms(e)
   }
+  
+  override def readSyms(e: Any): List[Sym[Any]] = e match { 
+		case e: AbstractFatLoop => readSyms(e.size) ::: readSyms(e.body)
+    case _ => super.readSyms(e)
+  }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => e.v :: boundSyms(e.body)

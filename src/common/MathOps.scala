@@ -66,6 +66,7 @@ trait MathOpsExp extends MathOps with EffectExp {
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case MathAbs(x) => math_abs(f(x))
+      case MathLog(x) => math_log(f(x)).asInstanceOf[Exp[A]]
       case _ => super.mirror(e,f)
     }
   }
