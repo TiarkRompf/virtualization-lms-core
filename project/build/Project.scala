@@ -38,6 +38,6 @@ class Project(info: ProjectInfo) extends DefaultProject(info)
 
 
   // compile options
-  override def compileOptions = super.compileOptions ++ Seq(/*Unchecked, */Deprecation)
+  override def compileOptions = super.compileOptions ++ Seq(/*Unchecked, */Deprecation) ++ compileOptions("-Yno-generic-signatures")
 
 }

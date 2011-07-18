@@ -16,10 +16,12 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     //case Copy(a) => f(a)
-    case SimpleLoop(s,i, ArrayElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(y))))
-    case SimpleLoop(s,i, ReduceElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(y))))
-    case SimpleLoop(s,i, ArrayIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayIfElem(f(c),f(y))))
-    case SimpleLoop(s,i, ReduceIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceIfElem(f(c),f(y))))
+    case Yield(i,y) => toAtom(Yield(f(i),f(y)))
+    case Skip(i) => toAtom(Skip(f(i)))
+    case SimpleLoop(s,i, ArrayElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(g),f(y))))
+    case SimpleLoop(s,i, ReduceElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(g),f(y))))
+    case SimpleLoop(s,i, ArrayIfElem(g,c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayIfElem(f(g),f(c),f(y))))
+    case SimpleLoop(s,i, ReduceIfElem(g,c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceIfElem(f(g),f(c),f(y))))
     case ArrayIndex(a,i) => toAtom(ArrayIndex(f(a), f(i)))
     case ArrayLength(a) => toAtom(ArrayLength(f(a)))
     case Plus(x,y) => infix_+(f(x), f(y))
@@ -32,10 +34,10 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
   }).asInstanceOf[Exp[A]]
 
   override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer): Def[A] = (e match {
-    case ArrayElem(y) => ArrayElem(f(y))
-    case ReduceElem(y) => ReduceElem(f(y))
-    case ArrayIfElem(c,y) => ArrayIfElem(f(c),f(y))
-    case ReduceIfElem(c,y) => ReduceIfElem(f(c),f(y))
+    case ArrayElem(g,y) => ArrayElem(f(g),f(y))
+    case ReduceElem(g,y) => ReduceElem(f(g),f(y))
+    case ArrayIfElem(g,c,y) => ArrayIfElem(f(g),f(c),f(y))
+    case ReduceIfElem(g,c,y) => ReduceIfElem(f(g),f(c),f(y))
     case _ => super.mirrorFatDef(e,f)
   }).asInstanceOf[Def[A]]
     
@@ -57,18 +59,18 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with LoopFusi
   }
 
   override def unapplySimpleCollect(e: Def[Any]) = e match {
-    case ArrayElem(a) => Some(a)
+    case ArrayElem(g,Def(Yield(_,a))) => Some(a)
     case _ => super.unapplySimpleCollect(e)
   }
 
   override def unapplySimpleCollectIf(e: Def[Any]) = e match {
-    case ArrayIfElem(c,a) => Some((a,List(c)))
+    case ArrayIfElem(g,c,Def(Yield(_,a))) => Some((a,List(c)))
     case _ => super.unapplySimpleCollectIf(e)
   }
 
   override def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]) = e match { //TODO: should c be list or not?
-    case ArrayElem(a) if c.length == 1 => ArrayIfElem(c(0),a)
-    case ReduceElem(a) if c.length == 1 => ReduceIfElem(c(0),a)
+    case ArrayElem(g,a) if c.length == 1 => ArrayIfElem(g,c(0),a)
+    case ReduceElem(g,a) if c.length == 1 => ReduceIfElem(g,c(0),a)
     case _ => super.applyAddCondition(e,c)
   }
 

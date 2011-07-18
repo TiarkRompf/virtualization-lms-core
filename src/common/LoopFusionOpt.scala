@@ -183,6 +183,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           val otherLoopSyms = loopSyms diff (dx.lhs)
           getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
             case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopSyms contains i) => 
+              // TODO: might want to check that a is the result of a SimpleCollectIf loop (not a reduce, for example)
               //println("ignoring simple dependency " + e + " on loop var " + thisLoopSyms)
               Nil // direct deps on this loop's induction var don't count
             case sc =>
@@ -210,12 +211,40 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         
         // shape dependency helpers
         
+        // shape s depends on a?
         def isShapeDep(s: Exp[Int], a: TTP) = s match { case Def(SimpleDomain(a1)) => a.lhs contains a1 case _ => false }
         def getShapeCond(s: Exp[Int], a: TTP) = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) match { case SimpleCollectIf(a,c) => c } }
         
         def extendLoopWithCondition(e: TTP, shape: Exp[Int], targetVar: Sym[Int], c: List[Exp[Boolean]]): List[Exp[Any]] = e.rhs match { 
           case SimpleFatLoop(s,x,rhs) => rhs.map { r => findOrCreateDefinition(SimpleLoop(shape,targetVar,applyAddCondition(r,c))).sym }
         }
+        
+        
+        /*
+          val a = loop(len) { i => loop(u_i.length) { i2 => yield i2 } }
+          val b = loop(a.length): array { j => 2 * a(j) }
+          
+          val a,b = loop(len) { i =>
+            a = flatArray(u_i)
+            b = flatArray(  array(u_i.length) { j=> 2 * u_i(j) } )
+          }
+          
+        */
+        
+/*
+        def embedForeach(s: Exp[Int], a: TTP)(e: TTP, shape: Exp[Int], targetVar: Sym[Int]) = {
+          s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) } match { 
+            case SimpleCollectIf(a,c) => c 
+
+            e.rhs match { 
+              case SimpleFatLoop(s,x,rhs) => rhs.map { r => 
+                findOrCreateDefinition(SimpleLoop(shape,targetVar,applyAddCondition(r,c))).sym
+              }
+            }
+            
+          }
+        }
+*/        
         
         // partitioning: build maximal sets of loops to be fused
         // already fuse loops headers (shape, index variables)
@@ -240,6 +269,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
               // analyze shape dependency and add appropriate conditions to loop body when fusing a filter loop
               val shape = if (isShapeDep(shapeA,b)) {
                 val loops2 = extendLoopWithCondition(a,shapeB,targetVar,getShapeCond(shapeA,b))
+                //val loops2 = extendForeach(shapeA,b)(a,shapeB,targetVar)
                 (a.lhs zip loops2) foreach { p => t.subst(p._1) = p._2 }
                 shapeB
               } else if (isShapeDep(shapeB,a)) {
@@ -275,6 +305,8 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
                   printlog("replace " + e + " at " + index + " within " + fused)
 
                   val rhs = WgetLoopRes(fused)(index) match { case SimpleCollectIf(y,c) => y }
+
+                  printlog("substitute " + s + " -> " + rhs)
                   
                   t.subst(s) = rhs
                 case _ => //e

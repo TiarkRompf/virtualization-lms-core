@@ -25,60 +25,96 @@ trait ArrayLoops extends Loops with OverloadHack {
 
 trait ArrayLoopsExp extends LoopsExp {
   
-  case class ArrayElem[T](y: Exp[T]) extends Def[Array[T]]
-  case class ReduceElem(y: Exp[Double]) extends Def[Double]
+  trait Accu[T]
+  trait Gen[T]
+  
+  case class ArrayElem[T](g: Exp[Gen[T]], y: Exp[Gen[T]]) extends Def[Array[T]]
+  case class ReduceElem(g: Exp[Gen[Double]], y: Exp[Gen[Double]]) extends Def[Double]
 
-  case class ArrayIfElem[T](c: Exp[Boolean], y: Exp[T]) extends Def[Array[T]]
-  case class ReduceIfElem(c: Exp[Boolean], y: Exp[Double]) extends Def[Double]
+  case class ArrayIfElem[T](g: Exp[Gen[T]], c: Exp[Boolean], y: Exp[Gen[T]]) extends Def[Array[T]]
+  case class ReduceIfElem(g: Exp[Gen[Double]], c: Exp[Boolean], y: Exp[Gen[Double]]) extends Def[Double]
 
-  case class FlattenElem[T](y: Exp[Array[T]]) extends Def[Array[T]]
+  case class FlattenElem[T](g: Exp[Gen[Array[T]]], y: Exp[Gen[Array[T]]]) extends Def[Array[T]]
 
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
+
+
+  case class Yield[T](g: Exp[Int], a: Exp[T]) extends Def[Gen[T]]
+  case class Skip[T](g: Exp[Int]) extends Def[Gen[T]]
+
   
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
+    //val g = fresh[Accu[T]]
     val x = fresh[Int]
-    val y = f(x)
-    SimpleLoop(shape, x, ArrayElem(y))
+    var g: Exp[Gen[T]] = null
+    val y = reifyEffects { 
+      g = Yield(x,f(x))
+      g
+    }
+    reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
   }
 
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] = {
+    //val g = fresh[Accu[Double]]
     val x = fresh[Int]
-    val y = f(x)
-    SimpleLoop(shape, x, ReduceElem(y))
+    var g: Exp[Gen[Double]] = null
+    val y = reifyEffects { 
+      g = Yield(x,f(x))
+      g
+    }
+    reflectEffect(SimpleLoop(shape, x, ReduceElem(g,y)), summarizeEffects(y).star)
   }
 
   def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]] = {
     val x = fresh[Int]
-    val (c,y) = f(x)
-    SimpleLoop(shape, x, ArrayIfElem(c,y)) // TODO: simplify for const true/false
+    val (c,y) = f(x) //FIXME
+    val g = toAtom(Yield(x,y))
+    SimpleLoop(shape, x, ArrayIfElem(g,c,g)) // TODO: simplify for const true/false
   }
 
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] = {
     val x = fresh[Int]
-    val (c,y) = f(x)
-    SimpleLoop(shape, x, ReduceIfElem(c,y)) // TODO: simplify for const true/false
+    val (c,y) = f(x) //FIXME
+    val g = toAtom(Yield(x,y))
+    SimpleLoop(shape, x, ReduceIfElem(g,c,g)) // TODO: simplify for const true/false
   }
 
   def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]] = {
     val x = fresh[Int]
-    val y = f(x)
-    SimpleLoop(shape, x, FlattenElem(y))
+    val y = f(x) //FIXME
+    val g = toAtom(Yield(x,y))
+    SimpleLoop(shape, x, FlattenElem(g,g))
   }
 
 
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = ArrayIndex(a, i)
 
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
-    case Def(SimpleLoop(s, x, ArrayElem(y))) => s
+//    case Def(SimpleLoop(s, x, ArrayElem(g1,Def(Yield(x2,y))))) if x == x2 => s // TODO: check condition
+    case Def(SimpleLoop(s, x, ArrayElem(g,y))) if g == y => s // TODO: check condition
     case _ => ArrayLength(a)
   }
 
 
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case ArrayElem(g,y) => syms(y)
+    case ReduceElem(g,y) => syms(y)
+    case FlattenElem(g,y) => syms(y)
+    case _ => super.syms(e)
+  }
+
+  override def symsFreq(e: Any) = e match {
+    case ArrayElem(g,y) => freqNormal(y)
+    case ReduceElem(g,y) => freqNormal(y)
+    case FlattenElem(g,y) => freqNormal(y)
+    case _ => super.symsFreq(e)
+  }
+  
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case ArrayElem(y) => effectSyms(y)
-    case ReduceElem(y) => effectSyms(y)
-    case FlattenElem(y) => effectSyms(y)
+    case ArrayElem(g,y) => effectSyms(y)
+    case ReduceElem(g,y) => effectSyms(y)
+    case FlattenElem(g,y) => effectSyms(y)
     case _ => super.boundSyms(e)
   }
 
@@ -93,27 +129,50 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
   val IR: ArrayLoopsExp
   import IR._
   
+  // TODO: multiple gens
+  var genStack: Map[Exp[Gen[_]], String=>Unit] = Map.empty
+  def withGens[A](p: List[(Exp[Gen[_]], String=>Unit)])(body: =>A):A = {
+    val save = genStack
+    genStack = genStack ++ p
+    println("--- withGens " + p + " == " + genStack)
+    val res = body
+    genStack = save
+    res
+  }
+  
+  def withGen[T,A](g: Exp[Gen[T]], f: String=>Unit)(body: =>A):A = withGens(List((g,f)))(body)
+  def topGen[T](g: Exp[Gen[T]]): String => Unit = {
+    genStack.getOrElse(g, (s => "UNKNOWN: "+s))
+  }
+  
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
-    case SimpleLoop(s,x,ArrayElem(y)) =>  
+    case SimpleLoop(s,x,ArrayElem(g,y)) =>  
       stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") { " + quote(x) + " => ")
-      emitBlock(y)
-      stream.println(quote(getBlockResult(y)))
+      withGen(g, s=>stream.println(s)) {
+        emitBlock(y)
+      }
       stream.println("}")
-    case SimpleLoop(s,x,ReduceElem(y)) =>  
+    case SimpleLoop(s,x,ReduceElem(g,y)) =>  
       stream.println("val " + quote(sym) + " = LoopReduce("+quote(s)+") { " + quote(x) + " => ")
-      emitBlock(y)
-      stream.println(quote(getBlockResult(y)))
+      withGen(g, s=>stream.println(s)) {
+        emitBlock(y)
+      }
       stream.println("}")
     // TODO: conditional variants ...
-    case SimpleLoop(s,x,FlattenElem(y)) =>  
+    case SimpleLoop(s,x,FlattenElem(g,y)) =>  
       stream.println("val " + quote(sym) + " = LoopFlatten("+quote(s)+") { " + quote(x) + " => ")
-      emitBlock(y)
-      stream.println(quote(getBlockResult(y)))
+      withGen(g, s=>stream.println(s)) {
+        emitBlock(y)
+      }
       stream.println("}")
     case ArrayIndex(a,i) =>  
       emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
     case ArrayLength(a) =>  
       emitValDef(sym, quote(a) + ".length")
+    case Yield(g,a) => 
+      if (genStack.nonEmpty)topGen(sym.asInstanceOf[Sym[Gen[Any]]])(quote(a))
+      else emitValDef(sym, "yield " + quote(a) + " // context is messed up!")
+    case Skip(g) => 
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -126,42 +185,56 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
     case SimpleFatLoop(s,x,rhs) => 
       for ((l,r) <- sym zip rhs) {
         r match {
-          case ArrayElem(y) =>
-            stream.println("var " + quote(l) + " = new Array[]("+quote(s)+")")
-          case ReduceElem(y) =>
+          case ArrayElem(g,y) if g == y => 
+            stream.println("val " + quote(l) + " = new Array[]("+quote(s)+")")
+          case ArrayElem(g,y) =>
+            stream.println("val " + quote(g) + " = new ArrayBuilder[]")
+          case ReduceElem(g,y) =>
             stream.println("var " + quote(l) + " = 0")
-          case ArrayIfElem(c,y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[]")
-          case ReduceIfElem(c,y) =>
+          case ArrayIfElem(g,c,y) =>
+            stream.println("val " + quote(g) + " = new ArrayBuilder[]")
+          case ReduceIfElem(g,c,y) =>
             stream.println("var " + quote(l) + " = 0")
-          case FlattenElem(y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[]")
+          case FlattenElem(g,y) =>
+            stream.println("val " + quote(g) + " = new ArrayBuilder[]")
         }
       }
-      val ii = x // was: x(i)
-//      stream.println("var " + quote(ii) + " = 0")
-//      stream.println("while ("+quote(ii)+" < "+quote(s)+") {")
+      val ii = x
       stream.println("for ("+quote(ii)+" <- 0 until "+quote(s)+") {")
-//      for (jj <- x.drop(1)) {
-//        stream.println(quote(jj)+" = "+quote(ii))
-//      }
-      emitFatBlock(syms(rhs))
-      for ((l,r) <- sym zip rhs) {
-        r match {
-          case ArrayElem(y) =>
-            stream.println(quote(l) + "("+quote(ii)+") = " + quote(getBlockResult(y)))
-          case ReduceElem(y) =>
-            stream.println(quote(l) + " += " + quote(getBlockResult(y)))
-          case ArrayIfElem(c,y) =>
-            stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
-          case ReduceIfElem(c,y) =>
-            stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
-          case FlattenElem(y) =>
-            stream.println(quote(l) + " ++= " + quote(getBlockResult(y)))
-        }
+
+      val gens = for ((l,r) <- sym zip rhs) yield r match {
+        case ArrayElem(g,y) if g == y => 
+          (g, (s: String) => stream.println(quote(l) + "("+quote(ii)+") = " + s))
+        case ArrayElem(g,y) =>
+          (g, (s: String) => stream.println(quote(g) + " += " + s))
+        case ReduceElem(g,y) =>
+          (g, (s: String) => stream.println(quote(l) + " += " + s))
+        case ArrayIfElem(g,c,y) =>
+          (g, (s: String) => stream.println("if ("+quote(getBlockResult(c))+") " + quote(g) + " += " + s))
+        case ReduceIfElem(g,c,y) =>
+          (g, (s: String) => stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + s))
+        case FlattenElem(g,y) =>
+          (g, (s: String) => stream.println(quote(g) + " ++= " + s))
       }
-//      stream.println(quote(ii)+" += 1")
+
+      withGens(gens) {
+        emitFatBlock(syms(rhs))
+      }
+
       stream.println("}")
+
+      for ((l,r) <- sym zip rhs) r match {
+        case ArrayElem(g,y) if g == y => 
+        case ArrayElem(g,y) =>
+          stream.println("val " + quote(l) + " = " + quote(g) + ".result")
+        case ReduceElem(g,y) =>
+        case ArrayIfElem(g,c,y) =>
+          stream.println("val " + quote(l) + " = " + quote(g) + ".result")
+        case ReduceIfElem(g,c,y) =>
+        case FlattenElem(g,y) =>
+          stream.println("val " + quote(l) + " = " + quote(g) + ".result")
+      }
+
     case _ => super.emitFatNode(sym, rhs)
   }
 }
