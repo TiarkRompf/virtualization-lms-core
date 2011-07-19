@@ -220,31 +220,56 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         }
         
         
-        /*
-          val a = loop(len) { i => loop(u_i.length) { i2 => yield i2 } }
-          val b = loop(a.length): array { j => 2 * a(j) }
+        def duplicateYieldContextAndPlugInRhs(s: Exp[Int], a: TTP)(e: TTP, shape: Exp[Int], targetVar: Sym[Int]) = {
+          // s depends on loop a -- find corresponding loops result d
+          val d = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) }
           
-          val a,b = loop(len) { i =>
-            a = flatArray(u_i)
-            b = flatArray(  array(u_i.length) { j=> 2 * u_i(j) } )
-          }
+          println("beep bop "+d+"/"+e)
           
-        */
-        
-/*
-        def embedForeach(s: Exp[Int], a: TTP)(e: TTP, shape: Exp[Int], targetVar: Sym[Int]) = {
-          s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) } match { 
-            case SimpleCollectIf(a,c) => c 
-
-            e.rhs match { 
-              case SimpleFatLoop(s,x,rhs) => rhs.map { r => 
-                findOrCreateDefinition(SimpleLoop(shape,targetVar,applyAddCondition(r,c))).sym
-              }
+          var saveContext = globalDefs.length
+          
+          val z = e.rhs match { 
+            case SimpleFatLoop(s,x,rhs) => rhs.map { r => 
+              val z = findOrCreateDefinition(SimpleLoop(shape,targetVar,applyPlugIntoContext(d,r))).sym
+              println("mod context. old: " + r + "; new: " + findDefinition(z))
+              z
             }
-            
           }
+          
+          val newDefs = globalDefs.drop(saveContext)
+          println("new defs:" + newDefs)
+          innerScope = innerScope ++ newDefs
+          currentScope = currentScope ++ newDefs.map(fatten)
+          z
         }
-*/        
+        
+        /*
+          val a = loop(len) { i => array { loop(u_i.length) { i2 => yield u_i(i2) } } }
+          val b = loop(a.length) { j => sum { yield 2 * a(j) } }
+          
+          // bring loops together
+          val a,b = loop(len) { i =>
+            array { loop(u_i.length) { i2 => yield u_i(i2) } }
+            sum { yield 2 * a(j) }
+          }
+
+          // adapt shape by duplicating context (elim dep on size)
+          val a,b = loop(len) { i =>
+            array { loop(u_i.length) { i2 => yield u_i(i2) } }
+            sum { loop(u_i.length) { i2 => yield 2 * a(j) } }
+          }
+          
+          // remove elem dep by using yield param directly
+          val a,b = loop(len) { i =>
+            array { loop(u_i.length) { i2 => yield u_i(i2) } }
+            sum { loop(u_i.length) { i2 => yield 2 * u_i(i2) } }
+          }
+
+          // dead code elim
+          val b = loop(len) { i =>
+            sum { loop(u_i.length) { i2 => yield 2 * u_i(i2) } }
+          }
+        */
         
         // partitioning: build maximal sets of loops to be fused
         // already fuse loops headers (shape, index variables)
@@ -267,13 +292,14 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
                 t.subst(w) = targetVar
               
               // analyze shape dependency and add appropriate conditions to loop body when fusing a filter loop
-              val shape = if (isShapeDep(shapeA,b)) {
-                val loops2 = extendLoopWithCondition(a,shapeB,targetVar,getShapeCond(shapeA,b))
-                //val loops2 = extendForeach(shapeA,b)(a,shapeB,targetVar)
+              val shape = if (isShapeDep(shapeA,b)) { //shapeA depends on value b
+                //val loops2 = extendLoopWithCondition(a,shapeB,targetVar,getShapeCond(shapeA,b))
+                val loops2 = duplicateYieldContextAndPlugInRhs(shapeA,b)(a,shapeB,targetVar)
                 (a.lhs zip loops2) foreach { p => t.subst(p._1) = p._2 }
                 shapeB
               } else if (isShapeDep(shapeB,a)) {
-                val loops2 = extendLoopWithCondition(b,shapeA,targetVar,getShapeCond(shapeB,a))
+                //val loops2 = extendLoopWithCondition(b,shapeA,targetVar,getShapeCond(shapeB,a))
+                val loops2 = duplicateYieldContextAndPlugInRhs(shapeB,a)(b,shapeA,targetVar)
                 (b.lhs zip loops2) foreach { p => t.subst(p._1) = p._2 }
                 shapeA
               } else {
@@ -290,6 +316,10 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         printlog("partitions: " + partitionsOut)
       
       
+        //println("<0----"+result)
+        //currentScope.foreach(println)
+        //println("----0>")
+
         // actually do the fusion: now transform the loops bodies
       
         if ((partitionsOut intersect partitionsIn) != partitionsOut) { // was there any change?
@@ -304,7 +334,9 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
                   
                   printlog("replace " + e + " at " + index + " within " + fused)
 
-                  val rhs = WgetLoopRes(fused)(index) match { case SimpleCollectIf(y,c) => y }
+                   // we've plugged the loop body into the right scope above,
+                   // thus we know that we can safely access the yielded value
+                  val rhs = WgetLoopRes(fused)(index) match { case SimpleCollect(y) => y }
 
                   printlog("substitute " + s + " -> " + rhs)
                   
@@ -314,18 +346,30 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
             case _ => //e
           }
           
-          
-          currentScope = getFatSchedule(currentScope)(result) // clean things up!
+          //NOTE: if we have added stuff to currentScope, the line below will reset it
+          // because result is still untransformed and thus the new stuff no used
+          //currentScope = getFatSchedule(currentScope)(result) // clean things up!
+          //NOTE: it is necessary to bring currentScope into the right order, though
+          // the current approach is to use all of currentScope as root, not just result
+          currentScope = getFatSchedule(currentScope)(currentScope)
 
-          // SIMPLIFY! <--- multiple steps necessary???
+          // SIMPLIFY! <--- multiple steps necessary? 
+          // currently yes: transform goes first to last, but later elems may
+          // induce substitutions on earlier ones, so we have to iterate
           
           currentScope = transformAll(currentScope, t)
           result = t(result)
-          currentScope = getFatSchedule(currentScope)(result) // clean things up!
+          currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+
+          currentScope = transformAll(currentScope, t)
+          result = t(result)
+          currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
 
           currentScope = transformAll(currentScope, t)
           result = t(result)
           currentScope = getFatSchedule(currentScope)(result) // clean things up!
+          
+          // TODO: check that we're indeed finished
           
           //Wloops = currentScope collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
 
