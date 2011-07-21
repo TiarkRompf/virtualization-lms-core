@@ -260,16 +260,20 @@ trait Effects extends Expressions with Utils {
     createDefinition(fresh[A], d).sym
   }
 
-  def reflectMutable[A:Manifest](d: Def[A]): Exp[A] = {
-    val mutableInputs = readMutableData(d)    
-    val z = reflectEffect(d, Alloc() andAlso Read(mutableInputs))
-
-    val mutableAliases = mutableTransitiveAliases(d)
+  def checkIllegalSharing(z: Exp[Any], mutableAliases: List[Sym[Any]]) {
     if (mutableAliases.nonEmpty) {
       val zd = z match { case Def(zd) => zd }
       printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
       printerr("at " + z + "=" + zd)
     }
+  }
+  
+  def reflectMutable[A:Manifest](d: Def[A]): Exp[A] = {
+    val mutableInputs = readMutableData(d)    
+    val z = reflectEffect(d, Alloc() andAlso Read(mutableInputs))
+
+    val mutableAliases = mutableTransitiveAliases(d)
+    checkIllegalSharing(z, mutableAliases)
     z
   }
 
@@ -280,11 +284,7 @@ trait Effects extends Expressions with Utils {
     val z = reflectEffect(d, Write(write) andAlso Read(mutableInputs))
 
     val mutableAliases = mutableTransitiveAliases(d) filterNot (write contains _)
-    if (mutableAliases.nonEmpty) {
-      val zd = z match { case Def(zd) => zd }
-      printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
-      printerr("at " + z + "=" + zd)
-    }
+    checkIllegalSharing(z, mutableAliases)
     z
   }
 

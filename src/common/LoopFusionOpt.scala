@@ -57,7 +57,8 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
         printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
         innerScope = innerScope ::: missing
       }
-      val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
+      //val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
+      val shape2 = if (lhs != lhs2) lhs2.map { case Def(l: AbstractLoop[_]) => l.size } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
                    else t(s)
       val rhs2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r))) => transformLoopBody(s,r,t) }}
                  else (lhs zip rhs) map { case (s,r) => transformLoopBody(s,r,t) }
