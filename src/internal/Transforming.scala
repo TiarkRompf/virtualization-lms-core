@@ -8,6 +8,7 @@ trait Transforming extends Expressions {
   abstract class Transformer { // a polymorphic function, basically...
     def apply[A](x: Exp[A]): Exp[A]
     def apply[A](xs: List[Exp[A]]): List[Exp[A]] = xs map (e => apply(e))
+    def apply[X,A](f: X=>Exp[A]): X=>Exp[A] = (z:X) => apply(f(z))
     //def apply[A](xs: Summary): Summary = xs //TODO
     def onlySyms[A](xs: List[Sym[A]]): List[Sym[A]] = xs map (e => apply(e)) collect { case e: Sym[A] => e }
   }

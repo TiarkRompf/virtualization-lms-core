@@ -21,7 +21,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
         printdbg("skipping mirror operation "+s+"="+x+" syms " + ss.mkString(",") + " subst " + t.subst.mkString(","))
         s
       }
-    } catch { case e => println("Exception during mirroring of "+x+": "+ e); e.printStackTrace; s }
+    } catch { case e => printerr("Exception during mirroring of "+x+": "+ e); s }
     if (y != s) {
 
       if (y.isInstanceOf[Sym[Any]] && findDefinition(y.asInstanceOf[Sym[Any]]).nonEmpty)
@@ -284,13 +284,17 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           }
           
           
-          currentScope = getFatSchedule(currentScope)(result) // clean things up!
+          currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
 
           // SIMPLIFY! <--- multiple steps necessary???
           
           currentScope = transformAll(currentScope, t)
           result = t(result)
-          currentScope = getFatSchedule(currentScope)(result) // clean things up!
+          currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+
+          currentScope = transformAll(currentScope, t)
+          result = t(result)
+          currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
 
           currentScope = transformAll(currentScope, t)
           result = t(result)
