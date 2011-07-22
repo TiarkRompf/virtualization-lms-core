@@ -57,14 +57,16 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
         printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
         innerScope = innerScope ::: missing
       }
-      val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
+      val shape2 = if (lhs != lhs2) lhs2.map { case Def(e:AbstractLoop[_]) => e.size } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
                    else t(s)
       val rhs2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r))) => transformLoopBody(s,r,t) }}
                  else (lhs zip rhs) map { case (s,r) => transformLoopBody(s,r,t) }
       
       //update innerScope -- change definition of lhs2 in place
       innerScope = innerScope map {
-        case TP(l,_) if lhs2 contains l => TP(l, SimpleLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2(lhs2.indexOf(l)))) 
+        case TP(l,_) if lhs2 contains l => 
+          // FIXME: creating a SimpleLoop object, not exact class (DeliteOpXX) <-- PROBLEM ?
+          TP(l, SimpleLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2(lhs2.indexOf(l)))) 
         case d => d
       }
       
@@ -213,13 +215,14 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         
         // shape s depends on a?
         def isShapeDep(s: Exp[Int], a: TTP) = s match { case Def(SimpleDomain(a1)) => a.lhs contains a1 case _ => false }
+
+/*
         def getShapeCond(s: Exp[Int], a: TTP) = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) match { case SimpleCollectIf(a,c) => c } }
         
         def extendLoopWithCondition(e: TTP, shape: Exp[Int], targetVar: Sym[Int], c: List[Exp[Boolean]]): List[Exp[Any]] = e.rhs match { 
           case SimpleFatLoop(s,x,rhs) => rhs.map { r => findOrCreateDefinition(SimpleLoop(shape,targetVar,applyAddCondition(r,c))).sym }
         }
-        
-        
+*/              
         def duplicateYieldContextAndPlugInRhs(s: Exp[Int], a: TTP)(e: TTP, shape: Exp[Int], targetVar: Sym[Int]) = {
           // s depends on loop a -- find corresponding loops result d
           val d = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) }
