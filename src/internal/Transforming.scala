@@ -20,6 +20,8 @@ trait Transforming extends Expressions {
 
   // FIXME: mirroring for effects!
 
+  def mtype[A,B](m:Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]] // hack: need to pass explicit manifest during mirroring
+  
   def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = sys.error("don't know how to mirror " + e)
 
   def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer): Def[A] = sys.error("don't know how to mirror " + e) //hm...
