@@ -129,6 +129,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case IntDoubleValue(x) => int_double_value(f(x))
+      case IntDivide(x,y) => int_divide(f(x),f(y))
       case _ => super.mirror(e,f)
     }
   }).asInstanceOf[Exp[A]]

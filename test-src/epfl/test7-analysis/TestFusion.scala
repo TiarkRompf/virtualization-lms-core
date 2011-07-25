@@ -14,20 +14,22 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
 
   // TODO: should call constructor functions instead of directly creating objects (i.e. array_length instead of ArrayLength)
 
+  def mtype[A,B](m:Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]]
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     //case Copy(a) => f(a)
-    case SimpleLoop(s,i, ArrayElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(y))))
-    case SimpleLoop(s,i, ReduceElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(y))))
-    case SimpleLoop(s,i, ArrayIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayIfElem(f(c),f(y))))
-    case SimpleLoop(s,i, ReduceIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceIfElem(f(c),f(y))))
-    case ArrayIndex(a,i) => toAtom(ArrayIndex(f(a), f(i)))
-    case ArrayLength(a) => toAtom(ArrayLength(f(a)))
+    case SimpleLoop(s,i, ArrayElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(y))))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ReduceElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(y))))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ArrayIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayIfElem(f(c),f(y))))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ReduceIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceIfElem(f(c),f(y))))(mtype(manifest[A]))
+    case ArrayIndex(a,i) => toAtom(ArrayIndex(f(a), f(i)))(mtype(manifest[A]))
+    case ArrayLength(a) => toAtom(ArrayLength(f(a)))(mtype(manifest[A]))
     case Plus(x,y) => infix_+(f(x), f(y))
     case Minus(x,y) => infix_-(f(x), f(y))
     case Times(x,y) => infix_*(f(x), f(y))
     case Div(x,y) => infix_/(f(x), f(y))
     case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))
-    case Reify(x, u, es) => toAtom(Reify(f(x), mapOver(f,u), f(es)))
+    case Reify(x, u, es) => toAtom(Reify(f(x), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 

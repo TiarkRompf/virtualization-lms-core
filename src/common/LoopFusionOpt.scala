@@ -27,11 +27,17 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
         val s2 = mirror(x, t) 
         if (s2 == s)
           printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned same object (expected t(syms) = " + tss.mkString(",") + ")")
-        s2 match { case Def(x2) => 
-          val ss2 = syms(x2)
-          if (ss2 != tss.filter(_.isInstanceOf[Sym[Any]])) // should do filtering in def of tss above?
-            printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned "+s2+"="+x2+" syms " + ss2.mkString(",") + " (expected t(syms) = " + tss.mkString(",") + ")")
-          case _ => }
+        s2 match { 
+          case Def(x2) => 
+            val ss2 = syms(x2)
+            if (ss2 != tss.filter(_.isInstanceOf[Sym[Any]])) // should do filtering in def of tss above?
+              printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned "+s2+"="+x2+" syms " + ss2.mkString(",") + " (expected t(syms) = " + tss.mkString(",") + ")")
+            if (!(s2.Type <:< s.Type))
+              printerr("warning: mirroring of "+s+"="+x+" type " + s.Type + " returned "+s2+"="+x2+" type " + s2.Type + " (not a subtype)")
+          case _ =>
+            if (!(s2.Type <:< s.Type))
+              printerr("warning: mirroring of "+s+"="+x+" type " + s.Type + " returned "+s2+" type " + s2.Type + " (not a subtype)")
+        }
         s2
       } else {
         printdbg("skipping mirror operation "+s+"="+x+" syms " + ss.mkString(",") + " subst " + t.subst.mkString(","))
