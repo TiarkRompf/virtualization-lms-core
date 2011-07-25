@@ -211,7 +211,9 @@ trait Effects extends Expressions with Utils {
   def allTransitiveAliases(start: Any): List[TP[Any]] = allAliases(start).flatMap(utilLoadSymTP)
   
   
-  // TODO optimization: a mutable object never aliases another mutable object, so its inputs need not be followed
+  // TODO possible optimization: a mutable object never aliases another mutable object, so its inputs need not be followed
+  
+  // TODO: should include globalMutableSysms??
   
   def mutableTransitiveAliases(s: Any) = {
     allTransitiveAliases(s) collect { case TP(s2, Reflect(_, u, _)) if mustMutable(u) => s2 }
@@ -256,8 +258,11 @@ trait Effects extends Expressions with Utils {
     reflectEffect(d, Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
   }
 
-  def reflectMirrored[A:Manifest](d: Reflect[A]): Exp[A] = {
-    createDefinition(fresh[A], d).sym
+  def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
+    context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
+      case z::_ => z.asInstanceOf[Exp[A]]
+      case _ => internalReflect(fresh[A], zd)
+    }
   }
 
   def checkIllegalSharing(z: Exp[Any], mutableAliases: List[Sym[Any]]) {
@@ -268,6 +273,14 @@ trait Effects extends Expressions with Utils {
     }
   }
   
+  var globalMutableSyms: List[Sym[Any]] = Nil
+  
+  def reflectMutableSym[A](s: Sym[A]): Sym[A] = {
+    assert(findDefinition(s).isEmpty)
+    globalMutableSyms = globalMutableSyms :+ s
+    s
+  }
+
   def reflectMutable[A:Manifest](d: Def[A]): Exp[A] = {
     val mutableInputs = readMutableData(d)    
     val z = reflectEffect(d, Alloc() andAlso Read(mutableInputs))
@@ -292,10 +305,13 @@ trait Effects extends Expressions with Utils {
 
   def reflectEffect[A:Manifest](x: Def[A], u: Summary): Exp[A] = {
     if (mustPure(u)) super.toAtom(x) else {
+      // FIXME: reflecting mutable stuff *during mirroring* doesn't work right now...
+      
       val deps = calculateDependencies(u)
       val zd = Reflect(x,u,deps)
       if (mustIdempotent(u)) {
-        findDefinition(zd) map (_.sym) filter (context contains _) getOrElse { // local cse
+        context find { case Def(d) => d == zd } map { _.asInstanceOf[Exp[A]] } getOrElse {
+//        findDefinition(zd) map (_.sym) filter (context contains _) getOrElse { // local cse TODO: turn around and look at context first??
           val z = fresh[A]
           if (!x.toString.startsWith("ReadVar")) { // supress output for ReadVar
             printlog("promoting to effect: " + z + "=" + zd)
@@ -308,11 +324,14 @@ trait Effects extends Expressions with Utils {
         val z = fresh[A]
         // make sure all writes go to allocs
         for (w <- u.mayWrite) {
+          // TODO: w may be a symbol we use exclusively for writing (such as an accumulator for reduce)
           findDefinition(w) match {
             case Some(TP(_, Reflect(_, u, _))) if mustMutable(u) => // ok
             case o => 
-              printerr("error: write to non-mutable " + o)
-              printerr("at " + z + "=" + zd)
+              if (!globalMutableSyms.contains(w)) {
+                printerr("error: write to non-mutable " + w + " -> " + o)
+                printerr("at " + z + "=" + zd)
+              }
           }
         }
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations

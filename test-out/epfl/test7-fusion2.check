@@ -22,6 +22,7 @@ try once more ...
 wtableneg: List()
 partitions: List(TTP(List(Sym(47), Sym(51), Sym(2), Sym(57), Sym(46)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Sym(45)), ReduceElem(Sym(50)), ArrayElem(Const(1.0)), ArrayElem(Sym(44)), ArrayElem(Sym(45))))))
 no changes, we're done
+super.focusExactScopeFat with result changed from List(Sym(28)) to List(Sym(56))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -42,6 +43,7 @@ val x52 = x51/100
 val x53 = x48*x48
 val x54 = x52-x53
 val x55 = println(x54)
+val x27 = x55
 x27
 }
 }

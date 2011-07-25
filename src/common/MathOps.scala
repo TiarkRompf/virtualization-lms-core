@@ -62,14 +62,16 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMin(x, y)
   def math_pi = MathPi()
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case MathAbs(x) => math_abs(f(x))
+      case MathPow(x,y) => math_pow(f(x),f(y))
       case MathLog(x) => math_log(f(x)).asInstanceOf[Exp[A]]
+      case MathAtan2(x,y) => math_atan2(f(x),f(y)).asInstanceOf[Exp[A]]
       case _ => super.mirror(e,f)
     }
-  }
+  }).asInstanceOf[Exp[A]]
 
 }
 

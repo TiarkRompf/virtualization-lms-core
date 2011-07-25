@@ -124,6 +124,14 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   def int_binaryor(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryOr(lhs, rhs)
   def int_binaryand(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryAnd(lhs, rhs)
   def int_double_value(lhs: Exp[Int]) = IntDoubleValue(lhs)
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = ({
+    implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
+    e match {
+      case IntDoubleValue(x) => int_double_value(f(x))
+      case _ => super.mirror(e,f)
+    }
+  }).asInstanceOf[Exp[A]]
 }
 
 trait ScalaGenPrimitiveOps extends ScalaGenBase {

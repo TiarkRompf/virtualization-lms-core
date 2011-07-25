@@ -50,6 +50,7 @@ trait EqualExp extends Equal with BaseExp with VariablesExp {
     case NotEqual(a, b) => notequals(f(a),f(b))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
+
 }
 
 trait EqualExpOpt extends EqualExp {

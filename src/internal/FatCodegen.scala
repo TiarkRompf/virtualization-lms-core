@@ -16,7 +16,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
 
   def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]): Def[Any] = sys.error("not implemented")
 
-  def shouldApplyFusion(currentScope: List[TTP])(result: Exp[Any]): Boolean = true
+  def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true
 
   // -------------------
   
@@ -24,10 +24,13 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
   override def emitBlockFocused(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
     var currentScope = innerScope.map(fatten)
     currentScope = getFatSchedule(currentScope)(result) // clean things up!
-    emitFatBlockFocused(currentScope)(result)
+    result match {
+      case Combine(rs) => emitFatBlockFocused(currentScope)(rs)
+      case _ => emitFatBlockFocused(currentScope)(List(result))
+    }
   }
 
-  def emitFatBlockFocused(currentScope: List[TTP])(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
+  def emitFatBlockFocused(currentScope: List[TTP])(result: List[Exp[Any]])(implicit stream: PrintWriter): Unit = {
     // do what super does, modulo fat stuff
     focusExactScopeFat(currentScope)(result) { levelScope => 
       for (TTP(syms, rhs) <- levelScope) {
@@ -36,7 +39,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     }
   }
 
-  def focusExactScopeFat[A](currentScope: List[TTP])(result: Exp[Any])(body: List[TTP] => A): A = {
+  def focusExactScopeFat[A](currentScope: List[TTP])(result: List[Exp[Any]])(body: List[TTP] => A): A = {
     
     val saveInner = innerScope
     
@@ -76,7 +79,6 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     //case class Combine(p:List[Exp[Any]]) extends Exp[Any]
     //val g2 = g1.flatMap(z=>syms(z.rhs))//buildScheduleForResult(Combine(g1.map(_.sym)))
     
-
     // sanity check to make sure all effects are accounted for
     result match {
       case Def(Reify(x, u, effects)) =>
@@ -152,7 +154,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
   def emitFatNodeKernelExtra(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter): Unit = { }
 
 
-  case class Combine(a: List[Exp[Any]]) extends Exp[Any]
+  case class Combine(a: List[Exp[Any]]) extends Exp[Any] //TODO: get rid of
 
   def emitFatBlock(rhs: List[Exp[Any]])(implicit stream: PrintWriter): Unit = {
     emitBlock(Combine(rhs))
