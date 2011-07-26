@@ -14,8 +14,6 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
 
   // TODO: should call constructor functions instead of directly creating objects (i.e. array_length instead of ArrayLength)
 
-  def mtype[A,B](m:Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]]
-
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     //case Copy(a) => f(a)
     case SimpleLoop(s,i, ArrayElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(y))))(mtype(manifest[A]))
