@@ -43,25 +43,43 @@ trait TupleOpsExp extends TupleOps with BaseExp {
   implicit def make_tuple4[A:Manifest,B:Manifest,C:Manifest,D:Manifest](t: (Exp[A],Exp[B],Exp[C],Exp[D])) : Exp[(A,B,C,D)] = ETuple4(t._1, t._2, t._3, t._4)
   implicit def make_tuple5[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest](t: (Exp[A],Exp[B],Exp[C],Exp[D],Exp[E])) : Exp[(A,B,C,D,E)] = ETuple5(t._1, t._2, t._3, t._4, t._5)
 
-  case class ETuple2[A:Manifest,B:Manifest](_1: Exp[A],_2: Exp[B]) extends Def[(A,B)]
-  case class ETuple3[A:Manifest,B:Manifest,C:Manifest](_1: Exp[A],_2: Exp[B],_3: Exp[C]) extends Def[(A,B,C)]
-  case class ETuple4[A:Manifest,B:Manifest,C:Manifest,D:Manifest](_1: Exp[A],_2: Exp[B],_3: Exp[C],_4: Exp[D]) extends Def[(A,B,C,D)]
-  case class ETuple5[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest](_1: Exp[A],_2: Exp[B],_3: Exp[C],_4: Exp[D],_5: Exp[E]) extends Def[(A,B,C,D,E)]
+  case class ETuple2[A:Manifest,B:Manifest](_1: Exp[A],_2: Exp[B]) extends Def[(A,B)] {
+    val m1 = manifest[A]
+    val m2 = manifest[B]
+  }
+  case class ETuple3[A:Manifest,B:Manifest,C:Manifest](_1: Exp[A],_2: Exp[B],_3: Exp[C]) extends Def[(A,B,C)] {
+    val m1 = manifest[A]
+    val m2 = manifest[B]
+    val m3 = manifest[C]
+  }
+  case class ETuple4[A:Manifest,B:Manifest,C:Manifest,D:Manifest](_1: Exp[A],_2: Exp[B],_3: Exp[C],_4: Exp[D]) extends Def[(A,B,C,D)] {
+    val m1 = manifest[A]
+    val m2 = manifest[B]
+    val m3 = manifest[C]
+    val m4 = manifest[D]
+  }
+  case class ETuple5[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest](_1: Exp[A],_2: Exp[B],_3: Exp[C],_4: Exp[D],_5: Exp[E]) extends Def[(A,B,C,D,E)] {
+    val m1 = manifest[A]
+    val m2 = manifest[B]
+    val m3 = manifest[C]
+    val m4 = manifest[D]
+    val m5 = manifest[E]
+  }
 
-  case class Tuple2Access1[A:Manifest](t: Exp[(A,_)]) extends Def[A]
-  case class Tuple2Access2[B:Manifest](t: Exp[(_,B)]) extends Def[B]
-  case class Tuple3Access1[A:Manifest](t: Exp[(A,_,_)]) extends Def[A]
-  case class Tuple3Access2[B:Manifest](t: Exp[(_,B,_)]) extends Def[B]
-  case class Tuple3Access3[C:Manifest](t: Exp[(_,_,C)]) extends Def[C]
-  case class Tuple4Access1[A:Manifest](t: Exp[(A,_,_,_)]) extends Def[A]
-  case class Tuple4Access2[B:Manifest](t: Exp[(_,B,_,_)]) extends Def[B]
-  case class Tuple4Access3[C:Manifest](t: Exp[(_,_,C,_)]) extends Def[C]
-  case class Tuple4Access4[D:Manifest](t: Exp[(_,_,_,D)]) extends Def[D]
-  case class Tuple5Access1[A:Manifest](t: Exp[(A,_,_,_,_)]) extends Def[A]
-  case class Tuple5Access2[B:Manifest](t: Exp[(_,B,_,_,_)]) extends Def[B]
-  case class Tuple5Access3[C:Manifest](t: Exp[(_,_,C,_,_)]) extends Def[C]
-  case class Tuple5Access4[D:Manifest](t: Exp[(_,_,_,D,_)]) extends Def[D]
-  case class Tuple5Access5[E:Manifest](t: Exp[(_,_,_,_,E)]) extends Def[E]
+  case class Tuple2Access1[A:Manifest](t: Exp[(A,_)]) extends Def[A] { val m = manifest[A] }
+  case class Tuple2Access2[B:Manifest](t: Exp[(_,B)]) extends Def[B] { val m = manifest[B] }
+  case class Tuple3Access1[A:Manifest](t: Exp[(A,_,_)]) extends Def[A] { val m = manifest[A] }
+  case class Tuple3Access2[B:Manifest](t: Exp[(_,B,_)]) extends Def[B] { val m = manifest[B] }
+  case class Tuple3Access3[C:Manifest](t: Exp[(_,_,C)]) extends Def[C] { val m = manifest[C] }
+  case class Tuple4Access1[A:Manifest](t: Exp[(A,_,_,_)]) extends Def[A] { val m = manifest[A] }
+  case class Tuple4Access2[B:Manifest](t: Exp[(_,B,_,_)]) extends Def[B] { val m = manifest[B] }
+  case class Tuple4Access3[C:Manifest](t: Exp[(_,_,C,_)]) extends Def[C] { val m = manifest[C] }
+  case class Tuple4Access4[D:Manifest](t: Exp[(_,_,_,D)]) extends Def[D] { val m = manifest[D] }
+  case class Tuple5Access1[A:Manifest](t: Exp[(A,_,_,_,_)]) extends Def[A] { val m = manifest[A] }
+  case class Tuple5Access2[B:Manifest](t: Exp[(_,B,_,_,_)]) extends Def[B] { val m = manifest[B] }
+  case class Tuple5Access3[C:Manifest](t: Exp[(_,_,C,_,_)]) extends Def[C] { val m = manifest[C] }
+  case class Tuple5Access4[D:Manifest](t: Exp[(_,_,_,D,_)]) extends Def[D] { val m = manifest[D] }
+  case class Tuple5Access5[E:Manifest](t: Exp[(_,_,_,_,E)]) extends Def[E] { val m = manifest[E] }
 
   def tuple2_get1[A:Manifest](t: Exp[(A,_)]) = t match {
     case Def(ETuple2(a,b)) => a
@@ -122,6 +140,33 @@ trait TupleOpsExp extends TupleOps with BaseExp {
     case Def(ETuple5(a,b,c,d,e)) => e
     case _ => Tuple5Access5(t)
   }
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case e@ETuple2(a,b)     => make_tuple2(f(a),f(b))(e.m1,e.m2)
+    case e@Tuple2Access1(t) => tuple2_get1(f(t))(e.m)
+    case e@Tuple2Access2(t) => tuple2_get2(f(t))(e.m)
+
+    case e@ETuple3(a,b,c)   => make_tuple3(f(a),f(b),f(c))(e.m1,e.m2,e.m3)
+    case e@Tuple3Access1(t) => tuple3_get1(f(t))(e.m)
+    case e@Tuple3Access2(t) => tuple3_get2(f(t))(e.m)
+    case e@Tuple3Access3(t) => tuple3_get3(f(t))(e.m)
+
+    case e@ETuple4(a,b,c,d) => make_tuple4(f(a),f(b),f(c),f(d))(e.m1,e.m2,e.m3,e.m4)
+    case e@Tuple4Access1(t) => tuple4_get1(f(t))(e.m)
+    case e@Tuple4Access2(t) => tuple4_get2(f(t))(e.m)
+    case e@Tuple4Access3(t) => tuple4_get3(f(t))(e.m)
+    case e@Tuple4Access4(t) => tuple4_get4(f(t))(e.m)
+
+    case e@ETuple5(a,b,c,d,g) => make_tuple5(f(a),f(b),f(c),f(d),f(g))(e.m1,e.m2,e.m3,e.m4,e.m5)
+    case e@Tuple5Access1(t)   => tuple5_get1(f(t))(e.m)
+    case e@Tuple5Access2(t)   => tuple5_get2(f(t))(e.m)
+    case e@Tuple5Access3(t)   => tuple5_get3(f(t))(e.m)
+    case e@Tuple5Access4(t)   => tuple5_get4(f(t))(e.m)
+    case e@Tuple5Access5(t)   => tuple5_get5(f(t))(e.m)
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
+
+
 }
 
 trait ScalaGenTupleOps extends ScalaGenBase {
