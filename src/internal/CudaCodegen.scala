@@ -168,7 +168,7 @@ trait CudaCodegen extends CLikeCodegen {
      // TODO: Need to cleanup some data structures
   }
 
-  override def generatorInit(buildDir:String): Unit = {
+  override def initializeGenerator(buildDir:String): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
     helperFuncIdx = 0
