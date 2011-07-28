@@ -320,6 +320,10 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           
           currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
 
+          /*println("<1---"+result0+"/"+result)
+          currentScope.foreach(println)
+          println("---1>")*/
+
           // SIMPLIFY! <--- multiple steps necessary???
           
           def withEffectContext(body: =>List[TTP]): List[TTP] = {
@@ -358,6 +362,10 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
             printdbg(previousScope + "-->" + currentScope)
           }
           
+          /*println("<x---"+result0+"/"+result)
+          currentScope.foreach(println)
+          println("---x>")*/
+
           //Wloops = currentScope collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
 
           Wloops = transformAll(partitionsOut, t)

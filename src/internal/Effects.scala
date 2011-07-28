@@ -262,7 +262,7 @@ trait Effects extends Expressions with Utils {
 
   def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
     context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
-      case z::_ => z.asInstanceOf[Exp[A]]
+      //case z::_ => z.asInstanceOf[Exp[A]]  -- unsafe: we don't have a tight context, so we might pick one from a flattened subcontext
       case _ => internalReflect(fresh[A], zd)
     }
   }
