@@ -475,7 +475,8 @@ trait CudaCodegen extends CLikeCodegen {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
 	  helperFuncIdx += 1
-      out.append("void copyMutableInputDtoH_%s_%s_%s(%s) {\n".format(quote(ksym), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)))
+      out.append("void copyMutableInputDtoH_%s_%s_%s(%s) {\n".format(quote(ksym), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)+"_ptr"))
+	  out.append("%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
       //out.append(copyMutableInputDtoH(sym))
       out.append(contents)
       out.append("}\n")
@@ -491,13 +492,18 @@ trait CudaCodegen extends CLikeCodegen {
 	  	helperFuncIdx += 1
 		val argStr = args.map("\""+quote(_)+"\"").mkString(",")
 		val paramStr = args.map(ele =>
-				if(isObjectType(ele.Type)) remap(ele.Type) + " *" + quote(ele)
+				if(isObjectType(ele.Type)) remap(ele.Type) + " *" + quote(ele) + "_ptr"
 				else remap(ele.Type) + " " + quote(ele)
 		).mkString(",")
+    	val derefParams = args.map(ele=>
+      		if(isObjectType(ele.Type)) "\t%s %s = *(%s_ptr);\n".format(remap(ele.Type),quote(ele),quote(ele))
+      		else ""
+    	).mkString("")
     	
 		MetaData.gpuOutput = "{\"%s\":[\"%s\",\"allocFunc_%s\",[%s],".format(quote(sym),remap(sym.Type),helperFuncIdx,argStr)
       	//out.append("%s *allocFunc_%s(%s) {\n".format(remap(sym.Type), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)))
       	out.append("%s *allocFunc_%s(%s) {\n".format(remap(sym.Type), helperFuncIdx, paramStr))
+		out.append(derefParams+"\n")
       	//out.append(copyOutputDtoH(sym))
       	out.append(contents)
       	out.append("}\n")
@@ -511,7 +517,8 @@ trait CudaCodegen extends CLikeCodegen {
 	  if(isObjectType(sym.Type)) {
 	  	helperFuncIdx += 1
       	MetaData.gpuOutput = MetaData.gpuOutput + "\"copyOutputDtoH_%s\",[\"env\",\"%s\"]]}".format(helperFuncIdx,quote(sym))
-    	out.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.Type)+" *"+quote(sym)))
+    	out.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.Type)+" *"+quote(sym)+"_ptr"))
+		out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
       	out.append(contents)
       	out.append("}\n")
       	out.toString
@@ -533,10 +540,10 @@ trait CudaCodegen extends CLikeCodegen {
 
     // Get free variables
     val inputs = getFreeVarBlock(allocFunc,Nil)
-    val paramStr = inputs.map(ele=>
-			if(isObjectType(ele.Type)) remap(ele.Type) + " *_" + quote(ele)
-			else remap(ele.Type) + " " + quote(ele)
-	  ).mkString(",")
+    //val paramStr = inputs.map(ele=>
+	//		if(isObjectType(ele.Type)) remap(ele.Type) + " *_" + quote(ele)
+	//		else remap(ele.Type) + " " + quote(ele)
+	//  ).mkString(",")
 
     /* Object type inputs of helper functions are pointers, but CUDA generators assume the actual objects,
            therefore need to dereference the objects before emitting the actual block contents. */
@@ -555,7 +562,7 @@ trait CudaCodegen extends CLikeCodegen {
     // Generate allocation helper function
 	//tempString.append(derefParams)
     emitBlock(allocFunc)(tempStream)
-    tempString.append("\treturn %s;\n".format(quote(getBlockResult(allocFunc))))
+    tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc))))
     val allocOutputStr = emitAllocOutput(sym, null, tempString.toString, inputs)
 
     // Generate copy (D->H) helper function
