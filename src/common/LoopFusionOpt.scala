@@ -25,8 +25,9 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
       val tss = t(ss)
       if (ss != tss) {
         val s2 = mirror(x, t) 
-        if (s2 == s)
+        if (s2 == s) {
           printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned same object (expected t(syms) = " + tss.mkString(",") + ")")
+        }
         s2 match { 
           case Def(x2) => 
             val ss2 = syms(x2)
@@ -52,13 +53,12 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
         e.printStackTrace; 
         s
     }
-    if (y != s) {
 
+    if (y != s) {
       if (y.isInstanceOf[Sym[Any]] && findDefinition(y.asInstanceOf[Sym[Any]]).nonEmpty)
         printdbg("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[Any]]).get.rhs)
       else
         printdbg("--> replace " + s+"="+x + " by " + y)
-
       t.subst(s) = y // TODO: move out of conditional?
     }
     y
@@ -195,6 +195,8 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         def WgetLoopVar(e: TTP): List[Sym[Int]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => List(x) }
         def WgetLoopRes(e: TTP): List[Def[Any]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => rhs }
 
+        val loopCollectSyms = Wloops flatMap (e => (e.lhs zip WgetLoopRes(e)) collect { case (s, SimpleCollectIf(_,_)) => s })
+        
         val loopSyms = Wloops flatMap (_.lhs)
         val loopVars = Wloops flatMap WgetLoopVar
 
@@ -210,10 +212,12 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         // then we can later remove the entry and see if the dependency goes away...
         
         val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
-          val thisLoopSyms = WgetLoopVar(dx)
+          val thisLoopVars = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
           getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopSyms contains i) => 
+            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) => 
+              //if (!loopCollectSyms.contains(a))
+              //  printerr("DANGER WILL ROBINSON: ignoring dep " + e + " although " + a + " is not a loop sym " + loopCollectSyms)
               //println("ignoring simple dependency " + e + " on loop var " + thisLoopSyms)
               Nil // direct deps on this loop's induction var don't count
             case sc =>
@@ -412,7 +416,12 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
       }
       
     }
-
+/*
+    println("result "+result0+"/"+result)
+    println("<---")
+    currentScope.foreach(println)
+    println("--->")
+*/
     // do what super does ...
     super.focusExactScopeFat(currentScope)(result0)(body)
   }
