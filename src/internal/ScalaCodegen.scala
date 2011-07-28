@@ -1,7 +1,6 @@
 package scala.virtualization.lms
 package internal
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.sym
 import java.io.{File, FileWriter, PrintWriter}
 
 trait ScalaCodegen extends GenericCodegen {
@@ -48,12 +47,6 @@ trait ScalaCodegen extends GenericCodegen {
     val kernelName = syms.map(quote).mkString("")
     
     stream.println("package generated." + this.toString)
-    stream.println("final class activation_" + kernelName + " { // generated even if not used")
-    for (s <- syms) {
-      val x = s.Type
-      stream.println("var " + quote(s) + ": " + remap(s.Type) + " = _")
-    }
-    stream.println("}")
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
     stream.print(vals.map(p => quote(p) + ":" + remap(p.Type)).mkString(","))
@@ -80,6 +73,7 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println(kernelName)
     stream.println("}}")
   }
+
 
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("val " + quote(sym) + " = " + rhs) // + "        //" + sym.Type.debugInfo)
@@ -111,4 +105,14 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
 
 trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
   val IR: Expressions with Effects with FatExpressions
+  import IR._
+  
+  override def emitFatNodeKernelExtra(syms: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter): Unit = {
+    val kernelName = syms.map(quote).mkString("")
+    stream.println("final class activation_" + kernelName + " {")
+    for (s <- syms) {
+      stream.println("var " + quote(s) + ": " + remap(s.Type) + " = _")
+    }
+    stream.println("}")
+  }
 }

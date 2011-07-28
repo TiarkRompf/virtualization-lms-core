@@ -125,7 +125,7 @@ trait Effects extends Expressions with Utils {
 
   def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case Reflect(x, u, es) => aliasSyms(x)
-    case Reify(x, u, es) => aliasSyms(x)
+    case Reify(x, u, es) => syms(x)
     case s: Sym[Any] => List(s)
     case p: Product => p.productIterator.toList.flatMap(aliasSyms(_))
     case _ => Nil
@@ -133,24 +133,24 @@ trait Effects extends Expressions with Utils {
   
   def containSyms(e: Any): List[Sym[Any]] = e match {
     case Reflect(x, u, es) => containSyms(x)
-    case Reify(x, u, es) => containSyms(x)
-    case s: Sym[Any] => List(s)
+    case Reify(x, u, es) => Nil
+    case s: Sym[Any] => Nil
     case p: Product => p.productIterator.toList.flatMap(containSyms(_))
     case _ => Nil
   }
   
   def extractSyms(e: Any): List[Sym[Any]] = e match {
     case Reflect(x, u, es) => extractSyms(x)
-    case Reify(x, u, es) => extractSyms(x)
-    case s: Sym[Any] => List(s)
+    case Reify(x, u, es) => Nil
+    case s: Sym[Any] => Nil
     case p: Product => p.productIterator.toList.flatMap(extractSyms(_))
     case _ => Nil
   }
 
   def copySyms(e: Any): List[Sym[Any]] = e match {
     case Reflect(x, u, es) => copySyms(x)
-    case Reify(x, u, es) => copySyms(x)
-    case s: Sym[Any] => List(s)
+    case Reify(x, u, es) => Nil
+    case s: Sym[Any] => Nil
     case p: Product => p.productIterator.toList.flatMap(copySyms(_))
     case _ => Nil
   }
@@ -171,6 +171,8 @@ trait Effects extends Expressions with Utils {
   }
 */
   
+  def noPrim(sm: List[Sym[Any]]): List[Sym[Any]] = sm.filterNot(s=>isPrimitiveType(s.Type))
+  
   /*
    TODO: switch back to graph based formulation -- this will not work for circular deps
   */
@@ -183,15 +185,20 @@ trait Effects extends Expressions with Utils {
   def utilLoadSym[T](s: Sym[T]) = utilLoadSymTP(s).map(_.rhs)
   
   def shallowAliases(start: Any): List[Sym[Any]] = {
-    val alias = aliasSyms(start) flatMap { a => a::shallowAliasCache.getOrElseUpdate(a, shallowAliases(utilLoadSym(a))) }
-    val extract = extractSyms(start) flatMap { a => deepAliasCache.getOrElseUpdate(a, deepAliases(utilLoadSym(a))) }
+    val alias = noPrim(aliasSyms(start)) flatMap { a => a::shallowAliasCache.getOrElseUpdate(a, shallowAliases(utilLoadSym(a))) }
+    val extract = noPrim(extractSyms(start)) flatMap { a => deepAliasCache.getOrElseUpdate(a, deepAliases(utilLoadSym(a))) }
+    //println("shallowAliases("+start+") = "+alias+" ++ "+extract)
     (alias ++ extract).distinct
   }
   
   def deepAliases(start: Any): List[Sym[Any]] = {
-    val alias = aliasSyms(start) flatMap { a => deepAliasCache.getOrElseUpdate(a, deepAliases(utilLoadSym(a))) }
-    val copy = copySyms(start) flatMap { a => deepAliasCache.getOrElseUpdate(a, deepAliases(utilLoadSym(a))) }
-    val contain = containSyms(start) flatMap { a => a::allAliasCache.getOrElseUpdate(a, allAliases(utilLoadSym(a))) }
+    val alias = noPrim(aliasSyms(start)) flatMap { a => deepAliasCache.getOrElseUpdate(a, deepAliases(utilLoadSym(a))) }
+    val copy = noPrim(copySyms(start)) flatMap { a => deepAliasCache.getOrElseUpdate(a, deepAliases(utilLoadSym(a))) }
+    val contain = noPrim(containSyms(start)) flatMap { a => a::allAliasCache.getOrElseUpdate(a, allAliases(utilLoadSym(a))) }
+    //println("aliasSyms("+start+") = "+aliasSyms(start) + "/" + noPrim(aliasSyms(start)))
+    //println("copySyms("+start+") = "+copySyms(start) + "/" + noPrim(copySyms(start)))
+    //println("containSyms("+start+") = "+containSyms(start) + "/" + noPrim(containSyms(start)))
+    //println("deepAliases("+start+") = "+alias+" ++ "+copy+" ++ "+contain)
     (alias ++ copy ++ contain).distinct
   }
 
@@ -204,18 +211,27 @@ trait Effects extends Expressions with Utils {
   def allTransitiveAliases(start: Any): List[TP[Any]] = allAliases(start).flatMap(utilLoadSymTP)
   
   
-  // TODO optimization: a mutable object never aliases another mutable object, so its inputs need not be followed
+  // TODO possible optimization: a mutable object never aliases another mutable object, so its inputs need not be followed
+  
+  // TODO: should include globalMutableSysms??
   
   def mutableTransitiveAliases(s: Any) = {
     allTransitiveAliases(s) collect { case TP(s2, Reflect(_, u, _)) if mustMutable(u) => s2 }
   }
   
-  def readMutableData[A](d: Def[A]) = mutableTransitiveAliases(readSyms(d))
-
-
-  // legacy -- remove??
-  def mayAliasSomethingMutable(s: Sym[Any]) = mutableTransitiveAliases(s).nonEmpty
-  def getMutableInputs[A](d: Def[A]): List[Sym[Any]] = readSyms(d) filter (mayAliasSomethingMutable(_))
+  
+  def getActuallyReadSyms[A](d: Def[A]) = {
+    val bound = boundSyms(d)
+    val r = readSyms(d).map{case Def(Reify(x,_,_)) => x case x => x} filterNot (bound contains _)
+    //if (d.isInstanceOf[Reify[Any]] && r.nonEmpty) {
+    //  println("** actually read: "+readSyms(d)+"\\"+bound+"="+r)
+    //  println("** transitive shallow: " + shallowAliases(r))
+    //  println("** transitive deep: " + deepAliases(r))
+    //}
+    r
+  }
+  
+  def readMutableData[A](d: Def[A]) = mutableTransitiveAliases(getActuallyReadSyms(d))
 
 
   // --- reflect
@@ -242,8 +258,27 @@ trait Effects extends Expressions with Utils {
     reflectEffect(d, Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
   }
 
-  def reflectMirrored[A:Manifest](d: Reflect[A]): Exp[A] = {
-    createDefinition(fresh[A], d).sym
+  def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
+    context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
+      case z::_ => z.asInstanceOf[Exp[A]]
+      case _ => internalReflect(fresh[A], zd)
+    }
+  }
+
+  def checkIllegalSharing(z: Exp[Any], mutableAliases: List[Sym[Any]]) {
+    if (mutableAliases.nonEmpty) {
+      val zd = z match { case Def(zd) => zd }
+      printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
+      printerr("at " + z + "=" + zd)
+    }
+  }
+  
+  var globalMutableSyms: List[Sym[Any]] = Nil
+  
+  def reflectMutableSym[A](s: Sym[A]): Sym[A] = {
+    assert(findDefinition(s).isEmpty)
+    globalMutableSyms = globalMutableSyms :+ s
+    s
   }
 
   def reflectMutable[A:Manifest](d: Def[A]): Exp[A] = {
@@ -251,11 +286,7 @@ trait Effects extends Expressions with Utils {
     val z = reflectEffect(d, Alloc() andAlso Read(mutableInputs))
 
     val mutableAliases = mutableTransitiveAliases(d)
-    if (mutableAliases.nonEmpty) {
-      val zd = z match { case Def(zd) => zd }
-      printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
-      printerr("at " + z + "=" + zd)
-    }
+    checkIllegalSharing(z, mutableAliases)
     z
   }
 
@@ -266,11 +297,7 @@ trait Effects extends Expressions with Utils {
     val z = reflectEffect(d, Write(write) andAlso Read(mutableInputs))
 
     val mutableAliases = mutableTransitiveAliases(d) filterNot (write contains _)
-    if (mutableAliases.nonEmpty) {
-      val zd = z match { case Def(zd) => zd }
-      printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
-      printerr("at " + z + "=" + zd)
-    }
+    checkIllegalSharing(z, mutableAliases)
     z
   }
 
@@ -278,10 +305,13 @@ trait Effects extends Expressions with Utils {
 
   def reflectEffect[A:Manifest](x: Def[A], u: Summary): Exp[A] = {
     if (mustPure(u)) super.toAtom(x) else {
+      // FIXME: reflecting mutable stuff *during mirroring* doesn't work right now...
+      
       val deps = calculateDependencies(u)
       val zd = Reflect(x,u,deps)
       if (mustIdempotent(u)) {
-        findDefinition(zd) map (_.sym) filter (context contains _) getOrElse { // local cse
+        context find { case Def(d) => d == zd } map { _.asInstanceOf[Exp[A]] } getOrElse {
+//        findDefinition(zd) map (_.sym) filter (context contains _) getOrElse { // local cse TODO: turn around and look at context first??
           val z = fresh[A]
           if (!x.toString.startsWith("ReadVar")) { // supress output for ReadVar
             printlog("promoting to effect: " + z + "=" + zd)
@@ -294,11 +324,14 @@ trait Effects extends Expressions with Utils {
         val z = fresh[A]
         // make sure all writes go to allocs
         for (w <- u.mayWrite) {
+          // TODO: w may be a symbol we use exclusively for writing (such as an accumulator for reduce)
           findDefinition(w) match {
             case Some(TP(_, Reflect(_, u, _))) if mustMutable(u) => // ok
             case o => 
-              printerr("error: write to non-mutable " + o)
-              printerr("at " + z + "=" + zd)
+              if (!globalMutableSyms.contains(w)) {
+                printerr("error: write to non-mutable " + w + " -> " + o)
+                printerr("at " + z + "=" + zd)
+              }
           }
         }
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
@@ -352,6 +385,12 @@ trait Effects extends Expressions with Utils {
   }
 
   def internalReflect[A](s: Sym[A], x: Reflect[A]): Sym[A] = {
+    x match {
+      case Reflect(Reify(_,_,_),_,_) =>
+        printerr("error: reflecting a reify node.")
+        printerr("at " + s + "=" + x)
+      case _ => //ok
+    }
     createDefinition(s, x)
     context :+= s
     s
@@ -374,10 +413,11 @@ trait Effects extends Expressions with Utils {
     context = Nil
     
     val result = block
-    val summary = summarizeAll(context)
-    val resultR = if (context.isEmpty) result else Reify(result, summary, pruneContext(context)): Exp[A] // calls toAtom...
+    val deps = context
+    val summary = summarizeAll(deps)
     context = save
-    resultR
+    
+    if (deps.isEmpty) result else Reify(result, summary, pruneContext(deps)): Exp[A] // calls toAtom...
   }
 
   def reifyEffectsHere[A:Manifest](block: => Exp[A]): Exp[A] = {
@@ -393,9 +433,9 @@ trait Effects extends Expressions with Utils {
     val deps = if (save eq null) context else context.drop(save.length)
     
     val summary = summarizeAll(deps)
-    val resultR = if (deps.isEmpty) result else Reify(result, summary, pruneContext(deps)): Exp[A] // calls toAtom...
     context = save
-    resultR
+    
+    if (deps.isEmpty) result else Reify(result, summary, pruneContext(deps)): Exp[A] // calls toAtom...
   }
 
   // --- bookkeping

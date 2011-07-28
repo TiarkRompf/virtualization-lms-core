@@ -28,6 +28,11 @@ trait CastingOpsExp extends CastingOps with BaseExp {
 
   def rep_isinstanceof[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B]) = RepIsInstanceOf(lhs,mA,mB)
   def rep_asinstanceof[A,B:Manifest](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B]) : Exp[B] = RepAsInstanceOf(lhs,mA,mB)
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case RepAsInstanceOf(lhs, mA, mB) => rep_asinstanceof(f(lhs), mA,mB)
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
 }
 
 trait ScalaGenCastingOps extends ScalaGenBase {

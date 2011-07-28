@@ -62,13 +62,19 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMin(x, y)
   def math_pi = MathPi()
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
+      case MathCeil(x) => math_ceil(f(x))
+      case MathFloor(x) => math_floor(f(x))
+      case MathExp(x) => math_exp(f(x))
+      case MathPow(x,y) => math_pow(f(x),f(y))
       case MathAbs(x) => math_abs(f(x))
+      case MathLog(x) => math_log(f(x))
+      case MathAtan2(x,y) => math_atan2(f(x),f(y))
       case _ => super.mirror(e,f)
     }
-  }
+  }).asInstanceOf[Exp[A]]
 
 }
 
@@ -82,7 +88,7 @@ trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {
   val IR: MathOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match { // TODO: use java.lang.Math etc...
     case MathCeil(x) => emitValDef(sym, "Math.ceil(" + quote(x) + ")")
     case MathFloor(x) => emitValDef(sym, "Math.floor(" + quote(x) + ")")
     case MathExp(x) => emitValDef(sym, "Math.exp(" + quote(x) + ")")
