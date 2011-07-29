@@ -89,18 +89,18 @@ trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match { // TODO: use java.lang.Math etc...
-    case MathCeil(x) => emitValDef(sym, "Math.ceil(" + quote(x) + ")")
-    case MathFloor(x) => emitValDef(sym, "Math.floor(" + quote(x) + ")")
-    case MathExp(x) => emitValDef(sym, "Math.exp(" + quote(x) + ")")
-    case MathLog(x) => emitValDef(sym, "Math.log(" + quote(x) + ")")
-    case MathSqrt(x) => emitValDef(sym, "Math.sqrt(" + quote(x) + ")")
-    case MathAtan(x) => emitValDef(sym, "Math.atan(" + quote(x) + ")")
-    case MathAtan2(x,y) => emitValDef(sym, "Math.atan2(" + quote(x) + ", " + quote(y) + ")")
-    case MathPow(x,y) => emitValDef(sym, "Math.pow(" + quote(x) + "," + quote(y) + ")")
-    case MathAbs(x) => emitValDef(sym, "Math.abs(" + quote(x) + ")")
-    case MathMax(x,y) => emitValDef(sym, "Math.max(" + quote(x) + ", " + quote(y) + ")")
-    case MathMin(x,y) => emitValDef(sym, "Math.min(" + quote(x) + ", " + quote(y) + ")")
-    case MathPi() => emitValDef(sym, "Math.Pi")
+    case MathCeil(x) => emitValDef(sym, "java.lang.Math.ceil(" + quote(x) + ")")
+    case MathFloor(x) => emitValDef(sym, "java.lang.Math.floor(" + quote(x) + ")")
+    case MathExp(x) => emitValDef(sym, "java.lang.Math.exp(" + quote(x) + ")")
+    case MathLog(x) => emitValDef(sym, "java.lang.Math.log(" + quote(x) + ")")
+    case MathSqrt(x) => emitValDef(sym, "java.lang.Math.sqrt(" + quote(x) + ")")
+    case MathAtan(x) => emitValDef(sym, "java.lang.Math.atan(" + quote(x) + ")")
+    case MathAtan2(x,y) => emitValDef(sym, "java.lang.Math.atan2(" + quote(x) + ", " + quote(y) + ")")
+    case MathPow(x,y) => emitValDef(sym, "java.lang.Math.pow(" + quote(x) + "," + quote(y) + ")")
+    case MathAbs(x) => emitValDef(sym, "java.lang.Math.abs(" + quote(x) + ")")
+    case MathMax(x,y) => emitValDef(sym, "java.lang.Math.max(" + quote(x) + ", " + quote(y) + ")")
+    case MathMin(x,y) => emitValDef(sym, "java.lang.Math.min(" + quote(x) + ", " + quote(y) + ")")
+    case MathPi() => emitValDef(sym, "java.lang.Math.Pi")
     case _ => super.emitNode(sym, rhs)
   }
 }
