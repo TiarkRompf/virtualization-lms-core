@@ -110,30 +110,31 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
         val actual = levelScope.filter(_.lhs exists (effects contains _))
         if (effects != actual.flatMap(_.lhs)) {
           val expected = effects.map(d=>fatten(findDefinition(d.asInstanceOf[Sym[Any]]).get))
-          printerr("error: violated ordering of effects")
-          printerr("  expected:")
-          expected.foreach(d => printerr("    "+d))
-          printerr("  actual:")
-          actual.foreach(d => printerr("    "+d))
+          val missing = expected filterNot (actual contains _)
+          val printfn = if (missing.isEmpty) printlog _ else printerr _
+          printfn("error: violated ordering of effects")
+          printfn("  expected:")
+          expected.foreach(d => printfn("    "+d))
+          printfn("  actual:")
+          actual.foreach(d => printfn("    "+d))
           // stuff going missing because of stray dependencies is the most likely cause 
           // so let's print some debugging hints
-          printerr("  missing:")
-          val missing = expected filterNot (actual contains _)
+          printfn("  missing:")
           if (missing.isEmpty)
-            printerr("  note: there is nothing missing so the different order might in fact be ok (artifact of new effect handling? TODO)")
+            printfn("  note: there is nothing missing so the different order might in fact be ok (artifact of new effect handling? TODO)")
           missing.foreach { d => 
             val inDeep = e1 contains d
             val inShallow = e2 contains d
             val inDep = g1 contains d
-            printerr("    "+d+" <-- inDeep: "+inDeep+", inShallow: "+inShallow+", inDep: "+inDep)
+            printfn("    "+d+" <-- inDeep: "+inDeep+", inShallow: "+inShallow+", inDep: "+inDep)
             if (inDep) e1 foreach { z =>
               val b = boundSyms(z.rhs)
               if (b.isEmpty) "" else {
                 val g2 = getFatDependentStuff(currentScope)(b)
                 if (g2 contains d) {
-                  printerr("    depends on " + z + " (bound: "+b+")")
+                  printfn("    depends on " + z + " (bound: "+b+")")
                   val path = getFatSchedule(g2)(d)
-                  for (p <- path) printerr("      "+p)
+                  for (p <- path) printfn("      "+p)
                 }
               }
             }
