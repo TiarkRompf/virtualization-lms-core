@@ -38,7 +38,8 @@ trait Equal extends Base with Variables with OverloadHack {
   def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]) : Rep[Boolean]
 }
 
-trait EqualExp extends Equal with BaseExp with VariablesExp {
+trait EqualExpBridge extends BaseExp  {
+
   case class Equal[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
   case class NotEqual[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
 
@@ -51,6 +52,9 @@ trait EqualExp extends Equal with BaseExp with VariablesExp {
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
+}
+
+trait EqualExp extends Equal with EqualExpBridge with VariablesExp {
 }
 
 trait EqualExpOpt extends EqualExp {

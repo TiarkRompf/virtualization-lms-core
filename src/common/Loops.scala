@@ -135,6 +135,9 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
   override def fatten(e: TP[Any]): TTP = e.rhs match {
     case op: AbstractLoop[_] => 
       TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
+    case Reflect(op: AbstractLoop[_], u, es) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on... 
+      printdbg("-- fatten effectful loop " + e)
+      TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
     case _ => super.fatten(e)
   }
 
