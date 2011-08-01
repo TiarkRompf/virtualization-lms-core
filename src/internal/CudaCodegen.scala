@@ -385,7 +385,13 @@ trait CudaCodegen extends CLikeCodegen {
     stream.println(addTab() + " " + lhs + " = " + rhs + ";")
   }
   
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
+    if (external) {
+      // CUDA library ops use a C wrapper, so should be generated as a C kernel
+      super.emitKernelHeader(syms, vals, vars, resultType, resultIsVar, external)
+      return
+    }
+    
     val List(sym) = syms // TODO
 
     val out = new StringBuilder
@@ -408,7 +414,12 @@ trait CudaCodegen extends CLikeCodegen {
     stream.print(out.toString)
   }
 
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
+    if (external) {
+      super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external)
+      return
+    }
+    
     val List(sym) = syms // TODO
     
     tabWidth -= 1

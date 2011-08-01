@@ -11,8 +11,8 @@ trait GenericCodegen extends Scheduling {
   // TODO: should some of the methods be moved into more specific subclasses?
   
   def kernelFileExt = ""
-  def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
-  def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
+  def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {}
+  def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {}
   
   // Initializer
   def initializeGenerator(buildDir:String): Unit = {}
@@ -60,9 +60,13 @@ trait GenericCodegen extends Scheduling {
   def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter): Unit = {
     throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
-
-  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit
   
+  def emitExternalLib(rhs: Def[Any]): Unit = {
+    throw new GenerationFailedException("don't know how to generate external lib for " + rhs)
+  }
+  
+  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit
+    
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
       
   def quote(x: Exp[Any]) : String = x match {
