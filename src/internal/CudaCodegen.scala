@@ -133,11 +133,11 @@ trait CudaCodegen extends CLikeCodegen {
     var gpuLibCall: String = ""
 
     def init = {
-      gpuBlockSizeX = ""
-      gpuBlockSizeY = ""
-      gpuBlockSizeZ = ""
-      gpuDimSizeX = ""
-      gpuDimSizeY = ""
+      gpuBlockSizeX = "[]"
+      gpuBlockSizeY = "[]"
+      gpuBlockSizeZ = "[]"
+      gpuDimSizeX = "[]"
+      gpuDimSizeY = "[]"
       gpuInputs = new ArrayList[String]
       gpuOutput = ""
       gpuTemps = new ArrayList[String]
@@ -185,7 +185,6 @@ trait CudaCodegen extends CLikeCodegen {
     hstream.print(getDSLHeaders)
     hstream.print("#include <iostream>\n")
     hstream.print("#include <limits>\n")
-    hstream.print("#include <cublas.h>\n\n")
     hstream.print("#include <jni.h>\n\n")
     hstream.print("//Delite Runtime APIs\n")
     hstream.print("extern void DeliteCudaMallocHost(void **ptr, size_t size);\n")
@@ -398,7 +397,8 @@ trait CudaCodegen extends CLikeCodegen {
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
     if (external) {
       // CUDA library ops use a C wrapper, so should be generated as a C kernel
-      super.emitKernelHeader(syms, vals, vars, resultType, resultIsVar, external)
+      stream.println(getDSLHeaders)
+      super.emitKernelHeader(syms, gpuOutputs ::: vals, vars, resultType, resultIsVar, external)
       return
     }
     
@@ -427,13 +427,18 @@ trait CudaCodegen extends CLikeCodegen {
   override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
     if (external) {
       super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external)
-      return
+      //return 
     }
-    
+    else {
+      stream.println("}")
+    }
+
+    // aks TODO: the rest of this stuff adds to metadata and seems necessary even if we are external. 
+    // should probably be refactored...
+
     val List(sym) = syms // TODO
     
     tabWidth -= 1
-    stream.println("}")
       
 	  //if(MetaData.gpuOutput == "") { throw new GenerationFailedException("CudaGen:No output for GPU")}
 
@@ -444,7 +449,9 @@ trait CudaCodegen extends CLikeCodegen {
     }
 
     // Emit kerenl size calculation helper functions
-    helperFuncString.append(emitSizeFuncs(sym))
+    if (!external) {
+      helperFuncString.append(emitSizeFuncs(sym, external))
+    }
 
     // Print out to file stream
     hstream.print(helperFuncString)
@@ -618,12 +625,12 @@ trait CudaCodegen extends CLikeCodegen {
   }
 
   // Prints out the helper functions for getting the threadBlcok size and grid size
-  def emitSizeFuncs(sym: Sym[Any]): String = {
+  def emitSizeFuncs(sym: Sym[Any], external: Boolean): String = {
     helperFuncIdx += 1
 
     val out = new StringBuilder
 
-    if((xDimList.size == 0) && (MetaData.gpuLibCall==""))
+    if(xDimList.size == 0 && !external)
       throw new GenerationFailedException("CudaGen: No dimension specified for this kernel.")
 
     val inputs = (gpuOutputs ::: gpuInputs ::: gpuTemps)
