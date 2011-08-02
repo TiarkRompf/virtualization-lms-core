@@ -1,3 +1,4 @@
+  
 package scala.virtualization.lms
 package internal
 
@@ -267,6 +268,11 @@ trait CudaCodegen extends CLikeCodegen {
     }
   }
 
+  def isVariableType[A](m: Manifest[A]) : Boolean = {
+    if(m.erasure == classOf[Variable[AnyVal]]) true
+    else false
+  }
+
   // Check the type and generate Exception if the type is not GPUable
   def checkGPUableType[A](m: Manifest[A]) : Unit = {
     if(!isGPUableType(m))
@@ -275,7 +281,7 @@ trait CudaCodegen extends CLikeCodegen {
 
   // All the types supported by CUDA Generation
   def isGPUableType[A](m : Manifest[A]) : Boolean = {
-    if(!isObjectType(m) && !isPrimitiveType(m) && !isVoidType(m))
+    if(!isObjectType(m) && !isPrimitiveType(m) && !isVoidType(m) && !isVariableType(m))
       false
     else
       true
@@ -283,15 +289,19 @@ trait CudaCodegen extends CLikeCodegen {
 
   override def remap[A](m: Manifest[A]) : String = {
     checkGPUableType(m)
-    m.toString match {
-        case "Int" => "int"
-        case "Long" => "long"
-        case "Float" => "float"
-        case "Double" => "double"
-        case "Boolean" => "bool"
-        case "Unit" => "void"
-        case "scala.collection.immutable.List[Int]" => "CudaArrayList<int>"  //TODO: Use C++ list
-        case _ => throw new Exception("CudaGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
+    if (m.erasure == classOf[Variable[AnyVal]])
+      remap(m.typeArguments.head)
+    else {
+      m.toString match {
+          case "Int" => "int"
+          case "Long" => "long"
+          case "Float" => "float"
+          case "Double" => "double"
+          case "Boolean" => "bool"
+          case "Unit" => "void"
+          case "scala.collection.immutable.List[Int]" => "CudaArrayList<int>"  //TODO: Use C++ list
+          case _ => throw new Exception("CudaGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
+      }
     }
   }
 
@@ -367,7 +377,7 @@ trait CudaCodegen extends CLikeCodegen {
 
 /*
   //TODO: is sym of type Any or Variable[Any] ?
-  def emitConstDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitConstDef(sym: Sym[Any], rhs: emitK)(implicit stream: PrintWriter): Unit = {
     stream.print("const ")
     emitVarDef(sym, rhs)
   }
@@ -428,9 +438,9 @@ trait CudaCodegen extends CLikeCodegen {
 	  //if(MetaData.gpuOutput == "") { throw new GenerationFailedException("CudaGen:No output for GPU")}
 
     // Emit input copy helper functions for object type inputs
-    for(v <- vals) {
-      helperFuncString.append(emitCopyInputHtoD(v, sym))
-      helperFuncString.append(emitCopyMutableInputDtoH(v, sym))
+    for(v <- vals if isObjectType(v.Type)) {
+      helperFuncString.append(emitCopyInputHtoD(v, sym, copyInputHtoD(v)))
+      helperFuncString.append(emitCopyMutableInputDtoH(v, sym, copyMutableInputDtoH(v)))
     }
 
     // Emit kerenl size calculation helper functions
@@ -458,12 +468,13 @@ trait CudaCodegen extends CLikeCodegen {
   // TODO: Change the metadata function names
 
   // For object type inputs, allocate GPU memory and copy from CPU to GPU.
-  def emitCopyInputHtoD(sym: Sym[Any], ksym: Sym[Any]) : String = {
+  def emitCopyInputHtoD(sym: Sym[Any], ksym: Sym[Any], contents: String) : String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
 	    helperFuncIdx += 1
       out.append("%s *copyInputHtoD_%s_%s_%s(%s) {\n".format(remap(sym.Type), quote(ksym), quote(sym),helperFuncIdx, "JNIEnv *env , jobject obj"))
-      out.append(copyInputHtoD(sym))
+      //out.append(copyInputHtoD(sym))
+      out.append(contents)
       out.append("}\n")
       MetaData.gpuInputs.add("{\"%s\":[\"%s\",\"copyInputHtoD_%s_%s_%s\"".format(quote(sym),remap(sym.Type),quote(ksym),quote(sym),helperFuncIdx))
       out.toString
@@ -472,17 +483,59 @@ trait CudaCodegen extends CLikeCodegen {
   }
 
   // For mutable inputs, copy the mutated datastructure from GPU to CPU after the kernel is terminated
-  def emitCopyMutableInputDtoH(sym: Sym[Any], ksym: Sym[Any]): String = {
+  def emitCopyMutableInputDtoH(sym: Sym[Any], ksym: Sym[Any], contents: String): String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
-	    helperFuncIdx += 1
-      out.append("void copyMutableInputDtoH_%s_%s_%s(%s) {\n".format(quote(ksym), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)))
-      out.append(copyMutableInputDtoH(sym))
+	  helperFuncIdx += 1
+      out.append("void copyMutableInputDtoH_%s_%s_%s(%s) {\n".format(quote(ksym), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)+"_ptr"))
+	  out.append("%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
+      //out.append(copyMutableInputDtoH(sym))
+      out.append(contents)
       out.append("}\n")
       MetaData.gpuInputs.add("\"copyMutableInputDtoH_%s_%s_%s\"]}".format(quote(ksym),quote(sym),helperFuncIdx))
       out.toString
     }
     else ""    
+  }
+
+  def emitAllocOutput(sym: Sym[Any], ksym: Sym[Any], contents: String, args: List[Sym[Any]]): String = {
+	  val out = new StringBuilder
+	  if(isObjectType(sym.Type)) {
+	  	helperFuncIdx += 1
+		val argStr = args.map("\""+quote(_)+"\"").mkString(",")
+		val paramStr = args.map(ele =>
+				if(isObjectType(ele.Type)) remap(ele.Type) + " *" + quote(ele) + "_ptr"
+				else remap(ele.Type) + " " + quote(ele)
+		).mkString(",")
+    	val derefParams = args.map(ele=>
+      		if(isObjectType(ele.Type)) "\t%s %s = *(%s_ptr);\n".format(remap(ele.Type),quote(ele),quote(ele))
+      		else ""
+    	).mkString("")
+    	
+		MetaData.gpuOutput = "{\"%s\":[\"%s\",\"allocFunc_%s\",[%s],".format(quote(sym),remap(sym.Type),helperFuncIdx,argStr)
+      	//out.append("%s *allocFunc_%s(%s) {\n".format(remap(sym.Type), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)))
+      	out.append("%s *allocFunc_%s(%s) {\n".format(remap(sym.Type), helperFuncIdx, paramStr))
+		out.append(derefParams+"\n")
+      	//out.append(copyOutputDtoH(sym))
+      	out.append(contents)
+      	out.append("}\n")
+      	out.toString
+	  }
+	  else ""
+  }
+
+  def emitCopyOutputDtoH(sym: Sym[Any], ksym: Sym[Any], contents: String): String = {
+	  val out = new StringBuilder
+	  if(isObjectType(sym.Type)) {
+	  	helperFuncIdx += 1
+      	MetaData.gpuOutput = MetaData.gpuOutput + "\"copyOutputDtoH_%s\",[\"env\",\"%s\"]]}".format(helperFuncIdx,quote(sym))
+    	out.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.Type)+" *"+quote(sym)+"_ptr"))
+		out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
+      	out.append(contents)
+      	out.append("}\n")
+      	out.toString
+	  }
+	  else ""
   }
 
   /* emitAllocFunc method emits code for allocating the output memory of a kernel,
@@ -491,6 +544,7 @@ trait CudaCodegen extends CLikeCodegen {
   def emitAllocFunc(sym:Sym[Any], allocFunc:Exp[Any]) {
     helperFuncIdx += 1
     val tempString = new StringWriter
+    val tempString2 = new StringWriter
     val tempStream = new PrintWriter(tempString,true)
 
     // Need to save idx before calling emitBlock, which might recursively call this method
@@ -498,36 +552,48 @@ trait CudaCodegen extends CLikeCodegen {
 
     // Get free variables
     val inputs = getFreeVarBlock(allocFunc,Nil)
-    val paramStr = inputs.map(ele=>
-			if(isObjectType(ele.Type)) remap(ele.Type) + " *_" + quote(ele)
-			else remap(ele.Type) + " " + quote(ele)
-	  ).mkString(",")
+    //val paramStr = inputs.map(ele=>
+	//		if(isObjectType(ele.Type)) remap(ele.Type) + " *_" + quote(ele)
+	//		else remap(ele.Type) + " " + quote(ele)
+	//  ).mkString(",")
 
     /* Object type inputs of helper functions are pointers, but CUDA generators assume the actual objects,
            therefore need to dereference the objects before emitting the actual block contents. */
-    val derefParams = inputs.map(ele=>
-      if(isObjectType(ele.Type)) "\t%s %s = *_%s;\n".format(remap(ele.Type),quote(ele),quote(ele))
-      else ""
-    ).mkString("")
+    //val derefParams = inputs.map(ele=>
+    //  if(isObjectType(ele.Type)) "\t%s %s = *_%s;\n".format(remap(ele.Type),quote(ele),quote(ele))
+    //  else ""
+    //).mkString("")
 
     // Generate allocation helper function
-    tempString.append("%s *allocFunc_%s(%s) {\n".format(remap(allocFunc.Type),currHelperFuncIdx,paramStr))
-    tempString.append(derefParams)
+    //tempString.append("%s *allocFunc_%s(%s) {\n".format(remap(allocFunc.Type),currHelperFuncIdx,paramStr))
+    //tempString.append(derefParams)
+    //emitBlock(allocFunc)(tempStream)
+    //tempString.append("\treturn %s;\n".format(quote(getBlockResult(allocFunc))))
+    //tempString.append("}\n")
+    
+    // Generate allocation helper function
+	//tempString.append(derefParams)
     emitBlock(allocFunc)(tempStream)
-    tempString.append("\treturn %s;\n".format(quote(getBlockResult(allocFunc))))
-    tempString.append("}\n")
+    tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc))))
+    val allocOutputStr = emitAllocOutput(sym, null, tempString.toString, inputs)
 
     // Generate copy (D->H) helper function
-    tempString.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.Type)+" *"+quote(sym)))
-    tempString.append(copyOutputDtoH(sym))
-    tempString.append("}\n")
+    //tempString.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.Type)+" *"+quote(sym)))
+    //tempString.append(copyOutputDtoH(sym))
+    //tempString.append("}\n")
+    
+    // Generate copy (D->H) helper function
+    tempString2.append(copyOutputDtoH(sym))
+	val copyOutputStr = emitCopyOutputDtoH(sym, null, tempString2.toString)
 
     // Register Metadata
-    MetaData.gpuOutput = "{\"%s\":[\"%s\",\"allocFunc_%s\",[%s],\"copyOutputDtoH_%s\",[\"env\",\"%s\"]]}".format(quote(sym),remap(sym.Type),currHelperFuncIdx,inputs.map(quote(_)).mkString(","),currHelperFuncIdx,quote(sym))
+    //MetaData.gpuOutput = "{\"%s\":[\"%s\",\"allocFunc_%s\",[%s],\"copyOutputDtoH_%s\",[\"env\",\"%s\"]]}".format(quote(sym),remap(sym.Type),currHelperFuncIdx,inputs.map("\""+quote(_)+"\"").mkString(","),currHelperFuncIdx,quote(sym))
     gpuOutputs = gpuOutputs :+ sym
 
     // Write to helper function string
-    helperFuncString.append(tempString)
+    //helperFuncString.append(tempString)
+	helperFuncString.append(allocOutputStr)
+	helperFuncString.append(copyOutputStr)
   }
 
 
