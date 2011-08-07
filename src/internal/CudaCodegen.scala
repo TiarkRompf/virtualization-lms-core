@@ -130,7 +130,6 @@ trait CudaCodegen extends CLikeCodegen {
     var gpuInputs: ArrayList[String] = new ArrayList[String]
     var gpuOutput: String = ""
     var gpuTemps: ArrayList[String] = new ArrayList[String]
-    var gpuLibCall: String = ""
 
     def init = {
       gpuBlockSizeX = "[]"
@@ -141,7 +140,6 @@ trait CudaCodegen extends CLikeCodegen {
       gpuInputs = new ArrayList[String]
       gpuOutput = ""
       gpuTemps = new ArrayList[String]
-      gpuLibCall = ""
     }
     
     override def toString: String = {
@@ -157,7 +155,6 @@ trait CudaCodegen extends CLikeCodegen {
       if(gpuOutput != "")
         out.append("\"gpuOutput\":"+gpuOutput+",")
       out.append("\"gpuTemps\":"+gpuTemps.toString)
-      if(gpuLibCall != "") out.append(",\"gpuLibCall\":"+gpuLibCall.toString)
       out.append("}")
       out.toString
     }
@@ -718,34 +715,6 @@ trait CudaCodegen extends CLikeCodegen {
     */
     out.toString
   }
-
-  def emitLibCall(sym: Sym[Any], stmts: List[String]) : Unit = {
-    val out = new StringBuilder
-
-    if(sym == kernelSymbol) {
-      // Emit code for library call function
-      val inputs = (gpuOutputs ::: gpuInputs)
-      val paramStr = inputs.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(",")
-      if(inputs.length != 0)
-        out.append("void gpuLibCall_%s(%s,%s) {\n".format(quote(sym),paramStr,"cudaStream_t stream"))
-      else
-        out.append("void gpuLibCall_%s(%s) {\n".format(quote(sym),"cudaStream_t stream"))
-      
-      for(s <- stmts)
-        out.append("\t"+s+"\n")
-      out.append("}\n")
-      helperFuncString.append(out.toString)
-
-      // Add to metadata
-      //MetaData.gpuLibCall = "{\"%s\":[\"%s\",\"gpuMemAlloc_%s_%s\",[%s]]}".format(quote(newSym),remap(newSym.Type),quote(kernelSymbol),quote(newSym),argStrTemp)
-      MetaData.gpuLibCall = "\"gpuLibCall_%s\"".format(quote(sym))
-    }
-    else {
-      throw new GenerationFailedException("CudaGen: Not GPUable (Only top-level node can use library call)")
-    }
-
-  }
-
 }
 
 // TODO: do we need this for each target?
