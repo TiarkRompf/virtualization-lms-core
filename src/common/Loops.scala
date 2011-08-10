@@ -79,6 +79,11 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     case e: AbstractFatLoop => syms(e.size) ::: syms(e.body)
     case _ => super.syms(e)
   }
+  
+  override def readSyms(e: Any): List[Sym[Any]] = e match { 
+		case e: AbstractFatLoop => readSyms(e.size) ::: readSyms(e.body)
+    case _ => super.readSyms(e)
+  }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => e.v :: boundSyms(e.body)
@@ -129,6 +134,9 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
 
   override def fatten(e: TP[Any]): TTP = e.rhs match {
     case op: AbstractLoop[_] => 
+      TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
+    case Reflect(op: AbstractLoop[_], u, es) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on... 
+      printdbg("-- fatten effectful loop " + e)
       TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
     case _ => super.fatten(e)
   }

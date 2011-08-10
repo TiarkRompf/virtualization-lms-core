@@ -43,7 +43,7 @@ trait ScalaCodegen extends GenericCodegen {
     stream.flush
   }
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
     val kernelName = syms.map(quote).mkString("")
     
     stream.println("package generated." + this.toString)
@@ -68,7 +68,7 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println("")
   }
 
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
     val kernelName = syms.map(quote).mkString("")
     stream.println(kernelName)
     stream.println("}}")
