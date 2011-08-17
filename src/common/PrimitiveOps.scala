@@ -78,6 +78,7 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
   def infix_%(lhs: Rep[Int], rhs: Rep[Int]) = int_mod(lhs, rhs)
   def infix_&(lhs: Rep[Int], rhs: Rep[Int]) = int_binaryand(lhs, rhs)
   def infix_|(lhs: Rep[Int], rhs: Rep[Int]) = int_binaryor(lhs, rhs)
+  def infix_^(lhs: Rep[Int], rhs: Rep[Int]) = int_binaryxor(lhs, rhs)
 
   def obj_integer_parse_int(s: Rep[String]): Rep[Int]
   def obj_int_max_value: Rep[Int]
@@ -86,6 +87,7 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
   def int_mod(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
   def int_binaryor(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
   def int_binaryand(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
+  def int_binaryxor(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
   def int_double_value(lhs: Rep[Int]): Rep[Double]
   def int_bitwise_not(lhs: Rep[Int]) : Rep[Int]
 }
@@ -116,6 +118,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class IntMod(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntBinaryOr(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntBinaryAnd(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntBinaryXor(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntDoubleValue(lhs: Exp[Int]) extends Def[Double]
   case class IntBitwiseNot(lhs: Exp[Int]) extends Def[Int]
 
@@ -126,6 +129,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   def int_mod(lhs: Exp[Int], rhs: Exp[Int]) = IntMod(lhs, rhs)
   def int_binaryor(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryOr(lhs, rhs)
   def int_binaryand(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryAnd(lhs, rhs)
+  def int_binaryxor(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryXor(lhs, rhs)
   def int_double_value(lhs: Exp[Int]) = IntDoubleValue(lhs)
   def int_bitwise_not(lhs: Exp[Int]) = IntBitwiseNot(lhs)
 
@@ -156,6 +160,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
     case IntBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
     case IntBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
+    case IntBinaryXor(lhs,rhs) => emitValDef(sym, quote(lhs) + " ^ " + quote(rhs))
     case IntDoubleValue(lhs) => emitValDef(sym, quote(lhs) + ".doubleValue()")
     case IntBitwiseNot(lhs) => emitValDef(sym, "~" + quote(lhs))
     case _ => super.emitNode(sym, rhs)    
