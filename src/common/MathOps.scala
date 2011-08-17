@@ -14,6 +14,7 @@ trait MathOps extends Base {
     def sqrt(x: Rep[Double]) = math_sqrt(x)
     def sin(x: Rep[Double]) = math_sin(x)
     def cos(x: Rep[Double]) = math_cos(x)
+    def acos(x: Rep[Double]) = math_acos(x)
     def atan(x: Rep[Double]) = math_atan(x)
     def atan2(x: Rep[Double], y: Rep[Double]) = math_atan2(x,y)
     def pow(x: Rep[Double], y: Rep[Double]) = math_pow(x,y)
@@ -30,6 +31,7 @@ trait MathOps extends Base {
   def math_sqrt(x: Rep[Double]) : Rep[Double]
   def math_sin(x: Rep[Double]) : Rep[Double]
   def math_cos(x: Rep[Double]) : Rep[Double]
+  def math_acos(x: Rep[Double]) : Rep[Double]
   def math_atan(x: Rep[Double]) : Rep[Double]
   def math_atan2(x: Rep[Double], y: Rep[Double]) : Rep[Double]
   def math_pow(x: Rep[Double], y: Rep[Double]): Rep[Double]
@@ -47,6 +49,7 @@ trait MathOpsExp extends MathOps with EffectExp {
   case class MathSqrt(x: Exp[Double]) extends Def[Double]
   case class MathSin(x: Exp[Double]) extends Def[Double]
   case class MathCos(x: Exp[Double]) extends Def[Double]
+  case class MathAcos(x: Exp[Double]) extends Def[Double]
   case class MathAtan(x: Exp[Double]) extends Def[Double]
   case class MathAtan2(x: Exp[Double], y: Exp[Double]) extends Def[Double]
   case class MathPow(x: Exp[Double], y: Exp[Double]) extends Def[Double]
@@ -62,6 +65,7 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_sqrt(x: Exp[Double]) = MathSqrt(x)
   def math_sin(x: Exp[Double]) = MathSin(x)
   def math_cos(x: Exp[Double]) = MathCos(x)
+  def math_acos(x: Exp[Double]) = MathAcos(x)
   def math_atan(x: Exp[Double]) = MathAtan(x)
   def math_atan2(x: Exp[Double], y: Exp[Double]) = MathAtan2(x,y)
   def math_pow(x: Exp[Double], y: Exp[Double]) = MathPow(x,y)
@@ -80,6 +84,7 @@ trait MathOpsExp extends MathOps with EffectExp {
       case MathAbs(x) => math_abs(f(x))
       case MathSin(x) => math_sin(f(x))
       case MathCos(x) => math_cos(f(x))
+      case MathAcos(x) => math_acos(f(x))
       case MathLog(x) => math_log(f(x))
       case MathSqrt(x) => math_sqrt(f(x))
       case MathAtan2(x,y) => math_atan2(f(x),f(y))
@@ -109,6 +114,7 @@ trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {
     case MathSqrt(x) => emitValDef(sym, "java.lang.Math.sqrt(" + quote(x) + ")")
     case MathSin(x) => emitValDef(sym, "java.lang.Math.sin(" + quote(x) + ")")
     case MathCos(x) => emitValDef(sym, "java.lang.Math.cos(" + quote(x) + ")")
+    case MathAcos(x) => emitValDef(sym, "java.lang.Math.acos(" + quote(x) + ")")
     case MathAtan(x) => emitValDef(sym, "java.lang.Math.atan(" + quote(x) + ")")
     case MathAtan2(x,y) => emitValDef(sym, "java.lang.Math.atan2(" + quote(x) + ", " + quote(y) + ")")
     case MathPow(x,y) => emitValDef(sym, "java.lang.Math.pow(" + quote(x) + "," + quote(y) + ")")
