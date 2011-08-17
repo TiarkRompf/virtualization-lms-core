@@ -71,6 +71,7 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
     //def /[A](rhs: Rep[A])(implicit mA: Manifest[A], f: Fractional[A], o: Overloaded1) = int_divide_frac(lhs, rhs)
     //def /(rhs: Rep[Int]) = int_divide(lhs, rhs)
     def doubleValue() = int_double_value(lhs)
+    def unary_~() = int_bitwise_not(lhs)
   }
 
   def infix_/(lhs: Rep[Int], rhs: Rep[Int]) = int_divide(lhs, rhs)
@@ -86,6 +87,7 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
   def int_binaryor(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
   def int_binaryand(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
   def int_double_value(lhs: Rep[Int]): Rep[Double]
+  def int_bitwise_not(lhs: Rep[Int]) : Rep[Int]
 }
 
 trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
@@ -115,6 +117,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class IntBinaryOr(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntBinaryAnd(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntDoubleValue(lhs: Exp[Int]) extends Def[Double]
+  case class IntBitwiseNot(lhs: Exp[Int]) extends Def[Int]
 
   def obj_integer_parse_int(s: Rep[String]) = ObjIntegerParseInt(s)
   def obj_int_max_value = ObjIntMaxValue()
@@ -124,11 +127,13 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   def int_binaryor(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryOr(lhs, rhs)
   def int_binaryand(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryAnd(lhs, rhs)
   def int_double_value(lhs: Exp[Int]) = IntDoubleValue(lhs)
+  def int_bitwise_not(lhs: Exp[Int]) = IntBitwiseNot(lhs)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case IntDoubleValue(x) => int_double_value(f(x))
+      case IntBitwiseNot(x) => int_bitwise_not(f(x))
       case IntDivide(x,y) => int_divide(f(x),f(y))
       case _ => super.mirror(e,f)
     }
@@ -152,6 +157,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
     case IntBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
     case IntDoubleValue(lhs) => emitValDef(sym, quote(lhs) + ".doubleValue()")
+    case IntBitwiseNot(lhs) => emitValDef(sym, "~" + quote(lhs))
     case _ => super.emitNode(sym, rhs)    
   }
 }
