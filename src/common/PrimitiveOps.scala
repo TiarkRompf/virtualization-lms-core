@@ -70,6 +70,8 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
     // TODO (tiark): either of these cause scalac to crash        
     //def /[A](rhs: Rep[A])(implicit mA: Manifest[A], f: Fractional[A], o: Overloaded1) = int_divide_frac(lhs, rhs)
     //def /(rhs: Rep[Int]) = int_divide(lhs, rhs)
+    // TODO Something is wrong if we just use floatValue. implicits get confused
+    def floatValueL() = int_float_value(lhs)
     def doubleValue() = int_double_value(lhs)
     def unary_~() = int_bitwise_not(lhs)
   }
@@ -88,6 +90,7 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
   def int_binaryor(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
   def int_binaryand(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
   def int_binaryxor(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
+  def int_float_value(lhs: Rep[Int]): Rep[Float]
   def int_double_value(lhs: Rep[Int]): Rep[Double]
   def int_bitwise_not(lhs: Rep[Int]) : Rep[Int]
 }
@@ -120,6 +123,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class IntBinaryAnd(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntBinaryXor(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntDoubleValue(lhs: Exp[Int]) extends Def[Double]
+  case class IntFloatValue(lhs: Exp[Int]) extends Def[Float]
   case class IntBitwiseNot(lhs: Exp[Int]) extends Def[Int]
 
   def obj_integer_parse_int(s: Rep[String]) = ObjIntegerParseInt(s)
@@ -131,12 +135,14 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   def int_binaryand(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryAnd(lhs, rhs)
   def int_binaryxor(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryXor(lhs, rhs)
   def int_double_value(lhs: Exp[Int]) = IntDoubleValue(lhs)
+  def int_float_value(lhs: Exp[Int]) = IntFloatValue(lhs)
   def int_bitwise_not(lhs: Exp[Int]) = IntBitwiseNot(lhs)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case IntDoubleValue(x) => int_double_value(f(x))
+      case IntFloatValue(x) => int_float_value(f(x))
       case IntBitwiseNot(x) => int_bitwise_not(f(x))
       case IntDivide(x,y) => int_divide(f(x),f(y))
       case _ => super.mirror(e,f)
@@ -162,6 +168,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
     case IntBinaryXor(lhs,rhs) => emitValDef(sym, quote(lhs) + " ^ " + quote(rhs))
     case IntDoubleValue(lhs) => emitValDef(sym, quote(lhs) + ".doubleValue()")
+    case IntFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
     case IntBitwiseNot(lhs) => emitValDef(sym, "~" + quote(lhs))
     case _ => super.emitNode(sym, rhs)    
   }
