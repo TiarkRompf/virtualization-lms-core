@@ -57,8 +57,8 @@ trait FunctionsExp extends Functions with EffectExp {
     case _ => // unknown function, assume it is effectful
       reflectEffect(Apply(f, x))
   }
-  
-  // TODO: right now were trying to hoist as much as we can out of functions. 
+
+  // TODO: right now were trying to hoist as much as we can out of functions.
   // That might not always be appropriate. A promising strategy would be to have
   // explicit 'hot' and 'cold' functions. 
 
@@ -86,7 +86,7 @@ trait FunctionsExp extends Functions with EffectExp {
     case Lambda(f, x, y) => x :: effectSyms(y)
     case Lambda2(f, x1, x2, y) => x1 :: x2 :: effectSyms(y)
     case _ => super.boundSyms(e)
-  }  
+  }
 }
 
 trait BaseGenFunctions extends GenericNestedCodegen {
@@ -148,6 +148,24 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
         stream.println(addTab() + "%s %s = %s;".format(remap(x2.Type), quote(x2), quote(sym)+"_2"))
         emitBlock(y)
         stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
+      case Apply(fun, arg) =>
+        emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
+
+      case _ => super.emitNode(sym, rhs)
+    }
+  }
+}
+
+trait OpenCLGenFunctions extends OpenCLGenEffect with BaseGenFunctions {
+  val IR: FunctionsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+    rhs match {
+      case e@Lambda(fun, x, y) =>
+        throw new GenerationFailedException("OpenCLGenFunctions: Lambda is not supported yet")
+      case e@Lambda2(fun, x1, x2, y) =>
+        throw new GenerationFailedException("OpenCLGenFunctions: Lambda2 is not supported yet")
       case Apply(fun, arg) =>
         emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 

@@ -42,7 +42,7 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b))
     case _ => super.mirror(e,f)
   }
-  
+
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case IfThenElse(c,a,b) => syms(a):::syms(b)
     case _ => super.aliasSyms(e)
@@ -156,6 +156,49 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
           val objRetType = (!isVoidType(sym.Type)) && (!isPrimitiveType(sym.Type))
           objRetType match {
             case true => throw new GenerationFailedException("CudaGen: If-Else cannot return object type.")
+            case _ =>
+          }
+          isVoidType(sym.Type) match {
+            case true =>
+              stream.println(addTab() + "if (" + quote(c) + ") {")
+              tabWidth += 1
+              emitBlock(a)
+              tabWidth -= 1
+              stream.println(addTab() + "} else {")
+              tabWidth += 1
+              emitBlock(b)
+              tabWidth -= 1
+              stream.println(addTab()+"}")
+            case false =>
+              stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
+              stream.println(addTab() + "if (" + quote(c) + ") {")
+              tabWidth += 1
+              emitBlock(a)
+              stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
+              tabWidth -= 1
+              stream.println(addTab() + "} else {")
+              tabWidth += 1
+              emitBlock(b)
+              stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
+              tabWidth -= 1
+              stream.println(addTab()+"}")
+          }
+
+        case _ => super.emitNode(sym, rhs)
+      }
+    }
+}
+
+trait OpenCLGenIfThenElse extends OpenCLGenEffect with BaseGenIfThenElse {
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+      rhs match {
+        case IfThenElse(c,a,b) =>
+
+          val objRetType = (!isVoidType(sym.Type)) && (!isPrimitiveType(sym.Type))
+          objRetType match {
+            case true => throw new GenerationFailedException("OpenCLGen: If-Else cannot return object type.")
             case _ =>
           }
           isVoidType(sym.Type) match {

@@ -134,6 +134,7 @@ trait CLikeGenIOOps extends CLikeGenBase {
   }
 }
 trait CudaGenIOOps extends CudaGenBase with CLikeGenIOOps
+trait OpenCLGenIOOps extends OpenCLGenBase with CLikeGenIOOps
 trait CGenIOOps extends CGenBase with CLikeGenIOOps
 
 

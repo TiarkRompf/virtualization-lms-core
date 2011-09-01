@@ -91,5 +91,6 @@ trait CLikeGenArrayOps extends BaseGenArrayOps with CLikeGenBase {
 }
 
 trait CudaGenArrayOps extends CudaGenBase with CLikeGenArrayOps
+trait OpenCLGenArrayOps extends OpenCLGenBase with CLikeGenArrayOps
 trait CGenArrayOps extends CGenBase with CLikeGenArrayOps
 

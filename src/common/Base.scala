@@ -3,7 +3,8 @@ package common
 
 import internal.{Expressions, Effects, Transforming, FatExpressions, FatTransforming}
 import internal.{ScalaCodegen, ScalaNestedCodegen, ScalaFatCodegen, 
-  CudaCodegen, CudaNestedCodegen, CudaFatCodegen, 
+  CudaCodegen, CudaNestedCodegen, CudaFatCodegen,
+  OpenCLCodegen, OpenCLNestedCodegen, OpenCLFatCodegen,
   CCodegen, CNestedCodegen, CFatCodegen,
   CLikeCodegen}
 
@@ -88,7 +89,11 @@ trait CudaGenEffect extends CudaNestedCodegen with CudaGenBase
 
 trait CudaGenFat extends CudaFatCodegen with CudaGenBase
 
+trait OpenCLGenBase extends OpenCLCodegen
 
+trait OpenCLGenEffect extends OpenCLNestedCodegen with OpenCLGenBase
+
+trait OpenCLGenFat extends OpenCLFatCodegen with OpenCLGenBase
 
 trait CGenBase extends CCodegen
 

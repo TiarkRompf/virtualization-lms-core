@@ -170,7 +170,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntDoubleValue(lhs) => emitValDef(sym, quote(lhs) + ".doubleValue()")
     case IntFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
     case IntBitwiseNot(lhs) => emitValDef(sym, "~" + quote(lhs))
-    case _ => super.emitNode(sym, rhs)    
+    case _ => super.emitNode(sym, rhs)
   }
 }
 
@@ -190,5 +190,6 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
 }
 
 trait CudaGenPrimitiveOps extends CudaGenBase with CLikeGenPrimitiveOps
+trait OpenCLGenPrimitiveOps extends OpenCLGenBase with CLikeGenPrimitiveOps
 trait CGenPrimitiveOps extends CGenBase with CLikeGenPrimitiveOps
 
