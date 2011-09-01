@@ -22,6 +22,7 @@ trait MathOps extends Base {
     def max[A:Manifest:Numeric](x: Rep[A], y: Rep[A]) = math_max(x,y)
     def min[A:Manifest:Numeric](x: Rep[A], y: Rep[A]) = math_min(x,y)
     def Pi = math_pi
+    def E = math_e
   }
 
   def math_ceil(x: Rep[Double]) : Rep[Double]
@@ -39,6 +40,7 @@ trait MathOps extends Base {
   def math_max[A:Manifest:Numeric](x: Rep[A], y: Rep[A]): Rep[A]
   def math_min[A:Manifest:Numeric](x: Rep[A], y: Rep[A]): Rep[A]
   def math_pi: Rep[Double]
+  def math_e: Rep[Double]
 }
 
 trait MathOpsExp extends MathOps with EffectExp {
@@ -57,6 +59,7 @@ trait MathOpsExp extends MathOps with EffectExp {
   case class MathMax[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
   case class MathMin[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
   case class MathPi() extends Def[Double]
+  case class MathE() extends Def[Double]
 
   def math_ceil(x: Exp[Double]) = MathCeil(x)
   def math_floor(x: Exp[Double]) = MathFloor(x)
@@ -73,6 +76,7 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_max[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMax(x, y)
   def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMin(x, y)
   def math_pi = MathPi()
+  def math_e = MathE()
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
@@ -121,7 +125,8 @@ trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {
     case MathAbs(x) => emitValDef(sym, "java.lang.Math.abs(" + quote(x) + ")")
     case MathMax(x,y) => emitValDef(sym, "java.lang.Math.max(" + quote(x) + ", " + quote(y) + ")")
     case MathMin(x,y) => emitValDef(sym, "java.lang.Math.min(" + quote(x) + ", " + quote(y) + ")")
-    case MathPi() => emitValDef(sym, "java.lang.Math.Pi")
+    case MathPi() => emitValDef(sym, "java.lang.Math.PI")
+    case MathE() => emitValDef(sym, "java.lang.Math.E")
     case _ => super.emitNode(sym, rhs)
   }
 }
