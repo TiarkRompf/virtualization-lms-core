@@ -153,7 +153,7 @@ trait OpenCLCodegen extends CLikeCodegen {
       out.append("\"gpuDimSizeX\":"+gpuDimSizeX+",")
       out.append("\"gpuDimSizeY\":"+gpuDimSizeY+",")
       out.append("\"gpuInputs\":"+gpuInputs.toString+",")
-      out.append("\"gpuOutput\":"+gpuOutput.toString+",")
+      out.append("\"gpuOutputs\":"+gpuOutput.toString+",")
       //if(gpuOutput != "")
       //  out.append("\"gpuOutput\":"+gpuOutput+",")
       out.append("\"gpuTemps\":"+gpuTemps.toString)
@@ -443,10 +443,7 @@ trait OpenCLCodegen extends CLikeCodegen {
       stream.println("}")
     }
 
-    val ksym = syms(0)
-
     tabWidth -= 1
-    stream.println("}")
       
 	  //if(MetaData.gpuOutput == "") { throw new GenerationFailedException("OpenCLGen:No output for GPU")}
 

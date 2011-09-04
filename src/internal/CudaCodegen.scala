@@ -3,8 +3,9 @@ package internal
 
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
-import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
+import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap, ListMap, HashSet}
 import collection.immutable.List._
+
 
 trait CudaCodegen extends CLikeCodegen {
   val IR: Expressions
@@ -13,9 +14,66 @@ trait CudaCodegen extends CLikeCodegen {
   override def kernelFileExt = "cu"
   override def toString = "cuda"
 
+  /* Kernel input / output symbols */
+  private var kernelInputs: List[Sym[Any]] = null
+  private var kernelOutputs: List[Sym[Any]] = null
+  def getKernelInputs = kernelInputs
+  def setKernelInputs(syms: List[Sym[Any]]): Unit = { kernelInputs = syms }
+  def getKernelOutputs = kernelOutputs
+  def setKernelOutputs(syms: List[Sym[Any]]): Unit = { kernelOutputs = syms }
+  def getKernelTemps = metaData.temps.toList.reverse.map(ele => ele._1)
+
   /* For using GPU local variables */
+  final class CudaOptimizer {
+    // Map (collection,idx) -> localVar
+    var collToVar: HashMap[(Sym[Any],String),String] = HashMap[(Sym[Any],String),String]()
+    // Map variable symbol -> set of aliased symbols
+    var varToSet: HashMap[String,HashSet[String]] = HashMap[String,HashSet[String]]()
+
+    /*
+    //TODO: deal with aliased collection
+    def hasLocalVar(coll:Sym[Any], idx: String): Boolean = {
+      var hit = false
+      for (i <- varToSet(idx)) {
+        if (collToVar contains  (coll,i))
+          hit = true
+      }
+      hit
+    }
+    def getLocalVar(coll:Sym[Any], idx: String): String = {
+      assert(hasLocalVar(coll,idx))
+      for (i <- varToSet(idx) if (collToVar contains (coll,i))) {
+        return collToVar.get(coll,i).get
+      }
+    }
+    def registerAlias(sym:String,aliased:String) {
+      if (varToSet contains aliased) {
+        val set = varToSet.get(aliased).get
+        set.add(sym)
+        varToSet.put(sym,set)
+      }
+      else if (varToSet contains sym) {
+        val set = varToSet.get(sym).get
+        set.add(aliased)
+        varToSet.put(aliased,set)
+      }
+      else {
+        val set = HashSet[String](sym,aliased)
+        varToSet.put(sym,set)
+        varToSet.put(aliased,set)
+      }
+      println("resitested alias: %s = %s".format(sym,aliased))
+    }
+    */
+    //def registerLocalVarArith(sym:String, )
+    //def registerLocalVar(key:(Sym[Any],String), value:String) {
+    //  collToVar.put(key,value)
+    //}
+  }
+  var optimizer: CudaOptimizer = null
+
+  /*
   var useLocalVar:Boolean = false
-  val indexMap = HashMap[Exp[Any],String]()
   private val cudaVarMap = HashMap[Tuple2[Exp[Any],String],String]()
   private var localVarIdx = 0
   def getNewLocalVar():String = {
@@ -34,6 +92,7 @@ trait CudaCodegen extends CLikeCodegen {
   def saveLocalVar(sym:Exp[Any],idx:String,varName:String) {
     cudaVarMap.put(Tuple2(sym,idx),varName)
   }
+  */
 
   /* Indicates current dimension of work threads */
   var currDim = 0
@@ -70,16 +129,10 @@ trait CudaCodegen extends CLikeCodegen {
   var helperFuncIdx = 0
   var kernelsList = ListBuffer[Exp[Any]]()
 
-  var kernelSymbol:Sym[Any] = null
   var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
   
-  var gpuInputs:List[Sym[Any]] = Nil
-  var gpuOutputs:List[Sym[Any]] = Nil
-  var gpuTemps:List[Sym[Any]] = Nil
-  var gpuInputsStr = ""
-  var gpuOutputStr = ""
-  var gpuTempsStr = ""
+  var forceParallel = false
 
   var helperFuncString:StringBuilder = null
   var hstream: PrintWriter = null
@@ -88,9 +141,6 @@ trait CudaCodegen extends CLikeCodegen {
   var devStream: PrintWriter = null
   var headerStream: PrintWriter = null
 
-  // MetaData structure
-  override def hasMetaData: Boolean = true
-  override def getMetaData: String = MetaData.toString
 
   def emitDevFunc(func:Exp[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
     devFuncIdx += 1
@@ -105,7 +155,7 @@ trait CudaCodegen extends CLikeCodegen {
     emitBlock(func)(tempStream)
     tabWidth = currentTab
 
-    val inputs = (getFreeVarBlock(func,Nil).filterNot(ele => locals.contains(ele))++gpuTemps).distinct
+    val inputs = (getFreeVarBlock(func,Nil).filterNot(ele => locals.contains(ele))++getKernelTemps).distinct
     val paramStr = (locals++inputs).map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
     header.append("__device__ %s dev_%s(%s) {\n".format(remap(func.Type),currIdx,paramStr))
     header.append("\tint idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
@@ -120,40 +170,42 @@ trait CudaCodegen extends CLikeCodegen {
     ("dev_"+currIdx,inputs)
   }
 
-  object MetaData {
-    var gpuBlockSizeX: String = ""
-    var gpuBlockSizeY: String = ""
-    var gpuBlockSizeZ: String = ""
-    var gpuDimSizeX: String = ""
-    var gpuDimSizeY: String = ""
-    var gpuInputs: ArrayList[String] = new ArrayList[String]
-    var gpuOutput: String = ""
-    var gpuTemps: ArrayList[String] = new ArrayList[String]
 
-    def init = {
-      gpuBlockSizeX = "[]"
-      gpuBlockSizeY = "[]"
-      gpuBlockSizeZ = "[]"
-      gpuDimSizeX = "[]"
-      gpuDimSizeY = "[]"
-      gpuInputs = new ArrayList[String]
-      gpuOutput = ""
-      gpuTemps = new ArrayList[String]
+  // MetaData
+  override def hasMetaData: Boolean = true
+  override def getMetaData: String = metaData.toString
+  var metaData: CudaMetaData = null
+
+  final class TransferFunc {
+    var funcHtoD:String = _
+    var argsFuncHtoD:List[Sym[Any]] = _
+    var funcDtoH:String = _
+    var argsFuncDtoH:List[Sym[Any]] = _
+    //override def toString: String = {  }
+  }
+  final class SizeFunc(val func:String, val args:List[Sym[Any]]) {
+    override def toString: String = {
+      "[\"%s\",[%s]]".format(func,args.map("\""+quote(_)+"\"").mkString(","))
     }
-    
+  }
+  final class CudaMetaData {
+    val inputs: ListMap[Sym[Any],TransferFunc] = ListMap()
+    val outputs: ListMap[Sym[Any],TransferFunc] = ListMap()
+    val temps: ListMap[Sym[Any],TransferFunc] = ListMap()
+    val sizeFuncs: ListMap[String,SizeFunc] = ListMap()
+    var gpuLibCall: String = ""
     override def toString: String = {
       val out = new StringBuilder
       out.append("{")
-      out.append("\"gpuBlockSizeX\":"+gpuBlockSizeX+",")
-      out.append("\"gpuBlockSizeY\":"+gpuBlockSizeY+",")
-      out.append("\"gpuBlockSizeZ\":"+gpuBlockSizeZ+",")
-      out.append("\"gpuDimSizeX\":"+gpuDimSizeX+",")
-      out.append("\"gpuDimSizeY\":"+gpuDimSizeY+",")
-      out.append("\"gpuInputs\":"+gpuInputs.toString+",")
-      //if(gpuOutput == "") { println("ERROR:No Output for GPU?"); throw new Exception()}
-      if(gpuOutput != "")
-        out.append("\"gpuOutput\":"+gpuOutput+",")
-      out.append("\"gpuTemps\":"+gpuTemps.toString)
+      //TODO: Change to use the toString methods
+      for (f <- sizeFuncs.toList) {
+        out.append("\"%s\":".format(f._1)+f._2.toString+",")
+      }
+      out.append("\"gpuInputs\":["+inputs.toList.reverse.map(in=>"{\""+quote(in._1)+"\":[\""+remap(in._1.Type)+"\",\""+in._2.funcHtoD+"\",\""+in._2.funcDtoH+"\"]}").mkString(",")+"],")
+      out.append("\"gpuOutputs\":["+outputs.toList.reverse.map(out=>"{\""+quote(out._1)+"\":[\""+remap(out._1.Type)+"\",\""+out._2.funcHtoD+"\","+"["+ out._2.argsFuncHtoD.map("\""+quote(_)+"\"").mkString(",")+"]"+",\""+out._2.funcDtoH+"\"]}").mkString(",")+"],")
+      out.append("\"gpuTemps\":["+temps.toList.reverse.map(temp=>"{\""+quote(temp._1)+"\":[\""+remap(temp._1.Type)+"\",\""+temp._2.funcHtoD+"\","+"["+ temp._2.argsFuncHtoD.map("\""+quote(_)+"\"").mkString(",")+"]"+",\""+temp._2.funcDtoH+"\"]}").mkString(",")+"]")
+
+      //if(gpuLibCall != "") out.append(",\"gpuLibCall\":"+gpuLibCall.toString)
       out.append("}")
       out.toString
     }
@@ -166,6 +218,7 @@ trait CudaCodegen extends CLikeCodegen {
   }
 
   override def initializeGenerator(buildDir:String): Unit = {
+
     val outDir = new File(buildDir)
     outDir.mkdirs
     helperFuncIdx = 0
@@ -192,40 +245,33 @@ trait CudaCodegen extends CLikeCodegen {
   }
 
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
-    if(syms.length != 1) {
-      println("TODO: implement cuda gen for fat exps!")
-      throw new GenerationFailedException("TODO: implement cuda gen for fat exps!")
-    }
-    
-    val List(sym) = syms
+    // Set kernel input and output symbols
+    setKernelInputs(vals)
+    setKernelOutputs(syms)
 
     // Conditions for not generating CUDA kernels (may be relaxed later)
-    if((!isObjectType(sym.Type)) && (remap(sym.Type)!="void")) throw new GenerationFailedException("CudaGen: Not GPUable")
-    if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("CudaGen: Not GPUable")
+    for (sym <- syms) {
+      if((!isObjectType(sym.Type)) && (remap(sym.Type)!="void")) throw new GenerationFailedException("CudaGen: Not GPUable output type : %s".format(remap(sym.Type)))
+    }
+    if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("CudaGen: Not GPUable input/output types: Variable")
 
     // Initialize global variables
-    useLocalVar = false
-    cudaVarMap.clear
-    indexMap.clear
+    //useLocalVar = false
+    //cudaVarMap.clear
+    optimizer = new CudaOptimizer
 
     currDim = 0
     xDimList.clear
     yDimList.clear
-	  multDimInputs.clear
+    multDimInputs.clear
 
     helperFuncString.clear
-    kernelSymbol = sym
-    MetaData.init
+    metaData = new CudaMetaData
+    //MetaData.init
     tabWidth = 1
     devFuncString = new StringBuilder
 
-    gpuInputs = vals
-    //gpuInputsStr = vals.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
-    gpuOutputs = Nil
-    //gpuOutputs = if(remap(sym.Type)!= "void") List(sym) else Nil
-    //gpuOutputStr = vals.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
-    gpuTemps = Nil
-    //gpuTempsStr = ""
+    forceParallel = false
   }
 
   /****************************************
@@ -340,7 +386,10 @@ trait CudaCodegen extends CLikeCodegen {
 
   def positionMultDimInputs(sym: Sym[Any]) : String = {
     throw new GenerationFailedException("CudaGen: positionMultDimInputs(sym) : Cannot reposition GPU memory (%s)".format(remap(sym.Type)))
+  }
 
+  def cloneObject(sym: Sym[Any], src: Sym[Any]) : String = {
+    throw new GenerationFailedException("CudaGen: cloneObject(sym)")
   }
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
@@ -394,7 +443,7 @@ trait CudaCodegen extends CLikeCodegen {
     if (external) {
       // CUDA library ops use a C wrapper, so should be generated as a C kernel
       stream.println(getDSLHeaders)
-      super.emitKernelHeader(syms, gpuOutputs ::: vals, vars, resultType, resultIsVar, external)
+      super.emitKernelHeader(syms, getKernelOutputs ::: vals, vars, resultType, resultIsVar, external)
       return
     }
 
@@ -405,11 +454,7 @@ trait CudaCodegen extends CLikeCodegen {
     out.append("#include <cuda.h>\n\n")
     out.append(getDSLHeaders)
 
-    val paramStr = (gpuOutputs:::gpuInputs:::gpuTemps).map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
-    //paramStr.append( (gpuOutputs:::gpuInputs:::gpuTemps).map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ") )
-    //if(gpuOutputs.length>0) paramStr.append(gpuOutputStr)
-    //if(gpuInputs.length>0) paramStr.append(","+gpuInputsStr)
-    //if(gpuTemps.length>0) paramStr.append(","+gpuTemps.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", "))
+    val paramStr = (getKernelOutputs++getKernelInputs++getKernelTemps).map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
 
     out.append("__global__ void kernel_%s(%s) {\n".format(quote(sym), paramStr))
     out.append(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
@@ -431,33 +476,26 @@ trait CudaCodegen extends CLikeCodegen {
 
     // aks TODO: the rest of this stuff adds to metadata and seems necessary even if we are external.
     // should probably be refactored...
-
-    val List(sym) = syms // TODO
-    
     tabWidth -= 1
-
-	  //if(MetaData.gpuOutput == "") { throw new GenerationFailedException("CudaGen:No output for GPU")}
 
     // Emit input copy helper functions for object type inputs
     for(v <- vals if isObjectType(v.Type)) {
-      helperFuncString.append(emitCopyInputHtoD(v, sym, copyInputHtoD(v)))
-      helperFuncString.append(emitCopyMutableInputDtoH(v, sym, copyMutableInputDtoH(v)))
+      helperFuncString.append(emitCopyInputHtoD(v, syms, copyInputHtoD(v)))
+      helperFuncString.append(emitCopyMutableInputDtoH(v, syms, copyMutableInputDtoH(v)))
     }
 
-    // Emit kerenl size calculation helper functions
-    if (!external) {
-      helperFuncString.append(emitSizeFuncs(sym, external))
-    }
+    // Emit kernel size calculation helper functions
+    helperFuncString.append(emitSizeFuncs(syms, external))
 
-    // Print out to file stream
+    // Print helper functions to file stream
     hstream.print(helperFuncString)
     hstream.flush
 
     // Print out dsl.h file
-	  if(!kernelsList.contains(sym)) {
-    	headerStream.println("#include \"%s.cu\"".format(quote(sym)))
-		  kernelsList += sym
-	  }
+    if(kernelsList.intersect(syms).isEmpty) {
+      headerStream.println("#include \"%s.cu\"".format(syms.map(quote).mkString("")))
+      kernelsList ++= syms
+    }
     headerStream.flush
 
     // Print out device function
@@ -471,74 +509,95 @@ trait CudaCodegen extends CLikeCodegen {
   // TODO: Change the metadata function names
 
   // For object type inputs, allocate GPU memory and copy from CPU to GPU.
-  def emitCopyInputHtoD(sym: Sym[Any], ksym: Sym[Any], contents: String) : String = {
+  def emitCopyInputHtoD(sym: Sym[Any], ksym: List[Sym[Any]], contents: String) : String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
-	    helperFuncIdx += 1
-      out.append("%s *copyInputHtoD_%s_%s_%s(%s) {\n".format(remap(sym.Type), quote(ksym), quote(sym),helperFuncIdx, "JNIEnv *env , jobject obj"))
-      //out.append(copyInputHtoD(sym))
+      helperFuncIdx += 1
+      out.append("%s *copyInputHtoD_%s_%s_%s(%s) {\n".format(remap(sym.Type), ksym.map(quote).mkString(""), quote(sym),helperFuncIdx, "JNIEnv *env , jobject obj"))
       out.append(contents)
       out.append("}\n")
-      MetaData.gpuInputs.add("{\"%s\":[\"%s\",\"copyInputHtoD_%s_%s_%s\"".format(quote(sym),remap(sym.Type),quote(ksym),quote(sym),helperFuncIdx))
+      val tr = metaData.inputs.getOrElse(sym,new TransferFunc)
+      tr.funcHtoD = "copyInputHtoD_%s_%s_%s".format(ksym.map(quote).mkString(""),quote(sym),helperFuncIdx)
+      metaData.inputs.put(sym,tr)
       out.toString
     }
     else ""
   }
 
   // For mutable inputs, copy the mutated datastructure from GPU to CPU after the kernel is terminated
-  def emitCopyMutableInputDtoH(sym: Sym[Any], ksym: Sym[Any], contents: String): String = {
+  def emitCopyMutableInputDtoH(sym: Sym[Any], ksym: List[Sym[Any]], contents: String): String = {
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
-	  helperFuncIdx += 1
-      out.append("void copyMutableInputDtoH_%s_%s_%s(%s) {\n".format(quote(ksym), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)+"_ptr"))
-	  out.append("%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
-      //out.append(copyMutableInputDtoH(sym))
+      helperFuncIdx += 1
+      out.append("void copyMutableInputDtoH_%s_%s_%s(%s) {\n".format(ksym.map(quote).mkString(""), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)+"_ptr"))
+      out.append("%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
       out.append(contents)
       out.append("}\n")
-      MetaData.gpuInputs.add("\"copyMutableInputDtoH_%s_%s_%s\"]}".format(quote(ksym),quote(sym),helperFuncIdx))
+      val tr = metaData.inputs.getOrElse(sym,new TransferFunc)
+      tr.funcDtoH = "copyMutableInputDtoH_%s_%s_%s".format(ksym.map(quote).mkString(""),quote(sym),helperFuncIdx)
+      metaData.inputs.put(sym,tr)
       out.toString
     }
     else ""    
   }
 
-  def emitAllocOutput(sym: Sym[Any], ksym: Sym[Any], contents: String, args: List[Sym[Any]]): String = {
-	  val out = new StringBuilder
-	  if(isObjectType(sym.Type)) {
-	  	helperFuncIdx += 1
-		val argStr = args.map("\""+quote(_)+"\"").mkString(",")
-		val paramStr = args.map(ele =>
-				if(isObjectType(ele.Type)) remap(ele.Type) + " *" + quote(ele) + "_ptr"
-				else remap(ele.Type) + " " + quote(ele)
-		).mkString(",")
+  def emitAllocOutput(sym: Sym[Any], ksym: List[Sym[Any]], contents: String, args: List[Sym[Any]]): String = {
+    val out = new StringBuilder
+    if(isObjectType(sym.Type)) {
+    	helperFuncIdx += 1
+      val paramStr = args.map(ele =>
+  			if(isObjectType(ele.Type)) remap(ele.Type) + " *" + quote(ele) + "_ptr"
+  			else remap(ele.Type) + " " + quote(ele)
+      ).mkString(",")
     	val derefParams = args.map(ele=>
-      		if(isObjectType(ele.Type)) "\t%s %s = *(%s_ptr);\n".format(remap(ele.Type),quote(ele),quote(ele))
-      		else ""
-    	).mkString("")
-    	
-		MetaData.gpuOutput = "{\"%s\":[\"%s\",\"allocFunc_%s\",[%s],".format(quote(sym),remap(sym.Type),helperFuncIdx,argStr)
-      	//out.append("%s *allocFunc_%s(%s) {\n".format(remap(sym.Type), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)))
-      	out.append("%s *allocFunc_%s(%s) {\n".format(remap(sym.Type), helperFuncIdx, paramStr))
-		out.append(derefParams+"\n")
-      	//out.append(copyOutputDtoH(sym))
-      	out.append(contents)
-      	out.append("}\n")
-      	out.toString
-	  }
-	  else ""
+        if(isObjectType(ele.Type)) "\t%s %s = *(%s_ptr);\n".format(remap(ele.Type),quote(ele),quote(ele))
+        else ""
+      ).mkString("")
+
+      if (getKernelOutputs contains sym) {
+        val tr = metaData.outputs.getOrElse(sym,new TransferFunc)
+        tr.funcHtoD = "allocFunc_%s".format(helperFuncIdx)
+        tr.argsFuncHtoD = args
+        metaData.outputs.put(sym,tr)
+      }
+      else {
+        val tr = metaData.temps.getOrElse(sym,new TransferFunc)
+        tr.funcHtoD = "allocFunc_%s".format(helperFuncIdx)
+        tr.argsFuncHtoD = args
+        metaData.temps.put(sym,tr)
+      }
+
+      out.append("%s *allocFunc_%s(%s) {\n".format(remap(sym.Type), helperFuncIdx, paramStr))
+  	  out.append(derefParams+"\n")
+      out.append(contents)
+      out.append("}\n")
+      out.toString
+    }
+    else ""
   }
 
-  def emitCopyOutputDtoH(sym: Sym[Any], ksym: Sym[Any], contents: String): String = {
-	  val out = new StringBuilder
-	  if(isObjectType(sym.Type)) {
-	  	helperFuncIdx += 1
-      	MetaData.gpuOutput = MetaData.gpuOutput + "\"copyOutputDtoH_%s\",[\"env\",\"%s\"]]}".format(helperFuncIdx,quote(sym))
-    	out.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.Type)+" *"+quote(sym)+"_ptr"))
-		out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
-      	out.append(contents)
-      	out.append("}\n")
-      	out.toString
-	  }
-	  else ""
+  def emitCopyOutputDtoH(sym: Sym[Any], ksym: List[Sym[Any]], contents: String): String = {
+    val out = new StringBuilder
+    if(isObjectType(sym.Type)) {
+    	helperFuncIdx += 1
+      if (getKernelOutputs contains sym) {
+        val tr = metaData.outputs.getOrElse(sym,new TransferFunc)
+        tr.funcDtoH = "copyOutputDtoH_%s".format(helperFuncIdx)
+        metaData.outputs.put(sym,tr)
+      }
+      else {
+        val tr = metaData.temps.getOrElse(sym,new TransferFunc)
+        tr.funcDtoH = "copyOutputDtoH_%s".format(helperFuncIdx)
+        metaData.temps.put(sym,tr)
+      }
+
+      out.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.Type)+" *"+quote(sym)+"_ptr"))
+  	  out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
+      out.append(contents)
+      out.append("}\n")
+      out.toString
+    }
+    else ""
   }
 
   /* emitAllocFunc method emits code for allocating the output memory of a kernel,
@@ -555,50 +614,52 @@ trait CudaCodegen extends CLikeCodegen {
 
     // Get free variables
     val inputs = getFreeVarBlock(allocFunc,Nil)
-    //val paramStr = inputs.map(ele=>
-	//		if(isObjectType(ele.Type)) remap(ele.Type) + " *_" + quote(ele)
-	//		else remap(ele.Type) + " " + quote(ele)
-	//  ).mkString(",")
 
-    /* Object type inputs of helper functions are pointers, but CUDA generators assume the actual objects,
-           therefore need to dereference the objects before emitting the actual block contents. */
-    //val derefParams = inputs.map(ele=>
-    //  if(isObjectType(ele.Type)) "\t%s %s = *_%s;\n".format(remap(ele.Type),quote(ele),quote(ele))
-    //  else ""
-    //).mkString("")
-
-    // Generate allocation helper function
-    //tempString.append("%s *allocFunc_%s(%s) {\n".format(remap(allocFunc.Type),currHelperFuncIdx,paramStr))
-    //tempString.append(derefParams)
-    //emitBlock(allocFunc)(tempStream)
-    //tempString.append("\treturn %s;\n".format(quote(getBlockResult(allocFunc))))
-    //tempString.append("}\n")
-
-    // Generate allocation helper function
-	//tempString.append(derefParams)
+    // Get the body (string) of the allocation function in tempString
     emitBlock(allocFunc)(tempStream)
     tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc))))
+
+    // Emit the full allocation function
     val allocOutputStr = emitAllocOutput(sym, null, tempString.toString, inputs)
 
     // Generate copy (D->H) helper function
-    //tempString.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.Type)+" *"+quote(sym)))
-    //tempString.append(copyOutputDtoH(sym))
-    //tempString.append("}\n")
+    tempString2.append(copyOutputDtoH(sym))
+    val copyOutputStr = emitCopyOutputDtoH(sym, null, tempString2.toString)
+
+    // Write to helper function string
+    helperFuncString.append(allocOutputStr)
+    helperFuncString.append(copyOutputStr)
+  }
+
+  def emitCloneFunc(sym:Sym[Any], src:Sym[Any]) {
+    helperFuncIdx += 1
+    val tempString = new StringWriter
+    val tempString2 = new StringWriter
+    val tempStream = new PrintWriter(tempString,true)
+
+    // Need to save idx before calling emitBlock, which might recursively call this method
+    val currHelperFuncIdx = helperFuncIdx
+
+    // Get free variables
+    //val inputs = getFreeVarBlock(allocFunc,Nil)
+    val inputs = List(src)
+
+    // Get the body (string) of the allocation function in tempString
+    //emitBlock(allocFunc)(tempStream)
+    tempString.append(cloneObject(sym,src))
+    tempString.append("\treturn %s_ptr;\n".format(quote(sym)))
+
+    // Emit the full allocation function
+    val allocOutputStr = emitAllocOutput(sym, null, tempString.toString, inputs)
 
     // Generate copy (D->H) helper function
     tempString2.append(copyOutputDtoH(sym))
-	val copyOutputStr = emitCopyOutputDtoH(sym, null, tempString2.toString)
-
-    // Register Metadata
-    //MetaData.gpuOutput = "{\"%s\":[\"%s\",\"allocFunc_%s\",[%s],\"copyOutputDtoH_%s\",[\"env\",\"%s\"]]}".format(quote(sym),remap(sym.Type),currHelperFuncIdx,inputs.map("\""+quote(_)+"\"").mkString(","),currHelperFuncIdx,quote(sym))
-    gpuOutputs = gpuOutputs :+ sym
+    val copyOutputStr = emitCopyOutputDtoH(sym, null, tempString2.toString)
 
     // Write to helper function string
-    //helperFuncString.append(tempString)
-	helperFuncString.append(allocOutputStr)
-	helperFuncString.append(copyOutputStr)
+    helperFuncString.append(allocOutputStr)
+    helperFuncString.append(copyOutputStr)
   }
-
 
   /**********************************************************
    * Calculation and Emission of GPU kernel size functions
@@ -621,7 +682,8 @@ trait CudaCodegen extends CLikeCodegen {
   }
 
   // Prints out the helper functions for getting the threadBlcok size and grid size
-  def emitSizeFuncs(sym: Sym[Any], external: Boolean): String = {
+  def emitSizeFuncs(syms: List[Sym[Any]], external: Boolean): String = {
+    val sym = syms(0)  //TODO: Fix
     helperFuncIdx += 1
 
     val out = new StringBuilder
@@ -629,48 +691,48 @@ trait CudaCodegen extends CLikeCodegen {
     if(xDimList.size == 0 && !external)
       throw new GenerationFailedException("CudaGen: No dimension specified for this kernel.")
 
-    val inputs = (gpuOutputs ::: gpuInputs ::: gpuTemps)
+    val inputs = (getKernelOutputs++getKernelInputs++getKernelTemps)
     val paramStr = inputs.map(ele=>
-			if(isObjectType(ele.Type)) remap(ele.Type) + " *" + quote(ele)
-			else remap(ele.Type) + " " + quote(ele)
-	  ).mkString(",")
+  		if(isObjectType(ele.Type)) remap(ele.Type) + " *" + quote(ele)
+  		else remap(ele.Type) + " " + quote(ele)
+    ).mkString(",")
     val argStr = inputs.map("\""+quote(_)+"\"").mkString(",")
     val argInputStr = inputs.map(quote(_)).mkString(",")
 
     //TODO: Restore safety check for the dimension sizes
     out.append("int gpuBlockSizeX_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
-	if(xDimList.length==0)
-      out.append("\tint X = 1;\n")
-	else
-	  out.append("\tint X = %s;\n".format(xDimList(xDimList.length-1)))
+    if(xDimList.length==0)
+        out.append("\tint X = 1;\n")
+    else
+      out.append("\tint X = %s;\n".format(xDimList(xDimList.length-1)))
     out.append("\tif(X < %s) return X;\n".format(MAX_THREADS_PER_BLOCK))
     out.append("\telse return %s;\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
-    MetaData.gpuBlockSizeX = "[\"gpuBlockSizeX_%s_%s\",[%s]]".format(quote(sym),helperFuncIdx,argStr)
+    metaData.sizeFuncs.put("gpuBlockSizeX",new SizeFunc("gpuBlockSizeX_%s_%s".format(quote(sym),helperFuncIdx),inputs))
 
     out.append("int gpuBlockSizeY_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
     out.append("\treturn 1;\n")
     out.append("}\n")
-    MetaData.gpuBlockSizeY = "[\"gpuBlockSizeY_%s_%s\",[%s]]".format(quote(sym),helperFuncIdx,argStr)
+    metaData.sizeFuncs.put("gpuBlockSizeY",new SizeFunc("gpuBlockSizeY_%s_%s".format(quote(sym),helperFuncIdx),inputs))
 
     out.append("int gpuBlockSizeZ_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
     out.append("\treturn 1;\n")
     out.append("}\n")
-    MetaData.gpuBlockSizeZ = "[\"gpuBlockSizeZ_%s_%s\",[%s]]".format(quote(sym),helperFuncIdx,argStr)
+    metaData.sizeFuncs.put("gpuBlockSizeZ",new SizeFunc("gpuBlockSizeZ_%s_%s".format(quote(sym),helperFuncIdx),inputs))
 
     out.append("int gpuDimSizeX_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
-	  if(xDimList.length==0)
+    if(xDimList.length==0)
     	out.append("\tint X = 1;\n")
-	  else
+    else
     	out.append("\tint X = %s;\n".format(xDimList(xDimList.length-1)))
     out.append("\treturn 1+((X-1)/%s);\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
-    MetaData.gpuDimSizeX = "[\"gpuDimSizeX_%s_%s\",[%s]]".format(quote(sym),helperFuncIdx,argStr)
+    metaData.sizeFuncs.put("gpuDimSizeX",new SizeFunc("gpuDimSizeX_%s_%s".format(quote(sym),helperFuncIdx),inputs))
 
     out.append("int gpuDimSizeY_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
-	  out.append("\treturn 1;\n")
+    out.append("\treturn 1;\n")
     out.append("}\n")
-    MetaData.gpuDimSizeY = "[\"gpuDimSizeY_%s_%s\",[%s]]".format(quote(sym),helperFuncIdx,argStr)
+    metaData.sizeFuncs.put("gpuDimSizeY",new SizeFunc("gpuDimSizeY_%s_%s".format(quote(sym),helperFuncIdx),inputs))
 
     /*
     out.append("int gpuBlockSizeX_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
