@@ -6,35 +6,14 @@ import java.util.ArrayList
 import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
 import collection.immutable.List._
 
-trait OpenCLCodegen extends CLikeCodegen {
+trait OpenCLCodegen extends GPUCodegen {
   val IR: Expressions
   import IR._
 
   override def kernelFileExt = "cl"
   override def toString = "opencl"
 
-  /* For using GPU local variables */
-  var useLocalVar:Boolean = false
-  val indexMap = HashMap[Exp[Any],String]()
-  private val openclVarMap = HashMap[Tuple2[Exp[Any],String],String]()
-  private var localVarIdx = 0
-  def getNewLocalVar():String = {
-    localVarIdx +=1
-    "local_"+localVarIdx
-  }
-  def hasLocalVar(sym:Exp[Any],idx:String):Boolean = {
-    openclVarMap.contains(sym,idx)
-  }
-  def getLocalVar(sym:Exp[Any],idx:String):String = {
-    openclVarMap.get(sym,idx) match {
-      case None => null
-      case Some(varName) => varName
-    }
-  }
-  def saveLocalVar(sym:Exp[Any],idx:String,varName:String) {
-    openclVarMap.put(Tuple2(sym,idx),varName)
-  }
-
+  /*
   /* Indicates current dimension of work threads */
   var currDim = 0
   val xDimList =  ListBuffer[String]()
@@ -168,6 +147,7 @@ trait OpenCLCodegen extends CLikeCodegen {
      super.exceptionHandler(e, outFile, kstream)
      // TODO: Need to cleanup some data structures
   }
+  */
 
   override def initializeGenerator(buildDir:String): Unit = {
     val outDir = new File(buildDir)
@@ -179,7 +159,6 @@ trait OpenCLCodegen extends CLikeCodegen {
     headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.h"))
     headerStream.println("#include \"helperFuncs.h\"")
     //headerStream.println("#include \"devFuncs.cu\"")
-    enforcePar = false
 
     //TODO: Put all the DELITE APIs declarations somewhere
     hstream.print(getDSLHeaders)
@@ -187,7 +166,6 @@ trait OpenCLCodegen extends CLikeCodegen {
     hstream.print("#include <limits>\n")
     hstream.print("#include <jni.h>\n")
     hstream.print("#include <assert.h>\n")
-    hstream.print("#include \"openclBLAS.h\"\n")
     hstream.print("#include \"OpenCLList.h\"\n\n")
     hstream.print("//Delite Runtime APIs\n")
     hstream.print("extern void DeliteOpenCLMallocHost(void **ptr, size_t size);\n")
@@ -198,6 +176,7 @@ trait OpenCLCodegen extends CLikeCodegen {
     hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
   }
 
+  /*
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
 
     // Conditions for not generating OpenCL kernels (may be relaxed later)
@@ -225,11 +204,12 @@ trait OpenCLCodegen extends CLikeCodegen {
     gpuOutputs = Nil
     gpuTemps = Nil
   }
+  */
 
   /****************************************
    *  Methods for managing GPUable Types
    *  **************************************/
-
+  /*
   // Map a scala primitive type to JNI type descriptor
   def JNITypeDescriptor[A](m: Manifest[A]) : String = m.toString match {
     case "Int" => "I"
@@ -239,17 +219,18 @@ trait OpenCLCodegen extends CLikeCodegen {
     case "Boolean" => "Z"
     case _ => throw new GenerationFailedException("Undefined OpenCL type")
   }
+  */
 
-  def isObjectType[A](m: Manifest[A]) : Boolean = {
+  override def isObjectType[A](m: Manifest[A]) : Boolean = {
     m.toString match {
       case "scala.collection.immutable.List[Int]" => true
         //TODO: ObjectTypes needs to be able to broken down, but array does not have to be.
         //TODO: What we need to do is to distinguish between passable types or not to the opencl kernel
       case "Array[Int]" | "Array[Long]" | "Array[Float]" | "Array[Double]" | "Array[Boolean]" => true
-      case _ => false
+      case _ => super.isObjectType(m)
     }
   }
-
+  /*
   def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
     m.toString match {
       case "Int" | "Long" | "Float" | "Double" | "Boolean"  => true
@@ -283,6 +264,7 @@ trait OpenCLCodegen extends CLikeCodegen {
     else
       true
   }
+  */
 
   override def remap[A](m: Manifest[A]) : String = {
     checkGPUableType(m)
@@ -312,7 +294,7 @@ trait OpenCLCodegen extends CLikeCodegen {
     }
   }
 
-  def unpackObject[A](sym: Sym[Any]) : Map[String,Manifest[_]] = remap(sym.Type) match {
+  override def unpackObject[A](sym: Sym[Any]) : Map[String,Manifest[_]] = remap(sym.Type) match {
     case "OpenCLIntList" => Map("length"->Manifest.Int)    //TODO: How to initialize the data array type for the list?
     case _ => throw new GenerationFailedException("OpenCLGen: Type %s cannot be unpacked.".format(sym.Type.toString))
   }
@@ -360,6 +342,10 @@ trait OpenCLCodegen extends CLikeCodegen {
 
   }
 
+  def cloneObject(sym: Sym[Any], src: Sym[Any]) : String = {
+    throw new GenerationFailedException("OpenCLGen: cloneObject(sym)")
+  }
+
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
     val x = fresh[A]
     val y = f(x)
@@ -403,14 +389,14 @@ trait OpenCLCodegen extends CLikeCodegen {
     if (external) {
       // CUDA library ops use a C wrapper, so should be generated as a C kernel
       stream.println(getDSLHeaders)
-      super.emitKernelHeader(syms, gpuOutputs ::: vals, vars, resultType, resultIsVar, external)
+      super.emitKernelHeader(syms, getKernelOutputs ::: vals, vars, resultType, resultIsVar, external)
       return
     }
 
     val out = new StringBuilder
     //out.append(getDSLHeaders)
 
-    val paramStr = (gpuOutputs:::gpuInputs:::gpuTemps).map( ele =>
+    val paramStr = (getKernelOutputs++getKernelInputs++getKernelTemps).map( ele =>
       if(isPrimitiveType(ele.Type))
         remap(ele.Type) + " " + quote(ele)
       else
@@ -420,7 +406,7 @@ trait OpenCLCodegen extends CLikeCodegen {
     //TODO: Kernel parameters needs to be unrolled
     out.append("__kernel void kernel_%s(%s) {\n".format(syms.map(quote(_)).mkString(""),paramStr))
     out.append(addTab()+"int idxX = get_global_id(0);\n")
-    val reAssembleString = (gpuOutputs:::gpuInputs:::gpuTemps).filter(e=>isObjectType(e.Type)).map( ele =>
+    val reAssembleString = (getKernelOutputs++getKernelInputs++getKernelTemps).filter(e=>isObjectType(e.Type)).map( ele =>
       remap(ele.Type) + " " + quote(ele) + ";" +
       unpackObject(ele).map(e => quote(ele) + "." + e._1 + " = " + quote(ele) + "_" + e._1).mkString(";")
     ).mkString(";\n") + ";\n"
@@ -463,7 +449,7 @@ trait OpenCLCodegen extends CLikeCodegen {
 
     // Emit kerenl size calculation helper functions
     if (!external) {
-      helperFuncString.append(emitSizeFuncs(syms))
+      helperFuncString.append(emitSizeFuncs(syms,external))
     }
 
     // Print out to file stream
@@ -481,6 +467,7 @@ trait OpenCLCodegen extends CLikeCodegen {
    *******************************************************/
   // TODO: Change the metadata function names
 
+  /*
   // For object type inputs, allocate GPU memory and copy from CPU to GPU.
   def emitCopyInputHtoD(sym: Sym[Any], ksyms: List[Sym[Any]], contents: String) : String = {
     val out = new StringBuilder
@@ -710,6 +697,7 @@ trait OpenCLCodegen extends CLikeCodegen {
     //}
 
   }
+  */
 
 }
 
