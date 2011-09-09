@@ -36,8 +36,8 @@ Sym(4)
 class Power3 extends ((Double)=>(Double)) {
 def apply(x0:Double): Double = {
 val x1 = x0+x0
-val x2 = x1*x1
-val x3 = x2*x2
+val y2 = x1*x1      // TestPower.scala:19
+val x3 = y2*y2      // TestPower.scala:135
 x3
 }
 }

@@ -21,7 +21,7 @@ class Test extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
 var x26 = 0
 for (x8 <- 0 until 100) {
-val x21 = x8 > 50
+val x21 = x8 > 50      // OrderingOps.scala:61
 if (x21) x26 += x8
 }
 val x27 = println(x26)
