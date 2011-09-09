@@ -82,7 +82,7 @@ trait Expressions extends Utils {
     } else ("x", 0, None)
     val (name, id, nameId) = nextName(basename)
     val sym = Sym[T](id)
-    sym.name = name + (if (line != 0) "_" + line else "")
+    sym.name = name
     sym.nameId = nameId
     sym.sourceContext = srcCtx
     sym
@@ -117,7 +117,7 @@ trait Expressions extends Utils {
   }
 
   protected implicit def toAtom[T:Manifest](d: Def[T])(implicit ctx: SourceContext): Exp[T] = {
-    findOrCreateDefinition(d).sym // TODO: return Const(()) if type is Unit??
+    findOrCreateDefinition(d, ctx).sym // TODO: return Const(()) if type is Unit??
   }
 
   object Def {

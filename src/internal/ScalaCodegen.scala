@@ -76,11 +76,22 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println("}}")
   }
 
-
+  def relativePath(fileName: String): String = {
+    val i = fileName.lastIndexOf('/')
+    fileName.substring(i + 1)
+  }
+  
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("val " + quote(sym) + " = " + rhs + (if (sym.sourceContext.isEmpty) ""
-                                                        else "      // " + sym.sourceContext.get))
+                                                        else {
+                                                          val context = sym.sourceContext.get
+                                                          if (context.fileName == "<unknown file>")
+                                                            ""
+                                                          else
+                                                            "      // " + relativePath(context.fileName) + ":" + context.line
+                                                        }))
   }
+
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.Type) + " = " + rhs)
   }
