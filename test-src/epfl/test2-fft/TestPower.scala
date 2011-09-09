@@ -47,7 +47,7 @@ object TestPower {
 
 class TestPower extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test2-new-"
+  val prefix = "test-out/epfl/test2-"
 
   def testPower = {
     withOutFile(prefix+"power") {
@@ -150,9 +150,9 @@ class TestPower extends FileDiffSuite {
       println(power4c(2))
     }
     }
-    //assertFileEqualsCheck(prefix+"power")
-    //assertFileEqualsCheck(prefix+"power1-dot")
-    //assertFileEqualsCheck(prefix+"power2-dot")
-    //assertFileEqualsCheck(prefix+"power3-dot")
+    assertFileEqualsCheck(prefix+"power")
+    assertFileEqualsCheck(prefix+"power1-dot")
+    assertFileEqualsCheck(prefix+"power2-dot")
+    assertFileEqualsCheck(prefix+"power3-dot")
   }
 }
