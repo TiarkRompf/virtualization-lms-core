@@ -23,11 +23,6 @@ trait BaseGenListOps extends GenericNestedCodegen {
   val IR: ListOpsExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match { // TODO: can do without override?
-    case ListNew(xs) => (xs flatMap { syms }).toList
-    case _ => super.syms(e)
-  }
-
 }
 
 trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {

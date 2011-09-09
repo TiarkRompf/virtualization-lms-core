@@ -27,7 +27,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
 
   case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int]
   case class ArrayApply[T](a: Exp[Array[T]], n: Exp[Int])(implicit val mT:Manifest[T]) extends Def[T]
-  case class ArrayForeach[T](a: Exp[Array[T]], x: Exp[T], block: Exp[Unit]) extends Def[Unit]
+  case class ArrayForeach[T](a: Exp[Array[T]], x: Sym[T], block: Exp[Unit]) extends Def[Unit]
 
   def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int]): Rep[T] = ArrayApply(x, n)
   def array_length[T:Manifest](a: Exp[Array[T]]) : Rep[Int] = ArrayLength(a)
@@ -36,16 +36,27 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
     val b = reifyEffects(block(x))
     reflectEffect(ArrayForeach(a, x, b), summarizeEffects(b).star)
   }
+
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case ArrayForeach(a, x, body) => syms(a):::syms(body)
+    case _ => super.syms(e)
+  }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case ArrayForeach(a, x, body) => x :: effectSyms(body)
+    case _ => super.boundSyms(e)
+  }
+
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case ArrayForeach(a, x, body) => freqNormal(a):::freqHot(body)
+    case _ => super.symsFreq(e)
+  }
 }
 
 trait BaseGenArrayOps extends GenericNestedCodegen {
   val IR: ArrayOpsExp
   import IR._
 
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case ArrayForeach(a,x,block) if shallow => syms(a)
-    case _ => super.syms(e)
-  }
 }
 
 trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {

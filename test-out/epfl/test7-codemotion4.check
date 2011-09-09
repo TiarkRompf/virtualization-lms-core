@@ -1,0 +1,21 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Unit)=>(scala.Function1[Double, Unit])) {
+def apply(x0:Unit): scala.Function1[Double, Unit] = {
+val x7 = {x1: (Double) => 
+val x5 = if (true) {
+val x2 = x1+1.0
+val x3 = println(x2)
+()
+} else {
+()
+}
+x5: Unit
+}
+x7
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

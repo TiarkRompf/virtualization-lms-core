@@ -5,7 +5,7 @@ import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
 import collection.mutable.ArrayBuffer
 
-trait ArrayBufferOps extends Base {
+trait SynchronizedArrayBufferOps extends Base {
 
   object ArrayBuffer {
     def apply[A:Manifest](xs: Rep[A]*) = arraybuffer_new(xs)
@@ -20,7 +20,7 @@ trait ArrayBufferOps extends Base {
   def arraybuffer_new[A:Manifest](xs: Seq[Rep[A]]): Rep[ArrayBuffer[A]]
 }
 
-trait ArrayBufferOpsExp extends ArrayBufferOps with EffectExp {
+trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with EffectExp {
   case class ArrayBufferNew[A:Manifest](xs: Seq[Exp[A]]) extends Def[ArrayBuffer[A]]  {
     val mA = manifest[A]
   }
@@ -33,25 +33,25 @@ trait ArrayBufferOpsExp extends ArrayBufferOps with EffectExp {
 
 }
 
-trait BaseGenArrayBufferOps extends GenericNestedCodegen {
-  val IR: ArrayBufferOpsExp
+trait BaseGenSynchronizedArrayBufferOps extends GenericNestedCodegen {
+  val IR: SynchronizedArrayBufferOpsExp
   import IR._
 }
 
-trait ScalaGenArrayBufferOps extends BaseGenArrayBufferOps with ScalaGenEffect {
-  val IR: ArrayBufferOpsExp
+trait ScalaGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferOps with ScalaGenEffect {
+  val IR: SynchronizedArrayBufferOpsExp
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
-    case a@ArrayBufferNew(xs) => emitValDef(sym, "scala.collection.mutable.ArrayBuffer[" + remap(a.mA) + "](" + (xs map {quote}).mkString(",") + ")")
+    case a@ArrayBufferNew(xs) => emitValDef(sym, "(new scala.collection.mutable.ArrayBuffer[" + remap(a.mA) + "] with scala.collection.mutable.SynchronizedBuffer[" + remap(a.mA) + "]) ++= List(" + (xs map {quote}).mkString(",") + ")")
     case ArrayBufferMkString(l, sep) => emitValDef(sym, quote(l) + ".mkString(" + quote(sep) + ")")
     case ArrayBufferAppend(l, e) => emitValDef(sym, quote(l) + " += " + quote(e))
     case _ => super.emitNode(sym, rhs)
   }
 }
 
-trait CLikeGenArrayBufferOps extends BaseGenArrayBufferOps with CLikeGenBase {
-  val IR: ArrayBufferOpsExp
+trait CLikeGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferOps with CLikeGenBase {
+  val IR: SynchronizedArrayBufferOpsExp
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
@@ -61,6 +61,6 @@ trait CLikeGenArrayBufferOps extends BaseGenArrayBufferOps with CLikeGenBase {
     }
 }
 
-trait CudaGenArrayBufferOps extends CudaGenEffect with CLikeGenArrayBufferOps
-trait CGenArrayBufferOps extends CGenEffect with CLikeGenArrayBufferOps
+trait CudaGenSynchronizedArrayBufferOps extends CudaGenEffect with CLikeGenSynchronizedArrayBufferOps
+trait CGenSynchronizedArrayBufferOps extends CGenEffect with CLikeGenSynchronizedArrayBufferOps
 

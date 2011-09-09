@@ -1,0 +1,32 @@
+promoting to effect: Sym(7)=Reflect(ArrayLength(Sym(6)),Summary(false,false,false,false,false,List(Sym(6)),List(Sym(6)),List(),List()),List(Sym(6)))
+depends on  Sym(6)
+error: illegal sharing of mutable objects Sym(6)
+at Sym(13)=Reflect(Assign(Variable(Sym(3)),Sym(6)),Summary(false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(Sym(3)),List(Sym(3))),List(Sym(10), Sym(12)))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Any)) {
+def apply(x0:Int): Any = {
+val x2 = LoopArray(100) { x1 => 
+0.0
+}
+var x3: Array[Double] = x2
+val x5 = LoopArray(100) { x4 => 
+0.0
+}
+val x6 = x5.clone // mutable
+val x7 = x6.length
+var x9 : Int = 0
+val x15 = while (x9 < x7) {
+val x10 = x3
+val x12 = x6.update(x9, 8.0)
+x3 = x6
+()
+x9 = x9 + 1
+}
+x15
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

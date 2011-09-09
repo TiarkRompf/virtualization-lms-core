@@ -1,7 +1,6 @@
 package scala.virtualization.lms
 package internal
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.sym
 import java.io.{File, FileWriter, PrintWriter}
 
 import scala.reflect.SourceContext
@@ -46,14 +45,10 @@ trait ScalaCodegen extends GenericCodegen {
     stream.flush
   }
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
     val kernelName = syms.map(quote).mkString("")
     
     stream.println("package generated." + this.toString)
-    stream.println("final class activation_" + kernelName + " { // generated even if not used")
-    for (s <- syms)
-      stream.println("var " + quote(s) + ": " + remap(s.Type) + " = _")
-    stream.println("}")
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
     stream.print(vals.map(p => quote(p) + ":" + remap(p.Type)).mkString(","))
@@ -75,17 +70,18 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println("")
   }
 
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
     val kernelName = syms.map(quote).mkString("")
     stream.println(kernelName)
     stream.println("}}")
   }
 
+
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("val " + quote(sym) + " = " + rhs + (if (sym.sourceContext.isEmpty) ""
                                                         else "      // " + sym.sourceContext.get))
   }
-  def emitVarDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.Type) + " = " + rhs)
   }
   def emitAssignment(lhs: String, rhs: String)(implicit stream: PrintWriter): Unit = {
@@ -112,4 +108,14 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
 
 trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
   val IR: Expressions with Effects with FatExpressions
+  import IR._
+  
+  override def emitFatNodeKernelExtra(syms: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter): Unit = {
+    val kernelName = syms.map(quote).mkString("")
+    stream.println("final class activation_" + kernelName + " {")
+    for (s <- syms) {
+      stream.println("var " + quote(s) + ": " + remap(s.Type) + " = _")
+    }
+    stream.println("}")
+  }
 }

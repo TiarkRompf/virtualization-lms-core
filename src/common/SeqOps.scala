@@ -25,23 +25,34 @@ trait SeqOps extends Variables {
 }
 
 trait SeqOpsExp extends SeqOps with EffectExp {
-  case class SeqNew[A:Manifest](xs: Seq[Rep[A]]) extends Def[Seq[A]]
+  case class SeqNew[A:Manifest](xs: List[Rep[A]]) extends Def[Seq[A]]
   case class SeqLength[T:Manifest](a: Exp[Seq[T]]) extends Def[Int]
   case class SeqApply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int]) extends Def[T]
   
-  def seq_new[A:Manifest](xs: Seq[Rep[A]]) = SeqNew(xs)
+  def seq_new[A:Manifest](xs: Seq[Rep[A]]) = SeqNew(xs.toList)
   def seq_apply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int]): Exp[T] = SeqApply(x, n)
   def seq_length[T:Manifest](a: Exp[Seq[T]]): Exp[Int] = SeqLength(a)
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case SeqNew(xs) => seq_new(f(xs))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
+
+  // TODO: need override? (missing data dependency in delite kernel without it...)
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case SeqNew(xs) => (xs flatMap { syms }).toList
+    case _ => super.syms(e)
+  }
+
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case SeqNew(xs) => (xs flatMap { freqNormal }).toList
+    case _ => super.symsFreq(e)
+  }
 }
 
 trait BaseGenSeqOps extends GenericNestedCodegen {
   val IR: SeqOpsExp
   import IR._
-
-  override def syms(e: Any): List[Sym[Any]] = e match { // TODO: can do without override?
-    case SeqNew(xs) => (xs flatMap { syms }).toList
-    case _ => super.syms(e)
-  }
 
 }
 

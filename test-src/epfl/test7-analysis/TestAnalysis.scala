@@ -207,13 +207,7 @@ trait ScalaGenPrint extends ScalaGenEffect {
       - if loops are unrelated (no interdeps) in the modified graph they can be fused!
       - strongly connected components cannot be fused internally (they are sequential), only externally
       - 
-    
-    
-    
 */
-
-
-
 
 
 

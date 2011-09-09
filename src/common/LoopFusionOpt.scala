@@ -7,28 +7,58 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
   val IR: LoopsFatExp
   import IR._
   
+  case class Forward[A](x: Exp[A]) extends Def[A]
+  
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
+    case Forward(x) => emitValDef(sym, quote(x))
+    case _ => super.emitNode(sym, rhs)
+  }
+  
   def transformOne[A](s: Sym[A], x: Def[A], t: SubstTransformer): Exp[A] = {
     if (t.subst.contains(s)) return t(s)
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
 
-    //if (!syms(x).exists(t.subst contains _)) return s   <---- should be safe to prune but test fails (??)
+    //if (!syms(x).exists(t.subst contains _)) return s   //<---- should be safe to prune but test fails (??)
 
     val y = try { 
       val ss = syms(x)
-      if (ss != t(ss)) {
-        mirror(x, t) 
+      val tss = t(ss)
+      if (ss != tss) {
+        val s2 = mirror(x, t) 
+        if (s2 == s) {
+          printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned same object (expected t(syms) = " + tss.mkString(",") + ")")
+        }
+        s2 match { 
+          case Def(x2) => 
+            val ss2 = syms(x2)
+            if (ss2 != tss.filter(_.isInstanceOf[Sym[Any]])) // should do filtering in def of tss above?
+              printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned "+s2+"="+x2+" syms " + ss2.mkString(",") + " (expected t(syms) = " + tss.mkString(",") + ")")
+            if (!(s2.Type <:< s.Type))
+              printerr("warning: mirroring of "+s+"="+x+" type " + s.Type + " returned "+s2+"="+x2+" type " + s2.Type + " (not a subtype)")
+          case _ =>
+            if (!(s2.Type <:< s.Type))
+              printerr("warning: mirroring of "+s+"="+x+" type " + s.Type + " returned "+s2+" type " + s2.Type + " (not a subtype)")
+        }
+        s2
       } else {
         printdbg("skipping mirror operation "+s+"="+x+" syms " + ss.mkString(",") + " subst " + t.subst.mkString(","))
         s
       }
-    } catch { case e => println("Exception during mirroring of "+x+": "+ e); e.printStackTrace; s }
-    if (y != s) {
+    } catch { //hack
+      case e if e.toString contains "don't know how to mirror" => 
+        printerr("error: " + e.getMessage)
+        s
+      case e => 
+        printerr("error: exception during mirroring of "+x+": "+ e)
+        e.printStackTrace; 
+        s
+    }
 
+    if (y != s) {
       if (y.isInstanceOf[Sym[Any]] && findDefinition(y.asInstanceOf[Sym[Any]]).nonEmpty)
         printdbg("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[Any]]).get.rhs)
       else
         printdbg("--> replace " + s+"="+x + " by " + y)
-
       t.subst(s) = y // TODO: move out of conditional?
     }
     y
@@ -57,7 +87,8 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
         printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
         innerScope = innerScope ::: missing
       }
-      val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
+      //val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
+      val shape2 = if (lhs != lhs2) lhs2.map { case Def(l: AbstractLoop[_]) => l.size case Def(Reflect(l: AbstractLoop[_], _, _)) => l.size } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
                    else t(s)
       val rhs2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r))) => transformLoopBody(s,r,t) }}
                  else (lhs zip rhs) map { case (s,r) => transformLoopBody(s,r,t) }
@@ -121,19 +152,13 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
   }
 
 
-  override def focusExactScopeFat[A](currentScope0: List[TTP])(result0: Exp[Any])(body: List[TTP] => A): A = {
-    var result: Exp[Any] = result0
+  override def focusExactScopeFat[A](currentScope0: List[TTP])(result0: List[Exp[Any]])(body: List[TTP] => A): A = {
+    var result: List[Exp[Any]] = result0
     var currentScope = currentScope0
 
     if (!shouldApplyFusion(currentScope)(result))
       return super.focusExactScopeFat(currentScope)(result)(body)
 /*
-    println("--- pre-pre-loop fusion: getFatSchedule")
-    shallow = true
-    val e2 = getFatSchedule(currentScope)(result)
-    shallow = false
-    e2.foreach(println)
-
     println("--- pre-pre-loop fusion: bound")
     val bound = currentScope.flatMap(z => boundSyms(z.rhs))
     bound.foreach(println)
@@ -170,6 +195,8 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         def WgetLoopVar(e: TTP): List[Sym[Int]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => List(x) }
         def WgetLoopRes(e: TTP): List[Def[Any]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => rhs }
 
+        val loopCollectSyms = Wloops flatMap (e => (e.lhs zip WgetLoopRes(e)) collect { case (s, SimpleCollectIf(_,_)) => s })
+        
         val loopSyms = Wloops flatMap (_.lhs)
         val loopVars = Wloops flatMap WgetLoopVar
 
@@ -185,10 +212,12 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         // then we can later remove the entry and see if the dependency goes away...
         
         val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
-          val thisLoopSyms = WgetLoopVar(dx)
+          val thisLoopVars = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
           getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopSyms contains i) => 
+            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) => 
+              //if (!loopCollectSyms.contains(a))
+              //  printerr("DANGER WILL ROBINSON: ignoring dep " + e + " although " + a + " is not a loop sym " + loopCollectSyms)
               //println("ignoring simple dependency " + e + " on loop var " + thisLoopSyms)
               Nil // direct deps on this loop's induction var don't count
             case sc =>
@@ -289,18 +318,54 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           }
           
           
-          currentScope = getFatSchedule(currentScope)(result) // clean things up!
+          currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+
+          /*println("<1---"+result0+"/"+result)
+          currentScope.foreach(println)
+          println("---1>")*/
 
           // SIMPLIFY! <--- multiple steps necessary???
           
-          currentScope = transformAll(currentScope, t)
+          def withEffectContext(body: =>List[TTP]): List[TTP] = {
+            val save = context
+            context = Nil
+            val scope = body
+            val leftovereffects = context.filterNot((scope.flatMap(_.lhs)) contains _)
+            if (leftovereffects.nonEmpty) 
+              printlog("warning: transformation left effect context (will be discarded): "+leftovereffects)
+            context = save
+            scope
+          }
+          
+          currentScope = withEffectContext { transformAll(currentScope, t) }
+          result = t(result)
+          currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+
+          currentScope = withEffectContext { transformAll(currentScope, t) }
+          result = t(result)
+          currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+
+          currentScope = withEffectContext { transformAll(currentScope, t) }
           result = t(result)
           currentScope = getFatSchedule(currentScope)(result) // clean things up!
 
-          currentScope = transformAll(currentScope, t)
+
+          // once more to see if we are converged
+          val previousScope = currentScope
+          
+          currentScope = withEffectContext { transformAll(currentScope, t) }
           result = t(result)
           currentScope = getFatSchedule(currentScope)(result) // clean things up!
           
+          if (currentScope != previousScope) { // check convergence
+            printerr("error: transformation of scope contents has not converged")
+            printdbg(previousScope + "-->" + currentScope)
+          }
+          
+          /*println("<x---"+result0+"/"+result)
+          currentScope.foreach(println)
+          println("---x>")*/
+
           //Wloops = currentScope collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
 
           Wloops = transformAll(partitionsOut, t)
@@ -339,8 +404,34 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
      
     }
 
+    // the caller of emitBlock will quite likely call getBlockResult afterwards,
+    // and if we change the result here, the caller will emit a reference to a sym
+    // that doesn't exist (because it was replaced)
+
+    if (result0 != result) {
+      printlog("super.focusExactScopeFat with result changed from " + result0 + " to " + result)
+      
+      (result0 zip result) foreach {
+        case (r0 @ Def(Reify(x, _, _)),Def(Reify(y, u, es))) => 
+          if (!x.isInstanceOf[Sym[Any]])
+            printlog("non-sym block result: " + x + " to " + y)
+          else
+            currentScope = currentScope :+ TTP(List(x.asInstanceOf[Sym[Any]]), ThinDef(Forward(y)))
+          currentScope = currentScope :+ TTP(List(r0.asInstanceOf[Sym[Any]]), ThinDef(Reify(x,u,es)))
+          // should rewire result so that x->y assignment is inserted
+        case (r0,r) => 
+          if (r0 != r) currentScope = currentScope :+ TTP(List(r0.asInstanceOf[Sym[Any]]), ThinDef(Forward(r)))
+      }
+      
+    }
+/*
+    println("result "+result0+"/"+result)
+    println("<---")
+    currentScope.foreach(println)
+    println("--->")
+*/
     // do what super does ...
-    super.focusExactScopeFat(currentScope)(result)(body)
+    super.focusExactScopeFat(currentScope)(result0)(body)
   }
 
 }

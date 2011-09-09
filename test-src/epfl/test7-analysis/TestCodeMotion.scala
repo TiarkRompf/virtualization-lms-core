@@ -47,7 +47,44 @@ trait NestCondProg extends Arith with Functions with IfThenElse with Print {
         f
       else
         doLambda { x: Rep[Double] => x + 1 }
-   }
+    }
+    g
+  }
+  
+}
+
+
+trait NestCondProg2 extends Arith with Functions with IfThenElse with Print {
+  
+  def test(x: Rep[Unit]) = {
+    val f = if (unit(true)) doLambda { x: Rep[Double] => 2 * x } else doLambda { x: Rep[Double] => 4 * x }
+    
+    val g = doLambda { y: Rep[Boolean] =>
+      print("yo")
+      if (y) {
+        print("then")
+        f
+      } else {
+        print("else")
+        if (unit(false)) doLambda { x: Rep[Double] => x + 1 } else doLambda { x: Rep[Double] => x + 2 }
+      }
+    }
+    g
+  }
+  
+}
+
+trait NestCondProg3 extends Arith with Functions with IfThenElse with Print {
+  
+  def test(x: Rep[Unit]) = {
+    val g = doLambda { y: Rep[Double] =>
+      if (unit(true)) {
+        val x = y + 1.0
+        print(x)
+        ()
+      } else {
+      }
+    }
     g
   }
   
@@ -80,6 +117,28 @@ class TestCodemotion extends FileDiffSuite {
       }
     }
     assertFileEqualsCheck(prefix+"codemotion2")
+  }
+
+  def testCodemotion3 = {
+    // test loop hoisting (should use loops but lambdas will do for now)
+    withOutFile(prefix+"codemotion3") {
+      new NestCondProg2 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+      }
+    }
+    assertFileEqualsCheck(prefix+"codemotion3")
+  }
+
+  def testCodemotion4 = {
+    // test loop hoisting (should use loops but lambdas will do for now)
+    withOutFile(prefix+"codemotion4") {
+      new NestCondProg3 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+      }
+    }
+    assertFileEqualsCheck(prefix+"codemotion4")
   }
 
 

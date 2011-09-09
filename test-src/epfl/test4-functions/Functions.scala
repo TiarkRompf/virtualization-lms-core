@@ -101,7 +101,14 @@ trait FunctionsCanonical extends FunctionsExp with ClosureCompare {
 
 trait FunctionsExternalDef0 extends FunctionsExp {
   case class DefineFun[A,B](res: Exp[B])(val arg: Sym[A]) extends Def[A=>B]
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case f@DefineFun(y) => f.arg::effectSyms(y)
+    case _ => super.boundSyms(e)
+  }
+
 }
+
 
 trait FunctionsExternalDef01 extends FunctionsExternalDef0 { // not used
 
@@ -183,10 +190,6 @@ trait ScalaGenFunctionsExternal extends ScalaGenEffect {
   val IR: FunctionsExternalDef0 with EffectExp
   import IR._
   
-  override def syms(e: Any): List[Sym[Any]] = e match {
-    case DefineFun(y) if shallow => Nil // in shallow mode, don't count deps from nested blocks
-    case _ => super.syms(e)
-  }
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
     case e@DefineFun(y) =>
       stream.println("val " + quote(sym) + " = {" + quote(e.arg) + ": (" + e.arg.Type + ") => ")

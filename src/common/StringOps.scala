@@ -15,6 +15,7 @@ trait LiftString {
 trait StringOps extends Variables with OverloadHack {
   // NOTE: if something doesn't get lifted, this won't give you a compile time error,
   //       since string concat is defined on all objects
+  
   def infix_+(s1: Rep[String], s2: Rep[Any]) = string_plus(s1, s2)
   def infix_+(s1: Rep[String], s2: Var[Any])(implicit o: Overloaded1) = string_plus(s1, readVar(s2))
   def infix_+(s1: String, s2: Rep[Any])(implicit o: Overloaded4) = string_plus(unit(s1), s2)
@@ -23,6 +24,8 @@ trait StringOps extends Variables with OverloadHack {
   def infix_+(s1: Var[Any], s2: Rep[String])(implicit o: Overloaded3) = string_plus(readVar(s1), s2)
   def infix_+(s1: Rep[Any], s2: String)(implicit o: Overloaded6) = string_plus(s1, unit(s2))
   def infix_+(s1: Var[Any], s2: String)(implicit o: Overloaded7) = string_plus(readVar(s1), unit(s2))
+  def infix_+(s1: Rep[String], s2: Var[Int])(implicit o: Overloaded8) = string_plus(s1, readVar(s2))
+  def infix_+(s1: String, s2: Var[Int])(implicit o: Overloaded9) = string_plus(unit(s1), readVar(s2))
 
   def infix_trim(s: Rep[String]) = string_trim(s)
   def infix_split(s: Rep[String], separators: Rep[String]) = string_split(s, separators)
@@ -47,6 +50,11 @@ trait StringOpsExp extends StringOps with VariablesExp {
   def string_trim(s: Exp[String])(implicit ctx: SourceContext) : Rep[String] = StringTrim(s)
   def string_split(s: Exp[String], separators: Exp[String])(implicit ctx: SourceContext) : Rep[Array[String]] = StringSplit(s, separators)
   def string_valueof(a: Exp[Any])(implicit ctx: SourceContext) = StringValueOf(a)
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case StringPlus(a,b) => string_plus(f(a),f(b))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
 }
 
 trait ScalaGenStringOps extends ScalaGenBase {
