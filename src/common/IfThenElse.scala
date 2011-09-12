@@ -15,7 +15,7 @@ trait IfThenElse extends Base {
 }
 
 // TODO: it would be nice if IfThenElseExp would extend IfThenElsePureExp
-// but then we would need to give it a different name.
+// but then we would need to use different names.
 
 trait IfThenElsePureExp extends IfThenElse with BaseExp {
 
@@ -32,14 +32,18 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
   override def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]) = {
     val a = reifyEffectsHere(thenp)
     val b = reifyEffectsHere(elsep)
-    val ae = summarizeEffects(a)
-    val be = summarizeEffects(b)
-    reflectEffect(IfThenElse(cond,a,b), ae orElse be)
+    ifThenElse(cond,a,b)
   }
 
+  def ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: Rep[T], elsep: Rep[T]) = { // thenp,elsep reified
+    val ae = summarizeEffects(thenp)
+    val be = summarizeEffects(elsep)
+    reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
+  }
+  
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
     case Reflect(IfThenElse(c,a,b), u, es) => reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))
-    case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b))
+    case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b)) // FIXME: should apply pattern rewrites (ie call smart constructor)
     case _ => super.mirror(e,f)
   }
   
@@ -83,9 +87,23 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
 
 }
 
-trait IfThenElseOpt extends IfThenElse with EffectExp { //TODO!
-}
+trait IfThenElseExpOpt extends IfThenElseExp { this: BooleanOpsExp with EqualExpBridge =>
+  
+  //TODO: eliminate conditional if both branches return same value!
 
+  // it would be nice to handle rewrites in method ifThenElse but we'll need to
+  // 'de-reify' blocks in case we rewrite if(true) to thenp. 
+  // TODO: make reflect(Reify(..)) do the right thing
+  
+  override def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]) = cond match {
+    case Const(true) => thenp
+    case Const(false) => elsep
+    case Def(BooleanNegate(a)) => __ifThenElse(a, elsep, thenp)
+    case Def(NotEqual(a,b)) => __ifThenElse(equals(a,b), elsep, thenp)
+    case _ =>
+      super.__ifThenElse(cond, thenp, elsep)
+  }
+}
 
 trait BaseGenIfThenElse extends GenericNestedCodegen {
   val IR: IfThenElseExp
@@ -108,36 +126,6 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
     
     case _ => super.emitNode(sym, rhs)
   }
-
-/* TR: I think this should belong into delite
-
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
-    /**
-     * IfThenElse generates methods for each branch due to empirically discovered performance issues in the JVM
-     * when generating long blocks of straight-line code in each branch.
-     */
-    case IfThenElse(c,a,b) =>
-      stream.println("val " + quote(sym) + " = {")
-      stream.println("def " + quote(sym) + "thenb(): " + remap(getBlockResult(a).Type) + " = {")
-      emitBlock(a)
-      stream.println(quote(getBlockResult(a)))
-      stream.println("}")
-
-      stream.println("def " + quote(sym) + "elseb(): " + remap(getBlockResult(b).Type) + " = {")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
-
-      stream.println("if (" + quote(c) + ") {")
-      stream.println(quote(sym) + "thenb()")
-      stream.println("} else {")
-      stream.println(quote(sym) + "elseb()")
-      stream.println("}")
-      stream.println("}")
-    
-    case _ => super.emitNode(sym, rhs)
-  }
-*/
 }
 
 trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {

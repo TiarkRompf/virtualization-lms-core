@@ -113,6 +113,63 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
 */      
   }
 
+  def transformAllFully(currentScope0: List[TTP], result0: List[Exp[Any]], t: SubstTransformer): (List[TTP], List[Exp[Any]]) = {
+    var currentScope = currentScope0
+    var result = result0
+    
+    // ---
+    currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+
+    /*println("<1---"+result0+"/"+result)
+    currentScope.foreach(println)
+    println("---1>")*/
+
+    // SIMPLIFY! <--- multiple steps necessary???
+  
+    def withEffectContext(body: =>List[TTP]): List[TTP] = {
+      val save = context
+      context = Nil
+      val scope = body
+      val leftovereffects = context.filterNot((scope.flatMap(_.lhs)) contains _)
+      if (leftovereffects.nonEmpty) 
+        printlog("warning: transformation left effect context (will be discarded): "+leftovereffects)
+      context = save
+      scope
+    }
+  
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(result) // clean things up!
+
+
+    // once more to see if we are converged
+    val previousScope = currentScope
+  
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(result) // clean things up!
+  
+    if (currentScope != previousScope) { // check convergence
+      printerr("error: transformation of scope contents has not converged")
+      printdbg(previousScope + "-->" + currentScope)
+    }
+  
+    /*println("<x---"+result0+"/"+result)
+    currentScope.foreach(println)
+    println("---x>")*/
+    
+    (currentScope, result)
+  }
+  
+  
   def simplify(scope: List[TTP])(results: List[Exp[Any]]): (List[TTP], List[Exp[Any]]) = {
     val t = new SubstTransformer    
     val scope2 = transformAll(scope, t)
@@ -317,54 +374,12 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
             case _ => //e
           }
           
+          // ---
           
-          currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
-
-          /*println("<1---"+result0+"/"+result)
-          currentScope.foreach(println)
-          println("---1>")*/
-
-          // SIMPLIFY! <--- multiple steps necessary???
-          
-          def withEffectContext(body: =>List[TTP]): List[TTP] = {
-            val save = context
-            context = Nil
-            val scope = body
-            val leftovereffects = context.filterNot((scope.flatMap(_.lhs)) contains _)
-            if (leftovereffects.nonEmpty) 
-              printlog("warning: transformation left effect context (will be discarded): "+leftovereffects)
-            context = save
-            scope
+          transformAllFully(currentScope, result, t) match { case (a,b) => // too bad we can't use pair assigment
+            currentScope = a
+            result = b
           }
-          
-          currentScope = withEffectContext { transformAll(currentScope, t) }
-          result = t(result)
-          currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
-
-          currentScope = withEffectContext { transformAll(currentScope, t) }
-          result = t(result)
-          currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
-
-          currentScope = withEffectContext { transformAll(currentScope, t) }
-          result = t(result)
-          currentScope = getFatSchedule(currentScope)(result) // clean things up!
-
-
-          // once more to see if we are converged
-          val previousScope = currentScope
-          
-          currentScope = withEffectContext { transformAll(currentScope, t) }
-          result = t(result)
-          currentScope = getFatSchedule(currentScope)(result) // clean things up!
-          
-          if (currentScope != previousScope) { // check convergence
-            printerr("error: transformation of scope contents has not converged")
-            printdbg(previousScope + "-->" + currentScope)
-          }
-          
-          /*println("<x---"+result0+"/"+result)
-          currentScope.foreach(println)
-          println("---x>")*/
 
           //Wloops = currentScope collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
 
@@ -415,7 +430,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         case (r0 @ Def(Reify(x, _, _)),Def(Reify(y, u, es))) => 
           if (!x.isInstanceOf[Sym[Any]])
             printlog("non-sym block result: " + x + " to " + y)
-          else
+          else if (x != y)
             currentScope = currentScope :+ TTP(List(x.asInstanceOf[Sym[Any]]), ThinDef(Forward(y)))
           currentScope = currentScope :+ TTP(List(r0.asInstanceOf[Sym[Any]]), ThinDef(Reify(x,u,es)))
           // should rewire result so that x->y assignment is inserted

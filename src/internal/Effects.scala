@@ -124,6 +124,32 @@ trait Effects extends Expressions with Utils {
     2) use a data structure to track transitive aliasing or recompute always?
   */
 
+
+  /*
+  
+  the methods below define the sharing relation between the
+  result of an operation and its arguments.
+  
+  how do i use them? what do i need to return?
+  
+  assume an operation foo:
+
+  y = Foo(x)
+
+  x should be returned in the following cases:
+
+  x in aliasSyms(y)      if y = x      // if then else
+  x in containSyms(y)    if *y = x     // array update
+  x in extractSyms(y)    if y = *x     // array apply
+  x in copySyms(y)       if *y = *x    // array clone
+    
+  y = x is to be understood as "y may be equal to x"
+  *y = x as "dereferencing y (at some index) may return x"
+  etc.
+  
+  */
+
+
   def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case Reflect(x, u, es) => aliasSyms(x)
     case Reify(x, u, es) => syms(x)

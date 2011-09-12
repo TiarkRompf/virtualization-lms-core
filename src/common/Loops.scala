@@ -17,6 +17,8 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   }
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
+  
+  def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = SimpleLoop(size, v, body)
 
 
   override def syms(e: Any): List[Sym[Any]] = e match {

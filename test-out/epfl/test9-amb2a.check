@@ -1,0 +1,923 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+val x1 = 1 != 1
+val x9 = if (x1) {
+val x7 = if (x1) {
+val x2 = println("found:")
+val x3 = println(1)
+val x4 = println(1)
+val x5 = println(1)
+x5
+} else {
+()
+}
+x7
+} else {
+()
+}
+val x10 = 1 != 2
+val x18 = if (x1) {
+val x16 = if (x10) {
+val x11 = println("found:")
+val x12 = println(1)
+val x13 = println(1)
+val x14 = println(2)
+x14
+} else {
+()
+}
+x16
+} else {
+()
+}
+val x19 = 1 != 3
+val x27 = if (x1) {
+val x25 = if (x19) {
+val x20 = println("found:")
+val x21 = println(1)
+val x22 = println(1)
+val x23 = println(3)
+x23
+} else {
+()
+}
+x25
+} else {
+()
+}
+val x28 = 1 != 4
+val x36 = if (x1) {
+val x34 = if (x28) {
+val x29 = println("found:")
+val x30 = println(1)
+val x31 = println(1)
+val x32 = println(4)
+x32
+} else {
+()
+}
+x34
+} else {
+()
+}
+val x37 = 2 != 1
+val x45 = if (x10) {
+val x43 = if (x37) {
+val x38 = println("found:")
+val x39 = println(1)
+val x40 = println(2)
+val x41 = println(1)
+x41
+} else {
+()
+}
+x43
+} else {
+()
+}
+val x46 = 2 != 2
+val x54 = if (x10) {
+val x52 = if (x46) {
+val x47 = println("found:")
+val x48 = println(1)
+val x49 = println(2)
+val x50 = println(2)
+x50
+} else {
+()
+}
+x52
+} else {
+()
+}
+val x55 = 2 != 3
+val x63 = if (x10) {
+val x61 = if (x55) {
+val x56 = println("found:")
+val x57 = println(1)
+val x58 = println(2)
+val x59 = println(3)
+x59
+} else {
+()
+}
+x61
+} else {
+()
+}
+val x64 = 2 != 4
+val x72 = if (x10) {
+val x70 = if (x64) {
+val x65 = println("found:")
+val x66 = println(1)
+val x67 = println(2)
+val x68 = println(4)
+x68
+} else {
+()
+}
+x70
+} else {
+()
+}
+val x73 = 3 != 1
+val x81 = if (x19) {
+val x79 = if (x73) {
+val x74 = println("found:")
+val x75 = println(1)
+val x76 = println(3)
+val x77 = println(1)
+x77
+} else {
+()
+}
+x79
+} else {
+()
+}
+val x82 = 3 != 2
+val x90 = if (x19) {
+val x88 = if (x82) {
+val x83 = println("found:")
+val x84 = println(1)
+val x85 = println(3)
+val x86 = println(2)
+x86
+} else {
+()
+}
+x88
+} else {
+()
+}
+val x91 = 3 != 3
+val x99 = if (x19) {
+val x97 = if (x91) {
+val x92 = println("found:")
+val x93 = println(1)
+val x94 = println(3)
+val x95 = println(3)
+x95
+} else {
+()
+}
+x97
+} else {
+()
+}
+val x100 = 3 != 4
+val x108 = if (x19) {
+val x106 = if (x100) {
+val x101 = println("found:")
+val x102 = println(1)
+val x103 = println(3)
+val x104 = println(4)
+x104
+} else {
+()
+}
+x106
+} else {
+()
+}
+val x109 = 4 != 1
+val x117 = if (x28) {
+val x115 = if (x109) {
+val x110 = println("found:")
+val x111 = println(1)
+val x112 = println(4)
+val x113 = println(1)
+x113
+} else {
+()
+}
+x115
+} else {
+()
+}
+val x118 = 4 != 2
+val x126 = if (x28) {
+val x124 = if (x118) {
+val x119 = println("found:")
+val x120 = println(1)
+val x121 = println(4)
+val x122 = println(2)
+x122
+} else {
+()
+}
+x124
+} else {
+()
+}
+val x127 = 4 != 3
+val x135 = if (x28) {
+val x133 = if (x127) {
+val x128 = println("found:")
+val x129 = println(1)
+val x130 = println(4)
+val x131 = println(3)
+x131
+} else {
+()
+}
+x133
+} else {
+()
+}
+val x136 = 4 != 4
+val x144 = if (x28) {
+val x142 = if (x136) {
+val x137 = println("found:")
+val x138 = println(1)
+val x139 = println(4)
+val x140 = println(4)
+x140
+} else {
+()
+}
+x142
+} else {
+()
+}
+val x152 = if (x37) {
+val x150 = if (x1) {
+val x145 = println("found:")
+val x146 = println(2)
+val x147 = println(1)
+val x148 = println(1)
+x148
+} else {
+()
+}
+x150
+} else {
+()
+}
+val x160 = if (x37) {
+val x158 = if (x10) {
+val x153 = println("found:")
+val x154 = println(2)
+val x155 = println(1)
+val x156 = println(2)
+x156
+} else {
+()
+}
+x158
+} else {
+()
+}
+val x168 = if (x37) {
+val x166 = if (x19) {
+val x161 = println("found:")
+val x162 = println(2)
+val x163 = println(1)
+val x164 = println(3)
+x164
+} else {
+()
+}
+x166
+} else {
+()
+}
+val x176 = if (x37) {
+val x174 = if (x28) {
+val x169 = println("found:")
+val x170 = println(2)
+val x171 = println(1)
+val x172 = println(4)
+x172
+} else {
+()
+}
+x174
+} else {
+()
+}
+val x184 = if (x46) {
+val x182 = if (x37) {
+val x177 = println("found:")
+val x178 = println(2)
+val x179 = println(2)
+val x180 = println(1)
+x180
+} else {
+()
+}
+x182
+} else {
+()
+}
+val x192 = if (x46) {
+val x190 = if (x46) {
+val x185 = println("found:")
+val x186 = println(2)
+val x187 = println(2)
+val x188 = println(2)
+x188
+} else {
+()
+}
+x190
+} else {
+()
+}
+val x200 = if (x46) {
+val x198 = if (x55) {
+val x193 = println("found:")
+val x194 = println(2)
+val x195 = println(2)
+val x196 = println(3)
+x196
+} else {
+()
+}
+x198
+} else {
+()
+}
+val x208 = if (x46) {
+val x206 = if (x64) {
+val x201 = println("found:")
+val x202 = println(2)
+val x203 = println(2)
+val x204 = println(4)
+x204
+} else {
+()
+}
+x206
+} else {
+()
+}
+val x216 = if (x55) {
+val x214 = if (x73) {
+val x209 = println("found:")
+val x210 = println(2)
+val x211 = println(3)
+val x212 = println(1)
+x212
+} else {
+()
+}
+x214
+} else {
+()
+}
+val x224 = if (x55) {
+val x222 = if (x82) {
+val x217 = println("found:")
+val x218 = println(2)
+val x219 = println(3)
+val x220 = println(2)
+x220
+} else {
+()
+}
+x222
+} else {
+()
+}
+val x232 = if (x55) {
+val x230 = if (x91) {
+val x225 = println("found:")
+val x226 = println(2)
+val x227 = println(3)
+val x228 = println(3)
+x228
+} else {
+()
+}
+x230
+} else {
+()
+}
+val x240 = if (x55) {
+val x238 = if (x100) {
+val x233 = println("found:")
+val x234 = println(2)
+val x235 = println(3)
+val x236 = println(4)
+x236
+} else {
+()
+}
+x238
+} else {
+()
+}
+val x248 = if (x64) {
+val x246 = if (x109) {
+val x241 = println("found:")
+val x242 = println(2)
+val x243 = println(4)
+val x244 = println(1)
+x244
+} else {
+()
+}
+x246
+} else {
+()
+}
+val x256 = if (x64) {
+val x254 = if (x118) {
+val x249 = println("found:")
+val x250 = println(2)
+val x251 = println(4)
+val x252 = println(2)
+x252
+} else {
+()
+}
+x254
+} else {
+()
+}
+val x264 = if (x64) {
+val x262 = if (x127) {
+val x257 = println("found:")
+val x258 = println(2)
+val x259 = println(4)
+val x260 = println(3)
+x260
+} else {
+()
+}
+x262
+} else {
+()
+}
+val x272 = if (x64) {
+val x270 = if (x136) {
+val x265 = println("found:")
+val x266 = println(2)
+val x267 = println(4)
+val x268 = println(4)
+x268
+} else {
+()
+}
+x270
+} else {
+()
+}
+val x280 = if (x73) {
+val x278 = if (x1) {
+val x273 = println("found:")
+val x274 = println(3)
+val x275 = println(1)
+val x276 = println(1)
+x276
+} else {
+()
+}
+x278
+} else {
+()
+}
+val x288 = if (x73) {
+val x286 = if (x10) {
+val x281 = println("found:")
+val x282 = println(3)
+val x283 = println(1)
+val x284 = println(2)
+x284
+} else {
+()
+}
+x286
+} else {
+()
+}
+val x296 = if (x73) {
+val x294 = if (x19) {
+val x289 = println("found:")
+val x290 = println(3)
+val x291 = println(1)
+val x292 = println(3)
+x292
+} else {
+()
+}
+x294
+} else {
+()
+}
+val x304 = if (x73) {
+val x302 = if (x28) {
+val x297 = println("found:")
+val x298 = println(3)
+val x299 = println(1)
+val x300 = println(4)
+x300
+} else {
+()
+}
+x302
+} else {
+()
+}
+val x312 = if (x82) {
+val x310 = if (x37) {
+val x305 = println("found:")
+val x306 = println(3)
+val x307 = println(2)
+val x308 = println(1)
+x308
+} else {
+()
+}
+x310
+} else {
+()
+}
+val x320 = if (x82) {
+val x318 = if (x46) {
+val x313 = println("found:")
+val x314 = println(3)
+val x315 = println(2)
+val x316 = println(2)
+x316
+} else {
+()
+}
+x318
+} else {
+()
+}
+val x328 = if (x82) {
+val x326 = if (x55) {
+val x321 = println("found:")
+val x322 = println(3)
+val x323 = println(2)
+val x324 = println(3)
+x324
+} else {
+()
+}
+x326
+} else {
+()
+}
+val x336 = if (x82) {
+val x334 = if (x64) {
+val x329 = println("found:")
+val x330 = println(3)
+val x331 = println(2)
+val x332 = println(4)
+x332
+} else {
+()
+}
+x334
+} else {
+()
+}
+val x344 = if (x91) {
+val x342 = if (x73) {
+val x337 = println("found:")
+val x338 = println(3)
+val x339 = println(3)
+val x340 = println(1)
+x340
+} else {
+()
+}
+x342
+} else {
+()
+}
+val x352 = if (x91) {
+val x350 = if (x82) {
+val x345 = println("found:")
+val x346 = println(3)
+val x347 = println(3)
+val x348 = println(2)
+x348
+} else {
+()
+}
+x350
+} else {
+()
+}
+val x360 = if (x91) {
+val x358 = if (x91) {
+val x353 = println("found:")
+val x354 = println(3)
+val x355 = println(3)
+val x356 = println(3)
+x356
+} else {
+()
+}
+x358
+} else {
+()
+}
+val x368 = if (x91) {
+val x366 = if (x100) {
+val x361 = println("found:")
+val x362 = println(3)
+val x363 = println(3)
+val x364 = println(4)
+x364
+} else {
+()
+}
+x366
+} else {
+()
+}
+val x376 = if (x100) {
+val x374 = if (x109) {
+val x369 = println("found:")
+val x370 = println(3)
+val x371 = println(4)
+val x372 = println(1)
+x372
+} else {
+()
+}
+x374
+} else {
+()
+}
+val x384 = if (x100) {
+val x382 = if (x118) {
+val x377 = println("found:")
+val x378 = println(3)
+val x379 = println(4)
+val x380 = println(2)
+x380
+} else {
+()
+}
+x382
+} else {
+()
+}
+val x392 = if (x100) {
+val x390 = if (x127) {
+val x385 = println("found:")
+val x386 = println(3)
+val x387 = println(4)
+val x388 = println(3)
+x388
+} else {
+()
+}
+x390
+} else {
+()
+}
+val x400 = if (x100) {
+val x398 = if (x136) {
+val x393 = println("found:")
+val x394 = println(3)
+val x395 = println(4)
+val x396 = println(4)
+x396
+} else {
+()
+}
+x398
+} else {
+()
+}
+val x408 = if (x109) {
+val x406 = if (x1) {
+val x401 = println("found:")
+val x402 = println(4)
+val x403 = println(1)
+val x404 = println(1)
+x404
+} else {
+()
+}
+x406
+} else {
+()
+}
+val x416 = if (x109) {
+val x414 = if (x10) {
+val x409 = println("found:")
+val x410 = println(4)
+val x411 = println(1)
+val x412 = println(2)
+x412
+} else {
+()
+}
+x414
+} else {
+()
+}
+val x424 = if (x109) {
+val x422 = if (x19) {
+val x417 = println("found:")
+val x418 = println(4)
+val x419 = println(1)
+val x420 = println(3)
+x420
+} else {
+()
+}
+x422
+} else {
+()
+}
+val x432 = if (x109) {
+val x430 = if (x28) {
+val x425 = println("found:")
+val x426 = println(4)
+val x427 = println(1)
+val x428 = println(4)
+x428
+} else {
+()
+}
+x430
+} else {
+()
+}
+val x440 = if (x118) {
+val x438 = if (x37) {
+val x433 = println("found:")
+val x434 = println(4)
+val x435 = println(2)
+val x436 = println(1)
+x436
+} else {
+()
+}
+x438
+} else {
+()
+}
+val x448 = if (x118) {
+val x446 = if (x46) {
+val x441 = println("found:")
+val x442 = println(4)
+val x443 = println(2)
+val x444 = println(2)
+x444
+} else {
+()
+}
+x446
+} else {
+()
+}
+val x456 = if (x118) {
+val x454 = if (x55) {
+val x449 = println("found:")
+val x450 = println(4)
+val x451 = println(2)
+val x452 = println(3)
+x452
+} else {
+()
+}
+x454
+} else {
+()
+}
+val x464 = if (x118) {
+val x462 = if (x64) {
+val x457 = println("found:")
+val x458 = println(4)
+val x459 = println(2)
+val x460 = println(4)
+x460
+} else {
+()
+}
+x462
+} else {
+()
+}
+val x472 = if (x127) {
+val x470 = if (x73) {
+val x465 = println("found:")
+val x466 = println(4)
+val x467 = println(3)
+val x468 = println(1)
+x468
+} else {
+()
+}
+x470
+} else {
+()
+}
+val x480 = if (x127) {
+val x478 = if (x82) {
+val x473 = println("found:")
+val x474 = println(4)
+val x475 = println(3)
+val x476 = println(2)
+x476
+} else {
+()
+}
+x478
+} else {
+()
+}
+val x488 = if (x127) {
+val x486 = if (x91) {
+val x481 = println("found:")
+val x482 = println(4)
+val x483 = println(3)
+val x484 = println(3)
+x484
+} else {
+()
+}
+x486
+} else {
+()
+}
+val x496 = if (x127) {
+val x494 = if (x100) {
+val x489 = println("found:")
+val x490 = println(4)
+val x491 = println(3)
+val x492 = println(4)
+x492
+} else {
+()
+}
+x494
+} else {
+()
+}
+val x504 = if (x136) {
+val x502 = if (x109) {
+val x497 = println("found:")
+val x498 = println(4)
+val x499 = println(4)
+val x500 = println(1)
+x500
+} else {
+()
+}
+x502
+} else {
+()
+}
+val x512 = if (x136) {
+val x510 = if (x118) {
+val x505 = println("found:")
+val x506 = println(4)
+val x507 = println(4)
+val x508 = println(2)
+x508
+} else {
+()
+}
+x510
+} else {
+()
+}
+val x520 = if (x136) {
+val x518 = if (x127) {
+val x513 = println("found:")
+val x514 = println(4)
+val x515 = println(4)
+val x516 = println(3)
+x516
+} else {
+()
+}
+x518
+} else {
+()
+}
+val x528 = if (x136) {
+val x526 = if (x136) {
+val x521 = println("found:")
+val x522 = println(4)
+val x523 = println(4)
+val x524 = println(4)
+x524
+} else {
+()
+}
+x526
+} else {
+()
+}
+()
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

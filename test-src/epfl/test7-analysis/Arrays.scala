@@ -39,31 +39,31 @@ trait ArrayLoopsExp extends LoopsExp {
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
     val y = f(x)
-    SimpleLoop(shape, x, ArrayElem(y))
+    simpleLoop(shape, x, ArrayElem(y))
   }
 
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] = {
     val x = fresh[Int]
     val y = f(x)
-    SimpleLoop(shape, x, ReduceElem(y))
+    simpleLoop(shape, x, ReduceElem(y))
   }
 
   def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]] = {
     val x = fresh[Int]
     val (c,y) = f(x)
-    SimpleLoop(shape, x, ArrayIfElem(c,y)) // TODO: simplify for const true/false
+    simpleLoop(shape, x, ArrayIfElem(c,y)) // TODO: simplify for const true/false
   }
 
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] = {
     val x = fresh[Int]
     val (c,y) = f(x)
-    SimpleLoop(shape, x, ReduceIfElem(c,y)) // TODO: simplify for const true/false
+    simpleLoop(shape, x, ReduceIfElem(c,y)) // TODO: simplify for const true/false
   }
 
   def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]] = {
     val x = fresh[Int]
     val y = f(x)
-    SimpleLoop(shape, x, FlattenElem(y))
+    simpleLoop(shape, x, FlattenElem(y))
   }
 
 
