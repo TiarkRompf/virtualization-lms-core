@@ -415,7 +415,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         case (r0 @ Def(Reify(x, _, _)),Def(Reify(y, u, es))) => 
           if (!x.isInstanceOf[Sym[Any]])
             printlog("non-sym block result: " + x + " to " + y)
-          else
+          else if (x != y)
             currentScope = currentScope :+ TTP(List(x.asInstanceOf[Sym[Any]]), ThinDef(Forward(y)))
           currentScope = currentScope :+ TTP(List(r0.asInstanceOf[Sym[Any]]), ThinDef(Reify(x,u,es)))
           // should rewire result so that x->y assignment is inserted
