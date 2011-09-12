@@ -89,6 +89,7 @@ trait StructExp extends BaseExp with VariablesExp with IfThenElseExp with ArrayL
   
   
   def reReify[T:Manifest](a: Rep[T]): Rep[T] = a match { // TODO: should work with loop bodies, too (Def!)
+    // TODO: this seems inherently unsafe because it duplicates effects. what should we do about it?
     case Def(Reify(Def(Struct(tag,elems)),es,u)) =>
       struct[T](tag, elems.map(p=>(p._1,toAtom(Reify(p._2, es, u)))))
     case _ => a
