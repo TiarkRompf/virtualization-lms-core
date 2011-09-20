@@ -118,6 +118,7 @@ class TestMutation extends FileDiffSuite {
   trait DSL extends ArrayMutation with Arith with OrderingOps with Variables with IfThenElse with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
     def mzeros(l: Rep[Int]) = zeros(l).mutable
+    def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
     def test(x: Rep[Int]): Rep[Any]
   }
@@ -341,7 +342,7 @@ class TestMutation extends FileDiffSuite {
       // local variables of primitive type
       trait Prog extends DSL with LiftVariables {
         def test(x0: Rep[Int]) = {
-          val x = x0.asInstanceOf[Rep[Double]] // avoid codegen for implicit convert
+          val x = x0.toDouble // avoid codegen for implicit convert
           var c = 0.0
           while (c < x) {
             c = c + 1
