@@ -247,8 +247,6 @@ trait CudaCodegen extends GPUCodegen {
       return
     }
 
-    val List(sym) = syms // TODO
-
     val out = new StringBuilder
 
     out.append("#include <cuda.h>\n\n")
@@ -256,7 +254,7 @@ trait CudaCodegen extends GPUCodegen {
 
     val paramStr = (getKernelOutputs++getKernelInputs++getKernelTemps).map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
 
-    out.append("__global__ void kernel_%s(%s) {\n".format(quote(sym), paramStr))
+    out.append("__global__ void kernel_%s(%s) {\n".format(syms.map(quote(_)).mkString(""), paramStr))
     out.append(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
     out.append(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;\n")
     for(in <- multDimInputs) {

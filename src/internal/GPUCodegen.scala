@@ -327,6 +327,7 @@ trait GPUCodegen extends CLikeCodegen {
   }
 
   def emitAllocOutput(sym: Sym[Any], ksym: List[Sym[Any]], contents: String, args: List[Sym[Any]]): String = {
+    println("alloc for " + quote(sym))
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
     	helperFuncIdx += 1
@@ -346,6 +347,7 @@ trait GPUCodegen extends CLikeCodegen {
         metaData.outputs.put(sym,tr)
       }
       else {
+        println("added to temp " + quote(sym))
         val tr = metaData.temps.getOrElse(sym,new TransferFunc)
         tr.funcHtoD = "allocFunc_%s".format(helperFuncIdx)
         tr.argsFuncHtoD = args

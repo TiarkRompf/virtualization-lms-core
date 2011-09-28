@@ -13,6 +13,33 @@ trait OpenCLCodegen extends GPUCodegen {
   override def kernelFileExt = "cl"
   override def toString = "opencl"
 
+  override def emitDevFunc(func:Exp[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
+    devFuncIdx += 1
+    val currIdx = devFuncIdx
+    val tempString = new StringWriter
+    val tempStream = new PrintWriter(tempString, true)
+    val header = new StringWriter
+    val footer = new StringWriter
+
+    val currentTab = tabWidth
+    tabWidth = 1
+    emitBlock(func)(tempStream)
+    tabWidth = currentTab
+
+    val inputs = (getFreeVarBlock(func,Nil).filterNot(ele => locals.contains(ele))++getKernelTemps).distinct
+    val paramStr = (locals++inputs).map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
+    header.append("%s dev_%s(%s) {\n".format(remap(func.Type),currIdx,paramStr))
+    //header.append("\tint idxX = get_global_id(0);\n")
+    if(remap(func.Type) != "void")
+      footer.append("\treturn %s;\n".format(quote(getBlockResult(func))))
+    footer.append("}\n")
+    devFuncString.append(header)
+    devFuncString.append(tempString)
+    devFuncString.append(footer)
+
+    ("dev_"+currIdx,inputs)
+  }
+
   /*
   /* Indicates current dimension of work threads */
   var currDim = 0
@@ -72,7 +99,7 @@ trait OpenCLCodegen extends GPUCodegen {
   override def hasMetaData: Boolean = true
   override def getMetaData: String = MetaData.toString
 
-  def emitDevFunc(func:Exp[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
+  override def emitDevFunc(func:Exp[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
     devFuncIdx += 1
     val currIdx = devFuncIdx
     val tempString = new StringWriter
