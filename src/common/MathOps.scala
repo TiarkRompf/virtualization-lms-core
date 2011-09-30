@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import internal.{GenericNestedCodegen}
+import scala.reflect.SourceContext
 
 trait MathOps extends Base {
 
@@ -78,7 +79,7 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_pi = MathPi()
   def math_e = MathE()
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = ({
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case MathCeil(x) => math_ceil(f(x))

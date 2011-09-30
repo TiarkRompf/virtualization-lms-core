@@ -4,6 +4,7 @@ package common
 import java.io.PrintWriter
 
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
+import scala.reflect.SourceContext
 
 trait RangeOps extends Base {
   // workaround for infix not working with manifests
@@ -48,7 +49,7 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
     reflectEffect(RangeForeach(start, end, i, a), summarizeEffects(a).star)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case Reflect(RangeForeach(s,e,i,b), u, es) => reflectMirrored(Reflect(RangeForeach(f(s),f(e),f(i).asInstanceOf[Sym[Int]],f(b)), mapOver(f,u), f(es)))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]

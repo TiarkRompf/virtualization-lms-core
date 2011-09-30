@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
+import scala.reflect.SourceContext
 
 trait OrderingOps extends Base with Variables with OverloadHack {
   // workaround for infix not working with implicits in PrimitiveOps
@@ -64,7 +65,7 @@ trait OrderingOpsExp extends OrderingOps with VariablesExp {
   def ordering_max[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[T] = OrderingMax(lhs,rhs)
   def ordering_min[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[T] = OrderingMin(lhs,rhs)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = {
     implicit val z1: Ordering[Any] = null // hack!! need to store it in Def instances??
     implicit val z2: Ordering[A] = null // hack!! need to store it in Def instances??
     (e match {

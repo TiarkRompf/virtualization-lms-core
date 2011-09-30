@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
+import scala.reflect.SourceContext
 
 trait LiftEquals extends Base {
   this: Equal =>
@@ -46,7 +47,7 @@ trait EqualExpBridge extends BaseExp  {
   def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = Equal(a,b)
   def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = NotEqual(a,b)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case Equal(a, b) => equals(f(a),f(b))
     case NotEqual(a, b) => notequals(f(a),f(b))
     case _ => super.mirror(e,f)

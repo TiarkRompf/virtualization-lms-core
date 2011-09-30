@@ -78,7 +78,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
           else List(fatten(tp.get))
         case _ => Nil
       }
-    case TTP(lhs, SimpleFatLoop(s,x,rhs)) =>
+    case TTP(lhs, SimpleFatLoop(s,x,rhs,sc)) =>
       // alternate strategy: transform thin def, then fatten again (a little detour)
       printdbg("need to transform rhs of fat loop: " + lhs + ", " + rhs)
       val lhs2 = lhs.map { case s @ Def(r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
@@ -90,7 +90,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
       //val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
       val shape2 = if (lhs != lhs2) lhs2.map { case Def(l: AbstractLoop[_]) => l.size case Def(Reflect(l: AbstractLoop[_], _, _)) => l.size } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
                    else t(s)
-      val rhs2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r))) => transformLoopBody(s,r,t) }}
+      val rhs2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r), _)) => transformLoopBody(s,r,t) }}
                  else (lhs zip rhs) map { case (s,r) => transformLoopBody(s,r,t) }
       
       //update innerScope -- change definition of lhs2 in place
@@ -100,7 +100,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
       }
       
       printdbg("came up with: " + lhs2 + ", " + rhs2 + " with subst " + t.subst.mkString(","))
-      List(TTP(lhs2, SimpleFatLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2)))
+      List(TTP(lhs2, SimpleFatLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2,sc)))
       // still problem: VectorSum(a,b) = SimpleLoop(i, ReduceElem(f(i))) 
       // might need to translate f(i), but looking up VectorSum will not be changed at all!!!
       // --> change rhs nonetheless???
@@ -229,7 +229,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
     var Wloops = super.focusExactScopeFat(currentScope)(result) { levelScope => 
       // TODO: cannot in general fuse several effect loops (one effectful and several pure ones is ok though)
       // so we need a strategy. a simple one would be exclude all effectful loops right away (TODO).
-      levelScope collect { case e @ TTP(_, SimpleFatLoop(_,_,_)) => e }
+      levelScope collect { case e @ TTP(_, SimpleFatLoop(_,_,_,_)) => e }
     }
     
     // FIXME: more than one super call means exponential cost -- is there a better way?
@@ -244,13 +244,13 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
       var done = false
 
       // keep track of loops in inner scopes
-      var UloopSyms = currentScope collect { case e @ TTP(lhs, SimpleFatLoop(_,_,_)) if !Wloops.contains(e) => lhs }
+      var UloopSyms = currentScope collect { case e @ TTP(lhs, SimpleFatLoop(_,_,_,_)) if !Wloops.contains(e) => lhs }
       
       do {
         // utils
-        def WgetLoopShape(e: TTP): Exp[Int] = e.rhs match { case SimpleFatLoop(s,x,rhs) => s }
-        def WgetLoopVar(e: TTP): List[Sym[Int]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => List(x) }
-        def WgetLoopRes(e: TTP): List[Def[Any]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => rhs }
+        def WgetLoopShape(e: TTP): Exp[Int] = e.rhs match { case SimpleFatLoop(s,x,rhs,_) => s }
+        def WgetLoopVar(e: TTP): List[Sym[Int]] = e.rhs match { case SimpleFatLoop(s,x,rhs,_) => List(x) }
+        def WgetLoopRes(e: TTP): List[Def[Any]] = e.rhs match { case SimpleFatLoop(s,x,rhs,_) => rhs }
 
         val loopCollectSyms = Wloops flatMap (e => (e.lhs zip WgetLoopRes(e)) collect { case (s, SimpleCollectIf(_,_)) => s })
         
@@ -292,9 +292,9 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           !WtableNeg.exists(p => (a.lhs contains p._1) && (b.lhs contains p._2) || (b.lhs contains p._1) && (a.lhs contains p._2))
         
         def canFuseDirect(a: TTP, b: TTP): Boolean = (a.rhs,b.rhs) match {
-          case (SimpleFatLoop(s1,_,_), SimpleFatLoop(s2,_,_)) if s1 == s2 => true  // same size (horizontal or pipeline)
-          case (SimpleFatLoop(Def(SimpleDomain(a1)),_,_), SimpleFatLoop(_,_,_)) if b.lhs contains a1 => true // pipeline
-          case (SimpleFatLoop(_,_,_), SimpleFatLoop(Def(SimpleDomain(b1)),_,_)) if a.lhs contains b1 => true
+          case (SimpleFatLoop(s1,_,_,_), SimpleFatLoop(s2,_,_,_)) if s1 == s2 => true  // same size (horizontal or pipeline)
+          case (SimpleFatLoop(Def(SimpleDomain(a1)),_,_,_), SimpleFatLoop(_,_,_,_)) if b.lhs contains a1 => true // pipeline
+          case (SimpleFatLoop(_,_,_,_), SimpleFatLoop(Def(SimpleDomain(b1)),_,_,_)) if a.lhs contains b1 => true
           case _ => false
         }
         
@@ -306,7 +306,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         def getShapeCond(s: Exp[Int], a: TTP) = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) match { case SimpleCollectIf(a,c) => c } }
         
         def extendLoopWithCondition(e: TTP, shape: Exp[Int], targetVar: Sym[Int], c: List[Exp[Boolean]]): List[Exp[Any]] = e.rhs match { 
-          case SimpleFatLoop(s,x,rhs) => rhs.map { r => findOrCreateDefinition(SimpleLoop(shape,targetVar,applyAddCondition(r,c))).sym }
+          case SimpleFatLoop(s,x,rhs,_) => rhs.map { r => findOrCreateDefinition(SimpleLoop(shape,targetVar,applyAddCondition(r,c))).sym }
         }
         
         // partitioning: build maximal sets of loops to be fused
@@ -343,7 +343,11 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
                 shapeA
               }
 
-              val fused = TTP(a.lhs:::b.lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
+              // source context of fused loop is source context of loop a
+              val context = a.rhs match {
+                case SimpleFatLoop(_, _, _, sc) => sc
+              }
+              val fused = TTP(a.lhs:::b.lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b), context))
               partitionsOut = fused :: (partitionsOut diff List(a))
             case None => partitionsOut = b::partitionsOut
           }
@@ -398,10 +402,10 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
       
       // prune Wloops (some might be no longer necessary)
       Wloops = Wloops map {
-        case TTP(lhs, SimpleFatLoop(s, x, rhs)) =>
+        case TTP(lhs, SimpleFatLoop(s, x, rhs, sc)) =>
           val ex = lhs map (s => currentScope exists (_.lhs == List(s)))
           def select[A](a: List[A], b: List[Boolean]) = (a zip b) collect { case (w, true) => w }
-          TTP(select(lhs, ex), SimpleFatLoop(s, x, select(rhs, ex)))
+          TTP(select(lhs, ex), SimpleFatLoop(s, x, select(rhs, ex), sc))
       }
       
       // PREVIOUS PROBLEM: don't throw out all loops, might have some that are *not* in levelScope

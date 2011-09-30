@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal._
+import scala.reflect.SourceContext
 
 trait MiscOps extends Base {
   /**
@@ -36,7 +37,7 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   def error(s: Exp[String]) = reflectEffect(Error(s))
   def returnL(x: Exp[Any]) = reflectEffect(Return(x))
   
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))
     case Reflect(PrintLn(x), u, es) => reflectMirrored(Reflect(PrintLn(f(x)), mapOver(f,u), f(es)))
     case Reflect(Exit(x), u, es) => reflectMirrored(Reflect(Exit(f(x)), mapOver(f,u), f(es)))

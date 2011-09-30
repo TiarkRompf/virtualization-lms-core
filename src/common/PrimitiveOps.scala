@@ -4,6 +4,7 @@ package common
 import java.io.PrintWriter
 
 import scala.virtualization.lms.util.OverloadHack
+import scala.reflect.SourceContext
 
 trait LowPriorityPrimitiveImplicits {
   this: Variables with ImplicitOps =>
@@ -138,7 +139,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   def int_float_value(lhs: Exp[Int]) = IntFloatValue(lhs)
   def int_bitwise_not(lhs: Exp[Int]) = IntBitwiseNot(lhs)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = ({
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case IntDoubleValue(x) => int_double_value(f(x))

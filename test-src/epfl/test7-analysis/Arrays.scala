@@ -123,7 +123,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
   import IR._
   
   override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
-    case SimpleFatLoop(s,x,rhs) => 
+    case SimpleFatLoop(s,x,rhs,sc) => 
       for ((l,r) <- sym zip rhs) {
         r match {
           case ArrayElem(y) =>

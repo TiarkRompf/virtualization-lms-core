@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
+import scala.reflect.SourceContext
 
 trait ImplicitOps extends Base {
   /**
@@ -20,7 +21,7 @@ trait ImplicitOpsExp extends ImplicitOps with BaseExp {
     if (mX == mY) x.asInstanceOf[Rep[Y]] else ImplicitConvert[X,Y](x)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case im@ImplicitConvert(x) => toAtom(ImplicitConvert(f(x))(im.mX,im.mY))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]

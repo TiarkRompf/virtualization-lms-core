@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.{GenericNestedCodegen,GenericFatCodegen}
+import scala.reflect.SourceContext
 
 trait Loops extends Base { // no surface constructs for now
 
@@ -14,6 +15,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val size: Exp[Int]
     val v: Sym[Int]
     val body: Def[A]
+    def sourceContext: Option[SourceContext] = None
   }
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
@@ -72,9 +74,11 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     val size: Exp[Int]
     val v: Sym[Int]
     val body: List[Def[Any]]
+    def sourceContext: Option[SourceContext] = None
   }
   
-  case class SimpleFatLoop(val size: Exp[Int], val v: Sym[Int], val body: List[Def[Any]]) extends AbstractFatLoop
+  case class SimpleFatLoop(val size: Exp[Int], val v: Sym[Int], val body: List[Def[Any]],
+                           override val sourceContext: Option[SourceContext]) extends AbstractFatLoop
 
 
   override def syms(e: Any): List[Sym[Any]] = e match {
@@ -136,10 +140,10 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
 
   override def fatten(e: TP[Any]): TTP = e.rhs match {
     case op: AbstractLoop[_] => 
-      TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
+      TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body), op.sourceContext))
     case Reflect(op: AbstractLoop[_], u, es) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on... 
       printdbg("-- fatten effectful loop " + e)
-      TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
+      TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body), op.sourceContext))
     case _ => super.fatten(e)
   }
 
