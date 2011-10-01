@@ -1,168 +1,93 @@
-promoting to effect: Sym(24)=Reflect(IfThenElse(Sym(16),Sym(4),Sym(21)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14)))
-depends on  Sym(13)
-depends on  Sym(14)
-promoting to effect: Sym(25)=Reflect(IfThenElse(Sym(16),Sym(5),Sym(22)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14)))
-depends on  Sym(13)
-depends on  Sym(14)
-wtableneg: List()
-partitions: List(TTP(List(Sym(10), Sym(11), Sym(4), Sym(5)),SimpleFatLoop(Const(100),Sym(7),List(ArrayElem(Sym(8)), ArrayElem(Sym(7)), ArrayElem(Sym(1)), ArrayElem(Sym(2))))))
-skipping mirror operation Sym(8)=Minus(Const(0.0),Sym(7)) syms Sym(7) subst Sym(7) -> Sym(7),Sym(1) -> Sym(7)
-need to transform rhs of fat loop: List(Sym(10)), List(ArrayElem(Sym(8)))
-skipping mirror operation Sym(10)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(8))) syms Sym(8) subst Sym(7) -> Sym(7),Sym(1) -> Sym(7)
-came up with: List(Sym(10)), List(ArrayElem(Sym(8))) with subst Sym(7) -> Sym(7),Sym(1) -> Sym(7)
-skipping mirror operation Sym(13)=Reflect(NewVar(Sym(10)),Summary(false,false,false,false,true,List(),List(),List(),List()),List()) syms Sym(10) subst Sym(7) -> Sym(7),Sym(1) -> Sym(7)
-need to transform rhs of fat loop: List(Sym(11)), List(ArrayElem(Sym(7)))
-skipping mirror operation Sym(11)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(7))) syms Sym(7) subst Sym(7) -> Sym(7),Sym(1) -> Sym(7)
-came up with: List(Sym(11)), List(ArrayElem(Sym(7))) with subst Sym(7) -> Sym(7),Sym(1) -> Sym(7)
-skipping mirror operation Sym(14)=Reflect(NewVar(Sym(11)),Summary(false,false,false,false,true,List(),List(),List(),List()),List()) syms Sym(11) subst Sym(7) -> Sym(7),Sym(1) -> Sym(7)
-need to transform rhs of fat loop: List(Sym(4)), List(ArrayElem(Sym(1)))
---> replace Sym(4)=SimpleLoop(Const(100),Sym(1),ArrayElem(Sym(1))) by Sym(11)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(7)))
-lhs changed! will add to innerScope: 
-came up with: List(Sym(11)), List(ArrayElem(Sym(7))) with subst Sym(7) -> Sym(7),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(16)=OrderingGT(Sym(0),Const(7)) syms Sym(0) subst Sym(7) -> Sym(7),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(17)=Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13))) syms Sym(13),Sym(13) subst Sym(7) -> Sym(7),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(18)=Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14))) syms Sym(14),Sym(14) subst Sym(7) -> Sym(7),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(21)=Reify(Sym(17),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(),List()),List(Sym(17), Sym(18))) syms Sym(17),Sym(17),Sym(18) subst Sym(7) -> Sym(7),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
---> replace Sym(24)=Reflect(IfThenElse(Sym(16),Sym(4),Sym(21)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14))) by Sym(35)=Reflect(IfThenElse(Sym(16),Sym(11),Sym(21)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14)))
---> replace Sym(2)=Minus(Const(0.0),Sym(1)) by Sym(8)=Minus(Const(0.0),Sym(7))
-need to transform rhs of fat loop: List(Sym(5)), List(ArrayElem(Sym(2)))
---> replace Sym(5)=SimpleLoop(Const(100),Sym(1),ArrayElem(Sym(2))) by Sym(10)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(8)))
-lhs changed! will add to innerScope: 
-came up with: List(Sym(10)), List(ArrayElem(Sym(8))) with subst Sym(2) -> Sym(8),Sym(24) -> Sym(35),Sym(7) -> Sym(7),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(22)=Reify(Sym(18),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(),List()),List(Sym(17), Sym(18))) syms Sym(18),Sym(17),Sym(18) subst Sym(2) -> Sym(8),Sym(24) -> Sym(35),Sym(7) -> Sym(7),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
---> replace Sym(25)=Reflect(IfThenElse(Sym(16),Sym(5),Sym(22)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14))) by Sym(36)=Reflect(IfThenElse(Sym(16),Sym(10),Sym(22)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14)))
---> replace Sym(27)=Reflect(Assign(Variable(Sym(13)),Sym(4)),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(Sym(13)),List(Sym(13))),List(Sym(13), Sym(24), Sym(25))) by Sym(37)=Reflect(Assign(Variable(Sym(13)),Sym(11)),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(Sym(13)),List(Sym(13))),List(Sym(13), Sym(35), Sym(36)))
---> replace Sym(28)=Reflect(Assign(Variable(Sym(14)),Sym(5)),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(Sym(14)),List(Sym(14))),List(Sym(14), Sym(24), Sym(25))) by Sym(38)=Reflect(Assign(Variable(Sym(14)),Sym(10)),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(Sym(14)),List(Sym(14))),List(Sym(14), Sym(35), Sym(36)))
---> replace Sym(29)=Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13), Sym(27))) by Sym(39)=Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13), Sym(37)))
---> replace Sym(30)=Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14), Sym(28))) by Sym(40)=Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14), Sym(38)))
-error: don't know how to mirror Struct(Complex,Map(re -> Sym(29), im -> Sym(30)))
-skipping mirror operation Sym(32)=Reflect(Print(Sym(31)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()) syms Sym(31) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-error: don't know how to mirror Struct(Complex,Map(re -> Sym(24), im -> Sym(25)))
-skipping mirror operation Sym(33)=Reflect(Print(Sym(26)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(32))) syms Sym(26),Sym(32) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
---> replace Sym(34)=Reify(Sym(33),Summary(true,true,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14))),List(Sym(13), Sym(14), Sym(24), Sym(25), Sym(27), Sym(28), Sym(29), Sym(30), Sym(32), Sym(33))) by Sym(41)=Reify(Sym(33),Summary(true,true,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14))),List(Sym(13), Sym(14), Sym(35), Sym(36), Sym(37), Sym(38), Sym(39), Sym(40), Sym(32), Sym(33)))
-skipping mirror operation Sym(8)=Minus(Const(0.0),Sym(7)) syms Sym(7) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-need to transform rhs of fat loop: List(Sym(10)), List(ArrayElem(Sym(8)))
-skipping mirror operation Sym(10)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(8))) syms Sym(8) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-came up with: List(Sym(10)), List(ArrayElem(Sym(8))) with subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(13)=Reflect(NewVar(Sym(10)),Summary(false,false,false,false,true,List(),List(),List(),List()),List()) syms Sym(10) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-need to transform rhs of fat loop: List(Sym(11)), List(ArrayElem(Sym(7)))
-skipping mirror operation Sym(11)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(7))) syms Sym(7) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-came up with: List(Sym(11)), List(ArrayElem(Sym(7))) with subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(14)=Reflect(NewVar(Sym(11)),Summary(false,false,false,false,true,List(),List(),List(),List()),List()) syms Sym(11) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(16)=OrderingGT(Sym(0),Const(7)) syms Sym(0) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(17)=Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13))) syms Sym(13),Sym(13) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(18)=Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14))) syms Sym(14),Sym(14) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(21)=Reify(Sym(17),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(),List()),List(Sym(17), Sym(18))) syms Sym(17),Sym(17),Sym(18) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(35)=Reflect(IfThenElse(Sym(16),Sym(11),Sym(21)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14))) syms Sym(16),Sym(11),Sym(21),Sym(13),Sym(14) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(22)=Reify(Sym(18),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(),List()),List(Sym(17), Sym(18))) syms Sym(18),Sym(17),Sym(18) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(36)=Reflect(IfThenElse(Sym(16),Sym(10),Sym(22)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14))) syms Sym(16),Sym(10),Sym(22),Sym(13),Sym(14) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(37)=Reflect(Assign(Variable(Sym(13)),Sym(11)),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(Sym(13)),List(Sym(13))),List(Sym(13), Sym(35), Sym(36))) syms Sym(13),Sym(11),Sym(13),Sym(35),Sym(36) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(38)=Reflect(Assign(Variable(Sym(14)),Sym(10)),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(Sym(14)),List(Sym(14))),List(Sym(14), Sym(35), Sym(36))) syms Sym(14),Sym(10),Sym(14),Sym(35),Sym(36) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(39)=Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13), Sym(37))) syms Sym(13),Sym(13),Sym(37) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(40)=Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14), Sym(38))) syms Sym(14),Sym(14),Sym(38) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-error: don't know how to mirror Struct(Complex,Map(re -> Sym(29), im -> Sym(30)))
-skipping mirror operation Sym(32)=Reflect(Print(Sym(31)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()) syms Sym(31) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-error: don't know how to mirror Struct(Complex,Map(re -> Sym(24), im -> Sym(25)))
-skipping mirror operation Sym(33)=Reflect(Print(Sym(26)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(32))) syms Sym(26),Sym(32) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(41)=Reify(Sym(33),Summary(true,true,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14))),List(Sym(13), Sym(14), Sym(35), Sym(36), Sym(37), Sym(38), Sym(39), Sym(40), Sym(32), Sym(33))) syms Sym(33),Sym(13),Sym(14),Sym(35),Sym(36),Sym(37),Sym(38),Sym(39),Sym(40),Sym(32),Sym(33) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(8)=Minus(Const(0.0),Sym(7)) syms Sym(7) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-need to transform rhs of fat loop: List(Sym(10)), List(ArrayElem(Sym(8)))
-skipping mirror operation Sym(10)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(8))) syms Sym(8) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-came up with: List(Sym(10)), List(ArrayElem(Sym(8))) with subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(13)=Reflect(NewVar(Sym(10)),Summary(false,false,false,false,true,List(),List(),List(),List()),List()) syms Sym(10) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-need to transform rhs of fat loop: List(Sym(11)), List(ArrayElem(Sym(7)))
-skipping mirror operation Sym(11)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(7))) syms Sym(7) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-came up with: List(Sym(11)), List(ArrayElem(Sym(7))) with subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(14)=Reflect(NewVar(Sym(11)),Summary(false,false,false,false,true,List(),List(),List(),List()),List()) syms Sym(11) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(16)=OrderingGT(Sym(0),Const(7)) syms Sym(0) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(17)=Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13))) syms Sym(13),Sym(13) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(18)=Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14))) syms Sym(14),Sym(14) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(21)=Reify(Sym(17),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(),List()),List(Sym(17), Sym(18))) syms Sym(17),Sym(17),Sym(18) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(35)=Reflect(IfThenElse(Sym(16),Sym(11),Sym(21)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14))) syms Sym(16),Sym(11),Sym(21),Sym(13),Sym(14) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(22)=Reify(Sym(18),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(),List()),List(Sym(17), Sym(18))) syms Sym(18),Sym(17),Sym(18) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(36)=Reflect(IfThenElse(Sym(16),Sym(10),Sym(22)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14))) syms Sym(16),Sym(10),Sym(22),Sym(13),Sym(14) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(37)=Reflect(Assign(Variable(Sym(13)),Sym(11)),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(Sym(13)),List(Sym(13))),List(Sym(13), Sym(35), Sym(36))) syms Sym(13),Sym(11),Sym(13),Sym(35),Sym(36) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(38)=Reflect(Assign(Variable(Sym(14)),Sym(10)),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(Sym(14)),List(Sym(14))),List(Sym(14), Sym(35), Sym(36))) syms Sym(14),Sym(10),Sym(14),Sym(35),Sym(36) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(39)=Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13), Sym(37))) syms Sym(13),Sym(13),Sym(37) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(40)=Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14), Sym(38))) syms Sym(14),Sym(14),Sym(38) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-error: don't know how to mirror Struct(Complex,Map(re -> Sym(29), im -> Sym(30)))
-skipping mirror operation Sym(32)=Reflect(Print(Sym(31)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()) syms Sym(31) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-error: don't know how to mirror Struct(Complex,Map(re -> Sym(24), im -> Sym(25)))
-skipping mirror operation Sym(33)=Reflect(Print(Sym(26)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(32))) syms Sym(26),Sym(32) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(41)=Reify(Sym(33),Summary(true,true,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14))),List(Sym(13), Sym(14), Sym(35), Sym(36), Sym(37), Sym(38), Sym(39), Sym(40), Sym(32), Sym(33))) syms Sym(33),Sym(13),Sym(14),Sym(35),Sym(36),Sym(37),Sym(38),Sym(39),Sym(40),Sym(32),Sym(33) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(8)=Minus(Const(0.0),Sym(7)) syms Sym(7) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-need to transform rhs of fat loop: List(Sym(10)), List(ArrayElem(Sym(8)))
-skipping mirror operation Sym(10)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(8))) syms Sym(8) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-came up with: List(Sym(10)), List(ArrayElem(Sym(8))) with subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(13)=Reflect(NewVar(Sym(10)),Summary(false,false,false,false,true,List(),List(),List(),List()),List()) syms Sym(10) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-need to transform rhs of fat loop: List(Sym(11)), List(ArrayElem(Sym(7)))
-skipping mirror operation Sym(11)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(7))) syms Sym(7) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-came up with: List(Sym(11)), List(ArrayElem(Sym(7))) with subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(14)=Reflect(NewVar(Sym(11)),Summary(false,false,false,false,true,List(),List(),List(),List()),List()) syms Sym(11) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(16)=OrderingGT(Sym(0),Const(7)) syms Sym(0) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(17)=Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13))) syms Sym(13),Sym(13) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(18)=Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14))) syms Sym(14),Sym(14) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(21)=Reify(Sym(17),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(),List()),List(Sym(17), Sym(18))) syms Sym(17),Sym(17),Sym(18) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(35)=Reflect(IfThenElse(Sym(16),Sym(11),Sym(21)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14))) syms Sym(16),Sym(11),Sym(21),Sym(13),Sym(14) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(22)=Reify(Sym(18),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(),List()),List(Sym(17), Sym(18))) syms Sym(18),Sym(17),Sym(18) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(36)=Reflect(IfThenElse(Sym(16),Sym(10),Sym(22)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14))) syms Sym(16),Sym(10),Sym(22),Sym(13),Sym(14) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(37)=Reflect(Assign(Variable(Sym(13)),Sym(11)),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(Sym(13)),List(Sym(13))),List(Sym(13), Sym(35), Sym(36))) syms Sym(13),Sym(11),Sym(13),Sym(35),Sym(36) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(38)=Reflect(Assign(Variable(Sym(14)),Sym(10)),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(Sym(14)),List(Sym(14))),List(Sym(14), Sym(35), Sym(36))) syms Sym(14),Sym(10),Sym(14),Sym(35),Sym(36) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(39)=Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13), Sym(37))) syms Sym(13),Sym(13),Sym(37) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(40)=Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14), Sym(38))) syms Sym(14),Sym(14),Sym(38) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-error: don't know how to mirror Struct(Complex,Map(re -> Sym(29), im -> Sym(30)))
-skipping mirror operation Sym(32)=Reflect(Print(Sym(31)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()) syms Sym(31) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-error: don't know how to mirror Struct(Complex,Map(re -> Sym(24), im -> Sym(25)))
-skipping mirror operation Sym(33)=Reflect(Print(Sym(26)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(32))) syms Sym(26),Sym(32) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(41)=Reify(Sym(33),Summary(true,true,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14))),List(Sym(13), Sym(14), Sym(35), Sym(36), Sym(37), Sym(38), Sym(39), Sym(40), Sym(32), Sym(33))) syms Sym(33),Sym(13),Sym(14),Sym(35),Sym(36),Sym(37),Sym(38),Sym(39),Sym(40),Sym(32),Sym(33) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-need to transform rhs of fat loop: List(Sym(10), Sym(11), Sym(4), Sym(5)), List(ArrayElem(Sym(8)), ArrayElem(Sym(7)), ArrayElem(Sym(1)), ArrayElem(Sym(2)))
-skipping mirror operation Sym(10)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(8))) syms Sym(8) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-skipping mirror operation Sym(11)=SimpleLoop(Const(100),Sym(7),ArrayElem(Sym(7))) syms Sym(7) subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-lhs changed! will add to innerScope: 
-came up with: List(Sym(10), Sym(11)), List(ArrayElem(Sym(8)), ArrayElem(Sym(7))) with subst Sym(2) -> Sym(8),Sym(29) -> Sym(39),Sym(27) -> Sym(37),Sym(24) -> Sym(35),Sym(34) -> Sym(41),Sym(28) -> Sym(38),Sym(30) -> Sym(40),Sym(7) -> Sym(7),Sym(25) -> Sym(36),Sym(5) -> Sym(10),Sym(4) -> Sym(11),Sym(1) -> Sym(7)
-try once more ...
-wtableneg: List()
-partitions: List(TTP(List(Sym(10), Sym(11)),SimpleFatLoop(Const(100),Sym(7),List(ArrayElem(Sym(8)), ArrayElem(Sym(7))))))
-no changes, we're done
-super.focusExactScopeFat with result changed from List(Sym(34)) to List(Sym(41))
+TODO: turn fusion on (need to adapt SimplifyTransform)
+----- Sym(26) / Set((re,Sym(27)), (im,Sym(28)))
+TTP(List(Sym(8)),ThinDef(Minus(Const(0.0),Sym(7))))
+TTP(List(Sym(10)),SimpleFatLoop(Const(100),Sym(7),List(ArrayElem(Sym(8)))))
+TTP(List(Sym(13)),ThinDef(Reflect(NewVar(Sym(10)),Summary(false,false,false,false,true,List(),List(),List(),List()),List())))
+TTP(List(Sym(11)),SimpleFatLoop(Const(100),Sym(7),List(ArrayElem(Sym(7)))))
+TTP(List(Sym(14)),ThinDef(Reflect(NewVar(Sym(11)),Summary(false,false,false,false,true,List(),List(),List(),List()),List())))
+TTP(List(Sym(16)),ThinDef(OrderingGT(Sym(0),Const(7))))
+TTP(List(Sym(17)),ThinDef(Reflect(Print(Const(foobar true)),Summary(true,true,false,false,false,List(),List(),List(),List()),List())))
+TTP(List(Sym(24)),ThinDef(Reify(Const(()),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(17)))))
+TTP(List(Sym(19)),ThinDef(Reflect(Print(Const(foobar false)),Summary(true,true,false,false,false,List(),List(),List(),List()),List())))
+TTP(List(Sym(20)),ThinDef(Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13)))))
+TTP(List(Sym(21)),ThinDef(Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14)))))
+TTP(List(Sym(25)),ThinDef(Reify(Const(()),Summary(true,true,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(),List()),List(Sym(19), Sym(20), Sym(21)))))
+TTP(List(Sym(26), Sym(27), Sym(28)),SimpleFatIf(Sym(16),List(Sym(24), Sym(4), Sym(5)),List(Sym(25), Sym(20), Sym(21))))
+TTP(List(Sym(4)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Sym(1)))))
+TTP(List(Sym(30)),ThinDef(Reflect(Assign(Variable(Sym(13)),Sym(4)),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(Sym(13)),List(Sym(13))),List(Sym(13), Sym(26)))))
+TTP(List(Sym(2)),ThinDef(Minus(Const(0.0),Sym(1))))
+TTP(List(Sym(5)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Sym(2)))))
+TTP(List(Sym(31)),ThinDef(Reflect(Assign(Variable(Sym(14)),Sym(5)),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(Sym(14)),List(Sym(14))),List(Sym(14), Sym(26)))))
+TTP(List(Sym(32)),ThinDef(Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13), Sym(30)))))
+TTP(List(Sym(33)),ThinDef(Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14), Sym(31)))))
+TTP(List(Sym(34)),ThinDef(Struct(List(Array, Complex),Map(re -> Sym(32), im -> Sym(33)))))
+TTP(List(Sym(35)),ThinDef(Reflect(Print(Sym(34)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(26)))))
+TTP(List(Sym(29)),ThinDef(Struct(List(Array, Complex),Map(re -> Sym(27), im -> Sym(28)))))
+TTP(List(Sym(36)),ThinDef(Reflect(Print(Sym(29)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(26), Sym(35)))))
+TTP(List(Sym(37)),ThinDef(Reify(Sym(36),Summary(true,true,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(Sym(13), Sym(14))),List(Sym(13), Sym(14), Sym(26), Sym(30), Sym(31), Sym(32), Sym(33), Sym(35), Sym(36)))))
+TTP(List(Sym(8)),ThinDef(Minus(Const(0.0),Sym(7))))
+TTP(List(Sym(2)),ThinDef(Minus(Const(0.0),Sym(1))))
+TTP(List(Sym(17)),ThinDef(Reflect(Print(Const(foobar true)),Summary(true,true,false,false,false,List(),List(),List(),List()),List())))
+TTP(List(Sym(24)),ThinDef(Reify(Const(()),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(17)))))
+TTP(List(Sym(20)),ThinDef(Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13)))))
+TTP(List(Sym(21)),ThinDef(Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14)))))
+TTP(List(Sym(19)),ThinDef(Reflect(Print(Const(foobar false)),Summary(true,true,false,false,false,List(),List(),List(),List()),List())))
+TTP(List(Sym(25)),ThinDef(Reify(Const(()),Summary(true,true,false,false,false,List(Sym(13), Sym(14)),List(Sym(13), Sym(14)),List(),List()),List(Sym(19), Sym(20), Sym(21)))))
+error: violated ordering of effects
+  expected:
+    TTP(List(Sym(19)),ThinDef(Reflect(Print(Const(foobar false)),Summary(true,true,false,false,false,List(),List(),List(),List()),List())))
+    TTP(List(Sym(20)),ThinDef(Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13)))))
+    TTP(List(Sym(21)),ThinDef(Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14)))))
+  actual:
+    TTP(List(Sym(20)),ThinDef(Reflect(ReadVar(Variable(Sym(13))),Summary(false,false,false,false,false,List(Sym(13)),List(Sym(13)),List(),List()),List(Sym(13)))))
+    TTP(List(Sym(21)),ThinDef(Reflect(ReadVar(Variable(Sym(14))),Summary(false,false,false,false,false,List(Sym(14)),List(Sym(14)),List(),List()),List(Sym(14)))))
+    TTP(List(Sym(19)),ThinDef(Reflect(Print(Const(foobar false)),Summary(true,true,false,false,false,List(),List(),List(),List()),List())))
+  missing:
+  note: there is nothing missing so the different order might in fact be ok (artifact of new effect handling? TODO)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
 var x10 = new Array[](100)
-var x11 = new Array[](100)
 for (x7 <- 0 until 100) {
 val x8 = 0.0-x7
 x10(x7) = x8
-x11(x7) = x7
 }
 var x13: Any = x10
+var x11 = new Array[](100)
+for (x7 <- 0 until 100) {
+x11(x7) = x7
+}
 var x14: Any = x11
 val x16 = x0 > 7
-val x35 = if (x16) {
-x11
-} else {
-val x17 = x13
-val x18 = x14
-x17
+var x4 = new Array[](100)
+for (x1 <- 0 until 100) {
+x4(x1) = x1
 }
-val x36 = if (x16) {
-x10
-} else {
-val x17 = x13
-val x18 = x14
-x18
+var x5 = new Array[](100)
+for (x1 <- 0 until 100) {
+val x2 = 0.0-x1
+x5(x1) = x2
 }
-x13 = x11
-x14 = x10
-val x39 = x13
-val x40 = x14
-val x31 = XXX Struct(Complex,Map(re -> Sym(29), im -> Sym(30)))
-val x32 = println(x31)
-val x26 = XXX Struct(Complex,Map(re -> Sym(24), im -> Sym(25)))
-val x33 = println(x26)
-x33
+val (x26,x27,x28) = if (x16) {
+val x17 = println("foobar true")
+((),x4,x5)
+} else {
+val x20 = x13
+val x21 = x14
+val x19 = println("foobar false")
+((),x20,x21)
+}
+x13 = x4
+x14 = x5
+val x32 = x13
+val x33 = x14
+val x34 = XXX Struct(List(Array, Complex),Map(re -> Sym(32), im -> Sym(33)))
+val x35 = println(x34)
+val x29 = XXX Struct(List(Array, Complex),Map(re -> Sym(27), im -> Sym(28)))
+val x36 = println(x29)
+x36
 }
 }
 /*****************************************

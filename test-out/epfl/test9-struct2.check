@@ -1,7 +1,5 @@
-promoting to effect: Sym(24)=Reflect(IfThenElse(Sym(16),Sym(4),Sym(21)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14)))
-depends on  Sym(13)
-depends on  Sym(14)
-promoting to effect: Sym(25)=Reflect(IfThenElse(Sym(16),Sym(5),Sym(22)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14)))
+TODO: this makes only sense with fat codegen
+promoting to effect: Sym(21)=Reflect(IfThenElse(Sym(16),Sym(6),Sym(20)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14)))
 depends on  Sym(13)
 depends on  Sym(14)
 /*****************************************
@@ -21,34 +19,28 @@ var x14: Any = x11
 val x4 = LoopArray(100) { x1 => 
 x1
 }
-val x16 = x0 > 7
-val x24 = if (x16) {
-x4
-} else {
-val x17 = x13
-val x18 = x14
-x17
-}
 val x5 = LoopArray(100) { x1 => 
 val x2 = 0.0-x1
 x2
 }
-val x25 = if (x16) {
-x5
+val x16 = x0 > 7
+val x21 = if (x16) {
+val x6 = XXX Struct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(5)))
+x6
 } else {
 val x17 = x13
 val x18 = x14
-x18
+val x19 = XXX Struct(List(Array, Complex),Map(re -> Sym(17), im -> Sym(18)))
+x19
 }
 x13 = x4
 x14 = x5
-val x29 = x13
-val x30 = x14
-val x31 = XXX Struct(Complex,Map(re -> Sym(29), im -> Sym(30)))
-val x32 = println(x31)
-val x26 = XXX Struct(Complex,Map(re -> Sym(24), im -> Sym(25)))
-val x33 = println(x26)
-x33
+val x24 = x13
+val x25 = x14
+val x26 = XXX Struct(List(Array, Complex),Map(re -> Sym(24), im -> Sym(25)))
+val x27 = println(x26)
+val x28 = println(x21)
+x28
 }
 }
 /*****************************************

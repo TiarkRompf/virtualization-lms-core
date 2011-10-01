@@ -29,7 +29,9 @@ trait Expressions extends Utils {
 
   abstract class Def[+T] // operations (composite)
 
-  case class TP[+T](sym: Sym[T], rhs: Def[T]) 
+  //abstract class Stm // statement (links syms and definitions)
+  
+  case class TP[+T](sym: Sym[T], rhs: Def[T]) //extends Stm
 
   var globalDefs: List[TP[Any]] = Nil
 

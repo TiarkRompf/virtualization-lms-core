@@ -215,7 +215,8 @@ trait GenericNestedCodegen extends GenericCodegen {
     result match {
       case Def(Reify(x, u, effects)) =>
         val actual = levelScope.filter(effects contains _.sym)
-        assert(effects == actual.map(_.sym), "violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
+        if (effects != actual.map(_.sym))
+          printerr("violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
       case _ =>
     }
 

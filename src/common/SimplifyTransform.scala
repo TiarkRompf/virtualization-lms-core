@@ -78,7 +78,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
           else List(fatten(tp.get))
         case _ => Nil
       }
-    case TTP(lhs, SimpleFatLoop(s,x,rhs)) =>
+    case TTP(lhs, SimpleFatLoop(s,x,rhs)) => //TODO: need to handle other cases once we add more FatDef subclasses (if/else, ...)
       // alternate strategy: transform thin def, then fatten again (a little detour)
       printdbg("need to transform rhs of fat loop: " + lhs + ", " + rhs)
       val lhs2 = lhs.map { case s @ Def(r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
