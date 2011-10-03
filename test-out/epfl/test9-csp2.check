@@ -1,0 +1,17 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test(px1:scala.collection.mutable.ArrayBuffer[Int]) extends ((Int)=>(Any)) {
+def apply(x0:Int): Any = {
+val x1 = px1 // static data: ArrayBuffer()
+val x2 = x1 += x0
+val x3 = x1 += x0
+x3
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+-- running program
+compilation: ok
+accumulated: 21,21

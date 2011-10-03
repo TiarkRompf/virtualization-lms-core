@@ -301,6 +301,14 @@ trait Effects extends Expressions with Utils {
     }
   }
   
+  def isWritableSym[A](w: Sym[A]): Boolean = {
+    findDefinition(w) match {
+      case Some(TP(_, Reflect(_, u, _))) if mustMutable(u) => true // ok
+      case o => globalMutableSyms.contains(w)
+    }
+  }
+  
+  
   var globalMutableSyms: List[Sym[Any]] = Nil
   
   def reflectMutableSym[A](s: Sym[A]): Sym[A] = {
@@ -351,16 +359,9 @@ trait Effects extends Expressions with Utils {
       } else {
         val z = fresh[A]
         // make sure all writes go to allocs
-        for (w <- u.mayWrite) {
-          // TODO: w may be a symbol we use exclusively for writing (such as an accumulator for reduce)
-          findDefinition(w) match {
-            case Some(TP(_, Reflect(_, u, _))) if mustMutable(u) => // ok
-            case o => 
-              if (!globalMutableSyms.contains(w)) {
-                printerr("error: write to non-mutable " + w + " -> " + o)
-                printerr("at " + z + "=" + zd)
-              }
-          }
+        for (w <- u.mayWrite if !isWritableSym(w)) {
+          printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
+          printerr("at " + z + "=" + zd)
         }
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
         // make sure no mutable object becomes part of mutable result (in case of allocation)

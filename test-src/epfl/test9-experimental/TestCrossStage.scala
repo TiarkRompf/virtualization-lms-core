@@ -11,13 +11,13 @@ import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,Scala
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-
+import collection.mutable.ArrayBuffer
 
 class TestCrossStage extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test9-"
   
-  trait DSL extends Functions with ArrayLoops with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with RangeOps with Print {
+  trait DSL extends Functions with ArrayBufferOps with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with RangeOps with Print {
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
     def test(x: Rep[Int]): Rep[Any]
     
@@ -27,18 +27,25 @@ class TestCrossStage extends FileDiffSuite {
     implicit def anyToRep[T:Manifest:StaticAccess](x:T): Rep[T] */
     
     implicit def funToRep[T:Manifest,U:Manifest](x:T=>U): Rep[T=>U]
+    implicit def abToRep[T:Manifest](x:ArrayBuffer[T]): Rep[ArrayBuffer[T]]
   }
 
-  trait Impl extends DSL with FunctionsExp with ArrayLoopsExp with ArithExp with OrderingOpsExp with VariablesExp 
+  trait Impl extends DSL with FunctionsExp with ArrayBufferOpsExp with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp with ScalaCompile { self => 
 
-    implicit def funToRep[T:Manifest,U:Manifest](x:T=>U): Rep[T=>U] = staticData(x)
+    def funToRep[T:Manifest,U:Manifest](x:T=>U): Rep[T=>U] = staticData(x)
+    def abToRep[T:Manifest](x:ArrayBuffer[T]): Rep[ArrayBuffer[T]] = staticData(x)
 
     case class StaticData[T](x: T) extends Def[T]
     def staticData[T:Manifest](x: T): Exp[T] = StaticData(x)
 
+    override def isWritableSym[A](w: Sym[A]): Boolean = findDefinition(w) match {
+      case Some(TP(_, StaticData(_))) => true
+      case _ => super.isWritableSym(w)
+    }
+
     override val verbosity = 2
-    val codegen = new ScalaGenFunctions with ScalaGenArrayLoops with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenFunctions with ScalaGenArrayBufferOps with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { 
         val IR: self.type = self 
@@ -80,9 +87,10 @@ class TestCrossStage extends FileDiffSuite {
   }
 */
   
+  // don't know sharing dependencies between static data in general -- for now assume there is no sharing
+  
   def testCrossStage1 = {
     withOutFile(prefix+"csp1") {
-      // test cross stage persistence
       val f = (x: Int) => println("this is external non-DSL code: " + (2*x))
       
       trait Prog extends DSL {
@@ -96,18 +104,22 @@ class TestCrossStage extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"csp1")
   }
 
-/*
   def testCrossStage2 = {
     withOutFile(prefix+"csp2") {
+      val acc = new ArrayBuffer[Int]
+      
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
-          // ...
+          
+          acc += x
+          acc += x
         }
       }
       new Prog with Impl
+      
+      println("accumulated: " + acc.mkString(","))
     }
     assertFileEqualsCheck(prefix+"csp2")
   }
-*/
 
 }
