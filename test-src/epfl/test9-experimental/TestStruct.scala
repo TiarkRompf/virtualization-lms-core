@@ -126,7 +126,23 @@ trait StructExp extends BaseExp with VariablesExp with IfThenElseExp with ArrayL
   override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
     case ArrayElem(Def(Struct(tag, elems))) => 
       struct[A]("Array"::tag, elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(p._2)))))
+    case ArrayElem(Def(ArrayIndex(b,v))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce!
     case _ => super.simpleLoop(size, v, body)
+  }
+  
+  override def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
+    case Def(Struct(pre::tag,elems:Map[String,Exp[Array[T]]])) =>
+      assert(pre == "Array")
+      struct[T](tag, elems.map(p=>(p._1,infix_at(p._2, i))))
+    case _ => super.infix_at(a,i)
+  }
+  
+  override def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
+    case Def(Struct(pre::tag,elems:Map[String,Exp[Array[T]]])) =>
+      assert(pre == "Array")
+      val ll = elems.map(p=>infix_length(p._2)) // all arrays must have same length!
+      ll reduceLeft { (a1,a2) => assert(a1 == a2); a1 }
+    case _ => super.infix_length(a)
   }
   
 }
@@ -220,20 +236,29 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
     //println("grouped: ")
     //println(m.mkString("\n"))
 
-    def fatif(s:Sym[Unit],c:Exp[Boolean],a:Exp[Unit],b:Exp[Unit]) = {
+    def fatphi(s:Sym[Unit]) = {
       val phis = m(s)
       val ss = phis collect { case TP(s, _) => s }
       val us = phis collect { case TP(_, Phi(c,a,u,b,v)) => u } // assert c,a,b match
       val vs = phis collect { case TP(_, Phi(c,a,u,b,v)) => v }
-      TTP(s::ss, SimpleFatIfThenElse(c,a::us,b::vs))
+      val c  = phis collect { case TP(_, Phi(c,a,u,b,v)) => c } reduceLeft { (c1,c2) => assert(c1 == c2); c1 }
+      TTP(ss, SimpleFatIfThenElse(c,us,vs))
+    }
+    def fatif(s:Sym[Unit],c:Exp[Boolean],a:Exp[Unit],b:Exp[Unit]) = fatphi(s) match {
+      case TTP(ss, SimpleFatIfThenElse(c2,us,vs)) =>
+        assert(c == c2)
+        TTP(s::ss, SimpleFatIfThenElse(c,a::us,b::vs))
     }
 
+    val orphans = m.keys.toList.filterNot(k => e exists (_.sym == k)) // parent if/else might have been removed!
+
     val r = e.flatMap { 
-      case TP(sym, Phi(c,a,u,b,v)) => Nil
+      case TP(sym, p@Phi(c,a,u,b,v)) => Nil
       case TP(sym:Sym[Unit], IfThenElse(c,a:Exp[Unit],b:Exp[Unit])) => List(fatif(sym,c,a,b))
       case TP(sym:Sym[Unit], Reflect(IfThenElse(c,a:Exp[Unit],b:Exp[Unit]),_,_)) => List(fatif(sym,c,a,b))
       case t => List(fatten(t))
-    }
+    } ++ orphans.map { case s: Sym[Unit] => fatphi(s) }
+    
     r.foreach(println)
     r
   }
@@ -290,6 +315,7 @@ class TestStruct extends FileDiffSuite {
 
   def testStruct2 = {
     withOutFile(prefix+"struct2") {
+      // test basic struct flattening (loops, variables, conditionals)
       println("REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)")
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
@@ -319,6 +345,7 @@ class TestStruct extends FileDiffSuite {
 
   def testStruct2b = {
     withOutFile(prefix+"struct2b") {
+      // test basic struct flattening (loops, variables, conditionals)
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           // split loops (rely on fusion, don't want to duplicate computation!)
@@ -347,6 +374,68 @@ class TestStruct extends FileDiffSuite {
       new Prog with ImplFused
     }
     assertFileEqualsCheck(prefix+"struct2b")
+  }
+
+  def testStruct3 = {
+    withOutFile(prefix+"struct3") {
+      // fuse conjugate computation with construction, essentially a no-op
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+
+          val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
+
+          def conj(c: Rep[Complex]) = Complex(c.re, 0.0 - c.im)
+          def infix_map[A:Manifest,B:Manifest](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
+
+          val vector3 = vector1.map(conj)
+
+          print(vector3)
+        }
+      }
+      new Prog with ImplFused {
+        // TODO: use a generic Opt trait instead of defining rewrites here...
+        override def infix_-(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+          case (x, Def(Minus(Const(0.0),y))) => infix_+(x,y)
+          case _ => super.infix_-(x,y)
+        }
+        override def infix_+(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+          case (Const(0.0), y) => y
+          case _ => super.infix_+(x,y)
+        }
+      }
+    }
+    assertFileEqualsCheck(prefix+"struct3")
+  }
+
+  def testStruct4 = {
+    withOutFile(prefix+"struct4") {
+      trait Prog extends DSL {
+        // recognize that only imaginary part is modified, real part untouched
+        def test(x: Rep[Int]) = {
+
+          val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
+          val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
+
+          def conj(c: Rep[Complex]) = Complex(c.re, 0.0 - c.im)
+          def infix_map[A:Manifest,B:Manifest](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
+
+          var vvar = vector1 // force access outside conditional, otherwise construction will be moved inside, defeating purpose of test
+
+          // result of this conditional should be a *single* array 
+          // containing the flattened im fields. re fields should be
+          // unconditional.
+          val vector3 = if (x > 7) {
+            vector1.map(conj)
+          } else {
+            vector1
+          }
+
+          print(vector3)
+        }
+      }
+      new Prog with ImplFused
+    }
+    assertFileEqualsCheck(prefix+"struct4")
   }
 
 }
