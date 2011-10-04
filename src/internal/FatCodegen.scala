@@ -22,9 +22,10 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
 
   // -------------------
   
-
+  
+  
   override def emitBlockFocused(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
-    var currentScope = innerScope.map(fatten)
+    var currentScope = fattenAll(innerScope)
     currentScope = getFatSchedule(currentScope)(result) // clean things up!
     result match {
       case Combine(rs) => emitFatBlockFocused(currentScope)(rs)
@@ -110,7 +111,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
     result foreach {
       case LocalDef(ThinDef(Reify(x, u, effects))) =>
         val actual = levelScope.filter(_.lhs exists (effects contains _))
-        if (effects != actual.flatMap(_.lhs)) {
+        if (effects != actual.flatMap(_.lhs filter (effects contains _))) {
           val expected = effects.map(d=>fatten(findDefinition(d.asInstanceOf[Sym[Any]]).get))
           val missing = expected filterNot (actual contains _)
           val printfn = if (missing.isEmpty) printlog _ else printerr _

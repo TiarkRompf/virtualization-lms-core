@@ -32,7 +32,7 @@ trait Transforming extends Expressions {
     val subst = new HashMap[Exp[Any], Exp[Any]]
     
     def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
-      case Some(y) => apply(y.asInstanceOf[Exp[A]]) case None => x 
+      case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x 
     }
 
 

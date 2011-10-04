@@ -1,0 +1,18 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Boolean)=>(Unit)) {
+def apply(x0:Boolean): Unit = {
+val x5 = if (x0) {
+val x1 = println(7)
+x1
+} else {
+val x3 = println(9)
+x3
+}
+x5
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

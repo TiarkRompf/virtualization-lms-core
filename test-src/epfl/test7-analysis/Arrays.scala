@@ -44,6 +44,47 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   case class Yield[T](g: Exp[Int], a: Exp[T]) extends Def[Gen[T]]
   case class Skip[T](g: Exp[Int]) extends Def[Gen[T]]
 
+/*
+  example for flatMap fusion
+
+  val as = ... // input
+
+  val xs = for (i <- 0 until as.length) yield (i, f(as(i)))  // as map f
+  
+  val ys = for (i <- 0 until xs.length) {  // xs flatMap g
+    val es = xs(i)
+    for (j <- 0 until es.length) {
+      yield(i, es(j))
+    }
+  }
+  
+  val zs = for (i <- 0 until ys.length) yield (i, h(ys(i)))  // ys map h
+  
+  // fused (assuming xs, ys not otherwise used)
+  
+  for (i <- 0 until as.length) 
+  
+    val xs_i = f(as(i))  // as map f
+  
+    val es = xs_i
+    for (j <- 0 until es.length) {
+      val ys_i = es(j))
+      val zs_i = h(ys_i))
+      
+      yield(i, zs_i)
+    }
+
+  }
+
+  
+  // --- unrelated to above: loops over hashtables should be able to write to 'current' key
+  
+  for ((k,v) <- htable) {
+    htable(k) = f(v)
+  }
+*/  
+  
+  // TODO: use simpleLoop instead of SimpleLoop
   
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     //val g = fresh[Accu[T]]
@@ -53,7 +94,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
       g = Yield(x,f(x))
       g
     }
-    reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
+    simpleLoop(shape, x, ArrayElem(g,y))
   }
 
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] = {
@@ -64,7 +105,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
       g = Yield(x,f(x))
       g
     }
-    reflectEffect(SimpleLoop(shape, x, ReduceElem(g,y)), summarizeEffects(y).star)
+    simpleLoop(shape, x, ReduceElem(g,y))
   }
 
   def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]] = {
@@ -87,7 +128,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
       val x2 = fresh[Int]
       g = Yield(x,infix_at(z,x2))
       val y2 = g // TODO: effects...
-      SimpleLoop(shape2, x2, ForeachElem(y2).asInstanceOf[Def[Gen[T]]])
+      simpleLoop(shape2, x2, ForeachElem(y2).asInstanceOf[Def[Gen[T]]])
     }
     reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
   }
@@ -109,7 +150,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
     val x = fresh[Int]
     val y = f(x) //FIXME
     val g = toAtom(Yield(x,y))
-    SimpleLoop(shape, x, FlattenElem(g,g))
+    simpleLoop(shape, x, FlattenElem(g,g))
   }
 */
 
@@ -159,7 +200,7 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
   def withGens[A](p: List[(Exp[Gen[_]], String=>Unit)])(body: =>A):A = {
     val save = genStack
     genStack = genStack ++ p
-    println("--- withGens " + p + " == " + genStack)
+    //println("--- withGens " + p + " == " + genStack)
     val res = body
     genStack = save
     res
