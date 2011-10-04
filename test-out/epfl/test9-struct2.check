@@ -1,4 +1,4 @@
-TODO: this makes only sense with fat codegen
+REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)
 promoting to effect: Sym(21)=Reflect(IfThenElse(Sym(16),Sym(6),Sym(20)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14)))
 depends on  Sym(13)
 depends on  Sym(14)

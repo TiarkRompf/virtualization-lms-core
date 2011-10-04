@@ -4,7 +4,7 @@ package common
 // TODO: generalize and clean up
 
 trait SimplifyTransform extends internal.GenericFatCodegen {
-  val IR: LoopsFatExp
+  val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
   
   case class Forward[A](x: Exp[A]) extends Def[A]
@@ -68,7 +68,13 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
     mirrorFatDef(x, t)
   }
+  def transformIfBody[A](s: Sym[A], x: Exp[A], t: SubstTransformer): Exp[A] = {
+    implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
+    //transformOne(s,x,t)
+    t(x)
+  }
   
+  // TODO: generalize, abstract out SimpleFatXX types
   def transformAll(scope: List[TTP], t: SubstTransformer): List[TTP] = scope flatMap {
     case TTP(List(sym), ThinDef(rhs)) =>
       transformOne(sym, rhs, t) match {
@@ -78,7 +84,37 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
           else List(fatten(tp.get))
         case _ => Nil
       }
-    case TTP(lhs, SimpleFatLoop(s,x,rhs)) => //TODO: need to handle other cases once we add more FatDef subclasses (if/else, ...)
+    case TTP(lhs, SimpleFatIfThenElse(c,as,bs)) =>
+      // alternate strategy: transform thin def, then fatten again (a little detour)
+      printdbg("need to transform rhs of fat if/then/else: " + lhs + ", if " + c + " then " + as + " else " + bs)
+      val lhs2 = lhs.map { case s @ Def(r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
+      if (lhs != lhs2) {
+        val missing = (lhs2.map(s => findDefinition(s).get) diff innerScope)
+        printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
+        innerScope = innerScope ::: missing
+      }
+      //val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
+      //val cond2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatIfThenElse(c, _, _)) => c }} reduceLeft { (s1,s2) => assert(s1==s2,"conditions don't agree: "+s1+","+s2); s1 }
+      val cond2 = if (lhs != lhs2) lhs2.map { 
+                    case Def(l: AbstractIfThenElse[_]) => l.cond
+                    case Def(Reflect(l: AbstractIfThenElse[_], _, _)) => l.cond
+                    case Def(x) => sys.error("XXX " + x)
+                  } reduceLeft { (s1,s2) => assert(s1==s2,"conditions don't agree: "+s1+","+s2); s1 }
+                  else t(c)
+      val as2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatIfThenElse(_, List(r), _)) => transformIfBody(s,r,t) }}
+                 else (lhs zip as) map { case (s,r) => transformIfBody(s,r,t) }
+      val bs2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatIfThenElse(_, _, List(r))) => transformIfBody(s,r,t) }}
+                 else (lhs zip bs) map { case (s,r) => transformIfBody(s,r,t) }
+    
+      //update innerScope -- change definition of lhs2 in place
+      innerScope = innerScope map {
+        case TP(l,_) if lhs2 contains l => TP(l, IfThenElse(cond2,as2(lhs2.indexOf(l)),bs2(lhs2.indexOf(l))))
+        case d => d
+      }
+    
+      printdbg("came up with: " + lhs2 + ", if " + cond2 + " then " + as2 + " else " + bs2 + " with subst " + t.subst.mkString(","))
+      List(TTP(lhs2, SimpleFatIfThenElse(cond2,as2,bs2)))
+    case TTP(lhs, SimpleFatLoop(s,x,rhs)) =>
       // alternate strategy: transform thin def, then fatten again (a little detour)
       printdbg("need to transform rhs of fat loop: " + lhs + ", " + rhs)
       val lhs2 = lhs.map { case s @ Def(r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]

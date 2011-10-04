@@ -41,11 +41,19 @@ trait ComplexStructExp extends ComplexBase with StructExp {
 }
 
 
+// ------ struct impl follows, will move to common once stable
+
 trait StructExp extends BaseExp with VariablesExp with IfThenElseExp with ArrayLoopsExp {
   
   case class Struct[T](tag: List[String], elems: Map[String,Rep[Any]]) extends Def[T]
   case class Field[T](struct: Rep[Any], index: String) extends Def[T]
   
+  def struct[T:Manifest](tag: List[String], elems: Map[String,Rep[Any]]): Rep[T] = Struct[T](tag, elems)
+  
+  def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = struct match {
+    case Def(Struct(tag, elems)) => elems(index).asInstanceOf[Rep[T]]
+    case _ => Field[T](struct, index)
+  }
   
   // FIXME: need  syms override because Map is not a Product
   override def syms(x: Any): List[Sym[Any]] = x match {
@@ -56,15 +64,14 @@ trait StructExp extends BaseExp with VariablesExp with IfThenElseExp with ArrayL
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case z:Iterable[_] => z.toList.flatMap(symsFreq)
     case _ => super.symsFreq(e)
+  }  
+  
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+    case Struct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
+    case _ => super.mirror(e,f)
   }
   
-  def struct[T:Manifest](tag: List[String], elems: Map[String,Rep[Any]]): Rep[T] = Struct[T](tag, elems)
-  
-  def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = struct match {
-    case Def(Struct(tag, elems)) => elems(index).asInstanceOf[Rep[T]]
-    case _ => Field[T](struct, index)
-  }
-  
+  // ----------------------
   
   override def var_new[T:Manifest](init: Exp[T]): Var[T] = init match {
     case Def(Struct(tag, elems)) => 
@@ -124,44 +131,10 @@ trait StructExp extends BaseExp with VariablesExp with IfThenElseExp with ArrayL
   
 }
 
-/*
-  val s = if (c) {
-    val x = struct(a,b); x
-  } else {
-    val y = struct(u,v); y
-  }
 
-  ...
-  val f1 = field(s,1)
-  ...
-  val f2 = field(s,2)
-  ...
-  
-  -------------------------
-  translation: remove s!
-  
-  var f1v
-  var f1v
-  if (c) {
-    f1v = a
-    f2v = b
-    ()
-  } else {
-    f1v = u
-    f2v = v
-    ()
-  }
-  
-  val f1 = f1v
-  val f2 = f2v
-  
-*/
+trait StructFatExp extends StructExp with IfThenElseFatExp { 
 
-trait StructFatExp extends StructExp with FatExpressions { 
-
-  case class SimpleFatIf(c: Exp[Boolean],as:List[Exp[Any]],bs:List[Exp[Any]]) extends FatDef
-
-  case class Phi[T](cond: Exp[Boolean], a1: Exp[Unit], a2: Exp[T], b1: Exp[Unit], b2: Exp[T])(val parent: Exp[Unit]) extends Def[T] // parent points to conditional
+  case class Phi[T](cond: Exp[Boolean], a1: Exp[Unit], val thenp: Exp[T], b1: Exp[Unit], val elsep: Exp[T])(val parent: Exp[Unit]) extends AbstractIfThenElse[T] // parent points to conditional
   def phi[T:Manifest](c: Exp[Boolean], a1: Exp[Unit], a2: Exp[T], b1: Exp[Unit], b2: Exp[T])(parent: Exp[Unit]): Exp[T] = if (a2 == b2) a2 else Phi(c,a1,a2,b1,b2)(parent)
 
   override def syms(x: Any): List[Sym[Any]] = x match {
@@ -171,14 +144,17 @@ trait StructFatExp extends StructExp with FatExpressions {
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
 //    case Phi(c,a,u,b,v) => freqNormal(c) ++ freqCold(a) ++ freqCold(b)
-    case SimpleFatIf(c,as,bs) => freqNormal(c) ++ freqCold(as) ++ freqCold(bs)
     case _ => super.symsFreq(e)
   }
   
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case Phi(c,a,u,b,v) => effectSyms(a):::effectSyms(b)
-    case SimpleFatIf(c,as,bs) => effectSyms(as):::effectSyms(bs)
     case _ => super.boundSyms(e)
+  }
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+    case p@Phi(c,a,u,b,v) => phi(f(c),f(a),f(u),f(b),f(v))(f(p.parent))
+    case _ => super.mirror(e,f)
   }
 
   def deReify[T:Manifest](a: Rep[T]): (Rep[Unit], Rep[T]) = a match { // take Reify(stms, e) and return Reify(stms, ()), e
@@ -231,18 +207,8 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
     case _ => super.emitNode(sym, rhs)
   }
   
-  override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
-    case SimpleFatIf(c,as,bs) =>
-      stream.println("val (" + sym.map(quote).mkString(",") + ") = if (" + quote(c) + ") {")
-      emitFatBlock(as)
-      stream.println("(" + as.map(z=>quote(getBlockResult(z))).mkString(",") + ")")
-      stream.println("} else {")
-      emitFatBlock(bs)
-      stream.println("(" + bs.map(z=>quote(getBlockResult(z))).mkString(",") + ")")
-      stream.println("}")
-    case _ => super.emitFatNode(sym,rhs)
-  }
-
+  
+  // TODO: implement regular fatten ?
   
   override def fattenAll(e: List[TP[Any]]): List[TTP] = {
     val m = e collect { 
@@ -259,7 +225,7 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
       val ss = phis collect { case TP(s, _) => s }
       val us = phis collect { case TP(_, Phi(c,a,u,b,v)) => u } // assert c,a,b match
       val vs = phis collect { case TP(_, Phi(c,a,u,b,v)) => v }
-      TTP(s::ss, SimpleFatIf(c,a::us,b::vs))
+      TTP(s::ss, SimpleFatIfThenElse(c,a::us,b::vs))
     }
 
     val r = e.flatMap { 
@@ -273,6 +239,8 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
   }
 }
 
+
+// ----- test cases
 
 
 class TestStruct extends FileDiffSuite {
@@ -299,58 +267,11 @@ class TestStruct extends FileDiffSuite {
     val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self;
-        override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false }
+        override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
 
   
-  
-  trait StructProg1 extends DSL {
-    def test(x: Rep[Int]) = {
-      
-      // TODO: how to split loops? don't want to duplicate computation!
-      
-      val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
-      val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
-
-      var vvar = vector2
-
-      // TODO: how to split conditionals? might have struct in only one branch ...
-      
-      val vector3 = if (x > 7) vector1 else vvar
-      
-      // conditional is reflected because it reads vvar -- effect ordering for split terms?
-      // don't want them to be reordered. plus: will reflect/reify prevent matching on struct?
-      
-      vvar = vector1
-        
-      print(vvar)
-      print(vector3)
-    }
-  }
-  trait StructProg2 extends DSL {
-    def test(x: Rep[Int]) = {
-      
-      // TODO: how to split loops? don't want to duplicate computation!
-      
-      val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
-      val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
-
-      var vvar = vector2
-
-      // TODO: how to split conditionals? might have struct in only one branch ...
-      
-      val vector3 = if (x > 7) { print("foobar true"); vector1 } else { print("foobar false"); vvar }
-      
-      // conditional is reflected because it reads vvar -- effect ordering for split terms?
-      // don't want them to be reordered. plus: will reflect/reify prevent matching on struct?
-      
-      vvar = vector1
-        
-      print(vvar)
-      print(vector3)
-    }
-  }  
   
   def testStruct1 = {
     withOutFile(prefix+"struct1") {
@@ -369,8 +290,28 @@ class TestStruct extends FileDiffSuite {
 
   def testStruct2 = {
     withOutFile(prefix+"struct2") {
-      println("TODO: this makes only sense with fat codegen")
-      trait Prog extends StructProg1
+      println("REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)")
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          // split loops (rely on fusion, don't want to duplicate computation!)
+
+          val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
+          val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
+
+          var vvar = vector2
+
+          // split conditionals (be careful about effects)
+
+          val vector3 = if (x > 7) vector1 else vvar
+
+          // conditional is reflected because it reads vvar -- effect ordering for split terms?
+
+          vvar = vector1
+
+          print(vvar)
+          print(vector3)
+        }
+      }
       new Prog with Impl
     }
     assertFileEqualsCheck(prefix+"struct2")
@@ -378,8 +319,31 @@ class TestStruct extends FileDiffSuite {
 
   def testStruct2b = {
     withOutFile(prefix+"struct2b") {
-      println("TODO: turn fusion on (need to adapt SimplifyTransform)")
-      trait Prog extends StructProg2
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          // split loops (rely on fusion, don't want to duplicate computation!)
+
+          val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
+          val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
+
+          var vvar = vector2
+
+          // split conditionals (be careful about effects)
+
+          val vector3 = if (x > 7) { 
+            print("foobar true")
+            vector1
+          } else {
+            print("foobar false")
+            vvar 
+          }
+
+          vvar = vector1
+
+          print(vvar)
+          print(vector3)
+        }
+      }
       new Prog with ImplFused
     }
     assertFileEqualsCheck(prefix+"struct2b")

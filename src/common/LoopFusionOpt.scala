@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
-  val IR: LoopsFatExp
+  val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
   
 /*
