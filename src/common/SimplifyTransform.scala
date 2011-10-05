@@ -153,6 +153,23 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     var currentScope = currentScope0
     var result = result0
     
+/*
+    this comment block was added to wip-fusion -- need to keep??
+    
+    //NOTE: if we have added stuff to currentScope, the line below will reset it
+    // because result is still untransformed and thus the new stuff no used
+    //currentScope = getFatSchedule(currentScope)(result) // clean things up!
+    //NOTE: it is necessary to bring currentScope into the right order, though
+    // the current approach is to use all of currentScope as root, not just result
+    currentScope = getFatSchedule(currentScope)(currentScope)
+
+    // SIMPLIFY! <--- multiple steps necessary? 
+    // currently yes: transform goes first to last, but later elems may
+    // induce substitutions on earlier ones, so we have to iterate
+    
+    currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+*/
+
     // ---
     currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
 

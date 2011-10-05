@@ -16,10 +16,13 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     //case Copy(a) => f(a)
-    case SimpleLoop(s,i, ArrayElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(y))))(mtype(manifest[A]))
-    case SimpleLoop(s,i, ReduceElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(y))))(mtype(manifest[A]))
-    case SimpleLoop(s,i, ArrayIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayIfElem(f(c),f(y))))(mtype(manifest[A]))
-    case SimpleLoop(s,i, ReduceIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceIfElem(f(c),f(y))))(mtype(manifest[A]))
+    case Yield(i,y) => toAtom(Yield(f(i),f(y)))(mtype(manifest[A]))
+    case Skip(i) => toAtom(Skip(f(i)))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ForeachElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ForeachElem(f(y))))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ArrayElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(g),f(y))))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ReduceElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(g),f(y))))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ArrayIfElem(g,c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayIfElem(f(g),f(c),f(y))))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ReduceIfElem(g,c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceIfElem(f(g),f(c),f(y))))(mtype(manifest[A]))
     case ArrayIndex(a,i) => toAtom(ArrayIndex(f(a), f(i)))(mtype(manifest[A]))
     case ArrayLength(a) => toAtom(ArrayLength(f(a)))(mtype(manifest[A]))
     case Plus(x,y) => infix_+(f(x), f(y))
@@ -32,10 +35,11 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
   }).asInstanceOf[Exp[A]]
 
   override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer): Def[A] = (e match {
-    case ArrayElem(y) => ArrayElem(f(y))
-    case ReduceElem(y) => ReduceElem(f(y))
-    case ArrayIfElem(c,y) => ArrayIfElem(f(c),f(y))
-    case ReduceIfElem(c,y) => ReduceIfElem(f(c),f(y))
+    case ForeachElem(y) => ForeachElem(f(y))
+    case ArrayElem(g,y) => ArrayElem(f(g),f(y))
+    case ReduceElem(g,y) => ReduceElem(f(g),f(y))
+    case ArrayIfElem(g,c,y) => ArrayIfElem(f(g),f(c),f(y))
+    case ReduceIfElem(g,c,y) => ReduceIfElem(f(g),f(c),f(y))
     case _ => super.mirrorFatDef(e,f)
   }).asInstanceOf[Def[A]]
     
@@ -57,20 +61,51 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
   }
 
   override def unapplySimpleCollect(e: Def[Any]) = e match {
-    case ArrayElem(a) => Some(a)
+    case ArrayElem(Def(Yield(_,a)), _) => Some(a)
     case _ => super.unapplySimpleCollect(e)
   }
 
   override def unapplySimpleCollectIf(e: Def[Any]) = e match {
-    case ArrayIfElem(c,a) => Some((a,List(c)))
+    case ArrayIfElem(g,c,Def(Yield(_,a))) => Some((a,List(c)))
+    case ArrayElem(g,Def(IfThenElse(c,Def(SimpleCollectIf(a,cs)),Def(Skip(_))))) => Some((a,c::cs))
     case _ => super.unapplySimpleCollectIf(e)
   }
 
+  def wrap[T:Manifest](g: Exp[Gen[T]], c: Exp[Boolean], a: Exp[Gen[T]]) = g match {
+    case Def(Yield(x,_)) => reflectEffect(IfThenElse(c, a, reflectEffect(Skip[T](x), Pure)), Pure)
+  }
+
   override def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]) = e match { //TODO: should c be list or not?
-    case ArrayElem(a) if c.length == 1 => ArrayIfElem(c(0),a)
-    case ReduceElem(a) if c.length == 1 => ReduceIfElem(c(0),a)
+    case ArrayElem(g,a) if c.length == 1 => ArrayElem(g,wrap(g,c(0),a))
+    case ReduceElem(g,a) if c.length == 1 => ReduceElem(g,wrap(g,c(0),a))
     case _ => super.applyAddCondition(e,c)
   }
+  
+  
+  // TODO: more variants...
+  
+  // take d's context (everything between loop body and yield) and duplicate it into r
+
+  def toAtom2[A:Manifest](d: Def[A]): Exp[A] = {
+    val tp = findOrCreateDefinition(d)
+    tp.sym
+  }
+
+  def plugInHelper[A,T:Manifest,U:Manifest](g: Exp[Gen[A]], d: Exp[Gen[T]], r: Exp[Gen[U]]): Exp[Gen[U]] = d match {
+    case `g` => r
+    case Def(IfThenElse(c,a,b@Def(Skip(x)))) => toAtom2(IfThenElse(c,plugInHelper(g,a,r),toAtom2(Skip(x))))
+    case Def(SimpleLoop(sh,x,ForeachElem(y))) => toAtom2(SimpleLoop(sh,x,ForeachElem(plugInHelper(g,y,r))))
+  }
+
+  
+  override def applyPlugIntoContext(d: Def[Any], r: Def[Any]) = (d,r) match {
+    case (ArrayElem(g,a), ArrayElem(g2,b)) => ArrayElem(g2,plugInHelper(g,a,b))
+    case (ReduceElem(g,a), ArrayElem(g2,b)) => ArrayElem(g2,plugInHelper(g,a,b))
+    case (ArrayElem(g,a), ReduceElem(g2,b)) => ReduceElem(g2,plugInHelper(g,a,b))
+    case (ReduceElem(g,a), ReduceElem(g2,b)) => ReduceElem(g2,plugInHelper(g,a,b))
+    case _ => super.applyPlugIntoContext(d,r)
+  }
+  
 
 
 
@@ -128,6 +163,27 @@ trait FusionProg2 extends Arith with ArrayLoops with Print with OrderingOps {
 }
 
 
+trait FusionProg3 extends Arith with ArrayLoops with Print with OrderingOps {
+  
+  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+  
+  def test(x: Rep[Unit]) = {
+    
+    def flatten[T:Manifest](x: Rep[Array[Array[T]]]) = 
+      arrayFlat(x.length) { i => x.at(i) }
+    
+    val range = array(100) { i => i }
+    
+    val nested = array(10) { i => range }
+    
+    val flat = flatten(nested)
+    
+    val res = sum(flat.length) { i => flat.at(i) }
+        
+    print(res)
+  }
+  
+}
 
 /* 
   some thoughts on cse/gvn :
@@ -214,9 +270,37 @@ class TestFusion extends FileDiffSuite {
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        globalDefs.foreach(println)
       }
     }
     assertFileEqualsCheck(prefix+"fusion4")
+  }
+
+  def testFusion5 = {
+    withOutFile(prefix+"fusion5") {
+      new FusionProg3 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+        override val verbosity = 1
+        val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
+          with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
+            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false }
+        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+      }
+    }
+    assertFileEqualsCheck(prefix+"fusion5")
+  }
+
+  def testFusion6 = {
+    withOutFile(prefix+"fusion6") {
+      new FusionProg3 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+        override val verbosity = 1
+        val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
+          with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
+            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
+        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        globalDefs.foreach(println)
+      }
+    }
+    assertFileEqualsCheck(prefix+"fusion6")
   }
  
 }

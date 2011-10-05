@@ -124,9 +124,12 @@ trait StructExp extends BaseExp with VariablesExp with IfThenElseExp with ArrayL
   }
   
   override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
-    case ArrayElem(Def(Struct(tag, elems))) => 
-      struct[A]("Array"::tag, elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(p._2)))))
-    case ArrayElem(Def(ArrayIndex(b,v))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce!
+    case ArrayElem(g, Def(Yield(_, Def(Struct(tag, elems:Map[String,Exp[A]]))))) =>
+      struct[A]("Array"::tag, elems.map { p=>
+        val g: Exp[Gen[A]] = Yield(v,p._2) // introduce yield op
+        (p._1,simpleLoop(size, v, ArrayElem(g,g)))
+      })
+    case ArrayElem(g, Def(Yield(`v`, Def(ArrayIndex(b,`v`))))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce!
     case _ => super.simpleLoop(size, v, body)
   }
   
