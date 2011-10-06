@@ -1,59 +1,29 @@
 package scala.virtualization.lms
-package epfl
-package test9
+package common
 
-import common._
-import internal.{FatExpressions,GenericFatCodegen}
+import java.io.PrintWriter
+import scala.virtualization.lms.internal.{FatExpressions,GenericNestedCodegen,GenericFatCodegen}
 
-
-import test1._
-import test7.{Print,PrintExp,ScalaGenPrint}
-import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt,TransformingStuff}
+//import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt,TransformingStuff} // TODO: eliminate deps
 
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
-
-trait ComplexArith extends Arith with ComplexBase with OverloadHack {
-  
-  def infix_+(x: Rep[Complex], y: Rep[Complex])(implicit o: Overloaded1): Rep[Complex] = Complex(x.re + y.re, x.im + y.im)
-  def infix_-(x: Rep[Complex], y: Rep[Complex])(implicit o: Overloaded1): Rep[Complex] = Complex(x.re - y.re, x.im - y.im)
-  //def infix_*(x: Rep[Complex], y: Rep[Complex]): Rep[Complex] = Complex(x.re + y.re, x.im + y.im)
-  
-}
-
-trait ComplexBase extends Arith {
-  
-  class Complex
-  
-  def Complex(re: Rep[Double], im: Rep[Double]): Rep[Complex]
-  def infix_re(c: Rep[Complex]): Rep[Double]
-  def infix_im(c: Rep[Complex]): Rep[Double]
-}
-
-trait ComplexStructExp extends ComplexBase with StructExp {
-
-  def Complex(re: Rep[Double], im: Rep[Double]) = struct[Complex](List("Complex"), Map("re"->re, "im"->im))
-  def infix_re(c: Rep[Complex]): Rep[Double] = field[Double](c, "re")
-  def infix_im(c: Rep[Complex]): Rep[Double] = field[Double](c, "im")
-  
-}
+/*
+  Right now there is no user facing trait Struct. Should we have one? It seems like
+  structs are most useful as an implementation detail.
+*/
 
 
-// ------ struct impl follows, will move to common once stable
-
-trait StructExp extends BaseExp with VariablesExp with IfThenElseExp with ArrayLoopsExp {
+trait StructExp extends BaseExp {
   
   case class Struct[T](tag: List[String], elems: Map[String,Rep[Any]]) extends Def[T]
   case class Field[T](struct: Rep[Any], index: String) extends Def[T]
   
   def struct[T:Manifest](tag: List[String], elems: Map[String,Rep[Any]]): Rep[T] = Struct[T](tag, elems)
   
-  def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = struct match {
-    case Def(Struct(tag, elems)) => elems(index).asInstanceOf[Rep[T]]
-    case _ => Field[T](struct, index)
-  }
+  def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = Field[T](struct, index)
   
   // FIXME: need  syms override because Map is not a Product
   override def syms(x: Any): List[Sym[Any]] = x match {
@@ -70,8 +40,18 @@ trait StructExp extends BaseExp with VariablesExp with IfThenElseExp with ArrayL
     case Struct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
     case _ => super.mirror(e,f)
   }
+}
   
-  // ----------------------
+trait StructExpOpt extends StructExp {
+
+  override def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = struct match {
+    case Def(Struct(tag, elems)) => elems(index).asInstanceOf[Rep[T]]
+    case _ => super.field[T](struct, index)
+  }
+
+}
+
+trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseExp {
   
   override def var_new[T:Manifest](init: Exp[T]): Var[T] = init match {
     case Def(Struct(tag, elems)) => 
@@ -123,10 +103,18 @@ trait StructExp extends BaseExp with VariablesExp with IfThenElseExp with ArrayL
     case _ => super.ifThenElse(cond,a,b)
   }
   
+}
+
+/*
+
+At the moment arrays still live in test case land, not in lms.common.
+
+trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
+  
   override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
     case ArrayElem(Def(Struct(tag, elems))) => 
       struct[A]("Array"::tag, elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(p._2)))))
-    case ArrayElem(Def(ArrayIndex(b,v))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce!
+    case ArrayElem(Def(ArrayIndex(b,v))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
     case _ => super.simpleLoop(size, v, body)
   }
   
@@ -144,11 +132,16 @@ trait StructExp extends BaseExp with VariablesExp with IfThenElseExp with ArrayL
       ll reduceLeft { (a1,a2) => assert(a1 == a2); a1 }
     case _ => super.infix_length(a)
   }
-  
+
 }
+*/
 
 
-trait StructFatExp extends StructExp with IfThenElseFatExp { 
+// the if/phi stuff is more general than structs -- could be used for variable assignments as well
+
+trait StructFatExp extends StructExp with BaseFatExp
+
+trait StructFatExpOptCommon extends StructFatExp with IfThenElseFatExp { 
 
   case class Phi[T](cond: Exp[Boolean], a1: Exp[Unit], val thenp: Exp[T], b1: Exp[Unit], val elsep: Exp[T])(val parent: Exp[Unit]) extends AbstractIfThenElse[T] // parent points to conditional
   def phi[T:Manifest](c: Exp[Boolean], a1: Exp[Unit], a2: Exp[T], b1: Exp[Unit], b2: Exp[T])(parent: Exp[Unit]): Exp[T] = if (a2 == b2) a2 else Phi(c,a1,a2,b1,b2)(parent)
@@ -214,7 +207,7 @@ trait ScalaGenStruct extends ScalaGenBase {
 }
 
 trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
-  val IR: StructFatExp
+  val IR: StructFatExpOptCommon // TODO: restructure traits, maybe move this to if then else codegen?
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
@@ -264,178 +257,3 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
   }
 }
 
-
-// ----- test cases
-
-
-class TestStruct extends FileDiffSuite {
-  
-  val prefix = "test-out/epfl/test9-"
-  
-  trait DSL extends ComplexArith with ArrayLoops with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with RangeOps with Print {
-    def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-    def test(x: Rep[Int]): Rep[Any]
-  }
-
-  trait Impl extends DSL with ComplexStructExp with ArrayLoopsExp with ArithExp with OrderingOpsExp with VariablesExp 
-      with IfThenElseExp with RangeOpsExp with PrintExp { self => 
-    override val verbosity = 2
-    val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
-      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
-      with ScalaGenPrint { val IR: self.type = self }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
-  }
-
-  trait ImplFused extends DSL with ComplexStructExp with StructFatExp with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
-      with IfThenElseExp with RangeOpsExp with PrintExp with TransformingStuff { self => 
-    override val verbosity = 2
-    val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
-      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
-      with ScalaGenPrint { val IR: self.type = self;
-        override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
-  }
-
-  
-  
-  def testStruct1 = {
-    withOutFile(prefix+"struct1") {
-      // test variable splitting
-      trait Prog extends DSL {
-        def test(x: Rep[Int]) = {
-          var c = Complex(x.toDouble, 0)
-          c = c + Complex(0,x.toDouble)
-          print(c)
-        }
-      }
-      new Prog with Impl
-    }
-    assertFileEqualsCheck(prefix+"struct1")
-  }
-
-  def testStruct2 = {
-    withOutFile(prefix+"struct2") {
-      // test basic struct flattening (loops, variables, conditionals)
-      println("REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)")
-      trait Prog extends DSL {
-        def test(x: Rep[Int]) = {
-          // split loops (rely on fusion, don't want to duplicate computation!)
-
-          val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
-          val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
-
-          var vvar = vector2
-
-          // split conditionals (be careful about effects)
-
-          val vector3 = if (x > 7) vector1 else vvar
-
-          // conditional is reflected because it reads vvar -- effect ordering for split terms?
-
-          vvar = vector1
-
-          print(vvar)
-          print(vector3)
-        }
-      }
-      new Prog with Impl
-    }
-    assertFileEqualsCheck(prefix+"struct2")
-  }
-
-  def testStruct2b = {
-    withOutFile(prefix+"struct2b") {
-      // test basic struct flattening (loops, variables, conditionals)
-      trait Prog extends DSL {
-        def test(x: Rep[Int]) = {
-          // split loops (rely on fusion, don't want to duplicate computation!)
-
-          val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
-          val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
-
-          var vvar = vector2
-
-          // split conditionals (be careful about effects)
-
-          val vector3 = if (x > 7) { 
-            print("foobar true")
-            vector1
-          } else {
-            print("foobar false")
-            vvar 
-          }
-
-          vvar = vector1
-
-          print(vvar)
-          print(vector3)
-        }
-      }
-      new Prog with ImplFused
-    }
-    assertFileEqualsCheck(prefix+"struct2b")
-  }
-
-  def testStruct3 = {
-    withOutFile(prefix+"struct3") {
-      // fuse conjugate computation with construction, essentially a no-op
-      trait Prog extends DSL {
-        def test(x: Rep[Int]) = {
-
-          val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
-
-          def conj(c: Rep[Complex]) = Complex(c.re, 0.0 - c.im)
-          def infix_map[A:Manifest,B:Manifest](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
-
-          val vector3 = vector1.map(conj)
-
-          print(vector3)
-        }
-      }
-      new Prog with ImplFused {
-        // TODO: use a generic Opt trait instead of defining rewrites here...
-        override def infix_-(x: Exp[Double], y: Exp[Double]) = (x, y) match {
-          case (x, Def(Minus(Const(0.0),y))) => infix_+(x,y)
-          case _ => super.infix_-(x,y)
-        }
-        override def infix_+(x: Exp[Double], y: Exp[Double]) = (x, y) match {
-          case (Const(0.0), y) => y
-          case _ => super.infix_+(x,y)
-        }
-      }
-    }
-    assertFileEqualsCheck(prefix+"struct3")
-  }
-
-  def testStruct4 = {
-    withOutFile(prefix+"struct4") {
-      trait Prog extends DSL {
-        // recognize that only imaginary part is modified, real part untouched
-        def test(x: Rep[Int]) = {
-
-          val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
-          val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
-
-          def conj(c: Rep[Complex]) = Complex(c.re, 0.0 - c.im)
-          def infix_map[A:Manifest,B:Manifest](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
-
-          var vvar = vector1 // force access outside conditional, otherwise construction will be moved inside, defeating purpose of test
-
-          // result of this conditional should be a *single* array 
-          // containing the flattened im fields. re fields should be
-          // unconditional.
-          val vector3 = if (x > 7) {
-            vector1.map(conj)
-          } else {
-            vector1
-          }
-
-          print(vector3)
-        }
-      }
-      new Prog with ImplFused
-    }
-    assertFileEqualsCheck(prefix+"struct4")
-  }
-
-}
