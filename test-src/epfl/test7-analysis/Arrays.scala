@@ -250,7 +250,8 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
     case Yield(g,a) => 
       if (genStack.nonEmpty)topGen(sym.asInstanceOf[Sym[Gen[Any]]])(quote(a))
       else emitValDef(sym, "yield " + quote(a) + " // context is messed up!")
-    case Skip(g) =>
+    case Skip(g) => 
+      emitValDef(sym, "() // skip")
     case _ => super.emitNode(sym, rhs)
   }
 }
