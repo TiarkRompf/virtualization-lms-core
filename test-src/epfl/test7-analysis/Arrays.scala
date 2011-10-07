@@ -24,7 +24,10 @@ trait ArrayLoops extends Loops with OverloadHack {
 
 
 trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
-  
+
+  /**
+   * Super trait for all statements that emit results from the loop. For example: Yield and Skip.
+   */
   trait Gen[+T]
   
   case class ForeachElem[T](y: Exp[Gen[T]]) extends Def[Gen[T]]
@@ -40,8 +43,17 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
 
-
+  /**
+   * Yield statement in loops. Indicates that element is being emitted to
+   *  @param  g   Represents the collection to which this yield statement emits.
+   *  @param  a   Element that is being emitted.
+   */
   case class Yield[T](g: Exp[Int], a: Exp[T]) extends Def[Gen[T]]
+
+  /**
+   * Skip statement is used in loops to indicate that no element is being emitted. For example in filter clauses.
+   *  @param  g   Represents the loop to which this skip statement belongs.
+   */
   case class Skip[T](g: Exp[Int]) extends Def[Gen[T]]
 
 /*
@@ -238,7 +250,7 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
     case Yield(g,a) => 
       if (genStack.nonEmpty)topGen(sym.asInstanceOf[Sym[Gen[Any]]])(quote(a))
       else emitValDef(sym, "yield " + quote(a) + " // context is messed up!")
-    case Skip(g) => 
+    case Skip(g) =>
     case _ => super.emitNode(sym, rhs)
   }
 }

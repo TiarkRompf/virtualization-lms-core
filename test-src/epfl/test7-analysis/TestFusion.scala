@@ -105,20 +105,18 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
     case (ReduceElem(g,a), ReduceElem(g2,b)) => ReduceElem(g2,plugInHelper(g,a,b))
     case _ => super.applyPlugIntoContext(d,r)
   }
-  
-
-
-
 }
-
 
 // trait NestLambdaProg extends Arith with Functions with Print 
 // --> from TestCodeMotion.scala
 
+/**
+ * No fusion should be happening.
+ */
 trait FusionProg extends Arith with ArrayLoops with Print {
   
   implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-  
+
   def test(x: Rep[Unit]) = {
     
     val constant = array(100) { i => 1 }
@@ -142,21 +140,24 @@ trait FusionProg extends Arith with ArrayLoops with Print {
   
 }
 
+/**
+ * Generate => Filter => Reduce chain. Can be fused into a single loop.
+ */
 trait FusionProg2 extends Arith with ArrayLoops with Print with OrderingOps {
   
   implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
   
   def test(x: Rep[Unit]) = {
     
-    def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) = 
+    def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
       arrayIf(x.length) { i => (p(x.at(i)), x.at(i)) }
-    
+
     val range = array(100) { i => i }
-    
+
     val odds = filter(range) { z => z > 50 }
-    
+
     val res = sum(odds.length) { i => odds.at(i) }
-        
+
     print(res)
   }
   
@@ -248,7 +249,8 @@ class TestFusion extends FileDiffSuite {
     }
     assertFileEqualsCheck(prefix+"fusion2")
   }
- 
+
+  // Test with filter clause that does not apply fusion.
   def testFusion3 = {
     withOutFile(prefix+"fusion3") {
       new FusionProg2 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
@@ -262,6 +264,7 @@ class TestFusion extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"fusion3")
   }
 
+  // Test with filter clause that applies fusion.
   def testFusion4 = {
     withOutFile(prefix+"fusion4") {
       new FusionProg2 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
@@ -276,6 +279,7 @@ class TestFusion extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"fusion4")
   }
 
+  // Test with flatMap clause that does not apply fusion.
   def testFusion5 = {
     withOutFile(prefix+"fusion5") {
       new FusionProg3 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
@@ -289,6 +293,7 @@ class TestFusion extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"fusion5")
   }
 
+  // Test with flatMap clause that applies fusion.
   def testFusion6 = {
     withOutFile(prefix+"fusion6") {
       new FusionProg3 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
