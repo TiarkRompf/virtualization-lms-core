@@ -478,7 +478,7 @@ trait GPUCodegen extends CLikeCodegen {
     if(xDimList.size == 0 && !external)
       throw new GenerationFailedException("GPUGen: No dimension specified for this kernel.")
 
-    val inputs = (getKernelOutputs++getKernelInputs++getKernelTemps)
+    val inputs = (getKernelOutputs++getKernelInputs++getKernelTemps).filterNot(e=>isVoidType(e.Type))
     val paramStr = inputs.map(ele=>
   		if(isObjectType(ele.Type)) remap(ele.Type) + " *" + quote(ele)
   		else remap(ele.Type) + " " + quote(ele)

@@ -252,7 +252,7 @@ trait CudaCodegen extends GPUCodegen {
     out.append("#include <cuda.h>\n\n")
     out.append(getDSLHeaders)
 
-    val paramStr = (getKernelOutputs++getKernelInputs++getKernelTemps).map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
+    val paramStr = (getKernelOutputs++getKernelInputs++getKernelTemps).filterNot(e=>isVoidType(e.Type)).map(e=>remap(e.Type) + " " + quote(e)).mkString(", ")
 
     out.append("__global__ void kernel_%s(%s) {\n".format(syms.map(quote(_)).mkString(""), paramStr))
     out.append(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")

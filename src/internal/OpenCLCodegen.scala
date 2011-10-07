@@ -426,7 +426,7 @@ trait OpenCLCodegen extends GPUCodegen {
     val out = new StringBuilder
     //out.append(getDSLHeaders)
 
-    val paramStr = (getKernelOutputs++getKernelInputs++getKernelTemps).map( ele =>
+    val paramStr = (getKernelOutputs++getKernelInputs++getKernelTemps).filterNot(e=>isVoidType(e.Type)).map(ele =>
       if(isPrimitiveType(ele.Type))
         remap(ele.Type) + " " + quote(ele)
       else
