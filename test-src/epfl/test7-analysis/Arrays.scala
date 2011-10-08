@@ -247,9 +247,11 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
       emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
     case ArrayLength(a) =>  
       emitValDef(sym, quote(a) + ".length")
-    case Yield(g,a) => 
-      if (genStack.nonEmpty)topGen(sym.asInstanceOf[Sym[Gen[Any]]])(quote(a))
-      else emitValDef(sym, "yield " + quote(a) + " // context is messed up!")
+    case Yield(g,a) =>
+      if (genStack.nonEmpty) {
+        topGen(sym.asInstanceOf[Sym[Gen[Any]]])(quote(a))
+        emitValDef(sym, "()")
+      } else emitValDef(sym, "yield " + quote(a) + " // context is messed up!")
     case Skip(g) => 
       emitValDef(sym, "() // skip")
     case _ => super.emitNode(sym, rhs)
