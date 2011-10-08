@@ -4,9 +4,7 @@ package test7
 
 import common._
 import test1._
-
 import util.OverloadHack
-
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
@@ -47,7 +45,7 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
 
 
 
-trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGenIfThenElseFat with LoopFusionOpt {
+trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGenIfThenElseFatYield with LoopFusionOpt {
   val IR: ArrayLoopsFatExp with IfThenElseFatExp
   import IR._  
   
@@ -104,6 +102,51 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
     case (ArrayElem(g,a), ReduceElem(g2,b)) => ReduceElem(g2,plugInHelper(g,a,b))
     case (ReduceElem(g,a), ReduceElem(g2,b)) => ReduceElem(g2,plugInHelper(g,a,b))
     case _ => super.applyPlugIntoContext(d,r)
+  }
+}
+
+/**
+ * If then else code generator. It optimizes out the Skip statement.
+ * It requires IfThenElseFatExp and ArrayLoopsExp to be mixed in.
+ * TODO (VJ) Move to common instead of the existing version of ScalaGenIfThenElseFat.
+ * TODO(VJ) what about then clause. Check with Tiark.
+ */
+trait ScalaGenIfThenElseFatYield extends ScalaGenIfThenElse with ScalaGenFat with BaseGenIfThenElseFat {
+  val IR: IfThenElseFatExp with ArrayLoopsExp
+  import IR._
+
+  private def quoteList[T](xs: List[Exp[T]]) =
+    if (xs.length > 1) xs.map(quote).mkString("(", ",", ")") else xs.map(quote).mkString(",")
+
+  /**
+   * Helper method for emitting just the ifThen block.
+   */
+  private def emitFatIfThenBlock(symList: List[Sym[Any]],
+                                 rhs: FatDef,
+                                 c: Exp[Boolean],
+                                 as: List[Exp[Any]])
+                                (implicit stream: PrintWriter) {
+    if (symList.length > 1) stream.println("// TODO: use vars instead of tuples to return multiple values")
+    stream.println("val " + quoteList(symList) + " = if (" + quote(c) + ") {")
+    emitFatBlock(as)
+    stream.println(quoteList(as.map(getBlockResult)))
+    stream.print("}")
+  }
+
+  override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+    // Eliminate the else branch if it only contains the Skip clause
+    case SimpleFatIfThenElse(c, as, List(Def(Skip(_)))) =>
+      emitFatIfThenBlock(symList, rhs, c, as)(stream)
+      stream.println("")
+
+    // Generate the full if then else
+    case SimpleFatIfThenElse(c, as, bs) =>
+      emitFatIfThenBlock(symList, rhs, c, as)(stream)
+      stream.println(" else {")
+      emitFatBlock(bs)
+      stream.println(quoteList(bs.map(getBlockResult)))
+      stream.println("}")
+    case _ => super.emitFatNode(symList, rhs)
   }
 }
 
@@ -221,9 +264,6 @@ trait FusionProg3 extends Arith with ArrayLoops with Print with OrderingOps {
       as ArrayZero(len) extends DeliteOP(array(len) { i => 0}).
       here, cse will be done on the case class representation
 */
-
-
-
 class TestFusion extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test7-"
