@@ -21,8 +21,8 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
     case SimpleLoop(s,i, ForeachElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ForeachElem(f(y))))(mtype(manifest[A]))
     case SimpleLoop(s,i, ArrayElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(g),f(y))))(mtype(manifest[A]))
     case SimpleLoop(s,i, ReduceElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(g),f(y))))(mtype(manifest[A]))
-    case SimpleLoop(s,i, ArrayIfElem(g,c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayIfElem(f(g),f(c),f(y))))(mtype(manifest[A]))
-    case SimpleLoop(s,i, ReduceIfElem(g,c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceIfElem(f(g),f(c),f(y))))(mtype(manifest[A]))
+    //case SimpleLoop(s,i, ArrayIfElem(g,c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayIfElem(f(g),f(c),f(y))))(mtype(manifest[A]))
+    //case SimpleLoop(s,i, ReduceIfElem(g,c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceIfElem(f(g),f(c),f(y))))(mtype(manifest[A]))
     case ArrayIndex(a,i) => toAtom(ArrayIndex(f(a), f(i)))(mtype(manifest[A]))
     case ArrayLength(a) => toAtom(ArrayLength(f(a)))(mtype(manifest[A]))
     case Plus(x,y) => infix_+(f(x), f(y))
@@ -38,8 +38,8 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
     case ForeachElem(y) => ForeachElem(f(y))
     case ArrayElem(g,y) => ArrayElem(f(g),f(y))
     case ReduceElem(g,y) => ReduceElem(f(g),f(y))
-    case ArrayIfElem(g,c,y) => ArrayIfElem(f(g),f(c),f(y))
-    case ReduceIfElem(g,c,y) => ReduceIfElem(f(g),f(c),f(y))
+    //case ArrayIfElem(g,c,y) => ArrayIfElem(f(g),f(c),f(y))
+    //case ReduceIfElem(g,c,y) => ReduceIfElem(f(g),f(c),f(y))
     case _ => super.mirrorFatDef(e,f)
   }).asInstanceOf[Def[A]]
     
@@ -66,7 +66,7 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
   }
 
   override def unapplySimpleCollectIf(e: Def[Any]) = e match {
-    case ArrayIfElem(g,c,Def(Yield(_,a))) => Some((a,List(c)))
+    //case ArrayIfElem(g,c,Def(Yield(_,a))) => Some((a,List(c)))
     case ArrayElem(g,Def(IfThenElse(c,Def(SimpleCollectIf(a,cs)),Def(Skip(_))))) => Some((a,c::cs))
     case _ => super.unapplySimpleCollectIf(e)
   }
