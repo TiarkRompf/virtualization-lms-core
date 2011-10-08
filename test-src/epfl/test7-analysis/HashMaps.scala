@@ -41,8 +41,8 @@ trait HashLoops extends ArrayLoops with OverloadHack {
 trait HashLoopsExp extends HashLoops with ArrayLoopsExp {
   
 /*
-  case class ArrayElem[T](y: Exp[T]) extends Def[Array[T]]
-  case class ReduceElem(y: Exp[Double]) extends Def[Double]
+  case class ArrayElem[T](y: Exp[T]) extends Def[Array[T]]        DeliteCollectElem
+  case class ReduceElem(y: Exp[Double]) extends Def[Double]       DeliteReduceElem
 
   case class ArrayIfElem[T](c: Exp[Boolean], y: Exp[T]) extends Def[Array[T]]
   case class ReduceIfElem(c: Exp[Boolean], y: Exp[Double]) extends Def[Double]
@@ -53,8 +53,9 @@ trait HashLoopsExp extends HashLoops with ArrayLoopsExp {
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
 */
 
-  case class HashArrayElem[K,T](k: Exp[K], y: Exp[T]) extends Def[HashMap[K,Array[T]]]
-  case class HashReduceElem[K](k: Exp[K], y: Exp[Double]) extends Def[HashMap[K,Double]]
+  case class HashElem[K,T](k: Exp[K], y: Exp[T]) extends Def[HashMap[K,T]]                    //  DeliteHashCllectElem
+  case class HashArrayElem[K,T](k: Exp[K], y: Exp[T]) extends Def[HashMap[K,Array[T]]]        //  DeliteBucketCollectElem
+  case class HashReduceElem[K](k: Exp[K], y: Exp[Double]) extends Def[HashMap[K,Double]]      //  DeliteBucketReduceElem
 
   case class HashKeyIndex[K,T](a: Rep[HashMap[K,T]], i: Rep[Int]) extends Def[K]
   case class HashValueIndex[K,T](a: Rep[HashMap[K,T]], i: Rep[Int]) extends Def[T]
@@ -174,12 +175,12 @@ trait ScalaGenHashLoopsFat extends ScalaGenHashLoops with ScalaGenArrayLoopsFat 
             stream.println("var " + quote(l) + " = new Array[]("+quote(s)+")")
           case ReduceElem(g,y) =>
             stream.println("var " + quote(l) + " = 0")
-          case ArrayIfElem(g,c,y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[]")
-          case ReduceIfElem(g,c,y) =>
-            stream.println("var " + quote(l) + " = 0")
-          case FlattenElem(g,y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[]")
+          //case ArrayIfElem(g,c,y) =>
+          //  stream.println("var " + quote(l) + " = new ArrayBuilder[]")
+          //case ReduceIfElem(g,c,y) =>
+          //  stream.println("var " + quote(l) + " = 0")
+          //case FlattenElem(g,y) =>
+          //  stream.println("var " + quote(l) + " = new ArrayBuilder[]")
         }
       }
       val ii = x // was: x(i)
@@ -196,12 +197,12 @@ trait ScalaGenHashLoopsFat extends ScalaGenHashLoops with ScalaGenArrayLoopsFat 
             stream.println(quote(l) + "("+quote(ii)+") = " + quote(getBlockResult(y)))
           case ReduceElem(g,y) =>
             stream.println(quote(l) + " += " + quote(getBlockResult(y)))
-          case ArrayIfElem(g,c,y) =>
-            stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
-          case ReduceIfElem(g,c,y) =>
-            stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
-          case FlattenElem(g,y) =>
-            stream.println(quote(l) + " ++= " + quote(getBlockResult(y)))
+          //case ArrayIfElem(g,c,y) =>
+          //  stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
+          //case ReduceIfElem(g,c,y) =>
+          //  stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
+          //case FlattenElem(g,y) =>
+          //  stream.println(quote(l) + " ++= " + quote(getBlockResult(y)))
         }
       }
 //      stream.println(quote(ii)+" += 1")

@@ -32,8 +32,8 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   case class ArrayElem[T](g: Exp[Gen[T]], y: Exp[Gen[T]]) extends Def[Array[T]]
   case class ReduceElem(g: Exp[Gen[Double]], y: Exp[Gen[Double]]) extends Def[Double]
 
-  case class ArrayIfElem[T](g: Exp[Gen[T]], c: Exp[Boolean], y: Exp[Gen[T]]) extends Def[Array[T]]
-  case class ReduceIfElem(g: Exp[Gen[Double]], c: Exp[Boolean], y: Exp[Gen[Double]]) extends Def[Double]
+  //case class ArrayIfElem[T](g: Exp[Gen[T]], c: Exp[Boolean], y: Exp[Gen[T]]) extends Def[Array[T]]
+  //case class ReduceIfElem(g: Exp[Gen[Double]], c: Exp[Boolean], y: Exp[Gen[Double]]) extends Def[Double]
 
   case class FlattenElem[T](g: Exp[Gen[Array[T]]], y: Exp[Gen[Array[T]]]) extends Def[Array[T]]
 
@@ -225,12 +225,12 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
       }
       stream.println("}")
     // TODO: conditional variants ...
-    case SimpleLoop(s,x,FlattenElem(g,y)) =>  
+    /*case SimpleLoop(s,x,FlattenElem(g,y)) =>  
       stream.println("val " + quote(sym) + " = LoopFlatten("+quote(s)+") { " + quote(x) + " => ")
       withGen(g, s=>stream.println(s)) {
         emitBlock(y)
       }
-      stream.println("}")
+      stream.println("}")*/
     case ArrayIndex(a,i) =>  
       emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
     case ArrayLength(a) =>  
@@ -259,12 +259,12 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
             stream.println("val " + quote(g) + " = new ArrayBuilder[]")
           case ReduceElem(g,y) =>
             stream.println("var " + quote(l) + " = 0")
-          case ArrayIfElem(g,c,y) =>
-            stream.println("val " + quote(g) + " = new ArrayBuilder[]")
-          case ReduceIfElem(g,c,y) =>
-            stream.println("var " + quote(l) + " = 0")
-          case FlattenElem(g,y) =>
-            stream.println("val " + quote(g) + " = new ArrayBuilder[]")
+          //case ArrayIfElem(g,c,y) =>
+          //  stream.println("val " + quote(g) + " = new ArrayBuilder[]")
+          //case ReduceIfElem(g,c,y) =>
+          //  stream.println("var " + quote(l) + " = 0")
+          //case FlattenElem(g,y) =>
+          //  stream.println("val " + quote(g) + " = new ArrayBuilder[]")
         }
       }
       val ii = x
@@ -278,12 +278,12 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
           (g, (s: String) => stream.println(quote(g) + " += " + s))
         case ReduceElem(g,y) =>
           (g, (s: String) => stream.println(quote(l) + " += " + s))
-        case ArrayIfElem(g,c,y) =>
-          (g, (s: String) => stream.println("if ("+quote(getBlockResult(c))+") " + quote(g) + " += " + s))
-        case ReduceIfElem(g,c,y) =>
-          (g, (s: String) => stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + s))
-        case FlattenElem(g,y) =>
-          (g, (s: String) => stream.println(quote(g) + " ++= " + s))
+        //case ArrayIfElem(g,c,y) =>
+        //  (g, (s: String) => stream.println("if ("+quote(getBlockResult(c))+") " + quote(g) + " += " + s))
+        //case ReduceIfElem(g,c,y) =>
+        //  (g, (s: String) => stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + s))
+        //case FlattenElem(g,y) =>
+        //  (g, (s: String) => stream.println(quote(g) + " ++= " + s))
       }
 
       withGens(gens) {
@@ -298,11 +298,11 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
         case ArrayElem(g,y) =>
           stream.println("val " + quote(l) + " = " + quote(g) + ".result")
         case ReduceElem(g,y) =>
-        case ArrayIfElem(g,c,y) =>
-          stream.println("val " + quote(l) + " = " + quote(g) + ".result")
-        case ReduceIfElem(g,c,y) =>
-        case FlattenElem(g,y) =>
-          stream.println("val " + quote(l) + " = " + quote(g) + ".result")
+        //case ArrayIfElem(g,c,y) =>
+        //  stream.println("val " + quote(l) + " = " + quote(g) + ".result")
+        //case ReduceIfElem(g,c,y) =>
+        //case FlattenElem(g,y) =>
+        //  stream.println("val " + quote(l) + " = " + quote(g) + ".result")
       }
 
     case _ => super.emitFatNode(sym, rhs)
