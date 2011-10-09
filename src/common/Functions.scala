@@ -47,26 +47,35 @@ trait FunctionsExp extends Functions with EffectExp {
   }
 
   def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A]): Exp[B] = f match {
-
+/*
     case Def(Lambda(_,_,Def(Reify(_,_,_)))) => 
       // if function result is known to be effectful, so is application
       reflectEffect(Apply(f,x))
-    case Def(Lambda(_,_,_)) => 
+*/
+    case Def(Lambda(_,_,y)) => 
       // if function result is known to be pure, so is application
-      Apply(f, x)
-    case _ => // unknown function, assume it is effectful
+      // TODO: what about 
+      val ye = summarizeEffects(y)
+      reflectEffect(Apply(f, x), ye)
+    case _ => // unknown function, assume it is effectful TODO: global vs simple?
       reflectEffect(Apply(f, x))
   }
-
-  // TODO: right now were trying to hoist as much as we can out of functions.
-  // That might not always be appropriate. A promising strategy would be to have
-  // explicit 'hot' and 'cold' functions. 
-
+  
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => syms(y)
     case Lambda2(f, x1, x2, y) => syms(y)
     case _ => super.syms(e)
   }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case Lambda(f, x, y) => x :: effectSyms(y)
+    case Lambda2(f, x1, x2, y) => x1 :: x2 :: effectSyms(y)
+    case _ => super.boundSyms(e)
+  }  
+
+// TODO: right now were trying to hoist as much as we can out of functions. 
+// That might not always be appropriate. A promising strategy would be to have
+// explicit 'hot' and 'cold' functions. 
 
 /*
   override def hotSyms(e: Any): List[Sym[Any]] = e match {
@@ -82,11 +91,6 @@ trait FunctionsExp extends Functions with EffectExp {
     case _ => super.symsFreq(e)
   }
 
-  override def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case Lambda(f, x, y) => x :: effectSyms(y)
-    case Lambda2(f, x1, x2, y) => x1 :: x2 :: effectSyms(y)
-    case _ => super.boundSyms(e)
-  }
 }
 
 trait BaseGenFunctions extends GenericNestedCodegen {

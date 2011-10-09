@@ -115,17 +115,18 @@ class TestMutation extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test8-"
   
-  trait DSL extends ArrayMutation with Arith with OrderingOps with Variables with IfThenElse with RangeOps with Print {
+  trait DSL extends ArrayMutation with Arith with OrderingOps with Variables with IfThenElse with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
     def mzeros(l: Rep[Int]) = zeros(l).mutable
+    def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
     def test(x: Rep[Int]): Rep[Any]
   }
   trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExp with VariablesExp 
-      with IfThenElseExp with RangeOpsExp with PrintExp { self => 
+      with IfThenElseExp with WhileExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 2
     val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
-      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
+      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhile with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
@@ -334,6 +335,27 @@ class TestMutation extends FileDiffSuite {
       new Prog with Impl
     }
     assertFileEqualsCheck(prefix+"mutation6")
+  }
+
+  def testMutation7 = {
+    withOutFile(prefix+"mutation7") {
+      // local variables of primitive type
+      trait Prog extends DSL with LiftVariables {
+        def test(x0: Rep[Int]) = {
+          val x = x0.toDouble // avoid codegen for implicit convert
+          var c = 0.0
+          while (c < x) {
+            c = c + 1
+          }
+          if (c < x)
+            c = 8
+          c
+        }
+      }
+      
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"mutation7")
   }
 
 }

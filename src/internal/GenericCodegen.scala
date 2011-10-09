@@ -39,6 +39,8 @@ trait GenericCodegen extends Scheduling {
 
   def getFreeVarBlock(start: Exp[Any], local: List[Sym[Any]]): List[Sym[Any]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
 
+  def getFreeDataBlock[A](start: Exp[A]): List[(Sym[Any],Any)] = Nil // TODO: Nil or Exception??
+
   def hasMetaData: Boolean = false
   def getMetaData: String = null
 
@@ -47,6 +49,8 @@ trait GenericCodegen extends Scheduling {
 
   // ----------
 
+  def getBlockResult[A](s: Exp[A]): Exp[A] = s
+  
   def emitBlock(y: Exp[Any])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
     
@@ -55,8 +59,6 @@ trait GenericCodegen extends Scheduling {
     }
   }
 
-  def getBlockResult[A](s: Exp[A]): Exp[A] = s
-  
   def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter): Unit = {
     throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
@@ -67,7 +69,7 @@ trait GenericCodegen extends Scheduling {
   
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit
     
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] // return free static data in block
       
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s+"\""
@@ -75,7 +77,6 @@ trait GenericCodegen extends Scheduling {
     case Const(f: Float) => f.toString + "f"
     case Const(z) => z.toString
     case Sym(n) => "x"+n
-    case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
     case null => "null"
     case _ => throw new RuntimeException("could not quote " + x)
   }
@@ -214,7 +215,8 @@ trait GenericNestedCodegen extends GenericCodegen {
     result match {
       case Def(Reify(x, u, effects)) =>
         val actual = levelScope.filter(effects contains _.sym)
-        assert(effects == actual.map(_.sym), "violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
+        if (effects != actual.map(_.sym))
+          printerr("violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
       case _ =>
     }
 
@@ -289,6 +291,7 @@ trait GenericNestedCodegen extends GenericCodegen {
     }
   }
 
+  override def getFreeDataBlock[A](start: Exp[A]): List[(Sym[Any],Any)] = Nil // FIXME: should have generic impl
 
   def reset { // used anywhere?
     innerScope = null

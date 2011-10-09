@@ -373,7 +373,7 @@ trait OpenCLCodegen extends GPUCodegen {
     throw new GenerationFailedException("OpenCLGen: cloneObject(sym)")
   }
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
     val y = f(x)
 
@@ -398,6 +398,7 @@ trait OpenCLCodegen extends GPUCodegen {
                    "*******************************************/")
 
     stream.flush
+    Nil
   }
 
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
@@ -737,7 +738,7 @@ trait OpenCLNestedCodegen extends GenericNestedCodegen with OpenCLCodegen {
   import IR._
   
   override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
 

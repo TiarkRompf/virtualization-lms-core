@@ -123,6 +123,32 @@ trait Effects extends Expressions with Utils {
     2) use a data structure to track transitive aliasing or recompute always?
   */
 
+
+  /*
+  
+  the methods below define the sharing relation between the
+  result of an operation and its arguments.
+  
+  how do i use them? what do i need to return?
+  
+  assume an operation foo:
+
+  y = Foo(x)
+
+  x should be returned in the following cases:
+
+  x in aliasSyms(y)      if y = x      // if then else
+  x in containSyms(y)    if *y = x     // array update
+  x in extractSyms(y)    if y = *x     // array apply
+  x in copySyms(y)       if *y = *x    // array clone
+    
+  y = x is to be understood as "y may be equal to x"
+  *y = x as "dereferencing y (at some index) may return x"
+  etc.
+  
+  */
+
+
   def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case Reflect(x, u, es) => aliasSyms(x)
     case Reify(x, u, es) => syms(x)
@@ -275,6 +301,14 @@ trait Effects extends Expressions with Utils {
     }
   }
   
+  def isWritableSym[A](w: Sym[A]): Boolean = {
+    findDefinition(w) match {
+      case Some(TP(_, Reflect(_, u, _))) if mustMutable(u) => true // ok
+      case o => globalMutableSyms.contains(w)
+    }
+  }
+  
+  
   var globalMutableSyms: List[Sym[Any]] = Nil
   
   def reflectMutableSym[A](s: Sym[A]): Sym[A] = {
@@ -325,16 +359,9 @@ trait Effects extends Expressions with Utils {
       } else {
         val z = fresh[A]
         // make sure all writes go to allocs
-        for (w <- u.mayWrite) {
-          // TODO: w may be a symbol we use exclusively for writing (such as an accumulator for reduce)
-          findDefinition(w) match {
-            case Some(TP(_, Reflect(_, u, _))) if mustMutable(u) => // ok
-            case o => 
-              if (!globalMutableSyms.contains(w)) {
-                printerr("error: write to non-mutable " + w + " -> " + o)
-                printerr("at " + z + "=" + zd)
-              }
-          }
+        for (w <- u.mayWrite if !isWritableSym(w)) {
+          printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
+          printerr("at " + z + "=" + zd)
         }
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
         // make sure no mutable object becomes part of mutable result (in case of allocation)

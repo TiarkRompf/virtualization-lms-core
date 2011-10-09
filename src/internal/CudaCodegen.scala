@@ -192,7 +192,7 @@ trait CudaCodegen extends GPUCodegen {
     throw new GenerationFailedException("CudaGen: cloneObject(sym)")
   }
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
     val y = f(x)
 
@@ -217,6 +217,7 @@ trait CudaCodegen extends GPUCodegen {
                    "*******************************************/")
 
     stream.flush
+    Nil
   }  
 
 /*
@@ -311,7 +312,7 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
   import IR._
   
   override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
 
