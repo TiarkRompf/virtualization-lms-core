@@ -27,6 +27,7 @@ trait ScalaCodegen extends GenericCodegen {
     val sB = mB.toString
 
     emitImports(stream)
+    performTyping(x, y)
 
     stream.println("/*****************************************\n"+
                    "  Emitting Generated Code                  \n"+
@@ -45,8 +46,6 @@ trait ScalaCodegen extends GenericCodegen {
 
     stream.flush
   }
-
-  def emitImports(implicit stream:PrintWriter): Unit = { }
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
     val kernelName = syms.map(quote).mkString("")

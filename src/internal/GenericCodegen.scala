@@ -13,7 +13,11 @@ trait GenericCodegen extends Scheduling {
   def kernelFileExt = ""
   def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
   def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
-  
+
+  // Vlad: I need these for MDArrays
+  def emitImports(implicit stream:PrintWriter): Unit = { }
+  def performTyping[A: Manifest, B: Manifest](x: Exp[A], y: Exp[B]): Unit = { }
+
   // Initializer
   def generatorInit(build_dir:String): Unit = {}
   def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
