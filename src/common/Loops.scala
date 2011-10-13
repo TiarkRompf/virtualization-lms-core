@@ -17,6 +17,8 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   }
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
+  
+  def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = SimpleLoop(size, v, body)
 
 
   override def syms(e: Any): List[Sym[Any]] = e match {
@@ -24,8 +26,8 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case _ => super.syms(e)
   }
 
-  override def readSyms(e: Any): List[Sym[Any]] = e match { 
-    case e: AbstractLoop[_] => readSyms(e.size) ::: readSyms(e.body)
+	override def readSyms(e: Any): List[Sym[Any]] = e match { 
+		case e: AbstractLoop[_] => readSyms(e.size) ::: readSyms(e.body)
     case _ => super.readSyms(e)
   }
 
@@ -39,6 +41,29 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case _ => super.symsFreq(e)
   }
 
+
+	/////////////////////
+  // aliases and sharing
+
+  override def aliasSyms(e: Any): List[Sym[Any]] = e match {
+		case e: AbstractLoop[_] => aliasSyms(e.body)
+    case _ => super.aliasSyms(e)
+  }
+
+  override def containSyms(e: Any): List[Sym[Any]] = e match {
+    case e: AbstractLoop[_] => containSyms(e.body)
+    case _ => super.containSyms(e)
+  }
+
+  override def extractSyms(e: Any): List[Sym[Any]] = e match {
+    case e: AbstractLoop[_] => extractSyms(e.body)
+    case _ => super.extractSyms(e)
+  }
+
+  override def copySyms(e: Any): List[Sym[Any]] = e match {
+    case e: AbstractLoop[_] => copySyms(e.body)
+    case _ => super.copySyms(e)
+  }
 }
 
 trait LoopsFatExp extends LoopsExp with BaseFatExp {
@@ -56,6 +81,11 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     case e: AbstractFatLoop => syms(e.size) ::: syms(e.body)
     case _ => super.syms(e)
   }
+  
+  override def readSyms(e: Any): List[Sym[Any]] = e match { 
+		case e: AbstractFatLoop => readSyms(e.size) ::: readSyms(e.body)
+    case _ => super.readSyms(e)
+  }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => e.v :: boundSyms(e.body)
@@ -67,6 +97,28 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     case _ => super.symsFreq(e)
   }
 
+	/////////////////////
+  // aliases and sharing
+
+  override def aliasSyms(e: Any): List[Sym[Any]] = e match {
+    case e: AbstractFatLoop => aliasSyms(e.body)
+    case _ => super.aliasSyms(e)
+  }
+
+  override def containSyms(e: Any): List[Sym[Any]] = e match {
+    case e: AbstractFatLoop => containSyms(e.body)
+    case _ => super.containSyms(e)
+  }
+
+  override def extractSyms(e: Any): List[Sym[Any]] = e match {
+    case e: AbstractFatLoop => extractSyms(e.body)
+    case _ => super.extractSyms(e)
+  }
+
+  override def copySyms(e: Any): List[Sym[Any]] = e match {
+    case e: AbstractFatLoop => copySyms(e.body)
+    case _ => super.copySyms(e)
+  }
 }
 
 
@@ -84,6 +136,9 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
 
   override def fatten(e: TP[Any]): TTP = e.rhs match {
     case op: AbstractLoop[_] => 
+      TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
+    case Reflect(op: AbstractLoop[_], u, es) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on... 
+      printdbg("-- fatten effectful loop " + e)
       TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
     case _ => super.fatten(e)
   }

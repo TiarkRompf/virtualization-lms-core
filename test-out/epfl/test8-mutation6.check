@@ -23,7 +23,7 @@ val x5 = LoopArray(10) { x4 =>
 x3
 }
 val x10 = x0 > 7
-val x11 = if (x10) {
+val x11: Array[Array[Double]] = if (x10) {
 x5
 } else {
 val x8 = LoopArray(100) { x7 => 

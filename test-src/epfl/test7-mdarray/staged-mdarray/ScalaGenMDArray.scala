@@ -392,7 +392,7 @@ trait ScalaGenMDArray extends ScalaGenEffect with TypedGenMDArray {
   }
 
   // the emitSource in ScalaCodeGen is not exactly what we need - we need to select the parameters on our own
-  override def emitSource[A: Manifest, B: Manifest](f: Exp[A] => Exp[B], className: String, stream: PrintWriter): Unit = {
+  override def emitSource[A: Manifest, B: Manifest](f: Exp[A] => Exp[B], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
 
     stream.println("package scala.virtualization.lms")
     stream.println("package epfl")

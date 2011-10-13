@@ -191,5 +191,5 @@ trait MDArrayTypingConstraints extends BaseGenMDArray with BaseGenIfThenElse wit
   }
 
   override def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {}
-  override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {}
+  override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = Nil
 }

@@ -1,0 +1,92 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+val x1 = 1==1
+val x6: Unit = if (x1) {
+val x2 = println("found:")
+val x3 = println(1)
+val x4 = println(1)
+x4
+} else {
+()
+}
+val x7 = 1==2
+val x12: Unit = if (x7) {
+val x8 = println("found:")
+val x9 = println(1)
+val x10 = println(2)
+x10
+} else {
+()
+}
+val x13 = 1==3
+val x18: Unit = if (x13) {
+val x14 = println("found:")
+val x15 = println(1)
+val x16 = println(3)
+x16
+} else {
+()
+}
+val x19 = 2==1
+val x24: Unit = if (x19) {
+val x20 = println("found:")
+val x21 = println(2)
+val x22 = println(1)
+x22
+} else {
+()
+}
+val x25 = 2==2
+val x30: Unit = if (x25) {
+val x26 = println("found:")
+val x27 = println(2)
+val x28 = println(2)
+x28
+} else {
+()
+}
+val x31 = 2==3
+val x36: Unit = if (x31) {
+val x32 = println("found:")
+val x33 = println(2)
+val x34 = println(3)
+x34
+} else {
+()
+}
+val x37 = x0==1
+val x42: Unit = if (x37) {
+val x38 = println("found:")
+val x39 = println(x0)
+val x40 = println(1)
+x40
+} else {
+()
+}
+val x43 = x0==2
+val x48: Unit = if (x43) {
+val x44 = println("found:")
+val x45 = println(x0)
+val x46 = println(2)
+x46
+} else {
+()
+}
+val x49 = x0==3
+val x54: Unit = if (x49) {
+val x50 = println("found:")
+val x51 = println(x0)
+val x52 = println(3)
+x52
+} else {
+()
+}
+()
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

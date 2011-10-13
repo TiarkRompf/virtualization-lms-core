@@ -1,0 +1,48 @@
+REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)
+promoting to effect: Sym(21)=Reflect(IfThenElse(Sym(16),Sym(6),Sym(20)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14)))
+depends on  Sym(13)
+depends on  Sym(14)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Any)) {
+def apply(x0:Int): Any = {
+val x10 = LoopArray(100) { x7 => 
+val x8 = 0.0-x7
+x8
+}
+var x13: Any = x10
+val x11 = LoopArray(100) { x7 => 
+x7
+}
+var x14: Any = x11
+val x4 = LoopArray(100) { x1 => 
+x1
+}
+val x5 = LoopArray(100) { x1 => 
+val x2 = 0.0-x1
+x2
+}
+val x16 = x0 > 7
+val x21: Array[scala.virtualization.lms.epfl.test9.ComplexBase$Complex] = if (x16) {
+val x6 = XXX Struct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(5)))
+x6
+} else {
+val x17 = x13
+val x18 = x14
+val x19 = XXX Struct(List(Array, Complex),Map(re -> Sym(17), im -> Sym(18)))
+x19
+}
+x13 = x4
+x14 = x5
+val x24 = x13
+val x25 = x14
+val x26 = XXX Struct(List(Array, Complex),Map(re -> Sym(24), im -> Sym(25)))
+val x27 = println(x26)
+val x28 = println(x21)
+x28
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

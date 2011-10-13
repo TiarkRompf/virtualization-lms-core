@@ -63,7 +63,7 @@ trait MDArrayGraphExport extends TypedGenMDArray {
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit =
     sys.error("Not implemented!")
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit =
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] =
     sys.error("Not implemented!")
 
 

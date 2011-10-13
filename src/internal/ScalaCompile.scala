@@ -53,7 +53,7 @@ trait ScalaCompile extends Expressions {
     compileCount += 1
     
     val source = new StringWriter()
-    codegen.emitSource(f, className, new PrintWriter(source))
+    val staticData = codegen.emitSource(f, className, new PrintWriter(source))
 
     val compiler = this.compiler
     val run = new compiler.Run
@@ -77,7 +77,9 @@ trait ScalaCompile extends Expressions {
     val loader = new AbstractFileClassLoader(fileSystem, this.getClass.getClassLoader)
 
     val cls: Class[_] = loader.loadClass(className)
-    val obj: A=>B = cls.newInstance().asInstanceOf[A=>B]
+    val cons = cls.getConstructor(staticData.map(_._1.Type.erasure):_*)
+    
+    val obj: A=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[A=>B]
     obj
   }
 }

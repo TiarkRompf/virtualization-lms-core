@@ -3,7 +3,7 @@
 *******************************************/
 class Test extends ((Unit)=>(scala.Function1[Boolean, scala.Function1[Double, Double]])) {
 def apply(x0:Unit): scala.Function1[Boolean, scala.Function1[Double, Double]] = {
-val x7 = if (true) {
+val x7: scala.Function1[Double, Double] = if (true) {
 val x3 = {x1: (Double) => 
 val x2 = 2.0*x1
 x2: Double
@@ -16,7 +16,7 @@ x5: Double
 }
 x6
 }
-val x19 = if (false) {
+val x19: scala.Function1[Double, Double] = if (false) {
 val x15 = {x13: (Double) => 
 val x14 = x13+1.0
 x14: Double
@@ -31,7 +31,7 @@ x18
 }
 val x23 = {x8: (Boolean) => 
 val x9 = println("yo")
-val x21 = if (x8) {
+val x21: scala.Function1[Double, Double] = if (x8) {
 val x10 = println("then")
 x7
 } else {

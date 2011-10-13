@@ -7,7 +7,7 @@ def apply(x0:Double): Double = {
 val x1 = println("yoyo")
 val x2 = x0==x0
 val x6 = x0+4.0
-val x9 = if (x2) {
+val x9: Double = if (x2) {
 val x3 = println("yoyo")
 val x4 = println("xxx")
 val x5 = println("yoyo")

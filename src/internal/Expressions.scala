@@ -37,15 +37,15 @@ trait Expressions extends Utils {
 
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
-  case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
-      
   var nVars = 0
   var nTypes = 0
   def fresh[T:Manifest] = Sym[T] { nVars += 1; nVars -1 }
 
   abstract class Def[+T] // operations (composite)
 
-  case class TP[+T](sym: Sym[T], rhs: Def[T]) 
+  //abstract class Stm // statement (links syms and definitions)
+  
+  case class TP[+T](sym: Sym[T], rhs: Def[T]) //extends Stm
 
   var globalDefs: List[TP[Any]] = Nil
 

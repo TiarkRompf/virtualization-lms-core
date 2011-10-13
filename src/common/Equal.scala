@@ -38,7 +38,8 @@ trait Equal extends Base with Variables with OverloadHack {
   def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]) : Rep[Boolean]
 }
 
-trait EqualExp extends Equal with BaseExp with VariablesExp {
+trait EqualExpBridge extends BaseExp  {
+
   case class Equal[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
   case class NotEqual[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
 
@@ -47,15 +48,27 @@ trait EqualExp extends Equal with BaseExp with VariablesExp {
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     case Equal(a, b) => equals(f(a),f(b))
-    case NotEqual(a, b) => equals(f(a),f(b))
+    case NotEqual(a, b) => notequals(f(a),f(b))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
+
 }
 
-trait EqualExpOpt extends EqualExp {
-  override def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = if (a == b) Const(true) else super.equals(a,b)
-  override def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = if (a == b) Const(false) else super.notequals(a,b)
+trait EqualExp extends Equal with EqualExpBridge with VariablesExp
+
+trait EqualExpBridgeOpt extends EqualExp {
+  override def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = if (a == b) Const(true) else (a,b) match {
+    case (Const(a),Const(b)) => Const(a == b)
+    case _ => super.equals(a,b)
+  }
+  
+  override def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B]): Rep[Boolean] = if (a == b) Const(false) else (a,b) match {
+    case (Const(a),Const(b)) => Const(a != b)
+    case _ => super.notequals(a,b)
+  }
 }
+
+trait EqualExpOpt extends EqualExp with EqualExpBridgeOpt
 
 
 trait ScalaGenEqual extends ScalaGenBase {

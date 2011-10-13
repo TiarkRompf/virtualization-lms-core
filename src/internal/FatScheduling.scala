@@ -11,6 +11,9 @@ trait FatScheduling extends Scheduling {
   import util.GraphUtil
 
   def fatten(e: TP[Any]): TTP = TTP(List(e.sym), ThinDef(e.rhs))
+
+  def fattenAll(e: List[TP[Any]]): List[TTP] = e.map(fatten)
+
   
   def getSchedule(scope: List[TP[Any]])(result: Any): List[TP[Any]] = {
     def deps(st: List[Sym[Any]]): List[TP[Any]] =
@@ -20,10 +23,15 @@ trait FatScheduling extends Scheduling {
   }
 
   def getFatSchedule(scope: List[TTP])(result: Any): List[TTP] = {
-    def deps(st: List[Sym[Any]]): List[TTP] =
+    def deps(st: List[Sym[Any]]): List[TTP] = 
       scope.filter(d => (st intersect d.lhs).nonEmpty)
 
-    GraphUtil.stronglyConnectedComponents[TTP](deps(syms(result)), t => deps(syms(t.rhs))).flatten.reverse
+    val xx = GraphUtil.stronglyConnectedComponents[TTP](deps(syms(result)), t => deps(syms(t.rhs)))
+    xx.foreach { x => 
+      if (x.length > 1)
+        printerr("warning: recursive schedule for result " + result + ": " + x)
+    }
+    xx.flatten.reverse
   }
 
 /*
@@ -43,7 +51,7 @@ trait FatScheduling extends Scheduling {
   def getFatScheduleM(scope: List[TTP])(start: Any, cold: Boolean, hot: Boolean): List[TTP] = {
     def mysyms(st: Any) = {
       val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
-      assert(syms(st).toSet == db.map(_._1).toSet, "different list of syms: "+syms(st)+"!="+db)
+      assert(syms(st).toSet == db.map(_._1).toSet, "different list of syms: "+syms(st)+"!="+db+" for "+st)
       if (cold && hot) db.map(_._1)
       else if (cold && !hot) db.withFilter(_._2 < 100.0).map(_._1)
       else if (!cold && hot) db.withFilter(_._2 > 0.75).map(_._1)

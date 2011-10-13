@@ -1,7 +1,6 @@
 package scala.virtualization.lms
 package internal
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.sym
 import java.io.{File, FileWriter, PrintWriter}
 
 trait ScalaCodegen extends GenericCodegen {
@@ -18,7 +17,7 @@ trait ScalaCodegen extends GenericCodegen {
       outFile.delete
   }
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
 
     val x = fresh[A]
     val y = f(x)
@@ -29,37 +28,38 @@ trait ScalaCodegen extends GenericCodegen {
     emitImports(stream)
     performTyping(x, y)
 
+    val staticData = getFreeDataBlock(y)
+
     stream.println("/*****************************************\n"+
                    "  Emitting Generated Code                  \n"+
                    "*******************************************/")
-    stream.println("class "+className+" extends (("+sA+")=>("+sB+")) {")
+                   
+    // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
+    stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.Type).mkString(",")+")")+" extends (("+sA+")=>("+sB+")) {")
     stream.println("def apply("+quote(x)+":"+sA+"): "+sB+" = {")
     
     emitBlock(y)(stream)
     stream.println(quote(getBlockResult(y)))
     
     stream.println("}")
+    
     stream.println("}")
     stream.println("/*****************************************\n"+
                    "  End of Generated Code                  \n"+
                    "*******************************************/")
 
     stream.flush
+    
+    staticData
   }
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
     val kernelName = syms.map(quote).mkString("")
     
     stream.println("package generated." + this.toString)
 
     emitImports(stream)
 
-    stream.println("final class activation_" + kernelName + " { // generated even if not used")
-    for (s <- syms) {
-      val x = s.Type
-      stream.println("var " + quote(s) + ": " + remap(s.Type) + " = _")
-    }
-    stream.println("}")
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
     stream.print(vals.map(p => quote(p) + ":" + remap(p.Type)).mkString(","))
@@ -81,11 +81,12 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println("")
   }
 
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
     val kernelName = syms.map(quote).mkString("")
     stream.println(kernelName)
     stream.println("}}")
   }
+
 
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("val " + quote(sym) + " = " + rhs) // + "        //" + sym.Type.debugInfo)
@@ -103,7 +104,7 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   import IR._
   
   override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
 
@@ -117,4 +118,14 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
 
 trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
   val IR: Expressions with Effects with FatExpressions
+  import IR._
+  
+  override def emitFatNodeKernelExtra(syms: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter): Unit = {
+    val kernelName = syms.map(quote).mkString("")
+    stream.println("final class activation_" + kernelName + " {")
+    for (s <- syms) {
+      stream.println("var " + quote(s) + ": " + remap(s.Type) + " = _")
+    }
+    stream.println("}")
+  }
 }

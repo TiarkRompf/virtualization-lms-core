@@ -41,4 +41,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info)
   // compile options
   override def compileOptions = super.compileOptions ++ Seq(Unchecked, Deprecation)
 
+  override def testCompileOptions = super.testCompileOptions ++ compileOptions("-Xplugin:"+
+    local.scalaVirtualizedHome.get.get+"/misc/scala-devel/plugins/continuations.jar", "-P:continuations:enable")
+
 }

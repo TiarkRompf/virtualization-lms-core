@@ -11,15 +11,17 @@ trait GenericCodegen extends Scheduling {
   // TODO: should some of the methods be moved into more specific subclasses?
   
   def kernelFileExt = ""
-  def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
-  def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean)(implicit stream: PrintWriter): Unit = {}
 
   // Vlad: I need these for MDArrays
   def emitImports(implicit stream:PrintWriter): Unit = { }
   def performTyping[A: Manifest, B: Manifest](x: Exp[A], y: Exp[B]): Unit = { }
 
+  def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {}
+  def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {}
+  
   // Initializer
-  def generatorInit(build_dir:String): Unit = {}
+  def initializeGenerator(buildDir:String): Unit = {}
+  def finalizeGenerator(): Unit = {}
   def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
 
   def emitDataStructures(path: String): Unit = {}
@@ -42,6 +44,8 @@ trait GenericCodegen extends Scheduling {
 
   def getFreeVarBlock(start: Exp[Any], local: List[Sym[Any]]): List[Sym[Any]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
 
+  def getFreeDataBlock[A](start: Exp[A]): List[(Sym[Any],Any)] = Nil // TODO: Nil or Exception??
+
   def hasMetaData: Boolean = false
   def getMetaData: String = null
 
@@ -50,6 +54,8 @@ trait GenericCodegen extends Scheduling {
 
   // ----------
 
+  def getBlockResult[A](s: Exp[A]): Exp[A] = s
+  
   def emitBlock(y: Exp[Any])(implicit stream: PrintWriter): Unit = {
     val deflist = buildScheduleForResult(y)
     
@@ -58,15 +64,17 @@ trait GenericCodegen extends Scheduling {
     }
   }
 
-  def getBlockResult[A](s: Exp[A]): Exp[A] = s
-  
   def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter): Unit = {
     throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
-
-  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit
   
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit
+  def emitExternalLib(rhs: Def[Any]): Unit = {
+    throw new GenerationFailedException("don't know how to generate external lib for " + rhs)
+  }
+  
+  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit
+    
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] // return free static data in block
       
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s+"\""
@@ -74,7 +82,6 @@ trait GenericCodegen extends Scheduling {
     case Const(f: Float) => f.toString + "f"
     case Const(z) => z.toString
     case Sym(n) => "x"+n
-    case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
     case null => "null"
     case _ => throw new RuntimeException("could not quote " + x)
   }
@@ -213,7 +220,8 @@ trait GenericNestedCodegen extends GenericCodegen {
     result match {
       case Def(Reify(x, u, effects)) =>
         val actual = levelScope.filter(effects contains _.sym)
-        assert(effects == actual.map(_.sym), "violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
+        if (effects != actual.map(_.sym))
+          printerr("violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
       case _ =>
     }
 
@@ -256,18 +264,28 @@ trait GenericNestedCodegen extends GenericCodegen {
     case _ => super.emitNode(sym, rhs)
   }
 
+	def boundInScope(x: List[Exp[Any]]): List[Sym[Any]] = {
+		(x.flatMap(syms):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
+	}
+	
+	def usedInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
+		(y.flatMap(syms):::innerScope.flatMap(t => syms(t.rhs))).distinct
+	}
+	
+	def readInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
+		(y.flatMap(syms):::innerScope.flatMap(t => readSyms(t.rhs))).distinct
+	}
+	
   // bound/used/free variables in current scope, with input vars x (bound!) and result y (used!)
   def boundAndUsedInScope(x: List[Exp[Any]], y: List[Exp[Any]]): (List[Sym[Any]], List[Sym[Any]]) = {
-    val used = (y.flatMap(syms):::innerScope.flatMap(t => syms(t.rhs))).distinct
-    val bound = (x.flatMap(syms):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
-    (bound, used)
+    (boundInScope(x), usedInScope(y))
   }
 
   def freeInScope(x: List[Exp[Any]], y: List[Exp[Any]]): List[Sym[Any]] = {
     val (bound, used) = boundAndUsedInScope(x,y)
     // aks: freeInScope used to collect effects that are not true input dependencies. TR, any better solution?
     // i would expect read to be a subset of used, but there are cases where read has symbols not in used (TODO: investigate)
-    val read = (y.flatMap(syms):::innerScope.flatMap(t => readSyms(t.rhs))).distinct
+    val read = readInScope(y)
     (used intersect read) diff bound
   }
 
@@ -278,6 +296,7 @@ trait GenericNestedCodegen extends GenericCodegen {
     }
   }
 
+  override def getFreeDataBlock[A](start: Exp[A]): List[(Sym[Any],Any)] = Nil // FIXME: should have generic impl
 
   def reset { // used anywhere?
     innerScope = null

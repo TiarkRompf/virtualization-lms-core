@@ -16,18 +16,18 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     //case Copy(a) => f(a)
-    case SimpleLoop(s,i, ArrayElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(y))))
-    case SimpleLoop(s,i, ReduceElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(y))))
-    case SimpleLoop(s,i, ArrayIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayIfElem(f(c),f(y))))
-    case SimpleLoop(s,i, ReduceIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceIfElem(f(c),f(y))))
-    case ArrayIndex(a,i) => toAtom(ArrayIndex(f(a), f(i)))
-    case ArrayLength(a) => toAtom(ArrayLength(f(a)))
+    case SimpleLoop(s,i, ArrayElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(y))))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ReduceElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(y))))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ArrayIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayIfElem(f(c),f(y))))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ReduceIfElem(c,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceIfElem(f(c),f(y))))(mtype(manifest[A]))
+    case ArrayIndex(a,i) => toAtom(ArrayIndex(f(a), f(i)))(mtype(manifest[A]))
+    case ArrayLength(a) => toAtom(ArrayLength(f(a)))(mtype(manifest[A]))
     case Plus(x,y) => infix_+(f(x), f(y))
     case Minus(x,y) => infix_-(f(x), f(y))
     case Times(x,y) => infix_*(f(x), f(y))
     case Div(x,y) => infix_/(f(x), f(y))
     case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))
-    case Reify(x, u, es) => toAtom(Reify(f(x), mapOver(f,u), f(es)))
+    case Reify(x, u, es) => toAtom(Reify(f(x), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -43,8 +43,8 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
 
 
 
-trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with LoopFusionOpt {
-  val IR: ArrayLoopsFatExp
+trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGenIfThenElseFat with LoopFusionOpt {
+  val IR: ArrayLoopsFatExp with IfThenElseFatExp
   import IR._  
   
   override def unapplySimpleIndex(e: Def[Any]) = e match {
@@ -184,7 +184,7 @@ class TestFusion extends FileDiffSuite {
   def testFusion2 = {
     withOutFile(prefix+"fusion2") {
       // LoopsExp2 with ArithExp with PrintExp with BaseFatExp
-      new FusionProg with ArithExp with ArrayLoopsFatExp with PrintExp with TransformingStuff { self =>
+      new FusionProg with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with TransformingStuff { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
@@ -195,11 +195,11 @@ class TestFusion extends FileDiffSuite {
  
   def testFusion3 = {
     withOutFile(prefix+"fusion3") {
-      new FusionProg2 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
+      new FusionProg2 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: Exp[Any]): Boolean = false }
+            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -208,11 +208,11 @@ class TestFusion extends FileDiffSuite {
 
   def testFusion4 = {
     withOutFile(prefix+"fusion4") {
-      new FusionProg2 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
+      new FusionProg2 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: Exp[Any]): Boolean = true }
+            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }

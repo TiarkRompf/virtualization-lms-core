@@ -19,9 +19,18 @@ trait ObjectOpsExp extends ObjectOps with VariablesExp {
   case class ObjectUnsafeImmutable[A](o: Exp[A]) extends Def[A]
 
   def object_tostring(lhs: Exp[Any]) = ObjectToString(lhs)
-	def object_unsafe_immutable[A:Manifest](lhs: Exp[A]) = ObjectUnsafeImmutable(lhs)
-	
-	/////////////////////
+  def object_unsafe_immutable[A:Manifest](lhs: Exp[A]) = ObjectUnsafeImmutable(lhs)
+
+  //////////////
+  // mirroring
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case ObjectUnsafeImmutable(a) => object_unsafe_immutable(f(a))
+    case Reflect(ObjectUnsafeImmutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeImmutable(f(a)), mapOver(f,u), f(es)))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
+
+  /////////////////////
   // aliases and sharing
 
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {

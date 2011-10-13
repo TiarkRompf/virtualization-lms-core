@@ -1,98 +1,8 @@
 package scala.virtualization.lms
 package common
 
-// TODO: simplify/transform trait should be generalized and cleaned up
-
-trait SimplifyTransform extends internal.GenericFatCodegen {
-  val IR: LoopsFatExp
-  import IR._
-  
-  def transformOne[A](s: Sym[A], x: Def[A], t: SubstTransformer): Exp[A] = {
-    if (t.subst.contains(s)) return t(s)
-    implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
-
-    //if (!syms(x).exists(t.subst contains _)) return s   <---- should be safe to prune but test fails (??)
-
-    val y = try { 
-      val ss = syms(x)
-      if (ss != t(ss)) {
-        mirror(x, t) 
-      } else {
-        printdbg("skipping mirror operation "+s+"="+x+" syms " + ss.mkString(",") + " subst " + t.subst.mkString(","))
-        s
-      }
-    } catch { case e => println("Exception during mirroring of "+x+": "+ e); e.printStackTrace; s }
-    if (y != s) {
-
-      if (y.isInstanceOf[Sym[Any]] && findDefinition(y.asInstanceOf[Sym[Any]]).nonEmpty)
-        printdbg("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[Any]]).get.rhs)
-      else
-        printdbg("--> replace " + s+"="+x + " by " + y)
-
-      t.subst(s) = y // TODO: move out of conditional?
-    }
-    y
-  }
-
-  def transformLoopBody[A](s: Sym[A], x: Def[A], t: SubstTransformer): Def[A] = {
-    implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
-    mirrorFatDef(x, t)
-  }
-  
-  def transformAll(scope: List[TTP], t: SubstTransformer): List[TTP] = scope flatMap {
-    case TTP(List(sym), ThinDef(rhs)) =>
-      transformOne(sym, rhs, t) match {
-        case s: Sym[Any] => 
-          val tp = findDefinition(s)
-          if (tp.isEmpty) Nil // happens for array(100) { i => i } TODO: match on Def?
-          else List(fatten(tp.get))
-        case _ => Nil
-      }
-    case TTP(lhs, SimpleFatLoop(s,x,rhs)) =>
-      // alternate strategy: transform thin def, then fatten again (a little detour)
-      printdbg("need to transform rhs of fat loop: " + lhs + ", " + rhs)
-      val lhs2 = lhs.map { case s @ Def(r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
-      if (lhs != lhs2) {
-        val missing = (lhs2.map(s => findDefinition(s).get) diff innerScope)
-        printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
-        innerScope = innerScope ::: missing
-      }
-      val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
-                   else t(s)
-      val rhs2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r))) => transformLoopBody(s,r,t) }}
-                 else (lhs zip rhs) map { case (s,r) => transformLoopBody(s,r,t) }
-      
-      //update innerScope -- change definition of lhs2 in place
-      innerScope = innerScope map {
-        case TP(l,_) if lhs2 contains l => TP(l, SimpleLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2(lhs2.indexOf(l)))) 
-        case d => d
-      }
-      
-      printdbg("came up with: " + lhs2 + ", " + rhs2 + " with subst " + t.subst.mkString(","))
-      List(TTP(lhs2, SimpleFatLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2)))
-      // still problem: VectorSum(a,b) = SimpleLoop(i, ReduceElem(f(i))) 
-      // might need to translate f(i), but looking up VectorSum will not be changed at all!!!
-      // --> change rhs nonetheless???
-      
-/*      
-      // potential problem here: calling toAtom on a SimpleCollect (which does not have any symbol so far!)
-      val lhs2 = (lhs zip rhs).map(p=>transformOne(p._1,p._2,t)).map { case s: Sym[Any] => s }.distinct.asInstanceOf[List[Sym[Any]]]
-      val rhs2 = lhs2 map (findDefinition(_).get.rhs) //FIXME: will lookup old sym (ie VectorTrans) in case of AbstractCollect
-      List(TTP(lhs2, SimpleFatLoop(t(s),t(x).asInstanceOf[Sym[Int]],rhs2)))
-*/      
-  }
-
-  def simplify(scope: List[TTP])(results: List[Exp[Any]]): (List[TTP], List[Exp[Any]]) = {
-    val t = new SubstTransformer    
-    val scope2 = transformAll(scope, t)
-    val results2 = results map (t apply _)
-    (scope2, results2)
-  }
-}
-
-
 trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
-  val IR: LoopsFatExp
+  val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
   
 /*
@@ -121,8 +31,8 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
   }
 
 
-  override def focusExactScopeFat[A](currentScope0: List[TTP])(result0: Exp[Any])(body: List[TTP] => A): A = {
-    var result: Exp[Any] = result0
+  override def focusExactScopeFat[A](currentScope0: List[TTP])(result0: List[Exp[Any]])(body: List[TTP] => A): A = {
+    var result: List[Exp[Any]] = result0
     var currentScope = currentScope0
 
     if (!shouldApplyFusion(currentScope)(result))
@@ -164,6 +74,8 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         def WgetLoopVar(e: TTP): List[Sym[Int]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => List(x) }
         def WgetLoopRes(e: TTP): List[Def[Any]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => rhs }
 
+        val loopCollectSyms = Wloops flatMap (e => (e.lhs zip WgetLoopRes(e)) collect { case (s, SimpleCollectIf(_,_)) => s })
+        
         val loopSyms = Wloops flatMap (_.lhs)
         val loopVars = Wloops flatMap WgetLoopVar
 
@@ -179,10 +91,12 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         // then we can later remove the entry and see if the dependency goes away...
         
         val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
-          val thisLoopSyms = WgetLoopVar(dx)
+          val thisLoopVars = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
           getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopSyms contains i) => 
+            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) => 
+              //if (!loopCollectSyms.contains(a))
+              //  printerr("DANGER WILL ROBINSON: ignoring dep " + e + " although " + a + " is not a loop sym " + loopCollectSyms)
               //println("ignoring simple dependency " + e + " on loop var " + thisLoopSyms)
               Nil // direct deps on this loop's induction var don't count
             case sc =>
@@ -282,19 +196,13 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
             case _ => //e
           }
           
+          // ---
           
-          currentScope = getFatSchedule(currentScope)(result) // clean things up!
+          transformAllFully(currentScope, result, t) match { case (a,b) => // too bad we can't use pair assigment
+            currentScope = a
+            result = b
+          }
 
-          // SIMPLIFY! <--- multiple steps necessary???
-          
-          currentScope = transformAll(currentScope, t)
-          result = t(result)
-          currentScope = getFatSchedule(currentScope)(result) // clean things up!
-
-          currentScope = transformAll(currentScope, t)
-          result = t(result)
-          currentScope = getFatSchedule(currentScope)(result) // clean things up!
-          
           //Wloops = currentScope collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
 
           Wloops = transformAll(partitionsOut, t)
@@ -333,8 +241,34 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
      
     }
 
+    // the caller of emitBlock will quite likely call getBlockResult afterwards,
+    // and if we change the result here, the caller will emit a reference to a sym
+    // that doesn't exist (because it was replaced)
+
+    if (result0 != result) {
+      printlog("super.focusExactScopeFat with result changed from " + result0 + " to " + result)
+      
+      (result0 zip result) foreach {
+        case (r0 @ Def(Reify(x, _, _)),Def(Reify(y, u, es))) => 
+          if (!x.isInstanceOf[Sym[Any]])
+            printlog("non-sym block result: " + x + " to " + y)
+          else if (x != y)
+            currentScope = currentScope :+ TTP(List(x.asInstanceOf[Sym[Any]]), ThinDef(Forward(y)))
+          currentScope = currentScope :+ TTP(List(r0.asInstanceOf[Sym[Any]]), ThinDef(Reify(x,u,es)))
+          // should rewire result so that x->y assignment is inserted
+        case (r0,r) => 
+          if (r0 != r) currentScope = currentScope :+ TTP(List(r0.asInstanceOf[Sym[Any]]), ThinDef(Forward(r)))
+      }
+      
+    }
+/*
+    println("result "+result0+"/"+result)
+    println("<---")
+    currentScope.foreach(println)
+    println("--->")
+*/
     // do what super does ...
-    super.focusExactScopeFat(currentScope)(result)(body)
+    super.focusExactScopeFat(currentScope)(result0)(body)
   }
 
 }
