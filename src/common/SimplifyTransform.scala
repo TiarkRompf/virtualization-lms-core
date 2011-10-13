@@ -13,7 +13,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     case Forward(x) => emitValDef(sym, quote(x))
     case _ => super.emitNode(sym, rhs)
   }
-  
+
   def transformOne[A](s: Sym[A], x: Def[A], t: SubstTransformer): Exp[A] = {
     if (t.subst.contains(s)) return t(s)
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
@@ -137,7 +137,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
       
       printdbg("came up with: " + lhs2 + ", " + rhs2 + " with subst " + t.subst.mkString(","))
       List(TTP(lhs2, SimpleFatLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2)))
-      // still problem: VectorSum(a,b) = SimpleLoop(i, ReduceElem(f(i))) 
+      // still problem: VectorSum(a,b) = SimpleLoop(i, ReduceElem(f(i)))
       // might need to translate f(i), but looking up VectorSum will not be changed at all!!!
       // --> change rhs nonetheless???
       
@@ -149,13 +149,16 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
 */      
   }
 
+  /**
+   * Applies the transformation several times on the current scope with transformer t.
+   */
   def transformAllFully(currentScope0: List[TTP], result0: List[Exp[Any]], t: SubstTransformer): (List[TTP], List[Exp[Any]]) = {
     var currentScope = currentScope0
     var result = result0
     
 /*
     this comment block was added to wip-fusion -- need to keep??
-    
+
     //NOTE: if we have added stuff to currentScope, the line below will reset it
     // because result is still untransformed and thus the new stuff no used
     //currentScope = getFatSchedule(currentScope)(result) // clean things up!
@@ -189,7 +192,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
       context = save
       scope
     }
-  
+    // TODO (VJ) make a loop
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
     currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!

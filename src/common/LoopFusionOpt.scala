@@ -70,9 +70,10 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
       var done = false
 
       // keep track of loops in inner scopes
-      var UloopSyms = currentScope collect { case e @ TTP(lhs, SimpleFatLoop(_,_,_)) if !Wloops.contains(e) => lhs }
+      var UloopSyms = Nil: List[List[Sym[Any]]]
       var nrFusions = 0;
       do {
+        UloopSyms = currentScope collect { case e @ TTP(lhs, SimpleFatLoop(_,_,_)) if !Wloops.contains(e) => lhs }
         // utils
         def WgetLoopShape(e: TTP): Exp[Int] = e.rhs match { case SimpleFatLoop(s,x,rhs) => s }
         def WgetLoopVar(e: TTP): List[Sym[Int]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => List(x) }
@@ -139,13 +140,21 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           case SimpleFatLoop(s,x,rhs) => rhs.map { r => findOrCreateDefinition(SimpleLoop(shape,targetVar,applyAddCondition(r,c))).sym }
         }
 */
+        /**
+         * Plugs body of loop e with the symbol that stands for output of loop a. Method also adds new definitions to the current scope.
+         *
+         * @param s Shape of the loop that a depends on.
+         * @param a Loop that e is depending on.
+         * @param shape shape of the resulting loop.
+         * @param targetVar variable for the loop that is being plugged.
+         */
         def duplicateYieldContextAndPlugInRhs(s: Exp[Int], a: TTP)(e: TTP, shape: Exp[Int], targetVar: Sym[Int]) = {
           // s depends on loop a -- find corresponding loops result d
           val d = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) }
 
           println("beep bop "+d+"/"+e)
 
-          var saveContext = globalDefs.length
+          val saveContext = globalDefs.length
 
           val z = e.rhs match {
             case SimpleFatLoop(s,x,rhs) => rhs.map { r =>
@@ -195,7 +204,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
 
         val t = new SubstTransformer
 
-        var partitionsIn = Wloops
+        val partitionsIn = Wloops
         var partitionsOut = Nil:List[TTP]
 
         for (b <- partitionsIn) {
@@ -295,20 +304,20 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           def select[A](a: List[A], b: List[Boolean]) = (a zip b) collect { case (w, true) => w }
           TTP(select(lhs, ex), SimpleFatLoop(s, x, select(rhs, ex)))
       }
-      
+
       // PREVIOUS PROBLEM: don't throw out all loops, might have some that are *not* in levelScope
       // note: if we don't do it here, we will likely see a problem going back to innerScope in 
       // FatCodegen.focusExactScopeFat below. --> how to go back from SimpleFatLoop to VectorPlus??
       // UPDATE: UloopSyms puts a tentative fix in place. check if it is sufficient!!
       // what is the reason we cannot just look at Wloops??
-      currentScope = currentScope.filter { case e@TTP(lhs, _: AbstractFatLoop) => 
+      currentScope = currentScope.filter { case e@TTP(lhs, _: AbstractFatLoop) =>
         val keep = UloopSyms contains lhs
         //if (!keep) println("dropping: " + e + ", not int UloopSyms: " + UloopSyms)
         keep case _ => true } ::: Wloops
 
       // schedule (and emit)
       currentScope = getFatSchedule(currentScope)(result) // clean things up!
-     
+
     }
 
     // the caller of emitBlock will quite likely call getBlockResult afterwards,

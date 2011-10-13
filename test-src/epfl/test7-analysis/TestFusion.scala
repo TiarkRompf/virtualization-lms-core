@@ -95,7 +95,7 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
     case Def(SimpleLoop(sh,x,ForeachElem(y))) => toAtom2(SimpleLoop(sh,x,ForeachElem(plugInHelper(g,y,r))))
   }
 
-  
+
   override def applyPlugIntoContext(d: Def[Any], r: Def[Any]) = (d,r) match {
     case (ArrayElem(g,a), ArrayElem(g2,b)) => ArrayElem(g2,plugInHelper(g,a,b))
     case (ReduceElem(g,a), ArrayElem(g2,b)) => ArrayElem(g2,plugInHelper(g,a,b))
@@ -236,6 +236,9 @@ trait FusionProg4 extends Arith with ArrayLoops with Print with OrderingOps {
 
   def test(x: Rep[Unit]) = {
 
+    def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) =
+      array(x.length)(i => f(x.at(i)))
+
     def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
       arrayIf(x.length) { i => (p(x.at(i)), x.at(i)) }
 
@@ -248,12 +251,10 @@ trait FusionProg4 extends Arith with ArrayLoops with Print with OrderingOps {
 
     val flat = flatten(nested)
 
-    val filtered = filter(flat) {i => i > 50 }
-//    val res = sum(flat.length) { i => flat.at(i) } (does not fail)
-    // optimizes out loops all together :)
-    val res = sum(filtered.length) { i => flat.at(i) }
+    val mapped = map(flat) { i => i + 2}
 
-    print(res)
+    val filtered = filter(mapped) {i => i > 50 }
+    print(filtered)
   }
 
 }

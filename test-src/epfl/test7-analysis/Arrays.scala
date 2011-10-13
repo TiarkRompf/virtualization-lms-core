@@ -29,7 +29,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
    * Super trait for all statements that emit results from the loop. For example: Yield and Skip.
    */
   trait Gen[+T]
-  
+
   case class ForeachElem[T](y: Exp[Gen[T]]) extends Def[Gen[T]]
 
   case class ArrayElem[T](g: Exp[Gen[T]], y: Exp[Gen[T]]) extends Def[Array[T]]
@@ -176,6 +176,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
 
   override def syms(e: Any): List[Sym[Any]] = e match {
+    case ForeachElem(y) => syms(y)
     case ArrayElem(g,y) => syms(y)
     case ReduceElem(g,y) => syms(y)
     case FlattenElem(g,y) => syms(y)
@@ -183,6 +184,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   }
 
   override def symsFreq(e: Any) = e match {
+    case ForeachElem(y) => freqNormal(y)
     case ArrayElem(g,y) => freqNormal(y)
     case ReduceElem(g,y) => freqNormal(y)
     case FlattenElem(g,y) => freqNormal(y)
@@ -190,6 +192,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   }
   
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case ForeachElem(y) => effectSyms(y)
     case ArrayElem(g,y) => effectSyms(y)
     case ReduceElem(g,y) => effectSyms(y)
     case FlattenElem(g,y) => effectSyms(y)
@@ -285,8 +288,8 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
       stream.println("for ("+quote(ii)+" <- 0 until "+quote(s)+") {")
 
       val gens = for ((l,r) <- sym zip rhs if !r.isInstanceOf[ForeachElem[_]]) yield r match {
-        //case ForeachElem(y) => 
-        case ArrayElem(g,y) if g == y => 
+        //case ForeachElem(y) =>
+        case ArrayElem(g,y) if g == y =>
           (g, (s: String) => stream.println(quote(l) + "("+quote(ii)+") = " + s))
         case ArrayElem(g,y) =>
           (g, (s: String) => stream.println(quote(g) + " += " + s))

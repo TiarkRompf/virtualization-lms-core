@@ -27,12 +27,16 @@ trait Transforming extends Expressions {
 
   def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer): Def[A] = sys.error("don't know how to mirror " + e) //hm...
 
-
+  /**
+   * Transforms Exp to to another Exp based on substitution rules in subst field.
+   * Substitution rules are applied recursively until no more rules can be applied.
+   */
   class SubstTransformer extends Transformer {
     val subst = new HashMap[Exp[Any], Exp[Any]]
     
     def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
-      case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x 
+      case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]])
+      case _ => x
     }
 
 
