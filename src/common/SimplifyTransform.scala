@@ -176,10 +176,6 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     // ---
     currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
 
-    /*println("<1---"+result0+"/"+result)
-    currentScope.foreach(println)
-    println("---1>")*/
-
     // SIMPLIFY! <--- multiple steps necessary???
   
     def withEffectContext(body: =>List[TTP]): List[TTP] = {
@@ -192,19 +188,21 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
       context = save
       scope
     }
-    // TODO (VJ) make a loop
+
+    // Applies the transformation several times until convergence. NOTE: The first two invocations use the whole scope as
+    // the result because we are still not sure about the order of operations.
+    // The last two operations take the result and clean up the code.
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+    currentScope = getFatSchedule(currentScope)(currentScope)
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+    currentScope = getFatSchedule(currentScope)(currentScope)
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
     currentScope = getFatSchedule(currentScope)(result) // clean things up!
-
 
     // once more to see if we are converged
     val previousScope = currentScope
@@ -217,10 +215,6 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
       printerr("error: transformation of scope contents has not converged")
       printdbg(previousScope + "-->" + currentScope)
     }
-  
-    /*println("<x---"+result0+"/"+result)
-    currentScope.foreach(println)
-    println("---x>")*/
     
     (currentScope, result)
   }
