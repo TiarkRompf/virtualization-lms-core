@@ -19,11 +19,11 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 trait StructExp extends BaseExp {
   
   case class Struct[T](tag: List[String], elems: Map[String,Rep[Any]]) extends Def[T]
-  case class Field[T](struct: Rep[Any], index: String) extends Def[T]
+  case class Field[T](struct: Rep[Any], index: String, tp: Manifest[T]) extends Def[T]
   
   def struct[T:Manifest](tag: List[String], elems: Map[String,Rep[Any]]): Rep[T] = Struct[T](tag, elems)
   
-  def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = Field[T](struct, index)
+  def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = Field[T](struct, index, manifest[T])
   
   // FIXME: need  syms override because Map is not a Product
   override def syms(x: Any): List[Sym[Any]] = x match {
@@ -198,10 +198,12 @@ trait ScalaGenStruct extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
-    case Struct(tag, elems) => 
-      emitValDef(sym, "XXX " + rhs)
-    case Field(struct, index) =>  
-      emitValDef(sym, "XXX " + rhs)
+    case Struct(tag, elems) =>
+      //emitValDef(sym, "new " + tag.last + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
+      emitValDef(sym, "Map(" + elems.map(e => "\"" + e._1 + "\"->" + quote(e._2)).mkString(",") + ") //" + tag.last)
+    case Field(struct, index, tp) =>  
+      //emitValDef(sym, quote(struct) + "." + index)
+      emitValDef(sym, quote(struct) + "(\"" + index + "\").asInstanceOf[" + remap(tp) + "]")
     case _ => super.emitNode(sym, rhs)
   }
 }
