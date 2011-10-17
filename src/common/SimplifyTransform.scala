@@ -3,16 +3,9 @@ package common
 
 // TODO: generalize and clean up
 
-trait SimplifyTransform extends internal.GenericFatCodegen {
+trait SimplifyTransform extends internal.FatTraversal {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
-  
-  case class Forward[A](x: Exp[A]) extends Def[A]
-  
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
-    case Forward(x) => emitValDef(sym, quote(x))
-    case _ => super.emitNode(sym, rhs)
-  }
   
   def transformOne[A](s: Sym[A], x: Def[A], t: SubstTransformer): Exp[A] = {
     if (t.subst.contains(s)) return t(s)

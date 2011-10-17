@@ -10,6 +10,19 @@ trait FatTraversal extends NestedTraversal with FatScheduling {
   import IR._  
 
 
+  //  ------------------- these are needed by loop fusion. they should live elsewhere.
+  def unapplySimpleIndex(e: Def[Any]): Option[(Exp[Any], Exp[Int])] = None
+  def unapplySimpleDomain(e: Def[Int]): Option[Exp[Any]] = None
+  def unapplySimpleCollect(e: Def[Any]): Option[Exp[Any]] = None
+  def unapplySimpleCollectIf(e: Def[Any]): Option[(Exp[Any],List[Exp[Boolean]])] = unapplySimpleCollect(e).map((_,Nil))
+
+  def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]): Def[Any] = sys.error("not implemented")
+
+  def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true
+
+  // -------------------
+
+
   def focusExactScopeFat[A](currentScope: List[TTP])(result: List[Exp[Any]])(body: List[TTP] => A): A = {
 
     val saveInner = innerScope
@@ -121,8 +134,6 @@ trait FatTraversal extends NestedTraversal with FatScheduling {
     rval
   }
 
-
-  case class Combine(a: List[Exp[Any]]) extends Exp[Any] //TODO: get rid of
 
   def focusFatBlock[A](rhs: List[Exp[Any]])(body: => A): A = {
     focusBlock(Combine(rhs))(body)
