@@ -16,7 +16,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 */
 
 
-trait StructExp extends BaseExp {
+trait StructExp extends BaseExp with EffectExp {
   
   case class Struct[T](tag: List[String], elems: Map[String,Rep[Any]]) extends Def[T]
   case class Field[T](struct: Rep[Any], index: String, tp: Manifest[T]) extends Def[T]
@@ -24,6 +24,9 @@ trait StructExp extends BaseExp {
   def struct[T:Manifest](tag: List[String], elems: Map[String,Rep[Any]]): Rep[T] = Struct[T](tag, elems)
   
   def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = Field[T](struct, index, manifest[T])
+  
+  //FIXME: reflectMutable has to take the Def
+  def mfield[T:Manifest](struct: Rep[Any], index: String): Rep[T] = reflectMutable(Field[T](struct, index, manifest[T]))
   
   // FIXME: need  syms override because Map is not a Product
   override def syms(x: Any): List[Sym[Any]] = x match {
