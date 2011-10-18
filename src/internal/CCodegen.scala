@@ -12,7 +12,7 @@ trait CCodegen extends CLikeCodegen {
 
   override def toString = "c"
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
     val y = f(x)
 
@@ -39,6 +39,7 @@ trait CCodegen extends CLikeCodegen {
                    "*******************************************/")
 
     stream.flush
+    Nil
   }  
 
 /*
@@ -79,7 +80,7 @@ trait CNestedCodegen extends GenericNestedCodegen with CCodegen {
   import IR._
   
   override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
 

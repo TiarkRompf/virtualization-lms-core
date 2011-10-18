@@ -38,13 +38,15 @@ trait UtilExp extends BaseExp with Utils {
 
   case class Tup[A,B](a: Exp[A],b: Exp[B]) extends Def[(A,B)]
   
-  //case class External[A](s: String) extends Exp[A]
+  case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
   
 }
 
 trait ScalaGenUtil extends ScalaGenBase {
   val IR: UtilExp
   import IR._
+  
+  // case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case StrCat(a,b) =>
@@ -55,7 +57,7 @@ trait ScalaGenUtil extends ScalaGenBase {
   }
 
   override def quote(x: Exp[Any]) = x match {
-    case External(s,args) => s
+    case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
     case _ => super.quote(x)
   }
 

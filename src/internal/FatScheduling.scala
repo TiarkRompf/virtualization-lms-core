@@ -11,6 +11,9 @@ trait FatScheduling extends Scheduling {
   import util.GraphUtil
 
   def fatten(e: TP[Any]): TTP = TTP(List(e.sym), ThinDef(e.rhs))
+
+  def fattenAll(e: List[TP[Any]]): List[TTP] = e.map(fatten)
+
   
   def getSchedule(scope: List[TP[Any]])(result: Any): List[TP[Any]] = {
     def deps(st: List[Sym[Any]]): List[TP[Any]] =
