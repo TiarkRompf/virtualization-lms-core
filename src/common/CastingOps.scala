@@ -52,8 +52,7 @@ trait CudaGenCastingOps extends CudaGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
-        //TODO: How about carrying the dynamic type information in C datastructure?
-        case RepIsInstanceOf(x,mA,mB) => throw new RuntimeException("CudaGen: Cannot check runtime type")
+        //case RepIsInstanceOf(x,mA,mB) => throw new RuntimeException("CudaGen: Cannot check runtime type")
         case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, "(%s) %s".format(remap(mB),quote(x)))
         case _ => super.emitNode(sym, rhs)
       }
@@ -66,8 +65,7 @@ trait OpenCLGenCastingOps extends OpenCLGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
-        //TODO: How about carrying the dynamic type information in C datastructure?
-        case RepIsInstanceOf(x,mA,mB) => throw new RuntimeException("OpenCLGen: Cannot check runtime type")
+        //case RepIsInstanceOf(x,mA,mB) => throw new RuntimeException("OpenCLGen: Cannot check runtime type")
         case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, "(%s) %s".format(remap(mB),quote(x)))
         case _ => super.emitNode(sym, rhs)
       }
