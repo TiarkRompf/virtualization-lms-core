@@ -3,11 +3,18 @@ package internal
 
 import util.GraphUtil
 import scala.collection.mutable
+import scala.annotation.unchecked.uncheckedVariance
 
-trait Effects extends Expressions with Utils {
+trait Blocks extends Expressions {
+  
+  case class Block[+T](val res: Exp[T]) { def Type: Manifest[T @uncheckedVariance] = res.Type } // variance ...  
+  
+}
+
+
+trait Effects extends Expressions with Blocks with Utils {
   
   // TODO: transform over Summary currently lives in common/Base.scala. move it here?
-  
   // --- context
 
   type State = List[Exp[Any]] // TODO: maybe use TP instead to save lookup
@@ -77,9 +84,9 @@ trait Effects extends Expressions with Utils {
   def infix_star(u: Summary) = Pure() orElse u // any number of repetitions, including 0
 
 
-  def summarizeEffects(e: Exp[Any]) = e match {
-    case Def(Reify(_,u,_)) => u
-    case Def(Reflect(_,u,_)) => u
+  def summarizeEffects(e: Block[Any]) = e match {
+    case Block(Def(Reify(_,u,_))) => u
+//    case Def(Reflect(_,u,_)) => u
     case _ => Pure()
   }
 
@@ -437,7 +444,7 @@ trait Effects extends Expressions with Utils {
 
   def pruneContext(ctx: List[Exp[Any]]): List[Exp[Any]] = ctx // TODO this doesn't work yet (because of loops!): filterNot { case Def(Reflect(_,u,_)) => mustOnlyRead(u) }
 
-  def reifyEffects[A:Manifest](block: => Exp[A]): Exp[A] = {
+  def reifyEffects[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     context = Nil
     
@@ -446,10 +453,10 @@ trait Effects extends Expressions with Utils {
     val summary = summarizeAll(deps)
     context = save
     
-    if (deps.isEmpty && mustPure(summary)) result else Reify(result, summary, pruneContext(deps)): Exp[A] // calls toAtom...
+    if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
   }
 
-  def reifyEffectsHere[A:Manifest](block: => Exp[A]): Exp[A] = {
+  def reifyEffectsHere[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     if (save eq null)
       context = Nil
@@ -464,7 +471,7 @@ trait Effects extends Expressions with Utils {
     val summary = summarizeAll(deps)
     context = save
     
-    if (deps.isEmpty && mustPure(summary)) result else Reify(result, summary, pruneContext(deps)): Exp[A] // calls toAtom...
+    if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
   }
 
   // --- bookkeping

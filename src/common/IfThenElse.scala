@@ -29,11 +29,11 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
 
   abstract class AbstractIfThenElse[T] extends Def[T] {
     val cond: Exp[Boolean]
-    val thenp: Exp[T]
-    val elsep: Exp[T]
+    val thenp: Block[T]
+    val elsep: Block[T]
   }
   
-  case class IfThenElse[T:Manifest](cond: Exp[Boolean], thenp: Exp[T], elsep: Exp[T]) extends AbstractIfThenElse[T]
+  case class IfThenElse[T:Manifest](cond: Exp[Boolean], thenp: Block[T], elsep: Block[T]) extends AbstractIfThenElse[T]
 
   override def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]) = {
     val a = reifyEffectsHere(thenp)
@@ -41,7 +41,7 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     ifThenElse(cond,a,b)
   }
 
-  def ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: Rep[T], elsep: Rep[T]) = { // thenp,elsep reified
+  def ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: Block[T], elsep: Block[T]) = { // thenp,elsep reified
     val ae = summarizeEffects(thenp)
     val be = summarizeEffects(elsep)
     reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
@@ -97,11 +97,11 @@ trait IfThenElseFatExp extends IfThenElseExp with BaseFatExp {
 
   abstract class AbstractFatIfThenElse extends FatDef {
     val cond: Exp[Boolean]
-    val thenp: List[Exp[Any]]
-    val elsep: List[Exp[Any]]
+    val thenp: List[Block[Any]]
+    val elsep: List[Block[Any]]
   }
 
-  case class SimpleFatIfThenElse(cond: Exp[Boolean], thenp: List[Exp[Any]], elsep: List[Exp[Any]]) extends AbstractFatIfThenElse
+  case class SimpleFatIfThenElse(cond: Exp[Boolean], thenp: List[Block[Any]], elsep: List[Block[Any]]) extends AbstractFatIfThenElse
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case SimpleFatIfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)

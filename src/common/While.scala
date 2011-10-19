@@ -10,7 +10,7 @@ trait While extends Base {
 
 
 trait WhileExp extends While with EffectExp { 
-  case class While(cond: Exp[Boolean], body: Exp[Unit]) extends Def[Unit]
+  case class While(cond: Block[Boolean], body: Block[Unit]) extends Def[Unit]
 
   override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
     val c = reifyEffects(cond)

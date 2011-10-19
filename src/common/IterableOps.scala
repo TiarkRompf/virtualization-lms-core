@@ -21,7 +21,7 @@ trait IterableOps extends Variables {
 
 trait IterableOpsExp extends IterableOps with EffectExp with VariablesExp {
 
-  case class IterableForeach[T](a: Exp[Iterable[T]], x: Sym[T], block: Exp[Unit]) extends Def[Unit]
+  case class IterableForeach[T](a: Exp[Iterable[T]], x: Sym[T], block: Block[Unit]) extends Def[Unit]
 
   def iterable_foreach[T:Manifest](a: Exp[Iterable[T]], block: Exp[T] => Exp[Unit]): Exp[Unit] = {
     val x = fresh[T]

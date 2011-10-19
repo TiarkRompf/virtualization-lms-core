@@ -46,9 +46,9 @@ trait ComplexStructExp extends ComplexBase with StructExp {
 trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   
   override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
-    case ArrayElem(Def(Struct(tag, elems))) => 
-      struct[A]("Array"::tag, elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(p._2)))))
-    case ArrayElem(Def(ArrayIndex(b,v))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
+    case ArrayElem(Block(Def(Struct(tag, elems)))) => 
+      struct[A]("Array"::tag, elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2))))))
+    case ArrayElem(Block(Def(ArrayIndex(b,v)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
     case _ => super.simpleLoop(size, v, body)
   }
   

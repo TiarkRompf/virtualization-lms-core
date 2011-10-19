@@ -94,11 +94,11 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
   }*/
 
 
-  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Rep[T], b: Rep[T]) = (a,b) match {
-    case (Def(Struct(tagA,elemsA)), Def(Struct(tagB, elemsB))) => 
+  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T]) = (a,b) match {
+    case (Block(Def(Struct(tagA,elemsA))), Block(Def(Struct(tagB, elemsB)))) => 
       assert(tagA == tagB)
       assert(elemsA.keySet == elemsB.keySet)
-      val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, elemsA(k), elemsB(k)))
+      val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, Block(elemsA(k)), Block(elemsB(k))))
       struct[T](tagA, elemsNew.toMap)
     case _ => super.ifThenElse(cond,a,b)
   }
@@ -143,8 +143,9 @@ trait StructFatExp extends StructExp with BaseFatExp
 
 trait StructFatExpOptCommon extends StructFatExp with IfThenElseFatExp { 
 
-  case class Phi[T](cond: Exp[Boolean], a1: Exp[Unit], val thenp: Exp[T], b1: Exp[Unit], val elsep: Exp[T])(val parent: Exp[Unit]) extends AbstractIfThenElse[T] // parent points to conditional
-  def phi[T:Manifest](c: Exp[Boolean], a1: Exp[Unit], a2: Exp[T], b1: Exp[Unit], b2: Exp[T])(parent: Exp[Unit]): Exp[T] = if (a2 == b2) a2 else Phi(c,a1,a2,b1,b2)(parent)
+  case class Phi[T](cond: Exp[Boolean], a1: Block[Unit], val thenp: Block[T], b1: Block[Unit], val elsep: Block[T])(val parent: Exp[Unit]) extends AbstractIfThenElse[T] // parent points to conditional
+  def phi[T:Manifest](c: Exp[Boolean], a1: Block[Unit], a2: Exp[T], b1: Block[Unit], b2: Exp[T])(parent: Exp[Unit]): Exp[T] = if (a2 == b2) a2 else Phi(c,a1,Block(a2),b1,Block(b2))(parent)
+  def phiB[T:Manifest](c: Exp[Boolean], a1: Block[Unit], a2: Block[T], b1: Block[Unit], b2: Block[T])(parent: Exp[Unit]): Exp[T] = if (a2 == b2) a2.res else Phi(c,a1,a2,b1,b2)(parent) // FIXME: duplicate
 
   override def syms(x: Any): List[Sym[Any]] = x match {
 //    case Phi(c,a,u,b,v) => syms(List(c,a,b))
@@ -162,18 +163,18 @@ trait StructFatExpOptCommon extends StructFatExp with IfThenElseFatExp {
   }
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
-    case p@Phi(c,a,u,b,v) => phi(f(c),f(a),f(u),f(b),f(v))(f(p.parent))
+    case p@Phi(c,a,u,b,v) => phiB(f(c),f(a),f(u),f(b),f(v))(f(p.parent))
     case _ => super.mirror(e,f)
   }
 
-  def deReify[T:Manifest](a: Rep[T]): (Rep[Unit], Rep[T]) = a match { // take Reify(stms, e) and return Reify(stms, ()), e
-    case Def(Reify(x,es,u)) => (toAtom(Reify(Const(()), es, u)), x)
-    case _ => (Const(()), a)
+  def deReify[T:Manifest](a: Block[T]): (Block[Unit], Rep[T]) = a match { // take Reify(stms, e) and return Reify(stms, ()), e
+    case Block(Def(Reify(x,es,u))) => (Block(Reify(Const(()), es, u)), x)
+    case Block(x) => (Block(Const(())), x)
   }
   
   
-  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Rep[T], b: Rep[T]) = (deReify(a),deReify(b)) match {
-    case ((u, x@Def(Struct(tagA,elemsA))), (v, y@Def(Struct(tagB, elemsB)))) => 
+  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T]) = (deReify(a),deReify(b)) match {
+    case ((u, Def(Struct(tagA,elemsA))), (v, Def(Struct(tagB, elemsB)))) => 
       assert(tagA == tagB)
       assert(elemsA.keySet == elemsB.keySet)
       // create stm that computes all values at once
@@ -237,7 +238,7 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
       val c  = phis collect { case TP(_, Phi(c,a,u,b,v)) => c } reduceLeft { (c1,c2) => assert(c1 == c2); c1 }
       TTP(ss, SimpleFatIfThenElse(c,us,vs))
     }
-    def fatif(s:Sym[Unit],c:Exp[Boolean],a:Exp[Unit],b:Exp[Unit]) = fatphi(s) match {
+    def fatif(s:Sym[Unit],c:Exp[Boolean],a:Block[Unit],b:Block[Unit]) = fatphi(s) match {
       case TTP(ss, SimpleFatIfThenElse(c2,us,vs)) =>
         assert(c == c2)
         TTP(s::ss, SimpleFatIfThenElse(c,a::us,b::vs))
@@ -247,8 +248,8 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
 
     val r = e.flatMap { 
       case TP(sym, p@Phi(c,a,u,b,v)) => Nil
-      case TP(sym:Sym[Unit], IfThenElse(c,a:Exp[Unit],b:Exp[Unit])) => List(fatif(sym,c,a,b))
-      case TP(sym:Sym[Unit], Reflect(IfThenElse(c,a:Exp[Unit],b:Exp[Unit]),_,_)) => List(fatif(sym,c,a,b))
+      case TP(sym:Sym[Unit], IfThenElse(c,a:Block[Unit],b:Block[Unit])) => List(fatif(sym,c,a,b))
+      case TP(sym:Sym[Unit], Reflect(IfThenElse(c,a:Block[Unit],b:Block[Unit]),_,_)) => List(fatif(sym,c,a,b))
       case t => List(fatten(t))
     } ++ orphans.map { case s: Sym[Unit] => fatphi(s) }
     

@@ -8,11 +8,17 @@ trait Traversal extends Scheduling {
   val IR: Expressions
   import IR._
 
-  def getFreeVarBlock(start: Exp[Any], local: List[Sym[Any]]): List[Sym[Any]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
+  type Block[+T]
+  
+  def reifyBlock[T: Manifest](x: => Exp[T]): Block[T]
 
-  def getFreeDataBlock[A](start: Exp[A]): List[(Sym[Any],Any)] = Nil // TODO: Nil or Exception??
+  def compactize(start: Block[Any], local: List[Sym[Any]]): List[Sym[Any]] = { throw new Exception("Method compactize should be overriden.") }
 
-  def getBlockResult[A](s: Exp[A]): Exp[A] = s
+  def getFreeVarBlock(start: Block[Any], local: List[Sym[Any]]): List[Sym[Any]] = Nil
+
+  def getFreeDataBlock[A](start: Block[A]): List[(Sym[Any],Any)] = Nil // TODO: Nil or Exception??
+
+  def getBlockResult[A](s: Block[A]): Exp[A] // = s.res
   
 }
 
@@ -20,6 +26,10 @@ trait Traversal extends Scheduling {
 trait NestedTraversal extends Traversal {
   val IR: Expressions with Effects
   import IR._
+
+  type Block[+T] = IR.Block[T]
+  def reifyBlock[T: Manifest](x: => Exp[T]): Block[T] = IR.reifyEffects(x)
+
   
 //  var shallow = false
 
@@ -32,7 +42,7 @@ trait NestedTraversal extends Traversal {
   override def availableDefs = if (innerScope ne null) innerScope else initialDefs
 
 
-  def focusBlock[A](result: Exp[Any])(body: => A): A = {
+  def focusBlock[A](result: Block[Any])(body: => A): A = {
     val initDef = initialDefs
     val availDef = availableDefs
 
@@ -42,7 +52,7 @@ trait NestedTraversal extends Traversal {
 
 //    outerScope = outerScope ::: levelScope
 //    levelScope = Nil
-    innerScope = buildScheduleForResult(result) // deep list of deps
+    innerScope = buildScheduleForResult(result.res) // deep list of deps
 
     var rval = null.asInstanceOf[A]
     try {
@@ -75,7 +85,8 @@ trait NestedTraversal extends Traversal {
 */
 
 
-  def focusExactScope[A](result: Exp[Any])(body: List[TP[Any]] => A): A = {
+  def focusExactScope[A](resultB: Block[Any])(body: List[TP[Any]] => A): A = {
+    val result = getBlockResult(resultB)
 
     val saveInner = innerScope
 
@@ -161,9 +172,9 @@ trait NestedTraversal extends Traversal {
   }
     
     
-  override def getBlockResult[A](s: Exp[A]): Exp[A] = s match {
-    case Def(Reify(x, _, _)) => x
-    case _ => super.getBlockResult(s)
+  override def getBlockResult[A](s: Block[A]): Exp[A] = s match {
+    case Block(Def(Reify(x, _, _))) => x
+    case Block(x) => x
   }
   
 
@@ -193,13 +204,13 @@ trait NestedTraversal extends Traversal {
   }
 
   // TODO: remove
-  override def getFreeVarBlock(start: Exp[Any], local: List[Sym[Any]]): List[Sym[Any]] = {
+  override def getFreeVarBlock(start: Block[Any], local: List[Sym[Any]]): List[Sym[Any]] = {
     focusBlock(start) {
-      freeInScope(local, List(start))
+      freeInScope(local, List(getBlockResult(start)))
     }
   }
 
-  override def getFreeDataBlock[A](start: Exp[A]): List[(Sym[Any],Any)] = Nil // FIXME: should have generic impl
+  override def getFreeDataBlock[A](start: Block[A]): List[(Sym[Any],Any)] = Nil // FIXME: should have generic impl
 
   def reset { // used anywhere?
     innerScope = null

@@ -31,7 +31,7 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   case class RangeStep(r: Exp[Range]) extends Def[Int]
   case class RangeEnd(r: Exp[Range]) extends Def[Int]
   //case class RangeForeach(r: Exp[Range], i: Exp[Int], body: Exp[Unit]) extends Def[Unit]
-  case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Sym[Int], body: Exp[Unit]) extends Def[Unit]
+  case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Sym[Int], body: Block[Unit]) extends Def[Unit]
 
   def range_until(start: Exp[Int], end: Exp[Int]) : Exp[Range] = Until(start, end)
   def range_start(r: Exp[Range]) : Exp[Int] = RangeStart(r)

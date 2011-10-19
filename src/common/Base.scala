@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package common
 
-import internal.{Expressions, Effects, Transforming, FatExpressions, FatTransforming}
+import internal.{Expressions, Effects, Blocks, Transforming, FatExpressions, FatTransforming}
 import internal.{ScalaCodegen, ScalaNestedCodegen, ScalaFatCodegen, 
   CudaCodegen, CudaNestedCodegen, CudaFatCodegen, 
   CCodegen, CNestedCodegen, CFatCodegen,
@@ -43,7 +43,15 @@ trait BaseExp extends Base with Expressions with Transforming {
   protected def unit[T:Manifest](x: T) = Const(x)
 }
 
-trait EffectExp extends BaseExp with Effects {
+trait BlockExp extends BaseExp with Blocks {
+  
+  implicit object CanTransformBlock extends CanTransform[Block] {
+    def transform[A](x: Block[A], t: Transformer): Block[A] = Block(t(x.res))
+  }
+  
+}
+
+trait EffectExp extends BlockExp with Effects {
 
   def mapOver(t: Transformer, u: Summary) = { // TODO: move to effects class?
     u.copy(mayRead = t.onlySyms(u.mayRead), mstRead = t.onlySyms(u.mstRead),

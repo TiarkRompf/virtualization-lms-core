@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package epfl
 package test4
 
-import common.EffectExp
+import common.{BlockExp,EffectExp}
 import common.ScalaGenEffect // don't import FunctionsExp
 import test2._
 import test3._
@@ -99,8 +99,8 @@ trait FunctionsCanonical extends FunctionsExp with ClosureCompare {
 }
 
 
-trait FunctionsExternalDef0 extends FunctionsExp {
-  case class DefineFun[A,B](res: Exp[B])(val arg: Sym[A]) extends Def[A=>B]
+trait FunctionsExternalDef0 extends FunctionsExp with BlockExp {
+  case class DefineFun[A,B](res: Block[B])(val arg: Sym[A]) extends Def[A=>B]
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case f@DefineFun(y) => f.arg::effectSyms(y)
@@ -116,7 +116,7 @@ trait FunctionsExternalDef01 extends FunctionsExternalDef0 { // not used
     var funSym = fresh[A=>B]
     var argSym = fresh[A]//Sym(-1)
       
-    createDefinition(funSym, DefineFun[A,B](f(argSym))(argSym))
+    createDefinition(funSym, DefineFun[A,B](Block(f(argSym)))(argSym)) //FIXME: use reify (conflict with test3.effects)
     funSym
   }
 
@@ -141,8 +141,8 @@ trait FunctionsExternalDef1 extends FunctionsExternalDef0 with ClosureCompare { 
         val g = (x: Exp[A]) => Apply(funSym, x): Exp[B]
         funTable = (g,can)::funTable
         
-        f(argSym) match {
-          case c @ Const(_) => 
+        Block(f(argSym)) match { //FIXME: use reify (conflict with test3.effects)
+          case Block(c @ Const(_)) => 
             val g = (x: Exp[A]) => c
             funTable = (g,can)::funTable // ok?
             Lambda(g)
@@ -172,8 +172,8 @@ trait FunctionsExternalDef2 extends FunctionsCanonical with FunctionsExternalDef
         val g = (x: Exp[A]) => Apply(funSym, x): Exp[B]
         funTable = (g,can)::funTable
         
-        f(argSym) match {
-          case c @ Const(_) => 
+        Block(f(argSym)) match { //FIXME: use reify (conflict with test3.effects)
+          case Block(c @ Const(_)) => 
             val g = (x: Exp[A]) => c
             funTable = (g,can)::funTable // ok?
             g

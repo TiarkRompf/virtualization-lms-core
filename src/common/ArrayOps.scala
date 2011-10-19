@@ -27,7 +27,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
 
   case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int]
   case class ArrayApply[T](a: Exp[Array[T]], n: Exp[Int])(implicit val mT:Manifest[T]) extends Def[T]
-  case class ArrayForeach[T](a: Exp[Array[T]], x: Sym[T], block: Exp[Unit]) extends Def[Unit]
+  case class ArrayForeach[T](a: Exp[Array[T]], x: Sym[T], block: Block[Unit]) extends Def[Unit]
 
   def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int]): Rep[T] = ArrayApply(x, n)
   def array_length[T:Manifest](a: Exp[Array[T]]) : Rep[Int] = ArrayLength(a)

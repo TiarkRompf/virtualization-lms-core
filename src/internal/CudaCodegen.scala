@@ -93,7 +93,7 @@ trait CudaCodegen extends CLikeCodegen {
   override def hasMetaData: Boolean = true
   override def getMetaData: String = MetaData.toString
 
-  def emitDevFunc(func:Exp[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
+  def emitDevFunc(func:Block[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
     devFuncIdx += 1
     val currIdx = devFuncIdx
     val tempString = new StringWriter
@@ -108,10 +108,10 @@ trait CudaCodegen extends CLikeCodegen {
 
     val inputs = (getFreeVarBlock(func,Nil).filterNot(ele => locals.contains(ele))++gpuTemps).distinct
     val paramStr = (locals++inputs).map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
-    header.append("__device__ %s dev_%s(%s) {\n".format(remap(func.Type),currIdx,paramStr))
+    header.append("__device__ %s dev_%s(%s) {\n".format(remap(getBlockResult(func).Type),currIdx,paramStr))
     header.append("\tint idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
     header.append("\tint idxY = blockIdx.y*blockDim.y + threadIdx.y;\n")
-    if(remap(func.Type) != "void")
+    if(remap(getBlockResult(func).Type) != "void")
       footer.append("\treturn %s;\n".format(quote(getBlockResult(func))))
     footer.append("}\n")
     devFuncString.append(header)
@@ -346,7 +346,7 @@ trait CudaCodegen extends CLikeCodegen {
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
-    val y = f(x)
+    val y = reifyBlock(f(x))
 
     val sA = mA.toString
     val sB = mB.toString
@@ -546,7 +546,7 @@ trait CudaCodegen extends CLikeCodegen {
   /* emitAllocFunc method emits code for allocating the output memory of a kernel,
        and copying  it to CPU memory with allocation of new object in CPU */
   //TODO: Separate output and temporary allocations
-  def emitAllocFunc(sym:Sym[Any], allocFunc:Exp[Any]) {
+  def emitAllocFunc(sym:Sym[Any], allocFunc:Block[Any]) {
     helperFuncIdx += 1
     val tempString = new StringWriter
     val tempString2 = new StringWriter
@@ -723,12 +723,6 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
   val IR: Expressions with Effects
   import IR._
   
-  override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
-    super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
-  }
-
-
   def CudaConsts(x:Exp[Any], s:String): String = {
     s match {
       case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.Type))

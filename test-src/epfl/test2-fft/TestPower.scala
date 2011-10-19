@@ -106,7 +106,7 @@ class TestPower extends FileDiffSuite {
       val o = new Power1 with ArithExpOpt
       import o._
       val f = (x: Rep[Double]) => power(x + x, 4)
-      val p = new ScalaGenArith { val IR: o.type = o }
+      val p = new ScalaGenFlat with ScalaGenArith { val IR: o.type = o }
       p.emitSource(f, "Power2", new PrintWriter(System.out))
     }
 
@@ -124,14 +124,14 @@ class TestPower extends FileDiffSuite {
       val o = new Power2 with ArithExpOpt
       import o._
       val f = (x: Rep[Double]) => power(x + x, 4)
-      val p = new ScalaGenArith { val IR: o.type = o }
+      val p = new ScalaGenFlat with ScalaGenArith { val IR: o.type = o }
       p.emitSource(f, "Power3", new PrintWriter(System.out))
     }
 
 
     {
       val o = new Power1 with ArithExpOpt with CompileScala { self => 
-        val codegen = new ScalaGenArith { val IR: self.type = self }
+        val codegen = new ScalaGenFlat with ScalaGenArith { val IR: self.type = self }
       }
       import o._
 

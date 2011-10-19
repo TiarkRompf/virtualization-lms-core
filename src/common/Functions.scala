@@ -22,8 +22,8 @@ trait Functions extends Base {
 
 trait FunctionsExp extends Functions with EffectExp {
 
-  case class Lambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B], x: Sym[A], y: Exp[B]) extends Def[A => B]
-  case class Lambda2[A1:Manifest,A2:Manifest,B:Manifest](f: (Exp[A1],Exp[A2]) => Exp[B], x1: Sym[A1], x2: Sym[A2], y: Exp[B]) extends Def[(A1,A2) => B]
+  case class Lambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B], x: Sym[A], y: Block[B]) extends Def[A => B]
+  case class Lambda2[A1:Manifest,A2:Manifest,B:Manifest](f: (Exp[A1],Exp[A2]) => Exp[B], x1: Sym[A1], x2: Sym[A2], y: Block[B]) extends Def[(A1,A2) => B]
 
   case class Apply[A:Manifest,B:Manifest](f: Exp[A => B], arg: Exp[A]) extends Def[B]
 

@@ -14,7 +14,7 @@ trait CCodegen extends CLikeCodegen {
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
-    val y = f(x)
+    val y = reifyBlock(f(x))
 
     val sA = mA.toString
     val sB = mB.toString
@@ -79,11 +79,6 @@ trait CNestedCodegen extends GenericNestedCodegen with CCodegen {
   val IR: Expressions with Effects
   import IR._
   
-  override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
-    super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
-  }
-
   override def quote(x: Exp[Any]) = x match { // TODO: quirk!
     case Sym(-1) => "_"
     case _ => super.quote(x)

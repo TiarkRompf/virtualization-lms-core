@@ -9,16 +9,16 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatTraversal {
   import IR._  
   
   
-  override def emitBlockFocused(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
+  override def emitBlockFocused(result: Block[Any])(implicit stream: PrintWriter): Unit = {
     var currentScope = fattenAll(innerScope)
     currentScope = getFatSchedule(currentScope)(result) // clean things up!
     result match {
-      case Combine(rs) => emitFatBlockFocused(currentScope)(rs)
+      case Block(Combine(rs)) => emitFatBlockFocused(currentScope)(rs.map(Block(_)))  // TODO: find another way
       case _ => emitFatBlockFocused(currentScope)(List(result))
     }
   }
 
-  def emitFatBlockFocused(currentScope: List[TTP])(result: List[Exp[Any]])(implicit stream: PrintWriter): Unit = {
+  def emitFatBlockFocused(currentScope: List[TTP])(result: List[Block[Any]])(implicit stream: PrintWriter): Unit = {
 /*
     val dbg = (result == List(Sym(1729)))
     if (dbg) {
@@ -62,8 +62,8 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatTraversal {
   def emitFatNodeKernelExtra(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter): Unit = { }
 
 
-  def emitFatBlock(rhs: List[Exp[Any]])(implicit stream: PrintWriter): Unit = {
-    emitBlock(Combine(rhs))
+  def emitFatBlock(rhs: List[Block[Any]])(implicit stream: PrintWriter): Unit = {
+    emitBlock(Block(Combine(rhs.map(getBlockResult)))) // TODO: find another way
   }
 
 
