@@ -25,19 +25,19 @@ x2
 }
 val x16 = x0 > 7
 val x21 = if (x16) {
-val x6 = XXX Struct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(5)))
+val x6 = Map("re"->x4,"im"->x5) //Array Complex
 x6
 } else {
 val x17 = x13
 val x18 = x14
-val x19 = XXX Struct(List(Array, Complex),Map(re -> Sym(17), im -> Sym(18)))
+val x19 = Map("re"->x17,"im"->x18) //Array Complex
 x19
 }
 x13 = x4
 x14 = x5
 val x24 = x13
 val x25 = x14
-val x26 = XXX Struct(List(Array, Complex),Map(re -> Sym(24), im -> Sym(25)))
+val x26 = Map("re"->x24,"im"->x25) //Array Complex
 val x27 = println(x26)
 val x28 = println(x21)
 x28

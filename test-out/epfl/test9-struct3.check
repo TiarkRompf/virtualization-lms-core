@@ -72,7 +72,7 @@ var x4 = new Array[](100)
 for (x1 <- 0 until 100) {
 x4(x1) = x1
 }
-val x17 = XXX Struct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(4)))
+val x17 = Map("re"->x4,"im"->x4) //Array Complex
 val x18 = println(x17)
 val x15 = x18
 x15
