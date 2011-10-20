@@ -24,6 +24,15 @@ trait LiftAll extends Base {
 trait Base extends EmbeddedControls {
 
   type Rep[+T]
+  
+  trait InterfaceOps[+T] {
+    type Self
+    val elem: Rep[Self]   
+    def wrap(x: Rep[Self]): Interface[T]
+  }
+  trait Interface[+T] { // Interface[Vector[T]]
+    val ops: InterfaceOps[T]
+  }
 
   protected def unit[T:Manifest](x: T): Rep[T]
 

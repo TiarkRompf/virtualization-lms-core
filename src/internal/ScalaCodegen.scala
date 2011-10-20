@@ -62,6 +62,7 @@ trait ScalaCodegen extends GenericCodegen {
     if (vals.length > 0 && vars.length > 0){
       stream.print(", ")
     }
+    // TODO: remap Ref instead of explicitly adding generated.scala
     if (vars.length > 0){
       stream.print(vars.map(v => quote(v) + ":" + "generated.scala.Ref[" + remap(v.Type) +"]").mkString(","))
     }
