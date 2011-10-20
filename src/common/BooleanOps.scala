@@ -11,13 +11,13 @@ trait LiftBoolean {
 }
 
 trait BooleanOps extends Variables {
-  def infix_unary_!(x: Rep[Boolean]) = boolean_negate(x)
-  def infix_&&(lhs: Rep[Boolean], rhs: Rep[Boolean]) = boolean_and(lhs,rhs)
-  def infix_||(lhs: Rep[Boolean], rhs: Rep[Boolean]) = boolean_or(lhs,rhs)
+  def infix_unary_!(x: Rep[Boolean])(implicit ctx: SourceContext) = boolean_negate(x)
+  def infix_&&(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit ctx: SourceContext) = boolean_and(lhs,rhs)
+  def infix_||(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit ctx: SourceContext) = boolean_or(lhs,rhs)
 
-  def boolean_negate(lhs: Rep[Boolean]): Rep[Boolean]
-  def boolean_and(lhs: Rep[Boolean], rhs: Rep[Boolean]): Rep[Boolean]
-  def boolean_or(lhs: Rep[Boolean], rhs: Rep[Boolean]): Rep[Boolean]
+  def boolean_negate(lhs: Rep[Boolean])(implicit ctx: SourceContext): Rep[Boolean]
+  def boolean_and(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit ctx: SourceContext): Rep[Boolean]
+  def boolean_or(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit ctx: SourceContext): Rep[Boolean]
 }
 
 trait BooleanOpsExp extends BooleanOps with BaseExp {
@@ -25,9 +25,9 @@ trait BooleanOpsExp extends BooleanOps with BaseExp {
   case class BooleanAnd(lhs: Exp[Boolean], rhs: Exp[Boolean]) extends Def[Boolean]
   case class BooleanOr(lhs: Exp[Boolean], rhs: Exp[Boolean]) extends Def[Boolean]
 
-  def boolean_negate(lhs: Exp[Boolean]) : Exp[Boolean] = BooleanNegate(lhs)
-  def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean]) : Exp[Boolean] = BooleanAnd(lhs,rhs)
-  def boolean_or(lhs: Exp[Boolean], rhs: Exp[Boolean]) : Exp[Boolean] = BooleanOr(lhs,rhs)
+  def boolean_negate(lhs: Exp[Boolean])(implicit ctx: SourceContext) : Exp[Boolean] = BooleanNegate(lhs)
+  def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit ctx: SourceContext) : Exp[Boolean] = BooleanAnd(lhs,rhs)
+  def boolean_or(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit ctx: SourceContext) : Exp[Boolean] = BooleanOr(lhs,rhs)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case BooleanNegate(x) => boolean_negate(f(x))

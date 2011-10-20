@@ -3,7 +3,6 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.{GenericNestedCodegen,GenericFatCodegen}
-import scala.reflect.SourceContext
 
 trait Loops extends Base { // no surface constructs for now
 

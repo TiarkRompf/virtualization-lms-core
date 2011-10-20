@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import internal._
+import scala.reflect.SourceContext
 
 trait IterableOps extends Variables {
 
@@ -13,17 +14,17 @@ trait IterableOps extends Variables {
   implicit def iterableToIterableOps[T:Manifest](a: Iterable[T]) = new IterableOpsCls(unit(a))
 
   class IterableOpsCls[T:Manifest](a: Rep[Iterable[T]]){
-    def foreach(block: Rep[T] => Rep[Unit]) = iterable_foreach(a, block)
+    def foreach(block: Rep[T] => Rep[Unit])(implicit ctx: SourceContext) = iterable_foreach(a, block)
   }
 
-  def iterable_foreach[T:Manifest](x: Rep[Iterable[T]], block: Rep[T] => Rep[Unit]): Rep[Unit]
+  def iterable_foreach[T:Manifest](x: Rep[Iterable[T]], block: Rep[T] => Rep[Unit])(implicit ctx: SourceContext): Rep[Unit]
 }
 
 trait IterableOpsExp extends IterableOps with EffectExp with VariablesExp {
 
   case class IterableForeach[T](a: Exp[Iterable[T]], x: Sym[T], block: Exp[Unit]) extends Def[Unit]
 
-  def iterable_foreach[T:Manifest](a: Exp[Iterable[T]], block: Exp[T] => Exp[Unit]): Exp[Unit] = {
+  def iterable_foreach[T:Manifest](a: Exp[Iterable[T]], block: Exp[T] => Exp[Unit])(implicit ctx: SourceContext): Exp[Unit] = {
     val x = fresh[T]
     val b = reifyEffects(block(x))
     reflectEffect(IterableForeach(a, x, b), summarizeEffects(b).star)

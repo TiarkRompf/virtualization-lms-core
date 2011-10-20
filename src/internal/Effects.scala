@@ -294,11 +294,11 @@ trait Effects extends Expressions with Utils {
     }
   }
 
-  def checkIllegalSharing(z: Exp[Any], mutableAliases: List[Sym[Any]]) {
+  def checkIllegalSharing(z: Exp[Any], mutableAliases: List[Sym[Any]], ctx: SourceContext) {
     if (mutableAliases.nonEmpty) {
       val zd = z match { case Def(zd) => zd }
       printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
-      printerr("at " + z + "=" + zd)
+      printerr("at " + ctx.line + ": " + z + "=" + zd)
     }
   }
   
@@ -315,7 +315,7 @@ trait Effects extends Expressions with Utils {
     val z = reflectEffect(d, Alloc() andAlso Read(mutableInputs))
 
     val mutableAliases = mutableTransitiveAliases(d)
-    checkIllegalSharing(z, mutableAliases)
+    checkIllegalSharing(z, mutableAliases, ctx)
     z
   }
 
@@ -326,7 +326,7 @@ trait Effects extends Expressions with Utils {
     val z = reflectEffect(d, Write(write) andAlso Read(mutableInputs))
 
     val mutableAliases = mutableTransitiveAliases(d) filterNot (write contains _)
-    checkIllegalSharing(z, mutableAliases)
+    checkIllegalSharing(z, mutableAliases, ctx)
     z
   }
 
@@ -359,7 +359,7 @@ trait Effects extends Expressions with Utils {
             case o => 
               if (!globalMutableSyms.contains(w)) {
                 printerr("error: write to non-mutable " + w + " -> " + o)
-                printerr("at " + z + "=" + zd)
+                printerr("at " + ctx.line + ": " + z + "=" + zd)
               }
           }
         }

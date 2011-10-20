@@ -16,22 +16,22 @@ trait StringOps extends Variables with OverloadHack {
   // NOTE: if something doesn't get lifted, this won't give you a compile time error,
   //       since string concat is defined on all objects
   
-  def infix_+(s1: Rep[String], s2: Rep[Any]) = string_plus(s1, s2)
-  def infix_+(s1: Rep[String], s2: Var[Any])(implicit o: Overloaded1) = string_plus(s1, readVar(s2))
-  def infix_+(s1: String, s2: Rep[Any])(implicit o: Overloaded4) = string_plus(unit(s1), s2)
-  def infix_+(s1: String, s2: Var[Any])(implicit o: Overloaded5) = string_plus(unit(s1), readVar(s2))
-  def infix_+(s1: Rep[Any], s2: Rep[String])(implicit o: Overloaded2) = string_plus(s1, s2)
-  def infix_+(s1: Var[Any], s2: Rep[String])(implicit o: Overloaded3) = string_plus(readVar(s1), s2)
-  def infix_+(s1: Rep[Any], s2: String)(implicit o: Overloaded6) = string_plus(s1, unit(s2))
-  def infix_+(s1: Var[Any], s2: String)(implicit o: Overloaded7) = string_plus(readVar(s1), unit(s2))
-  def infix_+(s1: Rep[String], s2: Var[Int])(implicit o: Overloaded8) = string_plus(s1, readVar(s2))
-  def infix_+(s1: String, s2: Var[Int])(implicit o: Overloaded9) = string_plus(unit(s1), readVar(s2))
+  def infix_+(s1: Rep[String], s2: Rep[Any])(implicit ctx: SourceContext) = string_plus(s1, s2)
+  def infix_+(s1: Rep[String], s2: Var[Any])(implicit o: Overloaded1, ctx: SourceContext) = string_plus(s1, readVar(s2))
+  def infix_+(s1: String, s2: Rep[Any])(implicit o: Overloaded4, ctx: SourceContext) = string_plus(unit(s1), s2)
+  def infix_+(s1: String, s2: Var[Any])(implicit o: Overloaded5, ctx: SourceContext) = string_plus(unit(s1), readVar(s2))
+  def infix_+(s1: Rep[Any], s2: Rep[String])(implicit o: Overloaded2, ctx: SourceContext) = string_plus(s1, s2)
+  def infix_+(s1: Var[Any], s2: Rep[String])(implicit o: Overloaded3, ctx: SourceContext) = string_plus(readVar(s1), s2)
+  def infix_+(s1: Rep[Any], s2: String)(implicit o: Overloaded6, ctx: SourceContext) = string_plus(s1, unit(s2))
+  def infix_+(s1: Var[Any], s2: String)(implicit o: Overloaded7, ctx: SourceContext) = string_plus(readVar(s1), unit(s2))
+  def infix_+(s1: Rep[String], s2: Var[Int])(implicit o: Overloaded8, ctx: SourceContext) = string_plus(s1, readVar(s2))
+  def infix_+(s1: String, s2: Var[Int])(implicit o: Overloaded9, ctx: SourceContext) = string_plus(unit(s1), readVar(s2))
 
-  def infix_trim(s: Rep[String]) = string_trim(s)
-  def infix_split(s: Rep[String], separators: Rep[String]) = string_split(s, separators)
+  def infix_trim(s: Rep[String])(implicit ctx: SourceContext) = string_trim(s)
+  def infix_split(s: Rep[String], separators: Rep[String])(implicit ctx: SourceContext) = string_split(s, separators)
 
   object String {
-    def valueOf(a: Rep[Any]) = string_valueof(a)
+    def valueOf(a: Rep[Any])(implicit ctx: SourceContext) = string_valueof(a)
   }
 
   def string_plus(s: Rep[Any], o: Rep[Any])(implicit ctx: SourceContext): Rep[String]

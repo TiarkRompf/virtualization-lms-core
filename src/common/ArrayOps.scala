@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import internal._
+import scala.reflect.SourceContext
 
 trait ArrayOps extends Variables {
 
@@ -13,14 +14,14 @@ trait ArrayOps extends Variables {
   implicit def arrayToArrayOps[T:Manifest](a: Array[T]) = new ArrayOpsCls(unit(a))
 
   class ArrayOpsCls[T:Manifest](a: Rep[Array[T]]){
-    def apply(n: Rep[Int]) = array_apply(a, n)
-    def length = array_length(a)
-    def foreach(block: Rep[T] => Rep[Unit]) = array_foreach(a, block)
+    def apply(n: Rep[Int])(implicit ctx: SourceContext) = array_apply(a, n)
+    def length(implicit ctx: SourceContext) = array_length(a)
+    def foreach(block: Rep[T] => Rep[Unit])(implicit ctx: SourceContext) = array_foreach(a, block)
   }
 
-  def array_apply[T:Manifest](x: Rep[Array[T]], n: Rep[Int]): Rep[T]
-  def array_length[T:Manifest](x: Rep[Array[T]]) : Rep[Int]
-  def array_foreach[T:Manifest](x: Rep[Array[T]], block: Rep[T] => Rep[Unit]): Rep[Unit]
+  def array_apply[T:Manifest](x: Rep[Array[T]], n: Rep[Int])(implicit ctx: SourceContext): Rep[T]
+  def array_length[T:Manifest](x: Rep[Array[T]])(implicit ctx: SourceContext) : Rep[Int]
+  def array_foreach[T:Manifest](x: Rep[Array[T]], block: Rep[T] => Rep[Unit])(implicit ctx: SourceContext): Rep[Unit]
 }
 
 trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
@@ -29,9 +30,9 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   case class ArrayApply[T](a: Exp[Array[T]], n: Exp[Int])(implicit val mT:Manifest[T]) extends Def[T]
   case class ArrayForeach[T](a: Exp[Array[T]], x: Sym[T], block: Exp[Unit]) extends Def[Unit]
 
-  def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int]): Rep[T] = ArrayApply(x, n)
-  def array_length[T:Manifest](a: Exp[Array[T]]) : Rep[Int] = ArrayLength(a)
-  def array_foreach[T:Manifest](a: Exp[Array[T]], block: Exp[T] => Exp[Unit]): Exp[Unit] = {
+  def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int])(implicit ctx: SourceContext): Rep[T] = ArrayApply(x, n)
+  def array_length[T:Manifest](a: Exp[Array[T]])(implicit ctx: SourceContext) : Rep[Int] = ArrayLength(a)
+  def array_foreach[T:Manifest](a: Exp[Array[T]], block: Exp[T] => Exp[Unit])(implicit ctx: SourceContext): Exp[Unit] = {
     val x = fresh[T]
     val b = reifyEffects(block(x))
     reflectEffect(ArrayForeach(a, x, b), summarizeEffects(b).star)

@@ -7,12 +7,13 @@ import common.ScalaGenEffect // don't import FunctionsExp
 import test2._
 import test3._
 import util.ClosureCompare
+import scala.reflect.SourceContext
 
 trait FunctionsExpClever extends test3.FunctionsExp {
 
   def exec[A:Manifest,B:Manifest](fun: Exp[A]=>Exp[B], arg: Exp[A]): Exp[B]
 
-  override def doApply[A:Manifest,B:Manifest](fun: Exp[A => B], arg: Exp[A]): Exp[B] = fun match {
+  override def doApply[A:Manifest,B:Manifest](fun: Exp[A => B], arg: Exp[A])(implicit ctx: SourceContext): Exp[B] = fun match {
     case Def(Lambda(fun)) => 
       exec(fun, arg)
     case _ => super.doApply(fun, arg)
@@ -93,7 +94,7 @@ trait FunctionsCanonical extends FunctionsExp with ClosureCompare {
   }
 
 
-  override def doLambda[A:Manifest,B:Manifest](fun: Exp[A]=>Exp[B]) = {
+  override def doLambda[A:Manifest,B:Manifest](fun: Exp[A]=>Exp[B])(implicit ctx: SourceContext) = {
     super.doLambda(lookupFun(fun))
   }
 }
@@ -112,7 +113,7 @@ trait FunctionsExternalDef0 extends FunctionsExp {
 
 trait FunctionsExternalDef01 extends FunctionsExternalDef0 { // not used
 
-  override def doLambda[A:Manifest,B:Manifest](f: Exp[A]=>Exp[B]): Exp[A=>B] = {
+  override def doLambda[A:Manifest,B:Manifest](f: Exp[A]=>Exp[B])(implicit ctx: SourceContext): Exp[A=>B] = {
     var funSym = fresh[A=>B]
     var argSym = fresh[A]//Sym(-1)
       
@@ -126,7 +127,7 @@ trait FunctionsExternalDef1 extends FunctionsExternalDef0 with ClosureCompare { 
 
   var funTable: List[(Function[_,_], Any)] = List()
   
-  override def doLambda[A:Manifest,B:Manifest](f: Exp[A]=>Exp[B]): Exp[A=>B] = {
+  override def doLambda[A:Manifest,B:Manifest](f: Exp[A]=>Exp[B])(implicit ctx: SourceContext): Exp[A=>B] = {
     var can = canonicalize(f)
 
     funTable.find(_._2 == can) match {

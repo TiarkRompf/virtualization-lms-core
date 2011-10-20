@@ -4,6 +4,7 @@ package common
 import java.io.{File, FileReader, FileWriter, BufferedReader, BufferedWriter, PrintWriter}
 import scala.virtualization.lms.internal.{GenerationFailedException}
 import util.OverloadHack
+import scala.reflect.SourceContext
 
 // TODO: fine grained effects
 
@@ -13,59 +14,59 @@ trait IOOps extends Variables with OverloadHack {
    * File
    */
   object File {
-    def apply(dir: Rep[String]) = obj_file_apply(dir)
+    def apply(dir: Rep[String])(implicit ctx: SourceContext) = obj_file_apply(dir)
   }
-  def infix_getCanonicalFile(f: Rep[File]) = file_getcanonicalfile(f)
-  def infix_getPath(f: Rep[File]) = file_getpath(f)
-  def infix_listFiles(f: Rep[File]) = file_listfiles(f)
+  def infix_getCanonicalFile(f: Rep[File])(implicit ctx: SourceContext) = file_getcanonicalfile(f)
+  def infix_getPath(f: Rep[File])(implicit ctx: SourceContext) = file_getpath(f)
+  def infix_listFiles(f: Rep[File])(implicit ctx: SourceContext) = file_listfiles(f)
 
-  def obj_file_apply(dir: Rep[String]): Rep[File]
-  def file_getcanonicalfile(f: Rep[File]): Rep[File]
-  def file_getpath(f: Rep[File]): Rep[String]
-  def file_listfiles(f: Rep[File]): Rep[Array[File]]
+  def obj_file_apply(dir: Rep[String])(implicit ctx: SourceContext): Rep[File]
+  def file_getcanonicalfile(f: Rep[File])(implicit ctx: SourceContext): Rep[File]
+  def file_getpath(f: Rep[File])(implicit ctx: SourceContext): Rep[String]
+  def file_listfiles(f: Rep[File])(implicit ctx: SourceContext): Rep[Array[File]]
   
   /**
    * BufferedReader
    */
   object BufferedReader {
-    def apply(f: Rep[FileReader]) = obj_br_apply(f)
+    def apply(f: Rep[FileReader])(implicit ctx: SourceContext) = obj_br_apply(f)
   }
-  def infix_readLine(b: Rep[BufferedReader]) = br_readline(b)
-  def infix_close(b: Rep[BufferedReader]) = br_close(b)
+  def infix_readLine(b: Rep[BufferedReader])(implicit ctx: SourceContext) = br_readline(b)
+  def infix_close(b: Rep[BufferedReader])(implicit ctx: SourceContext) = br_close(b)
 
-  def obj_br_apply(f: Rep[FileReader]): Rep[BufferedReader]
-  def br_readline(b: Rep[BufferedReader]): Rep[String]
-  def br_close(b: Rep[BufferedReader]): Rep[Unit]
+  def obj_br_apply(f: Rep[FileReader])(implicit ctx: SourceContext): Rep[BufferedReader]
+  def br_readline(b: Rep[BufferedReader])(implicit ctx: SourceContext): Rep[String]
+  def br_close(b: Rep[BufferedReader])(implicit ctx: SourceContext): Rep[Unit]
 
   /**
    * BufferedWriter
    */
   object BufferedWriter {
-    def apply(f: Rep[FileWriter]) = obj_bw_apply(f)    
+    def apply(f: Rep[FileWriter])(implicit ctx: SourceContext) = obj_bw_apply(f)    
   }
 
-  def infix_write(b: Rep[BufferedWriter], s: Rep[String]) = bw_write(b,s)
-  def infix_close(b: Rep[BufferedWriter])(implicit o: Overloaded1) = bw_close(b)
+  def infix_write(b: Rep[BufferedWriter], s: Rep[String])(implicit ctx: SourceContext) = bw_write(b,s)
+  def infix_close(b: Rep[BufferedWriter])(implicit o: Overloaded1, ctx: SourceContext) = bw_close(b)
 
-  def obj_bw_apply(f: Rep[FileWriter]): Rep[BufferedWriter]
-  def bw_write(b: Rep[BufferedWriter], s: Rep[String]): Rep[Unit]
-  def bw_close(b: Rep[BufferedWriter]): Rep[Unit]
+  def obj_bw_apply(f: Rep[FileWriter])(implicit ctx: SourceContext): Rep[BufferedWriter]
+  def bw_write(b: Rep[BufferedWriter], s: Rep[String])(implicit ctx: SourceContext): Rep[Unit]
+  def bw_close(b: Rep[BufferedWriter])(implicit ctx: SourceContext): Rep[Unit]
 
   /**
    * FileReader
    */
   object FileReader {
-    def apply(s: Rep[String]) = obj_fr_apply(s)
+    def apply(s: Rep[String])(implicit ctx: SourceContext) = obj_fr_apply(s)
   }
-  def obj_fr_apply(s: Rep[String]): Rep[FileReader]
+  def obj_fr_apply(s: Rep[String])(implicit ctx: SourceContext): Rep[FileReader]
 
   /**
    * FileWriter
    */
   object FileWriter {
-    def apply(s: Rep[String]) = obj_fw_apply(s)
+    def apply(s: Rep[String])(implicit ctx: SourceContext) = obj_fw_apply(s)
   }
-  def obj_fw_apply(s: Rep[String]): Rep[FileWriter]
+  def obj_fw_apply(s: Rep[String])(implicit ctx: SourceContext): Rep[FileWriter]
 }
 
 trait IOOpsExp extends IOOps with DSLOpsExp {
@@ -84,20 +85,20 @@ trait IOOpsExp extends IOOps with DSLOpsExp {
   case class BrReadline(b: Exp[BufferedReader]) extends Def[String]
   case class BrClose(b: Exp[BufferedReader]) extends Def[Unit]
 
-  def obj_file_apply(dir: Exp[String]): Exp[File] = reflectEffect(ObjFileApply(dir))
-  def file_getcanonicalfile(f: Exp[File]) = FileGetCanonicalFile(f)
-  def file_getpath(f: Exp[File]) = FileGetPath(f)
-  def file_listfiles(f: Exp[File]) = FileListFiles(f)
+  def obj_file_apply(dir: Exp[String])(implicit ctx: SourceContext): Exp[File] = reflectEffect(ObjFileApply(dir))
+  def file_getcanonicalfile(f: Exp[File])(implicit ctx: SourceContext) = FileGetCanonicalFile(f)
+  def file_getpath(f: Exp[File])(implicit ctx: SourceContext) = FileGetPath(f)
+  def file_listfiles(f: Exp[File])(implicit ctx: SourceContext) = FileListFiles(f)
   
-  def obj_br_apply(f: Exp[FileReader]): Exp[BufferedReader] = reflectEffect(ObjBrApply(f))
-  def obj_bw_apply(f: Exp[FileWriter]): Exp[BufferedWriter] = reflectEffect(ObjBwApply(f))
-  def obj_fr_apply(s: Exp[String]): Exp[FileReader] = reflectEffect(ObjFrApply(s))
-  def obj_fw_apply(s: Exp[String]): Exp[FileWriter] = reflectEffect(ObjFwApply(s))
+  def obj_br_apply(f: Exp[FileReader])(implicit ctx: SourceContext): Exp[BufferedReader] = reflectEffect(ObjBrApply(f))
+  def obj_bw_apply(f: Exp[FileWriter])(implicit ctx: SourceContext): Exp[BufferedWriter] = reflectEffect(ObjBwApply(f))
+  def obj_fr_apply(s: Exp[String])(implicit ctx: SourceContext): Exp[FileReader] = reflectEffect(ObjFrApply(s))
+  def obj_fw_apply(s: Exp[String])(implicit ctx: SourceContext): Exp[FileWriter] = reflectEffect(ObjFwApply(s))
 
-  def bw_write(b: Exp[BufferedWriter], s: Exp[String]) = reflectEffect(BwWrite(b,s))
-  def bw_close(b: Exp[BufferedWriter]) = reflectEffect(BwClose(b))
-  def br_readline(b: Exp[BufferedReader]) : Exp[String] = reflectEffect(BrReadline(b))
-  def br_close(b: Exp[BufferedReader]) : Exp[Unit] = reflectEffect(BrClose(b))
+  def bw_write(b: Exp[BufferedWriter], s: Exp[String])(implicit ctx: SourceContext) = reflectEffect(BwWrite(b,s))
+  def bw_close(b: Exp[BufferedWriter])(implicit ctx: SourceContext) = reflectEffect(BwClose(b))
+  def br_readline(b: Exp[BufferedReader])(implicit ctx: SourceContext) : Exp[String] = reflectEffect(BrReadline(b))
+  def br_close(b: Exp[BufferedReader])(implicit ctx: SourceContext) : Exp[Unit] = reflectEffect(BrClose(b))
 }
 
 trait ScalaGenIOOps extends ScalaGenBase {

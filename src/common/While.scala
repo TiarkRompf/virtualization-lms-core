@@ -3,16 +3,17 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
+import scala.reflect.SourceContext
 
 trait While extends Base {
-  def __whileDo(cond: => Rep[Boolean], body: => Rep[Unit])
+  def __whileDo(cond: => Rep[Boolean], body: => Rep[Unit])(implicit ctx: SourceContext)
 }
 
 
 trait WhileExp extends While with EffectExp { 
   case class While(cond: Exp[Boolean], body: Exp[Unit]) extends Def[Unit]
 
-  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
+  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit])(implicit ctx: SourceContext) {
     val c = reifyEffects(cond)
     val a = reifyEffects(body)
     val ce = summarizeEffects(c)
