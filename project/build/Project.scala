@@ -31,7 +31,10 @@ class Project(info: ProjectInfo) extends DefaultProject(info)
   
   // dependencies
   val scalaToolsSnapshots = ScalaToolsSnapshots
-  val scalatest = "org.scalatest" % "scalatest" % "1.4-SNAPSHOT" //% "test"
+
+  // FIXME: custom-built scalatest
+  override def repositories = Set("Dropbox" at "http://dl.dropbox.com/u/12870350/scala-virtualized")
+  val scalatest = "org.scalatest" % "scalatest_2.10.0-virtualized-SNAPSHOT" % "1.6.1-SNAPSHOT" //% "test"
 
 //  val scalac = "org.scala-lang" % "scala-compiler" % "2.8.0" % "test"
 //  val scala = "org.scala-lang" % "scala-library" % "2.8.0" % "test"
