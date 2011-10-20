@@ -14,7 +14,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info)
   
   // use the local scala-virtualized compiler and library
   override def localScala =
-    defineScala("2.9.x-virtualized-SNAPSHOT", new File(local.scalaVirtualizedHome.get.getOrElse {
+    defineScala("2.10.0-virtualized-SNAPSHOT", new File(local.scalaVirtualizedHome.get.getOrElse {
       log.error("scala.virtualized.home needs to be defined in local.properties and "+
       "must point to a valid scala-virtualized home directory"); "<undefined>"
     }))::Nil
@@ -34,7 +34,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info)
 
   // FIXME: custom-built scalatest
   override def repositories = Set("Dropbox" at "http://dl.dropbox.com/u/12870350/scala-virtualized")
-  val scalatest = "org.scalatest" % "scalatest_2.10.0-virtualized-SNAPSHOT" % "1.6.1-SNAPSHOT" //% "test"
+  val scalatest = "org.scalatest" % "scalatest_2.10.0-virtualized-SNAPSHOT" % "1.6.1-SNAPSHOT" % "test"
 
 //  val scalac = "org.scala-lang" % "scala-compiler" % "2.8.0" % "test"
 //  val scala = "org.scala-lang" % "scala-library" % "2.8.0" % "test"
