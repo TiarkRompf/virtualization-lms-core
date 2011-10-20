@@ -41,6 +41,16 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
     reflectEffect(ArrayForeach(a, x, b), summarizeEffects(b).star)
   }
 
+  //////////////
+  // mirroring
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
+    (e match {
+      case ArrayApply(a,x) => array_apply(f(a),f(x))
+      case _ => super.mirror(e,f)
+    }).asInstanceOf[Exp[A]] // why??
+  }
+  
   override def syms(e: Any): List[Sym[Any]] = e match {
     case ArrayForeach(a, x, body) => syms(a):::syms(body)
     case _ => super.syms(e)
@@ -55,6 +65,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
     case ArrayForeach(a, x, body) => freqNormal(a):::freqHot(body)
     case _ => super.symsFreq(e)
   }
+    
 }
 
 trait BaseGenArrayOps extends GenericNestedCodegen {
