@@ -32,7 +32,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
 
 
   override def focusExactScopeFat[A](currentScope0: List[TTP])(result0B: List[Block[Any]])(body: List[TTP] => A): A = {
-    val result0 = result0B.map(getBlockResult)
+    val result0 = result0B.map(getBlockResultFull)
     var result: List[Exp[Any]] = result0
     var currentScope = currentScope0
 

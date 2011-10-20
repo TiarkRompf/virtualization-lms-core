@@ -288,9 +288,12 @@ trait Effects extends Expressions with Blocks with Utils {
   */
 
   protected override implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
+/*
     // are we depending on a variable? then we need to be serialized -> effect
     val mutableInputs = readMutableData(d)
     reflectEffect(d, Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
+*/
+    reflectEffect(d, Pure())
   }
 
   def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
@@ -325,8 +328,7 @@ trait Effects extends Expressions with Blocks with Utils {
   }
 
   def reflectMutable[A:Manifest](d: Def[A]): Exp[A] = {
-    val mutableInputs = readMutableData(d)    
-    val z = reflectEffect(d, Alloc() andAlso Read(mutableInputs))
+    val z = reflectEffect(d, Alloc())
 
     val mutableAliases = mutableTransitiveAliases(d)
     checkIllegalSharing(z, mutableAliases)
@@ -335,9 +337,8 @@ trait Effects extends Expressions with Blocks with Utils {
 
   def reflectWrite[A:Manifest](write0: Exp[Any]*)(d: Def[A]): Exp[A] = {
     val write = write0.toList.asInstanceOf[List[Sym[Any]]] // should check...
-    val mutableInputs = readMutableData(d)
 
-    val z = reflectEffect(d, Write(write) andAlso Read(mutableInputs))
+    val z = reflectEffect(d, Write(write))
 
     val mutableAliases = mutableTransitiveAliases(d) filterNot (write contains _)
     checkIllegalSharing(z, mutableAliases)
@@ -346,7 +347,13 @@ trait Effects extends Expressions with Blocks with Utils {
 
   def reflectEffect[A:Manifest](x: Def[A]): Exp[A] = reflectEffect(x, Simple()) // simple effect (serialized with respect to other simples)
 
-  def reflectEffect[A:Manifest](x: Def[A], u: Summary): Exp[A] = {
+  def reflectEffect[A:Manifest](d: Def[A], u: Summary): Exp[A] = {
+    // are we depending on a variable? then we need to be serialized -> effect
+    val mutableInputs = readMutableData(d)
+    reflectEffectInternal(d, u andAlso Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
+  }
+  
+  def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary): Exp[A] = {
     if (mustPure(u)) super.toAtom(x) else {
       // FIXME: reflecting mutable stuff *during mirroring* doesn't work right now...
       

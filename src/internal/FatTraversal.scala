@@ -24,7 +24,7 @@ trait FatTraversal extends NestedTraversal with FatScheduling {
 
 
   def focusExactScopeFat[A](currentScope: List[TTP])(resultB: List[Block[Any]])(body: List[TTP] => A): A = {
-    val result = resultB.map(getBlockResult)
+    val result = resultB.map(getBlockResultFull)
 
     val saveInner = innerScope
 
@@ -137,7 +137,7 @@ trait FatTraversal extends NestedTraversal with FatScheduling {
 
 
   def focusFatBlock[A](rhs: List[Block[Any]])(body: => A): A = {
-    focusBlock(Block(Combine(rhs.map(getBlockResult))))(body)
+    focusBlock(Block(Combine(rhs.map(getBlockResultFull))))(body)
   }
 
 }

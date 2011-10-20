@@ -63,7 +63,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatTraversal {
 
 
   def emitFatBlock(rhs: List[Block[Any]])(implicit stream: PrintWriter): Unit = {
-    emitBlock(Block(Combine(rhs.map(getBlockResult)))) // TODO: find another way
+    emitBlock(Block(Combine(rhs.map(getBlockResultFull)))) // TODO: find another way
   }
 
 

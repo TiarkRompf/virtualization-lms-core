@@ -18,7 +18,8 @@ trait Traversal extends Scheduling {
 
   def getFreeDataBlock[A](start: Block[A]): List[(Sym[Any],Any)] = Nil // TODO: Nil or Exception??
 
-  def getBlockResult[A](s: Block[A]): Exp[A] // = s.res
+  def getBlockResult[A](s: Block[A]): Exp[A] = getBlockResultFull(s) // = s.res
+  def getBlockResultFull[A](s: Block[A]): Exp[A] // = s.res
   
 }
 
@@ -86,7 +87,7 @@ trait NestedTraversal extends Traversal {
 
 
   def focusExactScope[A](resultB: Block[Any])(body: List[TP[Any]] => A): A = {
-    val result = getBlockResult(resultB)
+    val result = getBlockResultFull(resultB)
 
     val saveInner = innerScope
 
@@ -171,7 +172,9 @@ trait NestedTraversal extends Traversal {
     rval
   }
     
-    
+  
+  override def getBlockResultFull[A](s: Block[A]): Exp[A] = s.res
+  
   override def getBlockResult[A](s: Block[A]): Exp[A] = s match {
     case Block(Def(Reify(x, _, _))) => x
     case Block(x) => x
@@ -206,7 +209,7 @@ trait NestedTraversal extends Traversal {
   // TODO: remove
   override def getFreeVarBlock(start: Block[Any], local: List[Sym[Any]]): List[Sym[Any]] = {
     focusBlock(start) {
-      freeInScope(local, List(getBlockResult(start)))
+      freeInScope(local, List(getBlockResultFull(start)))
     }
   }
 

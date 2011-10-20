@@ -94,7 +94,7 @@ class TestLambdalift extends FileDiffSuite {
             case e@Lambda(fun, x, y) =>
             
               focusBlock(y) {
-                var free = freeInScope(x,getBlockResult(y))
+                var free = freeInScope(x,getBlockResultFull(y))
             
                 val sw = new StringWriter
                 codegenInner.emitFocused("Anonfun_"+quote(sym), free, x, y)(new PrintWriter(sw))

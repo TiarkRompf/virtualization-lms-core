@@ -46,7 +46,7 @@ trait GenericCodegen extends Traversal {
   // ----------
 
   def emitBlock(y: Block[Any])(implicit stream: PrintWriter): Unit = {
-    val deflist = buildScheduleForResult(getBlockResult(y))
+    val deflist = buildScheduleForResult(getBlockResultFull(y)) // need actual Reify node here, not its embedded exp
     
     for (TP(sym, rhs) <- deflist) {
       emitNode(sym, rhs)

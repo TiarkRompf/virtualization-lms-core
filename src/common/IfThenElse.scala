@@ -38,13 +38,22 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
   override def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T]) = {
     val a = reifyEffectsHere(thenp)
     val b = reifyEffectsHere(elsep)
+
     ifThenElse(cond,a,b)
   }
 
-  def ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: Block[T], elsep: Block[T]) = { // thenp,elsep reified
+  def ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: Block[T], elsep: Block[T]) = {
     val ae = summarizeEffects(thenp)
     val be = summarizeEffects(elsep)
-    reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
+    
+    // TODO: make a decision whether we should call reflect or reflectInternal.
+    // the former will look for any read mutable effects in addition to the passed
+    // summary whereas reflectInternal will take ae orElse be literally.
+    // the case where this comes up is if (c) a else b, with a or b mutable.
+    // (see TestMutation, for now sticking to old behavior)
+    
+    //reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
+    reflectEffectInternal(IfThenElse(cond,thenp,elsep), ae orElse be)
   }
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
