@@ -142,7 +142,7 @@ x23
 } else {
 x5
 }
-val x27 = XXX Struct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(26)))
+val x27 = Map("re"->x4,"im"->x26) //Array Complex
 val x28 = println(x27)
 x28
 }

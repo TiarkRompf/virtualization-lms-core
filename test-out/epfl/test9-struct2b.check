@@ -226,9 +226,9 @@ x13 = x11
 x14 = x10
 val x42 = x13
 val x43 = x14
-val x44 = XXX Struct(List(Array, Complex),Map(re -> Sym(42), im -> Sym(43)))
+val x44 = Map("re"->x42,"im"->x43) //Array Complex
 val x45 = println(x44)
-val x46 = XXX Struct(List(Array, Complex),Map(re -> Sym(38), im -> Sym(39)))
+val x46 = Map("re"->x38,"im"->x39) //Array Complex
 val x47 = println(x46)
 val x36 = x47
 x36
