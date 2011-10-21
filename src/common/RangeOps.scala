@@ -140,6 +140,22 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
   }
 }
 
+trait OpenCLGenRangeOps extends OpenCLGenEffect with BaseGenRangeOps {
+  val IR: RangeOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+    case Until(start, end) =>
+      throw new GenerationFailedException("OpenCLGenRangeOps: Range vector is not supported")
+    case RangeForeach(start, end, i, body) =>
+      stream.println("for(int %s=%s; %s < %s; %s++) {".format(quote(i),quote(start),quote(i),quote(end),quote(i)))
+      emitBlock(body)
+      stream.println("}")
+
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
 trait CGenRangeOps extends CGenEffect with BaseGenRangeOps {
   val IR: RangeOpsExp
   import IR._

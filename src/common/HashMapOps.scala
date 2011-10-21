@@ -84,4 +84,5 @@ trait CLikeGenHashMapOps extends BaseGenHashMapOps with CLikeCodegen {
 }
 
 trait CudaGenHashMapOps extends CudaGenEffect with CLikeGenHashMapOps
+trait OpenCLGenHashMapOps extends OpenCLGenEffect with CLikeGenHashMapOps
 trait CGenHashMapOps extends CGenEffect with CLikeGenHashMapOps

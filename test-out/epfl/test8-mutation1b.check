@@ -13,7 +13,7 @@ val x5 = LoopArray(100) { x4 =>
 0.0
 }
 val x6 = x5.clone // mutable
-val x7 = x0 > 7      // OrderingOps.scala:61
+val x7 = x0 > 7
 val x8 = if (x7) {
 x3
 } else {

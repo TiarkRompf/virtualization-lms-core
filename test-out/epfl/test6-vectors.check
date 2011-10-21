@@ -6,8 +6,8 @@ class Test extends ((Unit)=>(Array[Double])) {
 def apply(x0:Unit): Array[Double] = {
 val x1 = scala.virtualization.lms.epfl.test6.VectorOps.random(7)
 val x3 = scala.virtualization.lms.epfl.test6.VectorOps.random(7)
-val x4 = (x1,x3)      // Test.scala:85
-val x5 = scala.virtualization.lms.epfl.test6.VectorOps.plus(x4)      // Test.scala:85
+val x4 = (x1,x3)
+val x5 = scala.virtualization.lms.epfl.test6.VectorOps.plus(x4)
 x5
 }
 }
@@ -21,8 +21,8 @@ compilation: ok
 *******************************************/
 class Test extends ((Any)=>(Any)) {
 def apply(x0:Any): Any = {
-val x1 = "hi yo ".toString + x0.toString      // Test.scala:34
-val x2 = x1.toString + " done".toString      // Test.scala:35
+val x1 = "hi yo ".toString + x0.toString
+val x2 = x1.toString + " done".toString
 x2
 }
 }

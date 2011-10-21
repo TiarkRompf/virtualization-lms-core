@@ -28,8 +28,6 @@ trait Expressions extends Utils {
 
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
-  case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
-
   var nVars = 0
   var idMap = Map[String, Int]() // next id for variable name
 
@@ -90,7 +88,7 @@ trait Expressions extends Utils {
 
   abstract class Def[+T] // operations (composite)
 
-  case class TP[+T](sym: Sym[T], rhs: Def[T]) 
+  case class TP[+T](sym: Sym[T], rhs: Def[T])
 
   var globalDefs: List[TP[Any]] = Nil
 
@@ -140,6 +138,9 @@ trait Expressions extends Utils {
 
   def boundSyms(e: Any): List[Sym[Any]] = e match {
     case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
+
+
+
     case _ => Nil
   }
 

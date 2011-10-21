@@ -1,5 +1,5 @@
 error: illegal sharing of mutable objects Sym(8)
-at Sym(10)=Reflect(ArrayUpdate(Sym(5),Const(5),Sym(8)),Summary(false,false,false,false,false,List(Sym(5), Sym(8)),List(Sym(5), Sym(8)),List(Sym(5)),List(Sym(5))),List(Sym(5), Sym(8), Sym(9)))
+at 35: Sym(10)=Reflect(ArrayUpdate(Sym(5),Const(5),Sym(8)),Summary(false,false,false,false,false,List(Sym(5), Sym(8)),List(Sym(5), Sym(8)),List(Sym(5)),List(Sym(5))),List(Sym(5), Sym(8), Sym(9)))
 promoting to effect: Sym(12)=Reflect(ArrayIndex(Sym(5),Const(5)),Summary(false,false,false,false,false,List(Sym(5)),List(Sym(5)),List(),List()),List(Sym(5), Sym(9), Sym(10)))
 depends on  Sym(5)
 /*****************************************
@@ -22,7 +22,7 @@ val x9 = x5.update(4, x2)
 val x10 = x5.update(5, x8)
 val x11 = x8.update(50, 50.0)
 val x12 = x5.apply(5)
-val x13 = x12.apply(50)      // Arrays.scala:70
+val x13 = x12.apply(50)
 val x14 = println(x13)
 x14
 }

@@ -5,13 +5,13 @@ class Test extends ((Unit)=>(scala.Function1[Boolean, scala.Function1[Double, Do
 def apply(x0:Unit): scala.Function1[Boolean, scala.Function1[Double, Double]] = {
 val x7 = if (true) {
 val x3 = {x1: (Double) => 
-val x2 = 2.0*x1      // TestCodeMotion.scala:60
+val x2 = 2.0*x1
 x2: Double
 }
 x3
 } else {
 val x6 = {x4: (Double) => 
-val x5 = 4.0*x4      // TestCodeMotion.scala:60
+val x5 = 4.0*x4
 x5: Double
 }
 x6

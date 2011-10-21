@@ -65,3 +65,18 @@ trait ScalaGenObjectOps extends ScalaGenBase {
     case _ => super.emitNode(sym, rhs)
   }
 }
+
+trait CLikeGenObjectOps extends CLikeGenBase {
+  val IR: ObjectOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+    case ObjectToString(lhs) => emitValDef(sym, "(" + quote(lhs) + ").toString()")
+    case ObjectUnsafeImmutable(x) => emitValDef(sym, quote(x) + "// unsafe immutable")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenObjectOps extends CudaGenBase with CLikeGenObjectOps
+trait OpenCLGenObjectOps extends OpenCLGenBase with CLikeGenObjectOps
+trait CGenObjectOps extends CGenBase with CLikeGenObjectOps

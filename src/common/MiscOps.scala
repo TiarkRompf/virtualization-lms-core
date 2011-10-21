@@ -80,3 +80,13 @@ trait CudaGenMiscOps extends CudaGenEffect {
     case _ => super.emitNode(sym, rhs)
   }
 }
+
+
+trait OpenCLGenMiscOps extends OpenCLGenEffect {
+  val IR: MiscOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+    case _ => super.emitNode(sym, rhs)
+  }
+}

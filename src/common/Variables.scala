@@ -143,7 +143,7 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
   }
 
 
-    
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case Reflect(NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))(mtype(manifest[A]))
@@ -191,4 +191,5 @@ trait CLikeGenVariables extends CLikeGenBase {
 }
 
 trait CudaGenVariables extends CudaGenEffect with CLikeGenVariables
+trait OpenCLGenVariables extends OpenCLGenEffect with CLikeGenVariables
 trait CGenVariables extends CGenEffect with CLikeGenVariables

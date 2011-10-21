@@ -31,17 +31,17 @@ def apply(x0:Unit): Unit = {
 var x47 = 0
 var x51 = 0
 for (x11 <- 0 until 100) {
-val x44 = 2.0*x11      // TestFusion.scala:28
-val x45 = 1.0+x44      // TestFusion.scala:26
-val x50 = x45*x45      // TestFusion.scala:28
+val x44 = 2.0*x11
+val x45 = 1.0+x44
+val x50 = x45*x45
 x47 += x45
 x51 += x50
 }
-val x48 = x47/100      // TestFusion.scala:29
+val x48 = x47/100
 val x49 = println(x48)
-val x52 = x51/100      // TestFusion.scala:29
-val x53 = x48*x48      // TestFusion.scala:28
-val x54 = x52-x53      // TestFusion.scala:27
+val x52 = x51/100
+val x53 = x48*x48
+val x54 = x52-x53
 val x55 = println(x54)
 val x27 = x55
 x27

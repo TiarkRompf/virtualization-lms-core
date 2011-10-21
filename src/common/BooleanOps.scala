@@ -63,4 +63,5 @@ trait CLikeGenBooleanOps extends CLikeGenBase {
 }
 
 trait CudaGenBooleanOps extends CudaGenBase with CLikeGenBooleanOps
+trait OpenCLGenBooleanOps extends OpenCLGenBase with CLikeGenBooleanOps
 trait CGenBooleanOps extends CGenBase with CLikeGenBooleanOps

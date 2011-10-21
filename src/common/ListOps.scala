@@ -48,5 +48,6 @@ trait CLikeGenListOps extends BaseGenListOps with CLikeGenBase {
 }
 
 trait CudaGenListOps extends CudaGenEffect with CLikeGenListOps
+trait OpenCLGenListOps extends OpenCLGenEffect with CLikeGenListOps
 trait CGenListOps extends CGenEffect with CLikeGenListOps
 

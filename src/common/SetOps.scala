@@ -76,4 +76,5 @@ trait CLikeGenSetOps extends BaseGenSetOps with CLikeCodegen {
 }
 
 trait CudaGenSetOps extends CudaGenEffect with CLikeGenSetOps
+trait OpenCLGenSetOps extends OpenCLGenEffect with CLikeGenSetOps
 trait CGenSetOps extends CGenEffect with CLikeGenSetOps

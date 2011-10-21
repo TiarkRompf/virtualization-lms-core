@@ -21,7 +21,7 @@ trait JSCodegen extends GenericCodegen {
     stream.flush
   }
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], methName: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], methName: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
     val y = f(x)
 
@@ -32,6 +32,7 @@ trait JSCodegen extends GenericCodegen {
     
     stream.println("}")
     stream.flush
+    Nil
   }
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("var " + quote(sym) + " = " + rhs)
@@ -43,7 +44,7 @@ trait JSNestedCodegen extends GenericNestedCodegen with JSCodegen {
 
   // TODO: we shouldn't need the manifests here (aks)
   override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): Unit = {
+      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
   }
   override def quote(x: Exp[Any]) = x match { // TODO: quirk!

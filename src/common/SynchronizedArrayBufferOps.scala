@@ -63,5 +63,6 @@ trait CLikeGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferO
 }
 
 trait CudaGenSynchronizedArrayBufferOps extends CudaGenEffect with CLikeGenSynchronizedArrayBufferOps
+trait OpenCLGenSynchronizedArrayBufferOps extends OpenCLGenEffect with CLikeGenSynchronizedArrayBufferOps
 trait CGenSynchronizedArrayBufferOps extends CGenEffect with CLikeGenSynchronizedArrayBufferOps
 
