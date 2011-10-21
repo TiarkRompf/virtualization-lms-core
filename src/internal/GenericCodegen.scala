@@ -3,6 +3,7 @@ package internal
 
 import util.GraphUtil
 import java.io.{File, PrintWriter}
+import scala.collection.mutable.{Map => MMap}
 
 trait GenericCodegen extends Scheduling {
   val IR: Expressions
@@ -14,8 +15,10 @@ trait GenericCodegen extends Scheduling {
   def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {}
   def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {}
   
+  var analysisResults: MMap[String,Any] = null.asInstanceOf[MMap[String,Any]]
+  
   // Initializer
-  def initializeGenerator(buildDir:String): Unit = {}
+  def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = { analysisResults = _analysisResults }
   def finalizeGenerator(): Unit = {}
   def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
 

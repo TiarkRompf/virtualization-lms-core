@@ -4,7 +4,7 @@ package internal
 
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
-import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
+import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap, Map => MMap}
 import collection.immutable.List._
 
 trait CudaCodegen extends CLikeCodegen {
@@ -166,7 +166,7 @@ trait CudaCodegen extends CLikeCodegen {
      // TODO: Need to cleanup some data structures
   }
 
-  override def initializeGenerator(buildDir:String): Unit = {
+  override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
     helperFuncIdx = 0
@@ -190,6 +190,8 @@ trait CudaCodegen extends CLikeCodegen {
     hstream.print("extern void DeliteCudaMemcpyDtoHAsync(void *dptr, void *sptr, size_t size);\n")
     hstream.print("typedef jboolean jbool;\n")              // TODO: Fix this
     hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
+    
+    super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
