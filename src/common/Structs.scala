@@ -17,16 +17,26 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 trait StructExp extends BaseExp with EffectExp {
+
+  abstract class Struct[T] extends Def[T] {
+    val tag: List[String]
+    val elems: Map[String, Rep[Any]]
+  }
+
+  object Struct {
+    def unapply[T](s: Struct[T]): Option[(List[String], Map[String, Rep[Any]])] = Some((s.tag, s.elems))
+  }
   
-  case class Struct[T](tag: List[String], elems: Map[String,Rep[Any]]) extends Def[T]
+  case class GenericStruct[T](tag: List[String], elems: Map[String,Rep[Any]]) extends Struct[T]
   case class Field[T](struct: Rep[Any], index: String, tp: Manifest[T]) extends Def[T]
   
-  def struct[T:Manifest](tag: List[String], elems: Map[String,Rep[Any]]): Rep[T] = Struct[T](tag, elems)
+  def struct[T:Manifest](tag: List[String], elems: (String, Rep[Any])*): Rep[T] = struct(tag, Map(elems:_*))
+  def struct[T:Manifest](tag: List[String], elems: Map[String, Rep[Any]]): Rep[T] = GenericStruct[T](tag, elems)
   
   def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = Field[T](struct, index, manifest[T])
   
   //FIXME: reflectMutable has to take the Def
-  def mfield[T:Manifest](struct: Rep[Any], index: String): Rep[T] = reflectMutable(Field[T](struct, index, manifest[T]))
+  //def mfield[T:Manifest](struct: Rep[Any], index: String): Rep[T] = reflectMutable(Field[T](struct, index, manifest[T]))
   
   // FIXME: need  syms override because Map is not a Product
   override def syms(x: Any): List[Sym[Any]] = x match {
@@ -40,7 +50,7 @@ trait StructExp extends BaseExp with EffectExp {
   }  
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
-    case Struct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
+    case GenericStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
     case _ => super.mirror(e,f)
   }
 }
@@ -57,7 +67,7 @@ trait StructExpOpt extends StructExp {
 trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseExp {
   
   override def var_new[T:Manifest](init: Exp[T]): Var[T] = init match {
-    case Def(Struct(tag, elems)) => 
+    case Def(Struct(tag, elems)) =>
       //val r = Variable(struct(tag, elems.mapValues(e=>var_new(e).e))) // DON'T use mapValues!! <--lazy
       Variable(struct[Variable[T]](tag, elems.map(p=>(p._1,var_new(p._2).e))))
     case _ => 
@@ -65,7 +75,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
   }
 
   override def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = (lhs,rhs) match {
-    case (Variable(Def(Struct(tagL,elemsL:Map[String,Exp[Variable[Any]]]))), Def(Struct(tagR, elemsR))) => 
+    case (Variable(Def(Struct(tagL,elemsL:Map[String,Exp[Variable[Any]]]))), Def(Struct(tagR, elemsR))) =>
       assert(tagL == tagR)
       assert(elemsL.keySet == elemsR.keySet)
       for (k <- elemsL.keySet)
@@ -75,7 +85,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
   }
   
   override def readVar[T:Manifest](v: Var[T]) : Exp[T] = v match {
-    case Variable(Def(Struct(tag, elems: Map[String,Exp[Variable[Any]]]))) => 
+    case Variable(Def(Struct(tag, elems: Map[String,Exp[Variable[Any]]]))) =>
       struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2)))))
     case _ => super.readVar(v)
   }
@@ -98,7 +108,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
 
 
   override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Rep[T], b: Rep[T]) = (a,b) match {
-    case (Def(Struct(tagA,elemsA)), Def(Struct(tagB, elemsB))) => 
+    case (Def(Struct(tagA,elemsA)), Def(Struct(tagB, elemsB))) =>
       assert(tagA == tagB)
       assert(elemsA.keySet == elemsB.keySet)
       val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, elemsA(k), elemsB(k)))
@@ -176,7 +186,7 @@ trait StructFatExpOptCommon extends StructFatExp with IfThenElseFatExp {
   
   
   override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Rep[T], b: Rep[T]) = (deReify(a),deReify(b)) match {
-    case ((u, x@Def(Struct(tagA,elemsA))), (v, y@Def(Struct(tagB, elemsB)))) => 
+    case ((u, x@Def(Struct(tagA,elemsA))), (v, y@Def(Struct(tagB, elemsB)))) =>
       assert(tagA == tagB)
       assert(elemsA.keySet == elemsB.keySet)
       // create stm that computes all values at once
@@ -206,6 +216,7 @@ trait ScalaGenStruct extends ScalaGenBase {
       emitValDef(sym, "Map(" + elems.map(e => "\"" + e._1 + "\"->" + quote(e._2)).mkString(",") + ") //" + tag.mkString(" "))
     case Field(struct, index, tp) =>  
       //emitValDef(sym, quote(struct) + "." + index)
+      println("WARNING: emitting field access: " + quote(struct) + "." + index)
       emitValDef(sym, quote(struct) + "(\"" + index + "\").asInstanceOf[" + remap(tp) + "]")
     case _ => super.emitNode(sym, rhs)
   }
