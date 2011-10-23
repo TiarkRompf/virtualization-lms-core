@@ -98,4 +98,5 @@ trait CLikeGenEqual extends CLikeGenBase {
 }
 
 trait CudaGenEqual extends CudaGenBase with CLikeGenEqual
+trait OpenCLGenEqual extends OpenCLGenBase with CLikeGenEqual
 trait CGenEqual extends CGenBase with CLikeGenEqual
