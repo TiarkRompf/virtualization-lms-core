@@ -20,7 +20,7 @@ trait Expressions extends Utils {
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
-    //var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
+    var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
     var name: String = "x" + (if (id == 0) "" else id)
     var nameId: Int = id
     var sourceContext: Option[SourceContext] = None
