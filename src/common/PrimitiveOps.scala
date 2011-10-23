@@ -4,6 +4,7 @@ package common
 import java.io.PrintWriter
 
 import scala.virtualization.lms.util.OverloadHack
+import scala.reflect.SourceContext
 
 trait LowPriorityPrimitiveImplicits {
   this: Variables with ImplicitOps =>
@@ -36,30 +37,30 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
   implicit def varDoubleToDoubleOps(n: Var[Double]) = new DoubleOpsCls(readVar(n))
   
   object Double {
-    def parseDouble(s: Rep[String]) = obj_double_parse_double(s)
-    def PositiveInfinity = obj_double_positive_infinity
-    def MinValue = obj_double_min_value
+    def parseDouble(s: Rep[String])(implicit ctx: SourceContext) = obj_double_parse_double(s)
+    def PositiveInfinity(implicit ctx: SourceContext) = obj_double_positive_infinity
+    def MinValue(implicit ctx: SourceContext) = obj_double_min_value
   }
 
   class DoubleOpsCls(lhs: Rep[Double]){
-    def floatValue() = double_float_value(lhs)
+    def floatValue()(implicit ctx: SourceContext) = double_float_value(lhs)
   }
 
-  def obj_double_parse_double(s: Rep[String]): Rep[Double]
-  def obj_double_positive_infinity: Rep[Double]
-  def obj_double_min_value: Rep[Double]
-  def double_float_value(lhs: Rep[Double]): Rep[Float]
+  def obj_double_parse_double(s: Rep[String])(implicit ctx: SourceContext): Rep[Double]
+  def obj_double_positive_infinity(implicit ctx: SourceContext): Rep[Double]
+  def obj_double_min_value(implicit ctx: SourceContext): Rep[Double]
+  def double_float_value(lhs: Rep[Double])(implicit ctx: SourceContext): Rep[Float]
 
   /**
    * Int
    */
 
   object Integer {
-    def parseInt(s: Rep[String]) = obj_integer_parse_int(s)
+    def parseInt(s: Rep[String])(implicit ctx: SourceContext) = obj_integer_parse_int(s)
   }
 
   object Int {
-    def MaxValue = obj_int_max_value
+    def MaxValue(implicit ctx: SourceContext) = obj_int_max_value
   }
 
   implicit def intToIntOps(n: Int) = new IntOpsCls(n)
@@ -71,28 +72,28 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
     //def /[A](rhs: Rep[A])(implicit mA: Manifest[A], f: Fractional[A], o: Overloaded1) = int_divide_frac(lhs, rhs)
     //def /(rhs: Rep[Int]) = int_divide(lhs, rhs)
     // TODO Something is wrong if we just use floatValue. implicits get confused
-    def floatValueL() = int_float_value(lhs)
-    def doubleValue() = int_double_value(lhs)
-    def unary_~() = int_bitwise_not(lhs)
+    def floatValueL()(implicit ctx: SourceContext) = int_float_value(lhs)
+    def doubleValue()(implicit ctx: SourceContext) = int_double_value(lhs)
+    def unary_~()(implicit ctx: SourceContext) = int_bitwise_not(lhs)
   }
 
-  def infix_/(lhs: Rep[Int], rhs: Rep[Int]) = int_divide(lhs, rhs)
-  def infix_%(lhs: Rep[Int], rhs: Rep[Int]) = int_mod(lhs, rhs)
-  def infix_&(lhs: Rep[Int], rhs: Rep[Int]) = int_binaryand(lhs, rhs)
-  def infix_|(lhs: Rep[Int], rhs: Rep[Int]) = int_binaryor(lhs, rhs)
-  def infix_^(lhs: Rep[Int], rhs: Rep[Int]) = int_binaryxor(lhs, rhs)
+  def infix_/(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_divide(lhs, rhs)
+  def infix_%(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_mod(lhs, rhs)
+  def infix_&(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_binaryand(lhs, rhs)
+  def infix_|(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_binaryor(lhs, rhs)
+  def infix_^(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_binaryxor(lhs, rhs)
 
-  def obj_integer_parse_int(s: Rep[String]): Rep[Int]
-  def obj_int_max_value: Rep[Int]
-  def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A]): Rep[A]
-  def int_divide(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
-  def int_mod(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
-  def int_binaryor(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
-  def int_binaryand(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
-  def int_binaryxor(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
-  def int_float_value(lhs: Rep[Int]): Rep[Float]
-  def int_double_value(lhs: Rep[Int]): Rep[Double]
-  def int_bitwise_not(lhs: Rep[Int]) : Rep[Int]
+  def obj_integer_parse_int(s: Rep[String])(implicit ctx: SourceContext): Rep[Int]
+  def obj_int_max_value(implicit ctx: SourceContext): Rep[Int]
+  def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A])(implicit ctx: SourceContext): Rep[A]
+  def int_divide(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
+  def int_mod(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
+  def int_binaryor(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
+  def int_binaryand(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
+  def int_binaryxor(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
+  def int_float_value(lhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float]
+  def int_double_value(lhs: Rep[Int])(implicit ctx: SourceContext): Rep[Double]
+  def int_bitwise_not(lhs: Rep[Int])(implicit ctx: SourceContext) : Rep[Int]
 }
 
 trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
@@ -106,10 +107,10 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class ObjDoubleMinValue() extends Def[Double]
   case class DoubleFloatValue(lhs: Exp[Double]) extends Def[Float]
 
-  def obj_double_parse_double(s: Exp[String]) = ObjDoubleParseDouble(s)
-  def obj_double_positive_infinity = ObjDoublePositiveInfinity()
-  def obj_double_min_value = ObjDoubleMinValue()
-  def double_float_value(lhs: Exp[Double]) = DoubleFloatValue(lhs)
+  def obj_double_parse_double(s: Exp[String])(implicit ctx: SourceContext) = ObjDoubleParseDouble(s)
+  def obj_double_positive_infinity(implicit ctx: SourceContext) = ObjDoublePositiveInfinity()
+  def obj_double_min_value(implicit ctx: SourceContext) = ObjDoubleMinValue()
+  def double_float_value(lhs: Exp[Double])(implicit ctx: SourceContext) = DoubleFloatValue(lhs)
 
   /**
    * Int
@@ -126,19 +127,19 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class IntFloatValue(lhs: Exp[Int]) extends Def[Float]
   case class IntBitwiseNot(lhs: Exp[Int]) extends Def[Int]
 
-  def obj_integer_parse_int(s: Rep[String]) = ObjIntegerParseInt(s)
-  def obj_int_max_value = ObjIntMaxValue()
-  def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) : Exp[A] = IntDivideFrac(lhs, rhs)
-  def int_divide(lhs: Exp[Int], rhs: Exp[Int]) : Exp[Int] = IntDivide(lhs, rhs)
-  def int_mod(lhs: Exp[Int], rhs: Exp[Int]) = IntMod(lhs, rhs)
-  def int_binaryor(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryOr(lhs, rhs)
-  def int_binaryand(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryAnd(lhs, rhs)
-  def int_binaryxor(lhs: Exp[Int], rhs: Exp[Int]) = IntBinaryXor(lhs, rhs)
-  def int_double_value(lhs: Exp[Int]) = IntDoubleValue(lhs)
-  def int_float_value(lhs: Exp[Int]) = IntFloatValue(lhs)
-  def int_bitwise_not(lhs: Exp[Int]) = IntBitwiseNot(lhs)
+  def obj_integer_parse_int(s: Rep[String])(implicit ctx: SourceContext) = ObjIntegerParseInt(s)
+  def obj_int_max_value(implicit ctx: SourceContext) = ObjIntMaxValue()
+  def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A])(implicit ctx: SourceContext) : Exp[A] = IntDivideFrac(lhs, rhs)
+  def int_divide(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) : Exp[Int] = IntDivide(lhs, rhs)
+  def int_mod(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntMod(lhs, rhs)
+  def int_binaryor(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntBinaryOr(lhs, rhs)
+  def int_binaryand(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntBinaryAnd(lhs, rhs)
+  def int_binaryxor(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntBinaryXor(lhs, rhs)
+  def int_double_value(lhs: Exp[Int])(implicit ctx: SourceContext) = IntDoubleValue(lhs)
+  def int_float_value(lhs: Exp[Int])(implicit ctx: SourceContext) = IntFloatValue(lhs)
+  def int_bitwise_not(lhs: Exp[Int])(implicit ctx: SourceContext) = IntBitwiseNot(lhs)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = ({
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case IntDoubleValue(x) => int_double_value(f(x))

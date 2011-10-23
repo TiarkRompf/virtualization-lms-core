@@ -3,6 +3,7 @@ package internal
 
 import util.OverloadHack
 import scala.collection.mutable.HashMap
+import scala.reflect.SourceContext
 
 trait Transforming extends Expressions with OverloadHack {
   this: scala.virtualization.lms.common.BaseExp => // probably shouldn't be here...
@@ -27,7 +28,7 @@ trait Transforming extends Expressions with OverloadHack {
 
   def mtype[A,B](m:Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]] // hack: need to pass explicit manifest during mirroring
   
-  def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = sys.error("don't know how to mirror " + e)
+  def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = sys.error("don't know how to mirror " + e)
 
   def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer): Def[A] = sys.error("don't know how to mirror " + e) //hm...
 

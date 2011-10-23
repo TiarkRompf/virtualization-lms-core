@@ -3,20 +3,21 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
+import scala.reflect.SourceContext
 
 trait ListOps extends Base {
 
   object List {
-    def apply[A:Manifest](xs: Rep[A]*) = list_new(xs)
+    def apply[A:Manifest](xs: Rep[A]*)(implicit ctx: SourceContext) = list_new(xs)
   }
 
-  def list_new[A:Manifest](xs: Seq[Rep[A]]) : Rep[List[A]]
+  def list_new[A:Manifest](xs: Seq[Rep[A]])(implicit ctx: SourceContext) : Rep[List[A]]
 }
 
 trait ListOpsExp extends ListOps with EffectExp {
   case class ListNew[A:Manifest](xs: Seq[Rep[A]]) extends Def[List[A]]
 
-  def list_new[A:Manifest](xs: Seq[Rep[A]]) = ListNew(xs)
+  def list_new[A:Manifest](xs: Seq[Rep[A]])(implicit ctx: SourceContext) = ListNew(xs)
 }
 
 trait BaseGenListOps extends GenericNestedCodegen {

@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package internal
 
+import scala.reflect.SourceContext
 import scala.annotation.unchecked.uncheckedVariance
 import java.lang.{StackTraceElement,Thread}
 
@@ -20,18 +21,74 @@ trait Expressions extends Utils {
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
+    var name: String = "x" + (if (id == 0) "" else id)
+    var nameId: Int = id
+    var sourceContext: Option[SourceContext] = None
   }
 
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
   var nVars = 0
-  def fresh[T:Manifest] = Sym[T] { nVars += 1; nVars -1 }
+  var idMap = Map[String, Int]() // next id for variable name
 
-  abstract class Def[+T] // operations (compos  ite)
+  // returns (name, global id, per-name id)
+  def nextName(basename: String): (String, Int, Int) = {
+    nVars += 1
+    val id = nVars - 1
+    idMap.get(basename) match {
+      case None =>
+        idMap += (basename -> 1)
+        (basename + id, id, 0)
+      case Some(varnum) =>
+        idMap += (basename -> (varnum + 1))
+        (basename + id, id, varnum)
+    }
+  }
 
-  //abstract class Stm // statement (links syms and definitions)
-  
-  case class TP[+T](sym: Sym[T], rhs: Def[T]) //extends Stm
+  def fresh[T:Manifest] = {
+    val (name, id, nameId) = nextName("x")
+    val sym = Sym[T](id)
+    sym.name = name
+    sym.nameId = nameId
+    sym
+  }
+
+  def fresh[T:Manifest](d: Def[T], ctx: Option[SourceContext]) = {
+    def enclosingNamedContext(sc: SourceContext): Option[SourceContext] = sc.bindings match {
+      case (null, _) :: _ =>
+        if (!sc.parent.isEmpty) enclosingNamedContext(sc.parent.get)
+        else None
+      case (name, line) :: _ =>
+        Some(sc)
+    }
+
+    // create base name from source context
+    val (basename, line, srcCtx) = if (!ctx.isEmpty) {
+      enclosingNamedContext(ctx.get) match {
+        case None =>
+          // no enclosing context has variable assignment
+          var outermost = ctx.get
+          while (!outermost.parent.isEmpty) {
+            outermost = outermost.parent.get
+          }
+          ("x", 0, Some(outermost))
+        case Some(sc) => sc.bindings match {
+          case (n, l) :: _ =>
+            (n, l, Some(sc))
+        }
+      }
+    } else ("x", 0, None)
+    val (name, id, nameId) = nextName(basename)
+    val sym = Sym[T](id)
+    sym.name = name
+    sym.nameId = nameId
+    sym.sourceContext = srcCtx
+    sym
+  }
+
+  abstract class Def[+T] // operations (composite)
+
+  case class TP[+T](sym: Sym[T], rhs: Def[T])
 
   var globalDefs: List[TP[Any]] = Nil
 
@@ -43,7 +100,12 @@ trait Expressions extends Utils {
 
   def findOrCreateDefinition[T:Manifest](d: Def[T]): TP[T] =
     findDefinition[T](d).getOrElse {
-      createDefinition(fresh[T], d)
+      createDefinition(fresh[T](d, None), d)
+    }
+
+  def findOrCreateDefinition[T:Manifest](d: Def[T], ctx: SourceContext): TP[T] =
+    findDefinition[T](d).getOrElse {
+      createDefinition(fresh[T](d, Some(ctx)), d)
     }
 
   def createDefinition[T](s: Sym[T], d: Def[T]): TP[T] = {
@@ -52,8 +114,8 @@ trait Expressions extends Utils {
     f
   }
 
-  protected implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
-    findOrCreateDefinition(d).sym // TODO: return Const(()) if type is Unit??
+  protected implicit def toAtom[T:Manifest](d: Def[T])(implicit ctx: SourceContext): Exp[T] = {
+    findOrCreateDefinition(d, ctx).sym // TODO: return Const(()) if type is Unit??
   }
 
   object Def {

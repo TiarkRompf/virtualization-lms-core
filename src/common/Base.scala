@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package common
 
 import internal._
+import scala.reflect.SourceContext
 
 /**
  * This trait automatically lifts any concrete instance to a representation.
@@ -54,7 +55,7 @@ trait EffectExp extends BaseExp with Effects {
       mayWrite = t.onlySyms(u.mayWrite), mstWrite = t.onlySyms(u.mstWrite))
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = e match {
 /*
     case Reflect(x, u, es) =>
       reifyEffects {

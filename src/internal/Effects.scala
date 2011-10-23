@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package internal
 
+import scala.reflect.SourceContext
 import util.GraphUtil
 import scala.collection.mutable
 
@@ -280,7 +281,7 @@ trait Effects extends Expressions with Utils {
     TODO: find a solution ...
   */
 
-  protected override implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
+  protected override implicit def toAtom[T:Manifest](d: Def[T])(implicit ctx: SourceContext): Exp[T] = {
     // are we depending on a variable? then we need to be serialized -> effect
     val mutableInputs = readMutableData(d)
     reflectEffect(d, Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
@@ -293,11 +294,11 @@ trait Effects extends Expressions with Utils {
     }
   }
 
-  def checkIllegalSharing(z: Exp[Any], mutableAliases: List[Sym[Any]]) {
+  def checkIllegalSharing(z: Exp[Any], mutableAliases: List[Sym[Any]], ctx: SourceContext) {
     if (mutableAliases.nonEmpty) {
       val zd = z match { case Def(zd) => zd }
       printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
-      printerr("at " + z + "=" + zd)
+      printerr("at " + ctx.line + ": " + z + "=" + zd)
     }
   }
   
@@ -317,29 +318,29 @@ trait Effects extends Expressions with Utils {
     s
   }
 
-  def reflectMutable[A:Manifest](d: Def[A]): Exp[A] = {
+  def reflectMutable[A:Manifest](d: Def[A])(implicit ctx: SourceContext): Exp[A] = {
     val mutableInputs = readMutableData(d)    
     val z = reflectEffect(d, Alloc() andAlso Read(mutableInputs))
 
     val mutableAliases = mutableTransitiveAliases(d)
-    checkIllegalSharing(z, mutableAliases)
+    checkIllegalSharing(z, mutableAliases, ctx)
     z
   }
 
-  def reflectWrite[A:Manifest](write0: Exp[Any]*)(d: Def[A]): Exp[A] = {
+  def reflectWrite[A:Manifest](write0: Exp[Any]*)(d: Def[A])(implicit ctx: SourceContext): Exp[A] = {
     val write = write0.toList.asInstanceOf[List[Sym[Any]]] // should check...
     val mutableInputs = readMutableData(d)
 
     val z = reflectEffect(d, Write(write) andAlso Read(mutableInputs))
 
     val mutableAliases = mutableTransitiveAliases(d) filterNot (write contains _)
-    checkIllegalSharing(z, mutableAliases)
+    checkIllegalSharing(z, mutableAliases, ctx)
     z
   }
 
-  def reflectEffect[A:Manifest](x: Def[A]): Exp[A] = reflectEffect(x, Simple()) // simple effect (serialized with respect to other simples)
+  def reflectEffect[A:Manifest](x: Def[A])(implicit ctx: SourceContext): Exp[A] = reflectEffect(x, Simple()) // simple effect (serialized with respect to other simples)
 
-  def reflectEffect[A:Manifest](x: Def[A], u: Summary): Exp[A] = {
+  def reflectEffect[A:Manifest](x: Def[A], u: Summary)(implicit ctx: SourceContext): Exp[A] = {
     if (mustPure(u)) super.toAtom(x) else {
       // FIXME: reflecting mutable stuff *during mirroring* doesn't work right now...
       
@@ -361,7 +362,7 @@ trait Effects extends Expressions with Utils {
         // make sure all writes go to allocs
         for (w <- u.mayWrite if !isWritableSym(w)) {
           printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
-          printerr("at " + z + "=" + zd)
+          printerr("at " + ctx.line + ": " + z + "=" + zd)
         }
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
         // make sure no mutable object becomes part of mutable result (in case of allocation)

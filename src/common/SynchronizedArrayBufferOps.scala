@@ -4,20 +4,21 @@ package common
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
 import collection.mutable.ArrayBuffer
+import scala.reflect.SourceContext
 
 trait SynchronizedArrayBufferOps extends Base {
 
   object ArrayBuffer {
-    def apply[A:Manifest](xs: Rep[A]*) = arraybuffer_new(xs)
+    def apply[A:Manifest](xs: Rep[A]*)(implicit ctx: SourceContext) = arraybuffer_new(xs)
   }
 
-  def infix_mkString[A:Manifest](l: Rep[ArrayBuffer[A]], sep: Rep[String] = unit("")) = arraybuffer_mkstring(l, sep)
-  def infix_+=[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A]) = arraybuffer_append(l, e)
-  def infix_append[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A]) = arraybuffer_append(l, e)
+  def infix_mkString[A:Manifest](l: Rep[ArrayBuffer[A]], sep: Rep[String] = unit(""))(implicit ctx: SourceContext) = arraybuffer_mkstring(l, sep)
+  def infix_+=[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A])(implicit ctx: SourceContext) = arraybuffer_append(l, e)
+  def infix_append[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A])(implicit ctx: SourceContext) = arraybuffer_append(l, e)
 
-  def arraybuffer_mkstring[A:Manifest](l: Rep[ArrayBuffer[A]], sep: Rep[String]): Rep[String]
-  def arraybuffer_append[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A]): Rep[Unit]
-  def arraybuffer_new[A:Manifest](xs: Seq[Rep[A]]): Rep[ArrayBuffer[A]]
+  def arraybuffer_mkstring[A:Manifest](l: Rep[ArrayBuffer[A]], sep: Rep[String])(implicit ctx: SourceContext): Rep[String]
+  def arraybuffer_append[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A])(implicit ctx: SourceContext): Rep[Unit]
+  def arraybuffer_new[A:Manifest](xs: Seq[Rep[A]])(implicit ctx: SourceContext): Rep[ArrayBuffer[A]]
 }
 
 trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with EffectExp {
@@ -27,9 +28,9 @@ trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with Effe
   case class ArrayBufferMkString[A:Manifest](l: Exp[ArrayBuffer[A]], sep: Exp[String]) extends Def[String]
   case class ArrayBufferAppend[A:Manifest](l: Exp[ArrayBuffer[A]], e: Exp[A]) extends Def[Unit]
 
-  def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]]) = reflectMutable(ArrayBufferNew(xs))
-  def arraybuffer_mkstring[A:Manifest](l: Exp[ArrayBuffer[A]], sep: Exp[String]) = ArrayBufferMkString(l, sep)
-  def arraybuffer_append[A:Manifest](l: Exp[ArrayBuffer[A]], e: Exp[A]) = reflectWrite(l)(ArrayBufferAppend(l, e))
+  def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]])(implicit ctx: SourceContext) = reflectMutable(ArrayBufferNew(xs))
+  def arraybuffer_mkstring[A:Manifest](l: Exp[ArrayBuffer[A]], sep: Exp[String])(implicit ctx: SourceContext) = ArrayBufferMkString(l, sep)
+  def arraybuffer_append[A:Manifest](l: Exp[ArrayBuffer[A]], e: Exp[A])(implicit ctx: SourceContext) = reflectWrite(l)(ArrayBufferAppend(l, e))
 
 }
 

@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
+import scala.reflect.SourceContext
 
 trait LiftNumeric {
   this: Base =>
@@ -17,21 +18,21 @@ trait NumericOps extends Variables {
   implicit def varNumericToNumericOps[T:Numeric:Manifest](n: Var[T]) = new NumericOpsCls(readVar(n))
   
   class NumericOpsCls[T:Numeric:Manifest](lhs: Rep[T]){
-    def +[A](rhs: A)(implicit c: A => T) = numeric_plus(lhs,unit(c(rhs)))
-    def +(rhs: Rep[T]) = numeric_plus(lhs,rhs)
-    def -(rhs: Rep[T]) = numeric_minus(lhs,rhs)
-    def *(rhs: Rep[T]) = numeric_times(lhs,rhs)
-    def /(rhs: Rep[T]) = numeric_divide(lhs,rhs)
+    def +[A](rhs: A)(implicit c: A => T, ctx: SourceContext) = numeric_plus(lhs,unit(c(rhs)))
+    def +(rhs: Rep[T])(implicit ctx: SourceContext) = numeric_plus(lhs,rhs)
+    def -(rhs: Rep[T])(implicit ctx: SourceContext) = numeric_minus(lhs,rhs)
+    def *(rhs: Rep[T])(implicit ctx: SourceContext) = numeric_times(lhs,rhs)
+    def /(rhs: Rep[T])(implicit ctx: SourceContext) = numeric_divide(lhs,rhs)
   }
 
   //def infix_+[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_plus(lhs,rhs)
   //def infix_-[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_minus(lhs,rhs)
   //def infix_*[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_times(lhs,rhs)
 
-  def numeric_plus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]): Rep[T]
-  def numeric_minus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]): Rep[T]
-  def numeric_times[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]): Rep[T]
-  def numeric_divide[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]): Rep[T]
+  def numeric_plus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit ctx: SourceContext): Rep[T]
+  def numeric_minus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit ctx: SourceContext): Rep[T]
+  def numeric_times[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit ctx: SourceContext): Rep[T]
+  def numeric_divide[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit ctx: SourceContext): Rep[T]
   //def numeric_negate[T:Numeric](x: T): Rep[T]
   //def numeric_abs[T:Numeric](x: T): Rep[T]
   //def numeric_signum[T:Numeric](x: T): Rep[Int]
@@ -48,16 +49,16 @@ trait NumericOpsExp extends NumericOps with VariablesExp with BaseFatExp {
   case class NumericTimes[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T]
   case class NumericDivide[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T]
 
-  def numeric_plus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) : Exp[T] = NumericPlus(lhs, rhs)
-  def numeric_minus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) : Exp[T] = NumericMinus(lhs, rhs)
-  def numeric_times[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) : Exp[T] = NumericTimes(lhs, rhs)
-  def numeric_divide[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T]) : Exp[T] = NumericDivide(lhs, rhs)
+  def numeric_plus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit ctx: SourceContext) : Exp[T] = NumericPlus(lhs, rhs)
+  def numeric_minus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit ctx: SourceContext) : Exp[T] = NumericMinus(lhs, rhs)
+  def numeric_times[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit ctx: SourceContext) : Exp[T] = NumericTimes(lhs, rhs)
+  def numeric_divide[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit ctx: SourceContext) : Exp[T] = NumericDivide(lhs, rhs)
   
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
-    case e@NumericPlus(l,r) => numeric_plus(f(l), f(r))(e.aev, e.mev)
-    case e@NumericMinus(l,r) => numeric_minus(f(l), f(r))(e.aev, e.mev)
-    case e@NumericTimes(l,r) => numeric_times(f(l), f(r))(e.aev, e.mev)
-    case e@NumericDivide(l,r) => numeric_divide(f(l), f(r))(e.aev, e.mev)
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = e match {
+    case e@NumericPlus(l,r) => numeric_plus(f(l), f(r))(e.aev, e.mev, implicitly[SourceContext])
+    case e@NumericMinus(l,r) => numeric_minus(f(l), f(r))(e.aev, e.mev, implicitly[SourceContext])
+    case e@NumericTimes(l,r) => numeric_times(f(l), f(r))(e.aev, e.mev, implicitly[SourceContext])
+    case e@NumericDivide(l,r) => numeric_divide(f(l), f(r))(e.aev, e.mev, implicitly[SourceContext])
     case _ => super.mirror(e,f)
   }
 

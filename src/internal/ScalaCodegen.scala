@@ -3,6 +3,8 @@ package internal
 
 import java.io.{File, FileWriter, PrintWriter}
 
+import scala.reflect.SourceContext
+
 trait ScalaCodegen extends GenericCodegen {
   val IR: Expressions
   import IR._
@@ -82,10 +84,15 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println("}}")
   }
 
-
-  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println("val " + quote(sym) + " = " + rhs) // + "        //" + sym.Type.debugInfo)
+  def relativePath(fileName: String): String = {
+    val i = fileName.lastIndexOf('/')
+    fileName.substring(i + 1)
   }
+  
+  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
+    stream.println("val " + quote(sym) + " = " + rhs)
+  }
+
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.Type) + " = " + rhs)
   }
