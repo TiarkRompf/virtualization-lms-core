@@ -45,7 +45,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   //////////////
   // mirroring
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
     (e match {
       case ArrayApply(a,x) => array_apply(f(a),f(x))
       case _ => super.mirror(e,f)

@@ -54,7 +54,7 @@ trait NumericOpsExp extends NumericOps with VariablesExp with BaseFatExp {
   def numeric_times[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit ctx: SourceContext) : Exp[T] = NumericTimes(lhs, rhs)
   def numeric_divide[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit ctx: SourceContext) : Exp[T] = NumericDivide(lhs, rhs)
   
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
     case e@NumericPlus(l,r) => numeric_plus(f(l), f(r))(e.aev, e.mev, implicitly[SourceContext])
     case e@NumericMinus(l,r) => numeric_minus(f(l), f(r))(e.aev, e.mev, implicitly[SourceContext])
     case e@NumericTimes(l,r) => numeric_times(f(l), f(r))(e.aev, e.mev, implicitly[SourceContext])

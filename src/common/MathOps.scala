@@ -79,7 +79,7 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_pi(implicit ctx: SourceContext) = MathPi()
   def math_e(implicit ctx: SourceContext) = MathE()
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = ({
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case MathCeil(x) => math_ceil(f(x))

@@ -142,7 +142,7 @@ trait TupleOpsExp extends TupleOps with BaseExp {
     case _ => Tuple5Access5(t)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     case e@ETuple2(a,b)     => make_tuple2(f(a),f(b))(e.m1,e.m2,implicitly[SourceContext])
     case e@Tuple2Access1(t) => tuple2_get1(f(t))(e.m,implicitly[SourceContext])
     case e@Tuple2Access2(t) => tuple2_get2(f(t))(e.m,implicitly[SourceContext])

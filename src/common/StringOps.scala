@@ -51,7 +51,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
   def string_split(s: Exp[String], separators: Exp[String])(implicit ctx: SourceContext) : Rep[Array[String]] = StringSplit(s, separators)
   def string_valueof(a: Exp[Any])(implicit ctx: SourceContext) = StringValueOf(a)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     case StringPlus(a,b) => string_plus(f(a),f(b))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]

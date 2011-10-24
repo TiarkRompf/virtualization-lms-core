@@ -29,7 +29,7 @@ trait BooleanOpsExp extends BooleanOps with BaseExp {
   def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit ctx: SourceContext) : Exp[Boolean] = BooleanAnd(lhs,rhs)
   def boolean_or(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit ctx: SourceContext) : Exp[Boolean] = BooleanOr(lhs,rhs)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     case BooleanNegate(x) => boolean_negate(f(x))
     case BooleanAnd(x,y) => boolean_and(f(x),f(y))
     case BooleanOr(x,y) => boolean_or(f(x),f(y))
