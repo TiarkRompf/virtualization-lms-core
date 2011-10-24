@@ -239,13 +239,6 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
         emitBlock(y)
       }
       stream.println("}")
-    // TODO: conditional variants ...
-    /*case SimpleLoop(s,x,FlattenElem(g,y)) =>  
-      stream.println("val " + quote(sym) + " = LoopFlatten("+quote(s)+") { " + quote(x) + " => ")
-      withGen(g, s=>stream.println(s)) {
-        emitBlock(y)
-      }
-      stream.println("}")*/
     case ArrayIndex(a,i) =>  
       emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
     case ArrayLength(a) =>  
@@ -253,7 +246,6 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
     case Yield(g,a) =>
       if (genStack.nonEmpty) {
         topGen(sym.asInstanceOf[Sym[Gen[Any]]])(quote(a))
-        emitValDef(sym, "()")
       } else emitValDef(sym, "yield " + quote(a) + " // context is messed up!")
     case Skip(g) => 
       emitValDef(sym, "() // skip")
@@ -266,7 +258,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
   import IR._
   
   override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
-    case SimpleFatLoop(s,x,rhs) => 
+    case SimpleFatLoop(s,x,rhs) =>
       for ((l,r) <- sym zip rhs) {
         r match {
           case ForeachElem(y) => 
@@ -276,12 +268,6 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
             stream.println("val " + quote(g) + " = new ArrayBuilder[]")
           case ReduceElem(g,y) =>
             stream.println("var " + quote(l) + " = 0")
-          //case ArrayIfElem(g,c,y) =>
-          //  stream.println("val " + quote(g) + " = new ArrayBuilder[]")
-          //case ReduceIfElem(g,c,y) =>
-          //  stream.println("var " + quote(l) + " = 0")
-          //case FlattenElem(g,y) =>
-          //  stream.println("val " + quote(g) + " = new ArrayBuilder[]")
         }
       }
       val ii = x
@@ -295,12 +281,6 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
           (g, (s: String) => stream.println(quote(g) + " += " + s))
         case ReduceElem(g,y) =>
           (g, (s: String) => stream.println(quote(l) + " += " + s))
-        //case ArrayIfElem(g,c,y) =>
-        //  (g, (s: String) => stream.println("if ("+quote(getBlockResult(c))+") " + quote(g) + " += " + s))
-        //case ReduceIfElem(g,c,y) =>
-        //  (g, (s: String) => stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + s))
-        //case FlattenElem(g,y) =>
-        //  (g, (s: String) => stream.println(quote(g) + " ++= " + s))
       }
 
       withGens(gens) {
@@ -315,11 +295,6 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
         case ArrayElem(g,y) =>
           stream.println("val " + quote(l) + " = " + quote(g) + ".result")
         case ReduceElem(g,y) =>
-        //case ArrayIfElem(g,c,y) =>
-        //  stream.println("val " + quote(l) + " = " + quote(g) + ".result")
-        //case ReduceIfElem(g,c,y) =>
-        //case FlattenElem(g,y) =>
-        //  stream.println("val " + quote(l) + " = " + quote(g) + ".result")
       }
 
     case _ => super.emitFatNode(sym, rhs)
