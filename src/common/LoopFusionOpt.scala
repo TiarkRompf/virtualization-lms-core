@@ -1,6 +1,8 @@
 package scala.virtualization.lms
 package common
 
+import collection.mutable.ArrayBuffer
+
 trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
@@ -152,20 +154,26 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           // s depends on loop a -- find corresponding loops result d
           val d = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) }
 
-          println("beep bop "+d+"/"+e)
-
-          val saveContext = globalDefs.length
-
+          printlog("beep bop "+d+"/"+e)
+          val implicitDefs = ArrayBuffer[TP[Any]]()
+          val explicitDefs = ArrayBuffer[TP[Any]]()
+          var saveContext = 0
           val z = e.rhs match {
             case SimpleFatLoop(s,x,rhs) => rhs.map { r =>
-              val z = findOrCreateDefinition(SimpleLoop(shape,targetVar,applyPlugIntoContext(d,r))).sym
-              println("mod context. old: " + r + "; new: " + findDefinition(z))
+              saveContext = globalDefs.length
+              val newSym = SimpleLoop(shape,targetVar,applyPlugIntoContext(d,r))
+              implicitDefs ++= globalDefs.drop(saveContext)
+              // keep track of implicitly defined loops so they do not get cleaned up in filtering of loops
+              UloopSyms = UloopSyms ++ List(globalDefs.drop(saveContext)map(_.sym))
+
+              saveContext = globalDefs.length
+              val z = findOrCreateDefinition(newSym).sym
+              explicitDefs ++= globalDefs.drop(saveContext)
+              printlog("mod context. old: " + r + "; new: " + findDefinition(z))
               z
             }
           }
-
-          val newDefs = globalDefs.drop(saveContext)
-          println("new defs:" + newDefs)
+          val newDefs = implicitDefs ++ explicitDefs
           innerScope = innerScope ++ newDefs
           currentScope = currentScope ++ newDefs.map(fatten)
           z
