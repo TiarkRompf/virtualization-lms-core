@@ -85,8 +85,6 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
     case Yield(g,y) => Nil
     case SimpleLoop(s,i, ArrayElem(g,y)) => Nil
     case SimpleLoop(s,i, ReduceElem(g,y)) => Nil
-    //case SimpleLoop(s,i, ArrayIfElem(g,c,y)) => Nil
-    //case SimpleLoop(s,i, ReduceIfElem(g,c,y)) => Nil
     case ArrayIndex(a,i) => Nil
     case ArrayLength(a) => Nil
     case ArrayUpdate(a,i,x) => syms(a)

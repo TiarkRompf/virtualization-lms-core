@@ -16,7 +16,9 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
 
   def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]): Def[Any] = sys.error("not implemented")
 
-  def applyPlugIntoContext(d: Def[Any], r: Def[Any]): Def[Any] = sys.error("not implemented")
+  def applyPlugIntoContext(d: Def[Any], r: Def[Any], newGen: Exp[Any]): Def[Any] = sys.error("not implemented")
+
+  def applyExtendGenerator[A](d: Def[Any], body: Def[Any]): (Exp[A], Exp[A]) = sys.error("not implemented")
 
   def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true
 

@@ -35,9 +35,6 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   case class ArrayElem[T](g: Exp[Gen[T]], y: Exp[Gen[T]]) extends Def[Array[T]]
   case class ReduceElem(g: Exp[Gen[Double]], y: Exp[Gen[Double]]) extends Def[Double]
 
-  //case class ArrayIfElem[T](g: Exp[Gen[T]], c: Exp[Boolean], y: Exp[Gen[T]]) extends Def[Array[T]]
-  //case class ReduceIfElem(g: Exp[Gen[Double]], c: Exp[Boolean], y: Exp[Gen[Double]]) extends Def[Double]
-
   case class FlattenElem[T](g: Exp[Gen[Array[T]]], y: Exp[Gen[Array[T]]]) extends Def[Array[T]]
 
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
@@ -48,13 +45,13 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
    *  @param  g   Represents the collection to which this yield statement emits.
    *  @param  a   Element that is being emitted.
    */
-  case class Yield[T](g: Exp[Int], a: Exp[T]) extends Def[Gen[T]]
+  case class Yield[T](g: List[Exp[Int]], a: Exp[T]) extends Def[Gen[T]]
 
   /**
    * Skip statement is used in loops to indicate that no element is being emitted. For example in filter clauses.
    *  @param  g   Represents the loop to which this skip statement belongs.
    */
-  case class Skip[T](g: Exp[Int]) extends Def[Gen[T]]
+  case class Skip[T](g: List[Exp[Int]]) extends Def[Gen[T]]
 
 /*
   example for flatMap fusion
@@ -97,13 +94,13 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 */  
   
   // TODO: use simpleLoop instead of SimpleLoop
-  
+
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     //val g = fresh[Accu[T]]
     val x = fresh[Int]
     var g: Exp[Gen[T]] = null
     val y = reifyEffects { 
-      g = Yield(x,f(x))
+      g = Yield(List(x),f(x))
       g
     }
     simpleLoop(shape, x, ArrayElem(g,y))
@@ -114,7 +111,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
     val x = fresh[Int]
     var g: Exp[Gen[Double]] = null
     val y = reifyEffects { 
-      g = Yield(x,f(x))
+      g = Yield(List(x),f(x))
       g
     }
     simpleLoop(shape, x, ReduceElem(g,y))
@@ -125,8 +122,8 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
     var g: Exp[Gen[T]] = null
     val y: Exp[Gen[T]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?    
       val (c,z) = f(x)
-      g = Yield(x,z)
-      if (c) g else Skip[T](x)
+      g = Yield(List(x),z)
+      if (c) g else Skip[T](List(x))
     }
     reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
   }
@@ -138,8 +135,8 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
       val z = f(x)
       val shape2 = infix_length(z)
       val x2 = fresh[Int]
-      g = Yield(x,infix_at(z,x2))
-      val y2 = g // TODO: effects...
+      g = Yield(List(x2, x),infix_at(z,x2))
+      val y2 = g
       simpleLoop(shape2, x2, ForeachElem(y2).asInstanceOf[Def[Gen[T]]])
     }
     reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
@@ -151,8 +148,8 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
     var g: Exp[Gen[Double]] = null
     val y: Exp[Gen[Double]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
       val (c,z) = f(x)
-      g = Yield(x,z)
-      if (c) g else Skip[Double](x)
+      g = Yield(List(x),z)
+      if (c) g else Skip[Double](List(x))
     }
     reflectEffect(SimpleLoop(shape, x, ReduceElem(g,y)), summarizeEffects(y).star)
   }
@@ -261,8 +258,8 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
     case SimpleFatLoop(s,x,rhs) =>
       for ((l,r) <- sym zip rhs) {
         r match {
-          case ForeachElem(y) => 
-          case ArrayElem(g,y) if g == y => 
+          case ForeachElem(y) =>
+          case ArrayElem(g,y) if g == y =>
             stream.println("val " + quote(l) + " = new Array[]("+quote(s)+")")
           case ArrayElem(g,y) =>
             stream.println("val " + quote(g) + " = new ArrayBuilder[]")

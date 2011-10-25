@@ -142,38 +142,38 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           case SimpleFatLoop(s,x,rhs) => rhs.map { r => findOrCreateDefinition(SimpleLoop(shape,targetVar,applyAddCondition(r,c))).sym }
         }
 */
-        /**
-         * Plugs body of loop e with the symbol that stands for output of loop a. Method also adds new definitions to the current scope.
-         *
-         * @param s Shape of the loop that a depends on.
-         * @param a Loop that e is depending on.
-         * @param shape shape of the resulting loop.
-         * @param targetVar variable for the loop that is being plugged.
+       /**
+         * Plugs Yield statements in body of loop e with the output of loop a. Also adds new definitions to the current scope.
          */
-        def duplicateYieldContextAndPlugInRhs(s: Exp[Int], a: TTP)(e: TTP, shape: Exp[Int], targetVar: Sym[Int]) = {
+        def duplicateYieldContextAndPlugInRhs(trans: SubstTransformer)(s: Exp[Int], a: TTP)(e: TTP, shape: Exp[Int], targetVar: Sym[Int]) = {
           // s depends on loop a -- find corresponding loops result d
           val d = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) }
 
           printlog("beep bop "+d+"/"+e)
-          val implicitDefs = ArrayBuffer[TP[Any]]()
-          val explicitDefs = ArrayBuffer[TP[Any]]()
+          val newDefs = ArrayBuffer[TP[Any]]()
           var saveContext = 0
           val z = e.rhs match {
             case SimpleFatLoop(s,x,rhs) => rhs.map { r =>
               saveContext = globalDefs.length
-              val newSym = SimpleLoop(shape,targetVar,applyPlugIntoContext(d,r))
-              implicitDefs ++= globalDefs.drop(saveContext)
-              // keep track of implicitly defined loops so they do not get cleaned up in filtering of loops
-              UloopSyms = UloopSyms ++ List(globalDefs.drop(saveContext)map(_.sym))
 
-              saveContext = globalDefs.length
+              // concatenating loop vars of both generators (Yield) in the new Generator.
+              // This keeps the dependency between the new Yield and all added loops.
+              val (gen, newGen) = applyExtendGenerator(d, r)
+              val newSym = SimpleLoop(shape, targetVar, applyPlugIntoContext(d, r, newGen))
+              trans.subst(gen) = newGen
+
+              // track only symbols of loops that are created in plugging. This prevents loops to be filtered afterwards.
+              UloopSyms = UloopSyms ++ globalDefs.drop(saveContext).collect{case a@ TP(lhs, SimpleLoop(_, _, _)) => List(lhs)}
+
+              // extract new definitions
               val z = findOrCreateDefinition(newSym).sym
-              explicitDefs ++= globalDefs.drop(saveContext)
+              newDefs ++= globalDefs.drop(saveContext)
               printlog("mod context. old: " + r + "; new: " + findDefinition(z))
               z
             }
           }
-          val newDefs = implicitDefs ++ explicitDefs
+
+          printlog("newDefs:" + newDefs)
           innerScope = innerScope ++ newDefs
           currentScope = currentScope ++ newDefs.map(fatten)
           z
@@ -201,7 +201,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
             sum { loop(u_i.length) { i2 => yield 2 * u_i(i2) } }
           }
 
-          // dead code elim
+          // dead code elimination
           val b = loop(len) { i =>
             sum { loop(u_i.length) { i2 => yield 2 * u_i(i2) } }
           }
@@ -230,12 +230,12 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
               // analyze shape dependency and add appropriate conditions to loop body when fusing a filter loop
               val shape = if (isShapeDep(shapeA,b)) { //shapeA depends on value b
                 //val loops2 = extendLoopWithCondition(a,shapeB,targetVar,getShapeCond(shapeA,b))
-                val loops2 = duplicateYieldContextAndPlugInRhs(shapeA,b)(a,shapeB,targetVar)
+                val loops2 = duplicateYieldContextAndPlugInRhs(t)(shapeA,b)(a,shapeB,targetVar)
                 (a.lhs zip loops2) foreach { p => t.subst(p._1) = p._2 }
                 shapeB
               } else if (isShapeDep(shapeB,a)) {
                 //val loops2 = extendLoopWithCondition(b,shapeA,targetVar,getShapeCond(shapeB,a))
-                val loops2 = duplicateYieldContextAndPlugInRhs(shapeB,a)(b,shapeA,targetVar)
+                val loops2 = duplicateYieldContextAndPlugInRhs(t)(shapeB,a)(b,shapeA,targetVar)
                 (b.lhs zip loops2) foreach { p => t.subst(p._1) = p._2 }
                 shapeA
               } else {
