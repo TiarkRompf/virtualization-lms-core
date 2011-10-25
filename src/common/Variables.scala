@@ -26,7 +26,8 @@ trait ReadVarImplicitExp extends EffectExp {
 
   implicit def readVar[T:Manifest](v: Var[T])(implicit ctx: SourceContext) : Exp[T] = {
     //toAtom(ReadVar(v))
-    reflectEffect(ReadVar(v)) // toAtom should do this anyways...
+    reflectEffect(ReadVar(v))
+    //reflectEffect(ReadVar(v), Read(List(v.e.asInstanceOf[Sym[T]]))) // toAtom should do this anyways...
   }
 }
 

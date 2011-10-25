@@ -34,7 +34,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   case class ArrayForeach[T](a: Exp[Array[T]], x: Sym[T], block: Exp[Unit]) extends Def[Unit]
 
   def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int])(implicit ctx: SourceContext): Exp[T] = ArrayApply(x, n)
-  def array_update[T:Manifest](x: Exp[Array[T]], n: Exp[Int], y: Exp[T])(implicit ctx: SourceContext) = ArrayUpdate(x,n,y)
+  def array_update[T:Manifest](x: Exp[Array[T]], n: Exp[Int], y: Exp[T])(implicit ctx: SourceContext) = reflectWrite(x)(ArrayUpdate(x,n,y))
   def array_length[T:Manifest](a: Exp[Array[T]])(implicit ctx: SourceContext) : Rep[Int] = ArrayLength(a)
   def array_foreach[T:Manifest](a: Exp[Array[T]], block: Exp[T] => Exp[Unit])(implicit ctx: SourceContext): Exp[Unit] = {
     val x = fresh[T]
@@ -48,6 +48,8 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
     (e match {
       case ArrayApply(a,x) => array_apply(f(a),f(x))
+      case Reflect(ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(ArrayUpdate(l,i,r), u, es) => reflectMirrored(Reflect(ArrayUpdate(f(l),f(i),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
       case _ => super.mirror(e,f)
     }).asInstanceOf[Exp[A]] // why??
   }
