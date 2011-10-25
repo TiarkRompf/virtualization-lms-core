@@ -130,7 +130,7 @@ trait CudaCodegen extends GPUCodegen {
   */
 
   override def remap[A](m: Manifest[A]) : String = {
-    checkGPUableType(m)
+    //checkGPUableType(m)
     if (m.erasure == classOf[Variable[AnyVal]])
       remap(m.typeArguments.head)
     else {
