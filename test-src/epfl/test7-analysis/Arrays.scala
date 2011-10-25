@@ -259,6 +259,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
       for ((l,r) <- sym zip rhs) {
         r match {
           case ForeachElem(y) =>
+            stream.println("val " + quote(l) + " = () // foreach")
           case ArrayElem(g,y) if g == y =>
             stream.println("val " + quote(l) + " = new Array[]("+quote(s)+")")
           case ArrayElem(g,y) =>
