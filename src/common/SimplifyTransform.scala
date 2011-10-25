@@ -191,7 +191,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
 
     // Applies the transformation several times until convergence. NOTE: The first two invocations use the whole scope as
     // the result because we are still not sure about the order of operations.
-    // The last two operations take the result and clean up the code.
+    // The last two operations take the scope result and clean up the code.
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
     currentScope = getFatSchedule(currentScope)(currentScope)
@@ -199,6 +199,27 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
     currentScope = getFatSchedule(currentScope)(currentScope)
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(currentScope)
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(currentScope)
+
+    val previousScopeWhole = currentScope
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(currentScope)
+
+    if (currentScope != previousScopeWhole) // check convergence and avoid silent failure
+      throw new RuntimeException("The scope has not converged!!! Increase the number of cleanup steps. Scopes: " + previousScopeWhole + "-->" + currentScope)
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(result) // clean things up!
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
@@ -210,12 +231,10 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
     currentScope = getFatSchedule(currentScope)(result) // clean things up!
-  
-    if (currentScope != previousScope) { // check convergence
-      printerr("error: transformation of scope contents has not converged")
-      printdbg(previousScope + "-->" + currentScope)
-    }
-    
+
+    if (currentScope != previousScope) // check convergence and avoid silent failure
+      throw new RuntimeException("The scope has not converged!!! Increase the number of cleanup steps. Scopes: " + previousScope + "-->" + currentScope)
+
     (currentScope, result)
   }
   
