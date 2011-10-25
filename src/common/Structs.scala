@@ -19,20 +19,20 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 trait StructExp extends BaseExp with EffectExp {
 
-  abstract class Struct[T] extends Def[T] {
+  abstract class AbstractStruct[T] extends Def[T] {
     val tag: List[String]
     val elems: Map[String, Rep[Any]]
   }
 
   object Struct {
-    def unapply[T](s: Struct[T]): Option[(List[String], Map[String, Rep[Any]])] = Some((s.tag, s.elems))
+    def unapply[T](s: AbstractStruct[T]): Option[(List[String], Map[String, Rep[Any]])] = Some((s.tag, s.elems))
   }
   
-  case class GenericStruct[T](tag: List[String], elems: Map[String,Rep[Any]]) extends Struct[T]
+  case class SimpleStruct[T](tag: List[String], elems: Map[String,Rep[Any]]) extends AbstractStruct[T]
   case class Field[T](struct: Rep[Any], index: String, tp: Manifest[T]) extends Def[T]
   
   def struct[T:Manifest](tag: List[String], elems: (String, Rep[Any])*)(implicit ctx: SourceContext): Rep[T] = struct(tag, Map(elems:_*))
-  def struct[T:Manifest](tag: List[String], elems: Map[String, Rep[Any]])(implicit ctx: SourceContext): Rep[T] = GenericStruct[T](tag, elems)
+  def struct[T:Manifest](tag: List[String], elems: Map[String, Rep[Any]])(implicit ctx: SourceContext): Rep[T] = SimpleStruct[T](tag, elems)
   
   def field[T:Manifest](struct: Rep[Any], index: String)(implicit ctx: SourceContext): Rep[T] = Field[T](struct, index, manifest[T])
   
@@ -51,7 +51,7 @@ trait StructExp extends BaseExp with EffectExp {
   }  
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
-    case GenericStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
+    case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
     case _ => super.mirror(e,f)
   }
 }

@@ -1,7 +1,7 @@
 promoting to effect: Sym(5)=Reflect(SimpleLoop(Const(10),Sym(4),ArrayElem(Sym(3))),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
 depends on  Sym(3)
 error: illegal sharing of mutable objects Sym(3)
-at 37: Sym(6)=Reflect(ArrayMutable(Sym(5)),Summary(false,false,false,false,true,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
+at Sym(6)=Reflect(ArrayMutable(Sym(5)),Summary(false,false,false,false,true,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
 promoting to effect: Sym(7)=Reflect(ArrayIndex(Sym(6),Const(5)),Summary(false,false,false,false,false,List(Sym(6), Sym(3)),List(Sym(6), Sym(3)),List(),List()),List(Sym(3), Sym(6)))
 depends on  Sym(6)
 depends on  Sym(3)

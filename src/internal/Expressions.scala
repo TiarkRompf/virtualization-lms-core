@@ -15,36 +15,36 @@ trait Expressions extends Utils {
 
   abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
     def Type : Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
+    def pos: List[SourceContext] = Nil
   }
 
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
-    var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
-    var name: String = "x" + (if (id == 0) "" else id)
-    var nameId: Int = id
-    var sourceContext: Option[SourceContext] = None
+    var sourceInfo = Thread.currentThread.getStackTrace // TODO: make use of SourceContext instead
+    var sourceContexts: List[SourceContext] = Nil
+    override def pos = sourceContexts
+    def withPos(pos: List[SourceContext]) = { sourceContexts :::= pos; this }
   }
 
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
   var nVars = 0
-  var idMap = Map[String, Int]() // next id for variable name
+  def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1; nVars -1 }
 
-  // returns (name, global id, per-name id)
-  def nextName(basename: String): (String, Int, Int) = {
-    nVars += 1
-    val id = nVars - 1
-    idMap.get(basename) match {
-      case None =>
-        idMap += (basename -> 1)
-        (basename + id, id, 0)
-      case Some(varnum) =>
-        idMap += (basename -> (varnum + 1))
-        (basename + id, id, varnum)
-    }
+  def fresh[T:Manifest](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
+
+  def quotePos(e: Exp[Any]): String = e.pos match {
+    case Nil => "<unknown>"
+    case cs => 
+      def all(cs: SourceContext): List[SourceContext] = cs.parent match {
+        case None => List(cs)
+        case Some(p) => cs::all(p)
+      }
+    cs.map(c => all(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
   }
 
+/*
   def fresh[T:Manifest] = {
     val (name, id, nameId) = nextName("x")
     val sym = Sym[T](id)
@@ -85,10 +85,13 @@ trait Expressions extends Utils {
     sym.sourceContext = srcCtx
     sym
   }
+*/
 
   abstract class Def[+T] // operations (composite)
 
-  case class TP[+T](sym: Sym[T], rhs: Def[T])
+  //abstract class Stm // statement (links syms and definitions)
+  
+  case class TP[+T](sym: Sym[T], rhs: Def[T]) //extends Stm
 
   var globalDefs: List[TP[Any]] = Nil
 
@@ -98,14 +101,9 @@ trait Expressions extends Utils {
   def findDefinition[T](d: Def[T]): Option[TP[T]] =
     globalDefs.find(_.rhs == d).asInstanceOf[Option[TP[T]]]
 
-  def findOrCreateDefinition[T:Manifest](d: Def[T]): TP[T] =
-    findDefinition[T](d).getOrElse {
-      createDefinition(fresh[T](d, None), d)
-    }
-
-  def findOrCreateDefinition[T:Manifest](d: Def[T], ctx: SourceContext): TP[T] =
-    findDefinition[T](d).getOrElse {
-      createDefinition(fresh[T](d, Some(ctx)), d)
+  def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): TP[T] =
+    findDefinition[T](d) map { f => f.sym.withPos(pos); f } getOrElse {
+      createDefinition(fresh[T](pos), d)
     }
 
   def createDefinition[T](s: Sym[T], d: Def[T]): TP[T] = {
@@ -115,7 +113,7 @@ trait Expressions extends Utils {
   }
 
   protected implicit def toAtom[T:Manifest](d: Def[T])(implicit ctx: SourceContext): Exp[T] = {
-    findOrCreateDefinition(d, ctx).sym // TODO: return Const(()) if type is Unit??
+    findOrCreateDefinition(d, List(ctx)).sym // TODO: return Const(()) if type is Unit??
   }
 
   object Def {
