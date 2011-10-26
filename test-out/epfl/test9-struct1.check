@@ -13,7 +13,7 @@ val x10 = x6+x0
 x3 = x10
 val x14 = x2
 val x15 = x3
-val x16 = XXX Struct(List(Complex),Map(re -> Sym(14), im -> Sym(15)))
+val x16 = Map("re"->x14,"im"->x15) //Complex
 val x17 = println(x16)
 x17
 }

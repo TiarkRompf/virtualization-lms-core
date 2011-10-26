@@ -9,7 +9,7 @@ trait While extends Base {
 }
 
 
-trait WhileExp extends While with EffectExp { 
+trait WhileExp extends While with EffectExp {
   case class While(cond: Block[Boolean], body: Block[Unit]) extends Def[Unit]
 
   override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
@@ -29,7 +29,7 @@ trait WhileExp extends While with EffectExp {
     case While(c, b) => effectSyms(c):::effectSyms(b)
     case _ => super.boundSyms(e)
   }
-  
+
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case While(c, b) => freqHot(c):::freqHot(b)
     case _ => super.symsFreq(e)
@@ -88,6 +88,24 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
         case _ => super.emitNode(sym, rhs)
       }
     }
+}
+
+trait OpenCLGenWhile extends OpenCLGenEffect with BaseGenWhile {
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+    rhs match {
+      case While(c,b) =>
+        // calculate condition
+        emitBlock(c)
+        stream.println("bool cond_%s = %s;".format(quote(sym),quote(getBlockResult(c))))
+        // Emit while loop
+        stream.print("while (cond_%s) {".format(quote(sym)))
+        emitBlock(b)
+        stream.println("}")
+      case _ => super.emitNode(sym, rhs)
+    }
+  }
 }
 
 trait CGenWhile extends CGenEffect with BaseGenWhile {

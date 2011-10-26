@@ -1,12 +1,7 @@
 package scala.virtualization.lms
 package common
 
-import internal.{Expressions, Effects, Blocks, Transforming, FatExpressions, FatTransforming}
-import internal.{ScalaCodegen, ScalaNestedCodegen, ScalaFatCodegen, 
-  CudaCodegen, CudaNestedCodegen, CudaFatCodegen, 
-  CCodegen, CNestedCodegen, CFatCodegen,
-  CLikeCodegen}
-
+import internal._
 
 /**
  * This trait automatically lifts any concrete instance to a representation.
@@ -89,17 +84,16 @@ trait ScalaGenFat extends ScalaFatCodegen with ScalaGenBase
 
 trait CLikeGenBase extends CLikeCodegen
 
+trait GPUGenBase extends GPUCodegen
 
 trait CudaGenBase extends CudaCodegen
-
 trait CudaGenEffect extends CudaNestedCodegen with CudaGenBase
-
 trait CudaGenFat extends CudaFatCodegen with CudaGenBase
 
-
+trait OpenCLGenBase extends OpenCLCodegen
+trait OpenCLGenEffect extends OpenCLNestedCodegen with OpenCLGenBase
+trait OpenCLGenFat extends OpenCLFatCodegen with OpenCLGenBase
 
 trait CGenBase extends CCodegen
-
 trait CGenEffect extends CNestedCodegen with CGenBase
-
 trait CGenFat extends CFatCodegen with CGenBase

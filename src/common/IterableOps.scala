@@ -77,5 +77,6 @@ trait CLikeGenIterableOps extends BaseGenIterableOps with CLikeGenBase {
 }
 
 trait CudaGenIterableOps extends CudaGenBase with CLikeGenIterableOps
+trait OpenCLGenIterableOps extends OpenCLGenBase with CLikeGenIterableOps
 trait CGenIterableOps extends CGenBase with CLikeGenIterableOps
 
