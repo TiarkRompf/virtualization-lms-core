@@ -443,6 +443,9 @@ trait Effects extends Expressions with Blocks with Utils {
   // --- reify
 
   def summarizeAll(es: List[Exp[Any]]): Summary = {
+    
+    /* TODO: summary should not include reads/writes to vars allocated inside */
+    
     var u = Pure()
     for (Def(Reflect(_, u2, _)) <- es)
       u = u andThen u2
