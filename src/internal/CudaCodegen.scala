@@ -142,7 +142,8 @@ trait CudaCodegen extends GPUCodegen {
           case "Boolean" => "bool"
           case "Unit" => "void"
           case "scala.collection.immutable.List[Int]" => "CudaArrayList<int>"  //TODO: Use C++ list
-          case _ => throw new Exception("CudaGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
+          //case _ => throw new Exception("CudaGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
+          case _ => throw new GenerationFailedException("CudaGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
       }
     }
   }
