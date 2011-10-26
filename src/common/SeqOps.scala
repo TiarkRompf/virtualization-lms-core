@@ -34,7 +34,7 @@ trait SeqOpsExp extends SeqOps with EffectExp {
   def seq_apply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int])(implicit ctx: SourceContext): Exp[T] = SeqApply(x, n)
   def seq_length[T:Manifest](a: Exp[Seq[T]])(implicit ctx: SourceContext): Exp[Int] = SeqLength(a)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case SeqNew(xs) => seq_new(f(xs))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]

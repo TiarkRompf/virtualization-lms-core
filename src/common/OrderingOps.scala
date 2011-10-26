@@ -65,7 +65,7 @@ trait OrderingOpsExp extends OrderingOps with VariablesExp {
   def ordering_max[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit ctx: SourceContext): Rep[T] = OrderingMax(lhs,rhs)
   def ordering_min[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit ctx: SourceContext): Rep[T] = OrderingMin(lhs,rhs)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = {
     implicit val z1: Ordering[Any] = null // hack!! need to store it in Def instances??
     implicit val z2: Ordering[A] = null // hack!! need to store it in Def instances??
     (e match {

@@ -50,7 +50,7 @@ trait StructExp extends BaseExp with EffectExp {
     case _ => super.symsFreq(e)
   }  
   
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = e match {
     case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
     case _ => super.mirror(e,f)
   }
@@ -175,7 +175,7 @@ trait StructFatExpOptCommon extends StructFatExp with IfThenElseFatExp {
     case _ => super.boundSyms(e)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = e match {
     case p@Phi(c,a,u,b,v) => phi(f(c),f(a),f(u),f(b),f(v))(f(p.parent))
     case _ => super.mirror(e,f)
   }
