@@ -298,7 +298,8 @@ trait Effects extends Expressions with Utils {
     if (mutableAliases.nonEmpty) {
       val zd = z match { case Def(zd) => zd }
       printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
-      printerr("at " + quotePos(z) + ": " + z + "=" + zd)
+      printerr("at " + z + "=" + zd)
+      printsrc("in " + quotePos(z))
     }
   }
   
@@ -362,7 +363,8 @@ trait Effects extends Expressions with Utils {
         // make sure all writes go to allocs
         for (w <- u.mayWrite if !isWritableSym(w)) {
           printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
-          printerr("at " + quotePos(z) + ": " + z + "=" + zd)
+          printerr("at " + z + "=" + zd)
+          printsrc("in " + quotePos(z))
         }
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
         // make sure no mutable object becomes part of mutable result (in case of allocation)
@@ -419,6 +421,7 @@ trait Effects extends Expressions with Utils {
       case Reflect(Reify(_,_,_),_,_) =>
         printerr("error: reflecting a reify node.")
         printerr("at " + s + "=" + x)
+        printsrc("in " + quotePos(s))
       case _ => //ok
     }
     createDefinition(s, x)
