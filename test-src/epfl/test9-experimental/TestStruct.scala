@@ -47,7 +47,7 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   
   override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
     case ArrayElem(Block(Def(Struct(tag, elems)))) => 
-      struct[A]("Array"::tag, elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2))))))
+      struct[A]("Array"::tag, elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.Type.arrayManifest))))
     case ArrayElem(Block(Def(ArrayIndex(b,v)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
     case _ => super.simpleLoop(size, v, body)
   }
@@ -55,7 +55,13 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   override def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
     case Def(Struct(pre::tag,elems:Map[String,Exp[Array[T]]])) =>
       assert(pre == "Array")
-      struct[T](tag, elems.map(p=>(p._1,infix_at(p._2, i))))
+      def unwrap[A](m:Manifest[Array[A]]): Manifest[A] = m.typeArguments match {
+        case a::_ => mtype(a)
+        case _ =>
+          if (m.erasure.isArray) mtype(Manifest.classType(m.erasure.getComponentType))
+          else { printerr("warning: expect type Array[A] but got "+m); mtype(manifest[Any]) }
+      }
+      struct[T](tag, elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.Type)))))
     case _ => super.infix_at(a,i)
   }
   

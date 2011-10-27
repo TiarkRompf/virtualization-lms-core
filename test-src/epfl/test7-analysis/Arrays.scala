@@ -131,15 +131,15 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
       for ((l,r) <- sym zip rhs) {
         r match {
           case ArrayElem(y) =>
-            stream.println("var " + quote(l) + " = new Array[]("+quote(s)+")")
+            stream.println("var " + quote(l) + " = new Array[" + getBlockResult(y).Type + "]("+quote(s)+")")
           case ReduceElem(y) =>
             stream.println("var " + quote(l) + " = 0")
           case ArrayIfElem(c,y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[]")
+            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).Type + "]")
           case ReduceIfElem(c,y) =>
             stream.println("var " + quote(l) + " = 0")
           case FlattenElem(y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[]")
+            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).Type + "]")
         }
       }
       val ii = x // was: x(i)

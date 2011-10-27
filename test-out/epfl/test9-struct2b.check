@@ -202,15 +202,15 @@ error: violated ordering of effects
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-var x10 = new Array[](100)
-var x11 = new Array[](100)
+var x10 = new Array[Double](100)
+var x11 = new Array[Int](100)
 for (x7 <- 0 until 100) {
 val x8 = 0.0-x7
 x10(x7) = x8
 x11(x7) = x7
 }
-var x13: Any = x10
-var x14: Any = x11
+var x13: Array[Double] = x10
+var x14: Array[Int] = x11
 val x16 = x0 > 7
 // TODO: use vars instead of tuples to return multiple values
 val (x26,x38,x39) = if (x16) {

@@ -11,11 +11,11 @@ val x10 = LoopArray(100) { x7 =>
 val x8 = 0.0-x7
 x8
 }
-var x13: Any = x10
+var x13: Array[Double] = x10
 val x11 = LoopArray(100) { x7 => 
 x7
 }
-var x14: Any = x11
+var x14: Array[Int] = x11
 val x4 = LoopArray(100) { x1 => 
 x1
 }

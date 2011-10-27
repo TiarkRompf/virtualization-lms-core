@@ -121,18 +121,18 @@ TTP(List(Sym(21)),ThinDef(Minus(Const(0.0),Sym(19))))
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-var x4 = new Array[](100)
-var x5 = new Array[](100)
+var x4 = new Array[Int](100)
+var x5 = new Array[Double](100)
 for (x1 <- 0 until 100) {
 val x2 = 0.0-x1
 x4(x1) = x1
 x5(x1) = x2
 }
-var x13: Any = x4
-var x14: Any = x5
+var x13: Array[Int] = x4
+var x14: Array[Double] = x5
 val x16 = x0 > 7
 val x26 = if (x16) {
-var x23 = new Array[](100)
+var x23 = new Array[Double](100)
 for (x17 <- 0 until 100) {
 val x19 = x5.apply(x17)
 val x21 = 0.0-x19
