@@ -24,7 +24,10 @@ trait StructExp extends BaseExp {
   }
 
   object Struct {
-    def unapply[T](s: AbstractStruct[T]): Option[(List[String], Map[String, Rep[Any]])] = Some((s.tag, s.elems))
+    def unapply[T](s: Def[T]): Option[(List[String], Map[String, Rep[Any]])] = s match {
+      case s: AbstractStruct[_] => Some((s.tag, s.elems))
+      case _ => None
+    }
   }
   
   case class SimpleStruct[T](tag: List[String], elems: Map[String,Rep[Any]]) extends AbstractStruct[T]
@@ -151,7 +154,7 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
 
 trait StructFatExp extends StructExp with BaseFatExp
 
-trait StructFatExpOptCommon extends StructFatExp with IfThenElseFatExp { 
+trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with IfThenElseFatExp { 
 
   case class Phi[T](cond: Exp[Boolean], a1: Block[Unit], val thenp: Block[T], b1: Block[Unit], val elsep: Block[T])(val parent: Exp[Unit]) extends AbstractIfThenElse[T] // parent points to conditional
   def phi[T:Manifest](c: Exp[Boolean], a1: Block[Unit], a2: Exp[T], b1: Block[Unit], b2: Exp[T])(parent: Exp[Unit]): Exp[T] = if (a2 == b2) a2 else Phi(c,a1,Block(a2),b1,Block(b2))(parent)
@@ -242,9 +245,7 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
 
     //println("grouped: ")
     //println(m.mkString("\n"))
-
-    def fatphi(s:Sym[Unit]) = {
-      val phis = m(s)
+    def fatphi(s:Sym[Unit]) = m.get(s).map { phis =>
       val ss = phis collect { case TP(s, _) => s }
       val us = phis collect { case TP(_, Phi(c,a,u,b,v)) => u } // assert c,a,b match
       val vs = phis collect { case TP(_, Phi(c,a,u,b,v)) => v }
@@ -252,9 +253,11 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
       TTP(ss, SimpleFatIfThenElse(c,us,vs))
     }
     def fatif(s:Sym[Unit],c:Exp[Boolean],a:Block[Unit],b:Block[Unit]) = fatphi(s) match {
-      case TTP(ss, SimpleFatIfThenElse(c2,us,vs)) =>
+      case Some(TTP(ss, SimpleFatIfThenElse(c2,us,vs))) =>
         assert(c == c2)
         TTP(s::ss, SimpleFatIfThenElse(c,a::us,b::vs))
+      case _ =>
+        TTP(s::Nil, SimpleFatIfThenElse(c,a::Nil,b::Nil))
     }
 
     val orphans = m.keys.toList.filterNot(k => e exists (_.sym == k)) // parent if/else might have been removed!
@@ -264,7 +267,7 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
       case TP(sym:Sym[Unit], IfThenElse(c,a:Block[Unit],b:Block[Unit])) => List(fatif(sym,c,a,b))
       case TP(sym:Sym[Unit], Reflect(IfThenElse(c,a:Block[Unit],b:Block[Unit]),_,_)) => List(fatif(sym,c,a,b))
       case t => List(fatten(t))
-    } ++ orphans.map { case s: Sym[Unit] => fatphi(s) }
+    } ++ orphans.map { case s: Sym[Unit] => fatphi(s).get } // be fail-safe here?
     
     r.foreach(println)
     r
