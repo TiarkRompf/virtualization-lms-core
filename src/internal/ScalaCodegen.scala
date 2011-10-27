@@ -5,7 +5,7 @@ import java.io.{File, FileWriter, PrintWriter}
 
 import scala.reflect.SourceContext
 
-trait ScalaCodegen extends GenericCodegen {
+trait ScalaCodegen extends GenericCodegen with Config {
   val IR: Expressions
   import IR._
 
@@ -90,7 +90,10 @@ trait ScalaCodegen extends GenericCodegen {
   }
   
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println("val " + quote(sym) + " = " + rhs)
+    stream.println("val " + quote(sym) + " = " + rhs + (if ((sourceinfo < 2) || sym.pos.isEmpty) "" else {
+      val context = sym.pos(0)
+      "      // " + relativePath(context.fileName) + ":" + context.line
+    }))
   }
 
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
