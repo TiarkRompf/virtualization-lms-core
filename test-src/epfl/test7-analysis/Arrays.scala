@@ -158,8 +158,8 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = ArrayIndex(a, i)
 
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
-//    case Def(SimpleLoop(s, x, ArrayElem(g1,Def(Yield(x2,y))))) if x == x2 => s // TODO: check condition
-    case Def(SimpleLoop(s, x, ArrayElem(g,y))) if g == y => s // TODO: check condition
+//    case Def(SimpleLoop(s, x, ArrayElem(g1,Block(Def(Yield(x2,y)))))) if x == x2 => s // TODO: check condition
+    case Def(SimpleLoop(s, x, ArrayElem(g,Block(y)))) if g == y => s // TODO: check condition
     case _ => ArrayLength(a)
   }
 
