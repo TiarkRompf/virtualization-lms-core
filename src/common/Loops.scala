@@ -17,8 +17,10 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   }
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
-  
-  def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = reflectEffect(SimpleLoop(size, v, body),summarizeEffects(body).star)
+
+  // TODO (VJ) Why does this not work? Simple loop and if then else should accept body as the parameter?
+//  def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Block[A]): Exp[A] = reflectEffect(SimpleLoop(size, v, body),summarizeEffects(body).star)
+  def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = SimpleLoop(size, v, body)
 
 
   override def syms(e: Any): List[Sym[Any]] = e match {
@@ -137,7 +139,7 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
   override def fatten(e: TP[Any]): TTP = e.rhs match {
     case op: AbstractLoop[_] => 
       TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
-    case Reflect(op: AbstractLoop[_], u, es) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on... 
+    case Reflect(op: AbstractLoop[_], u, es) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on...
       printdbg("-- fatten effectful loop " + e)
       TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
     case _ => super.fatten(e)
@@ -169,6 +171,20 @@ trait CudaGenLoops extends CudaGenBase with BaseGenLoops {
 }
 
 trait CudaGenLoopsFat extends CudaGenLoops with CudaGenFat with BaseGenLoopsFat {
+  import IR._
+
+  //TODO
+
+}
+
+trait OpenCLGenLoops extends OpenCLGenBase with BaseGenLoops {
+  import IR._
+
+  //TODO
+
+}
+
+trait OpenCLGenLoopsFat extends OpenCLGenLoops with OpenCLGenFat with BaseGenLoopsFat {
   import IR._
 
   //TODO

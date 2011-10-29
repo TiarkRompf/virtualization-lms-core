@@ -3,17 +3,10 @@ package common
 
 // TODO: generalize and clean up
 
-trait SimplifyTransform extends internal.GenericFatCodegen {
+trait SimplifyTransform extends internal.FatTraversal {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
   
-  case class Forward[A](x: Exp[A]) extends Def[A]
-  
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
-    case Forward(x) => emitValDef(sym, quote(x))
-    case _ => super.emitNode(sym, rhs)
-  }
-
   def transformOne[A](s: Sym[A], x: Def[A], t: SubstTransformer): Exp[A] = {
     if (t.subst.contains(s)) return t(s)
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
@@ -68,7 +61,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
     mirrorFatDef(x, t)
   }
-  def transformIfBody[A](s: Sym[A], x: Exp[A], t: SubstTransformer): Exp[A] = {
+  def transformIfBody[A](s: Sym[A], x: Block[A], t: SubstTransformer): Block[A] = {
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
     //transformOne(s,x,t)
     t(x)
@@ -208,6 +201,18 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     result = t(result)
     currentScope = getFatSchedule(currentScope)(currentScope)
 
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(currentScope)
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(currentScope)
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(currentScope)
+
     val previousScopeWhole = currentScope
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
@@ -215,7 +220,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     currentScope = getFatSchedule(currentScope)(currentScope)
 
     if (currentScope != previousScopeWhole) // check convergence and avoid silent failure
-      throw new RuntimeException("The scope has not converged!!! Increase the number of cleanup steps. Scopes: " + previousScopeWhole + "-->" + currentScope)
+      throw new RuntimeException("The scope has not converged!!! Increase the number of cleanup steps. Scopes: " + previousScopeWhole + "\n----->\n" + currentScope)
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
@@ -233,7 +238,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     currentScope = getFatSchedule(currentScope)(result) // clean things up!
 
     if (currentScope != previousScope) // check convergence and avoid silent failure
-      throw new RuntimeException("The scope has not converged!!! Increase the number of cleanup steps. Scopes: " + previousScope + "-->" + currentScope)
+      throw new RuntimeException("The scope has not converged!!! Increase the number of cleanup steps. Scopes: " + previousScope + "\n----->\n" + currentScope)
 
     (currentScope, result)
   }

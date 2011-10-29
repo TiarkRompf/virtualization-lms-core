@@ -1,32 +1,32 @@
-promoting to effect: Sym(5)=Reflect(SimpleLoop(Const(10),Sym(4),ArrayElem(Sym(3))),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
-depends on  Sym(3)
-promoting to effect: Sym(6)=Reflect(ArrayClone(Sym(5)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
-depends on  Sym(3)
-error: illegal sharing of mutable objects Sym(3)
-at Sym(7)=Reflect(ArrayMutable(Sym(6)),Summary(false,false,false,false,true,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
-promoting to effect: Sym(8)=Reflect(ArrayIndex(Sym(7),Const(5)),Summary(false,false,false,false,false,List(Sym(7), Sym(3)),List(Sym(7), Sym(3)),List(),List()),List(Sym(3), Sym(7)))
-depends on  Sym(7)
-depends on  Sym(3)
-promoting to effect: Sym(9)=Reflect(ArrayIndex(Sym(8),Const(50)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
-depends on  Sym(3)
+promoting to effect: Sym(6)=Reflect(Yield(List(Sym(5)),Sym(4)),Summary(false,false,false,false,false,List(Sym(4)),List(Sym(4)),List(),List()),List())
+depends on  Sym(4)
+promoting to effect: Sym(9)=Reflect(ArrayClone(Sym(8)),Summary(false,false,false,false,false,List(Sym(4)),List(Sym(4)),List(),List()),List(Sym(4)))
+depends on  Sym(4)
+error: illegal sharing of mutable objects Sym(4)
+at Sym(10)=Reflect(ArrayMutable(Sym(9)),Summary(false,false,false,false,true,List(Sym(4)),List(Sym(4)),List(),List()),List(Sym(4)))
+promoting to effect: Sym(11)=Reflect(ArrayIndex(Sym(10),Const(5)),Summary(false,false,false,false,false,List(Sym(10), Sym(4)),List(Sym(10), Sym(4)),List(),List()),List(Sym(4), Sym(10)))
+depends on  Sym(10)
+depends on  Sym(4)
+promoting to effect: Sym(12)=Reflect(ArrayIndex(Sym(11),Const(50)),Summary(false,false,false,false,false,List(Sym(4)),List(Sym(4)),List(),List()),List(Sym(4)))
+depends on  Sym(4)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-val x2 = LoopArray(100) { x1 => 
+val x3 = LoopArray(100) { x1 => 
 0.0
 }
-val x3 = x2.clone // mutable
-val x5 = LoopArray(10) { x4 => 
-x3
+val x4 = x3.clone // mutable
+val x8 = LoopArray(10) { x5 => 
+x4
 }
-val x6 = x5.clone
-val x7 = x6.clone // mutable
-val x8 = x7.apply(5)
-val x9 = x8.apply(50)
-val x10 = println(x9)
-x10
+val x9 = x8.clone
+val x10 = x9.clone // mutable
+val x11 = x10.apply(5)
+val x12 = x11.apply(50)
+val x13 = println(x12)
+x13
 }
 }
 /*****************************************

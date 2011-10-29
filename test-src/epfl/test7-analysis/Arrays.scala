@@ -30,12 +30,12 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
    */
   trait Gen[+T]
 
-  case class ForeachElem[T](y: Exp[Gen[T]]) extends Def[Gen[T]]
+  case class ForeachElem[T](y: Block[Gen[T]]) extends Def[Gen[T]]
 
-  case class ArrayElem[T](g: Exp[Gen[T]], y: Exp[Gen[T]]) extends Def[Array[T]]
-  case class ReduceElem(g: Exp[Gen[Double]], y: Exp[Gen[Double]]) extends Def[Double]
+  case class ArrayElem[T](g: Exp[Gen[T]], y: Block[Gen[T]]) extends Def[Array[T]]
+  case class ReduceElem(g: Exp[Gen[Double]], y: Block[Gen[Double]]) extends Def[Double]
 
-  case class FlattenElem[T](g: Exp[Gen[Array[T]]], y: Exp[Gen[Array[T]]]) extends Def[Array[T]]
+  case class FlattenElem[T](g: Exp[Gen[Array[T]]], y: Block[Gen[Array[T]]]) extends Def[Array[T]]
 
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
@@ -98,6 +98,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     //val g = fresh[Accu[T]]
     val x = fresh[Int]
+
     var g: Exp[Gen[T]] = null
     val y = reifyEffects { 
       g = Yield(List(x),f(x))
@@ -120,7 +121,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]] = {
     val x = fresh[Int]
     var g: Exp[Gen[T]] = null
-    val y: Exp[Gen[T]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?    
+    val y: Block[Gen[T]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
       val (c,z) = f(x)
       g = Yield(List(x),z)
       if (c) g else Skip[T](List(x))
@@ -131,12 +132,12 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   def arrayFlat[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]] = {
     val x = fresh[Int]
     var g: Exp[Gen[T]] = null
-    val y: Exp[Gen[T]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?    
+    val y: Block[Gen[T]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
       val z = f(x)
       val shape2 = infix_length(z)
       val x2 = fresh[Int]
       g = Yield(List(x2, x),infix_at(z,x2))
-      val y2 = g
+      val y2 = reifyEffects {g}
       simpleLoop(shape2, x2, ForeachElem(y2).asInstanceOf[Def[Gen[T]]])
     }
     reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
@@ -146,22 +147,13 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] = {
     val x = fresh[Int]
     var g: Exp[Gen[Double]] = null
-    val y: Exp[Gen[Double]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
+    val y: Block[Gen[Double]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
       val (c,z) = f(x)
       g = Yield(List(x),z)
       if (c) g else Skip[Double](List(x))
     }
     reflectEffect(SimpleLoop(shape, x, ReduceElem(g,y)), summarizeEffects(y).star)
   }
-
-/*
-  def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]] = {
-    val x = fresh[Int]
-    val y = f(x) //FIXME
-    val g = toAtom(Yield(x,y))
-    simpleLoop(shape, x, FlattenElem(g,g))
-  }
-*/
 
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = ArrayIndex(a, i)
 
@@ -261,9 +253,9 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
           case ForeachElem(y) =>
             stream.println("val " + quote(l) + " = () // foreach")
           case ArrayElem(g,y) if g == y =>
-            stream.println("val " + quote(l) + " = new Array[]("+quote(s)+")")
+            stream.println("val " + quote(l) + " = new Array[" + getBlockResult(y).Type + "]("+quote(s)+")")
           case ArrayElem(g,y) =>
-            stream.println("val " + quote(g) + " = new ArrayBuilder[]")
+            stream.println("val " + quote(g) + " = new ArrayBuilder[" + getBlockResult(y).Type  + "]")
           case ReduceElem(g,y) =>
             stream.println("var " + quote(l) + " = 0")
         }
@@ -282,7 +274,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
       }
 
       withGens(gens) {
-        emitFatBlock(syms(rhs))
+        emitFatBlock(syms(rhs).map(Block(_)))
       }
 
       stream.println("}")
@@ -298,13 +290,6 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
     case _ => super.emitFatNode(sym, rhs)
   }
 }
-
-
-
-
-
-
-
 
 trait Arrays extends Base with OverloadHack {
   def zeroes(n: Rep[Int]): Rep[Array[Int]]

@@ -147,3 +147,20 @@ trait CudaGenMathOps extends BaseGenMathOps with CudaGenEffect {
     case _ => super.emitNode(sym, rhs)
   }        
 }
+
+trait OpenCLGenMathOps extends BaseGenMathOps with OpenCLGenEffect {
+  val IR: MathOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+    case MathCeil(x) => emitValDef(sym, "ceil(" + quote(x) + ")")
+    case MathFloor(x) => emitValDef(sym, "floor(" + quote(x) + ")")
+    case MathExp(x) => emitValDef(sym, "exp(" + quote(x) + ")")
+    case MathLog(x) => emitValDef(sym, "log(" + quote(x) + ")")
+    case MathSqrt(x) => emitValDef(sym, "sqrt(" + quote(x) + ")")
+    case MathAbs(x) => emitValDef(sym, "abs(" + quote(x) + ")")
+    case MathMax(x,y) => emitValDef(sym, "max(" + quote(x) + ", " + quote(y) + ")")
+    case MathMin(x,y) => emitValDef(sym, "min(" + quote(x) + ", " + quote(y) + ")")
+    case _ => super.emitNode(sym, rhs)
+  }
+}

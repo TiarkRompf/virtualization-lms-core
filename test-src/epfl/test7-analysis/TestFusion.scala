@@ -68,15 +68,9 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
     case _ => super.unapplySimpleCollectIf(e)
   }
 
-  def wrap[T:Manifest](g: Exp[Gen[T]], c: Exp[Boolean], a: Exp[Gen[T]]) = g match {
-    case Def(Yield(x,_)) => reflectEffect(IfThenElse(c, a, reflectEffect(Skip[T](x), Pure)), Pure)
-  }
-
-  override def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]) = e match { //TODO: should c be list or not?
-    case ArrayElem(g,a) if c.length == 1 => ArrayElem(g,wrap(g,c(0),a))
-    case ReduceElem(g,a) if c.length == 1 => ReduceElem(g,wrap(g,c(0),a))
-    case _ => super.applyAddCondition(e,c)
-  }
+//  def wrap[T:Manifest](g: Exp[Gen[T]], c: Exp[Boolean], a: Exp[Gen[T]]) = g match {
+//    case Def(Yield(x,_)) => reflectEffect(IfThenElse(c, a, reflectEffect(Skip[T](x), Pure)), Pure)
+//  }
   
   
   // TODO: more variants...
@@ -88,10 +82,11 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
     tp.sym
   }
 
-  def plugInHelper[A,T:Manifest,U:Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = context match {
-    case `oldGen` => plug
-    case Def(IfThenElse(c,a,b@Def(Skip(x)))) => toAtom2(IfThenElse(c,plugInHelper(oldGen,a,plug),toAtom2(Skip(x))))
-    case Def(SimpleLoop(sh,x,ForeachElem(y))) => toAtom2(SimpleLoop(sh,x,ForeachElem(plugInHelper(oldGen,y,plug))))
+  def plugInHelper[A,T:Manifest,U:Manifest](oldGen: Exp[Gen[A]], context: Block[Gen[T]], plug: Block[Gen[U]]): Block[Gen[U]] = context match {
+    case Block(`oldGen`) => plug
+    case Block(Def(IfThenElse(c,a,b@Block(Def(Skip(x)))))) => Block(toAtom2(IfThenElse(c,plugInHelper(oldGen,a,plug),Block(toAtom2(Skip(x))))))
+    case Block(Def(SimpleLoop(sh,x,ForeachElem(y)))) => Block(toAtom2(SimpleLoop(sh,x,ForeachElem(plugInHelper(oldGen,y,plug)))))
+    case Block(Def(x)) => error("Missed me => " + x + " should find " + oldGen); throw new RuntimeException("Missed me => " + x + " should find " + oldGen)
   }
 
   override def applyPlugIntoContext(d: Def[Any], r: Def[Any], newGen: Exp[Any]) = (d, r) match {
@@ -128,10 +123,8 @@ trait ScalaGenIfThenElseFatYield extends ScalaGenIfThenElse with ScalaGenFat wit
   /**
    * Helper method for emitting just the ifThen block.
    */
-  private def emitFatIfThenBlock(symList: List[Sym[Any]],
-                                 rhs: FatDef,
-                                 c: Exp[Boolean],
-                                 as: List[Exp[Any]])
+  private def emitFatIfThenBlock(symList: List[Sym[Any]], rhs: FatDef,
+                                 c: Exp[Boolean], as: List[Block[Any]])
                                 (implicit stream: PrintWriter) {
     if (symList.length > 1) stream.println("// TODO: use vars instead of tuples to return multiple values")
     stream.println("val " + quoteList(symList) + " = if (" + quote(c) + ") {")
@@ -142,7 +135,7 @@ trait ScalaGenIfThenElseFatYield extends ScalaGenIfThenElse with ScalaGenFat wit
 
   override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
     // Eliminate the else branch if it only contains the Skip clause
-    case SimpleFatIfThenElse(c, as, List(Def(Skip(_)))) =>
+    case SimpleFatIfThenElse(c, as, List(Block(Def(Skip(_))))) =>
       emitFatIfThenBlock(symList, rhs, c, as)(stream)
       stream.println("")
 

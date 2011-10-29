@@ -1,47 +1,45 @@
-promoting to effect: Sym(5)=Reflect(SimpleLoop(Const(10),Sym(4),ArrayElem(Sym(3))),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
-depends on  Sym(3)
-promoting to effect: Sym(11)=Reflect(IfThenElse(Sym(10),Sym(5),Sym(9)),Summary(false,false,false,false,false,List(Sym(3)),List(),List(),List()),List(Sym(3)))
-depends on  Sym(3)
-promoting to effect: Sym(12)=Reflect(ArrayIndex(Sym(11),Const(5)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
-depends on  Sym(3)
-promoting to effect: Sym(13)=Reflect(ArrayIndex(Sym(12),Const(50)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
-depends on  Sym(3)
-promoting to effect: Sym(15)=Reflect(ArrayIndex(Sym(11),Const(5)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3), Sym(14)))
-depends on  Sym(3)
-promoting to effect: Sym(16)=Reflect(ArrayIndex(Sym(15),Const(50)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3), Sym(14)))
-depends on  Sym(3)
+promoting to effect: Sym(6)=Reflect(Yield(List(Sym(5)),Sym(4)),Summary(false,false,false,false,false,List(Sym(4)),List(Sym(4)),List(),List()),List())
+depends on  Sym(4)
+promoting to effect: Sym(17)=Reflect(ArrayIndex(Sym(16),Const(5)),Summary(false,false,false,false,false,List(Sym(4)),List(Sym(4)),List(),List()),List(Sym(4)))
+depends on  Sym(4)
+promoting to effect: Sym(18)=Reflect(ArrayIndex(Sym(17),Const(50)),Summary(false,false,false,false,false,List(Sym(4)),List(Sym(4)),List(),List()),List(Sym(4)))
+depends on  Sym(4)
+promoting to effect: Sym(20)=Reflect(ArrayIndex(Sym(16),Const(5)),Summary(false,false,false,false,false,List(Sym(4)),List(Sym(4)),List(),List()),List(Sym(4), Sym(19)))
+depends on  Sym(4)
+promoting to effect: Sym(21)=Reflect(ArrayIndex(Sym(20),Const(50)),Summary(false,false,false,false,false,List(Sym(4)),List(Sym(4)),List(),List()),List(Sym(4), Sym(19)))
+depends on  Sym(4)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-val x2 = LoopArray(100) { x1 => 
+val x3 = LoopArray(100) { x1 => 
 0.0
 }
-val x3 = x2.clone // mutable
-val x5 = LoopArray(10) { x4 => 
-x3
-}
-val x10 = x0 > 7
-val x11 = if (x10) {
-x5
-} else {
-val x8 = LoopArray(100) { x7 => 
+val x4 = x3.clone // mutable
+val x12 = LoopArray(100) { x10 => 
 0.0
 }
-val x9 = LoopArray(10) { x6 => 
+val x15 = x0 > 7
+val x16 = if (x15) {
+val x8 = LoopArray(10) { x5 => 
+x4
+}
 x8
+} else {
+val x14 = LoopArray(10) { x9 => 
+x12
 }
-x9
+x14
 }
-val x12 = x11.apply(5)
-val x13 = x12.apply(50)
-val x14 = x3.update(50, 50.0)
-val x15 = x11.apply(5)
-val x16 = x15.apply(50)
-val x17 = x16-x13
-val x18 = println(x17)
-x18
+val x17 = x16.apply(5)
+val x18 = x17.apply(50)
+val x19 = x4.update(50, 50.0)
+val x20 = x16.apply(5)
+val x21 = x20.apply(50)
+val x22 = x21-x18
+val x23 = println(x22)
+x23
 }
 }
 /*****************************************

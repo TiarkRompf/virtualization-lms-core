@@ -1,30 +1,30 @@
-promoting to effect: Sym(7)=Reflect(ArrayLength(Sym(6)),Summary(false,false,false,false,false,List(Sym(6)),List(Sym(6)),List(),List()),List(Sym(6)))
-depends on  Sym(6)
-error: illegal sharing of mutable objects Sym(6)
-at Sym(13)=Reflect(Assign(Variable(Sym(3)),Sym(6)),Summary(false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(Sym(3)),List(Sym(3))),List(Sym(10), Sym(12)))
+promoting to effect: Sym(9)=Reflect(ArrayLength(Sym(8)),Summary(false,false,false,false,false,List(Sym(8)),List(Sym(8)),List(),List()),List(Sym(8)))
+depends on  Sym(8)
+error: illegal sharing of mutable objects Sym(8)
+at Sym(15)=Reflect(Assign(Variable(Sym(4)),Sym(8)),Summary(false,false,false,false,false,List(Sym(4), Sym(8)),List(Sym(4), Sym(8)),List(Sym(4)),List(Sym(4))),List(Sym(12), Sym(14)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-val x2 = LoopArray(100) { x1 => 
+val x3 = LoopArray(100) { x1 => 
 0.0
 }
-var x3: Array[Double] = x2
-val x5 = LoopArray(100) { x4 => 
+var x4: Array[Double] = x3
+val x7 = LoopArray(100) { x5 => 
 0.0
 }
-val x6 = x5.clone // mutable
-val x7 = x6.length
-var x9 : Int = 0
-val x15 = while (x9 < x7) {
-val x10 = x3
-val x12 = x6.update(x9, 8.0)
-x3 = x6
+val x8 = x7.clone // mutable
+val x9 = x8.length
+var x11 : Int = 0
+val x17 = while (x11 < x9) {
+val x12 = x4
+val x14 = x8.update(x11, 8.0)
+x4 = x8
 ()
-x9 = x9 + 1
+x11 = x11 + 1
 }
-x15
+x17
 }
 }
 /*****************************************

@@ -1,31 +1,31 @@
-promoting to effect: Sym(7)=Reflect(ArrayLength(Sym(6)),Summary(false,false,false,false,false,List(Sym(6)),List(Sym(6)),List(),List()),List(Sym(6)))
-depends on  Sym(6)
-promoting to effect: Sym(13)=Reflect(ArrayClone(Sym(6)),Summary(false,false,false,false,false,List(Sym(6)),List(Sym(6)),List(),List()),List(Sym(12)))
-depends on  Sym(6)
+promoting to effect: Sym(9)=Reflect(ArrayLength(Sym(8)),Summary(false,false,false,false,false,List(Sym(8)),List(Sym(8)),List(),List()),List(Sym(8)))
+depends on  Sym(8)
+promoting to effect: Sym(15)=Reflect(ArrayClone(Sym(8)),Summary(false,false,false,false,false,List(Sym(8)),List(Sym(8)),List(),List()),List(Sym(14)))
+depends on  Sym(8)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-val x2 = LoopArray(100) { x1 => 
+val x3 = LoopArray(100) { x1 => 
 0.0
 }
-var x3: Array[Double] = x2
-val x5 = LoopArray(100) { x4 => 
+var x4: Array[Double] = x3
+val x7 = LoopArray(100) { x5 => 
 0.0
 }
-val x6 = x5.clone // mutable
-val x7 = x6.length
-var x9 : Int = 0
-val x16 = while (x9 < x7) {
-val x10 = x3
-val x12 = x6.update(x9, 8.0)
-val x13 = x6.clone
-x3 = x13
+val x8 = x7.clone // mutable
+val x9 = x8.length
+var x11 : Int = 0
+val x18 = while (x11 < x9) {
+val x12 = x4
+val x14 = x8.update(x11, 8.0)
+val x15 = x8.clone
+x4 = x15
 ()
-x9 = x9 + 1
+x11 = x11 + 1
 }
-x16
+x18
 }
 }
 /*****************************************

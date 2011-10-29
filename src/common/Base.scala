@@ -1,12 +1,7 @@
 package scala.virtualization.lms
 package common
 
-import internal.{Expressions, Effects, Transforming, FatExpressions, FatTransforming}
-import internal.{ScalaCodegen, ScalaNestedCodegen, ScalaFatCodegen, 
-  CudaCodegen, CudaNestedCodegen, CudaFatCodegen, 
-  CCodegen, CNestedCodegen, CFatCodegen,
-  CLikeCodegen}
-
+import internal._
 
 /**
  * This trait automatically lifts any concrete instance to a representation.
@@ -43,7 +38,15 @@ trait BaseExp extends Base with Expressions with Transforming {
   protected def unit[T:Manifest](x: T) = Const(x)
 }
 
-trait EffectExp extends BaseExp with Effects {
+trait BlockExp extends BaseExp with Blocks {
+  
+  implicit object CanTransformBlock extends CanTransform[Block] {
+    def transform[A](x: Block[A], t: Transformer): Block[A] = Block(t(x.res))
+  }
+  
+}
+
+trait EffectExp extends BlockExp with Effects {
 
   def mapOver(t: Transformer, u: Summary) = { // TODO: move to effects class?
     u.copy(mayRead = t.onlySyms(u.mayRead), mstRead = t.onlySyms(u.mstRead),
@@ -81,17 +84,16 @@ trait ScalaGenFat extends ScalaFatCodegen with ScalaGenBase
 
 trait CLikeGenBase extends CLikeCodegen
 
+trait GPUGenBase extends GPUCodegen
 
 trait CudaGenBase extends CudaCodegen
-
 trait CudaGenEffect extends CudaNestedCodegen with CudaGenBase
-
 trait CudaGenFat extends CudaFatCodegen with CudaGenBase
 
-
+trait OpenCLGenBase extends OpenCLCodegen
+trait OpenCLGenEffect extends OpenCLNestedCodegen with OpenCLGenBase
+trait OpenCLGenFat extends OpenCLFatCodegen with OpenCLGenBase
 
 trait CGenBase extends CCodegen
-
 trait CGenEffect extends CNestedCodegen with CGenBase
-
 trait CGenFat extends CFatCodegen with CGenBase

@@ -144,13 +144,13 @@ trait ScalaGenHashLoops extends ScalaGenArrayLoops {
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case SimpleLoop(s,x,HashArrayElem(k,y)) =>  
       stream.println("val " + quote(sym) + " = LoopHashArray("+quote(s)+") { " + quote(x) + " => ")
-      emitBlock(Combine2(k,y))
-      stream.println(quote(getBlockResult(k))+"->"+quote(getBlockResult(y)))
+//      emitBlock(Block(Combine2(k,y)))
+//      stream.println(quote(getBlockResult(k))+"->"+quote(getBlockResult(y)))
       stream.println("}")
     case SimpleLoop(s,x,HashReduceElem(k,y)) =>  
       stream.println("val " + quote(sym) + " = LoopHashReduce("+quote(s)+") { " + quote(x) + " => ")
-      emitBlock(Combine2(k,y))
-      stream.println(quote(getBlockResult(k))+"->"+quote(getBlockResult(y)))
+//      emitBlock(Block(Combine2(k,y)))
+//      stream.println(quote(getBlockResult(k))+"->"+quote(getBlockResult(y)))
       stream.println("}")
     // TODO: conditional variants ...
     case HashKeyIndex(a,i) =>  
@@ -190,7 +190,7 @@ trait ScalaGenHashLoopsFat extends ScalaGenHashLoops with ScalaGenArrayLoopsFat 
 //      for (jj <- x.drop(1)) {
 //        stream.println(quote(jj)+" = "+quote(ii))
 //      }
-      emitFatBlock(syms(rhs))
+//      emitFatBlock(syms(rhs))
       for ((l,r) <- sym zip rhs) {
         r match {
           case ArrayElem(g,y) =>

@@ -31,7 +31,7 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   case class RangeStep(r: Exp[Range]) extends Def[Int]
   case class RangeEnd(r: Exp[Range]) extends Def[Int]
   //case class RangeForeach(r: Exp[Range], i: Exp[Int], body: Exp[Unit]) extends Def[Unit]
-  case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Sym[Int], body: Exp[Unit]) extends Def[Unit]
+  case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Sym[Int], body: Block[Unit]) extends Def[Unit]
 
   def range_until(start: Exp[Int], end: Exp[Int]) : Exp[Range] = Until(start, end)
   def range_start(r: Exp[Range]) : Exp[Int] = RangeStart(r)
@@ -135,6 +135,22 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
         tabWidth -= 1
         stream.println(addTab() + "}")
     }
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait OpenCLGenRangeOps extends OpenCLGenEffect with BaseGenRangeOps {
+  val IR: RangeOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+    case Until(start, end) =>
+      throw new GenerationFailedException("OpenCLGenRangeOps: Range vector is not supported")
+    case RangeForeach(start, end, i, body) =>
+      stream.println("for(int %s=%s; %s < %s; %s++) {".format(quote(i),quote(start),quote(i),quote(end),quote(i)))
+      emitBlock(body)
+      stream.println("}")
+
     case _ => super.emitNode(sym, rhs)
   }
 }

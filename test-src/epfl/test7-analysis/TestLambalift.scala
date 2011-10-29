@@ -73,7 +73,7 @@ class TestLambdalift extends FileDiffSuite {
       
       trait ScalaGenBla extends ScalaGenBase {
         import IR._
-        def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Exp[B])(implicit stream: PrintWriter): Unit
+        def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Block[B])(implicit stream: PrintWriter): Unit
       }
       
       new NestLambdaProg with ArithExp with FunctionsExp with PrintExp { self =>
@@ -94,7 +94,7 @@ class TestLambdalift extends FileDiffSuite {
             case e@Lambda(fun, x, y) =>
             
               focusBlock(y) {
-                var free = freeInScope(x,y)
+                var free = freeInScope(x,getBlockResultFull(y))
             
                 val sw = new StringWriter
                 codegenInner.emitFocused("Anonfun_"+quote(sym), free, x, y)(new PrintWriter(sw))
@@ -111,7 +111,7 @@ class TestLambdalift extends FileDiffSuite {
           
           override def initialDefs = codegen.availableDefs
           
-          def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Exp[B])(implicit stream: PrintWriter) = {
+          def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Block[B])(implicit stream: PrintWriter) = {
             // TODO: this is not valid Scala code. the types are missing.
             stream.println("class "+name+"("+params.map(quote).mkString(",")+") {")
             stream.println("def apply("+quote(x)+") = {")
@@ -121,7 +121,7 @@ class TestLambdalift extends FileDiffSuite {
             stream.println("}")
           }
         }
-        val codegenInner: ScalaGenBla { val IR: self.type } = codegen2
+        val codegenInner: ScalaGenBla { val IR: self.type; type Block[+T] = self.Block[T] } = codegen2
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
         classes.foreach(println)
       }

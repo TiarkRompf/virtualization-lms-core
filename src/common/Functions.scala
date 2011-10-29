@@ -22,8 +22,8 @@ trait Functions extends Base {
 
 trait FunctionsExp extends Functions with EffectExp {
 
-  case class Lambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B], x: Sym[A], y: Exp[B]) extends Def[A => B]
-  case class Lambda2[A1:Manifest,A2:Manifest,B:Manifest](f: (Exp[A1],Exp[A2]) => Exp[B], x1: Sym[A1], x2: Sym[A2], y: Exp[B]) extends Def[(A1,A2) => B]
+  case class Lambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B], x: Sym[A], y: Block[B]) extends Def[A => B]
+  case class Lambda2[A1:Manifest,A2:Manifest,B:Manifest](f: (Exp[A1],Exp[A2]) => Exp[B], x1: Sym[A1], x2: Sym[A2], y: Block[B]) extends Def[(A1,A2) => B]
 
   case class Apply[A:Manifest,B:Manifest](f: Exp[A => B], arg: Exp[A]) extends Def[B]
 
@@ -90,6 +90,7 @@ trait FunctionsExp extends Functions with EffectExp {
     case Lambda2(f, x1, x2, y) => freqHot(y)
     case _ => super.symsFreq(e)
   }
+
 }
 
 trait BaseGenFunctions extends GenericNestedCodegen {
@@ -151,6 +152,24 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
         stream.println(addTab() + "%s %s = %s;".format(remap(x2.Type), quote(x2), quote(sym)+"_2"))
         emitBlock(y)
         stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
+      case Apply(fun, arg) =>
+        emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
+
+      case _ => super.emitNode(sym, rhs)
+    }
+  }
+}
+
+trait OpenCLGenFunctions extends OpenCLGenEffect with BaseGenFunctions {
+  val IR: FunctionsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+    rhs match {
+      case e@Lambda(fun, x, y) =>
+        throw new GenerationFailedException("OpenCLGenFunctions: Lambda is not supported yet")
+      case e@Lambda2(fun, x1, x2, y) =>
+        throw new GenerationFailedException("OpenCLGenFunctions: Lambda2 is not supported yet")
       case Apply(fun, arg) =>
         emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 

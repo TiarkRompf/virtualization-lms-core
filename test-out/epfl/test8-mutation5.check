@@ -1,30 +1,30 @@
-error: illegal sharing of mutable objects Sym(8)
-at Sym(10)=Reflect(ArrayUpdate(Sym(5),Const(5),Sym(8)),Summary(false,false,false,false,false,List(Sym(5), Sym(8)),List(Sym(5), Sym(8)),List(Sym(5)),List(Sym(5))),List(Sym(5), Sym(8), Sym(9)))
-promoting to effect: Sym(12)=Reflect(ArrayIndex(Sym(5),Const(5)),Summary(false,false,false,false,false,List(Sym(5)),List(Sym(5)),List(),List()),List(Sym(5), Sym(9), Sym(10)))
-depends on  Sym(5)
+error: illegal sharing of mutable objects Sym(11)
+at Sym(13)=Reflect(ArrayUpdate(Sym(7),Const(5),Sym(11)),Summary(false,false,false,false,false,List(Sym(7), Sym(11)),List(Sym(7), Sym(11)),List(Sym(7)),List(Sym(7))),List(Sym(7), Sym(11), Sym(12)))
+promoting to effect: Sym(15)=Reflect(ArrayIndex(Sym(7),Const(5)),Summary(false,false,false,false,false,List(Sym(7)),List(Sym(7)),List(),List()),List(Sym(7), Sym(12), Sym(13)))
+depends on  Sym(7)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-val x2 = LoopArray(100) { x1 => 
+val x3 = LoopArray(100) { x1 => 
 0.0
 }
-val x4 = LoopArray(10) { x3 => 
-x2
+val x6 = LoopArray(10) { x4 => 
+x3
 }
-val x5 = x4.clone // mutable
-val x7 = LoopArray(20) { x6 => 
+val x7 = x6.clone // mutable
+val x10 = LoopArray(20) { x8 => 
 0.0
 }
-val x8 = x7.clone // mutable
-val x9 = x5.update(4, x2)
-val x10 = x5.update(5, x8)
-val x11 = x8.update(50, 50.0)
-val x12 = x5.apply(5)
-val x13 = x12.apply(50)
-val x14 = println(x13)
-x14
+val x11 = x10.clone // mutable
+val x12 = x7.update(4, x3)
+val x13 = x7.update(5, x11)
+val x14 = x11.update(50, 50.0)
+val x15 = x7.apply(5)
+val x16 = x15.apply(50)
+val x17 = println(x16)
+x17
 }
 }
 /*****************************************

@@ -1,29 +1,29 @@
-promoting to effect: Sym(11)=Reflect(ArrayIndex(Sym(9),Const(50)),Summary(false,false,false,false,false,List(Sym(9)),List(Sym(9)),List(),List()),List(Sym(9), Sym(10)))
-depends on  Sym(9)
+promoting to effect: Sym(13)=Reflect(ArrayIndex(Sym(11),Const(50)),Summary(false,false,false,false,false,List(Sym(11)),List(Sym(11)),List(),List()),List(Sym(11), Sym(12)))
+depends on  Sym(11)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-val x2 = LoopArray(100) { x1 => 
+val x3 = LoopArray(100) { x1 => 
 0.0
 }
-val x3 = x2.clone // mutable
-val x5 = LoopArray(100) { x4 => 
+val x4 = x3.clone // mutable
+val x7 = LoopArray(100) { x5 => 
 0.0
 }
-val x6 = x5.clone // mutable
-val x7 = x0 > 7
-val x8 = if (x7) {
-x3
+val x8 = x7.clone // mutable
+val x9 = x0 > 7
+val x10 = if (x9) {
+x4
 } else {
-x6
+x8
 }
-val x9 = x8.clone // mutable
-val x10 = x9.update(40, 40.0)
-val x11 = x9.apply(50)
-val x12 = println(x11)
-x12
+val x11 = x10.clone // mutable
+val x12 = x11.update(40, 40.0)
+val x13 = x11.apply(50)
+val x14 = println(x13)
+x14
 }
 }
 /*****************************************

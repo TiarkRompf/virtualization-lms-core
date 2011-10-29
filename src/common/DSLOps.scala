@@ -12,7 +12,7 @@ import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailed
 trait DSLOpsExp extends EffectExp {
   // representation must be reified! this places the burden on the caller, but allows the caller to avoid the
   // use of function values (which can be uglier).
-  class DSLOp[A](val representation: Exp[A]) extends Def[A]
+  class DSLOp[A](val representation: Block[A]) extends Def[A]
 }
 
 trait BaseGenDSLOps extends GenericNestedCodegen {
@@ -47,6 +47,7 @@ trait CLikeGenDSLOps extends BaseGenDSLOps with CLikeGenBase {
   }
 }
 
-trait CudaGenDSLOps extends CudaGenEffect with CLikeGenDSLOps 
+trait CudaGenDSLOps extends CudaGenEffect with CLikeGenDSLOps
+trait OpenCLGenDSLOps extends OpenCLGenEffect with CLikeGenDSLOps
 trait CGenDSLOps extends CGenEffect with CLikeGenDSLOps
 

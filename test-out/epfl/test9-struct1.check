@@ -3,8 +3,8 @@
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-var x2: Any = x0
-var x3: Any = 0.0
+var x2: Int = x0
+var x3: Double = 0.0
 val x5 = x2
 val x6 = x3
 val x9 = x5+0.0
@@ -13,7 +13,7 @@ val x10 = x6+x0
 x3 = x10
 val x14 = x2
 val x15 = x3
-val x16 = XXX Struct(List(Complex),Map(re -> Sym(14), im -> Sym(15)))
+val x16 = Map("re"->x14,"im"->x15) //Complex
 val x17 = println(x16)
 x17
 }
