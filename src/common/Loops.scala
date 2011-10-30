@@ -16,21 +16,17 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val body: Def[A]
   }
 
-  /**
-   * Super trait for all statements that emit results from the loop. For example: Yield and Skip.
-   */
-  trait Gen[+T]
 
   /**
    * Yield statement in loops. Indicates that element is being emitted to
-   *  @param  g   Represents list of loop vars that in which this yield is nested.
+   *  @param  g   Represents list of loop vars in which this yield is nested.
    *  @param  a   Expression for the
    */
   case class Yield[T](g: List[Exp[Int]], a: Exp[T]) extends Def[Gen[T]]
 
   /**
    * Skip statement is used in loops to indicate that no element is being emitted. For example in filter clauses.
-   *  @param  g   Represents list of loop vars that in which this yield is nested.
+   *  @param  g   Represents list of loop vars in which this yield is nested.
    */
   case class Skip[T](g: List[Exp[Int]]) extends Def[Gen[T]]
 

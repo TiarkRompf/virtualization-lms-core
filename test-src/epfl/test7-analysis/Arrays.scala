@@ -224,7 +224,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
 
       val gens = for ((l,r) <- sym zip rhs if !r.isInstanceOf[ForeachElem[_]]) yield r match {
         //case ForeachElem(y) =>
-        case ArrayElem(g,y) if g == y =>
+        case ArrayElem(g,Block(y)) if g == y =>
           (g, (s: String) => stream.println(quote(l) + "("+quote(ii)+") = " + s))
         case ArrayElem(g,y) =>
           (g, (s: String) => stream.println(quote(g) + " += " + s))
@@ -240,7 +240,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
 
       for ((l,r) <- sym zip rhs) r match {
         case ForeachElem(y) => 
-        case ArrayElem(g,y) if g == y => 
+        case ArrayElem(g,Block(y)) if g == y =>
         case ArrayElem(g,y) =>
           stream.println("val " + quote(l) + " = " + quote(g) + ".result")
         case ReduceElem(g,y) =>

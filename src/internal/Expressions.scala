@@ -16,6 +16,12 @@ trait Expressions extends Utils {
     def Type : Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
   }
 
+  // TODO (VJ) check with Tiark if there is a better place for this class
+  /**
+   * Super trait for all statements that emit results from the loop. For example: Yield and Skip.
+   */
+  abstract class Gen[+T: Manifest]
+
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
