@@ -23,14 +23,14 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 
   /**
    * Yield statement in loops. Indicates that element is being emitted to
-   *  @param  g   Represents the collection to which this yield statement emits.
-   *  @param  a   Element that is being emitted.
+   *  @param  g   Represents list of loop vars that in which this yield is nested.
+   *  @param  a   Expression for the
    */
   case class Yield[T](g: List[Exp[Int]], a: Exp[T]) extends Def[Gen[T]]
 
   /**
    * Skip statement is used in loops to indicate that no element is being emitted. For example in filter clauses.
-   *  @param  g   Represents the loop to which this skip statement belongs.
+   *  @param  g   Represents list of loop vars that in which this yield is nested.
    */
   case class Skip[T](g: List[Exp[Int]]) extends Def[Gen[T]]
 
@@ -148,6 +148,24 @@ trait BaseGenLoops extends GenericNestedCodegen {
   val IR: LoopsExp
   import IR._
 
+  // TODO: multiple gens
+  var genStack: Map[Exp[Gen[_]], String => Unit] = Map.empty
+
+  def withGens[A](p: List[(Exp[Gen[_]], String => Unit)])(body: => A): A = {
+    val save = genStack
+    genStack = genStack ++ p
+    //println("--- withGens " + p + " == " + genStack)
+    val res = body
+    genStack = save
+    res
+  }
+
+  def withGen[T, A](g: Exp[Gen[T]], f: String => Unit)(body: => A): A = withGens(List((g, f)))(body)
+
+  def topGen[T](g: Exp[Gen[T]]): String => Unit = {
+    genStack.getOrElse(g, (s => "UNKNOWN: " + s))
+  }
+
 }
 
 trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
@@ -166,18 +184,24 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
 }
 
 
-
 trait ScalaGenLoops extends ScalaGenBase with BaseGenLoops {
   import IR._
 
-  //TODO
-
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+    case Yield(g, a) =>
+      if (genStack.nonEmpty) {
+        topGen(sym.asInstanceOf[Sym[Gen[Any]]])(quote(a))
+      } else emitValDef(sym, "yield " + quote(a) + " // context is messed up!")
+    case Skip(g) =>
+      emitValDef(sym, "() // skip")
+    case _ => super.emitNode(sym, rhs)
+  }
 }
 
 trait ScalaGenLoopsFat extends ScalaGenLoops with ScalaGenFat with BaseGenLoopsFat {
   import IR._
 
-  //TODO
+
 
 }
 

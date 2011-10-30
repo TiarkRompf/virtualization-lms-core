@@ -78,7 +78,6 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   // TODO: use simpleLoop instead of SimpleLoop
 
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
-    //val g = fresh[Accu[T]]
     val x = fresh[Int]
 
     var g: Exp[Gen[T]] = null
@@ -181,22 +180,6 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
   val IR: ArrayLoopsExp
   import IR._
   
-  // TODO: multiple gens
-  var genStack: Map[Exp[Gen[_]], String=>Unit] = Map.empty
-  def withGens[A](p: List[(Exp[Gen[_]], String=>Unit)])(body: =>A):A = {
-    val save = genStack
-    genStack = genStack ++ p
-    //println("--- withGens " + p + " == " + genStack)
-    val res = body
-    genStack = save
-    res
-  }
-  
-  def withGen[T,A](g: Exp[Gen[T]], f: String=>Unit)(body: =>A):A = withGens(List((g,f)))(body)
-  def topGen[T](g: Exp[Gen[T]]): String => Unit = {
-    genStack.getOrElse(g, (s => "UNKNOWN: "+s))
-  }
-  
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case SimpleLoop(s,x,ArrayElem(g,y)) =>  
       stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") { " + quote(x) + " => ")
@@ -214,12 +197,6 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
       emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
     case ArrayLength(a) =>  
       emitValDef(sym, quote(a) + ".length")
-    case Yield(g,a) =>
-      if (genStack.nonEmpty) {
-        topGen(sym.asInstanceOf[Sym[Gen[Any]]])(quote(a))
-      } else emitValDef(sym, "yield " + quote(a) + " // context is messed up!")
-    case Skip(g) => 
-      emitValDef(sym, "() // skip")
     case _ => super.emitNode(sym, rhs)
   }
 }
