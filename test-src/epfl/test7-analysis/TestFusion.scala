@@ -59,18 +59,15 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
   }
 
   override def unapplySimpleCollect(e: Def[Any]) = e match {
+      // TODO (VJ) is this good ? Do not think so!!
     case ArrayElem(Def(Yield(_,a)), _) => Some(a)
     case _ => super.unapplySimpleCollect(e)
   }
 
   override def unapplySimpleCollectIf(e: Def[Any]) = e match {
-    case ArrayElem(g,Def(IfThenElse(c,Def(SimpleCollectIf(a,cs)),Def(Skip(_))))) => Some((a,c::cs))
+    case ArrayElem(g,Block(Def(IfThenElse(c,Def(SimpleCollectIf(a,cs)),Def(Skip(_)))))) => Some((a,c::cs))
     case _ => super.unapplySimpleCollectIf(e)
   }
-
-//  def wrap[T:Manifest](g: Exp[Gen[T]], c: Exp[Boolean], a: Exp[Gen[T]]) = g match {
-//    case Def(Yield(x,_)) => reflectEffect(IfThenElse(c, a, reflectEffect(Skip[T](x), Pure)), Pure)
-//  }
   
   
   // TODO: more variants...

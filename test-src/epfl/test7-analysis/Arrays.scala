@@ -25,11 +25,6 @@ trait ArrayLoops extends Loops with OverloadHack {
 
 trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
-  /**
-   * Super trait for all statements that emit results from the loop. For example: Yield and Skip.
-   */
-  trait Gen[+T]
-
   case class ForeachElem[T](y: Block[Gen[T]]) extends Def[Gen[T]]
 
   case class ArrayElem[T](g: Exp[Gen[T]], y: Block[Gen[T]]) extends Def[Array[T]]
@@ -39,19 +34,6 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
-
-  /**
-   * Yield statement in loops. Indicates that element is being emitted to
-   *  @param  g   Represents the collection to which this yield statement emits.
-   *  @param  a   Element that is being emitted.
-   */
-  case class Yield[T](g: List[Exp[Int]], a: Exp[T]) extends Def[Gen[T]]
-
-  /**
-   * Skip statement is used in loops to indicate that no element is being emitted. For example in filter clauses.
-   *  @param  g   Represents the loop to which this skip statement belongs.
-   */
-  case class Skip[T](g: List[Exp[Int]]) extends Def[Gen[T]]
 
 /*
   example for flatMap fusion
@@ -252,7 +234,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
         r match {
           case ForeachElem(y) =>
             stream.println("val " + quote(l) + " = () // foreach")
-          case ArrayElem(g,y) if g == y =>
+          case ArrayElem(g,y) if g == getBlockResult(y) =>
             stream.println("val " + quote(l) + " = new Array[" + getBlockResult(y).Type + "]("+quote(s)+")")
           case ArrayElem(g,y) =>
             stream.println("val " + quote(g) + " = new ArrayBuilder[" + getBlockResult(y).Type  + "]")

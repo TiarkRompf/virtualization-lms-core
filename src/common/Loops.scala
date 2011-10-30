@@ -15,7 +15,25 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val v: Sym[Int]
     val body: Def[A]
   }
-  
+
+  /**
+   * Super trait for all statements that emit results from the loop. For example: Yield and Skip.
+   */
+  trait Gen[+T]
+
+  /**
+   * Yield statement in loops. Indicates that element is being emitted to
+   *  @param  g   Represents the collection to which this yield statement emits.
+   *  @param  a   Element that is being emitted.
+   */
+  case class Yield[T](g: List[Exp[Int]], a: Exp[T]) extends Def[Gen[T]]
+
+  /**
+   * Skip statement is used in loops to indicate that no element is being emitted. For example in filter clauses.
+   *  @param  g   Represents the loop to which this skip statement belongs.
+   */
+  case class Skip[T](g: List[Exp[Int]]) extends Def[Gen[T]]
+
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
 
   // TODO (VJ) Why does this not work? Simple loop and if then else should accept body as the parameter?
