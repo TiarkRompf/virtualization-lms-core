@@ -71,7 +71,7 @@ trait CLikeGenObjectOps extends CLikeGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ObjectToString(lhs) => emitValDef(sym, "(" + quote(lhs) + ").toString()")
-    case ObjectUnsafeImmutable(x) => emitValDef(sym, quote(x) + "// unsafe immutable")
+    case ObjectUnsafeImmutable(x) => emitValDef(sym, quote(x) + "; // unsafe immutable")
     case _ => super.emitNode(sym, rhs)
   }
 }
