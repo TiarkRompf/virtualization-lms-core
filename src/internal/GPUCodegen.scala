@@ -113,6 +113,8 @@ trait GPUCodegen extends CLikeCodegen {
   var devFuncIdx = 0
   var devStream: PrintWriter = null
   var headerStream: PrintWriter = null
+  
+  var isHostAlloc: Boolean = false
 
 
   def emitDevFunc(func:Exp[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
@@ -224,6 +226,7 @@ trait GPUCodegen extends CLikeCodegen {
     devFuncString = new StringBuilder
 
     forceParallel = false
+    isHostAlloc = false
   }
 
   // Map a scala primitive type to JNI type descriptor
@@ -391,6 +394,7 @@ trait GPUCodegen extends CLikeCodegen {
        and copying  it to CPU memory with allocation of new object in CPU */
   //TODO: Separate output and temporary allocations
   def emitAllocFunc(sym:Sym[Any], allocFunc:Exp[Any]) {
+    isHostAlloc = true
     helperFuncIdx += 1
     val tempString = new StringWriter
     val tempString2 = new StringWriter
@@ -416,6 +420,7 @@ trait GPUCodegen extends CLikeCodegen {
     // Write to helper function string
     helperFuncString.append(allocOutputStr)
     helperFuncString.append(copyOutputStr)
+    isHostAlloc = false
   }
 
   def emitCloneFunc(sym:Sym[Any], src:Sym[Any]) {
