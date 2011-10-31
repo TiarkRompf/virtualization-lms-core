@@ -11,6 +11,16 @@ trait ScalaCodegen extends GenericCodegen {
 
   override def toString = "scala"
 
+  /**
+   * Returns the appropriate type of the block that could return a Gen[_].
+   */
+  def stripGenToUnit[A](m: Manifest[A]): String = {
+    if (m.erasure == classOf[Gen[Any]])
+      "Unit"
+    else
+      remap(m)
+  }
+
   override def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
       e.printStackTrace()
       kstream.close()
