@@ -9,17 +9,18 @@ import scala.collection.mutable
 trait LivenessOpt extends NestedTraversal {
   import IR._  
   
-  def calculateLivenessTransform[A](used: mutable.HashSet[Exp[Any]], t: TP[A]): List[TP[_]] = t match {
+  def calculateLivenessTransform[A](used: mutable.HashSet[Sym[Any]], t: TP[A]): List[TP[_]] = t match {
     case TP(sym, Reify(x, u, es)) if used(sym) => 
-      used += x
+      used ++= syms(x) // ignore effect dependencies!
       used ++= u.mayWrite // writes to external data
-      List(t) // ignore effect dependencies!
+      List(t)
     case TP(sym, rhs@Reflect(_, u, es)) if used(sym) || 
-      mayWrite(u, used.toList.collect { case s:Sym[_] => s}) || maySimple(u) => 
+      mayWrite(u, used.toList) || maySimple(u) => 
       used ++= syms(rhs)
       List(t)
     case TP(sym, rhs) if used(sym) => 
       used ++= syms(rhs)
+      //printlog("** add used at " + t + ": " + syms(rhs))
       List(t)
     case e => 
       printlog("dropping " + e)
@@ -30,9 +31,10 @@ trait LivenessOpt extends NestedTraversal {
   override def focusBlock[A](result: Block[Any])(body: => A): A = {
     super.focusBlock(result) {
 
-      printdbg("gathering liveness info for block " + result)
-      
-      val used = mutable.HashSet[Exp[Any]](getBlockResultFull(result))
+      printlog("gathering liveness info for block " + result)
+
+      val used = new mutable.HashSet[Sym[Any]]
+      used ++= syms(result)
 
       val newInnerScope = innerScope.reverse.flatMap(calculateLivenessTransform(used,_).reverse)
       
@@ -64,7 +66,7 @@ trait DefUseAnalysis extends NestedTraversal {
       }
     
       if (saveDefUseMap ne null)
-        defUseMap = pairs.groupBy(_._1).map(p => (p._1, saveDefUseMap(p._1) ++ p._2.map(_._2)))
+        defUseMap = pairs.groupBy(_._1).map(p => (p._1, saveDefUseMap.getOrElse(p._1, Set()) ++ p._2.map(_._2)))
       else
         defUseMap = pairs.groupBy(_._1).map(p => (p._1, p._2.map(_._2).toSet))
 
