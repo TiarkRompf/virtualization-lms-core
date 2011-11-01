@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.{GenericNestedCodegen,GenericFatCodegen}
+import internal.{Transforming, GenericNestedCodegen, GenericFatCodegen}
 
 trait Loops extends Base { // no surface constructs for now
 
@@ -80,6 +80,13 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case e: AbstractLoop[_] => copySyms(e.body)
     case _ => super.copySyms(e)
   }
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case Yield(i,y) => toAtom(Yield(i.map(x => f(x)),f(y)))(mtype(manifest[A]))
+    case Skip(i) => toAtom(Skip(i.map(x => f(x))))(mtype(manifest[A]))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
+
 }
 
 trait LoopsFatExp extends LoopsExp with BaseFatExp {
