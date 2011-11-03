@@ -30,7 +30,10 @@ trait ArrayOps extends Variables {
 
 trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
 
-  case class ArrayNew[T:Manifest](xs: Seq[T]) extends Def[Array[T]]
+  case class ArrayNew[T:Manifest](xs: Seq[T]) extends Def[Array[T]] {
+    val mt = manifest[T]
+  }
+  
   case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int]
   case class ArrayApply[T](a: Exp[Array[T]], n: Exp[Int])(implicit val mT:Manifest[T]) extends Def[T]
   case class ArrayForeach[T](a: Exp[Array[T]], x: Sym[T], block: Exp[Unit]) extends Def[Unit]
@@ -69,9 +72,19 @@ trait BaseGenArrayOps extends GenericNestedCodegen {
 trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
   val IR: ArrayOpsExp
   import IR._
+  
+  val ARRAY_LITERAL_MAX_SIZE = 30000
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
-    case ArrayNew(xs) => emitValDef(sym, "Array(" + xs.mkString(",") + ")")
+    case e@ArrayNew(xs) => {
+      emitData(sym, xs)
+      emitValDef(sym, if(xs.size > ARRAY_LITERAL_MAX_SIZE) {
+        "{import scala.io.Source;(Source.fromFile(\"" + symDataPath(sym) + "\").getLines.map{Integer.parseInt(_)}).toArray}"
+      }
+      else {
+        "Array(" + xs.mkString(",") + ")"
+      })
+    }
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
     case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
     case ArrayForeach(a,x,block) => stream.println("val " + quote(sym) + "=" + quote(a) + ".foreach{")

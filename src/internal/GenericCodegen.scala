@@ -23,6 +23,28 @@ trait GenericCodegen extends Scheduling {
   def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
 
   def emitDataStructures(path: String): Unit = {}
+ 
+  def dataPath = {
+    "data" + java.io.File.separator
+  }
+  
+  def symDataPath(sym: Sym[Any]) = {
+    dataPath + sym.id
+  }
+ 
+  def emitData(sym: Sym[Any], data: Seq[_]) {
+    val outDir = new File(dataPath)
+    outDir.mkdirs()
+    val outFile = new File(symDataPath(sym))
+    val stream = new PrintWriter(outFile)
+    
+    for(e <- data) {
+      System.out.println("printing " + e)
+      stream.println(e)
+    }
+    
+    stream.close()
+  }
   
   // exception handler
   def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
