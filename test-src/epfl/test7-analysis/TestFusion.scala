@@ -14,8 +14,6 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     //case Copy(a) => f(a)
-    case Yield(i,y) => toAtom(Yield(i.map(x => f(x)),f(y)))(mtype(manifest[A]))
-    case Skip(i) => toAtom(Skip(i.map(x => f(x))))(mtype(manifest[A]))
     case SimpleLoop(s,i, ForeachElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ForeachElem(f(y))))(mtype(manifest[A]))
     case SimpleLoop(s,i, ArrayElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(g),f(y))))(mtype(manifest[A]))
     case SimpleLoop(s,i, ReduceElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(g),f(y))))(mtype(manifest[A]))
