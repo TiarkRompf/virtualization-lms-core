@@ -52,6 +52,16 @@ trait GenericCodegen extends Scheduling {
       outFile.delete
   }
 
+  def remap[A](s: String, method: String, t: Manifest[A]) : String = remap(s, method, t.toString)
+  
+  def remap(s: String, method: String, t: String) : String = {
+    s + method + "[" + remap(t) + "]"
+  }
+  
+  def remap(s: String) : String = {
+    s
+  }
+  
   // optional type remapping (default is identity)
   def remap[A](m: Manifest[A]) : String = {
     if (m.erasure == classOf[Variable[Any]] ) {
