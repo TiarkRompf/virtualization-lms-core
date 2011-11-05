@@ -53,13 +53,12 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
   }
 
   override def unapplySimpleCollect(e: Def[Any]) = e match {
-      // TODO (VJ) is this good ? Do not think so!!
     case ArrayElem(Def(Yield(_,a)), _) => Some(a)
     case _ => super.unapplySimpleCollect(e)
   }
 
   override def unapplySimpleCollectIf(e: Def[Any]) = e match {
-    case ArrayElem(g,Block(Def(IfThenElse(c,Def(SimpleCollectIf(a,cs)),Def(Skip(_)))))) => Some((a,c::cs))
+    case ArrayElem(g,Block(Def(IfThenElse(c,Block(Def(SimpleCollectIf(a,cs))),Block(Def(Skip(_))))))) => Some((a,c::cs))
     case _ => super.unapplySimpleCollectIf(e)
   }
   
@@ -269,17 +268,17 @@ trait FusionProg5 extends Arith with ArrayLoops with Print with OrderingOps {
       arrayFlat(x.length) { i => x.at(i) }
 
     val range = array(100) { i => i }
-    val range1 = array(101) { i => i }
+//    val range1 = array(101) { i => i }
 
     val nested = array(10) { i => range }
 
     val flat = flatten(nested)
 
-    val mapped = map(flat){ i => range1 }
+    val mapped = map(flat){ i => i + 5 }
 
-    val flattenedAgain = flatten(mapped)
+//    val flattenedAgain = flatten(mapped)
 
-    print(flattenedAgain)
+    print(mapped)
   }
 
 }

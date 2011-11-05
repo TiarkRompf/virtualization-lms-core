@@ -43,8 +43,6 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
     case Yield(g,y) => syms(y) //FIXME
     case SimpleLoop(s,i, ArrayElem(g,y)) => Nil
     case SimpleLoop(s,i, ReduceElem(g,y)) => syms(y) // could also return zero value
-    //case SimpleLoop(s,i, ArrayIfElem(g,c,y)) => Nil
-    //case SimpleLoop(s,i, ReduceIfElem(g,c,y)) => syms(y) // could also return zero value
     case ArrayIndex(a,i) => Nil
     case ArrayLength(a) => Nil
     case ArrayUpdate(a,i,x) => Nil // syms(a) <-- any use to return a?
@@ -57,8 +55,6 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
     case Yield(g,y) => Nil
     case SimpleLoop(s,i, ArrayElem(g,y)) => syms(y)
     case SimpleLoop(s,i, ReduceElem(g,y)) => Nil
-    //case SimpleLoop(s,i, ArrayIfElem(g,c,y)) => syms(y)
-    //case SimpleLoop(s,i, ReduceIfElem(g,c,y)) => Nil
     case ArrayIndex(a,i) => Nil
     case ArrayLength(a) => Nil
     case ArrayUpdate(a,i,x) => syms(x)
@@ -71,8 +67,6 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
     case Yield(g,y) => Nil
     case SimpleLoop(s,i, ArrayElem(g,y)) => Nil
     case SimpleLoop(s,i, ReduceElem(g,y)) => Nil
-    //case SimpleLoop(s,i, ArrayIfElem(g,c,y)) => Nil
-    //case SimpleLoop(s,i, ReduceIfElem(g,c,y)) => Nil
     case ArrayIndex(a,i) => syms(a)
     case ArrayLength(a) => Nil
     case ArrayUpdate(a,i,x) => Nil

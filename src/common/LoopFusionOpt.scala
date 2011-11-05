@@ -97,7 +97,8 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
 
         // possible extension: have WtableNeg keep track of the statements that prevent fusion
         // then we can later remove the entry and see if the dependency goes away...
-
+        printlog("Scope: ")
+        currentScope.foreach(x => printlog(x))
         val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
           val thisLoopVars = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
@@ -109,8 +110,21 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
               //println("ignoring simple dependency " + e + " on loop var " + thisLoopSyms)
               Nil // direct deps on this loop's induction var don't count
             case sc =>
+
               val pr = syms(sc.rhs).intersect(otherLoopSyms) flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
-              if (pr.nonEmpty) printlog("fusion of "+pr+" prevented by " + sc + " which is required by body of " + dx.lhs)
+              if (pr.nonEmpty) {
+                printlog("Fusion prevented by " + sc.rhs)
+                printlog("Syms " + syms(sc.rhs))
+                printlog("Other loop syms " + syms(sc.rhs).intersect(otherLoopSyms))
+
+                printlog(sc match {
+                  case TTP(_, ThinDef(SimpleIndex(a, i))) => {
+                    "a=" + a + "i=" + i + "thisLoopVars => " + thisLoopVars + " loopCollectSyms =>" + loopCollectSyms
+                  }
+                  case _ => "Did not match " + sc
+                })
+                printlog("fusion of " + pr + " prevented by " + sc + " which is required by body of " + dx.lhs)
+              }
               pr
           }
         }.distinct
