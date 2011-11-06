@@ -303,6 +303,8 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
             currentScope = a
             result = b
           }
+          printlog("After transform all fully: " )
+          currentScope.foreach(x => printlog(x))
 
           //Wloops = currentScope collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
 
@@ -338,8 +340,13 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         //if (!keep) println("dropping: " + e + ", not int UloopSyms: " + UloopSyms)
         keep case _ => true } ::: Wloops
 
+      printlog("Before last schedule: " )
+      currentScope.foreach(x => printlog(x))
       // schedule (and emit)
       currentScope = getFatSchedule(currentScope)(result.map(Block(_))) // clean things up!
+      printlog("After last schedule: " )
+      currentScope.foreach(x => printlog(x))
+
     }
 
     // the caller of emitBlock will quite likely call getBlockResult afterwards,
