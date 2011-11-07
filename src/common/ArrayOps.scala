@@ -90,7 +90,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
   val IR: ArrayOpsExp
   import IR._
   
-  val ARRAY_LITERAL_MAX_SIZE = 30000
+  val ARRAY_LITERAL_MAX_SIZE = 1000
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case e@ArrayNew(xs) => {
