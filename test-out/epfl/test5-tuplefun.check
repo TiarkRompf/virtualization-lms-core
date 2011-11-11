@@ -1,0 +1,7 @@
+function main(x0) {
+var x3 = function(x1,x2) {
+return {_1:x1,_2:x2}
+}
+var x5 = x3(1.0,x0)
+return x5
+}
