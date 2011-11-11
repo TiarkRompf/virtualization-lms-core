@@ -53,6 +53,9 @@ scalacOptions += "-deprecation"
 //Our tests are not threadsafe so disabling parallel execution for now
 parallelExecution in Test := false
 
+// disable publishing of main docs
+publishArtifact in (Compile, packageDoc) := false
+
 //continuations plugin
 
 //Uncomment the following two lines if you are not using local Scala
