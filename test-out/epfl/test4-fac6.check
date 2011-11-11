@@ -1,0 +1,29 @@
+
+<function1>
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Fac extends ((Double)=>(Double)) {
+def apply(x0:Double): Double = {
+val x1 = {x2: (Double) => 
+val x3 = x2==0
+val x12 = if (x3) {
+1.0
+} else {
+val x8 = x2-1.0
+val x9 = x1(x8)
+val x10 = x2*x9
+x10
+}
+x12: Double
+}
+val x18 = x1(x0)
+val x23 = 2.0*x0
+val x24 = x1(x23)
+val x25 = x18+x24
+x25
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
