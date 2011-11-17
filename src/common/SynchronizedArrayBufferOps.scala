@@ -5,52 +5,42 @@ import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
 import collection.mutable.ArrayBuffer
 
-trait SynchronizedArrayBufferOps extends Base {
+trait SynchronizedArrayBufferOps extends ArrayBufferOps {
 
-  object ArrayBuffer {
+/*
+  object SynchronizedArrayBuffer {
     def apply[A:Manifest](xs: Rep[A]*) = arraybuffer_new(xs)
   }
+*/
 
-  def infix_mkString[A:Manifest](l: Rep[ArrayBuffer[A]], sep: Rep[String] = unit("")) = arraybuffer_mkstring(l, sep)
-  def infix_+=[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A]) = arraybuffer_append(l, e)
-  def infix_append[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A]) = arraybuffer_append(l, e)
-
-  def arraybuffer_mkstring[A:Manifest](l: Rep[ArrayBuffer[A]], sep: Rep[String]): Rep[String]
-  def arraybuffer_append[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A]): Rep[Unit]
-  def arraybuffer_new[A:Manifest](xs: Seq[Rep[A]]): Rep[ArrayBuffer[A]]
 }
 
-trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with EffectExp {
-  case class ArrayBufferNew[A:Manifest](xs: Seq[Exp[A]]) extends Def[ArrayBuffer[A]]  {
+trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with ArrayBufferOpsExp {
+  case class SyncArrayBufferNew[A:Manifest](xs: Seq[Exp[A]]) extends Def[ArrayBuffer[A]]  {
     val mA = manifest[A]
   }
-  case class ArrayBufferMkString[A:Manifest](l: Exp[ArrayBuffer[A]], sep: Exp[String]) extends Def[String]
-  case class ArrayBufferAppend[A:Manifest](l: Exp[ArrayBuffer[A]], e: Exp[A]) extends Def[Unit]
 
-  def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]]) = reflectMutable(ArrayBufferNew(xs))
-  def arraybuffer_mkstring[A:Manifest](l: Exp[ArrayBuffer[A]], sep: Exp[String]) = ArrayBufferMkString(l, sep)
-  def arraybuffer_append[A:Manifest](l: Exp[ArrayBuffer[A]], e: Exp[A]) = reflectWrite(l)(ArrayBufferAppend(l, e))
+  // all array buffers are synchronized (nackward compat). TODO: separate constructor
 
+  override def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]]) = reflectMutable(SyncArrayBufferNew(xs))
 }
 
-trait BaseGenSynchronizedArrayBufferOps extends GenericNestedCodegen {
+trait BaseGenSynchronizedArrayBufferOps extends BaseGenArrayBufferOps {
   val IR: SynchronizedArrayBufferOpsExp
   import IR._
 }
 
-trait ScalaGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferOps with ScalaGenEffect {
+trait ScalaGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferOps with ScalaGenArrayBufferOps {
   val IR: SynchronizedArrayBufferOpsExp
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
-    case a@ArrayBufferNew(xs) => emitValDef(sym, "(new scala.collection.mutable.ArrayBuffer[" + remap(a.mA) + "] with scala.collection.mutable.SynchronizedBuffer[" + remap(a.mA) + "]) ++= List(" + (xs map {quote}).mkString(",") + ")")
-    case ArrayBufferMkString(l, sep) => emitValDef(sym, quote(l) + ".mkString(" + quote(sep) + ")")
-    case ArrayBufferAppend(l, e) => emitValDef(sym, quote(l) + " += " + quote(e))
+    case a@SyncArrayBufferNew(xs) => emitValDef(sym, "(new scala.collection.mutable.ArrayBuffer[" + remap(a.mA) + "] with scala.collection.mutable.SynchronizedBuffer[" + remap(a.mA) + "]) ++= List(" + (xs map {quote}).mkString(",") + ")")
     case _ => super.emitNode(sym, rhs)
   }
 }
 
-trait CLikeGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferOps with CLikeGenBase {
+trait CLikeGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferOps with CLikeGenArrayBufferOps {
   val IR: SynchronizedArrayBufferOpsExp
   import IR._
 
@@ -62,5 +52,6 @@ trait CLikeGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferO
 }
 
 trait CudaGenSynchronizedArrayBufferOps extends CudaGenEffect with CLikeGenSynchronizedArrayBufferOps
+trait OpenCLGenSynchronizedArrayBufferOps extends OpenCLGenEffect with CLikeGenSynchronizedArrayBufferOps
 trait CGenSynchronizedArrayBufferOps extends CGenEffect with CLikeGenSynchronizedArrayBufferOps
 

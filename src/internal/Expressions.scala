@@ -41,7 +41,7 @@ trait Expressions extends Utils {
   var nTypes = 0
   def fresh[T:Manifest] = Sym[T] { nVars += 1; nVars -1 }
 
-  abstract class Def[+T] // operations (composite)
+  abstract class Def[+T] // operations (compos  ite)
 
   //abstract class Stm // statement (links syms and definitions)
   
@@ -90,6 +90,9 @@ trait Expressions extends Utils {
 
   def boundSyms(e: Any): List[Sym[Any]] = e match {
     case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
+
+
+
     case _ => Nil
   }
 

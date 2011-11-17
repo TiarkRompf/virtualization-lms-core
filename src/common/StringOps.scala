@@ -81,6 +81,17 @@ trait CudaGenStringOps extends CudaGenBase {
   }
 }
 
+trait OpenCLGenStringOps extends OpenCLGenBase {
+  val IR: StringOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+    case StringPlus(s1,s2) => throw new GenerationFailedException("OpenCLGen: Not GPUable")
+    case StringTrim(s) => throw new GenerationFailedException("OpenCLGen: Not GPUable")
+    case StringSplit(s, sep) => throw new GenerationFailedException("OpenCLGen: Not GPUable")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
 trait CGenStringOps extends CGenBase {
   val IR: StringOpsExp
   import IR._

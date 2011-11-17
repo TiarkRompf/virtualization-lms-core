@@ -202,5 +202,20 @@ trait ScalaGenTupleOps extends ScalaGenBase {
 
     case _ => super.emitNode(sym, rhs)
   }
+}
 
+trait OpenCLGenTupleOps extends OpenCLGenBase {
+  val IR: TupleOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+    case ETuple2(a,b)  =>
+      stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
+      stream.println("%s._1 = %s;".format(quote(sym),quote(a)))
+      stream.println("%s._2 = %s;".format(quote(sym),quote(b)))
+    case Tuple2Access1(t) => stream.println("%s %s = %s._1;".format(remap(sym.Type),quote(sym),quote(t)))
+    case Tuple2Access2(t) => stream.println("%s %s = %s._2;".format(remap(sym.Type),quote(sym),quote(t)))
+
+    case _ => super.emitNode(sym, rhs)
+  }
 }
