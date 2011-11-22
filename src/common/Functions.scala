@@ -7,7 +7,7 @@ import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailed
 import scala.virtualization.lms.util.ClosureCompare
 
 trait Functions extends Base {
-  implicit def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B]): Rep[A => B]
+  def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B]): Rep[A => B]
   implicit def fun[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
 
   implicit def toLambdaOps[A:Manifest,B:Manifest](fun: Rep[A => B]) = new LambdaOps(fun)
