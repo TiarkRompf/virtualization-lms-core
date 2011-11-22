@@ -1,0 +1,50 @@
+-- begin
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Double)=>(Any)) {
+def apply(x0:Double): Any = {
+val x1 = {x2: (Any) => 
+val x3 = println("foo")
+x2: Any
+}
+val x30 = x1(x0)
+val x31 = x1(x30)
+val x17 = {x18: (Any) => 
+val x19 = println("bar")
+val x24 = x17(x18)
+x24: Any
+}
+val x32 = x17(x31)
+val x9 = {x10: (Any) => 
+val x11 = println("baz")
+1.0: Double
+}
+val x33 = x9(x32)
+x33
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+function main(x0) {
+var x1 = function(x2) {
+var x3 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("foo"))
+return x2
+}
+var x30 = x1(x0)
+var x31 = x1(x30)
+var x17 = function(x18) {
+var x19 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("bar"))
+var x24 = x17(x18)
+return x24
+}
+var x32 = x17(x31)
+var x9 = function(x10) {
+var x11 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("baz"))
+return 1.0
+}
+var x33 = x9(x32)
+return x33
+}
+-- end
