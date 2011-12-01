@@ -89,7 +89,7 @@ class TestStaged extends FileDiffSuite {
       }
 
       // Generate the corresponding code :)
-      implicit val printWriter: PrintWriter = IndentWriter.getIndentPrintWriter(new FileWriter(codeFile))
+      implicit val printWriter: PrintWriter = new PrintWriter(new FileWriter(codeFile))
       val scalaGen = new ScalaGenMDArray with ScalaGenIfThenElse with ScalaGenArguments { val IR: dsl.type = dsl; override val TY = typing }
       scalaGen.emitSource(ff, "Experiment", printWriter)
       printWriter.close
