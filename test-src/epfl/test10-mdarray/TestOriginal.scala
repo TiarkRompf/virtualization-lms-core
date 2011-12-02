@@ -9,7 +9,7 @@ import scala.util.Random
 
 /*
  * To run only this test use:
- * sbt 'test-only scala.virtualization.lms.epfl.test10.TestOriginalPDE1Benchmark'
+ * sbt 'test-only scala.virtualization.lms.epfl.test10.TestOriginal'
  */
 class TestOriginal extends FileDiffSuite {
 
@@ -53,7 +53,7 @@ class TestOriginal extends FileDiffSuite {
     // Create the matrix
     val size: Int = 10
     val arr2: Array[Int] = new Array[Int](size * size)
-    // Draw a "glider" in the upper left corner ans see it flying :)
+    // Draw a "glider" in the upper left corner and see it flying :)
     // http://en.wikipedia.org/wiki/Conway's_Game_of_Life#Examples_of_patterns
     arr2(12) = 1
     arr2(23) = 1

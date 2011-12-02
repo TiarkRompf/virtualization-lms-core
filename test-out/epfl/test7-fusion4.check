@@ -18,16 +18,16 @@ super.focusExactScopeFat with result changed from List(Sym(12)) to List(Sym(28))
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Unit)=>(Unit)) {
-def apply(x0:Unit): Unit = {
-var x26 = 0
-for (x8 <- 0 until 100) {
-val x21 = x8 > 50
-if (x21) x26 += x8
-}
-val x27 = println(x26)
-val x11 = x27
-x11
-}
+  def apply(x0:Unit): Unit = {
+    var x26 = 0
+    for (x8 <- 0 until 100) {
+      val x21 = x8 > 50
+      if (x21) x26 += x8
+    }
+    val x27 = println(x26)
+    val x11 = x27
+    x11
+  }
 }
 /*****************************************
   End of Generated Code                  

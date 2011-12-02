@@ -1,7 +1,6 @@
 package scala.virtualization.lms.util
 
-import java.io.IOException
-import java.io.Writer
+import java.io.{Writer, OutputStream, OutputStreamWriter, IOException}
 
 class IndentWriter(out: Writer) extends Writer {
     private var indent: Int = 0
@@ -11,6 +10,8 @@ class IndentWriter(out: Writer) extends Writer {
     private val INDENT_STR: String = "  "
     private var doIndent: Boolean = false
 
+    def this(out: OutputStream) = this(new OutputStreamWriter(out))
+    
     override def write(cbuf: Array[Char], off: Int, len:Int) {
       var i = off;
       var j = 0;

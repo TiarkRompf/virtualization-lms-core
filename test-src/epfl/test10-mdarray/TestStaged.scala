@@ -11,9 +11,9 @@ import original.SpecificOperations._
 
 
 /*
-To run only this test use:
-sbt 'test-only scala.virtualization.lms.epfl.test10.TestStagedPDE1Benchmark'
-*/
+ * To run only this test use:
+ * sbt 'test-only scala.virtualization.lms.epfl.test10.TestStaged'
+ */
 class TestStaged extends FileDiffSuite {
 
   val prefix = "test-out/epfl/test10-staged-"
