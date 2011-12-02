@@ -75,7 +75,6 @@ class PDE1BenchmarkOriginal {
       u = where(!red, Relax(u, f, 1d/10d), u)
     }
     val finishTime: Long = System.currentTimeMillis
-    println("Time: " + (finishTime-startTime).toString + "ms")
 
     u
   }

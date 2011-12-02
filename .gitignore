@@ -7,5 +7,7 @@ project/build/target
 target
 virtualization-lms-core.iml
 .gitingore
+test-out/epfl/test7-staged-*
+!test-out/epfl/test7-staged-*.check
 test-out/epfl/test7-original-*
-test-out/epfl/test7-*-type-inference
+!test-out/epfl/test7-original-*.check

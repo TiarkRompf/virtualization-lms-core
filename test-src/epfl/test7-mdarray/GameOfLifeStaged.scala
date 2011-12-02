@@ -29,9 +29,9 @@ trait GameOfLifeStaged { this: MDArrayBase with IfThenElse =>
       0
   }
 
-  def computeIfReborn(neigh: Rep[MDArray[Int]], dead: Rep[MDArray[Int]]): Rep[MDArray[Int]] = {
+  def computeIfReborn(neigh: Rep[MDArray[Int]], alive: Rep[MDArray[Int]]): Rep[MDArray[Int]] = {
 
-    if (dead === 1) {
+    if (alive === 0) {
       if (neigh === 3)
         1 // Rule 4: Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
       else
@@ -46,8 +46,7 @@ trait GameOfLifeStaged { this: MDArrayBase with IfThenElse =>
       iv => computeIfDead(sum(tile(values(dim(alive), 3), iv-1, alive)), alive(iv))).GenArray(shape(alive))
 
     val reborn = With(lbStrict = true, ubStrict = true, function =
-      iv => computeIfReborn(sum(tile(values(dim(alive), 3), iv-1, alive)) -
-                            sum(tile(values(dim(alive), 3), iv-1, dead)), dead(iv))).GenArray(shape(alive))
+      iv => computeIfReborn(sum(tile(values(dim(alive), 3), iv-1, alive)), alive(iv))).GenArray(shape(alive))
 
     val result = alive - dead + reborn
     result
