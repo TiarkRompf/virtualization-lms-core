@@ -2,13 +2,13 @@ package scala.virtualization.lms
 package epfl
 package test7
 
-import test7.original.MDArray
-import internal.GraphVizExport
-import test2.{DisableDCE, DisableCSE}
 import common._
-import test4.ScalaGenFunctionsExternal
-import test1.ScalaGenArith
 import java.io.{FileWriter, PrintWriter}
+import scala.virtualization.lms.util.IndentWriter
+import original._
+import original.Operations._
+import original.SpecificOperations._
+
 
 /*
 To run only this test use:
@@ -89,7 +89,7 @@ class TestStaged extends FileDiffSuite {
       }
 
       // Generate the corresponding code :)
-      implicit val printWriter: PrintWriter = new PrintWriter(new FileWriter(codeFile))
+      implicit val printWriter: PrintWriter = new PrintWriter(new IndentWriter(new FileWriter(codeFile)))
       val scalaGen = new ScalaGenMDArray with ScalaGenIfThenElse with ScalaGenArguments { val IR: dsl.type = dsl; override val TY = typing }
       scalaGen.emitSource(ff, "Experiment", printWriter)
       printWriter.close

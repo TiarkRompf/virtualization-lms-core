@@ -8,3 +8,4 @@ target
 virtualization-lms-core.iml
 .gitingore
 test-out/epfl/test7-original-*
+test-out/epfl/test7-*-type-inference
