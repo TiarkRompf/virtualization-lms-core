@@ -229,41 +229,6 @@ trait GPUCodegen extends CLikeCodegen {
     isHostAlloc = false
   }
 
-  // Map a scala primitive type to JNI type descriptor
-  def JNITypeDescriptor[A](m: Manifest[A]) : String = m.toString match {
-    case "Int" => "I"
-    case "Long" => "J"
-    case "Float" => "F"
-    case "Double" => "D"
-    case "Boolean" => "Z"
-    case _ => throw new GenerationFailedException("Undefined GPU type")
-  }
-
-  def isObjectType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "scala.collection.immutable.List[Int]" => true
-      case _ => false
-    }
-  }
-
-  def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "Int" | "Long" | "Float" | "Double" | "Boolean"  => true
-      case _ => false
-    }
-  }
-
-  def isVoidType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "Unit" => true
-      case _ => false
-    }
-  }
-
-  def isVariableType[A](m: Manifest[A]) : Boolean = {
-    if(m.erasure == classOf[Variable[AnyVal]]) true
-    else false
-  }
 
   // Check the type and generate Exception if the type is not GPUable
   def checkGPUableType[A](m: Manifest[A]) : Unit = {

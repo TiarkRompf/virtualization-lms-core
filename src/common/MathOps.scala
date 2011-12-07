@@ -191,3 +191,15 @@ trait OpenCLGenMathOps extends BaseGenMathOps with OpenCLGenEffect {
     case _ => super.emitNode(sym, rhs)
   }
 }
+
+trait CGenMathOps extends BaseGenMathOps with CGenEffect {
+  val IR: MathOpsExp
+  import IR._
+  
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+    case MathSin(x) if(remap(sym.Type)=="double") => emitValDef(sym, "sin(" + quote(x) + ")")
+    case MathPi() if(remap(sym.Type)=="double") => emitValDef(sym, "M_PI")
+    case _ => super.emitNode(sym, rhs)
+  }
+
+}

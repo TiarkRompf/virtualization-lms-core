@@ -175,6 +175,20 @@ trait CudaGenLoopsFat extends CudaGenLoops with CudaGenFat with BaseGenLoopsFat 
 
 }
 
+trait CGenLoops extends CGenBase with BaseGenLoops {
+  import IR._
+
+  //TODO
+
+}
+
+trait CGenLoopsFat extends CGenLoops with CGenFat with BaseGenLoopsFat {
+  import IR._
+
+  //TODO
+
+}
+
 trait OpenCLGenLoops extends OpenCLGenBase with BaseGenLoops {
   import IR._
 
