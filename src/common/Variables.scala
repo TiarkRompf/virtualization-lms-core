@@ -52,6 +52,8 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
   def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
   def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
   def var_minusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
+  def var_timesequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
+  def var_divideequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
 
   def __assign[T:Manifest](lhs: Var[T], rhs: T) = var_assign(lhs, unit(rhs))
   def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_assign(lhs, rhs)
@@ -68,6 +70,12 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
   def infix_-=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T]) = var_minusequals(lhs, unit(rhs))
   def infix_-=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_minusequals(lhs,rhs)
   def infix_-=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T]) = var_minusequals(lhs,readVar(rhs))
+  def infix_*=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T]) = var_timesequals(lhs, unit(rhs))
+  def infix_*=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_timesequals(lhs,rhs)
+  def infix_*=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T]) = var_timesequals(lhs,readVar(rhs))
+  def infix_/=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T]) = var_divideequals(lhs, unit(rhs))
+  def infix_/=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_divideequals(lhs,rhs)
+  def infix_/=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T]) = var_divideequals(lhs,readVar(rhs))
 }
 
 trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits with ReadVarImplicitExp {
@@ -84,6 +92,8 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
   case class Assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
   case class VarPlusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
   case class VarMinusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
+  case class VarTimesEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
+  case class VarDivideEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
 
   def var_new[T:Manifest](init: Exp[T]): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
@@ -104,6 +114,16 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
     reflectWrite(lhs.e)(VarMinusEquals(lhs, rhs))
     Const()
   }
+  
+  def var_timesequals[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
+    reflectWrite(lhs.e)(VarTimesEquals(lhs, rhs))
+    Const()
+  }
+  
+  def var_divideequals[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
+    reflectWrite(lhs.e)(VarDivideEquals(lhs, rhs))
+    Const()
+  }
 
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case NewVar(a) => Nil
@@ -111,6 +131,8 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
     case Assign(Variable(a),b) => Nil
     case VarPlusEquals(Variable(a),b) => Nil
     case VarMinusEquals(Variable(a),b) => Nil
+    case VarTimesEquals(Variable(a),b) => Nil
+    case VarDivideEquals(Variable(a),b) => Nil
     case _ => super.aliasSyms(e)
   }
 
@@ -120,6 +142,8 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
     case Assign(Variable(a),b) => syms(b)
     case VarPlusEquals(Variable(a),b) => syms(b)
     case VarMinusEquals(Variable(a),b) => syms(b)
+    case VarTimesEquals(Variable(a),b) => syms(b)
+    case VarDivideEquals(Variable(a),b) => syms(b)
     case _ => super.containSyms(e)
   }
 
@@ -129,6 +153,8 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
     case Assign(Variable(a),b) => Nil
     case VarPlusEquals(Variable(a),b) => syms(a)
     case VarMinusEquals(Variable(a),b) => syms(a)
+    case VarTimesEquals(Variable(a),b) => syms(a)
+    case VarDivideEquals(Variable(a),b) => syms(a)
     case _ => super.extractSyms(e)
   }
 
@@ -138,6 +164,8 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
     case Assign(Variable(a),b) => Nil
     case VarPlusEquals(Variable(a),b) => Nil
     case VarMinusEquals(Variable(a),b) => Nil
+    case VarTimesEquals(Variable(a),b) => Nil
+    case VarDivideEquals(Variable(a),b) => Nil
     case _ => super.copySyms(e)
   }
 
@@ -149,6 +177,8 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
     case Reflect(Assign(Variable(a),b), u, es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(VarPlusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(VarMinusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarMinusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(VarTimesEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarTimesEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(VarDivideEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarDivideEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -166,6 +196,8 @@ trait ScalaGenVariables extends ScalaGenEffect {
     //case Assign(a, b) => emitAssignment(quote(a), quote(b))
     case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(getBlockResult(b)))
     case VarMinusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(getBlockResult(b)))
+    case VarTimesEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(getBlockResult(b)))
+    case VarDivideEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(getBlockResult(b)))
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -184,6 +216,12 @@ trait CLikeGenVariables extends CLikeGenBase {
           emitAssignment(quote(a), quote(getBlockResult(b)))
         case VarPlusEquals(Variable(a), b) =>
           emitAssignment(quote(a), quote(a) + " + " + quote(getBlockResult(b)))
+        case VarMinusEquals(Variable(a), b) =>
+          emitAssignment(quote(a), quote(a) + " - " + quote(getBlockResult(b)))
+        case VarTimesEquals(Variable(a), b) =>
+          emitAssignment(quote(a), quote(a) + " * " + quote(getBlockResult(b)))
+        case VarDivideEquals(Variable(a), b) =>
+          emitAssignment(quote(a), quote(a) + " / " + quote(getBlockResult(b)))
         case _ => super.emitNode(sym, rhs)
       }
     }
