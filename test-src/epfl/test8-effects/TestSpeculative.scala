@@ -210,6 +210,8 @@ class TestSpeculative extends FileDiffSuite {
           while (c < 10) {
             if (x < 10)
               print("test")
+            else
+              x = c
             print(x)
             c += 1
           }
