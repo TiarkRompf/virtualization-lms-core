@@ -3,6 +3,7 @@ package internal
 
 import util.GraphUtil
 import java.io.{File, PrintWriter}
+import scala.reflect.RefinedManifest
 
 trait GenericCodegen extends Scheduling {
   val IR: Expressions
@@ -29,11 +30,18 @@ trait GenericCodegen extends Scheduling {
 
   // optional type remapping (default is identity)
   def remap(s: String): String = s
-  def remap[A](m: Manifest[A]): String = {
-    if (m.erasure == classOf[Variable[Any]] ) {
-      remap(m.typeArguments.head)
-    }
-    else m.toString
+  def remap[A](m: Manifest[A]): String = m match {
+    case rm: RefinedManifest[A] =>  "AnyRef{" + rm.fields.foldLeft(""){(acc, f) => {val (n,mnf) = f; acc + "val " + n + ": " + remap(mnf) + ";"}} + "}"
+    case _ if m.erasure == classOf[Variable[Any]] =>
+        remap(m.typeArguments.head)
+    case _ =>
+      // call remap on all type arguments
+      val targs = m.typeArguments
+      if (targs.length > 0) {
+        val ms = m.toString
+        ms.take(ms.indexOf("[")+1) + targs.map(tp => remap(tp)).mkString(",") + "]"
+      }
+      else m.toString    
   }
   def remapImpl[A](m: Manifest[A]): String = remap(m)
   //def remapVar[A](m: Manifest[Variable[A]]) : String = remap(m.typeArguments.head)
