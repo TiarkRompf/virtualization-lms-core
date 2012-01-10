@@ -73,13 +73,15 @@ trait FunctionsExp extends Functions with EffectExp {
   def unboxedFresh[A:Manifest] : Exp[A] = fresh[A]
   def unbox[A:Manifest](x : Exp[A]) : Exp[A] = x
 
-  def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B]) : Exp[A => B] = {
+  def doLambdaDef[A:Manifest,B:Manifest](f: Exp[A] => Exp[B]) : Def[A => B] = {
     val x = unboxedFresh[A]
     val y = reifyEffects(f(x)) // unfold completely at the definition site. 
-                               // TODO: this will not work if f is recursive. 
-                               // need to incorporate the other pieces at some point.
+
     Lambda(f, x, y)
   }
+
+  def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B]) : Exp[A => B] =
+    doLambdaDef(f)
 
   def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A]): Exp[B] = {
     val x1 = unbox(x)
@@ -184,39 +186,17 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
 }
 
 trait FunctionsRecursiveExp extends FunctionsExp with ClosureCompare {
-  override def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A]): Exp[B] = f match {
-    case Def(Lambda(f,_,_)) => f(unbox(x))
-    case _ => super.doApply(f, x)
-  }
-
+  var funTable: List[(Sym[_], Any)] = List()
   override def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B]) : Exp[A => B] = {
-    super.doLambda(lookupFun(f))
-  }
-
-  var funTable: List[(Function[_,_], Any)] = List()
-  def lookupFun[A:Manifest,B:Manifest](f: Exp[A]=>Exp[B]): (Exp[A]=>Exp[B]) = {
-    var can = canonicalize(f)
-
+    val can = canonicalize(f)
     funTable.find(_._2 == can) match {
-      case Some((g, _)) =>
-        g.asInstanceOf[Exp[A]=>Exp[B]]
+      case Some((funSym, _)) =>
+        funSym.asInstanceOf[Exp[A=>B]]
       case _ =>
-      
-        var funSym = fresh[A=>B]
-        var argSym = unboxedFresh[A]
-
-        val g = (x: Exp[A]) => reflectEffect(Apply(funSym, unbox(x))): Exp[B]
-        funTable = (g,can)::funTable
-
-        reifyEffects(f(argSym)) match {
-          case c @ Const(_) => 
-            val g = (x: Exp[A]) => c
-            funTable = (g,can)::funTable
-            g
-          case e => 
-            createDefinition(funSym, Lambda[A,B](f, argSym, e))
-            g
-	}
+        val funSym = fresh[A=>B]
+        funTable = (funSym,can)::funTable
+        createDefinition(funSym, doLambdaDef(f))
+        funSym
     }
   }
   

@@ -2,19 +2,19 @@ function main(x0) {
 var x1 = function(x2,x3) {
 var x4 = x2
 var x6 = x4==0
-var x17
+var x12
 if (x6) {
 var x5 = x3
-x17=x5
+x12=x5
 } else {
-var x12 = x4-1.0
+var x7 = x4-1.0
 var x5 = x3
-var x13 = x4*x5
-var x15 = x1(x12,x13)
-x17=x15
+var x8 = x4*x5
+var x10 = x1(x7,x8)
+x12=x10
 }
-return x17
+return x12
 }
-var x25 = x1(x0,1.0)
-return x25
+var x15 = x1(x0,1.0)
+return x15
 }

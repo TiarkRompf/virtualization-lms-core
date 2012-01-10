@@ -8,20 +8,20 @@ val x1 = {x2: (Any) =>
 val x3 = println("foo")
 x2: Any
 }
-val x30 = x1(x0)
-val x31 = x1(x30)
-val x17 = {x18: (Any) => 
-val x19 = println("bar")
-val x24 = x17(x18)
-x24: Any
-}
-val x32 = x17(x31)
+val x14 = x1(x0)
+val x15 = x1(x14)
 val x9 = {x10: (Any) => 
-val x11 = println("baz")
+val x11 = println("bar")
+val x12 = x9(x10)
+x12: Any
+}
+val x16 = x9(x15)
+val x5 = {x6: (Any) => 
+val x7 = println("baz")
 1.0: Double
 }
-val x33 = x9(x32)
-x33
+val x17 = x5(x16)
+x17
 }
 }
 /*****************************************
@@ -32,19 +32,19 @@ var x1 = function(x2) {
 var x3 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("foo"))
 return x2
 }
-var x30 = x1(x0)
-var x31 = x1(x30)
-var x17 = function(x18) {
-var x19 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("bar"))
-var x24 = x17(x18)
-return x24
-}
-var x32 = x17(x31)
+var x14 = x1(x0)
+var x15 = x1(x14)
 var x9 = function(x10) {
-var x11 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("baz"))
+var x11 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("bar"))
+var x12 = x9(x10)
+return x12
+}
+var x16 = x9(x15)
+var x5 = function(x6) {
+var x7 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("baz"))
 return 1.0
 }
-var x33 = x9(x32)
-return x33
+var x17 = x5(x16)
+return x17
 }
 -- end

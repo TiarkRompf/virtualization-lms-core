@@ -2,6 +2,6 @@ function main(x0) {
 var x1 = function() {
 return x0
 }
-var x5 = x1()
-return x5
+var x2 = x1()
+return x2
 }
