@@ -6,28 +6,27 @@ import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 import scala.reflect.SourceContext
 
-trait LowPriorityPrimitiveImplicits {
-  this: Variables with ImplicitOps =>
+trait LiftPrimitives {
+  this: PrimitiveOps =>
 
-  implicit def intToRepDouble(i: Int): Rep[Double] = unit(i.toDouble)
-  implicit def intToRepFloat(i: Int): Rep[Float] = unit(i.toFloat)
-  implicit def floatToRepDouble(f: Float): Rep[Double] = unit(f.toDouble)
-
-  implicit def repIntToRepDouble(x: Rep[Int]): Rep[Double] = implicit_convert[Int,Double](x)
-  implicit def repIntToRepFloat(x: Rep[Int]): Rep[Float] = implicit_convert[Int,Float](x)
-  implicit def repFloatToRepDouble(x: Rep[Float]): Rep[Double] = implicit_convert[Float,Double](x)
+  implicit def intToRepInt(x: Int) = unit(x)  
+  implicit def floatToRepFloat(x: Float) = unit(x)
+  implicit def doubleToRepDouble(x: Double) = unit(x)  
+  
+  // precision-widening promotions
+  implicit def chainIntToRepFloat[A:Manifest](x: A)(implicit c: A => Rep[Int]): Rep[Float] = repIntToRepFloat(c(x))
+  implicit def chainFloatToRepDouble[A:Manifest](x: A)(implicit c: A => Rep[Float]): Rep[Double] = repFloatToRepDouble(c(x))
 }
 
-trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitiveImplicits {
+trait PrimitiveOps extends Variables with OverloadHack { 
   this: ImplicitOps =>
 
   /**
-   * High priority lifting implicits
+   * Primitive conversions
    */
-  implicit def intToRepInt(x: Int): Rep[Int] = unit(x)
-  implicit def floatToRepFloat(x: Float): Rep[Float] = unit(x)
-  //implicit def doubleToRepDouble(x: Double): Rep[Double] = unit(x)
-
+  implicit def repIntToRepDouble(x: Rep[Int]): Rep[Double] = implicit_convert[Int,Double](x)
+  implicit def repIntToRepFloat(x: Rep[Int]): Rep[Float] = implicit_convert[Int,Float](x)
+  implicit def repFloatToRepDouble(x: Rep[Float]): Rep[Double] = implicit_convert[Float,Double](x)  
 
   /**
    *  Double
@@ -63,7 +62,7 @@ trait PrimitiveOps extends Variables with OverloadHack with LowPriorityPrimitive
     def MaxValue(implicit ctx: SourceContext) = obj_int_max_value
   }
 
-  implicit def intToIntOps(n: Int) = new IntOpsCls(n)
+  implicit def intToIntOps(n: Int) = new IntOpsCls(unit(n))
   implicit def repIntToIntOps(n: Rep[Int]) = new IntOpsCls(n)
   implicit def varIntToIntOps(n: Var[Int]) = new IntOpsCls(readVar(n))
     
