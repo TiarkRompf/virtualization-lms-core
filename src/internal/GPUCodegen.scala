@@ -326,7 +326,7 @@ trait GPUCodegen extends CLikeCodegen {
     else ""
   }
 
-  def emitAllocOutput(sym: Sym[Any], ksym: List[Sym[Any]], contents: String, args: List[Sym[Any]]): String = {
+  def emitAllocOutput(sym: Sym[Any], ksym: List[Sym[Any]], contents: String, args: List[Sym[Any]], aV: Sym[Any]=null, size:Exp[Any]=null): String = {
     //println("alloc for " + quote(sym))
     val out = new StringBuilder
     if(isObjectType(sym.Type)) {
@@ -356,6 +356,7 @@ trait GPUCodegen extends CLikeCodegen {
 
       out.append("%s *allocFunc_%s(%s) {\n".format(remap(sym.Type), helperFuncIdx, paramStr))
   	  out.append(derefParams+"\n")
+      out.append("\t%s *%s = new %s(%s);\n".format(remap(aV.Type),quote(aV),remap(aV.Type),quote(size)))
       out.append(contents)
       out.append("}\n")
       out.toString
@@ -390,7 +391,7 @@ trait GPUCodegen extends CLikeCodegen {
   /* emitAllocFunc method emits code for allocating the output memory of a kernel,
        and copying  it to CPU memory with allocation of new object in CPU */
   //TODO: Separate output and temporary allocations
-  def emitAllocFunc(sym:Sym[Any], allocFunc:Exp[Any]) {
+  def emitAllocFunc(sym:Sym[Any], allocFunc:Exp[Any], aV:Sym[Any]=null, size:Exp[Any]=null) {
     helperFuncIdx += 1
     val tempString = new StringWriter
     val tempString2 = new StringWriter
@@ -399,15 +400,18 @@ trait GPUCodegen extends CLikeCodegen {
     // Need to save idx before calling emitBlock, which might recursively call this method
     val currHelperFuncIdx = helperFuncIdx
 
-    // Get free variables
-    val inputs = getFreeVarBlock(allocFunc,Nil)
+    // Get free variables (exclude the arrayVariable)
+    val inputs = if(size.isInstanceOf[Sym[Any]]) (getFreeVarBlock(allocFunc,List(aV)) ++ List(size.asInstanceOf[Sym[Any]])).distinct
+                 else getFreeVarBlock(allocFunc,List(aV))
+    //println("Inputs are %s".format(inputs.map(quote(_)).mkString(",")))
 
     // Get the body (string) of the allocation function in tempString
     emitBlock(allocFunc)(tempStream)
     tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc))))
 
     // Emit the full allocation function
-    val allocOutputStr = emitAllocOutput(sym, null, tempString.toString, inputs)
+    //println("out: %s, %s".format(quote(sym),sym.Type.toString))
+    val allocOutputStr = emitAllocOutput(sym, null, tempString.toString, inputs, aV, size)
 
     // Generate copy (D->H) helper function
     tempString2.append(copyOutputDtoH(sym))
