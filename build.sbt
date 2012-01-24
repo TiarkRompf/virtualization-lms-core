@@ -12,6 +12,8 @@ scalaSource in Compile <<= baseDirectory(_ / "src")
 
 scalaSource in Test <<= baseDirectory(_ / "test-src")
 
+scalacOptions += "-Yvirtualize" 
+
 //scalacOptions in Compile ++= Seq(/*Unchecked, */Deprecation)
 
 // TODO: scalaHome appears to be undefined by default (how do we get the scalac path?)
