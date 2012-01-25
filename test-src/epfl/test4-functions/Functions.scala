@@ -107,6 +107,11 @@ trait FunctionsExternalDef0 extends FunctionsExp with BlockExp {
     case _ => super.boundSyms(e)
   }
 
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case DefineFun(y) => freqHot(y)
+    case _ => super.symsFreq(e)
+  }
+
 }
 
 
@@ -122,30 +127,30 @@ trait FunctionsExternalDef01 extends FunctionsExternalDef0 { // not used
 
 }
 
-trait FunctionsExternalDef1 extends FunctionsExternalDef0 with ClosureCompare { // not used
+trait FunctionsExternalDef1 extends FunctionsExternalDef0 with ClosureCompare { // not used (New: used by TestMatcherNew)
 
-  var funTable: List[(Function[_,_], Any)] = List()
+  var funTable: List[(Function[_,_], Any, Sym[_])] = List()
   
   override def doLambda[A:Manifest,B:Manifest](f: Exp[A]=>Exp[B]): Exp[A=>B] = {
     var can = canonicalize(f)
 
     funTable.find(_._2 == can) match {
-      case Some((g, _)) =>
+      case Some((g, _, funSym)) =>
         println("-- found fun: " + g.getClass.getName)
-        Lambda(g.asInstanceOf[Exp[A]=>Exp[B]])
+        funSym.asInstanceOf[Sym[A=>B]]
       case _ =>
       
         var funSym = fresh[A=>B]
         var argSym = fresh[A]//Sym(-1)
       
         val g = (x: Exp[A]) => Apply(funSym, x): Exp[B]
-        funTable = (g,can)::funTable
+        funTable = (g,can,funSym)::funTable
         
         Block(f(argSym)) match { //FIXME: use reify (conflict with test3.effects)
-          case Block(c @ Const(_)) => 
+          /*case Block(c @ Const(_)) => 
             val g = (x: Exp[A]) => c
             funTable = (g,can)::funTable // ok?
-            Lambda(g)
+            Lambda(g)*/
           case e => 
             createDefinition(funSym, DefineFun[A,B](e)(argSym))
             funSym

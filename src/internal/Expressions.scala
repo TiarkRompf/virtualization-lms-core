@@ -19,7 +19,7 @@ trait Expressions extends Utils {
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
-    var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
+    @transient var sourceInfo = Thread.currentThread.getStackTrace // until we can get useful info out of the manifest
   }
 
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant

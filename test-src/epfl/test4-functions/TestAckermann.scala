@@ -35,7 +35,7 @@ trait AckProg { this: Arith with Functions with Equal with IfThenElse =>
   ack_0(n) =  n+1
   
   this actually "just works", modulo duplicating the definitions of ack_n in the then/else branches
-  due to code motion
+  due to code motion (TODO: can this be resolved by suitably overriding symsFreq?)
   
   */
 
