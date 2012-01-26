@@ -10,6 +10,8 @@ resolvers += dropboxScalaTestRepo
 
 scalaVersion := virtScala
 
+scalaBinaryVersion := virtScala // necessary??
+
 scalaSource in Compile <<= baseDirectory(_ / "src")
 
 scalaSource in Test <<= baseDirectory(_ / "test-src")
@@ -26,7 +28,13 @@ libraryDependencies += "org.scala-lang" % "scala-compiler" % virtScala
 
 libraryDependencies += scalaTest
 
+
+// tests are not thread safe
 parallelExecution in Test := false
+
+// disable publishing of main docs
+publishArtifact in (Compile, packageDoc) := false
+
 
 
 // continuations
