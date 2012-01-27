@@ -8,6 +8,9 @@ resolvers += ScalaToolsSnapshots
 
 scalaVersion := virtScala
 
+// quick way of getting artifact naming compatibility right now
+crossPaths := false
+
 scalaSource in Compile <<= baseDirectory(_ / "src")
 
 scalaSource in Test <<= baseDirectory(_ / "test-src")
