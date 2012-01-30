@@ -50,6 +50,8 @@ libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.10.0-virtualized
 
 scalacOptions += "-deprecation"
 
+scalacOptions += "-Yvirtualize"
+
 //Our tests are not threadsafe so disabling parallel execution for now
 parallelExecution in Test := false
 
