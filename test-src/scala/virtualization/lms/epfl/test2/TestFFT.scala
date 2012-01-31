@@ -10,7 +10,6 @@ import java.io.PrintWriter
 
 import org.scalatest._
 
-
 trait FFT { this: Arith with Trig =>
   
   def omega(k: Int, N: Int): Complex = {
@@ -96,7 +95,6 @@ trait FlatResult extends BaseExp { // just to make dot output nicer
   def result(x: Any): Exp[Any] = toAtom(Result(x))
   
 }
-
 
 
 

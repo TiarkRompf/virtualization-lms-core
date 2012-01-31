@@ -10,3 +10,7 @@ This is the common embedding framework portion of the collaboration effort betwe
     Instead of `<downloadpath>` of course you use the actual path.
       
 3. Run `sbt`
+
+### How to use Eclipse with virtualization-lms-core:
+
+See [`this page`](http://lamplmscore.epfl.ch/mediawiki/) for instructions.
