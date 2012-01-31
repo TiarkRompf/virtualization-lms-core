@@ -11,6 +11,6 @@ This is the common embedding framework portion of the collaboration effort betwe
       
 3. Run `sbt`
 
-### How to use Eclipse with virtualization-lms-core:
+### Use Eclipse with for development:
 
-See [`this page`](http://lamplmscore.epfl.ch/mediawiki/) for instructions.
+See [this page](http://lamplmscore.epfl.ch/mediawiki/index.php/Eclipse_IDE_with_Scala-virtualized) for instructions on importing the project.
