@@ -177,16 +177,16 @@ trait GPUCodegen extends CLikeCodegen {
 
     override def toString: String = {
       "\"" + tpe + "\"," + hasCond + ",[" + loopFuncInputs.map(i => "\""+ i +"\"").mkString(",") + "],[" + loopFuncInputs_2.map(i => "\""+ i +"\"").mkString(",") + "]" +
-      ",\"" + loopFuncOutputType + "\",\"" + loopFuncOutputType_2 + "\",[" + loopCondInputs.map(i => "\""+ i +"\"").mkString(",") + "], [" + loopReduceInputs.map(i => "\""+ i +"\"").mkString(",") + "],[" + loopReduceInputs_2.map(i => "\""+ i +"\"").mkString(",") + "]" +
+      ",\"" + loopFuncOutputType + "\",\"" + loopFuncOutputType_2 + "\",[" + loopCondInputs.map(i => "\""+ i +"\"").mkString(",") + "],[" + loopReduceInputs.map(i => "\""+ i +"\"").mkString(",") + "],[" + loopReduceInputs_2.map(i => "\""+ i +"\"").mkString(",") + "]" +
       ",[" + loopReduceParInputs.map(i => "\""+ i +"\"").mkString(",") + "],[" + loopReduceParInputs_2.map(i => "\""+ i +"\"").mkString(",") + "]" +
       ",[" + loopZeroInputs.map(i => "\""+ i +"\"").mkString(",") + "],[" + loopZeroInputs_2.map(i => "\""+ i +"\"").mkString(",") + "]"
     }
   }
   final class TransferFunc {
-    var funcHtoD:String = _
-    var argsFuncHtoD:List[Sym[Any]] = _
-    var funcDtoH:String = _
-    var argsFuncDtoH:List[Sym[Any]] = _
+    var funcHtoD:String = ""
+    var argsFuncHtoD:List[Sym[Any]] = Nil
+    var funcDtoH:String = ""
+    var argsFuncDtoH:List[Sym[Any]] = Nil
     //override def toString: String = {  }
   }
   final class SizeFunc(val func:String, val args:List[Sym[Any]]) {
