@@ -13,8 +13,8 @@ trait CastingOps extends Variables with OverloadHack {
   implicit def varAnyToCastingOps[A:Manifest](lhs: Var[A]) = new CastingOpsCls(readVar(lhs))
     
   class CastingOpsCls[A:Manifest](lhs: Rep[A]){
-    def isInstanceOfL[B:Manifest](implicit ctx: SourceContext): Rep[Boolean] = rep_isinstanceof(lhs, manifest[A], manifest[B])
-    def asInstanceOfL[B:Manifest](implicit ctx: SourceContext): Rep[B] = rep_asinstanceof(lhs, manifest[A], manifest[B])
+    def IsInstanceOf[B:Manifest](implicit ctx: SourceContext): Rep[Boolean] = rep_isinstanceof(lhs, manifest[A], manifest[B])
+    def AsInstanceOf[B:Manifest](implicit ctx: SourceContext): Rep[B] = rep_asinstanceof(lhs, manifest[A], manifest[B])
   }
 
   def rep_isinstanceof[A,B](lhs: Rep[A], mA: Manifest[A], mB: Manifest[B])(implicit ctx: SourceContext) : Rep[Boolean]
