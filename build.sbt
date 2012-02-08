@@ -42,3 +42,13 @@ parallelExecution in Test := false
 //scalacOptions in Test <++= (scalaHome) map { home => Seq("-Xplugin:" + home +"/misc/scala-devel/plugins/continuations.jar", "-P:continuations:enable") }
 
 //scalacOptions in Test += "-P:continuations:enable"
+
+EclipseKeys.withSource := true
+
+EclipseKeys.executionEnvironment := Some(EclipseExecutionEnvironment.JavaSE16)
+
+// Get rid of java source directories in compile
+unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)(Seq(_))
+
+// Get rid of java source directories in test
+unmanagedSourceDirectories in Test <<= (scalaSource in Test)(Seq(_))
