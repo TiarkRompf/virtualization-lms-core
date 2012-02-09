@@ -22,7 +22,6 @@ trait Expressions extends Utils {
   // don't care about typing MDArrays, simply revert this Const labeling :)
   case class Const[+T:Manifest](x: T) extends Exp[T] {
 //    var id: Int = {nVars += 1; nVars - 1}
-//    def typeManifest: Manifest[_] = manifest[T]
 //    override def toString = "Const(" + id + ": " + x.toString+ ")"
 //    override def equals(other: Any): Boolean = other match {
 //      case that: Const[_] => that.canEqual(this) && this.x == that.x && this.typeManifest == that.typeManifest && this.id == that.id
@@ -37,7 +36,6 @@ trait Expressions extends Utils {
     def withPos(pos: List[SourceContext]) = { sourceContexts :::= pos; this }
     var lastRead: Sym[T @uncheckedVariance] = this // TODO
     var version = id
-    val typeManifest: Manifest[_] = manifest[T]
   }
 
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
