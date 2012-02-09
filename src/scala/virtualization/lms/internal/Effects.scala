@@ -433,12 +433,29 @@ trait Effects extends Expressions with Utils {
   // --- reify
 
   def summarizeAll(es: List[Exp[Any]]): Summary = {
+    // compute an *external* summary for a seq of nodes
+    // don't report any reads/writes on data allocated within the block
     var u = Pure()
-    for (Def(Reflect(_, u2, _)) <- es)
-      u = u andThen u2
+    var ux = u
+    var allocs: List[Exp[Any]] = Nil
+    def clean(xs: List[Sym[Any]]) = xs.filterNot(allocs contains _)
+    for (s@Def(Reflect(_, u2, _)) <- es) {
+      if (mustMutable(u2)) allocs ::= s
+      u = u andThen (u2.copy(mayRead = clean(u2.mayRead), mstRead = clean(u2.mstRead),
+              mayWrite = clean(u2.mayWrite), mstWrite = clean(u2.mstWrite)))
+      ux = ux andThen u2
+    }
+    //if (ux != u) printdbg("** effect summary reduced from "+ux+" to" + u)
     u
   }
 
+//  def summarizeAll(es: List[Exp[Any]]): Summary = {
+//    var u = Pure()
+//    for (Def(Reflect(_, u2, _)) <- es)
+//      u = u andThen u2
+//    u
+//  }
+  
   def pruneContext(ctx: List[Exp[Any]]): List[Exp[Any]] = ctx // TODO this doesn't work yet (because of loops!): filterNot { case Def(Reflect(_,u,_)) => mustOnlyRead(u) }
 
   def reifyEffects[A:Manifest](block: => Exp[A]): Exp[A] = {

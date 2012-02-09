@@ -4,10 +4,10 @@ package test7
 
 import common._
 import test1._
-
 import util.OverloadHack
 import scala.reflect.SourceContext
 
+import util.IndentWriter
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
@@ -176,7 +176,7 @@ class TestFusion extends FileDiffSuite {
     withOutFile(prefix+"fusion1") {
       new FusionProg with ArithExp with ArrayLoopsExp with PrintExp { self =>
         val codegen = new ScalaGenArrayLoops with ScalaGenArith with ScalaGenPrint { val IR: self.type = self }
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource(test, "Test", new PrintWriter(new IndentWriter(System.out)))
       }
     }
     assertFileEqualsCheck(prefix+"fusion1")
@@ -188,7 +188,7 @@ class TestFusion extends FileDiffSuite {
       new FusionProg with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with TransformingStuff { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint { val IR: self.type = self }
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource(test, "Test", new PrintWriter(new IndentWriter(System.out)))
       }
     }
     assertFileEqualsCheck(prefix+"fusion2")
@@ -201,7 +201,7 @@ class TestFusion extends FileDiffSuite {
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false }
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource(test, "Test", new PrintWriter(new IndentWriter(System.out)))
       }
     }
     assertFileEqualsCheck(prefix+"fusion3")
@@ -214,7 +214,7 @@ class TestFusion extends FileDiffSuite {
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource(test, "Test", new PrintWriter(new IndentWriter(System.out)))
       }
     }
     assertFileEqualsCheck(prefix+"fusion4")

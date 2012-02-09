@@ -27,6 +27,9 @@ trait ScalaCodegen extends GenericCodegen with Config {
     val sA = mA.toString
     val sB = mB.toString
 
+    emitImports(stream)
+    performTyping(x, y)
+
     val staticData = getFreeDataBlock(y)
 
     stream.println("/*****************************************\n"+
@@ -56,6 +59,9 @@ trait ScalaCodegen extends GenericCodegen with Config {
     val kernelName = syms.map(quote).mkString("")
     
     stream.println("package generated." + this.toString)
+
+    emitImports(stream)
+
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
     stream.print(vals.map(p => quote(p) + ":" + remap(p.Type)).mkString(","))

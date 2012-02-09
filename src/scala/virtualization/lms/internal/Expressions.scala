@@ -18,13 +18,26 @@ trait Expressions extends Utils {
     def pos: List[SourceContext] = Nil
   }
 
-  case class Const[+T:Manifest](x: T) extends Exp[T]
+  // TODO: The fact that we label Consts crashes all the dot tests in the testsuite. In case you need those tests and
+  // don't care about typing MDArrays, simply revert this Const labeling :)
+  case class Const[+T:Manifest](x: T) extends Exp[T] {
+//    var id: Int = {nVars += 1; nVars - 1}
+//    def typeManifest: Manifest[_] = manifest[T]
+//    override def toString = "Const(" + id + ": " + x.toString+ ")"
+//    override def equals(other: Any): Boolean = other match {
+//      case that: Const[_] => that.canEqual(this) && this.x == that.x && this.typeManifest == that.typeManifest && this.id == that.id
+//      case _ => false
+//    }
+  }
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var sourceInfo = Thread.currentThread.getStackTrace // TODO: make use of SourceContext instead
     var sourceContexts: List[SourceContext] = Nil
     override def pos = sourceContexts
     def withPos(pos: List[SourceContext]) = { sourceContexts :::= pos; this }
+    var lastRead: Sym[T @uncheckedVariance] = this // TODO
+    var version = id
+    val typeManifest: Manifest[_] = manifest[T]
   }
 
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant

@@ -37,10 +37,10 @@ trait FileDiffSuite extends Suite {
     val fis = new FileInputStream(name)
     fis.read(buf)
     fis.close()
-    new String(buf)
+    (new String(buf)).replaceAll("\\r\\n","\n").replaceAll("\\r","\n") // normalize line endings
   }
   def assertFileEqualsCheck(name: String): Unit = {
-    assert(readFile(name) == readFile(name+".check"), name) // TODO: diff output
+    assert(readFile(name) == readFile(name+".check"), name) // should use real diff algorithm?
     new File(name) delete ()
   }
 }

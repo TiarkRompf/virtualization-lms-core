@@ -9,6 +9,10 @@ trait GenericCodegen extends Scheduling {
   val IR: Expressions
   import IR._
 
+  // Necessary for MDARRAYS
+  def emitImports(stream: PrintWriter): Unit = ()
+  def performTyping[A, B](x: Exp[A], y: Exp[B]): Unit = ()
+  
   // TODO: should some of the methods be moved into more specific subclasses?
   
   def kernelFileExt = ""
