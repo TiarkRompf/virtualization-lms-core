@@ -27,39 +27,60 @@ trait Expressions extends Utils {
   var nVars = 0
   def fresh[T:Manifest] = Sym[T] { nVars += 1; nVars -1 }
 
-  abstract class Def[+T] // operations (compos  ite)
+  abstract class Def[+T] // operations (composite)
 
-  //abstract class Stm // statement (links syms and definitions)
+  abstract class Stm // statement (links syms and definitions)
   
-  case class TP[+T](sym: Sym[T], rhs: Def[T]) //extends Stm
+  def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {
+    case TP(sym, rhs) => List(sym)
+  }
+  
+  def infix_rhs(stm: Stm): Any = stm match { // clients use syms(e.rhs), boundSyms(e.rhs) etc.
+    case TP(sym, rhs) => rhs
+  }
 
-  var globalDefs: List[TP[Any]] = Nil
+  def infix_defines[A](stm: Stm, sym: Sym[A]): Option[Def[A]] = stm match {
+    case TP(`sym`, rhs: Def[A]) => Some(rhs)
+    case _ => None
+  }
 
-  def findDefinition[T](s: Sym[T]): Option[TP[T]] =
-    globalDefs.find(_.sym == s).asInstanceOf[Option[TP[T]]]
+  def infix_defines[A](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
+    case TP(sym: Sym[A], `rhs`) => Some(sym)
+    case _ => None
+  }
+  
+  case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
 
-  def findDefinition[T](d: Def[T]): Option[TP[T]] =
-    globalDefs.find(_.rhs == d).asInstanceOf[Option[TP[T]]]
+  var globalDefs: List[Stm] = Nil
 
-  def findOrCreateDefinition[T:Manifest](d: Def[T]): TP[T] =
+  def findDefinition[T](s: Sym[T]): Option[Stm] =
+    globalDefs.find(x => x.defines(s).nonEmpty)
+
+  def findDefinition[T](d: Def[T]): Option[Stm] =
+    globalDefs.find(x => x.defines(d).nonEmpty)
+
+  def findOrCreateDefinition[T:Manifest](d: Def[T]): Stm =
     findDefinition[T](d).getOrElse {
       createDefinition(fresh[T], d)
     }
 
-  def createDefinition[T](s: Sym[T], d: Def[T]): TP[T] = {
+  def findOrCreateDefinitionExp[T:Manifest](d: Def[T]): Exp[T] =
+    findOrCreateDefinition(d).defines(d).get
+
+  def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
     val f = TP(s, d)
     globalDefs = globalDefs:::List(f)
     f
   }
 
   protected implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
-    findOrCreateDefinition(d).sym // TODO: return Const(()) if type is Unit??
+    findOrCreateDefinitionExp(d) // TODO: return Const(()) if type is Unit??
   }
 
   object Def {
     def unapply[T](e: Exp[T]): Option[Def[T]] = e match { // really need to test for sym?
       case s @ Sym(_) =>
-        findDefinition(s).map(_.rhs)
+        findDefinition(s).flatMap(_.defines(s))
       case _ =>
         None
     }

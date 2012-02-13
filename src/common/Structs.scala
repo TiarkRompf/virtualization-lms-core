@@ -240,7 +240,7 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
   
   // TODO: implement regular fatten ?
   
-  override def fattenAll(e: List[TP[Any]]): List[TTP] = {
+  override def fattenAll(e: List[Stm]): List[Stm] = {
     val m = e collect { 
       case t@TP(sym, p @ Phi(c,a,u,b,v)) => t
     } groupBy { 
@@ -254,22 +254,22 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
       val us = phis collect { case TP(_, Phi(c,a,u,b,v)) => u } // assert c,a,b match
       val vs = phis collect { case TP(_, Phi(c,a,u,b,v)) => v }
       val c  = phis collect { case TP(_, Phi(c,a,u,b,v)) => c } reduceLeft { (c1,c2) => assert(c1 == c2); c1 }
-      TTP(ss, SimpleFatIfThenElse(c,us,vs))
+      TTP(ss, phis map (_.rhs), SimpleFatIfThenElse(c,us,vs))
     }
-    def fatif(s:Sym[Unit],c:Exp[Boolean],a:Block[Unit],b:Block[Unit]) = fatphi(s) match {
-      case Some(TTP(ss, SimpleFatIfThenElse(c2,us,vs))) =>
+    def fatif(s:Sym[Unit],o:Def[Unit],c:Exp[Boolean],a:Block[Unit],b:Block[Unit]) = fatphi(s) match {
+      case Some(TTP(ss, oo, SimpleFatIfThenElse(c2,us,vs))) =>
         assert(c == c2)
-        TTP(s::ss, SimpleFatIfThenElse(c,a::us,b::vs))
+        TTP(s::ss, o::oo, SimpleFatIfThenElse(c,a::us,b::vs))
       case _ =>
-        TTP(s::Nil, SimpleFatIfThenElse(c,a::Nil,b::Nil))
+        TTP(s::Nil, o::Nil, SimpleFatIfThenElse(c,a::Nil,b::Nil))
     }
 
-    val orphans = m.keys.toList.filterNot(k => e exists (_.sym == k)) // parent if/else might have been removed!
+    val orphans = m.keys.toList.filterNot(k => e exists (_.lhs contains k)) // parent if/else might have been removed!
 
     val r = e.flatMap { 
       case TP(sym, p@Phi(c,a,u,b,v)) => Nil
-      case TP(sym:Sym[Unit], IfThenElse(c,a:Block[Unit],b:Block[Unit])) => List(fatif(sym,c,a,b))
-      case TP(sym:Sym[Unit], Reflect(IfThenElse(c,a:Block[Unit],b:Block[Unit]),_,_)) => List(fatif(sym,c,a,b))
+      case TP(sym:Sym[Unit], o@IfThenElse(c,a:Block[Unit],b:Block[Unit])) => List(fatif(sym,o.asInstanceOf[Def[Unit]],c,a,b))
+      case TP(sym:Sym[Unit], o@Reflect(IfThenElse(c,a:Block[Unit],b:Block[Unit]),_,_)) => List(fatif(sym,o.asInstanceOf[Def[Unit]],c,a,b))
       case t => List(fatten(t))
     } ++ orphans.map { case s: Sym[Unit] => fatphi(s).get } // be fail-safe here?
     

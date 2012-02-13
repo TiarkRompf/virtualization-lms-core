@@ -80,7 +80,7 @@ class TestLambdalift extends FileDiffSuite {
         val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenPrint { 
           val IR: self.type = self
           
-          def boundAndUsedInScope(x: Exp[Any], y: Exp[Any]): (List[Sym[Any]], List[Sym[Any]]) = {
+          /*def boundAndUsedInScope(x: Exp[Any], y: Exp[Any]): (List[Sym[Any]], List[Sym[Any]]) = {
             val used = (syms(y):::innerScope.flatMap(t => syms(t.rhs))).distinct
             val bound = (syms(x):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
             (bound, used)
@@ -88,14 +88,14 @@ class TestLambdalift extends FileDiffSuite {
           def freeInScope(x: Exp[Any], y: Exp[Any]): List[Sym[Any]] = {
             val (bound, used) = boundAndUsedInScope(x,y)
             used diff bound
-          }
+          }*/
           
           override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
             case e@Lambda(fun, x, y) =>
             
               focusBlock(y) {
-                var free = freeInScope(x,getBlockResultFull(y))
-            
+                var free = freeInScope(List(x),List(getBlockResultFull(y)))
+                
                 val sw = new StringWriter
                 codegenInner.emitFocused("Anonfun_"+quote(sym), free, x, y)(new PrintWriter(sw))
                 classes = sw.toString :: classes

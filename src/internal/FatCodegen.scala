@@ -11,14 +11,14 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatTraversal {
   
   override def emitBlockFocused(result: Block[Any])(implicit stream: PrintWriter): Unit = {
     var currentScope = fattenAll(innerScope)
-    currentScope = getFatSchedule(currentScope)(result) // clean things up!
+    currentScope = getSchedule(currentScope)(result) // clean things up!
     result match {
       case Block(Combine(rs)) => emitFatBlockFocused(currentScope)(rs.map(Block(_)))  // TODO: find another way
       case _ => emitFatBlockFocused(currentScope)(List(result))
     }
   }
 
-  def emitFatBlockFocused(currentScope: List[TTP])(result: List[Block[Any]])(implicit stream: PrintWriter): Unit = {
+  def emitFatBlockFocused(currentScope: List[Stm])(result: List[Block[Any]])(implicit stream: PrintWriter): Unit = {
 /*
     val dbg = (result == List(Sym(1729)))
     if (dbg) {
@@ -40,8 +40,9 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatTraversal {
       println("-- exact for "+result)
       availableDefs.foreach(println(_))
 */
-      for (TTP(syms, rhs) <- levelScope) {
-        emitFatNode(syms, rhs)
+      levelScope foreach {
+        case TP(sym, rhs) => emitNode(sym,rhs)
+        case TTP(lhs, mhs, rhs) => emitFatNode(lhs, rhs)
       }
     }
   }
@@ -53,8 +54,6 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatTraversal {
   }
   
   def emitFatNode(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter): Unit = rhs match {
-    case ThinDef(Reflect(s, u, effects)) => emitFatNode(sym, ThinDef(s)) // call back into emitFatNode, not emitNode
-    case ThinDef(a) => emitNode(sym(0), a)
     case _ => sys.error("don't know how to generate code for: "+rhs)
   }
 

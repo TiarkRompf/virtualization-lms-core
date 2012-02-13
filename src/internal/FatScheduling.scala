@@ -10,11 +10,11 @@ trait FatScheduling extends Scheduling {
   
   import util.GraphUtil
 
-  def fatten(e: TP[Any]): TTP = TTP(List(e.sym), ThinDef(e.rhs))
+  def fatten(e: Stm): Stm = e
 
-  def fattenAll(e: List[TP[Any]]): List[TTP] = e.map(fatten)
+  def fattenAll(e: List[Stm]): List[Stm] = e.map(fatten)
 
-  
+/*  
   def getSchedule(scope: List[TP[Any]])(result: Any): List[TP[Any]] = {
     def deps(st: List[Sym[Any]]): List[TP[Any]] =
       scope.filter(st contains _.sym)
@@ -33,6 +33,7 @@ trait FatScheduling extends Scheduling {
     }
     xx.flatten.reverse
   }
+*/
 
 /*
   def buildScheduleForResultM(defs: List[TP[Any]])(start: Any, cold: Boolean, hot: Boolean): List[TP[Any]] = {
@@ -48,6 +49,9 @@ trait FatScheduling extends Scheduling {
     GraphUtil.stronglyConnectedComponents[TP[Any]](deps(mysyms(start,cold,hot)), t => deps(mysyms(t.rhs,cold,hot))).flatten.reverse
   }  
 */  
+
+
+/*
   def getFatScheduleM(scope: List[TTP])(start: Any, cold: Boolean, hot: Boolean): List[TTP] = {
     def mysyms(st: Any) = {
       val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
@@ -115,5 +119,6 @@ trait FatScheduling extends Scheduling {
     }
     GraphUtil.stronglyConnectedComponents[TTP](uses(st), t => t.lhs flatMap uses).flatten
   }
+*/
     
 }

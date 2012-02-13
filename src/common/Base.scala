@@ -72,8 +72,8 @@ trait EffectExp extends BlockExp with Effects {
 trait BaseFatExp extends BaseExp with FatExpressions with FatTransforming
 
 
-// TODO: what is the point of these, I suggest to remove them 
-// Answer: provide an interface to codegen without depending on internal._
+// The traits below provide an interface to codegen so that client do 
+// not need to depend on internal._
 
 trait ScalaGenBase extends ScalaCodegen
 

@@ -49,7 +49,7 @@ trait SimplifyTransform extends internal.FatTraversal {
 
     if (y != s) {
       if (y.isInstanceOf[Sym[Any]] && findDefinition(y.asInstanceOf[Sym[Any]]).nonEmpty)
-        printdbg("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[Any]]).get.rhs)
+        printdbg("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[Any]]).get.defines(y.asInstanceOf[Sym[Any]]).get)
       else
         printdbg("--> replace " + s+"="+x + " by " + y)
       t.subst(s) = y // TODO: move out of conditional?
@@ -68,59 +68,62 @@ trait SimplifyTransform extends internal.FatTraversal {
   }
   
   // TODO: generalize, abstract out SimpleFatXX types
-  def transformAll(scope: List[TTP], t: SubstTransformer): List[TTP] = scope flatMap {
-    case TTP(List(sym), ThinDef(rhs)) =>
+  def transformAll(scope: List[Stm], t: SubstTransformer): List[Stm] = scope flatMap {
+    case TP(sym, rhs) =>
       transformOne(sym, rhs, t) match {
-        case s: Sym[Any] => 
-          val tp = findDefinition(s)
-          if (tp.isEmpty) Nil // happens for array(100) { i => i } TODO: match on Def?
-          else List(fatten(tp.get))
+        case s: Sym[Any] => findDefinition(s).toList
         case _ => Nil
       }
-    case TTP(lhs, SimpleFatIfThenElse(c,as,bs)) =>
+    case TTP(lhs, mhs, SimpleFatIfThenElse(c,as,bs)) =>
       // alternate strategy: transform thin def, then fatten again (a little detour)
       printdbg("need to transform rhs of fat if/then/else: " + lhs + ", if " + c + " then " + as + " else " + bs)
-      val lhs2 = lhs.map { case s @ Def(r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
+      val lhs2 = (lhs zip mhs).map { case (s,r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
+      val mhs2 = lhs2.map(s => findDefinition(s).get.defines(s).get)
+      // TBD: we're mirroring the defs in mhs, creating new stms
+      // we don't really want new stms: if the defs are just abstract descriptions we only want them updated
+      
+      // this means we'll have both a TP and a TTP defining the same sym in globalDefs --> bad!
+      // not quite so fast, chances are the TTP's never make it into globalDefs (no toAtom call)!!!
+      
       if (lhs != lhs2) {
         val missing = (lhs2.map(s => findDefinition(s).get) diff innerScope)
         printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
         innerScope = innerScope ::: missing
       }
-      //val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
-      //val cond2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatIfThenElse(c, _, _)) => c }} reduceLeft { (s1,s2) => assert(s1==s2,"conditions don't agree: "+s1+","+s2); s1 }
-      val cond2 = if (lhs != lhs2) lhs2.map { 
-                    case Def(l: AbstractIfThenElse[_]) => l.cond
-                    case Def(Reflect(l: AbstractIfThenElse[_], _, _)) => l.cond
-                    case Def(x) => sys.error("XXX " + x)
-                  } reduceLeft { (s1,s2) => assert(s1==s2,"conditions don't agree: "+s1+","+s2); s1 }
-                  else t(c)
-      val as2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatIfThenElse(_, List(r), _)) => transformIfBody(s,r,t) }}
-                 else (lhs zip as) map { case (s,r) => transformIfBody(s,r,t) }
-      val bs2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatIfThenElse(_, _, List(r))) => transformIfBody(s,r,t) }}
-                 else (lhs zip bs) map { case (s,r) => transformIfBody(s,r,t) }
-    
-      //update innerScope -- change definition of lhs2 in place
-      innerScope = innerScope map {
-        case TP(l,_) if lhs2 contains l => TP(l, IfThenElse(cond2,as2(lhs2.indexOf(l)),bs2(lhs2.indexOf(l))))
-        case d => d
+
+      def infix_toIf(d: Def[Any]) = d match {
+        case l: AbstractIfThenElse[_] => l
+        case Reflect(l: AbstractIfThenElse[_], _, _) => l
       }
+      val cond2 = if (lhs != lhs2) mhs2.map (_.toIf.cond) reduceLeft { (s1,s2) => assert(s1==s2,"conditions don't agree: "+s1+","+s2); s1 }
+                  else t(c)
+      val as2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toIf.thenp)))
+                 else (lhs zip as)) map { case (s,r) => transformIfBody(s,r,t) }
+      val bs2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toIf.elsep)))
+                 else (lhs zip bs)) map { case (s,r) => transformIfBody(s,r,t) }
     
       printdbg("came up with: " + lhs2 + ", if " + cond2 + " then " + as2 + " else " + bs2 + " with subst " + t.subst.mkString(","))
-      List(TTP(lhs2, SimpleFatIfThenElse(cond2,as2,bs2)))
-    case TTP(lhs, SimpleFatLoop(s,x,rhs)) =>
+      List(TTP(lhs2, mhs2, SimpleFatIfThenElse(cond2,as2,bs2)))
+      
+    case TTP(lhs, mhs, SimpleFatLoop(s,x,rhs)) =>
       // alternate strategy: transform thin def, then fatten again (a little detour)
       printdbg("need to transform rhs of fat loop: " + lhs + ", " + rhs)
-      val lhs2 = lhs.map { case s @ Def(r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
+      val lhs2 = (lhs zip mhs).map { case (s,r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
+      val mhs2 = lhs2.map(s => findDefinition(s).get.defines(s).get)
       if (lhs != lhs2) {
         val missing = (lhs2.map(s => findDefinition(s).get) diff innerScope)
         printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
         innerScope = innerScope ::: missing
       }
       //val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
-      val shape2 = if (lhs != lhs2) lhs2.map { case Def(l: AbstractLoop[_]) => l.size case Def(Reflect(l: AbstractLoop[_], _, _)) => l.size } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
+      def infix_toLoop(d: Def[Any]) = d match {
+        case l: AbstractLoop[_] => l
+        case Reflect(l: AbstractLoop[_], _, _) => l
+      }
+      val shape2 = if (lhs != lhs2) mhs2.map (_.toLoop.size) reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
                    else t(s)
-      val rhs2 = if (lhs != lhs2) lhs2.map { s => fatten(findDefinition(s).get) match { case TTP(List(s), SimpleFatLoop(_, _, List(r))) => transformLoopBody(s,r,t) }}
-                 else (lhs zip rhs) map { case (s,r) => transformLoopBody(s,r,t) }
+      val rhs2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toLoop.body)))
+                  else (lhs zip rhs)) map { case (s,r) => transformLoopBody(s,r,t) }
       
       //update innerScope -- change definition of lhs2 in place
       innerScope = innerScope map {
@@ -129,7 +132,7 @@ trait SimplifyTransform extends internal.FatTraversal {
       }
       
       printdbg("came up with: " + lhs2 + ", " + rhs2 + " with subst " + t.subst.mkString(","))
-      List(TTP(lhs2, SimpleFatLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2)))
+      List(TTP(lhs2, mhs2, SimpleFatLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2)))
       // still problem: VectorSum(a,b) = SimpleLoop(i, ReduceElem(f(i))) 
       // might need to translate f(i), but looking up VectorSum will not be changed at all!!!
       // --> change rhs nonetheless???
@@ -142,12 +145,12 @@ trait SimplifyTransform extends internal.FatTraversal {
 */      
   }
 
-  def transformAllFully(currentScope0: List[TTP], result0: List[Exp[Any]], t: SubstTransformer): (List[TTP], List[Exp[Any]]) = {
+  def transformAllFully(currentScope0: List[Stm], result0: List[Exp[Any]], t: SubstTransformer): (List[Stm], List[Exp[Any]]) = {
     var currentScope = currentScope0
     var result = result0
     
     // ---
-    currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+    currentScope = getSchedule(currentScope)(currentScope) // clean things up!
 
     /*println("<1---"+result0+"/"+result)
     currentScope.foreach(println)
@@ -155,7 +158,7 @@ trait SimplifyTransform extends internal.FatTraversal {
 
     // SIMPLIFY! <--- multiple steps necessary???
   
-    def withEffectContext(body: =>List[TTP]): List[TTP] = {
+    def withEffectContext(body: =>List[Stm]): List[Stm] = {
       val save = context
       context = Nil
       val scope = body
@@ -168,15 +171,15 @@ trait SimplifyTransform extends internal.FatTraversal {
   
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+    currentScope = getSchedule(currentScope)(currentScope) // clean things up!
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+    currentScope = getSchedule(currentScope)(currentScope) // clean things up!
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(result) // clean things up!
+    currentScope = getSchedule(currentScope)(result) // clean things up!
 
 
     // once more to see if we are converged
@@ -184,7 +187,7 @@ trait SimplifyTransform extends internal.FatTraversal {
   
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(result) // clean things up!
+    currentScope = getSchedule(currentScope)(result) // clean things up!
   
     if (currentScope != previousScope) { // check convergence
       printerr("error: transformation of scope contents has not converged")
@@ -199,7 +202,7 @@ trait SimplifyTransform extends internal.FatTraversal {
   }
   
   
-  def simplify(scope: List[TTP])(results: List[Exp[Any]]): (List[TTP], List[Exp[Any]]) = {
+  def simplify(scope: List[Stm])(results: List[Exp[Any]]): (List[Stm], List[Exp[Any]]) = {
     val t = new SubstTransformer    
     val scope2 = transformAll(scope, t)
     val results2 = results map (t apply _)

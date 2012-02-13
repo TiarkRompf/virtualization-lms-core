@@ -215,7 +215,7 @@ trait Effects extends Expressions with Blocks with Utils {
   val deepAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   val allAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   
-  def utilLoadSymTP[T](s: Sym[T]) = if (!isPrimitiveType(s.Type)) globalDefs.filter(List(s) contains _.sym) else Nil
+  def utilLoadSymTP[T](s: Sym[T]) = if (!isPrimitiveType(s.Type)) globalDefs.filter{e => e.lhs contains s} else Nil
   def utilLoadSym[T](s: Sym[T]) = utilLoadSymTP(s).map(_.rhs)
   
   def shallowAliases(start: Any): List[Sym[Any]] = {
@@ -242,7 +242,7 @@ trait Effects extends Expressions with Blocks with Utils {
     r
   }
 
-  def allTransitiveAliases(start: Any): List[TP[Any]] = allAliases(start).flatMap(utilLoadSymTP)
+  def allTransitiveAliases(start: Any): List[Stm] = allAliases(start).flatMap(utilLoadSymTP)
   
   
   // TODO possible optimization: a mutable object never aliases another mutable object, so its inputs need not be followed

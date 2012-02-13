@@ -9,7 +9,7 @@ import scala.collection.mutable
 trait LivenessOpt extends NestedTraversal {
   import IR._  
   
-  def calculateLivenessTransform[A](used: mutable.HashSet[Sym[Any]], t: TP[A]): List[TP[_]] = t match {
+  def calculateLivenessTransform(used: mutable.HashSet[Sym[Any]], t: Stm): List[Stm] = t match {
     case TP(sym, Reify(x, u, es)) if used(sym) => 
       used ++= syms(x) // ignore effect dependencies!
       used ++= u.mayWrite // writes to external data

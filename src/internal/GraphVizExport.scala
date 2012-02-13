@@ -27,7 +27,7 @@ trait GraphVizExport extends Scheduling {
 
     stream.println("digraph G {")
 
-    val deflist = buildScheduleForResult(start)
+    val deflist = buildScheduleForResult(start,false)
 
     if (landscape)
       stream.println("rankdir=LR")

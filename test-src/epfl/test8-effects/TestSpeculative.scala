@@ -12,6 +12,10 @@ import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
+// NOTE: the test cases print 'violated ordering of effects' warnings.
+// we remove dead stores on purpose, based on liveness information
+// but the scheduler thinks they go missing by error.
+
 trait WhileExpOptSpeculative extends WhileExp {
   
   case class PreviousIteration() extends Def[Unit]
