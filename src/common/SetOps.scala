@@ -19,14 +19,18 @@ trait SetOps extends Base {
     def remove(i: Rep[A])(implicit ctx: SourceContext) = set_remove(s, i)
     def size(implicit ctx: SourceContext) = set_size(s)
     def clear()(implicit ctx: SourceContext) = set_clear(s)
+    def toSeq(implicit ctx: SourceContext) = set_toseq(s)
+    def toArray(implicit ctx: SourceContext) = set_toarray(s)
   }
 
-  def set_new[A:Manifest](xs: Seq[Rep[A]])(implicit ctx: SourceContext) : Rep[Set[A]]
-  def set_contains[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit ctx: SourceContext) : Rep[Boolean]
-  def set_add[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit ctx: SourceContext) : Rep[Unit]
-  def set_remove[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit ctx: SourceContext) : Rep[Unit]
-  def set_size[A:Manifest](s: Rep[Set[A]])(implicit ctx: SourceContext) : Rep[Int]
-  def set_clear[A:Manifest](s: Rep[Set[A]])(implicit ctx: SourceContext) : Rep[Unit]
+  def set_new[A:Manifest](xs: Seq[Rep[A]])(implicit ctx: SourceContext): Rep[Set[A]]
+  def set_contains[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit ctx: SourceContext): Rep[Boolean]
+  def set_add[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit ctx: SourceContext): Rep[Unit]
+  def set_remove[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit ctx: SourceContext): Rep[Unit]
+  def set_size[A:Manifest](s: Rep[Set[A]])(implicit ctx: SourceContext): Rep[Int]
+  def set_clear[A:Manifest](s: Rep[Set[A]])(implicit ctx: SourceContext): Rep[Unit]
+  def set_toseq[A:Manifest](s: Rep[Set[A]])(implicit ctx: SourceContext): Rep[Seq[A]]
+  def set_toarray[A:Manifest](s: Rep[Set[A]])(implicit ctx: SourceContext): Rep[Array[A]]
 }
 
 trait SetOpsExp extends SetOps with EffectExp {
@@ -36,6 +40,8 @@ trait SetOpsExp extends SetOps with EffectExp {
   case class SetRemove[A:Manifest](s: Exp[Set[A]], i: Exp[A]) extends Def[Unit]
   case class SetSize[A:Manifest](s: Exp[Set[A]]) extends Def[Int]
   case class SetClear[A:Manifest](s: Exp[Set[A]]) extends Def[Unit]
+  case class SetToSeq[A:Manifest](s: Exp[Set[A]]) extends Def[Seq[A]]
+  case class SetToArray[A:Manifest](s: Exp[Set[A]]) extends Def[Array[A]]
 
   def set_new[A:Manifest](xs: Seq[Exp[A]])(implicit ctx: SourceContext) = reflectMutable(SetNew(xs, manifest[A]))
   def set_contains[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit ctx: SourceContext) = SetContains(s, i)
@@ -43,6 +49,8 @@ trait SetOpsExp extends SetOps with EffectExp {
   def set_remove[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit ctx: SourceContext) = reflectWrite(s)(SetRemove(s, i))
   def set_size[A:Manifest](s: Exp[Set[A]])(implicit ctx: SourceContext) = SetSize(s)
   def set_clear[A:Manifest](s: Exp[Set[A]])(implicit ctx: SourceContext) = reflectWrite(s)(SetClear(s))
+  def set_toseq[A:Manifest](s: Exp[Set[A]])(implicit ctx: SourceContext) = SetToSeq(s)
+  def set_toarray[A:Manifest](s: Exp[Set[A]])(implicit ctx: SourceContext) = SetToArray(s)
 }
 
 trait BaseGenSetOps extends GenericNestedCodegen {
@@ -62,6 +70,8 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
     case SetRemove(s,i) => emitValDef(sym, quote(s) + ".remove(" + quote(i) + ")")
     case SetSize(s) => emitValDef(sym, quote(s) + ".size")
     case SetClear(s) => emitValDef(sym, quote(s) + ".clear()")
+    case SetToSeq(s) => emitValDef(sym, quote(s) + ".toSeq")
+    case SetToArray(s) => emitValDef(sym, quote(s) + ".toArray")
     case _ => super.emitNode(sym, rhs)
   }
 }
