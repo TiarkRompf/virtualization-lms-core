@@ -25,6 +25,8 @@ trait ArrayOps extends Variables {
     def length(implicit ctx: SourceContext) = array_length(a)
     def foreach(block: Rep[T] => Rep[Unit])(implicit ctx: SourceContext) = array_foreach(a, block)
     def sort(implicit ctx: SourceContext) = array_sort(a)
+    def map[B:Manifest](f: Rep[T] => Rep[B]) = array_map(a,f)
+    def toSeq = array_toseq(a)
   }    
 
   def array_obj_new[T:Manifest](n: Rep[Int]): Rep[Array[T]]
@@ -36,6 +38,8 @@ trait ArrayOps extends Variables {
   def array_copy[T:Manifest](src: Rep[Array[T]], srcPos: Rep[Int], dest: Rep[Array[T]], destPos: Rep[Int], len: Rep[Int])(implicit ctx: SourceContext): Rep[Unit]
   def array_unsafe_copy[T:Manifest](src: Rep[Array[T]], srcPos: Rep[Int], dest: Rep[Array[T]], destPos: Rep[Int], len: Rep[Int])(implicit ctx: SourceContext): Rep[Unit]
   def array_sort[T:Manifest](x: Rep[Array[T]])(implicit ctx: SourceContext): Rep[Array[T]]
+  def array_map[A:Manifest,B:Manifest](a: Rep[Array[A]], f: Rep[A] => Rep[B]): Rep[Array[B]]
+  def array_toseq[A:Manifest](a: Rep[Array[A]]): Rep[Seq[A]]
 }
 
 trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
@@ -50,6 +54,8 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   case class ArraySort[T:Manifest](x: Exp[Array[T]]) extends Def[Array[T]] {
     val m = manifest[T]
   }
+  case class ArrayMap[A:Manifest,B:Manifest](x: Exp[Array[A]], block: Exp[B]) extends Def[Array[B]]
+  case class ArrayToSeq[A:Manifest](x: Exp[Array[A]]) extends Def[Seq[A]]
   
   def array_obj_new[T:Manifest](n: Exp[Int]) = reflectMutable(ArrayNew(n))
   def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int])(implicit ctx: SourceContext): Exp[T] = ArrayApply(x, n)
@@ -64,6 +70,12 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   def array_copy[T:Manifest](src: Exp[Array[T]], srcPos: Exp[Int], dest: Exp[Array[T]], destPos: Exp[Int], len: Exp[Int])(implicit ctx: SourceContext) = reflectWrite(dest)(ArrayCopy(src,srcPos,dest,destPos,len))
   def array_unsafe_copy[T:Manifest](src: Exp[Array[T]], srcPos: Exp[Int], dest: Exp[Array[T]], destPos: Exp[Int], len: Exp[Int])(implicit ctx: SourceContext) = ArrayCopy(src,srcPos,dest,destPos,len)
   def array_sort[T:Manifest](x: Exp[Array[T]])(implicit ctx: SourceContext) = ArraySort(x)
+  def array_map[A:Manifest,B:Manifest](a: Exp[Array[A]], f: Exp[A] => Exp[B]) = {
+    val x = fresh[A]
+    val b = reifyEffectsHere(f(x))
+    reflectEffect(ArrayMap(a, b), summarizeEffects(b))    
+  }
+  def array_toseq[A:Manifest](a: Exp[Array[A]]) = ArrayToSeq(a)
   
   //////////////
   // mirroring
@@ -122,6 +134,12 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
       stream.println("scala.util.Sorting.quickSort(d)")
       stream.println("d")
       stream.println("}")
+    case ArrayMap(a,blk) => 
+      stream.println("val " + quote(sym) + " = {")
+      stream.println(quote(a) + ".map(")
+      emitBlock(blk)
+      stream.println(")}")  
+    case ArrayToSeq(a) => emitValDef(sym, quote(a) + ".toSeq")
     case _ => super.emitNode(sym, rhs)
   }
 }
