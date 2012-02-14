@@ -33,7 +33,7 @@ trait SetOps extends Base {
   def set_toarray[A:Manifest](s: Rep[Set[A]])(implicit ctx: SourceContext): Rep[Array[A]]
 }
 
-trait SetOpsExp extends SetOps with EffectExp {
+trait SetOpsExp extends SetOps with ArrayOps with EffectExp {
   case class SetNew[A:Manifest](xs: Seq[Exp[A]], mA: Manifest[A]) extends Def[Set[A]]
   case class SetContains[A:Manifest](s: Exp[Set[A]], i: Exp[A]) extends Def[Boolean]
   case class SetAdd[A:Manifest](s: Exp[Set[A]], i: Exp[A]) extends Def[Unit]
@@ -41,7 +41,10 @@ trait SetOpsExp extends SetOps with EffectExp {
   case class SetSize[A:Manifest](s: Exp[Set[A]]) extends Def[Int]
   case class SetClear[A:Manifest](s: Exp[Set[A]]) extends Def[Unit]
   case class SetToSeq[A:Manifest](s: Exp[Set[A]]) extends Def[Seq[A]]
-  case class SetToArray[A:Manifest](s: Exp[Set[A]]) extends Def[Array[A]]
+  case class SetToArray[A:Manifest](s: Exp[Set[A]]) extends Def[Array[A]] {
+    //val array = unit(manifest[A].newArray(0))
+    val array = NewArray[A](s.size)
+  }
 
   def set_new[A:Manifest](xs: Seq[Exp[A]])(implicit ctx: SourceContext) = reflectMutable(SetNew(xs, manifest[A]))
   def set_contains[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit ctx: SourceContext) = SetContains(s, i)
@@ -71,7 +74,18 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
     case SetSize(s) => emitValDef(sym, quote(s) + ".size")
     case SetClear(s) => emitValDef(sym, quote(s) + ".clear()")
     case SetToSeq(s) => emitValDef(sym, quote(s) + ".toSeq")
-    case SetToArray(s) => emitValDef(sym, quote(s) + ".toArray")
+    case n@SetToArray(s) => //emitValDef(sym, quote(s) + ".toArray")
+      stream.println("// workaround for refinedManifest problem")
+      stream.println("val " + quote(sym) + " = {")
+      stream.println("val out = " + quote(n.array))
+      stream.println("val in = " + quote(s) + ".toSeq")
+      stream.println("var i = 0")
+      stream.println("while (i < in.length) {")
+      stream.println("out(i) = in(i)")
+      stream.println("i += 1")      
+      stream.println("}")
+      stream.println("out")
+      stream.println("}")
     case _ => super.emitNode(sym, rhs)
   }
 }

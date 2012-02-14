@@ -54,7 +54,9 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   case class ArraySort[T:Manifest](x: Exp[Array[T]]) extends Def[Array[T]] {
     val m = manifest[T]
   }
-  case class ArrayMap[A:Manifest,B:Manifest](x: Exp[Array[A]], block: Exp[B]) extends Def[Array[B]]
+  case class ArrayMap[A:Manifest,B:Manifest](a: Exp[Array[A]], x: Sym[A], block: Exp[B]) extends Def[Array[B]] {
+    val array = NewArray[B](a.length)
+  }
   case class ArrayToSeq[A:Manifest](x: Exp[Array[A]]) extends Def[Seq[A]]
   
   def array_obj_new[T:Manifest](n: Exp[Int]) = reflectMutable(ArrayNew(n))
@@ -72,8 +74,8 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   def array_sort[T:Manifest](x: Exp[Array[T]])(implicit ctx: SourceContext) = ArraySort(x)
   def array_map[A:Manifest,B:Manifest](a: Exp[Array[A]], f: Exp[A] => Exp[B]) = {
     val x = fresh[A]
-    val b = reifyEffectsHere(f(x))
-    reflectEffect(ArrayMap(a, b), summarizeEffects(b))    
+    val b = reifyEffects(f(x))
+    reflectEffect(ArrayMap(a, x, b), summarizeEffects(b))    
   }
   def array_toseq[A:Manifest](a: Exp[Array[A]]) = ArrayToSeq(a)
   
@@ -91,16 +93,19 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   
   override def syms(e: Any): List[Sym[Any]] = e match {
     case ArrayForeach(a, x, body) => syms(a):::syms(body)
+    case ArrayMap(a, x, body) => syms(a):::syms(body)
     case _ => super.syms(e)
   }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case ArrayForeach(a, x, body) => x :: effectSyms(body)
+    case ArrayMap(a, x, body) => x :: effectSyms(body)
     case _ => super.boundSyms(e)
   }
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case ArrayForeach(a, x, body) => freqNormal(a):::freqHot(body)
+    case ArrayMap(a, x, body) => freqNormal(a):::freqHot(body)
     case _ => super.symsFreq(e)
   }
     
@@ -121,7 +126,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
     case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
     case ArrayUpdate(x,n,y) => emitValDef(sym, quote(x) + "(" + quote(n) + ") = " + quote(y))
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
-    case ArrayForeach(a,x,block) => stream.println("val " + quote(sym) + "=" + quote(a) + ".foreach{")
+    case ArrayForeach(a,x,block) => stream.println("val " + quote(sym) + " = " + quote(a) + ".foreach{")
       stream.println(quote(x) + " => ")
       emitBlock(block)
       stream.println(quote(getBlockResult(block)))
@@ -134,11 +139,26 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
       stream.println("scala.util.Sorting.quickSort(d)")
       stream.println("d")
       stream.println("}")
-    case ArrayMap(a,blk) => 
+    case n@ArrayMap(a,x,blk) => 
+      stream.println("// workaround for refinedManifest problem")
       stream.println("val " + quote(sym) + " = {")
-      stream.println(quote(a) + ".map(")
+      stream.println("val out = " + quote(n.array))
+      stream.println("val in = " + quote(a))
+      stream.println("var i = 0")
+      stream.println("while (i < in.length) {")
+      stream.println("val " + quote(x) + " = in(i)")
       emitBlock(blk)
-      stream.println(")}")  
+      stream.println("out(i) = " + quote(getBlockResult(blk)))
+      stream.println("i += 1")      
+      stream.println("}")
+      stream.println("out")
+      stream.println("}")
+    
+      // stream.println("val " + quote(sym) + " = " + quote(a) + ".map{")
+      // stream.println(quote(x) + " => ")
+      // emitBlock(blk)
+      // stream.println(quote(getBlockResult(blk)))
+      // stream.println("}")  
     case ArrayToSeq(a) => emitValDef(sym, quote(a) + ".toSeq")
     case _ => super.emitNode(sym, rhs)
   }

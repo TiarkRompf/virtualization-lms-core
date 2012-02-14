@@ -35,8 +35,8 @@ trait ListOps extends Variables {
 trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   case class ListNew[A:Manifest](xs: Seq[Rep[A]]) extends Def[List[A]]
   case class ListFromSeq[A:Manifest](xs: Rep[Seq[A]]) extends Def[List[A]]
-  case class ListMap[A:Manifest,B:Manifest](x: Exp[List[A]], block: Exp[B]) extends Def[List[B]]
-  case class ListSortBy[A:Manifest,B:Manifest:Ordering](x: Exp[List[A]], block: Exp[B]) extends Def[List[A]]
+  case class ListMap[A:Manifest,B:Manifest](l: Exp[List[A]], x: Sym[A], block: Exp[B]) extends Def[List[B]]
+  case class ListSortBy[A:Manifest,B:Manifest:Ordering](l: Exp[List[A]], x: Sym[A], block: Exp[B]) extends Def[List[A]]
   case class ListPrepend[A:Manifest](x: Exp[List[A]], e: Exp[A]) extends Def[List[A]]
   case class ListToArray[A:Manifest](x: Exp[List[A]]) extends Def[Array[A]]
   case class ListToSeq[A:Manifest](x: Exp[List[A]]) extends Def[Seq[A]]
@@ -45,17 +45,35 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit ctx: SourceContext) = ListFromSeq(xs)
   def list_map[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[B]) = {
     val a = fresh[A]
-    val b = reifyEffectsHere(f(a))
-    reflectEffect(ListMap(l, b), summarizeEffects(b))    
+    val b = reifyEffects(f(a))
+    reflectEffect(ListMap(l, a, b), summarizeEffects(b))    
   }
   def list_sortby[A:Manifest,B:Manifest:Ordering](l: Exp[List[A]], f: Exp[A] => Exp[B]) = {
     val a = fresh[A]
-    val b = reifyEffectsHere(f(a))
-    reflectEffect(ListSortBy(l, b), summarizeEffects(b))
+    val b = reifyEffects(f(a))
+    reflectEffect(ListSortBy(l, a, b), summarizeEffects(b))
   }
   def list_toarray[A:Manifest](l: Exp[List[A]]) = ListToArray(l)
   def list_toseq[A:Manifest](l: Exp[List[A]]) = ListToSeq(l)
   def list_prepend[A:Manifest](l: Exp[List[A]], e: Exp[A]) = ListPrepend(l,e)
+  
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case ListMap(a, x, body) => syms(a):::syms(body)
+    case ListSortBy(a, x, body) => syms(a):::syms(body)
+    case _ => super.syms(e)
+  }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case ListMap(a, x, body) => x :: effectSyms(body)
+    case ListSortBy(a, x, body) => x :: effectSyms(body)
+    case _ => super.boundSyms(e)
+  }
+
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case ListMap(a, x, body) => freqNormal(a):::freqHot(body)
+    case ListSortBy(a, x, body) => freqNormal(a):::freqHot(body)
+    case _ => super.symsFreq(e)
+  }  
 }
 
 trait BaseGenListOps extends GenericNestedCodegen {
@@ -71,16 +89,18 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ListNew(xs) => emitValDef(sym, "List(" + (xs map {quote}).mkString(",") + ")")
     case ListFromSeq(xs) => emitValDef(sym, "List(" + quote(xs) + ": _*)")
-    case ListMap(l,blk) => 
-      stream.println("val " + quote(sym) + " = {")
-      stream.println(quote(l) + ".map(")
+    case ListMap(l,x,blk) => 
+      stream.println("val " + quote(sym) + " = " + quote(l) + ".map{")
+      stream.println(quote(x) + " => ")
       emitBlock(blk)
-      stream.println(")}")
-    case ListSortBy(l,blk) =>
-      stream.println("val " + quote(sym) + " = {")
-      stream.println(quote(l) + ".sortBy(")
+      stream.println(quote(getBlockResult(blk)))
+      stream.println("}")
+    case ListSortBy(l,x,blk) =>
+      stream.println("val " + quote(sym) + " = " + quote(l) + ".sortBy{")
+      stream.println(quote(x) + " => ")
       emitBlock(blk)
-      stream.println(")}")
+      stream.println(quote(getBlockResult(blk)))
+      stream.println("}")
     case ListPrepend(l,e) => emitValDef(sym, quote(e) + " :: " + quote(l))    
     case ListToArray(l) => emitValDef(sym, quote(l) + ".toArray")
     case ListToSeq(l) => emitValDef(sym, quote(l) + ".toSeq")
