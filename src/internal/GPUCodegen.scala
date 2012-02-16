@@ -119,6 +119,8 @@ trait GPUCodegen extends CLikeCodegen {
 
   var isGPUable:Boolean = false
 
+  var processingHelperFunc: Boolean = false
+
   def emitMultiLoopFunc(func:Exp[Any], postfix: String, lastInputs: List[Sym[Any]], stream:PrintWriter): List[String] = {
     val tempString = new StringWriter
     val tempStream = new PrintWriter(tempString, true)
@@ -254,12 +256,9 @@ trait GPUCodegen extends CLikeCodegen {
 
     helperFuncString.clear
     metaData = new GPUMetaData
-    //MetaData.init
     tabWidth = 1
-    //devFuncString = new StringBuilder
     isGPUable = false
-
-    //forceParallel = false
+    processingHelperFunc = false
   }
 
   // Map a scala primitive type to JNI type descriptor
@@ -451,6 +450,7 @@ trait GPUCodegen extends CLikeCodegen {
        and copying  it to CPU memory with allocation of new object in CPU */
   //TODO: Separate output and temporary allocations
   def emitAllocFunc(sym:Sym[Any], allocFunc:Exp[Any], aV:Sym[Any]=null, size:Exp[Any]=null) {
+    processingHelperFunc = true
     helperFuncIdx += 1
     val tempString = new StringWriter
     val tempString2 = new StringWriter
@@ -479,9 +479,12 @@ trait GPUCodegen extends CLikeCodegen {
     // Write to helper function string
     helperFuncString.append(allocOutputStr)
     helperFuncString.append(copyOutputStr)
+
+    processingHelperFunc = false
   }
 
   def emitAllocFuncPrimitive(sym:Sym[Any]) {
+    processingHelperFunc = true
     assert(isPrimitiveType(sym.Type))
 
     val tempString = new StringWriter
@@ -501,6 +504,8 @@ trait GPUCodegen extends CLikeCodegen {
     // Write to helper function string
     helperFuncString.append(allocOutputStr)
     helperFuncString.append(copyOutputStr)
+    
+    processingHelperFunc = false
   }
 
   def emitCloneFunc(sym:Sym[Any], src:Sym[Any]) {
@@ -531,5 +536,13 @@ trait GPUCodegen extends CLikeCodegen {
     // Write to helper function string
     helperFuncString.append(allocOutputStr)
     helperFuncString.append(copyOutputStr)
+  }
+
+  def checkGPUAlloc(sym: Sym[Any]) {
+    if(!processingHelperFunc) {
+      println("\n** GPU Warning ** " + quotePos(sym))
+      println("Code has nested memory allocations (not supported by current Delite GPU code generator). Try manually unrolling the outer loop.")
+      throw new GenerationFailedException("CudaGen: Nested allocations not allowed\n")
+    }
   }
 }
