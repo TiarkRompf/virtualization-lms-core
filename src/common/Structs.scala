@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
+import scala.reflect.SourceContext
 import scala.virtualization.lms.internal.{FatExpressions,GenericNestedCodegen,GenericFatCodegen}
 
 //import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt,TransformingStuff} // TODO: eliminate deps
@@ -49,7 +50,7 @@ trait StructExp extends BaseExp {
     case _ => super.symsFreq(e)
   }  
   
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
     case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
     case _ => super.mirror(e,f)
   }
@@ -179,7 +180,7 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
     case _ => super.boundSyms(e)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
     case p@Phi(c,a,u,b,v) => phiB(f(c),f(a),f(u),f(b),f(v))(f(p.parent))
     case _ => super.mirror(e,f)
   }
@@ -215,8 +216,16 @@ trait ScalaGenStruct extends ScalaGenBase {
   val IR: StructExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Struct(tag, elems) =>
+      /* TODO: emit code that creates an object corresponding to the tag and the manifest 
+      
+      RefinedManifest  -->  new Base { def field = value }
+      Class --> new Base(field = value)
+      
+      Array --> transform soa back to aos
+      */
+    
       //emitValDef(sym, "new " + tag.last + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
       emitValDef(sym, "Map(" + elems.map(e => "\"" + e._1 + "\"->" + quote(e._2)).mkString(",") + ") //" + tag.mkString(" "))
     case Field(struct, index, tp) =>  
@@ -231,7 +240,7 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
   val IR: StructFatExpOptCommon // TODO: restructure traits, maybe move this to if then else codegen?
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case p@Phi(c,a,u,b,v) =>
       emitValDef(sym, "XXX " + rhs + " // parent " + quote(p.parent))
     case _ => super.emitNode(sym, rhs)

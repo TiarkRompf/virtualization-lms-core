@@ -125,7 +125,9 @@ trait GPUCodegen extends CLikeCodegen {
 
     val currentTab = tabWidth
     tabWidth = 1
-    emitBlock(func)(tempStream)
+    withStream(tempStream) {
+      emitBlock(func)
+    }
     tabWidth = currentTab
 
     val inputs = (getFreeVarBlock(func,Nil).filterNot(ele => locals.contains(ele))++getKernelTemps).distinct
@@ -403,7 +405,7 @@ trait GPUCodegen extends CLikeCodegen {
     val inputs = getFreeVarBlock(allocFunc,Nil)
 
     // Get the body (string) of the allocation function in tempString
-    emitBlock(allocFunc)(tempStream)
+    withStream(tempStream)(emitBlock(allocFunc))
     tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc))))
 
     // Emit the full allocation function

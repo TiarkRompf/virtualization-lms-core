@@ -12,52 +12,52 @@ trait CCodegen extends CLikeCodegen {
 
   override def toString = "c"
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
     val y = reifyBlock(f(x))
 
     val sA = mA.toString
     val sB = mB.toString
 
-    stream.println("/*****************************************\n"+
-                   "  Emitting C Generated Code                  \n"+
-                   "*******************************************/\n" +
-                   "#include <stdio.h>\n" +
-                   "#include <stdlib.h>"
-    )
+    withStream(out) {
+      stream.println("/*****************************************\n"+
+                     "  Emitting C Generated Code                  \n"+
+                     "*******************************************/\n" +
+                     "#include <stdio.h>\n" +
+                     "#include <stdlib.h>"
+      )
 
-    //stream.println("class "+className+" extends (("+sA+")=>("+sB+")) {")
-    stream.println("int main(int argc, char** argv) {")
+      //stream.println("class "+className+" extends (("+sA+")=>("+sB+")) {")
+      stream.println("int main(int argc, char** argv) {")
 
-    emitBlock(y)(stream)
-    //stream.println(quote(getBlockResult(y)))
+      emitBlock(y)
+      //stream.println(quote(getBlockResult(y)))
 
-    //stream.println("}")
-    stream.println("}")
-    stream.println("/*****************************************\n"+
-                   "  End of C Generated Code                  \n"+
-                   "*******************************************/")
-
-    stream.flush
+      //stream.println("}")
+      stream.println("}")
+      stream.println("/*****************************************\n"+
+                     "  End of C Generated Code                  \n"+
+                     "*******************************************/")
+    }
     Nil
   }  
 
 /*
   //TODO: is sym of type Any or Variable[Any] ?
-  def emitConstDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitConstDef(sym: Sym[Any], rhs: String): Unit = {
     stream.print("const ")
     emitVarDef(sym, rhs)
   }
 */
-  def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitAssignment(lhs:String, rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitAssignment(lhs:String, rhs: String): Unit = {
     stream.println(lhs + " = " + rhs + ";")
   }
 
@@ -78,11 +78,6 @@ trait CCodegen extends CLikeCodegen {
 trait CNestedCodegen extends GenericNestedCodegen with CCodegen {
   val IR: Expressions with Effects
   import IR._
-  
-  override def quote(x: Exp[Any]) = x match { // TODO: quirk!
-    case Sym(-1) => "_"
-    case _ => super.quote(x)
-  }
   
 }
 

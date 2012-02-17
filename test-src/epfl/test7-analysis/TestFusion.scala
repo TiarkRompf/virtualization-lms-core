@@ -8,13 +8,13 @@ import test1._
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-
+import scala.reflect.SourceContext
 
 trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with ArithExp with PrintExp {
 
   // TODO: should call constructor functions instead of directly creating objects (i.e. array_length instead of ArrayLength)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     //case Copy(a) => f(a)
     case SimpleLoop(s,i, ArrayElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(y))))(mtype(manifest[A]))
     case SimpleLoop(s,i, ReduceElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(y))))(mtype(manifest[A]))
@@ -31,7 +31,7 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
-  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer): Def[A] = (e match {
+  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
     case ArrayElem(y) => ArrayElem(f(y))
     case ReduceElem(y) => ReduceElem(f(y))
     case ArrayIfElem(c,y) => ArrayIfElem(f(c),f(y))

@@ -22,6 +22,12 @@ trait FatTraversal extends NestedTraversal with FatScheduling {
 
   // -------------------
 
+  override def focusFatBlock[A](result: List[Block[Any]])(body: => A): A = {
+    super.focusFatBlock(result) {
+      innerScope = fattenAll(innerScope)
+      body
+    }
+  }
 
 
 }

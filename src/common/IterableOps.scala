@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import internal._
+import scala.reflect.SourceContext
 
 trait IterableOps extends Variables {
 
@@ -13,17 +14,17 @@ trait IterableOps extends Variables {
   implicit def iterableToIterableOps[T:Manifest](a: Iterable[T]) = new IterableOpsCls(unit(a))
 
   class IterableOpsCls[T:Manifest](a: Rep[Iterable[T]]){
-    def foreach(block: Rep[T] => Rep[Unit]) = iterable_foreach(a, block)
+    def foreach(block: Rep[T] => Rep[Unit])(implicit pos: SourceContext) = iterable_foreach(a, block)
   }
 
-  def iterable_foreach[T:Manifest](x: Rep[Iterable[T]], block: Rep[T] => Rep[Unit]): Rep[Unit]
+  def iterable_foreach[T:Manifest](x: Rep[Iterable[T]], block: Rep[T] => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
 }
 
 trait IterableOpsExp extends IterableOps with EffectExp with VariablesExp {
 
   case class IterableForeach[T](a: Exp[Iterable[T]], x: Sym[T], block: Block[Unit]) extends Def[Unit]
 
-  def iterable_foreach[T:Manifest](a: Exp[Iterable[T]], block: Exp[T] => Exp[Unit]): Exp[Unit] = {
+  def iterable_foreach[T:Manifest](a: Exp[Iterable[T]], block: Exp[T] => Exp[Unit])(implicit pos: SourceContext): Exp[Unit] = {
     val x = fresh[T]
     val b = reifyEffects(block(x))
     reflectEffect(IterableForeach(a, x, b), summarizeEffects(b).star)
@@ -55,7 +56,7 @@ trait ScalaGenIterableOps extends BaseGenIterableOps with ScalaGenBase {
   val IR: IterableOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IterableForeach(a,x,block) => stream.println("val " + quote(sym) + "=" + quote(a) + ".foreach{")
       stream.println(quote(x) + " => ")
       emitBlock(block)
@@ -69,7 +70,7 @@ trait CLikeGenIterableOps extends BaseGenIterableOps with CLikeGenBase {
   val IR: IterableOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case _ => super.emitNode(sym, rhs)
       }

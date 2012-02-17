@@ -4,6 +4,7 @@ package test2
 
 import common._
 import test1._
+import reflect.SourceContext
 
 import java.io.PrintWriter
 
@@ -96,15 +97,15 @@ trait FlatResult extends BaseExp { // just to make dot output nicer
   
 }
 
-
 trait ScalaGenFlat extends ScalaGenBase {
-  import IR._
-  type Block[+T] = Exp[T]
-  def getBlockResultFull[T](x: Block[T]): Exp[T] = x
-  def reifyBlock[T:Manifest](x: =>Exp[T]): Block[T] = x
+   import IR._
+   type Block[+T] = Exp[T]
+   def getBlockResultFull[T](x: Block[T]): Exp[T] = x
+   def reifyBlock[T:Manifest](x: =>Exp[T]): Block[T] = x
+   def traverseBlock[A](block: Block[A]): Unit = {
+     buildScheduleForResult(block) foreach traverseStm
+   }
 }
-
-
 
 
 

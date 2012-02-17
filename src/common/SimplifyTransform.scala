@@ -3,6 +3,52 @@ package common
 
 // TODO: generalize and clean up
 
+trait ForwardTransformer extends internal.FatTraversal with SimplifyTransform {
+  val IR: LoopsFatExp with IfThenElseFatExp
+  import IR._
+  
+  var subst: scala.collection.immutable.Map[Sym[_], Exp[_]] = Map.empty
+  
+  def transformBlock[A:Manifest](block: Block[A]): Block[A] = {
+    reifyEffects {
+      mirrorBlock(block)
+    }
+  }
+  
+  def mirrorBlock[A](block: Block[A]): Exp[A] = {
+    traverseBlock(block)
+    mirrorExp(block.res)
+  }
+
+  def mirrorExp[A](e: Exp[A]): Exp[A] = e match {
+    case s: Sym[A] =>
+      val e2 = subst.getOrElse(s,e).asInstanceOf[Exp[A]]
+      if (e2 == e) e2 else mirrorExp(e2)
+    case _ => e
+  }
+
+  override def traverseStm(stm: Stm): Unit = stm match {
+    case TP(sym, rhs) => 
+      val sym2 = mirrorExp(sym)
+      if (sym2 == sym) {
+        val replace = mmmirror(rhs)
+        subst = subst + (sym -> replace)
+      }
+  }
+  
+
+  def mmmirror[A:Manifest](e: Def[A]): Exp[A] = e match {
+    case IfThenElse(c,a,b) => __ifThenElse(mirrorExp(c),mirrorBlock(a),mirrorBlock(b))
+    case _ => mirror(e, new Transformer { def apply[A](e: Exp[A]) = mirrorExp(e) })
+  }
+  
+}
+
+
+
+
+
+
 trait SimplifyTransform extends internal.FatTraversal {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
@@ -125,7 +171,7 @@ trait SimplifyTransform extends internal.FatTraversal {
       val rhs2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toLoop.body)))
                   else (lhs zip rhs)) map { case (s,r) => transformLoopBody(s,r,t) }
       
-      //update innerScope -- change definition of lhs2 in place
+      //update innerScope -- change definition of lhs2 in place (necessary?)
       innerScope = innerScope map {
         case TP(l,_) if lhs2 contains l => TP(l, SimpleLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2(lhs2.indexOf(l)))) 
         case d => d

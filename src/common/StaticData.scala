@@ -39,7 +39,7 @@ trait ScalaGenStaticData extends ScalaGenEffect with BaseGenStaticData {
   val IR: StaticDataExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case StaticData(x) => 
       emitValDef(sym, "p"+quote(sym) + " // static data: " + x)
     case _ => super.emitNode(sym, rhs)

@@ -23,7 +23,9 @@ trait OpenCLCodegen extends GPUCodegen {
 
     val currentTab = tabWidth
     tabWidth = 1
-    emitBlock(func)(tempStream)
+    withStream(tempStream) {
+      emitBlock(func)
+    }
     tabWidth = currentTab
 
     val inputs = (getFreeVarBlock(func,Nil).filterNot(ele => locals.contains(ele))++getKernelTemps).distinct
@@ -373,47 +375,47 @@ trait OpenCLCodegen extends GPUCodegen {
     throw new GenerationFailedException("OpenCLGen: cloneObject(sym)")
   }
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
     val y = reifyBlock(f(x))
 
     val sA = mA.toString
     val sB = mB.toString
 
-    stream.println("/*****************************************\n"+
-                   "  Emitting OpenCL Generated Code                  \n"+
-                   "*******************************************/\n" +
-                   "#include <stdio.h>\n" +
-                   "#include <stdlib.h>"
-    )
+    withStream(out) {
+      stream.println("/*****************************************\n"+
+                     "  Emitting OpenCL Generated Code                  \n"+
+                     "*******************************************/\n" +
+                     "#include <stdio.h>\n" +
+                     "#include <stdlib.h>"
+      )
 
-    stream.println("int main(int argc, char** argv) {")
+      stream.println("int main(int argc, char** argv) {")
 
-    emitBlock(y)(stream)
-    //stream.println(quote(getBlockResult(y)))
+      emitBlock(y)
+      //stream.println(quote(getBlockResult(y)))
 
-    stream.println("}")
-    stream.println("/*****************************************\n"+
-                   "  End of OpenCL Generated Code                  \n"+
-                   "*******************************************/")
-
-    stream.flush
+      stream.println("}")
+      stream.println("/*****************************************\n"+
+                     "  End of OpenCL Generated Code                  \n"+
+                     "*******************************************/")
+      }
     Nil
   }
 
-  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     stream.println(addTab() + remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println(addTab()+ remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitAssignment(lhs:String, rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitAssignment(lhs:String, rhs: String): Unit = {
     stream.println(addTab() + " " + lhs + " = " + rhs + ";")
   }
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     if (external) {
       // CUDA library ops use a C wrapper, so should be generated as a C kernel
       assert(syms.length == 1)
@@ -451,7 +453,7 @@ trait OpenCLCodegen extends GPUCodegen {
     stream.print(out.toString)
   }
 
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     if (external) {
       super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external)
       //return
@@ -748,7 +750,6 @@ trait OpenCLNestedCodegen extends GenericNestedCodegen with OpenCLCodegen {
     case Const(s: String) => "\""+s+"\""
     case Const(null) => "NULL"
     case Const(z) => OpenCLConsts(x, z.toString)
-    case Sym(-1) => "_"
     case _ => super.quote(x)
   }
   

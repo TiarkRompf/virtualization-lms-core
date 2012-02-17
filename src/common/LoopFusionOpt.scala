@@ -31,13 +31,13 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
   }
 
 
-  override def focusExactScopeFat[A](currentScope0: List[Stm])(result0B: List[Block[Any]])(body: List[Stm] => A): A = {
-    val result0 = result0B.map(getBlockResultFull)
+  override def traverseBlockFocused[A](result0B: Block[A]) {
+    val result0 = List(result0B).map(getBlockResultFull)
     var result: List[Exp[Any]] = result0
-    var currentScope = currentScope0
+    var currentScope = innerScope
 
     if (!shouldApplyFusion(currentScope)(result))
-      return super.focusExactScopeFat(currentScope)(result.map(Block(_)))(body)
+      return super.traverseBlockFocused(result0B)
 /*
     println("--- pre-pre-loop fusion: bound")
     val bound = currentScope.flatMap(z => boundSyms(z.rhs))
@@ -197,7 +197,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
 
           // within fused loops, remove accesses to outcomes of the fusion
           currentScope.foreach {
-            case e@TP(s, SimpleIndex(a, i)) =>
+            case e@TP(s, SimpleIndex(a, i)) => // if a is a loop result, i is a loop var, and both loops are fused
               printlog("considering " + e)
               partitionsOut.find(_.lhs contains a) match {
                 case Some(fused) if WgetLoopVar(fused) contains t(i) => 
@@ -215,11 +215,14 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
           
           // ---
           
+          // go ahead and apply accumulated substitution
+          
           transformAllFully(currentScope, result, t) match { case (a,b) => // too bad we can't use pair assigment
             currentScope = a
             result = b
           }
-
+          innerScope = currentScope
+          
           //Wloops = currentScope collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
 
           Wloops = transformAll(partitionsOut, t)
@@ -255,7 +258,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
 
       // schedule (and emit)
       currentScope = getSchedule(currentScope)(result.map(Block(_))) // clean things up!
-     
+      innerScope = currentScope     
     }
 
     // the caller of emitBlock will quite likely call getBlockResult afterwards,
@@ -276,7 +279,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         case (r0,r) => 
           if (r0 != r) currentScope = currentScope :+ TP(r0.asInstanceOf[Sym[Any]], Forward(r))
       }
-      
+      innerScope = currentScope      
     }
 /*
     println("result "+result0+"/"+result)
@@ -285,7 +288,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
     println("--->")
 */
     // do what super does ...
-    super.focusExactScopeFat(currentScope)(result0.map(Block(_)))(body)
+    super.traverseBlockFocused(result0B)
   }
 
 }

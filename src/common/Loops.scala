@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
+import scala.reflect.SourceContext
 import scala.virtualization.lms.internal.{GenericNestedCodegen,GenericFatCodegen}
 
 trait Loops extends Base { // no surface constructs for now
@@ -45,7 +46,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   //////////////
   // mirroring
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case SimpleLoop(s,v,body) => simpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??

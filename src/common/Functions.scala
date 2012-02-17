@@ -4,19 +4,20 @@ package common
 import java.io.PrintWriter
 
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
+import scala.reflect.SourceContext
 
 trait Functions extends Base {
 
-  implicit def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B]): Rep[A => B]
-  implicit def doLambda2[A1:Manifest,A2:Manifest,B:Manifest](fun: (Rep[A1],Rep[A2]) => Rep[B]): Rep[(A1,A2) => B]
+  implicit def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[A => B]
+  implicit def doLambda2[A1:Manifest,A2:Manifest,B:Manifest](fun: (Rep[A1],Rep[A2]) => Rep[B])(implicit pos: SourceContext): Rep[(A1,A2) => B]
 
   implicit def toLambdaOps[A:Manifest,B:Manifest](fun: Rep[A => B]) = new LambdaOps(fun)
   
   class LambdaOps[A:Manifest,B:Manifest](f: Rep[A => B]) {
-    def apply(x: Rep[A]): Rep[B] = doApply(f,x)
+    def apply(x: Rep[A])(implicit pos: SourceContext): Rep[B] = doApply(f,x)
   }
 
-  def doApply[A:Manifest,B:Manifest](fun: Rep[A => B], arg: Rep[A]): Rep[B]
+  def doApply[A:Manifest,B:Manifest](fun: Rep[A => B], arg: Rep[A])(implicit pos: SourceContext): Rep[B]
 
 }
 
@@ -27,7 +28,7 @@ trait FunctionsExp extends Functions with EffectExp {
 
   case class Apply[A:Manifest,B:Manifest](f: Exp[A => B], arg: Exp[A]) extends Def[B]
 
-  def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B]) : Exp[A => B] = {
+  def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B])(implicit pos: SourceContext) : Exp[A => B] = {
 
     val x = fresh[A]
     val y = reifyEffects(f(x)) // unfold completely at the definition site. 
@@ -36,7 +37,7 @@ trait FunctionsExp extends Functions with EffectExp {
     Lambda(f, x, y)
   }
 
-  def doLambda2[A1:Manifest,A2:Manifest,B:Manifest](f: (Exp[A1],Exp[A2]) => Exp[B]) : Exp[(A1,A2) => B] = {
+  def doLambda2[A1:Manifest,A2:Manifest,B:Manifest](f: (Exp[A1],Exp[A2]) => Exp[B])(implicit pos: SourceContext) : Exp[(A1,A2) => B] = {
 
     val x1 = fresh[A1]
     val x2 = fresh[A2]
@@ -46,7 +47,7 @@ trait FunctionsExp extends Functions with EffectExp {
     Lambda2(f, x1, x2, y)
   }
 
-  def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A]): Exp[B] = f match {
+  def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A])(implicit pos: SourceContext): Exp[B] = f match {
 /*
     case Def(Lambda(_,_,Def(Reify(_,_,_)))) => 
       // if function result is known to be effectful, so is application
@@ -103,7 +104,7 @@ trait BaseGenFunctions extends GenericNestedCodegen {
 trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
       stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + x.Type + ") => ")
       emitBlock(y)
@@ -127,7 +128,7 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         // The version for inlined device function
@@ -164,7 +165,7 @@ trait OpenCLGenFunctions extends OpenCLGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         throw new GenerationFailedException("OpenCLGenFunctions: Lambda is not supported yet")
@@ -182,7 +183,7 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         throw new GenerationFailedException("CGenFunctions: Lambda is not supported yet")

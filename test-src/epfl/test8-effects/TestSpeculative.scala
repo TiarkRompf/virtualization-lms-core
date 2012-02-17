@@ -11,6 +11,8 @@ import test7.{ArrayLoops,ArrayLoopsExp,ScalaGenArrayLoops}
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
+import scala.reflect.SourceContext
+
 
 // NOTE: the test cases print 'violated ordering of effects' warnings.
 // we remove dead stores on purpose, based on liveness information
@@ -62,7 +64,7 @@ trait ScalaGenWhileOptSpeculative extends ScalaGenWhile {
   val IR: WhileExpOptSpeculative
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case PreviousIteration() =>
       // dummy ...
       //emitValDef(sym, "() // dummy placeholder for previous iteration")
@@ -74,11 +76,11 @@ trait ScalaGenWhileOptSpeculative extends ScalaGenWhile {
 
 
 trait OrderingOpsExpOpt extends OrderingOpsExp {
-  override def ordering_lt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[Boolean] = (lhs,rhs) match {
+  override def ordering_lt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs,rhs) match {
     case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].lt(a,b))
     case _ => super.ordering_lt(lhs,rhs)
   }
-  override def ordering_gt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[Boolean] = (lhs,rhs) match {
+  override def ordering_gt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs,rhs) match {
     case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].gt(a,b))
     case _ => super.ordering_gt(lhs,rhs)
   }
@@ -164,6 +166,29 @@ class TestSpeculative extends FileDiffSuite {
     }
     assertFileEqualsCheck(prefix+"speculative1c")
   }
+
+  def testSpeculative1d = {
+    withOutFile(prefix+"speculative1d") {
+     // test simple copy propagation through variable
+      trait Prog extends DSL {
+        def test(y: Rep[Int]) = {
+          var x = 7
+          var z = 9 // should remove z because it is never read
+          
+          if (x > y) { // cannot remove conditional
+            x = 5
+            z = 12
+          } else
+            print("no")
+          
+          print(x) // should be var read          
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"speculative1d")
+  }
+
   
   def testSpeculative3 = {
     withOutFile(prefix+"speculative3") {

@@ -2,8 +2,9 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
+import scala.reflect.SourceContext
+import scala.collection.mutable.ArrayBuffer
 import scala.virtualization.lms.internal.GenericNestedCodegen
-import collection.mutable.ArrayBuffer
 
 trait ArrayBufferOps extends Base {
 
@@ -34,7 +35,7 @@ trait ArrayBufferOpsExp extends ArrayBufferOps with EffectExp {
   //////////////
   // mirroring
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case Reflect(ArrayBufferMkString(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferMkString(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(ArrayBufferAppend(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferAppend(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
@@ -50,7 +51,7 @@ trait ScalaGenArrayBufferOps extends BaseGenArrayBufferOps with ScalaGenEffect {
   val IR: ArrayBufferOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case a@ArrayBufferNew(xs) => emitValDef(sym, "scala.collection.mutable.ArrayBuffer[" + remap(a.mA) + "](" + (xs map {quote}).mkString(",") + ")")
     case ArrayBufferMkString(l, sep) => emitValDef(sym, quote(l) + ".mkString(" + quote(sep) + ")")
     case ArrayBufferAppend(l, e) => emitValDef(sym, quote(l) + " += " + quote(e))
@@ -62,7 +63,7 @@ trait CLikeGenArrayBufferOps extends BaseGenArrayBufferOps with CLikeGenBase {
   val IR: ArrayBufferOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case _ => super.emitNode(sym, rhs)
       }

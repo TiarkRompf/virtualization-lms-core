@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
+import scala.reflect.SourceContext
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
 
 trait IfThenElse extends Base {
@@ -56,11 +57,21 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     reflectEffectInternal(IfThenElse(cond,thenp,elsep), ae orElse be)
   }
   
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
     case Reflect(IfThenElse(c,a,b), u, es) => reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))
     case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b)) // FIXME: should apply pattern rewrites (ie call smart constructor)
     case _ => super.mirror(e,f)
   }
+
+/*
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+    case Reflect(IfThenElse(c,a,b), u, es) => mirror(IfThenElse(c,a,b)) // discard reflect
+    case IfThenElse(c,a,b) => ifThenElse(f(c),f(a),f(b)) // f.apply[A](a: Block[A]): Exp[A] mirrors the block into the current context
+    case _ => super.mirror(e,f)
+  }  
+*/
+
+
 
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case IfThenElse(c,a,b) => syms(a):::syms(b)
@@ -188,7 +199,7 @@ trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen {
 trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
   import IR._
  
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IfThenElse(c,a,b) =>
       stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
       emitBlock(a)
@@ -204,7 +215,7 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
 trait ScalaGenIfThenElseFat extends ScalaGenIfThenElse with ScalaGenFat with BaseGenIfThenElseFat {
   import IR._
 
-  override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+  override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatIfThenElse(c,as,bs) => 
       def quoteList[T](xs: List[Exp[T]]) = if (xs.length > 1) xs.map(quote).mkString("(",",",")") else xs.map(quote).mkString(",")
       if (symList.length > 1) stream.println("// TODO: use vars instead of tuples to return multiple values")
@@ -223,7 +234,7 @@ trait ScalaGenIfThenElseFat extends ScalaGenIfThenElse with ScalaGenFat with Bas
 trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case IfThenElse(c,a,b) =>
           // TODO: Not GPUable if the result is not primitive types.
@@ -272,7 +283,7 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
 trait CudaGenIfThenElseFat extends CudaGenIfThenElse with CudaGenFat with BaseGenIfThenElseFat {
   import IR._
 
-  override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+  override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatIfThenElse(c,a,b) => sys.error("TODO: implement fat if CUDA codegen")
     case _ => super.emitFatNode(symList, rhs)
   }
@@ -281,7 +292,7 @@ trait CudaGenIfThenElseFat extends CudaGenIfThenElse with CudaGenFat with BaseGe
 trait OpenCLGenIfThenElse extends OpenCLGenEffect with BaseGenIfThenElse {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case IfThenElse(c,a,b) =>
 
@@ -324,7 +335,7 @@ trait OpenCLGenIfThenElse extends OpenCLGenEffect with BaseGenIfThenElse {
 trait OpenCLGenIfThenElseFat extends OpenCLGenIfThenElse with OpenCLGenFat with BaseGenIfThenElseFat {
   import IR._
 
-  override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+  override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatIfThenElse(c,a,b) => sys.error("TODO: implement fat if OpenCL codegen")
     case _ => super.emitFatNode(symList, rhs)
   }
@@ -333,7 +344,7 @@ trait OpenCLGenIfThenElseFat extends OpenCLGenIfThenElse with OpenCLGenFat with 
 trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case IfThenElse(c,a,b) =>
         //TODO: using if-else does not work 
@@ -382,7 +393,7 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
 trait CGenIfThenElseFat extends CGenIfThenElse with CGenFat with BaseGenIfThenElseFat {
   import IR._
 
-  override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+  override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatIfThenElse(c,a,b) => sys.error("TODO: implement fat if C codegen")
     case _ => super.emitFatNode(symList, rhs)
   }

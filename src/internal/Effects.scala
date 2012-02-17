@@ -9,6 +9,12 @@ trait Blocks extends Expressions {
   
   case class Block[+T](val res: Exp[T]) { def Type: Manifest[T @uncheckedVariance] = res.Type } // variance ...  
   
+  def blocks(e: Any): List[Block[Any]] = e match {
+    case b: Block[Any] => List(b)
+    case p: Product => p.productIterator.toList.flatMap(blocks(_))
+    case _ => Nil
+  }  
+  
 }
 
 

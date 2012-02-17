@@ -21,16 +21,59 @@ trait Traversal extends Scheduling {
   def getBlockResult[A](s: Block[A]): Exp[A] = getBlockResultFull(s) // = s.res
   def getBlockResultFull[A](s: Block[A]): Exp[A] // = s.res
   
+  def traverseBlock[A](block: Block[A]): Unit
+  def traverseStm(stm: Stm): Unit
+  
+  def reset: Unit = ()
 }
+
+
+/*
+trait CustomTransformer extends NestedTraversal {
+  val IR: Expressions with Effects
+  import IR._
+  
+  def traverseBlock[A](block: Block[A]): Unit = {
+    focusBlock(block) {
+      traverseBlockFocused(block)
+    }
+  }
+
+  def traverseBlockFocused[A](block: Block[A]): Unit = {
+    focusExactScope(block) { levelScope =>
+      levelScope foreach traverseStm
+    }
+  }
+  
+  def traverseStm(stm: Stm): Unit = {
+    blocks(stm.rhs) foreach traverseBlock
+  }
+
+}
+*/
+
+
 
 
 trait NestedTraversal extends Traversal {
   val IR: Expressions with Effects
   import IR._
 
+  // ----- block definition
+
   type Block[+T] = IR.Block[T]
   def reifyBlock[T: Manifest](x: => Exp[T]): Block[T] = IR.reifyEffects(x)
 
+  override def getBlockResultFull[A](s: Block[A]): Exp[A] = s.res
+  
+  override def getBlockResult[A](s: Block[A]): Exp[A] = s match {
+    case Block(Def(Reify(x, _, _))) => x
+    case Block(x) => x
+  }
+
+  
+  // ----- stateful focus management
+  
   
 //  var shallow = false
 
@@ -76,19 +119,11 @@ trait NestedTraversal extends Traversal {
     rval
   }
 
-/* fom delite-develop:
-  // a block should only emit a dependency if it truly depends on it (as an input),
-  // or if it is an effect that has not been emitted yet by anybody
-  var ignoreEffects = false
-  var effectScope: List[TP[_]] = Nil // global to all blocks
-  var freeVarEffectScope: List[TP[_]] = Nil // global to all blocks
-
-  var scope: List[TP[_]] = Nil
-  var nested = 0
-  var lastNodeAttempted: TP[_] = _
-*/
 
 
+  def focusExactScope[A](resultB: Block[Any])(body: List[Stm] => A): A = 
+    focusExactScopeFat[A](availableDefs)(List(resultB))(body)
+  
   def focusExactScopeFat[A](currentScope: List[Stm])(resultB: List[Block[Any]])(body: List[Stm] => A): A = {
     val result = resultB.map(getBlockResultFull)
 
@@ -110,13 +145,13 @@ trait NestedTraversal extends Traversal {
     val h1 = e1 filterNot (g1 contains _) // 'may outside'
     val f1 = g1.flatMap { t => syms(t.rhs) } flatMap { s => h1 filter (_.lhs contains s) } // fringe: 1 step from g1
 
-    val e2 = getFatScheduleM(e1)(result, false, true)       // (shallow|hot)*  no cold ref on path
+    val e2 = getScheduleM(e1)(result, false, true)       // (shallow|hot)*  no cold ref on path
 
-    val e3 = getFatScheduleM(e1)(result, true, false)       // (shallow|cold)* no hot ref on path
+    val e3 = getScheduleM(e1)(result, true, false)       // (shallow|cold)* no hot ref on path
 
     val f2 = f1 filterNot (e3 contains _)                   // fringe restricted to: any* hot any*
 
-    val h2 = getFatScheduleM(e1)(f2.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
+    val h2 = getScheduleM(e1)(f2.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
 
     // things that should live on this level:
     // - not within conditional: no cold ref on path (shallow|hot)*
@@ -185,17 +220,6 @@ trait NestedTraversal extends Traversal {
 */
     
     innerScope = e1 diff levelScope // delay everything that remains
-    
-    /*val innerScope2 = e1 diff levelScope // delay everything that remains
-
-    innerScope = innerScope2 flatMap { 
-      case TP(sym, rhs) => List(TP(sym, rhs))
-      case e => 
-        val z = innerScope.filter(d => (e.lhs intersect d.lhs).nonEmpty)
-        if (z.length != e.lhs.length)
-          printerr("TROUBLE: couldn't get syms " + e.lhs + ", found only " + z)
-        z
-    }*/
 
     val rval = body(levelScope)
 
@@ -203,9 +227,6 @@ trait NestedTraversal extends Traversal {
     rval
   }
 
-
-  def focusExactScope[A](resultB: Block[Any])(body: List[Stm] => A): A = 
-    focusExactScopeFat[A](availableDefs)(List(resultB))(body)
 
 /*
   def focusExactScope[A](resultB: Block[Any])(body: List[TP[Any]] => A): A = {
@@ -295,13 +316,8 @@ trait NestedTraversal extends Traversal {
   }
 */    
   
-  override def getBlockResultFull[A](s: Block[A]): Exp[A] = s.res
   
-  override def getBlockResult[A](s: Block[A]): Exp[A] = s match {
-    case Block(Def(Reify(x, _, _))) => x
-    case Block(x) => x
-  }
-  
+  // ---- bound and free vars
 
 	def boundInScope(x: List[Exp[Any]]): List[Sym[Any]] = {
 		(x.flatMap(syms):::innerScope.flatMap(t => t.lhs:::boundSyms(t.rhs))).distinct
@@ -337,10 +353,33 @@ trait NestedTraversal extends Traversal {
 
   override def getFreeDataBlock[A](start: Block[A]): List[(Sym[Any],Any)] = Nil // FIXME: should have generic impl
 
-  def reset { // used anywhere?
+
+
+  // ----- high level api
+
+  def traverseBlock[A](block: Block[A]): Unit = {
+    focusBlock(block) {
+      traverseBlockFocused(block)
+    }
+  }
+
+  def traverseBlockFocused[A](block: Block[A]): Unit = {
+    focusExactScope(block) { levelScope =>
+      levelScope foreach traverseStm
+    }
+  }
+
+  def traverseStm(stm: Stm): Unit = { // override this to implement custom traversal
+    blocks(stm.rhs) foreach traverseBlock
+  }
+
+  // ----- reset
+
+  override def reset { // used anywhere?
     innerScope = null
     //shallow = false
     IR.reset
+    super.reset
   }
 }
 

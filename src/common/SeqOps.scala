@@ -3,11 +3,12 @@ package common
 
 import java.io.PrintWriter
 import internal._
+import scala.reflect.SourceContext
 
 trait SeqOps extends Variables {
 
   object Seq {
-    def apply[A:Manifest](xs: Rep[A]*) = seq_new(xs)
+    def apply[A:Manifest](xs: Rep[A]*)(implicit pos: SourceContext) = seq_new(xs)
   }
   
   implicit def varToSeqOps[A:Manifest](x: Var[Seq[A]]) = new SeqOpsCls(readVar(x))
@@ -15,13 +16,13 @@ trait SeqOps extends Variables {
   implicit def seqToSeqOps[T:Manifest](a: Seq[T]) = new SeqOpsCls(unit(a))
 
   class SeqOpsCls[T:Manifest](a: Rep[Seq[T]]){
-    def apply(n: Rep[Int]) = seq_apply(a,n)
-    def length = seq_length(a)
+    def apply(n: Rep[Int])(implicit pos: SourceContext) = seq_apply(a,n)
+    def length(implicit pos: SourceContext) = seq_length(a)
   }
 
-  def seq_new[A:Manifest](xs: Seq[Rep[A]]): Rep[Seq[A]]
-  def seq_apply[T:Manifest](x: Rep[Seq[T]], n: Rep[Int]): Rep[T]
-  def seq_length[T:Manifest](x: Rep[Seq[T]]): Rep[Int]
+  def seq_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext): Rep[Seq[A]]
+  def seq_apply[T:Manifest](x: Rep[Seq[T]], n: Rep[Int])(implicit pos: SourceContext): Rep[T]
+  def seq_length[T:Manifest](x: Rep[Seq[T]])(implicit pos: SourceContext): Rep[Int]
 }
 
 trait SeqOpsExp extends SeqOps with EffectExp {
@@ -29,11 +30,11 @@ trait SeqOpsExp extends SeqOps with EffectExp {
   case class SeqLength[T:Manifest](a: Exp[Seq[T]]) extends Def[Int]
   case class SeqApply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int]) extends Def[T]
   
-  def seq_new[A:Manifest](xs: Seq[Rep[A]]) = SeqNew(xs.toList)
-  def seq_apply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int]): Exp[T] = SeqApply(x, n)
-  def seq_length[T:Manifest](a: Exp[Seq[T]]): Exp[Int] = SeqLength(a)
+  def seq_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext) = SeqNew(xs.toList)
+  def seq_apply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int])(implicit pos: SourceContext): Exp[T] = SeqApply(x, n)
+  def seq_length[T:Manifest](a: Exp[Seq[T]])(implicit pos: SourceContext): Exp[Int] = SeqLength(a)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case SeqNew(xs) => seq_new(f(xs))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
@@ -60,7 +61,7 @@ trait ScalaGenSeqOps extends BaseGenSeqOps with ScalaGenEffect {
   val IR: SeqOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case SeqNew(xs) => emitValDef(sym, "Seq(" + (xs map {quote}).mkString(",") + ")")
     case SeqLength(x) => emitValDef(sym, "" + quote(x) + ".length")
     case SeqApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
@@ -72,7 +73,7 @@ trait CLikeGenSeqOps extends BaseGenSeqOps with CLikeGenBase  {
   val IR: SeqOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case _ => super.emitNode(sym, rhs)
     }

@@ -97,9 +97,6 @@ trait Expressions extends Utils {
 
   def boundSyms(e: Any): List[Sym[Any]] = e match {
     case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
-
-
-
     case _ => Nil
   }
 

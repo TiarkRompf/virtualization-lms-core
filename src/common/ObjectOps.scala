@@ -4,27 +4,28 @@ package common
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 import scala.virtualization.lms.internal.{GenerationFailedException}
+import scala.reflect.SourceContext
 
 trait ObjectOps extends Variables with OverloadHack {
-  def infix_toString(lhs: Rep[Any]) = object_tostring(lhs)
-  def infix_toStringL(lhs: Rep[Any]) = object_tostring(lhs)
-  def infix_unsafeImmutable[A:Manifest](lhs: Rep[A]) = object_unsafe_immutable(lhs)
+  def infix_toString(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
+  def infix_toStringL(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
+  def infix_unsafeImmutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext) = object_unsafe_immutable(lhs)
 
-  def object_tostring(lhs: Rep[Any]): Rep[String]
-	def object_unsafe_immutable[A:Manifest](lhs: Rep[A]): Rep[A]
+  def object_tostring(lhs: Rep[Any])(implicit pos: SourceContext): Rep[String]
+	def object_unsafe_immutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext): Rep[A]
 }
 
 trait ObjectOpsExp extends ObjectOps with VariablesExp {
   case class ObjectToString(o: Exp[Any]) extends Def[String]
   case class ObjectUnsafeImmutable[A](o: Exp[A]) extends Def[A]
 
-  def object_tostring(lhs: Exp[Any]) = ObjectToString(lhs)
-  def object_unsafe_immutable[A:Manifest](lhs: Exp[A]) = ObjectUnsafeImmutable(lhs)
+  def object_tostring(lhs: Exp[Any])(implicit pos: SourceContext) = ObjectToString(lhs)
+  def object_unsafe_immutable[A:Manifest](lhs: Exp[A])(implicit pos: SourceContext) = ObjectUnsafeImmutable(lhs)
 
   //////////////
   // mirroring
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case ObjectUnsafeImmutable(a) => object_unsafe_immutable(f(a))
     case Reflect(ObjectUnsafeImmutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeImmutable(f(a)), mapOver(f,u), f(es)))
     case _ => super.mirror(e,f)
@@ -58,7 +59,7 @@ trait ScalaGenObjectOps extends ScalaGenBase {
   val IR: ObjectOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ObjectToString(lhs) => emitValDef(sym, "(" + quote(lhs) + ").toString()")
     case ObjectUnsafeImmutable(x) => emitValDef(sym, quote(x) + "// unsafe immutable")
     case _ => super.emitNode(sym, rhs)
@@ -69,7 +70,7 @@ trait CLikeGenObjectOps extends CLikeGenBase {
   val IR: ObjectOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ObjectToString(lhs) => emitValDef(sym, "(" + quote(lhs) + ").toString()")
     case ObjectUnsafeImmutable(x) => emitValDef(sym, quote(x) + "// unsafe immutable")
     case _ => super.emitNode(sym, rhs)

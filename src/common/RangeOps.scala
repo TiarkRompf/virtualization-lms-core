@@ -4,25 +4,26 @@ package common
 import java.io.PrintWriter
 
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
+import scala.reflect.SourceContext
 
 trait RangeOps extends Base {
   // workaround for infix not working with manifests
   implicit def repRangeToRangeOps(r: Rep[Range]) = new rangeOpsCls(r)
   class rangeOpsCls(r: Rep[Range]){
-    def foreach(f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
+    def foreach(f: Rep[Int] => Rep[Unit])(implicit pos: SourceContext) = range_foreach(r, f)
   }
 
-  def infix_until(start: Rep[Int], end: Rep[Int]) = range_until(start,end)
-  def infix_start(r: Rep[Range]) = range_start(r)
-  def infix_step(r: Rep[Range]) = range_step(r)
-  def infix_end(r: Rep[Range]) = range_end(r)
+  def infix_until(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = range_until(start,end)
+  def infix_start(r: Rep[Range])(implicit pos: SourceContext) = range_start(r)
+  def infix_step(r: Rep[Range])(implicit pos: SourceContext) = range_step(r)
+  def infix_end(r: Rep[Range])(implicit pos: SourceContext) = range_end(r)
   //def infix_foreach(r: Rep[Range], f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
 
-  def range_until(start: Rep[Int], end: Rep[Int]): Rep[Range]
-  def range_start(r: Rep[Range]) : Rep[Int]
-  def range_step(r: Rep[Range]) : Rep[Int]
-  def range_end(r: Rep[Range]) : Rep[Int]
-  def range_foreach(r: Rep[Range], f: (Rep[Int]) => Rep[Unit]): Rep[Unit]
+  def range_until(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext): Rep[Range]
+  def range_start(r: Rep[Range])(implicit pos: SourceContext) : Rep[Int]
+  def range_step(r: Rep[Range])(implicit pos: SourceContext) : Rep[Int]
+  def range_end(r: Rep[Range])(implicit pos: SourceContext) : Rep[Int]
+  def range_foreach(r: Rep[Range], f: (Rep[Int]) => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
 }
 
 trait RangeOpsExp extends RangeOps with FunctionsExp {
@@ -33,22 +34,23 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   //case class RangeForeach(r: Exp[Range], i: Exp[Int], body: Exp[Unit]) extends Def[Unit]
   case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Sym[Int], body: Block[Unit]) extends Def[Unit]
 
-  def range_until(start: Exp[Int], end: Exp[Int]) : Exp[Range] = Until(start, end)
-  def range_start(r: Exp[Range]) : Exp[Int] = RangeStart(r)
-  def range_step(r: Exp[Range]) : Exp[Int] = RangeStep(r)
-  def range_end(r: Exp[Range]) : Exp[Int] = RangeEnd(r)
-  def range_foreach(r: Exp[Range], block: Exp[Int] => Exp[Unit]) : Exp[Unit] = {
+  def range_until(start: Exp[Int], end: Exp[Int])(implicit pos: SourceContext) : Exp[Range] = Until(start, end)
+  def range_start(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = r match { 
+    case Def(Until(start, end)) => start
+    case _ => RangeStart(r)
+  }
+  def range_step(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = RangeStep(r)
+  def range_end(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = r match { 
+    case Def(Until(start, end)) => end
+    case _ => RangeEnd(r)
+  }
+  def range_foreach(r: Exp[Range], block: Exp[Int] => Exp[Unit])(implicit pos: SourceContext) : Exp[Unit] = {
     val i = fresh[Int]
-    //reflectEffect(RangeForeach(r, i, reifyEffects(block(i))))
-    val (start,end) = r match {
-      case Def(Until(start,end)) => (start,end)
-      case _ => throw new Exception("unexpected symbol in RangeForeach")
-    }
     val a = reifyEffects(block(i))
-    reflectEffect(RangeForeach(start, end, i, a), summarizeEffects(a).star)
+    reflectEffect(RangeForeach(r.start, r.end, i, a), summarizeEffects(a).star)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Reflect(RangeForeach(s,e,i,b), u, es) => reflectMirrored(Reflect(RangeForeach(f(s),f(e),f(i).asInstanceOf[Sym[Int]],f(b)), mapOver(f,u), f(es)))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
@@ -81,7 +83,7 @@ trait BaseGenRangeOps extends GenericNestedCodegen {
 trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Until(start, end) => emitValDef(sym, "" + quote(start) + " until " + quote(end))
 
     /*
@@ -110,7 +112,7 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
   val IR: RangeOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Until(start, end) =>
         stream.println(addTab()+"int %s_start = %s;".format(quote(sym), quote(start)))
         stream.println(addTab()+"int %s_end = %s;".format(quote(sym), quote(end)))
@@ -143,7 +145,7 @@ trait OpenCLGenRangeOps extends OpenCLGenEffect with BaseGenRangeOps {
   val IR: RangeOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Until(start, end) =>
       throw new GenerationFailedException("OpenCLGenRangeOps: Range vector is not supported")
     case RangeForeach(start, end, i, body) =>
@@ -159,7 +161,7 @@ trait CGenRangeOps extends CGenEffect with BaseGenRangeOps {
   val IR: RangeOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Until(start, end) =>
       throw new GenerationFailedException("CGenRangeOps: Range vector is not supported")
     case RangeForeach(start, end, i, body) =>

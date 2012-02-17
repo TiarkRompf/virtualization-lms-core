@@ -1,0 +1,27 @@
+gathering liveness info for block Block(Sym(12))
+gathering liveness info for block Block(Sym(6))
+gathering liveness info for block Block(Sym(8))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Any)) {
+def apply(x0:Int): Any = {
+var x1: Int = 7
+//var x2: Int = 9
+val x3 = 7 > x0
+val x9 = if (x3) {
+x1 = 5
+//x2 = 12
+()
+} else {
+val x7 = println("no")
+x7
+}
+val x10 = x1
+val x11 = println(x10)
+x11
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

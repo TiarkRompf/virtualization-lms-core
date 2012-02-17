@@ -48,7 +48,7 @@ trait BaseGenWhile extends GenericNestedCodegen {
 trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case While(c,b) =>
       stream.print("val " + quote(sym) + " = while ({")
       emitBlock(c)
@@ -66,7 +66,7 @@ trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
 trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case While(c,b) =>
             // Get free variables list
@@ -93,7 +93,7 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
 trait OpenCLGenWhile extends OpenCLGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case While(c,b) =>
         // calculate condition
@@ -111,7 +111,7 @@ trait OpenCLGenWhile extends OpenCLGenEffect with BaseGenWhile {
 trait CGenWhile extends CGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case While(c,b) =>
         // calculate condition

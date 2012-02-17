@@ -14,6 +14,11 @@ trait OverloadHack {
   class Overloaded8
   class Overloaded9
   class Overloaded10
+  class Overloaded11
+  class Overloaded12
+  class Overloaded13
+  class Overloaded14
+  class Overloaded15
 
   implicit val overloaded1 = new Overloaded1
   implicit val overloaded2 = new Overloaded2
@@ -25,4 +30,9 @@ trait OverloadHack {
   implicit val overloaded8 = new Overloaded8
   implicit val overloaded9 = new Overloaded9
   implicit val overloaded10 = new Overloaded10
+  implicit val overloaded11 = new Overloaded11
+  implicit val overloaded12 = new Overloaded12
+  implicit val overloaded13 = new Overloaded13
+  implicit val overloaded14 = new Overloaded14
+  implicit val overloaded15 = new Overloaded15
 }

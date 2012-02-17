@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import internal._
+import scala.reflect.SourceContext
 
 trait ArrayOps extends Variables {
 
@@ -13,16 +14,16 @@ trait ArrayOps extends Variables {
   implicit def arrayToArrayOps[T:Manifest](a: Array[T]) = new ArrayOpsCls(unit(a))
 
   class ArrayOpsCls[T:Manifest](a: Rep[Array[T]]){
-    def apply(n: Rep[Int]) = array_apply(a, n)
-    def update(n: Rep[Int], y: Rep[T]) = array_update(a,n,y)
-    def length = array_length(a)
-    def foreach(block: Rep[T] => Rep[Unit]) = array_foreach(a, block)
+    def apply(n: Rep[Int])(implicit pos: SourceContext) = array_apply(a, n)
+    def update(n: Rep[Int], y: Rep[T])(implicit pos: SourceContext) = array_update(a,n,y)
+    def length(implicit pos: SourceContext) = array_length(a)
+    def foreach(block: Rep[T] => Rep[Unit])(implicit pos: SourceContext) = array_foreach(a, block)
   }
 
-  def array_apply[T:Manifest](x: Rep[Array[T]], n: Rep[Int]): Rep[T]
-  def array_update[T:Manifest](x: Rep[Array[T]], n: Rep[Int], y: Rep[T]): Rep[Unit]
-  def array_length[T:Manifest](x: Rep[Array[T]]) : Rep[Int]
-  def array_foreach[T:Manifest](x: Rep[Array[T]], block: Rep[T] => Rep[Unit]): Rep[Unit]
+  def array_apply[T:Manifest](x: Rep[Array[T]], n: Rep[Int])(implicit pos: SourceContext): Rep[T]
+  def array_update[T:Manifest](x: Rep[Array[T]], n: Rep[Int], y: Rep[T])(implicit pos: SourceContext): Rep[Unit]
+  def array_length[T:Manifest](x: Rep[Array[T]])(implicit pos: SourceContext) : Rep[Int]
+  def array_foreach[T:Manifest](x: Rep[Array[T]], block: Rep[T] => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
 }
 
 trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
@@ -32,10 +33,10 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int]
   case class ArrayForeach[T](a: Exp[Array[T]], x: Sym[T], block: Block[Unit]) extends Def[Unit]
 
-  def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int]): Exp[T] = ArrayApply(x, n)
-  def array_update[T:Manifest](x: Exp[Array[T]], n: Exp[Int], y: Exp[T]) = reflectWrite(x)(ArrayUpdate(x,n,y))
-  def array_length[T:Manifest](a: Exp[Array[T]]) : Rep[Int] = ArrayLength(a)
-  def array_foreach[T:Manifest](a: Exp[Array[T]], block: Exp[T] => Exp[Unit]): Exp[Unit] = {
+  def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int])(implicit pos: SourceContext): Exp[T] = ArrayApply(x, n)
+  def array_update[T:Manifest](x: Exp[Array[T]], n: Exp[Int], y: Exp[T])(implicit pos: SourceContext) = reflectWrite(x)(ArrayUpdate(x,n,y))
+  def array_length[T:Manifest](a: Exp[Array[T]])(implicit pos: SourceContext) : Rep[Int] = ArrayLength(a)
+  def array_foreach[T:Manifest](a: Exp[Array[T]], block: Exp[T] => Exp[Unit])(implicit pos: SourceContext): Exp[Unit] = {
     val x = fresh[T]
     val b = reifyEffects(block(x))
     reflectEffect(ArrayForeach(a, x, b), summarizeEffects(b).star)
@@ -44,9 +45,8 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   //////////////
   // mirroring
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
     (e match {
-      case ArrayLength(a) => array_length(f(a))
       case ArrayApply(a,x) => array_apply(f(a),f(x))
       case Reflect(ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
       case Reflect(ArrayUpdate(l,i,r), u, es) => reflectMirrored(Reflect(ArrayUpdate(f(l),f(i),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
@@ -81,7 +81,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
   val IR: ArrayOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
     case ArrayUpdate(x,n,y) => emitValDef(sym, quote(x) + "(" + quote(n) + ") = " + quote(y))
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
@@ -98,7 +98,7 @@ trait CLikeGenArrayOps extends BaseGenArrayOps with CLikeGenBase {
   val IR: ArrayOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case ArrayLength(a) =>
           emitValDef(sym, " sizeof(" + quote(a) + ")")

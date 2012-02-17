@@ -97,7 +97,7 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
   val IR: ArrayLoopsExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case SimpleLoop(s,x,ArrayElem(y)) =>  
       stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") { " + quote(x) + " => ")
       emitBlock(y)
@@ -126,7 +126,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
   val IR: ArrayLoopsFatExp
   import IR._
   
-  override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+  override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatLoop(s,x,rhs) => 
       for ((l,r) <- sym zip rhs) {
         r match {
@@ -196,7 +196,7 @@ trait ScalaGenArrays extends ScalaGenEffect {
   val IR: ArraysExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ArrayZero(n) =>  
       emitValDef(sym, "new Array[Int](" + quote(n) + ")")
     case ArrayUpdate(a,x,v) =>  

@@ -35,7 +35,7 @@ trait Scheduling {
     xx.flatten.reverse
   }
 
-  def getFatScheduleM(scope: List[Stm])(result: Any, cold: Boolean, hot: Boolean): List[Stm] = {
+  def getScheduleM(scope: List[Stm])(result: Any, cold: Boolean, hot: Boolean): List[Stm] = {
     def mysyms(st: Any) = {
       val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
       assert(syms(st).toSet == db.map(_._1).toSet, "different list of syms: "+syms(st)+"!="+db+" for "+st)
@@ -53,9 +53,6 @@ trait Scheduling {
     
   def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] = 
     getSchedule(availableDefs)(result, sort)
-    
-  def buildScheduleForResultM(scope: List[Stm])(result: Any, cold: Boolean, hot: Boolean): List[Stm] =
-    getFatScheduleM(scope)(result, cold, hot)
 
 
   def getFatDependentStuff(scope: List[Stm])(sts: List[Sym[Any]]): List[Stm] = {
