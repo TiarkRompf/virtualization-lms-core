@@ -66,7 +66,8 @@ class TestCrossStage extends FileDiffSuite {
       
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
-          
+          // FIXME: array buffer now uses implicis instead of
+          // infix methods and lifting does not kick in
           acc += x
           acc += x
         }
