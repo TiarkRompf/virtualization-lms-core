@@ -18,10 +18,8 @@ skipping mirror operation Sym(2)=Minus(Const(0.0),Sym(1)) syms Sym(1) subst Sym(
 need to transform rhs of fat loop: List(Sym(5)), List(ArrayElem(Block(Sym(2))))
 skipping mirror operation Sym(5)=SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))) syms Sym(2) subst Sym(7) -> Sym(1),Sym(9) -> Sym(2),Sym(1) -> Sym(1)
 came up with: List(Sym(5)), List(ArrayElem(Block(Sym(2)))) with subst Sym(7) -> Sym(1),Sym(9) -> Sym(2),Sym(1) -> Sym(1)
-warning: mirroring of Sym(11)=Minus(Const(0.0),Sym(9)) type Double returned Sym(1) type Int (not a subtype)
 --> replace Sym(11)=Minus(Const(0.0),Sym(9)) by Sym(1)
 need to transform rhs of fat loop: List(Sym(13)), List(ArrayElem(Block(Sym(11))))
-warning: mirroring of Sym(13)=SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(11)))) type Array[Double] returned Sym(4)=SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))) type Array[Int] (not a subtype)
 --> replace Sym(13)=SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(11)))) by Sym(4)=SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1))))
 lhs changed! will add to innerScope: 
 came up with: List(Sym(4)), List(ArrayElem(Block(Sym(1)))) with subst Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(9) -> Sym(2),Sym(1) -> Sym(1)
@@ -51,6 +49,22 @@ skipping mirror operation Sym(19)=Reify(Sym(18),Summary(true,true,false,false,fa
 need to transform rhs of fat loop: List(Sym(4)), List(ArrayElem(Block(Sym(1))))
 skipping mirror operation Sym(4)=SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))) syms Sym(1) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
 came up with: List(Sym(4)), List(ArrayElem(Block(Sym(1)))) with subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+skipping mirror operation Sym(2)=Minus(Const(0.0),Sym(1)) syms Sym(1) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+need to transform rhs of fat loop: List(Sym(5)), List(ArrayElem(Block(Sym(2))))
+skipping mirror operation Sym(5)=SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))) syms Sym(2) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+came up with: List(Sym(5)), List(ArrayElem(Block(Sym(2)))) with subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+skipping mirror operation Sym(17)=SimpleStruct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(4))) syms Sym(4),Sym(4) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+skipping mirror operation Sym(18)=Reflect(Print(Sym(17)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()) syms Sym(17) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+skipping mirror operation Sym(19)=Reify(Sym(18),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(18))) syms Sym(18),Sym(18) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+need to transform rhs of fat loop: List(Sym(4)), List(ArrayElem(Block(Sym(1))))
+skipping mirror operation Sym(4)=SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))) syms Sym(1) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+came up with: List(Sym(4)), List(ArrayElem(Block(Sym(1)))) with subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+skipping mirror operation Sym(17)=SimpleStruct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(4))) syms Sym(4),Sym(4) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+skipping mirror operation Sym(18)=Reflect(Print(Sym(17)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()) syms Sym(17) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+skipping mirror operation Sym(19)=Reify(Sym(18),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(18))) syms Sym(18),Sym(18) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+need to transform rhs of fat loop: List(Sym(4)), List(ArrayElem(Block(Sym(1))))
+skipping mirror operation Sym(4)=SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))) syms Sym(1) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
+came up with: List(Sym(4)), List(ArrayElem(Block(Sym(1)))) with subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
 skipping mirror operation Sym(17)=SimpleStruct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(4))) syms Sym(4),Sym(4) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
 skipping mirror operation Sym(18)=Reflect(Print(Sym(17)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()) syms Sym(17) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
 skipping mirror operation Sym(19)=Reify(Sym(18),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(18))) syms Sym(18),Sym(18) subst Sym(16) -> Sym(19),Sym(11) -> Sym(1),Sym(13) -> Sym(4),Sym(7) -> Sym(1),Sym(14) -> Sym(17),Sym(9) -> Sym(2),Sym(15) -> Sym(18),Sym(1) -> Sym(1)
@@ -69,7 +83,7 @@ super.focusExactScopeFat with result changed from List(Sym(16)) to List(Sym(19))
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-var x4 = new Array[Int](100)
+var x4 = new Array[Double](100)
 for (x1 <- 0 until 100) {
 x4(x1) = x1
 }

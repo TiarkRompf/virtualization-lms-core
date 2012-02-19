@@ -198,7 +198,16 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
       // return struct of syms
       val combinedResult = super.ifThenElse(cond,u,v)
       
-      val elemsNew = for (k <- elemsA.keySet) yield (k -> phi(cond,u,elemsA(k),v,elemsB(k))(combinedResult))
+      val elemsNew = for (k <- elemsA.keySet) yield {
+        val ea = elemsA(k)
+        val eb = elemsB(k)
+        var tp = ea.Type // TODO: really want lub(ea.Type, eb.Type) !
+        if (!(eb.Type <:< tp)) {
+          tp = eb.Type
+          assert(ea.Type <:< tp, "TODO: phi should calculate lub of types " + ea.Type + "/" + eb.Type)
+        }        
+        k -> phi(cond,u,elemsA(k),v,elemsB(k))(combinedResult)(mtype(tp))
+      }
       println("----- " + combinedResult + " / " + elemsNew)
       struct[T](tagA, elemsNew.toMap)
       

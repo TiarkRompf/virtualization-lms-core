@@ -67,8 +67,9 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
       var done = false
 
       // keep track of loops in inner scopes
-      var UloopSyms = currentScope collect { case e @ TTP(lhs, SimpleFatLoop(_,_,_)) if !Wloops.contains(e) => lhs }
+      var UloopSyms = Nil: List[List[Sym[Any]]]
       
+      UloopSyms = currentScope collect { case e @ TTP(lhs, SimpleFatLoop(_,_,_)) if !Wloops.contains(e) => lhs }
       do {
         // utils
         def WgetLoopShape(e: TTP): Exp[Int] = e.rhs match { case SimpleFatLoop(s,x,rhs) => s }
@@ -91,15 +92,21 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         // possible extension: have WtableNeg keep track of the statements that prevent fusion
         // then we can later remove the entry and see if the dependency goes away...
         
-        val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
+        var WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
           val thisLoopVars = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
-          getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) => 
+          getCustomFatSchedule(currentScope)(WgetLoopRes(dx)) {
+            case e@ThinDef(SimpleIndex(a,i)) if (thisLoopVars contains i) && (loopCollectSyms contains a) => 
+              // check that a is the result of a SimpleCollectIf loop (not a reduce, for example)
               //if (!loopCollectSyms.contains(a))
               //  printerr("DANGER WILL ROBINSON: ignoring dep " + e + " although " + a + " is not a loop sym " + loopCollectSyms)
               //println("ignoring simple dependency " + e + " on loop var " + thisLoopSyms)
               Nil // direct deps on this loop's induction var don't count
+            case e => 
+              syms(e)
+          } flatMap {
+            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) =>
+              Nil //FIXME: shouldn't duplicate condition ...
             case sc =>
               val pr = syms(sc.rhs).intersect(otherLoopSyms) flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
               if (pr.nonEmpty) printlog("fusion of "+pr+" prevented by " + sc + " which is required by body of " + dx.lhs)
@@ -107,7 +114,20 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
           }
         }.distinct      
       
-        printlog("wtableneg: " + WtableNeg)        
+        // transitive closure of negative dependencies
+        def iter {
+          val oldNeg = WtableNeg
+          val delta = WtableNeg flatMap { p => WtableNeg collect { case q if p._2 == q._1 => (p._1, q._2) }}
+          WtableNeg = (WtableNeg ++ delta).distinct
+          if (WtableNeg != oldNeg) iter
+        }
+        iter
+      
+        printlog("wtableneg: " + WtableNeg) // will add more later, need to maintain closure
+        
+        // TODO: loops that have the same symbol have been split from a single struct loop        
+        if (loopSyms.distinct != loopSyms)
+          println("*** should fuse detected split " + loopSyms)        
         
         // other preconditions for fusion: loops must have same shape, or one must loop over the other's result
         
@@ -137,7 +157,8 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         
         val t = new SubstTransformer
 
-        var partitionsIn = Wloops
+        // make loops with same var adjacent (fusing each with another loop would lead to a conflicting substitution!)
+        var partitionsIn = Wloops.sortBy(e => WgetLoopVar(e).toString) 
         var partitionsOut = Nil:List[TTP]
       
         for (b <- partitionsIn) {
@@ -149,8 +170,15 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
               
               // unify loop vars
               val targetVar = WgetLoopVar(a)(0) // should use a fresh var?
-              for (w <- WgetLoopVar(b))
+              for (w <- WgetLoopVar(b)) {
+                // check for conflicting subsitutions
+                t.subst.get(w) match {  
+                  case Some(r) if r != targetVar => 
+                    printerr("error: conflicting substitution " + w + " -> " + r + ", updat -> " +targetVar)
+                  case _ => 
+                }
                 t.subst(w) = targetVar
+              }
               
               // analyze shape dependency and add appropriate conditions to loop body when fusing a filter loop
               val shape = if (isShapeDep(shapeA,b)) {
@@ -166,8 +194,17 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
                 shapeA
               }
 
-              val fused = TTP(a.lhs:::b.lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
+              val lhs = a.lhs ++ b.lhs
+
+              val fused = TTP(lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
               partitionsOut = fused :: (partitionsOut diff List(a))
+
+              val preNeg = WtableNeg collect { case p if (lhs contains p._2) => p._1 }
+              val postNeg = WtableNeg collect { case p if (lhs contains p._1) => p._2 }
+              
+              val fusedNeg = preNeg flatMap { s1 => postNeg map { s2 => (s1,s2) } }
+              WtableNeg = (fusedNeg ++ WtableNeg).distinct
+              
             case None => partitionsOut = b::partitionsOut
           }
         }

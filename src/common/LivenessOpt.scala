@@ -57,6 +57,8 @@ trait DefUseAnalysis extends NestedTraversal {
       val saveDefUseMap = defUseMap
       defUseMap 
     
+      printlog("gathering def-use info for block " + result)
+      
       var pairs = List[(Exp[Any],Exp[Any])]()
     
       for (TP(sym, rhs) <- innerScope) {
@@ -65,9 +67,12 @@ trait DefUseAnalysis extends NestedTraversal {
         }
       }
     
-      if (saveDefUseMap ne null)
-        defUseMap = pairs.groupBy(_._1).map(p => (p._1, saveDefUseMap.getOrElse(p._1, Set()) ++ p._2.map(_._2)))
-      else
+      if (saveDefUseMap ne null) {
+        defUseMap = pairs.groupBy(_._1).map(p => (p._1, p._2.map(_._2).toSet))
+        for ((k,vs) <- saveDefUseMap) {
+          defUseMap += (k -> (saveDefUseMap(k) ++ defUseMap.getOrElse(k, Set())))
+        }        
+      } else
         defUseMap = pairs.groupBy(_._1).map(p => (p._1, p._2.map(_._2).toSet))
 
       body

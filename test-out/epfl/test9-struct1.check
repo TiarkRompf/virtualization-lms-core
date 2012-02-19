@@ -3,7 +3,7 @@
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-var x2: Int = x0
+var x2: Double = x0
 var x3: Double = 0.0
 val x5 = x2
 val x6 = x3

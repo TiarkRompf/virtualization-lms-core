@@ -83,12 +83,13 @@ class TestStruct extends FileDiffSuite {
   val prefix = "test-out/epfl/test9-"
   
   trait DSL extends ComplexArith with ArrayLoops with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with RangeOps with Print {
-    def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+    def infix_toDouble(x: Rep[Int]): Rep[Double]
     def test(x: Rep[Int]): Rep[Any]
   }
 
   trait Impl extends DSL with ComplexStructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
+    def infix_toDouble(x: Rep[Int]): Rep[Double] = x match { case Const(c) => Const(c.toDouble) case Sym(n) => Sym[Double](n) }//Hack
     override val verbosity = 2
     val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
@@ -98,6 +99,7 @@ class TestStruct extends FileDiffSuite {
 
   trait ImplFused extends DSL with ComplexStructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp with TransformingStuff { self => 
+    def infix_toDouble(x: Rep[Int]): Rep[Double] = x match { case Const(c) => Const(c.toDouble) case Sym(n) => Sym[Double](n) }//Hack
     override val verbosity = 2
     val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 

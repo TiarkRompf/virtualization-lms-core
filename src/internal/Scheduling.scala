@@ -28,7 +28,7 @@ trait Scheduling {
   def buildScheduleForResultM(scope: List[TP[Any]])(start: Any, cold: Boolean, hot: Boolean): List[TP[Any]] = {
     def mysyms(st: Any) = {
       val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
-      assert(syms(st).toSet == db.map(_._1).toSet, "different list of syms: "+syms(st)+"!="+db)
+      assert(syms(st).toSet == db.map(_._1).toSet, "different list of syms: "+syms(st)+"!="+db+" for "+st)
       if (cold && hot) db.map(_._1)
       else if (cold && !hot) db.withFilter(_._2 < 100.0).map(_._1)
       else if (!cold && hot) db.withFilter(_._2 > 0.75).map(_._1)
