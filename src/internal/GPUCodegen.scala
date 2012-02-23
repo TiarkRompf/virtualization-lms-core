@@ -4,6 +4,7 @@ package internal
 import java.io.{StringWriter, PrintWriter, File}
 import collection.mutable.{ListBuffer, HashMap, ListMap, HashSet}
 import collection.immutable.List._
+import scala.reflect.SourceContext
 
 trait GPUCodegen extends CLikeCodegen {
   val IR: Expressions
@@ -120,8 +121,10 @@ trait GPUCodegen extends CLikeCodegen {
   var isGPUable:Boolean = false
 
   var processingHelperFunc: Boolean = false
+  var isNestedNode: Boolean = false
 
   def emitMultiLoopFunc(func:Exp[Any], postfix: String, lastInputs: List[Sym[Any]], stream:PrintWriter): List[String] = {
+    isNestedNode = true
     val tempString = new StringWriter
     val tempStream = new PrintWriter(tempString, true)
     val header = new StringWriter
@@ -153,6 +156,7 @@ trait GPUCodegen extends CLikeCodegen {
       metaData.outputs.put(sym,tr)
     }
     */
+    isNestedNode = false
     inputs.map(quote(_))
   }
 
@@ -259,6 +263,7 @@ trait GPUCodegen extends CLikeCodegen {
     tabWidth = 1
     isGPUable = false
     processingHelperFunc = false
+    isNestedNode = false
   }
 
   // Map a scala primitive type to JNI type descriptor
@@ -540,9 +545,27 @@ trait GPUCodegen extends CLikeCodegen {
 
   def checkGPUAlloc(sym: Sym[Any]) {
     if(!processingHelperFunc) {
-      println("\n** GPU Warning ** " + quotePos(sym))
-      println("Code has nested memory allocations (not supported by current Delite GPU code generator). Try manually unrolling the outer loop.")
-      throw new GenerationFailedException("CudaGen: Nested allocations not allowed\n")
+      if (isNestedNode) {
+        printDebug(sym, "Code has nested memory allocations (not supported by current Delite GPU code generator). Try manually unrolling the outer loop.")
+        throw new GenerationFailedException("CudaGen: Nested allocations not allowed\n")
+      }
+      else {
+        throw new GenerationFailedException("CudaGen: Allocations cannot be done within a GPU kernel.\n")
+      }
     }
+  }
+
+  def printDebug(sym: Sym[Any], msg: String) {
+    def getFirstStack(cs: SourceContext): SourceContext = cs.parent match {
+      case None => cs
+      case Some(p) => getFirstStack(p)
+    }
+    print("\n** GPU Warning ")
+    sym.pos match {
+      case Nil => println("[unknown file] **")
+      case cs => println("[" + cs.map(e=>getFirstStack(e).fileName.split(File.separator).last+":"+getFirstStack(e).line).mkString(", ") + "] **")
+    }
+    println(msg)
+    println("Stack Trace: " + quotePos(sym))
   }
 }

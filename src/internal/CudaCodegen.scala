@@ -248,6 +248,7 @@ trait CudaFatCodegen extends GenericFatCodegen with CudaCodegen {
   import IR._
 
   def emitMultiLoopCond(sym: Sym[Any], funcs:List[Exp[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]]) = {
+    isNestedNode = true
     devFuncIdx += 1
     val currIdx = devFuncIdx
     val tempString = new StringWriter
@@ -274,6 +275,7 @@ trait CudaFatCodegen extends GenericFatCodegen with CudaCodegen {
     lf.hasCond = true
     lf.loopCondInputs = inputs.map(quote)
     metaData.loopFuncs.put(sym,lf)
+    isNestedNode = false
 
     ("dev_"+currIdx,inputs)
   }
