@@ -3,6 +3,7 @@ package common
 
 import internal._
 import scala.reflect.SourceContext
+import scala.virtualization.lms.internal.Expressions
 
 /**
  * This trait automatically lifts any concrete instance to a representation.
