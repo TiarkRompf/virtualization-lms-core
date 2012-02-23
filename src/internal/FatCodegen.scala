@@ -111,7 +111,9 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatScheduling {
         val actual = levelScope.filter(_.lhs exists (effects contains _))
         if (effects != actual.flatMap(_.lhs filter (effects contains _))) {
           val expected = effects.map(d=>fatten(findDefinition(d.asInstanceOf[Sym[Any]]).get))
-          val missing = expected filterNot (actual contains _)
+          //val missing = expected filterNot (actual contains _)
+          val actualSyms = actual.flatMap(_.lhs)
+          val missing = effects.filterNot(actualSyms contains _)
           val printfn = if (missing.isEmpty) printlog _ else printerr _
           printfn("error: violated ordering of effects")
           printfn("  expected:")
