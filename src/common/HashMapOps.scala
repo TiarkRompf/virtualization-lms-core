@@ -44,7 +44,7 @@ trait HashMapOpsExp extends HashMapOps with EffectExp {
 
   def hashmap_new[K:Manifest,V:Manifest]() = reflectMutable(HashMapNew[K,V]())
   def hashmap_apply[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K]) = HashMapApply(m,k)
-  def hashmap_update[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K], v: Exp[V]) = reflectMutable(HashMapUpdate(m,k,v))
+  def hashmap_update[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K], v: Exp[V]) = reflectWrite(m)(HashMapUpdate(m,k,v))
   def hashmap_contains[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], i: Exp[K]) = HashMapContains(m, i)
   def hashmap_size[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) = HashMapSize(m)
   def hashmap_values[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) = HashMapValues(m)

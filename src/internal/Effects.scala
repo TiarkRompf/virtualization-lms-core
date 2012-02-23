@@ -49,6 +49,7 @@ trait Effects extends Expressions with Blocks with Utils {
 
   def mayRead(u: Summary, a: List[Sym[Any]]): Boolean = u.mayGlobal || a.exists(u.mayRead contains _)
   def mayWrite(u: Summary, a: List[Sym[Any]]): Boolean = u.mayGlobal || a.exists(u.mayWrite contains _)
+  def maySimple(u: Summary): Boolean = u.mayGlobal || u.maySimple
 
   def mustMutable(u: Summary): Boolean = u.resAlloc
   def mustPure(u: Summary): Boolean = u == Pure()
@@ -443,12 +444,19 @@ trait Effects extends Expressions with Blocks with Utils {
   // --- reify
 
   def summarizeAll(es: List[Exp[Any]]): Summary = {
-    
-    /* TODO: summary should not include reads/writes to vars allocated inside */
-    
+    // compute an *external* summary for a seq of nodes
+    // don't report any reads/writes on data allocated within the block
     var u = Pure()
-    for (Def(Reflect(_, u2, _)) <- es)
-      u = u andThen u2
+    var ux = u
+    var allocs: List[Exp[Any]] = Nil
+    def clean(xs: List[Sym[Any]]) = xs.filterNot(allocs contains _)
+    for (s@Def(Reflect(_, u2, _)) <- es) {
+      if (mustMutable(u2)) allocs ::= s
+      u = u andThen (u2.copy(mayRead = clean(u2.mayRead), mstRead = clean(u2.mstRead),
+              mayWrite = clean(u2.mayWrite), mstWrite = clean(u2.mstWrite)))
+      ux = ux andThen u2
+    }
+    //if (ux != u) printdbg("** effect summary reduced from "+ux+" to" + u)
     u
   }
 

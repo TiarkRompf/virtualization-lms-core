@@ -99,15 +99,11 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         // then we can later remove the entry and see if the dependency goes away...
         printlog("Scope: ")
         currentScope.foreach(x => printlog(x))
-        val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
+        var WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
           val thisLoopVars = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
           getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
             case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) =>
-              // check that a is the result of a SimpleCollectIf loop (not a reduce, for example)
-              //if (!loopCollectSyms.contains(a))
-              //  printerr("DANGER WILL ROBINSON: ignoring dep " + e + " although " + a + " is not a loop sym " + loopCollectSyms)
-              //println("ignoring simple dependency " + e + " on loop var " + thisLoopSyms)
               Nil // direct deps on this loop's induction var don't count
             case sc =>
 
@@ -127,10 +123,20 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
               }
               pr
           }
-        }.distinct
-
-        printlog("wtableneg: " + WtableNeg)
-
+        }.distinct      
+      
+        // transitive closure of negative dependencies
+        def iter {
+          val oldNeg = WtableNeg
+          val delta = WtableNeg flatMap { p => WtableNeg collect { case q if p._2 == q._1 => (p._1, q._2) }}
+          WtableNeg = (WtableNeg ++ delta).distinct
+          if (WtableNeg != oldNeg) iter
+        }
+        iter
+      
+        printlog("wtableneg: " + WtableNeg) // will add more later, need to maintain closure
+        
+        
         // other preconditions for fusion: loops must have same shape, or one must loop over the other's result
 
         def canFuseIndirect(a: TTP, b: TTP): Boolean =
@@ -233,7 +239,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         for (b <- partitionsIn) {
           // try to add to an item in partitionsOut, if not possible add as-is
           partitionsOut.find(a => canFuse(a,b)) match {
-            case Some(a) =>
+            case Some(a) => 
               val shapeA = WgetLoopShape(a)
               val shapeB = WgetLoopShape(b)
 
@@ -258,19 +264,22 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
                 shapeA
               }
 
-              val fused = TTP(a.lhs:::b.lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
+              val lhs = a.lhs ++ b.lhs
+
+              val fused = TTP(lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
               partitionsOut = fused :: (partitionsOut diff List(a))
+
+              val preNeg = WtableNeg collect { case p if (lhs contains p._2) => p._1 }
+              val postNeg = WtableNeg collect { case p if (lhs contains p._1) => p._2 }
+              
+              val fusedNeg = preNeg flatMap { s1 => postNeg map { s2 => (s1,s2) } }
+              WtableNeg = fusedNeg ++ WtableNeg
+              
             case None => partitionsOut = b::partitionsOut
           }
         }
 
         printlog("partitions: " + partitionsOut)
-
-
-        //println("<0----"+result)
-        //currentScope.foreach(println)
-        //println("----0>")
-
         // actually do the fusion: now transform the loops bodies
 
         if ((partitionsOut intersect partitionsIn) != partitionsOut) { // was there any change?
@@ -369,12 +378,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
       }
       
     }
-/*
-    println("result "+result0+"/"+result)
-    println("<---")
-    currentScope.foreach(println)
-    println("--->")
-*/
+
     // do what super does ...
     super.focusExactScopeFat(currentScope)(result0.map(Block(_)))(body)
   }

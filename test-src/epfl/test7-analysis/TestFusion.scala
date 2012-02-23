@@ -72,7 +72,7 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
     tp.sym
   }
 
-  def plugInHelper[A,T:Manifest,U:Manifest](oldGen: Exp[Gen[A]], context: Block[Gen[T]], plug: Block[Gen[U]]): Block[Gen[U]] = context match {
+  override def plugInHelper[A,T:Manifest,U:Manifest](oldGen: Exp[Gen[A]], context: Block[Gen[T]], plug: Block[Gen[U]]): Block[Gen[U]] = context match {
     case Block(`oldGen`) => plug
     case Block(Def(IfThenElse(c,a,b@Block(Def(Skip(x)))))) => Block(toAtom2(IfThenElse(c,plugInHelper(oldGen,a,plug),Block(toAtom2(Skip(x))))))
     case Block(Def(SimpleLoop(sh,x,ForeachElem(y)))) => Block(toAtom2(SimpleLoop(sh,x,ForeachElem(plugInHelper(oldGen,y,plug)))))

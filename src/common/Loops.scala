@@ -58,6 +58,16 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   }
 
 
+  //////////////
+  // mirroring
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+    case SimpleLoop(s,v,body) => simpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f))
+    case Yield(i,y) => toAtom(Yield(i.map(x => f(x)),f(y)))(mtype(manifest[A]))
+    case Skip(i) => toAtom(Skip(i.map(x => f(x))))(mtype(manifest[A]))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]] // why??
+
 	/////////////////////
   // aliases and sharing
 
@@ -80,12 +90,6 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case e: AbstractLoop[_] => copySyms(e.body)
     case _ => super.copySyms(e)
   }
-
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
-    case Yield(i,y) => toAtom(Yield(i.map(x => f(x)),f(y)))(mtype(manifest[A]))
-    case Skip(i) => toAtom(Skip(i.map(x => f(x))))(mtype(manifest[A]))
-    case _ => super.mirror(e,f)
-  }).asInstanceOf[Exp[A]]
 
 }
 
