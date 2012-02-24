@@ -1,0 +1,15 @@
+In order to get the Eclipse project to build correctly, you need to add the 
+scalatest jar in this folder. This can be done using any http download tool
+such as wget or curl. 
+
+LINUX:
+  cd <path-to-lms>/virtualization-lms-core/lib
+  wget -O scalatest.jar http://dl.dropbox.com/u/...
+
+MAC:
+  cd <path-to-lms>/virtualization-lms-core/lib
+  curl -o scalatest.jar http://dl.dropbox.com/u/...
+
+WINDOWS:
+  Manually download http://dl.dropbox.com/u/...
+  and place it in the lib folder.

@@ -12,7 +12,7 @@ scalaVersion := virtScala
 
 // quick way of getting artifact naming compatibility right now
 //crossPaths := false
-scalaBinaryVersion := virtScala // necessary??
+//scalaBinaryVersion := virtScala // necessary??
 
 scalaSource in Compile <<= baseDirectory(_ / "src")
 
@@ -40,4 +40,14 @@ autoCompilerPlugins := true
 
 addCompilerPlugin("org.scala-lang.plugins" % "continuations" % virtScala)
 
-scalacOptions += "-P:continuations:enable"
+scalacOptions in Test += "-P:continuations:enable"
+
+EclipseKeys.withSource := true
+
+EclipseKeys.executionEnvironment := Some(EclipseExecutionEnvironment.JavaSE16)
+
+// Get rid of java source directories in compile
+unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)(Seq(_))
+
+// Get rid of java source directories in test
+unmanagedSourceDirectories in Test <<= (scalaSource in Test)(Seq(_))
