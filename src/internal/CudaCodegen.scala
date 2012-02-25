@@ -21,11 +21,7 @@ trait CudaCodegen extends GPUCodegen {
     helperFuncString = new StringBuilder
     hstream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cu"))
     helperFuncHdrStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
-    //devStream = new PrintWriter(new FileWriter(buildDir+"devFuncs.cu"))
     headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.h"))
-    //headerStream.println("#include \"CudaArrayList.h\"")
-    //headerStream.println("#include \"helperFuncs.cu\"")
-    //headerStream.println("#include \"devFuncs.cu\"")
 
     //TODO: Put all the DELITE APIs declarations somewhere
     hstream.print("#include \"helperFuncs.h\"\n")
@@ -159,58 +155,6 @@ trait CudaCodegen extends GPUCodegen {
 
   def emitAssignment(lhs:String, rhs: String)(implicit stream: PrintWriter): Unit = {
     stream.println(addTab() + " " + lhs + " = " + rhs + ";")
-  }
-  
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
-    if (external) {
-      // CUDA library ops use a C wrapper, so should be generated as a C kernel
-      stream.println(getDSLHeaders)
-      super.emitKernelHeader(syms, getKernelOutputs ::: vals, vars, resultType, resultIsVar, external)
-      return
-    }
-
-    val out = new StringBuilder
-
-    out.append(getDSLHeaders)
-    stream.print(out.toString)
-  }
-
-  def registerKernel(syms: List[Sym[Any]]) {
-    // Print out dsl.h file
-    isGPUable = true
-    if(kernelsList.intersect(syms).isEmpty) {
-      headerStream.println("#include \"%s.cu\"".format(syms.map(quote).mkString("")))
-      kernelsList ++= syms
-    }
-  }
-
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
-    if (!isGPUable) throw new GenerationFailedException("This kernel is not GPUable")
-
-    if (external) {
-      super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external)
-      //return
-    }
-
-    // aks TODO: the rest of this stuff adds to metadata and seems necessary even if we are external.
-    // should probably be refactored...
-    tabWidth -= 1
-
-    // Emit input copy helper functions for object type inputs
-    for(v <- vals if isObjectType(v.Type)) {
-      helperFuncString.append(emitCopyInputHtoD(v, syms, copyInputHtoD(v)))
-      helperFuncString.append(emitCopyMutableInputDtoH(v, syms, copyMutableInputDtoH(v)))
-    }
-
-    // Print helper functions to file stream
-    hstream.print(helperFuncString)
-    hstream.flush
-    helperFuncHdrStream.flush
-    headerStream.flush
-
-    // Print out device function
-    //devStream.println(devFuncString)
-    //devStream.flush
   }
 
 }

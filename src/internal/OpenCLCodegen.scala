@@ -199,6 +199,7 @@ trait OpenCLCodegen extends GPUCodegen {
     stream.println(addTab() + " " + lhs + " = " + rhs + ";")
   }
 
+  /*
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
     if (external) {
       // CUDA library ops use a C wrapper, so should be generated as a C kernel
@@ -273,6 +274,7 @@ trait OpenCLCodegen extends GPUCodegen {
     //devStream.flush
 
   }
+  */
 
 }
 
