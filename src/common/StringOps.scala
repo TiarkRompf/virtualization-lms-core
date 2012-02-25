@@ -17,9 +17,9 @@ trait StringOps extends Variables with OverloadHack {
   //       since string concat is defined on all objects
   
   def infix_+(s1: String, s2: Rep[Any])(implicit o: Overloaded1, ctx: SourceContext) = string_plus(unit(s1), s2)
-  def infix_+(s1: String, s2: Var[Any])(implicit o: Overloaded2, ctx: SourceContext) = string_plus(unit(s1), readVar(s2))  
+  def infix_+[T:Manifest](s1: String, s2: Var[T])(implicit o: Overloaded2, ctx: SourceContext) = string_plus(unit(s1), readVar(s2))
   def infix_+(s1: Rep[String], s2: Rep[Any])(implicit o: Overloaded1, ctx: SourceContext) = string_plus(s1, s2)
-  def infix_+(s1: Rep[String], s2: Var[Any])(implicit o: Overloaded2, ctx: SourceContext) = string_plus(s1, readVar(s2))
+  def infix_+[T:Manifest](s1: Rep[String], s2: Var[T])(implicit o: Overloaded2, ctx: SourceContext) = string_plus(s1, readVar(s2))
   def infix_+(s1: Rep[String], s2: Rep[String])(implicit o: Overloaded3, ctx: SourceContext) = string_plus(s1, s2)
   def infix_+(s1: Rep[String], s2: Var[String])(implicit o: Overloaded4, ctx: SourceContext) = string_plus(s1, readVar(s2))
   def infix_+(s1: Rep[Any], s2: Rep[String])(implicit o: Overloaded5, ctx: SourceContext) = string_plus(s1, s2)
@@ -27,12 +27,12 @@ trait StringOps extends Variables with OverloadHack {
   def infix_+(s1: Rep[Any], s2: String)(implicit o: Overloaded7, ctx: SourceContext) = string_plus(s1, unit(s2))
   
   def infix_+(s1: Var[String], s2: Rep[Any])(implicit o: Overloaded8, ctx: SourceContext) = string_plus(readVar(s1), s2)  
-  def infix_+(s1: Var[String], s2: Var[Any])(implicit o: Overloaded9, ctx: SourceContext) = string_plus(readVar(s1), readVar(s2))    
+  def infix_+[T:Manifest](s1: Var[String], s2: Var[T])(implicit o: Overloaded9, ctx: SourceContext) = string_plus(readVar(s1), readVar(s2))
   def infix_+(s1: Var[String], s2: Rep[String])(implicit o: Overloaded10, ctx: SourceContext) = string_plus(readVar(s1), s2)    
   def infix_+(s1: Var[String], s2: Var[String])(implicit o: Overloaded11, ctx: SourceContext) = string_plus(readVar(s1), readVar(s2))    
-  def infix_+(s1: Var[Any], s2: Rep[String])(implicit o: Overloaded12, ctx: SourceContext) = string_plus(readVar(s1), s2)  
-  def infix_+(s1: Var[Any], s2: Var[String])(implicit o: Overloaded13, ctx: SourceContext) = string_plus(readVar(s1), readVar(s2))  
-  def infix_+(s1: Var[Any], s2: String)(implicit o: Overloaded14, ctx: SourceContext) = string_plus(readVar(s1), unit(s2))
+  def infix_+[T:Manifest](s1: Var[T], s2: Rep[String])(implicit o: Overloaded12, ctx: SourceContext) = string_plus(readVar(s1), s2)
+  def infix_+[T:Manifest](s1: Var[T], s2: Var[String])(implicit o: Overloaded13, ctx: SourceContext) = string_plus(readVar(s1), readVar(s2))
+  def infix_+[T:Manifest](s1: Var[T], s2: String)(implicit o: Overloaded14, ctx: SourceContext) = string_plus(readVar(s1), unit(s2))
   
   // these are necessary to be more specific than arithmetic/numeric +. is there a more generic form of this that will work?
   //def infix_+[R:Manifest](s1: Rep[String], s2: R)(implicit c: R => Rep[Any], o: Overloaded15, ctx: SourceContext) = string_plus(s1, c(s2))  
