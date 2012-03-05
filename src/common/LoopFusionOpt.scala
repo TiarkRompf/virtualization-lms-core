@@ -165,6 +165,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
           // try to add to an item in partitionsOut, if not possible add as-is
           partitionsOut.find(a => canFuse(a,b)) match {
             case Some(a) => 
+              
               val shapeA = WgetLoopShape(a)
               val shapeB = WgetLoopShape(b)
               
@@ -210,7 +211,6 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         }
       
         printlog("partitions: " + partitionsOut)
-      
       
         // actually do the fusion: now transform the loops bodies
       
