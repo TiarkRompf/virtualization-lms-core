@@ -37,7 +37,6 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     } 
   }
   
-  // TODO (VJ) generalize to tuples of greater arity and to arbitrary data structures   
   /**     
    * $yieldstmt
    * 
@@ -65,8 +64,6 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
 
-  // TODO (VJ) Why does this not work? Simple loop and if then else should accept body as the parameter?
-//  def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Block[A]): Exp[A] = reflectEffect(SimpleLoop(size, v, body),summarizeEffects(body).star)
   def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = SimpleLoop(size, v, body)
 
 
@@ -189,21 +186,20 @@ trait BaseGenLoops extends GenericNestedCodegen {
   val IR: LoopsExp
   import IR._
 
-  // TODO(VJ): multiple gens
-  var genStack: Map[Exp[Gen[_]], String => Unit] = Map.empty
+  var genStack: Map[Exp[Gen[_]], List[String] => Unit] = Map.empty
 
-  def withGens[A](p: List[(Exp[Gen[_]], String => Unit)])(body: => A): A = {
+  def withGens[A](p: List[(Exp[Gen[_]], List[String] => Unit)])(body: => A): A = {
     val save = genStack
     genStack = genStack ++ p
-    //println("--- withGens " + p + " == " + genStack)
+
     val res = body
     genStack = save
     res
   }
 
-  def withGen[T, A](g: Exp[Gen[T]], f: String => Unit)(body: => A): A = withGens(List((g, f)))(body)
+  def withGen[T, A](g: Exp[Gen[T]], f: List[String] => Unit)(body: => A): A = withGens(List((g, f)))(body)
 
-  def topGen[T](g: Exp[Gen[T]]): String => Unit = {
+  def topGen[T](g: Exp[Gen[T]]): List[String] => Unit = {
     genStack.getOrElse(g, (s => "UNKNOWN: " + s))
   }
 
@@ -231,7 +227,7 @@ trait ScalaGenLoops extends ScalaGenBase with BaseGenLoops {
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Yield(g, a) =>
       if (genStack.nonEmpty) {
-        topGen(sym.asInstanceOf[Sym[Gen[Any]]])(a.map(quote).mkString("", "xyz", ""))
+        topGen(sym.asInstanceOf[Sym[Gen[Any]]])(a.map(quote))
       } else emitValDef(sym, "yield " + a.map(quote) + " // context is messed up!")
     case Skip(g) =>
       emitValDef(sym, "() // skip")
