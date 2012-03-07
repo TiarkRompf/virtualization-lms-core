@@ -4,6 +4,11 @@ package common
 import java.io.PrintWriter
 import internal.{Transforming, GenericNestedCodegen, GenericFatCodegen}
 
+/**
+ * @define yieldstmt Yield statement represents that a single value is yielded to a collection from a loop.
+ * During loop fusion it is used as hole that is plugged with contents of shape dependent loops that have
+ *  no negative dependencies.
+ */
 trait Loops extends Base { // no surface constructs for now
 
 }
@@ -15,18 +20,46 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val v: Sym[Int]
     val body: Def[A]
   }
-
-
-  /**
-   * Yield statement in loops. Indicates that element is being emitted to
+  
+  object Yield {
+    
+    def apply(lvs: List[Exp[Int]], exps: List[Exp[Any]]): Def[Gen[Any]] = exps match {
+      case x :: Nil => YieldSingle(lvs, x)
+      case x :: y :: Nil => YieldTuple(lvs, (x, y))
+      case Nil => throw new RuntimeException("Empty Yield not allowed!!!")
+      case _ => ???
+    }
+    
+    def unapply(g: Def[Gen[Any]]): Option[(List[Exp[Int]], List[Exp[Any]])] = g match {
+      case YieldSingle(a, b) => Some((a, List(b)))
+      case YieldTuple(a, b) => Some((a, b.productIterator.toList.asInstanceOf[List[Exp[Any]]]))
+      case _ => None      
+    } 
+  }
+  
+  // TODO (VJ) generalize to tuples of greater arity and to arbitrary data structures   
+  /**     
+   * $yieldstmt
+   * 
    *  @param  g   Represents list of loop vars in which this yield is nested.
-   *  @param  a   Expression for the
+   *  @param  a   Expression for the value that is being yielded.
    */
-  case class Yield[T](g: List[Exp[Int]], a: Exp[T]) extends Def[Gen[T]]
+  case class YieldSingle[T](g: List[Exp[Int]], a: Exp[T]) extends Def[Gen[T]]
 
   /**
-   * Skip statement is used in loops to indicate that no element is being emitted. For example in filter clauses.
+   * $yieldstmt
+   * 
+   * This is a special case of the Yield statement that is used for optimizing processing of tuples. 
+   * It is used during code generation to avoid generation of excess tuples during aggregation.
+   * 
    *  @param  g   Represents list of loop vars in which this yield is nested.
+   *  @param  a   Expression for the value that is being yielded.
+   */
+  case class YieldTuple[A, B](g: List[Exp[Int]], a: (Exp[A], Exp[B])) extends Def[Gen[(A, B)]]
+  
+  /**
+   * Skip statement is used in loops to indicate that no element is being emitted. For example in filter clauses, else branch will contain a Skip.
+   * @param  g   Represents list of loop vars in which this skip is nested.
    */
   case class Skip[T](g: List[Exp[Int]]) extends Def[Gen[T]]
 
@@ -63,7 +96,8 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
     case SimpleLoop(s,v,body) => simpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f))
-    case Yield(i,y) => toAtom(Yield(i.map(x => f(x)),f(y)))(mtype(manifest[A]))
+    case YieldSingle(i,y) => toAtom(YieldSingle(i.map(x => f(x)),f(y)))(mtype(manifest[A]))
+    case YieldTuple(i, y) => toAtom(YieldTuple(i.map(x => f(x)),(f(y._1), f(y._2))))(mtype(manifest[A]))
     case Skip(i) => toAtom(Skip(i.map(x => f(x))))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
@@ -75,7 +109,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 		case e: AbstractLoop[_] => aliasSyms(e.body)
     case _ => super.aliasSyms(e)
   }
-
+ 
   override def containSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => containSyms(e.body)
     case _ => super.containSyms(e)
@@ -155,7 +189,7 @@ trait BaseGenLoops extends GenericNestedCodegen {
   val IR: LoopsExp
   import IR._
 
-  // TODO: multiple gens
+  // TODO(VJ): multiple gens
   var genStack: Map[Exp[Gen[_]], String => Unit] = Map.empty
 
   def withGens[A](p: List[(Exp[Gen[_]], String => Unit)])(body: => A): A = {
@@ -197,8 +231,8 @@ trait ScalaGenLoops extends ScalaGenBase with BaseGenLoops {
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Yield(g, a) =>
       if (genStack.nonEmpty) {
-        topGen(sym.asInstanceOf[Sym[Gen[Any]]])(quote(a))
-      } else emitValDef(sym, "yield " + quote(a) + " // context is messed up!")
+        topGen(sym.asInstanceOf[Sym[Gen[Any]]])(a.map(quote).mkString("", "xyz", ""))
+      } else emitValDef(sym, "yield " + a.map(quote) + " // context is messed up!")
     case Skip(g) =>
       emitValDef(sym, "() // skip")
     case _ => super.emitNode(sym, rhs)
