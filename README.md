@@ -15,4 +15,4 @@ with some minor tweaks for use with [JavaScript as an embedded DSL in Scala](htt
     Instead of `<downloadpath>` of course you use the actual path to your Scala-Virtualized repository.
       
 3. Run `sbt`. `test` to ensure everything works. Then `publish-local`.
-  * In case of problems with sbt's compiler interface, check this (script)[https://gist.github.com/1643715]
+  * In case of problems with sbt's compiler interface, run this [script](https://gist.github.com/1643715).
