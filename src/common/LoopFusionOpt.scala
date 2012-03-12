@@ -155,14 +155,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
 
         // shape s depends on a?
         def isShapeDep(s: Exp[Int], a: TTP) = s match { case Def(SimpleDomain(a1)) => a.lhs contains a1 case _ => false }
-
-/*
-        def getShapeCond(s: Exp[Int], a: TTP) = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) match { case SimpleCollectIf(a,c) => c } }
-
-        def extendLoopWithCondition(e: TTP, shape: Exp[Int], targetVar: Sym[Int], c: List[Exp[Boolean]]): List[Exp[Any]] = e.rhs match {
-          case SimpleFatLoop(s,x,rhs) => rhs.map { r => findOrCreateDefinition(SimpleLoop(shape,targetVar,applyAddCondition(r,c))).sym }
-        }
-*/
+        
        /**
          * Plugs Yield statements in body of loop e with the output of loop a. Also adds new definitions to the current scope.
          */
@@ -248,14 +241,12 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
               for (w <- WgetLoopVar(b))
                 t.subst(w) = targetVar
 
-              // analyze shape dependency and add appropriate conditions to loop body when fusing a filter loop
+              // analyze shape dependency and plug body of one loop into another
               val shape = if (isShapeDep(shapeA,b)) { //shapeA depends on value b
-                //val loops2 = extendLoopWithCondition(a,shapeB,targetVar,getShapeCond(shapeA,b))
                 val loops2 = duplicateYieldContextAndPlugInRhs(t)(shapeA,b)(a,shapeB,targetVar)
                 (a.lhs zip loops2) foreach { p => t.subst(p._1) = p._2 }
                 shapeB
-              } else if (isShapeDep(shapeB,a)) {
-                //val loops2 = extendLoopWithCondition(b,shapeA,targetVar,getShapeCond(shapeB,a))
+              } else if (isShapeDep(shapeB,a)) {                
                 val loops2 = duplicateYieldContextAndPlugInRhs(t)(shapeB,a)(b,shapeA,targetVar)
                 (b.lhs zip loops2) foreach { p => t.subst(p._1) = p._2 }
                 shapeA

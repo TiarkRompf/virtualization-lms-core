@@ -82,7 +82,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
     var g: Exp[Gen[T]] = null
     val y = reifyEffects { 
-      g = Yield(List(x),f(x))
+      g = YieldSingle(List(x),f(x))
       g
     }
     simpleLoop(shape, x, ArrayElem(g,y))
@@ -93,7 +93,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
     val x = fresh[Int]
     var g: Exp[Gen[Double]] = null
     val y = reifyEffects { 
-      g = Yield(List(x),f(x))
+      g = YieldSingle(List(x),f(x))
       g
     }
     simpleLoop(shape, x, ReduceElem(g,y))
@@ -104,7 +104,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
     var g: Exp[Gen[T]] = null
     val y: Block[Gen[T]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
       val (c,z) = f(x)
-      g = Yield(List(x),z)
+      g = YieldSingle(List(x),z)
       if (c) g else Skip[T](List(x))
     }
     reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
@@ -117,7 +117,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
       val z = f(x)
       val shape2 = infix_length(z)
       val x2 = fresh[Int]
-      g = Yield(List(x2, x),infix_at(z,x2))
+      g = YieldSingle(List(x2, x),infix_at(z,x2))
       val y2 = reifyEffects {g}
       simpleLoop(shape2, x2, ForeachElem(y2).asInstanceOf[Def[Gen[T]]])
     }
@@ -130,7 +130,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
     var g: Exp[Gen[Double]] = null
     val y: Block[Gen[Double]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
       val (c,z) = f(x)
-      g = Yield(List(x),z)
+      g = YieldSingle(List(x),z)
       if (c) g else Skip[Double](List(x))
     }
     reflectEffect(SimpleLoop(shape, x, ReduceElem(g,y)), summarizeEffects(y).star)
@@ -225,11 +225,11 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
       val gens = for ((l,r) <- sym zip rhs if !r.isInstanceOf[ForeachElem[_]]) yield r match {
         //case ForeachElem(y) =>
         case ArrayElem(g,Block(y)) if g == y =>
-          (g, (s: String) => stream.println(quote(l) + "("+quote(ii)+") = " + s))
+          (g, (s: List[String]) => stream.println(quote(l) + "("+quote(ii)+") = " + s.head))
         case ArrayElem(g,y) =>
-          (g, (s: String) => stream.println(quote(g) + " += " + s))
+          (g, (s: List[String]) => stream.println(quote(g) + " += " + s.head))
         case ReduceElem(g,y) =>
-          (g, (s: String) => stream.println(quote(l) + " += " + s))
+          (g, (s: List[String]) => stream.println(quote(l) + " += " + s.head))
       }
 
       withGens(gens) {
