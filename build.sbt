@@ -4,22 +4,7 @@ organization := "scala"
 
 version := "0.1"
 
-//--- Local Scala
-
-scalaHome <<= baseDirectory { f =>
-  val props = new java.util.Properties()
-  IO.load(props, f / "local.properties")
-  val x = props.getProperty("scala.virtualized.home")
-  if (x == null)
-    sys.error("Did you forget to set scala.virtualized.home property in local.properties file?")
-  else Some(file(x))
-}
-
-scalacOptions in Test <+= scalaHome map (_.map(f => "-Xplugin:"+f+"/misc/scala-devel/plugins/continuations.jar").get)
-
-//--- End of Local Scala
-
-scalaVersion := "2.10.0-virtualized-SNAPSHOT"
+scalaVersion := "2.10.0-M2-0020-geab3b7e4d7-2012-03-06"
 
 //--- Paths
 
@@ -44,7 +29,7 @@ resolvers ++= Seq(
 
 libraryDependencies += "org.scalatest" % "scalatest_2.10.0-virtualized-SNAPSHOT" % "1.6.1-SNAPSHOT" % "test"
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.10.0-virtualized-SNAPSHOT"
+libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.10.0-M2-0020-geab3b7e4d7-2012-03-06"
 
 //--- End of Dependencies
 
@@ -62,8 +47,8 @@ publishArtifact in (Compile, packageDoc) := false
 
 //Uncomment the following two lines if you are not using local Scala
 
-//autoCompilerPlugins := true
+autoCompilerPlugins := true
 
-//addCompilerPlugin("org.scala-lang.plugins" % "continuations" % "2.10.0-virtualized-SNAPSHOT")
+addCompilerPlugin("org.scala-lang.plugins" % "continuations" % "2.10.0-M2-0020-geab3b7e4d7-2012-03-06")
 
 scalacOptions in Test += "-P:continuations:enable"
