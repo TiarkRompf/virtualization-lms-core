@@ -106,15 +106,15 @@ trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
-      stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + x.Type + ") => ")
+      stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + x.tp + ") => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)) + ": " + y.Type)
+      stream.println(quote(getBlockResult(y)) + ": " + y.tp)
       stream.println("}")
 
     case e@Lambda2(fun, x1, x2, y) =>
-      stream.println("val " + quote(sym) + " = { (" + quote(x1) + ": " + x1.Type + ", " + quote(x2) + ": " + x2.Type + ") => ")
+      stream.println("val " + quote(sym) + " = { (" + quote(x1) + ": " + x1.tp + ", " + quote(x2) + ": " + x2.tp + ") => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)) + ": " + y.Type)
+      stream.println(quote(getBlockResult(y)) + ": " + y.tp)
       stream.println("}")
 
     case Apply(fun, arg) =>
@@ -132,9 +132,9 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
     rhs match {
       case e@Lambda(fun, x, y) =>
         // The version for inlined device function
-        stream.println(addTab() + "%s %s = %s;".format(remap(x.Type), quote(x), quote(sym)+"_1"))
+        stream.println(addTab() + "%s %s = %s;".format(remap(x.tp), quote(x), quote(sym)+"_1"))
         emitBlock(y)
-        stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
+        stream.println(addTab() + "%s %s = %s;".format(remap(y.tp), quote(sym), quote(getBlockResult(y))))
 
         // The version for separate device function
         /*
@@ -149,10 +149,10 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
 
       case e@Lambda2(fun, x1, x2, y) =>
         // The version for inlined device function
-        stream.println(addTab() + "%s %s = %s;".format(remap(x1.Type), quote(x1), quote(sym)+"_1"))
-        stream.println(addTab() + "%s %s = %s;".format(remap(x2.Type), quote(x2), quote(sym)+"_2"))
+        stream.println(addTab() + "%s %s = %s;".format(remap(x1.tp), quote(x1), quote(sym)+"_1"))
+        stream.println(addTab() + "%s %s = %s;".format(remap(x2.tp), quote(x2), quote(sym)+"_2"))
         emitBlock(y)
-        stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
+        stream.println(addTab() + "%s %s = %s;".format(remap(y.tp), quote(sym), quote(getBlockResult(y))))
       case Apply(fun, arg) =>
         emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 

@@ -47,6 +47,12 @@ trait EqualExpBridge extends BaseExp  {
   def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = Equal(a,b)
   def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = NotEqual(a,b)
 
+  override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+    case Equal(a, b) => Equal(f(a),f(b))
+    case NotEqual(a, b) => NotEqual(f(a),f(b))
+    case _ => super.mirrorDef(e,f)
+  }).asInstanceOf[Def[A]]
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Equal(a, b) => equals(f(a),f(b))
     case NotEqual(a, b) => notequals(f(a),f(b))

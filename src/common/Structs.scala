@@ -19,6 +19,8 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 trait StructExp extends BaseExp {
 
+  // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
+
   abstract class AbstractStruct[T] extends Def[T] {
     val tag: List[String]
     val elems: Map[String, Rep[Any]]
@@ -70,7 +72,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
   override def var_new[T:Manifest](init: Exp[T]): Var[T] = init match {
     case Def(Struct(tag, elems)) => 
       //val r = Variable(struct(tag, elems.mapValues(e=>var_new(e).e))) // DON'T use mapValues!! <--lazy
-      Variable(struct[Variable[T]](tag, elems.map(p=>(p._1,var_new(p._2)(p._2.Type).e))))
+      Variable(struct[Variable[T]](tag, elems.map(p=>(p._1,var_new(p._2)(p._2.tp).e))))
     case _ => 
       super.var_new(init)
   }
@@ -80,7 +82,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
       assert(tagL == tagR)
       assert(elemsL.keySet == elemsR.keySet)
       for (k <- elemsL.keySet)
-        var_assign(Variable(elemsL(k)), elemsR(k))(elemsR(k).Type)
+        var_assign(Variable(elemsL(k)), elemsR(k))(elemsR(k).tp)
       Const(())
     case _ => super.var_assign(lhs, rhs)
   }
@@ -91,7 +93,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
         case a::_ => mtype(a)
         case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
       }
-      struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.Type)))))
+      struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.tp)))))
     case _ => super.readVar(v)
   }
   
@@ -116,7 +118,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
     case (Block(Def(Struct(tagA,elemsA))), Block(Def(Struct(tagB, elemsB)))) => 
       assert(tagA == tagB)
       assert(elemsA.keySet == elemsB.keySet)
-      val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, Block(elemsA(k)), Block(elemsB(k)))(elemsB(k).Type))
+      val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, Block(elemsA(k)), Block(elemsB(k)))(elemsB(k).tp))
       struct[T](tagA, elemsNew.toMap)
     case _ => super.ifThenElse(cond,a,b)
   }

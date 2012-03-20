@@ -19,7 +19,7 @@ trait CLikeCodegen extends GenericCodegen {
 
     if( (vars.length>0) || (resultIsVar) ) throw new GenerationFailedException("Var is not supported for CPP kernels")
 
-    val paramStr = vals.map(ele=>remap(ele.Type) + " " + quote(ele)).mkString(", ")
+    val paramStr = vals.map(ele=>remap(ele.tp) + " " + quote(ele)).mkString(", ")
     stream.println("%s kernel_%s(%s) {".format(resultType, quote(sym), paramStr))
   }
 

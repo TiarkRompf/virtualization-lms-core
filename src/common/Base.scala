@@ -18,6 +18,7 @@ trait LiftAll extends Base {
  * @since 0.1 
  */
 trait Base extends EmbeddedControls {
+  type API <: Base
 
   type Rep[+T]
 
@@ -33,12 +34,15 @@ trait Base extends EmbeddedControls {
  *
  * @since 0.1
  */
-trait BaseExp extends Base with Expressions with Transforming {
+trait BaseExp extends Base with Expressions with Blocks with Transforming {
   type Rep[+T] = Exp[T]
 
   protected def unit[T:Manifest](x: T) = Const(x)
 }
 
+trait BlockExp extends BaseExp
+
+/*
 trait BlockExp extends BaseExp with Blocks {
   
   implicit object CanTransformBlock extends CanTransform[Block] {
@@ -46,12 +50,19 @@ trait BlockExp extends BaseExp with Blocks {
   }
   
 }
+*/
 
-trait EffectExp extends BlockExp with Effects {
+trait EffectExp extends BaseExp with Effects {
 
   def mapOver(t: Transformer, u: Summary) = { // TODO: move to effects class?
     u.copy(mayRead = t.onlySyms(u.mayRead), mstRead = t.onlySyms(u.mstRead),
       mayWrite = t.onlySyms(u.mayWrite), mstWrite = t.onlySyms(u.mstWrite))
+  }
+
+  override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
+    case Reflect(x, u, es) => Reflect(mirrorDef(x,f), mapOver(f,u), f(es))
+    case Reify(x, u, es) => Reify(f(x), mapOver(f,u), f(es))
+    case _ => super.mirrorDef(e,f)
   }
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
@@ -64,6 +75,7 @@ trait EffectExp extends BlockExp with Effects {
     
 */    
 //    case Reflect(Print(x), u, es) => Reflect(Print(f(x)), es map (e => f(e)))
+    case Reflect(x, u, es) => reflectMirrored(mirrorDef(e,f).asInstanceOf[Reflect[A]])
     case Reify(x, u, es) => Reify(f(x), mapOver(f,u), f(es)) //TODO: u
     case _ => super.mirror(e,f)
   }

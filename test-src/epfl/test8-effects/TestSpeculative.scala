@@ -3,7 +3,7 @@ package epfl
 package test8
 
 import common._
-import internal.{NestedTraversal}
+import internal.{NestedBlockTraversal}
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
 import test7.{ArrayLoops,ArrayLoopsExp,ScalaGenArrayLoops}

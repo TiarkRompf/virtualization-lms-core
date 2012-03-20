@@ -4,7 +4,7 @@ package internal
 import util.GraphUtil
 import java.io.{File, PrintWriter}
 
-trait GenericCodegen extends Traversal {
+trait GenericCodegen extends BlockTraversal {
   val IR: Expressions
   import IR._
 
@@ -93,7 +93,7 @@ trait GenericCodegen extends Traversal {
 
 
 
-trait GenericNestedCodegen extends NestedTraversal with GenericCodegen {
+trait GenericNestedCodegen extends NestedBlockTraversal with GenericCodegen {
   val IR: Expressions with Effects
   import IR._
 

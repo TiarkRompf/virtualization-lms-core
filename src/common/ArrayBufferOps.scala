@@ -35,6 +35,12 @@ trait ArrayBufferOpsExp extends ArrayBufferOps with EffectExp {
   //////////////
   // mirroring
 
+  override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Def[A] = (e match {
+    case ArrayBufferMkString(l,r) => ArrayBufferMkString(f(l),f(r))
+    case ArrayBufferAppend(l,r) => ArrayBufferAppend(f(l),f(r))
+    case _ => super.mirrorDef(e,f)
+  }).asInstanceOf[Def[A]] // why??
+  
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case Reflect(ArrayBufferMkString(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferMkString(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(ArrayBufferAppend(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferAppend(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))

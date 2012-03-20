@@ -43,4 +43,8 @@ trait FileDiffSuite extends Suite {
     assert(readFile(name) == readFile(name+".check"), name) // TODO: diff output
     new File(name) delete ()
   }
+  def withOutFileChecked(name: String)(func: => Unit): Unit = {
+    withOutFile(name)(func)
+    assertFileEqualsCheck(name)
+  }
 }

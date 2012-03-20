@@ -33,7 +33,7 @@ trait ScalaCodegen extends GenericCodegen {
                      "*******************************************/")
                    
       // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
-      stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.Type).mkString(",")+")")+" extends (("+sA+")=>("+sB+")) {")
+      stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends (("+sA+")=>("+sB+")) {")
       stream.println("def apply("+quote(x)+":"+sA+"): "+sB+" = {")
     
       emitBlock(y)
@@ -56,14 +56,14 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println("package generated." + this.toString)
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
-    stream.print(vals.map(p => quote(p) + ":" + remap(p.Type)).mkString(","))
+    stream.print(vals.map(p => quote(p) + ":" + remap(p.tp)).mkString(","))
 
     // variable name mangling
     if (vals.length > 0 && vars.length > 0){
       stream.print(", ")
     }
     if (vars.length > 0){
-      stream.print(vars.map(v => quote(v) + ":" + "generated.scala.Ref[" + remap(v.Type) +"]").mkString(","))
+      stream.print(vars.map(v => quote(v) + ":" + "generated.scala.Ref[" + remap(v.tp) +"]").mkString(","))
     }
     if (resultIsVar){
       stream.print("): " + "generated.scala.Ref[" + resultType + "] = {")
@@ -83,10 +83,10 @@ trait ScalaCodegen extends GenericCodegen {
 
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    stream.println("val " + quote(sym) + " = " + rhs) // + "        //" + sym.Type.debugInfo)
+    stream.println("val " + quote(sym) + " = " + rhs) // + "        //" + sym.tp.debugInfo)
   }
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
-    stream.println("var " + quote(sym) + ": " + remap(sym.Type) + " = " + rhs)
+    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
   def emitAssignment(lhs: String, rhs: String): Unit = {
     stream.println(lhs + " = " + rhs)
@@ -108,7 +108,7 @@ trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
     val kernelName = syms.map(quote).mkString("")
     stream.println("final class activation_" + kernelName + " {")
     for (s <- syms) {
-      stream.println("var " + quote(s) + ": " + remap(s.Type) + " = _")
+      stream.println("var " + quote(s) + ": " + remap(s.tp) + " = _")
     }
     stream.println("}")
   }

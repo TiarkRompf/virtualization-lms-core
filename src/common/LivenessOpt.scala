@@ -2,11 +2,11 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.NestedTraversal
+import scala.virtualization.lms.internal.NestedBlockTraversal
 
 import scala.collection.mutable
 
-trait LivenessOpt extends NestedTraversal {
+trait LivenessOpt extends NestedBlockTraversal {
   import IR._  
   
   def calculateLivenessTransform(used: mutable.HashSet[Sym[Any]], t: Stm): List[Stm] = t match {
@@ -47,7 +47,7 @@ trait LivenessOpt extends NestedTraversal {
 }
 
 
-trait DefUseAnalysis extends NestedTraversal {
+trait DefUseAnalysis extends NestedBlockTraversal {
   import IR._  
   
   var defUseMap: Map[Exp[Any], Set[Exp[Any]]] = _

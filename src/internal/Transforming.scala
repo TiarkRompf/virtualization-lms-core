@@ -4,21 +4,27 @@ package internal
 import scala.collection.mutable.HashMap
 import scala.reflect.SourceContext
 
-trait Transforming extends Expressions { // FIXME: effects only needed for block
+trait AbstractTransformer {
+  val IR: Expressions with Blocks
+  import IR._
   
-  abstract class CanTransform[C[_]] {
-    def transform[A](x:C[A], t: Transformer): C[A]
-  }
+  def apply[A](x: Exp[A]): Exp[A]
+  def apply[A](xs: Block[A]): Block[A] = Block(apply(xs.res))
+
+  def apply[A](xs: List[Exp[A]]): List[Exp[A]] = xs map (e => apply(e))
+  def apply[A](xs: Seq[Exp[A]]): Seq[Exp[A]] = xs map (e => apply(e))
+  def apply[X,A](f: X=>Exp[A]): X=>Exp[A] = (z:X) => apply(f(z))
+  def apply[X,Y,A](f: (X,Y)=>Exp[A]): (X,Y)=>Exp[A] = (z1:X,z2:Y) => apply(f(z1,z2))
+  //def apply[A](xs: Summary): Summary = xs //TODO
+  def onlySyms[A](xs: List[Sym[A]]): List[Sym[A]] = xs map (e => apply(e)) collect { case e: Sym[A] => e }
   
-  abstract class Transformer { // a polymorphic function, basically...
-    def apply[A](x: Exp[A]): Exp[A]
-    def apply[A,C[_]:CanTransform](x: C[A]): C[A] = implicitly[CanTransform[C]].transform(x, this)
-    def apply[A](xs: List[Exp[A]]): List[Exp[A]] = xs map (e => apply(e))
-    def apply[A](xs: Seq[Exp[A]]): Seq[Exp[A]] = xs map (e => apply(e))
-    def apply[X,A](f: X=>Exp[A]): X=>Exp[A] = (z:X) => apply(f(z))
-    def apply[X,Y,A](f: (X,Y)=>Exp[A]): (X,Y)=>Exp[A] = (z1:X,z2:Y) => apply(f(z1,z2))
-    //def apply[A](xs: Summary): Summary = xs //TODO
-    def onlySyms[A](xs: List[Sym[A]]): List[Sym[A]] = xs map (e => apply(e)) collect { case e: Sym[A] => e }
+}
+
+
+trait Transforming extends Expressions with Blocks { self =>
+  
+  abstract class Transformer extends AbstractTransformer { // a polymorphic function, basically...
+    val IR: self.type = self    
   }
 
 	object IdentityTransformer extends Transformer {
@@ -29,7 +35,9 @@ trait Transforming extends Expressions { // FIXME: effects only needed for block
 
   def mtype[A,B](m:Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]] // hack: need to pass explicit manifest during mirroring
   
-  def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = sys.error("don't know how to mirror " + e)
+  def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = mirrorDef(e,f)
+
+  def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = sys.error("don't know how to mirror " + e)
 
   def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = sys.error("don't know how to mirror " + e) //hm...
 
@@ -45,7 +53,7 @@ trait Transforming extends Expressions { // FIXME: effects only needed for block
 /*    
     def transform[A](s: Sym[A], x: Def[A]): Exp[A] = {
       if (subst.contains(s)) return apply(s)
-      implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
+      implicit val m: Manifest[A] = s.tp.asInstanceOf[Manifest[A]]
       
       val y = mirror(x, this)
       if (y != s) {

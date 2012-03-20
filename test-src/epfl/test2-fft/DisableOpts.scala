@@ -9,7 +9,7 @@ trait DisableCSE extends Expressions {
 }
 
 
-trait DisableDCE extends Scheduling {
+trait DisableDCE extends GraphTraversal {
   import IR._
   override def buildScheduleForResult(start: Any, sort: Boolean = true): List[Stm] =
     globalDefs

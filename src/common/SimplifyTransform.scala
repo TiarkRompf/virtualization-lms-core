@@ -1,61 +1,40 @@
 package scala.virtualization.lms
 package common
 
-// TODO: generalize and clean up
 
-trait ForwardTransformer extends internal.FatTraversal with SimplifyTransform {
+
+trait SimplifyTransform extends internal.FatScheduling {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
   
-  var subst: scala.collection.immutable.Map[Sym[_], Exp[_]] = Map.empty
+  // take a (sub) graph and a substitution, return a new graph with the substitution applied
+  // (method transformAllFully)
   
-  def transformBlock[A:Manifest](block: Block[A]): Block[A] = {
-    reifyEffects {
-      mirrorBlock(block)
-    }
-  }
+  // TODO: check if this may fail if mirror creates more than one new stm (might be that internal stms are dropped)
   
-  def mirrorBlock[A](block: Block[A]): Exp[A] = {
-    traverseBlock(block)
-    mirrorExp(block.res)
-  }
-
-  def mirrorExp[A](e: Exp[A]): Exp[A] = e match {
-    case s: Sym[A] =>
-      val e2 = subst.getOrElse(s,e).asInstanceOf[Exp[A]]
-      if (e2 == e) e2 else mirrorExp(e2)
-    case _ => e
-  }
-
-  override def traverseStm(stm: Stm): Unit = stm match {
-    case TP(sym, rhs) => 
-      val sym2 = mirrorExp(sym)
-      if (sym2 == sym) {
-        val replace = mmmirror(rhs)
-        subst = subst + (sym -> replace)
-      }
-  }
+  /*
+     question: is the input part of globalDefs?
+     question: should the input remain part of globalDefs?
+     question: should the output be part of globalDefs?
   
-
-  def mmmirror[A:Manifest](e: Def[A]): Exp[A] = e match {
-    case IfThenElse(c,a,b) => __ifThenElse(mirrorExp(c),mirrorBlock(a),mirrorBlock(b))
-    case _ => mirror(e, new Transformer { def apply[A](e: Exp[A]) = mirrorExp(e) })
+     idea (if yes-yes-yes): use reifySubGraph to get newly created stms, union with old scope
+      and use schedule to drop things no longer used
+      
+     other idea (if yes-no-yes): first remove input scope from globalDefs, 
+      then if s = mirror(s) call reflectSubGraph(s) to insert stm into globalDefs
+  */
+  
+  
+/*
+  def transformOneStmToGraph[A](stm: Stm, t: SubstTransformer): Exp[A] = stm match {
+    case TP(s, d) =>
+      val (res, stms) = reifySubGraph(transformOne(s,d,t))
   }
-  
-}
+*/  
 
-
-
-
-
-
-trait SimplifyTransform extends internal.FatTraversal {
-  val IR: LoopsFatExp with IfThenElseFatExp
-  import IR._
-  
   def transformOne[A](s: Sym[A], x: Def[A], t: SubstTransformer): Exp[A] = {
-    if (t.subst.contains(s)) return t(s)
-    implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
+    if (t.subst.contains(s)) return t(s) // should continue transforming t(s)?
+    implicit val m: Manifest[A] = s.tp.asInstanceOf[Manifest[A]]
 
     //if (!syms(x).exists(t.subst contains _)) return s   //<---- should be safe to prune but test fails (??)
 
@@ -72,11 +51,11 @@ trait SimplifyTransform extends internal.FatTraversal {
             val ss2 = syms(x2)
             if (ss2 != tss.filter(_.isInstanceOf[Sym[Any]])) // should do filtering in def of tss above?
               printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned "+s2+"="+x2+" syms " + ss2.mkString(",") + " (expected t(syms) = " + tss.mkString(",") + ")")
-            if (!(s2.Type <:< s.Type))
-              printerr("warning: mirroring of "+s+"="+x+" type " + s.Type + " returned "+s2+"="+x2+" type " + s2.Type + " (not a subtype)")
+            if (!(s2.tp <:< s.tp))
+              printerr("warning: mirroring of "+s+"="+x+" type " + s.tp + " returned "+s2+"="+x2+" type " + s2.tp + " (not a subtype)")
           case _ =>
-            if (!(s2.Type <:< s.Type))
-              printerr("warning: mirroring of "+s+"="+x+" type " + s.Type + " returned "+s2+" type " + s2.Type + " (not a subtype)")
+            if (!(s2.tp <:< s.tp))
+              printerr("warning: mirroring of "+s+"="+x+" type " + s.tp + " returned "+s2+" type " + s2.tp + " (not a subtype)")
         }
         s2
       } else {
@@ -104,11 +83,11 @@ trait SimplifyTransform extends internal.FatTraversal {
   }
 
   def transformLoopBody[A](s: Sym[A], x: Def[A], t: SubstTransformer): Def[A] = {
-    implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
+    implicit val m: Manifest[A] = s.tp.asInstanceOf[Manifest[A]]
     mirrorFatDef(x, t)
   }
   def transformIfBody[A](s: Sym[A], x: Block[A], t: SubstTransformer): Block[A] = {
-    implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
+    implicit val m: Manifest[A] = s.tp.asInstanceOf[Manifest[A]]
     //transformOne(s,x,t)
     t(x)
   }
@@ -117,7 +96,7 @@ trait SimplifyTransform extends internal.FatTraversal {
   def transformAll(scope: List[Stm], t: SubstTransformer): List[Stm] = scope flatMap {
     case TP(sym, rhs) =>
       transformOne(sym, rhs, t) match {
-        case s: Sym[Any] => findDefinition(s).toList
+        case s: Sym[Any] => (scope.find(_.lhs contains s) orElse findDefinition(s)).toList // check scope before target graph
         case _ => Nil
       }
     case TTP(lhs, mhs, SimpleFatIfThenElse(c,as,bs)) =>
@@ -132,9 +111,9 @@ trait SimplifyTransform extends internal.FatTraversal {
       // not quite so fast, chances are the TTP's never make it into globalDefs (no toAtom call)!!!
       
       if (lhs != lhs2) {
-        val missing = (lhs2.map(s => findDefinition(s).get) diff innerScope)
+        val missing = Nil//(lhs2.map(s => findDefinition(s).get) diff innerScope)
         printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
-        innerScope = innerScope ::: missing
+        //innerScope = innerScope ::: missing
       }
 
       def infix_toIf(d: Def[Any]) = d match {
@@ -157,9 +136,9 @@ trait SimplifyTransform extends internal.FatTraversal {
       val lhs2 = (lhs zip mhs).map { case (s,r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
       val mhs2 = lhs2.map(s => findDefinition(s).get.defines(s).get)
       if (lhs != lhs2) {
-        val missing = (lhs2.map(s => findDefinition(s).get) diff innerScope)
+        val missing = (lhs2.map(s => findDefinition(s).get) diff scope/*innerScope*/)
         printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
-        innerScope = innerScope ::: missing
+        //innerScope = innerScope ::: missing
       }
       //val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
       def infix_toLoop(d: Def[Any]) = d match {
@@ -171,11 +150,11 @@ trait SimplifyTransform extends internal.FatTraversal {
       val rhs2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toLoop.body)))
                   else (lhs zip rhs)) map { case (s,r) => transformLoopBody(s,r,t) }
       
-      //update innerScope -- change definition of lhs2 in place (necessary?)
+/*      //update innerScope -- change definition of lhs2 in place (necessary?)
       innerScope = innerScope map {
         case TP(l,_) if lhs2 contains l => TP(l, SimpleLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2(lhs2.indexOf(l)))) 
         case d => d
-      }
+      }*/
       
       printdbg("came up with: " + lhs2 + ", " + rhs2 + " with subst " + t.subst.mkString(","))
       List(TTP(lhs2, mhs2, SimpleFatLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2)))

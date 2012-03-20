@@ -13,7 +13,7 @@ import java.lang.{StackTraceElement,Thread}
 trait Expressions extends Utils {
 
   abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
-    def Type : Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
+    def tp: Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
   }
 
   case class Const[+T:Manifest](x: T) extends Exp[T]
@@ -51,7 +51,30 @@ trait Expressions extends Utils {
   
   case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
 
+  // graph construction state
+  
   var globalDefs: List[Stm] = Nil
+  var localDefs: List[Stm] = Nil
+
+  def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
+    val saveLocal = localDefs
+    val saveGlobal = globalDefs
+    localDefs = Nil
+    val r = b
+    val defs = localDefs
+    localDefs = saveLocal
+    globalDefs = saveGlobal
+    (r, defs)
+  }
+
+  def reflectSubGraph(ds: List[Stm]): Unit = {
+    val lhs = ds.flatMap(_.lhs)
+    assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
+    val existing = globalDefs filter (_.lhs exists (lhs contains _))
+    assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
+    localDefs = localDefs ::: ds
+    globalDefs = globalDefs ::: ds
+  }
 
   def findDefinition[T](s: Sym[T]): Option[Stm] =
     globalDefs.find(x => x.defines(s).nonEmpty)
@@ -69,9 +92,10 @@ trait Expressions extends Utils {
 
   def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
     val f = TP(s, d)
-    globalDefs = globalDefs:::List(f)
+    reflectSubGraph(List(f))
     f
   }
+  
 
   protected implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
     findOrCreateDefinitionExp(d) // TODO: return Const(()) if type is Unit??

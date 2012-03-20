@@ -49,7 +49,7 @@ trait CudaCodegen extends GPUCodegen {
 
     // Conditions for not generating CUDA kernels (may be relaxed later)
     for (sym <- syms) {
-      if((!isObjectType(sym.Type)) && (remap(sym.Type)!="void")) throw new GenerationFailedException("CudaGen: Not GPUable output type : %s".format(remap(sym.Type)))
+      if((!isObjectType(sym.tp)) && (remap(sym.tp)!="void")) throw new GenerationFailedException("CudaGen: Not GPUable output type : %s".format(remap(sym.tp)))
     }
     if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("CudaGen: Not GPUable input/output types: Variable")
 
@@ -148,44 +148,44 @@ trait CudaCodegen extends GPUCodegen {
 
   // TODO: Handle general C datastructure
   def copyInputHtoD(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.Type)
-    remap(sym.Type) match {
+    checkGPUableType(sym.tp)
+    remap(sym.tp) match {
       case "CudaArrayList<int>" => {
         val out = new StringBuilder
-        out.append("\t%s *%s = new %s();\n".format(remap(sym.Type),quote(sym),remap(sym.Type)))
+        out.append("\t%s *%s = new %s();\n".format(remap(sym.tp),quote(sym),remap(sym.tp)))
         out.append("\treturn %s;\n".format(quote(sym)))
         out.toString
       }
-      case _ => throw new Exception("CudaGen: copyInputHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.Type)))
+      case _ => throw new Exception("CudaGen: copyInputHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.tp)))
     }
   }
 
   def copyOutputDtoH(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.Type)
-    remap(sym.Type) match {
+    checkGPUableType(sym.tp)
+    remap(sym.tp) match {
       case "CudaArrayList<int>" => "\t//TODO: Implement this!\n"
-      case _ => throw new Exception("CudaGen: copyOutputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+      case _ => throw new Exception("CudaGen: copyOutputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
     }
   }
 
   def copyMutableInputDtoH(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.Type)
-    remap(sym.Type) match {
+    checkGPUableType(sym.tp)
+    remap(sym.tp) match {
       case "CudaArrayList<int>" => "\t//TODO: Implement this!\n"
-      case _ => throw new Exception("CudaGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+      case _ => throw new Exception("CudaGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
     }
   }
 
   //TODO: Remove below methods
   def allocOutput(newSym: Sym[_], sym: Sym[_], reset: Boolean = false) : Unit = {
-    throw new GenerationFailedException("CudaGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
+    throw new GenerationFailedException("CudaGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.tp)))
   }
   def allocReference(newSym: Sym[Any], sym: Sym[Any]) : Unit = {
-    throw new GenerationFailedException("CudaGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
+    throw new GenerationFailedException("CudaGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.tp)))
   }
 
   def positionMultDimInputs(sym: Sym[Any]) : String = {
-    throw new GenerationFailedException("CudaGen: positionMultDimInputs(sym) : Cannot reposition GPU memory (%s)".format(remap(sym.Type)))
+    throw new GenerationFailedException("CudaGen: positionMultDimInputs(sym) : Cannot reposition GPU memory (%s)".format(remap(sym.tp)))
   }
 
   def cloneObject(sym: Sym[Any], src: Sym[Any]) : String = {
@@ -229,11 +229,11 @@ trait CudaCodegen extends GPUCodegen {
 */
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    stream.println(addTab() + remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+    stream.println(addTab() + remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
-    stream.println(addTab()+ remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+    stream.println(addTab()+ remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
   def emitAssignment(lhs:String, rhs: String): Unit = {
@@ -253,7 +253,7 @@ trait CudaCodegen extends GPUCodegen {
     out.append("#include <cuda.h>\n\n")
     out.append(getDSLHeaders)
 
-    val paramStr = (getKernelOutputs++getKernelInputs++getKernelTemps).filterNot(e=>isVoidType(e.Type)).map(e=>remap(e.Type) + " " + quote(e)).mkString(", ")
+    val paramStr = (getKernelOutputs++getKernelInputs++getKernelTemps).filterNot(e=>isVoidType(e.tp)).map(e=>remap(e.tp) + " " + quote(e)).mkString(", ")
 
     out.append("__global__ void kernel_%s(%s) {\n".format(syms.map(quote(_)).mkString(""), paramStr))
     out.append(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
@@ -278,7 +278,7 @@ trait CudaCodegen extends GPUCodegen {
     tabWidth -= 1
 
     // Emit input copy helper functions for object type inputs
-    for(v <- vals if isObjectType(v.Type)) {
+    for(v <- vals if isObjectType(v.tp)) {
       helperFuncString.append(emitCopyInputHtoD(v, syms, copyInputHtoD(v)))
       helperFuncString.append(emitCopyMutableInputDtoH(v, syms, copyMutableInputDtoH(v)))
     }
@@ -313,7 +313,7 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
   
   def CudaConsts(x:Exp[Any], s:String): String = {
     s match {
-      case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.Type))
+      case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.tp))
       case _ => s
     }
   }

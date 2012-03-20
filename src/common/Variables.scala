@@ -78,6 +78,7 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
   // then the existing implicit from Rep to Ops will be used, and the ReadVar operation will be lost.
   // Defining Vars as separate from Exps will always cause a compile-time error if the implicit is missing.
 
+  //case class Variable[+T](val e: Exp[Variable[T]]) // FIXME: in Expressions because used by codegen...
   type Var[+T] = Variable[T] //FIXME: should be invariant
 
   case class ReadVar[T:Manifest](v: Var[T]) extends Def[T]

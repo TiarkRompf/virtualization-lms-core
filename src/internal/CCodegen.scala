@@ -50,11 +50,11 @@ trait CCodegen extends CLikeCodegen {
   }
 */
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
-    stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+    stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+    stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
   def emitAssignment(lhs:String, rhs: String): Unit = {

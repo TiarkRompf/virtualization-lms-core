@@ -4,18 +4,13 @@ package internal
 import util.GraphUtil
 import scala.collection.mutable.HashMap
 
+
+
+
+
 trait Scheduling {
   val IR: Expressions
   import IR._
-  
-  def dep(e: Def[Any]): List[Sym[Any]] = e match { // only used by GraphVizExport currently
-    case d: Product => syms(d)
-    case _ => Nil
-  }
-
-
-  def availableDefs: List[Stm] = globalDefs
-  
 
   def getUnsortedSchedule(scope: List[Stm])(result: Any): List[Stm] = {
     getSchedule(scope)(result, false)
@@ -51,9 +46,6 @@ trait Scheduling {
     GraphUtil.stronglyConnectedComponents[Stm](deps(mysyms(result)), t => deps(mysyms(t.rhs))).flatten.reverse
   }
     
-  def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] = 
-    getSchedule(availableDefs)(result, sort)
-
 
   def getFatDependentStuff(scope: List[Stm])(sts: List[Sym[Any]]): List[Stm] = {
     /*
@@ -88,14 +80,6 @@ trait Scheduling {
     }.distinct
 
 //    st.distinct.flatMap(getFatDependentStuff0(scope)(_)).distinct // this is expensive!!
-  }
-
-  def getDependentStuff(st: List[Sym[Any]]): List[Stm] = {
-    getFatDependentStuff(availableDefs)(st)
-  }
-    
-  def getDependentStuff(st: Sym[Any]): List[Stm] = {
-    getDependentStuff(List(st))
   }
 
 }

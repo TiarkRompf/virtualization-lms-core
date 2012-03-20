@@ -7,7 +7,7 @@ import scala.annotation.unchecked.uncheckedVariance
 
 trait Blocks extends Expressions {
   
-  case class Block[+T](val res: Exp[T]) { def Type: Manifest[T @uncheckedVariance] = res.Type } // variance ...  
+  case class Block[+T](val res: Exp[T]) { def tp: Manifest[T @uncheckedVariance] = res.tp } // variance ...
   
   def blocks(e: Any): List[Block[Any]] = e match {
     case b: Block[Any] => List(b)
@@ -204,14 +204,14 @@ trait Effects extends Expressions with Blocks with Utils {
 /*
   def allTransitiveAliases(start: Any): List[TP[Any]] = {
     def deps(st: List[Sym[Any]]): List[TP[Any]] = {
-      val st1 = st filterNot (s => isPrimitiveType(s.Type))
+      val st1 = st filterNot (s => isPrimitiveType(s.tp))
       globalDefs.filter(st1 contains _.sym)
     }
     GraphUtil.stronglyConnectedComponents[TP[Any]](deps(aliasSyms(start)), t => deps(aliasSyms(t.rhs))).flatten.reverse
   }
 */
   
-  def noPrim(sm: List[Sym[Any]]): List[Sym[Any]] = sm.filterNot(s=>isPrimitiveType(s.Type))
+  def noPrim(sm: List[Sym[Any]]): List[Sym[Any]] = sm.filterNot(s=>isPrimitiveType(s.tp))
   
   /*
    TODO: switch back to graph based formulation -- this will not work for circular deps
@@ -221,7 +221,7 @@ trait Effects extends Expressions with Blocks with Utils {
   val deepAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   val allAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   
-  def utilLoadSymTP[T](s: Sym[T]) = if (!isPrimitiveType(s.Type)) globalDefs.filter{e => e.lhs contains s} else Nil
+  def utilLoadSymTP[T](s: Sym[T]) = if (!isPrimitiveType(s.tp)) globalDefs.filter{e => e.lhs contains s} else Nil
   def utilLoadSym[T](s: Sym[T]) = utilLoadSymTP(s).map(_.rhs)
   
   def shallowAliases(start: Any): List[Sym[Any]] = {
@@ -472,7 +472,9 @@ trait Effects extends Expressions with Blocks with Utils {
     val save = context
     context = Nil
     
-    val result = block
+    val (result, defs) = reifySubGraph(block)
+    reflectSubGraph(defs)
+    
     val deps = context
     val summary = summarizeAll(deps)
     context = save
@@ -485,7 +487,8 @@ trait Effects extends Expressions with Blocks with Utils {
     if (save eq null)
       context = Nil
     
-    val result = block
+    val (result, defs) = reifySubGraph(block)
+    reflectSubGraph(defs)
 
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
       printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)

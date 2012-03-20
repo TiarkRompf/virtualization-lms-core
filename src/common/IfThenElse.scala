@@ -57,6 +57,11 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     reflectEffectInternal(IfThenElse(cond,thenp,elsep), ae orElse be)
   }
   
+  override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
+    case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b))
+    case _ => super.mirrorDef(e,f)
+  }
+  
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
     case Reflect(IfThenElse(c,a,b), u, es) => reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))
     case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b)) // FIXME: should apply pattern rewrites (ie call smart constructor)
@@ -242,14 +247,14 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
           // TODO: In the future, consider passing the object references to the GPU kernels rather than copying by value.
           // Below is a safety check related to changing the output reference of the kernel.
           // This is going to be changed when above TODOs are done.
-          //if( (sym==kernelSymbol) && (isObjectType(sym.Type)) ) throw new RuntimeException("CudaGen: Changing the reference of output is not allowed within GPU kernel.")
+          //if( (sym==kernelSymbol) && (isObjectType(sym.tp)) ) throw new RuntimeException("CudaGen: Changing the reference of output is not allowed within GPU kernel.")
 
-          val objRetType = (!isVoidType(sym.Type)) && (!isPrimitiveType(sym.Type))
+          val objRetType = (!isVoidType(sym.tp)) && (!isPrimitiveType(sym.tp))
           objRetType match {
             case true => throw new GenerationFailedException("CudaGen: If-Else cannot return object type.")
             case _ =>
           }
-          isVoidType(sym.Type) match {
+          isVoidType(sym.tp) match {
             case true =>
               stream.println(addTab() + "if (" + quote(c) + ") {")
               tabWidth += 1
@@ -261,7 +266,7 @@ trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
               tabWidth -= 1
               stream.println(addTab()+"}")
             case false =>
-              stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
+              stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
               stream.println(addTab() + "if (" + quote(c) + ") {")
               tabWidth += 1
               emitBlock(a)
@@ -296,12 +301,12 @@ trait OpenCLGenIfThenElse extends OpenCLGenEffect with BaseGenIfThenElse {
       rhs match {
         case IfThenElse(c,a,b) =>
 
-          val objRetType = (!isVoidType(sym.Type)) && (!isPrimitiveType(sym.Type))
+          val objRetType = (!isVoidType(sym.tp)) && (!isPrimitiveType(sym.tp))
           objRetType match {
             case true => throw new GenerationFailedException("OpenCLGen: If-Else cannot return object type.")
             case _ =>
           }
-          isVoidType(sym.Type) match {
+          isVoidType(sym.tp) match {
             case true =>
               stream.println(addTab() + "if (" + quote(c) + ") {")
               tabWidth += 1
@@ -313,7 +318,7 @@ trait OpenCLGenIfThenElse extends OpenCLGenEffect with BaseGenIfThenElse {
               tabWidth -= 1
               stream.println(addTab()+"}")
             case false =>
-              stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
+              stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
               stream.println(addTab() + "if (" + quote(c) + ") {")
               tabWidth += 1
               emitBlock(a)
@@ -348,7 +353,7 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
     rhs match {
       case IfThenElse(c,a,b) =>
         //TODO: using if-else does not work 
-        remap(sym.Type) match {
+        remap(sym.tp) match {
           case "void" =>
             stream.println("if (" + quote(c) + ") {")
             emitBlock(a)
@@ -356,7 +361,7 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
             emitBlock(b)
             stream.println("}")
           case _ =>
-            stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
+            stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
             stream.println("if (" + quote(c) + ") {")
             emitBlock(a)
             stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(a))))
@@ -366,9 +371,9 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
             stream.println("}")
         }
         /*
-        val booll = remap(sym.Type).equals("void")
+        val booll = remap(sym.tp).equals("void")
         if(booll) {
-          stream.println("%s %s;".format(remap(sym.Type),quote(sym)))
+          stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
           stream.println("if (" + quote(c) + ") {")
           emitBlock(a)
           stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(a))))
