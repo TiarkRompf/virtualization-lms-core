@@ -1,11 +1,19 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
-val x2 = println(7)
-val x3 = println(7)
-x3
+class Test extends ((Unit)=>(Any)) {
+def apply(x0:Unit): Any = {
+val x6 = if (true) {
+val x2 = 7.0+9.0
+val x5 = {x1: (Double) => 
+val x3 = println(x2)
+x3: Unit
+}
+x5
+} else {
+()
+}
+x6
 }
 }
 /*****************************************

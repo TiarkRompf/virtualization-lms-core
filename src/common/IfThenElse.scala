@@ -53,7 +53,7 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     // the case where this comes up is if (c) a else b, with a or b mutable.
     // (see TestMutation, for now sticking to old behavior)
     
-    //reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
+    ////reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
     reflectEffectInternal(IfThenElse(cond,thenp,elsep), ae orElse be)
   }
   
@@ -64,7 +64,11 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
     case Reflect(IfThenElse(c,a,b), u, es) => reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))
-    case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b)) // FIXME: should apply pattern rewrites (ie call smart constructor)
+    case IfThenElse(c,a,b) => 
+      if (f.hasContext)
+        __ifThenElse(f(c),f.reflectBlock(a),f.reflectBlock(b))
+      else
+        IfThenElse(f(c),f(a),f(b)) // FIXME: should apply pattern rewrites (ie call smart constructor)
     case _ => super.mirror(e,f)
   }
 
@@ -124,9 +128,21 @@ trait IfThenElseFatExp extends IfThenElseExp with BaseFatExp {
     val cond: Exp[Boolean]
     val thenp: List[Block[Any]]
     val elsep: List[Block[Any]]
+    
+    var extradeps: List[Exp[Any]] = Nil //HACK
   }
 
   case class SimpleFatIfThenElse(cond: Exp[Boolean], thenp: List[Block[Any]], elsep: List[Block[Any]]) extends AbstractFatIfThenElse
+
+/* HACK */
+
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case x@SimpleFatIfThenElse(c, t, e) => super.syms(x) ++ syms(x.extradeps)
+    case _ => super.syms(e)
+  }
+
+/* END HACK */
+
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case SimpleFatIfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)
@@ -134,7 +150,7 @@ trait IfThenElseFatExp extends IfThenElseExp with BaseFatExp {
   }
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
-    case SimpleFatIfThenElse(c, t, e) => freqNormal(c) ++ freqCold(t) ++ freqCold(e)
+    case x@SimpleFatIfThenElse(c, t, e) => freqNormal(c) ++ freqCold(t) ++ freqCold(e)    ++ freqNormal(x.extradeps)
     case _ => super.symsFreq(e)
   }
 
@@ -180,6 +196,12 @@ trait IfThenElseExpOpt extends IfThenElseExp { this: BooleanOpsExp with EqualExp
   }
 }
 
+
+
+
+
+
+
 trait BaseGenIfThenElse extends GenericNestedCodegen {
   val IR: IfThenElseExp
   import IR._
@@ -196,7 +218,9 @@ trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen {
     case TP(sym, p @ Reflect(o: AbstractIfThenElse[_], u, es)) => //if !u.maySimple && !u.mayGlobal =>  // contrary, fusing will not change observable order
       // assume body will reflect, too...
       printdbg("-- fatten effectful if/then/else " + e)
-      TTP(List(sym), List(p), SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)))
+      val e2 = SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep))
+      //e2.extradeps = es //HACK
+      TTP(List(sym), List(p), e2)
     case _ => super.fatten(e)
   }
 }

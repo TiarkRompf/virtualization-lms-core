@@ -28,8 +28,8 @@ import scala.reflect.SourceContext
 //    val x0 = vzeros(100)
 //    val as0 = vliteral(List(x))
 //    val m0 = vupdate(x0,5,7)
-//    val x1 = x0 // mutate x0 <- m0
-//    val as1 = as0 // mutate as0 <- m0
+//    val x1 = x0 // mutate m0
+//    val as1 = as0 // mutate m0
 // 
 // current questions: 
 //    what do we gain?
@@ -58,6 +58,8 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
 
   case class Copy[T](a: Rep[T]) extends Def[T]
   
+  case class ReflectSoft[T](a: Def[T], es: List[Exp[Any]]) extends Def[T]
+  
   case class Multi(as: List[Def[Any]]) extends FatDef
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
@@ -71,6 +73,20 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
     case VectorUpdate(a,x,y) => syms(a)
     case _ => List()
   }
+
+  override def syms(d: Any): List[Sym[Any]] = d match {
+    case d@ReflectSoft(a,es) => syms(a)
+    case _ => super.syms(d)
+  }
+  override def symsFreq(d: Any) = d match {
+    case d@ReflectSoft(a,es) => symsFreq(a)
+    case _ => super.symsFreq(d)
+  }
+  override def softSyms(d: Any): List[Sym[Any]] = d match {
+    case d@ReflectSoft(a,es) => syms(es)
+    case _ => super.softSyms(d)
+  }
+
 
   var subst: Map[Sym[_],Exp[_]] = Map() // need to hook this up with reifyEffects? does it ever need to be reset?
 
@@ -100,7 +116,26 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
           subst += (s -> toAtom(Mutate(s, sym)))
         }
         
-        createDefinition(sym, d)
+        // TODO: add soft dependencies on transitive to ensure ordering!
+        
+        // at first sight it should be enough that for each s in transitive 
+        // there is a Mutate node with a dependency.
+        // however the Mutate node might be DCE'd, but not the original
+        // mutable sym.
+        
+        /* scenario:
+          
+          val v = vrand(100)
+          val w = v
+          println(w)
+          v(5) = 100               <--- must still come after w
+          val v1 = v // mutated
+        [ val w1 = w // mutated ]  <--- dce
+          println(v)
+          
+        */
+        
+        createDefinition(sym, ReflectSoft(d, transitive.flatMap(_.lhs)))
         sym
       } else {
         // right now we add copy statements whenever we'd do CSE
@@ -144,7 +179,7 @@ class TestEffects extends FileDiffSuite {
   trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt //with VariablesExpOpt 
       with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp 
-      with test7.TransformingStuff with Lib with LibExp { self => 
+      with Lib with LibExp { self => 
     override val verbosity = 2
     val codegen = new ScalaGenFat with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative with ScalaGenRangeOps 
@@ -172,12 +207,17 @@ class TestEffects extends FileDiffSuite {
         }
         override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
           case Multi(as) => 
+            stream.println("// begin multi")
             (symList zip as) foreach { case (s,e) => emitNode(s,e) }
+            stream.println("// end multi")
           case _ => super.emitFatNode(symList, rhs)
         }
         override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
           case _ if rhs.toString.startsWith("Vector") => 
             stream.println(sym + " = " + rhs)
+          case ReflectSoft(x,es) =>
+            stream.println("// soft deps: "+es.map(quote))
+            emitNode(sym,x)
           case Mutate(a,b) =>
             stream.println(sym + " = " + a + " Mutate "+ b)
           case Copy(a) =>
@@ -189,7 +229,7 @@ class TestEffects extends FileDiffSuite {
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
   
-  def testEffects1 = withOutFileChecked(prefix+"effects1") {
+  def testEffects1 = withOutFileChecked(prefix+"effects1") { // test ordering
     trait Prog extends DSL {
       def test(x: Rep[Int]) = {
         val x = vzeros(100)
@@ -202,11 +242,11 @@ class TestEffects extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testEffects2 = withOutFileChecked(prefix+"effects2") {
+  def testEffects2 = withOutFileChecked(prefix+"effects2") { // test cse
     trait Prog extends DSL {
       def test(x: Rep[Int]) = {
         val x = vzeros(100)
-        val y = vzeros(100) // this will do speculative cse
+        val y = vzeros(100) // this will do speculative cse (or call copy)
         val as = vliteral(List(x))
         val bs = vliteral(List(y))
         vupdate(x,5,7) // must undo cse: now x and y are different. also, as and bs are different now
@@ -219,11 +259,11 @@ class TestEffects extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testEffects3 = withOutFileChecked(prefix+"effects3") {
+  def testEffects3 = withOutFileChecked(prefix+"effects3") { // test cse
     trait Prog extends DSL {
       def test(x: Rep[Int]) = {
         val x = vzeros(100)
-        val y = vzeros(100) // this will do speculative cse
+        val y = vzeros(100) // this will do speculative cse  (or call copy)
         val e = vliteral(List(y)) // assume that this operation is expensive (don't want to do it twice)
         print(e)
         vupdate(x,5,7) // must undo cse: now x and y are different. also, as and bs are different now
@@ -233,5 +273,19 @@ class TestEffects extends FileDiffSuite {
     new Prog with Impl
   }
 
-
+  def testEffects4 = withOutFileChecked(prefix+"effects4") { // test mutable dce
+    trait Prog extends DSL {
+      def test(x: Rep[Int]) = {
+        val x = vzeros(100)
+        val y = x
+        val as = vliteral(List(x))
+        val bs = vliteral(List(y)) // this one should be dce'd because it is never used
+        vupdate(x,5,7) // this will invalidate bs (anti-dep) but should not give rise to a hard dependency
+        val u = vapply(as,0)
+        val v = vapply(bs,0)
+        print(u)
+      }
+    }
+    new Prog with Impl
+  }
 }

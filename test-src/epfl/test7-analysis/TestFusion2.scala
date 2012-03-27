@@ -170,7 +170,7 @@ class TestFusion2 extends FileDiffSuite {
   
   def testFusion21 = {
     withOutFile(prefix+"fusion21") {
-      new FusionProg21 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
+      new FusionProg21 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
@@ -183,7 +183,7 @@ class TestFusion2 extends FileDiffSuite {
 
   def testFusion22 = {
     withOutFile(prefix+"fusion22") {
-      new FusionProg22 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
+      new FusionProg22 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
@@ -196,7 +196,7 @@ class TestFusion2 extends FileDiffSuite {
 
   def testFusion23 = {
     withOutFile(prefix+"fusion23") {
-      new FusionProg23 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
+      new FusionProg23 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
@@ -209,7 +209,7 @@ class TestFusion2 extends FileDiffSuite {
 
   def testFusion24 = {
      withOutFile(prefix+"fusion24") {
-       new FusionProg24 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
+       new FusionProg24 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
 
          override def infix_-(x: Exp[Double], y: Exp[Double]) = if (x == y) {
            println("*** removing self subtraction " + x + " - " + y)

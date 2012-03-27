@@ -6,7 +6,7 @@ import common._
 import internal.{ScalaCompile}
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
-import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt,TransformingStuff}
+import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt}
 
 import util.OverloadHack
 

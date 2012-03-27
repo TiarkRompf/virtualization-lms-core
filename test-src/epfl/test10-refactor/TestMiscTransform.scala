@@ -42,7 +42,8 @@ trait SimpleBlockTransformer extends internal.FatBlockTraversal {
 
   def transformStm(stm: Stm): List[Stm] = stm match { // override this to implement custom traversal
     case TP(s,d) => 
-      val trans = new Transformer {
+      val trans = new AbstractTransformer {
+        val IR: SimpleBlockTransformer.this.IR.type = SimpleBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = x 
         override def apply[A](x: Block[A]) = transformBlock(x)
       }
@@ -107,7 +108,8 @@ trait NestedBlockTransformer extends internal.FatBlockTraversal {
 
   def transformStm(stm: Stm): List[Stm] = stm match { // override this to implement custom traversal
     case TP(s,d) => 
-      val trans = new Transformer {
+      val trans = new AbstractTransformer {
+        val IR: NestedBlockTransformer.this.IR.type = NestedBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
         override def apply[A](x: Block[A]) = transformBlock(x)
       }
@@ -171,7 +173,8 @@ trait MirrorBlockTransformer extends internal.FatBlockTraversal {
   
   def transformStm(stm: Stm): Exp[Any] = stm match { // override this to implement custom traversal
     case TP(s,d) => 
-      val trans = new Transformer {
+      val trans = new AbstractTransformer {
+        val IR: MirrorBlockTransformer.this.IR.type = MirrorBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
         override def apply[A](x: Block[A]) = transformBlock(x)
       }
@@ -207,7 +210,8 @@ trait MirrorRetainBlockTransformer extends MirrorBlockTransformer {
         return s
       }
       //println("need to replace " + stm + " / " + subst)
-      val trans = new Transformer {
+      val trans = new AbstractTransformer {
+        val IR: MirrorRetainBlockTransformer.this.IR.type = MirrorRetainBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
         override def apply[A](x: Block[A]) = transformBlock(x)
       }
@@ -260,7 +264,7 @@ class TestMisc extends FileDiffSuite {
       with EqualExpOpt //with VariablesExpOpt 
       with ArrayMutationExp
       with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp 
-      with test7.TransformingStuff 
+       
       with FatExpressions { self => 
     override val verbosity = 1
   }

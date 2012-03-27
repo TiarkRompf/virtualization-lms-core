@@ -28,11 +28,11 @@ trait NestLambdaProg extends Arith with Functions with Print { // also used by T
 
 trait NestCondProg extends Arith with Functions with IfThenElse with Print {
   
-  /* TODO: This program exhibits behavior that is likely undesired in many
-  cases. The definition of f will be moved *into* g and into the conditional.
-  The doLambda in the else branch will not be hoisted out of g either.
+  /* Previously this program exhibited behavior that is likely undesired in many
+  cases. The definition of f was moved *into* g and into the conditional.
+  The doLambda in the else branch would not be hoisted out of g either.
   
-  While there are situations where this particular kind of code motion
+  Although there are situations where this particular kind of code motion
   is an improvement (namely, if the probability of y == true is very low
   and the else branch would be cheap).
   */
@@ -91,6 +91,36 @@ trait NestCondProg3 extends Arith with Functions with IfThenElse with Print {
 }
 
 
+trait NestCondProg4 extends Arith with Functions with IfThenElse with Print {
+  
+  def test(x: Rep[Unit]) = {
+    if (unit(true)) {
+      // should place 7 + 9 here
+      doLambda { y: Rep[Double] =>
+        print(unit(7.0) + unit(9.0))
+      }
+    } else {
+    }
+  }
+  
+}
+
+
+trait NestCondProg5 extends Arith with Functions with IfThenElse with Print {
+  
+  def test(x: Rep[Unit]) = {
+    val z = unit(7.0) + unit(9.0) // should move into the conditional
+    val x = if (unit(true)) {
+      print(z)
+    } else {
+    }
+    doLambda { y: Rep[Boolean] => 
+      print(x)
+    }
+  }
+  
+}
+
 
 
 class TestCodemotion extends FileDiffSuite {
@@ -139,6 +169,28 @@ class TestCodemotion extends FileDiffSuite {
       }
     }
     assertFileEqualsCheck(prefix+"codemotion4")
+  }
+
+  def testCodemotion5 = {
+    // test loop hoisting (should use loops but lambdas will do for now)
+    withOutFile(prefix+"codemotion5") {
+      new NestCondProg4 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+      }
+    }
+    assertFileEqualsCheck(prefix+"codemotion5")
+  }
+
+  def testCodemotion6 = {
+    // test loop hoisting (should use loops but lambdas will do for now)
+    withOutFile(prefix+"codemotion6") {
+      new NestCondProg5 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+      }
+    }
+    assertFileEqualsCheck(prefix+"codemotion6")
   }
 
 

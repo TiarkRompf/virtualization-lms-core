@@ -10,6 +10,7 @@ trait CodeMotion extends Scheduling {
   import IR._
 
   def getExactScope[A](currentScope: List[Stm])(result: List[Exp[Any]]): List[Stm] = {
+    // currentScope must be tight for result and strongly sorted
     val e1 = currentScope
 
     // shallow is 'must outside + should outside' <--- currently shallow == deep for lambdas, meaning everything 'should outside'
@@ -34,8 +35,18 @@ trait CodeMotion extends Scheduling {
     // things that should live on this level:
     // - not within conditional: no cold ref on path (shallow|hot)*
     // - on the fringe but outside of mustInside, if on a hot path any* hot any*
+    
+    // TODO: use (shallow|hot)* hot any* instead
+    
+    val loopsNotInIfs = e2 filterNot (e3 contains _)    // (shallow|hot)* hot (shallow|hot)*   <---- a hot ref on all paths!
+    val reachFromTopLoops = getSchedule(e1)(loopsNotInIfs)
+    
+    val f3 = f1 filter (reachFromTopLoops contains _)    // fringe restricted to: (shallow|hot)* hot any*
+    val h3 = getScheduleM(e1)(f3.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
+    
+    val shouldOutside = e1 filter (z => (e2 contains z) || (h3 contains z))
 
-    val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
+    //val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
 
     val levelScope = e1.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
 

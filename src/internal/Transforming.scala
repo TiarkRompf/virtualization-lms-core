@@ -1,12 +1,15 @@
 package scala.virtualization.lms
 package internal
 
-import scala.collection.mutable.HashMap
+import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
 
 trait AbstractTransformer {
   val IR: Expressions with Blocks
   import IR._
+  
+  def hasContext = false
+  def reflectBlock[A](xs: Block[A]): Exp[A] = sys.error("reflectBlock not supported by context-free transformer")
   
   def apply[A](x: Exp[A]): Exp[A]
   def apply[A](xs: Block[A]): Block[A] = Block(apply(xs.res))
@@ -20,16 +23,34 @@ trait AbstractTransformer {
   
 }
 
+trait AbstractSubstTransformer extends AbstractTransformer {
+  import IR._
+  var subst = immutable.Map.empty[Exp[Any], Exp[Any]]
+  
+  def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
+    case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x 
+  }
+}
+
 
 trait Transforming extends Expressions with Blocks { self =>
   
-  abstract class Transformer extends AbstractTransformer { // a polymorphic function, basically...
+  /*abstract class Transformer extends AbstractTransformer { // a polymorphic function, basically...
     val IR: self.type = self    
+  }*/
+
+  type Transformer = AbstractTransformer { val IR: self.type }
+
+  class SubstTransformer extends /*AbstractSubstTransformer*/ AbstractTransformer { val IR: self.type = self 
+    val subst = new mutable.HashMap[Exp[Any], Exp[Any]]
+    def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
+      case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x 
+    }
   }
 
-	object IdentityTransformer extends Transformer {
+	/*object IdentityTransformer extends Transformer {
 		def apply[A](x: Exp[A]) = x
-	}
+	}*/
 
   // FIXME: mirroring for effects!
 
@@ -40,35 +61,6 @@ trait Transforming extends Expressions with Blocks { self =>
   def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = sys.error("don't know how to mirror " + e)
 
   def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = sys.error("don't know how to mirror " + e) //hm...
-
-
-  class SubstTransformer extends Transformer {
-    val subst = new HashMap[Exp[Any], Exp[Any]]
-    
-    def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
-      case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x 
-    }
-
-
-/*    
-    def transform[A](s: Sym[A], x: Def[A]): Exp[A] = {
-      if (subst.contains(s)) return apply(s)
-      implicit val m: Manifest[A] = s.tp.asInstanceOf[Manifest[A]]
-      
-      val y = mirror(x, this)
-      if (y != s) {
-/*
-        if (y.isInstanceOf[Sym[Any]] && findDefinition(y.asInstanceOf[Sym[Any]]).nonEmpty)
-          println("--> replace " + s+"="+x + " by " + y+"="+findDefinition(y.asInstanceOf[Sym[Any]]).get.rhs)
-        else
-          println("--> replace " + s+"="+x + " by " + y)
-*/
-        subst(s) = y // TODO: move out of conditional
-      }
-      y
-    }
-*/    
-  }
   
 }
 

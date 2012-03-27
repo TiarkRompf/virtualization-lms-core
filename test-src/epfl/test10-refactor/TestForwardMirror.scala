@@ -153,7 +153,7 @@ trait FWTransform extends BaseFatExp with EffectExp with IfThenElseFatExp with L
   // we need to apply the current substitution to each Def we create:
   // Foo(x) atPhase(t) { bar(x) }   <--- x in bar(x)  will refer to a sym that may have been replaced itself
   
-  def subst: Map[Sym[_], Exp[_]] = xform.subst
+  def subst: Map[Exp[Any], Exp[Any]] = xform.subst
 
   override implicit def toAtom[A:Manifest](d: Def[A]): Exp[A] = { // override createDefinition instead?
     val in = syms(d)
@@ -222,6 +222,7 @@ trait VectorExpTrans extends FWTransform with VectorExp with ArrayLoopsExp with 
 
 
   val xform = new MyWorklistTransformer {
+/*
     override def mmmirror[A:Manifest](e: Def[A]): Exp[A] = (e match {
       case IfThenElse(c,a,b) => __ifThenElse(mirrorExp(c),mirrorBlock(a),mirrorBlock(b))
       case SimpleLoop(s,v,ArrayElem(body)) => 
@@ -233,6 +234,7 @@ trait VectorExpTrans extends FWTransform with VectorExp with ArrayLoopsExp with 
         //println("* super mmirror " + e)
         super.mmmirror(e)
     }).asInstanceOf[Exp[A]] // gadt fail
+*/  
   }
   
   
@@ -254,7 +256,7 @@ class TestForward extends FileDiffSuite {
   trait Impl extends DSL with VectorExpTrans with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt //with VariablesExpOpt 
       with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp 
-      with test7.TransformingStuff with FWTransform { self => 
+       with FWTransform { self => 
     override val verbosity = 2
     val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative with ScalaGenRangeOps 

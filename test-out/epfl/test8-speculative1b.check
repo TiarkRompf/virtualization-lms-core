@@ -1,16 +1,3 @@
-gathering liveness info for block Block(Sym(4))
-dropping TP(Sym(2),Reflect(Assign(Variable(Sym(1)),Const(5)),Summary(false,false,false,false,false,List(Sym(1)),List(Sym(1)),List(Sym(1)),List(Sym(1))),List(Sym(1))))
-dropping TP(Sym(1),Reflect(NewVar(Const(7)),Summary(false,false,false,false,true,List(),List(),List(),List()),List()))
-error: violated ordering of effects
-  expected:
-    TP(Sym(1),Reflect(NewVar(Const(7)),Summary(false,false,false,false,true,List(),List(),List(),List()),List()))
-    TP(Sym(2),Reflect(Assign(Variable(Sym(1)),Const(5)),Summary(false,false,false,false,false,List(Sym(1)),List(Sym(1)),List(Sym(1)),List(Sym(1))),List(Sym(1))))
-    TP(Sym(3),Reflect(Print(Const(5)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
-  actual:
-    TP(Sym(3),Reflect(Print(Const(5)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
-  missing:
-    TP(Sym(1),Reflect(NewVar(Const(7)),Summary(false,false,false,false,true,List(),List(),List(),List()),List())) <-- inDeep: false, inShallow: false, inDep: false
-    TP(Sym(2),Reflect(Assign(Variable(Sym(1)),Const(5)),Summary(false,false,false,false,false,List(Sym(1)),List(Sym(1)),List(Sym(1)),List(Sym(1))),List(Sym(1)))) <-- inDeep: false, inShallow: false, inDep: false
 /*****************************************
   Emitting Generated Code                  
 *******************************************/

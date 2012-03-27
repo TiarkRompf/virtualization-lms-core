@@ -306,7 +306,7 @@ trait Effects extends Expressions with Blocks with Utils {
   def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
     context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
       //case z::_ => z.asInstanceOf[Exp[A]]  -- unsafe: we don't have a tight context, so we might pick one from a flattened subcontext
-      case _ => internalReflect(fresh[A], zd)
+      case _ => createReflectDefinition(fresh[A], zd)
     }
   }
 
@@ -375,7 +375,7 @@ trait Effects extends Expressions with Blocks with Utils {
             for (w <- u.mayRead)
               printlog("depends on  " + w)
           }
-          internalReflect(z, zd)
+          createReflectDefinition(z, zd)
         }
       } else {
         val z = fresh[A]
@@ -412,29 +412,30 @@ trait Effects extends Expressions with Blocks with Utils {
           printerr("at " + z + "=" + zd)
         }
         */
-        internalReflect(z, zd)
+        createReflectDefinition(z, zd)
       }
     }
   }
   
-  def calculateDependencies(u: Summary): State = {
-    if (u.mayGlobal) context else {
+  def calculateDependencies(u: Summary): State = calculateDependencies(context, u)
+  def calculateDependencies(scope: State, u: Summary): State = {
+    if (u.mayGlobal) scope else {
       val read = u.mayRead
       val write = u.mayWrite
 
-      val readDeps = if (read.isEmpty) Nil else context filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
+      val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
       // TODO: write-on-read deps should be weak
-      val writeDeps = if (write.isEmpty) Nil else context filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || mayRead(u, write) || read.contains(e) }
-      val simpleDeps = if (!u.maySimple) Nil else context filter { case e@Def(Reflect(_, u, _)) => u.maySimple }
-      val globalDeps = context filter { case e@Def(Reflect(_, u, _)) => u.mayGlobal }
+      val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || mayRead(u, write) || read.contains(e) }
+      val simpleDeps = if (!u.maySimple) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.maySimple }
+      val globalDeps = scope filter { case e@Def(Reflect(_, u, _)) => u.mayGlobal }
 
       // TODO: optimize!!
       val allDeps = readDeps ++ writeDeps ++ simpleDeps ++ globalDeps
-      context filter (allDeps contains _)
+      scope filter (allDeps contains _)
     }
   }
 
-  def internalReflect[A](s: Sym[A], x: Reflect[A]): Sym[A] = {
+  def createReflectDefinition[A](s: Sym[A], x: Reflect[A]): Sym[A] = {
     x match {
       case Reflect(Reify(_,_,_),_,_) =>
         printerr("error: reflecting a reify node.")
@@ -468,6 +469,8 @@ trait Effects extends Expressions with Blocks with Utils {
 
   def pruneContext(ctx: List[Exp[Any]]): List[Exp[Any]] = ctx // TODO this doesn't work yet (because of loops!): filterNot { case Def(Reflect(_,u,_)) => mustOnlyRead(u) }
 
+  // reify the effects of an isolated block.
+  // no assumptions about the current context remain valid.
   def reifyEffects[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     context = Nil
@@ -482,6 +485,8 @@ trait Effects extends Expressions with Blocks with Utils {
     if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
   }
 
+  // reify the effects of a block that is executed 'here' (if it is executed at all).
+  // all assumptions about the current context carry over unchanged.
   def reifyEffectsHere[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     if (save eq null)

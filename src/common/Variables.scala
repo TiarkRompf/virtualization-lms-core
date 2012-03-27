@@ -164,6 +164,8 @@ trait VariablesExpOpt extends VariablesExp {
       // find the last modification of variable v
       // if it is an assigment, just return the last value assigned 
       val vs = v.e.asInstanceOf[Sym[Variable[T]]]
+      //TODO: could use calculateDependencies(Read(v))
+      
       val rhs = context.reverse.collectFirst { 
         case w @ Def(Reflect(NewVar(rhs: Exp[T]), _, _)) if w == vs => Some(rhs)
         case Def(Reflect(Assign(`v`, rhs: Exp[T]), _, _)) => Some(rhs)

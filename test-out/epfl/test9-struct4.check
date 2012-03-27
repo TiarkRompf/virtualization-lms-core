@@ -8,7 +8,7 @@ TP(Sym(16),OrderingGT(Sym(0),Const(7)))
 TP(Sym(19),ArrayIndex(Sym(5),Sym(17)))
 TP(Sym(21),Minus(Const(0.0),Sym(19)))
 TTP(List(Sym(23)),List(SimpleLoop(Const(100),Sym(17),ArrayElem(Block(Sym(21))))),SimpleFatLoop(Const(100),Sym(17),List(ArrayElem(Block(Sym(21))))))
-TP(Sym(27),SimpleStruct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(26))))
+TP(Sym(27),SimpleStruct(ArraySoaTag(ClassTag(Complex),Const(100)),Map(re -> Sym(4), im -> Sym(26))))
 TP(Sym(28),Reflect(Print(Sym(27)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
 TP(Sym(29),Reify(Sym(28),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(13), Sym(14), Sym(28))))
 TTP(List(Sym(26)),List(Phi(Sym(16),Block(Const(())),Block(Sym(23)),Block(Const(())),Block(Sym(5)))),SimpleFatIfThenElse(Sym(16),List(Block(Sym(23))),List(Block(Sym(5)))))
@@ -33,7 +33,7 @@ came up with: List(Sym(23)), List(ArrayElem(Block(Sym(21)))) with subst Sym(1) -
 need to transform rhs of fat if/then/else: List(Sym(26)), if Sym(16) then List(Block(Sym(23))) else List(Block(Sym(5)))
 skipping mirror operation Sym(26)=Phi(Sym(16),Block(Const(())),Block(Sym(23)),Block(Const(())),Block(Sym(5))) syms Sym(16),Sym(23),Sym(5) subst Sym(1) -> Sym(1)
 came up with: List(Sym(26)), if Sym(16) then List(Block(Sym(23))) else List(Block(Sym(5))) with subst Sym(1) -> Sym(1)
-skipping mirror operation Sym(27)=SimpleStruct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(26))) syms Sym(4),Sym(26) subst Sym(1) -> Sym(1)
+skipping mirror operation Sym(27)=SimpleStruct(ArraySoaTag(ClassTag(Complex),Const(100)),Map(re -> Sym(4), im -> Sym(26))) syms Sym(4),Sym(26) subst Sym(1) -> Sym(1)
 skipping mirror operation Sym(28)=Reflect(Print(Sym(27)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()) syms Sym(27) subst Sym(1) -> Sym(1)
 skipping mirror operation Sym(29)=Reify(Sym(28),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(13), Sym(14), Sym(28))) syms Sym(28),Sym(13),Sym(14),Sym(28) subst Sym(1) -> Sym(1)
 need to transform rhs of fat loop: List(Sym(4)), List(ArrayElem(Block(Sym(1))))
@@ -54,7 +54,7 @@ came up with: List(Sym(23)), List(ArrayElem(Block(Sym(21)))) with subst Sym(1) -
 need to transform rhs of fat if/then/else: List(Sym(26)), if Sym(16) then List(Block(Sym(23))) else List(Block(Sym(5)))
 skipping mirror operation Sym(26)=Phi(Sym(16),Block(Const(())),Block(Sym(23)),Block(Const(())),Block(Sym(5))) syms Sym(16),Sym(23),Sym(5) subst Sym(1) -> Sym(1)
 came up with: List(Sym(26)), if Sym(16) then List(Block(Sym(23))) else List(Block(Sym(5))) with subst Sym(1) -> Sym(1)
-skipping mirror operation Sym(27)=SimpleStruct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(26))) syms Sym(4),Sym(26) subst Sym(1) -> Sym(1)
+skipping mirror operation Sym(27)=SimpleStruct(ArraySoaTag(ClassTag(Complex),Const(100)),Map(re -> Sym(4), im -> Sym(26))) syms Sym(4),Sym(26) subst Sym(1) -> Sym(1)
 skipping mirror operation Sym(28)=Reflect(Print(Sym(27)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()) syms Sym(27) subst Sym(1) -> Sym(1)
 skipping mirror operation Sym(29)=Reify(Sym(28),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(13), Sym(14), Sym(28))) syms Sym(28),Sym(13),Sym(14),Sym(28) subst Sym(1) -> Sym(1)
 need to transform rhs of fat loop: List(Sym(4)), List(ArrayElem(Block(Sym(1))))
@@ -75,7 +75,7 @@ came up with: List(Sym(23)), List(ArrayElem(Block(Sym(21)))) with subst Sym(1) -
 need to transform rhs of fat if/then/else: List(Sym(26)), if Sym(16) then List(Block(Sym(23))) else List(Block(Sym(5)))
 skipping mirror operation Sym(26)=Phi(Sym(16),Block(Const(())),Block(Sym(23)),Block(Const(())),Block(Sym(5))) syms Sym(16),Sym(23),Sym(5) subst Sym(1) -> Sym(1)
 came up with: List(Sym(26)), if Sym(16) then List(Block(Sym(23))) else List(Block(Sym(5))) with subst Sym(1) -> Sym(1)
-skipping mirror operation Sym(27)=SimpleStruct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(26))) syms Sym(4),Sym(26) subst Sym(1) -> Sym(1)
+skipping mirror operation Sym(27)=SimpleStruct(ArraySoaTag(ClassTag(Complex),Const(100)),Map(re -> Sym(4), im -> Sym(26))) syms Sym(4),Sym(26) subst Sym(1) -> Sym(1)
 skipping mirror operation Sym(28)=Reflect(Print(Sym(27)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()) syms Sym(27) subst Sym(1) -> Sym(1)
 skipping mirror operation Sym(29)=Reify(Sym(28),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(13), Sym(14), Sym(28))) syms Sym(28),Sym(13),Sym(14),Sym(28) subst Sym(1) -> Sym(1)
 need to transform rhs of fat loop: List(Sym(4)), List(ArrayElem(Block(Sym(1))))
@@ -96,7 +96,7 @@ came up with: List(Sym(23)), List(ArrayElem(Block(Sym(21)))) with subst Sym(1) -
 need to transform rhs of fat if/then/else: List(Sym(26)), if Sym(16) then List(Block(Sym(23))) else List(Block(Sym(5)))
 skipping mirror operation Sym(26)=Phi(Sym(16),Block(Const(())),Block(Sym(23)),Block(Const(())),Block(Sym(5))) syms Sym(16),Sym(23),Sym(5) subst Sym(1) -> Sym(1)
 came up with: List(Sym(26)), if Sym(16) then List(Block(Sym(23))) else List(Block(Sym(5))) with subst Sym(1) -> Sym(1)
-skipping mirror operation Sym(27)=SimpleStruct(List(Array, Complex),Map(re -> Sym(4), im -> Sym(26))) syms Sym(4),Sym(26) subst Sym(1) -> Sym(1)
+skipping mirror operation Sym(27)=SimpleStruct(ArraySoaTag(ClassTag(Complex),Const(100)),Map(re -> Sym(4), im -> Sym(26))) syms Sym(4),Sym(26) subst Sym(1) -> Sym(1)
 skipping mirror operation Sym(28)=Reflect(Print(Sym(27)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()) syms Sym(27) subst Sym(1) -> Sym(1)
 skipping mirror operation Sym(29)=Reify(Sym(28),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(13), Sym(14), Sym(28))) syms Sym(28),Sym(13),Sym(14),Sym(28) subst Sym(1) -> Sym(1)
 need to transform rhs of fat loop: List(Sym(4)), List(ArrayElem(Block(Sym(1))))
@@ -148,7 +148,7 @@ x23
 } else {
 x5
 }
-val x27 = Map("re"->x4,"im"->x26) //Array Complex
+val x27 = Map("re"->x4,"im"->x26) //ArraySoaTag(ClassTag(Complex),Const(100))
 val x28 = println(x27)
 x28
 }

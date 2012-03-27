@@ -14,7 +14,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import scala.reflect.SourceContext
 
 
-// NOTE: the test cases print 'violated ordering of effects' warnings.
+// NOTE: some test cases print 'violated ordering of effects' warnings.
 // we remove dead stores on purpose, based on liveness information
 // but the scheduler thinks they go missing by error.
 
@@ -22,9 +22,13 @@ trait WhileExpOptSpeculative extends WhileExp {
   
   case class PreviousIteration() extends Def[Unit]
   
+  def reflectDummy(u: Summary) = reflectEffect(PreviousIteration(), u)
+  // TBD: does previousIteration need to reference the loop?
+  // what if we split the loop?
+
+
   override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
 
-    def reflectDummy(u: Summary) = reflectEffect(PreviousIteration(), u)
 
     val c = reifyEffectsHere(cond)
     val ce = summarizeEffects(c)
@@ -100,11 +104,19 @@ class TestSpeculative extends FileDiffSuite {
   }
   trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt with VariablesExpOpt 
-      with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp { self => 
-    override val verbosity = 2
+      with IfThenElseExpOpt with WhileExpOptSpeculative with SplitEffectsExpFat with RangeOpsExp with PrintExp { self => 
+    override val verbosity = 3
     val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
-      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative with ScalaGenRangeOps 
-      with ScalaGenPrint with LivenessOpt { val IR: self.type = self }
+      with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenWhileOptSpeculative with ScalaGenSplitEffects
+      with ScalaGenRangeOps with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self 
+          /*override def focusBlock[A](result: Block[Any])(body: => A): A = {
+            super.focusBlock(result) {
+              println("focusBlock")
+              innerScope.foreach(println)
+              body
+            }
+          }*/
+      }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
   

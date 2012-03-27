@@ -18,13 +18,18 @@ trait LivenessOpt extends NestedBlockTraversal {
       mayWrite(u, used.toList) || maySimple(u) => 
       used ++= syms(rhs)
       List(t)
-    case TP(sym, rhs) if used(sym) => 
+/*    case TP(sym, rhs) if used(sym) => 
       used ++= syms(rhs)
       //printlog("** add used at " + t + ": " + syms(rhs))
-      List(t)
+      List(t)*/
     case e => 
-      printlog("dropping " + e)
-      Nil
+      if (e.lhs exists used) {
+        used ++= syms(e.rhs)
+        List(t)
+      } else {
+        printlog("dropping " + e)
+        Nil
+      }
   }
 
 

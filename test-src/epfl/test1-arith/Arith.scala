@@ -4,6 +4,7 @@ package test1
 
 import common._
 
+import scala.reflect.SourceContext
 import java.io.PrintWriter
 
 trait LiftArith {
@@ -48,6 +49,14 @@ trait ArithExp extends Arith with BaseExp {
   def infix_-(x: Exp[Double], y: Exp[Double]) = Minus(x, y)
   def infix_*(x: Exp[Double], y: Exp[Double]) = Times(x, y)
   def infix_/(x: Exp[Double], y: Exp[Double]) = Div(x, y)
+  
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
+    case Plus(x,y) => f(x) + f(y)
+    case Minus(x,y) => f(x) - f(y)
+    case Times(x,y) => f(x) * f(y)
+    case Div(x,y) => f(x) / f(y)
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
 }
 
 trait ArithExpOpt extends ArithExp {

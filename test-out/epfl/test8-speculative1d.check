@@ -1,25 +1,23 @@
-gathering liveness info for block Block(Sym(12))
-gathering liveness info for block Block(Sym(6))
-gathering liveness info for block Block(Sym(8))
+-- fatten effectful if/then/else TP(Sym(15),Reflect(IfThenElse(Sym(3),Block(Sym(10)),Block(Sym(14))),Summary(true,false,false,false,false,List(),List(),List(),List()),List()))
+-- fatten effectful if/then/else TP(Sym(11),Reflect(IfThenElse(Sym(3),Block(Sym(9)),Block(Sym(10))),Summary(false,false,false,false,false,List(Sym(1)),List(),List(Sym(1)),List()),List(Sym(1))))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
 var x1: Int = 7
-//var x2: Int = 9
 val x3 = 7 > x0
-val x9 = if (x3) {
+// TODO: use vars instead of tuples to return multiple values
+val (x15,x11) = if (x3) {
 x1 = 5
-//x2 = 12
-()
+((),())
 } else {
 val x7 = println("no")
-x7
+((),())
 }
-val x10 = x1
-val x11 = println(x10)
-x11
+val x17 = x1
+val x18 = println(x17)
+x18
 }
 }
 /*****************************************

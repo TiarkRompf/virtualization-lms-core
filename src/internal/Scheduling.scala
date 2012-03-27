@@ -16,6 +16,21 @@ trait Scheduling {
     getSchedule(scope)(result, false)
   }
   
+  def getStronglySortedSchedule(scope: List[Stm])(result: Any): List[Stm] = {
+    def deps(st: List[Sym[Any]]): List[Stm] = 
+      scope.filter(d => (st intersect d.lhs).nonEmpty)
+    def allSyms(r: Any) = syms(r) ++ softSyms(r)
+    
+    val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result)), t => deps(allSyms(t.rhs)))
+    /*xx.foreach { x => 
+      if (x.length > 1) {
+        printerr("warning: recursive schedule for result " + result + ": " + x)
+        (new Exception) printStackTrace
+      }
+    }*/
+    xx.flatten.reverse
+  }
+
   def getSchedule(scope: List[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
     def deps(st: List[Sym[Any]]): List[Stm] = 
       scope.filter(d => (st intersect d.lhs).nonEmpty)

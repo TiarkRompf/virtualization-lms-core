@@ -129,6 +129,12 @@ trait Expressions extends Utils {
     case _ => Nil
   }
 
+  def softSyms(e: Any): List[Sym[Any]] = e match {
+    // empty by default
+    //case s: Sym[Any] => List(s)
+    case p: Product => p.productIterator.toList.flatMap(softSyms(_))
+    case _ => Nil
+  }
 
 
   def rsyms[T](e: Any)(f: Any=>List[T]): List[T] = e match {

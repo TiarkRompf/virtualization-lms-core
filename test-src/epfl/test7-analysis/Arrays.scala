@@ -5,8 +5,11 @@ package test7
 import common._
 import test1._
 
-import util.OverloadHack
+import internal.AbstractSubstTransformer
 
+
+import util.OverloadHack
+import scala.reflect.SourceContext
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
@@ -85,6 +88,24 @@ trait ArrayLoopsExp extends LoopsExp {
     case FlattenElem(y) => effectSyms(y)
     case _ => super.boundSyms(e)
   }
+
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case SimpleLoop(s,i, ArrayElem(y)) if f.hasContext => 
+      array(f(s)) { j => f.asInstanceOf[AbstractSubstTransformer{val IR:ArrayLoopsExp.this.type}].subst += (i -> j); f.reflectBlock(y) }
+    case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
+    case ArrayLength(a) => infix_length(f(a))(mtype(manifest[A]))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
+
+  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+    case ArrayElem(y) => ArrayElem(f(y))
+    case ReduceElem(y) => ReduceElem(f(y))
+    case ArrayIfElem(c,y) => ArrayIfElem(f(c),f(y))
+    case ReduceIfElem(c,y) => ReduceIfElem(f(c),f(y))
+    case _ => super.mirrorFatDef(e,f)
+  }).asInstanceOf[Def[A]]
+
 
 }
 

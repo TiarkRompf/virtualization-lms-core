@@ -78,7 +78,7 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
   }
   
   def focusExactScopeSubGraph[A](result: List[Exp[Any]])(body: List[Stm] => A): A = {
-    val availDefs = availableDefs
+    val availDefs = getStronglySortedSchedule(availableDefs)(result) // resolve anti-dependencies (may still be recursive -- not sure whether that's a problem)
     val levelScope = getExactScope(availDefs)(result)
     withInnerScope(availDefs diff levelScope) { // delay everything that remains
       body(levelScope)
