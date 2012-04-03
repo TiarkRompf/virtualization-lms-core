@@ -87,7 +87,7 @@ trait FunctionsCanonical extends FunctionsExp with ClosureCompare {
 
     funTable.find(_._2 == can) match {
       case Some((g, _)) =>
-        println("-- found fun: " + g.getClass.getName)
+        //println("-- found fun: " + g.getClass.getName)
         g.asInstanceOf[Exp[A]=>Exp[B]]
       case _ =>
         funTable = (f,can)::funTable
@@ -139,7 +139,7 @@ trait FunctionsExternalDef1 extends FunctionsExternalDef0 with ClosureCompare { 
 
     funTable.find(_._2 == can) match {
       case Some((g, _, funSym)) =>
-        println("-- found fun: " + g.getClass.getName)
+        //println("-- found fun: " + g.getClass.getName)
         funSym.asInstanceOf[Sym[A=>B]]
       case _ =>
       
@@ -170,7 +170,7 @@ trait FunctionsExternalDef2 extends FunctionsCanonical with FunctionsExternalDef
 
     funTable.find(_._2 == can) match {
       case Some((g, _)) =>
-        println("-- found fun: " + g.getClass.getName)
+        //println("-- found fun: " + g.getClass.getName)
         g.asInstanceOf[Exp[A]=>Exp[B]]
       case _ =>
       

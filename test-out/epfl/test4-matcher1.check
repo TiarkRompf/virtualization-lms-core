@@ -6,17 +6,6 @@ match
 match
 match
 no match
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
 TP(Sym(3),Deconstruct(class scala.collection.immutable.$colon$colon,Sym(2)))
 TP(Sym(4),First(Sym(3)))
 TP(Sym(5),Second(Sym(3)))

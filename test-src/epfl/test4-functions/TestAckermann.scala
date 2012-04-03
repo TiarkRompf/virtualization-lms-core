@@ -51,8 +51,7 @@ class TestAck extends FileDiffSuite {
     withOutFile(prefix+"ack1") {
       object AckProgExp extends AckProg
         with ArithExpOpt with EqualExp with IfThenElseExp 
-        with FunctionExpUnfoldRecursion 
-        with FunctionsExternalDef2
+        with FunctionsExternalDef1
       import AckProgExp._
 
       val f = (x:Rep[Double]) => ack(2)(x)

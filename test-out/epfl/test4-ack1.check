@@ -1,7 +1,3 @@
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -13,34 +9,34 @@ val x7 = {x8: (Double) =>
 val x9 = x8+1.0
 x9
 }
-val x11 = x7(1.0)
+val x10 = x7(1.0)
 x4 = {x5: (Double) => 
 val x6 = x5 == 0
-val x16 = if (x6) {
-x11
+val x14 = if (x6) {
+x10
 } else {
-val x13 = x5-1.0
-val x14 = x4(x13)
-val x15 = x7(x14)
-x15
+val x11 = x5-1.0
+val x12 = x4(x11)
+val x13 = x7(x12)
+x13
 }
-x16
+x14
 }
-val x17 = x4(1.0)
+val x15 = x4(1.0)
 x1 = {x2: (Double) => 
 val x3 = x2 == 0
-val x22 = if (x3) {
-x17
+val x19 = if (x3) {
+x15
 } else {
-val x19 = x2-1.0
-val x20 = x1(x19)
-val x21 = x4(x20)
-x21
+val x16 = x2-1.0
+val x17 = x1(x16)
+val x18 = x4(x17)
+x18
 }
-x22
+x19
 }
-val x23 = x1(x0)
-x23
+val x20 = x1(x0)
+x20
 }
 }
 /*****************************************

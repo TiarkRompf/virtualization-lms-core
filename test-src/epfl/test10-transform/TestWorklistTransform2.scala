@@ -24,12 +24,9 @@ import scala.reflect.SourceContext
 
 
 
-trait FWTransform1 extends BaseFatExp with EffectExp with IfThenElseFatExp with LoopsFatExp { self =>
+trait FWTransform2 extends BaseFatExp with EffectExp with IfThenElseFatExp with LoopsFatExp { self =>
   
   class MyWorklistTransformer extends WorklistTransformer { val IR: self.type = self }
-  
-  def xform: MyWorklistTransformer
-  
   
   // ---------- Exp api
   
@@ -46,98 +43,61 @@ trait FWTransform1 extends BaseFatExp with EffectExp with IfThenElseFatExp with 
   }
     
   
+	def onCreate[A:Manifest](s: Sym[A], d: Def[A]): Exp[A] = s
+
   // ----------
   
-  // we need to apply the current substitution to each Def we create:
-  // Foo(x) atPhase(t) { bar(x) }   <--- x in bar(x)  will refer to a sym that may have been replaced itself
-  
-  protected override implicit def toAtom[A:Manifest](d: Def[A]): Exp[A] = { // override createDefinition instead?
-    val in = syms(d)
-    val actual = xform(in)
-    
-    if (in != actual) {
-      println("toAtom transform "+d+" " + in + " -> " + actual)
-      mirror(d,xform)
-    } else {
-      super.toAtom(d)
-    }
+  override def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
+		onCreate(s,d)(s.tp)
+		super.createDefinition(s,d)
   }
 
 }
 
-trait VectorExpTrans1 extends FWTransform1 with VectorExp with ArrayLoopsExp with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with StructExp //with VariablesExpOpt 
     with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp {
   
   
-  // TODO: this is not very modular. should it be more modular?
-  // can we (do we even want to?) add the atPhase transforms in a
-  // separate trait? the argument against it is that we could just
-  // implement the transform by pattern matching against Defs
+  def vzeros_xform(n: Rep[Int]) = vfromarray(array(n) { i => 0 })
 
-  override def vzeros(n: Rep[Int]) =  VectorZeros(n).atPhase(xform) { vfromarray(array(n) { i => 0 }) }
+  def vapply_xform[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]) = vtoarray(a).at(x)
 
-  override def vapply[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]) = (a,x) match {
-		case (Def(VectorLiteral(ax)), Const(x)) => ax(x)
-		case _ =>
-			VectorApply(a,x).atPhase(xform) { vtoarray(a).at(x) }
-	}
-  
-
-
-  // how does this interact with CSE? 
-  // Foo(x) atPhase(t) { bar(x) }   <--- Foo(x) may resolve to existing sym z, which is then scheduled to be replaced
-
-  override def vplus(a: Rep[Vector[Double]], b: Rep[Vector[Double]]): Rep[Vector[Double]] = (a,b) match {
-    //case (Def(VectorZeros(n)), b) => b
-    //case (a, Def(VectorZeros(n))) => a
-    case _ => 
-      VectorPlus(a,b).atPhase(xform) {
-        val data = array(vlength(a)) { i => vapply(a,i) + vapply(b,i) }
-        vfromarray(data)
-      }
-  }
-  
-  
-/*
-	override def vlength[T:Manifest](a: Rep[Vector[T]]) = a match {
-	  case Def(VectorFromArray(b)) => b.length
-	  case _ => super.vlength(a)
+  def vplus_xform(a: Rep[Vector[Double]], b: Rep[Vector[Double]]): Rep[Vector[Double]] = {
+		val data = array(vlength(a)) { i => vapply(a,i) + vapply(b,i) }
+  	vfromarray(data)
 	}
 
-  case class VectorFromArray[T](a: Rep[Array[T]]) extends Def[Vector[T]]
-  case class VectorToArray[T](a: Rep[Vector[T]]) extends Def[Array[T]]
-
-  def vfromarray[A:Manifest](x: Exp[Array[A]]): Exp[Vector[A]] = VectorFromArray(x)
-  def vtoarray[A:Manifest](x: Exp[Vector[A]]): Exp[Array[A]] = x match {
-    case Def(VectorFromArray(z)) => z
-    case _ => VectorToArray(x)
-  }
-
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case VectorFromArray(a) => vfromarray(f(a))
-    case VectorToArray(a) => vtoarray(f(a))
-    case _ => super.mirror(e,f)
-  }).asInstanceOf[Exp[A]] // gadt fail
-*/
+	def vlength_xform[T:Manifest](a: Rep[Vector[T]]) = field[Int](a, "length")
+	
 
 	def vfromarray[A:Manifest](x: Exp[Array[A]]): Exp[Vector[A]] = struct(ClassTag[Vector[A]]("Vector"), "data" -> x, "length" -> x.length)
 	def vtoarray[A:Manifest](x: Exp[Vector[A]]): Exp[Array[A]] = field[Array[A]](x, "data")
 
-	override def vlength[T:Manifest](a: Rep[Vector[T]]) = {
-//	  VectorLength(a).atPhase(xform) {
-			field[Int](a, "length")
-//		}
-	}
+
+	override def onCreate[A:Manifest](s: Sym[A], d: Def[A]) = (d match {
+		case VectorZeros(n)   => s.atPhase(xform) { vzeros_xform(xform(n)).asInstanceOf[Exp[A]] }
+		case VectorApply(a,x) => s.atPhase(xform) { vapply_xform(xform(a), xform(x)).asInstanceOf[Exp[A]] }
+		case VectorLength(x)  => s.atPhase(xform) { vlength_xform(xform(x)).asInstanceOf[Exp[A]] }
+		case VectorPlus(a,b)  => s.atPhase(xform) { vplus_xform(xform(a),xform(b)).asInstanceOf[Exp[A]] }
+		case _ => super.onCreate(s,d)
+	}).asInstanceOf[Exp[A]]
 
 
   val xform = new MyWorklistTransformer
   
+
+
+  override def vapply[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]) = (a,x) match {
+		case (Def(VectorLiteral(ax)), Const(x)) => ax(x)
+		case _ => super.vapply(a,x)
+	}
+	
 }
 
 
 
-class TestForward1 extends FileDiffSuite {
+class TestForward2 extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test10-"
   
@@ -148,10 +108,10 @@ class TestForward1 extends FileDiffSuite {
 
     def test(x: Rep[Int]): Rep[Any]
   }
-  trait Impl extends DSL with VectorExpTrans1 with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+  trait Impl extends DSL with VectorExpTrans2 with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt with StructFatExpOptCommon //with VariablesExpOpt 
       with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp 
-       with FWTransform1 { self => 
+       with FWTransform2 { self => 
     override val verbosity = 2
     val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenStruct with ScalaGenRangeOps 
@@ -182,7 +142,7 @@ class TestForward1 extends FileDiffSuite {
     }
   }
   
-  def testWorklist1 = withOutFileChecked(prefix+"worklist1") {
+  def testWorklist1 = withOutFileChecked(prefix+"worklist21") {
     trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val z = vzeros(100)
@@ -195,7 +155,7 @@ class TestForward1 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testWorklist2 = withOutFileChecked(prefix+"worklist2") {
+  def testWorklist2 = withOutFileChecked(prefix+"worklist22") {
     trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val z = vzeros(100)
@@ -207,7 +167,7 @@ class TestForward1 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testWorklist3 = withOutFileChecked(prefix+"worklist3") {
+  def testWorklist3 = withOutFileChecked(prefix+"worklist23") {
     trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val z1 = vzeros(100)
