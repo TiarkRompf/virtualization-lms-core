@@ -27,8 +27,8 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case _ => super.syms(e)
   }
 
-	override def readSyms(e: Any): List[Sym[Any]] = e match { 
-		case e: AbstractLoop[_] => readSyms(e.size) ::: readSyms(e.body)
+  override def readSyms(e: Any): List[Sym[Any]] = e match { 
+    case e: AbstractLoop[_] => readSyms(e.size) ::: readSyms(e.body)
     case _ => super.readSyms(e)
   }
 
@@ -51,11 +51,11 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 
-	/////////////////////
+  /////////////////////
   // aliases and sharing
 
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
-		case e: AbstractLoop[_] => aliasSyms(e.body)
+    case e: AbstractLoop[_] => aliasSyms(e.body)
     case _ => super.aliasSyms(e)
   }
 
@@ -92,7 +92,7 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
   }
   
   override def readSyms(e: Any): List[Sym[Any]] = e match { 
-		case e: AbstractFatLoop => readSyms(e.size) ::: readSyms(e.body)
+    case e: AbstractFatLoop => readSyms(e.size) ::: readSyms(e.body)
     case _ => super.readSyms(e)
   }
 
@@ -106,7 +106,7 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     case _ => super.symsFreq(e)
   }
 
-	/////////////////////
+  /////////////////////
   // aliases and sharing
 
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {

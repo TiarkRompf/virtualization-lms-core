@@ -12,7 +12,7 @@ trait ObjectOps extends Variables with OverloadHack {
   def infix_unsafeImmutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext) = object_unsafe_immutable(lhs)
 
   def object_tostring(lhs: Rep[Any])(implicit pos: SourceContext): Rep[String]
-	def object_unsafe_immutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext): Rep[A]
+  def object_unsafe_immutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext): Rep[A]
 }
 
 trait ObjectOpsExp extends ObjectOps with VariablesExp {

@@ -78,10 +78,10 @@ trait VectorExpTrans1 extends FWTransform1 with VectorExp with ArrayLoopsExp wit
   override def vzeros(n: Rep[Int]) =  VectorZeros(n).atPhase(xform) { vfromarray(array(n) { i => 0 }) }
 
   override def vapply[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]) = (a,x) match {
-		case (Def(VectorLiteral(ax)), Const(x)) => ax(x)
-		case _ =>
-			VectorApply(a,x).atPhase(xform) { vtoarray(a).at(x) }
-	}
+    case (Def(VectorLiteral(ax)), Const(x)) => ax(x)
+    case _ =>
+      VectorApply(a,x).atPhase(xform) { vtoarray(a).at(x) }
+  }
   
 
 
@@ -100,10 +100,10 @@ trait VectorExpTrans1 extends FWTransform1 with VectorExp with ArrayLoopsExp wit
   
   
 /*
-	override def vlength[T:Manifest](a: Rep[Vector[T]]) = a match {
-	  case Def(VectorFromArray(b)) => b.length
-	  case _ => super.vlength(a)
-	}
+  override def vlength[T:Manifest](a: Rep[Vector[T]]) = a match {
+    case Def(VectorFromArray(b)) => b.length
+    case _ => super.vlength(a)
+  }
 
   case class VectorFromArray[T](a: Rep[Array[T]]) extends Def[Vector[T]]
   case class VectorToArray[T](a: Rep[Vector[T]]) extends Def[Array[T]]
@@ -121,14 +121,14 @@ trait VectorExpTrans1 extends FWTransform1 with VectorExp with ArrayLoopsExp wit
   }).asInstanceOf[Exp[A]] // gadt fail
 */
 
-	def vfromarray[A:Manifest](x: Exp[Array[A]]): Exp[Vector[A]] = struct(ClassTag[Vector[A]]("Vector"), "data" -> x, "length" -> x.length)
-	def vtoarray[A:Manifest](x: Exp[Vector[A]]): Exp[Array[A]] = field[Array[A]](x, "data")
+  def vfromarray[A:Manifest](x: Exp[Array[A]]): Exp[Vector[A]] = struct(ClassTag[Vector[A]]("Vector"), "data" -> x, "length" -> x.length)
+  def vtoarray[A:Manifest](x: Exp[Vector[A]]): Exp[Array[A]] = field[Array[A]](x, "data")
 
-	override def vlength[T:Manifest](a: Rep[Vector[T]]) = {
-//	  VectorLength(a).atPhase(xform) {
-			field[Int](a, "length")
-//		}
-	}
+  override def vlength[T:Manifest](a: Rep[Vector[T]]) = {
+//    VectorLength(a).atPhase(xform) {
+      field[Int](a, "length")
+//    }
+  }
 
 
   val xform = new MyWorklistTransformer
@@ -173,7 +173,7 @@ class TestForward1 extends FileDiffSuite {
         println()
         println("### next")
         val b2 = xform.runOnce(b1)
-	      println("--- code ---")
+        println("--- code ---")
         codegen.emitBlock(b2)
         codegen.stream.flush
         if (!xform.isDone) iter(n-1,b2)
@@ -212,7 +212,7 @@ class TestForward1 extends FileDiffSuite {
       def test(x: Rep[Int]) = {
         val z1 = vzeros(100)
         val z2 = vzeros(50)
-				val z = if (x > 0) z1 else z2
+        val z = if (x > 0) z1 else z2
         val y = vzeros(100)
         val a = vplus(z,y)
         print(a)

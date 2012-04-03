@@ -68,10 +68,10 @@ class TestPatMat extends FileDiffSuite {
   def testPatMat1 = {
     withOutFile(prefix+"patmat1") {
       trait Prog extends Intf {
-				println("NOTE: doesn't work yet :-(")
-				def test = repInt(7) match { case 5 => "foo" case _ => "bar" }
-				println(test)
-			}
+        println("NOTE: doesn't work yet :-(")
+        def test = repInt(7) match { case 5 => "foo" case _ => "bar" }
+        println(test)
+      }
       new Prog with Impl
     }
     assertFileEqualsCheck(prefix+"patmat1")

@@ -40,14 +40,14 @@ class TestSpeculative extends FileDiffSuite {
   trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt with VariablesExpOpt 
       with IfThenElseExpOpt with WhileExpOptSpeculative with SplitEffectsExpFat with RangeOpsExp with PrintExp 
-			with CompileScala { self => 
+      with CompileScala { self => 
     override val verbosity = 1
     val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenWhileOptSpeculative with ScalaGenSplitEffects
       with ScalaGenRangeOps with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
-		val f = compile(test)
-		f(7)
+    val f = compile(test)
+    f(7)
   }
   
   def testSpeculative1 = {
@@ -161,7 +161,7 @@ class TestSpeculative extends FileDiffSuite {
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var x = 7
-		  		var y = 4.0 // should remove
+          var y = 4.0 // should remove
           var c = 0.0
           while (c < 10) {
             print(x) // should be const 7
@@ -169,7 +169,7 @@ class TestSpeculative extends FileDiffSuite {
             var z = 2 // should remove var
             c = c + 1
             print(z) // should be const 2
-						y = y + 2 // should remove
+            y = y + 2 // should remove
           }          
           print(x) // should be const 7
           print(c)
@@ -189,7 +189,7 @@ class TestSpeculative extends FileDiffSuite {
           while (c > 10) {
             print("booooring!")
           }
-					print("done")
+          print("done")
         }
       }
       new Prog with Impl

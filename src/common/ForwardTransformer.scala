@@ -25,7 +25,7 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
         val replace = mirror(rhs, self.asInstanceOf[Transformer]) // cast needed why?
         subst += (sym -> replace)
       } else {
-				printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
+        printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
         // what to do? bail out? lookup def and then transform???
       }
   }
@@ -45,16 +45,16 @@ trait WorklistTransformer extends ForwardTransformer { // need backward version,
       nextSubst = nextSubst + (x.asInstanceOf[Sym[A]] -> (() => y))
     }
   }
-	def isDone = nextSubst.isEmpty
+  def isDone = nextSubst.isEmpty
   def runOnce[A:Manifest](s: Block[A]): Block[A] = {
     subst = Map.empty
     curSubst = nextSubst
     nextSubst = Map.empty
     transformBlock(s)
   }
-	def run[A:Manifest](s: Block[A]): Block[A] = {
-		if (isDone) s else run(runOnce(s))
-	}
+  def run[A:Manifest](s: Block[A]): Block[A] = {
+    if (isDone) s else run(runOnce(s))
+  }
   override def traverseStm(stm: Stm): Unit = stm match {
     case TP(sym, rhs) => 
       curSubst.get(sym) match {

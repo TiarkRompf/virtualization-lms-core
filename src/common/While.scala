@@ -105,7 +105,7 @@ trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
 
 
 trait ScalaGenWhileOptSpeculative extends ScalaGenWhile with ScalaGenPreviousIterationDummy {
-	val IR: WhileExpOptSpeculative
+  val IR: WhileExpOptSpeculative
 }
 
 

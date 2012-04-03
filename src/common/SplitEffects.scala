@@ -9,14 +9,14 @@ import scala.virtualization.lms.internal.{GenericNestedCodegen, GenericFatCodege
 
 trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIterationDummyExp { this: BooleanOpsExp with EqualExpBridge =>
   
-	// split effectful statements: one piece for each affected mutable object.
-	// this provides for simple dce: pieces not referenced are eliminated.
-	// code generation will recombine pieces of previously split statements.
+  // split effectful statements: one piece for each affected mutable object.
+  // this provides for simple dce: pieces not referenced are eliminated.
+  // code generation will recombine pieces of previously split statements.
 
   // TBD: should this be in a central method such as reflectEffectInternal ?
   // or rather individually in ifThenElse and whileDo ?
   
-	// TODO: SimpleLoops
+  // TODO: SimpleLoops
 
   override def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary): Exp[A] = x match {
     case IfThenElse(cond, thenp, elsep) =>
@@ -34,42 +34,42 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
       val affected = (u.mayRead ++ u.mayWrite).distinct
 
       for (s <- affected) {
-		    val cc = projectPureWithB(cond,List(s))
-		    val bb = projectPureWithB(body,List(s))
+        val cc = projectPureWithB(cond,List(s))
+        val bb = projectPureWithB(body,List(s))
   
-		    super.reflectEffectInternal(While(cc,bb), projectS(u,List(s)))
+        super.reflectEffectInternal(While(cc,bb), projectS(u,List(s)))
     
-		    // tie recursive knot!
+        // tie recursive knot!
 
-		    // find PreviousIteration nodes that write to s
-		    // for each one, add a reflect dep to the loop
+        // find PreviousIteration nodes that write to s
+        // for each one, add a reflect dep to the loop
     
-		    val TP(loopSym, Reflect(While(_,_),_,_)) = globalDefs.last
+        val TP(loopSym, Reflect(While(_,_),_,_)) = globalDefs.last
     
-		    def xtract(b:Block[Any]) = b match { 
-		      case Block(Def(Reify(_,_,es: List[Sym[Any]]))) => 
-		        es map (e=>findDefinition(e)) collect { 
-		          case Some(t@TP(s1,Reflect(PreviousIteration(_),u,_))) if mayWrite(u,List(s)) => t }}
+        def xtract(b:Block[Any]) = b match { 
+          case Block(Def(Reify(_,_,es: List[Sym[Any]]))) => 
+            es map (e=>findDefinition(e)) collect { 
+              case Some(t@TP(s1,Reflect(PreviousIteration(_),u,_))) if mayWrite(u,List(s)) => t }}
     
-		    val pvs = xtract(cc) ++ xtract(bb)
-		    val pvss = (pvs map (_.sym))
+        val pvs = xtract(cc) ++ xtract(bb)
+        val pvss = (pvs map (_.sym))
 
-		    //println("pvs: "+ s + " // " + pvss + " // " + pvs)
+        //println("pvs: "+ s + " // " + pvss + " // " + pvs)
     
-		    def xform(x:Stm) = x match { 
-		      case TP(s1,Reflect(PreviousIteration(k),u,es)) if (pvss contains s1) => 
-		      //println("replace " + s1)
-		      	TP(s1, Reflect(PreviousIteration(k),u,es:+loopSym))
-		      case t => t
-		    }
-		    globalDefs = globalDefs map xform
-		    localDefs = localDefs map xform   
-		  }
+        def xform(x:Stm) = x match { 
+          case TP(s1,Reflect(PreviousIteration(k),u,es)) if (pvss contains s1) => 
+          //println("replace " + s1)
+            TP(s1, Reflect(PreviousIteration(k),u,es:+loopSym))
+          case t => t
+        }
+        globalDefs = globalDefs map xform
+        localDefs = localDefs map xform   
+      }
 
       if (u.maySimple)
         super.reflectEffectInternal(While(projectPureWithSimpleB(cond),projectSimpleB(body)), projectSimpleS(u))
 
-			//no pure result!
+      //no pure result!
       //super.reflectEffectInternal(While(projectPureB(cond),projectPureB(body)), projectPureS(u)).asInstanceOf[Exp[A]]
       Const(()).asInstanceOf[Exp[A]]
 
@@ -222,7 +222,7 @@ trait BaseGenSplitEffects extends BaseGenIfThenElseFat with GenericFatCodegen {
           ifs.flatMap(_.rhs.asInstanceOf[SimpleFatIfThenElse].elsep)))
       case ((c, "while"), wls: List[TTP]) => 
         val x = SimpleFatWhile(wls.map(_.rhs.asInstanceOf[SimpleFatWhile].cond).apply(0), //FIXME: merge cond!!!
-					wls.flatMap(_.rhs.asInstanceOf[SimpleFatWhile].body))
+          wls.flatMap(_.rhs.asInstanceOf[SimpleFatWhile].body))
         x.extradeps = wls.flatMap(_.rhs.asInstanceOf[SimpleFatWhile].extradeps) diff wls.flatMap(_.lhs)
         TTP(wls.flatMap(_.lhs), wls.flatMap(_.mhs), // TODO: merge cond blocks!
         x)

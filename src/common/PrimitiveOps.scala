@@ -182,7 +182,7 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       //case ObjDoubleParseDouble(s) => emitValDef(sym, "atof(" + quote(s) + ")")
-    	case ObjDoublePositiveInfinity() => emitValDef(sym, "DBL_MAX")
+      case ObjDoublePositiveInfinity() => emitValDef(sym, "DBL_MAX")
       //case ObjDoubleMinValue() => emitValDef(sym, "scala.Double.MinValue")
       case DoubleFloatValue(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       //case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")

@@ -37,19 +37,19 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
         blocks: [1]
   
         1: 
-          1	NEW REF(class IntRef)
-          1	DUP(REF(class IntRef))
-          1	CONSTANT(Constant(0))
-          1	CALL_METHOD scala.runtime.IntRef.<init> (static-instance)
-          1	STORE_LOCAL(variable x$1)
-          1	SCOPE_ENTER variable x$1
-          1	SCOPE_ENTER value f
-          undef	LOAD_LOCAL(variable x$1)
-          1	CONSTANT(Constant(7))
-          1	STORE_FIELD variable elem (dynamic)
-          1	SCOPE_EXIT variable x$1
-          1	SCOPE_EXIT value f
-          1	RETURN(UNIT)
+          1 NEW REF(class IntRef)
+          1 DUP(REF(class IntRef))
+          1 CONSTANT(Constant(0))
+          1 CALL_METHOD scala.runtime.IntRef.<init> (static-instance)
+          1 STORE_LOCAL(variable x$1)
+          1 SCOPE_ENTER variable x$1
+          1 SCOPE_ENTER value f
+          undef LOAD_LOCAL(variable x$1)
+          1 CONSTANT(Constant(7))
+          1 STORE_FIELD variable elem (dynamic)
+          1 SCOPE_EXIT variable x$1
+          1 SCOPE_EXIT value f
+          1 RETURN(UNIT)
     
         }
         

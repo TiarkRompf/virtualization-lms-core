@@ -222,7 +222,7 @@ trait OpenCLCodegen extends GPUCodegen {
     currDim = 0
     xDimList.clear
     yDimList.clear
-	  multDimInputs.clear
+    multDimInputs.clear
 
     helperFuncString.clear
     MetaData.init
@@ -464,7 +464,7 @@ trait OpenCLCodegen extends GPUCodegen {
 
     tabWidth -= 1
       
-	  //if(MetaData.gpuOutput == "") { throw new GenerationFailedException("OpenCLGen:No output for GPU")}
+    //if(MetaData.gpuOutput == "") { throw new GenerationFailedException("OpenCLGen:No output for GPU")}
 
     // Emit input copy helper functions for object type inputs
     for(v <- vals if isObjectType(v.tp)) {
@@ -505,7 +505,7 @@ trait OpenCLCodegen extends GPUCodegen {
   def emitCopyInputHtoD(sym: Sym[Any], ksyms: List[Sym[Any]], contents: String) : String = {
     val out = new StringBuilder
     if(isObjectType(sym.tp)) {
-	    helperFuncIdx += 1
+      helperFuncIdx += 1
       out.append("%s *copyInputHtoD_%s_%s_%s(%s) {\n".format(remap(sym.tp), ksyms.map(quote(_)).mkString(""), quote(sym),helperFuncIdx, "JNIEnv *env , jobject obj"))
       //out.append(copyInputHtoD(sym))
       out.append(contents)
@@ -520,7 +520,7 @@ trait OpenCLCodegen extends GPUCodegen {
   def emitCopyMutableInputDtoH(sym: Sym[Any], ksyms: List[Sym[Any]], contents: String): String = {
     val out = new StringBuilder
     if(isObjectType(sym.tp)) {
-	  helperFuncIdx += 1
+    helperFuncIdx += 1
       out.append("void copyMutableInputDtoH_%s_%s_%s(%s) {\n".format(ksyms.map(quote(_)).mkString(""), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.tp)+" *"+quote(sym)+"_ptr"))
       out.append("%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
       //out.append(copyMutableInputDtoH(sym))
@@ -533,43 +533,43 @@ trait OpenCLCodegen extends GPUCodegen {
   }
 
   def emitAllocOutput(sym: Sym[Any], contents: String, args: List[Sym[Any]]): String = {
-	  val out = new StringBuilder
-	  if(isObjectType(sym.tp)) {
-	  	helperFuncIdx += 1
-		val argStr = args.map("\""+quote(_)+"\"").mkString(",")
-		val paramStr = args.map(ele =>
-		  if(isObjectType(ele.tp)) remap(ele.tp) + " *" + quote(ele) + "_ptr"
-		  else remap(ele.tp) + " " + quote(ele)
-		).mkString(",")
+    val out = new StringBuilder
+    if(isObjectType(sym.tp)) {
+      helperFuncIdx += 1
+    val argStr = args.map("\""+quote(_)+"\"").mkString(",")
+    val paramStr = args.map(ele =>
+      if(isObjectType(ele.tp)) remap(ele.tp) + " *" + quote(ele) + "_ptr"
+      else remap(ele.tp) + " " + quote(ele)
+    ).mkString(",")
     val derefParams = args.map(ele=>
-   	  if(isObjectType(ele.tp)) "\t%s %s = *(%s_ptr);\n".format(remap(ele.tp),quote(ele),quote(ele))
+      if(isObjectType(ele.tp)) "\t%s %s = *(%s_ptr);\n".format(remap(ele.tp),quote(ele),quote(ele))
       else ""
     ).mkString("")
 
     MetaData.gpuOutput.add("{\"%s\":[\"%s\",\"allocFunc_%s\",[%s],".format(quote(sym),remap(sym.tp),helperFuncIdx,argStr))
     out.append("%s *allocFunc_%s(%s) {\n".format(remap(sym.tp), helperFuncIdx, paramStr))
-		out.append(derefParams+"\n")
+    out.append(derefParams+"\n")
     out.append(contents)
     out.append("}\n")
     out.toString
-	  }
-	  else ""
+    }
+    else ""
   }
 
   def emitCopyOutputDtoH(sym: Sym[Any], ksym: Sym[Any], contents: String): String = {
-	  val out = new StringBuilder
-	  if(isObjectType(sym.tp)) {
-	  	helperFuncIdx += 1
+    val out = new StringBuilder
+    if(isObjectType(sym.tp)) {
+      helperFuncIdx += 1
       val str = MetaData.gpuOutput.get(MetaData.gpuOutput.size-1)
       MetaData.gpuOutput.remove(MetaData.gpuOutput.size-1)
       MetaData.gpuOutput.add(str+"\"copyOutputDtoH_%s\",{%s}]}".format(helperFuncIdx,unpackObject(sym).map(f => "\"%s\":\"%s\"".format(f._1,remap(f._2)).replaceAll("__global ","")).mkString(",")))
       out.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.tp)+" *"+quote(sym)+"_ptr"))
-		  out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
+      out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
       out.append(contents)
       out.append("}\n")
       out.toString
-	  }
-	  else ""
+    }
+    else ""
   }
 
   /* emitAllocFunc method emits code for allocating the output memory of a kernel,
@@ -587,9 +587,9 @@ trait OpenCLCodegen extends GPUCodegen {
     // Get free variables
     val inputs = getFreeVarBlock(allocFunc,Nil)
     //val paramStr = inputs.map(ele=>
-	//		if(isObjectType(ele.tp)) remap(ele.tp) + " *_" + quote(ele)
-	//		else remap(ele.tp) + " " + quote(ele)
-	//  ).mkString(",")
+  //    if(isObjectType(ele.tp)) remap(ele.tp) + " *_" + quote(ele)
+  //    else remap(ele.tp) + " " + quote(ele)
+  //  ).mkString(",")
 
     /* Object type inputs of helper functions are pointers, but OpenCL generators assume the actual objects,
            therefore need to dereference the objects before emitting the actual block contents. */
@@ -606,7 +606,7 @@ trait OpenCLCodegen extends GPUCodegen {
     //tempString.append("}\n")
 
     // Generate allocation helper function
-	//tempString.append(derefParams)
+  //tempString.append(derefParams)
     emitBlock(allocFunc)(tempStream)
     tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc))))
     val allocOutputStr = emitAllocOutput(sym, tempString.toString, inputs)
@@ -618,7 +618,7 @@ trait OpenCLCodegen extends GPUCodegen {
 
     // Generate copy (D->H) helper function
     tempString2.append(copyOutputDtoH(sym))
-	val copyOutputStr = emitCopyOutputDtoH(sym, null, tempString2.toString)
+  val copyOutputStr = emitCopyOutputDtoH(sym, null, tempString2.toString)
 
     // Register Metadata
     //TODO: How can I get rid of __global from the result of remap??
@@ -627,8 +627,8 @@ trait OpenCLCodegen extends GPUCodegen {
 
     // Write to helper function string
     //helperFuncString.append(tempString)
-	helperFuncString.append(allocOutputStr)
-	helperFuncString.append(copyOutputStr)
+  helperFuncString.append(allocOutputStr)
+  helperFuncString.append(copyOutputStr)
   }
 
 
@@ -663,18 +663,18 @@ trait OpenCLCodegen extends GPUCodegen {
 
     val inputs = (gpuOutputs ::: gpuInputs ::: gpuTemps)
     val paramStr = inputs.map(ele=>
-			if(isObjectType(ele.tp)) remap(ele.tp) + " *" + quote(ele)
-			else remap(ele.tp) + " " + quote(ele)
-	  ).mkString(",")
+      if(isObjectType(ele.tp)) remap(ele.tp) + " *" + quote(ele)
+      else remap(ele.tp) + " " + quote(ele)
+    ).mkString(",")
     val argStr = inputs.map("\""+quote(_)+"\"").mkString(",")
     val argInputStr = inputs.map(quote(_)).mkString(",")
 
     //TODO: Restore safety check for the dimension sizes
     out.append("int gpuBlockSizeX_%s_%s(%s) {\n".format(syms.map(quote(_)).mkString(""),helperFuncIdx,paramStr))
-	  if(xDimList.length==0)
+    if(xDimList.length==0)
       out.append("\tint X = 1;\n")
-	  else
-	    out.append("\tint X = %s;\n".format(xDimList(xDimList.length-1)))
+    else
+      out.append("\tint X = %s;\n".format(xDimList(xDimList.length-1)))
     out.append("\tif(X < %s) return X;\n".format(MAX_THREADS_PER_BLOCK))
     out.append("\telse return %s;\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
@@ -691,16 +691,16 @@ trait OpenCLCodegen extends GPUCodegen {
     MetaData.gpuBlockSizeZ = "[\"gpuBlockSizeZ_%s_%s\",[%s]]".format(syms.map(quote(_)).mkString(""),helperFuncIdx,argStr)
 
     out.append("int gpuDimSizeX_%s_%s(%s) {\n".format(syms.map(quote(_)).mkString(""),helperFuncIdx,paramStr))
-	  if(xDimList.length==0)
-    	out.append("\tint X = 1;\n")
-	  else
-    	out.append("\tint X = %s;\n".format(xDimList(xDimList.length-1)))
+    if(xDimList.length==0)
+      out.append("\tint X = 1;\n")
+    else
+      out.append("\tint X = %s;\n".format(xDimList(xDimList.length-1)))
     out.append("\treturn 1+((X-1)/%s);\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
     MetaData.gpuDimSizeX = "[\"gpuDimSizeX_%s_%s\",[%s]]".format(syms.map(quote(_)).mkString(""),helperFuncIdx,argStr)
 
     out.append("int gpuDimSizeY_%s_%s(%s) {\n".format(syms.map(quote(_)).mkString(""),helperFuncIdx,paramStr))
-	  out.append("\treturn 1;\n")
+    out.append("\treturn 1;\n")
     out.append("}\n")
     MetaData.gpuDimSizeY = "[\"gpuDimSizeY_%s_%s\",[%s]]".format(syms.map(quote(_)).mkString(""),helperFuncIdx,argStr)
     out.toString

@@ -459,18 +459,18 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
           //println("pInT " + pInT)
           //println("pOutT " + pOutT)
 
-  	      // prune Wloops (some might be no longer necessary)
-  	      Wloops = pOutT map {
-  	        case TTP(lhs, mhs, SimpleFatLoop(s, x, rhs)) =>
-  	          val ex = lhs map (s => currentScope exists (_.lhs contains s))
-  	          def select[A](a: List[A], b: List[Boolean]) = (a zip b) collect { case (w, true) => w }
-  	          TTP(select(lhs, ex), select(mhs, ex), SimpleFatLoop(s, x, select(rhs, ex)))
-  	      }
+          // prune Wloops (some might be no longer necessary)
+          Wloops = pOutT map {
+            case TTP(lhs, mhs, SimpleFatLoop(s, x, rhs)) =>
+              val ex = lhs map (s => currentScope exists (_.lhs contains s))
+              def select[A](a: List[A], b: List[Boolean]) = (a zip b) collect { case (w, true) => w }
+              TTP(select(lhs, ex), select(mhs, ex), SimpleFatLoop(s, x, select(rhs, ex)))
+          }
 
           currentScope = (currentScope diff pInT) ++ Wloops
 
-  	      // schedule
-  	      currentScope = getSchedule(currentScope)(result) // get the order right
+          // schedule
+          currentScope = getSchedule(currentScope)(result) // get the order right
 
 
           /*println("<---2")
@@ -479,7 +479,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
 
           printlog("try once more ...")
 
-	        return fuseTopLevelLoops(currentScope)(result)
+          return fuseTopLevelLoops(currentScope)(result)
         }
         printlog("no changes, we're done")
     }
@@ -551,8 +551,8 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
         val WloopSyms = Wloops map (_.lhs)
         val WloopVars = Wloops map WgetLoopVar
 
-		println("Wloops " + Wloops)
-		
+    println("Wloops " + Wloops)
+    
         // find negative dependencies (those that block fusion)
         
         // might be costly: resolve and traverse complete input deps for each loop body

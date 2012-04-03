@@ -108,7 +108,7 @@ trait NestCondProg5 extends Arith with Functions with IfThenElse with Print {
 
 trait NestCondProg6 extends Arith with Functions with IfThenElse with Print {
   
-	// FIXME: this one doesn't work yet!!!
+  // FIXME: this one doesn't work yet!!!
 
   def test(x: Rep[Unit]) = {
     val z = unit(7.0) + unit(9.0) // should move into the conditional (but isn't currently)

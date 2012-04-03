@@ -78,7 +78,7 @@ trait VectorExp extends VectorOps with EffectExp {
   }
 
   override def containSyms(e: Any): List[Sym[Any]] = e match {
-		case VectorLiteral(as) => syms(as)
+    case VectorLiteral(as) => syms(as)
     case _ => super.containSyms(e)
   }
 

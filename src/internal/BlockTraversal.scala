@@ -63,18 +63,18 @@ trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
   
   // ---- bound and free vars
 
-	def boundInScope(x: List[Exp[Any]]): List[Sym[Any]] = {
-		(x.flatMap(syms):::innerScope.flatMap(t => t.lhs:::boundSyms(t.rhs))).distinct
-	}
-	
-	def usedInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
-		(y.flatMap(syms):::innerScope.flatMap(t => syms(t.rhs))).distinct
-	}
-	
-	def readInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
-		(y.flatMap(syms):::innerScope.flatMap(t => readSyms(t.rhs))).distinct
-	}
-	
+  def boundInScope(x: List[Exp[Any]]): List[Sym[Any]] = {
+    (x.flatMap(syms):::innerScope.flatMap(t => t.lhs:::boundSyms(t.rhs))).distinct
+  }
+  
+  def usedInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
+    (y.flatMap(syms):::innerScope.flatMap(t => syms(t.rhs))).distinct
+  }
+  
+  def readInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
+    (y.flatMap(syms):::innerScope.flatMap(t => readSyms(t.rhs))).distinct
+  }
+  
   // bound/used/free variables in current scope, with input vars x (bound!) and result y (used!)
   def boundAndUsedInScope(x: List[Exp[Any]], y: List[Exp[Any]]): (List[Sym[Any]], List[Sym[Any]]) = {
     (boundInScope(x), usedInScope(y))

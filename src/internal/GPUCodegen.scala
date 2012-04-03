@@ -332,12 +332,12 @@ trait GPUCodegen extends CLikeCodegen {
     //println("alloc for " + quote(sym))
     val out = new StringBuilder
     if(isObjectType(sym.tp)) {
-    	helperFuncIdx += 1
+      helperFuncIdx += 1
       val paramStr = args.map(ele =>
-  			if(isObjectType(ele.tp)) remap(ele.tp) + " *" + quote(ele) + "_ptr"
-  			else remap(ele.tp) + " " + quote(ele)
+        if(isObjectType(ele.tp)) remap(ele.tp) + " *" + quote(ele) + "_ptr"
+        else remap(ele.tp) + " " + quote(ele)
       ).mkString(",")
-    	val derefParams = args.map(ele=>
+      val derefParams = args.map(ele=>
         if(isObjectType(ele.tp)) "\t%s %s = *(%s_ptr);\n".format(remap(ele.tp),quote(ele),quote(ele))
         else ""
       ).mkString("")
@@ -357,7 +357,7 @@ trait GPUCodegen extends CLikeCodegen {
       }
 
       out.append("%s *allocFunc_%s(%s) {\n".format(remap(sym.tp), helperFuncIdx, paramStr))
-  	  out.append(derefParams+"\n")
+      out.append(derefParams+"\n")
       out.append(contents)
       out.append("}\n")
       out.toString
@@ -368,7 +368,7 @@ trait GPUCodegen extends CLikeCodegen {
   def emitCopyOutputDtoH(sym: Sym[Any], ksym: List[Sym[Any]], contents: String): String = {
     val out = new StringBuilder
     if(isObjectType(sym.tp)) {
-    	helperFuncIdx += 1
+      helperFuncIdx += 1
       if (getKernelOutputs contains sym) {
         val tr = metaData.outputs.getOrElse(sym,new TransferFunc)
         tr.funcDtoH = "copyOutputDtoH_%s".format(helperFuncIdx)
@@ -381,7 +381,7 @@ trait GPUCodegen extends CLikeCodegen {
       }
 
       out.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.tp)+" *"+quote(sym)+"_ptr"))
-  	  out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
+      out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
       out.append(contents)
       out.append("}\n")
       out.toString
@@ -482,8 +482,8 @@ trait GPUCodegen extends CLikeCodegen {
 
     val inputs = (getKernelOutputs++getKernelInputs++getKernelTemps).filterNot(e=>isVoidType(e.tp))
     val paramStr = inputs.map(ele=>
-  		if(isObjectType(ele.tp)) remap(ele.tp) + " *" + quote(ele)
-  		else remap(ele.tp) + " " + quote(ele)
+      if(isObjectType(ele.tp)) remap(ele.tp) + " *" + quote(ele)
+      else remap(ele.tp) + " " + quote(ele)
     ).mkString(",")
     val argStr = inputs.map("\""+quote(_)+"\"").mkString(",")
     val argInputStr = inputs.map(quote(_)).mkString(",")
@@ -511,9 +511,9 @@ trait GPUCodegen extends CLikeCodegen {
 
     out.append("int gpuDimSizeX_%s_%s(%s) {\n".format(quote(sym),helperFuncIdx,paramStr))
     if(xDimList.length==0)
-    	out.append("\tint X = 1;\n")
+      out.append("\tint X = 1;\n")
     else
-    	out.append("\tint X = %s;\n".format(xDimList(xDimList.length-1)))
+      out.append("\tint X = %s;\n".format(xDimList(xDimList.length-1)))
     out.append("\treturn 1+((X-1)/%s);\n".format(MAX_THREADS_PER_BLOCK))
     out.append("}\n")
     metaData.sizeFuncs.put("gpuDimSizeX",new SizeFunc("gpuDimSizeX_%s_%s".format(quote(sym),helperFuncIdx),inputs))

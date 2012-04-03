@@ -289,20 +289,20 @@ trait Effects extends Expressions with Blocks with Utils {
       val c = b.costly  // costly(Foo(a)) would simplify to Cheap(a), 
                         // but this ends up as Reflect(Costly(Reflect(Foo(a)))) instead of Reflect(Cheap(a))
     
-		of course this is unsafe in general but there might be cases that are definitely save.
+    of course this is unsafe in general but there might be cases that are definitely save.
   */
 
   protected override implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
 /*
     are we depending on a variable or mutable object? then we need to be serialized -> effect
 
-		the call chain goes like this:
-		
-			toAtom
-			reflectEffect(Pure()) 		 // figure out dependencies on mutable objects
-			reflectEffectInternal(u)	 // extended summary Pure() -> u
-				super.toAtom 						 // if summary is still pure
-				createReflectDefinition  // if summary is not pure
+    the call chain goes like this:
+    
+      toAtom
+      reflectEffect(Pure())      // figure out dependencies on mutable objects
+      reflectEffectInternal(u)   // extended summary Pure() -> u
+        super.toAtom             // if summary is still pure
+        createReflectDefinition  // if summary is not pure
 */
     reflectEffect(d, Pure())
   }
@@ -428,7 +428,7 @@ trait Effects extends Expressions with Blocks with Utils {
       val write = u.mayWrite
 
       val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
-			val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
+      val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
       val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || write.contains(e) }
       val simpleDeps = if (!u.maySimple) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.maySimple }
       val globalDeps = scope filter { case e@Def(Reflect(_, u, _)) => u.mayGlobal }

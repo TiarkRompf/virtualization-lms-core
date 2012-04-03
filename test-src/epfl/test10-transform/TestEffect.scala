@@ -46,7 +46,7 @@ import scala.reflect.SourceContext
 // implementation (DONE):
 //    ensure anti-deps: mutated symbols must be dead after the VectorUpdate stm
 //    add fattening: fuse VectorUpdate and those Mutate nodes that aren't DCEd
-//			is this really necessary? it seems like 
+//      is this really necessary? it seems like 
 
 
 
@@ -188,7 +188,7 @@ class TestEffects extends FileDiffSuite {
         override def fattenAll(e: List[Stm]): List[Stm] = {
           println("**fatten "+e)
           // group all Mutate helper nodes together with the mutation
-					// TBD: is this necessary (if not, desirable) ?
+          // TBD: is this necessary (if not, desirable) ?
           val m = e collect { case e@TP(s, Mutate(a,b)) => e } 
           val mg = m groupBy { case e@TP(s, Mutate(a,b)) => b } 
           

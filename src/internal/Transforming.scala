@@ -48,9 +48,9 @@ trait Transforming extends Expressions with Blocks { self =>
     }
   }
 
-	/*object IdentityTransformer extends Transformer {
-		def apply[A](x: Exp[A]) = x
-	}*/
+  /*object IdentityTransformer extends Transformer {
+    def apply[A](x: Exp[A]) = x
+  }*/
 
   // FIXME: mirroring for effects!
 
