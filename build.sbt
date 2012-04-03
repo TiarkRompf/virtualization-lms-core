@@ -10,7 +10,7 @@ resolvers += dropboxScalaTestRepo
 
 scalaVersion := virtScala
 
-scalaBinaryVersion := virtScala // necessary??
+//scalaBinaryVersion := virtScala // necessary??
 
 scalaSource in Compile <<= baseDirectory(_ / "src")
 
