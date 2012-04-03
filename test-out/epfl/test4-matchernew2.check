@@ -1,0 +1,116 @@
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef1$$anonfun$1
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef1$$anonfun$1
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef1$$anonfun$1
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class MatchG extends ((scala.collection.immutable.List[Char])=>(scala.virtualization.lms.epfl.test4.DfaState)) {
+def apply(x0:scala.collection.immutable.List[Char]): scala.virtualization.lms.epfl.test4.DfaState = {
+var x1 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.gTrans], scala.virtualization.lms.epfl.test4.DfaState]]
+var x32 = null.asInstanceOf[scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.gTrans]]
+var x31 = null.asInstanceOf[scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.gTrans]]
+var x29 = null.asInstanceOf[scala.Function1[Char, scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.gTrans]]]
+x1 = {x2: (scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.gTrans]) => 
+val x3 = x2.flatMap(_.e)
+val x4 = {x5: (Char) => 
+val x6 = x2.flatMap(_.f.apply(x5))
+val x7 = x1(x6)
+x7
+}
+val x8 = scala.virtualization.lms.epfl.test4.dfaTrans(x4)
+val x9 = scala.virtualization.lms.epfl.test4.dfaFlagged(x3, x8)
+x9
+}
+x29 = {x30: (Char) => 
+x32
+}
+x31 = List(scala.virtualization.lms.epfl.test4.gTrans(List(),x29))
+val x21 = List()
+val x19 = {x20: (Char) => 
+x21
+}
+val x22 = List(scala.virtualization.lms.epfl.test4.gTrans(List(1),x19))
+val x16 = {x17: (Char) => 
+val x18 = x17 == 'B'
+val x23 = if (x18) {
+x22
+} else {
+x21
+}
+x23
+}
+val x24 = List(scala.virtualization.lms.epfl.test4.gTrans(List(),x16))
+val x10 = {x11: (Char) => 
+val x12 = x11 == 'A'
+val x27 = if (x12) {
+val x13 = {x14: (Char) => 
+val x15 = x14 == x11
+val x25 = if (x15) {
+x24
+} else {
+x21
+}
+x25
+}
+val x26 = List(scala.virtualization.lms.epfl.test4.gTrans(List(),x13))
+x26
+} else {
+x21
+}
+x27
+}
+val x28 = List(scala.virtualization.lms.epfl.test4.gTrans(List(),x10))
+x32 = x28 ::: x31
+val x33 = x1(x32)
+x33
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef1$$anonfun$1
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef1$$anonfun$1
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef1$$anonfun$1
+compilation: ok
+idx:   0
+found: false
+char:  X
+idx:   1
+found: false
+char:  A
+idx:   2
+found: false
+char:  B
+idx:   3
+found: false
+char:  Z
+idx:   4
+found: false
+char:  A
+idx:   5
+found: false
+char:  A
+idx:   6
+found: false
+char:  B
+idx:   7
+found: true
+char:  W
+idx:   8
+found: false
+char:  A
+idx:   9
+found: false
+char:  A
+idx:   10
+found: false
+char:  A
+idx:   11
+found: false
+char:  A
+idx:   12
+found: false
+char:  B
+idx:   13
+found: true
+char:  Q

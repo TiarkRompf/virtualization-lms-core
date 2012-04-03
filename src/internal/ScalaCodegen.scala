@@ -97,6 +97,24 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   val IR: Expressions with Effects
   import IR._
   
+  // emit forward decls for recursive vals
+  override def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
+    recursive foreach emitForwardDef
+    super.traverseStmsInBlock(stms)
+  }
+  
+  def emitForwardDef(sym: Sym[Any]): Unit = {
+    stream.println("var " + quote(sym) + /*": " + remap(sym.tp) +*/ " = null.asInstanceOf[" + remap(sym.tp) + "]")
+  }
+  
+  // special case for recursive vals
+  override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
+    if (recursive contains sym)
+      stream.println(quote(sym) + " = " + rhs) // we have a forward declaration above.
+    else
+      super.emitValDef(sym,rhs)
+  }
+  
 }
 
 

@@ -219,11 +219,12 @@ trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen {
       // assume body will reflect, too...
       printdbg("-- fatten effectful if/then/else " + e)
       val e2 = SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep))
-      //e2.extradeps = es //HACK
+      e2.extradeps = es //HACK
       TTP(List(sym), List(p), e2)
     case _ => super.fatten(e)
   }
 }
+
 
 trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
   import IR._

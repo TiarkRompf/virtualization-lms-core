@@ -3,13 +3,19 @@
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
-val x15 = while ({true}) {
-val x13 = println("booooring!")
-x13
+while ({ // List(Sym(18))
+// dummy placeholder for previous iteration: List(Sym(11)) = Sym(3) / List()
+false
+}) {
+// dummy placeholder for previous iteration: List(Sym(13)) = Sym(2) / List()
+val x14 = println("booooring!")
 }
-()
+val x19 = println("done")
+x19
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
+compilation: ok
+done

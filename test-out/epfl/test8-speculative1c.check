@@ -1,5 +1,3 @@
--- fatten effectful if/then/else TP(Sym(10),Reflect(IfThenElse(Sym(2),Block(Sym(7)),Block(Sym(9))),Summary(true,false,false,false,false,List(),List(),List(),List()),List()))
--- fatten effectful if/then/else TP(Sym(8),Reflect(IfThenElse(Sym(2),Block(Sym(4)),Block(Sym(7))),Summary(false,false,false,false,false,List(Sym(1)),List(),List(Sym(1)),List()),List(Sym(1))))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -23,3 +21,6 @@ x13
 /*****************************************
   End of Generated Code                  
 *******************************************/
+compilation: ok
+no
+7

@@ -59,6 +59,7 @@ trait StructExp extends BaseExp {
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
     case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
+    case Field(struct, key, mf) => field(f(struct), key)(mf)
     case _ => super.mirror(e,f)
   }
 }
@@ -211,7 +212,7 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
       val combinedResult = super.ifThenElse(cond,u,v)
       
       val elemsNew = for (k <- elemsA.keySet) yield (k -> phi(cond,u,elemsA(k),v,elemsB(k))(combinedResult))
-      println("----- " + combinedResult + " / " + elemsNew)
+      //println("----- " + combinedResult + " / " + elemsNew)
       struct[T](tagA, elemsNew.toMap)
       
     case _ => super.ifThenElse(cond,a,b)
@@ -293,7 +294,7 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
       case t => List(fatten(t))
     } ++ orphans.map { case s: Sym[Unit] => fatphi(s).get } // be fail-safe here?
     
-    r.foreach(println)
+    //r.foreach(println)
     r
   }
 }

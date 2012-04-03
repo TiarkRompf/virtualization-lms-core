@@ -16,17 +16,13 @@ import scala.reflect.SourceContext
 
 /*
 
-  highest level: immutable Vectors, possible 
+  highest level: immutable Vectors 
   
   for loops, map and reduce
   
   mutable arrays, while loops
   
 */
-  
-
-
-
 
 
 // Vector API

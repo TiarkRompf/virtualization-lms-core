@@ -87,7 +87,7 @@ class TestStruct extends FileDiffSuite {
 
   trait Impl extends DSL with ComplexStructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
-    override val verbosity = 2
+    override val verbosity = 1
     val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
@@ -96,7 +96,7 @@ class TestStruct extends FileDiffSuite {
 
   trait ImplFused extends DSL with ComplexStructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp  { self => 
-    override val verbosity = 2
+    override val verbosity = 1
     val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self;

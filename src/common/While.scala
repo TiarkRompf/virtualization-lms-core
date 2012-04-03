@@ -39,6 +39,47 @@ trait WhileExp extends While with EffectExp {
 }
 
 
+trait WhileExpOptSpeculative extends WhileExp with PreviousIterationDummyExp {
+  
+  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
+
+    val pc = fresh[Nothing]
+    val pb = fresh[Nothing]
+
+    val c = reifyEffectsHere(cond)
+    val ce = summarizeEffects(c)
+    val a = reifyEffectsHere { reflectPreviousDummy(pc,ce); body }
+    val ae = summarizeEffects(a)
+    
+    val c1 = reifyEffectsHere { reflectPreviousDummy(pb,ae); cond }
+    val ce1 = summarizeEffects(c1)
+    val a1 = reifyEffectsHere { reflectPreviousDummy(pc,ce1); body }
+    val ae1 = summarizeEffects(a1)
+
+    val c2 = reifyEffectsHere { reflectPreviousDummy(pb,ae1/*.lastIteration*/); cond }
+    val ce2 = summarizeEffects(c2)
+    val a2 = reifyEffectsHere { reflectPreviousDummy(pc,ce2); body }
+    val ae2 = summarizeEffects(a2)
+  
+    assert(ae2 == ae1, "not converged: " + ae1 + " != " + ae2)
+      
+    val cr = c2
+    val ar = a2
+    val cer = ce2
+    val aer = ae2
+    
+/*  
+    val c = reifyEffects(cond)
+    val a = reifyEffects(body)
+    val ce = summarizeEffects(c)
+    val ae = summarizeEffects(a)
+*/
+    reflectEffect(While(cr, ar), cer andThen ((aer andThen cer).star))
+  }
+
+}
+
+
 trait BaseGenWhile extends GenericNestedCodegen {
   val IR: WhileExp
   import IR._
@@ -61,6 +102,13 @@ trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
     case _ => super.emitNode(sym, rhs)
   }
 }
+
+
+trait ScalaGenWhileOptSpeculative extends ScalaGenWhile with ScalaGenPreviousIterationDummy {
+	val IR: WhileExpOptSpeculative
+}
+
+
 
 
 trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {

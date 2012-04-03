@@ -1,5 +1,5 @@
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
 TP(Sym(3),Equal(Sym(2),Const(0)))
 TP(Sym(4),Lambda(<function1>))
 TP(Sym(5),Minus(Sym(2),Const(1.0)))

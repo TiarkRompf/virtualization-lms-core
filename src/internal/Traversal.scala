@@ -77,11 +77,75 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
     }
   }
   
+  // strong order for levelScope (as obtained by code motion), taking care of recursive dependencies.
+  def getStronglySortedSchedule2(scope: List[Stm], level: List[Stm], result: Any): (List[Stm], List[Sym[Any]]) = {
+    import util.GraphUtil
+    import scala.collection.{mutable,immutable}
+
+    def deps(st: List[Sym[Any]]): List[Stm] = 
+      scope.filter(d => (st intersect d.lhs).nonEmpty)
+    val fixed = new mutable.HashMap[Any,List[Sym[Any]]]
+    def allSyms(r: Any) = fixed.getOrElse(r, syms(r) ++ softSyms(r))
+
+
+    val inner = scope diff level // TODO: restrict to things referenced by functions (not ifs) ?
+
+    var recursive: List[Sym[Any]] = Nil
+
+    var xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result)), t => deps(allSyms(t.rhs)))    
+    xx.foreach { xs => 
+      if (xs.length > 1) {
+        printdbg("warning: recursive schedule for result " + result + ": " + xs)
+
+        // find things residing on top level
+        val fs = (xs intersect level) flatMap (_.lhs)
+
+        recursive = fs ::: recursive
+
+        // eliminate all outward dependencies
+        // CAVEAT: this *only* works for lambdas
+        // problematic if sym is used both in a lambda and an if branch (may lead to NPE) 
+        // TODO: restrict 'inner' to functions
+        // CAVEAT: even for lambdas, this works *only* if the initialization happens before the first call
+        // TODO: can we check that somehow? -- maybe insert a dep from the call
+        (inner intersect xs) foreach {
+          case stm if allSyms(stm.rhs) exists (fs contains _) => 
+            fixed(stm.rhs) = allSyms(stm.rhs) filterNot (fs contains _)
+            printdbg("fixing deps of " + stm.rhs + " to " + fixed(stm.rhs))
+          case _ =>
+        }
+        
+        // also remove direct inner deps (without inner stms): x1 = Lambda { x2 => Block(x3) }
+        (level intersect xs) foreach {
+          case stm if allSyms(blocks(stm.rhs)) exists (fs contains _) => 
+            fixed(stm.rhs) = allSyms(stm.rhs) filterNot (fs contains _)
+            printdbg("fixing deps of " + stm.rhs + " to " + fixed(stm.rhs))
+          case _ =>
+        }
+      }
+    }
+    xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result) ++ allSyms(recursive)), t => deps(allSyms(t.rhs)))
+    xx.foreach { xs => 
+      if (xs.length > 1) {
+        printerr("error: recursive schedule did not go away for result " + result + ": " + xs)
+      }
+    }
+    val xxf = xx.flatten.reverse
+    (xxf filter (level contains _), recursive)
+  }
+  
+  var recursive: List[Sym[Any]] = Nil // FIXME: should propagate differently
+  
   def focusExactScopeSubGraph[A](result: List[Exp[Any]])(body: List[Stm] => A): A = {
-    val availDefs = getStronglySortedSchedule(availableDefs)(result) // resolve anti-dependencies (may still be recursive -- not sure whether that's a problem)
+    val availDefs = availableDefs//getStronglySortedSchedule(availableDefs)(result) // resolve anti-dependencies (may still be recursive -- not sure whether that's a problem)
     val levelScope = getExactScope(availDefs)(result)
-    withInnerScope(availDefs diff levelScope) { // delay everything that remains
-      body(levelScope)
+    val (levelScope2,recursive) = getStronglySortedSchedule2(availDefs,levelScope,result) // resolve anti-dependencies and recursive declarations
+    withInnerScope(availDefs diff levelScope2) { // delay everything that remains
+      val save = this.recursive
+      this.recursive = recursive
+      val r = body(levelScope2)
+      this.recursive = save
+      r
     }
   }
 

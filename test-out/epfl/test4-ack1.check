@@ -1,29 +1,24 @@
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Ack extends ((Double)=>(Double)) {
 def apply(x0:Double): Double = {
-val x1 = {x2: (Double) => 
-val x3 = x2 == 0
-val x22 = if (x3) {
-val x4 = {x5: (Double) => 
-val x6 = x5 == 0
-val x16 = if (x6) {
+var x4 = null.asInstanceOf[scala.Function1[Double, Double]]
+var x1 = null.asInstanceOf[scala.Function1[Double, Double]]
 val x7 = {x8: (Double) => 
 val x9 = x8+1.0
 x9
 }
 val x11 = x7(1.0)
+x4 = {x5: (Double) => 
+val x6 = x5 == 0
+val x16 = if (x6) {
 x11
 } else {
-val x7 = {x8: (Double) => 
-val x9 = x8+1.0
-x9
-}
 val x13 = x5-1.0
 val x14 = x4(x13)
 val x15 = x7(x14)
@@ -32,29 +27,11 @@ x15
 x16
 }
 val x17 = x4(1.0)
+x1 = {x2: (Double) => 
+val x3 = x2 == 0
+val x22 = if (x3) {
 x17
 } else {
-val x4 = {x5: (Double) => 
-val x6 = x5 == 0
-val x16 = if (x6) {
-val x7 = {x8: (Double) => 
-val x9 = x8+1.0
-x9
-}
-val x11 = x7(1.0)
-x11
-} else {
-val x7 = {x8: (Double) => 
-val x9 = x8+1.0
-x9
-}
-val x13 = x5-1.0
-val x14 = x4(x13)
-val x15 = x7(x14)
-x15
-}
-x16
-}
 val x19 = x2-1.0
 val x20 = x1(x19)
 val x21 = x4(x20)

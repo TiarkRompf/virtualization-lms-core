@@ -6,7 +6,7 @@ import common._
 import internal._
 
 
-// investigate backwards analysis
+// investigate backward analysis -- these are preliminary ideas ...
 //
 //  def foobar(x: Exp[Int]) = onBwdInfo { bw => ...  }
 //
@@ -110,6 +110,11 @@ trait TestDSL extends BaseExp with LiftAll {
   }
 
 
+  override def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
+		// remove previous definition and update in place. TODO: find a better way ...
+		globalDefs = globalDefs filterNot (_.lhs contains s)
+    super.createDefinition(s,d)
+  }
 
   def reflect[T](d: Def[T]): Exp[T] = {
     val sym = fresh[T](mtype(manifest[Any]))

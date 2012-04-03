@@ -3,24 +3,62 @@
 *******************************************/
 class Test extends ((Int)=>(Any)) {
 def apply(x0:Int): Any = {
+var x46 = null.asInstanceOf[Unit]
+var x50 = null.asInstanceOf[Unit]
 var x2: Double = 0.0
-val x37 = while ({val x25 = x2
-val x26 = x25 < 10.0
-x26}) {
-val x29 = println(7)
-val x30 = x2
-val x31 = println(x30)
-val x33 = x30+1.0
-x2 = x33
-val x35 = println(2)
-x35
+while ({ // List(Sym(46), Sym(50))
+// dummy placeholder for previous iteration: List(Sym(28), Sym(27)) = Sym(4) / List(Sym(2), Sym(46))
+val x29 = x2
+val x30 = x29 < 10.0
+x30
+}) {
+// dummy placeholder for previous iteration: List(Sym(33), Sym(32)) = Sym(3) / List(Sym(2), Sym(46))
+val x35 = x2
+val x34 = println(7)
+val x36 = println(x35)
+val x40 = println(2)
+val x38 = x35+1.0
+x2 = x38
 }
-val x38 = println(7)
-val x39 = x2
-val x40 = println(x39)
-x40
+val x51 = println(7)
+val x52 = x2
+val x53 = println(x52)
+x53
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
+compilation: ok
+7
+0.0
+2
+7
+1.0
+2
+7
+2.0
+2
+7
+3.0
+2
+7
+4.0
+2
+7
+5.0
+2
+7
+6.0
+2
+7
+7.0
+2
+7
+8.0
+2
+7
+9.0
+2
+7
+10.0

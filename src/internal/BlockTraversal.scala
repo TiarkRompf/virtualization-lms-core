@@ -109,8 +109,12 @@ trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
 
   def traverseBlockFocused[A](block: Block[A]): Unit = {
     focusExactScope(block) { levelScope =>
-      levelScope foreach traverseStm
+      traverseStmsInBlock(levelScope)
     }
+  }
+
+  def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
+    stms foreach traverseStm
   }
 
   def traverseStm(stm: Stm): Unit = { // override this to implement custom traversal

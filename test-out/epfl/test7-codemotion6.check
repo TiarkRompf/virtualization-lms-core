@@ -3,8 +3,8 @@
 *******************************************/
 class Test extends ((Unit)=>(scala.Function1[Boolean, Unit])) {
 def apply(x0:Unit): scala.Function1[Boolean, Unit] = {
-val x4 = if (true) {
 val x1 = 7.0+9.0
+val x4 = if (true) {
 val x2 = println(x1)
 x2
 } else {
@@ -20,3 +20,4 @@ x8
 /*****************************************
   End of Generated Code                  
 *******************************************/
+// NOTE: generated code is not ideal yet (x1=7+9 should be moved inside conditional). see source for discussion.

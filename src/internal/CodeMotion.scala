@@ -39,7 +39,7 @@ trait CodeMotion extends Scheduling {
     // TODO: use (shallow|hot)* hot any* instead
     
     val loopsNotInIfs = e2 filterNot (e3 contains _)    // (shallow|hot)* hot (shallow|hot)*   <---- a hot ref on all paths!
-    val reachFromTopLoops = getSchedule(e1)(loopsNotInIfs)
+    val reachFromTopLoops = getSchedule(e1)(loopsNotInIfs,false)
     
     val f3 = f1 filter (reachFromTopLoops contains _)    // fringe restricted to: (shallow|hot)* hot any*
     val h3 = getScheduleM(e1)(f3.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
@@ -69,7 +69,14 @@ trait CodeMotion extends Scheduling {
                                }
 */
 
-
+    
+    // TODO: recursion!!!  identify recursive up-pointers
+    
+    
+    
+    
+    
+    
 
     object LocalDef {
       def unapply[A](x: Exp[A]): Option[Stm] = { // fusion may have rewritten Reify contents so we look at local scope
@@ -80,8 +87,9 @@ trait CodeMotion extends Scheduling {
     // sanity check to make sure all effects are accounted for
     result foreach {
       case LocalDef(TP(_, Reify(x, u, effects))) =>
-        val actual = levelScope.filter(_.lhs exists (effects contains _))
-        if (effects != actual.flatMap(_.lhs filter (effects contains _))) {
+        val acteffects = levelScope.flatMap(_.lhs) filter (effects contains _)
+        if (effects.toSet != acteffects.toSet) {
+          val actual = levelScope.filter(_.lhs exists (effects contains _))
           val expected = effects.map(d=>/*fatten*/(findDefinition(d.asInstanceOf[Sym[Any]]).get))
           val missing = expected filterNot (actual contains _)
           val printfn = if (missing.isEmpty) printlog _ else printerr _

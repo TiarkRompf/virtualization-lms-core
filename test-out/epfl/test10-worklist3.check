@@ -1,0 +1,80 @@
+### first
+register replacement for Sym(1)
+register replacement for Sym(2)
+discarding, already have a replacement for Sym(1)
+register replacement for Sym(5)
+--- code ---
+val x1 = VectorZeros(Const(100))
+val x3 = x0 > 0
+val x4 = if (x3) {
+x1
+} else {
+val x2 = VectorZeros(Const(50))
+x2
+}
+val x5 = VectorPlus(Sym(4),Sym(1))
+val x6 = println(x5)
+
+### next
+install replacement for Sym(1)
+install replacement for Sym(2)
+install replacement for Sym(5)
+toAtom transform Field(Sym(4),length,Int) List(Sym(4)) -> List(Sym(17))
+toAtom transform VectorApply(Sym(4),Sym(18)) List(Sym(4), Sym(18)) -> List(Sym(17), Sym(18))
+register replacement for Sym(19)
+discarding, already have a replacement for Sym(19)
+toAtom transform VectorApply(Sym(1),Sym(18)) List(Sym(1), Sym(18)) -> List(Sym(10), Sym(18))
+register replacement for Sym(20)
+discarding, already have a replacement for Sym(20)
+--- code ---
+val x3 = x0 > 0
+val x9 = LoopArray(100) { x8 => 
+0.0
+}
+// TODO: use vars instead of tuples to return multiple values
+val (x16,x15) = if (x3) {
+(100,x9)
+} else {
+val x12 = LoopArray(50) { x11 => 
+0.0
+}
+(50,x12)
+}
+val x17 = Map("data"->x15,"length"->x16) //ClassTag(Vector)
+val x10 = Map("data"->x9,"length"->100) //ClassTag(Vector)
+val x22 = LoopArray(x16) { x18 => 
+val x19 = VectorApply(Sym(17),Sym(18))
+val x20 = VectorApply(Sym(10),Sym(18))
+val x21 = x19+x20
+x21
+}
+val x23 = Map("data"->x22,"length"->x16) //ClassTag(Vector)
+val x24 = println(x23)
+
+### next
+install replacement for Sym(19)
+toAtom transform ArrayIndex(Sym(15),Sym(18)) List(Sym(15), Sym(18)) -> List(Sym(31), Sym(34))
+install replacement for Sym(20)
+toAtom transform ArrayIndex(Sym(9),Sym(18)) List(Sym(9), Sym(18)) -> List(Sym(28), Sym(34))
+--- code ---
+val x3 = x0 > 0
+val x28 = LoopArray(100) { x27 => 
+0.0
+}
+// TODO: use vars instead of tuples to return multiple values
+val (x16,x31) = if (x3) {
+(100,x28)
+} else {
+val x30 = LoopArray(50) { x29 => 
+0.0
+}
+(50,x30)
+}
+val x38 = LoopArray(x16) { x34 => 
+val x35 = x31.apply(x34)
+val x36 = x28.apply(x34)
+val x37 = x35+x36
+x37
+}
+val x39 = Map("data"->x38,"length"->x16) //ClassTag(Vector)
+val x40 = println(x39)

@@ -73,6 +73,103 @@ import internal.Scheduling
 */
 
 
+/*
+  unrelated question: can we separate loop fusion and code motion?
+  
+    a1 = SimpleLoop(s, i1, ArrayElem(Block(e1)))
+
+    a2 = SimpleLoop(s, i2, ArrayElem(Block(e2)))
+  
+  becomes:
+  
+    a1,a2 = SimpleFatLoop(s, i12, ArrayElem(Block(e1)), ArrayElem(Block(e2)))
+
+  we still have separate blocks for the ArrayElems.
+  
+  currently, calling emitFatBlock on the list of all embedded blocks List(e1,e2)
+  will effectively combine the blocks during the descent, triggering
+  fusion of inner loops and other optimizations.
+  
+  if we descend separately we miss opportunities.
+
+  an isolated fusion pass will need to physically merge the blocks. a yield
+  based version may achieve this:
+
+    a1,a2 = SimpleFatLoop(s, i12, y1=ArrayElem, y2=ArrayElem, Block(e12)))
+  
+  where e12 invokes y1 and y2 internally.
+  
+  RULE: isolated passes need to merge blocks
+*/
+
+
+/*
+  another idea: make block results staging time values
+  
+    case class Block[T](res: T)
+    
+  and use syms(res) to get the block result expressions.
+  
+  this would allow moving arbitrary stuff inside blocks:
+  
+    a1,a2 = SimpleFatLoop(s, i12, Block((ArrayElem(e1), ArrayElem(e2))))
+
+*/
+
+
+/*
+  scheduling/dce/code motion: really a few separate things
+  
+    1) available: get all upward dependencies from result (backwards,dce,available)
+    2) from that set, get all downward dependencies on bound variables, up to the node in which the var is bound (forward,must-below)
+  
+*/
+
+
+
+/*
+  another unrelated question: is mirroring always behaving correctly?
+  what are the side conditions?
+  
+  RULE: mirror should not create new syms (apart from final result via toAtom)
+        we must not create a new sym for one that is to be replaced
+  RULE: mirror should not not call reifyEffects 
+        why? it will likely call reflectEffect inside, which will create new syms. 
+        maybe we already have a replacement for one of the effectful nodes.
+  
+  if mirror has a replacement for a node, apply it. if inputs of replacement
+  are in domain of substitution, mirror replacement.
+  
+  mirroring is context-free in general. (for Reflect nodes we do setup a 
+  dummy context with the tranformed inputs)
+  
+  
+  thinking about a test case where mirroring breaks:
+  
+    val x = mzeros(100)
+
+    val p = any()
+
+    val a = foobar(x,i,p)
+
+  then go ahead and replace p -> Const(0)
+
+    def foobar(x,i,p) = p match {
+      case Const(0) => 
+        
+        // something effectful...
+        vapply(x,i)
+        
+      case _ => FooBar(x,i,p)
+    }
+
+    val a = vapply(x,i)   // becomes Reflect(VectorApply(x,i), Read(x))
+
+  not sure...
+  
+*/
+
+
 
 trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
   val IR: LoopsFatExp with IfThenElseFatExp

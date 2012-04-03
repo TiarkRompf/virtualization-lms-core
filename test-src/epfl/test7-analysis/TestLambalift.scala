@@ -76,7 +76,7 @@ class TestLambdalift extends FileDiffSuite {
         def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Block[B], out: PrintWriter): Unit
       }
       
-      new NestLambdaProg with ArithExp with FunctionsExp with PrintExp { self =>
+      new NestLambdaProg1 with ArithExp with FunctionsExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenPrint { 
           val IR: self.type = self
           

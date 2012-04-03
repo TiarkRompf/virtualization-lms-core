@@ -9,7 +9,7 @@ trait AbstractTransformer {
   import IR._
   
   def hasContext = false
-  def reflectBlock[A](xs: Block[A]): Exp[A] = sys.error("reflectBlock not supported by context-free transformer")
+  def reflectBlock[A](xs: Block[A]): Exp[A] = sys.error("reflectBlock not supported by context-free transformers")
   
   def apply[A](x: Exp[A]): Exp[A]
   def apply[A](xs: Block[A]): Block[A] = Block(apply(xs.res))

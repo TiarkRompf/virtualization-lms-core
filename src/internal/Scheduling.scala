@@ -22,12 +22,12 @@ trait Scheduling {
     def allSyms(r: Any) = syms(r) ++ softSyms(r)
     
     val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result)), t => deps(allSyms(t.rhs)))
-    /*xx.foreach { x => 
+    xx.foreach { x => 
       if (x.length > 1) {
         printerr("warning: recursive schedule for result " + result + ": " + x)
         (new Exception) printStackTrace
       }
-    }*/
+    }
     xx.flatten.reverse
   }
 

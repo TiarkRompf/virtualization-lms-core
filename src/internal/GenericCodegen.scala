@@ -75,8 +75,9 @@ trait GenericCodegen extends BlockTraversal {
       
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s+"\""
-    case Const(null) => "null"
+    case Const(c: Char) => "'"+c+"'"
     case Const(f: Float) => f.toString + "f"
+    case Const(null) => "null"
     case Const(z) => z.toString
     case Sym(n) => "x"+n
     case _ => throw new RuntimeException("could not quote " + x)

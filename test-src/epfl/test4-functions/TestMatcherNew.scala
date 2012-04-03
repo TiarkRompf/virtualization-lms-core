@@ -7,6 +7,18 @@ import test1._
 import test2._
 import test3._
 
+/*
+TODO:
++implement dfa_trans
++automata 
++compile and run
+
+benchmark
+cleanup
+parsing / tree construction?
+http parser??
+iteratee interface?
+*/
 
 
 
@@ -646,7 +658,115 @@ trait MatcherNewProgB { this: Arith with Functions with Equal with IfThenElse =>
 }
 
 
-trait MatcherNewProg { this: Arith with Functions with Equal with IfThenElse =>
+
+
+abstract class DfaState {
+  def hasFlag(x: Any): Boolean
+  def next(c: Char): DfaState
+}
+case class dfaFlagged(flag: Any, link: DfaState) extends DfaState {
+  def hasFlag(x: Any) = x == flag || link.hasFlag(x)
+  def next(c: Char) = link.next(c)
+}
+case class dfaTrans(f: Char => DfaState) extends DfaState {
+  def hasFlag(x: Any) = false
+  def next(c: Char) = f(c)
+}
+
+trait DFAOps extends Base {
+
+  type DIO = Rep[DfaState]
+
+  def dfa_flagged(e: Rep[Any])(rec: DIO): DIO
+  def dfa_trans(f: Rep[Char] => DIO): DIO 
+}
+
+
+trait DFAOpsExp extends BaseExp with DFAOps { this: Functions => 
+
+  case class DFAFlagged(e: Rep[Any], link: DIO) extends Def[DfaState]
+  case class DFAState(f: Rep[Char => DfaState]) extends Def[DfaState]
+  
+  def dfa_flagged(e: Rep[Any])(rec: DIO): DIO = DFAFlagged(e,rec)
+  def dfa_trans(f: Rep[Char] => DIO): DIO = DFAState(doLambda(f))
+  
+}
+
+
+trait ScalaGenDFAOps extends ScalaGenBase {
+  val IR: DFAOpsExp
+  import IR._
+  
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case DFAState(f) => emitValDef(sym, "scala.virtualization.lms.epfl.test4.dfaTrans(" + quote(f) + ")")
+    case DFAFlagged(e,l) => emitValDef(sym, "scala.virtualization.lms.epfl.test4.dfaFlagged(" + quote(e) + ", " + quote(l) + ")")
+    case _ => super.emitNode(sym, rhs)
+  }  
+}
+
+
+trait NFAToDFA extends DFAOps { this: Arith with Functions with Equal with IfThenElse =>
+
+  // TODO: copy from below
+
+}
+
+
+
+case class gTrans(e: List[Any], f: Char => List[gTrans])
+
+trait GAOps extends Base {
+
+  type GIO = List[gTrans] // unstaged Automaton type, also State type (State = list of possible transitions)
+  
+  def gtrans(f: Rep[Char] => Rep[GIO]): Rep[GIO] = gtrans(unit(Nil))(f)
+  def gtrans(e: Rep[List[Any]])(f: Rep[Char] => Rep[GIO]): Rep[GIO] // = collectall(List(unit("gtrans"), lam(f))).asInstanceOf[Rep[GIO]]
+  def gcall(f: Rep[GIO], c: Rep[Char]): Rep[GIO] // = collectall(List(unit("gcall"), f, c)).asInstanceOf[Rep[GIO]]
+
+  def gflags(f: Rep[GIO]): Rep[List[Any]]
+  
+  def gguard(c: Rep[Boolean], s: Boolean = false)(d: Rep[GIO]): Rep[GIO]
+
+  def gstop(): Rep[GIO]
+  def gor(a: Rep[GIO], b: Rep[GIO]): Rep[GIO]
+
+}
+
+
+trait GAOpsExp extends BaseExp with GAOps { this: ListOps with IfThenElse with Functions =>
+
+  case class GTrans(e: Rep[Any], f: Rep[Char => GIO]) extends Def[GIO]
+  case class GCall(f: Rep[GIO], c: Rep[Char]) extends Def[GIO]
+  case class GFlags(f: Rep[GIO]) extends Def[List[Any]]
+
+  def gtrans(e: Rep[List[Any]])(f: Rep[Char] => Rep[GIO]): Rep[GIO] = GTrans(e, doLambda(f))
+  def gcall(f: Rep[GIO], c: Rep[Char]): Rep[GIO] = GCall(f,c)
+
+  def gflags(f: Rep[GIO]): Rep[List[Any]] = GFlags(f)
+  
+  def gguard(c: Rep[Boolean], s: Boolean = false)(d: Rep[GIO]): Rep[GIO] = if (c) d else gstop()
+
+  def gstop(): Rep[GIO] = list_new(Nil)
+  def gor(a: Rep[GIO], b: Rep[GIO]): Rep[GIO] = list_concat(a,b)
+
+}
+
+trait ScalaGenGAOps extends ScalaGenBase {
+  val IR: GAOpsExp
+  import IR._
+  
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case GTrans(e,f) => emitValDef(sym, "List(scala.virtualization.lms.epfl.test4.gTrans(" + quote(e) + "," + quote(f) + "))")
+    case GCall(f,c) => emitValDef(sym, quote(f) + ".flatMap(_.f.apply(" + quote(c) + "))")
+    case GFlags(f) => emitValDef(sym, quote(f) + ".flatMap(_.e)")
+    case _ => super.emitNode(sym, rhs)
+  }  
+}
+
+
+
+
+trait MatcherNewProg extends DFAOps with GAOps { this: Arith with Functions with Equal with IfThenElse =>
 
   class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
     def apply(x:Rep[A]): Rep[B] = doApply(f, x)
@@ -660,38 +780,27 @@ trait MatcherNewProg { this: Arith with Functions with Equal with IfThenElse =>
 
 
   def collectall(in: List[Rep[Any]]): Rep[Unit]
-  def printL(in: Rep[Any]): Rep[Unit]
+  //def printL(in: Rep[Any]): Rep[Unit]
 
   // -- end util
 
 
   // -- begin general automaton
   
-  type GIO = List[GTrans] // unstaged Automaton type, also State type (State = list of possible transitions)
-  
-  case class GTrans(f: Char => List[GTrans])
-  
-  def gtrans(f: Rep[Char] => Rep[GIO]): Rep[GIO] = collectall(List(unit("gtrans"), lam(f))).asInstanceOf[Rep[GIO]]
-  def gcall(f: Rep[GIO], c: Rep[Char]): Rep[GIO] = collectall(List(unit("gcall"), f, c)).asInstanceOf[Rep[GIO]]
-  
-  def gguard(c: Rep[Boolean], s: Boolean = false)(d: Rep[GIO]): Rep[GIO] = if (c) d else collectall(Nil).asInstanceOf[Rep[GIO]]
-
-  def gstop(): Rep[GIO] = collectall(List(unit("stop"))).asInstanceOf[Rep[GIO]]
-  def gor[A](a: Rep[List[A]], b: Rep[List[A]]): Rep[List[A]] = collectall(List(unit("++"),a,b)).asInstanceOf[Rep[List[A]]]
-  
   def gfindAAB(): Rep[GIO] = {
     gor(gtrans { a1 =>
       gguard (a1 == 'A') { 
         gtrans { a2 =>
-          gguard (a2 == 'A') { 
+          gguard (a2 == a1/*'A'*/) { 
             gtrans { a3 =>
               gguard (a3 == 'B', true) {
-                gstop()
+                //gstop()
+                gtrans(unit(List(1))) { a4 => gstop() }
     }}}}}},
     gtrans { _ => gfindAAB() }) // in parallel...
   }
   
-  def ginterpret(xs: Rep[GIO], cin: Rep[Char]): Rep[GIO] = gcall(xs, cin) // xs flatMap { f => f(cin) }
+  def ginterpret(xs: Rep[GIO], cin: Rep[Char]): Rep[GIO] = gcall(xs, cin)
   
   // -- end general automaton
 
@@ -706,38 +815,29 @@ trait MatcherNewProg { this: Arith with Functions with Equal with IfThenElse =>
   def trans(c: Option[Char])(s: () => IO): IO = List(Trans(c, None, s))
   
   
-  def interpret[A:Manifest](xs: IO, cin: Rep[Char])(k: IO => Rep[A]): Rep[A] = xs match {
+  def exploreNFA[A:Manifest](xs: IO, cin: Rep[Char])(flag: Rep[Any] => Rep[A] => Rep[A])(k: IO => Rep[A]): Rep[A] = xs match {
     case Nil => k(Nil)
     case Trans(Some(c), e, s)::rest =>
       if (cin == c) {
         val xs1 = rest collect { case Trans(Some(`c`) | None,e,s) => Trans(None,e,s) }
-        val rec = interpret(xs1, cin)(acc => k(acc ++ s()))
-        e map (dfa_exec(_, rec)) getOrElse rec
-      }
-      else {
+        val maybeFlag = e map flag getOrElse ((x:Rep[A])=>x)
+        maybeFlag(exploreNFA(xs1, cin)(flag)(acc => k(acc ++ s())))
+      } else {
         val xs1 = rest filter { case Trans(Some(`c`),_,_) => false case _ => true }
-        interpret(xs1, cin)(k)
+        exploreNFA(xs1, cin)(flag)(k)
       }
     case Trans(None, e, s)::rest =>
-      val rec = interpret(rest,cin)(acc => k(acc ++ s()))
-      e map (dfa_exec(_, rec)) getOrElse rec
+      val maybeFlag = e map flag getOrElse ((x:Rep[A])=>x)
+      maybeFlag(exploreNFA(rest,cin)(flag)(acc => k(acc ++ s())))
   }
 
   // -- end NFA
 
+
+
+
   // -- begin DFA
   
-  def dfa_exec[A:Manifest](e: Rep[Any], rec: Rep[A]): Rep[A] = collectall(List(unit("exec"), e, rec)).asInstanceOf[Rep[A]]
-  
-  type DIO = Rep[Unit]
-  
-  //case class DTrans(c: Option[Char], s: () => DIO)
-  
-  def dfa_trans(f: Rep[Char] => DIO): DIO = collectall(List(unit("dfagoto"), lam(f)))
-  
-  
-  // -- end DFA
-
 
   def findAAB(): IO = {
     guard(Some('A')) {
@@ -771,21 +871,15 @@ trait MatcherNewProg { this: Arith with Functions with Equal with IfThenElse =>
   }
 
 
-  /*
-  TODO:
-  implement dfa_trans
-  automata 
-  compile and run
-  benchmark
-  */
 
 
   def testMatchingG(xs: Rep[List[Char]]) = {
 
-    def iterate: Rep[GIO => Unit] = lam { state: Rep[GIO] => dfa_trans { c: Rep[Char] =>
+    def iterate: Rep[GIO => DfaState] = lam { state: Rep[GIO] => dfa_flagged(gflags(state))(dfa_trans { c: Rep[Char] =>
       
       iterate(gcall(state,c))
-    }}
+      
+    })}
     iterate(gfindAAB())
 
   }
@@ -793,7 +887,7 @@ trait MatcherNewProg { this: Arith with Functions with Equal with IfThenElse =>
   def testMatching(xs: Rep[List[Char]]) = {
 
     def iterate(state: IO): DIO = dfa_trans { c: Rep[Char] =>
-      interpret(state, c) { next =>
+      exploreNFA(state, c)(dfa_flagged) { next =>
         iterate(next)
       }
     }
@@ -868,26 +962,23 @@ class TestMatcherNew extends FileDiffSuite {
 
 
 
-  def testMatcher1 = {
+  def testMatcherNew1 = {
     withOutFile(prefix+"matchernew1") {
-      object MatcherProgExp extends MatcherNewProg 
-      with ArithExpOpt with EqualExpOpt with BooleanOpsExp with IfThenElseExpOpt 
+      object MatcherProgExp extends MatcherNewProg with DFAOpsExp with GAOpsExp
+      with ArithExpOpt with EqualExpOpt with BooleanOpsExp with IfThenElseExpOpt with ListOpsExp
       //with FunctionExpUnfoldRecursion 
-      with FunctionsExternalDef1 /* was 2 */ {
+      with FunctionsExternalDef1 /* was 2 */ 
+      with CompileScala {
         case class Result(in: List[Exp[Any]]) extends Def[Unit] //FIXME
         def collectall(in: List[Rep[Any]]): Rep[Unit] = Result(in)
-        def printL(in: Rep[Any]): Rep[Unit] = /*reflectEffect*/(Result(List(in))) //FIXME violate ordering
+        //def printL(in: Rep[Any]): Rep[Unit] = /*reflectEffect*/(Result(List(in))) //FIXME violate ordering
         override val verbosity = 1
+        lazy val codegen = p
       }
-      import MatcherProgExp._
-
-
-      val f = (x:Rep[List[Char]]) => testMatching(x)
-      val g = (x:Rep[List[Char]]) => testMatchingG(x)
-      
-      val p = new ScalaGenArith with ScalaGenEqual with 
-        ScalaGenIfThenElse with ScalaGenFunctionsExternal { val IR: MatcherProgExp.type = MatcherProgExp 
-          
+      object p extends ScalaGenArith with ScalaGenEqual with ScalaGenListOps with ScalaGenDFAOps with ScalaGenGAOps
+        with ScalaGenIfThenElse with ScalaGenFunctionsExternal { 
+          val IR: MatcherProgExp.type = MatcherProgExp 
+          import IR._          
           import java.io.PrintWriter
           override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
             case Result(xs) => emitValDef(sym, "(" + (xs map {quote}).mkString(",") + ") // DUMMY")
@@ -896,15 +987,77 @@ class TestMatcherNew extends FileDiffSuite {
               //println("emit super on " + sym + " = " + rhs + " / " + rhs.getClass)
               super.emitNode(sym, rhs)
           }
-        }
+      }
+      
+      import MatcherProgExp.{List=>_,_}
+      val f = (x:Rep[List[Char]]) => testMatching(x)
+      
+      p.emitSource(f, "Match", new java.io.PrintWriter(System.out))
+      val fc = compile(f)
+      var state = fc(Nil)
+      
+      val input = List('X','A','B','Z','A','A','B','W','A','A','A','A','B','Q')
+      var idx = 0
+      input foreach { c =>
+        println("idx:   " + idx)
+        println("found: " + state.hasFlag("found"))
+        println("char:  " + c)
+        
+        idx += 1
+        state = state.next(c)
+      }
+    }
+    assertFileEqualsCheck(prefix+"matchernew1")
+  }
+
+  def testMatcherNew2 = {
+    withOutFile(prefix+"matchernew2") {
+      object MatcherProgExp extends MatcherNewProg with DFAOpsExp with GAOpsExp
+      with ArithExpOpt with EqualExpOpt with BooleanOpsExp with IfThenElseExpOpt with ListOpsExp
+      //with FunctionExpUnfoldRecursion 
+      with FunctionsExternalDef1 /* was 2 */ 
+      with CompileScala {
+        case class Result(in: List[Exp[Any]]) extends Def[Unit] //FIXME
+        def collectall(in: List[Rep[Any]]): Rep[Unit] = Result(in)
+        //def printL(in: Rep[Any]): Rep[Unit] = /*reflectEffect*/(Result(List(in))) //FIXME violate ordering
+        override val verbosity = 1
+        lazy val codegen = p
+      }
+      object p extends ScalaGenArith with ScalaGenEqual with ScalaGenListOps with ScalaGenDFAOps with ScalaGenGAOps
+        with ScalaGenIfThenElse with ScalaGenFunctionsExternal { 
+          val IR: MatcherProgExp.type = MatcherProgExp
+          import IR._          
+          import java.io.PrintWriter
+          override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+            case Result(xs) => emitValDef(sym, "(" + (xs map {quote}).mkString(",") + ") // DUMMY")
+            //case Lambda(f) => emitNode(sym, DefineFun(f)) // FIXME
+            case _ => 
+              //println("emit super on " + sym + " = " + rhs + " / " + rhs.getClass)
+              super.emitNode(sym, rhs)
+          }
+      }
+      import MatcherProgExp.{List=>_,_}
+
+      val f = (x:Rep[List[Char]]) => testMatchingG(x)
       
       // FIXME: problem with recursive codegen
         
-      p.emitSource(f, "Match", new java.io.PrintWriter(System.out))
-      p.emitSource(g, "MatchG", new java.io.PrintWriter(System.out))
+      p.emitSource(f, "MatchG", new java.io.PrintWriter(System.out))
+      val fc = compile(f)
+      var state = fc(Nil)
+      
+      val input = List('X','A','B','Z','A','A','B','W','A','A','A','A','B','Q')
+      var idx = 0
+      input foreach { c =>
+        println("idx:   " + idx)
+        println("found: " + state.hasFlag(List(1)))
+        println("char:  " + c)
+        
+        idx += 1
+        state = state.next(c)
+      }
     }
-    assertFileEqualsCheck(prefix+"matchernew1")
-    //assertFileEqualsCheck(prefix+"matcher1-dot")
+    assertFileEqualsCheck(prefix+"matchernew2")
   }
 
 }

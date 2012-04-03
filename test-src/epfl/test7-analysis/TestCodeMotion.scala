@@ -11,7 +11,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 
-trait NestLambdaProg extends Arith with Functions with Print { // also used by TestLambdaLift
+trait NestLambdaProg1 extends Arith with Functions with Print { // also used by TestLambdaLift
   
   def test(x: Rep[Unit]) = {
     val f = doLambda { x: Rep[Double] =>
@@ -26,7 +26,7 @@ trait NestLambdaProg extends Arith with Functions with Print { // also used by T
   
 }
 
-trait NestCondProg extends Arith with Functions with IfThenElse with Print {
+trait NestCondProg2 extends Arith with Functions with IfThenElse with Print {
   
   /* Previously this program exhibited behavior that is likely undesired in many
   cases. The definition of f was moved *into* g and into the conditional.
@@ -54,7 +54,7 @@ trait NestCondProg extends Arith with Functions with IfThenElse with Print {
 }
 
 
-trait NestCondProg2 extends Arith with Functions with IfThenElse with Print {
+trait NestCondProg3 extends Arith with Functions with IfThenElse with Print {
   
   def test(x: Rep[Unit]) = {
     val f = if (unit(true)) doLambda { x: Rep[Double] => 2 * x } else doLambda { x: Rep[Double] => 4 * x }
@@ -74,7 +74,7 @@ trait NestCondProg2 extends Arith with Functions with IfThenElse with Print {
   
 }
 
-trait NestCondProg3 extends Arith with Functions with IfThenElse with Print {
+trait NestCondProg4 extends Arith with Functions with IfThenElse with Print {
   
   def test(x: Rep[Unit]) = {
     val g = doLambda { y: Rep[Double] =>
@@ -91,7 +91,7 @@ trait NestCondProg3 extends Arith with Functions with IfThenElse with Print {
 }
 
 
-trait NestCondProg4 extends Arith with Functions with IfThenElse with Print {
+trait NestCondProg5 extends Arith with Functions with IfThenElse with Print {
   
   def test(x: Rep[Unit]) = {
     if (unit(true)) {
@@ -106,10 +106,12 @@ trait NestCondProg4 extends Arith with Functions with IfThenElse with Print {
 }
 
 
-trait NestCondProg5 extends Arith with Functions with IfThenElse with Print {
+trait NestCondProg6 extends Arith with Functions with IfThenElse with Print {
   
+	// FIXME: this one doesn't work yet!!!
+
   def test(x: Rep[Unit]) = {
-    val z = unit(7.0) + unit(9.0) // should move into the conditional
+    val z = unit(7.0) + unit(9.0) // should move into the conditional (but isn't currently)
     val x = if (unit(true)) {
       print(z)
     } else {
@@ -130,7 +132,7 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion1 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion1") {
-      new NestLambdaProg with ArithExp with FunctionsExp with PrintExp { self =>
+      new NestLambdaProg1 with ArithExp with FunctionsExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
@@ -141,7 +143,7 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion2 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion2") {
-      new NestCondProg with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+      new NestCondProg2 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
@@ -152,7 +154,7 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion3 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion3") {
-      new NestCondProg2 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+      new NestCondProg3 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
@@ -163,7 +165,7 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion4 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion4") {
-      new NestCondProg3 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+      new NestCondProg4 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
@@ -174,7 +176,7 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion5 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion5") {
-      new NestCondProg4 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+      new NestCondProg5 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
@@ -185,9 +187,10 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion6 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion6") {
-      new NestCondProg5 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+      new NestCondProg6 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        println("// NOTE: generated code is not ideal yet (x1=7+9 should be moved inside conditional). see source for discussion.")
       }
     }
     assertFileEqualsCheck(prefix+"codemotion6")

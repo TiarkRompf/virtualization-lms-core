@@ -278,8 +278,6 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // --- reflect
 
-  // TODO: should reflectEffect try to add Read(mutableInputs) as well ??? or just toAtom ???
-
   // REMARK: making toAtom context-dependent is quite a departure from the 
   // earlier design. there are a number of implications especially for mirroring.
 
@@ -289,16 +287,22 @@ trait Effects extends Expressions with Blocks with Utils {
       val a = ...       // mutable
       val b = a.foo     // usually Foo(a) but now Reflect(Foo(a))
       val c = b.costly  // costly(Foo(a)) would simplify to Cheap(a), 
-                        // but this ends up as Reflect(Costly(Foo(a))) instead of Reflect(Cheap(a))
+                        // but this ends up as Reflect(Costly(Reflect(Foo(a)))) instead of Reflect(Cheap(a))
     
-    TODO: find a solution ...
+		of course this is unsafe in general but there might be cases that are definitely save.
   */
 
   protected override implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
 /*
-    // are we depending on a variable? then we need to be serialized -> effect
-    val mutableInputs = readMutableData(d)
-    reflectEffect(d, Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
+    are we depending on a variable or mutable object? then we need to be serialized -> effect
+
+		the call chain goes like this:
+		
+			toAtom
+			reflectEffect(Pure()) 		 // figure out dependencies on mutable objects
+			reflectEffectInternal(u)	 // extended summary Pure() -> u
+				super.toAtom 						 // if summary is still pure
+				createReflectDefinition  // if summary is not pure
 */
     reflectEffect(d, Pure())
   }
@@ -362,7 +366,7 @@ trait Effects extends Expressions with Blocks with Utils {
   
   def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary): Exp[A] = {
     if (mustPure(u)) super.toAtom(x) else {
-      // FIXME: reflecting mutable stuff *during mirroring* doesn't work right now...
+      // NOTE: reflecting mutable stuff *during mirroring* doesn't work right now.
       
       val deps = calculateDependencies(u)
       val zd = Reflect(x,u,deps)
@@ -424,13 +428,14 @@ trait Effects extends Expressions with Blocks with Utils {
       val write = u.mayWrite
 
       val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
-      // TODO: write-on-read deps should be weak
-      val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || mayRead(u, write) || read.contains(e) }
+			val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
+      val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || write.contains(e) }
       val simpleDeps = if (!u.maySimple) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.maySimple }
       val globalDeps = scope filter { case e@Def(Reflect(_, u, _)) => u.mayGlobal }
 
+      // TODO: write-on-read deps should be weak
       // TODO: optimize!!
-      val allDeps = readDeps ++ writeDeps ++ simpleDeps ++ globalDeps
+      val allDeps = readDeps ++ softWriteDeps ++ writeDeps ++ simpleDeps ++ globalDeps
       scope filter (allDeps contains _)
     }
   }

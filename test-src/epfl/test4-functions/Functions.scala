@@ -9,6 +9,8 @@ import test3._
 import util.ClosureCompare
 import scala.reflect.SourceContext
 
+import scala.collection.{immutable, mutable}
+
 trait FunctionsExpClever extends test3.FunctionsExp {
 
   def exec[A:Manifest,B:Manifest](fun: Exp[A]=>Exp[B], arg: Exp[A]): Exp[B]
@@ -198,7 +200,7 @@ trait ScalaGenFunctionsExternal extends ScalaGenEffect {
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@DefineFun(y) =>
-      stream.println("val " + quote(sym) + " = {" + quote(e.arg) + ": (" + e.arg.tp + ") => ")
+      emitValDef(sym, "{" + quote(e.arg) + ": (" + e.arg.tp + ") => "/*}*/)
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")

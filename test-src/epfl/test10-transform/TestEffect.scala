@@ -43,9 +43,10 @@ import scala.reflect.SourceContext
 //      another idea was to recognize common subexpressions but insert copy nodes instead
 //      of eliminating them (similar to mzeros(100) = zeros(100).mutable)
 //
-// implementation TODO:
-//    add fattening: need to fuse VectorUpdate and those Mutate nodes that aren't DCEd
-//    ensure anti-deps: mutated symbols must be dead after their Mutate nodes
+// implementation (DONE):
+//    ensure anti-deps: mutated symbols must be dead after the VectorUpdate stm
+//    add fattening: fuse VectorUpdate and those Mutate nodes that aren't DCEd
+//			is this really necessary? it seems like 
 
 
 
@@ -116,7 +117,7 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
           subst += (s -> toAtom(Mutate(s, sym)))
         }
         
-        // TODO: add soft dependencies on transitive to ensure ordering!
+        // add soft dependencies on transitive to ensure ordering!
         
         // at first sight it should be enough that for each s in transitive 
         // there is a Mutate node with a dependency.
@@ -138,8 +139,8 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
         createDefinition(sym, ReflectSoft(d, transitive.flatMap(_.lhs)))
         sym
       } else {
-        // right now we add copy statements whenever we'd do CSE
-        // maybe we need to re-introduce a split between mutable and immutable data
+        // right now we add copy statements whenever we'd do CSE.
+        // TODO: re-introduce a split between mutable and immutable data.
         val o = findDefinition(d)
         
         val sym = fresh[A]
@@ -186,10 +187,8 @@ class TestEffects extends FileDiffSuite {
       with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self 
         override def fattenAll(e: List[Stm]): List[Stm] = {
           println("**fatten "+e)
-          
-          // TODO: add dependencies to all other nodes that use the thing being mutated 
-          // (so as to make sure the mutation is the last use)
-          
+          // group all Mutate helper nodes together with the mutation
+					// TBD: is this necessary (if not, desirable) ?
           val m = e collect { case e@TP(s, Mutate(a,b)) => e } 
           val mg = m groupBy { case e@TP(s, Mutate(a,b)) => b } 
           
@@ -214,14 +213,14 @@ class TestEffects extends FileDiffSuite {
         }
         override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
           case _ if rhs.toString.startsWith("Vector") => 
-            stream.println(sym + " = " + rhs)
+            emitValDef(sym, rhs.toString)
           case ReflectSoft(x,es) =>
-            stream.println("// soft deps: "+es.map(quote))
+            stream.println("// soft deps: "+es.map(quote).mkString(","))
             emitNode(sym,x)
           case Mutate(a,b) =>
-            stream.println(sym + " = " + a + " Mutate "+ b)
+            emitValDef(sym, quote(a) + " // mutated by "+ quote(b))
           case Copy(a) =>
-            stream.println(sym + " = Copy " + a)
+            emitValDef(sym, quote(a) + ".clone")
           case _ =>
             super.emitNode(sym,rhs)
         }

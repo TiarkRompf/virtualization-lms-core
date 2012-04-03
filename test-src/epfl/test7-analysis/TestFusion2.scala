@@ -221,7 +221,7 @@ class TestFusion2 extends FileDiffSuite {
            with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
              override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
          codegen.emitSource(test, "Test", new PrintWriter(System.out))
-         println("// generated code is not ideal yet. see source for discussion")
+         println("// NOTE: generated code is not ideal yet (x2 is never used). see source for discussion.")
        }
      }
      assertFileEqualsCheck(prefix+"fusion24")

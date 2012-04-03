@@ -1,13 +1,14 @@
 
 <function1>
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
+-- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$2
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Fac extends ((Double)=>(Double)) {
 def apply(x0:Double): Double = {
-val x1 = {x2: (Double) => 
+var x1 = null.asInstanceOf[scala.Function1[Double, Double]]
+x1 = {x2: (Double) => 
 val x3 = x2 == 0
 val x8 = if (x3) {
 1.0
