@@ -90,15 +90,22 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         // possible extension: have WtableNeg keep track of the statements that prevent fusion
         // then we can later remove the entry and see if the dependency goes away...
         
-        val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
+        var WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
           val thisLoopVars = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
-          getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) => 
+          getCustomFatSchedule(currentScope)(WgetLoopRes(dx)) {
+            case e@ThinDef(SimpleIndex(a,i)) if (thisLoopVars contains i) && (loopCollectSyms contains a) => 
+              // check that a is the result of a SimpleCollectIf loop (not a reduce, for example)
               //if (!loopCollectSyms.contains(a))
               //  printerr("DANGER WILL ROBINSON: ignoring dep " + e + " although " + a + " is not a loop sym " + loopCollectSyms)
-              //println("ignoring simple dependency " + e + " on loop var " + thisLoopSyms)
+              printdbg("ignoring simple dependency " + e + " on loop var " + thisLoopVars + " required by body of " + dx.lhs)
               Nil // direct deps on this loop's induction var don't count
+            case e => 
+              syms(e)
+          } flatMap {
+            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) =>
+              printdbg("ignoring2 simple dependency " + e + " on loop var " + thisLoopVars + " required by body of " + dx.lhs)
+              Nil //FIXME: shouldn't duplicate condition ...
             case sc =>
               val pr = syms(sc.rhs).intersect(otherLoopSyms) flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
               if (pr.nonEmpty) printlog("fusion of "+pr+" prevented by " + sc + " which is required by body of " + dx.lhs)
@@ -106,7 +113,16 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           }
         }.distinct      
       
-        printlog("wtableneg: " + WtableNeg)        
+        // transitive closure of negative dependencies
+        def iter {
+          val oldNeg = WtableNeg
+          val delta = WtableNeg flatMap { p => WtableNeg collect { case q if p._2 == q._1 => (p._1, q._2) }}
+          WtableNeg = (WtableNeg ++ delta).distinct
+          if (WtableNeg != oldNeg) iter
+        }
+        iter
+      
+        printlog("wtableneg: " + WtableNeg) // will add more later, need to maintain closure
         
         // other preconditions for fusion: loops must have same shape, or one must loop over the other's result
         
@@ -165,8 +181,17 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
                 shapeA
               }
 
-              val fused = TTP(a.lhs:::b.lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
+              val lhs = a.lhs ++ b.lhs
+              
+              val fused = TTP(lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
               partitionsOut = fused :: (partitionsOut diff List(a))
+
+              val preNeg = WtableNeg collect { case p if (lhs contains p._2) => p._1 }
+              val postNeg = WtableNeg collect { case p if (lhs contains p._1) => p._2 }
+              
+              val fusedNeg = preNeg flatMap { s1 => postNeg map { s2 => (s1,s2) } }
+              WtableNeg = (fusedNeg ++ WtableNeg).distinct
+
             case None => partitionsOut = b::partitionsOut
           }
         }
