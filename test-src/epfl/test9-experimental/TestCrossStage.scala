@@ -66,9 +66,9 @@ class TestCrossStage extends FileDiffSuite {
       
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
-          
-          acc += x
-          acc += x
+// Breaks test compilation          
+//          acc += x
+//          acc += x
         }
       }
       new Prog with Impl

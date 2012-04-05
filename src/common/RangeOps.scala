@@ -4,25 +4,26 @@ package common
 import java.io.PrintWriter
 
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
+import scala.reflect.SourceContext
 
 trait RangeOps extends Base {
   // workaround for infix not working with manifests
   implicit def repRangeToRangeOps(r: Rep[Range]) = new rangeOpsCls(r)
   class rangeOpsCls(r: Rep[Range]){
-    def foreach(f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
+    def foreach(f: Rep[Int] => Rep[Unit])(implicit ctx: SourceContext) = range_foreach(r, f)
   }
 
-  def infix_until(start: Rep[Int], end: Rep[Int]) = range_until(start,end)
-  def infix_start(r: Rep[Range]) = range_start(r)
-  def infix_step(r: Rep[Range]) = range_step(r)
-  def infix_end(r: Rep[Range]) = range_end(r)
+  def infix_until(start: Rep[Int], end: Rep[Int])(implicit ctx: SourceContext) = range_until(start,end)
+  def infix_start(r: Rep[Range])(implicit ctx: SourceContext) = range_start(r)
+  def infix_step(r: Rep[Range])(implicit ctx: SourceContext) = range_step(r)
+  def infix_end(r: Rep[Range])(implicit ctx: SourceContext) = range_end(r)
   //def infix_foreach(r: Rep[Range], f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
 
-  def range_until(start: Rep[Int], end: Rep[Int]): Rep[Range]
-  def range_start(r: Rep[Range]) : Rep[Int]
-  def range_step(r: Rep[Range]) : Rep[Int]
-  def range_end(r: Rep[Range]) : Rep[Int]
-  def range_foreach(r: Rep[Range], f: (Rep[Int]) => Rep[Unit]): Rep[Unit]
+  def range_until(start: Rep[Int], end: Rep[Int])(implicit ctx: SourceContext): Rep[Range]
+  def range_start(r: Rep[Range])(implicit ctx: SourceContext) : Rep[Int]
+  def range_step(r: Rep[Range])(implicit ctx: SourceContext) : Rep[Int]
+  def range_end(r: Rep[Range])(implicit ctx: SourceContext) : Rep[Int]
+  def range_foreach(r: Rep[Range], f: (Rep[Int]) => Rep[Unit])(implicit ctx: SourceContext): Rep[Unit]
 }
 
 trait RangeOpsExp extends RangeOps with FunctionsExp {
@@ -33,11 +34,11 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   //case class RangeForeach(r: Exp[Range], i: Exp[Int], body: Exp[Unit]) extends Def[Unit]
   case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Sym[Int], body: Exp[Unit]) extends Def[Unit]
 
-  def range_until(start: Exp[Int], end: Exp[Int]) : Exp[Range] = Until(start, end)
-  def range_start(r: Exp[Range]) : Exp[Int] = RangeStart(r)
-  def range_step(r: Exp[Range]) : Exp[Int] = RangeStep(r)
-  def range_end(r: Exp[Range]) : Exp[Int] = RangeEnd(r)
-  def range_foreach(r: Exp[Range], block: Exp[Int] => Exp[Unit]) : Exp[Unit] = {
+  def range_until(start: Exp[Int], end: Exp[Int])(implicit ctx: SourceContext) : Exp[Range] = Until(start, end)
+  def range_start(r: Exp[Range])(implicit ctx: SourceContext) : Exp[Int] = RangeStart(r)
+  def range_step(r: Exp[Range])(implicit ctx: SourceContext) : Exp[Int] = RangeStep(r)
+  def range_end(r: Exp[Range])(implicit ctx: SourceContext) : Exp[Int] = RangeEnd(r)
+  def range_foreach(r: Exp[Range], block: Exp[Int] => Exp[Unit])(implicit ctx: SourceContext) : Exp[Unit] = {
     val i = fresh[Int]
     //reflectEffect(RangeForeach(r, i, reifyEffects(block(i))))
     val (start,end) = r match {
@@ -48,7 +49,7 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
     reflectEffect(RangeForeach(start, end, i, a), summarizeEffects(a).star)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case Reflect(RangeForeach(s,e,i,b), u, es) => reflectMirrored(Reflect(RangeForeach(f(s),f(e),f(i).asInstanceOf[Sym[Int]],f(b)), mapOver(f,u), f(es)))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]

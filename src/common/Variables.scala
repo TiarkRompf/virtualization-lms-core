@@ -3,13 +3,14 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
+import scala.reflect.SourceContext
 
 trait LiftVariables extends Base {
   this: Variables =>
 
-  def __newVar[T:Manifest](init: T) = var_new(unit(init))
-  def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_new(init)
-  def __newVar[T](init: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_new(init)
+  def __newVar[T:Manifest](init: T)(implicit ctx: SourceContext) = var_new(unit(init))
+  def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T], ctx: SourceContext) = var_new(init)
+  def __newVar[T](init: Var[T])(implicit o: Overloaded2, mT: Manifest[T], ctx: SourceContext) = var_new(init)
 }
 
 // ReadVar is factored out so that it does not have higher priority than VariableImplicits when mixed in
@@ -17,57 +18,55 @@ trait LiftVariables extends Base {
 trait ReadVarImplicit {
   this: Variables =>
 
-  implicit def readVar[T:Manifest](v: Var[T]) : Rep[T]
+  implicit def readVar[T:Manifest](v: Var[T])(implicit ctx: SourceContext) : Rep[T]
 }
 
 trait ReadVarImplicitExp extends EffectExp {
   this: VariablesExp =>
 
-  implicit def readVar[T:Manifest](v: Var[T]) : Exp[T] = {
-    toAtom(ReadVar(v))
-  }
+  implicit def readVar[T:Manifest](v: Var[T])(implicit ctx: SourceContext) : Exp[T] = ReadVar(v)
 }
 
 trait LowPriorityVariableImplicits extends ImplicitOps {
   this: Variables =>
 
-  implicit def varIntToRepDouble(x: Var[Int]): Rep[Double] = implicit_convert[Int,Double](readVar(x))
-  implicit def varIntToRepFloat(x: Var[Int]): Rep[Float] = implicit_convert[Int,Float](readVar(x))
-  implicit def varFloatToRepDouble(x: Var[Float]): Rep[Double] = implicit_convert[Float,Double](readVar(x))
+  implicit def varIntToRepDouble(x: Var[Int])(implicit ctx: SourceContext): Rep[Double] = implicit_convert[Int,Double](readVar(x))
+  implicit def varIntToRepFloat(x: Var[Int])(implicit ctx: SourceContext): Rep[Float] = implicit_convert[Int,Float](readVar(x))
+  implicit def varFloatToRepDouble(x: Var[Float])(implicit ctx: SourceContext): Rep[Double] = implicit_convert[Float,Double](readVar(x))
 }
 
 trait VariableImplicits extends LowPriorityVariableImplicits {
   this: Variables =>
 
   // we always want to prioritize a direct conversion if any Rep will do
-  implicit def varIntToRepInt(v: Var[Int]): Rep[Int] = readVar(v)
-  implicit def varFloatToRepFloat(v: Var[Float]): Rep[Float] = readVar(v)
+  implicit def varIntToRepInt(v: Var[Int])(implicit ctx: SourceContext): Rep[Int] = readVar(v)
+  implicit def varFloatToRepFloat(v: Var[Float])(implicit ctx: SourceContext): Rep[Float] = readVar(v)
 }
 
 trait Variables extends Base with OverloadHack with VariableImplicits with ReadVarImplicit {
   type Var[+T] //FIXME: should be invariant
 
   //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
-  def var_new[T:Manifest](init: Rep[T]): Var[T]
-  def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
-  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
-  def var_minusequals[T:Manifest](lhs: Var[T], rhs: Rep[T]): Rep[Unit]
+  def var_new[T:Manifest](init: Rep[T])(implicit ctx: SourceContext): Var[T]
+  def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit ctx: SourceContext): Rep[Unit]
+  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit ctx: SourceContext): Rep[Unit]
+  def var_minusequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit ctx: SourceContext): Rep[Unit]
 
-  def __assign[T:Manifest](lhs: Var[T], rhs: T) = var_assign(lhs, unit(rhs))
-  def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T]) = var_assign(lhs, rhs)
-  def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_assign(lhs, readVar(rhs))
+  def __assign[T:Manifest](lhs: Var[T], rhs: T)(implicit ctx: SourceContext) = var_assign(lhs, unit(rhs))
+  def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T], ctx: SourceContext) = var_assign(lhs, rhs)
+  def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T], ctx: SourceContext) = var_assign(lhs, readVar(rhs))
 /*
   def __assign[T,U](lhs: Var[T], rhs: Rep[U])(implicit o: Overloaded2, mT: Manifest[T], mU: Manifest[U], conv: Rep[U]=>Rep[T]) = var_assign(lhs, conv(rhs))
 */
 
   // TODO: why doesn't this implicit kick in automatically? <--- do they belong here? maybe better move to NumericOps
   // we really need to refactor this. +=/-= shouldn't be here or in Arith, but in some other type class, which includes Numeric variables
-  def infix_+=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T]) = var_plusequals(lhs, unit(rhs))
-  def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_plusequals(lhs,rhs)
-  def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T]) = var_plusequals(lhs,readVar(rhs))
-  def infix_-=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T]) = var_minusequals(lhs, unit(rhs))
-  def infix_-=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T]) = var_minusequals(lhs,rhs)
-  def infix_-=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T]) = var_minusequals(lhs,readVar(rhs))
+  def infix_+=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T], ctx: SourceContext) = var_plusequals(lhs, unit(rhs))
+  def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T], ctx: SourceContext) = var_plusequals(lhs,rhs)
+  def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T], ctx: SourceContext) = var_plusequals(lhs,readVar(rhs))
+  def infix_-=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T], ctx: SourceContext) = var_minusequals(lhs, unit(rhs))
+  def infix_-=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T], ctx: SourceContext) = var_minusequals(lhs,rhs)
+  def infix_-=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T], ctx: SourceContext) = var_minusequals(lhs,readVar(rhs))
 }
 
 trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits with ReadVarImplicitExp {
@@ -85,22 +84,22 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
   case class VarPlusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
   case class VarMinusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
 
-  def var_new[T:Manifest](init: Exp[T]): Var[T] = {
+  def var_new[T:Manifest](init: Exp[T])(implicit ctx: SourceContext): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
     Variable(reflectMutable(NewVar(init)))
   }
 
-  def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
+  def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit ctx: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(Assign(lhs, rhs))
     Const()
   }
 
-  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
+  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit ctx: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarPlusEquals(lhs, rhs))
     Const()
   }
 
-  def var_minusequals[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = {
+  def var_minusequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit ctx: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarMinusEquals(lhs, rhs))
     Const()
   }
@@ -143,7 +142,7 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
 
 
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case Reflect(NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(Assign(Variable(a),b), u, es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))

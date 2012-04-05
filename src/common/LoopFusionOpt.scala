@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package common
 
-trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
+trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
   
@@ -128,7 +128,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         def getShapeCond(s: Exp[Int], a: TTP) = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) match { case SimpleCollectIf(a,c) => c } }
         
         def extendLoopWithCondition(e: TTP, shape: Exp[Int], targetVar: Sym[Int], c: List[Exp[Boolean]]): List[Exp[Any]] = e.rhs match { 
-          case SimpleFatLoop(s,x,rhs) => rhs.map { r => findOrCreateDefinition(SimpleLoop(shape,targetVar,applyAddCondition(r,c))).sym }
+          case SimpleFatLoop(s,x,rhs) => (e.lhs zip rhs).map { case (l,r) => findOrCreateDefinition(SimpleLoop(shape,targetVar,applyAddCondition(r,c)), l.pos).sym }
         }
         
         // partitioning: build maximal sets of loops to be fused

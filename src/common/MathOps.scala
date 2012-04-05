@@ -3,44 +3,45 @@ package common
 
 import java.io.PrintWriter
 import internal.{GenericNestedCodegen}
+import scala.reflect.SourceContext
 
 trait MathOps extends Base {
 
   object Math {
-    def ceil(x: Rep[Double]) = math_ceil(x)
-    def floor(x: Rep[Double]) = math_floor(x)
-    def exp(x: Rep[Double]) = math_exp(x)
-    def log(x: Rep[Double]) = math_log(x)
-    def sqrt(x: Rep[Double]) = math_sqrt(x)
-    def sin(x: Rep[Double]) = math_sin(x)
-    def cos(x: Rep[Double]) = math_cos(x)
-    def acos(x: Rep[Double]) = math_acos(x)
-    def atan(x: Rep[Double]) = math_atan(x)
-    def atan2(x: Rep[Double], y: Rep[Double]) = math_atan2(x,y)
-    def pow(x: Rep[Double], y: Rep[Double]) = math_pow(x,y)
-    def abs[A:Manifest:Numeric](x: Rep[A]) = math_abs(x)
-    def max[A:Manifest:Numeric](x: Rep[A], y: Rep[A]) = math_max(x,y)
-    def min[A:Manifest:Numeric](x: Rep[A], y: Rep[A]) = math_min(x,y)
-    def Pi = math_pi
-    def E = math_e
+    def ceil(x: Rep[Double])(implicit ctx: SourceContext) = math_ceil(x)
+    def floor(x: Rep[Double])(implicit ctx: SourceContext) = math_floor(x)
+    def exp(x: Rep[Double])(implicit ctx: SourceContext) = math_exp(x)
+    def log(x: Rep[Double])(implicit ctx: SourceContext) = math_log(x)
+    def sqrt(x: Rep[Double])(implicit ctx: SourceContext) = math_sqrt(x)
+    def sin(x: Rep[Double])(implicit ctx: SourceContext) = math_sin(x)
+    def cos(x: Rep[Double])(implicit ctx: SourceContext) = math_cos(x)
+    def acos(x: Rep[Double])(implicit ctx: SourceContext) = math_acos(x)
+    def atan(x: Rep[Double])(implicit ctx: SourceContext) = math_atan(x)
+    def atan2(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext) = math_atan2(x,y)
+    def pow(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext) = math_pow(x,y)
+    def abs[A:Manifest:Numeric](x: Rep[A])(implicit ctx: SourceContext) = math_abs(x)
+    def max[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit ctx: SourceContext) = math_max(x,y)
+    def min[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit ctx: SourceContext) = math_min(x,y)
+    def Pi(implicit ctx: SourceContext) = math_pi
+    def E(implicit ctx: SourceContext) = math_e
   }
 
-  def math_ceil(x: Rep[Double]) : Rep[Double]
-  def math_floor(x: Rep[Double]) : Rep[Double]
-  def math_exp(x: Rep[Double]) : Rep[Double]
-  def math_log(x: Rep[Double]) : Rep[Double]
-  def math_sqrt(x: Rep[Double]) : Rep[Double]
-  def math_sin(x: Rep[Double]) : Rep[Double]
-  def math_cos(x: Rep[Double]) : Rep[Double]
-  def math_acos(x: Rep[Double]) : Rep[Double]
-  def math_atan(x: Rep[Double]) : Rep[Double]
-  def math_atan2(x: Rep[Double], y: Rep[Double]) : Rep[Double]
-  def math_pow(x: Rep[Double], y: Rep[Double]): Rep[Double]
-  def math_abs[A:Manifest:Numeric](x: Rep[A]) : Rep[A]
-  def math_max[A:Manifest:Numeric](x: Rep[A], y: Rep[A]): Rep[A]
-  def math_min[A:Manifest:Numeric](x: Rep[A], y: Rep[A]): Rep[A]
-  def math_pi: Rep[Double]
-  def math_e: Rep[Double]
+  def math_ceil(x: Rep[Double])(implicit ctx: SourceContext) : Rep[Double]
+  def math_floor(x: Rep[Double])(implicit ctx: SourceContext) : Rep[Double]
+  def math_exp(x: Rep[Double])(implicit ctx: SourceContext) : Rep[Double]
+  def math_log(x: Rep[Double])(implicit ctx: SourceContext) : Rep[Double]
+  def math_sqrt(x: Rep[Double])(implicit ctx: SourceContext) : Rep[Double]
+  def math_sin(x: Rep[Double])(implicit ctx: SourceContext) : Rep[Double]
+  def math_cos(x: Rep[Double])(implicit ctx: SourceContext) : Rep[Double]
+  def math_acos(x: Rep[Double])(implicit ctx: SourceContext) : Rep[Double]
+  def math_atan(x: Rep[Double])(implicit ctx: SourceContext) : Rep[Double]
+  def math_atan2(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext) : Rep[Double]
+  def math_pow(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext): Rep[Double]
+  def math_abs[A:Manifest:Numeric](x: Rep[A])(implicit ctx: SourceContext) : Rep[A]
+  def math_max[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit ctx: SourceContext): Rep[A]
+  def math_min[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit ctx: SourceContext): Rep[A]
+  def math_pi(implicit ctx: SourceContext): Rep[Double]
+  def math_e(implicit ctx: SourceContext): Rep[Double]
 }
 
 trait MathOpsExp extends MathOps with EffectExp {
@@ -61,24 +62,24 @@ trait MathOpsExp extends MathOps with EffectExp {
   case class MathPi() extends Def[Double]
   case class MathE() extends Def[Double]
 
-  def math_ceil(x: Exp[Double]) = MathCeil(x)
-  def math_floor(x: Exp[Double]) = MathFloor(x)
-  def math_exp(x: Exp[Double]) = MathExp(x)
-  def math_log(x: Exp[Double]) = MathLog(x)
-  def math_sqrt(x: Exp[Double]) = MathSqrt(x)
-  def math_sin(x: Exp[Double]) = MathSin(x)
-  def math_cos(x: Exp[Double]) = MathCos(x)
-  def math_acos(x: Exp[Double]) = MathAcos(x)
-  def math_atan(x: Exp[Double]) = MathAtan(x)
-  def math_atan2(x: Exp[Double], y: Exp[Double]) = MathAtan2(x,y)
-  def math_pow(x: Exp[Double], y: Exp[Double]) = MathPow(x,y)
-  def math_abs[A:Manifest:Numeric](x: Exp[A]) = MathAbs(x)
-  def math_max[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMax(x, y)
-  def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) = MathMin(x, y)
-  def math_pi = MathPi()
-  def math_e = MathE()
+  def math_ceil(x: Exp[Double])(implicit ctx: SourceContext) = MathCeil(x)
+  def math_floor(x: Exp[Double])(implicit ctx: SourceContext) = MathFloor(x)
+  def math_exp(x: Exp[Double])(implicit ctx: SourceContext) = MathExp(x)
+  def math_log(x: Exp[Double])(implicit ctx: SourceContext) = MathLog(x)
+  def math_sqrt(x: Exp[Double])(implicit ctx: SourceContext) = MathSqrt(x)
+  def math_sin(x: Exp[Double])(implicit ctx: SourceContext) = MathSin(x)
+  def math_cos(x: Exp[Double])(implicit ctx: SourceContext) = MathCos(x)
+  def math_acos(x: Exp[Double])(implicit ctx: SourceContext) = MathAcos(x)
+  def math_atan(x: Exp[Double])(implicit ctx: SourceContext) = MathAtan(x)
+  def math_atan2(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = MathAtan2(x,y)
+  def math_pow(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = MathPow(x,y)
+  def math_abs[A:Manifest:Numeric](x: Exp[A])(implicit ctx: SourceContext) = MathAbs(x)
+  def math_max[A:Manifest:Numeric](x: Exp[A], y: Exp[A])(implicit ctx: SourceContext) = MathMax(x, y)
+  def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A])(implicit ctx: SourceContext) = MathMin(x, y)
+  def math_pi(implicit ctx: SourceContext) = MathPi()
+  def math_e(implicit ctx: SourceContext) = MathE()
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = ({
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case MathCeil(x) => math_ceil(f(x))
