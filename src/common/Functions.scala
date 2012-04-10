@@ -18,6 +18,7 @@ trait Functions extends Base {
   }
 
   def doApply[A:Manifest,B:Manifest](fun: Rep[A => B], arg: Rep[A])(implicit pos: SourceContext): Rep[B]
+  def doApply2[A1:Manifest,A2:Manifest,B:Manifest](fun: Rep[(A1,A2) => B], arg1: Rep[A1], arg2: Rep[A2])(implicit pos: SourceContext): Rep[B]
 
 }
 
@@ -61,6 +62,9 @@ trait FunctionsExp extends Functions with EffectExp {
     case _ => // unknown function, assume it is effectful TODO: global vs simple?
       reflectEffect(Apply(f, x))
   }
+
+  def doApply2[A1:Manifest,A2:Manifest,B:Manifest](fun: Exp[(A1,A2) => B], arg1: Exp[A1], arg2: Exp[A2])(implicit pos: SourceContext): Exp[B] = sys.error("TODO!")
+
   
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => syms(y)

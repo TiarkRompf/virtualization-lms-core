@@ -21,6 +21,41 @@ iteratee interface?
 */
 
 
+/*
+type NAutomaton[I,O] = List[NState[I,O]]
+
+case class NState[I,O](out: O, next: I => NAutomaton[I,O])
+
+
+def convertNAtoDA[I,O](na: NAutomaton[I,O])(m: Monoid[O]): Automaton[I,O] =
+  Automaton(m reduce (na map (_.out)), x => na flatMap (_.next(x)))
+
+
+type NAUT = NAutomaton[Char,Boolean]
+
+def advance(f: Char => NAUT) = List(NState(false, f))
+
+def guard(c: Boolean)(k: => NAUT) = if (c) k else List()
+
+def found = List(NState(true, x => Nil))
+
+def findAAB(): NAUT = {
+  advance { a1 =>
+    guard(a1 == 'A') {
+      advance { a2 =>
+        guard(a2 == 'A') {
+          advance { a3 =>
+            guard(a3 == 'B') {
+              done(true)
+  }}}}}} ++
+  advance { _ => gfindAAB() } // in parallel...
+}
+*/
+
+
+
+
+
 
 /*
   def findAAB(in: Rep[Input]): Rep[Boolean] = in match {
@@ -347,17 +382,16 @@ trait MatcherNewProgTrivialC {
   
   def findAAB(): IO = {
     val t1 = advanceIf(true) { a1 => 
-        advanceIf(a1 == 'A') { a2 => 
-          advanceIf(a2 == 'A') { b =>
-              if (b == 'B')
-                success() 
-              else 
-                fail() }}}
+      advanceIf(a1 == 'A') { a2 => 
+        advanceIf(a2 == 'A') { b =>
+          if (b == 'B')
+            success() 
+          else 
+            fail() }}}
 
     val t2 = advanceIf(true) { _ => findAAB() } // in parallel...
     OR(t1,t2)
   }
-
 
 
   def advanceIf(cond: Boolean)(f: Char => IO): IO = {
@@ -413,18 +447,7 @@ trait MatcherNewProgTrivialC {
 
 
 
-trait MatcherNewProgA { this: Arith with Functions with Equal with IfThenElse =>
-
-  class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
-    def apply(x:Rep[A]): Rep[B] = doApply(f, x)
-  }
-  implicit def lam[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
-  //implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
-
-  implicit def toDouble(f: Rep[Int]): Rep[Double] = f.asInstanceOf[Rep[Double]]
-  
-  // -- end boilerplate
-
+trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with IfThenElse =>
 
   type IO = Rep[Unit]
   
@@ -432,10 +455,10 @@ trait MatcherNewProgA { this: Arith with Functions with Equal with IfThenElse =>
   
   def findAAB(): IO = {
     advanceIf(unit(true)) { a1 => 
-        advanceIf(a1 == 'A') { a2 => 
-            advanceIf(a2 == 'A') { b =>
-              if (b == 'B')
-                success() }}}
+      advanceIf(a1 == 'A') { a2 => 
+        advanceIf(a2 == 'A') { b =>
+          if (b == 'B')
+            success() }}}
 
     advanceIf(unit(true)) { _ => findAAB() } // in parallel...
   }
@@ -511,44 +534,7 @@ trait MatcherNewProgA { this: Arith with Functions with Equal with IfThenElse =>
 }
 
 
-trait MemoUtils extends util.ClosureCompare {
-  val m = new scala.collection.mutable.HashMap[Any, Any]
-
-  def memo[T](x:T, hint: String = "", trace: Boolean = false): T = {
-    println("-- lookup " + hint + " " + x.getClass.getName)
-    if (trace) {
-      println(canon(x))
-    }
-    m.getOrElseUpdate(canon(x),{ println("-- not found"); x }).asInstanceOf[T]
-  }
-  
-  def canon(x:Any): String = {
-    val s = new java.io.ByteArrayOutputStream()
-    val o = new java.io.ObjectOutputStream(s)
-    o.writeObject(x)
-    s.toString("ASCII")
-  }
-}
-
-
-trait MatcherNewProgB { this: Arith with Functions with Equal with IfThenElse =>
-
-  class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
-    def apply(x:Rep[A]): Rep[B] = doApply(f, x)
-  }
-  implicit def lam[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
-  //implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
-
-  implicit def toDouble(f: Rep[Int]): Rep[Double] = f.asInstanceOf[Rep[Double]]
-  
-  // -- end boilerplate
-
-
-  def collectall(in: List[Rep[Any]]): Rep[Unit]
-  def printL(in: Rep[Any]): Rep[Unit]
-
-  // -- end util
-
+trait MatcherNewProgB extends Util { this: Arith with Functions with Equal with IfThenElse =>
 
   abstract class EX
   
@@ -564,7 +550,7 @@ trait MatcherNewProgB { this: Arith with Functions with Equal with IfThenElse =>
         advance { a2 => 
           guard(a2 == 'X') {
             advance { b =>
-              guard(b == /*a2*/'B') { //cannot re
+              guard(b == /*a2*/'B') { //cannot reach back: *finite* automaton!
                 success()
     }}}}}} ++
     advance { _ => findAAB() } // in parallel...
@@ -657,117 +643,33 @@ trait MatcherNewProgB { this: Arith with Functions with Equal with IfThenElse =>
 
 }
 
+// see: SI-5367 - Closures hang on to free variables of all their parents, causing subtle memory leaks
+// this also means equality using canonicalize may be problemtic for nested closures
 
+trait MemoUtils extends util.ClosureCompare {
+  val m = new scala.collection.mutable.HashMap[Any, Any]
 
-
-abstract class DfaState {
-  def hasFlag(x: Any): Boolean
-  def next(c: Char): DfaState
-}
-case class dfaFlagged(flag: Any, link: DfaState) extends DfaState {
-  def hasFlag(x: Any) = x == flag || link.hasFlag(x)
-  def next(c: Char) = link.next(c)
-}
-case class dfaTrans(f: Char => DfaState) extends DfaState {
-  def hasFlag(x: Any) = false
-  def next(c: Char) = f(c)
-}
-
-trait DFAOps extends Base {
-
-  type DIO = Rep[DfaState]
-
-  def dfa_flagged(e: Rep[Any])(rec: DIO): DIO
-  def dfa_trans(f: Rep[Char] => DIO): DIO 
-}
-
-
-trait DFAOpsExp extends BaseExp with DFAOps { this: Functions => 
-
-  case class DFAFlagged(e: Rep[Any], link: DIO) extends Def[DfaState]
-  case class DFAState(f: Rep[Char => DfaState]) extends Def[DfaState]
+  def memo[T](x:T, hint: String = "", trace: Boolean = false): T = {
+    println("-- lookup " + hint + " " + x.getClass.getName)
+    if (trace) {
+      println(canon(x))
+    }
+    m.getOrElseUpdate(canon(x),{ println("-- not found"); x }).asInstanceOf[T]
+  }
   
-  def dfa_flagged(e: Rep[Any])(rec: DIO): DIO = DFAFlagged(e,rec)
-  def dfa_trans(f: Rep[Char] => DIO): DIO = DFAState(doLambda(f))
-  
-}
-
-
-trait ScalaGenDFAOps extends ScalaGenBase {
-  val IR: DFAOpsExp
-  import IR._
-  
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case DFAState(f) => emitValDef(sym, "scala.virtualization.lms.epfl.test4.dfaTrans(" + quote(f) + ")")
-    case DFAFlagged(e,l) => emitValDef(sym, "scala.virtualization.lms.epfl.test4.dfaFlagged(" + quote(e) + ", " + quote(l) + ")")
-    case _ => super.emitNode(sym, rhs)
-  }  
-}
-
-
-trait NFAToDFA extends DFAOps { this: Arith with Functions with Equal with IfThenElse =>
-
-  // TODO: copy from below
-
-}
-
-
-
-case class gTrans(e: List[Any], f: Char => List[gTrans])
-
-trait GAOps extends Base {
-
-  type GIO = List[gTrans] // unstaged Automaton type, also State type (State = list of possible transitions)
-  
-  def gtrans(f: Rep[Char] => Rep[GIO]): Rep[GIO] = gtrans(unit(Nil))(f)
-  def gtrans(e: Rep[List[Any]])(f: Rep[Char] => Rep[GIO]): Rep[GIO] // = collectall(List(unit("gtrans"), lam(f))).asInstanceOf[Rep[GIO]]
-  def gcall(f: Rep[GIO], c: Rep[Char]): Rep[GIO] // = collectall(List(unit("gcall"), f, c)).asInstanceOf[Rep[GIO]]
-
-  def gflags(f: Rep[GIO]): Rep[List[Any]]
-  
-  def gguard(c: Rep[Boolean], s: Boolean = false)(d: Rep[GIO]): Rep[GIO]
-
-  def gstop(): Rep[GIO]
-  def gor(a: Rep[GIO], b: Rep[GIO]): Rep[GIO]
-
-}
-
-
-trait GAOpsExp extends BaseExp with GAOps { this: ListOps with IfThenElse with Functions =>
-
-  case class GTrans(e: Rep[Any], f: Rep[Char => GIO]) extends Def[GIO]
-  case class GCall(f: Rep[GIO], c: Rep[Char]) extends Def[GIO]
-  case class GFlags(f: Rep[GIO]) extends Def[List[Any]]
-
-  def gtrans(e: Rep[List[Any]])(f: Rep[Char] => Rep[GIO]): Rep[GIO] = GTrans(e, doLambda(f))
-  def gcall(f: Rep[GIO], c: Rep[Char]): Rep[GIO] = GCall(f,c)
-
-  def gflags(f: Rep[GIO]): Rep[List[Any]] = GFlags(f)
-  
-  def gguard(c: Rep[Boolean], s: Boolean = false)(d: Rep[GIO]): Rep[GIO] = if (c) d else gstop()
-
-  def gstop(): Rep[GIO] = list_new(Nil)
-  def gor(a: Rep[GIO], b: Rep[GIO]): Rep[GIO] = list_concat(a,b)
-
-}
-
-trait ScalaGenGAOps extends ScalaGenBase {
-  val IR: GAOpsExp
-  import IR._
-  
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case GTrans(e,f) => emitValDef(sym, "List(scala.virtualization.lms.epfl.test4.gTrans(" + quote(e) + "," + quote(f) + "))")
-    case GCall(f,c) => emitValDef(sym, quote(f) + ".flatMap(_.f.apply(" + quote(c) + "))")
-    case GFlags(f) => emitValDef(sym, quote(f) + ".flatMap(_.e)")
-    case _ => super.emitNode(sym, rhs)
-  }  
+  def canon(x:Any): String = {
+    val s = new java.io.ByteArrayOutputStream()
+    val o = new java.io.ObjectOutputStream(s)
+    o.writeObject(x)
+    s.toString("ASCII")
+  }
 }
 
 
 
 
-trait MatcherNewProg extends DFAOps with GAOps { this: Arith with Functions with Equal with IfThenElse =>
-
+trait Util extends Base with Arith with Functions {
+  
   class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
     def apply(x:Rep[A]): Rep[B] = doApply(f, x)
   }
@@ -776,14 +678,13 @@ trait MatcherNewProg extends DFAOps with GAOps { this: Arith with Functions with
 
   implicit def toDouble(f: Rep[Int]): Rep[Double] = f.asInstanceOf[Rep[Double]]
   
-  // -- end boilerplate
-
-
   def collectall(in: List[Rep[Any]]): Rep[Unit]
-  //def printL(in: Rep[Any]): Rep[Unit]
+  def protect[A:Manifest](x: Rep[A], in: List[Rep[Any]]): Rep[A]
+}
 
-  // -- end util
 
+
+trait MatcherNewProg extends DFAOps with GAOps with NFAtoDFA with GAtoDA with Util { this: Arith with Functions with Equal with IfThenElse =>
 
   // -- begin general automaton
   
@@ -800,46 +701,10 @@ trait MatcherNewProg extends DFAOps with GAOps { this: Arith with Functions with
     gtrans { _ => gfindAAB() }) // in parallel...
   }
   
-  def ginterpret(xs: Rep[GIO], cin: Rep[Char]): Rep[GIO] = gcall(xs, cin)
   
-  // -- end general automaton
-
-
-
-  // -- begin NFA
-  
-  type IO = List[Trans]
-  
-  case class Trans(c: Option[Char], e: Option[Rep[Unit]], s: () => IO)
-  
-  def trans(c: Option[Char])(s: () => IO): IO = List(Trans(c, None, s))
-  
-  
-  def exploreNFA[A:Manifest](xs: IO, cin: Rep[Char])(flag: Rep[Any] => Rep[A] => Rep[A])(k: IO => Rep[A]): Rep[A] = xs match {
-    case Nil => k(Nil)
-    case Trans(Some(c), e, s)::rest =>
-      if (cin == c) {
-        val xs1 = rest collect { case Trans(Some(`c`) | None,e,s) => Trans(None,e,s) }
-        val maybeFlag = e map flag getOrElse ((x:Rep[A])=>x)
-        maybeFlag(exploreNFA(xs1, cin)(flag)(acc => k(acc ++ s())))
-      } else {
-        val xs1 = rest filter { case Trans(Some(`c`),_,_) => false case _ => true }
-        exploreNFA(xs1, cin)(flag)(k)
-      }
-    case Trans(None, e, s)::rest =>
-      val maybeFlag = e map flag getOrElse ((x:Rep[A])=>x)
-      maybeFlag(exploreNFA(rest,cin)(flag)(acc => k(acc ++ s())))
-  }
-
-  // -- end NFA
-
-
-
-
   // -- begin DFA
   
-
-  def findAAB(): IO = {
+  def findAAB(): NIO = {
     guard(Some('A')) {
       guard(Some('A')) {
         guard(Some('B'), true) {
@@ -848,80 +713,16 @@ trait MatcherNewProg extends DFAOps with GAOps { this: Arith with Functions with
     guard(None) { findAAB() } // in parallel...
   }
 
-  
-  def guard(cond: Option[Char], found: Boolean = false)(e: => IO): IO = {
-    List(Trans(cond, if (found) Some(unit("found").asInstanceOf[Rep[Unit]]) else None, () => e))
+
+  def testMatchingG() = {
+
+    convertGAtoDA(gfindAAB())
   }
 
-  def stop(): IO = Nil
+  def testMatching() = {
 
-
-  // --- test
-
-  var nest: Int = 0
-
-  def checkNest(b: => Rep[Unit]): Rep[Unit] = {
-    if (nest == 7) collectall(List(unit("overflow"+nest)))
-    else {
-      nest += 1
-      val r = b  
-      nest -= 1
-      r
-    }
+    convertNFAtoDFA(findAAB())
   }
-
-
-
-
-  def testMatchingG(xs: Rep[List[Char]]) = {
-
-    def iterate: Rep[GIO => DfaState] = lam { state: Rep[GIO] => dfa_flagged(gflags(state))(dfa_trans { c: Rep[Char] =>
-      
-      iterate(gcall(state,c))
-      
-    })}
-    iterate(gfindAAB())
-
-  }
-
-  def testMatching(xs: Rep[List[Char]]) = {
-
-    def iterate(state: IO): DIO = dfa_trans { c: Rep[Char] =>
-      exploreNFA(state, c)(dfa_flagged) { next =>
-        iterate(next)
-      }
-    }
-    
-    iterate(findAAB())
-
-
-    // see: SI-5367 - Closures hang on to free variables of all their parents, causing subtle memory leaks
-    // this also means equality using canonicalize may be problemtic for nested closures
-
-    /*def continue(funs: IO) = dfa_trans { c: Rep[Char] =>
-      println("within arg " + c)
-      
-      val r = interpret(funs,c) { next => 
-        println(next)
-        iterate(next)
-      }
-
-      println("leave arg " + c)
-      r
-    }
-
-    def iterate(script: IO): Rep[Unit] = {
-      println("iterate " + nest + " " + script)
-  
-      checkNest {
-        continue(script)
-      }  
-    }
-
-    val script = findAAB()
-    iterate(script)*/
-  }
-
 }
 
 
@@ -931,6 +732,72 @@ class TestMatcherNew extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test4-"
   
+  trait DSL extends MatcherNewProg with Arith with Functions with Equal with IfThenElse {
+    def bare[T:Manifest](x: Rep[Any], f: String => String): Rep[T]
+    def test(x: Rep[Unit]): DIO
+  }
+
+  trait RunTest {
+    val fc: Unit => Automaton[Char,List[Any]]
+    val input = List('X','A','B','Z','A','A','B','W','A','A','A','A','B','Q')
+    def runtest() {
+      var state = fc()
+
+      var idx = 0
+      input foreach { c =>
+        println("idx:   " + idx)
+        println("out:   " + state.out)
+        println("char:  " + c)
+
+        idx += 1
+        state = state.next(c)
+      }
+      
+      println("idx:   " + idx)
+      println("out:   " + state.out)
+    }
+  }
+
+  trait Impl extends DSL with RunTest with DFAOpsExp with GAOpsExp
+    with ArithExpOpt with EqualExpOpt with TupleOpsExp with OrderingOpsExp 
+    with BooleanOpsExp with IfThenElseExpOpt with IfThenElseFatExp with ListOpsExp
+    with SplitEffectsExpFat // temporary!
+    //with FunctionExpUnfoldRecursion 
+    with FunctionsExternalDef1 /* was 2 */ 
+    with CompileScala { q =>
+      case class Result(in: List[Exp[Any]]) extends Def[Unit] //FIXME
+      case class ResultA[A](x: Exp[A], in: List[Exp[Any]]) extends Def[A] //FIXME
+      case class Bare[T](x: Exp[Any], f: String => String) extends Def[T] //FIXME
+      def collectall(in: List[Rep[Any]]): Rep[Unit] = Result(in)
+      def protect[A:Manifest](x: Exp[A], in: List[Rep[Any]]): Rep[A] = ResultA(x,in)
+      def bare[T:Manifest](x: Exp[Any], f: String => String): Exp[T] = Bare[T](x,f)
+      //def printL(in: Rep[Any]): Rep[Unit] = /*reflectEffect*/(Result(List(in))) //FIXME violate ordering
+      override val verbosity = 1
+      object codegen extends ScalaGenArith with ScalaGenEqual with ScalaGenListOps with ScalaGenTupleOps
+          with ScalaGenIfThenElseFat with ScalaGenSplitEffects with ScalaGenOrderingOps
+          with ScalaGenDFAOps with ScalaGenGAOps
+          with ScalaGenFunctionsExternal { 
+        val IR: q.type = q
+        //import IR._   
+        import java.io.PrintWriter
+        override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+          case Result(xs) => emitValDef(sym, "(" + (xs map {quote}).mkString(",") + ") // DUMMY")
+          case ResultA(x,xs) => emitValDef(sym, quote(x) + " // " + (xs map quote).mkString(","))
+          case Bare(x,f) => emitValDef(sym, f(quote(x)))
+          case _ => 
+            super.emitNode(sym, rhs)
+        }
+      }
+      
+      val f = (x:Rep[Unit]) => test(x)
+      codegen.emitSource(f, "Match", new java.io.PrintWriter(System.out))
+      val fc = compile(f)
+      runtest()
+  }
+
+
+
+
   def testMatcherTriv1 = {
     withOutFile(prefix+"matchertriv1") {
       object MatcherProgExp extends MatcherNewProgTrivialA
@@ -961,103 +828,205 @@ class TestMatcherNew extends FileDiffSuite {
   // civet 573 ms, dk.brics.automaton 816 ms
 
 
-
-  def testMatcherNew1 = {
-    withOutFile(prefix+"matchernew1") {
-      object MatcherProgExp extends MatcherNewProg with DFAOpsExp with GAOpsExp
-      with ArithExpOpt with EqualExpOpt with BooleanOpsExp with IfThenElseExpOpt with ListOpsExp
-      //with FunctionExpUnfoldRecursion 
-      with FunctionsExternalDef1 /* was 2 */ 
-      with CompileScala {
-        case class Result(in: List[Exp[Any]]) extends Def[Unit] //FIXME
-        def collectall(in: List[Rep[Any]]): Rep[Unit] = Result(in)
-        //def printL(in: Rep[Any]): Rep[Unit] = /*reflectEffect*/(Result(List(in))) //FIXME violate ordering
-        override val verbosity = 1
-        lazy val codegen = p
-      }
-      object p extends ScalaGenArith with ScalaGenEqual with ScalaGenListOps with ScalaGenDFAOps with ScalaGenGAOps
-        with ScalaGenIfThenElse with ScalaGenFunctionsExternal { 
-          val IR: MatcherProgExp.type = MatcherProgExp 
-          import IR._          
-          import java.io.PrintWriter
-          override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-            case Result(xs) => emitValDef(sym, "(" + (xs map {quote}).mkString(",") + ") // DUMMY")
-            //case Lambda(f) => emitNode(sym, DefineFun(f)) // FIXME
-            case _ => 
-              //println("emit super on " + sym + " = " + rhs + " / " + rhs.getClass)
-              super.emitNode(sym, rhs)
-          }
-      }
-      
-      import MatcherProgExp.{List=>_,_}
-      val f = (x:Rep[List[Char]]) => testMatching(x)
-      
-      p.emitSource(f, "Match", new java.io.PrintWriter(System.out))
-      val fc = compile(f)
-      var state = fc(Nil)
-      
-      val input = List('X','A','B','Z','A','A','B','W','A','A','A','A','B','Q')
-      var idx = 0
-      input foreach { c =>
-        println("idx:   " + idx)
-        println("found: " + state.hasFlag("found"))
-        println("char:  " + c)
+  def testMatcherNew1 = withOutFileChecked(prefix+"matchernew1") {
+    trait Prog extends DSL {
+      def test(x: Rep[Unit]) = {
         
-        idx += 1
-        state = state.next(c)
+        def findAAB(): NIO = {
+          guard(Some('A')) {
+            guard(Some('A')) {
+              guard(Some('B'), true) {
+                stop()
+          }}} ++
+          guard(None) { findAAB() } // in parallel...
+        }
+        
+        convertNFAtoDFA(findAAB())
       }
     }
-    assertFileEqualsCheck(prefix+"matchernew1")
+    new Prog with Impl
   }
 
-  def testMatcherNew2 = {
-    withOutFile(prefix+"matchernew2") {
-      object MatcherProgExp extends MatcherNewProg with DFAOpsExp with GAOpsExp
-      with ArithExpOpt with EqualExpOpt with BooleanOpsExp with IfThenElseExpOpt with ListOpsExp
-      //with FunctionExpUnfoldRecursion 
-      with FunctionsExternalDef1 /* was 2 */ 
-      with CompileScala {
-        case class Result(in: List[Exp[Any]]) extends Def[Unit] //FIXME
-        def collectall(in: List[Rep[Any]]): Rep[Unit] = Result(in)
-        //def printL(in: Rep[Any]): Rep[Unit] = /*reflectEffect*/(Result(List(in))) //FIXME violate ordering
-        override val verbosity = 1
-        lazy val codegen = p
-      }
-      object p extends ScalaGenArith with ScalaGenEqual with ScalaGenListOps with ScalaGenDFAOps with ScalaGenGAOps
-        with ScalaGenIfThenElse with ScalaGenFunctionsExternal { 
-          val IR: MatcherProgExp.type = MatcherProgExp
-          import IR._          
-          import java.io.PrintWriter
-          override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-            case Result(xs) => emitValDef(sym, "(" + (xs map {quote}).mkString(",") + ") // DUMMY")
-            //case Lambda(f) => emitNode(sym, DefineFun(f)) // FIXME
-            case _ => 
-              //println("emit super on " + sym + " = " + rhs + " / " + rhs.getClass)
-              super.emitNode(sym, rhs)
-          }
-      }
-      import MatcherProgExp.{List=>_,_}
-
-      val f = (x:Rep[List[Char]]) => testMatchingG(x)
-      
-      // FIXME: problem with recursive codegen
+  def testMatcherNew1b = withOutFileChecked(prefix+"matchernew1b") {
+    trait Prog extends DSL {
+      def test(x: Rep[Unit]) = {
         
-      p.emitSource(f, "MatchG", new java.io.PrintWriter(System.out))
-      val fc = compile(f)
-      var state = fc(Nil)
-      
-      val input = List('X','A','B','Z','A','A','B','W','A','A','A','A','B','Q')
-      var idx = 0
-      input foreach { c =>
-        println("idx:   " + idx)
-        println("found: " + state.hasFlag(List(1)))
-        println("char:  " + c)
+        def star(c: Option[Char])(k: => NIO): NIO = {
+          guard(c)(star(c)(k)) ++ k
+        }
         
-        idx += 1
-        state = state.next(c)
+        def findAAB(): NIO = {
+          star(None) {
+            guard(Some('A')) {
+              guard(Some('A')) {
+                guard(Some('B'), true) {
+                  stop()
+          }}}}
+        }
+        
+        convertNFAtoDFA(findAAB())
       }
     }
-    assertFileEqualsCheck(prefix+"matchernew2")
+    new Prog with Impl
   }
+
+
+  def testMatcherNew2 = withOutFileChecked(prefix+"matchernew2") {
+    trait Prog extends DSL {
+      def test(x: Rep[Unit]) = {
+        
+        def gfindAAB(): Rep[GIO] = {
+          gor(gtrans { a1 =>
+            gguard (a1 == 'A') { 
+              gtrans { a2 =>
+                gguard (a2 == a1/*'A'*/) { 
+                  gtrans { a3 =>
+                    gguard (a3 == 'B', true) {
+                      //gstop()
+                      gtrans(unit(List(1))) { a4 => gstop() }
+          }}}}}},
+          gtrans { _ => gfindAAB() }) // in parallel...
+        }
+        
+        convertGAtoDA(gfindAAB())        
+      }
+    }
+    new Prog with Impl
+  }
+
+
+  def testMatcherNew2b = withOutFileChecked(prefix+"matchernew2b") {
+    trait Prog extends DSL {
+      def test(x: Rep[Unit]) = {
+        
+        def star(p: Rep[Char] => Rep[Boolean])(k0: => Rep[GIO]): Rep[GIO] = {
+          val k = k0
+          gor(gtrans(a => gguard(p(a))(star(p)(k))), k)
+        }
+        
+        def gfindAAB(): Rep[GIO] = {
+          star(a => unit(true))(gtrans { a1 =>
+            gguard (a1 == 'A') { 
+              gtrans { a2 =>
+                gguard (a2 == a1/*'A'*/) { 
+                  gtrans { a3 =>
+                    gguard (a3 == 'B'/*, true*/) {
+                      //gstop()
+                      gtrans(unit(List(1))) { a4 => gstop() }
+          }}}}}})
+        }
+        
+        convertGAtoDA(gfindAAB())        
+      }
+    }
+    new Prog with Impl
+  }
+
+
+  def testCounter1 = withOutFileChecked(prefix+"counter1") {
+    trait Prog extends DSL with ListOps with Arith {
+
+      def protect[A:Manifest](a:Rep[A],b:Rep[Any]): Rep[A] = protect(a, Seq(b).toList)
+
+      def test(x: Rep[Unit]) = {
+        
+        def count: Rep[Double => DfaState] = lam { s: Rep[Double] =>
+          dfa_trans(List(s)) { a1 =>
+            count(protect(s,a1) + 1)
+          }
+        }
+        
+        count(0.0)
+      }
+    }
+    new Prog with Impl
+  }
+
+
+  trait StreamHelpers extends DSL with ListOps with Arith with BooleanOps with TupleOps with OrderingOps with StepperOps {
+    def countChar(c:Rep[Char]) = Stream[Char] filter (_ == c) into fcount
+
+    def pcount(n: Rep[Double]) = Prod[Double](0, _ < n, _ + 1)
+    def ptails[T:Manifest](xs: Rep[List[T]]) = Prod[List[T]](xs, !list_isEmpty(_), list_tail(_))
+    def plist[T:Manifest](xs: Rep[List[T]]) = ptails(xs) map (list_head(_))
+
+    def fcount[T:Manifest] = Foreach[T,Double](0, c => s => s + 1)
+    def fwhile[T:Manifest](p: Rep[T] => Rep[Boolean]) = Foreach[T,Boolean](unit(true), c => s => if (s && p(c)) unit(true) else unit(false))
+    def flast[T:Manifest](s: Rep[T]) = Foreach[T,T](s, c => s => c)
+    def fcollect[T:Manifest] = Foreach[T,List[T]](List(), c => s => list_concat(s,List(c)))
+
+    def switcher[T:Manifest,S1:Manifest,S2:Manifest,O1:Manifest,O2:Manifest](s: Stream[T])(p: Rep[T]=>Rep[Boolean])(a: Stepper2[T,S1,O1], b: Stepper2[O1,S2,O2]) = 
+      Stepper2[T,(S1,S2),O2]((a.s,b.s), ss => b.cond(ss._2), c => ss => if (p(c)) (a.s, b.yld(a.res(ss._1))(ss._2)) else (a.yld(c)(ss._1), ss._2), ss => b.res(ss._2))
+      
+  }
+
+  def testCounter2 = withOutFileChecked(prefix+"counter2") {
+    trait Prog extends DSL with StreamHelpers {
+
+      def test(x: Rep[Unit]): DIO = {
+        
+        val nested = Stream[Char] flatMap { c => plist(List(c,c,c)) } into fcollect
+
+        val listhandler = Stream[Char] split(_ == 'A', fcount) filter (_ != 0) into fcount
+        
+        val countA = countChar('A') zip listhandler
+        val countB = countChar('B');
+        val countC = countChar('C');
+        
+        val d = countA zip countB zip countC zip nested
+        
+        stepthrough(d)
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testStream1 = withOutFileChecked(prefix+"stream1") {
+    trait Prog extends DSL with StreamHelpers {
+      
+      def iseven(n: Rep[Double]) = bare[Boolean](n,s=>s+"%2 == 0")
+      
+      def test(x: Rep[Unit]): DIO = {
+        
+        val nums = pcount(8)
+        val even = pcount(8) /*until (_ == 5.0)*/ filter (n => iseven(n))
+        
+        val pairs = nums zip even
+        
+        val nested = Stream[Char] flatMap { c => pairs } into fcollect
+
+        stepthrough(nested)
+      }
+    }
+    new Prog with Impl
+  }
+  
+
+/*
+  val req = "PUT /file HTTP/1.1\r\n"+
+  "Host: example.com\r"+
+  "User-agent: X\n"+ 
+  "content-type: text/plain\r\n"+ 
+  "\r\n"+
+  "1C\r\n"+
+  "body line 1lf body line 2\r\n"+
+  "7\r\n"+
+  "body li\r\n"+
+  "37\r\n"+
+  "ne 3cr body line 4\n body line 5\n\r\n"+
+  "0crlfcrlf"
+
+  assume input is given as buffers: List[String]
+  
+  val chars = Stream[String] flatMap (buf => pstring(buf)) 
+  
+  val headerLines = Stream[Char] split ("\r\n|\r|\n", fcollect) until (_.isEmpty) into handleHeaderLine
+
+  val chunked = ...
+  
+  
+  def parse = buffers into (chars into (parseHeader andThen parseBody))
+
+*/
 
 }

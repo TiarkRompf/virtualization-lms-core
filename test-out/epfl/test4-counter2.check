@@ -1,0 +1,176 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Match extends ((Unit)=>(scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
+def apply(x0:Unit): scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
+var x59 = null.asInstanceOf[scala.Function1[scala.Tuple2[scala.collection.immutable.List[Char], scala.collection.immutable.List[Char]], scala.Tuple2[scala.collection.immutable.List[Char], scala.collection.immutable.List[Char]]]]
+var x7 = null.asInstanceOf[scala.Function1[scala.Tuple2[scala.Tuple2[scala.Tuple2[scala.Tuple2[Double, scala.Tuple2[Double, Double]], Double], Double], scala.collection.immutable.List[Char]], scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+x59 = {x60: (scala.Tuple2[scala.collection.immutable.List[Char], scala.collection.immutable.List[Char]]) => 
+val x61 = x60._1
+val x63 = x61.isEmpty
+val x65 = if (x63) {
+false
+} else {
+true
+}
+val x72 = if (x65) {
+val x66 = x61.tail
+val x62 = x60._2
+val x67 = x61.head
+val x68 = List(x67)
+val x69 = x62 ::: x68
+val x70 = (x66,x69)
+val x71 = x59(x70)
+x71
+} else {
+x60
+}
+x72
+}
+x7 = {x8: (scala.Tuple2[scala.Tuple2[scala.Tuple2[scala.Tuple2[Double, scala.Tuple2[Double, Double]], Double], Double], scala.collection.immutable.List[Char]]) => 
+val x10 = x8._2
+val x9 = x8._1
+val x12 = x9._2
+val x11 = x9._1
+val x14 = x11._2
+val x13 = x11._1
+val x15 = x13._1
+val x16 = x13._2
+val x18 = x16._2
+val x19 = (x15,x18)
+val x20 = (x19,x14)
+val x21 = (x20,x12)
+val x22 = (x21,x10)
+val x23 = List(x22)
+val x24 = {x25: (Char) => 
+val x27 = x8 // x25
+val x36 = x25 == 'A'
+// TODO: use vars instead of tuples to return multiple values
+val (x38,x48) = if (x36) {
+val x28 = x27._1
+val x30 = x28._1
+val x32 = x30._1
+val x34 = x32._1
+val x37 = x34+1.0
+val x35 = x32._2
+val x39 = x35._1
+val x42 = x39 == 0
+val x44 = if (x42) {
+val x40 = x35._2
+x40
+} else {
+val x40 = x35._2
+val x43 = x40+1.0
+x43
+}
+val x45 = (0.0,x44)
+(x37,x45)
+} else {
+val x28 = x27._1
+val x30 = x28._1
+val x32 = x30._1
+val x34 = x32._1
+val x35 = x32._2
+val x40 = x35._2
+val x39 = x35._1
+val x46 = x39+1.0
+val x47 = (x46,x40)
+(x34,x47)
+}
+val x49 = (x38,x48)
+val x50 = x25 == 'B'
+val x52 = if (x50) {
+val x28 = x27._1
+val x30 = x28._1
+val x33 = x30._2
+val x51 = x33+1.0
+x51
+} else {
+val x28 = x27._1
+val x30 = x28._1
+val x33 = x30._2
+x33
+}
+val x53 = (x49,x52)
+val x54 = x25 == 'C'
+val x56 = if (x54) {
+val x28 = x27._1
+val x31 = x28._2
+val x55 = x31+1.0
+x55
+} else {
+val x28 = x27._1
+val x31 = x28._2
+x31
+}
+val x57 = (x53,x56)
+val x26 = List(x25,x25,x25)
+val x29 = x27._2
+val x58 = (x26,x29)
+val x73 = x59(x58)
+val x75 = x73._2
+val x76 = (x57,x75)
+val x77 = x7(x76)
+x77
+}
+val x78 = scala.virtualization.lms.epfl.test4.Automaton(x23,x24)
+x78
+}
+val x1 = List()
+val x2 = (0.0,0.0)
+val x3 = (0.0,x2)
+val x4 = (x3,0.0)
+val x5 = (x4,0.0)
+val x6 = (x5,x1)
+val x79 = x7(x6)
+x79
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+compilation: ok
+idx:   0
+out:   List(((((0.0,0.0),0.0),0.0),List()))
+char:  X
+idx:   1
+out:   List(((((0.0,0.0),0.0),0.0),List(X, X, X)))
+char:  A
+idx:   2
+out:   List(((((1.0,1.0),0.0),0.0),List(X, X, X, A, A, A)))
+char:  B
+idx:   3
+out:   List(((((1.0,1.0),1.0),0.0),List(X, X, X, A, A, A, B, B, B)))
+char:  Z
+idx:   4
+out:   List(((((1.0,1.0),1.0),0.0),List(X, X, X, A, A, A, B, B, B, Z, Z, Z)))
+char:  A
+idx:   5
+out:   List(((((2.0,2.0),1.0),0.0),List(X, X, X, A, A, A, B, B, B, Z, Z, Z, A, A, A)))
+char:  A
+idx:   6
+out:   List(((((3.0,2.0),1.0),0.0),List(X, X, X, A, A, A, B, B, B, Z, Z, Z, A, A, A, A, A, A)))
+char:  B
+idx:   7
+out:   List(((((3.0,2.0),2.0),0.0),List(X, X, X, A, A, A, B, B, B, Z, Z, Z, A, A, A, A, A, A, B, B, B)))
+char:  W
+idx:   8
+out:   List(((((3.0,2.0),2.0),0.0),List(X, X, X, A, A, A, B, B, B, Z, Z, Z, A, A, A, A, A, A, B, B, B, W, W, W)))
+char:  A
+idx:   9
+out:   List(((((4.0,3.0),2.0),0.0),List(X, X, X, A, A, A, B, B, B, Z, Z, Z, A, A, A, A, A, A, B, B, B, W, W, W, A, A, A)))
+char:  A
+idx:   10
+out:   List(((((5.0,3.0),2.0),0.0),List(X, X, X, A, A, A, B, B, B, Z, Z, Z, A, A, A, A, A, A, B, B, B, W, W, W, A, A, A, A, A, A)))
+char:  A
+idx:   11
+out:   List(((((6.0,3.0),2.0),0.0),List(X, X, X, A, A, A, B, B, B, Z, Z, Z, A, A, A, A, A, A, B, B, B, W, W, W, A, A, A, A, A, A, A, A, A)))
+char:  A
+idx:   12
+out:   List(((((7.0,3.0),2.0),0.0),List(X, X, X, A, A, A, B, B, B, Z, Z, Z, A, A, A, A, A, A, B, B, B, W, W, W, A, A, A, A, A, A, A, A, A, A, A, A)))
+char:  B
+idx:   13
+out:   List(((((7.0,3.0),3.0),0.0),List(X, X, X, A, A, A, B, B, B, Z, Z, Z, A, A, A, A, A, A, B, B, B, W, W, W, A, A, A, A, A, A, A, A, A, A, A, A, B, B, B)))
+char:  Q
+idx:   14
+out:   List(((((7.0,3.0),3.0),0.0),List(X, X, X, A, A, A, B, B, B, Z, Z, Z, A, A, A, A, A, A, B, B, B, W, W, W, A, A, A, A, A, A, A, A, A, A, A, A, B, B, B, Q, Q, Q)))

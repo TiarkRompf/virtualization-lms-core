@@ -149,17 +149,14 @@ trait FunctionsExternalDef1 extends FunctionsExternalDef0 with ClosureCompare { 
         val g = (x: Exp[A]) => Apply(funSym, x): Exp[B]
         funTable = (g,can,funSym)::funTable
         
-        Block(f(argSym)) match { //FIXME: use reify (conflict with test3.effects)
-          /*case Block(c @ Const(_)) => 
-            val g = (x: Exp[A]) => c
-            funTable = (g,can)::funTable // ok?
-            Lambda(g)*/
-          case e => 
-            createDefinition(funSym, DefineFun[A,B](e)(argSym))
-            funSym
-        }
+        val y = Block(f(argSym)) // should use reifyEffects!
+        
+        createDefinition(funSym, DefineFun[A,B](y)(argSym))
+        funSym
     }
   }
+
+
 
 }
 
@@ -206,6 +203,8 @@ trait ScalaGenFunctionsExternal extends ScalaGenEffect {
       stream.println("}")
     case Apply(fun, arg) => 
       emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
+    case Apply2(fun, arg1, arg2) => 
+      emitValDef(sym, quote(fun) + "(" + quote(arg1) + ", " + quote(arg2) + ")")
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -39,6 +39,7 @@ trait TupleOps extends Base {
 }
 
 trait TupleOpsExp extends TupleOps with BaseExp {
+  
   implicit def make_tuple2[A:Manifest,B:Manifest](t: (Exp[A],Exp[B]))(implicit pos: SourceContext) : Exp[(A,B)] = ETuple2(t._1, t._2)
   implicit def make_tuple3[A:Manifest,B:Manifest,C:Manifest](t: (Exp[A],Exp[B],Exp[C]))(implicit pos: SourceContext) : Exp[(A,B,C)] = ETuple3(t._1, t._2, t._3)
   implicit def make_tuple4[A:Manifest,B:Manifest,C:Manifest,D:Manifest](t: (Exp[A],Exp[B],Exp[C],Exp[D]))(implicit pos: SourceContext) : Exp[(A,B,C,D)] = ETuple4(t._1, t._2, t._3, t._4)

@@ -46,7 +46,7 @@ x12
 x18
 }
 val x19 = List(scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]](List(),x1))
-x23 = x19 ::: x22
+x23 = x22 ::: x19
 x24 = {x25: (scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]) => 
 val x26 = x25.flatMap(_.out)
 val x27 = {x28: (Char) => 

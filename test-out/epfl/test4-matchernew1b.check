@@ -3,51 +3,51 @@
 *******************************************/
 class Match extends ((Unit)=>(scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
 def apply(x0:Unit): scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
-var x10 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
+var x12 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
 var x1 = null.asInstanceOf[scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
 var x17 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
 var x4 = null.asInstanceOf[scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
-var x13 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
+var x10 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
 var x7 = null.asInstanceOf[scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
-var x11 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
+var x13 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
 x1 = {x2: (Char) => 
 val x3 = x2 == 'A'
 val x18 = if (x3) {
 x17
 } else {
-x10
+x12
 }
 x18
 }
-x10 = scala.virtualization.lms.epfl.test4.Automaton(List(),x1)
-x11 = x10.copy(out = "found"::x10.out)
+x12 = scala.virtualization.lms.epfl.test4.Automaton(List(),x1)
+x13 = x12.copy(out = "found"::x12.out)
 x7 = {x8: (Char) => 
-val x9 = x8 == 'B'
+val x9 = x8 == 'A'
 val x15 = if (x9) {
-x11
+x10
 } else {
-val x12 = x8 == 'A'
-val x14 = if (x12) {
+val x11 = x8 == 'B'
+val x14 = if (x11) {
 x13
 } else {
-x10
+x12
 }
 x14
 }
 x15
 }
-x13 = scala.virtualization.lms.epfl.test4.Automaton(List(),x7)
+x10 = scala.virtualization.lms.epfl.test4.Automaton(List(),x7)
 x4 = {x5: (Char) => 
 val x6 = x5 == 'A'
 val x16 = if (x6) {
-x13
-} else {
 x10
+} else {
+x12
 }
 x16
 }
 x17 = scala.virtualization.lms.epfl.test4.Automaton(List(),x4)
-x10
+x12
 }
 }
 /*****************************************
