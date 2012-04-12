@@ -22,8 +22,8 @@ trait ScalaCodegen extends GenericCodegen {
     val x = fresh[A]
     val y = f(x)
 
-    val sA = mA.toString
-    val sB = mB.toString
+    val sA = remap(mA)
+    val sB = remap(mB)
 
     val staticData = getFreeDataBlock(y)
 
