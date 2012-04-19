@@ -54,8 +54,8 @@ trait GenericCodegen extends Traversal {
 
   // ----------
 
-  def emitBlock(y: Exp[Any])(implicit stream: PrintWriter): Unit = {
-    val deflist = buildScheduleForResult(y)
+  def emitBlock(y: Block[Any])(implicit stream: PrintWriter): Unit = {
+    val deflist = buildScheduleForResult(getBlockResultFull(y)) // need actual Reify node here, not its embedded exp
     
     for (TP(sym, rhs) <- deflist) {
       emitNode(sym, rhs)
@@ -92,13 +92,13 @@ trait GenericNestedCodegen extends NestedTraversal with GenericCodegen {
   val IR: Expressions with Effects
   import IR._
 
-  override def emitBlock(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
+  override def emitBlock(result: Block[Any])(implicit stream: PrintWriter): Unit = {
     focusBlock(result) {
       emitBlockFocused(result)
     }
   }
   
-  def emitBlockFocused(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
+  def emitBlockFocused(result: Block[Any])(implicit stream: PrintWriter): Unit = {
     focusExactScope(result) { levelScope =>
       for (TP(sym, rhs) <- levelScope)
         emitNode(sym, rhs)

@@ -31,12 +31,13 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
   }
 
 
-  override def focusExactScopeFat[A](currentScope0: List[TTP])(result0: List[Exp[Any]])(body: List[TTP] => A): A = {
+  override def focusExactScopeFat[A](currentScope0: List[TTP])(result0B: List[Block[Any]])(body: List[TTP] => A): A = {
+    val result0 = result0B.map(getBlockResultFull)
     var result: List[Exp[Any]] = result0
     var currentScope = currentScope0
 
     if (!shouldApplyFusion(currentScope)(result))
-      return super.focusExactScopeFat(currentScope)(result)(body)
+      return super.focusExactScopeFat(currentScope)(result.map(Block(_)))(body)
 /*
     println("--- pre-pre-loop fusion: bound")
     val bound = currentScope.flatMap(z => boundSyms(z.rhs))
@@ -48,7 +49,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
 */
 
     // find loops at current top level
-    var Wloops = super.focusExactScopeFat(currentScope)(result) { levelScope => 
+    var Wloops = super.focusExactScopeFat(currentScope)(result.map(Block(_))) { levelScope => 
       // TODO: cannot in general fuse several effect loops (one effectful and several pure ones is ok though)
       // so we need a strategy. a simple one would be exclude all effectful loops right away (TODO).
       levelScope collect { case e @ TTP(_, SimpleFatLoop(_,_,_)) => e }
@@ -159,6 +160,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           // try to add to an item in partitionsOut, if not possible add as-is
           partitionsOut.find(a => canFuse(a,b)) match {
             case Some(a) => 
+              
               val shapeA = WgetLoopShape(a)
               val shapeB = WgetLoopShape(b)
               
@@ -182,7 +184,6 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
               }
 
               val lhs = a.lhs ++ b.lhs
-              
               val fused = TTP(lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
               partitionsOut = fused :: (partitionsOut diff List(a))
 
@@ -197,7 +198,6 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         }
       
         printlog("partitions: " + partitionsOut)
-      
       
         // actually do the fusion: now transform the loops bodies
       
@@ -262,7 +262,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         keep case _ => true } ::: Wloops
 
       // schedule (and emit)
-      currentScope = getFatSchedule(currentScope)(result) // clean things up!
+      currentScope = getFatSchedule(currentScope)(result.map(Block(_))) // clean things up!
      
     }
 
@@ -293,7 +293,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
     println("--->")
 */
     // do what super does ...
-    super.focusExactScopeFat(currentScope)(result0)(body)
+    super.focusExactScopeFat(currentScope)(result0.map(Block(_)))(body)
   }
 
 }

@@ -23,7 +23,8 @@ trait FatTraversal extends NestedTraversal with FatScheduling {
   // -------------------
 
 
-  def focusExactScopeFat[A](currentScope: List[TTP])(result: List[Exp[Any]])(body: List[TTP] => A): A = {
+  def focusExactScopeFat[A](currentScope: List[TTP])(resultB: List[Block[Any]])(body: List[TTP] => A): A = {
+    val result = resultB.map(getBlockResultFull)
 
     val saveInner = innerScope
 
@@ -75,7 +76,9 @@ trait FatTraversal extends NestedTraversal with FatScheduling {
         val actual = levelScope.filter(_.lhs exists (effects contains _))
         if (effects != actual.flatMap(_.lhs filter (effects contains _))) {
           val expected = effects.map(d=>fatten(findDefinition(d.asInstanceOf[Sym[Any]]).get))
-          val missing = expected filterNot (actual contains _)
+          //val missing = expected filterNot (actual contains _)
+          val actualSyms = actual.flatMap(_.lhs)
+          val missing = effects.filterNot(actualSyms contains _)
           val printfn = if (missing.isEmpty) printlog _ else printerr _
           printfn("error: violated ordering of effects")
           printfn("  expected:")
@@ -135,8 +138,8 @@ trait FatTraversal extends NestedTraversal with FatScheduling {
   }
 
 
-  def focusFatBlock[A](rhs: List[Exp[Any]])(body: => A): A = {
-    focusBlock(Combine(rhs))(body)
+  def focusFatBlock[A](rhs: List[Block[Any]])(body: => A): A = {
+    focusBlock(Block(Combine(rhs.map(getBlockResultFull))))(body)
   }
 
 }

@@ -1,6 +1,6 @@
 name := "LMS"
 
-version := "0.1"
+version := "0.2"
 
 organization := "EPFL"
 
@@ -10,8 +10,6 @@ resolvers += dropboxScalaTestRepo
 
 scalaVersion := virtScala
 
-// quick way of getting artifact naming compatibility right now
-//crossPaths := false
 scalaBinaryVersion := virtScala // necessary??
 
 scalaSource in Compile <<= baseDirectory(_ / "src")

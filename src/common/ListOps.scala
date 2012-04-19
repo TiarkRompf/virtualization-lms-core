@@ -35,8 +35,8 @@ trait ListOps extends Variables {
 trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   case class ListNew[A:Manifest](xs: Seq[Rep[A]]) extends Def[List[A]]
   case class ListFromSeq[A:Manifest](xs: Rep[Seq[A]]) extends Def[List[A]]
-  case class ListMap[A:Manifest,B:Manifest](l: Exp[List[A]], x: Sym[A], block: Exp[B]) extends Def[List[B]]
-  case class ListSortBy[A:Manifest,B:Manifest:Ordering](l: Exp[List[A]], x: Sym[A], block: Exp[B]) extends Def[List[A]]
+  case class ListMap[A:Manifest,B:Manifest](l: Exp[List[A]], x: Sym[A], block: Block[B]) extends Def[List[B]]
+  case class ListSortBy[A:Manifest,B:Manifest:Ordering](l: Exp[List[A]], x: Sym[A], block: Block[B]) extends Def[List[A]]
   case class ListPrepend[A:Manifest](x: Exp[List[A]], e: Exp[A]) extends Def[List[A]]
   case class ListToArray[A:Manifest](x: Exp[List[A]]) extends Def[Array[A]]
   case class ListToSeq[A:Manifest](x: Exp[List[A]]) extends Def[Seq[A]]

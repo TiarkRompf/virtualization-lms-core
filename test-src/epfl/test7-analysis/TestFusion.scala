@@ -58,12 +58,12 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
   }
 
   override def unapplySimpleCollect(e: Def[Any]) = e match {
-    case ArrayElem(a) => Some(a)
+    case ArrayElem(Block(a)) => Some(a) //TODO: block??
     case _ => super.unapplySimpleCollect(e)
   }
 
   override def unapplySimpleCollectIf(e: Def[Any]) = e match {
-    case ArrayIfElem(c,a) => Some((a,List(c)))
+    case ArrayIfElem(c,Block(a)) => Some((a,List(c))) //TODO: block?
     case _ => super.unapplySimpleCollectIf(e)
   }
 

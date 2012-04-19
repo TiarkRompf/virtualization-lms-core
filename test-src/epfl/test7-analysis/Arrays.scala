@@ -25,44 +25,48 @@ trait ArrayLoops extends Loops with OverloadHack {
 
 trait ArrayLoopsExp extends LoopsExp {
   
-  case class ArrayElem[T](y: Exp[T]) extends Def[Array[T]]
-  case class ReduceElem(y: Exp[Double]) extends Def[Double]
+  case class ArrayElem[T](y: Block[T]) extends Def[Array[T]]
+  case class ReduceElem(y: Block[Double]) extends Def[Double]
 
-  case class ArrayIfElem[T](c: Exp[Boolean], y: Exp[T]) extends Def[Array[T]]
-  case class ReduceIfElem(c: Exp[Boolean], y: Exp[Double]) extends Def[Double]
+  case class ArrayIfElem[T](c: Exp[Boolean], y: Block[T]) extends Def[Array[T]]
+  case class ReduceIfElem(c: Exp[Boolean], y: Block[Double]) extends Def[Double]
 
-  case class FlattenElem[T](y: Exp[Array[T]]) extends Def[Array[T]]
+  case class FlattenElem[T](y: Block[Array[T]]) extends Def[Array[T]]
 
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
   
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
-    val y = f(x)
+    val y = reifyEffects(f(x))
     simpleLoop(shape, x, ArrayElem(y))
   }
 
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] = {
     val x = fresh[Int]
-    val y = f(x)
+    val y = reifyEffects(f(x))
     simpleLoop(shape, x, ReduceElem(y))
   }
 
   def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]] = {
     val x = fresh[Int]
-    val (c,y) = f(x)
+    //val (c,y) = f(x)
+    var c: Rep[Boolean] = null
+    val y = reifyEffects { val p = f(x); c = p._1; p._2 }
     simpleLoop(shape, x, ArrayIfElem(c,y)) // TODO: simplify for const true/false
   }
 
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] = {
     val x = fresh[Int]
-    val (c,y) = f(x)
+    //val (c,y) = f(x)
+    var c: Rep[Boolean] = null
+    val y = reifyEffects { val p = f(x); c = p._1; p._2 }
     simpleLoop(shape, x, ReduceIfElem(c,y)) // TODO: simplify for const true/false
   }
 
   def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]] = {
     val x = fresh[Int]
-    val y = f(x)
+    val y = reifyEffects(f(x))
     simpleLoop(shape, x, FlattenElem(y))
   }
 
@@ -127,15 +131,15 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
       for ((l,r) <- sym zip rhs) {
         r match {
           case ArrayElem(y) =>
-            stream.println("var " + quote(l) + " = new Array[]("+quote(s)+")")
+            stream.println("var " + quote(l) + " = new Array[" + getBlockResult(y).Type + "]("+quote(s)+")")
           case ReduceElem(y) =>
             stream.println("var " + quote(l) + " = 0")
           case ArrayIfElem(c,y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[]")
+            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).Type + "]")
           case ReduceIfElem(c,y) =>
             stream.println("var " + quote(l) + " = 0")
           case FlattenElem(y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[]")
+            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).Type + "]")
         }
       }
       val ii = x // was: x(i)
@@ -145,7 +149,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
 //      for (jj <- x.drop(1)) {
 //        stream.println(quote(jj)+" = "+quote(ii))
 //      }
-      emitFatBlock(syms(rhs))
+      emitFatBlock(syms(rhs).map(Block(_))) // TODO: check this
       for ((l,r) <- sym zip rhs) {
         r match {
           case ArrayElem(y) =>
@@ -153,9 +157,9 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
           case ReduceElem(y) =>
             stream.println(quote(l) + " += " + quote(getBlockResult(y)))
           case ArrayIfElem(c,y) =>
-            stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
+            stream.println("if ("+quote(/*getBlockResult*/(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
           case ReduceIfElem(c,y) =>
-            stream.println("if ("+quote(getBlockResult(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
+            stream.println("if ("+quote(/*getBlockResult*/(c))+") " + quote(l) + " += " + quote(getBlockResult(y)))
           case FlattenElem(y) =>
             stream.println(quote(l) + " ++= " + quote(getBlockResult(y)))
         }
