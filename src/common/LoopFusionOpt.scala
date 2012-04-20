@@ -184,6 +184,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
               }
 
               val lhs = a.lhs ++ b.lhs
+
               val fused = TTP(lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
               partitionsOut = fused :: (partitionsOut diff List(a))
 

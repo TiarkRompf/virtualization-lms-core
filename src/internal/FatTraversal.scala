@@ -74,13 +74,16 @@ trait FatTraversal extends NestedTraversal with FatScheduling {
     result foreach {
       case LocalDef(ThinDef(Reify(x, u, effects))) =>
         val actual = levelScope.filter(_.lhs exists (effects contains _))
-        if (effects != actual.flatMap(_.lhs filter (effects contains _))) {
+        val isDifferent = effects != actual.flatMap(_.lhs filter (effects contains _))
+        val missingSyms = effects filterNot (e => levelScope exists (_.lhs contains e))
+        val isMissingSymbols = missingSyms.nonEmpty
+        if (isDifferent && !isMissingSymbols) printlog("effect ordering changed: expected " + effects.mkString(",") + " got " + actual.map(_.lhs).mkString(","))
+        if (isMissingSymbols || (isDifferent && verbosity >= 2)) { // if no missing symbols, only warn in debug mode          
           val expected = effects.map(d=>fatten(findDefinition(d.asInstanceOf[Sym[Any]]).get))
-          //val missing = expected filterNot (actual contains _)
-          val actualSyms = actual.flatMap(_.lhs)
-          val missing = effects.filterNot(actualSyms contains _)
-          val printfn = if (missing.isEmpty) printlog _ else printerr _
+          val missing = expected filterNot (actual contains _)
+          val printfn = if (!isMissingSymbols) printlog _ else printerr _
           printfn("error: violated ordering of effects")
+          printfn("  missing symbols: " + missingSyms.mkString(","))
           printfn("  expected:")
           expected.foreach(d => printfn("    "+d))
           printfn("  actual:")
@@ -88,7 +91,7 @@ trait FatTraversal extends NestedTraversal with FatScheduling {
           // stuff going missing because of stray dependencies is the most likely cause 
           // so let's print some debugging hints
           printfn("  missing:")
-          if (missing.isEmpty)
+          if (!isMissingSymbols)
             printfn("  note: there is nothing missing so the different order might in fact be ok (artifact of new effect handling? TODO)")
           missing.foreach { d => 
             val inDeep = e1 contains d

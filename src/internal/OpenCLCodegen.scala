@@ -14,7 +14,7 @@ trait OpenCLCodegen extends GPUCodegen {
   override def toString = "opencl"
 
   /*
-  override def emitDevFunc(func:Exp[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
+  override def emitDevFunc(func:Block[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
     devFuncIdx += 1
     val currIdx = devFuncIdx
     val tempString = new StringWriter
