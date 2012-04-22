@@ -16,7 +16,11 @@ trait ArrayOps extends Variables {
   // substitution for "new Array[T](...)"
   // TODO: look into overriding __new for arrays
   object NewArray {
-    def apply[T:Manifest](n: Rep[Int]) = array_obj_new(n)
+    def apply[T:Manifest](n: Rep[Int]) = array_obj_new(n)    
+  }
+  
+  object Array {
+    def apply[T:Manifest](xs: T*) = array_obj_fromseq(xs)
   }
   
   class ArrayOpsCls[T:Manifest](a: Rep[Array[T]]){
@@ -30,6 +34,7 @@ trait ArrayOps extends Variables {
   }    
 
   def array_obj_new[T:Manifest](n: Rep[Int]): Rep[Array[T]]
+  def array_obj_fromseq[T:Manifest](xs: Seq[T]): Rep[Array[T]]
   def array_apply[T:Manifest](x: Rep[Array[T]], n: Rep[Int])(implicit ctx: SourceContext): Rep[T]
   def array_update[T:Manifest](x: Rep[Array[T]], n: Rep[Int], y: Rep[T])(implicit ctx: SourceContext): Rep[Unit]
   def array_unsafe_update[T:Manifest](x: Rep[Array[T]], n: Rep[Int], y: Rep[T])(implicit ctx: SourceContext): Rep[Unit]
@@ -46,6 +51,9 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   case class ArrayNew[T:Manifest](n: Exp[Int]) extends Def[Array[T]] {
     val m = manifest[T]
   }
+  case class ArrayFromSeq[T:Manifest](xs: Seq[T]) extends Def[Array[T]] {
+    val m = manifest[T]
+  }
   case class ArrayApply[T:Manifest](a: Exp[Array[T]], n: Exp[Int]) extends Def[T]
   case class ArrayUpdate[T:Manifest](a: Exp[Array[T]], n: Exp[Int], y: Exp[T]) extends Def[Unit]  
   case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int]
@@ -60,6 +68,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   case class ArrayToSeq[A:Manifest](x: Exp[Array[A]]) extends Def[Seq[A]]
   
   def array_obj_new[T:Manifest](n: Exp[Int]) = reflectMutable(ArrayNew(n))
+  def array_obj_fromseq[T:Manifest](xs: Seq[T]) = /*reflectMutable(*/ ArrayFromSeq(xs) /*)*/
   def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int])(implicit ctx: SourceContext): Exp[T] = ArrayApply(x, n)
   def array_update[T:Manifest](x: Exp[Array[T]], n: Exp[Int], y: Exp[T])(implicit ctx: SourceContext) = reflectWrite(x)(ArrayUpdate(x,n,y))
   def array_unsafe_update[T:Manifest](x: Rep[Array[T]], n: Rep[Int], y: Rep[T])(implicit ctx: SourceContext) = ArrayUpdate(x,n,y)
@@ -121,13 +130,34 @@ trait BaseGenArrayOps extends GenericNestedCodegen {
 trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
   val IR: ArrayOpsExp
   import IR._
+  
+  val ARRAY_LITERAL_MAX_SIZE = 1000
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case a@ArrayNew(n) => emitValDef(sym, "new Array[" + remap(a.m) + "](" + quote(n) + ")")
+    case e@ArrayFromSeq(xs) => {
+      emitData(sym, xs)
+      emitValDef(sym, 
+        if(xs.size > ARRAY_LITERAL_MAX_SIZE) {
+          /* def append(i: Int) = {
+            val start = i*ARRAY_LITERAL_MAX_SIZE
+            val end = Math.min((i+1)*ARRAY_LITERAL_MAX_SIZE, xs.size)
+            val size = end - start
+            "def x" + sym.id + "_" + i + "=Array(" + (start until end).map{xs(_)} + ")\nArray.copy(x" + sym.id + "_" + i + ",0,buf," + start + "," + size + ")\n"
+          }
+          val numBlocks = Math.ceil(xs.size / ARRAY_LITERAL_MAX_SIZE).intValue
+          "{val buf=new Array[" + remap(e.mt) + "](" + xs.size + ")\n" + ((0 until numBlocks).map(append)).mkString("\n") + "buf}" */
+          "{import scala.io.Source;(Source.fromFile(\"" + symDataPath(sym) + "\").getLines.map{Integer.parseInt(_)}).toArray}"
+        }
+        else {
+          "Array(" + xs.mkString(",") + ")"
+        }
+      )
+    }
     case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
     case ArrayUpdate(x,n,y) => emitValDef(sym, quote(x) + "(" + quote(n) + ") = " + quote(y))
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
-    case ArrayForeach(a,x,block) => stream.println("val " + quote(sym) + " = " + quote(a) + ".foreach{")
+    case ArrayForeach(a,x,block) => stream.println("val " + quote(sym) + " = " + quote(a) + ".foreach{")    
       stream.println(quote(x) + " => ")
       emitBlock(block)
       stream.println(quote(getBlockResult(block)))

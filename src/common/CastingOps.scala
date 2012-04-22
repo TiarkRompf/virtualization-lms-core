@@ -47,28 +47,19 @@ trait ScalaGenCastingOps extends ScalaGenBase {
   }
 }
 
-trait CudaGenCastingOps extends CudaGenBase {
+trait CLikeGenCastingOps extends CLikeGenBase { 
   val IR: CastingOpsExp
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
       rhs match {
-        //case RepIsInstanceOf(x,mA,mB) => throw new RuntimeException("CudaGen: Cannot check runtime type")
+        //case RepIsInstanceOf(x,mA,mB) => //TODO: How?
         case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, "(%s) %s".format(remap(mB),quote(x)))
         case _ => super.emitNode(sym, rhs)
       }
     }
 }
 
-trait OpenCLGenCastingOps extends OpenCLGenBase {
-  val IR: CastingOpsExp
-  import IR._
-
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
-      rhs match {
-        //case RepIsInstanceOf(x,mA,mB) => throw new RuntimeException("OpenCLGen: Cannot check runtime type")
-        case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, "(%s) %s".format(remap(mB),quote(x)))
-        case _ => super.emitNode(sym, rhs)
-      }
-    }
-}
+trait CudaGenCastingOps extends CudaGenBase with CLikeGenCastingOps 
+trait OpenCLGenCastingOps extends OpenCLGenBase with CLikeGenCastingOps 
+trait CGenCastingOps extends CGenBase with CLikeGenCastingOps 

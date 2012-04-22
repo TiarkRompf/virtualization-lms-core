@@ -4,6 +4,7 @@ package internal
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
 import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap, ListMap, HashSet}
+import collection.mutable.{Map => MMap}
 import collection.immutable.List._
 
 trait CudaCodegen extends GPUCodegen {
@@ -13,8 +14,7 @@ trait CudaCodegen extends GPUCodegen {
   override def kernelFileExt = "cu"
   override def toString = "cuda"
 
-  override def initializeGenerator(buildDir:String): Unit = {
-
+  override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
     helperFuncIdx = 0
@@ -22,6 +22,7 @@ trait CudaCodegen extends GPUCodegen {
     hstream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cu"))
     helperFuncHdrStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
     headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.h"))
+    headerStream.println("#include \"CudaArrayList.h\"")    
 
     //TODO: Put all the DELITE APIs declarations somewhere
     hstream.print("#include \"helperFuncs.h\"\n")
@@ -32,6 +33,8 @@ trait CudaCodegen extends GPUCodegen {
     helperFuncHdrStream.print("#include \"DeliteCuda.h\"\n")
     helperFuncHdrStream.print("typedef jboolean jbool;\n")              // TODO: Fix this
     helperFuncHdrStream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
+    
+    super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
   override def remap[A](m: Manifest[A]) : String = {
@@ -219,4 +222,3 @@ trait CudaFatCodegen extends GenericFatCodegen with CudaCodegen {
   }
 
 }
-

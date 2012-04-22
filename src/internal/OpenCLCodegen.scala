@@ -4,6 +4,7 @@ package internal
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
 import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
+import collection.mutable.{Map => MMap}
 import collection.immutable.List._
 
 trait OpenCLCodegen extends GPUCodegen {
@@ -42,7 +43,7 @@ trait OpenCLCodegen extends GPUCodegen {
   }
   */
 
-  override def initializeGenerator(buildDir:String): Unit = {
+  override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
     helperFuncIdx = 0
@@ -67,6 +68,8 @@ trait OpenCLCodegen extends GPUCodegen {
     hstream.print("extern void DeliteOpenCLMemcpyDtoHAsync(void *dptr, void *sptr, size_t size);\n")
     hstream.print("typedef jboolean jbool;\n")              // TODO: Fix this
     hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
+    
+    super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
   override def isObjectType[A](m: Manifest[A]) : Boolean = {
