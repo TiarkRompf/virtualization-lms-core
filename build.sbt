@@ -8,9 +8,9 @@ resolvers += ScalaToolsSnapshots
 
 resolvers += dropboxScalaTestRepo
 
-scalaVersion := virtScala
+scalaOrganization := "org.scala-lang"
 
-scalaBinaryVersion := virtScala // necessary??
+scalaVersion := virtScala
 
 scalaSource in Compile <<= baseDirectory(_ / "src")
 
