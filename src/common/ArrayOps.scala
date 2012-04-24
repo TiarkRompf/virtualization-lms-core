@@ -95,6 +95,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
     (e match {
       case ArrayLength(a) => array_length(f(a))
       case ArrayApply(a,x) => array_apply(f(a),f(x))
+      case Reflect(e@ArrayNew(n), u, es) => reflectMirrored(Reflect(ArrayNew(f(n))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))    
       case Reflect(ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
       case Reflect(ArrayUpdate(l,i,r), u, es) => reflectMirrored(Reflect(ArrayUpdate(f(l),f(i),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
       case _ => super.mirror(e,f)
