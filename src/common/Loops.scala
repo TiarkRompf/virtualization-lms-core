@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package common
 
+import collection.immutable.Stack
 import java.io.PrintWriter
 import internal.{Transforming, GenericNestedCodegen, GenericFatCodegen}
 
@@ -20,6 +21,9 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val v: Sym[Int]
     val body: Def[A]
   }
+  
+  // used for convenient creation of yield statements
+  var yieldStack: Stack[Def[Gen[_]]] = Stack.empty
   
   object Yield {
     
@@ -56,9 +60,17 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
    */
   case class YieldTuple[A, B](g: List[Exp[Int]], a: (Exp[A], Exp[B])) extends Def[Gen[(A, B)]]
   
-  def yields[T](g: List[Exp[Int]], a: Exp[T]) = YieldSingle(g, a)
+  def yields[T](g: List[Exp[Int]], a: Exp[T]) = { 
+    val y = YieldSingle(g, a)
+    yieldStack = yieldStack.push(y)
+    y
+  }
   
-  def yields[A, B](g: List[Exp[Int]], a: (Exp[A], Exp[B])) = YieldTuple(g, a)
+  def yields[A, B](g: List[Exp[Int]], a: (Exp[A], Exp[B])) = {
+    val y = YieldTuple(g, a)
+    yieldStack = yieldStack.push(y)
+    y
+  }
   
   /**
    * Skip statement is used in loops to indicate that no element is being emitted. For example in filter clauses, else branch will contain a Skip.
@@ -67,6 +79,16 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   case class Skip[T](g: List[Exp[Int]]) extends Def[Gen[T]]
   
   def skip[T : Manifest](g: List[Exp[Int]]) = Skip[T](g)
+  
+  /**
+   * For now single type parameter.
+   */
+  def collectYields[T](e: => Block[Gen[T]]): (Def[Gen[T]], Block[Gen[T]]) = {
+    val block = e
+    val res = (yieldStack.top.asInstanceOf[Def[Gen[T]]], block)
+    yieldStack = yieldStack.pop
+    res
+  }
   
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]

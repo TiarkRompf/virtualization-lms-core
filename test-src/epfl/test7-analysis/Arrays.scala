@@ -80,59 +80,50 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
 
-    var g: Exp[Gen[T]] = null
-    val y = reifyEffects { 
-      g = yields(List(x),f(x))
-      g
-    }
-    simpleLoop(shape, x, ArrayElem(g,y))
+    val (g, y) = collectYields{ reifyEffects { 
+        yields(List(x),f(x))
+      }}
+    simpleLoop(shape, x, ArrayElem(g, y))
   }
 
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] = {
     //val g = fresh[Accu[Double]]
     val x = fresh[Int]
-    var g: Exp[Gen[Double]] = null
-    val y = reifyEffects { 
-      g = yields(List(x),f(x))
-      g
-    }
+    val (g, y) = collectYields{ reifyEffects { 
+       yields(List(x),f(x))
+    }}
+    
     simpleLoop(shape, x, ReduceElem(g,y))
-  }
+  } 
 
   def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]] = {
     val x = fresh[Int]
-    var g: Exp[Gen[T]] = null
-    val y: Block[Gen[T]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
+    val (g, y) = collectYields{ reifyEffects { 
       val (c,z) = f(x)
-      g = yields(List(x),z)
-      if (c) g else Skip[T](List(x))
-    }
+      if (c) yields(List(x),z) else skip[T](List(x))
+    }}
     reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
   }
 
   def arrayFlat[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]] = {
     val x = fresh[Int]
-    var g: Exp[Gen[T]] = null
-    val y: Block[Gen[T]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
+    val (g, y) = collectYields{ reifyEffects {
       val z = f(x)
       val shape2 = infix_length(z)
       val x2 = fresh[Int]
-      g = yields(List(x2, x),infix_at(z,x2))
-      val y2 = reifyEffects {g}
-      simpleLoop(shape2, x2, ForeachElem(y2).asInstanceOf[Def[Gen[T]]])
-    }
+
+      simpleLoop(shape2, x2, ForeachElem(reifyEffects {yields(List(x2, x),infix_at(z,x2))}).asInstanceOf[Def[Gen[T]]])
+    }}
     reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
   }
 
 
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] = {
     val x = fresh[Int]
-    var g: Exp[Gen[Double]] = null
-    val y: Block[Gen[Double]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
+    val (g, y) = collectYields{ reifyEffects {
       val (c,z) = f(x)
-      g = yields(List(x),z)
-      if (c) g else skip[Double](List(x))
-    }
+      if (c) yields(List(x),z) else skip[Double](List(x))
+    }}
     reflectEffect(SimpleLoop(shape, x, ReduceElem(g,y)), summarizeEffects(y).star)
   }
 
