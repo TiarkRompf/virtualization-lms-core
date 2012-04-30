@@ -215,13 +215,16 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
 
       val gens = for ((l,r) <- sym zip rhs if !r.isInstanceOf[ForeachElem[_]]) yield r match {
         //case ForeachElem(y) =>
-        case ArrayElem(g,Block(y)) if g == y => // g == y indicates map operation
+        case ArrayElem(g,Block(y)) if g == y => // g == y indicates selectivity 1.0
           (g, (s: List[String]) => {
             stream.println(quote(l) + "("+quote(ii)+") = " + s.head)
             stream.println("val " + quote(g) + " = ()")
           })
         case ArrayElem(g,Block(y)) =>
-          (g, (s: List[String]) => stream.println(quote(g) + " += " + s.head))
+          (g, (s: List[String]) => {
+            stream.println(quote(l) + " += " + s.head)
+            stream.println("val " + quote(g) + " = ()")
+          })
         case ReduceElem(g,y) =>
           (g, (s: List[String]) => { 
             stream.println(quote(l) + " += " + s.head)
