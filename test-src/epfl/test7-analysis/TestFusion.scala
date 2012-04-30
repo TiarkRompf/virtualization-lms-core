@@ -39,7 +39,7 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
 
 
 
-trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGenIfThenElseFatYield with LoopFusionOpt {
+trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGenIfThenElseFat with LoopFusionOpt {
   val IR: ArrayLoopsFatExp with IfThenElseFatExp
   import IR._  
   
@@ -72,18 +72,25 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
     tp.sym
   }
 
-  override def plugInHelper[A,T:Manifest,U:Manifest](oldGen: Exp[Gen[A]], context: Block[Gen[T]], plug: Block[Gen[U]]): Block[Gen[U]] = context match {
-    case Block(`oldGen`) => plug
-    case Block(Def(IfThenElse(c,a,b@Block(Def(Skip(x)))))) => Block(toAtom2(IfThenElse(c,plugInHelper(oldGen,a,plug),Block(toAtom2(Skip(x))))))
-    case Block(Def(SimpleLoop(sh,x,ForeachElem(y)))) => Block(toAtom2(SimpleLoop(sh,x,ForeachElem(plugInHelper(oldGen,y,plug)))))
-    case Block(Def(x)) => error("Missed me => " + x + " should find " + oldGen); throw new RuntimeException("Missed me => " + x + " should find " + oldGen)
+  override def plugInHelper[A,T:Manifest,U:Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = context match {
+    case `oldGen` => plug
+    case Def(IfThenElse(c,Block(a),b@Block(Def(Skip(x))))) => 
+      toAtom2(IfThenElse(c,Block(plugInHelper(oldGen,a,plug)),Block(toAtom2(Skip(x)))))
+    case Def(SimpleLoop(sh,x,ForeachElem(Block(y)))) => 
+      toAtom2(SimpleLoop(sh,x,ForeachElem(Block(plugInHelper(oldGen,y,plug)))))
+    case Def(x) => 
+      error("Missed me => " + x + " should find " + oldGen);
   }
 
   override def applyPlugIntoContext(d: Def[Any], r: Def[Any], newGen: Exp[Gen[Any]]) = (d, r) match {
-    case (ArrayElem(g, a), ArrayElem(g2, b)) => ArrayElem(newGen.asInstanceOf[Exp[Gen[Nothing]]], plugInHelper(g, a, b))
-    case (ReduceElem(g, a), ArrayElem(g2, b)) => ArrayElem(newGen.asInstanceOf[Exp[Gen[Nothing]]], plugInHelper(g, a, b))
-    case (ArrayElem(g, a), ReduceElem(g2, b)) => ReduceElem(newGen.asInstanceOf[Exp[Gen[Double]]], plugInHelper(g, a, b))
-    case (ReduceElem(g, a), ReduceElem(g2, b)) => ReduceElem(newGen.asInstanceOf[Exp[Gen[Double]]], plugInHelper(g, a, b))
+    case (ArrayElem(g, Block(a)), ArrayElem(g2, Block(b))) => 
+      ArrayElem(newGen.asInstanceOf[Exp[Gen[Nothing]]], Block(plugInHelper(g, a, b)))
+    case (ReduceElem(g, Block(a)), ArrayElem(g2, Block(b))) => 
+      ArrayElem(newGen.asInstanceOf[Exp[Gen[Nothing]]], Block(plugInHelper(g, a, b)))
+    case (ArrayElem(g, Block(a)), ReduceElem(g2, Block(b))) => 
+      ReduceElem(newGen.asInstanceOf[Exp[Gen[Double]]], Block(plugInHelper(g, a, b)))
+    case (ReduceElem(g, Block(a)), ReduceElem(g2, Block(b))) => 
+      ReduceElem(newGen.asInstanceOf[Exp[Gen[Double]]], Block(plugInHelper(g, a, b)))
     case _ => super.applyPlugIntoContext(d, r, newGen)
   }
 
@@ -96,47 +103,6 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
       (g2, toAtom2(Yield(varList ::: l, y))).asInstanceOf[(Exp[A], Exp[A])]
     case (ReduceElem(g@Def(Yield(varList, _)), _), ArrayElem(g2@Def(Yield(l, y)), _)) =>
       (g2, toAtom2(Yield(varList ::: l, y))).asInstanceOf[(Exp[A], Exp[A])]
-  }
-}
-
-/**
- * If then else code generator. It optimizes out the Skip statement.
- * It requires IfThenElseFatExp and ArrayLoopsExp to be mixed in.
- */
-trait ScalaGenIfThenElseFatYield extends ScalaGenIfThenElse with ScalaGenFat with BaseGenIfThenElseFat {
-  val IR: IfThenElseFatExp with ArrayLoopsExp
-  import IR._
-
-  private def quoteList[T](xs: List[Exp[T]]) =
-    if (xs.length > 1) xs.map(quote).mkString("(", ",", ")") else xs.map(quote).mkString(",")
-
-  /**
-   * Helper method for emitting just the ifThen block.
-   */
-  private def emitFatIfThenBlock(symList: List[Sym[Any]], rhs: FatDef,
-                                 c: Exp[Boolean], as: List[Block[Any]])
-                                (implicit stream: PrintWriter) {
-    if (symList.length > 1) stream.println("// TODO: use vars instead of tuples to return multiple values")
-    stream.println("val " + quoteList(symList) + " = if (" + quote(c) + ") {")
-    emitFatBlock(as)
-    stream.println(quoteList(as.map(getBlockResult)))
-    stream.print("}")
-  }
-
-  override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
-    // Eliminate the else branch if it only contains the Skip clause
-    case SimpleFatIfThenElse(c, as, List(Block(Def(Skip(_))))) =>
-      emitFatIfThenBlock(symList, rhs, c, as)(stream)
-      stream.println("")
-
-    // Generate both then and else
-    case SimpleFatIfThenElse(c, as, bs) =>
-      emitFatIfThenBlock(symList, rhs, c, as)(stream)
-      stream.println(" else {")
-      emitFatBlock(bs)
-      stream.println(quoteList(bs.map(getBlockResult)))
-      stream.println("}")
-    case _ => super.emitFatNode(symList, rhs)
   }
 }
 
@@ -364,18 +330,18 @@ class TestFusion extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test7-"
   
-  def testFusion1 = {
-    withOutFile(prefix+"fusion1") {
+  def testFusion01 = {
+    withOutFile(prefix+"fusion01") {
       new FusionProg with ArithExp with ArrayLoopsExp with PrintExp { self =>
         val codegen = new ScalaGenArrayLoops with ScalaGenArith with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
-    assertFileEqualsCheck(prefix+"fusion1")
+    assertFileEqualsCheck(prefix+"fusion01")
   }
 
-  def testFusion2 = {
-    withOutFile(prefix+"fusion2") {
+  def testFusion02 = {
+    withOutFile(prefix+"fusion02") {
       // LoopsExp2 with ArithExp with PrintExp with BaseFatExp
       new FusionProg with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with TransformingStuff { self =>
         override val verbosity = 1
@@ -383,100 +349,96 @@ class TestFusion extends FileDiffSuite {
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
-    assertFileEqualsCheck(prefix+"fusion2")
+    assertFileEqualsCheck(prefix+"fusion02")
   }
 
   // Test with filter clause that does not apply fusion.
-  def testFusion3 = {
-    withOutFile(prefix+"fusion3") {
+  def testFusion03 = {
+    withOutFile(prefix+"fusion03") {
       new FusionProg2 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
-        override val verbosity = 1
+        override val verbosity = 0
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
-    assertFileEqualsCheck(prefix+"fusion3")
+    assertFileEqualsCheck(prefix+"fusion03")
   }
 
   // Test with filter clause that applies fusion.
-  def testFusion4 = {
-    withOutFile(prefix+"fusion4") {
+  def testFusion04 = {
+    withOutFile(prefix+"fusion04") {
       new FusionProg2 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
-        override val verbosity = 1
+        override val verbosity = 0
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
-        globalDefs.foreach(println)
       }
     }
-    assertFileEqualsCheck(prefix+"fusion4")
+    assertFileEqualsCheck(prefix+"fusion04")
   }
 
   // Test with flatMap clause that does not apply fusion.
   def testFusion5 = {
-    withOutFile(prefix+"fusion5") {
+    withOutFile(prefix+"fusion05") {
       new FusionProg3 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
-        override val verbosity = 1
+        override val verbosity = 0
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
-    assertFileEqualsCheck(prefix+"fusion5")
+    assertFileEqualsCheck(prefix+"fusion05")
   }
 
   // Test with flatMap clause that applies fusion.
   def testFusion6 = {
-    withOutFile(prefix+"fusion6") {
+    withOutFile(prefix+"fusion06") {
       new FusionProg3 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
-        override val verbosity = 1
+        override val verbosity = 0
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
-        globalDefs.foreach(println)
       }
     }
-    assertFileEqualsCheck(prefix+"fusion6")
+    assertFileEqualsCheck(prefix+"fusion06")
   }
 
-  // Test with (flatMap => filter => reduce) clause that applies fusion.
+  // Test with (flatMap => filter => reduce) clause without fusion.
   def testFusion7 = {
-    withOutFile(prefix+"fusion7") {
+    withOutFile(prefix+"fusion07") {
       new FusionProg4 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
-        override val verbosity = 1
+        override val verbosity = 0
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
-        globalDefs.foreach(println)
       }
     }
-    assertFileEqualsCheck(prefix+"fusion7")
+    assertFileEqualsCheck(prefix+"fusion07")
   }
 
   // Test with (flatMap => filter => reduce) clause that applies fusion.
   def testFusion8 = {
-    withOutFile(prefix+"fusion8") {
+    withOutFile(prefix+"fusion08") {
       new FusionProg4 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
-        globalDefs.foreach(println)
       }
     }
-    assertFileEqualsCheck(prefix+"fusion8")
+    assertFileEqualsCheck(prefix+"fusion08")
   }
 
   // Test with (flatMap => filter => reduce) clause that applies fusion.
   def testFusion9 = {
-    withOutFile(prefix+"fusion9") {
+    withOutFile(prefix+"fusion09") {
       new FusionProg5 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint
@@ -486,7 +448,7 @@ class TestFusion extends FileDiffSuite {
         globalDefs.foreach(println)
       }
     }
-    assertFileEqualsCheck(prefix+"fusion9")
+    assertFileEqualsCheck(prefix+"fusion09")
   }
 
   // Test with (flatMap => filter => reduce) clause that applies fusion.

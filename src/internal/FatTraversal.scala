@@ -17,7 +17,7 @@ trait FatTraversal extends NestedTraversal with FatScheduling {
   def unapplySimpleCollectIf(e: Def[Any]): Option[(Exp[Any],List[Exp[Boolean]])] = unapplySimpleCollect(e).map((_,Nil))
 
   def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]): Def[Any] = sys.error("not implemented")
-  def plugInHelper[A, T: Manifest, U: Manifest](oldGen: Exp[Gen[A]], context: Block[Gen[T]], plug: Block[Gen[U]]): Block[Gen[U]] = sys.error("not implemented")
+  def plugInHelper[A, T: Manifest, U: Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = sys.error("not implemented")
   def applyPlugIntoContext(d: Def[Any], r: Def[Any], newGen: Exp[Gen[Any]]): Def[Any] = sys.error("not implemented")
   def applyExtendGenerator[A](d: Def[Any], body: Def[Any]): (Exp[A], Exp[A]) = sys.error("not implemented")
 

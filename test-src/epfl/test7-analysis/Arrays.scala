@@ -82,7 +82,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
     var g: Exp[Gen[T]] = null
     val y = reifyEffects { 
-      g = YieldSingle(List(x),f(x))
+      g = yields(List(x),f(x))
       g
     }
     simpleLoop(shape, x, ArrayElem(g,y))
@@ -93,7 +93,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
     val x = fresh[Int]
     var g: Exp[Gen[Double]] = null
     val y = reifyEffects { 
-      g = YieldSingle(List(x),f(x))
+      g = yields(List(x),f(x))
       g
     }
     simpleLoop(shape, x, ReduceElem(g,y))
@@ -104,7 +104,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
     var g: Exp[Gen[T]] = null
     val y: Block[Gen[T]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
       val (c,z) = f(x)
-      g = YieldSingle(List(x),z)
+      g = yields(List(x),z)
       if (c) g else Skip[T](List(x))
     }
     reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
@@ -117,7 +117,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
       val z = f(x)
       val shape2 = infix_length(z)
       val x2 = fresh[Int]
-      g = YieldSingle(List(x2, x),infix_at(z,x2))
+      g = yields(List(x2, x),infix_at(z,x2))
       val y2 = reifyEffects {g}
       simpleLoop(shape2, x2, ForeachElem(y2).asInstanceOf[Def[Gen[T]]])
     }
@@ -130,8 +130,8 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
     var g: Exp[Gen[Double]] = null
     val y: Block[Gen[Double]] = reifyEffects { // TODO: simplify for const true/false (?) TODO: what about effects?
       val (c,z) = f(x)
-      g = YieldSingle(List(x),z)
-      if (c) g else Skip[Double](List(x))
+      g = yields(List(x),z)
+      if (c) g else skip[Double](List(x))
     }
     reflectEffect(SimpleLoop(shape, x, ReduceElem(g,y)), summarizeEffects(y).star)
   }
@@ -212,9 +212,9 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
           case ForeachElem(y) =>
             stream.println("val " + quote(l) + " = () // foreach")
           case ArrayElem(g,y) if g == getBlockResult(y) =>
-            stream.println("val " + quote(l) + " = new Array[" + getBlockResult(y).Type + "]("+quote(s)+")")
+            stream.println("val " + quote(l) + " = new Array[" + stripGen(getBlockResult(y).Type) + "]("+quote(s)+")")
           case ArrayElem(g,y) =>
-            stream.println("val " + quote(g) + " = new ArrayBuilder[" + getBlockResult(y).Type  + "]")
+            stream.println("val " + quote(l) + " = new ArrayBuilder[" + stripGen(getBlockResult(y).Type)  + "]")
           case ReduceElem(g,y) =>
             stream.println("var " + quote(l) + " = 0")
         }
@@ -224,12 +224,18 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
 
       val gens = for ((l,r) <- sym zip rhs if !r.isInstanceOf[ForeachElem[_]]) yield r match {
         //case ForeachElem(y) =>
-        case ArrayElem(g,Block(y)) if g == y =>
-          (g, (s: List[String]) => stream.println(quote(l) + "("+quote(ii)+") = " + s.head))
-        case ArrayElem(g,y) =>
+        case ArrayElem(g,Block(y)) if g == y => // g == y indicates map operation
+          (g, (s: List[String]) => {
+            stream.println(quote(l) + "("+quote(ii)+") = " + s.head)
+            stream.println("val " + quote(g) + " = ()")
+          })
+        case ArrayElem(g,Block(y)) =>
           (g, (s: List[String]) => stream.println(quote(g) + " += " + s.head))
         case ReduceElem(g,y) =>
-          (g, (s: List[String]) => stream.println(quote(l) + " += " + s.head))
+          (g, (s: List[String]) => { 
+            stream.println(quote(l) + " += " + s.head)
+            stream.println("val " + quote(g) + " = ()")
+          })
       }
 
       withGens(gens) {

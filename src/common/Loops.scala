@@ -56,16 +56,22 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
    */
   case class YieldTuple[A, B](g: List[Exp[Int]], a: (Exp[A], Exp[B])) extends Def[Gen[(A, B)]]
   
+  def yields[T](g: List[Exp[Int]], a: Exp[T]) = YieldSingle(g, a)
+  
+  def yields[A, B](g: List[Exp[Int]], a: (Exp[A], Exp[B])) = YieldTuple(g, a)
+  
   /**
    * Skip statement is used in loops to indicate that no element is being emitted. For example in filter clauses, else branch will contain a Skip.
    * @param  g   Represents list of loop vars in which this skip is nested.
    */
   case class Skip[T](g: List[Exp[Int]]) extends Def[Gen[T]]
-
+  
+  def skip[T : Manifest](g: List[Exp[Int]]) = Skip[T](g)
+  
+  
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
 
   def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = SimpleLoop(size, v, body)
-
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => syms(e.size) ::: syms(e.body) // should add super.syms(e) ?? not without a flag ...
