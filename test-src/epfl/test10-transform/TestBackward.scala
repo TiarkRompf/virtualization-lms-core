@@ -5,6 +5,7 @@ package test10
 import common._
 import internal._
 
+import scala.reflect.SourceContext
 
 // investigate backward analysis -- these are preliminary ideas ...
 //
@@ -117,7 +118,7 @@ trait TestDSL extends BaseExp with LiftAll {
   }
 
   def reflect[T](d: Def[T]): Exp[T] = {
-    val sym = fresh[T](mtype(manifest[Any]))
+    val sym = fresh[T](List(implicitly[SourceContext]))(mtype(manifest[Any]))
     curStms = curStms :+ createDefinition(sym,d)
     sym
   }
@@ -162,7 +163,7 @@ trait TestDSL extends BaseExp with LiftAll {
   def emitSource[A,B](f: Rep[A] => Rep[B]) = {
     
     val block1 = reifyBlock {
-      f(fresh[A](mtype(manifest[Any])))
+      f(fresh[A](List(implicitly[SourceContext]))(mtype(manifest[Any])))
     }
     
     println("===== first round")

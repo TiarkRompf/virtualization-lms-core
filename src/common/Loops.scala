@@ -4,6 +4,7 @@ package common
 import java.io.PrintWriter
 import scala.reflect.SourceContext
 import scala.virtualization.lms.internal.{GenericNestedCodegen,GenericFatCodegen}
+import scala.reflect.SourceContext
 
 trait Loops extends Base { // no surface constructs for now
 
@@ -178,6 +179,20 @@ trait CudaGenLoops extends CudaGenBase with BaseGenLoops {
 }
 
 trait CudaGenLoopsFat extends CudaGenLoops with CudaGenFat with BaseGenLoopsFat {
+  import IR._
+
+  //TODO
+
+}
+
+trait CGenLoops extends CGenBase with BaseGenLoops {
+  import IR._
+
+  //TODO
+
+}
+
+trait CGenLoopsFat extends CGenLoops with CGenFat with BaseGenLoopsFat {
   import IR._
 
   //TODO

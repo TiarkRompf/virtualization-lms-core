@@ -3,16 +3,17 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
+import scala.reflect.SourceContext
 
 trait While extends Base {
-  def __whileDo(cond: => Rep[Boolean], body: => Rep[Unit])
+  def __whileDo(cond: => Rep[Boolean], body: => Rep[Unit])(implicit pos: SourceContext)
 }
 
 
 trait WhileExp extends While with EffectExp {
   case class While(cond: Block[Boolean], body: Block[Unit]) extends Def[Unit]
 
-  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
+  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit])(implicit pos: SourceContext) {
     val c = reifyEffects(cond)
     val a = reifyEffects(body)
     val ce = summarizeEffects(c)
@@ -41,7 +42,7 @@ trait WhileExp extends While with EffectExp {
 
 trait WhileExpOptSpeculative extends WhileExp with PreviousIterationDummyExp {
   
-  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
+  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit])(implicit pos: SourceContext) {
 
     val pc = fresh[Nothing]
     val pb = fresh[Nothing]
@@ -117,19 +118,15 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case While(c,b) =>
-            // Get free variables list
-            //val freeVars = getFreeVarBlock(c,Nil)
-
-            // emit function for the condition evaluation
-            val (condFunc,freeVars) = emitDevFunc(c, Nil)
-            val argListStr = freeVars.map(quote(_)).mkString(", ")
-
-            // Emit while loop (only the result variable of condition)
+            emitBlock(c)
+            stream.println(addTab() + remap(getBlockResult(c).tp) + " " + quote(sym) + "_cond = " + quote(getBlockResult(c)) + ";")
             stream.print(addTab() + "while (")
-            stream.print("%s(%s)".format(condFunc,argListStr))
+            stream.print(quote(sym) + "_cond")
             stream.println(") {")
             tabWidth += 1
             emitBlock(b)
+            emitBlock(c)
+            stream.println(addTab() + quote(sym) + "_cond = " + quote(getBlockResult(c)) + ";")
             tabWidth -= 1
             //stream.println(quote(getBlockResult(b)))   //TODO: Is this needed?
             stream.println(addTab() + "}")

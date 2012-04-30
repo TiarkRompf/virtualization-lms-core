@@ -8,6 +8,8 @@ trait Utils extends Config {
   def printdbg(x: =>Any) { if (verbosity >= 2) System.err.println(x) }
   def printlog(x: =>Any) { if (verbosity >= 1) System.err.println(x) }
   def printerr(x: =>Any) { System.err.println(x); hadErrors = true }
+
+  def printsrc(x: =>Any) { if (sourceinfo >= 1) System.err.println(x) }
   
   var hadErrors = false
 }

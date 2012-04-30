@@ -32,18 +32,13 @@ trait ArithStr extends Arith with BaseStr {
   //todo removed below
   //implicit def unit(x: Double) = x.toString
 
-  def infix_+(x: Rep[Double], y: Rep[Double]) = "(%s+%s)".format(x,y)
-  def infix_-(x: Rep[Double], y: Rep[Double]) = "(%s-%s)".format(x,y)
-  def infix_*(x: Rep[Double], y: Rep[Double]) = "(%s*%s)".format(x,y)
-  def infix_/(x: Rep[Double], y: Rep[Double]) = "(%s/%s)".format(x,y)
+  def infix_+(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s+%s)".format(x,y)
+  def infix_-(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s-%s)".format(x,y)
+  def infix_*(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s*%s)".format(x,y)
+  def infix_/(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s/%s)".format(x,y)
 }
 
-object TestPower {
-  def main(args: Array[String]) {
-    val tp = new TestPower
-    tp.testPower
-  }
-}
+
 
 class TestPower extends FileDiffSuite {
   

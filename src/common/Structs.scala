@@ -4,6 +4,7 @@ package common
 import java.io.PrintWriter
 import scala.reflect.SourceContext
 import scala.virtualization.lms.internal.{FatExpressions,GenericNestedCodegen,GenericFatCodegen}
+import scala.reflect.SourceContext
 
 //import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt} // TODO: eliminate deps
 
@@ -17,7 +18,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 */
 
 
-trait StructExp extends BaseExp {
+trait StructExp extends BaseExp with EffectExp {
 
   // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
 
@@ -41,10 +42,13 @@ trait StructExp extends BaseExp {
   case class SimpleStruct[T](tag: StructTag[T], elems: Map[String,Rep[Any]]) extends AbstractStruct[T]
   case class Field[T](struct: Rep[Any], index: String, tp: Manifest[T]) extends Def[T]
   
-  def struct[T:Manifest](tag: StructTag[T], elems: (String, Rep[Any])*): Rep[T] = struct(tag, Map(elems:_*))
-  def struct[T:Manifest](tag: StructTag[T], elems: Map[String, Rep[Any]]): Rep[T] = SimpleStruct[T](tag, elems)
+  def struct[T:Manifest](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit pos: SourceContext): Rep[T] = struct(tag, Map(elems:_*))
+  def struct[T:Manifest](tag: StructTag[T], elems: Map[String, Rep[Any]])(implicit pos: SourceContext): Rep[T] = SimpleStruct[T](tag, elems)
   
-  def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = Field[T](struct, index, manifest[T])
+  def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = Field[T](struct, index, manifest[T])
+  
+  //FIXME: reflectMutable has to take the Def
+  //def mfield[T:Manifest](struct: Rep[Any], index: String): Rep[T] = reflectMutable(Field[T](struct, index, manifest[T]))
   
   // FIXME: need  syms override because Map is not a Product
   override def syms(x: Any): List[Sym[Any]] = x match {
@@ -59,14 +63,14 @@ trait StructExp extends BaseExp {
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
     case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
-    case Field(struct, key, mf) => field(f(struct), key)(mf)
+    case Field(struct, key, mf) => field(f(struct), key)(mf,pos)
     case _ => super.mirror(e,f)
   }
 }
   
 trait StructExpOpt extends StructExp {
 
-  override def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = struct match {
+  override def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = struct match {
     case Def(Struct(tag, elems)) => elems(index).asInstanceOf[Rep[T]]
     case _ => super.field[T](struct, index)
   }
@@ -75,31 +79,31 @@ trait StructExpOpt extends StructExp {
 
 trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseExp {
   
-  override def var_new[T:Manifest](init: Exp[T]): Var[T] = init match {
-    case Def(Struct(tag, elems)) => 
+  override def var_new[T:Manifest](init: Exp[T])(implicit pos: SourceContext): Var[T] = init match {
+    case Def(Struct(tag, elems)) =>
       //val r = Variable(struct(tag, elems.mapValues(e=>var_new(e).e))) // DON'T use mapValues!! <--lazy
-      Variable(struct[Variable[T]](NestClassTag[Variable,T](tag), elems.map(p=>(p._1,var_new(p._2)(p._2.tp).e))))
+      Variable(struct[Variable[T]](NestClassTag[Variable,T](tag), elems.map(p=>(p._1,var_new(p._2)(p._2.tp,pos).e))))
     case _ => 
       super.var_new(init)
   }
 
-  override def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = (lhs,rhs) match {
-    case (Variable(Def(Struct(NestClassTag(tagL),elemsL:Map[String,Exp[Variable[Any]]]))), Def(Struct(tagR, elemsR))) => 
+  override def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = (lhs,rhs) match {
+    case (Variable(Def(Struct(NestClassTag(tagL),elemsL: Map[String,Exp[Variable[Any]]]))), Def(Struct(tagR, elemsR))) => 
       assert(tagL == tagR)
       assert(elemsL.keySet == elemsR.keySet)
       for (k <- elemsL.keySet)
-        var_assign(Variable(elemsL(k)), elemsR(k))(elemsR(k).tp)
+        var_assign(Variable(elemsL(k)), elemsR(k))(elemsR(k).tp, pos)
       Const(())
     case _ => super.var_assign(lhs, rhs)
   }
   
-  override def readVar[T:Manifest](v: Var[T]) : Exp[T] = v match {
+  override def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {
     case Variable(Def(Struct(NestClassTag(tag), elems: Map[String,Exp[Variable[Any]]]))) => 
       def unwrap[A](m:Manifest[Variable[A]]): Manifest[A] = m.typeArguments match {
         case a::_ => mtype(a)
         case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
       }
-      struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.tp)))))
+      struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.tp), pos))))
     case _ => super.readVar(v)
   }
   
@@ -120,11 +124,11 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
   }*/
 
 
-  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T]) = (a,b) match {
+  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T])(implicit pos: SourceContext) = (a,b) match {
     case (Block(Def(Struct(tagA,elemsA))), Block(Def(Struct(tagB, elemsB)))) => 
       assert(tagA == tagB)
       assert(elemsA.keySet == elemsB.keySet)
-      val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, Block(elemsA(k)), Block(elemsB(k)))(elemsB(k).tp))
+      val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, Block(elemsA(k)), Block(elemsB(k)))(elemsB(k).tp, pos))
       struct[T](tagA, elemsNew.toMap)
     case _ => super.ifThenElse(cond,a,b)
   }
@@ -203,7 +207,7 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
   }
   
   
-  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T]) = (deReify(a),deReify(b)) match {
+  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T])(implicit pos: SourceContext) = (deReify(a),deReify(b)) match {
     case ((u, Def(Struct(tagA,elemsA))), (v, Def(Struct(tagB, elemsB)))) => 
       assert(tagA == tagB)
       assert(elemsA.keySet == elemsB.keySet)

@@ -356,7 +356,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
         def getShapeCond(s: Exp[Int], a: Stm) = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) match { case SimpleCollectIf(a,c) => c } }
 
         def extendLoopWithCondition(e: Stm, shape: Exp[Int], targetVar: Sym[Int], c: List[Exp[Boolean]]): List[Exp[Any]] = e.rhs match { 
-          case SimpleFatLoop(s,x,rhs) => rhs map { r => findOrCreateDefinitionExp(SimpleLoop(shape,targetVar,applyAddCondition(r,c))) }
+          case SimpleFatLoop(s,x,rhs) => (e.lhs zip rhs).map { case (l,r) => findOrCreateDefinitionExp(SimpleLoop(shape,targetVar,applyAddCondition(r,c)), l.pos) }
         }
 
         // partitioning: build maximal sets of loops to be fused
@@ -564,9 +564,23 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
         var WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
           val thisLoopVars = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
+/*
           getSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
             case e@TP(_, SimpleIndex(a,i)) if (thisLoopVars contains i) && (loopCollectSyms contains a) => 
+*/
+          getCustomFatSchedule(currentScope)(WgetLoopRes(dx)) {
+            case e@ThinDef(SimpleIndex(a,i)) if (thisLoopVars contains i) && (loopCollectSyms contains a) => 
+              // check that a is the result of a SimpleCollectIf loop (not a reduce, for example)
+              //if (!loopCollectSyms.contains(a))
+              //  printerr("DANGER WILL ROBINSON: ignoring dep " + e + " although " + a + " is not a loop sym " + loopCollectSyms)
+              printdbg("ignoring simple dependency " + e + " on loop var " + thisLoopVars + " required by body of " + dx.lhs)
               Nil // direct deps on this loop's induction var don't count
+            case e => 
+              syms(e)
+          } flatMap {
+            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) =>
+              printdbg("ignoring2 simple dependency " + e + " on loop var " + thisLoopVars + " required by body of " + dx.lhs)
+              Nil //FIXME: shouldn't duplicate condition ...
             case sc =>
               val pr = syms(sc.rhs).intersect(otherLoopSyms) flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
               if (pr.nonEmpty) printlog("fusion of "+pr+" prevented by " + sc + " which is required by body of " + dx.lhs + " / " + thisLoopVars)
@@ -584,7 +598,6 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
         iter
       
         printlog("wtableneg: " + WtableNeg) // will add more later, need to maintain closure
-        
         
         // other preconditions for fusion: loops must have same shape, or one must loop over the other's result
         
@@ -606,7 +619,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
         def getShapeCond(s: Exp[Int], a: Stm) = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) match { case SimpleCollectIf(a,c) => c } }
         
         def extendLoopWithCondition(e: Stm, shape: Exp[Int], targetVar: Sym[Int], c: List[Exp[Boolean]]): List[Exp[Any]] = e.rhs match { 
-          case SimpleFatLoop(s,x,rhs) => rhs.map { r => findOrCreateDefinitionExp(SimpleLoop(shape,targetVar,applyAddCondition(r,c))) }
+          case SimpleFatLoop(s,x,rhs) => (e.lhs zip rhs).map { case (l,r) => findOrCreateDefinitionExp(SimpleLoop(shape,targetVar,applyAddCondition(r,c)), l.pos) }
         }
         
         // partitioning: build maximal sets of loops to be fused
@@ -653,8 +666,8 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
               val postNeg = WtableNeg collect { case p if (lhs contains p._1) => p._2 }
               
               val fusedNeg = preNeg flatMap { s1 => postNeg map { s2 => (s1,s2) } }
-              WtableNeg = fusedNeg ++ WtableNeg
-              
+              WtableNeg = (fusedNeg ++ WtableNeg).distinct
+
             case None => partitionsOut = b::partitionsOut
           }
         }

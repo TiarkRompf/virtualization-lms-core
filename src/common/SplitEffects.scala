@@ -18,7 +18,7 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
   
   // TODO: SimpleLoops
 
-  override def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary): Exp[A] = x match {
+  override def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = x match {
     case IfThenElse(cond, thenp, elsep) =>
       val affected = (u.mayRead ++ u.mayWrite).distinct
 

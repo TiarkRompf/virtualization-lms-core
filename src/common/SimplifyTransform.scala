@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package common
 
+import scala.reflect.SourceContext
 
 
 trait SimplifyTransform extends internal.FatScheduling {
@@ -35,6 +36,9 @@ trait SimplifyTransform extends internal.FatScheduling {
   def transformOne[A](s: Sym[A], x: Def[A], t: SubstTransformer): Exp[A] = {
     if (t.subst.contains(s)) return t(s) // should continue transforming t(s)?
     implicit val m: Manifest[A] = s.tp.asInstanceOf[Manifest[A]]
+    val pos: SourceContext =
+      if (s.sourceContexts.isEmpty) implicitly[SourceContext]
+      else s.sourceContexts(0)
 
     //if (!syms(x).exists(t.subst contains _)) return s   //<---- should be safe to prune but test fails (??)
 
@@ -42,7 +46,7 @@ trait SimplifyTransform extends internal.FatScheduling {
       val ss = syms(x)
       val tss = t(ss)
       if (ss != tss) {
-        val s2 = mirror(x, t) 
+        val s2 = mirror(x, t)(m, pos)
         if (s2 == s) {
           printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned same object (expected t(syms) = " + tss.mkString(",") + ")")
         }

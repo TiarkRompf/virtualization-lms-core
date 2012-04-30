@@ -66,7 +66,8 @@ trait Transforming extends Expressions with Blocks { self =>
 
 
 trait FatTransforming extends Transforming with FatExpressions {
-
+  this: scala.virtualization.lms.common.BaseExp => // probably shouldn't be here...
+  
   //def mirror[A:Manifest](e: FatDef, f: Transformer): Exp[A] = sys.error("don't know how to mirror " + e)  
   
 }

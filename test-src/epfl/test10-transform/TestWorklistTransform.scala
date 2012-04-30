@@ -51,7 +51,7 @@ trait FWTransform1 extends BaseFatExp with EffectExp with IfThenElseFatExp with 
   // we need to apply the current substitution to each Def we create:
   // Foo(x) atPhase(t) { bar(x) }   <--- x in bar(x)  will refer to a sym that may have been replaced itself
   
-  protected override implicit def toAtom[A:Manifest](d: Def[A]): Exp[A] = { // override createDefinition instead?
+  protected override implicit def toAtom[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = { // override createDefinition instead?
     val in = syms(d)
     val actual = xform(in)
     

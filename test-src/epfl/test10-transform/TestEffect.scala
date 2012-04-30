@@ -94,7 +94,7 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
   // speculative nature: we must be able to back off if speculation fails.
   // ergo, need to save original Defs (or have a way to reconstruct them).
 
-  override implicit def toAtom[A:Manifest](d: Def[A]): Exp[A] = {
+  override implicit def toAtom[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
     val in = syms(d)
     val actual = in map (s => subst.getOrElse(s,s))
     

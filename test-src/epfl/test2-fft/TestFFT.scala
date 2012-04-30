@@ -62,17 +62,17 @@ trait FFT { this: Arith with Trig =>
 
 trait ArithExpOptFFT extends ArithExpOpt {
 
-  override def infix_+(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_+(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
     case (x, Def(Minus(Const(0.0) | Const(-0.0), y))) => infix_-(x, y)
     case _ => super.infix_+(x, y)
   }
 
-  override def infix_-(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
     case (x, Def(Minus(Const(0.0) | Const(-0.0), y))) => infix_+(x, y)
     case _ => super.infix_-(x, y)
   }
 
-  override def infix_*(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_*(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
     case (x, Const(-1.0)) => infix_-(0.0, x)
     case (Const(-1.0), y) => infix_-(0.0, y)
     case _ => super.infix_*(x, y)

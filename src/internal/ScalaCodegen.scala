@@ -3,7 +3,9 @@ package internal
 
 import java.io.{File, FileWriter, PrintWriter}
 
-trait ScalaCodegen extends GenericCodegen {
+import scala.reflect.SourceContext
+
+trait ScalaCodegen extends GenericCodegen with Config {
   val IR: Expressions
   import IR._
 
@@ -62,6 +64,7 @@ trait ScalaCodegen extends GenericCodegen {
     if (vals.length > 0 && vars.length > 0){
       stream.print(", ")
     }
+    // TODO: remap Ref instead of explicitly adding generated.scala
     if (vars.length > 0){
       stream.print(vars.map(v => quote(v) + ":" + "generated.scala.Ref[" + remap(v.tp) +"]").mkString(","))
     }
@@ -81,13 +84,23 @@ trait ScalaCodegen extends GenericCodegen {
     stream.println("}}")
   }
 
+  def relativePath(fileName: String): String = {
+    val i = fileName.lastIndexOf('/')
+    fileName.substring(i + 1)
+  }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    stream.println("val " + quote(sym) + " = " + rhs) // + "        //" + sym.tp.debugInfo)
+    val extra = if ((sourceinfo < 2) || sym.pos.isEmpty) "" else {
+      val context = sym.pos(0)
+      "      // " + relativePath(context.fileName) + ":" + context.line
+    }
+    stream.println("val " + quote(sym) + " = " + rhs + extra)
   }
+  
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
+  
   def emitAssignment(lhs: String, rhs: String): Unit = {
     stream.println(lhs + " = " + rhs)
   }

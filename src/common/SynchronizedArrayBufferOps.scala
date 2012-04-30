@@ -23,7 +23,7 @@ trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with Arra
 
   // all array buffers are synchronized (nackward compat). TODO: separate constructor
 
-  override def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]]) = reflectMutable(SyncArrayBufferNew(xs))
+  override def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]])(implicit pos: SourceContext) = reflectMutable(SyncArrayBufferNew(xs))
 }
 
 trait BaseGenSynchronizedArrayBufferOps extends BaseGenArrayBufferOps {

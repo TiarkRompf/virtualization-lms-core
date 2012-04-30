@@ -14,6 +14,7 @@ import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
+
 trait CpsProg1 extends Arith with IfThenElse with Equal with Print with Compile {
   
   def choose[A:Manifest](x: Rep[Boolean]): Boolean @cps[Rep[A]] = shift { k: (Boolean => Rep[A]) =>
@@ -150,9 +151,6 @@ trait AmbProg2 extends AmbProg1 {
   
   
 }
-
-
-
 
 
 

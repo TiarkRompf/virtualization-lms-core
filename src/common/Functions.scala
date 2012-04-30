@@ -30,7 +30,6 @@ trait FunctionsExp extends Functions with EffectExp {
   case class Apply[A:Manifest,B:Manifest](f: Exp[A => B], arg: Exp[A]) extends Def[B]
 
   def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B])(implicit pos: SourceContext) : Exp[A => B] = {
-
     val x = fresh[A]
     val y = reifyEffects(f(x)) // unfold completely at the definition site. 
                                // TODO: this will not work if f is recursive. 

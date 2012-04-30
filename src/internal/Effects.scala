@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package internal
 
+import scala.reflect.SourceContext
 import util.GraphUtil
 import scala.collection.mutable
 import scala.annotation.unchecked.uncheckedVariance
@@ -292,7 +293,7 @@ trait Effects extends Expressions with Blocks with Utils {
     of course this is unsafe in general but there might be cases that are definitely save.
   */
 
-  protected override implicit def toAtom[T:Manifest](d: Def[T]): Exp[T] = {
+  protected override implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
 /*
     are we depending on a variable or mutable object? then we need to be serialized -> effect
 
@@ -319,6 +320,7 @@ trait Effects extends Expressions with Blocks with Utils {
       val zd = z match { case Def(zd) => zd }
       printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
       printerr("at " + z + "=" + zd)
+      printsrc("in " + quotePos(z))
     }
   }
   
@@ -338,7 +340,7 @@ trait Effects extends Expressions with Blocks with Utils {
     s
   }
 
-  def reflectMutable[A:Manifest](d: Def[A]): Exp[A] = {
+  def reflectMutable[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
     val z = reflectEffect(d, Alloc())
 
     val mutableAliases = mutableTransitiveAliases(d)
@@ -346,7 +348,7 @@ trait Effects extends Expressions with Blocks with Utils {
     z
   }
 
-  def reflectWrite[A:Manifest](write0: Exp[Any]*)(d: Def[A]): Exp[A] = {
+  def reflectWrite[A:Manifest](write0: Exp[Any]*)(d: Def[A])(implicit pos: SourceContext): Exp[A] = {
     val write = write0.toList.asInstanceOf[List[Sym[Any]]] // should check...
 
     val z = reflectEffect(d, Write(write))
@@ -356,15 +358,15 @@ trait Effects extends Expressions with Blocks with Utils {
     z
   }
 
-  def reflectEffect[A:Manifest](x: Def[A]): Exp[A] = reflectEffect(x, Simple()) // simple effect (serialized with respect to other simples)
+  def reflectEffect[A:Manifest](x: Def[A])(implicit pos: SourceContext): Exp[A] = reflectEffect(x, Simple()) // simple effect (serialized with respect to other simples)
 
-  def reflectEffect[A:Manifest](d: Def[A], u: Summary): Exp[A] = {
+  def reflectEffect[A:Manifest](d: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
     // are we depending on a variable? then we need to be serialized -> effect
     val mutableInputs = readMutableData(d)
     reflectEffectInternal(d, u andAlso Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
   }
   
-  def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary): Exp[A] = {
+  def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
     if (mustPure(u)) super.toAtom(x) else {
       // NOTE: reflecting mutable stuff *during mirroring* doesn't work right now.
       
@@ -382,11 +384,12 @@ trait Effects extends Expressions with Blocks with Utils {
           createReflectDefinition(z, zd)
         }
       } else {
-        val z = fresh[A]
+        val z = fresh[A](List(pos))
         // make sure all writes go to allocs
         for (w <- u.mayWrite if !isWritableSym(w)) {
           printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
           printerr("at " + z + "=" + zd)
+          printsrc("in " + quotePos(z))
         }
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
         // make sure no mutable object becomes part of mutable result (in case of allocation)
@@ -445,6 +448,7 @@ trait Effects extends Expressions with Blocks with Utils {
       case Reflect(Reify(_,_,_),_,_) =>
         printerr("error: reflecting a reify node.")
         printerr("at " + s + "=" + x)
+        printsrc("in " + quotePos(s))
       case _ => //ok
     }
     createDefinition(s, x)
