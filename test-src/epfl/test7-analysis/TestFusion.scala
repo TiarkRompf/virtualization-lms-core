@@ -73,23 +73,35 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
   }
 
   override def plugInHelper[A,T:Manifest,U:Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = context match {
-    case `oldGen` => plug
+    // TODO(VJ) This should work for now but will not in general case
+    case Def(Reflect(`oldGen`, a, b))  => plug 
+    
     case Def(IfThenElse(c,Block(a),b@Block(Def(Skip(x))))) => 
-      toAtom2(IfThenElse(c,Block(plugInHelper(oldGen,a,plug)),Block(toAtom2(Skip(x)))))
-    case Def(SimpleLoop(sh,x,ForeachElem(Block(y)))) => 
-      toAtom2(SimpleLoop(sh,x,ForeachElem(Block(plugInHelper(oldGen,y,plug)))))
+      ifThenElse(c, reifyEffects(plugInHelper(oldGen,a,plug)), reifyEffects(skip[U](x)))
+      
+    case Def(SimpleLoop(sh,x,ForeachElem(Block(y)))) =>
+      val body = reifyEffects(plugInHelper(oldGen,y,plug))
+      reflectEffect(SimpleLoop(sh,x,ForeachElem(body)), summarizeEffects(body).star)
+      
+    case Def(Reify(y, s, e)) => 
+      getBlockResultFull(reifyEffects(plugInHelper(oldGen, y, plug)))
+    
     case Def(x) => 
-      error("Missed me => " + x + " should find " + oldGen);
+      error("Missed me => " + x + " should find " + oldGen)
   }
 
   override def applyPlugIntoContext(d: Def[Any], r: Def[Any], newGen: Exp[Gen[Any]]) = (d, r) match {
-    case (ArrayElem(g, Block(a)), ArrayElem(g2, Block(b))) => 
+    case (ArrayElem(g, Block(a)), ArrayElem(g2, Block(b))) =>
+      println("oldGen: " + g)
       ArrayElem(newGen.asInstanceOf[Exp[Gen[Nothing]]], Block(plugInHelper(g, a, b)))
     case (ReduceElem(g, Block(a)), ArrayElem(g2, Block(b))) => 
+      println("oldGen: " + g)
       ArrayElem(newGen.asInstanceOf[Exp[Gen[Nothing]]], Block(plugInHelper(g, a, b)))
-    case (ArrayElem(g, Block(a)), ReduceElem(g2, Block(b))) => 
+    case (ArrayElem(g, Block(a)), ReduceElem(g2, Block(b))) =>
+      println("oldGen: " + g)
       ReduceElem(newGen.asInstanceOf[Exp[Gen[Double]]], Block(plugInHelper(g, a, b)))
-    case (ReduceElem(g, Block(a)), ReduceElem(g2, Block(b))) => 
+    case (ReduceElem(g, Block(a)), ReduceElem(g2, Block(b))) =>
+      println("oldGen: " + g)
       ReduceElem(newGen.asInstanceOf[Exp[Gen[Double]]], Block(plugInHelper(g, a, b)))
     case _ => super.applyPlugIntoContext(d, r, newGen)
   }
@@ -356,7 +368,7 @@ class TestFusion extends FileDiffSuite {
   def testFusion03 = {
     withOutFile(prefix+"fusion03") {
       new FusionProg2 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
-        override val verbosity = 0
+        override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false }
@@ -370,7 +382,7 @@ class TestFusion extends FileDiffSuite {
   def testFusion04 = {
     withOutFile(prefix+"fusion04") {
       new FusionProg2 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
-        override val verbosity = 0
+        override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }

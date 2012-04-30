@@ -60,16 +60,16 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
    */
   case class YieldTuple[A, B](g: List[Exp[Int]], a: (Exp[A], Exp[B])) extends Def[Gen[(A, B)]]
   
-  def yields[T](g: List[Exp[Int]], a: Exp[T]) = { 
+  def yields[T : Manifest](g: List[Exp[Int]], a: Exp[T]) = { 
     val y = YieldSingle(g, a)
     yieldStack = yieldStack.push(y)
-    y
+    reflectEffect(y)
   }
   
-  def yields[A, B](g: List[Exp[Int]], a: (Exp[A], Exp[B])) = {
+  def yields[A : Manifest, B : Manifest](g: List[Exp[Int]], a: (Exp[A], Exp[B])) = {
     val y = YieldTuple(g, a)
     yieldStack = yieldStack.push(y)
-    y
+    reflectEffect(y)
   }
   
   /**
@@ -78,7 +78,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
    */
   case class Skip[T](g: List[Exp[Int]]) extends Def[Gen[T]]
   
-  def skip[T : Manifest](g: List[Exp[Int]]) = Skip[T](g)
+  def skip[T : Manifest](g: List[Exp[Int]]) = reflectEffect(Skip[T](g))
   
   /**
    * For now single type parameter.
@@ -120,14 +120,20 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   // mirroring
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
-    case SimpleLoop(s,v,body) => simpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f))
-    case YieldSingle(i,y) => toAtom(YieldSingle(i.map(x => f(x)),f(y)))(mtype(manifest[A]))
-    case YieldTuple(i, y) => toAtom(YieldTuple(i.map(x => f(x)),(f(y._1), f(y._2))))(mtype(manifest[A]))
-    case Skip(i) => toAtom(Skip(i.map(x => f(x))))(mtype(manifest[A]))
+    case Reflect(SimpleLoop(s,v,body), u, es) => 
+      reflectMirrored(Reflect(SimpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case SimpleLoop(s,v,body) =>
+      simpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f))(mtype(manifest[A]))
+    case Reflect(YieldSingle(i, y), u, es) => 
+      reflectMirrored(Reflect(YieldSingle(f(i), f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(YieldTuple(i, y), u, es) => 
+      reflectMirrored(Reflect(YieldTuple(f(i),(f(y._1), f(y._2))), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(Skip(i), u, es) => 
+      reflectMirrored(Reflect(Skip(f(i)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
-
-	/////////////////////
+  
+  /////////////////////
   // aliases and sharing
 
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
@@ -240,7 +246,7 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
   override def fatten(e: TP[Any]): TTP = e.rhs match {
     case op: AbstractLoop[_] => 
       TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
-    case Reflect(op: AbstractLoop[_], u, es) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on...
+    case Reflect(op: AbstractLoop[_], u, es)  => // if !u.maySimple && !u.mayGlobal // assume body will reflect, too. bring it on...
       printdbg("-- fatten effectful loop " + e)
       TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
     case _ => super.fatten(e)

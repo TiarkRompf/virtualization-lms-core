@@ -87,14 +87,13 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   }
 
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] = {
-    //val g = fresh[Accu[Double]]
     val x = fresh[Int]
     val (g, y) = collectYields{ reifyEffects { 
        yields(List(x),f(x))
     }}
     
-    simpleLoop(shape, x, ReduceElem(g,y))
-  } 
+    reflectEffect(SimpleLoop(shape, x, ReduceElem(g,y)), summarizeEffects(y).star)
+  }
 
   def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]] = {
     val x = fresh[Int]
@@ -111,8 +110,8 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
       val z = f(x)
       val shape2 = infix_length(z)
       val x2 = fresh[Int]
-
-      simpleLoop(shape2, x2, ForeachElem(reifyEffects {yields(List(x2, x),infix_at(z,x2))}).asInstanceOf[Def[Gen[T]]])
+      val innerBody = reifyEffects {yields(List(x2, x),infix_at(z,x2))}
+      reflectEffect(SimpleLoop(shape2, x2, ForeachElem(innerBody).asInstanceOf[Def[Gen[T]]]), summarizeEffects(innerBody).star)
     }}
     reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
   }
