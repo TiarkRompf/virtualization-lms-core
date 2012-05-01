@@ -53,10 +53,10 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
   }
 
   override def unapplySimpleCollect(e: Def[Any]) = e match {
-    case ArrayElem(Def(Yield(_,a)), _) => Some(a.head)
+    case ArrayElem(Def(Reflect(Yield(_,a), _, _)), _) => Some(a.head)
     case _ => super.unapplySimpleCollect(e)
   }
-
+  // TODO (VJ) what is this
   override def unapplySimpleCollectIf(e: Def[Any]) = e match {
     case ArrayElem(g,Block(Def(IfThenElse(c,Block(Def(SimpleCollectIf(a,cs))),Block(Def(Skip(_))))))) => Some((a,c::cs))
     case _ => super.unapplySimpleCollectIf(e)
@@ -73,35 +73,31 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
   }
 
   override def plugInHelper[A,T:Manifest,U:Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = context match {
-    // TODO(VJ) This should work for now but will not in general case
-    case Def(Reflect(`oldGen`, a, b))  => plug 
+    case `oldGen`  => plug 
     
-    case Def(IfThenElse(c,Block(a),b@Block(Def(Skip(x))))) => 
+    case Def(Reify(y, s, e)) =>
+      getBlockResultFull(reifyEffects(plugInHelper(oldGen, y, plug)))
+    
+    // TODO(VJ) find a better solution  
+    case Def(Reflect(IfThenElse(c, Block(a), Block(Def(Reify(Def(Reflect(Skip(x), _, _)), _, _)))), u, es)) => 
       ifThenElse(c, reifyEffects(plugInHelper(oldGen,a,plug)), reifyEffects(skip[U](x)))
       
     case Def(SimpleLoop(sh,x,ForeachElem(Block(y)))) =>
       val body = reifyEffects(plugInHelper(oldGen,y,plug))
       reflectEffect(SimpleLoop(sh,x,ForeachElem(body)), summarizeEffects(body).star)
-      
-    case Def(Reify(y, s, e)) => 
-      getBlockResultFull(reifyEffects(plugInHelper(oldGen, y, plug)))
     
-    case Def(x) => 
-      error("Missed me => " + x + " should find " + oldGen)
+    case Def(x) =>
+      error("Missed me => " + x + " should find " + Def.unapply(oldGen).getOrElse("None"))
   }
 
   override def applyPlugIntoContext(d: Def[Any], r: Def[Any]) = (d, r) match {
     case (ArrayElem(g, Block(a)), ArrayElem(g2, Block(b))) =>
-      println("oldGen: " + g)
       ArrayElem(g2, Block(plugInHelper(g, a, b)))
     case (ReduceElem(g, Block(a)), ArrayElem(g2, Block(b))) => 
-      println("oldGen: " + g)
       ArrayElem(g2, Block(plugInHelper(g, a, b)))
     case (ArrayElem(g, Block(a)), ReduceElem(g2, Block(b))) =>
-      println("oldGen: " + g)
       ReduceElem(g2, Block(plugInHelper(g, a, b)))
     case (ReduceElem(g, Block(a)), ReduceElem(g2, Block(b))) =>
-      println("oldGen: " + g)
       ReduceElem(g2, Block(plugInHelper(g, a, b)))
     case _ => super.applyPlugIntoContext(d, r)
   }
@@ -147,6 +143,29 @@ trait FusionProg extends Arith with ArrayLoops with Print {
 
     print(m)
     print(v)
+  }
+  
+}
+
+/**
+ * Simple stuff map => map.
+ */
+trait FusionProg1 extends Arith with ArrayLoops with Print {
+  
+  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+
+  def test(x: Rep[Unit]) = {
+    
+    def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) =
+      array(x.length)(i => f(x.at(i)))
+      
+    val range = array(100) { i => i }
+
+    val odds = map(range) { z => z + 3 }
+
+    val res = map(odds) { i => i + 5 }
+
+    print(res)
   }
   
 }
@@ -346,6 +365,7 @@ class TestFusion extends FileDiffSuite {
     withOutFile(prefix+"fusion01") {
       new FusionProg with ArithExp with ArrayLoopsExp with PrintExp { self =>
         val codegen = new ScalaGenArrayLoops with ScalaGenArith with ScalaGenPrint { val IR: self.type = self }
+        
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -355,9 +375,10 @@ class TestFusion extends FileDiffSuite {
   def testFusion02 = {
     withOutFile(prefix+"fusion02") {
       // LoopsExp2 with ArithExp with PrintExp with BaseFatExp
-      new FusionProg with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with TransformingStuff { self =>
-        override val verbosity = 1
-        val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint { val IR: self.type = self }
+      new FusionProg1 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with TransformingStuff { self =>
+        override val verbosity = 0
+        val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint { val IR: self.type = self 
+        override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -368,7 +389,7 @@ class TestFusion extends FileDiffSuite {
   def testFusion03 = {
     withOutFile(prefix+"fusion03") {
       new FusionProg2 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp with TransformingStuff { self =>
-        override val verbosity = 1
+        override val verbosity = 0
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false }

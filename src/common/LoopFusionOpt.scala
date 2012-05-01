@@ -271,6 +271,8 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         }
 
         printlog("partitions: " + partitionsOut)
+        printlog("After fusion: ")
+        currentScope.foreach(x => printlog(x))
         // actually do the fusion: now transform the loops bodies
 
         if ((partitionsOut intersect partitionsIn) != partitionsOut) { // was there any change?
