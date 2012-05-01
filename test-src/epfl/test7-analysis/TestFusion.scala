@@ -90,20 +90,20 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
       error("Missed me => " + x + " should find " + oldGen)
   }
 
-  override def applyPlugIntoContext(d: Def[Any], r: Def[Any], newGen: Exp[Gen[Any]]) = (d, r) match {
+  override def applyPlugIntoContext(d: Def[Any], r: Def[Any]) = (d, r) match {
     case (ArrayElem(g, Block(a)), ArrayElem(g2, Block(b))) =>
       println("oldGen: " + g)
-      ArrayElem(newGen.asInstanceOf[Exp[Gen[Nothing]]], Block(plugInHelper(g, a, b)))
+      ArrayElem(g2, Block(plugInHelper(g, a, b)))
     case (ReduceElem(g, Block(a)), ArrayElem(g2, Block(b))) => 
       println("oldGen: " + g)
-      ArrayElem(newGen.asInstanceOf[Exp[Gen[Nothing]]], Block(plugInHelper(g, a, b)))
+      ArrayElem(g2, Block(plugInHelper(g, a, b)))
     case (ArrayElem(g, Block(a)), ReduceElem(g2, Block(b))) =>
       println("oldGen: " + g)
-      ReduceElem(newGen.asInstanceOf[Exp[Gen[Double]]], Block(plugInHelper(g, a, b)))
+      ReduceElem(g2, Block(plugInHelper(g, a, b)))
     case (ReduceElem(g, Block(a)), ReduceElem(g2, Block(b))) =>
       println("oldGen: " + g)
-      ReduceElem(newGen.asInstanceOf[Exp[Gen[Double]]], Block(plugInHelper(g, a, b)))
-    case _ => super.applyPlugIntoContext(d, r, newGen)
+      ReduceElem(g2, Block(plugInHelper(g, a, b)))
+    case _ => super.applyPlugIntoContext(d, r)
   }
 
   override def applyExtendGenerator[A](d: Def[Any], r: Def[Any]) = (d, r) match {

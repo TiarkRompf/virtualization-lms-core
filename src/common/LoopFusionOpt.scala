@@ -172,9 +172,9 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
 
               // concatenating loop vars of both generators (Yield) in the new Generator.
               // This keeps the dependency between the new Yield and all added loops.
-              val (gen, newGen) = applyExtendGenerator(d, r)
-              val newSym = SimpleLoop(shape, targetVar, applyPlugIntoContext(d, r, newGen))
-              trans.subst(gen) = newGen
+//              val (gen, newGen) = applyExtendGenerator(d, r)
+              val newSym = SimpleLoop(shape, targetVar, applyPlugIntoContext(d, r))
+//              trans.subst(gen) = newGen
 
               // track only symbols of loops that are created in plugging. This prevents loops to be filtered afterwards.
               UloopSyms = UloopSyms ++ globalDefs.drop(saveContext).collect{case a@ TP(lhs, SimpleLoop(_, _, _)) => List(lhs)}
