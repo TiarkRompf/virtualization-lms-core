@@ -22,9 +22,6 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val body: Def[A]
   }
   
-  // used for convenient creation of yield statements
-  var yieldStack: Stack[Def[Gen[_]]] = Stack.empty
-  
   object Yield {
     
     def apply(lvs: List[Exp[Int]], exps: List[Exp[Any]]): Def[Gen[Any]] = exps match {
@@ -60,18 +57,6 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
    */
   case class YieldTuple[A, B](g: List[Exp[Int]], a: (Exp[A], Exp[B])) extends Def[Gen[(A, B)]]
   
-  def yields[T : Manifest](g: List[Exp[Int]], a: Exp[T]) = { 
-    val y = YieldSingle(g, a)
-    yieldStack = yieldStack.push(y)
-    reflectEffect(y)
-  }
-  
-  def yields[A : Manifest, B : Manifest](g: List[Exp[Int]], a: (Exp[A], Exp[B])) = {
-    val y = YieldTuple(g, a)
-    yieldStack = yieldStack.push(y)
-    reflectEffect(y)
-  }
-  
   /**
    * Skip statement is used in loops to indicate that no element is being emitted. For example in filter clauses, else branch will contain a Skip.
    * @param  g   Represents list of loop vars in which this skip is nested.
@@ -80,16 +65,31 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   
   def skip[T : Manifest](g: List[Exp[Int]]) = reflectEffect(Skip[T](g))
   
+  // used for convenient creation of yield statements
+  var yieldStack: Stack[Exp[Gen[_]]] = Stack.empty
+   
+  
+  def yields[T : Manifest](g: List[Exp[Int]], a: Exp[T]) = { 
+    val y = reflectEffect(YieldSingle(g, a))
+    yieldStack = yieldStack.push(y)
+    y
+  }
+  
+  def yields[A : Manifest, B : Manifest](g: List[Exp[Int]], a: (Exp[A], Exp[B])) = {
+    val y = reflectEffect(YieldTuple(g, a))
+    yieldStack = yieldStack.push(y)
+    y
+  }
+  
   /**
    * For now single type parameter.
    */
-  def collectYields[T](e: => Block[Gen[T]]): (Def[Gen[T]], Block[Gen[T]]) = {
+  def collectYields[T](e: => Block[Gen[T]]): (Exp[Gen[T]], Block[Gen[T]]) = {
     val block = e
-    val res = (yieldStack.top.asInstanceOf[Def[Gen[T]]], block)
+    val res = (yieldStack.top.asInstanceOf[Exp[Gen[T]]], block)
     yieldStack = yieldStack.pop
     res
   }
-  
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
 
