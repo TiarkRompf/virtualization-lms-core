@@ -1,0 +1,27 @@
+digraph G {
+"Sym(2)" [
+label="Sym(2) with S2=U1 \n Argument(Sym(1),1)"
+shape=box
+style=filled
+color=black
+fillcolor="#ffffff"
+]
+"Sym(1)" -> "Sym(2)"
+"Sym(3)" [
+label="Sym(3) with ?!? \n Argument(Sym(1),2)"
+shape=box
+style=filled
+color=black
+fillcolor="#ffffff"
+]
+"Sym(1)" -> "Sym(3)"
+"Sym(4)" [
+label="Sym(4) with S4=U1 \n InfixOp(+: Sym(2) and Sym(3))"
+shape=box
+style=filled
+color=black
+fillcolor="#ffffff"
+]
+"Sym(2)" -> "Sym(4)"
+"Sym(3)" -> "Sym(4)"
+}

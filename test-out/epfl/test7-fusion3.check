@@ -2,26 +2,26 @@
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Unit)=>(Unit)) {
-def apply(x0:Unit): Unit = {
-var x2 = new Array[](100)
-for (x1 <- 0 until 100) {
-x2(x1) = x1
-}
-var x6 = new ArrayBuilder[]
-for (x3 <- 0 until 100) {
-val x4 = x2.apply(x3)
-val x5 = x4 > 50
-if (x5) x6 += x4
-}
-val x7 = x6.length
-var x10 = 0
-for (x8 <- 0 until x7) {
-val x9 = x6.apply(x8)
-x10 += x9
-}
-val x11 = println(x10)
-x11
-}
+  def apply(x0:Unit): Unit = {
+    var x2 = new Array[](100)
+    for (x1 <- 0 until 100) {
+      x2(x1) = x1
+    }
+    var x6 = new ArrayBuilder[]
+    for (x3 <- 0 until 100) {
+      val x4 = x2.apply(x3)
+      val x5 = x4 > 50
+      if (x5) x6 += x4
+    }
+    val x7 = x6.length
+    var x10 = 0
+    for (x8 <- 0 until x7) {
+      val x9 = x6.apply(x8)
+      x10 += x9
+    }
+    val x11 = println(x10)
+    x11
+  }
 }
 /*****************************************
   End of Generated Code                  

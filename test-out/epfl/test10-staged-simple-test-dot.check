@@ -1,0 +1,43 @@
+digraph G {
+"Sym(7)" [
+label="Sym(7) with V7=[u14  u13  u12] and S7=[3] \n Argument(Sym(6),1)"
+shape=box
+style=filled
+color=black
+fillcolor="#ffffff"
+]
+"Sym(6)" -> "Sym(7)"
+"Sym(8)" [
+label="Sym(8) with ?!? \n Argument(Sym(6),2)"
+shape=box
+style=filled
+color=black
+fillcolor="#ffffff"
+]
+"Sym(6)" -> "Sym(8)"
+"Sym(9)" [
+label="Sym(9) with V9=[u11  u10  u9] and S9=[3] \n InfixOp(+: Sym(7) and Sym(8))"
+shape=box
+style=filled
+color=black
+fillcolor="#ffffff"
+]
+"Sym(7)" -> "Sym(9)"
+"Sym(8)" -> "Sym(9)"
+"Sym(10)" [
+label="Sym(10) with V10=[10  10  10] and S10=[3] \n KnownAtCompileTime(Vector(3): 10 10 10)"
+shape=box
+style=filled
+color=black
+fillcolor="#ffffff"
+]
+"Sym(11)" [
+label="Sym(11) with V11=[u8  u7  u6] and S11=[3] \n InfixOp(+: Sym(9) and Sym(10))"
+shape=box
+style=filled
+color=black
+fillcolor="#ffffff"
+]
+"Sym(9)" -> "Sym(11)"
+"Sym(10)" -> "Sym(11)"
+}

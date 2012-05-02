@@ -10,3 +10,7 @@ This is the common embedding framework portion of the collaboration effort betwe
     Instead of `<downloadpath>` of course you use the actual path.
       
 3. Run `sbt`
+
+### Use Eclipse with for development:
+
+See [this page](http://lamplmscore.epfl.ch/mediawiki/index.php/Eclipse_IDE_with_Scala-virtualized) for instructions on importing the project.

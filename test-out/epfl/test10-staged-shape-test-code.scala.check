@@ -1,0 +1,39 @@
+package scala.virtualization.lms
+package epfl
+package test10
+package original
+
+import test10.original.Conversions._
+import test10.original.Operations._
+import test10.original.SpecificOperations._
+
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Experiment extends ((scala.Tuple2[scala.virtualization.lms.epfl.test10.original.MDArray[Int], scala.virtualization.lms.epfl.test10.original.MDArray[Int]])=>(scala.virtualization.lms.epfl.test10.original.MDArray[Int])) {
+  def apply(x1:scala.Tuple2[scala.virtualization.lms.epfl.test10.original.MDArray[Int], scala.virtualization.lms.epfl.test10.original.MDArray[Int]]): scala.virtualization.lms.epfl.test10.original.MDArray[Int] = {
+    val x2 = x1._1
+    val x3 = x1._2
+    // RuntimeCheck : POST:   S2 = U1                                                from Bubble up shape for Sym(2) <- InfixOp(+: Sym(2) and Sym(3))
+    // RuntimeCheck : PRE:    S2 = S3 OR S3 = []                                     from InfixOp(+: Sym(2) and Sym(3))
+    // Shape: S4=U1
+    val x4: MDArray[Int] = {
+      // WARNING: Operation not specialized on {arrays|scalars}!
+      if (shape(shape(x3)).content()(0) == 0) {
+        val result = new Array[Int](shape(x2).content().foldLeft(1)((a,b) => a*b))
+        for(i <- List.range(0, result.length))
+        result(i) = x2.content()(i) +  x3
+        internalReshape(shape(x2), result, "infixOpAA")
+      } else {
+        val result = new Array[Int](shape(x2).content().foldLeft(1)((a,b) => a*b))
+        for(i <- List.range(0, result.length))
+        result(i) = x2.content()(i) +  x3.content()(i)
+        internalReshape(shape(x2), result, "infixOpAA")
+      }
+    }
+    x4
+  }
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

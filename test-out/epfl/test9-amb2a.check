@@ -4,8 +4,8 @@
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
 val x1 = 1 != 1
-val x9 = if (x1) {
-val x7 = if (x1) {
+val x9: Unit = if (x1) {
+val x7: Unit = if (x1) {
 val x2 = println("found:")
 val x3 = println(1)
 val x4 = println(1)
@@ -19,8 +19,8 @@ x7
 ()
 }
 val x10 = 1 != 2
-val x18 = if (x1) {
-val x16 = if (x10) {
+val x18: Unit = if (x1) {
+val x16: Unit = if (x10) {
 val x11 = println("found:")
 val x12 = println(1)
 val x13 = println(1)
@@ -34,8 +34,8 @@ x16
 ()
 }
 val x19 = 1 != 3
-val x27 = if (x1) {
-val x25 = if (x19) {
+val x27: Unit = if (x1) {
+val x25: Unit = if (x19) {
 val x20 = println("found:")
 val x21 = println(1)
 val x22 = println(1)
@@ -49,8 +49,8 @@ x25
 ()
 }
 val x28 = 1 != 4
-val x36 = if (x1) {
-val x34 = if (x28) {
+val x36: Unit = if (x1) {
+val x34: Unit = if (x28) {
 val x29 = println("found:")
 val x30 = println(1)
 val x31 = println(1)
@@ -64,8 +64,8 @@ x34
 ()
 }
 val x37 = 2 != 1
-val x45 = if (x10) {
-val x43 = if (x37) {
+val x45: Unit = if (x10) {
+val x43: Unit = if (x37) {
 val x38 = println("found:")
 val x39 = println(1)
 val x40 = println(2)
@@ -79,8 +79,8 @@ x43
 ()
 }
 val x46 = 2 != 2
-val x54 = if (x10) {
-val x52 = if (x46) {
+val x54: Unit = if (x10) {
+val x52: Unit = if (x46) {
 val x47 = println("found:")
 val x48 = println(1)
 val x49 = println(2)
@@ -94,8 +94,8 @@ x52
 ()
 }
 val x55 = 2 != 3
-val x63 = if (x10) {
-val x61 = if (x55) {
+val x63: Unit = if (x10) {
+val x61: Unit = if (x55) {
 val x56 = println("found:")
 val x57 = println(1)
 val x58 = println(2)
@@ -109,8 +109,8 @@ x61
 ()
 }
 val x64 = 2 != 4
-val x72 = if (x10) {
-val x70 = if (x64) {
+val x72: Unit = if (x10) {
+val x70: Unit = if (x64) {
 val x65 = println("found:")
 val x66 = println(1)
 val x67 = println(2)
@@ -124,8 +124,8 @@ x70
 ()
 }
 val x73 = 3 != 1
-val x81 = if (x19) {
-val x79 = if (x73) {
+val x81: Unit = if (x19) {
+val x79: Unit = if (x73) {
 val x74 = println("found:")
 val x75 = println(1)
 val x76 = println(3)
@@ -139,8 +139,8 @@ x79
 ()
 }
 val x82 = 3 != 2
-val x90 = if (x19) {
-val x88 = if (x82) {
+val x90: Unit = if (x19) {
+val x88: Unit = if (x82) {
 val x83 = println("found:")
 val x84 = println(1)
 val x85 = println(3)
@@ -154,8 +154,8 @@ x88
 ()
 }
 val x91 = 3 != 3
-val x99 = if (x19) {
-val x97 = if (x91) {
+val x99: Unit = if (x19) {
+val x97: Unit = if (x91) {
 val x92 = println("found:")
 val x93 = println(1)
 val x94 = println(3)
@@ -169,8 +169,8 @@ x97
 ()
 }
 val x100 = 3 != 4
-val x108 = if (x19) {
-val x106 = if (x100) {
+val x108: Unit = if (x19) {
+val x106: Unit = if (x100) {
 val x101 = println("found:")
 val x102 = println(1)
 val x103 = println(3)
@@ -184,8 +184,8 @@ x106
 ()
 }
 val x109 = 4 != 1
-val x117 = if (x28) {
-val x115 = if (x109) {
+val x117: Unit = if (x28) {
+val x115: Unit = if (x109) {
 val x110 = println("found:")
 val x111 = println(1)
 val x112 = println(4)
@@ -199,8 +199,8 @@ x115
 ()
 }
 val x118 = 4 != 2
-val x126 = if (x28) {
-val x124 = if (x118) {
+val x126: Unit = if (x28) {
+val x124: Unit = if (x118) {
 val x119 = println("found:")
 val x120 = println(1)
 val x121 = println(4)
@@ -214,8 +214,8 @@ x124
 ()
 }
 val x127 = 4 != 3
-val x135 = if (x28) {
-val x133 = if (x127) {
+val x135: Unit = if (x28) {
+val x133: Unit = if (x127) {
 val x128 = println("found:")
 val x129 = println(1)
 val x130 = println(4)
@@ -229,8 +229,8 @@ x133
 ()
 }
 val x136 = 4 != 4
-val x144 = if (x28) {
-val x142 = if (x136) {
+val x144: Unit = if (x28) {
+val x142: Unit = if (x136) {
 val x137 = println("found:")
 val x138 = println(1)
 val x139 = println(4)
@@ -243,8 +243,8 @@ x142
 } else {
 ()
 }
-val x152 = if (x37) {
-val x150 = if (x1) {
+val x152: Unit = if (x37) {
+val x150: Unit = if (x1) {
 val x145 = println("found:")
 val x146 = println(2)
 val x147 = println(1)
@@ -257,8 +257,8 @@ x150
 } else {
 ()
 }
-val x160 = if (x37) {
-val x158 = if (x10) {
+val x160: Unit = if (x37) {
+val x158: Unit = if (x10) {
 val x153 = println("found:")
 val x154 = println(2)
 val x155 = println(1)
@@ -271,8 +271,8 @@ x158
 } else {
 ()
 }
-val x168 = if (x37) {
-val x166 = if (x19) {
+val x168: Unit = if (x37) {
+val x166: Unit = if (x19) {
 val x161 = println("found:")
 val x162 = println(2)
 val x163 = println(1)
@@ -285,8 +285,8 @@ x166
 } else {
 ()
 }
-val x176 = if (x37) {
-val x174 = if (x28) {
+val x176: Unit = if (x37) {
+val x174: Unit = if (x28) {
 val x169 = println("found:")
 val x170 = println(2)
 val x171 = println(1)
@@ -299,8 +299,8 @@ x174
 } else {
 ()
 }
-val x184 = if (x46) {
-val x182 = if (x37) {
+val x184: Unit = if (x46) {
+val x182: Unit = if (x37) {
 val x177 = println("found:")
 val x178 = println(2)
 val x179 = println(2)
@@ -313,8 +313,8 @@ x182
 } else {
 ()
 }
-val x192 = if (x46) {
-val x190 = if (x46) {
+val x192: Unit = if (x46) {
+val x190: Unit = if (x46) {
 val x185 = println("found:")
 val x186 = println(2)
 val x187 = println(2)
@@ -327,8 +327,8 @@ x190
 } else {
 ()
 }
-val x200 = if (x46) {
-val x198 = if (x55) {
+val x200: Unit = if (x46) {
+val x198: Unit = if (x55) {
 val x193 = println("found:")
 val x194 = println(2)
 val x195 = println(2)
@@ -341,8 +341,8 @@ x198
 } else {
 ()
 }
-val x208 = if (x46) {
-val x206 = if (x64) {
+val x208: Unit = if (x46) {
+val x206: Unit = if (x64) {
 val x201 = println("found:")
 val x202 = println(2)
 val x203 = println(2)
@@ -355,8 +355,8 @@ x206
 } else {
 ()
 }
-val x216 = if (x55) {
-val x214 = if (x73) {
+val x216: Unit = if (x55) {
+val x214: Unit = if (x73) {
 val x209 = println("found:")
 val x210 = println(2)
 val x211 = println(3)
@@ -369,8 +369,8 @@ x214
 } else {
 ()
 }
-val x224 = if (x55) {
-val x222 = if (x82) {
+val x224: Unit = if (x55) {
+val x222: Unit = if (x82) {
 val x217 = println("found:")
 val x218 = println(2)
 val x219 = println(3)
@@ -383,8 +383,8 @@ x222
 } else {
 ()
 }
-val x232 = if (x55) {
-val x230 = if (x91) {
+val x232: Unit = if (x55) {
+val x230: Unit = if (x91) {
 val x225 = println("found:")
 val x226 = println(2)
 val x227 = println(3)
@@ -397,8 +397,8 @@ x230
 } else {
 ()
 }
-val x240 = if (x55) {
-val x238 = if (x100) {
+val x240: Unit = if (x55) {
+val x238: Unit = if (x100) {
 val x233 = println("found:")
 val x234 = println(2)
 val x235 = println(3)
@@ -411,8 +411,8 @@ x238
 } else {
 ()
 }
-val x248 = if (x64) {
-val x246 = if (x109) {
+val x248: Unit = if (x64) {
+val x246: Unit = if (x109) {
 val x241 = println("found:")
 val x242 = println(2)
 val x243 = println(4)
@@ -425,8 +425,8 @@ x246
 } else {
 ()
 }
-val x256 = if (x64) {
-val x254 = if (x118) {
+val x256: Unit = if (x64) {
+val x254: Unit = if (x118) {
 val x249 = println("found:")
 val x250 = println(2)
 val x251 = println(4)
@@ -439,8 +439,8 @@ x254
 } else {
 ()
 }
-val x264 = if (x64) {
-val x262 = if (x127) {
+val x264: Unit = if (x64) {
+val x262: Unit = if (x127) {
 val x257 = println("found:")
 val x258 = println(2)
 val x259 = println(4)
@@ -453,8 +453,8 @@ x262
 } else {
 ()
 }
-val x272 = if (x64) {
-val x270 = if (x136) {
+val x272: Unit = if (x64) {
+val x270: Unit = if (x136) {
 val x265 = println("found:")
 val x266 = println(2)
 val x267 = println(4)
@@ -467,8 +467,8 @@ x270
 } else {
 ()
 }
-val x280 = if (x73) {
-val x278 = if (x1) {
+val x280: Unit = if (x73) {
+val x278: Unit = if (x1) {
 val x273 = println("found:")
 val x274 = println(3)
 val x275 = println(1)
@@ -481,8 +481,8 @@ x278
 } else {
 ()
 }
-val x288 = if (x73) {
-val x286 = if (x10) {
+val x288: Unit = if (x73) {
+val x286: Unit = if (x10) {
 val x281 = println("found:")
 val x282 = println(3)
 val x283 = println(1)
@@ -495,8 +495,8 @@ x286
 } else {
 ()
 }
-val x296 = if (x73) {
-val x294 = if (x19) {
+val x296: Unit = if (x73) {
+val x294: Unit = if (x19) {
 val x289 = println("found:")
 val x290 = println(3)
 val x291 = println(1)
@@ -509,8 +509,8 @@ x294
 } else {
 ()
 }
-val x304 = if (x73) {
-val x302 = if (x28) {
+val x304: Unit = if (x73) {
+val x302: Unit = if (x28) {
 val x297 = println("found:")
 val x298 = println(3)
 val x299 = println(1)
@@ -523,8 +523,8 @@ x302
 } else {
 ()
 }
-val x312 = if (x82) {
-val x310 = if (x37) {
+val x312: Unit = if (x82) {
+val x310: Unit = if (x37) {
 val x305 = println("found:")
 val x306 = println(3)
 val x307 = println(2)
@@ -537,8 +537,8 @@ x310
 } else {
 ()
 }
-val x320 = if (x82) {
-val x318 = if (x46) {
+val x320: Unit = if (x82) {
+val x318: Unit = if (x46) {
 val x313 = println("found:")
 val x314 = println(3)
 val x315 = println(2)
@@ -551,8 +551,8 @@ x318
 } else {
 ()
 }
-val x328 = if (x82) {
-val x326 = if (x55) {
+val x328: Unit = if (x82) {
+val x326: Unit = if (x55) {
 val x321 = println("found:")
 val x322 = println(3)
 val x323 = println(2)
@@ -565,8 +565,8 @@ x326
 } else {
 ()
 }
-val x336 = if (x82) {
-val x334 = if (x64) {
+val x336: Unit = if (x82) {
+val x334: Unit = if (x64) {
 val x329 = println("found:")
 val x330 = println(3)
 val x331 = println(2)
@@ -579,8 +579,8 @@ x334
 } else {
 ()
 }
-val x344 = if (x91) {
-val x342 = if (x73) {
+val x344: Unit = if (x91) {
+val x342: Unit = if (x73) {
 val x337 = println("found:")
 val x338 = println(3)
 val x339 = println(3)
@@ -593,8 +593,8 @@ x342
 } else {
 ()
 }
-val x352 = if (x91) {
-val x350 = if (x82) {
+val x352: Unit = if (x91) {
+val x350: Unit = if (x82) {
 val x345 = println("found:")
 val x346 = println(3)
 val x347 = println(3)
@@ -607,8 +607,8 @@ x350
 } else {
 ()
 }
-val x360 = if (x91) {
-val x358 = if (x91) {
+val x360: Unit = if (x91) {
+val x358: Unit = if (x91) {
 val x353 = println("found:")
 val x354 = println(3)
 val x355 = println(3)
@@ -621,8 +621,8 @@ x358
 } else {
 ()
 }
-val x368 = if (x91) {
-val x366 = if (x100) {
+val x368: Unit = if (x91) {
+val x366: Unit = if (x100) {
 val x361 = println("found:")
 val x362 = println(3)
 val x363 = println(3)
@@ -635,8 +635,8 @@ x366
 } else {
 ()
 }
-val x376 = if (x100) {
-val x374 = if (x109) {
+val x376: Unit = if (x100) {
+val x374: Unit = if (x109) {
 val x369 = println("found:")
 val x370 = println(3)
 val x371 = println(4)
@@ -649,8 +649,8 @@ x374
 } else {
 ()
 }
-val x384 = if (x100) {
-val x382 = if (x118) {
+val x384: Unit = if (x100) {
+val x382: Unit = if (x118) {
 val x377 = println("found:")
 val x378 = println(3)
 val x379 = println(4)
@@ -663,8 +663,8 @@ x382
 } else {
 ()
 }
-val x392 = if (x100) {
-val x390 = if (x127) {
+val x392: Unit = if (x100) {
+val x390: Unit = if (x127) {
 val x385 = println("found:")
 val x386 = println(3)
 val x387 = println(4)
@@ -677,8 +677,8 @@ x390
 } else {
 ()
 }
-val x400 = if (x100) {
-val x398 = if (x136) {
+val x400: Unit = if (x100) {
+val x398: Unit = if (x136) {
 val x393 = println("found:")
 val x394 = println(3)
 val x395 = println(4)
@@ -691,8 +691,8 @@ x398
 } else {
 ()
 }
-val x408 = if (x109) {
-val x406 = if (x1) {
+val x408: Unit = if (x109) {
+val x406: Unit = if (x1) {
 val x401 = println("found:")
 val x402 = println(4)
 val x403 = println(1)
@@ -705,8 +705,8 @@ x406
 } else {
 ()
 }
-val x416 = if (x109) {
-val x414 = if (x10) {
+val x416: Unit = if (x109) {
+val x414: Unit = if (x10) {
 val x409 = println("found:")
 val x410 = println(4)
 val x411 = println(1)
@@ -719,8 +719,8 @@ x414
 } else {
 ()
 }
-val x424 = if (x109) {
-val x422 = if (x19) {
+val x424: Unit = if (x109) {
+val x422: Unit = if (x19) {
 val x417 = println("found:")
 val x418 = println(4)
 val x419 = println(1)
@@ -733,8 +733,8 @@ x422
 } else {
 ()
 }
-val x432 = if (x109) {
-val x430 = if (x28) {
+val x432: Unit = if (x109) {
+val x430: Unit = if (x28) {
 val x425 = println("found:")
 val x426 = println(4)
 val x427 = println(1)
@@ -747,8 +747,8 @@ x430
 } else {
 ()
 }
-val x440 = if (x118) {
-val x438 = if (x37) {
+val x440: Unit = if (x118) {
+val x438: Unit = if (x37) {
 val x433 = println("found:")
 val x434 = println(4)
 val x435 = println(2)
@@ -761,8 +761,8 @@ x438
 } else {
 ()
 }
-val x448 = if (x118) {
-val x446 = if (x46) {
+val x448: Unit = if (x118) {
+val x446: Unit = if (x46) {
 val x441 = println("found:")
 val x442 = println(4)
 val x443 = println(2)
@@ -775,8 +775,8 @@ x446
 } else {
 ()
 }
-val x456 = if (x118) {
-val x454 = if (x55) {
+val x456: Unit = if (x118) {
+val x454: Unit = if (x55) {
 val x449 = println("found:")
 val x450 = println(4)
 val x451 = println(2)
@@ -789,8 +789,8 @@ x454
 } else {
 ()
 }
-val x464 = if (x118) {
-val x462 = if (x64) {
+val x464: Unit = if (x118) {
+val x462: Unit = if (x64) {
 val x457 = println("found:")
 val x458 = println(4)
 val x459 = println(2)
@@ -803,8 +803,8 @@ x462
 } else {
 ()
 }
-val x472 = if (x127) {
-val x470 = if (x73) {
+val x472: Unit = if (x127) {
+val x470: Unit = if (x73) {
 val x465 = println("found:")
 val x466 = println(4)
 val x467 = println(3)
@@ -817,8 +817,8 @@ x470
 } else {
 ()
 }
-val x480 = if (x127) {
-val x478 = if (x82) {
+val x480: Unit = if (x127) {
+val x478: Unit = if (x82) {
 val x473 = println("found:")
 val x474 = println(4)
 val x475 = println(3)
@@ -831,8 +831,8 @@ x478
 } else {
 ()
 }
-val x488 = if (x127) {
-val x486 = if (x91) {
+val x488: Unit = if (x127) {
+val x486: Unit = if (x91) {
 val x481 = println("found:")
 val x482 = println(4)
 val x483 = println(3)
@@ -845,8 +845,8 @@ x486
 } else {
 ()
 }
-val x496 = if (x127) {
-val x494 = if (x100) {
+val x496: Unit = if (x127) {
+val x494: Unit = if (x100) {
 val x489 = println("found:")
 val x490 = println(4)
 val x491 = println(3)
@@ -859,8 +859,8 @@ x494
 } else {
 ()
 }
-val x504 = if (x136) {
-val x502 = if (x109) {
+val x504: Unit = if (x136) {
+val x502: Unit = if (x109) {
 val x497 = println("found:")
 val x498 = println(4)
 val x499 = println(4)
@@ -873,8 +873,8 @@ x502
 } else {
 ()
 }
-val x512 = if (x136) {
-val x510 = if (x118) {
+val x512: Unit = if (x136) {
+val x510: Unit = if (x118) {
 val x505 = println("found:")
 val x506 = println(4)
 val x507 = println(4)
@@ -887,8 +887,8 @@ x510
 } else {
 ()
 }
-val x520 = if (x136) {
-val x518 = if (x127) {
+val x520: Unit = if (x136) {
+val x518: Unit = if (x127) {
 val x513 = println("found:")
 val x514 = println(4)
 val x515 = println(4)
@@ -901,8 +901,8 @@ x518
 } else {
 ()
 }
-val x528 = if (x136) {
-val x526 = if (x136) {
+val x528: Unit = if (x136) {
+val x526: Unit = if (x136) {
 val x521 = println("found:")
 val x522 = println(4)
 val x523 = println(4)
