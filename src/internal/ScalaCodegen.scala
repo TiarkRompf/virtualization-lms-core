@@ -19,46 +19,46 @@ trait ScalaCodegen extends GenericCodegen with Config {
       outFile.delete
   }
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
 
     val x = fresh[A]
     val y = reifyBlock(f(x))
 
-    val sA = mA.toString
-    val sB = mB.toString
+    val sA = remap(mA)
+    val sB = remap(mB)
 
     val staticData = getFreeDataBlock(y)
 
-    stream.println("/*****************************************\n"+
-                   "  Emitting Generated Code                  \n"+
-                   "*******************************************/")
+    withStream(out) {
+      stream.println("/*****************************************\n"+
+                     "  Emitting Generated Code                  \n"+
+                     "*******************************************/")
                    
-    // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
-    stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.Type).mkString(",")+")")+" extends (("+sA+")=>("+sB+")) {")
-    stream.println("def apply("+quote(x)+":"+sA+"): "+sB+" = {")
+      // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
+      stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends (("+sA+")=>("+sB+")) {")
+      stream.println("def apply("+quote(x)+":"+sA+"): "+sB+" = {")
     
-    emitBlock(y)(stream)
-    stream.println(quote(getBlockResult(y)))
+      emitBlock(y)
+      stream.println(quote(getBlockResult(y)))
     
-    stream.println("}")
+      stream.println("}")
     
-    stream.println("}")
-    stream.println("/*****************************************\n"+
-                   "  End of Generated Code                  \n"+
-                   "*******************************************/")
-
-    stream.flush
+      stream.println("}")
+      stream.println("/*****************************************\n"+
+                     "  End of Generated Code                  \n"+
+                     "*******************************************/")
+    }
     
     staticData
   }
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
     
     stream.println("package generated." + this.toString)
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
-    stream.print(vals.map(p => quote(p) + ":" + remap(p.Type)).mkString(","))
+    stream.print(vals.map(p => quote(p) + ":" + remap(p.tp)).mkString(","))
 
     // variable name mangling
     if (vals.length > 0 && vars.length > 0){
@@ -66,7 +66,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
     }
     // TODO: remap Ref instead of explicitly adding generated.scala
     if (vars.length > 0){
-      stream.print(vars.map(v => quote(v) + ":" + "generated.scala.Ref[" + remap(v.Type) +"]").mkString(","))
+      stream.print(vars.map(v => quote(v) + ":" + "generated.scala.Ref[" + remap(v.tp) +"]").mkString(","))
     }
     if (resultIsVar){
       stream.print("): " + "generated.scala.Ref[" + resultType + "] = {")
@@ -78,7 +78,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
     stream.println("")
   }
 
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
     stream.println(kernelName)
     stream.println("}}")
@@ -88,18 +88,20 @@ trait ScalaCodegen extends GenericCodegen with Config {
     val i = fileName.lastIndexOf('/')
     fileName.substring(i + 1)
   }
-  
-  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println("val " + quote(sym) + " = " + rhs + (if ((sourceinfo < 2) || sym.pos.isEmpty) "" else {
+
+  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
+    val extra = if ((sourceinfo < 2) || sym.pos.isEmpty) "" else {
       val context = sym.pos(0)
       "      // " + relativePath(context.fileName) + ":" + context.line
-    }))
+    }
+    stream.println("val " + quote(sym) + " = " + rhs + extra)
   }
-
-  def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println("var " + quote(sym) + ": " + remap(sym.Type) + " = " + rhs)
+  
+  def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
+    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
-  def emitAssignment(lhs: String, rhs: String)(implicit stream: PrintWriter): Unit = {
+  
+  def emitAssignment(lhs: String, rhs: String): Unit = {
     stream.println(lhs + " = " + rhs)
   }
 }
@@ -108,11 +110,24 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   val IR: Expressions with Effects
   import IR._
   
-  override def quote(x: Exp[Any]) = x match { // TODO: quirk!
-    case Sym(-1) => "_"
-    case _ => super.quote(x)
+  // emit forward decls for recursive vals
+  override def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
+    recursive foreach emitForwardDef
+    super.traverseStmsInBlock(stms)
   }
-
+  
+  def emitForwardDef(sym: Sym[Any]): Unit = {
+    stream.println("var " + quote(sym) + /*": " + remap(sym.tp) +*/ " = null.asInstanceOf[" + remap(sym.tp) + "]")
+  }
+  
+  // special case for recursive vals
+  override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
+    if (recursive contains sym)
+      stream.println(quote(sym) + " = " + rhs) // we have a forward declaration above.
+    else
+      super.emitValDef(sym,rhs)
+  }
+  
 }
 
 
@@ -120,11 +135,11 @@ trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
   
-  override def emitFatNodeKernelExtra(syms: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter): Unit = {
+  override def emitFatNodeKernelExtra(syms: List[Sym[Any]], rhs: FatDef): Unit = {
     val kernelName = syms.map(quote).mkString("")
     stream.println("final class activation_" + kernelName + " {")
     for (s <- syms) {
-      stream.println("var " + quote(s) + ": " + remap(s.Type) + " = _")
+      stream.println("var " + quote(s) + ": " + remap(s.tp) + " = _")
     }
     stream.println("}")
   }

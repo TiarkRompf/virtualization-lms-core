@@ -8,29 +8,29 @@ import scala.reflect.SourceContext
 
 trait SetOps extends Base {
   object Set {
-    def apply[A:Manifest](xs: Rep[A]*)(implicit ctx: SourceContext) = set_new[A](xs)
+    def apply[A:Manifest](xs: Rep[A]*)(implicit pos: SourceContext) = set_new[A](xs)
   }
 
   implicit def repSetToSetOps[A:Manifest](v: Rep[Set[A]]) = new setOpsCls(v)
 
   class setOpsCls[A:Manifest](s: Rep[Set[A]]) {
-    def contains(i: Rep[A])(implicit ctx: SourceContext) = set_contains(s, i)
-    def add(i: Rep[A])(implicit ctx: SourceContext) = set_add(s, i)
-    def remove(i: Rep[A])(implicit ctx: SourceContext) = set_remove(s, i)
-    def size(implicit ctx: SourceContext) = set_size(s)
-    def clear()(implicit ctx: SourceContext) = set_clear(s)
-    def toSeq(implicit ctx: SourceContext) = set_toseq(s)
-    def toArray(implicit ctx: SourceContext) = set_toarray(s)
+    def contains(i: Rep[A])(implicit pos: SourceContext) = set_contains(s, i)
+    def add(i: Rep[A])(implicit pos: SourceContext) = set_add(s, i)
+    def remove(i: Rep[A])(implicit pos: SourceContext) = set_remove(s, i)
+    def size(implicit pos: SourceContext) = set_size(s)
+    def clear()(implicit pos: SourceContext) = set_clear(s)
+    def toSeq(implicit pos: SourceContext) = set_toseq(s)
+    def toArray(implicit pos: SourceContext) = set_toarray(s)
   }
 
-  def set_new[A:Manifest](xs: Seq[Rep[A]])(implicit ctx: SourceContext): Rep[Set[A]]
-  def set_contains[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit ctx: SourceContext): Rep[Boolean]
-  def set_add[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit ctx: SourceContext): Rep[Unit]
-  def set_remove[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit ctx: SourceContext): Rep[Unit]
-  def set_size[A:Manifest](s: Rep[Set[A]])(implicit ctx: SourceContext): Rep[Int]
-  def set_clear[A:Manifest](s: Rep[Set[A]])(implicit ctx: SourceContext): Rep[Unit]
-  def set_toseq[A:Manifest](s: Rep[Set[A]])(implicit ctx: SourceContext): Rep[Seq[A]]
-  def set_toarray[A:Manifest](s: Rep[Set[A]])(implicit ctx: SourceContext): Rep[Array[A]]
+  def set_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext) : Rep[Set[A]]
+  def set_contains[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit pos: SourceContext) : Rep[Boolean]
+  def set_add[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit pos: SourceContext) : Rep[Unit]
+  def set_remove[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit pos: SourceContext) : Rep[Unit]
+  def set_size[A:Manifest](s: Rep[Set[A]])(implicit pos: SourceContext) : Rep[Int]
+  def set_clear[A:Manifest](s: Rep[Set[A]])(implicit pos: SourceContext) : Rep[Unit]
+  def set_toseq[A:Manifest](s: Rep[Set[A]])(implicit pos: SourceContext): Rep[Seq[A]]
+  def set_toarray[A:Manifest](s: Rep[Set[A]])(implicit pos: SourceContext): Rep[Array[A]]
 }
 
 trait SetOpsExp extends SetOps with ArrayOps with EffectExp {
@@ -46,14 +46,14 @@ trait SetOpsExp extends SetOps with ArrayOps with EffectExp {
     val array = NewArray[A](s.size)
   }
 
-  def set_new[A:Manifest](xs: Seq[Exp[A]])(implicit ctx: SourceContext) = reflectMutable(SetNew(xs, manifest[A]))
-  def set_contains[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit ctx: SourceContext) = SetContains(s, i)
-  def set_add[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit ctx: SourceContext) = reflectWrite(s)(SetAdd(s, i))
-  def set_remove[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit ctx: SourceContext) = reflectWrite(s)(SetRemove(s, i))
-  def set_size[A:Manifest](s: Exp[Set[A]])(implicit ctx: SourceContext) = SetSize(s)
-  def set_clear[A:Manifest](s: Exp[Set[A]])(implicit ctx: SourceContext) = reflectWrite(s)(SetClear(s))
-  def set_toseq[A:Manifest](s: Exp[Set[A]])(implicit ctx: SourceContext) = SetToSeq(s)
-  def set_toarray[A:Manifest](s: Exp[Set[A]])(implicit ctx: SourceContext) = SetToArray(s)
+  def set_new[A:Manifest](xs: Seq[Exp[A]])(implicit pos: SourceContext) = reflectMutable(SetNew(xs, manifest[A]))
+  def set_contains[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit pos: SourceContext) = SetContains(s, i)
+  def set_add[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit pos: SourceContext) = reflectWrite(s)(SetAdd(s, i))
+  def set_remove[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit pos: SourceContext) = reflectWrite(s)(SetRemove(s, i))
+  def set_size[A:Manifest](s: Exp[Set[A]])(implicit pos: SourceContext) = SetSize(s)
+  def set_clear[A:Manifest](s: Exp[Set[A]])(implicit pos: SourceContext) = reflectWrite(s)(SetClear(s))
+  def set_toseq[A:Manifest](s: Exp[Set[A]])(implicit pos: SourceContext) = SetToSeq(s)
+  def set_toarray[A:Manifest](s: Exp[Set[A]])(implicit pos: SourceContext) = SetToArray(s)
 }
 
 trait BaseGenSetOps extends GenericNestedCodegen {
@@ -66,7 +66,7 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
   val IR: SetOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case SetNew(xs, mA) => emitValDef(sym, "collection.mutable.HashSet[" + remap(mA) + "](" + (xs map {quote}).mkString(",") + ")")
     case SetContains(s,i) => emitValDef(sym, quote(s) + ".contains(" + quote(i) + ")")
     case SetAdd(s,i) => emitValDef(sym, quote(s) + ".add(" + quote(i) + ")")
@@ -94,7 +94,7 @@ trait CLikeGenSetOps extends BaseGenSetOps with CLikeCodegen {
   val IR: SetOpsExp
   import IR._
 
-//  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+//  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
 //    case _ => super.emitNode(sym, rhs)
 //  }
 }

@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
+import scala.reflect.SourceContext
 import scala.virtualization.lms.internal.{GenericNestedCodegen,GenericFatCodegen}
 import scala.reflect.SourceContext
 
@@ -27,8 +28,8 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case _ => super.syms(e)
   }
 
-	override def readSyms(e: Any): List[Sym[Any]] = e match { 
-		case e: AbstractLoop[_] => readSyms(e.size) ::: readSyms(e.body)
+  override def readSyms(e: Any): List[Sym[Any]] = e match { 
+    case e: AbstractLoop[_] => readSyms(e.size) ::: readSyms(e.body)
     case _ => super.readSyms(e)
   }
 
@@ -46,16 +47,16 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   //////////////
   // mirroring
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case SimpleLoop(s,v,body) => simpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 
-	/////////////////////
+  /////////////////////
   // aliases and sharing
 
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
-		case e: AbstractLoop[_] => aliasSyms(e.body)
+    case e: AbstractLoop[_] => aliasSyms(e.body)
     case _ => super.aliasSyms(e)
   }
 
@@ -92,7 +93,7 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
   }
   
   override def readSyms(e: Any): List[Sym[Any]] = e match { 
-		case e: AbstractFatLoop => readSyms(e.size) ::: readSyms(e.body)
+    case e: AbstractFatLoop => readSyms(e.size) ::: readSyms(e.body)
     case _ => super.readSyms(e)
   }
 
@@ -106,7 +107,7 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     case _ => super.symsFreq(e)
   }
 
-	/////////////////////
+  /////////////////////
   // aliases and sharing
 
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
@@ -143,12 +144,12 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
   val IR: LoopsFatExp
   import IR._
 
-  override def fatten(e: TP[Any]): TTP = e.rhs match {
-    case op: AbstractLoop[_] => 
-      TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
-    case Reflect(op: AbstractLoop[_], u, es) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on...
+  override def fatten(e: Stm): Stm = e match {
+    case TP(sym, op: AbstractLoop[_]) => 
+      TTP(List(sym), List(op), SimpleFatLoop(op.size, op.v, List(op.body)))
+    case TP(sym, p @ Reflect(op: AbstractLoop[_], u, es)) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on...
       printdbg("-- fatten effectful loop " + e)
-      TTP(List(e.sym), SimpleFatLoop(op.size, op.v, List(op.body)))
+      TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)))
     case _ => super.fatten(e)
   }
 

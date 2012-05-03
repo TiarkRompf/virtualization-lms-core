@@ -40,8 +40,8 @@ trait CCodegen extends CLikeCodegen {
       val out = new StringBuilder
       out.append("{")
 
-      out.append("\"cppInputs\":["+inputs.toList.reverse.map(in=>"{\""+quote(in._1)+"\":[\""+remap(in._1.Type)+"\",\""+in._2.funcHtoD+"\",\""+in._2.funcDtoH+"\"]}").mkString(",")+"],")
-      out.append("\"cppOutputs\":["+outputs.toList.reverse.map(out=>"{\""+quote(out._1)+"\":[\""+remap(out._1.Type)+"\",\""+out._2.funcDtoH+"\"]}").mkString(",")+"]")
+      out.append("\"cppInputs\":["+inputs.toList.reverse.map(in=>"{\""+quote(in._1)+"\":[\""+remap(in._1.tp)+"\",\""+in._2.funcHtoD+"\",\""+in._2.funcDtoH+"\"]}").mkString(",")+"],")
+      out.append("\"cppOutputs\":["+outputs.toList.reverse.map(out=>"{\""+quote(out._1)+"\":[\""+remap(out._1.tp)+"\",\""+out._2.funcDtoH+"\"]}").mkString(",")+"]")
       out.append("}")
       out.toString
     }
@@ -55,7 +55,7 @@ trait CCodegen extends CLikeCodegen {
       /*
     // Conditions for not generating GPU kernels (may be relaxed later)
     for (sym <- syms) {
-      if((!isObjectType(sym.Type)) && (remap(sym.Type)!="void")) throw new GenerationFailedException("GPUGen: Not GPUable output type : %s".format(remap(sym.Type)))
+      if((!isObjectType(sym.tp)) && (remap(sym.tp)!="void")) throw new GenerationFailedException("GPUGen: Not GPUable output type : %s".format(remap(sym.tp)))
     }
     if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("GPUGen: Not GPUable input/output types: Variable")
 */
@@ -91,73 +91,73 @@ trait CCodegen extends CLikeCodegen {
   }
 
   def copyInputHtoD(sym: Sym[Any]) : String = {
-    remap(sym.Type) match {
-      case _ => throw new GenerationFailedException("CGen: copyInputHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.Type)))
+    remap(sym.tp) match {
+      case _ => throw new GenerationFailedException("CGen: copyInputHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.tp)))
     }
   }
 
   def copyOutputDtoH(sym: Sym[Any]) : String = {
-    remap(sym.Type) match {
-      case _ => throw new GenerationFailedException("CGen: copyOutputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+    remap(sym.tp) match {
+      case _ => throw new GenerationFailedException("CGen: copyOutputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
     }
   }
 
   def copyMutableInputDtoH(sym: Sym[Any]) : String = {
-    remap(sym.Type) match {
-      case _ => throw new GenerationFailedException("CGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+    remap(sym.tp) match {
+      case _ => throw new GenerationFailedException("CGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
     }
   }
       
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
     val y = reifyBlock(f(x))
 
     val sA = mA.toString
     val sB = mB.toString
 
-    stream.println("/*****************************************\n"+
-                   "  Emitting C Generated Code                  \n"+
-                   "*******************************************/\n" +
-                   "#include <stdio.h>\n" +
-                   "#include <stdlib.h>"
-    )
+    withStream(out) {
+      stream.println("/*****************************************\n"+
+                     "  Emitting C Generated Code                  \n"+
+                     "*******************************************/\n" +
+                     "#include <stdio.h>\n" +
+                     "#include <stdlib.h>"
+      )
 
-    //stream.println("class "+className+" extends (("+sA+")=>("+sB+")) {")
-    stream.println("int main(int argc, char** argv) {")
+      //stream.println("class "+className+" extends (("+sA+")=>("+sB+")) {")
+      stream.println("int main(int argc, char** argv) {")
 
-    emitBlock(y)(stream)
-    //stream.println(quote(getBlockResult(y)))
+      emitBlock(y)
+      //stream.println(quote(getBlockResult(y)))
 
-    //stream.println("}")
-    stream.println("}")
-    stream.println("/*****************************************\n"+
-                   "  End of C Generated Code                  \n"+
-                   "*******************************************/")
-
-    stream.flush
+      //stream.println("}")
+      stream.println("}")
+      stream.println("/*****************************************\n"+
+                     "  End of C Generated Code                  \n"+
+                     "*******************************************/")
+    }
     Nil
   }  
 
 /*
   //TODO: is sym of type Any or Variable[Any] ?
-  def emitConstDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitConstDef(sym: Sym[Any], rhs: String): Unit = {
     stream.print("const ")
     emitVarDef(sym, rhs)
   }
 */
-  def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+  def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
+    stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println(remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
+    stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitAssignment(lhs:String, rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitAssignment(lhs:String, rhs: String): Unit = {
     stream.println(lhs + " = " + rhs + ";")
   }
   
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     
     //Currently only allow single return value
     if(syms.size > 1) throw new GenerationFailedException("CLikeGen: Cannot have more than 1 results!\n");
@@ -168,13 +168,13 @@ trait CCodegen extends CLikeCodegen {
     stream.println("}")
     
     // Emit input copy helper functions for object type inputs
-    for(v <- (vals++vars) if isObjectType(v.Type)) {
+    for(v <- (vals++vars) if isObjectType(v.tp)) {
       helperFuncString.append(emitCopyInputHtoD(v, syms, copyInputHtoD(v)))
       helperFuncString.append(emitCopyMutableInputDtoH(v, syms, copyMutableInputDtoH(v)))
     }
 
     // Emit output copy helper functions for object type inputs
-    for(v <- (syms) if isObjectType(v.Type)) {
+    for(v <- (syms) if isObjectType(v.tp)) {
       helperFuncString.append(emitCopyOutputDtoH(v, syms, copyOutputDtoH(v)))
     }
 
@@ -196,7 +196,7 @@ trait CCodegen extends CLikeCodegen {
     */
   }
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     if(syms.size>1) throw new GenerationFailedException("CGen: Cannot have multiple kernel outputs!\n")
     
     //if( (vars.length>0) || (resultIsVar) ) throw new GenerationFailedException("Var is not supported for CPP kernels")
@@ -214,12 +214,12 @@ trait CCodegen extends CLikeCodegen {
     stream.print(resultType)
      
     stream.print(" kernel_" + kernelName + "(")
-    stream.print(vals.map(p=>remap(p.Type) + " " + quote(p)).mkString(", "))
+    stream.print(vals.map(p=>remap(p.tp) + " " + quote(p)).mkString(", "))
     if (vals.length > 0 && vars.length > 0){
       stream.print(", ")
     }
     if (vars.length > 0){
-      stream.print(vars.map(v => remap(v.Type) + " &" + quote(v)).mkString(","))
+      stream.print(vars.map(v => remap(v.tp) + " &" + quote(v)).mkString(","))
     }
 
     stream.println(") {")
@@ -248,9 +248,9 @@ trait CCodegen extends CLikeCodegen {
 
   def emitCopyInputHtoD(sym: Sym[Any], ksym: List[Sym[Any]], contents: String) : String = {
     val out = new StringBuilder
-    if(isObjectType(sym.Type)) {
+    if(isObjectType(sym.tp)) {
       helperFuncIdx += 1
-      out.append("%s copyInputHtoD_%s_%s_%s(%s) {\n".format(remap(sym.Type), ksym.map(quote).mkString(""), quote(sym),helperFuncIdx, "JNIEnv *env , jobject obj"))
+      out.append("%s copyInputHtoD_%s_%s_%s(%s) {\n".format(remap(sym.tp), ksym.map(quote).mkString(""), quote(sym),helperFuncIdx, "JNIEnv *env , jobject obj"))
       out.append(copyInputHtoD(sym))
       out.append("}\n")
       val tr = metaData.inputs.getOrElse(sym,new TransferFunc)
@@ -269,10 +269,10 @@ trait CCodegen extends CLikeCodegen {
   // For mutable inputs, copy the mutated datastructure from GPU to CPU after the kernel is terminated
   def emitCopyMutableInputDtoH(sym: Sym[Any], ksym: List[Sym[Any]], contents: String): String = {
     val out = new StringBuilder
-    if(isObjectType(sym.Type)) {
+    if(isObjectType(sym.tp)) {
       helperFuncIdx += 1
-      out.append("void copyMutableInputDtoH_%s_%s_%s(%s) {\n".format(ksym.map(quote).mkString(""), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.Type)+" *"+quote(sym)+"_ptr"))
-      out.append("%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
+      out.append("void copyMutableInputDtoH_%s_%s_%s(%s) {\n".format(ksym.map(quote).mkString(""), quote(sym), helperFuncIdx, "JNIEnv *env , jobject obj, "+remap(sym.tp)+" *"+quote(sym)+"_ptr"))
+      out.append("%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
       out.append(copyMutableInputDtoH(sym))
       out.append("}\n")
       val tr = metaData.inputs.getOrElse(sym,new TransferFunc)
@@ -290,10 +290,10 @@ trait CCodegen extends CLikeCodegen {
 
   def emitCopyOutputDtoH(sym: Sym[Any], ksym: List[Sym[Any]], contents: String): String = {
     val out = new StringBuilder
-    if(isObjectType(sym.Type)) {
+    if(isObjectType(sym.tp)) {
     	helperFuncIdx += 1
-      out.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.Type)+" *"+quote(sym)+"_ptr"))
-  	  out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
+      out.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.tp)+" *"+quote(sym)+"_ptr"))
+  	  out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
       out.append(copyOutputDtoH(sym))
       out.append("}\n")
       val tr = metaData.outputs.getOrElse(sym,new TransferFunc)
@@ -317,11 +317,6 @@ trait CCodegen extends CLikeCodegen {
 trait CNestedCodegen extends GenericNestedCodegen with CCodegen {
   val IR: Expressions with Effects
   import IR._
-  
-  override def quote(x: Exp[Any]) = x match { // TODO: quirk!
-    case Sym(-1) => "_"
-    case _ => super.quote(x)
-  }
   
 }
 

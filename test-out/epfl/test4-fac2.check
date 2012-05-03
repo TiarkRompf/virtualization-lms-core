@@ -1,5 +1,3 @@
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
 TP(Sym(3),Test(Sym(2),0.0))
 TP(Sym(4),Reify(Const(1.0),List(Sym(3))))
 TP(Sym(1),DefineFun(Block(Sym(4))))

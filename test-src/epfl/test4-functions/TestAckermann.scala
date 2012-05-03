@@ -35,7 +35,7 @@ trait AckProg { this: Arith with Functions with Equal with IfThenElse =>
   ack_0(n) =  n+1
   
   this actually "just works", modulo duplicating the definitions of ack_n in the then/else branches
-  due to code motion
+  due to code motion (TODO: can this be resolved by suitably overriding symsFreq?)
   
   */
 
@@ -51,8 +51,7 @@ class TestAck extends FileDiffSuite {
     withOutFile(prefix+"ack1") {
       object AckProgExp extends AckProg
         with ArithExpOpt with EqualExp with IfThenElseExp 
-        with FunctionExpUnfoldRecursion 
-        with FunctionsExternalDef2
+        with FunctionsExternalDef1
       import AckProgExp._
 
       val f = (x:Rep[Double]) => ack(2)(x)

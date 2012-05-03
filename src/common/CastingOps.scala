@@ -13,12 +13,12 @@ trait CastingOps extends Variables with OverloadHack {
   implicit def varAnyToCastingOps[A:Manifest](lhs: Var[A]) = new CastingOpsCls(readVar(lhs))
     
   class CastingOpsCls[A:Manifest](lhs: Rep[A]){
-    def IsInstanceOf[B:Manifest](implicit ctx: SourceContext): Rep[Boolean] = rep_isinstanceof(lhs, manifest[A], manifest[B])
-    def AsInstanceOf[B:Manifest](implicit ctx: SourceContext): Rep[B] = rep_asinstanceof(lhs, manifest[A], manifest[B])
+    def IsInstanceOf[B:Manifest](implicit pos: SourceContext): Rep[Boolean] = rep_isinstanceof(lhs, manifest[A], manifest[B])
+    def AsInstanceOf[B:Manifest](implicit pos: SourceContext): Rep[B] = rep_asinstanceof(lhs, manifest[A], manifest[B])
   }
 
-  def rep_isinstanceof[A,B](lhs: Rep[A], mA: Manifest[A], mB: Manifest[B])(implicit ctx: SourceContext) : Rep[Boolean]
-  def rep_asinstanceof[A,B:Manifest](lhs: Rep[A], mA: Manifest[A], mB: Manifest[B])(implicit ctx: SourceContext) : Rep[B]
+  def rep_isinstanceof[A,B](lhs: Rep[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) : Rep[Boolean]
+  def rep_asinstanceof[A,B:Manifest](lhs: Rep[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) : Rep[B]
 }
 
 trait CastingOpsExp extends CastingOps with BaseExp {
@@ -27,10 +27,10 @@ trait CastingOpsExp extends CastingOps with BaseExp {
   case class RepIsInstanceOf[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B]) extends Def[Boolean]
   case class RepAsInstanceOf[A,B:Manifest](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B]) extends Def[B]
 
-  def rep_isinstanceof[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit ctx: SourceContext) = RepIsInstanceOf(lhs,mA,mB)
-  def rep_asinstanceof[A,B:Manifest](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit ctx: SourceContext) : Exp[B] = RepAsInstanceOf(lhs,mA,mB)
+  def rep_isinstanceof[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) = RepIsInstanceOf(lhs,mA,mB)
+  def rep_asinstanceof[A,B:Manifest](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) : Exp[B] = RepAsInstanceOf(lhs,mA,mB)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case RepAsInstanceOf(lhs, mA, mB) => rep_asinstanceof(f(lhs), mA,mB)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
@@ -40,7 +40,7 @@ trait ScalaGenCastingOps extends ScalaGenBase {
   val IR: CastingOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case RepIsInstanceOf(x,mA,mB) => emitValDef(sym, quote(x) + ".isInstanceOf[" + remap(mB) + "]")
     case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, quote(x) + ".asInstanceOf[" + remap(mB) + "]")
     case _ => super.emitNode(sym, rhs)
@@ -51,7 +51,7 @@ trait CLikeGenCastingOps extends CLikeGenBase {
   val IR: CastingOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         //case RepIsInstanceOf(x,mA,mB) => //TODO: How?
         case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, "(%s) %s".format(remap(mB),quote(x)))

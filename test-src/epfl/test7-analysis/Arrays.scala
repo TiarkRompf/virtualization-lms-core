@@ -5,8 +5,11 @@ package test7
 import common._
 import test1._
 
-import util.OverloadHack
+import internal.AbstractSubstTransformer
 
+
+import util.OverloadHack
+import scala.reflect.SourceContext
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
@@ -86,6 +89,24 @@ trait ArrayLoopsExp extends LoopsExp {
     case _ => super.boundSyms(e)
   }
 
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case SimpleLoop(s,i, ArrayElem(y)) if f.hasContext => 
+      array(f(s)) { j => f.asInstanceOf[AbstractSubstTransformer{val IR:ArrayLoopsExp.this.type}].subst += (i -> j); f.reflectBlock(y) }
+    case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
+    case ArrayLength(a) => infix_length(f(a))(mtype(manifest[A]))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
+
+  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+    case ArrayElem(y) => ArrayElem(f(y))
+    case ReduceElem(y) => ReduceElem(f(y))
+    case ArrayIfElem(c,y) => ArrayIfElem(f(c),f(y))
+    case ReduceIfElem(c,y) => ReduceIfElem(f(c),f(y))
+    case _ => super.mirrorFatDef(e,f)
+  }).asInstanceOf[Def[A]]
+
+
 }
 
 trait ArrayLoopsFatExp extends ArrayLoopsExp with LoopsFatExp
@@ -97,7 +118,7 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
   val IR: ArrayLoopsExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case SimpleLoop(s,x,ArrayElem(y)) =>  
       stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") { " + quote(x) + " => ")
       emitBlock(y)
@@ -126,20 +147,20 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
   val IR: ArrayLoopsFatExp
   import IR._
   
-  override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+  override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatLoop(s,x,rhs) => 
       for ((l,r) <- sym zip rhs) {
         r match {
           case ArrayElem(y) =>
-            stream.println("var " + quote(l) + " = new Array[" + getBlockResult(y).Type + "]("+quote(s)+")")
+            stream.println("var " + quote(l) + " = new Array[" + getBlockResult(y).tp + "]("+quote(s)+")")
           case ReduceElem(y) =>
             stream.println("var " + quote(l) + " = 0")
           case ArrayIfElem(c,y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).Type + "]")
+            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).tp + "]")
           case ReduceIfElem(c,y) =>
             stream.println("var " + quote(l) + " = 0")
           case FlattenElem(y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).Type + "]")
+            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).tp + "]")
         }
       }
       val ii = x // was: x(i)
@@ -196,7 +217,7 @@ trait ScalaGenArrays extends ScalaGenEffect {
   val IR: ArraysExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ArrayZero(n) =>  
       emitValDef(sym, "new Array[Int](" + quote(n) + ")")
     case ArrayUpdate(a,x,v) =>  

@@ -14,7 +14,7 @@ trait Power1 { this: Arith =>
 }
 
 trait Power2 { this: Arith =>
-  def power(b: Rep[Double], x: Int)(implicit ctx: SourceContext): Rep[Double] = {
+  def power(b: Rep[Double], x: Int)(implicit pos: SourceContext): Rep[Double] = {
     if (x == 0) 1.0
     else if ((x&1) == 0) { val y = power(b, x/2); y * y }
     else b * power(b, x - 1)
@@ -32,18 +32,13 @@ trait ArithStr extends Arith with BaseStr {
   //todo removed below
   //implicit def unit(x: Double) = x.toString
 
-  def infix_+(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext) = "(%s+%s)".format(x,y)
-  def infix_-(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext) = "(%s-%s)".format(x,y)
-  def infix_*(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext) = "(%s*%s)".format(x,y)
-  def infix_/(x: Rep[Double], y: Rep[Double])(implicit ctx: SourceContext) = "(%s/%s)".format(x,y)
+  def infix_+(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s+%s)".format(x,y)
+  def infix_-(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s-%s)".format(x,y)
+  def infix_*(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s*%s)".format(x,y)
+  def infix_/(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s/%s)".format(x,y)
 }
 
-object TestPower {
-  def main(args: Array[String]) {
-    val tp = new TestPower
-    tp.testPower
-  }
-}
+
 
 class TestPower extends FileDiffSuite {
   

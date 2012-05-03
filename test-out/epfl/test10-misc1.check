@@ -1,0 +1,19 @@
+-- full graph
+TP(Sym(1),VectorZeros(Const(100)))
+TP(Sym(2),VectorPlus(Sym(1),Sym(1)))
+TP(Sym(3),VectorPlus(Sym(1),Sym(2)))
+TP(Sym(4),Reflect(Print(Sym(3)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(5),Reify(Sym(4),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(4))))
+-- before transformation
+val x1 = VectorZeros(Const(100))
+val x2 = VectorPlus(Sym(1),Sym(1))
+val x3 = VectorPlus(Sym(1),Sym(2))
+val x4 = println(x3)
+replacing TP(Sym(2),VectorPlus(Sym(1),Sym(1)))
+replacing TP(Sym(3),VectorPlus(Sym(1),Sym(2)))
+-- after transformation
+val x1 = VectorZeros(Const(100))
+val x2 = VectorPlus(Sym(1),Sym(1))
+val x3 = VectorPlus(Sym(2),Sym(1))
+val x4 = println(x3)
+-- done

@@ -11,7 +11,7 @@ trait LiftPrimitives {
 
   implicit def intToRepInt(x: Int) = unit(x)  
   implicit def floatToRepFloat(x: Float) = unit(x)
-  implicit def doubleToRepDouble(x: Double) = unit(x)  
+  implicit def doubleToRepDouble(x: Double) = unit(x)
   
   // precision-widening promotions
   implicit def chainIntToRepFloat[A:Manifest](x: A)(implicit c: A => Rep[Int]): Rep[Float] = repIntToRepFloat(c(x))
@@ -36,30 +36,30 @@ trait PrimitiveOps extends Variables with OverloadHack {
   implicit def varDoubleToDoubleOps(n: Var[Double]) = new DoubleOpsCls(readVar(n))
   
   object Double {
-    def parseDouble(s: Rep[String])(implicit ctx: SourceContext) = obj_double_parse_double(s)
-    def PositiveInfinity(implicit ctx: SourceContext) = obj_double_positive_infinity
-    def MinValue(implicit ctx: SourceContext) = obj_double_min_value
+    def parseDouble(s: Rep[String])(implicit pos: SourceContext) = obj_double_parse_double(s)
+    def PositiveInfinity(implicit pos: SourceContext) = obj_double_positive_infinity
+    def MinValue(implicit pos: SourceContext) = obj_double_min_value
   }
 
   class DoubleOpsCls(lhs: Rep[Double]){
-    def floatValue()(implicit ctx: SourceContext) = double_float_value(lhs)
+    def floatValue()(implicit pos: SourceContext) = double_float_value(lhs)
   }
 
-  def obj_double_parse_double(s: Rep[String])(implicit ctx: SourceContext): Rep[Double]
-  def obj_double_positive_infinity(implicit ctx: SourceContext): Rep[Double]
-  def obj_double_min_value(implicit ctx: SourceContext): Rep[Double]
-  def double_float_value(lhs: Rep[Double])(implicit ctx: SourceContext): Rep[Float]
+  def obj_double_parse_double(s: Rep[String])(implicit pos: SourceContext): Rep[Double]
+  def obj_double_positive_infinity(implicit pos: SourceContext): Rep[Double]
+  def obj_double_min_value(implicit pos: SourceContext): Rep[Double]
+  def double_float_value(lhs: Rep[Double])(implicit pos: SourceContext): Rep[Float]
 
   /**
    * Int
    */
 
   object Integer {
-    def parseInt(s: Rep[String])(implicit ctx: SourceContext) = obj_integer_parse_int(s)
+    def parseInt(s: Rep[String])(implicit pos: SourceContext) = obj_integer_parse_int(s)
   }
 
   object Int {
-    def MaxValue(implicit ctx: SourceContext) = obj_int_max_value
+    def MaxValue(implicit pos: SourceContext) = obj_int_max_value
   }
 
   implicit def intToIntOps(n: Int) = new IntOpsCls(unit(n))
@@ -71,28 +71,28 @@ trait PrimitiveOps extends Variables with OverloadHack {
     //def /[A](rhs: Rep[A])(implicit mA: Manifest[A], f: Fractional[A], o: Overloaded1) = int_divide_frac(lhs, rhs)
     //def /(rhs: Rep[Int]) = int_divide(lhs, rhs)
     // TODO Something is wrong if we just use floatValue. implicits get confused
-    def floatValueL()(implicit ctx: SourceContext) = int_float_value(lhs)
-    def doubleValue()(implicit ctx: SourceContext) = int_double_value(lhs)
-    def unary_~()(implicit ctx: SourceContext) = int_bitwise_not(lhs)
+    def floatValueL()(implicit pos: SourceContext) = int_float_value(lhs)
+    def doubleValue()(implicit pos: SourceContext) = int_double_value(lhs)
+    def unary_~()(implicit pos: SourceContext) = int_bitwise_not(lhs)
   }
 
-  def infix_/(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_divide(lhs, rhs)
-  def infix_%(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_mod(lhs, rhs)
-  def infix_&(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_binaryand(lhs, rhs)
-  def infix_|(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_binaryor(lhs, rhs)
-  def infix_^(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_binaryxor(lhs, rhs)
+  def infix_/(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_divide(lhs, rhs)
+  def infix_%(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_mod(lhs, rhs)
+  def infix_&(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_binaryand(lhs, rhs)
+  def infix_|(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_binaryor(lhs, rhs)
+  def infix_^(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_binaryxor(lhs, rhs)
 
-  def obj_integer_parse_int(s: Rep[String])(implicit ctx: SourceContext): Rep[Int]
-  def obj_int_max_value(implicit ctx: SourceContext): Rep[Int]
-  def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A])(implicit ctx: SourceContext): Rep[A]
-  def int_divide(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
-  def int_mod(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
-  def int_binaryor(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
-  def int_binaryand(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
-  def int_binaryxor(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
-  def int_float_value(lhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float]
-  def int_double_value(lhs: Rep[Int])(implicit ctx: SourceContext): Rep[Double]
-  def int_bitwise_not(lhs: Rep[Int])(implicit ctx: SourceContext) : Rep[Int]
+  def obj_integer_parse_int(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
+  def obj_int_max_value(implicit pos: SourceContext): Rep[Int]
+  def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A])(implicit pos: SourceContext): Rep[A]
+  def int_divide(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_mod(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_binaryor(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_binaryand(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_binaryxor(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_float_value(lhs: Rep[Int])(implicit pos: SourceContext): Rep[Float]
+  def int_double_value(lhs: Rep[Int])(implicit pos: SourceContext): Rep[Double]
+  def int_bitwise_not(lhs: Rep[Int])(implicit pos: SourceContext) : Rep[Int]
 }
 
 trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
@@ -106,10 +106,10 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class ObjDoubleMinValue() extends Def[Double]
   case class DoubleFloatValue(lhs: Exp[Double]) extends Def[Float]
 
-  def obj_double_parse_double(s: Exp[String])(implicit ctx: SourceContext) = ObjDoubleParseDouble(s)
-  def obj_double_positive_infinity(implicit ctx: SourceContext) = ObjDoublePositiveInfinity()
-  def obj_double_min_value(implicit ctx: SourceContext) = ObjDoubleMinValue()
-  def double_float_value(lhs: Exp[Double])(implicit ctx: SourceContext) = DoubleFloatValue(lhs)
+  def obj_double_parse_double(s: Exp[String])(implicit pos: SourceContext) = ObjDoubleParseDouble(s)
+  def obj_double_positive_infinity(implicit pos: SourceContext) = ObjDoublePositiveInfinity()
+  def obj_double_min_value(implicit pos: SourceContext) = ObjDoubleMinValue()
+  def double_float_value(lhs: Exp[Double])(implicit pos: SourceContext) = DoubleFloatValue(lhs)
 
   /**
    * Int
@@ -126,19 +126,19 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class IntFloatValue(lhs: Exp[Int]) extends Def[Float]
   case class IntBitwiseNot(lhs: Exp[Int]) extends Def[Int]
 
-  def obj_integer_parse_int(s: Rep[String])(implicit ctx: SourceContext) = ObjIntegerParseInt(s)
-  def obj_int_max_value(implicit ctx: SourceContext) = ObjIntMaxValue()
-  def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A])(implicit ctx: SourceContext) : Exp[A] = IntDivideFrac(lhs, rhs)
-  def int_divide(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) : Exp[Int] = IntDivide(lhs, rhs)
-  def int_mod(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntMod(lhs, rhs)
-  def int_binaryor(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntBinaryOr(lhs, rhs)
-  def int_binaryand(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntBinaryAnd(lhs, rhs)
-  def int_binaryxor(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntBinaryXor(lhs, rhs)
-  def int_double_value(lhs: Exp[Int])(implicit ctx: SourceContext) = IntDoubleValue(lhs)
-  def int_float_value(lhs: Exp[Int])(implicit ctx: SourceContext) = IntFloatValue(lhs)
-  def int_bitwise_not(lhs: Exp[Int])(implicit ctx: SourceContext) = IntBitwiseNot(lhs)
+  def obj_integer_parse_int(s: Rep[String])(implicit pos: SourceContext) = ObjIntegerParseInt(s)
+  def obj_int_max_value(implicit pos: SourceContext) = ObjIntMaxValue()
+  def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A])(implicit pos: SourceContext) : Exp[A] = IntDivideFrac(lhs, rhs)
+  def int_divide(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntDivide(lhs, rhs)
+  def int_mod(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntMod(lhs, rhs)
+  def int_binaryor(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntBinaryOr(lhs, rhs)
+  def int_binaryand(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntBinaryAnd(lhs, rhs)
+  def int_binaryxor(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntBinaryXor(lhs, rhs)
+  def int_double_value(lhs: Exp[Int])(implicit pos: SourceContext) = IntDoubleValue(lhs)
+  def int_float_value(lhs: Exp[Int])(implicit pos: SourceContext) = IntFloatValue(lhs)
+  def int_bitwise_not(lhs: Exp[Int])(implicit pos: SourceContext) = IntBitwiseNot(lhs)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = ({
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case IntDoubleValue(x) => int_double_value(f(x))
@@ -155,7 +155,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   val IR: PrimitiveOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ObjDoubleParseDouble(s) => emitValDef(sym, "java.lang.Double.parseDouble(" + quote(s) + ")")
     case ObjDoublePositiveInfinity() => emitValDef(sym, "scala.Double.PositiveInfinity")
     case ObjDoubleMinValue() => emitValDef(sym, "scala.Double.MinValue")
@@ -180,10 +180,10 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
   import IR._
 
   //TODO: stdlib.h needs to be included in the common header file
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       //case ObjDoubleParseDouble(s) => emitValDef(sym, "atof(" + quote(s) + ")")
-    	case ObjDoublePositiveInfinity() => emitValDef(sym, "DBL_MAX")
+      case ObjDoublePositiveInfinity() => emitValDef(sym, "DBL_MAX")
       //case ObjDoubleMinValue() => emitValDef(sym, "scala.Double.MinValue")
       case DoubleFloatValue(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       //case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")

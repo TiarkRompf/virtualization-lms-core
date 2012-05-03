@@ -3,7 +3,7 @@ package internal
 
 import java.io.{PrintWriter, FileOutputStream}
 
-trait GraphVizExport extends Scheduling {
+trait GraphVizExport extends GraphTraversal {
   val IR: Expressions
   import IR._
 
@@ -27,14 +27,14 @@ trait GraphVizExport extends Scheduling {
 
     stream.println("digraph G {")
 
-    val deflist = buildScheduleForResult(start)
+    val deflist = buildScheduleForResult(start,false)
 
     if (landscape)
       stream.println("rankdir=LR")
 
     for (TP(sym, rhs) <- deflist) {
 
-      val deps = dep(rhs)
+      val deps = syms(rhs)
 
       stream.println(quote(sym) + " [")
 

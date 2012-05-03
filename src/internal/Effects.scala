@@ -8,7 +8,13 @@ import scala.annotation.unchecked.uncheckedVariance
 
 trait Blocks extends Expressions {
   
-  case class Block[+T](val res: Exp[T]) { def Type: Manifest[T @uncheckedVariance] = res.Type } // variance ...  
+  case class Block[+T](val res: Exp[T]) { def tp: Manifest[T @uncheckedVariance] = res.tp } // variance ...
+  
+  def blocks(e: Any): List[Block[Any]] = e match {
+    case b: Block[Any] => List(b)
+    case p: Product => p.productIterator.toList.flatMap(blocks(_))
+    case _ => Nil
+  }  
   
 }
 
@@ -199,14 +205,14 @@ trait Effects extends Expressions with Blocks with Utils {
 /*
   def allTransitiveAliases(start: Any): List[TP[Any]] = {
     def deps(st: List[Sym[Any]]): List[TP[Any]] = {
-      val st1 = st filterNot (s => isPrimitiveType(s.Type))
+      val st1 = st filterNot (s => isPrimitiveType(s.tp))
       globalDefs.filter(st1 contains _.sym)
     }
     GraphUtil.stronglyConnectedComponents[TP[Any]](deps(aliasSyms(start)), t => deps(aliasSyms(t.rhs))).flatten.reverse
   }
 */
   
-  def noPrim(sm: List[Sym[Any]]): List[Sym[Any]] = sm.filterNot(s=>isPrimitiveType(s.Type))
+  def noPrim(sm: List[Sym[Any]]): List[Sym[Any]] = sm.filterNot(s=>isPrimitiveType(s.tp))
   
   /*
    TODO: switch back to graph based formulation -- this will not work for circular deps
@@ -216,7 +222,7 @@ trait Effects extends Expressions with Blocks with Utils {
   val deepAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   val allAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   
-  def utilLoadSymTP[T](s: Sym[T]) = if (!isPrimitiveType(s.Type)) globalDefs.filter(List(s) contains _.sym) else Nil
+  def utilLoadSymTP[T](s: Sym[T]) = if (!isPrimitiveType(s.tp)) globalDefs.filter{e => e.lhs contains s} else Nil
   def utilLoadSym[T](s: Sym[T]) = utilLoadSymTP(s).map(_.rhs)
   
   def shallowAliases(start: Any): List[Sym[Any]] = {
@@ -243,7 +249,7 @@ trait Effects extends Expressions with Blocks with Utils {
     r
   }
 
-  def allTransitiveAliases(start: Any): List[TP[Any]] = allAliases(start).flatMap(utilLoadSymTP)
+  def allTransitiveAliases(start: Any): List[Stm] = allAliases(start).flatMap(utilLoadSymTP)
   
   
   // TODO possible optimization: a mutable object never aliases another mutable object, so its inputs need not be followed
@@ -273,8 +279,6 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // --- reflect
 
-  // TODO: should reflectEffect try to add Read(mutableInputs) as well ??? or just toAtom ???
-
   // REMARK: making toAtom context-dependent is quite a departure from the 
   // earlier design. there are a number of implications especially for mirroring.
 
@@ -284,16 +288,22 @@ trait Effects extends Expressions with Blocks with Utils {
       val a = ...       // mutable
       val b = a.foo     // usually Foo(a) but now Reflect(Foo(a))
       val c = b.costly  // costly(Foo(a)) would simplify to Cheap(a), 
-                        // but this ends up as Reflect(Costly(Foo(a))) instead of Reflect(Cheap(a))
+                        // but this ends up as Reflect(Costly(Reflect(Foo(a)))) instead of Reflect(Cheap(a))
     
-    TODO: find a solution ...
+    of course this is unsafe in general but there might be cases that are definitely save.
   */
 
   protected override implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
 /*
-    // are we depending on a variable? then we need to be serialized -> effect
-    val mutableInputs = readMutableData(d)
-    reflectEffect(d, Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
+    are we depending on a variable or mutable object? then we need to be serialized -> effect
+
+    the call chain goes like this:
+    
+      toAtom
+      reflectEffect(Pure())      // figure out dependencies on mutable objects
+      reflectEffectInternal(u)   // extended summary Pure() -> u
+        super.toAtom             // if summary is still pure
+        createReflectDefinition  // if summary is not pure
 */
     reflectEffect(d, Pure())
   }
@@ -301,7 +311,7 @@ trait Effects extends Expressions with Blocks with Utils {
   def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
     context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
       //case z::_ => z.asInstanceOf[Exp[A]]  -- unsafe: we don't have a tight context, so we might pick one from a flattened subcontext
-      case _ => internalReflect(fresh[A], zd)
+      case _ => createReflectDefinition(fresh[A], zd)
     }
   }
 
@@ -358,7 +368,7 @@ trait Effects extends Expressions with Blocks with Utils {
   
   def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
     if (mustPure(u)) super.toAtom(x) else {
-      // FIXME: reflecting mutable stuff *during mirroring* doesn't work right now...
+      // NOTE: reflecting mutable stuff *during mirroring* doesn't work right now.
       
       val deps = calculateDependencies(u)
       val zd = Reflect(x,u,deps)
@@ -371,7 +381,7 @@ trait Effects extends Expressions with Blocks with Utils {
             for (w <- u.mayRead)
               printlog("depends on  " + w)
           }
-          internalReflect(z, zd)
+          createReflectDefinition(z, zd)
         }
       } else {
         val z = fresh[A](List(pos))
@@ -409,29 +419,31 @@ trait Effects extends Expressions with Blocks with Utils {
           printerr("at " + z + "=" + zd)
         }
         */
-        internalReflect(z, zd)
+        createReflectDefinition(z, zd)
       }
     }
   }
   
-  def calculateDependencies(u: Summary): State = {
-    if (u.mayGlobal) context else {
+  def calculateDependencies(u: Summary): State = calculateDependencies(context, u)
+  def calculateDependencies(scope: State, u: Summary): State = {
+    if (u.mayGlobal) scope else {
       val read = u.mayRead
       val write = u.mayWrite
 
-      val readDeps = if (read.isEmpty) Nil else context filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
-      // TODO: write-on-read deps should be weak
-      val writeDeps = if (write.isEmpty) Nil else context filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || mayRead(u, write) || read.contains(e) }
-      val simpleDeps = if (!u.maySimple) Nil else context filter { case e@Def(Reflect(_, u, _)) => u.maySimple }
-      val globalDeps = context filter { case e@Def(Reflect(_, u, _)) => u.mayGlobal }
+      val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
+      val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
+      val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || write.contains(e) }
+      val simpleDeps = if (!u.maySimple) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.maySimple }
+      val globalDeps = scope filter { case e@Def(Reflect(_, u, _)) => u.mayGlobal }
 
+      // TODO: write-on-read deps should be weak
       // TODO: optimize!!
-      val allDeps = readDeps ++ writeDeps ++ simpleDeps ++ globalDeps
-      context filter (allDeps contains _)
+      val allDeps = readDeps ++ softWriteDeps ++ writeDeps ++ simpleDeps ++ globalDeps
+      scope filter (allDeps contains _)
     }
   }
 
-  def internalReflect[A](s: Sym[A], x: Reflect[A]): Sym[A] = {
+  def createReflectDefinition[A](s: Sym[A], x: Reflect[A]): Sym[A] = {
     x match {
       case Reflect(Reify(_,_,_),_,_) =>
         printerr("error: reflecting a reify node.")
@@ -466,11 +478,15 @@ trait Effects extends Expressions with Blocks with Utils {
 
   def pruneContext(ctx: List[Exp[Any]]): List[Exp[Any]] = ctx // TODO this doesn't work yet (because of loops!): filterNot { case Def(Reflect(_,u,_)) => mustOnlyRead(u) }
 
+  // reify the effects of an isolated block.
+  // no assumptions about the current context remain valid.
   def reifyEffects[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     context = Nil
     
-    val result = block
+    val (result, defs) = reifySubGraph(block)
+    reflectSubGraph(defs)
+    
     val deps = context
     val summary = summarizeAll(deps)
     context = save
@@ -478,12 +494,15 @@ trait Effects extends Expressions with Blocks with Utils {
     if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
   }
 
+  // reify the effects of a block that is executed 'here' (if it is executed at all).
+  // all assumptions about the current context carry over unchanged.
   def reifyEffectsHere[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     if (save eq null)
       context = Nil
     
-    val result = block
+    val (result, defs) = reifySubGraph(block)
+    reflectSubGraph(defs)
 
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
       printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
