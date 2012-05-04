@@ -63,20 +63,19 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
    */
   case class Skip[T](g: List[Exp[Int]]) extends Def[Gen[T]]
   
-  def skip[T : Manifest](g: List[Exp[Int]]) = reflectEffect(Skip[T](g))
+  def skip[T : Manifest](s: Exp[_], g: List[Exp[Int]]) = toAtom(Skip[T](g))
   
   // used for convenient creation of yield statements
   var yieldStack: Stack[Exp[Gen[_]]] = Stack.empty
    
-  
-  def yields[T : Manifest](g: List[Exp[Int]], a: Exp[T]) = { 
-    val y = reflectEffect(YieldSingle(g, a))
+  def yields[T : Manifest](s: Exp[_], g: List[Exp[Int]], a: Exp[T]) = {
+    val y = reflectWrite(s)(YieldSingle(g, a))
     yieldStack = yieldStack.push(y)
     y
   }
   
-  def yields[A : Manifest, B : Manifest](g: List[Exp[Int]], a: (Exp[A], Exp[B])) = {
-    val y = reflectEffect(YieldTuple(g, a))
+  def yields[A : Manifest, B : Manifest](s: Sym[_], g: List[Exp[Int]], a: (Exp[A], Exp[B])) = {
+    val y = reflectWrite(s)(YieldTuple(g, a))
     yieldStack = yieldStack.push(y)
     y
   }
@@ -130,6 +129,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
       reflectMirrored(Reflect(YieldTuple(f(i),(f(y._1), f(y._2))), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(Skip(i), u, es) => 
       reflectMirrored(Reflect(Skip(f(i)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Skip(i) => toAtom(Skip(f(i)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
   

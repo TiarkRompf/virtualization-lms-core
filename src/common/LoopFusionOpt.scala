@@ -82,8 +82,6 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         def WgetLoopVar(e: TTP): List[Sym[Int]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => List(x) }
         def WgetLoopRes(e: TTP): List[Def[Any]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => rhs }
 
-        val loopCollectSyms = Wloops flatMap (e => (e.lhs zip WgetLoopRes(e)) collect { case (s, SimpleCollectIf(_,_)) => s })
-
         val loopSyms = Wloops flatMap (_.lhs)
         val loopVars = Wloops flatMap WgetLoopVar
 
@@ -103,7 +101,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
           val thisLoopVars = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
           getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) =>
+            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) =>
               Nil // direct deps on this loop's induction var don't count
             case sc =>
 
@@ -115,7 +113,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
 
                 printlog(sc match {
                   case TTP(_, ThinDef(SimpleIndex(a, i))) => {
-                    "a=" + a + "i=" + i + "thisLoopVars => " + thisLoopVars + " loopCollectSyms =>" + loopCollectSyms
+                    "a=" + a + "i=" + i + "thisLoopVars => " + thisLoopVars
                   }
                   case _ => "Did not match " + sc
                 })
@@ -158,23 +156,31 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         
        /**
          * Plugs Yield statements in body of loop e with the output of loop a. Also adds new definitions to the current scope.
+         *
+         *
+         * Here loop e is plugged into body of loop a. To be more precise:
+         * Shape of loop e dependsOn a
+         * s shapeOf e
+         * shape shapeOf a
+         * targetVar unified var for both loops
          */
-        def duplicateYieldContextAndPlugInRhs(trans: SubstTransformer)(s: Exp[Int], a: TTP)(e: TTP, shape: Exp[Int], targetVar: Sym[Int]) = {
-          // s depends on loop a -- find corresponding loops result d
-          val d = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) }
-
-          printlog("beep bop "+d+"/"+e)
+        def duplicateYieldContextAndPlugInRhs(trans: SubstTransformer)(shB: Exp[Int], a: TTP)(b: TTP, shA: Exp[Int], targetVar: Sym[Int]) = {
+          // s depends on loop a (a.lhs(x).length) -- d is the result of loop a that the shape depends on
+          val d = shB match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) }
+          
+          printlog("beep bop "+d+"/"+b)
           val newDefs = ArrayBuffer[TP[Any]]()
           var saveContext = 0
-          val z = e.rhs match {
+          // TODO (VJ) this is not good as it creates one new loop for part of the rhs
+          // it is also not good because it does not track effects in the new loop. Or does it?
+          val z = b.rhs match {
             case SimpleFatLoop(s,x,rhs) => rhs.map { r =>
               saveContext = globalDefs.length
 
               // concatenating loop vars of both generators (Yield) in the new Generator.
               // This keeps the dependency between the new Yield and all added loops.
-//              val (gen, newGen) = applyExtendGenerator(d, r)
-              val newSym = SimpleLoop(shape, targetVar, applyPlugIntoContext(d, r))
-//              trans.subst(gen) = newGen
+              // effects ?
+              val newSym = SimpleLoop(shA, targetVar, applyPlugIntoContext(d, r))
 
               // track only symbols of loops that are created in plugging. This prevents loops to be filtered afterwards.
               UloopSyms = UloopSyms ++ globalDefs.drop(saveContext).collect{case a@ TP(lhs, SimpleLoop(_, _, _)) => List(lhs)}
@@ -227,7 +233,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         val t = new SubstTransformer
 
         val partitionsIn = Wloops
-        var partitionsOut = Nil:List[TTP]
+        var partitionsOut = Nil: List[TTP]
 
         for (b <- partitionsIn) {
           // try to add to an item in partitionsOut, if not possible add as-is
@@ -244,10 +250,14 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
               // analyze shape dependency and plug body of one loop into another
               val shape = if (isShapeDep(shapeA,b)) { //shapeA depends on value b
                 val loops2 = duplicateYieldContextAndPlugInRhs(t)(shapeA,b)(a,shapeB,targetVar)
+                
+                // substitute results of the previous loop with the results of new ones
                 (a.lhs zip loops2) foreach { p => t.subst(p._1) = p._2 }
                 shapeB
               } else if (isShapeDep(shapeB,a)) {                
                 val loops2 = duplicateYieldContextAndPlugInRhs(t)(shapeB,a)(b,shapeA,targetVar)
+                
+                // substitute results of the previous loop with the results of new ones
                 (b.lhs zip loops2) foreach { p => t.subst(p._1) = p._2 }
                 shapeA
               } else {
@@ -271,10 +281,8 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         }
 
         printlog("partitions: " + partitionsOut)
-        printlog("After fusion: ")
-        currentScope.foreach(x => printlog(x))
+        
         // actually do the fusion: now transform the loops bodies
-
         if ((partitionsOut intersect partitionsIn) != partitionsOut) { // was there any change?
 
           // within fused loops, remove accesses to outcomes of the fusion
@@ -284,7 +292,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
               partitionsOut.find(_.lhs contains a) match {
                 case Some(fused) if WgetLoopVar(fused) contains t(i) =>
                   val index = fused.lhs.indexOf(a)
-
+                  
                   printlog("replace " + e + " at " + index + " within " + fused)
 
                    // we've plugged the loop body into the right scope above,
@@ -292,24 +300,24 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
                   val rhs = WgetLoopRes(fused)(index) match { case SimpleCollect(y) => y }
 
                   printlog("substitute " + s + " -> " + rhs)
-
                   t.subst(s) = rhs
                 case _ => //e
               }
             case _ => //e
           }
 
-          // ---
-
-          transformAllFully(currentScope, result, t) match { case (a,b) => // too bad we can't use pair assigment
+          // TODO (VJ) documentation
+          transformAllFully(currentScope, result, t) match { case (a,b) =>
             currentScope = a
             result = b
           }
+          
           printlog("After transform all fully: " )
           currentScope.foreach(x => printlog(x))
 
           //Wloops = currentScope collect { case e @ TTP(_, FatLoop(_,_,_)) => e }
 
+          // Why this line???
           Wloops = transformAll(partitionsOut, t)
 
           UloopSyms = UloopSyms map (t onlySyms _) // just lookup the symbols

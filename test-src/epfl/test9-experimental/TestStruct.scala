@@ -47,10 +47,12 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   
   override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
     case ArrayElem(g, Block(Def(Yield(_, Def(Struct(tag, elems:Map[String,Exp[A]])))))) =>
-      struct[A]("Array"::tag, elems.map { p=>
-        val g: Exp[Gen[A]] = yields(List(v),p._2) // introduce yield op
-        (p._1,simpleLoop(size, v, ArrayElem(g,Block(g))))
-      })
+//      struct[A]("Array"::tag, elems.map { p=>
+//        val g: Exp[Gen[A]] = yields(reflectMutable(), List(v),p._2) // introduce yield op
+//        (p._1,simpleLoop(size, v, ArrayElem(g,Block(g))))
+//      })
+//      }
+      ???
 
     case ArrayElem(g, Block(Def(Yield(_, Def(ArrayIndex(b,v))))))
       if (infix_length(b) == size) => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct

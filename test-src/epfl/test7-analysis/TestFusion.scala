@@ -56,6 +56,7 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
     case ArrayElem(Def(Reflect(Yield(_,a), _, _)), _) => Some(a.head)
     case _ => super.unapplySimpleCollect(e)
   }
+  
   // TODO (VJ) what is this
   override def unapplySimpleCollectIf(e: Def[Any]) = e match {
     case ArrayElem(g,Block(Def(IfThenElse(c,Block(Def(SimpleCollectIf(a,cs))),Block(Def(Skip(_))))))) => Some((a,c::cs))
@@ -73,16 +74,16 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
   }
 
   override def plugInHelper[A,T:Manifest,U:Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = context match {
-    case `oldGen`  => plug 
+    case `oldGen`  => plug
     
     case Def(Reify(y, s, e)) =>
       getBlockResultFull(reifyEffects(plugInHelper(oldGen, y, plug)))
     
-    // TODO(VJ) find a better solution  
-    case Def(Reflect(IfThenElse(c, Block(a), Block(Def(Reify(Def(Reflect(Skip(x), _, _)), _, _)))), u, es)) => 
-      ifThenElse(c, reifyEffects(plugInHelper(oldGen,a,plug)), reifyEffects(skip[U](x)))
+    case Def(Reflect(IfThenElse(c, Block(a), Block(Def(Skip(x)))), _, _)) => /*Block(Def(Reify(Def(Reflect(Skip(x), _, b)), _, _)))), u, es))*/
+      // this is wrong but we need to check if it works at all
+      ifThenElse(c, reifyEffects(plugInHelper(oldGen,a,plug)), reifyEffects(skip[U](null, x)))
       
-    case Def(SimpleLoop(sh,x,ForeachElem(Block(y)))) =>
+    case Def(Reflect(SimpleLoop(sh,x,ForeachElem(Block(y))), _, _)) =>
       val body = reifyEffects(plugInHelper(oldGen,y,plug))
       reflectEffect(SimpleLoop(sh,x,ForeachElem(body)), summarizeEffects(body).star)
     
@@ -181,12 +182,19 @@ trait FusionProg2 extends Arith with ArrayLoops with Print with OrderingOps {
     
     def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
       arrayIf(x.length) { i => (p(x.at(i)), x.at(i)) }
-
+   
+    def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) =
+      array(x.length)(i => f(x.at(i)))
+      
     val range = array(100) { i => i }
-
+    
+    val deadRange = map(range) { i => i + 1}
+    
+    val dead = filter(range) { z => z > 10 }
+    
     val odds = filter(range) { z => z > 50 }
 
-    val res = sum(odds.length) { i => odds.at(i) }
+    val res = sum(odds.length) { i => odds.at(i) } 
 
     print(res)
   }
@@ -233,7 +241,7 @@ trait FusionProg4 extends Arith with ArrayLoops with Print with OrderingOps {
       arrayFlat(x.length) { i => x.at(i) }
 
     val range = array(100) { i => i }
-
+    
     val nested = array(10) { i => range }
 
     val flat = flatten(nested)
@@ -376,7 +384,7 @@ class TestFusion extends FileDiffSuite {
     withOutFile(prefix+"fusion02") {
       // LoopsExp2 with ArithExp with PrintExp with BaseFatExp
       new FusionProg1 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with TransformingStuff { self =>
-        override val verbosity = 0
+        override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint { val IR: self.type = self 
         override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
@@ -394,7 +402,9 @@ class TestFusion extends FileDiffSuite {
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        globalDefs.foreach(println)
       }
+      
     }
     assertFileEqualsCheck(prefix+"fusion03")
   }
@@ -478,7 +488,6 @@ class TestFusion extends FileDiffSuite {
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
-        globalDefs.foreach(println)
       }
     }
     assertFileEqualsCheck(prefix+"fusion09")

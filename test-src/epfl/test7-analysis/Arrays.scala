@@ -34,7 +34,8 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
-
+  case class Dummy(a: Rep[Int]) extends Def[Unit]
+  
 /*
   example for flatMap fusion
 
@@ -79,17 +80,20 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
-
+    val d = reflectMutable(Dummy(Const(1)))
+    
     val (g, y) = collectYields{ reifyEffects { 
-        yields(List(x),f(x))
+        yields[T](d, List(x),f(x))
       }}
     simpleLoop(shape, x, ArrayElem(g, y))
   }
 
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] = {
     val x = fresh[Int]
+    val d = reflectMutable(Dummy(Const(1)))
+    
     val (g, y) = collectYields{ reifyEffects { 
-       yields(List(x),f(x))
+       yields(d, List(x),f(x))
     }}
     
     reflectEffect(SimpleLoop(shape, x, ReduceElem(g,y)), summarizeEffects(y).star)
@@ -97,33 +101,39 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
   def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]] = {
     val x = fresh[Int]
+    var builder = reflectMutable(Dummy(Const(1)))
     val (g, y) = collectYields{ reifyEffects { 
       val (c,z) = f(x)
-      if (c) yields(List(x),z) else skip[T](List(x))
+      if (c) yields(builder, List(x), z) else skip[T](builder, List(x))
     }}
-    reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
+    SimpleLoop(shape, x, ArrayElem(g,y))
+//    reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
   }
 
   def arrayFlat[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]] = {
     val x = fresh[Int]
+    var builder = reflectMutableSym(fresh[Int])
     val (g, y) = collectYields{ reifyEffects {
       val z = f(x)
       val shape2 = infix_length(z)
       val x2 = fresh[Int]
-      val innerBody = reifyEffects {yields(List(x2, x),infix_at(z,x2))}
+      val innerBody = reifyEffects {yields(builder, List(x2, x),infix_at(z,x2))}
       reflectEffect(SimpleLoop(shape2, x2, ForeachElem(innerBody).asInstanceOf[Def[Gen[T]]]), summarizeEffects(innerBody).star)
     }}
-    reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
+    SimpleLoop(shape, x, ArrayElem(g,y))
+//    reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
   }
 
 
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] = {
     val x = fresh[Int]
+    var builder = reflectMutableSym(fresh[Int])
     val (g, y) = collectYields{ reifyEffects {
       val (c,z) = f(x)
-      if (c) yields(List(x),z) else skip[Double](List(x))
+      if (c) yields(builder, List(x),z) else skip[Double](builder, List(x))
     }}
-    reflectEffect(SimpleLoop(shape, x, ReduceElem(g,y)), summarizeEffects(y).star)
+    SimpleLoop(shape, x, ReduceElem(g,y))
+//    reflectEffect(SimpleLoop(shape, x, ReduceElem(g,y)), summarizeEffects(y).star)
   }
 
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = ArrayIndex(a, i)
@@ -201,10 +211,10 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
         r match {
           case ForeachElem(y) =>
             stream.println("val " + quote(l) + " = () // foreach")
-          case ArrayElem(g,y) if g == getBlockResult(y) =>
-            stream.println("val " + quote(l) + " = new Array[" + stripGen(getBlockResult(y).Type) + "]("+quote(s)+")")
+          case ArrayElem(g,Block(y)) if g == y =>
+            stream.println("val " + quote(l) + " = new Array[" + stripGen(y.Type) + "]("+quote(s)+")")
           case ArrayElem(g,y) =>
-            stream.println("val " + quote(l) + " = new ArrayBuilder[" + stripGen(getBlockResult(y).Type)  + "]")
+            stream.println("val " + quote(l) + "_buff = new ArrayBuilder[" + stripGen(y.Type)  + "]")
           case ReduceElem(g,y) =>
             stream.println("var " + quote(l) + " = 0")
         }
@@ -214,14 +224,14 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
 
       val gens = for ((l,r) <- sym zip rhs if !r.isInstanceOf[ForeachElem[_]]) yield r match {
         //case ForeachElem(y) =>
-        case ArrayElem(g,Block(y)) if g == y => // g == y indicates selectivity 1.0
+        case ArrayElem(g,Block(y)) if g == y => // g == y should indicate selectivity 1.0 (which is not so general)
           (g, (s: List[String]) => {
             stream.println(quote(l) + "("+quote(ii)+") = " + s.head)
             stream.println("val " + quote(g) + " = ()")
           })
         case ArrayElem(g,Block(y)) =>
           (g, (s: List[String]) => {
-            stream.println(quote(l) + " += " + s.head)
+            stream.println(quote(l) + "_buff += " + s.head)
             stream.println("val " + quote(g) + " = ()")
           })
         case ReduceElem(g,y) =>
@@ -241,7 +251,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
         case ForeachElem(y) => 
         case ArrayElem(g,Block(y)) if g == y =>
         case ArrayElem(g,y) =>
-          stream.println("val " + quote(l) + " = " + quote(g) + ".result")
+          stream.println("val " + quote(l) + " = " + quote(l) + "_buff.result")
         case ReduceElem(g,y) =>
       }
 

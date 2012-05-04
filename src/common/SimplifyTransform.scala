@@ -182,9 +182,9 @@ trait SimplifyTransform extends internal.FatTraversal {
       scope
     }
 
-    // Applies the transformation several times until convergence. NOTE: The first two invocations use the whole scope as
+    // Applies the transformation several times until convergence. NOTE: The first several invocations use the whole scope as
     // the result because we are still not sure about the order of operations.
-    // The last two operations take the scope result and clean up the code.
+    // The last several operations take the scope result and clean up the code.
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
     currentScope = getFatSchedule(currentScope)(currentScope)
