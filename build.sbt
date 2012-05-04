@@ -4,7 +4,7 @@ version := "0.2"
 
 organization := "EPFL"
 
-resolvers += ScalaToolsSnapshots
+//resolvers += ScalaToolsSnapshots
 
 resolvers += dropboxScalaTestRepo
 

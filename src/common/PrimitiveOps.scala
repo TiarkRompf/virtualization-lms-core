@@ -38,7 +38,9 @@ trait PrimitiveOps extends Variables with OverloadHack {
   object Double {
     def parseDouble(s: Rep[String])(implicit ctx: SourceContext) = obj_double_parse_double(s)
     def PositiveInfinity(implicit ctx: SourceContext) = obj_double_positive_infinity
+    def NegativeInfinity(implicit ctx: SourceContext) = obj_double_negative_infinity
     def MinValue(implicit ctx: SourceContext) = obj_double_min_value
+    def MaxValue(implicit ctx: SourceContext) = obj_double_max_value
   }
 
   class DoubleOpsCls(lhs: Rep[Double]){
@@ -47,7 +49,9 @@ trait PrimitiveOps extends Variables with OverloadHack {
 
   def obj_double_parse_double(s: Rep[String])(implicit ctx: SourceContext): Rep[Double]
   def obj_double_positive_infinity(implicit ctx: SourceContext): Rep[Double]
+  def obj_double_negative_infinity(implicit ctx: SourceContext): Rep[Double]
   def obj_double_min_value(implicit ctx: SourceContext): Rep[Double]
+  def obj_double_max_value(implicit ctx: SourceContext): Rep[Double]
   def double_float_value(lhs: Rep[Double])(implicit ctx: SourceContext): Rep[Float]
 
   /**
@@ -60,6 +64,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
 
   object Int {
     def MaxValue(implicit ctx: SourceContext) = obj_int_max_value
+    def MinValue(implicit ctx: SourceContext) = obj_int_min_value
   }
 
   implicit def intToIntOps(n: Int) = new IntOpsCls(unit(n))
@@ -84,6 +89,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
 
   def obj_integer_parse_int(s: Rep[String])(implicit ctx: SourceContext): Rep[Int]
   def obj_int_max_value(implicit ctx: SourceContext): Rep[Int]
+  def obj_int_min_value(implicit ctx: SourceContext): Rep[Int]
   def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A])(implicit ctx: SourceContext): Rep[A]
   def int_divide(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
   def int_mod(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
@@ -103,12 +109,16 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
    */
   case class ObjDoubleParseDouble(s: Exp[String]) extends Def[Double]
   case class ObjDoublePositiveInfinity() extends Def[Double]
+  case class ObjDoubleNegativeInfinity() extends Def[Double]
   case class ObjDoubleMinValue() extends Def[Double]
+  case class ObjDoubleMaxValue() extends Def[Double]
   case class DoubleFloatValue(lhs: Exp[Double]) extends Def[Float]
 
   def obj_double_parse_double(s: Exp[String])(implicit ctx: SourceContext) = ObjDoubleParseDouble(s)
   def obj_double_positive_infinity(implicit ctx: SourceContext) = ObjDoublePositiveInfinity()
+  def obj_double_negative_infinity(implicit ctx: SourceContext) = ObjDoubleNegativeInfinity()
   def obj_double_min_value(implicit ctx: SourceContext) = ObjDoubleMinValue()
+  def obj_double_max_value(implicit ctx: SourceContext) = ObjDoubleMaxValue()
   def double_float_value(lhs: Exp[Double])(implicit ctx: SourceContext) = DoubleFloatValue(lhs)
 
   /**
@@ -116,6 +126,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
    */
   case class ObjIntegerParseInt(s: Exp[String]) extends Def[Int]
   case class ObjIntMaxValue() extends Def[Int]
+  case class ObjIntMinValue() extends Def[Int]
   case class IntDivideFrac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) extends Def[A]
   case class IntDivide(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntMod(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
@@ -128,6 +139,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
 
   def obj_integer_parse_int(s: Rep[String])(implicit ctx: SourceContext) = ObjIntegerParseInt(s)
   def obj_int_max_value(implicit ctx: SourceContext) = ObjIntMaxValue()
+  def obj_int_min_value(implicit ctx: SourceContext) = ObjIntMinValue()
   def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A])(implicit ctx: SourceContext) : Exp[A] = IntDivideFrac(lhs, rhs)
   def int_divide(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) : Exp[Int] = IntDivide(lhs, rhs)
   def int_mod(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntMod(lhs, rhs)
@@ -158,10 +170,13 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ObjDoubleParseDouble(s) => emitValDef(sym, "java.lang.Double.parseDouble(" + quote(s) + ")")
     case ObjDoublePositiveInfinity() => emitValDef(sym, "scala.Double.PositiveInfinity")
+    case ObjDoubleNegativeInfinity() => emitValDef(sym, "scala.Double.NegativeInfinity")
     case ObjDoubleMinValue() => emitValDef(sym, "scala.Double.MinValue")
+    case ObjDoubleMaxValue() => emitValDef(sym, "scala.Double.MaxValue")
     case DoubleFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
     case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")
     case ObjIntMaxValue() => emitValDef(sym, "scala.Int.MaxValue")
+    case ObjIntMinValue() => emitValDef(sym, "scala.Int.MinValue")
     case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
