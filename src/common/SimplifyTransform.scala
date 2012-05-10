@@ -1,15 +1,29 @@
 package scala.virtualization.lms
 package common
 
+import scala.reflect.SourceContext
+
 // TODO: generalize and clean up
 
-trait SimplifyTransform extends internal.FatTraversal {
+trait SimplifyTransform extends internal.GenericFatCodegen {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
   
+  case class Forward[A](x: Exp[A]) extends Def[A]
+  
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
+    case Forward(x) => emitValDef(sym, quote(x))
+    case _ => super.emitNode(sym, rhs)
+  }
+
+  def freshSourceContext()(implicit ctx: SourceContext) = ctx
+
   def transformOne[A](s: Sym[A], x: Def[A], t: SubstTransformer): Exp[A] = {
     if (t.subst.contains(s)) return t(s)
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
+    val ctx: SourceContext =
+      if (s.sourceContexts.isEmpty) freshSourceContext()
+      else s.sourceContexts(0)
 
     //if (!syms(x).exists(t.subst contains _)) return s   //<---- should be safe to prune but test fails (??)
 
@@ -17,7 +31,7 @@ trait SimplifyTransform extends internal.FatTraversal {
       val ss = syms(x)
       val tss = t(ss)
       if (ss != tss) {
-        val s2 = mirror(x, t) 
+        val s2 = mirror(x, t)(m, ctx)
         if (s2 == s) {
           printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned same object (expected t(syms) = " + tss.mkString(",") + ")")
         }

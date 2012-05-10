@@ -9,6 +9,7 @@ import internal.{FatExpressions,GenericFatCodegen}
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
 import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt,TransformingStuff}
+import scala.reflect.SourceContext
 
 import util.OverloadHack
 
@@ -39,6 +40,7 @@ trait ComplexStructExp extends ComplexBase with StructExp {
   def infix_im(c: Rep[Complex]): Rep[Double] = field[Double](c, "im")
   
 }
+
 
 
 // ------ struct impl follows, will move to common once stable
@@ -211,11 +213,11 @@ class TestStruct extends FileDiffSuite {
       }
       new Prog with ImplFused {
         // TODO: use a generic Opt trait instead of defining rewrites here...
-        override def infix_-(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+        override def infix_-(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = (x, y) match {
           case (x, Def(Minus(Const(0.0),y))) => infix_+(x,y)
           case _ => super.infix_-(x,y)
         }
-        override def infix_+(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+        override def infix_+(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = (x, y) match {
           case (Const(0.0), y) => y
           case _ => super.infix_+(x,y)
         }

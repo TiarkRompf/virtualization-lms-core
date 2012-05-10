@@ -4,6 +4,8 @@ package common
 import collection.immutable.Stack
 import java.io.PrintWriter
 import internal.{Transforming, GenericNestedCodegen, GenericFatCodegen}
+import scala.virtualization.lms.internal.{GenericNestedCodegen,GenericFatCodegen}
+import scala.reflect.SourceContext
 
 /**
  * @define yieldstmt Yield statement represents that a single value is yielded to a collection from a loop.
@@ -119,7 +121,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   //////////////
   // mirroring
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = (e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case Reflect(SimpleLoop(s,v,body), u, es) => 
       reflectMirrored(Reflect(SimpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case SimpleLoop(s,v,body) =>
@@ -285,6 +287,20 @@ trait CudaGenLoops extends CudaGenBase with BaseGenLoops {
 }
 
 trait CudaGenLoopsFat extends CudaGenLoops with CudaGenFat with BaseGenLoopsFat {
+  import IR._
+
+  //TODO
+
+}
+
+trait CGenLoops extends CGenBase with BaseGenLoops {
+  import IR._
+
+  //TODO
+
+}
+
+trait CGenLoopsFat extends CGenLoops with CGenFat with BaseGenLoopsFat {
   import IR._
 
   //TODO

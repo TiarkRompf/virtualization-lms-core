@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.{FatExpressions,GenericNestedCodegen,GenericFatCodegen}
+import scala.reflect.SourceContext
 
 //import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt,TransformingStuff} // TODO: eliminate deps
 
@@ -16,7 +17,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 */
 
 
-trait StructExp extends BaseExp {
+trait StructExp extends BaseExp with EffectExp {
 
   abstract class AbstractStruct[T] extends Def[T] {
     val tag: List[String]
@@ -33,10 +34,13 @@ trait StructExp extends BaseExp {
   case class SimpleStruct[T](tag: List[String], elems: Map[String,Rep[Any]]) extends AbstractStruct[T]
   case class Field[T](struct: Rep[Any], index: String, tp: Manifest[T]) extends Def[T]
   
-  def struct[T:Manifest](tag: List[String], elems: (String, Rep[Any])*): Rep[T] = struct(tag, Map(elems:_*))
-  def struct[T:Manifest](tag: List[String], elems: Map[String, Rep[Any]]): Rep[T] = SimpleStruct[T](tag, elems)
+  def struct[T:Manifest](tag: List[String], elems: (String, Rep[Any])*)(implicit ctx: SourceContext): Rep[T] = struct(tag, Map(elems:_*))
+  def struct[T:Manifest](tag: List[String], elems: Map[String, Rep[Any]])(implicit ctx: SourceContext): Rep[T] = SimpleStruct[T](tag, elems)
   
-  def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = Field[T](struct, index, manifest[T])
+  def field[T:Manifest](struct: Rep[Any], index: String)(implicit ctx: SourceContext): Rep[T] = Field[T](struct, index, manifest[T])
+  
+  //FIXME: reflectMutable has to take the Def
+  //def mfield[T:Manifest](struct: Rep[Any], index: String): Rep[T] = reflectMutable(Field[T](struct, index, manifest[T]))
   
   // FIXME: need  syms override because Map is not a Product
   override def syms(x: Any): List[Sym[Any]] = x match {
@@ -49,7 +53,7 @@ trait StructExp extends BaseExp {
     case _ => super.symsFreq(e)
   }  
   
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = e match {
     case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
     case _ => super.mirror(e,f)
   }
@@ -57,7 +61,7 @@ trait StructExp extends BaseExp {
   
 trait StructExpOpt extends StructExp {
 
-  override def field[T:Manifest](struct: Rep[Any], index: String): Rep[T] = struct match {
+  override def field[T:Manifest](struct: Rep[Any], index: String)(implicit ctx: SourceContext): Rep[T] = struct match {
     case Def(Struct(tag, elems)) => elems(index).asInstanceOf[Rep[T]]
     case _ => super.field[T](struct, index)
   }
@@ -66,31 +70,31 @@ trait StructExpOpt extends StructExp {
 
 trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseExp {
   
-  override def var_new[T:Manifest](init: Exp[T]): Var[T] = init match {
-    case Def(Struct(tag, elems)) => 
+  override def var_new[T:Manifest](init: Exp[T])(implicit ctx: SourceContext): Var[T] = init match {
+    case Def(Struct(tag, elems)) =>
       //val r = Variable(struct(tag, elems.mapValues(e=>var_new(e).e))) // DON'T use mapValues!! <--lazy
-      Variable(struct[Variable[T]](tag, elems.map(p=>(p._1,var_new(p._2)(p._2.Type).e))))
+      Variable(struct[Variable[T]](tag, elems.map(p=>(p._1,var_new(p._2)(p._2.Type,ctx).e))))
     case _ => 
       super.var_new(init)
   }
 
-  override def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T]): Exp[Unit] = (lhs,rhs) match {
-    case (Variable(Def(Struct(tagL,elemsL:Map[String,Exp[Variable[Any]]]))), Def(Struct(tagR, elemsR))) => 
+  override def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit ctx: SourceContext): Exp[Unit] = (lhs,rhs) match {
+    case (Variable(Def(Struct(tagL,elemsL:Map[String,Exp[Variable[Any]]]))), Def(Struct(tagR, elemsR))) =>
       assert(tagL == tagR)
       assert(elemsL.keySet == elemsR.keySet)
       for (k <- elemsL.keySet)
-        var_assign(Variable(elemsL(k)), elemsR(k))(elemsR(k).Type)
+        var_assign(Variable(elemsL(k)), elemsR(k))(elemsR(k).Type,ctx)
       Const(())
     case _ => super.var_assign(lhs, rhs)
   }
   
-  override def readVar[T:Manifest](v: Var[T]) : Exp[T] = v match {
+  override def readVar[T:Manifest](v: Var[T])(implicit ctx: SourceContext) : Exp[T] = v match {
     case Variable(Def(Struct(tag, elems: Map[String,Exp[Variable[Any]]]))) => 
       def unwrap[A](m:Manifest[Variable[A]]): Manifest[A] = m.typeArguments match {
         case a::_ => mtype(a)
         case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
       }
-      struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.Type)))))
+      struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.Type),ctx))))
     case _ => super.readVar(v)
   }
   
@@ -111,11 +115,11 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
   }*/
 
 
-  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T]) = (a,b) match {
+  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T])(implicit ctx: SourceContext) = (a,b) match {
     case (Block(Def(Struct(tagA,elemsA))), Block(Def(Struct(tagB, elemsB)))) => 
       assert(tagA == tagB)
       assert(elemsA.keySet == elemsB.keySet)
-      val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, Block(elemsA(k)), Block(elemsB(k)))(elemsB(k).Type))
+      val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, Block(elemsA(k)), Block(elemsB(k)))(elemsB(k).Type, ctx))
       struct[T](tagA, elemsNew.toMap)
     case _ => super.ifThenElse(cond,a,b)
   }
@@ -179,7 +183,7 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
     case _ => super.boundSyms(e)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = e match {
     case p@Phi(c,a,u,b,v) => phiB(f(c),f(a),f(u),f(b),f(v))(f(p.parent))
     case _ => super.mirror(e,f)
   }
@@ -190,7 +194,7 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
   }
   
   
-  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T]) = (deReify(a),deReify(b)) match {
+  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T])(implicit ctx: SourceContext) = (deReify(a),deReify(b)) match {
     case ((u, Def(Struct(tagA,elemsA))), (v, Def(Struct(tagB, elemsB)))) => 
       assert(tagA == tagB)
       assert(elemsA.keySet == elemsB.keySet)

@@ -3,6 +3,8 @@ package internal
 
 import util.GraphUtil
 import java.io.{File, PrintWriter}
+import scala.reflect.RefinedManifest
+import scala.collection.mutable.{Map => MMap}
 
 trait GenericCodegen extends Traversal {
   val IR: Expressions
@@ -14,26 +16,60 @@ trait GenericCodegen extends Traversal {
   def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {}
   def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {}
   
+  var analysisResults: MMap[String,Any] = null.asInstanceOf[MMap[String,Any]]
+  
   // Initializer
-  def initializeGenerator(buildDir:String): Unit = {}
+  def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = { analysisResults = _analysisResults }
   def finalizeGenerator(): Unit = {}
   def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
 
   def emitDataStructures(path: String): Unit = {}
+ 
+  def dataPath = {
+    "data" + java.io.File.separator
+  }
+  
+  def symDataPath(sym: Sym[Any]) = {
+    dataPath + sym.id
+  }
+ 
+  def emitData(sym: Sym[Any], data: Seq[Any]) {
+    val outDir = new File(dataPath)
+    outDir.mkdirs()
+    val outFile = new File(symDataPath(sym))
+    val stream = new PrintWriter(outFile)
+    
+    for(v <- data) {
+      stream.println(v)
+    }
+    
+    stream.close()
+  }
   
   // exception handler
   def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
       kstream.close()
       outFile.delete
   }
-
+  
   // optional type remapping (default is identity)
-  def remap[A](m: Manifest[A]) : String = {
-    if (m.erasure == classOf[Variable[Any]] ) {
-      remap(m.typeArguments.head)
-    }
-    else m.toString
+  def remap(s: String): String = s
+  def remap[A](s: String, method: String, t: Manifest[A]) : String = remap(s, method, t.toString)
+  def remap(s: String, method: String, t: String) : String = s + method + "[" + remap(t) + "]"    
+  def remap[A](m: Manifest[A]): String = m match {
+    case rm: RefinedManifest[A] =>  "AnyRef{" + rm.fields.foldLeft(""){(acc, f) => {val (n,mnf) = f; acc + "val " + n + ": " + remap(mnf) + ";"}} + "}"
+    case _ if m.erasure == classOf[Variable[Any]] =>
+        remap(m.typeArguments.head)
+    case _ =>
+      // call remap on all type arguments
+      val targs = m.typeArguments
+      if (targs.length > 0) {
+        val ms = m.toString
+        ms.take(ms.indexOf("[")+1) + targs.map(tp => remap(tp)).mkString(",") + "]"
+      }
+      else m.toString    
   }
+<<<<<<< HEAD
 
   /**
    * Strips of the Gen type and returns the string representation of the element type.
@@ -46,6 +82,9 @@ trait GenericCodegen extends Traversal {
   }
 
   def remapImpl[A](m: Manifest[A]) : String = remap(m)
+=======
+  def remapImpl[A](m: Manifest[A]): String = remap(m)
+>>>>>>> delite-develop
   //def remapVar[A](m: Manifest[Variable[A]]) : String = remap(m.typeArguments.head)
 
   def hasMetaData: Boolean = false

@@ -102,7 +102,17 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
           val otherLoopSyms = loopSyms diff (dx.lhs)
           getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
             case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) =>
+              // check that a is the result of a SimpleCollectIf loop (not a reduce, for example)
+              //if (!loopCollectSyms.contains(a))
+              //  printerr("DANGER WILL ROBINSON: ignoring dep " + e + " although " + a + " is not a loop sym " + loopCollectSyms)
+              printdbg("ignoring simple dependency " + e + " on loop var " + thisLoopVars + " required by body of " + dx.lhs)
               Nil // direct deps on this loop's induction var don't count
+            case e => 
+              syms(e)
+          } flatMap {
+            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) =>
+              printdbg("ignoring2 simple dependency " + e + " on loop var " + thisLoopVars + " required by body of " + dx.lhs)
+              Nil //FIXME: shouldn't duplicate condition ...
             case sc =>
 
               val pr = syms(sc.rhs).intersect(otherLoopSyms) flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
@@ -133,7 +143,6 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
         iter
       
         printlog("wtableneg: " + WtableNeg) // will add more later, need to maintain closure
-        
         
         // other preconditions for fusion: loops must have same shape, or one must loop over the other's result
 
@@ -274,8 +283,8 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
               val postNeg = WtableNeg collect { case p if (lhs contains p._1) => p._2 }
               
               val fusedNeg = preNeg flatMap { s1 => postNeg map { s2 => (s1,s2) } }
-              WtableNeg = fusedNeg ++ WtableNeg
-              
+              WtableNeg = (fusedNeg ++ WtableNeg).distinct
+
             case None => partitionsOut = b::partitionsOut
           }
         }

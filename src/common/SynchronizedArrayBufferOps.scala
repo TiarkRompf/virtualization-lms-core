@@ -4,12 +4,13 @@ package common
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
 import collection.mutable.ArrayBuffer
+import scala.reflect.SourceContext
 
 trait SynchronizedArrayBufferOps extends ArrayBufferOps {
 
 /*
   object SynchronizedArrayBuffer {
-    def apply[A:Manifest](xs: Rep[A]*) = arraybuffer_new(xs)
+    def apply[A:Manifest](xs: Rep[A]*)(implicit ctx: SourceContext) = arraybuffer_new(xs)
   }
 */
 
@@ -22,7 +23,7 @@ trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with Arra
 
   // all array buffers are synchronized (nackward compat). TODO: separate constructor
 
-  override def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]]) = reflectMutable(SyncArrayBufferNew(xs))
+  override def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]])(implicit ctx: SourceContext) = reflectMutable(SyncArrayBufferNew(xs))
 }
 
 trait BaseGenSynchronizedArrayBufferOps extends BaseGenArrayBufferOps {
