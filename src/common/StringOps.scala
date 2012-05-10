@@ -64,7 +64,6 @@ trait StringOpsExp extends StringOps with VariablesExp {
   case class StringStartsWith(s1: Exp[String], s2: Exp[String]) extends Def[Boolean]
   case class StringTrim(s: Exp[String]) extends Def[String]
   case class StringSplit(s: Exp[String], separators: Exp[String]) extends Def[Array[String]]
-  case class StringStartsWith(s: Exp[String], separators: Exp[String]) extends Def[Boolean]
   case class StringValueOf(a: Exp[Any]) extends Def[String]
   case class StringToDouble(s: Exp[String]) extends Def[Double]
 
@@ -90,7 +89,6 @@ trait ScalaGenStringOps extends ScalaGenBase {
     case StringStartsWith(s1,s2) => emitValDef(sym, "%s.startsWith(%s)".format(quote(s1),quote(s2)))
     case StringTrim(s) => emitValDef(sym, "%s.trim()".format(quote(s)))
     case StringSplit(s, sep) => emitValDef(sym, "%s.split(%s)".format(quote(s), quote(sep)))
-    case StringStartsWith(s, con) => emitValDef(sym, "%s.startsWith(%s)".format(quote(s), quote(con)))
     case StringValueOf(a) => emitValDef(sym, "java.lang.String.valueOf(%s)".format(quote(a)))
     case StringToDouble(s) => emitValDef(sym, "%s.toDouble".format(quote(s)))
     case _ => super.emitNode(sym, rhs)

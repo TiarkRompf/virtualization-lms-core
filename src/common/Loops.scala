@@ -132,7 +132,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
       reflectMirrored(Reflect(YieldTuple(f(i),(f(y._1), f(y._2))), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(Skip(i), u, es) => 
       reflectMirrored(Reflect(Skip(f(i)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Skip(i) => toAtom(Skip(f(i)))(mtype(manifest[A]))
+    case Skip(i) => toAtom(Skip(f(i)))(mtype(manifest[A]), ctx)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
   

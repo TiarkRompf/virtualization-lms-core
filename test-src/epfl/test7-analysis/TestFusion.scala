@@ -17,7 +17,7 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     //case Copy(a) => f(a)
     case SimpleLoop(s,i, ForeachElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ForeachElem(f(y))))(mtype(manifest[A]), implicitly[SourceContext])
-    case SimpleLoop(s,i, ArrayElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(g),f(y))))(mtype(manifest[A]))
+    case SimpleLoop(s,i, ArrayElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(g),f(y))))(mtype(manifest[A]), implicitly[SourceContext])
     case SimpleLoop(s,i, ReduceElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(g),f(y))))(mtype(manifest[A]), implicitly[SourceContext])
     case ArrayIndex(a,i) => toAtom(ArrayIndex(f(a), f(i)))(mtype(manifest[A]), implicitly[SourceContext])
     case ArrayLength(a) => toAtom(ArrayLength(f(a)))(mtype(manifest[A]), implicitly[SourceContext])
@@ -59,8 +59,8 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
     case _ => super.unapplySimpleCollect(e)
   }
   
-  def toAtom2[A:Manifest](d: Def[A]): Exp[A] = {
-    val tp = findOrCreateDefinition(d)
+  def toAtom2[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
+    val tp = findOrCreateDefinition(d, List(pos))
     tp.sym
   }
   

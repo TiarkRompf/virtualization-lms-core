@@ -102,15 +102,6 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
           val otherLoopSyms = loopSyms diff (dx.lhs)
           getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
             case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) =>
-              // check that a is the result of a SimpleCollectIf loop (not a reduce, for example)
-              //if (!loopCollectSyms.contains(a))
-              //  printerr("DANGER WILL ROBINSON: ignoring dep " + e + " although " + a + " is not a loop sym " + loopCollectSyms)
-              printdbg("ignoring simple dependency " + e + " on loop var " + thisLoopVars + " required by body of " + dx.lhs)
-              Nil // direct deps on this loop's induction var don't count
-            case e => 
-              syms(e)
-          } flatMap {
-            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) =>
               printdbg("ignoring2 simple dependency " + e + " on loop var " + thisLoopVars + " required by body of " + dx.lhs)
               Nil //FIXME: shouldn't duplicate condition ...
             case sc =>
@@ -195,7 +186,7 @@ trait LoopFusionOpt extends internal.FatTraversal with SimplifyTransform {
               UloopSyms = UloopSyms ++ globalDefs.drop(saveContext).collect{case a@ TP(lhs, SimpleLoop(_, _, _)) => List(lhs)}
 
               // extract new definitions
-              val z = findOrCreateDefinition(newSym).sym
+              val z = findOrCreateDefinition(newSym, Nil).sym
               newDefs ++= globalDefs.drop(saveContext)
               printlog("mod context. old: " + r + "; new: " + findDefinition(z))
               z

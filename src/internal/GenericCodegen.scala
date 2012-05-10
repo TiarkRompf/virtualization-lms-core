@@ -69,7 +69,6 @@ trait GenericCodegen extends Traversal {
       }
       else m.toString    
   }
-<<<<<<< HEAD
 
   /**
    * Strips of the Gen type and returns the string representation of the element type.
@@ -82,9 +81,6 @@ trait GenericCodegen extends Traversal {
   }
 
   def remapImpl[A](m: Manifest[A]) : String = remap(m)
-=======
-  def remapImpl[A](m: Manifest[A]): String = remap(m)
->>>>>>> delite-develop
   //def remapVar[A](m: Manifest[Variable[A]]) : String = remap(m.typeArguments.head)
 
   def hasMetaData: Boolean = false
