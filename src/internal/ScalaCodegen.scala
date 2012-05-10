@@ -135,7 +135,7 @@ trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
   
-  override def emitFatNodeKernelExtra(syms: List[Sym[Any]], rhs: FatDef): Unit = {
+  def emitKernelExtra(syms: List[Sym[Any]]): Unit = {
     val kernelName = syms.map(quote).mkString("")
     stream.println("final class activation_" + kernelName + " {")
     for (s <- syms) {
@@ -143,4 +143,9 @@ trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
     }
     stream.println("}")
   }
+  
+  override def emitFatNodeKernelExtra(syms: List[Sym[Any]], rhs: FatDef): Unit = emitKernelExtra(syms)
+  override def emitNodeKernelExtra(syms: List[Sym[Any]], rhs: Def[Any]): Unit = emitKernelExtra(syms)
+
+
 }

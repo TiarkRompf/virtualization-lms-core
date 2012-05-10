@@ -25,6 +25,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatBlockTraversal {
 
   // DELITE SPECIFIC METHOD -- used for kernel activation records
   def emitFatNodeKernelExtra(sym: List[Sym[Any]], rhs: FatDef): Unit = { }
+  def emitNodeKernelExtra(sym: List[Sym[Any]], rhs: Def[Any]): Unit = { }
 
   def emitFatBlock(rhs: List[Block[Any]]): Unit = {
     emitBlock(Block(Combine(rhs.map(getBlockResultFull)))) // TODO: find another way
