@@ -1,0 +1,45 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Unit)=>(Unit)) {
+def apply(x0:Unit): Unit = {
+val x5 = LoopArray(100) { x1 => 
+List(1.0)
+}
+val x11 = LoopArray(100) { x6 => 
+val x8 = 2.0*x6
+List(x8)
+}
+val x19 = LoopArray(100) { x12 => 
+val x14 = x5.apply(x12)
+val x15 = x11.apply(x12)
+val x16 = x14+x15
+List(x16)
+}
+val x20 = x19.length
+val x26 = LoopReduce(x20) { x21 => 
+val x23 = x19.apply(x21)
+List(x23)
+}
+val x34 = LoopReduce(x20) { x28 => 
+val x30 = x19.apply(x28)
+val x31 = x30*x30
+List(x31)
+}
+val x41 = LoopReduce(x20) { x36 => 
+val x38 = x19.apply(x36)
+List(x38)
+}
+val x27 = x26/x20
+val x45 = println(x27)
+val x35 = x34/x20
+val x42 = x41/x20
+val x43 = x42*x42
+val x44 = x35-x43
+val x46 = println(x44)
+x46
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

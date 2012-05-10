@@ -63,7 +63,8 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
    */
   case class Skip[T](g: List[Exp[Int]]) extends Def[Gen[T]]
   
-  def skip[T : Manifest](s: Exp[_], g: List[Exp[Int]]) = toAtom(Skip[T](g))
+  def skip[T : Manifest](s: Exp[_], g: List[Exp[Int]]) =
+    reflectWrite(s)(Skip[T](g))
   
   // used for convenient creation of yield statements
   var yieldStack: Stack[Exp[Gen[_]]] = Stack.empty

@@ -117,6 +117,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
       val z = f(x)
       val shape2 = infix_length(z)
       val x2 = fresh[Int]
+      
       val innerBody = reifyEffects {yields(builder, List(x2, x),infix_at(z,x2))}
       reflectEffect(SimpleLoop(shape2, x2, ForeachElem(innerBody).asInstanceOf[Def[Gen[T]]]), summarizeEffects(innerBody).star)
     }}
@@ -197,6 +198,7 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
       emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
     case ArrayLength(a) =>  
       emitValDef(sym, quote(a) + ".length")
+    case Dummy(_) => 
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -210,7 +212,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
       for ((l,r) <- sym zip rhs) {
         r match {
           case ForeachElem(y) =>
-            stream.println("val " + quote(l) + " = () // foreach")
+            stream.println("val " + quote(l) + " = () // foreach (this is perfectly fine)")
           case ArrayElem(g,Block(y)) if g == y =>
             stream.println("val " + quote(l) + " = new Array[" + stripGen(y.Type) + "]("+quote(s)+")")
           case ArrayElem(g,y) =>

@@ -1,0 +1,31 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Unit)=>(Unit)) {
+def apply(x0:Unit): Unit = {
+val x5_buff = new ArrayBuilder[Int]
+for (x1 <- 0 until 100) {
+x5_buff += x1
+val x3 = ()
+}
+val x5 = x5_buff.result
+val x34 = x5.length
+val x73_buff = new ArrayBuilder[Any]
+for (x24 <- 0 until 10) {
+val x71 = () // foreach (this is perfectly fine)
+for (x16 <- 0 until x34) {
+val x35 = x5.apply(x16)
+val x66 = x35+5.0
+x73_buff += x66
+val x67 = ()
+}
+}
+val x73 = x73_buff.result
+val x74 = println(x73)
+val x31 = x74
+x31
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
