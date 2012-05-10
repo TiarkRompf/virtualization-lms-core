@@ -1,5 +1,11 @@
 This is the common embedding framework portion of the collaboration effort between PPL and EPFL. 
 
+### Note:
+
+This is branch `master`, which has been outdated for a while. 
+The most recent semi-stable version is in branch `delite-develop`.
+
+
 ### How to build:
 
 1. Download and build [`scala-virtualized`](http://github.com/TiarkRompf/scala-virtualized).
