@@ -10,25 +10,25 @@ val x3 = ()
 }
 val x5 = x5_buff.result
 val x38 = x5.length
-val x83_buff = new ArrayBuilder[Any]
-for (x24 <- 0 until 10) {
-val x81 = () // foreach (this is perfectly fine)
+val x79_buff = new ArrayBuilder[Any]
+for (x6 <- 0 until 10) {
+val x77 = () // foreach (this is perfectly fine)
 for (x16 <- 0 until x38) {
 val x39 = x5.apply(x16)
-val x74 = x39 > 50
-val x77 = if (x74) {
-x83_buff += x39
-val x75 = ()
-x75
+val x68 = x39 > 50
+val x73 = if (x68) {
+x79_buff += x39
+val x69 = ()
+x69
 } else {
-val x30 = () // skip
-x30
+val x71 = () // skip
+x71
 }
 }
 }
-val x83 = x83_buff.result
-val x84 = println(x83)
-val x35 = x84
+val x79 = x79_buff.result
+val x80 = println(x79)
+val x35 = x80
 x35
 }
 }

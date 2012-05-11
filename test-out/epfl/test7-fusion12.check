@@ -22,37 +22,37 @@ x10_buff += x6
 val x8 = ()
 }
 val x10 = x10_buff.result
-val x357 = x10.length
-var x374 = 0
-for (x34 <- 0 until 11) {
-val x372 = () // foreach (this is perfectly fine)
+val x328 = x10.length
+var x345 = 0
+for (x16 <- 0 until 11) {
+val x343 = () // foreach (this is perfectly fine)
 for (x26 <- 0 until x110) {
 val x111 = x15.apply(x26)
-val x275 = x111.apply(x38)
-val x276 = x275 > 1111
-val x370 = if (x276) {
-val x366 = () // foreach (this is perfectly fine)
-for (x69 <- 0 until x357) {
-val x358 = x10.apply(x69)
-val x359 = x358 < 2222
-val x364 = if (x359) {
-x374 += x358
-val x360 = ()
-x360
+val x263 = x111.apply(x38)
+val x264 = x263 > 1111
+val x341 = if (x264) {
+val x337 = () // foreach (this is perfectly fine)
+for (x69 <- 0 until x328) {
+val x329 = x10.apply(x69)
+val x330 = x329 < 2222
+val x335 = if (x330) {
+x345 += x329
+val x331 = ()
+x331
 } else {
-val x362 = () // skip
-x362
+val x333 = () // skip
+x333
 }
 }
-x366
+x337
 } else {
-val x334 = () // skip
-x334
+val x321 = () // skip
+x321
 }
 }
 }
-val x375 = println(x374)
-val x95 = x375
+val x346 = println(x345)
+val x95 = x346
 x95
 }
 }

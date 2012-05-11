@@ -10,17 +10,17 @@ val x3 = ()
 }
 val x5 = x5_buff.result
 val x33 = x5.length
-var x69 = 0
-for (x24 <- 0 until 10) {
-val x67 = () // foreach (this is perfectly fine)
+var x63 = 0
+for (x6 <- 0 until 10) {
+val x61 = () // foreach (this is perfectly fine)
 for (x16 <- 0 until x33) {
 val x34 = x5.apply(x16)
-x69 += x34
-val x63 = ()
+x63 += x34
+val x57 = ()
 }
 }
-val x70 = println(x69)
-val x30 = x70
+val x64 = println(x63)
+val x30 = x64
 x30
 }
 }

@@ -3,20 +3,20 @@
 *******************************************/
 class Test extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-var x91 = 0
-for (x37 <- 0 until 100) {
-val x74 = x37 > 50
-val x89 = if (x74) {
-x91 += x37
-val x83 = ()
-x83
+var x80 = 0
+for (x1 <- 0 until 100) {
+val x46 = x1 > 50
+val x78 = if (x46) {
+x80 += x1
+val x74 = ()
+x74
 } else {
-val x87 = () // skip
-x87
+val x69 = () // skip
+x69
 }
 }
-val x92 = println(x91)
-val x43 = x92
+val x81 = println(x80)
+val x43 = x81
 x43
 }
 }

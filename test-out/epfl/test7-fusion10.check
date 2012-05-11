@@ -10,19 +10,19 @@ val x3 = ()
 }
 val x5 = x5_buff.result
 val x34 = x5.length
-val x73_buff = new ArrayBuilder[Any]
-for (x24 <- 0 until 10) {
-val x71 = () // foreach (this is perfectly fine)
+val x67_buff = new ArrayBuilder[Any]
+for (x6 <- 0 until 10) {
+val x65 = () // foreach (this is perfectly fine)
 for (x16 <- 0 until x34) {
 val x35 = x5.apply(x16)
-val x66 = x35+5.0
-x73_buff += x66
-val x67 = ()
+val x60 = x35+5.0
+x67_buff += x60
+val x61 = ()
 }
 }
-val x73 = x73_buff.result
-val x74 = println(x73)
-val x31 = x74
+val x67 = x67_buff.result
+val x68 = println(x67)
+val x31 = x68
 x31
 }
 }
