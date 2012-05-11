@@ -181,9 +181,6 @@ trait SimplifyTransform extends internal.FatScheduling {
     // ---
     currentScope = getSchedule(currentScope)(currentScope) // clean things up!
 
-    // ---
-    currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
-
     // SIMPLIFY! <--- multiple steps necessary???
   
     def withEffectContext(body: =>List[Stm]): List[Stm] = {
@@ -203,37 +200,37 @@ trait SimplifyTransform extends internal.FatScheduling {
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
 
-    currentScope = getFatSchedule(currentScope)(currentScope)
+    currentScope = getSchedule(currentScope)(currentScope)
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(currentScope)
+    currentScope = getSchedule(currentScope)(currentScope)
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(currentScope)
+    currentScope = getSchedule(currentScope)(currentScope)
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(currentScope)
+    currentScope = getSchedule(currentScope)(currentScope)
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(currentScope)
+    currentScope = getSchedule(currentScope)(currentScope)
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(currentScope)
+    currentScope = getSchedule(currentScope)(currentScope)
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(currentScope)
+    currentScope = getSchedule(currentScope)(currentScope)
 
     val previousScopeWhole = currentScope
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(currentScope)
+    currentScope = getSchedule(currentScope)(currentScope)
 
     if (currentScope != previousScopeWhole) // check convergence and avoid silent failure
       throw new RuntimeException("The scope has not converged!!! Increase the number of cleanup steps. Scopes: " + previousScopeWhole + "\n----->\n" + currentScope)
@@ -244,14 +241,14 @@ trait SimplifyTransform extends internal.FatScheduling {
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(result) // clean things up!
+    currentScope = getSchedule(currentScope)(result) // clean things up!
 
     // once more to see if we are converged
     val previousScope = currentScope
   
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getFatSchedule(currentScope)(result) // clean things up!
+    currentScope = getSchedule(currentScope)(result) // clean things up!
 
     if (currentScope != previousScope) // check convergence and avoid silent failure
       throw new RuntimeException("The scope has not converged!!! Increase the number of cleanup steps. Scopes: " + previousScope + "\n----->\n" + currentScope)

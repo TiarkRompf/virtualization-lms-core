@@ -141,7 +141,7 @@ trait ScalaGenHashLoops extends ScalaGenArrayLoops {
   val IR: HashLoopsExp
   import IR._
   case class Combine2(a:Any,b:Any)extends Exp[Any]
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case SimpleLoop(s,x,HashArrayElem(k,y)) =>  
       stream.println("val " + quote(sym) + " = LoopHashArray("+quote(s)+") { " + quote(x) + " => ")
 //      emitBlock(Block(Combine2(k,y)))
@@ -167,7 +167,7 @@ trait ScalaGenHashLoopsFat extends ScalaGenHashLoops with ScalaGenArrayLoopsFat 
   val IR: HashLoopsFatExp
   import IR._
   
-  override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+  override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatLoop(s,x,rhs) => 
       for ((l,r) <- sym zip rhs) {
         r match {

@@ -30,7 +30,7 @@ trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with Ar
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
-  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer): Def[A] = (e match {
+  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
     case ForeachElem(y) => ForeachElem(f(y))
     case ArrayElem(g,y) => ArrayElem(f(g),f(y))
     case ReduceElem(g,y) => ReduceElem(f(g),f(y))
@@ -59,10 +59,10 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
     case _ => super.unapplySimpleCollect(e)
   }
   
-  def toAtom2[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
+  /*def toAtom2[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
     val tp = findOrCreateDefinition(d, List(pos))
-    tp.sym
-  }
+    tp.lhs.head
+  }*/
   
   // take d's context (everything between loop body and yield) and duplicate it into r
   override def plugInHelper[A,T:Manifest,U:Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = context match {
@@ -95,7 +95,7 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
     case _ => super.applyPlugIntoContext(d, r)
   }
 
-  override def applyExtendGenerator[A](d: Def[Any], r: Def[Any]) = (d, r) match {
+  /*override def applyExtendGenerator[A](d: Def[Any], r: Def[Any]) = (d, r) match {
     case (ArrayElem(g@Def(Yield(varList, _)), _), ArrayElem(g2@Def(Yield(l, y)), _)) =>
       (g2, toAtom2(Yield(varList ::: l, y))).asInstanceOf[(Exp[A], Exp[A])]
     case (ReduceElem(g@Def(Yield(varList, _)), _), ReduceElem(g2@Def(Yield(l, y)), _)) =>
@@ -104,7 +104,7 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
       (g2, toAtom2(Yield(varList ::: l, y))).asInstanceOf[(Exp[A], Exp[A])]
     case (ReduceElem(g@Def(Yield(varList, _)), _), ArrayElem(g2@Def(Yield(l, y)), _)) =>
       (g2, toAtom2(Yield(varList ::: l, y))).asInstanceOf[(Exp[A], Exp[A])]
-  }
+  }*/
 }
 
 // trait NestLambdaProg extends Arith with Functions with Print 
@@ -434,7 +434,7 @@ class TestFusion extends FileDiffSuite {
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint {
             val IR: self.type = self
-            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
           codegen.emitSource(test, "Test", new PrintWriter(System.out))
         }
@@ -451,7 +451,7 @@ class TestFusion extends FileDiffSuite {
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps {
             val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
           }
           codegen.emitSource(test, "Test", new PrintWriter(System.out))
         }
@@ -468,7 +468,7 @@ class TestFusion extends FileDiffSuite {
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps {
             val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
           codegen.emitSource(test, "Test", new PrintWriter(System.out))
         }
@@ -485,7 +485,7 @@ class TestFusion extends FileDiffSuite {
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps {
             val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
           }
           codegen.emitSource(test, "Test", new PrintWriter(System.out))
         }
@@ -502,7 +502,7 @@ class TestFusion extends FileDiffSuite {
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps {
             val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
           codegen.emitSource(test, "Test", new PrintWriter(System.out))
         }
@@ -519,7 +519,7 @@ class TestFusion extends FileDiffSuite {
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps {
             val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
           }
           codegen.emitSource(test, "Test", new PrintWriter(System.out))
         }
@@ -536,7 +536,7 @@ class TestFusion extends FileDiffSuite {
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps {
             val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
           codegen.emitSource(test, "Test", new PrintWriter(System.out))
         }
@@ -553,7 +553,7 @@ class TestFusion extends FileDiffSuite {
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps {
             val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = false
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
           }
           codegen.emitSource(test, "Test", new PrintWriter(System.out))
         }
@@ -570,7 +570,7 @@ class TestFusion extends FileDiffSuite {
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps {
             val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
           codegen.emitSource(test, "Test", new PrintWriter(System.out))
         }
@@ -586,7 +586,7 @@ class TestFusion extends FileDiffSuite {
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps {
             val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
           codegen.emitSource(test, "Test", new PrintWriter(System.out))
         }
@@ -603,7 +603,7 @@ class TestFusion extends FileDiffSuite {
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps {
             val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
           codegen.emitSource(test, "Test", new PrintWriter(System.out))
         }

@@ -175,7 +175,8 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case SimpleLoop(s,i, ArrayElem(y)) if f.hasContext => 
+    // TODO (VJ) can we do this (just call the constructor with and ignore the old gen
+    case SimpleLoop(s,i, ArrayElem(g,y)) if f.hasContext => 
       array(f(s)) { j => f.asInstanceOf[AbstractSubstTransformer{val IR:ArrayLoopsExp.this.type}].subst += (i -> j); f.reflectBlock(y) }
     case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
     case ArrayLength(a) => infix_length(f(a))(mtype(manifest[A]))
@@ -183,10 +184,8 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   }).asInstanceOf[Exp[A]]
 
   override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
-    case ArrayElem(y) => ArrayElem(f(y))
-    case ReduceElem(y) => ReduceElem(f(y))
-    case ArrayIfElem(c,y) => ArrayIfElem(f(c),f(y))
-    case ReduceIfElem(c,y) => ReduceIfElem(f(c),f(y))
+    case ArrayElem(g, y) => ArrayElem(g, f(y))
+    case ReduceElem(g, y) => ReduceElem(g, f(y))
     case _ => super.mirrorFatDef(e,f)
   }).asInstanceOf[Def[A]]
 
@@ -202,7 +201,7 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
   val IR: ArrayLoopsExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case SimpleLoop(s,x,ArrayElem(g,y)) =>  
       stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") { " + quote(x) + " => ")
       withGen(g, s=>stream.println(s)) {
@@ -228,16 +227,16 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
   val IR: ArrayLoopsFatExp
   import IR._
   
-  override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef)(implicit stream: PrintWriter) = rhs match {
+  override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatLoop(s,x,rhs) =>
       for ((l,r) <- sym zip rhs) {
         r match {
           case ForeachElem(y) =>
             stream.println("val " + quote(l) + " = () // foreach (this is perfectly fine)")
           case ArrayElem(g,Block(y)) if g == y =>
-            stream.println("val " + quote(l) + " = new Array[" + stripGen(y.Type) + "]("+quote(s)+")")
+            stream.println("val " + quote(l) + " = new Array[" + stripGen(y.tp) + "]("+quote(s)+")")
           case ArrayElem(g,y) =>
-            stream.println("val " + quote(l) + "_buff = new ArrayBuilder[" + stripGen(y.Type)  + "]")
+            stream.println("val " + quote(l) + "_buff = new ArrayBuilder[" + stripGen(y.tp)  + "]")
           case ReduceElem(g,y) =>
             stream.println("var " + quote(l) + " = 0")
         }
