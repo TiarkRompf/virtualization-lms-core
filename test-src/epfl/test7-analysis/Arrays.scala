@@ -180,16 +180,24 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
       array(f(s)) { j => f.asInstanceOf[AbstractSubstTransformer{val IR:ArrayLoopsExp.this.type}].subst += (i -> j); f.reflectBlock(y) }
     case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
     case ArrayLength(a) => infix_length(f(a))(mtype(manifest[A]))
+    case Dummy(a) => Dummy(f(a))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
   override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
     case ArrayElem(g, y) => ArrayElem(g, f(y))
     case ReduceElem(g, y) => ReduceElem(g, f(y))
+    case Dummy(a) => Dummy(f(a))
     case _ => super.mirrorFatDef(e,f)
   }).asInstanceOf[Def[A]]
 
-
+  override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+    case SimpleLoop(s,i, ArrayElem(g,y)) if f.hasContext => 
+      array(f(s)) { j => f.asInstanceOf[AbstractSubstTransformer{val IR:ArrayLoopsExp.this.type}].subst += (i -> j); f.reflectBlock(y) }
+    case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
+    case ArrayLength(a) => infix_length(f(a))(mtype(manifest[A]))
+    case _ => super.mirrorDef(e,f)
+  }).asInstanceOf[Def[A]]
 }
 
 trait ArrayLoopsFatExp extends ArrayLoopsExp with LoopsFatExp
