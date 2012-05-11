@@ -8,16 +8,17 @@ import scala.reflect.SourceContext
 
 trait Functions extends Base {
 
-  implicit def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B])(implicit ctx: SourceContext): Rep[A => B]
-  implicit def doLambda2[A1:Manifest,A2:Manifest,B:Manifest](fun: (Rep[A1],Rep[A2]) => Rep[B])(implicit ctx: SourceContext): Rep[(A1,A2) => B]
+  implicit def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[A => B]
+  implicit def doLambda2[A1:Manifest,A2:Manifest,B:Manifest](fun: (Rep[A1],Rep[A2]) => Rep[B])(implicit pos: SourceContext): Rep[(A1,A2) => B]
 
   implicit def toLambdaOps[A:Manifest,B:Manifest](fun: Rep[A => B]) = new LambdaOps(fun)
   
   class LambdaOps[A:Manifest,B:Manifest](f: Rep[A => B]) {
-    def apply(x: Rep[A])(implicit ctx: SourceContext): Rep[B] = doApply(f,x)
+    def apply(x: Rep[A])(implicit pos: SourceContext): Rep[B] = doApply(f,x)
   }
 
-  def doApply[A:Manifest,B:Manifest](fun: Rep[A => B], arg: Rep[A])(implicit ctx: SourceContext): Rep[B]
+  def doApply[A:Manifest,B:Manifest](fun: Rep[A => B], arg: Rep[A])(implicit pos: SourceContext): Rep[B]
+  def doApply2[A1:Manifest,A2:Manifest,B:Manifest](fun: Rep[(A1,A2) => B], arg1: Rep[A1], arg2: Rep[A2])(implicit pos: SourceContext): Rep[B]
 
 }
 
@@ -28,8 +29,7 @@ trait FunctionsExp extends Functions with EffectExp {
 
   case class Apply[A:Manifest,B:Manifest](f: Exp[A => B], arg: Exp[A]) extends Def[B]
 
-  def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B])(implicit ctx: SourceContext) : Exp[A => B] = {
-
+  def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B])(implicit pos: SourceContext) : Exp[A => B] = {
     val x = fresh[A]
     val y = reifyEffects(f(x)) // unfold completely at the definition site. 
                                // TODO: this will not work if f is recursive. 
@@ -37,7 +37,7 @@ trait FunctionsExp extends Functions with EffectExp {
     Lambda(f, x, y)
   }
 
-  def doLambda2[A1:Manifest,A2:Manifest,B:Manifest](f: (Exp[A1],Exp[A2]) => Exp[B])(implicit ctx: SourceContext) : Exp[(A1,A2) => B] = {
+  def doLambda2[A1:Manifest,A2:Manifest,B:Manifest](f: (Exp[A1],Exp[A2]) => Exp[B])(implicit pos: SourceContext) : Exp[(A1,A2) => B] = {
 
     val x1 = fresh[A1]
     val x2 = fresh[A2]
@@ -47,7 +47,7 @@ trait FunctionsExp extends Functions with EffectExp {
     Lambda2(f, x1, x2, y)
   }
 
-  def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A])(implicit ctx: SourceContext): Exp[B] = f match {
+  def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A])(implicit pos: SourceContext): Exp[B] = f match {
 /*
     case Def(Lambda(_,_,Def(Reify(_,_,_)))) => 
       // if function result is known to be effectful, so is application
@@ -61,6 +61,9 @@ trait FunctionsExp extends Functions with EffectExp {
     case _ => // unknown function, assume it is effectful TODO: global vs simple?
       reflectEffect(Apply(f, x))
   }
+
+  def doApply2[A1:Manifest,A2:Manifest,B:Manifest](fun: Exp[(A1,A2) => B], arg1: Exp[A1], arg2: Exp[A2])(implicit pos: SourceContext): Exp[B] = sys.error("TODO!")
+
   
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => syms(y)
@@ -104,17 +107,17 @@ trait BaseGenFunctions extends GenericNestedCodegen {
 trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
-      stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + x.Type + ") => ")
+      stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + x.tp + ") => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)) + ": " + y.Type)
+      stream.println(quote(getBlockResult(y)) + ": " + y.tp)
       stream.println("}")
 
     case e@Lambda2(fun, x1, x2, y) =>
-      stream.println("val " + quote(sym) + " = { (" + quote(x1) + ": " + x1.Type + ", " + quote(x2) + ": " + x2.Type + ") => ")
+      stream.println("val " + quote(sym) + " = { (" + quote(x1) + ": " + x1.tp + ", " + quote(x2) + ": " + x2.tp + ") => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)) + ": " + y.Type)
+      stream.println(quote(getBlockResult(y)) + ": " + y.tp)
       stream.println("}")
 
     case Apply(fun, arg) =>
@@ -128,13 +131,13 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         // The version for inlined device function
-        stream.println(addTab() + "%s %s = %s;".format(remap(x.Type), quote(x), quote(sym)+"_1"))
+        stream.println(addTab() + "%s %s = %s;".format(remap(x.tp), quote(x), quote(sym)+"_1"))
         emitBlock(y)
-        stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
+        stream.println(addTab() + "%s %s = %s;".format(remap(y.tp), quote(sym), quote(getBlockResult(y))))
 
         // The version for separate device function
         /*
@@ -149,10 +152,10 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
 
       case e@Lambda2(fun, x1, x2, y) =>
         // The version for inlined device function
-        stream.println(addTab() + "%s %s = %s;".format(remap(x1.Type), quote(x1), quote(sym)+"_1"))
-        stream.println(addTab() + "%s %s = %s;".format(remap(x2.Type), quote(x2), quote(sym)+"_2"))
+        stream.println(addTab() + "%s %s = %s;".format(remap(x1.tp), quote(x1), quote(sym)+"_1"))
+        stream.println(addTab() + "%s %s = %s;".format(remap(x2.tp), quote(x2), quote(sym)+"_2"))
         emitBlock(y)
-        stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
+        stream.println(addTab() + "%s %s = %s;".format(remap(y.tp), quote(sym), quote(getBlockResult(y))))
       case Apply(fun, arg) =>
         emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 
@@ -165,7 +168,7 @@ trait OpenCLGenFunctions extends OpenCLGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         throw new GenerationFailedException("OpenCLGenFunctions: Lambda is not supported yet")
@@ -183,7 +186,7 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         throw new GenerationFailedException("CGenFunctions: Lambda is not supported yet")

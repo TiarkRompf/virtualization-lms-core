@@ -37,19 +37,19 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
         blocks: [1]
   
         1: 
-          1	NEW REF(class IntRef)
-          1	DUP(REF(class IntRef))
-          1	CONSTANT(Constant(0))
-          1	CALL_METHOD scala.runtime.IntRef.<init> (static-instance)
-          1	STORE_LOCAL(variable x$1)
-          1	SCOPE_ENTER variable x$1
-          1	SCOPE_ENTER value f
-          undef	LOAD_LOCAL(variable x$1)
-          1	CONSTANT(Constant(7))
-          1	STORE_FIELD variable elem (dynamic)
-          1	SCOPE_EXIT variable x$1
-          1	SCOPE_EXIT value f
-          1	RETURN(UNIT)
+          1 NEW REF(class IntRef)
+          1 DUP(REF(class IntRef))
+          1 CONSTANT(Constant(0))
+          1 CALL_METHOD scala.runtime.IntRef.<init> (static-instance)
+          1 STORE_LOCAL(variable x$1)
+          1 SCOPE_ENTER variable x$1
+          1 SCOPE_ENTER value f
+          undef LOAD_LOCAL(variable x$1)
+          1 CONSTANT(Constant(7))
+          1 STORE_FIELD variable elem (dynamic)
+          1 SCOPE_EXIT variable x$1
+          1 SCOPE_EXIT value f
+          1 RETURN(UNIT)
     
         }
         
@@ -73,14 +73,14 @@ class TestLambdalift extends FileDiffSuite {
       
       trait ScalaGenBla extends ScalaGenBase {
         import IR._
-        def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Block[B])(implicit stream: PrintWriter): Unit
+        def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Block[B], out: PrintWriter): Unit
       }
       
-      new NestLambdaProg with ArithExp with FunctionsExp with PrintExp { self =>
+      new NestLambdaProg1 with ArithExp with FunctionsExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenPrint { 
           val IR: self.type = self
           
-          def boundAndUsedInScope(x: Exp[Any], y: Exp[Any]): (List[Sym[Any]], List[Sym[Any]]) = {
+          /*def boundAndUsedInScope(x: Exp[Any], y: Exp[Any]): (List[Sym[Any]], List[Sym[Any]]) = {
             val used = (syms(y):::innerScope.flatMap(t => syms(t.rhs))).distinct
             val bound = (syms(x):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
             (bound, used)
@@ -88,16 +88,16 @@ class TestLambdalift extends FileDiffSuite {
           def freeInScope(x: Exp[Any], y: Exp[Any]): List[Sym[Any]] = {
             val (bound, used) = boundAndUsedInScope(x,y)
             used diff bound
-          }
+          }*/
           
-          override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+          override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
             case e@Lambda(fun, x, y) =>
             
               focusBlock(y) {
-                var free = freeInScope(x,getBlockResultFull(y))
-            
+                var free = freeInScope(List(x),List(getBlockResultFull(y)))
+                
                 val sw = new StringWriter
-                codegenInner.emitFocused("Anonfun_"+quote(sym), free, x, y)(new PrintWriter(sw))
+                codegenInner.emitFocused("Anonfun_"+quote(sym), free, x, y, new PrintWriter(sw))
                 classes = sw.toString :: classes
             
                 stream.println("val " + quote(sym) + " = new Anonfun_" + quote(sym) + "("+free.map(quote).mkString(",")+")")
@@ -111,14 +111,16 @@ class TestLambdalift extends FileDiffSuite {
           
           override def initialDefs = codegen.availableDefs
           
-          def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Block[B])(implicit stream: PrintWriter) = {
+          def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Block[B], out: PrintWriter) = {
             // TODO: this is not valid Scala code. the types are missing.
-            stream.println("class "+name+"("+params.map(quote).mkString(",")+") {")
-            stream.println("def apply("+quote(x)+") = {")
-            emitBlockFocused(y)
-            stream.println(quote(getBlockResult(y)))
-            stream.println("}")
-            stream.println("}")
+            withStream(out) {
+              stream.println("class "+name+"("+params.map(quote).mkString(",")+") {")
+              stream.println("def apply("+quote(x)+") = {")
+              traverseBlockFocused(y)
+              stream.println(quote(getBlockResult(y)))
+              stream.println("}")
+              stream.println("}")
+            }
           }
         }
         val codegenInner: ScalaGenBla { val IR: self.type; type Block[+T] = self.Block[T] } = codegen2

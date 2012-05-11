@@ -6,7 +6,7 @@ import common._
 import internal.{ScalaCompile}
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
-import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt,TransformingStuff}
+import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt}
 
 import util.OverloadHack
 
@@ -69,8 +69,8 @@ class TestCrossStage extends FileDiffSuite {
 // Breaks test compilation          
 // FIXME: array buffer now uses implicis instead of
 // infix methods and lifting does not kick in
-//          acc += x
-//          acc += x
+          acc += x
+          acc += x
         }
       }
       new Prog with Impl

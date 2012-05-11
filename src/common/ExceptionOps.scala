@@ -24,7 +24,7 @@ trait ScalaGenExceptionOps extends ScalaGenBase {
   val IR: ExceptionOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ThrowException(m) => emitValDef(sym, "throw new Exception(" + quote(m) + ")")
     case _ => super.emitNode(sym, rhs)
   }

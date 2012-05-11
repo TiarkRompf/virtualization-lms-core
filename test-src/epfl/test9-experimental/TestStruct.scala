@@ -8,7 +8,7 @@ import internal.{FatExpressions,GenericFatCodegen}
 
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
-import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt,TransformingStuff}
+import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt}
 import scala.reflect.SourceContext
 
 import util.OverloadHack
@@ -35,7 +35,7 @@ trait ComplexBase extends Arith {
 
 trait ComplexStructExp extends ComplexBase with StructExp {
 
-  def Complex(re: Rep[Double], im: Rep[Double]) = struct[Complex](List("Complex"), Map("re"->re, "im"->im))
+  def Complex(re: Rep[Double], im: Rep[Double]) = struct[Complex](ClassTag[Complex]("Complex"), Map("re"->re, "im"->im))
   def infix_re(c: Rep[Complex]): Rep[Double] = field[Double](c, "re")
   def infix_im(c: Rep[Complex]): Rep[Double] = field[Double](c, "im")
   
@@ -47,7 +47,10 @@ trait ComplexStructExp extends ComplexBase with StructExp {
 
 trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   
+  case class ArraySoaTag[T](base: StructTag[T], len: Exp[Int]) extends StructTag[T]
+  
   override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
+<<<<<<< HEAD
     case ArrayElem(g, Block(Def(Yield(_, Def(Struct(tag, elems:Map[String,Exp[A]])))))) =>
 //      struct[A]("Array"::tag, elems.map { p=>
 //        val g: Exp[Gen[A]] = yields(reflectMutable(), List(v),p._2) // introduce yield op
@@ -58,27 +61,28 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
 
     case ArrayElem(g, Block(Def(Yield(_, Def(ArrayIndex(b,v))))))
       if (infix_length(b) == size) => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
+=======
+    case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) => 
+      struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.arrayManifest))))
+    case ArrayElem(Block(Def(ArrayIndex(b,v)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
+>>>>>>> delite-develop
     case _ => super.simpleLoop(size, v, body)
   }
   
   override def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
-    case Def(Struct(pre::tag,elems:Map[String,Exp[Array[T]]])) =>
-      assert(pre == "Array")
+    case Def(Struct(ArraySoaTag(tag,len),elems:Map[String,Exp[Array[T]]])) =>
       def unwrap[A](m:Manifest[Array[A]]): Manifest[A] = m.typeArguments match {
         case a::_ => mtype(a)
         case _ =>
           if (m.erasure.isArray) mtype(Manifest.classType(m.erasure.getComponentType))
           else { printerr("warning: expect type Array[A] but got "+m); mtype(manifest[Any]) }
       }
-      struct[T](tag, elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.Type)))))
+      struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))
     case _ => super.infix_at(a,i)
   }
   
   override def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
-    case Def(Struct(pre::tag,elems:Map[String,Exp[Array[T]]])) =>
-      assert(pre == "Array")
-      val ll = elems.map(p=>infix_length(p._2)) // all arrays must have same length!
-      ll reduceLeft { (a1,a2) => assert(a1 == a2); a1 }
+    case Def(Struct(ArraySoaTag(tag,len),elems:Map[String,Exp[Array[T]]])) => len
     case _ => super.infix_length(a)
   }
 
@@ -98,7 +102,7 @@ class TestStruct extends FileDiffSuite {
 
   trait Impl extends DSL with ComplexStructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
-    override val verbosity = 2
+    override val verbosity = 1
     val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
@@ -106,12 +110,12 @@ class TestStruct extends FileDiffSuite {
   }
 
   trait ImplFused extends DSL with ComplexStructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
-      with IfThenElseExp with RangeOpsExp with PrintExp with TransformingStuff { self => 
-    override val verbosity = 2
+      with IfThenElseExp with RangeOpsExp with PrintExp  { self => 
+    override val verbosity = 1
     val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self;
-        override def shouldApplyFusion(currentScope: List[TTP])(result: List[Exp[Any]]): Boolean = true }
+        override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
 
@@ -213,11 +217,11 @@ class TestStruct extends FileDiffSuite {
       }
       new Prog with ImplFused {
         // TODO: use a generic Opt trait instead of defining rewrites here...
-        override def infix_-(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = (x, y) match {
+        override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
           case (x, Def(Minus(Const(0.0),y))) => infix_+(x,y)
           case _ => super.infix_-(x,y)
         }
-        override def infix_+(x: Exp[Double], y: Exp[Double])(implicit ctx: SourceContext) = (x, y) match {
+        override def infix_+(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
           case (Const(0.0), y) => y
           case _ => super.infix_+(x,y)
         }

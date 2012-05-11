@@ -72,6 +72,8 @@ trait AmbProg1 extends Arith with IfThenElse with Equal with Print with Compile 
   
   // xs could be either Rep[List[T]] or List[Rep[T]]
   // if List[Rep[T]], code paths could be duplicated or not...
+
+  // this is the BAM variant of AMB: be careful, it can cause code explosion.
   def amb[T](xs: List[Rep[T]]): Rep[T] @cps[Rep[Unit]] = shift { k =>
     xs foreach k 
   }  

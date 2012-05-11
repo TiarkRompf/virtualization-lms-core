@@ -2,61 +2,99 @@ package scala.virtualization.lms
 package internal
 
 import util.GraphUtil
+import scala.collection.mutable.HashMap
+
+
+
+
 
 trait Scheduling {
   val IR: Expressions
   import IR._
+
+  def getUnsortedSchedule(scope: List[Stm])(result: Any): List[Stm] = {
+    getSchedule(scope)(result, false)
+  }
   
-  def dep(e: Def[Any]): List[Sym[Any]] = e match { // only used by GraphVizExport currently
-    case d: Product => syms(d)
-    case _ => Nil
+  def getStronglySortedSchedule(scope: List[Stm])(result: Any): List[Stm] = {
+    def deps(st: List[Sym[Any]]): List[Stm] = 
+      scope.filter(d => (st intersect d.lhs).nonEmpty)
+    def allSyms(r: Any) = syms(r) ++ softSyms(r)
+    
+    val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result)), t => deps(allSyms(t.rhs)))
+    xx.foreach { x => 
+      if (x.length > 1) {
+        printerr("warning: recursive schedule for result " + result + ": " + x)
+        (new Exception) printStackTrace
+      }
+    }
+    xx.flatten.reverse
   }
 
+  def getSchedule(scope: List[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
+    def deps(st: List[Sym[Any]]): List[Stm] = 
+      scope.filter(d => (st intersect d.lhs).nonEmpty)
 
-  def availableDefs: List[TP[Any]] = globalDefs
-  
+    val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(syms(result)), t => deps(syms(t.rhs)))
+    if (sort) xx.foreach { x => 
+      if (x.length > 1) {
+        printerr("warning: recursive schedule for result " + result + ": " + x)
+        (new Exception) printStackTrace
+      }
+    }
+    xx.flatten.reverse
+  }
 
-
-  def buildScheduleForResult(start: Exp[Any]): List[TP[Any]] = {
-    def deps(st: List[Sym[Any]]): List[TP[Any]] =
-      availableDefs.filter(st contains _.sym)
-      //syms(e).flatMap(d => findDefinition(d).toList)
-
-    GraphUtil.stronglyConnectedComponents[TP[Any]](deps(syms(start)), t => deps(syms(t.rhs))).flatten.reverse
-  }  
-
-  def buildScheduleForResultM(scope: List[TP[Any]])(start: Any, cold: Boolean, hot: Boolean): List[TP[Any]] = {
+  def getScheduleM(scope: List[Stm])(result: Any, cold: Boolean, hot: Boolean): List[Stm] = {
     def mysyms(st: Any) = {
       val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
-      assert(syms(st).toSet == db.map(_._1).toSet, "different list of syms: "+syms(st)+"!="+db)
+      assert(syms(st).toSet == db.map(_._1).toSet, "different list of syms: "+syms(st)+"!="+db+" for "+st)
       if (cold && hot) db.map(_._1)
       else if (cold && !hot) db.withFilter(_._2 < 100.0).map(_._1)
       else if (!cold && hot) db.withFilter(_._2 > 0.75).map(_._1)
       else db.withFilter(p=>p._2 > 0.75 && p._2 < 100.0).map(_._1)
     }
-    
-    def deps(st: List[Sym[Any]]): List[TP[Any]] =
-      scope.filter(st contains _.sym)
-      //syms(e).flatMap(d => findDefinition(d).toList)
 
-    GraphUtil.stronglyConnectedComponents[TP[Any]](deps(mysyms(start)), t => deps(mysyms(t.rhs))).flatten.reverse
-  }  
+    def deps(st: List[Sym[Any]]): List[Stm] =
+      scope.filter(d => (st intersect d.lhs).nonEmpty)
 
-
-
-  def getDependentStuff(st: List[Sym[Any]]): List[TP[Any]] = {
-    // TODO: expensive! should do scc calculation only once
-    st.distinct.flatMap(getDependentStuff).distinct
+    GraphUtil.stronglyConnectedComponents[Stm](deps(mysyms(result)), t => deps(mysyms(t.rhs))).flatten.reverse
   }
     
-  def getDependentStuff(st: Sym[Any]): List[TP[Any]] = {
-    def uses(s: Sym[Any]): List[TP[Any]] = {
-      availableDefs.filter { d =>
-        d.sym == s || // include the definition itself
-        syms(d.rhs).contains(s) && !boundSyms(d.rhs).contains(st) // don't extrapolate outside the scope
+
+  def getFatDependentStuff(scope: List[Stm])(sts: List[Sym[Any]]): List[Stm] = {
+    /*
+     precompute:
+     s => all d in scope such that: d.lhs contains s || syms(d.rhs).contains(s)
+     st => all d in scope such that: boundSyms(d.rhs) contains st
+    */
+
+    val lhsCache = new HashMap[Sym[Any], List[Stm]]
+    val symsCache = new HashMap[Sym[Any], List[Stm]]
+    val boundSymsCache = new HashMap[Sym[Any], List[Stm]]
+
+    def putDef(map: HashMap[Sym[Any], List[Stm]], s: Sym[Any], d: Stm): Unit = {
+      map.getOrElse(s, Nil) match {
+        case `d`::ds =>
+        case ds => map(s) = d::ds
       }
     }
-    GraphUtil.stronglyConnectedComponents[TP[Any]](uses(st), t => uses(t.sym)).flatten
+
+    for (d <- scope) {
+      d.lhs.foreach(s => putDef(lhsCache, s, d))
+      syms(d.rhs).foreach(s => putDef(symsCache, s, d))
+      boundSyms(d.rhs).foreach(st => putDef(boundSymsCache, st, d))
+    }
+
+    sts.distinct.flatMap { st =>
+      // could precompute uses as well...
+      def uses(s: Sym[Any]): List[Stm] = {
+        lhsCache.getOrElse(s, Nil) ++ (symsCache.getOrElse(s, Nil) filterNot (boundSymsCache.getOrElse(st, Nil) contains _))
+      }
+      GraphUtil.stronglyConnectedComponents[Stm](uses(st), t => t.lhs flatMap uses).flatten
+    }.distinct
+
+//    st.distinct.flatMap(getFatDependentStuff0(scope)(_)).distinct // this is expensive!!
   }
 
 }

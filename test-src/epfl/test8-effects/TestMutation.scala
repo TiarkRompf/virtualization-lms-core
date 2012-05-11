@@ -94,7 +94,7 @@ trait ScalaGenArrayMutation extends ScalaGenArrayLoops {
   val IR: ArrayMutationExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ArrayUpdate(a,i,x) => 
       emitValDef(sym, quote(a) + ".update(" + quote(i) + ", " + quote(x) + ")")
     case ArrayMutable(a) =>  

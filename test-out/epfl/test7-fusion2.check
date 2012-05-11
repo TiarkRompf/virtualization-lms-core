@@ -1,49 +1,49 @@
-fusion of List((Sym(2),Sym(13))) prevented by TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) which is required by body of List(Sym(13))
-fusion of List((Sym(5),Sym(13))) prevented by TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) which is required by body of List(Sym(13))
-fusion of List((Sym(2),Sym(18))) prevented by TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) which is required by body of List(Sym(18))
-fusion of List((Sym(5),Sym(18))) prevented by TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) which is required by body of List(Sym(18))
-fusion of List((Sym(2),Sym(22))) prevented by TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) which is required by body of List(Sym(22))
-fusion of List((Sym(5),Sym(22))) prevented by TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) which is required by body of List(Sym(22))
+fusion of List((Sym(2),Sym(13))) prevented by TP(Sym(7),ArrayIndex(Sym(2),Sym(6))) which is required by body of List(Sym(13))
+fusion of List((Sym(5),Sym(13))) prevented by TP(Sym(8),ArrayIndex(Sym(5),Sym(6))) which is required by body of List(Sym(13))
+fusion of List((Sym(2),Sym(18))) prevented by TP(Sym(7),ArrayIndex(Sym(2),Sym(6))) which is required by body of List(Sym(18))
+fusion of List((Sym(5),Sym(18))) prevented by TP(Sym(8),ArrayIndex(Sym(5),Sym(6))) which is required by body of List(Sym(18))
+fusion of List((Sym(2),Sym(22))) prevented by TP(Sym(7),ArrayIndex(Sym(2),Sym(6))) which is required by body of List(Sym(22))
+fusion of List((Sym(5),Sym(22))) prevented by TP(Sym(8),ArrayIndex(Sym(5),Sym(6))) which is required by body of List(Sym(22))
 wtableneg: List((Sym(2),Sym(13)), (Sym(5),Sym(13)), (Sym(2),Sym(18)), (Sym(5),Sym(18)), (Sym(2),Sym(22)), (Sym(5),Sym(22)))
-partitions: List(TTP(List(Sym(13), Sym(18), Sym(22)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Block(Sym(12))), ReduceElem(Block(Sym(17))), ReduceElem(Block(Sym(21)))))), TTP(List(Sym(2), Sym(5), Sym(10)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Sym(4))), ArrayElem(Block(Sym(9)))))))
-considering TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6))))
-replace TTP(List(Sym(7)),ThinDef(ArrayIndex(Sym(2),Sym(6)))) at 0 within TTP(List(Sym(2), Sym(5), Sym(10)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Sym(4))), ArrayElem(Block(Sym(9))))))
-considering TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6))))
-replace TTP(List(Sym(8)),ThinDef(ArrayIndex(Sym(5),Sym(6)))) at 1 within TTP(List(Sym(2), Sym(5), Sym(10)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Sym(4))), ArrayElem(Block(Sym(9))))))
-considering TTP(List(Sym(12)),ThinDef(ArrayIndex(Sym(10),Sym(11))))
-considering TTP(List(Sym(16)),ThinDef(ArrayIndex(Sym(10),Sym(15))))
-considering TTP(List(Sym(21)),ThinDef(ArrayIndex(Sym(10),Sym(20))))
+partitions: List(TTP(List(Sym(13), Sym(18), Sym(22)),List(SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(12)))), SimpleLoop(Const(100),Sym(15),ReduceElem(Block(Sym(17)))), SimpleLoop(Const(100),Sym(20),ReduceElem(Block(Sym(21))))),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Block(Sym(12))), ReduceElem(Block(Sym(17))), ReduceElem(Block(Sym(21)))))), TTP(List(Sym(2), Sym(5), Sym(10)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Const(1.0)))), SimpleLoop(Const(100),Sym(3),ArrayElem(Block(Sym(4)))), SimpleLoop(Const(100),Sym(6),ArrayElem(Block(Sym(9))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Sym(4))), ArrayElem(Block(Sym(9)))))))
+considering TP(Sym(7),ArrayIndex(Sym(2),Sym(6)))
+replace TP(Sym(7),ArrayIndex(Sym(2),Sym(6))) at 0 within TTP(List(Sym(2), Sym(5), Sym(10)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Const(1.0)))), SimpleLoop(Const(100),Sym(3),ArrayElem(Block(Sym(4)))), SimpleLoop(Const(100),Sym(6),ArrayElem(Block(Sym(9))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Sym(4))), ArrayElem(Block(Sym(9))))))
+considering TP(Sym(8),ArrayIndex(Sym(5),Sym(6)))
+replace TP(Sym(8),ArrayIndex(Sym(5),Sym(6))) at 1 within TTP(List(Sym(2), Sym(5), Sym(10)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Const(1.0)))), SimpleLoop(Const(100),Sym(3),ArrayElem(Block(Sym(4)))), SimpleLoop(Const(100),Sym(6),ArrayElem(Block(Sym(9))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Sym(4))), ArrayElem(Block(Sym(9))))))
+considering TP(Sym(12),ArrayIndex(Sym(10),Sym(11)))
+considering TP(Sym(16),ArrayIndex(Sym(10),Sym(15)))
+considering TP(Sym(21),ArrayIndex(Sym(10),Sym(20)))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(34), Sym(38), Sym(2), Sym(30), Sym(32)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Block(Sym(33))), ReduceElem(Block(Sym(37))), ArrayElem(Block(Const(1.0))), ArrayElem(Block(Sym(29))), ArrayElem(Block(Sym(31)))))))
-considering TTP(List(Sym(33)),ThinDef(ArrayIndex(Sym(32),Sym(11))))
-replace TTP(List(Sym(33)),ThinDef(ArrayIndex(Sym(32),Sym(11)))) at 4 within TTP(List(Sym(34), Sym(38), Sym(2), Sym(30), Sym(32)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Block(Sym(33))), ReduceElem(Block(Sym(37))), ArrayElem(Block(Const(1.0))), ArrayElem(Block(Sym(29))), ArrayElem(Block(Sym(31))))))
+partitions: List(TTP(List(Sym(32), Sym(34), Sym(38)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(31)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(33)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(37))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(31))), ReduceElem(Block(Sym(33))), ReduceElem(Block(Sym(37)))))))
+considering TP(Sym(33),ArrayIndex(Sym(32),Sym(11)))
+replace TP(Sym(33),ArrayIndex(Sym(32),Sym(11))) at 0 within TTP(List(Sym(32), Sym(34), Sym(38)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(31)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(33)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(37))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(31))), ReduceElem(Block(Sym(33))), ReduceElem(Block(Sym(37))))))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(47), Sym(51), Sym(2), Sym(57), Sym(46)),SimpleFatLoop(Const(100),Sym(11),List(ReduceElem(Block(Sym(45))), ReduceElem(Block(Sym(50))), ArrayElem(Block(Const(1.0))), ArrayElem(Block(Sym(44))), ArrayElem(Block(Sym(45)))))))
+partitions: List(TTP(List(Sym(45), Sym(46)),List(SimpleLoop(Const(100),Sym(1),ReduceElem(Block(Sym(31)))), SimpleLoop(Const(100),Sym(1),ReduceElem(Block(Sym(44))))),SimpleFatLoop(Const(100),Sym(1),List(ReduceElem(Block(Sym(31))), ReduceElem(Block(Sym(44)))))))
 no changes, we're done
-super.focusExactScopeFat with result changed from List(Sym(28)) to List(Sym(56))
+super.focusExactScopeFat with result changed from List(Sym(28)) to List(Sym(53))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-var x47 = 0
-var x51 = 0
-for (x11 <- 0 until 100) {
-val x44 = 2.0*x11
-val x45 = 1.0+x44
-val x50 = x45*x45
-x47 += x45
-x51 += x50
+var x45 = 0
+var x46 = 0
+for (x1 <- 0 until 100) {
+val x29 = 2.0*x1
+val x31 = 1.0+x29
+val x44 = x31*x31
+x45 += x31
+x46 += x44
 }
-val x48 = x47/100
-val x49 = println(x48)
-val x52 = x51/100
-val x53 = x48*x48
-val x54 = x52-x53
-val x55 = println(x54)
-val x27 = x55
+val x47 = x45/100
+val x48 = println(x47)
+val x49 = x46/100
+val x50 = x47*x47
+val x51 = x49-x50
+val x52 = println(x51)
+val x27 = x52
 x27
 }
 }

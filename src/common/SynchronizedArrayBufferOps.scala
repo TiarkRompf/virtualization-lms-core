@@ -10,7 +10,7 @@ trait SynchronizedArrayBufferOps extends ArrayBufferOps {
 
 /*
   object SynchronizedArrayBuffer {
-    def apply[A:Manifest](xs: Rep[A]*)(implicit ctx: SourceContext) = arraybuffer_new(xs)
+    def apply[A:Manifest](xs: Rep[A]*)(implicit pos: SourceContext) = arraybuffer_new(xs)
   }
 */
 
@@ -23,7 +23,7 @@ trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with Arra
 
   // all array buffers are synchronized (nackward compat). TODO: separate constructor
 
-  override def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]])(implicit ctx: SourceContext) = reflectMutable(SyncArrayBufferNew(xs))
+  override def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]])(implicit pos: SourceContext) = reflectMutable(SyncArrayBufferNew(xs))
 }
 
 trait BaseGenSynchronizedArrayBufferOps extends BaseGenArrayBufferOps {
@@ -35,7 +35,7 @@ trait ScalaGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferO
   val IR: SynchronizedArrayBufferOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case a@SyncArrayBufferNew(xs) => emitValDef(sym, "(new scala.collection.mutable.ArrayBuffer[" + remap(a.mA) + "] with scala.collection.mutable.SynchronizedBuffer[" + remap(a.mA) + "]) ++= List(" + (xs map {quote}).mkString(",") + ")")
     case _ => super.emitNode(sym, rhs)
   }
@@ -45,7 +45,7 @@ trait CLikeGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferO
   val IR: SynchronizedArrayBufferOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case _ => super.emitNode(sym, rhs)
       }

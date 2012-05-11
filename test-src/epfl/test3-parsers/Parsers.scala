@@ -4,19 +4,19 @@ package test3
 
 trait Parsers { this: Matching with Extractors =>
   
-	type Elem
-	type Input = List[Elem]
+  type Elem
+  type Input = List[Elem]
   implicit val mE: Manifest[Elem]
   //implicit val mI: Manifest[List[Elem]]
-	
-	abstract class Parser {
-		def apply(in: Rep[Input]): Rep[ParseResult]
-	}
+  
+  abstract class Parser {
+    def apply(in: Rep[Input]): Rep[ParseResult]
+  }
 
   abstract class ParseResult
 
-	case class Success(rest: Input) extends ParseResult
-	case class Failure() extends ParseResult
+  case class Success(rest: Input) extends ParseResult
+  case class Failure() extends ParseResult
 
 
   object SuccessR {
@@ -36,40 +36,40 @@ trait Parsers { this: Matching with Extractors =>
   }
 
 
-	def acceptElem(elem: Elem) = {
-		new Parser {
-			def apply(in: Rep[Input]) = in switch {
-				case ((x: Rep[Elem]) :!: (rest: Rep[Input])) if x guard elem => // need types to make it compile
-					SuccessR(rest)
-    	} orElse {
-				case _ => FailureR()
-			} end
-		}
-	}
-	
-	def seq(a: Parser, b: Parser) = {
-		new Parser {
-			def apply(in: Rep[Input]) = a(in) switch {
-				case SuccessR(rest) => b(rest)
-			} orElse {
-				case _ => FailureR()
-			} end
-		}
-	}
-	
-	def alt(a: Parser, b: Parser) = {
-		new Parser {
-			def apply(in: Rep[Input]) = a(in) switch {
-				case s @ SuccessR(rest) => s
-			} orElse {
-				case _ => b(in)
-			} end
-		}
-	}
-	
-//	def acceptElem(elem: Elem) = acceptIf(_ == elem)
-	def acceptElems(elems: List[Elem]) = {
-		elems.map(acceptElem).reduceLeft(seq)
-	}
-	
+  def acceptElem(elem: Elem) = {
+    new Parser {
+      def apply(in: Rep[Input]) = in switch {
+        case ((x: Rep[Elem]) :!: (rest: Rep[Input])) if x guard elem => // need types to make it compile
+          SuccessR(rest)
+      } orElse {
+        case _ => FailureR()
+      } end
+    }
+  }
+  
+  def seq(a: Parser, b: Parser) = {
+    new Parser {
+      def apply(in: Rep[Input]) = a(in) switch {
+        case SuccessR(rest) => b(rest)
+      } orElse {
+        case _ => FailureR()
+      } end
+    }
+  }
+  
+  def alt(a: Parser, b: Parser) = {
+    new Parser {
+      def apply(in: Rep[Input]) = a(in) switch {
+        case s @ SuccessR(rest) => s
+      } orElse {
+        case _ => b(in)
+      } end
+    }
+  }
+  
+//  def acceptElem(elem: Elem) = acceptIf(_ == elem)
+  def acceptElems(elems: List[Elem]) = {
+    elems.map(acceptElem).reduceLeft(seq)
+  }
+  
 }

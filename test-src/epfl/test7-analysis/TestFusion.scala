@@ -8,7 +8,7 @@ import util.OverloadHack
 import scala.reflect.SourceContext
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-
+import scala.reflect.SourceContext
 
 trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with ArithExp with PrintExp {
 

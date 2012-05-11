@@ -1,0 +1,30 @@
+
+<function1>
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Fac extends ((Double)=>(Double)) {
+def apply(x0:Double): Double = {
+var x1 = null.asInstanceOf[scala.Function1[Double, Double]]
+x1 = {x2: (Double) => 
+val x3 = x2 == 0
+val x7 = if (x3) {
+1.0
+} else {
+val x4 = x2-1.0
+val x5 = x1(x4)
+val x6 = x2*x5
+x6
+}
+x7
+}
+val x8 = x1(x0)
+val x9 = 2.0*x0
+val x10 = x1(x9)
+val x11 = x8+x10
+x11
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

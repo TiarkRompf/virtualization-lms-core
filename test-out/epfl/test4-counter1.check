@@ -1,0 +1,69 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Match extends ((Unit)=>(scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
+def apply(x0:Unit): scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
+var x1 = null.asInstanceOf[scala.Function1[Double, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+x1 = {x2: (Double) => 
+val x3 = List(x2)
+val x4 = {x5: (Char) => 
+val x6 = x2 // x5
+val x7 = x6+1.0
+val x8 = x1(x7)
+x8
+}
+val x9 = scala.virtualization.lms.epfl.test4.Automaton(x3,x4)
+x9
+}
+val x10 = x1(0.0)
+x10
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+compilation: ok
+idx:   0
+out:   List(0.0)
+char:  X
+idx:   1
+out:   List(1.0)
+char:  A
+idx:   2
+out:   List(2.0)
+char:  B
+idx:   3
+out:   List(3.0)
+char:  Z
+idx:   4
+out:   List(4.0)
+char:  A
+idx:   5
+out:   List(5.0)
+char:  A
+idx:   6
+out:   List(6.0)
+char:  B
+idx:   7
+out:   List(7.0)
+char:  W
+idx:   8
+out:   List(8.0)
+char:  A
+idx:   9
+out:   List(9.0)
+char:  A
+idx:   10
+out:   List(10.0)
+char:  A
+idx:   11
+out:   List(11.0)
+char:  A
+idx:   12
+out:   List(12.0)
+char:  B
+idx:   13
+out:   List(13.0)
+char:  Q
+idx:   14
+out:   List(14.0)
