@@ -243,15 +243,17 @@ trait Effects extends Expressions with Blocks with Utils {
     r
   }
 
-  def allTransitiveAliases(start: Any): List[TP[Any]] = allAliases(start).flatMap(utilLoadSymTP)
+  def allTransitiveAliases(start: Any): List[TP[Any]] = transitiveAliases(allAliases(start))
   
+  def transitiveAliases(start: List[Sym[Any]]): List[TP[Any]] = start.flatMap(utilLoadSymTP)
   
   // TODO possible optimization: a mutable object never aliases another mutable object, so its inputs need not be followed
   
-  // TODO: should include globalMutableSysms??
-  
   def mutableTransitiveAliases(s: Any) = {
-    allTransitiveAliases(s) collect { case TP(s2, Reflect(_, u, _)) if mustMutable(u) => s2 }
+    val aliases = allAliases(s)
+    val globalMutable = aliases filter { o => globalMutableSyms.contains(o) }
+    val transitive = transitiveAliases(aliases) collect { case TP(s2, Reflect(_, u, _)) if mustMutable(u) => s2 }
+    globalMutable ++ transitive
   }
   
   
