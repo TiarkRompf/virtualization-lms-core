@@ -16,6 +16,10 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val v: Sym[Int]
     val body: Def[A]
   }
+
+  object Loop {
+    def unapply[A](l: AbstractLoop[A]): Option[(Exp[Int], Sym[Int], Def[A])] = Some((l.size, l.v, l.body))
+  }
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
   
