@@ -4,11 +4,18 @@ package internal
 import scala.reflect.SourceContext
 import util.GraphUtil
 import scala.collection.mutable
+import scala.annotation.unchecked.uncheckedVariance
 
-trait Effects extends Expressions with Utils {
+trait Blocks extends Expressions {
+  
+  case class Block[+T](val res: Exp[T]) { def Type: Manifest[T @uncheckedVariance] = res.Type } // variance ...  
+  
+}
+
+
+trait Effects extends Expressions with Blocks with Utils {
   
   // TODO: transform over Summary currently lives in common/Base.scala. move it here?
-  
   // --- context
 
   type State = List[Exp[Any]] // TODO: maybe use TP instead to save lookup
@@ -43,6 +50,7 @@ trait Effects extends Expressions with Utils {
 
   def mayRead(u: Summary, a: List[Sym[Any]]): Boolean = u.mayGlobal || a.exists(u.mayRead contains _)
   def mayWrite(u: Summary, a: List[Sym[Any]]): Boolean = u.mayGlobal || a.exists(u.mayWrite contains _)
+  def maySimple(u: Summary): Boolean = u.mayGlobal || u.maySimple
 
   def mustMutable(u: Summary): Boolean = u.resAlloc
   def mustPure(u: Summary): Boolean = u == Pure()
@@ -78,9 +86,9 @@ trait Effects extends Expressions with Utils {
   def infix_star(u: Summary) = Pure() orElse u // any number of repetitions, including 0
 
 
-  def summarizeEffects(e: Exp[Any]) = e match {
-    case Def(Reify(_,u,_)) => u
-    case Def(Reflect(_,u,_)) => u
+  def summarizeEffects(e: Block[Any]) = e match {
+    case Block(Def(Reify(_,u,_))) => u
+//    case Def(Reflect(_,u,_)) => u
     case _ => Pure()
   }
 
@@ -283,8 +291,7 @@ trait Effects extends Expressions with Utils {
 
   protected override implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
     // are we depending on a variable? then we need to be serialized -> effect
-    val mutableInputs = readMutableData(d)
-    reflectEffect(d, Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
+    reflectEffect(d, Pure())
   }
 
   def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
@@ -320,8 +327,7 @@ trait Effects extends Expressions with Utils {
   }
 
   def reflectMutable[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
-    val mutableInputs = readMutableData(d)    
-    val z = reflectEffect(d, Alloc() andAlso Read(mutableInputs))
+    val z = reflectEffect(d, Alloc())
 
     val mutableAliases = mutableTransitiveAliases(d)
     checkIllegalSharing(z, mutableAliases)
@@ -330,9 +336,8 @@ trait Effects extends Expressions with Utils {
 
   def reflectWrite[A:Manifest](write0: Exp[Any]*)(d: Def[A])(implicit pos: SourceContext): Exp[A] = {
     val write = write0.toList.asInstanceOf[List[Sym[Any]]] // should check...
-    val mutableInputs = readMutableData(d)
 
-    val z = reflectEffect(d, Write(write) andAlso Read(mutableInputs))
+    val z = reflectEffect(d, Write(write))
 
     val mutableAliases = mutableTransitiveAliases(d) filterNot (write contains _)
     checkIllegalSharing(z, mutableAliases)
@@ -341,7 +346,13 @@ trait Effects extends Expressions with Utils {
 
   def reflectEffect[A:Manifest](x: Def[A])(implicit pos: SourceContext): Exp[A] = reflectEffect(x, Simple()) // simple effect (serialized with respect to other simples)
 
-  def reflectEffect[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
+  def reflectEffect[A:Manifest](d: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
+    // are we depending on a variable? then we need to be serialized -> effect
+    val mutableInputs = readMutableData(d)
+    reflectEffectInternal(d, u andAlso Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
+  }
+  
+  def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
     if (mustPure(u)) super.toAtom(x) else {
       // FIXME: reflecting mutable stuff *during mirroring* doesn't work right now...
       
@@ -433,15 +444,25 @@ trait Effects extends Expressions with Utils {
   // --- reify
 
   def summarizeAll(es: List[Exp[Any]]): Summary = {
+    // compute an *external* summary for a seq of nodes
+    // don't report any reads/writes on data allocated within the block
     var u = Pure()
-    for (Def(Reflect(_, u2, _)) <- es)
-      u = u andThen u2
+    var ux = u
+    var allocs: List[Exp[Any]] = Nil
+    def clean(xs: List[Sym[Any]]) = xs.filterNot(allocs contains _)
+    for (s@Def(Reflect(_, u2, _)) <- es) {
+      if (mustMutable(u2)) allocs ::= s
+      u = u andThen (u2.copy(mayRead = clean(u2.mayRead), mstRead = clean(u2.mstRead),
+              mayWrite = clean(u2.mayWrite), mstWrite = clean(u2.mstWrite)))
+      ux = ux andThen u2
+    }
+    //if (ux != u) printdbg("** effect summary reduced from "+ux+" to" + u)
     u
   }
 
   def pruneContext(ctx: List[Exp[Any]]): List[Exp[Any]] = ctx // TODO this doesn't work yet (because of loops!): filterNot { case Def(Reflect(_,u,_)) => mustOnlyRead(u) }
 
-  def reifyEffects[A:Manifest](block: => Exp[A]): Exp[A] = {
+  def reifyEffects[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     context = Nil
     
@@ -450,10 +471,10 @@ trait Effects extends Expressions with Utils {
     val summary = summarizeAll(deps)
     context = save
     
-    if (deps.isEmpty && mustPure(summary)) result else Reify(result, summary, pruneContext(deps)): Exp[A] // calls toAtom...
+    if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
   }
 
-  def reifyEffectsHere[A:Manifest](block: => Exp[A]): Exp[A] = {
+  def reifyEffectsHere[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     if (save eq null)
       context = Nil
@@ -468,7 +489,7 @@ trait Effects extends Expressions with Utils {
     val summary = summarizeAll(deps)
     context = save
     
-    if (deps.isEmpty && mustPure(summary)) result else Reify(result, summary, pruneContext(deps)): Exp[A] // calls toAtom...
+    if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
   }
 
   // --- bookkeping

@@ -5,19 +5,12 @@ import scala.reflect.SourceContext
 
 // TODO: generalize and clean up
 
-trait SimplifyTransform extends internal.GenericFatCodegen {
+trait SimplifyTransform extends internal.FatTraversal {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
-  
-  case class Forward[A](x: Exp[A]) extends Def[A]
-  
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
-    case Forward(x) => emitValDef(sym, quote(x))
-    case _ => super.emitNode(sym, rhs)
-  }
 
   def freshSourceContext()(implicit ctx: SourceContext) = ctx
-
+  
   def transformOne[A](s: Sym[A], x: Def[A], t: SubstTransformer): Exp[A] = {
     if (t.subst.contains(s)) return t(s)
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
@@ -75,7 +68,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
     mirrorFatDef(x, t)
   }
-  def transformIfBody[A](s: Sym[A], x: Exp[A], t: SubstTransformer): Exp[A] = {
+  def transformIfBody[A](s: Sym[A], x: Block[A], t: SubstTransformer): Block[A] = {
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
     //transformOne(s,x,t)
     t(x)
@@ -156,10 +149,28 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
 */      
   }
 
+  /**
+   * Applies the transformation several times on the current scope with transformer t.
+   */
   def transformAllFully(currentScope0: List[TTP], result0: List[Exp[Any]], t: SubstTransformer): (List[TTP], List[Exp[Any]]) = {
     var currentScope = currentScope0
     var result = result0
     
+    /*
+        this comment block was added to wip-fusion -- need to keep??
+    
+        //NOTE: if we have added stuff to currentScope, the line below will reset it
+        // because result is still untransformed and thus the new stuff no used
+        //currentScope = getFatSchedule(currentScope)(result) // clean things up!
+        //NOTE: it is necessary to bring currentScope into the right order, though
+        // the current approach is to use all of currentScope as root, not just result
+        currentScope = getFatSchedule(currentScope)(currentScope)
+    
+        // SIMPLIFY! <--- multiple steps necessary? 
+        // currently yes: transform goes first to last, but later elems may
+        // induce substitutions on earlier ones, so we have to iterate
+    */  
+
     // ---
     currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
 
@@ -180,6 +191,9 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
       scope
     }
   
+    // Applies the transformation several times until convergence. NOTE: The first invocations use the whole scope as
+    // the result because we are still not sure about the order of operations.
+    // The last two operations take the scope result and clean up the code.
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
     currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
@@ -188,10 +202,28 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     result = t(result)
     currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
 
+    val previousScopeFull = currentScope
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(currentScope) // clean things up!
+
+    if (currentScope != previousScopeFull) { // check convergence
+      printerr("error: transformation of (full) scope contents has not converged")
+      printdbg(previousScopeFull + "-->" + currentScope)
+    }
+
+
+
+
+    // now get schedule for result only
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
     currentScope = getFatSchedule(currentScope)(result) // clean things up!
 
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getFatSchedule(currentScope)(result) // clean things up!
 
     // once more to see if we are converged
     val previousScope = currentScope

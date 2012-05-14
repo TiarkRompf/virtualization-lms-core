@@ -154,17 +154,40 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
 }
 
 
+trait VariablesExpOpt extends VariablesExp {
+
+  override implicit def readVar[T:Manifest](v: Var[T])(implicit ctx: SourceContext) : Exp[T] = {
+    if (context ne null) {
+      // find the last modification of variable v
+      // if it is an assigment, just return the last value assigned 
+      val vs = v.e.asInstanceOf[Sym[Variable[T]]]
+      val rhs = context.reverse.collectFirst { 
+        case w @ Def(Reflect(NewVar(rhs: Exp[T]), _, _)) if w == vs => Some(rhs)
+        case Def(Reflect(Assign(`v`, rhs: Exp[T]), _, _)) => Some(rhs)
+        case Def(Reflect(_, u, _)) if mayWrite(u, List(vs)) => None // not a simple assignment
+      }
+      rhs.flatten.getOrElse(super.readVar(v))
+    } else {
+      super.readVar(v)
+    }
+  }
+  
+  // TODO: could eliminate redundant stores, too
+  // by overriding assign ...
+
+}
+
 trait ScalaGenVariables extends ScalaGenEffect {
   val IR: VariablesExp
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
-    case NewVar(init) => emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(getBlockResult(init)))
-    case Assign(Variable(a), b) => emitAssignment(quote(a), quote(getBlockResult(b)))
+    case NewVar(init) => emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
+    case Assign(Variable(a), b) => emitAssignment(quote(a), quote(b))
     //case Assign(a, b) => emitAssignment(quote(a), quote(b))
-    case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(getBlockResult(b)))
-    case VarMinusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(getBlockResult(b)))
+    case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(b))
+    case VarMinusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -178,11 +201,11 @@ trait CLikeGenVariables extends CLikeGenBase {
         case ReadVar(Variable(a)) =>
           emitValDef(sym, quote(a))
         case NewVar(init) =>
-          emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(getBlockResult(init)))
+          emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
         case Assign(Variable(a), b) =>
-          emitAssignment(quote(a), quote(getBlockResult(b)))
+          emitAssignment(quote(a), quote(b))
         case VarPlusEquals(Variable(a), b) =>
-          emitAssignment(quote(a), quote(a) + " + " + quote(getBlockResult(b)))
+          emitAssignment(quote(a), quote(a) + " + " + quote(b))
         case _ => super.emitNode(sym, rhs)
       }
     }

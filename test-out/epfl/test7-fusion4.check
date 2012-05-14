@@ -1,31 +1,26 @@
-fusion of List((Sym(2),Sym(10))) prevented by TTP(List(Sym(4)),ThinDef(ArrayIndex(Sym(2),Sym(3)))) which is required by body of List(Sym(10))
-wtableneg: List((Sym(2),Sym(10)))
-partitions: List(TTP(List(Sym(10)),SimpleFatLoop(Sym(7),Sym(8),List(ReduceElem(Sym(9))))), TTP(List(Sym(2), Sym(6)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Sym(1)), ArrayIfElem(Sym(5),Sym(4))))))
+wtableneg: List()
+partitions: List(TTP(List(Sym(2), Sym(6), Sym(10)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(1))), ArrayIfElem(Sym(5),Block(Sym(4))), ReduceElem(Block(Sym(9)))))))
 considering TTP(List(Sym(4)),ThinDef(ArrayIndex(Sym(2),Sym(3))))
-replace TTP(List(Sym(4)),ThinDef(ArrayIndex(Sym(2),Sym(3)))) at 0 within TTP(List(Sym(2), Sym(6)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Sym(1)), ArrayIfElem(Sym(5),Sym(4)))))
+replace TTP(List(Sym(4)),ThinDef(ArrayIndex(Sym(2),Sym(3)))) at 0 within TTP(List(Sym(2), Sym(6), Sym(10)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(1))), ArrayIfElem(Sym(5),Block(Sym(4))), ReduceElem(Block(Sym(9))))))
 considering TTP(List(Sym(9)),ThinDef(ArrayIndex(Sym(6),Sym(8))))
+replace TTP(List(Sym(9)),ThinDef(ArrayIndex(Sym(6),Sym(8)))) at 1 within TTP(List(Sym(2), Sym(6), Sym(10)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(1))), ArrayIfElem(Sym(5),Block(Sym(4))), ReduceElem(Block(Sym(9))))))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(17), Sym(2), Sym(14)),SimpleFatLoop(Const(100),Sym(8),List(ReduceElem(Sym(16)), ArrayElem(Sym(1)), ArrayIfElem(Sym(13),Sym(1))))))
-considering TTP(List(Sym(16)),ThinDef(ArrayIndex(Sym(14),Sym(8))))
-replace TTP(List(Sym(16)),ThinDef(ArrayIndex(Sym(14),Sym(8)))) at 2 within TTP(List(Sym(17), Sym(2), Sym(14)),SimpleFatLoop(Const(100),Sym(8),List(ReduceElem(Sym(16)), ArrayElem(Sym(1)), ArrayIfElem(Sym(13),Sym(1)))))
-try once more ...
-wtableneg: List()
-partitions: List(TTP(List(Sym(26), Sym(29), Sym(22)),SimpleFatLoop(Const(100),Sym(8),List(ReduceIfElem(Sym(21),Sym(8)), ArrayElem(Sym(8)), ArrayIfElem(Sym(21),Sym(8))))))
+partitions: List(TTP(List(Sym(2), Sym(15), Sym(19)),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(1))), ArrayIfElem(Sym(14),Block(Sym(1))), ReduceIfElem(Sym(14),Block(Sym(1)))))))
 no changes, we're done
-super.focusExactScopeFat with result changed from List(Sym(12)) to List(Sym(28))
+super.focusExactScopeFat with result changed from List(Sym(12)) to List(Sym(21))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-var x26 = 0
-for (x8 <- 0 until 100) {
-val x21 = x8 > 50
-if (x21) x26 += x8
+var x19 = 0
+for (x1 <- 0 until 100) {
+val x14 = x1 > 50
+if (x14) x19 += x1
 }
-val x27 = println(x26)
-val x11 = x27
+val x20 = println(x19)
+val x11 = x20
 x11
 }
 }

@@ -124,7 +124,7 @@ trait GPUCodegen extends CLikeCodegen {
   var processingHelperFunc: Boolean = false
   var isNestedNode: Boolean = false
 
-  def emitMultiLoopFunc(func:Exp[Any], postfix: String, lastInputs: List[Sym[Any]], stream:PrintWriter): List[String] = {
+  def emitMultiLoopFunc(func:Block[Any], postfix: String, lastInputs: List[Sym[Any]], stream:PrintWriter): List[String] = {
     isNestedNode = true
     val tempString = new StringWriter
     val tempStream = new PrintWriter(tempString, true)
@@ -139,8 +139,8 @@ trait GPUCodegen extends CLikeCodegen {
     val inputs = getFreeVarBlock(func,lastInputs).distinct
     val paramStr = (inputs++lastInputs).map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
 
-    header.append("__device__ %s dev_%s(%s) {\n".format(remap(func.Type),postfix,paramStr))
-    if(remap(func.Type) != "void")
+    header.append("__device__ %s dev_%s(%s) {\n".format(remap(getBlockResult(func).Type),postfix,paramStr))
+    if(remap(getBlockResult(func).Type) != "void")
       footer.append("\treturn %s;\n".format(quote(getBlockResult(func))))
     footer.append("}\n")
     stream.print(header)
@@ -479,7 +479,7 @@ trait GPUCodegen extends CLikeCodegen {
   /* emitAllocFunc method emits code for allocating the output memory of a kernel,
        and copying  it to CPU memory with allocation of new object in CPU */
   //TODO: Separate output and temporary allocations
-  def emitAllocFunc(sym:Sym[Any], allocFunc:Exp[Any], aV:Sym[Any]=null, size:Exp[Any]=null) {
+  def emitAllocFunc(sym:Sym[Any], allocFunc:Block[Any], aV:Sym[Any]=null, size:Exp[Any]=null) {
     processingHelperFunc = true
     val tempString = new StringWriter
     val tempString2 = new StringWriter

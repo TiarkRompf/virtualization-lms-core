@@ -8,9 +8,14 @@ import scala.reflect.SourceContext
 trait Transforming extends Expressions with OverloadHack {
   this: scala.virtualization.lms.common.BaseExp => // probably shouldn't be here...
   
+  abstract class CanTransform[C[_]] {
+    def transform[A](x:C[A], t: Transformer): C[A]
+  }
+  
   abstract class Transformer { // a polymorphic function, basically...
     def apply[A](x: Exp[A]): Exp[A]
     def apply[A](x: Interface[A]): Interface[A] = x.ops.wrap(apply[x.ops.Self](x.ops.elem))
+    def apply[A,C[_]:CanTransform](x: C[A]): C[A] = implicitly[CanTransform[C]].transform(x, this)    
     def apply[A](xs: List[Exp[A]]): List[Exp[A]] = xs map (e => apply(e))
     def apply[A](xs: Seq[Exp[A]]): Seq[Exp[A]] = xs map (e => apply(e))
     def apply[X,A](f: X=>Exp[A]): X=>Exp[A] = (z:X) => apply(f(z))

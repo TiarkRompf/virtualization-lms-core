@@ -23,7 +23,7 @@ trait JSCodegen extends GenericCodegen {
 
   def emitSource[A,B](f: Exp[A] => Exp[B], methName: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
-    val y = f(x)
+    val y = reifyBlock(f(x))
 
     stream.println("function "+methName+"("+quote(x)+") {")
     
@@ -42,11 +42,6 @@ trait JSCodegen extends GenericCodegen {
 trait JSNestedCodegen extends GenericNestedCodegen with JSCodegen {
   import IR._
 
-  // TODO: we shouldn't need the manifests here (aks)
-  override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
-    super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
-  }
   override def quote(x: Exp[Any]) = x match { // TODO: quirk!
     case Sym(-1) => sys.error("Sym(-1) not supported")
     case _ => super.quote(x)

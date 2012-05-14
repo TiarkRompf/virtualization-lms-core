@@ -81,6 +81,8 @@ trait OrderingOpsExp extends OrderingOps with VariablesExp {
   }
 }
 
+
+
 trait ScalaGenOrderingOps extends ScalaGenBase {
   val IR: OrderingOpsExp
   import IR._

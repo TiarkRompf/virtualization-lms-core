@@ -34,6 +34,19 @@ trait FatScheduling extends Scheduling {
     xx.flatten.reverse
   }
 
+  def getCustomFatSchedule(scope: List[TTP])(result: Any)(dsyms: Any => List[Sym[Any]]): List[TTP] = {
+    def deps(st: List[Sym[Any]]): List[TTP] = 
+      scope.filter(d => (st intersect d.lhs).nonEmpty)
+
+    val xx = GraphUtil.stronglyConnectedComponents[TTP](deps(dsyms(result)), t => deps(dsyms(t.rhs)))
+    xx.foreach { x => 
+      if (x.length > 1)
+        printerr("warning: recursive schedule for result " + result + ": " + x)
+    }
+    xx.flatten.reverse
+  }
+
+
 /*
   def buildScheduleForResultM(defs: List[TP[Any]])(start: Any, cold: Boolean, hot: Boolean): List[TP[Any]] = {
     def mysyms(st: Any) = if (cold && hot) syms(st)

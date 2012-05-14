@@ -10,8 +10,8 @@ import scala.reflect.SourceContext
 
 
 
-trait FunctionsExp extends Functions with BaseExp { // shadow trait with same name in core package
-    
+trait FunctionsExp extends Functions with BlockExp { // shadow trait with same name in core package
+  
   // FIXME: there might be a conflict since this pulls in internal.Effects which is different from test1.Effects
   case class Lambda[A:Manifest,B:Manifest](fun: Exp[A] => Exp[B]) extends Def[A => B]
   case class Lambda2[A1:Manifest,A2:Manifest,B:Manifest](fun: (Exp[A1],Exp[A2]) => Exp[B]) extends Def[(A1,A2) => B]

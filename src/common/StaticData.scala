@@ -23,7 +23,7 @@ trait BaseGenStaticData extends GenericNestedCodegen {
     case _ => Nil
   }
   
-  override def getFreeDataBlock[A](start: Exp[A]): List[(Sym[Any],Any)] = {
+  override def getFreeDataBlock[A](start: Block[A]): List[(Sym[Any],Any)] = {
     focusBlock(start) {
       focusExactScope(start) { levelScope =>
         levelScope flatMap { case TP(sym, rhs) =>

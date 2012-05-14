@@ -45,6 +45,7 @@ trait StringOps extends Variables with OverloadHack {
   def infix_startsWith(s1: Rep[String], s2: Rep[String])(implicit ctx: SourceContext) = string_startswith(s1,s2)
   def infix_trim(s: Rep[String])(implicit ctx: SourceContext) = string_trim(s)
   def infix_split(s: Rep[String], separators: Rep[String])(implicit ctx: SourceContext) = string_split(s, separators)
+  def infix_endsWith(s: Rep[String], e: Rep[String])(implicit ctx: SourceContext) = string_endsWith(s,e)  
   def infix_toDouble(s: Rep[String])(implicit ctx: SourceContext) = string_todouble(s)
 
   object String {
@@ -55,6 +56,7 @@ trait StringOps extends Variables with OverloadHack {
   def string_startswith(s1: Rep[String], s2: Rep[String])(implicit ctx: SourceContext): Rep[Boolean]
   def string_trim(s: Rep[String])(implicit ctx: SourceContext): Rep[String]
   def string_split(s: Rep[String], separators: Rep[String])(implicit ctx: SourceContext): Rep[Array[String]]
+  def string_endsWith(s: Rep[String], e: Rep[String])(implicit ctx: SourceContext): Rep[Boolean]  
   def string_valueof(d: Rep[Any])(implicit ctx: SourceContext): Rep[String]
   def string_todouble(s: Rep[String])(implicit ctx: SourceContext): Rep[Double]
 }
@@ -64,6 +66,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
   case class StringStartsWith(s1: Exp[String], s2: Exp[String]) extends Def[Boolean]
   case class StringTrim(s: Exp[String]) extends Def[String]
   case class StringSplit(s: Exp[String], separators: Exp[String]) extends Def[Array[String]]
+  case class StringEndsWith(s: Exp[String], e: Exp[String]) extends Def[Boolean]  
   case class StringValueOf(a: Exp[Any]) extends Def[String]
   case class StringToDouble(s: Exp[String]) extends Def[Double]
 
@@ -71,11 +74,13 @@ trait StringOpsExp extends StringOps with VariablesExp {
   def string_startswith(s1: Exp[String], s2: Exp[String])(implicit ctx: SourceContext) = StringStartsWith(s1,s2)
   def string_trim(s: Exp[String])(implicit ctx: SourceContext) : Rep[String] = StringTrim(s)
   def string_split(s: Exp[String], separators: Exp[String])(implicit ctx: SourceContext) : Rep[Array[String]] = StringSplit(s, separators)
+  def string_endsWith(s: Rep[String], e: Rep[String])(implicit ctx: SourceContext) = StringEndsWith(s,e)  
   def string_valueof(a: Exp[Any])(implicit ctx: SourceContext) = StringValueOf(a)
   def string_todouble(s: Rep[String])(implicit ctx: SourceContext) = StringToDouble(s)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case StringPlus(a,b) => string_plus(f(a),f(b))
+    case StringEndsWith(s, e) => string_endsWith(f(s),f(e))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
@@ -89,6 +94,7 @@ trait ScalaGenStringOps extends ScalaGenBase {
     case StringStartsWith(s1,s2) => emitValDef(sym, "%s.startsWith(%s)".format(quote(s1),quote(s2)))
     case StringTrim(s) => emitValDef(sym, "%s.trim()".format(quote(s)))
     case StringSplit(s, sep) => emitValDef(sym, "%s.split(%s)".format(quote(s), quote(sep)))
+    case StringEndsWith(s, e) => emitValDef(sym, "%s.endsWith(%s)".format(quote(s), quote(e)))    
     case StringValueOf(a) => emitValDef(sym, "java.lang.String.valueOf(%s)".format(quote(a)))
     case StringToDouble(s) => emitValDef(sym, "%s.toDouble".format(quote(s)))
     case _ => super.emitNode(sym, rhs)

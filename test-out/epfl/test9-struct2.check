@@ -1,5 +1,5 @@
 REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)
-promoting to effect: Sym(21)=Reflect(IfThenElse(Sym(16),Sym(6),Sym(20)),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14)))
+promoting to effect: Sym(21)=Reflect(IfThenElse(Sym(16),Block(Sym(6)),Block(Sym(20))),Summary(false,false,false,false,false,List(Sym(13), Sym(14)),List(),List(),List()),List(Sym(13), Sym(14)))
 depends on  Sym(13)
 depends on  Sym(14)
 /*****************************************
@@ -11,11 +11,11 @@ val x10 = LoopArray(100) { x7 =>
 val x8 = 0.0-x7
 x8
 }
-var x13: Any = x10
+var x13: Array[Double] = x10
 val x11 = LoopArray(100) { x7 => 
 x7
 }
-var x14: Any = x11
+var x14: Array[Double] = x11
 val x4 = LoopArray(100) { x1 => 
 x1
 }

@@ -30,22 +30,31 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
 
   abstract class AbstractIfThenElse[T] extends Def[T] {
     val cond: Exp[Boolean]
-    val thenp: Exp[T]
-    val elsep: Exp[T]
+    val thenp: Block[T]
+    val elsep: Block[T]
   }
   
-  case class IfThenElse[T:Manifest](cond: Exp[Boolean], thenp: Exp[T], elsep: Exp[T]) extends AbstractIfThenElse[T]
+  case class IfThenElse[T:Manifest](cond: Exp[Boolean], thenp: Block[T], elsep: Block[T]) extends AbstractIfThenElse[T]
 
   override def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit ctx: SourceContext) = {
     val a = reifyEffectsHere(thenp)
     val b = reifyEffectsHere(elsep)
+
     ifThenElse(cond,a,b)
   }
 
-  def ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: Rep[T], elsep: Rep[T])(implicit ctx: SourceContext) = { // thenp,elsep reified
+  def ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: Block[T], elsep: Block[T])(implicit ctx: SourceContext) = {
     val ae = summarizeEffects(thenp)
     val be = summarizeEffects(elsep)
-    reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
+    
+    // TODO: make a decision whether we should call reflect or reflectInternal.
+    // the former will look for any read mutable effects in addition to the passed
+    // summary whereas reflectInternal will take ae orElse be literally.
+    // the case where this comes up is if (c) a else b, with a or b mutable.
+    // (see TestMutation, for now sticking to old behavior)
+    
+    //reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
+    reflectEffectInternal(IfThenElse(cond,thenp,elsep), ae orElse be)
   }
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = e match {
@@ -98,11 +107,11 @@ trait IfThenElseFatExp extends IfThenElseExp with BaseFatExp {
 
   abstract class AbstractFatIfThenElse extends FatDef {
     val cond: Exp[Boolean]
-    val thenp: List[Exp[Any]]
-    val elsep: List[Exp[Any]]
+    val thenp: List[Block[Any]]
+    val elsep: List[Block[Any]]
   }
 
-  case class SimpleFatIfThenElse(cond: Exp[Boolean], thenp: List[Exp[Any]], elsep: List[Exp[Any]]) extends AbstractFatIfThenElse
+  case class SimpleFatIfThenElse(cond: Exp[Boolean], thenp: List[Block[Any]], elsep: List[Block[Any]]) extends AbstractFatIfThenElse
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case SimpleFatIfThenElse(c, t, e) => effectSyms(t):::effectSyms(e)
