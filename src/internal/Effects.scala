@@ -297,7 +297,14 @@ trait Effects extends Expressions with Blocks with Utils {
     val mutableInputs = readMutableData(d)
     reflectEffect(d, Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
 */
-    reflectEffect(d, Pure())
+    d match {
+      case Reify(x,_,_) => 
+        // aks: this became a problem after adding global mutable vars to the read deps list. what is the proper way of handling this?
+        // specifically, if we return the reified version of a mutable bound var, we get a Reflect(Reify(..)) error, e.g. mutable Sum 
+        printlog("ignoring read of Reify(): " + d)
+        super.toAtom(d)
+      case _ => reflectEffect(d, Pure())
+    }    
   }
 
   def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
