@@ -7,46 +7,57 @@ import test1._
 import util.OverloadHack
 import scala.reflect.SourceContext
 
-import java.io.{PrintWriter,StringWriter,FileOutputStream}
+import java.io.{ PrintWriter, StringWriter, FileOutputStream }
 import scala.reflect.SourceContext
 
 trait TransformingStuff extends internal.Transforming with ArrayLoopsExp with ArithExp with PrintExp {
 
   // TODO: should call constructor functions instead of directly creating objects (i.e. array_length instead of ArrayLength)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
+  override def mirror[A: Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     //case Copy(a) => f(a)
-    case SimpleLoop(s,i, ForeachElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ForeachElem(f(y))))(mtype(manifest[A]), implicitly[SourceContext])
-    case SimpleLoop(s,i, ArrayElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(g),f(y))))(mtype(manifest[A]), implicitly[SourceContext])
-    case SimpleLoop(s,i, ReduceElem(g,y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(g),f(y))))(mtype(manifest[A]), implicitly[SourceContext])
-    case ArrayIndex(a,i) => toAtom(ArrayIndex(f(a), f(i)))(mtype(manifest[A]), implicitly[SourceContext])
+    case SimpleLoop(s, i, ForeachElem(y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ForeachElem(f(y))))(mtype(manifest[A]), implicitly[SourceContext])
+    case SimpleLoop(s, i, ArrayElem(g, y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(f(g), f(y))))(mtype(manifest[A]), implicitly[SourceContext])
+    case SimpleLoop(s, i, ReduceElem(g, y)) => toAtom(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ReduceElem(f(g), f(y))))(mtype(manifest[A]), implicitly[SourceContext])
+    case ArrayIndex(a, i) => toAtom(ArrayIndex(f(a), f(i)))(mtype(manifest[A]), implicitly[SourceContext])
     case ArrayLength(a) => toAtom(ArrayLength(f(a)))(mtype(manifest[A]), implicitly[SourceContext])
-    case Plus(x,y) => infix_+(f(x), f(y))
-    case Minus(x,y) => infix_-(f(x), f(y))
-    case Times(x,y) => infix_*(f(x), f(y))
-    case Div(x,y) => infix_/(f(x), f(y))
-    case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))
-    case Reify(x, u, es) => toAtom(Reify(f(x), mapOver(f,u), f(es)))(mtype(manifest[A]), implicitly[SourceContext])
-    case _ => super.mirror(e,f)
+    case Plus(x, y) => infix_+(f(x), f(y))
+    case Minus(x, y) => infix_-(f(x), f(y))
+    case Times(x, y) => infix_*(f(x), f(y))
+    case Div(x, y) => infix_/(f(x), f(y))
+    case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f, u), f(es)))
+    case Reify(x, u, es) => toAtom(Reify(f(x), mapOver(f, u), f(es)))(mtype(manifest[A]), implicitly[SourceContext])
+    case _ => super.mirror(e, f)
   }).asInstanceOf[Exp[A]]
 
-  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+  override def mirrorFatDef[A: Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
     case ForeachElem(y) => ForeachElem(f(y))
-    case ArrayElem(g,y) => ArrayElem(f(g),f(y))
-    case ReduceElem(g,y) => ReduceElem(f(g),f(y))
-    case _ => super.mirrorFatDef(e,f)
+    case ArrayElem(g, y) => ArrayElem(f(g), f(y))
+    case ReduceElem(g, y) => ReduceElem(f(g), f(y))
+    case _ => super.mirrorFatDef(e, f)
   }).asInstanceOf[Def[A]]
-    
+
 }
 
+trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaFatLoopsFusionOpt 
 
+trait ScalaGenIteratorLoopsOpt extends ScalaGenIteratorLoopsFat with ScalaFatIteratorFusionOpt  
 
-trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGenIfThenElseFat with LoopFusionOpt {
+trait ScalaFatIteratorFusionOpt extends ScalaFatLoopsFusionOpt {
+  val IR: IteratorLoopsFatExp with IfThenElseFatExp
+  import IR._
+  override def unapplySimpleDomain(e: Def[Int]): Option[Exp[Any]] = e match {
+    case SD(a) => Some(a)
+    case _ => super.unapplySimpleDomain(e)
+  }
+} 
+
+trait ScalaFatLoopsFusionOpt extends ScalaGenArrayLoops with ScalaGenIfThenElseFat with LoopFusionOpt {
   val IR: ArrayLoopsFatExp with IfThenElseFatExp
-  import IR._  
-  
+  import IR._
+
   override def unapplySimpleIndex(e: Def[Any]) = e match {
-    case ArrayIndex(a, i) => Some((a,i))
+    case ArrayIndex(a, i) => Some((a, i))
     case _ => super.unapplySimpleIndex(e)
   }
   override def unapplySimpleDomain(e: Def[Int]): Option[Exp[Any]] = e match {
@@ -55,30 +66,30 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
   }
 
   override def unapplySimpleCollect(e: Def[Any]) = e match {
-    case ArrayElem(Def(Reflect(Yield(_,a), _, _)), _) => Some(a.head)
+    case ArrayElem(Def(Reflect(Yield(_, a), _, _)), _) => Some(a.head)
     case _ => super.unapplySimpleCollect(e)
   }
-  
+
   /*def toAtom2[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
     val tp = findOrCreateDefinition(d, List(pos))
     tp.lhs.head
   }*/
-  
+
   // take d's context (everything between loop body and yield) and duplicate it into r
-  override def plugInHelper[A,T:Manifest,U:Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = context match {
-    case `oldGen`  => plug
-    
+  override def plugInHelper[A, T: Manifest, U: Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = context match {
+    case `oldGen` => plug
+
     case Def(Reify(y, s, e)) =>
       getBlockResultFull(reifyEffects(plugInHelper(oldGen, y, plug)))
-    
+
     case Def(Reflect(IfThenElse(c, Block(a), /*Block(Def(Skip(x)))), _, _))*/ Block(Def(Reify(Def(Reflect(Skip(x), _, b)), _, _)))), u, es)) =>
       // this is wrong but we need to check if it works at all
-      ifThenElse(c, reifyEffects(plugInHelper(oldGen,a,plug)), reifyEffects(skip[U](reflectMutable(Dummy(Const(1))), x)))
-      
-    case Def(Reflect(SimpleLoop(sh,x,ForeachElem(Block(y))), _, _)) =>
-      val body = reifyEffects(plugInHelper(oldGen,y,plug))
-      reflectEffect(SimpleLoop(sh,x,ForeachElem(body)), summarizeEffects(body).star)
-    
+      ifThenElse(c, reifyEffects(plugInHelper(oldGen, a, plug)), reifyEffects(skip[U](reflectMutable(Dummy(Const(1))), x)))
+
+    case Def(Reflect(SimpleLoop(sh, x, ForeachElem(Block(y))), _, _)) =>
+      val body = reifyEffects(plugInHelper(oldGen, y, plug))
+      reflectEffect(SimpleLoop(sh, x, ForeachElem(body)), summarizeEffects(body).star)
+
     case Def(x) =>
       error("Missed me => " + x + " should find " + Def.unapply(oldGen).getOrElse("None"))
   }
@@ -86,12 +97,16 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
   override def applyPlugIntoContext(d: Def[Any], r: Def[Any]) = (d, r) match {
     case (ArrayElem(g, Block(a)), ArrayElem(g2, Block(b))) =>
       ArrayElem(g2, Block(plugInHelper(g, a, b)))
-    case (ReduceElem(g, Block(a)), ArrayElem(g2, Block(b))) => 
+      
+    case (ReduceElem(g, Block(a)), ArrayElem(g2, Block(b))) =>
       ArrayElem(g2, Block(plugInHelper(g, a, b)))
+      
     case (ArrayElem(g, Block(a)), ReduceElem(g2, Block(b))) =>
       ReduceElem(g2, Block(plugInHelper(g, a, b)))
+      
     case (ReduceElem(g, Block(a)), ReduceElem(g2, Block(b))) =>
       ReduceElem(g2, Block(plugInHelper(g, a, b)))
+      
     case _ => super.applyPlugIntoContext(d, r)
   }
 
@@ -114,44 +129,76 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
  * No fusion should be happening.
  */
 trait FusionProg extends Arith with ArrayLoops with Print {
-  
+
   implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
   def test(x: Rep[Unit]) = {
-    
+
     val constant = array(100) { i => 1 }
 
-    val linear = array(100) { i => 2*i }
+    val linear = array(100) { i => 2 * i }
 
     val affine = array(100) { i => constant.at(i) + linear.at(i) }
-    
-    def square(x: Rep[Double]) = x*x
+
+    def square(x: Rep[Double]) = x * x
     def mean(x: Rep[Array[Double]]) = sum(x.length) { i => x.at(i) } / x.length
     def variance(x: Rep[Array[Double]]) = sum(x.length) { i => square(x.at(i)) } / x.length - square(mean(x))
-    
+
     val data = affine
-    
+
     val m = mean(data)
     val v = variance(data)
 
     print(m)
     print(v)
   }
-  
+
 }
+
+trait ItFusionProg1 extends Arith with IteratorLoops with Print with Functions with OrderingOps {
+
+  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+
+  def test(x: Rep[Unit]) = {
+   
+    def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) = {
+      val lambda: Rep[T=>V] = f 
+      array(sd(x))(i => doApply(lambda, x.at(i)))
+    }
+
+    def filter[T: Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) = {
+      val lambda: Rep[T => Boolean] = p
+      arrayIf(sd(x)) { i => (doApply(lambda, (x.at(i))), x.at(i)) }
+    }
+    
+    def flatten[T: Manifest](x: Rep[Array[Array[T]]]) ={ 
+      arrayFlat(sd(x)) { i => x.at(i) }
+    }
+    
+    def flatMap[T: Manifest, V: Manifest](x: Rep[Array[T]])(y: Rep[T] => Rep[Array[V]]) = flatten(map[T, Array[V]](x)(y))
+     
+    val range: Rep[Array[Int]] = input[Int] 
+    val nested = map(range){ x => x + 1 } 
+    val filtered = filter(nested) { i => i > 50 }
+
+    print(filtered)
+  }
+
+}
+
 
 /**
  * Simple stuff map => map.
  */
 trait FusionProg1 extends Arith with ArrayLoops with Print {
-  
+
   implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
   def test(x: Rep[Unit]) = {
-    
+
     def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) =
       array(x.length)(i => f(x.at(i)))
-      
+
     val range = array(100) { i => i }
 
     val odds = map(range) { z => z + 3 }
@@ -160,62 +207,60 @@ trait FusionProg1 extends Arith with ArrayLoops with Print {
 
     print(res)
   }
-  
+
 }
 
 /**
  * Generate => Filter => Reduce chain. Can be fused into a single loop.
  */
 trait FusionProg2 extends Arith with ArrayLoops with Print with OrderingOps {
-  
+
   implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-  
+
   def test(x: Rep[Unit]) = {
-    
-    def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
+
+    def filter[T: Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
       arrayIf(x.length) { i => (p(x.at(i)), x.at(i)) }
-   
+
     def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) =
       array(x.length)(i => f(x.at(i)))
-      
+
     val range = array(100) { i => i }
-    
-    val deadRange = map(range) { i => i + 1}
-    
+
+    val deadRange = map(range) { i => i + 1 }
+
     val dead = filter(range) { z => z > 10 }
-    
+
     val odds = filter(range) { z => z > 50 }
 
-    val res = sum(odds.length) { i => odds.at(i) } 
+    val res = sum(odds.length) { i => odds.at(i) }
 
     print(res)
   }
-  
+
 }
 
-
 trait FusionProg3 extends Arith with ArrayLoops with Print with OrderingOps {
-  
+
   implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-  
+
   def test(x: Rep[Unit]) = {
 
-    def flatten[T:Manifest](x: Rep[Array[Array[T]]]) =
+    def flatten[T: Manifest](x: Rep[Array[Array[T]]]) =
       arrayFlat(x.length) { i => x.at(i) }
-    
+
     val range = array(100) { i => i }
-    
+
     val nested = array(10) { i => range }
 
     val flat = flatten(nested)
-    
+
     val res = sum(flat.length) { i => flat.at(i) }
-        
+
     print(res)
   }
-  
-}
 
+}
 
 trait FusionProg4 extends Arith with ArrayLoops with Print with OrderingOps {
 
@@ -226,19 +271,19 @@ trait FusionProg4 extends Arith with ArrayLoops with Print with OrderingOps {
     def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) =
       array(x.length)(i => f(x.at(i)))
 
-    def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
+    def filter[T: Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
       arrayIf(x.length) { i => (p(x.at(i)), x.at(i)) }
 
-    def flatten[T:Manifest](x: Rep[Array[Array[T]]]) =
+    def flatten[T: Manifest](x: Rep[Array[Array[T]]]) =
       arrayFlat(x.length) { i => x.at(i) }
 
     val range = array(100) { i => i }
-    
+
     val nested = array(10) { i => range }
 
     val flat = flatten(nested)
 
-    val filtered = filter(flat) {i => i > 50 }
+    val filtered = filter(flat) { i => i > 50 }
 
     print(filtered)
   }
@@ -258,22 +303,22 @@ trait FusionProg5 extends Arith with ArrayLoops with Print with OrderingOps {
     def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) =
       array(x.length)(i => f(x.at(i)))
 
-    def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
+    def filter[T: Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
       arrayIf(x.length) { i => (p(x.at(i)), x.at(i)) }
 
-    def flatten[T:Manifest](x: Rep[Array[Array[T]]]) =
+    def flatten[T: Manifest](x: Rep[Array[Array[T]]]) =
       arrayFlat(x.length) { i => x.at(i) }
 
     val range = array(100) { i => i }
-//    val range1 = array(101) { i => i }
+    //    val range1 = array(101) { i => i }
 
     val nested = array(10) { i => range }
 
     val flat = flatten(nested)
 
-    val mapped = map(flat){ i => i + 5 }
+    val mapped = map(flat) { i => i + 5 }
 
-//    val flattenedAgain = flatten(mapped)
+    //    val flattenedAgain = flatten(mapped)
 
     print(mapped)
   }
@@ -293,10 +338,10 @@ trait FusionProg6 extends Arith with ArrayLoops with Print with OrderingOps {
     def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) =
       array(x.length)(i => f(x.at(i)))
 
-    def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
+    def filter[T: Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
       arrayIf(x.length) { i => (p(x.at(i)), x.at(i)) }
 
-    def flatten[T:Manifest](x: Rep[Array[Array[T]]]) =
+    def flatten[T: Manifest](x: Rep[Array[Array[T]]]) =
       arrayFlat(x.length) { i => x.at(i) }
 
     val range = array(1000) { i => i }
@@ -308,11 +353,11 @@ trait FusionProg6 extends Arith with ArrayLoops with Print with OrderingOps {
 
     val filtered1 = filter(flat)(i => i > 1111)
 
-    val mapped = map(filtered1){ i => range1 }
+    val mapped = map(filtered1) { i => range1 }
 
     val flattenedAgain = flatten(mapped)
 
-    val filtered2 = filter(flattenedAgain) {i => i < 2222 }
+    val filtered2 = filter(flattenedAgain) { i => i < 2222 }
 
     val reduced = sum(filtered2.length) { i => filtered2.at(i) }
 
@@ -320,7 +365,6 @@ trait FusionProg6 extends Arith with ArrayLoops with Print with OrderingOps {
   }
 
 }
-
 
 /**
  * Hardest example (includes nesting of flatMaps):
@@ -335,27 +379,27 @@ trait FusionProg7 extends Arith with ArrayLoops with Print with OrderingOps {
     def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) =
       array(x.length)(i => f(x.at(i)))
 
-    def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
+    def filter[T: Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
       arrayIf(x.length) { i => (p(x.at(i)), x.at(i)) }
 
-    def flatten[T:Manifest](x: Rep[Array[Array[T]]]) =
+    def flatten[T: Manifest](x: Rep[Array[Array[T]]]) =
       arrayFlat(x.length) { i => x.at(i) }
 
     val range = array(1000) { i => i }
     val range1 = array(1001) { i => i }
 
     val nested = array(10) { i => range }
-    
-    val nested2 = array(11) { i => nested}
+
+    val nested2 = array(11) { i => nested }
     val flat = flatten(flatten(nested2))
 
     val filtered1 = filter(flat)(i => i > 1111)
 
-    val mapped = map(filtered1){ i => range1 }
+    val mapped = map(filtered1) { i => range1 }
 
     val flattenedAgain = flatten(mapped)
 
-    val filtered2 = filter(flattenedAgain) {i => i < 2222 }
+    val filtered2 = filter(flattenedAgain) { i => i < 2222 }
 
     val reduced = sum(filtered2.length) { i => filtered2.at(i) }
 
@@ -363,7 +407,6 @@ trait FusionProg7 extends Arith with ArrayLoops with Print with OrderingOps {
   }
 
 }
-
 
 /* 
   some thoughts on cse/gvn :
@@ -401,7 +444,7 @@ trait FusionProg7 extends Arith with ArrayLoops with Print with OrderingOps {
       here, cse will be done on the case class representation
 */
 class TestFusion extends FileDiffSuite {
-  
+
   val prefix = "test-out/epfl/test7-"
 
   private[this] def printExceptions(b: => Unit) = {
@@ -602,6 +645,22 @@ class TestFusion extends FileDiffSuite {
         new FusionProg7 with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps {
+            val IR: self.type = self;
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          }
+          codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        }
+      }
+    }
+    assertFileEqualsCheck(prefix + "fusion12")
+  }
+
+  def testItFusion1 = {
+    withOutFile(prefix + "it-fusion1") {
+      printExceptions {
+        new ItFusionProg1 with ArithExp with IteratorLoopsFatExp with PrintExp with IfThenElseFatExp with FunctionsExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 1
+          val codegen = new ScalaGenIteratorLoopsOpt with ScalaGenArith with ScalaGenPrint with ScalaGenIfThenElse with ScalaGenOrderingOps with ScalaGenFunctions {
             val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }

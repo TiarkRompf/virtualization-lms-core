@@ -108,7 +108,8 @@ trait GenericCodegen extends BlockTraversal {
   def emitBlock(y: Block[Any]): Unit = traverseBlock(y)
     
   def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = {
-    throw new GenerationFailedException("don't know how to generate code for: " + rhs)
+    stream.println("don't know how to generate code for: "+rhs)
+//    throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
   
   def emitExternalLib(rhs: Def[Any]): Unit = {

@@ -27,9 +27,8 @@ trait ArrayLoops extends Loops with OverloadHack {
 
 
 trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
-
+  
   case class ForeachElem[T](y: Block[Gen[T]]) extends Def[Gen[T]]
-
   case class ArrayElem[T](g: Exp[Gen[T]], y: Block[Gen[T]]) extends Def[Array[T]]
   case class ReduceElem(g: Exp[Gen[Double]], y: Block[Gen[Double]]) extends Def[Double]
 
@@ -203,8 +202,6 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 trait ArrayLoopsFatExp extends ArrayLoopsExp with LoopsFatExp
 
 
-
-
 trait ScalaGenArrayLoops extends ScalaGenLoops {
   val IR: ArrayLoopsExp
   import IR._
@@ -253,7 +250,6 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
       stream.println("for ("+quote(ii)+" <- 0 until "+quote(s)+") {")
 
       val gens = for ((l,r) <- sym zip rhs if !r.isInstanceOf[ForeachElem[_]]) yield r match {
-        //case ForeachElem(y) =>
         case ArrayElem(g,Block(y)) if g == y => // g == y should indicate selectivity 1.0 (which is not so general)
           (g, (s: List[String]) => {
             stream.println(quote(l) + "("+quote(ii)+") = " + s.head)
@@ -289,6 +285,67 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
   }
 }
 
+
+trait IteratorLoops extends ArrayLoops {
+  def input[T: Manifest]: Rep[Array[T]]
+  def sd[T: Manifest](dep: Rep[Array[T]]): Rep[Int]
+}
+
+trait IteratorLoopsExp extends ArrayLoopsExp {
+  case class InputNode[T] extends Def[Array[T]]
+  case class SD[T: Manifest](dep: Rep[Array[T]]) extends Def[Int]
+  
+  def input[T: Manifest]: Rep[Array[T]] = InputNode[T]()
+  def sd[T: Manifest](dep: Rep[Array[T]]): Rep[Int] = SD(dep)
+  
+}
+
+trait IteratorLoopsFatExp extends ArrayLoopsFatExp with IteratorLoopsExp with LoopsFatExp
+
+trait ScalaGenIteratorLoopsFat extends ScalaGenArrayLoopsFat with ScalaGenLoopsFat {
+  val IR: IteratorLoopsFatExp with IfThenElseFatExp
+  import IR._
+  
+  override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef) = rhs match {
+    case SimpleFatLoop(Def(SD(dep)),x,rhs) =>
+      val ii = x
+      // here we need to extract the value from the loop
+      stream.println("val " + quote(sym.head) + " = " + quote(dep) +".mapPartitions(it => {")
+      
+      for ((l,r) <- sym zip rhs) {
+        r match {
+          case ForeachElem(y) =>
+            stream.println("val " + quote(l) + " = () // foreach (this is perfectly fine)")
+            stream.println("while(???) { // what to do with the iterator")
+          case ArrayElem(g,y) =>
+            // if not foreach elem
+            stream.println("val inArray = it.toArray")
+            stream.println("var " + quote(ii) + " = 0")
+            stream.println("val " + quote(l) + "_buff = new Array[" + stripGen(y.tp)  + "](inArray.size)")
+            stream.println("while ("+quote(ii)+" < inArray.size) {")
+        }
+      }
+      
+      val gens = for ((l,r) <- sym zip rhs if !r.isInstanceOf[ForeachElem[_]]) yield r match {
+        case ArrayElem(g,Block(y)) =>
+          (g, (s: List[String]) => {
+            stream.println(quote(l) + "_buff("+quote(ii)+") = " + s.head)
+            stream.println("val " + quote(g) + " = ()")
+          })
+      }
+
+      withGens(gens) {
+        emitFatBlock(syms(rhs).map(Block(_)))
+      }
+      stream.println(quote(ii) + " = " + quote(ii) + " + 1")
+      stream.println("}")
+      stream.println(quote(sym.head) + "_buff.iterator")
+      stream.println("})")
+
+    case _ => super.emitFatNode(sym, rhs)
+  }
+}
+
 trait Arrays extends Base with OverloadHack {
   def zeroes(n: Rep[Int]): Rep[Array[Int]]
   def infix_update(a: Rep[Array[Int]], x: Rep[Int], v: Rep[Int]): Rep[Array[Int]]
@@ -317,7 +374,7 @@ trait ScalaGenArrays extends ScalaGenEffect {
     case ArrayPlus(a,b) =>  
       emitValDef(sym, "new Array[Int](" + quote(a) + ".length)")
       stream.println("arrayPlus("+ quote(sym) + "," + quote(a) + "," + quote(b) + ")")
+    
     case _ => super.emitNode(sym, rhs)
   }
 }
-
