@@ -62,11 +62,11 @@ trait StructExp extends StructOps with BaseExp with EffectExp /*with ObjectOpsEx
     case _ => None
   }
 
-  def structName[T](m: Manifest[T]): String = m match {
+  def structName[T](m: Manifest[T]): String = "Map[String,Any]" /*m match {
     case rm: RefinedManifest[T] => rm.erasure.getSimpleName + rm.fields.map(f => structName(f._2)).mkString("")
     case _ if (m <:< manifest[AnyVal]) => m.toString
     case _ => m.erasure.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
-  }
+  } */
   
   val encounteredStructs = new scala.collection.mutable.HashMap[Manifest[Any], Map[String, Manifest[Any]]]
   def registerStruct(m: Manifest[Any], elems: Map[String, Rep[Any]]) {
@@ -239,10 +239,12 @@ trait ScalaGenStruct extends ScalaGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
     case Struct(tag, elems) =>
       registerStruct(sym.Type, elems)
-      emitValDef(sym, "new " + structName(sym.Type) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
+      emitValDef(sym, "Map(" + elems.map(e => "\"" + e._1 + "\"->" + quote(e._2)).mkString(",") + ") //" + tag)
+      //emitValDef(sym, "new " + structName(sym.Type) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
       println("WARNING: emitting " + tag.toString + " struct " + quote(sym))
     case f@Field(struct, index) =>
-      emitValDef(sym, quote(struct) + "." + index)
+      emitValDef(sym, quote(struct) + "(\"" + index + "\").asInstanceOf[" + remap(sym.Type) + "]")
+      //emitValDef(sym, quote(struct) + "." + index)
       println("WARNING: emitting field access: " + quote(struct) + "." + index)
     case _ => super.emitNode(sym, rhs)
   }

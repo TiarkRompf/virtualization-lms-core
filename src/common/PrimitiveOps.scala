@@ -81,6 +81,9 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def infix_&(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_binaryand(lhs, rhs)
   def infix_|(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_binaryor(lhs, rhs)
   def infix_^(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_binaryxor(lhs, rhs)
+  def infix_<<(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_leftshift(lhs, rhs)
+  def infix_>>(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_rightshiftarith(lhs, rhs)
+  def infix_>>>(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_rightshiftlogical(lhs, rhs)
 
   def obj_integer_parse_int(s: Rep[String])(implicit ctx: SourceContext): Rep[Int]
   def obj_int_max_value(implicit ctx: SourceContext): Rep[Int]
@@ -90,6 +93,9 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def int_binaryor(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
   def int_binaryand(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
   def int_binaryxor(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
+  def int_leftshift(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
+  def int_rightshiftarith(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
+  def int_rightshiftlogical(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int]
   def int_float_value(lhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float]
   def int_double_value(lhs: Rep[Int])(implicit ctx: SourceContext): Rep[Double]
   def int_bitwise_not(lhs: Rep[Int])(implicit ctx: SourceContext) : Rep[Int]
@@ -122,6 +128,9 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class IntBinaryOr(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntBinaryAnd(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntBinaryXor(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntShiftLeft(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntShiftRightArith(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntShiftRightLogical(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntDoubleValue(lhs: Exp[Int]) extends Def[Double]
   case class IntFloatValue(lhs: Exp[Int]) extends Def[Float]
   case class IntBitwiseNot(lhs: Exp[Int]) extends Def[Int]
@@ -134,6 +143,9 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   def int_binaryor(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntBinaryOr(lhs, rhs)
   def int_binaryand(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntBinaryAnd(lhs, rhs)
   def int_binaryxor(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntBinaryXor(lhs, rhs)
+  def int_leftshift(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntShiftLeft(lhs, rhs)
+  def int_rightshiftarith(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntShiftRightArith(lhs, rhs)
+  def int_rightshiftlogical(lhs: Exp[Int], rhs: Exp[Int])(implicit ctx: SourceContext) = IntShiftRightLogical(lhs, rhs)
   def int_double_value(lhs: Exp[Int])(implicit ctx: SourceContext) = IntDoubleValue(lhs)
   def int_float_value(lhs: Exp[Int])(implicit ctx: SourceContext) = IntFloatValue(lhs)
   def int_bitwise_not(lhs: Exp[Int])(implicit ctx: SourceContext) = IntBitwiseNot(lhs)
@@ -168,6 +180,9 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
     case IntBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
     case IntBinaryXor(lhs,rhs) => emitValDef(sym, quote(lhs) + " ^ " + quote(rhs))
+    case IntShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
+    case IntShiftRightArith(lhs, rhs) => emitValDef(sym, quote(lhs) + " >> " + quote(rhs))
+    case IntShiftRightLogical(lhs, rhs) => emitValDef(sym, quote(lhs) + " >>> " + quote(rhs))
     case IntDoubleValue(lhs) => emitValDef(sym, quote(lhs) + ".doubleValue()")
     case IntFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
     case IntBitwiseNot(lhs) => emitValDef(sym, "~" + quote(lhs))
