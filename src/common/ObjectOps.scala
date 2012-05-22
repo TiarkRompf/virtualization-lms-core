@@ -8,7 +8,7 @@ import scala.reflect.SourceContext
 
 trait ObjectOps extends Variables with OverloadHack {
   def infix_toString(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
-  def infix_toStringL(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
+  def infix_ToString(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
   def infix_unsafeImmutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext) = object_unsafe_immutable(lhs)
 
   def object_tostring(lhs: Rep[Any])(implicit pos: SourceContext): Rep[String]
