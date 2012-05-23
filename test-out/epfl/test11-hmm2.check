@@ -1,77 +1,51 @@
-promoting to effect: Sym(3)=Reflect(ArrayApply(Sym(2),Const(0)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2)))
-depends on  Sym(2)
-promoting to effect: Sym(14)=Reflect(ArrayApply(Sym(2),Const(1)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(7), Sym(12)))
-depends on  Sym(2)
-promoting to effect: Sym(19)=Reflect(ArrayApply(Sym(2),Const(2)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(7), Sym(12), Sym(16), Sym(18)))
-depends on  Sym(2)
-promoting to effect: Sym(26)=Reflect(ArrayApply(Sym(2),Const(3)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List())
-depends on  Sym(2)
-promoting to effect: Sym(35)=Reflect(ArrayApply(Sym(2),Const(4)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(7), Sym(12), Sym(16), Sym(18), Sym(21), Sym(23), Sym(34)))
-depends on  Sym(2)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test(px27:Array[Int]) extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
-val x2 = new Array[Int](5)
-val x3 = x2(0)
-val x1 = Array(3,1,5,-2,4)
-val x5 = x1(0)
-val x6 = x3 + x5
-val x7 = x2(0) = x6
-val x10 = x1(3)
-val x11 = x6 + x10
-val x12 = x2(0) = x11
-val x14 = x2(1)
-val x16 = x2(1) = x14
-val x9 = x1(2)
-val x17 = x14 + x9
-val x18 = x2(1) = x17
-val x19 = x2(2)
-val x21 = x2(2) = x19
-val x8 = x1(1)
-val x22 = x19 + x8
-val x23 = x2(2) = x22
-val x27 = px27 // static data: Array(0,0,1,1,1)
-var x25 : Int = 0
-val x34 = while (x25 < 5) {
-val x26 = x2(3)
-val x28 = x27(x25)
-val x29 = x1(x25)
-val x30 = x28 * x29
-val x31 = x26 + x30
-val x32 = x2(3) = x31
+class Test(px26:Array[Int]) extends ((Array[Int])=>(Array[Int])) {
+def apply(x0:Array[Int]): Array[Int] = {
+val x1 = new Array[Int](5)
+val x2 = x1(0)
+val x4 = x0(0)
+val x5 = x2 + x4
+val x6 = x1(0) = x5
+val x9 = x0(3)
+val x10 = x5 + x9
+val x11 = x1(0) = x10
+val x13 = x1(1)
+val x15 = x1(1) = x13
+val x8 = x0(2)
+val x16 = x13 + x8
+val x17 = x1(1) = x16
+val x18 = x1(2)
+val x20 = x1(2) = x18
+val x7 = x0(1)
+val x21 = x18 + x7
+val x22 = x1(2) = x21
+val x26 = px26 // static data: Array(0,0,1,1,1)
+var x24 : Int = 0
+val x33 = while (x24 < 5) {
+val x25 = x1(3)
+val x27 = x26(x24)
+val x28 = x0(x24)
+val x29 = x27 * x28
+val x30 = x25 + x29
+val x31 = x1(3) = x30
 ()
-x25 = x25 + 1
+x24 = x24 + 1
 }
-val x35 = x2(4)
-val x37 = x2(4) = x35
-val x38 = x35 + x9
-val x39 = x2(4) = x38
-val x13 = x1(4)
-val x40 = x38 + x13
-val x41 = x2(4) = x40
-val x45 = x2.foreach{
-x42 => 
-val x43 = println(x42)
-x43
-}
-x45
+val x34 = x1(4)
+val x36 = x1(4) = x34
+val x37 = x34 + x8
+val x38 = x1(4) = x37
+val x12 = x0(4)
+val x39 = x37 + x12
+val x40 = x1(4) = x39
+x1
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
-promoting to effect: Sym(51)=Reflect(ArrayApply(Sym(50),Const(0)),Summary(false,false,false,false,false,List(Sym(50)),List(Sym(50)),List(),List()),List(Sym(50)))
-depends on  Sym(50)
-promoting to effect: Sym(57)=Reflect(ArrayApply(Sym(50),Const(1)),Summary(false,false,false,false,false,List(Sym(50)),List(Sym(50)),List(),List()),List(Sym(50), Sym(54), Sym(56)))
-depends on  Sym(50)
-promoting to effect: Sym(62)=Reflect(ArrayApply(Sym(50),Const(2)),Summary(false,false,false,false,false,List(Sym(50)),List(Sym(50)),List(),List()),List(Sym(50), Sym(54), Sym(56), Sym(59), Sym(61)))
-depends on  Sym(50)
-promoting to effect: Sym(68)=Reflect(ArrayApply(Sym(50),Const(3)),Summary(false,false,false,false,false,List(Sym(50)),List(Sym(50)),List(),List()),List())
-depends on  Sym(50)
-promoting to effect: Sym(77)=Reflect(ArrayApply(Sym(50),Const(4)),Summary(false,false,false,false,false,List(Sym(50)),List(Sym(50)),List(),List()),List(Sym(50), Sym(54), Sym(56), Sym(59), Sym(61), Sym(64), Sym(66), Sym(76)))
-depends on  Sym(50)
 compilation: ok
 1
 5
