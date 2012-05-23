@@ -18,6 +18,12 @@ trait LiftPrimitives {
   implicit def chainFloatToRepDouble[A:Manifest](x: A)(implicit c: A => Rep[Float]): Rep[Double] = repFloatToRepDouble(c(x))
 }
 
+
+/**
+ * This file is extremely boilerplate and redundant and does not take advantage of any of
+ * Scala's type hierarchy to reduce the amount of IR nodes or code generation require.
+ * It is in semi-desperate need of a refactor.
+ */
 trait PrimitiveOps extends Variables with OverloadHack { 
   this: ImplicitOps =>
 
@@ -79,6 +85,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
     def floatValueL()(implicit ctx: SourceContext) = int_float_value(lhs)
     def doubleValue()(implicit ctx: SourceContext) = int_double_value(lhs)
     def unary_~()(implicit ctx: SourceContext) = int_bitwise_not(lhs)
+    def toLong(implicit ctx: SourceContext) = int_tolong(lhs)
   }
 
   def infix_/(lhs: Rep[Int], rhs: Rep[Int])(implicit ctx: SourceContext) = int_divide(lhs, rhs)
@@ -99,6 +106,22 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def int_float_value(lhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float]
   def int_double_value(lhs: Rep[Int])(implicit ctx: SourceContext): Rep[Double]
   def int_bitwise_not(lhs: Rep[Int])(implicit ctx: SourceContext) : Rep[Int]
+  def int_tolong(lhs: Rep[Int])(implicit ctx: SourceContext) : Rep[Long]
+  
+  /**
+   * Long
+   */
+  def infix_&(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded1, ctx: SourceContext) = long_binaryand(lhs, rhs)
+  def infix_|(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded1, ctx: SourceContext) = long_binaryor(lhs, rhs)
+  def infix_<<(lhs: Rep[Long], rhs: Rep[Int])(implicit ctx: SourceContext) = long_shiftleft(lhs, rhs)
+  def infix_>>>(lhs: Rep[Long], rhs: Rep[Int])(implicit ctx: SourceContext) = long_shiftright_unsigned(lhs, rhs)
+  def infix_toInt(lhs: Rep[Long])(implicit o: Overloaded1, ctx: SourceContext) = long_toint(lhs)
+    
+  def long_binaryand(lhs: Rep[Long], rhs: Rep[Long])(implicit ctx: SourceContext): Rep[Long]
+  def long_binaryor(lhs: Rep[Long], rhs: Rep[Long])(implicit ctx: SourceContext): Rep[Long]
+  def long_shiftleft(lhs: Rep[Long], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Long]
+  def long_shiftright_unsigned(lhs: Rep[Long], rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Long]
+  def long_toint(lhs: Rep[Long])(implicit ctx: SourceContext): Rep[Int]
 }
 
 trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
@@ -136,6 +159,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class IntDoubleValue(lhs: Exp[Int]) extends Def[Double]
   case class IntFloatValue(lhs: Exp[Int]) extends Def[Float]
   case class IntBitwiseNot(lhs: Exp[Int]) extends Def[Int]
+  case class IntToLong(lhs: Exp[Int]) extends Def[Long]
 
   def obj_integer_parse_int(s: Rep[String])(implicit ctx: SourceContext) = ObjIntegerParseInt(s)
   def obj_int_max_value(implicit ctx: SourceContext) = ObjIntMaxValue()
@@ -149,6 +173,22 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   def int_double_value(lhs: Exp[Int])(implicit ctx: SourceContext) = IntDoubleValue(lhs)
   def int_float_value(lhs: Exp[Int])(implicit ctx: SourceContext) = IntFloatValue(lhs)
   def int_bitwise_not(lhs: Exp[Int])(implicit ctx: SourceContext) = IntBitwiseNot(lhs)
+  def int_tolong(lhs: Exp[Int])(implicit ctx: SourceContext) = IntToLong(lhs)
+  
+  /**
+   * Long
+   */
+  case class LongBinaryOr(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
+  case class LongBinaryAnd(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
+  case class LongShiftLeft(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
+  case class LongShiftRightUnsigned(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
+  case class LongToInt(lhs: Exp[Long]) extends Def[Int]
+
+  def long_binaryor(lhs: Exp[Long], rhs: Exp[Long])(implicit ctx: SourceContext) = LongBinaryOr(lhs,rhs)
+  def long_binaryand(lhs: Exp[Long], rhs: Exp[Long])(implicit ctx: SourceContext) = LongBinaryAnd(lhs,rhs)  
+  def long_shiftleft(lhs: Exp[Long], rhs: Exp[Int])(implicit ctx: SourceContext) = LongShiftLeft(lhs,rhs)
+  def long_shiftright_unsigned(lhs: Exp[Long], rhs: Exp[Int])(implicit ctx: SourceContext) = LongShiftRightUnsigned(lhs,rhs)
+  def long_toint(lhs: Exp[Long])(implicit ctx: SourceContext) = LongToInt(lhs)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
@@ -186,6 +226,12 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntDoubleValue(lhs) => emitValDef(sym, quote(lhs) + ".doubleValue()")
     case IntFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
     case IntBitwiseNot(lhs) => emitValDef(sym, "~" + quote(lhs))
+    case IntToLong(lhs) => emitValDef(sym, quote(lhs) + ".toLong")
+    case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
+    case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))    
+    case LongShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
+    case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, quote(lhs) + " >>> " + quote(rhs))    
+    case LongToInt(lhs) => emitValDef(sym, quote(lhs) + ".toInt")
     case _ => super.emitNode(sym, rhs)
   }
 }

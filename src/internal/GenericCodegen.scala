@@ -104,6 +104,7 @@ trait GenericCodegen extends Traversal {
     case Const(s: String) => "\""+s+"\""
     case Const(null) => "null" // why is null getting lifted now? something to do with Equal
     case Const(f: Float) => "%1.10f".format(f) + "f"
+    case Const(l: Long) => l.toString + "L"
     case Const(z) => z.toString
     case Sym(n) => "x"+n
     case null => "null"
