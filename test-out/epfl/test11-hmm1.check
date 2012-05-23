@@ -1,0 +1,81 @@
+promoting to effect: Sym(3)=Reflect(ArrayApply(Sym(2),Const(0)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2)))
+depends on  Sym(2)
+promoting to effect: Sym(10)=Reflect(ArrayApply(Sym(2),Const(1)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(6), Sym(9)))
+depends on  Sym(2)
+promoting to effect: Sym(14)=Reflect(ArrayApply(Sym(2),Const(2)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(6), Sym(9), Sym(13)))
+depends on  Sym(2)
+promoting to effect: Sym(20)=Reflect(ArrayApply(Sym(2),Const(3)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List())
+depends on  Sym(2)
+promoting to effect: Sym(29)=Reflect(ArrayApply(Sym(2),Const(4)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(6), Sym(9), Sym(13), Sym(17), Sym(28)))
+depends on  Sym(2)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test(px21:Array[Int]) extends ((Int)=>(Any)) {
+def apply(x0:Int): Any = {
+val x2 = new Array[Int](5)
+val x3 = x2(0)
+val x1 = Array(3,1,5,-2,4)
+val x4 = x1(0)
+val x5 = x3 + x4
+val x6 = x2(0) = x5
+val x7 = x1(3)
+val x8 = x5 + x7
+val x9 = x2(0) = x8
+val x10 = x2(1)
+val x11 = x1(2)
+val x12 = x10 + x11
+val x13 = x2(1) = x12
+val x14 = x2(2)
+val x15 = x1(1)
+val x16 = x14 + x15
+val x17 = x2(2) = x16
+val x21 = px21 // static data: Array(0,0,1,1,1)
+var x19 : Int = 0
+val x28 = while (x19 < 5) {
+val x20 = x2(3)
+val x22 = x21(x19)
+val x23 = x1(x19)
+val x24 = x22 * x23
+val x25 = x20 + x24
+val x26 = x2(3) = x25
+x26
+x19 = x19 + 1
+}
+val x29 = x2(4)
+val x30 = x29 + x11
+val x31 = x2(4) = x30
+val x32 = x1(4)
+val x33 = x30 + x32
+val x34 = x2(4) = x33
+val x38 = x2.foreach{
+x35 => 
+val x36 = println(x35)
+x36
+}
+x38
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+promoting to effect: Sym(44)=Reflect(ArrayApply(Sym(43),Const(0)),Summary(false,false,false,false,false,List(Sym(43)),List(Sym(43)),List(),List()),List(Sym(43)))
+depends on  Sym(43)
+promoting to effect: Sym(49)=Reflect(ArrayApply(Sym(43),Const(1)),Summary(false,false,false,false,false,List(Sym(43)),List(Sym(43)),List(),List()),List(Sym(43), Sym(46), Sym(48)))
+depends on  Sym(43)
+promoting to effect: Sym(52)=Reflect(ArrayApply(Sym(43),Const(2)),Summary(false,false,false,false,false,List(Sym(43)),List(Sym(43)),List(),List()),List(Sym(43), Sym(46), Sym(48), Sym(51)))
+depends on  Sym(43)
+promoting to effect: Sym(56)=Reflect(ArrayApply(Sym(43),Const(3)),Summary(false,false,false,false,false,List(Sym(43)),List(Sym(43)),List(),List()),List())
+depends on  Sym(43)
+promoting to effect: Sym(65)=Reflect(ArrayApply(Sym(43),Const(4)),Summary(false,false,false,false,false,List(Sym(43)),List(Sym(43)),List(),List()),List(Sym(43), Sym(46), Sym(48), Sym(51), Sym(54), Sym(64)))
+depends on  Sym(43)
+<stdin>:32: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
+x62
+^
+one warning found
+compilation: ok
+1
+5
+1
+7
+9
