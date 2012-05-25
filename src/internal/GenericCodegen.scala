@@ -76,6 +76,7 @@ trait GenericCodegen extends Traversal {
       
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s+"\""
+    case Const(c: Char) => "'"+c+"'"
     case Const(null) => "null" // why is null getting lifted now? something to do with Equal
     case Const(f: Float) => f.toString + "f"
     case Const(z) => z.toString

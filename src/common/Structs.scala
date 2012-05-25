@@ -232,6 +232,63 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
 
 
 
+
+trait BaseGenFatStruct extends GenericFatCodegen {
+  val IR: StructFatExpOptCommon // TODO: restructure traits, maybe move this to if then else codegen?
+    import IR._
+
+    override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+      case p@Phi(c,a,u,b,v) =>
+        emitValDef(sym, "XXX " + rhs + " // parent " + quote(p.parent))
+      case _ => super.emitNode(sym, rhs)
+    }
+
+
+    // TODO: implement regular fatten ?
+
+    override def fattenAll(e: List[TP[Any]]): List[TTP] = {
+      val m = e collect {
+        case t@TP(sym, p @ Phi(c,a,u,b,v)) => t
+      } groupBy {
+        case TP(sym, p @ Phi(c,a,u,b,v)) => p.parent
+      }
+
+      //println("grouped: ")
+      //println(m.mkString("\n"))
+      def fatphi(s:Sym[Unit]) = m.get(s).map { phis =>
+        val ss = phis collect { case TP(s, _) => s }
+        val us = phis collect { case TP(_, Phi(c,a,u,b,v)) => u } // assert c,a,b match
+        val vs = phis collect { case TP(_, Phi(c,a,u,b,v)) => v }
+        val c  = phis collect { case TP(_, Phi(c,a,u,b,v)) => c } reduceLeft { (c1,c2) => assert(c1 == c2); c1 }
+        TTP(ss, SimpleFatIfThenElse(c,us,vs))
+      }
+      def fatif(s:Sym[Unit],c:Exp[Boolean],a:Block[Unit],b:Block[Unit]) = fatphi(s) match {
+        case Some(TTP(ss, SimpleFatIfThenElse(c2,us,vs))) =>
+          assert(c == c2)
+          TTP(s::ss, SimpleFatIfThenElse(c,a::us,b::vs))
+        case _ =>
+          TTP(s::Nil, SimpleFatIfThenElse(c,a::Nil,b::Nil))
+      }
+
+      val orphans = m.keys.toList.filterNot(k => e exists (_.sym == k)) // parent if/else might have been removed!
+
+      val r = e.flatMap {
+        case TP(sym, p@Phi(c,a,u,b,v)) => Nil
+        case TP(sym:Sym[Unit], IfThenElse(c,a:Block[Unit],b:Block[Unit])) => List(fatif(sym,c,a,b))
+        case TP(sym:Sym[Unit], Reflect(IfThenElse(c,a:Block[Unit],b:Block[Unit]),_,_)) => List(fatif(sym,c,a,b))
+        case t => List(fatten(t))
+      } ++ orphans.map { case s: Sym[Unit] => fatphi(s).get } // be fail-safe here?
+
+      r.foreach(println)
+      r
+    }
+}
+
+
+trait ScalaGenFatStruct extends ScalaGenStruct with BaseGenFatStruct
+
+trait CudaGenFatStruct extends CudaGenStruct with BaseGenFatStruct
+
 trait ScalaGenStruct extends ScalaGenBase {
   val IR: StructExp
   import IR._
@@ -268,54 +325,20 @@ trait ScalaGenStruct extends ScalaGenBase {
 
 }
 
-trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
-  val IR: StructFatExpOptCommon // TODO: restructure traits, maybe move this to if then else codegen?
+trait CudaGenStruct extends CudaGenBase {
+  val IR: StructExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
-    case p@Phi(c,a,u,b,v) =>
-      emitValDef(sym, "XXX " + rhs + " // parent " + quote(p.parent))
     case _ => super.emitNode(sym, rhs)
   }
-  
 
-  // TODO: implement regular fatten ?
-
-  override def fattenAll(e: List[TP[Any]]): List[TTP] = {
-    val m = e collect { 
-      case t@TP(sym, p @ Phi(c,a,u,b,v)) => t
-    } groupBy {
-      case TP(sym, p @ Phi(c,a,u,b,v)) => p.parent
-    }
-
-    //println("grouped: ")
-    //println(m.mkString("\n"))
-    def fatphi(s:Sym[Unit]) = m.get(s).map { phis =>
-      val ss = phis collect { case TP(s, _) => s }
-      val us = phis collect { case TP(_, Phi(c,a,u,b,v)) => u } // assert c,a,b match
-      val vs = phis collect { case TP(_, Phi(c,a,u,b,v)) => v }
-      val c  = phis collect { case TP(_, Phi(c,a,u,b,v)) => c } reduceLeft { (c1,c2) => assert(c1 == c2); c1 }
-      TTP(ss, SimpleFatIfThenElse(c,us,vs))
-    }
-    def fatif(s:Sym[Unit],c:Exp[Boolean],a:Block[Unit],b:Block[Unit]) = fatphi(s) match {
-      case Some(TTP(ss, SimpleFatIfThenElse(c2,us,vs))) =>
-        assert(c == c2)
-        TTP(s::ss, SimpleFatIfThenElse(c,a::us,b::vs))
-      case _ =>
-        TTP(s::Nil, SimpleFatIfThenElse(c,a::Nil,b::Nil))
-    }
-
-    val orphans = m.keys.toList.filterNot(k => e exists (_.sym == k)) // parent if/else might have been removed!
-
-    val r = e.flatMap {
-      case TP(sym, p@Phi(c,a,u,b,v)) => Nil
-      case TP(sym:Sym[Unit], IfThenElse(c,a:Block[Unit],b:Block[Unit])) => List(fatif(sym,c,a,b))
-      case TP(sym:Sym[Unit], Reflect(IfThenElse(c,a:Block[Unit],b:Block[Unit]),_,_)) => List(fatif(sym,c,a,b))
-      case t => List(fatten(t))
-    } ++ orphans.map { case s: Sym[Unit] => fatphi(s).get } // be fail-safe here?
-
-    r.foreach(println)
-    r
+  override def remap[A](m: Manifest[A]) = m match {
+    case _ => super.remap(m)
   }
-}
 
+  override def emitDataStructures(path: String) {
+    super.emitDataStructures(path)
+  }
+
+}

@@ -29,9 +29,10 @@ trait CudaCodegen extends GPUCodegen {
     helperFuncHdrStream.print("#include <iostream>\n")
     helperFuncHdrStream.print("#include <limits>\n")
     helperFuncHdrStream.print("#include <jni.h>\n\n")
+    helperFuncHdrStream.print("#define CHAR short\n")
+    helperFuncHdrStream.print("#define jCHAR jshort\n")
     helperFuncHdrStream.print("#include \"DeliteCuda.h\"\n")
-    helperFuncHdrStream.print("typedef jboolean jbool;\n")              // TODO: Fix this
-    helperFuncHdrStream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
+    helperFuncHdrStream.print("#include \"DeliteArray.h\"\n")
   }
 
   override def remap[A](m: Manifest[A]) : String = {
@@ -40,11 +41,14 @@ trait CudaCodegen extends GPUCodegen {
       remap(m.typeArguments.head)
     else {
       m.toString match {
+          case "Boolean" => "bool"
+          case "Byte" => "char"
+          case "Char" => "CHAR"
+          case "Short" => "short"
           case "Int" => "int"
           case "Long" => "long"
           case "Float" => "float"
           case "Double" => "double"
-          case "Boolean" => "bool"
           case "Unit" => "void"
           case "scala.collection.immutable.List[Int]" => "CudaArrayList<int>"  //TODO: Use C++ list
           case _ => throw new Exception("CudaGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
@@ -52,21 +56,44 @@ trait CudaCodegen extends GPUCodegen {
     }
   }
 
-  // TODO: Handle general C datastructure
+  def remapToJNI[A](m: Manifest[A]) : String = {
+    remap(m) match {
+      case "bool" => "Boolean"
+      case "char" => "Byte"
+      case "CHAR" => "Char"
+      case "short" => "Short"
+      case "int" => "Int"
+      case "long" => "Long"
+      case "float" => "Float"
+      case "double" => "Double"
+      case _ => throw new GenerationFailedException("CudaGen: Cannot get array creation JNI function for this type " + remap(m))
+    }
+  }
+
+  // TODO: Move to Delite?
   def copyInputHtoD(sym: Sym[Any]) : String = {
     checkGPUableType(sym.Type)
     remap(sym.Type) match {
-      case "CudaArrayList<int>" => {
+      case "DeliteArray<bool>" | "DeliteArray<char>" | "DeliteArray<CHAR>" | "DeliteArray<short>" | "DeliteArray<int>" | "DeiteArray<long>" | "DeliteArray<float>" | "DeliteArray<double>" =>
         val out = new StringBuilder
-        out.append("\t%s *%s = new %s();\n".format(remap(sym.Type),quote(sym),remap(sym.Type)))
+        val typeArg = sym.Type.typeArguments.head
+        val numBytesStr = "length * sizeof(%s)".format(remap(typeArg))
+        out.append("\tint length = env->GetArrayLength((j%sArray)obj);\n".format(remapToJNI(typeArg).toLowerCase))
+        out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical((j%sArray)obj,0);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase))
+        out.append("\t%s *%s = new %s(length);\n".format(remap(sym.Type),quote(sym),remap(sym.Type)))
+        out.append("\t%s *hostPtr;\n".format(remap(typeArg)))
+        out.append("\tDeliteCudaMallocHost((void**)&hostPtr,%s);\n".format(numBytesStr))
+        out.append("\tmemcpy(hostPtr, dataPtr, %s);\n".format(numBytesStr))
+        out.append("\tDeliteCudaMemcpyHtoDAsync(%s->data, hostPtr, %s);\n".format(quote(sym),numBytesStr))
+        out.append("\tenv->ReleasePrimitiveArrayCritical((j%sArray)obj, dataPtr, 0);\n".format(remapToJNI(typeArg).toLowerCase))
         out.append("\treturn %s;\n".format(quote(sym)))
         out.toString
-      }
       case _ => throw new Exception("CudaGen: copyInputHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.Type)))
     }
   }
 
   def copyOutputDtoH(sym: Sym[Any]) : String = {
+    checkGPUableType(sym.Type)
     if (isPrimitiveType(sym.Type)) {
       val out = new StringBuilder
       out.append("\t%s *ptr;\n".format(remap(sym.Type)))
@@ -75,20 +102,41 @@ trait CudaCodegen extends GPUCodegen {
       out.append("\treturn *ptr;\n")
       out.toString
     }
-    else throw new Exception("CudaGen: copyOutputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
-    /*
-    checkGPUableType(sym.Type)
-    remap(sym.Type) match {
-      case "CudaArrayList<int>" => "\t//TODO: Implement this!\n"
-      case _ => throw new Exception("CudaGen: copyOutputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+    else {
+      remap(sym.Type) match {
+        case "DeliteArray<bool>" | "DeliteArray<char>" | "DeliteArray<CHAR>" | "DeliteArray<short>" | "DeliteArray<int>" | "DeiteArray<long>" | "DeliteArray<float>" | "DeliteArray<double>" =>
+          val out = new StringBuilder
+          val typeArg = sym.Type.typeArguments.head
+          val numBytesStr = "%s.length * sizeof(%s)".format(quote(sym),remap(typeArg))
+          out.append("\tj%sArray arr = env->New%sArray(%s.length);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg),quote(sym)))
+          out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical((j%sArray)arr,0);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase))
+          out.append("\t%s *hostPtr;\n".format(remap(typeArg)))
+          out.append("\tDeliteCudaMallocHost((void**)&hostPtr,%s);\n".format(numBytesStr))
+          out.append("\tDeliteCudaMemcpyDtoHAsync(hostPtr, %s.data, %s);\n".format(quote(sym),numBytesStr))
+          out.append("\tmemcpy(dataPtr, hostPtr, %s);\n".format(numBytesStr))
+          out.append("\tenv->ReleasePrimitiveArrayCritical((j%sArray)arr, dataPtr, 0);\n".format(remapToJNI(typeArg).toLowerCase))
+          out.append("\treturn arr;\n")
+          out.toString
+        case _ => throw new Exception("CudaGen: copyOutputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+      }
     }
-    */
   }
 
   def copyMutableInputDtoH(sym: Sym[Any]) : String = {
     checkGPUableType(sym.Type)
     remap(sym.Type) match {
-      case "CudaArrayList<int>" => "\t//TODO: Implement this!\n"
+      case "DeliteArray<bool>" | "DeliteArray<char>" | "DeliteArray<CHAR>" | "DeliteArray<short>" | "DeliteArray<int>" | "DeiteArray<long>" | "DeliteArray<float>" | "DeliteArray<double>" =>
+        val out = new StringBuilder
+        val typeArg = sym.Type.typeArguments.head
+        val numBytesStr = "length * sizeof(%s)".format(remap(typeArg))
+        out.append("\tint length = %s.length;\n".format(quote(sym)))
+        out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical((j%sArray)obj,0);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase))
+        out.append("\t%s *hostPtr;\n".format(remap(typeArg)))
+        out.append("\tDeliteCudaMallocHost((void**)&hostPtr,%s);\n".format(numBytesStr))
+        out.append("\tDeliteCudaMemcpyDtoHAsync(hostPtr, %s.data, %s);\n".format(quote(sym),numBytesStr))
+        out.append("\tmemcpy(dataPtr, hostPtr, %s);\n".format(numBytesStr))
+        out.append("\tenv->ReleasePrimitiveArrayCritical((j%sArray)obj, dataPtr, 0);\n".format(remapToJNI(typeArg).toLowerCase))
+        out.toString
       case _ => throw new Exception("CudaGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
     }
   }
@@ -173,6 +221,7 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
   
   override def quote(x: Exp[Any]) = x match { // TODO: quirk!
     case Const(s: String) => "\""+s+"\""
+    case Const(s: Char) => "'"+s+"'"
     case Const(null) => "NULL"
     case Const(z) => CudaConsts(x, z.toString)
     case Sym(-1) => "_"
