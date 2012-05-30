@@ -231,18 +231,9 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
 }
 
 
-
-
 trait BaseGenFatStruct extends GenericFatCodegen {
   val IR: StructFatExpOptCommon // TODO: restructure traits, maybe move this to if then else codegen?
     import IR._
-
-    override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
-      case p@Phi(c,a,u,b,v) =>
-        emitValDef(sym, "XXX " + rhs + " // parent " + quote(p.parent))
-      case _ => super.emitNode(sym, rhs)
-    }
-
 
     // TODO: implement regular fatten ?
 
@@ -285,7 +276,16 @@ trait BaseGenFatStruct extends GenericFatCodegen {
 }
 
 
-trait ScalaGenFatStruct extends ScalaGenStruct with BaseGenFatStruct
+trait ScalaGenFatStruct extends ScalaGenStruct with BaseGenFatStruct {
+  val IR: StructFatExpOptCommon 
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+      case p@Phi(c,a,u,b,v) =>
+        emitValDef(sym, "XXX " + rhs + " // parent " + quote(p.parent))
+      case _ => super.emitNode(sym, rhs)
+  }
+}
 
 trait CudaGenFatStruct extends CudaGenStruct with BaseGenFatStruct
 
@@ -309,7 +309,7 @@ trait ScalaGenStruct extends ScalaGenBase {
   override def remap[A](m: Manifest[A]) = m match {
     case s if s <:< manifest[Record] => structName(m)
     case _ => super.remap(m)
-}
+  }
 
   override def emitDataStructures(path: String) {
     val stream = new PrintWriter(path + "Structs.scala")
