@@ -31,4 +31,23 @@ trait CLikeCodegen extends GenericCodegen {
     stream.println("}")
   }
   
+  def isObjectType[A](m: Manifest[A]) : Boolean = {
+    m.toString match {
+      case _ => false
+    }
+  }
+
+}
+
+trait CLikeNestedCodegen extends GenericNestedCodegen with CLikeCodegen {
+  val IR: Expressions with Effects
+  import IR._
+}
+
+trait CLikeFatCodegen extends GenericFatCodegen with CLikeCodegen {
+  val IR: Expressions with Effects with FatExpressions
+  import IR._
+
+  def emitMultiLoopCond(sym: Sym[Any], funcs:List[Block[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]])
+
 }

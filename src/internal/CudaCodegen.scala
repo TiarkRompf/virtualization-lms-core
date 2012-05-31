@@ -12,6 +12,7 @@ trait CudaCodegen extends GPUCodegen {
 
   override def kernelFileExt = "cu"
   override def toString = "cuda"
+  override def devFuncPrefix = "__device__"
 
   override def initializeGenerator(buildDir:String): Unit = {
 
@@ -21,7 +22,7 @@ trait CudaCodegen extends GPUCodegen {
     helperFuncString = new StringBuilder
     hstream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cu"))
     helperFuncHdrStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
-    headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.h"))
+    //headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.h"))
 
     //TODO: Put all the DELITE APIs declarations somewhere
     hstream.print("#include \"helperFuncs.h\"\n")
@@ -33,41 +34,6 @@ trait CudaCodegen extends GPUCodegen {
     helperFuncHdrStream.print("#define jCHAR jshort\n")
     helperFuncHdrStream.print("#include \"DeliteCuda.h\"\n")
     helperFuncHdrStream.print("#include \"DeliteArray.h\"\n")
-  }
-
-  override def remap[A](m: Manifest[A]) : String = {
-    checkGPUableType(m)
-    if (m.erasure == classOf[Variable[AnyVal]])
-      remap(m.typeArguments.head)
-    else {
-      m.toString match {
-          case "Boolean" => "bool"
-          case "Byte" => "char"
-          case "Char" => "CHAR"
-          case "Short" => "short"
-          case "Int" => "int"
-          case "Long" => "long"
-          case "Float" => "float"
-          case "Double" => "double"
-          case "Unit" => "void"
-          case "scala.collection.immutable.List[Int]" => "CudaArrayList<int>"  //TODO: Use C++ list
-          case _ => throw new Exception("CudaGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
-      }
-    }
-  }
-
-  def remapToJNI[A](m: Manifest[A]) : String = {
-    remap(m) match {
-      case "bool" => "Boolean"
-      case "char" => "Byte"
-      case "CHAR" => "Char"
-      case "short" => "Short"
-      case "int" => "Int"
-      case "long" => "Long"
-      case "float" => "Float"
-      case "double" => "Double"
-      case _ => throw new GenerationFailedException("CudaGen: Cannot get array creation JNI function for this type " + remap(m))
-    }
   }
 
   // TODO: Move to Delite?
@@ -208,7 +174,7 @@ trait CudaCodegen extends GPUCodegen {
 }
 
 // TODO: do we need this for each target?
-trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
+trait CudaNestedCodegen extends CLikeNestedCodegen with CudaCodegen {
   val IR: Expressions with Effects
   import IR._
 
@@ -230,7 +196,7 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
   
 }
 
-trait CudaFatCodegen extends GenericFatCodegen with CudaCodegen {
+trait CudaFatCodegen extends CLikeFatCodegen with CudaCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
 
@@ -250,7 +216,7 @@ trait CudaFatCodegen extends GenericFatCodegen with CudaCodegen {
 
     val inputs = getFreeVarBlock(Block(Combine(funcs.map(getBlockResultFull))),Nil).filterNot(quote(_)==quote(idx)).distinct
     val paramStr = (inputs++List(idx)).map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
-    header.append("__device__ bool dev_%s(%s) {\n".format(postfix,paramStr))
+    header.append(devFuncPrefix + " bool dev_%s(%s) {\n".format(postfix,paramStr))
     footer.append("\treturn %s;\n".format(funcs.map(f=>quote(getBlockResult(f))).mkString("&&")))
     footer.append("}\n")
     stream.print(header)

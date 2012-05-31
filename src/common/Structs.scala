@@ -288,6 +288,7 @@ trait ScalaGenFatStruct extends ScalaGenStruct with BaseGenFatStruct {
 }
 
 trait CudaGenFatStruct extends CudaGenStruct with BaseGenFatStruct
+trait OpenCLGenFatStruct extends OpenCLGenStruct with BaseGenFatStruct
 
 trait ScalaGenStruct extends ScalaGenBase {
   val IR: StructExp
@@ -329,16 +330,10 @@ trait CudaGenStruct extends CudaGenBase {
   val IR: StructExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
-    case _ => super.emitNode(sym, rhs)
-  }
+}
 
-  override def remap[A](m: Manifest[A]) = m match {
-    case _ => super.remap(m)
-  }
-
-  override def emitDataStructures(path: String) {
-    super.emitDataStructures(path)
-  }
+trait OpenCLGenStruct extends OpenCLGenBase {
+  val IR: StructExp
+  import IR._
 
 }

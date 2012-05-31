@@ -93,8 +93,12 @@ trait ScalaGenFat extends ScalaFatCodegen with ScalaGenBase
 
 
 trait CLikeGenBase extends CLikeCodegen
+trait CLikeGenEffect extends CLikeNestedCodegen with CLikeGenBase
+trait CLikeGenFat extends CLikeFatCodegen with CLikeGenBase
 
 trait GPUGenBase extends GPUCodegen
+trait GPUGenEffect extends GPUGenBase with CLikeNestedCodegen
+trait GPUGenFat extends GPUGenBase with CLikeFatCodegen
 
 trait CudaGenBase extends CudaCodegen
 trait CudaGenEffect extends CudaNestedCodegen with CudaGenBase

@@ -174,30 +174,14 @@ trait ScalaGenLoopsFat extends ScalaGenLoops with ScalaGenFat with BaseGenLoopsF
 
 }
 
-trait CudaGenLoops extends CudaGenBase with BaseGenLoops {
-  import IR._
+trait CLikeGenLoops extends CLikeGenBase with BaseGenLoops
+trait CLikeGenLoopsFat extends CLikeGenLoops with CLikeGenFat with BaseGenLoopsFat
 
-  //TODO
+trait GPUGenLoops extends GPUGenBase with CLikeGenLoops
+trait GPUGenLoopsFat extends GPUGenLoops with GPUGenFat with CLikeGenLoopsFat 
 
-}
+trait CudaGenLoops extends CudaGenBase with GPUGenLoops
+trait CudaGenLoopsFat extends CudaGenLoops with CudaGenFat with GPUGenLoopsFat
 
-trait CudaGenLoopsFat extends CudaGenLoops with CudaGenFat with BaseGenLoopsFat {
-  import IR._
-
-  //TODO
-
-}
-
-trait OpenCLGenLoops extends OpenCLGenBase with BaseGenLoops {
-  import IR._
-
-  //TODO
-
-}
-
-trait OpenCLGenLoopsFat extends OpenCLGenLoops with OpenCLGenFat with BaseGenLoopsFat {
-  import IR._
-
-  //TODO
-
-}
+trait OpenCLGenLoops extends OpenCLGenBase with GPUGenLoops
+trait OpenCLGenLoopsFat extends OpenCLGenLoops with OpenCLGenFat with GPUGenLoopsFat
