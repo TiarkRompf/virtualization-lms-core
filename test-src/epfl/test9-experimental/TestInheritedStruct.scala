@@ -3,7 +3,7 @@ package epfl
 package test9
 
 import common._
-import internal.{FatExpressions,GenericFatCodegen}
+import internal.{FatExpressions,GenericFatCodegen,GenericNestedCodegen}
 
 
 import test1._
@@ -16,12 +16,34 @@ import util.OverloadHack
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
+/******* Null types *******/
+trait NullOps extends Base{
+  def Null[T:Manifest] : Rep[T]
+}
+
+trait NullOpsExp extends NullOps with EffectExp{
+  case class NullGuy[T]() extends Def[T]
+  def Null[T:Manifest] : Exp[T] = NullGuy[T]()
+}
+
+trait ScalaGenNullOps extends GenericNestedCodegen{
+  val IR: NullOpsExp
+  import IR._
+
+  //quick hack for getting 0 as a null for doubles
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case NullGuy() => emitValDef(sym, "0")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+    
+
 trait ComplexInheritArith extends Arith with ComplexInheritBase with OverloadHack {
   
 
   def infix_+(x: Rep[Complex], y: Rep[Complex]): Rep[Complex] = {
-   val xCart = x.toCartesian
-   val yCart = y.toCartesian
+   val xCart : Rep[CartesianComplex] = x.toCartesian
+   val yCart : Rep[CartesianComplex]= y.toCartesian
    CartesianComplex(xCart.re + yCart.re, xCart.im + yCart.im) 
   }
 //  def infix_-(x: Rep[Complex], y:0 Rep[Complex])(implicit o: Overloaded1): Rep[Complex] = Complex(x.re - y.re, x.im - y.im)
@@ -29,14 +51,14 @@ trait ComplexInheritArith extends Arith with ComplexInheritBase with OverloadHac
   
 }
 
-
 // not very useful to have separate traits for every subclass of 
 // a complex
-trait ComplexInheritBase extends Arith {
-  
+trait ComplexInheritBase extends Arith with MathOps with CastingOps with IfThenElse{
+
   abstract class Complex
   class CartesianComplex extends Complex
   class PolarComplex extends Complex
+  class SubPolarComplex extends PolarComplex
 
   //constructor
   def CartesianComplex(re: Rep[Double], im: Rep[Double]) : Rep[CartesianComplex]
@@ -47,54 +69,100 @@ trait ComplexInheritBase extends Arith {
   def infix_r(c: Rep[PolarComplex]) : Rep[Double]
   def infix_phi(c: Rep[PolarComplex]) : Rep[Double]
 
-  def infix_toCartesian(c: Rep[Complex]): Rep[CartesianComplex]
+  def SubPolarComplex(r: Rep[Double], phi: Rep[Double]): Rep[SubPolarComplex]
 
+  def infix_toCartesian(c: Rep[Complex]): Rep[CartesianComplex] = {
+      if(c.IsInstanceOf[CartesianComplex]) {
+        c.AsInstanceOf[CartesianComplex]
+      }else if(c.IsInstanceOf[PolarComplex]) {
+        val p = c.AsInstanceOf[PolarComplex]
+        CartesianComplex(p.r * math_cos(p.phi), p.r * math_sin(p.phi))
+      }else{
+        CartesianComplex(0, 0)
+      }
+  }
 }
 
+trait SuperIfThenElseExp extends IfThenElseExpOpt with BooleanOpsExp with EqualExpBridge
+
 //the exps
+trait StructInheritanceExp extends StructExpOpt with CastingOpsExp with SuperIfThenElseExp with MathOpsExp{
 
-trait StructInheritanceExp extends StructExp{
+  case class SubclassTag[T](name: ClassTag[T], lineage: List[ClassTag[_ >: T]], mT: Manifest[T]) extends StructTag[T]
 
-  case class SubclassTag[T](name: ClassTag[T], lineage: List[ClassTag[Any]]) extends StructTag[T]
+  //Nodes for generating struct-related casts.. not actually 
+  case class StructIsInstanceOf[A,B](lhs: SimpleStruct[A], mA: Manifest[A], mB: Manifest[B]) extends Def[Boolean]
+  case class StructAsInstanceOf[A,B](lhs: SimpleStruct[A], mA: Manifest[A], mB: Manifest[B]) extends Def[B]
+
+  override def rep_isinstanceof[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) = lhs match {
+      case Def(SimpleStruct(SubclassTag(ClassTag(_), _, mT), _)) => 
+        unit(mT <:< mB)
+
+      //an ifThenElse creates a ClassTag
+      //we can match against it separately. Temporary solution  
+      case s@Def(SimpleStruct(ClassTag(_),_)) => 
+        equals[String, String](Field(s,"clzz", manifest[String]),unit(mB.toString))
+      case _ => 
+        super.rep_isinstanceof(lhs, mA, mB)
+  }
+
+  override def rep_asinstanceof[A, B:Manifest](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext): Exp[B] = lhs match {
+      //this should now work due to the presence of manifests
+      case scls@Def(SimpleStruct(SubclassTag(ClassTag(_), _, _), _)) => 
+        scls.asInstanceOf[Exp[B]]
+      //TODO: quick hack for testing, not real implementation
+      case s@Def(SimpleStruct(ClassTag(_),_)) => s.asInstanceOf[Exp[B]] 
+      case _ => super.rep_asinstanceof(lhs, mA, mB)
+  }
 }
 
 trait ComplexInheritStructExp extends ComplexInheritBase with StructInheritanceExp{
 
   def CartesianComplex(re: Exp[Double], im: Exp[Double]) = {
-    val superclassTag = ClassTag[Any]("Complex") //not ClassTag[Complex]
+    val superclassTag = ClassTag[Complex]("Complex") //not ClassTag[Complex]
     val cartesianTag = ClassTag[CartesianComplex]("CartesianComplex")
-    val subclassTag = SubclassTag[CartesianComplex](cartesianTag, List(superclassTag))
+    val subclassTag = SubclassTag[CartesianComplex](cartesianTag, List(superclassTag), manifest[CartesianComplex])
 
-    struct[CartesianComplex](subclassTag, Map("re"->re, "im"->im))
+    struct[CartesianComplex](subclassTag, Map("clzz"-> unit("CartesianComplex"), "re"->re, "im"->im))
   }
   def infix_re(c: Exp[CartesianComplex]): Exp[Double] = field[Double](c, "re")
   def infix_im(c: Exp[CartesianComplex]): Exp[Double] = field[Double](c, "im")
 
   //Polar complex numbers
   def PolarComplex(r: Exp[Double], phi: Exp[Double]) = {
-    val superclassTag = ClassTag[Any]("Complex") //not ClassTag[Complex]
+    val superclassTag = ClassTag[Complex]("Complex") //not ClassTag[Complex]
     val polarTag = ClassTag[PolarComplex]("PolarComplex")
-    val subclassTag = SubclassTag[PolarComplex](polarTag, List(superclassTag))
+    val subclassTag = SubclassTag[PolarComplex](polarTag, List(superclassTag), manifest[PolarComplex])
 
-    struct[PolarComplex](subclassTag, Map("r"->r, "phi"->phi))
+    struct[PolarComplex](subclassTag, Map("clzz"-> unit("PolarComplex"), "r"->r, "phi"->phi))
   } 
   
   def infix_r(c: Exp[PolarComplex]): Exp[Double] = field[Double](c, "r")
   def infix_phi(c: Exp[PolarComplex]): Exp[Double] = field[Double](c, "phi")
- 
-  def infix_toCartesian(c: Exp[Complex]): Exp[CartesianComplex] = c match {
-    //for now not doing the actual transformation
-    case Def(cp@SimpleStruct(SubclassTag(ClassTag("PolarComplex"), _), _)) => CartesianComplex(0,0)
-    case Def(cc@SimpleStruct(SubclassTag(ClassTag("CartesianComplex"), _), elems)) => CartesianComplex(elems("re").asInstanceOf[Exp[Double]],
-    elems("im").asInstanceOf[Exp[Double]])
+
+  //subPolar complex numbers
+  def SubPolarComplex(r: Exp[Double], phi: Exp[Double]) = {
+    val superclassTag = ClassTag[Complex]("Complex") //not ClassTag[Complex]
+    val parentclassTag = ClassTag[PolarComplex]("PolarComplex")
+    val subpolarTag = ClassTag[SubPolarComplex]("SubPolarComplex")
+    val subclassTag = SubclassTag[SubPolarComplex](subpolarTag, List(parentclassTag, superclassTag), manifest[SubPolarComplex])
+
+    struct[SubPolarComplex](subclassTag, Map("r"->r, "phi"->phi))
   }
- }
+
+}
 
 // ------ struct impl follows, will move to common once stable
-
-trait StructInheritExpOptLoops extends StructExpOptCommon with ArrayLoopsExp with StructInheritanceExp{
+trait StructInheritExpOptLoops extends StructExpOptCommon with StructInheritanceExp /*with ArrayLoopsExp*/with NullOpsExp{
   
   case class ArraySoaTag[T](base: StructTag[T], len: Exp[Int]) extends StructTag[T]
+
+  //in a copy-paste style!
+  def deReiify[T:Manifest](a: Block[T]): (Block[Unit], Rep[T]) = a match { // take Reify(stms, e) and return Reify(stms, ()), e
+    case Block(Def(Reify(x,es,u))) => (Block(Reify(Const(()), es, u)), x)
+    case Block(x) => (Block(Const(())), x)
+  }
+ 
 
   //should assume a topmost type like "Object"
   private def lub(hierarchy1: List[ClassTag[Any]], hierarchy2: List[ClassTag[Any]]) : ClassTag[Any] = {
@@ -107,31 +175,36 @@ trait StructInheritExpOptLoops extends StructExpOptCommon with ArrayLoopsExp wit
     inner(hierarchy1.reverse.head, hierarchy1.reverse.tail, hierarchy2.reverse.tail)
   }
   
-  override def ifThenElse[T:Manifest](cond: Exp[Boolean], a: Block[T], b: Block[T])(implicit pos: SourceContext) = (a,b) match {
-    case (Block(Def(Struct(tagA,elemsA))), Block(Def(Struct(tagB, elemsB)))) => 
-      //match the tags, which can now be subclasses
-      //the superclass is abstract, and has no keySet 
-      (tagA, tagB) match {
-        case (SubclassTag(c1, parents1), SubclassTag(c2, parents2)) => {
+  override def ifThenElse[T:Manifest](cond: Exp[Boolean], a: Block[T], b: Block[T])(implicit pos: SourceContext) = {
+    (deReiify(a),deReiify(b)) match {
+      case ((u, Def(s1@Struct(tagA, elemsA))), (v, Def(Struct(tagB, elemsB)))) =>
+        //match the tags, which can now be subclasses
+        //the superclass is abstract, and has no keySet 
+        (tagA, tagB) match {
+          case (SubclassTag(c1, parents1, _), SubclassTag(c2, parents2, _)) => 
 
-          val hierarchy1 = (c1::parents1).asInstanceOf[List[ClassTag[Any]]]
-          val hierarchy2 = (c2::parents2).asInstanceOf[List[ClassTag[Any]]]
+            val hierarchy1 = (c1::parents1).asInstanceOf[List[ClassTag[Any]]]
+            val hierarchy2 = (c2::parents2).asInstanceOf[List[ClassTag[Any]]]
 
-          //find the least upperbound
-          val commonClass: ClassTag[Any] = lub(hierarchy1, hierarchy2) 
+            //find the least upperbound
+            val commonClass: ClassTag[Any] = lub(hierarchy1, hierarchy2) 
 
-          //merge the keyset of c1 and c2
-          val elemsNewkeys = elemsA.keySet union elemsB.keySet
-          val elemsNew = for (k <- elemsNewkeys) yield (
-            k -> ifThenElse(cond, Block(elemsA.getOrElse(k, 0.asInstanceOf[Exp[Any]])), Block(elemsB.getOrElse(k, 0.asInstanceOf[Exp[Any]]))) //TODO : add sourcecontext
-          )
-          struct(commonClass, elemsNew.toMap).asInstanceOf[Exp[T]]
-        }
+            //merge the keyset of c1 and c2
+            val elemsNewkeys = elemsA.keySet union elemsB.keySet
+            val elemsNew = for (k <- elemsNewkeys) yield (
+              k -> ifThenElse(cond, Block(elemsA.getOrElse(k, Null)), Block(elemsB.getOrElse(k, Null))) //TODO : add sourcecontext
+            )
+            struct(commonClass, elemsNew.toMap).asInstanceOf[Exp[T]]
 
-        case _ => super.ifThenElse(cond, a, b)
+          //another temporary hack
+          case (ClassTag(name1), ClassTag(name2)) =>
+            //assert(name1 == name2)
+            s1
+
+          case _ => super.ifThenElse(cond, a, b)
       }
     case _ => super.ifThenElse(cond, a, b)
-  }
+  }}
 
 /*override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
     case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) => 
@@ -159,6 +232,7 @@ trait StructInheritExpOptLoops extends StructExpOptCommon with ArrayLoopsExp wit
 
 }
 
+
 // ----- test cases
 
 
@@ -171,42 +245,147 @@ class TestInheritedStruct extends FileDiffSuite {
     def test(x: Rep[Int]): Rep[Any]
   }
 
-  trait Impl extends DSL with ComplexInheritStructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
+  trait Impl extends DSL with ComplexInheritStructExp with ArrayLoopsExp with StructInheritExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 1
-    val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenMathOps with ScalaGenOrderingOps with
+    ScalaGenNullOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
 
-  trait ImplFused extends DSL with ComplexInheritStructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
+  trait ImplFused extends DSL with ComplexInheritStructExp with StructInheritExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp  { self => 
     override val verbosity = 1
-    val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenMathOps with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self;
         override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
 
-  
-  
-  def testStruct1 = {
-    withOutFile(prefix+"inheritedstruct1") {
+  def testStruct1a = {
+    withOutFile(prefix+"inheritedstruct1a") {
       // test variable splitting
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var c = CartesianComplex(x.toDouble, 0)
-          c = c + PolarComplex(0,x.toDouble)
+          print(c.toCartesian)
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"inheritedstruct1a")
+  }
+  
+  def testStruct1b = {
+    withOutFile(prefix+"inheritedstruct1b") {
+      // test variable splitting
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          var c = PolarComplex(x.toDouble, 0)
+          print(c.toCartesian)
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"inheritedstruct1b")
+  }
+
+  def testStruct1c = {
+    withOutFile(prefix+"inheritedstruct1c") {
+      // test variable splitting
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          var c = SubPolarComplex(x.toDouble, 0)
+          print(c.toCartesian)
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"inheritedstruct1c")
+  }
+
+  def testStruct2a = {
+    withOutFile(prefix+"inheritedstruct2a") {
+      // test variable splitting
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          var c = CartesianComplex(0, x.toDouble)
+          var d = CartesianComplex(x.toDouble, 0)
+          c = c+d
           print(c)
         }
       }
       new Prog with Impl
     }
-    assertFileEqualsCheck(prefix+"inheritedstruct1")
+    assertFileEqualsCheck(prefix+"inheritedstruct2a")
   }
 
+  def testStruct2b = {
+    withOutFile(prefix+"inheritedstruct2b") {
+      // test variable splitting
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          var c = CartesianComplex(0, x.toDouble)
+          var d = PolarComplex(x.toDouble, 0)
+          c = c+d
+          print(c)
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"inheritedstruct2b")
+  }  
+  
+  def testStruct3a = {
+    withOutFile(prefix+"inheritedstruct3a") {
+      // test variable splitting
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          var c = CartesianComplex(0, x.toDouble)
+          var d = CartesianComplex(x.toDouble, 0)
+          var e = if(x > 0) c else d
+          print(e)
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"inheritedstruct3a")
+  }
+
+  def testStruct3b = {
+    withOutFile(prefix+"inheritedstruct3b") {
+      // test variable splitting
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          var c = CartesianComplex(0, x.toDouble)
+          var d = PolarComplex(x.toDouble, 0)
+          var e = if(x > 0) c else d
+          print(e)
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"inheritedstruct3b")
+  }
+
+  def testStruct4a = {
+    withOutFile(prefix+"inheritedstruct4a") {
+      // test variable splitting
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          var c = CartesianComplex(0, x.toDouble)
+          var d = PolarComplex(x.toDouble, 0)
+          var e = if(x > 0) c else d
+          print(e.toCartesian)
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"inheritedstruct4a")
+  } 
 /*  def testStruct2 = {
     withOutFile(prefix+"struct2") {
       // test basic struct flattening (loops, variables, conditionals)

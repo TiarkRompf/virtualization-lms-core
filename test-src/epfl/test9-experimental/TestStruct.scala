@@ -247,5 +247,4 @@ class TestStruct extends FileDiffSuite {
     }
     assertFileEqualsCheck(prefix+"struct4")
   }
-
 }
