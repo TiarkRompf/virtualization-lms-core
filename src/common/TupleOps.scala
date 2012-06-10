@@ -143,27 +143,27 @@ trait TupleOpsExp extends TupleOps with BaseExp {
   }
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
-    case e@ETuple2(a,b)     => make_tuple2(f(a),f(b))(e.m1,e.m2,implicitly[SourceContext])
-    case e@Tuple2Access1(t) => tuple2_get1(f(t))(e.m,implicitly[SourceContext])
-    case e@Tuple2Access2(t) => tuple2_get2(f(t))(e.m,implicitly[SourceContext])
+    case e@ETuple2(a,b)     => toAtom(ETuple2(f(a),f(b))(e.m1,e.m2))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple2Access1(t) => toAtom(Tuple2Access1(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple2Access2(t) => toAtom(Tuple2Access2(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
 
-    case e@ETuple3(a,b,c)   => make_tuple3(f(a),f(b),f(c))(e.m1,e.m2,e.m3,implicitly[SourceContext])
-    case e@Tuple3Access1(t) => tuple3_get1(f(t))(e.m,implicitly[SourceContext])
-    case e@Tuple3Access2(t) => tuple3_get2(f(t))(e.m,implicitly[SourceContext])
-    case e@Tuple3Access3(t) => tuple3_get3(f(t))(e.m,implicitly[SourceContext])
+    case e@ETuple3(a,b,c)   => toAtom(ETuple3(f(a),f(b),f(c))(e.m1,e.m2,e.m3))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple3Access1(t) => toAtom(Tuple3Access1(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple3Access2(t) => toAtom(Tuple3Access2(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple3Access3(t) => toAtom(Tuple3Access3(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
 
-    case e@ETuple4(a,b,c,d) => make_tuple4(f(a),f(b),f(c),f(d))(e.m1,e.m2,e.m3,e.m4,implicitly[SourceContext])
-    case e@Tuple4Access1(t) => tuple4_get1(f(t))(e.m,implicitly[SourceContext])
-    case e@Tuple4Access2(t) => tuple4_get2(f(t))(e.m,implicitly[SourceContext])
-    case e@Tuple4Access3(t) => tuple4_get3(f(t))(e.m,implicitly[SourceContext])
-    case e@Tuple4Access4(t) => tuple4_get4(f(t))(e.m,implicitly[SourceContext])
+    case e@ETuple4(a,b,c,d) => toAtom(ETuple4(f(a),f(b),f(c),f(d))(e.m1,e.m2,e.m3,e.m4))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple4Access1(t) => toAtom(Tuple4Access1(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple4Access2(t) => toAtom(Tuple4Access2(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple4Access3(t) => toAtom(Tuple4Access3(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple4Access4(t) => toAtom(Tuple4Access4(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
 
-    case e@ETuple5(a,b,c,d,g) => make_tuple5(f(a),f(b),f(c),f(d),f(g))(e.m1,e.m2,e.m3,e.m4,e.m5,implicitly[SourceContext])
-    case e@Tuple5Access1(t)   => tuple5_get1(f(t))(e.m,implicitly[SourceContext])
-    case e@Tuple5Access2(t)   => tuple5_get2(f(t))(e.m,implicitly[SourceContext])
-    case e@Tuple5Access3(t)   => tuple5_get3(f(t))(e.m,implicitly[SourceContext])
-    case e@Tuple5Access4(t)   => tuple5_get4(f(t))(e.m,implicitly[SourceContext])
-    case e@Tuple5Access5(t)   => tuple5_get5(f(t))(e.m,implicitly[SourceContext])
+    case e@ETuple5(a,b,c,d,g) => toAtom(ETuple5(f(a),f(b),f(c),f(d),f(g))(e.m1,e.m2,e.m3,e.m4,e.m5))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple5Access1(t)   => toAtom(Tuple5Access1(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple5Access2(t)   => toAtom(Tuple5Access2(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple5Access3(t)   => toAtom(Tuple5Access3(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple5Access4(t)   => toAtom(Tuple5Access4(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Tuple5Access5(t)   => toAtom(Tuple5Access5(f(t))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
