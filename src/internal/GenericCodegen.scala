@@ -92,10 +92,6 @@ trait GenericCodegen extends Traversal {
     throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
   
-  def emitExternalLib(rhs: Def[Any]): Unit = {
-    throw new GenerationFailedException("don't know how to generate external lib for " + rhs)
-  }
-  
   def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit
     
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] // return free static data in block
