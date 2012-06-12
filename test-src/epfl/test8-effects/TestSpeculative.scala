@@ -8,6 +8,7 @@ import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
 import test7.{ArrayLoops,ArrayLoopsExp,ScalaGenArrayLoops}
 
+import scala.reflect.SourceContext
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
@@ -16,7 +17,7 @@ trait WhileExpOptSpeculative extends WhileExp {
   
   case class PreviousIteration() extends Def[Unit]
   
-  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
+  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit])(implicit ctx: SourceContext) {
 
     def reflectDummy(u: Summary) = reflectEffect(PreviousIteration(), u)
 
@@ -70,11 +71,11 @@ trait ScalaGenWhileOptSpeculative extends ScalaGenWhile {
 
 
 trait OrderingOpsExpOpt extends OrderingOpsExp {
-  override def ordering_lt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[Boolean] = (lhs,rhs) match {
+  override def ordering_lt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit ctx: SourceContext): Rep[Boolean] = (lhs,rhs) match {
     case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].lt(a,b))
     case _ => super.ordering_lt(lhs,rhs)
   }
-  override def ordering_gt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]): Rep[Boolean] = (lhs,rhs) match {
+  override def ordering_gt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit ctx: SourceContext): Rep[Boolean] = (lhs,rhs) match {
     case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].gt(a,b))
     case _ => super.ordering_gt(lhs,rhs)
   }

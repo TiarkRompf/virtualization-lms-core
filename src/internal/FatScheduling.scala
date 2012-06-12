@@ -3,6 +3,7 @@ package internal
 
 import util.GraphUtil
 import scala.collection.mutable.HashMap
+import java.util.IdentityHashMap
 
 trait FatScheduling extends Scheduling {
   val IR: FatExpressions
@@ -22,9 +23,25 @@ trait FatScheduling extends Scheduling {
     GraphUtil.stronglyConnectedComponents[TP[Any]](deps(syms(result)), t => deps(syms(t.rhs))).flatten.reverse
   }
 
+  // PERFORMANCE: 'intersect' calls appear to be a hotspot
+  
+  // checks if a and b share at least one element. O(N^2), but with no allocation and possible early exit.
+  def containsAny(a: List[Sym[Any]], b: List[Sym[Any]]): Boolean = {
+    var aIter = a.iterator
+    while (aIter.hasNext) {
+      val aElem = aIter.next()
+      val bIter = b.iterator
+      while (bIter.hasNext) {
+        if (bIter.next() eq aElem) return true
+      }
+    }
+    false
+  }
+  
   def getFatSchedule(scope: List[TTP])(result: Any): List[TTP] = {
     def deps(st: List[Sym[Any]]): List[TTP] = 
-      scope.filter(d => (st intersect d.lhs).nonEmpty)
+      scope.filter(d => containsAny(st, d.lhs))
+      // scope.filter(d => (st intersect d.lhs).nonEmpty)
 
     val xx = GraphUtil.stronglyConnectedComponents[TTP](deps(syms(result)), t => deps(syms(t.rhs)))
     xx.foreach { x => 
@@ -36,7 +53,8 @@ trait FatScheduling extends Scheduling {
 
   def getCustomFatSchedule(scope: List[TTP])(result: Any)(dsyms: Any => List[Sym[Any]]): List[TTP] = {
     def deps(st: List[Sym[Any]]): List[TTP] = 
-      scope.filter(d => (st intersect d.lhs).nonEmpty)
+      scope.filter(d => containsAny(st, d.lhs))
+      // scope.filter(d => (st intersect d.lhs).nonEmpty)
 
     val xx = GraphUtil.stronglyConnectedComponents[TTP](deps(dsyms(result)), t => deps(dsyms(t.rhs)))
     xx.foreach { x => 
@@ -71,11 +89,12 @@ trait FatScheduling extends Scheduling {
     }
 
     def deps(st: List[Sym[Any]]): List[TTP] =
-      scope.filter(d => (st intersect d.lhs).nonEmpty)
+      scope.filter(d => containsAny(st, d.lhs))
+      // scope.filter(d => (st intersect d.lhs).nonEmpty)
 
     GraphUtil.stronglyConnectedComponents[TTP](deps(mysyms(start)), t => deps(mysyms(t.rhs))).flatten.reverse
   }
-
+    
   def getFatDependentStuff(scope: List[TTP])(sts: List[Sym[Any]]): List[TTP] = {
     /*
      precompute:
@@ -83,14 +102,23 @@ trait FatScheduling extends Scheduling {
      st => all d in scope such that: boundSyms(d.rhs) contains st
     */
     
-    val lhsCache = new HashMap[Sym[Any], List[TTP]]
-    val symsCache = new HashMap[Sym[Any], List[TTP]]
-    val boundSymsCache = new HashMap[Sym[Any], List[TTP]]
+    val lhsCache = new IdentityHashMap[Sym[Any], List[TTP]]()
+    val symsCache = new IdentityHashMap[Sym[Any], List[TTP]]()
+    val boundSymsCache = new IdentityHashMap[Sym[Any], List[TTP]]()
     
-    def putDef(map: HashMap[Sym[Any], List[TTP]], s: Sym[Any], d: TTP): Unit = {
-      map.getOrElse(s, Nil) match {
+    def getOrElse[K,V](map: IdentityHashMap[K, V], s: K)(f: => V) = {
+      var res = map.get(s)
+      if (res == null) res = f
+      res
+    }
+    
+    def putDef(map: IdentityHashMap[Sym[Any], List[TTP]], s: Sym[Any], d: TTP): Unit = {
+      var res = map.get(s)
+      if (res == null) res = Nil
+      // map.getOrElse(s, Nil) match {
+      res match {
         case `d`::ds =>
-        case ds => map(s) = d::ds
+        case ds => map.put(s,d::ds)
       }
     }
     
@@ -103,7 +131,7 @@ trait FatScheduling extends Scheduling {
     sts.distinct.flatMap { st =>
       // could precompute uses as well...
       def uses(s: Sym[Any]): List[TTP] = {
-        lhsCache.getOrElse(s, Nil) ++ (symsCache.getOrElse(s, Nil) filterNot (boundSymsCache.getOrElse(st, Nil) contains _))
+        getOrElse(lhsCache,s)(Nil) ++ getOrElse(symsCache,s)(Nil) filterNot (getOrElse(boundSymsCache,st)(Nil) contains _)
       }
       GraphUtil.stronglyConnectedComponents[TTP](uses(st), t => t.lhs flatMap uses).flatten
     }.distinct

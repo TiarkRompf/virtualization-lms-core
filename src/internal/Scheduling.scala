@@ -2,6 +2,8 @@ package scala.virtualization.lms
 package internal
 
 import util.GraphUtil
+import scala.collection.mutable.HashMap
+import java.util.IdentityHashMap
 
 trait Scheduling {
   val IR: Expressions
@@ -15,12 +17,11 @@ trait Scheduling {
 
   def availableDefs: List[TP[Any]] = globalDefs
   
-
-
+  
   def buildScheduleForResult(start: Exp[Any]): List[TP[Any]] = {
-    def deps(st: List[Sym[Any]]): List[TP[Any]] =
+    def deps(st: List[Sym[Any]]): List[TP[Any]] = {
       availableDefs.filter(st contains _.sym)
-      //syms(e).flatMap(d => findDefinition(d).toList)
+    }
 
     GraphUtil.stronglyConnectedComponents[TP[Any]](deps(syms(start)), t => deps(syms(t.rhs))).flatten.reverse
   }  
@@ -42,21 +43,44 @@ trait Scheduling {
     GraphUtil.stronglyConnectedComponents[TP[Any]](deps(mysyms(start)), t => deps(mysyms(t.rhs))).flatten.reverse
   }  
 
+  /** begin performance hotspot **/
 
+  def getDependentCaches(st: List[Sym[Any]]): (Array[Set[Sym[Any]]], Array[Boolean]) = {
+    val l = availableDefs.length
+    val symsCache = new Array[Set[Sym[Any]]](l)
+    val boundSymsCache = new Array[Boolean](l)
 
-  def getDependentStuff(st: List[Sym[Any]]): List[TP[Any]] = {
-    // TODO: expensive! should do scc calculation only once
-    st.distinct.flatMap(getDependentStuff).distinct
+    var i = 0
+    for (d <- availableDefs) {
+      symsCache(i) = syms(d.rhs).toSet
+      boundSymsCache(i) = (boundSyms(d.rhs) intersect st).nonEmpty 
+      i += 1
+    }    
+    (symsCache, boundSymsCache)    
   }
-    
-  def getDependentStuff(st: Sym[Any]): List[TP[Any]] = {
-    def uses(s: Sym[Any]): List[TP[Any]] = {
-      availableDefs.filter { d =>
-        d.sym == s || // include the definition itself
-        syms(d.rhs).contains(s) && !boundSyms(d.rhs).contains(st) // don't extrapolate outside the scope
-      }
+  
+  def cachedUses(s: Sym[Any])(symsCache: Array[Set[Sym[Any]]], boundSymsCache: Array[Boolean]): List[TP[Any]] = {
+    // relies on sequential, left-to-right execution order for performance
+    var i = -1
+    availableDefs.filter { d =>              
+      i += 1
+      d.sym == s || // include the definition itself
+      symsCache(i).contains(s) && !boundSymsCache(i) // don't extrapolate beyond the scope of *any* root. is this the right thing to do?
     }
+  }    
+  
+  def getDependentStuff(st: List[Sym[Any]]): List[TP[Any]] = {
+    val (symsCache, boundSymsCache) = getDependentCaches(st)
+    def uses(s: Sym[Any]) = cachedUses(s)(symsCache,boundSymsCache)
+    (GraphUtil.stronglyConnectedComponents[TP[Any]]((st.flatMap(uses).distinct), t => uses(t.sym)).flatten).distinct // final distinct necessary?
+  }
+  
+  def getDependentStuff(st: Sym[Any]): List[TP[Any]] = {
+    val (symsCache, boundSymsCache) = getDependentCaches(List(st))
+    def uses(s: Sym[Any]) = cachedUses(s)(symsCache,boundSymsCache)
     GraphUtil.stronglyConnectedComponents[TP[Any]](uses(st), t => uses(t.sym)).flatten
   }
+      
+  /** end performance hotspot **/
 
 }

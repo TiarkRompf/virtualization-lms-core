@@ -132,16 +132,22 @@ trait Expressions extends Utils {
     case s: Sym[Any] => List(s)
     case ss: Seq[Any] => ss.toList.flatMap(syms(_))
     // All case classes extend Product!
-    case p: Product => p.productIterator.toList.flatMap(syms(_))
+    case p: Product =>       
+      //p.productIterator.toList.flatMap(syms(_))
+      /* performance hotspot */
+      val iter = p.productIterator
+      var out = List[Sym[Any]]()
+      while (iter.hasNext) {
+        val e = iter.next()
+        out :::= syms(e)  
+      }
+      out
     case _ => Nil
   }
 
   def boundSyms(e: Any): List[Sym[Any]] = e match {
     case ss: Seq[Any] => ss.toList.flatMap(boundSyms(_))
     case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
-
-
-
     case _ => Nil
   }
 
@@ -150,7 +156,6 @@ trait Expressions extends Utils {
     case p: Product => p.productIterator.toList.flatMap(effectSyms(_))
     case _ => Nil
   }
-
 
 
   def rsyms[T](e: Any)(f: Any=>List[T]): List[T] = e match {
