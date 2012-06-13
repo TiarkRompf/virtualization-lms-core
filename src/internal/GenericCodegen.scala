@@ -99,11 +99,7 @@ trait GenericCodegen extends BlockTraversal {
   def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = {
     throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
-  
-  def emitExternalLib(rhs: Def[Any]): Unit = {
-    throw new GenerationFailedException("don't know how to generate external lib for " + rhs)
-  }
-  
+    
   def emitValDef(sym: Sym[Any], rhs: String): Unit
     
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] // return free static data in block
@@ -111,7 +107,8 @@ trait GenericCodegen extends BlockTraversal {
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s+"\""
     case Const(c: Char) => "'"+c+"'"
-    case Const(f: Float) => f.toString + "f"
+    case Const(f: Float) => "%1.10f".format(f) + "f"
+    case Const(l: Long) => l.toString + "L"
     case Const(null) => "null"
     case Const(z) => z.toString
     case Sym(n) => "x"+n
