@@ -4,17 +4,17 @@ package internal
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
 import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap, ListMap, HashSet}
+import collection.mutable.{Map => MMap}
 import collection.immutable.List._
 
 trait CudaCodegen extends GPUCodegen {
-  val IR: Expressions
+  val IR: Expressions 
   import IR._
 
   override def kernelFileExt = "cu"
   override def toString = "cuda"
 
-  override def initializeGenerator(buildDir:String): Unit = {
-
+  override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
     helperFuncIdx = 0
@@ -22,6 +22,7 @@ trait CudaCodegen extends GPUCodegen {
     hstream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cu"))
     helperFuncHdrStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
     headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.h"))
+    headerStream.println("#include \"CudaArrayList.h\"")    
 
     //TODO: Put all the DELITE APIs declarations somewhere
     hstream.print("#include \"helperFuncs.h\"\n")
@@ -32,6 +33,8 @@ trait CudaCodegen extends GPUCodegen {
     helperFuncHdrStream.print("#include \"DeliteCuda.h\"\n")
     helperFuncHdrStream.print("typedef jboolean jbool;\n")              // TODO: Fix this
     helperFuncHdrStream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
+    
+    super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
   override def remap[A](m: Manifest[A]) : String = {
@@ -111,7 +114,7 @@ trait CudaCodegen extends GPUCodegen {
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
-    val y = f(x)
+    val y = reifyBlock(f(x))
 
     val sA = mA.toString
     val sB = mB.toString
@@ -164,12 +167,6 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
   val IR: Expressions with Effects
   import IR._
   
-  override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
-    super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
-  }
-
-
   def CudaConsts(x:Exp[Any], s:String): String = {
     s match {
       case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.Type))
@@ -191,7 +188,7 @@ trait CudaFatCodegen extends GenericFatCodegen with CudaCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
 
-  def emitMultiLoopCond(sym: Sym[Any], funcs:List[Exp[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]]) = {
+  def emitMultiLoopCond(sym: Sym[Any], funcs:List[Block[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]]) = {
     isNestedNode = true
     devFuncIdx += 1
     val currIdx = devFuncIdx
@@ -205,7 +202,7 @@ trait CudaFatCodegen extends GenericFatCodegen with CudaCodegen {
     emitFatBlock(funcs)(tempStream)
     tabWidth = currentTab
 
-    val inputs = getFreeVarBlock(Combine(funcs),Nil).filterNot(quote(_)==quote(idx)).distinct
+    val inputs = getFreeVarBlock(Block(Combine(funcs.map(getBlockResultFull))),Nil).filterNot(quote(_)==quote(idx)).distinct
     val paramStr = (inputs++List(idx)).map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
     header.append("__device__ bool dev_%s(%s) {\n".format(postfix,paramStr))
     footer.append("\treturn %s;\n".format(funcs.map(f=>quote(getBlockResult(f))).mkString("&&")))

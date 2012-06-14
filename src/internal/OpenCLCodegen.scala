@@ -4,6 +4,7 @@ package internal
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
 import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
+import collection.mutable.{Map => MMap}
 import collection.immutable.List._
 
 trait OpenCLCodegen extends GPUCodegen {
@@ -14,7 +15,7 @@ trait OpenCLCodegen extends GPUCodegen {
   override def toString = "opencl"
 
   /*
-  override def emitDevFunc(func:Exp[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
+  override def emitDevFunc(func:Block[Any], locals:List[Exp[Any]]):(String,List[Exp[Any]]) = {
     devFuncIdx += 1
     val currIdx = devFuncIdx
     val tempString = new StringWriter
@@ -42,7 +43,7 @@ trait OpenCLCodegen extends GPUCodegen {
   }
   */
 
-  override def initializeGenerator(buildDir:String): Unit = {
+  override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
     helperFuncIdx = 0
@@ -67,6 +68,8 @@ trait OpenCLCodegen extends GPUCodegen {
     hstream.print("extern void DeliteOpenCLMemcpyDtoHAsync(void *dptr, void *sptr, size_t size);\n")
     hstream.print("typedef jboolean jbool;\n")              // TODO: Fix this
     hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
+    
+    super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
   override def isObjectType[A](m: Manifest[A]) : Boolean = {
@@ -161,7 +164,7 @@ trait OpenCLCodegen extends GPUCodegen {
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
-    val y = f(x)
+    val y = reifyBlock(f(x))
 
     val sA = mA.toString
     val sB = mB.toString
@@ -282,12 +285,6 @@ trait OpenCLCodegen extends GPUCodegen {
 trait OpenCLNestedCodegen extends GenericNestedCodegen with OpenCLCodegen {
   val IR: Expressions with Effects
   import IR._
-  
-  override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
-    super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
-  }
-
 
   def OpenCLConsts(x:Exp[Any], s:String): String = {
     s match {

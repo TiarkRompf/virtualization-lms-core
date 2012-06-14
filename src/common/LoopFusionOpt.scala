@@ -31,12 +31,13 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
   }
 
 
-  override def focusExactScopeFat[A](currentScope0: List[TTP])(result0: List[Exp[Any]])(body: List[TTP] => A): A = {
+  override def focusExactScopeFat[A](currentScope0: List[TTP])(result0B: List[Block[Any]])(body: List[TTP] => A): A = {
+    val result0 = result0B.map(getBlockResultFull)
     var result: List[Exp[Any]] = result0
     var currentScope = currentScope0
 
     if (!shouldApplyFusion(currentScope)(result))
-      return super.focusExactScopeFat(currentScope)(result)(body)
+      return super.focusExactScopeFat(currentScope)(result.map(Block(_)))(body)
 /*
     println("--- pre-pre-loop fusion: bound")
     val bound = currentScope.flatMap(z => boundSyms(z.rhs))
@@ -48,7 +49,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
 */
 
     // find loops at current top level
-    var Wloops = super.focusExactScopeFat(currentScope)(result) { levelScope => 
+    var Wloops = super.focusExactScopeFat(currentScope)(result.map(Block(_))) { levelScope => 
       // TODO: cannot in general fuse several effect loops (one effectful and several pure ones is ok though)
       // so we need a strategy. a simple one would be exclude all effectful loops right away (TODO).
       levelScope collect { case e @ TTP(_, SimpleFatLoop(_,_,_)) => e }
@@ -90,15 +91,22 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         // possible extension: have WtableNeg keep track of the statements that prevent fusion
         // then we can later remove the entry and see if the dependency goes away...
         
-        val WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
+        var WtableNeg = Wloops.flatMap { dx => // find non-simple dependencies (other than a(i))
           val thisLoopVars = WgetLoopVar(dx)
           val otherLoopSyms = loopSyms diff (dx.lhs)
-          getFatSchedule(currentScope)(WgetLoopRes(dx)) flatMap {
-            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) => 
+          getCustomFatSchedule(currentScope)(WgetLoopRes(dx)) {
+            case e@ThinDef(SimpleIndex(a,i)) if (thisLoopVars contains i) && (loopCollectSyms contains a) => 
+              // check that a is the result of a SimpleCollectIf loop (not a reduce, for example)
               //if (!loopCollectSyms.contains(a))
               //  printerr("DANGER WILL ROBINSON: ignoring dep " + e + " although " + a + " is not a loop sym " + loopCollectSyms)
-              //println("ignoring simple dependency " + e + " on loop var " + thisLoopSyms)
+              printdbg("ignoring simple dependency " + e + " on loop var " + thisLoopVars + " required by body of " + dx.lhs)
               Nil // direct deps on this loop's induction var don't count
+            case e => 
+              syms(e)
+          } flatMap {
+            case e@TTP(_, ThinDef(SimpleIndex(a,i))) if (thisLoopVars contains i) && (loopCollectSyms contains a) =>
+              printdbg("ignoring2 simple dependency " + e + " on loop var " + thisLoopVars + " required by body of " + dx.lhs)
+              Nil //FIXME: shouldn't duplicate condition ...
             case sc =>
               val pr = syms(sc.rhs).intersect(otherLoopSyms) flatMap { otherLoop => dx.lhs map ((otherLoop, _)) }
               if (pr.nonEmpty) printlog("fusion of "+pr+" prevented by " + sc + " which is required by body of " + dx.lhs)
@@ -106,7 +114,16 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           }
         }.distinct      
       
-        printlog("wtableneg: " + WtableNeg)        
+        // transitive closure of negative dependencies
+        def iter {
+          val oldNeg = WtableNeg
+          val delta = WtableNeg flatMap { p => WtableNeg collect { case q if p._2 == q._1 => (p._1, q._2) }}
+          WtableNeg = (WtableNeg ++ delta).distinct
+          if (WtableNeg != oldNeg) iter
+        }
+        iter
+      
+        printlog("wtableneg: " + WtableNeg) // will add more later, need to maintain closure
         
         // other preconditions for fusion: loops must have same shape, or one must loop over the other's result
         
@@ -143,6 +160,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
           // try to add to an item in partitionsOut, if not possible add as-is
           partitionsOut.find(a => canFuse(a,b)) match {
             case Some(a) => 
+              
               val shapeA = WgetLoopShape(a)
               val shapeB = WgetLoopShape(b)
               
@@ -165,14 +183,22 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
                 shapeA
               }
 
-              val fused = TTP(a.lhs:::b.lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
+              val lhs = a.lhs ++ b.lhs
+
+              val fused = TTP(lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
               partitionsOut = fused :: (partitionsOut diff List(a))
+
+              val preNeg = WtableNeg collect { case p if (lhs contains p._2) => p._1 }
+              val postNeg = WtableNeg collect { case p if (lhs contains p._1) => p._2 }
+              
+              val fusedNeg = preNeg flatMap { s1 => postNeg map { s2 => (s1,s2) } }
+              WtableNeg = (fusedNeg ++ WtableNeg).distinct
+
             case None => partitionsOut = b::partitionsOut
           }
         }
       
         printlog("partitions: " + partitionsOut)
-      
       
         // actually do the fusion: now transform the loops bodies
       
@@ -237,7 +263,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
         keep case _ => true } ::: Wloops
 
       // schedule (and emit)
-      currentScope = getFatSchedule(currentScope)(result) // clean things up!
+      currentScope = getFatSchedule(currentScope)(result.map(Block(_))) // clean things up!
      
     }
 
@@ -268,7 +294,7 @@ trait LoopFusionOpt extends internal.GenericFatCodegen with SimplifyTransform {
     println("--->")
 */
     // do what super does ...
-    super.focusExactScopeFat(currentScope)(result0)(body)
+    super.focusExactScopeFat(currentScope)(result0.map(Block(_)))(body)
   }
 
 }

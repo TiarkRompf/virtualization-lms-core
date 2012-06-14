@@ -24,13 +24,13 @@ shape=box
 "Sym(2)" -> "Sym(7)"
 "Sym(6)" -> "Sym(7)"
 "Sym(8)" [
-label="Sym(8) \n IfThenElse(Sym(3),Const(1.0),Sym(7))"
+label="Sym(8) \n IfThenElse(Sym(3),Block(Const(1.0)),Block(Sym(7)))"
 shape=box
 ]
 "Sym(3)" -> "Sym(8)"
 "Sym(7)" -> "Sym(8)"
 "Sym(1)" [
-label="Sym(1) \n DefineFun(Sym(8))"
+label="Sym(1) \n DefineFun(Block(Sym(8)))"
 shape=box
 color=green
 style=filled

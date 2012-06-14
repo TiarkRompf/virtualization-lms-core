@@ -9,7 +9,7 @@ val x3 = println(1)
 val x4 = println("found:")
 val x5 = println(2)
 val x6 = println(2)
-val x7 = x0==1
+val x7 = x0 == 1
 val x12 = if (x7) {
 val x8 = println("found:")
 val x9 = println(x0)
@@ -18,7 +18,7 @@ x10
 } else {
 ()
 }
-val x13 = x0==2
+val x13 = x0 == 2
 val x18 = if (x13) {
 val x14 = println("found:")
 val x15 = println(x0)
@@ -27,7 +27,7 @@ x16
 } else {
 ()
 }
-val x19 = x0==3
+val x19 = x0 == 3
 val x24 = if (x19) {
 val x20 = println("found:")
 val x21 = println(x0)

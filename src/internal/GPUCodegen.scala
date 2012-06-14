@@ -7,7 +7,7 @@ import collection.immutable.List._
 import scala.reflect.SourceContext
 
 trait GPUCodegen extends CLikeCodegen {
-  val IR: Expressions
+  val IR: Expressions 
   import IR._
 
   /* Kernel input / output symbols */
@@ -118,13 +118,15 @@ trait GPUCodegen extends CLikeCodegen {
   var devFuncIdx = 0
   //var devStream: PrintWriter = null
   var headerStream: PrintWriter = null
+  
+  var isHostAlloc: Boolean = false
 
   var isGPUable:Boolean = false
 
   var processingHelperFunc: Boolean = false
   var isNestedNode: Boolean = false
 
-  def emitMultiLoopFunc(func:Exp[Any], postfix: String, lastInputs: List[Sym[Any]], stream:PrintWriter): List[String] = {
+  def emitMultiLoopFunc(func:Block[Any], postfix: String, lastInputs: List[Sym[Any]], stream:PrintWriter): List[String] = {
     isNestedNode = true
     val tempString = new StringWriter
     val tempStream = new PrintWriter(tempString, true)
@@ -139,8 +141,8 @@ trait GPUCodegen extends CLikeCodegen {
     val inputs = getFreeVarBlock(func,lastInputs).distinct
     val paramStr = (inputs++lastInputs).map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
 
-    header.append("__device__ %s dev_%s(%s) {\n".format(remap(func.Type),postfix,paramStr))
-    if(remap(func.Type) != "void")
+    header.append("__device__ %s dev_%s(%s) {\n".format(remap(getBlockResult(func).Type),postfix,paramStr))
+    if(remap(getBlockResult(func).Type) != "void")
       footer.append("\treturn %s;\n".format(quote(getBlockResult(func))))
     footer.append("}\n")
     stream.print(header)
@@ -302,41 +304,6 @@ trait GPUCodegen extends CLikeCodegen {
     }
   }
 
-  // Map a scala primitive type to JNI type descriptor
-  def JNITypeDescriptor[A](m: Manifest[A]) : String = m.toString match {
-    case "Int" => "I"
-    case "Long" => "J"
-    case "Float" => "F"
-    case "Double" => "D"
-    case "Boolean" => "Z"
-    case _ => throw new GenerationFailedException("Undefined GPU type")
-  }
-
-  def isObjectType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "scala.collection.immutable.List[Int]" => true
-      case _ => false
-    }
-  }
-
-  def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "Int" | "Long" | "Float" | "Double" | "Boolean"  => true
-      case _ => false
-    }
-  }
-
-  def isVoidType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "Unit" => true
-      case _ => false
-    }
-  }
-
-  def isVariableType[A](m: Manifest[A]) : Boolean = {
-    if(m.erasure == classOf[Variable[AnyVal]]) true
-    else false
-  }
 
   // Check the type and generate Exception if the type is not GPUable
   def checkGPUableType[A](m: Manifest[A]) : Unit = {
@@ -479,7 +446,7 @@ trait GPUCodegen extends CLikeCodegen {
   /* emitAllocFunc method emits code for allocating the output memory of a kernel,
        and copying  it to CPU memory with allocation of new object in CPU */
   //TODO: Separate output and temporary allocations
-  def emitAllocFunc(sym:Sym[Any], allocFunc:Exp[Any], aV:Sym[Any]=null, size:Exp[Any]=null) {
+  def emitAllocFunc(sym:Sym[Any], allocFunc:Block[Any], aV:Sym[Any]=null, size:Exp[Any]=null) {
     processingHelperFunc = true
     val tempString = new StringWriter
     val tempString2 = new StringWriter
@@ -545,7 +512,6 @@ trait GPUCodegen extends CLikeCodegen {
     // Write to helper function string
     helperFuncString.append(allocOutputStr)
     helperFuncString.append(copyOutputStr)
-    
     processingHelperFunc = false
   }
 

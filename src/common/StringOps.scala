@@ -46,6 +46,8 @@ trait StringOps extends Variables with OverloadHack {
   def infix_trim(s: Rep[String])(implicit ctx: SourceContext) = string_trim(s)
   def infix_split(s: Rep[String], separators: Rep[String])(implicit ctx: SourceContext) = string_split(s, separators)
   def infix_toDouble(s: Rep[String])(implicit ctx: SourceContext) = string_todouble(s)
+  def infix_toFloat(s: Rep[String])(implicit ctx: SourceContext) = string_tofloat(s)
+  def infix_toInt(s: Rep[String])(implicit ctx: SourceContext) = string_toint(s)
 
   object String {
     def valueOf(a: Rep[Any])(implicit ctx: SourceContext) = string_valueof(a)
@@ -57,6 +59,8 @@ trait StringOps extends Variables with OverloadHack {
   def string_split(s: Rep[String], separators: Rep[String])(implicit ctx: SourceContext): Rep[Array[String]]
   def string_valueof(d: Rep[Any])(implicit ctx: SourceContext): Rep[String]
   def string_todouble(s: Rep[String])(implicit ctx: SourceContext): Rep[Double]
+  def string_tofloat(s: Rep[String])(implicit ctx: SourceContext): Rep[Float]
+  def string_toint(s: Rep[String])(implicit ctx: SourceContext): Rep[Int]
 }
 
 trait StringOpsExp extends StringOps with VariablesExp {
@@ -66,6 +70,8 @@ trait StringOpsExp extends StringOps with VariablesExp {
   case class StringSplit(s: Exp[String], separators: Exp[String]) extends Def[Array[String]]
   case class StringValueOf(a: Exp[Any]) extends Def[String]
   case class StringToDouble(s: Exp[String]) extends Def[Double]
+  case class StringToFloat(s: Exp[String]) extends Def[Float]
+  case class StringToInt(s: Exp[String]) extends Def[Int]
 
   def string_plus(s: Exp[Any], o: Exp[Any])(implicit ctx: SourceContext): Rep[String] = StringPlus(s,o)
   def string_startswith(s1: Exp[String], s2: Exp[String])(implicit ctx: SourceContext) = StringStartsWith(s1,s2)
@@ -73,6 +79,8 @@ trait StringOpsExp extends StringOps with VariablesExp {
   def string_split(s: Exp[String], separators: Exp[String])(implicit ctx: SourceContext) : Rep[Array[String]] = StringSplit(s, separators)
   def string_valueof(a: Exp[Any])(implicit ctx: SourceContext) = StringValueOf(a)
   def string_todouble(s: Rep[String])(implicit ctx: SourceContext) = StringToDouble(s)
+  def string_tofloat(s: Rep[String])(implicit ctx: SourceContext) = StringToFloat(s)
+  def string_toint(s: Rep[String])(implicit ctx: SourceContext) = StringToInt(s)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case StringPlus(a,b) => string_plus(f(a),f(b))
@@ -91,6 +99,8 @@ trait ScalaGenStringOps extends ScalaGenBase {
     case StringSplit(s, sep) => emitValDef(sym, "%s.split(%s)".format(quote(s), quote(sep)))
     case StringValueOf(a) => emitValDef(sym, "java.lang.String.valueOf(%s)".format(quote(a)))
     case StringToDouble(s) => emitValDef(sym, "%s.toDouble".format(quote(s)))
+    case StringToFloat(s) => emitValDef(sym, "%s.toFloat".format(quote(s)))
+    case StringToInt(s) => emitValDef(sym, "%s.toInt".format(quote(s)))
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -130,33 +130,44 @@ trait Expressions extends Utils {
 
   def syms(e: Any): List[Sym[Any]] = e match {
     case s: Sym[Any] => List(s)
-    case p: Product => p.productIterator.toList.flatMap(syms(_))
+    case ss: Seq[Any] => ss.toList.flatMap(syms(_))
+    // All case classes extend Product!
+    case p: Product =>       
+      //p.productIterator.toList.flatMap(syms(_))
+      /* performance hotspot */
+      val iter = p.productIterator
+      var out = List[Sym[Any]]()
+      while (iter.hasNext) {
+        val e = iter.next()
+        out :::= syms(e)  
+      }
+      out
     case _ => Nil
   }
 
   def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case ss: Seq[Any] => ss.toList.flatMap(boundSyms(_))
     case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
-
-
-
     case _ => Nil
   }
 
   def effectSyms(x: Any): List[Sym[Any]] = x match {
+    case ss: Seq[Any] => ss.toList.flatMap(effectSyms(_))
     case p: Product => p.productIterator.toList.flatMap(effectSyms(_))
     case _ => Nil
   }
 
 
-
   def rsyms[T](e: Any)(f: Any=>List[T]): List[T] = e match {
     case s: Sym[Any] => f(s)
+    case ss: Seq[Any] => ss.toList.flatMap(f)
     case p: Product => p.productIterator.toList.flatMap(f)
     case _ => Nil
   }
 
   def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case s: Sym[Any] => List((s,1.0))
+    case ss: Seq[Any] => ss.toList.flatMap(symsFreq(_))
 //    case _ => rsyms(e)(symsFreq)
     case p: Product => p.productIterator.toList.flatMap(symsFreq(_))
     case _ => Nil

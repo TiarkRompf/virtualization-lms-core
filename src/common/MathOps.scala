@@ -95,6 +95,21 @@ trait MathOpsExp extends MathOps with EffectExp {
       case MathAtan2(x,y) => math_atan2(f(x),f(y))
       case MathMin(x,y) => math_min(f(x),f(y))
       case MathMax(x,y) => math_max(f(x),f(y))
+
+      case Reflect(MathCeil(x), u, es) => reflectMirrored(Reflect(MathCeil(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathFloor(x), u, es) => reflectMirrored(Reflect(MathFloor(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathExp(x), u, es) => reflectMirrored(Reflect(MathExp(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathPow(x,y), u, es) => reflectMirrored(Reflect(MathPow(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathAbs(x), u, es) => reflectMirrored(Reflect(MathAbs(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathSin(x), u, es) => reflectMirrored(Reflect(MathSin(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathCos(x), u, es) => reflectMirrored(Reflect(MathCos(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathAcos(x), u, es) => reflectMirrored(Reflect(MathAcos(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathLog(x), u, es) => reflectMirrored(Reflect(MathLog(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathSqrt(x), u, es) => reflectMirrored(Reflect(MathSqrt(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathAtan2(x,y), u, es) => reflectMirrored(Reflect(MathAtan2(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathMin(x,y), u, es) => reflectMirrored(Reflect(MathMin(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(MathMax(x,y), u, es) => reflectMirrored(Reflect(MathMax(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+
       case _ => super.mirror(e,f)
     }
   }).asInstanceOf[Exp[A]]
@@ -112,22 +127,22 @@ trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match { // TODO: use java.lang.Math etc...
-    case MathCeil(x) => emitValDef(sym, "java.lang.Math.ceil(" + quote(x) + ")")
-    case MathFloor(x) => emitValDef(sym, "java.lang.Math.floor(" + quote(x) + ")")
-    case MathExp(x) => emitValDef(sym, "java.lang.Math.exp(" + quote(x) + ")")
-    case MathLog(x) => emitValDef(sym, "java.lang.Math.log(" + quote(x) + ")")
-    case MathSqrt(x) => emitValDef(sym, "java.lang.Math.sqrt(" + quote(x) + ")")
-    case MathSin(x) => emitValDef(sym, "java.lang.Math.sin(" + quote(x) + ")")
-    case MathCos(x) => emitValDef(sym, "java.lang.Math.cos(" + quote(x) + ")")
-    case MathAcos(x) => emitValDef(sym, "java.lang.Math.acos(" + quote(x) + ")")
-    case MathAtan(x) => emitValDef(sym, "java.lang.Math.atan(" + quote(x) + ")")
-    case MathAtan2(x,y) => emitValDef(sym, "java.lang.Math.atan2(" + quote(x) + ", " + quote(y) + ")")
-    case MathPow(x,y) => emitValDef(sym, "java.lang.Math.pow(" + quote(x) + "," + quote(y) + ")")
-    case MathAbs(x) => emitValDef(sym, "java.lang.Math.abs(" + quote(x) + ")")
-    case MathMax(x,y) => emitValDef(sym, "java.lang.Math.max(" + quote(x) + ", " + quote(y) + ")")
-    case MathMin(x,y) => emitValDef(sym, "java.lang.Math.min(" + quote(x) + ", " + quote(y) + ")")
-    case MathPi() => emitValDef(sym, "java.lang.Math.PI")
-    case MathE() => emitValDef(sym, "java.lang.Math.E")
+    case MathCeil(x) => emitValDef(sym, "org.apache.commons.math.util.FastMath.ceil(" + quote(x) + ")")
+    case MathFloor(x) => emitValDef(sym, "org.apache.commons.math.util.FastMath.floor(" + quote(x) + ")")
+    case MathExp(x) => emitValDef(sym, "org.apache.commons.math.util.FastMath.exp(" + quote(x) + ")")
+    case MathLog(x) => emitValDef(sym, "org.apache.commons.math.util.FastMath.log(" + quote(x) + ")")
+    case MathSqrt(x) => emitValDef(sym, "org.apache.commons.math.util.FastMath.sqrt(" + quote(x) + ")")
+    case MathSin(x) => emitValDef(sym, "org.apache.commons.math.util.FastMath.sin(" + quote(x) + ")")
+    case MathCos(x) => emitValDef(sym, "org.apache.commons.math.util.FastMath.cos(" + quote(x) + ")")
+    case MathAcos(x) => emitValDef(sym, "org.apache.commons.math.util.FastMath.acos(" + quote(x) + ")")
+    case MathAtan(x) => emitValDef(sym, "org.apache.commons.math.util.FastMath.atan(" + quote(x) + ")")
+    case MathAtan2(x,y) => emitValDef(sym, "org.apache.commons.math.util.FastMath.atan2(" + quote(x) + ", " + quote(y) + ")")
+    case MathPow(x,y) => emitValDef(sym, "org.apache.commons.math.util.FastMath.pow(" + quote(x) + "," + quote(y) + ")")
+    case MathAbs(x) => emitValDef(sym, "org.apache.commons.math.util.FastMath.abs(" + quote(x) + ")")
+    case MathMax(x,y) => emitValDef(sym, "org.apache.commons.math.util.FastMath.max(" + quote(x) + ", " + quote(y) + ")")
+    case MathMin(x,y) => emitValDef(sym, "org.apache.commons.math.util.FastMath.min(" + quote(x) + ", " + quote(y) + ")")
+    case MathPi() => emitValDef(sym, "org.apache.commons.math.util.FastMath.PI")
+    case MathE() => emitValDef(sym, "org.apache.commons.math.util.FastMath.E")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -142,9 +157,21 @@ trait CudaGenMathOps extends BaseGenMathOps with CudaGenEffect {
     case MathExp(x) => emitValDef(sym, "exp(" + quote(x) + ")")
     case MathLog(x) => emitValDef(sym, "log(" + quote(x) + ")")
     case MathSqrt(x) => emitValDef(sym, "sqrt(" + quote(x) + ")")
-    case MathAbs(x) => emitValDef(sym, "abs(" + quote(x) + ")")
-    case MathMax(x,y) => emitValDef(sym, "max(" + quote(x) + ", " + quote(y) + ")")
-    case MathMin(x,y) => emitValDef(sym, "min(" + quote(x) + ", " + quote(y) + ")")
+    case MathSin(x) => emitValDef(sym, "sin(" + quote(x) + ")")
+    case MathCos(x) => emitValDef(sym, "cos(" + quote(x) + ")")
+    case MathAcos(x) => emitValDef(sym, "acos(" + quote(x) + ")")
+    case MathAtan(x) => emitValDef(sym, "atan(" + quote(x) + ")")
+    case MathAtan2(x,y) => emitValDef(sym, "atan2(" + quote(x) + ", " + quote(y) + ")")
+    case MathPow(x,y) => emitValDef(sym, "pow(" + quote(x) + "," + quote(y) + ")")
+    case MathAbs(x) => emitValDef(sym, "fabs(" + quote(x) + ")")
+    case MathMax(x,y) if(remap(sym.Type))=="float" => emitValDef(sym, "fmax(" + quote(x) + ", " + quote(y) + ")")
+    case MathMax(x,y) if(remap(sym.Type))=="double" => emitValDef(sym, "fmax(" + quote(x) + ", " + quote(y) + ")")
+    case MathMax(x,y) if(remap(sym.Type))=="int" => emitValDef(sym, "max(" + quote(x) + ", " + quote(y) + ")")
+    case MathMin(x,y) if(remap(sym.Type))=="float" => emitValDef(sym, "fmin(" + quote(x) + ", " + quote(y) + ")")
+    case MathMin(x,y) if(remap(sym.Type))=="double" => emitValDef(sym, "fmin(" + quote(x) + ", " + quote(y) + ")")
+    case MathMin(x,y) if(remap(sym.Type))=="int" => emitValDef(sym, "min(" + quote(x) + ", " + quote(y) + ")")
+    case MathPi() => emitValDef(sym, "CUDART_PI_F")
+    case MathE() => emitValDef(sym, "2.7182818284f")
     case _ => super.emitNode(sym, rhs)
   }        
 }
@@ -164,4 +191,16 @@ trait OpenCLGenMathOps extends BaseGenMathOps with OpenCLGenEffect {
     case MathMin(x,y) => emitValDef(sym, "min(" + quote(x) + ", " + quote(y) + ")")
     case _ => super.emitNode(sym, rhs)
   }
+}
+
+trait CGenMathOps extends BaseGenMathOps with CGenEffect {
+  val IR: MathOpsExp
+  import IR._
+  
+  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+    case MathSin(x) if(remap(sym.Type)=="double") => emitValDef(sym, "sin(" + quote(x) + ")")
+    case MathPi() if(remap(sym.Type)=="double") => emitValDef(sym, "M_PI")
+    case _ => super.emitNode(sym, rhs)
+  }
+
 }

@@ -21,6 +21,7 @@ trait HashMapOps extends Base {
     def values(implicit ctx: SourceContext) = hashmap_values(m)
     def clear()(implicit ctx: SourceContext) = hashmap_clear(m)
     def keySet(implicit ctx: SourceContext) = hashmap_keyset(m)
+    def keys(implicit ctx: SourceContext) = hashmap_keys(m)
   }
 
   def hashmap_new[K:Manifest,V:Manifest]()(implicit ctx: SourceContext) : Rep[HashMap[K,V]]
@@ -32,6 +33,7 @@ trait HashMapOps extends Base {
   def hashmap_values[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit ctx: SourceContext): Rep[Iterable[V]]
   def hashmap_clear[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit ctx: SourceContext): Rep[Unit]
   def hashmap_keyset[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit ctx: SourceContext): Rep[Set[K]]
+  def hashmap_keys[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit ctx: SourceContext): Rep[Iterable[K]]
 }
 
 trait HashMapOpsExp extends HashMapOps with EffectExp {
@@ -46,6 +48,7 @@ trait HashMapOpsExp extends HashMapOps with EffectExp {
   case class HashMapValues[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends Def[Iterable[V]]
   case class HashMapClear[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends Def[Unit]
   case class HashMapKeySet[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends Def[Set[K]]
+  case class HashMapKeys[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends Def[Iterable[K]]
 
   def hashmap_new[K:Manifest,V:Manifest]()(implicit ctx: SourceContext) = reflectMutable(HashMapNew[K,V]())
   def hashmap_apply[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K])(implicit ctx: SourceContext) = HashMapApply(m,k)
@@ -56,6 +59,7 @@ trait HashMapOpsExp extends HashMapOps with EffectExp {
   def hashmap_values[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]])(implicit ctx: SourceContext) = HashMapValues(m)
   def hashmap_clear[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]])(implicit ctx: SourceContext) = reflectWrite(m)(HashMapClear(m))
   def hashmap_keyset[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit ctx: SourceContext) = HashMapKeySet(m)
+  def hashmap_keys[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit ctx: SourceContext) = HashMapKeys(m)
 }
 
 trait BaseGenHashMapOps extends GenericNestedCodegen {
@@ -77,6 +81,7 @@ trait ScalaGenHashMapOps extends BaseGenHashMapOps with ScalaGenEffect {
     case HashMapValues(m) => emitValDef(sym, quote(m) + ".values")
     case HashMapClear(m) => emitValDef(sym, quote(m) + ".clear()")
     case HashMapKeySet(m) => emitValDef(sym, quote(m) + ".keySet")
+    case HashMapKeys(m) => emitValDef(sym, quote(m) + ".keys")
     case _ => super.emitNode(sym, rhs)
   }
 }

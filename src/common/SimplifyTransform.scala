@@ -75,7 +75,7 @@ trait SimplifyTransform extends internal.GenericFatCodegen {
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
     mirrorFatDef(x, t)
   }
-  def transformIfBody[A](s: Sym[A], x: Exp[A], t: SubstTransformer): Exp[A] = {
+  def transformIfBody[A](s: Sym[A], x: Block[A], t: SubstTransformer): Block[A] = {
     implicit val m: Manifest[A] = s.Type.asInstanceOf[Manifest[A]]
     //transformOne(s,x,t)
     t(x)

@@ -98,6 +98,14 @@ trait FlatResult extends BaseExp { // just to make dot output nicer
 }
 
 
+trait ScalaGenFlat extends ScalaGenBase {
+  import IR._
+  type Block[+T] = Exp[T]
+  def getBlockResultFull[T](x: Block[T]): Exp[T] = x
+  def reifyBlock[T:Manifest](x: =>Exp[T]): Block[T] = x
+}
+
+
 
 
 
@@ -152,7 +160,7 @@ class TestFFT extends FileDiffSuite {
           makeArray(r.flatMap { case Complex(re,im) => List(re,im) })
         }
         
-        val codegen = new ScalaGenArith with ScalaGenArrays { val IR: FooBar.this.type = FooBar.this } // TODO: find a better way...
+        val codegen = new ScalaGenFlat with ScalaGenArith with ScalaGenArrays { val IR: FooBar.this.type = FooBar.this } // TODO: find a better way...
       }
       val o = new FooBar
       import o._

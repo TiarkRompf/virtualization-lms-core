@@ -1,4 +1,4 @@
-error: write to non-mutable Sym(8) -> Some(TP(Sym(8),IfThenElse(Sym(7),Sym(3),Sym(6))))
+error: write to non-mutable Sym(8) -> Some(TP(Sym(8),IfThenElse(Sym(7),Block(Sym(3)),Block(Sym(6)))))
 at Sym(9)=Reflect(ArrayUpdate(Sym(8),Const(40),Const(40.0)),Summary(false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(Sym(8)),List(Sym(8))),List(Sym(3), Sym(6)))
 promoting to effect: Sym(10)=Reflect(ArrayIndex(Sym(8),Const(50)),Summary(false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(),List()),List(Sym(3), Sym(6)))
 depends on  Sym(3)
