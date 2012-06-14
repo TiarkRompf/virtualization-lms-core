@@ -38,17 +38,25 @@ trait CodeMotion extends Scheduling {
     
     // TODO: use (shallow|hot)* hot any* instead
     
-    val loopsNotInIfs = e2 filterNot (e3 contains _)    // (shallow|hot)* hot (shallow|hot)*   <---- a hot ref on all paths!
-    val reachFromTopLoops = getSchedule(e1)(loopsNotInIfs,false)
-    
-    val f3 = f1 filter (reachFromTopLoops contains _)    // fringe restricted to: (shallow|hot)* hot any*
-    val h3 = getScheduleM(e1)(f3.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
-    
-    val shouldOutside = e1 filter (z => (e2 contains z) || (h3 contains z))
-
-    //val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
+    // AKS: temporarily reverted to old code here to patch a bug in OptiML's MiniMSMBuilder application
+    // then/else branches were being unsafely hoisted out of a conditional 
+    val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
 
     val levelScope = e1.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
+    
+    // TODO: uncomment after resolving the issue above
+    
+    // val loopsNotInIfs = e2 filterNot (e3 contains _)    // (shallow|hot)* hot (shallow|hot)*   <---- a hot ref on all paths!
+    // val reachFromTopLoops = getSchedule(e1)(loopsNotInIfs,false)
+    // 
+    // val f3 = f1 filter (reachFromTopLoops contains _)    // fringe restricted to: (shallow|hot)* hot any*
+    // val h3 = getScheduleM(e1)(f3.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
+    // 
+    // val shouldOutside = e1 filter (z => (e2 contains z) || (h3 contains z))
+    // 
+    // //val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
+    // 
+    // val levelScope = e1.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
 
     // sym->sym->hot->sym->cold->sym  hot --> hoist **** iff the cold is actually inside the loop ****
     // sym->sym->cold->sym->hot->sym  cold here, hot later --> push down, then hoist

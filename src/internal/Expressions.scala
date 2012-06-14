@@ -177,7 +177,16 @@ trait Expressions extends Utils {
     case s: Sym[Any] => List(s)
     case ss: Seq[Any] => ss.toList.flatMap(syms(_))
     // All case classes extend Product!
-    case p: Product => p.productIterator.toList.flatMap(syms(_))
+    case p: Product => 
+      // p.productIterator.toList.flatMap(syms(_))
+      /* performance hotspot */
+      val iter = p.productIterator
+      var out = List[Sym[Any]]()
+      while (iter.hasNext) {
+        val e = iter.next()
+        out :::= syms(e)  
+      }
+      out
     case _ => Nil
   }
 

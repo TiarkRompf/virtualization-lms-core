@@ -243,21 +243,24 @@ trait Effects extends Expressions with Blocks with Utils {
     (alias ++ copy ++ contain).distinct
   }
 
+
   def allAliases(start: Any): List[Sym[Any]] = {
     val r = (shallowAliases(start) ++ deepAliases(start)).distinct
     //printdbg("all aliases of " + start + ": " + r.mkString(", "))
     r
   }
 
-  def allTransitiveAliases(start: Any): List[Stm] = allAliases(start).flatMap(utilLoadSymTP)
+  def allTransitiveAliases(start: Any): List[Stm] = transitiveAliases(allAliases(start))
   
+  def transitiveAliases(start: List[Sym[Any]]): List[Stm] = start.flatMap(utilLoadSymTP)
   
   // TODO possible optimization: a mutable object never aliases another mutable object, so its inputs need not be followed
   
-  // TODO: should include globalMutableSysms??
-  
   def mutableTransitiveAliases(s: Any) = {
-    allTransitiveAliases(s) collect { case TP(s2, Reflect(_, u, _)) if mustMutable(u) => s2 }
+    val aliases = allAliases(s)
+    val globalMutable = aliases filter { o => globalMutableSyms.contains(o) }
+    val transitive = transitiveAliases(aliases) collect { case TP(s2, Reflect(_, u, _)) if mustMutable(u) => s2 }
+    globalMutable ++ transitive
   }
   
   
@@ -305,7 +308,14 @@ trait Effects extends Expressions with Blocks with Utils {
         super.toAtom             // if summary is still pure
         createReflectDefinition  // if summary is not pure
 */
-    reflectEffect(d, Pure())
+    d match {
+      case Reify(x,_,_) => 
+        // aks: this became a problem after adding global mutable vars to the read deps list. what is the proper way of handling this?
+        // specifically, if we return the reified version of a mutable bound var, we get a Reflect(Reify(..)) error, e.g. mutable Sum 
+        printlog("ignoring read of Reify(): " + d)
+        super.toAtom(d)
+      case _ => reflectEffect(d, Pure())
+    }    
   }
 
   def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {

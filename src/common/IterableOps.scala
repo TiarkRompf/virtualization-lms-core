@@ -15,20 +15,24 @@ trait IterableOps extends Variables {
 
   class IterableOpsCls[T:Manifest](a: Rep[Iterable[T]]){
     def foreach(block: Rep[T] => Rep[Unit])(implicit pos: SourceContext) = iterable_foreach(a, block)
+    def toArray(implicit pos: SourceContext) = iterable_toarray(a)
   }
 
   def iterable_foreach[T:Manifest](x: Rep[Iterable[T]], block: Rep[T] => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
+  def iterable_toarray[T:Manifest](x: Rep[Iterable[T]])(implicit pos: SourceContext): Rep[Array[T]]
 }
 
 trait IterableOpsExp extends IterableOps with EffectExp with VariablesExp {
 
   case class IterableForeach[T](a: Exp[Iterable[T]], x: Sym[T], block: Block[Unit]) extends Def[Unit]
-
+  case class IterableToArray[T](a: Exp[Iterable[T]]) extends Def[Array[T]]
+  
   def iterable_foreach[T:Manifest](a: Exp[Iterable[T]], block: Exp[T] => Exp[Unit])(implicit pos: SourceContext): Exp[Unit] = {
     val x = fresh[T]
     val b = reifyEffects(block(x))
     reflectEffect(IterableForeach(a, x, b), summarizeEffects(b).star)
   }
+  def iterable_toarray[T:Manifest](a: Exp[Iterable[T]])(implicit pos: SourceContext) = IterableToArray(a)
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case IterableForeach(a, x, body) => syms(a):::syms(body)
@@ -62,6 +66,7 @@ trait ScalaGenIterableOps extends BaseGenIterableOps with ScalaGenBase {
       emitBlock(block)
       stream.println(quote(getBlockResult(block)))
       stream.println("}")
+    case IterableToArray(a) => emitValDef(sym, quote(a) + ".toArray")
     case _ => super.emitNode(sym, rhs)
   }
 }
