@@ -252,23 +252,27 @@ trait ScalaGenStruct extends ScalaGenBase {
   }
 }
 
-trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
+trait CudaGenStruct extends CudaGenBase {
+  val IR: StructExp
+  import IR._
+}
+
+trait OpenCLGenStruct extends OpenCLGenBase {
+  val IR: StructExp
+  import IR._
+}
+
+
+trait BaseGenFatStruct extends GenericFatCodegen {
   val IR: StructFatExpOptCommon // TODO: restructure traits, maybe move this to if then else codegen?
   import IR._
-  
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case p@Phi(c,a,u,b,v) =>
-      emitValDef(sym, "XXX " + rhs + " // parent " + quote(p.parent))
-    case _ => super.emitNode(sym, rhs)
-  }
-  
-  
-  // TODO: implement regular fatten ?
-  
+
+   // TODO: implement regular fatten ?
+
   override def fattenAll(e: List[Stm]): List[Stm] = {
-    val m = e collect { 
+    val m = e collect {
       case t@TP(sym, p @ Phi(c,a,u,b,v)) => t
-    } groupBy { 
+    } groupBy {
       case TP(sym, p @ Phi(c,a,u,b,v)) => p.parent
     }
 
@@ -291,15 +295,29 @@ trait ScalaGenFatStruct extends ScalaGenStruct with GenericFatCodegen {
 
     val orphans = m.keys.toList.filterNot(k => e exists (_.lhs contains k)) // parent if/else might have been removed!
 
-    val r = e.flatMap { 
+    val r = e.flatMap {
       case TP(sym, p@Phi(c,a,u,b,v)) => Nil
       case TP(sym:Sym[Unit], o@IfThenElse(c,a:Block[Unit],b:Block[Unit])) => List(fatif(sym,o.asInstanceOf[Def[Unit]],c,a,b))
       case TP(sym:Sym[Unit], o@Reflect(IfThenElse(c,a:Block[Unit],b:Block[Unit]),_,_)) => List(fatif(sym,o.asInstanceOf[Def[Unit]],c,a,b))
       case t => List(fatten(t))
     } ++ orphans.map { case s: Sym[Unit] => fatphi(s).get } // be fail-safe here?
-    
+
     //r.foreach(println)
     r
   }
 }
+
+trait ScalaGenFatStruct extends ScalaGenStruct with BaseGenFatStruct {
+  val IR: StructFatExpOptCommon // TODO: restructure traits, maybe move this to if then else codegen?
+  import IR._
+  
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case p@Phi(c,a,u,b,v) =>
+      emitValDef(sym, "XXX " + rhs + " // parent " + quote(p.parent))
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait CudaGenFatStruct extends CudaGenStruct with BaseGenFatStruct
+trait OpenCLGenFatStruct extends OpenCLGenStruct with BaseGenFatStruct
 
