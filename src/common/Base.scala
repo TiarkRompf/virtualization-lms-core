@@ -22,15 +22,6 @@ trait Base extends EmbeddedControls {
 
   type Rep[+T]
   
-  trait InterfaceOps[+T] {
-    type Self
-    val elem: Rep[Self]   
-    def wrap(x: Rep[Self]): Interface[T]
-  }
-  trait Interface[+T] { // Interface[Vector[T]]
-    val ops: InterfaceOps[T]
-  }
-  
   protected def unit[T:Manifest](x: T): Rep[T]
 
   // always lift Unit and Null (for now)
@@ -47,10 +38,6 @@ trait BaseExp extends Base with Expressions with Blocks with Transforming {
   type Rep[+T] = Exp[T]
 
   protected def unit[T:Manifest](x: T) = Const(x)
-  
-  object Interface {
-    def unapply[T](intf: Interface[T]): Option[Exp[Any]] = Some(intf.ops.elem)
-  }
 }
 
 trait BlockExp extends BaseExp

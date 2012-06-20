@@ -18,7 +18,7 @@ import scala.reflect.SourceContext
 // test various transform routines
 
 trait SimpleBlockTransformer extends internal.FatBlockTraversal {
-  val IR: Expressions with Effects with FatExpressions with Transforming with BaseExp //FIXME: remove BaseExp //LoopsFatExp with IfThenElseFatExp
+  val IR: Expressions with Effects with FatExpressions with Transforming //with LoopsFatExp with IfThenElseFatExp
   import IR._
 
   def transformBlock[A](block: Block[A]): Block[A] = {
@@ -56,7 +56,7 @@ trait SimpleBlockTransformer extends internal.FatBlockTraversal {
 
 
 trait NestedBlockTransformer extends internal.FatBlockTraversal {
-  val IR: Expressions with Effects with FatExpressions with Transforming with BaseExp //FIXME: remove BaseExp //LoopsFatExp with IfThenElseFatExp
+  val IR: Expressions with Effects with FatExpressions with Transforming //with LoopsFatExp with IfThenElseFatExp
   import IR._
 
   var subst: scala.collection.immutable.Map[Sym[_], Exp[_]] = Map.empty
@@ -122,7 +122,7 @@ trait NestedBlockTransformer extends internal.FatBlockTraversal {
 
 
 trait MirrorBlockTransformer extends internal.FatBlockTraversal {
-  val IR: Expressions with Effects with FatExpressions with Transforming with BaseExp //FIXME: remove BaseExp //LoopsFatExp with IfThenElseFatExp
+  val IR: Expressions with Effects with FatExpressions with Transforming //with LoopsFatExp with IfThenElseFatExp
   import IR._
 
   var subst: scala.collection.immutable.Map[Sym[_], Exp[_]] = Map.empty
@@ -185,7 +185,7 @@ trait MirrorBlockTransformer extends internal.FatBlockTraversal {
 
 
 trait MirrorRetainBlockTransformer extends MirrorBlockTransformer {
-  val IR: Expressions with Effects with FatExpressions with Transforming with BaseExp //FIXME: remove BaseExp //LoopsFatExp with IfThenElseFatExp
+  val IR: Expressions with Effects with FatExpressions with Transforming //with LoopsFatExp with IfThenElseFatExp
   import IR._
 
   override def traverseStm(stm: Stm): Unit = stm match {
