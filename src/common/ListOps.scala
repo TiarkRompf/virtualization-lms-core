@@ -72,6 +72,13 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   def list_tail[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListTail(xs)
   def list_isEmpty[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListIsEmpty(xs)
   
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
+    (e match {
+      case ListNew(xs) => list_new(f(xs))
+      case _ => super.mirror(e,f)
+    }).asInstanceOf[Exp[A]] // why??
+  }
+  
   override def syms(e: Any): List[Sym[Any]] = e match {
     case ListMap(a, x, body) => syms(a):::syms(body)
     case ListSortBy(a, x, body) => syms(a):::syms(body)

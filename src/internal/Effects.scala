@@ -307,18 +307,20 @@ trait Effects extends Expressions with Blocks with Utils {
       reflectEffectInternal(u)   // extended summary Pure() -> u
         super.toAtom             // if summary is still pure
         createReflectDefinition  // if summary is not pure
-*/
+*/    
+    if (manifest[T] == manifest[Any]) printlog("warning: possible missing mtype call - toAtom with Def of type Any " + d)
     d match {
       case Reify(x,_,_) => 
         // aks: this became a problem after adding global mutable vars to the read deps list. what is the proper way of handling this?
         // specifically, if we return the reified version of a mutable bound var, we get a Reflect(Reify(..)) error, e.g. mutable Sum 
-        printlog("ignoring read of Reify(): " + d)
+        // printlog("ignoring read of Reify(): " + d)
         super.toAtom(d)
       case _ => reflectEffect(d, Pure())
     }    
   }
 
   def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
+    if (manifest[A] == manifest[Any]) printlog("warning: possible missing mtype call - reflectMirrored with Def of type Any: " + zd)
     context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
       //case z::_ => z.asInstanceOf[Exp[A]]  -- unsafe: we don't have a tight context, so we might pick one from a flattened subcontext
       case _ => createReflectDefinition(fresh[A], zd)

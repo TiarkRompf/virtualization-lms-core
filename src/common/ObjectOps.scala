@@ -17,7 +17,9 @@ trait ObjectOps extends Variables with OverloadHack {
 
 trait ObjectOpsExp extends ObjectOps with VariablesExp {
   case class ObjectToString(o: Exp[Any]) extends Def[String]
-  case class ObjectUnsafeImmutable[A](o: Exp[A]) extends Def[A]
+  case class ObjectUnsafeImmutable[A:Manifest](o: Exp[A]) extends Def[A] {
+    val m = manifest[A]
+  }
 
   def object_tostring(lhs: Exp[Any])(implicit pos: SourceContext) = ObjectToString(lhs)
   def object_unsafe_immutable[A:Manifest](lhs: Exp[A])(implicit pos: SourceContext) = ObjectUnsafeImmutable(lhs)
@@ -26,8 +28,8 @@ trait ObjectOpsExp extends ObjectOps with VariablesExp {
   // mirroring
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case ObjectUnsafeImmutable(a) => object_unsafe_immutable(f(a))
-    case Reflect(ObjectUnsafeImmutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeImmutable(f(a)), mapOver(f,u), f(es)))
+    case e@ObjectUnsafeImmutable(a) => object_unsafe_immutable(f(a))(e.m,pos)
+    case Reflect(e@ObjectUnsafeImmutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeImmutable(f(a))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
