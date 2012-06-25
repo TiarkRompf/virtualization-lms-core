@@ -17,7 +17,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val v: Sym[Int]
     val body: Def[A]
   }
-  
+
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
   
   def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = SimpleLoop(size, v, body)
@@ -28,7 +28,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case _ => super.syms(e)
   }
 
-  override def readSyms(e: Any): List[Sym[Any]] = e match { 
+  override def readSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => readSyms(e.size) ::: readSyms(e.body)
     case _ => super.readSyms(e)
   }
@@ -145,7 +145,7 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
   import IR._
 
   override def fatten(e: Stm): Stm = e match {
-    case TP(sym, op: AbstractLoop[_]) => 
+    case TP(sym, op: AbstractLoop[_]) =>
       TTP(List(sym), List(op), SimpleFatLoop(op.size, op.v, List(op.body)))
     case TP(sym, p @ Reflect(op: AbstractLoop[_], u, es)) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on...
       printdbg("-- fatten effectful loop " + e)
@@ -171,44 +171,14 @@ trait ScalaGenLoopsFat extends ScalaGenLoops with ScalaGenFat with BaseGenLoopsF
 
 }
 
-trait CudaGenLoops extends CudaGenBase with BaseGenLoops {
-  import IR._
+trait CLikeGenLoops extends CLikeGenBase with BaseGenLoops
+trait CLikeGenLoopsFat extends CLikeGenLoops with CLikeGenFat with BaseGenLoopsFat
 
-  //TODO
+trait GPUGenLoops extends GPUGenBase with CLikeGenLoops
+trait GPUGenLoopsFat extends GPUGenLoops with GPUGenFat with CLikeGenLoopsFat 
 
-}
+trait CudaGenLoops extends CudaGenBase with GPUGenLoops
+trait CudaGenLoopsFat extends CudaGenLoops with CudaGenFat with GPUGenLoopsFat
 
-trait CudaGenLoopsFat extends CudaGenLoops with CudaGenFat with BaseGenLoopsFat {
-  import IR._
-
-  //TODO
-
-}
-
-trait CGenLoops extends CGenBase with BaseGenLoops {
-  import IR._
-
-  //TODO
-
-}
-
-trait CGenLoopsFat extends CGenLoops with CGenFat with BaseGenLoopsFat {
-  import IR._
-
-  //TODO
-
-}
-
-trait OpenCLGenLoops extends OpenCLGenBase with BaseGenLoops {
-  import IR._
-
-  //TODO
-
-}
-
-trait OpenCLGenLoopsFat extends OpenCLGenLoops with OpenCLGenFat with BaseGenLoopsFat {
-  import IR._
-
-  //TODO
-
-}
+trait OpenCLGenLoops extends OpenCLGenBase with GPUGenLoops
+trait OpenCLGenLoopsFat extends OpenCLGenLoops with OpenCLGenFat with GPUGenLoopsFat

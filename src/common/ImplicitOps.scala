@@ -53,31 +53,6 @@ trait CLikeGenImplicitOps extends CLikeGenBase {
     }
 }
 
-trait CudaGenImplicitOps extends CudaGenBase {
-  val IR: ImplicitOpsExp
-  import IR._
-
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-      rhs match {
-        case im@ImplicitConvert(x) =>
-          stream.println(addTab()+"%s %s = (%s)%s;".format(remap(im.mY), quote(sym), remap(im.mY), quote(x)))
-        case _ => super.emitNode(sym, rhs)
-      }
-    }
-}
-
-trait OpenCLGenImplicitOps extends OpenCLGenBase {
-  val IR: ImplicitOpsExp
-  import IR._
-
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-      rhs match {
-        case im@ImplicitConvert(x) =>
-          stream.println(addTab()+"%s %s = (%s)%s;".format(remap(im.mY), quote(sym), remap(im.mY), quote(x)))
-        case _ => super.emitNode(sym, rhs)
-      }
-    }
-}
-
-
+trait CudaGenImplicitOps extends CudaGenBase with CLikeGenImplicitOps
+trait OpenCLGenImplicitOps extends OpenCLGenBase with CLikeGenImplicitOps
 trait CGenImplicitOps extends CGenBase with CLikeGenImplicitOps

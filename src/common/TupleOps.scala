@@ -38,7 +38,7 @@ trait TupleOps extends Base {
   def tuple5_get5[E:Manifest](t: Rep[(_,_,_,_,E)])(implicit pos: SourceContext) : Rep[E]
 }
 
-trait TupleOpsExp extends TupleOps with BaseExp {
+trait TupleOpsExp extends TupleOps with EffectExp {
   
   implicit def make_tuple2[A:Manifest,B:Manifest](t: (Exp[A],Exp[B]))(implicit pos: SourceContext) : Exp[(A,B)] = ETuple2(t._1, t._2)
   implicit def make_tuple3[A:Manifest,B:Manifest,C:Manifest](t: (Exp[A],Exp[B],Exp[C]))(implicit pos: SourceContext) : Exp[(A,B,C)] = ETuple3(t._1, t._2, t._3)
@@ -147,17 +147,26 @@ trait TupleOpsExp extends TupleOps with BaseExp {
     case e@ETuple2(a,b)     => make_tuple2(f(a),f(b))(e.m1,e.m2,pos)
     case e@Tuple2Access1(t) => tuple2_get1(f(t))(e.m,pos)
     case e@Tuple2Access2(t) => tuple2_get2(f(t))(e.m,pos)
-
+    case Reflect(e@Tuple2Access1(t), u, es) => reflectMirrored(Reflect(Tuple2Access1(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple2Access2(t), u, es) => reflectMirrored(Reflect(Tuple2Access2(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    
     case e@ETuple3(a,b,c)   => make_tuple3(f(a),f(b),f(c))(e.m1,e.m2,e.m3,pos)
     case e@Tuple3Access1(t) => tuple3_get1(f(t))(e.m,pos)
     case e@Tuple3Access2(t) => tuple3_get2(f(t))(e.m,pos)
     case e@Tuple3Access3(t) => tuple3_get3(f(t))(e.m,pos)
+    case Reflect(e@Tuple3Access1(t), u, es) => reflectMirrored(Reflect(Tuple3Access1(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple3Access2(t), u, es) => reflectMirrored(Reflect(Tuple3Access2(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple3Access3(t), u, es) => reflectMirrored(Reflect(Tuple3Access3(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
 
     case e@ETuple4(a,b,c,d) => make_tuple4(f(a),f(b),f(c),f(d))(e.m1,e.m2,e.m3,e.m4,pos)
     case e@Tuple4Access1(t) => tuple4_get1(f(t))(e.m,pos)
     case e@Tuple4Access2(t) => tuple4_get2(f(t))(e.m,pos)
     case e@Tuple4Access3(t) => tuple4_get3(f(t))(e.m,pos)
     case e@Tuple4Access4(t) => tuple4_get4(f(t))(e.m,pos)
+    case Reflect(e@Tuple4Access1(t), u, es) => reflectMirrored(Reflect(Tuple4Access1(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple4Access2(t), u, es) => reflectMirrored(Reflect(Tuple4Access2(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple4Access3(t), u, es) => reflectMirrored(Reflect(Tuple4Access3(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+    case Reflect(e@Tuple4Access4(t), u, es) => reflectMirrored(Reflect(Tuple4Access4(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))    
 
     case e@ETuple5(a,b,c,d,g) => make_tuple5(f(a),f(b),f(c),f(d),f(g))(e.m1,e.m2,e.m3,e.m4,e.m5,pos)
     case e@Tuple5Access1(t)   => tuple5_get1(f(t))(e.m,pos)
@@ -165,6 +174,12 @@ trait TupleOpsExp extends TupleOps with BaseExp {
     case e@Tuple5Access3(t)   => tuple5_get3(f(t))(e.m,pos)
     case e@Tuple5Access4(t)   => tuple5_get4(f(t))(e.m,pos)
     case e@Tuple5Access5(t)   => tuple5_get5(f(t))(e.m,pos)
+    case Reflect(e@Tuple5Access1(t), u, es) => reflectMirrored(Reflect(Tuple5Access1(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple5Access2(t), u, es) => reflectMirrored(Reflect(Tuple5Access2(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple5Access3(t), u, es) => reflectMirrored(Reflect(Tuple5Access3(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+    case Reflect(e@Tuple5Access4(t), u, es) => reflectMirrored(Reflect(Tuple5Access4(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+    case Reflect(e@Tuple5Access5(t), u, es) => reflectMirrored(Reflect(Tuple5Access5(f(t))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+    
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -201,22 +216,6 @@ trait ScalaGenTupleOps extends ScalaGenBase {
     case Tuple5Access3(t) => emitValDef(sym, quote(t) + "._3")
     case Tuple5Access4(t) => emitValDef(sym, quote(t) + "._4")
     case Tuple5Access5(t) => emitValDef(sym, quote(t) + "._5")
-
-    case _ => super.emitNode(sym, rhs)
-  }
-}
-
-trait OpenCLGenTupleOps extends OpenCLGenBase {
-  val IR: TupleOpsExp
-  import IR._
-
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case ETuple2(a,b)  =>
-      stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
-      stream.println("%s._1 = %s;".format(quote(sym),quote(a)))
-      stream.println("%s._2 = %s;".format(quote(sym),quote(b)))
-    case Tuple2Access1(t) => stream.println("%s %s = %s._1;".format(remap(sym.tp),quote(sym),quote(t)))
-    case Tuple2Access2(t) => stream.println("%s %s = %s._2;".format(remap(sym.tp),quote(sym),quote(t)))
 
     case _ => super.emitNode(sym, rhs)
   }

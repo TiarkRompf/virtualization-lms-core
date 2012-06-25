@@ -21,16 +21,7 @@ trait Base extends EmbeddedControls {
   type API <: Base
 
   type Rep[+T]
-  
-  trait InterfaceOps[+T] {
-    type Self
-    val elem: Rep[Self]   
-    def wrap(x: Rep[Self]): Interface[T]
-  }
-  trait Interface[+T] { // Interface[Vector[T]]
-    val ops: InterfaceOps[T]
-  }
-  
+
   protected def unit[T:Manifest](x: T): Rep[T]
 
   // always lift Unit and Null (for now)
@@ -47,10 +38,6 @@ trait BaseExp extends Base with Expressions with Blocks with Transforming {
   type Rep[+T] = Exp[T]
 
   protected def unit[T:Manifest](x: T) = Const(x)
-  
-  object Interface {
-    def unapply[T](intf: Interface[T]): Option[Exp[Any]] = Some(intf.ops.elem)
-  }
 }
 
 trait BlockExp extends BaseExp
@@ -98,7 +85,7 @@ trait EffectExp extends BaseExp with Effects {
 trait BaseFatExp extends BaseExp with FatExpressions with FatTransforming
 
 
-// The traits below provide an interface to codegen so that client do 
+// The traits below provide an interface to codegen so that client do
 // not need to depend on internal._
 
 trait ScalaGenBase extends ScalaCodegen
@@ -109,8 +96,12 @@ trait ScalaGenFat extends ScalaFatCodegen with ScalaGenBase
 
 
 trait CLikeGenBase extends CLikeCodegen
+trait CLikeGenEffect extends CLikeNestedCodegen with CLikeGenBase
+trait CLikeGenFat extends CLikeFatCodegen with CLikeGenBase
 
 trait GPUGenBase extends GPUCodegen
+trait GPUGenEffect extends GPUGenBase with CLikeNestedCodegen
+trait GPUGenFat extends GPUGenBase with CLikeFatCodegen
 
 trait CudaGenBase extends CudaCodegen
 trait CudaGenEffect extends CudaNestedCodegen with CudaGenBase

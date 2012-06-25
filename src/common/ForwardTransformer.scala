@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package common
 
+import scala.reflect.SourceContext
 
 trait ForwardTransformer extends internal.AbstractSubstTransformer with internal.FatBlockTraversal { self =>
   val IR: LoopsFatExp with IfThenElseFatExp
@@ -11,18 +12,37 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
       reflectBlock(block)
     }
   }
-  
+
   override def hasContext = true
+  
+  override def apply[A:Manifest](xs: Block[A]): Block[A] = transformBlock(xs)
+  
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
     traverseBlock(block)
-    apply(block.res)
+    apply(getBlockResult(block))
   }
 
   override def traverseStm(stm: Stm): Unit = stm match {
     case TP(sym, rhs) => 
+      val m = sym.tp
+      val pos: SourceContext =
+        if (sym.sourceContexts.isEmpty) implicitly[SourceContext]
+        else sym.sourceContexts(0)
+      
       val sym2 = apply(sym)
       if (sym2 == sym) {
-        val replace = mirror(rhs, self.asInstanceOf[Transformer]) // cast needed why?
+        val replace = 
+          try {
+            mirror(rhs, self.asInstanceOf[Transformer])(m,pos) // cast needed why?
+          } catch { //hack
+            case e if e.toString contains "don't know how to mirror" => 
+              printerr("error: " + e.getMessage)
+              sym
+            case e => 
+              printerr("error: exception during mirroring of "+rhs+": "+ e)
+              e.printStackTrace; 
+              sym            
+          }
         subst += (sym -> replace)
       } else {
         printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
