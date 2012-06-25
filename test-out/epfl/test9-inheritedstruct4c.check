@@ -1,0 +1,51 @@
+ignoring read of Reify(): Reify(Sym(15),Summary(false,false,false,false,false,List(Sym(2), Sym(3), Sym(4)),List(Sym(2), Sym(3), Sym(4)),List(),List()),List(Sym(12), Sym(13), Sym(14)))
+ignoring read of Reify(): Reify(Sym(20),Summary(false,false,false,false,false,List(Sym(7), Sym(8), Sym(9)),List(Sym(7), Sym(8), Sym(9)),List(),List()),List(Sym(17), Sym(18), Sym(19)))
+ignoring read of Reify(): Reify(Const(()),Summary(false,false,false,false,false,List(Sym(2), Sym(3), Sym(4)),List(Sym(2), Sym(3), Sym(4)),List(),List()),List(Sym(12), Sym(13), Sym(14)))
+ignoring read of Reify(): Reify(Const(()),Summary(false,false,false,false,false,List(Sym(7), Sym(8), Sym(9)),List(Sym(7), Sym(8), Sym(9)),List(),List()),List(Sym(17), Sym(18), Sym(19)))
+ignoring read of Reify(): Reify(Sym(36),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(2), Sym(3), Sym(4), Sym(7), Sym(8), Sym(9), Sym(28), Sym(29), Sym(30), Sym(32), Sym(33), Sym(34), Sym(36)))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Any)) {
+def apply(x0:Int): Any = {
+var x2: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct4c$1$$anon$10@46289d64.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex] = scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct4c$1$$anon$10@46289d64.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex
+var x3: Double = 0.0
+var x4: Int = x0
+var x7: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct4c$1$$anon$10@46289d64.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex] = scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct4c$1$$anon$10@46289d64.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex
+var x8: Int = x0
+var x9: Double = 0.0
+val x11 = x0 > 0
+val x24 = if (x11) {
+val x12 = x2
+x12
+} else {
+val x17 = x7
+x17
+}
+var x28: Any = x24
+val x25 = if (x11) {
+val x13 = x3
+x13
+} else {
+val x18 = x8
+x18
+}
+var x29: Any = x25
+val x26 = if (x11) {
+val x14 = x4
+x14
+} else {
+val x19 = x9
+x19
+}
+var x30: Any = x26
+val x32 = x28
+val x33 = x29
+val x34 = x30
+val x36 = println("definitely a cartesian!")
+x36
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

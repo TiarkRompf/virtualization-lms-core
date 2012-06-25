@@ -1,0 +1,70 @@
+ignoring read of Reify(): Reify(Sym(15),Summary(false,false,false,false,false,List(Sym(2), Sym(3), Sym(4)),List(Sym(2), Sym(3), Sym(4)),List(),List()),List(Sym(12), Sym(13), Sym(14)))
+ignoring read of Reify(): Reify(Sym(20),Summary(false,false,false,false,false,List(Sym(7), Sym(8), Sym(9)),List(Sym(7), Sym(8), Sym(9)),List(),List()),List(Sym(17), Sym(18), Sym(19)))
+ignoring read of Reify(): Reify(Const(()),Summary(false,false,false,false,false,List(Sym(2), Sym(3), Sym(4)),List(Sym(2), Sym(3), Sym(4)),List(),List()),List(Sym(12), Sym(13), Sym(14)))
+ignoring read of Reify(): Reify(Const(()),Summary(false,false,false,false,false,List(Sym(7), Sym(8), Sym(9)),List(Sym(7), Sym(8), Sym(9)),List(),List()),List(Sym(17), Sym(18), Sym(19)))
+ignoring read of Reify(): Reify(Sym(43),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(2), Sym(3), Sym(4), Sym(7), Sym(8), Sym(9), Sym(31), Sym(32), Sym(33), Sym(34), Sym(35), Sym(37), Sym(38), Sym(39), Sym(40), Sym(41), Sym(43)))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Any)) {
+def apply(x0:Int): Any = {
+var x2: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct3b$1$$anon$7@2af12142.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex] = scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct3b$1$$anon$7@2af12142.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex
+var x3: Double = 0.0
+var x4: Int = x0
+var x7: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct3b$1$$anon$7@2af12142.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$PolarComplex] = scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct3b$1$$anon$7@2af12142.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$PolarComplex
+var x8: Int = x0
+var x9: Double = 0.0
+val x11 = x0 > 0
+val x25 = if (x11) {
+val x13 = x3
+x13
+} else {
+val x24 = 0
+x24
+}
+var x31: Any = x25
+val x26 = if (x11) {
+val x14 = x4
+x14
+} else {
+val x24 = 0
+x24
+}
+var x32: Any = x26
+val x27 = if (x11) {
+val x12 = x2
+x12
+} else {
+val x17 = x7
+x17
+}
+var x33: Any = x27
+val x28 = if (x11) {
+val x24 = 0
+x24
+} else {
+val x19 = x9
+x19
+}
+var x34: Any = x28
+val x29 = if (x11) {
+val x24 = 0
+x24
+} else {
+val x18 = x8
+x18
+}
+var x35: Any = x29
+val x37 = x31
+val x38 = x32
+val x39 = x33
+val x40 = x34
+val x41 = x35
+val x42 = Map("re"->x37,"im"->x38,"clzz"->x39,"phi"->x40,"r"->x41) //LubTag(scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct3b$1$$anon$7@2af12142.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$Complex,scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct3b$1$$anon$7@2af12142.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex,scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct3b$1$$anon$7@2af12142.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$PolarComplex)
+val x43 = println(x42)
+x43
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

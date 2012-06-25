@@ -1,0 +1,20 @@
+ignoring read of Reify(): Reify(Sym(10),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(2), Sym(3), Sym(4), Sym(6), Sym(7), Sym(8), Sym(10)))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Any)) {
+def apply(x0:Int): Any = {
+var x2: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct1a$1$$anon$1@5bc9c5b2.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex] = scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct1a$1$$anon$1@5bc9c5b2.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex
+var x3: Int = x0
+var x4: Double = 0.0
+val x6 = x2
+val x7 = x3
+val x8 = x4
+val x9 = Map("clzz"->x6,"re"->x7,"im"->x8) //MyClassTag(scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct1a$1$$anon$1@5bc9c5b2.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex)
+val x10 = println(x9)
+x10
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

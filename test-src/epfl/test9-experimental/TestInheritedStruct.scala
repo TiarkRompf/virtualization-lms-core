@@ -39,8 +39,6 @@ trait ScalaGenNullOps extends GenericNestedCodegen{
     
 
 trait ComplexInheritArith extends Arith with ComplexInheritBase with OverloadHack {
-  
-
   def infix_+(x: Rep[Complex], y: Rep[Complex]): Rep[Complex] = {
    val xCart : Rep[CartesianComplex] = x.toCartesian
    val yCart : Rep[CartesianComplex]= y.toCartesian
@@ -86,11 +84,19 @@ trait SuperIfThenElseExp extends IfThenElseExpOpt with BooleanOpsExp with EqualE
 
 //the exps
 //mixing with Complex base is hopefully temporary
-trait StructInheritanceExp extends StructExpOpt with CastingOpsExp with SuperIfThenElseExp with MathOpsExp with VariablesExp with
-ComplexInheritBase{
+trait StructInheritanceExp extends StructExpOpt with CastingOpsExp with SuperIfThenElseExp with MathOpsExp with VariablesExp{
 
-  case class MyClassTag[T](name: String, mT: Manifest[T]) extends StructTag[T]
-  case class SubclassTag[T](name: MyClassTag[T], lineage: List[MyClassTag[_ /* >: T*/]], mT: Manifest[T]) extends StructTag[T]
+  case class MyClassTag[T](mT: Manifest[T]) extends StructTag[T]
+
+  /**
+   * need a separate class for identifying ifThenElse tags
+   * treating them is different for instanceOf tests (where code needs
+   * to be generated)
+   * @param mT: the manifest "thought" to be the type of the ifThenElseStruct
+   * @param mL: manifest of the then branch
+   * @param mR: manifest of the else branch
+   */
+  case class LubTag[T,L,R](mT: Manifest[T], mL: Manifest[L], mR: Manifest[R]) extends StructTag[T]
 
   //in a copy-paste style!
   def deReiify[T:Manifest](a: Block[T]): (Block[Unit], Rep[T]) = a match { // take Reify(stms, e) and return Reify(stms, ()), e
@@ -99,69 +105,48 @@ ComplexInheritBase{
   }
 
   override def rep_isinstanceof[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) = lhs match {
-      case Def(SimpleStruct(SubclassTag(_, _, mT), _)) => 
+      case Def(SimpleStruct(MyClassTag(mT), _)) =>
         unit(mT <:< mB)
-
-      //an ifThenElse creates a MyClassTag
-      //we can match against it separately. Temporary solution  
-      case Def(SimpleStruct(MyClassTag(_,_),_)) => 
-        val aField = field[Manifest[_]](lhs, "clzz") match {
-          case Def(Reflect(ReadVar(s),_,_)) => s
-        }
+      case Def(SimpleStruct(LubTag(_, _, _), elems)) =>
+        val aField = elems("clzz").asInstanceOf[Rep[Manifest[_]]]
+        //TODO: replace with generation of <:< test
         val myequality = equals(aField,unit(mB.erasure))
-        //println(findDefinition(myequality.asInstanceOf[Sym[_]]).map(_.rhs))
-        //println()
         myequality
-      case _ => 
-        super.rep_isinstanceof(lhs, mA, mB)
+
+      case _ => super.rep_isinstanceof(lhs, mA, mB)
   }
 
   override def rep_asinstanceof[A, B:Manifest](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext): Exp[B] = lhs match {
-      //this should now work due to the presence of manifests
-      case scls@Def(SimpleStruct(SubclassTag(_, _, _), _)) => 
+      case scls@Def(SimpleStruct(sc@MyClassTag(mSc),elems)) => 
         scls.asInstanceOf[Exp[B]]
-      //TODO: quick hack for testing, not real implementation
-      case Def(SimpleStruct(sc@MyClassTag(_,mSc),elems)) => 
-        assert(mSc.equals(mA))
-        
-        if(mB.equals(manifest[CartesianComplex])){
-          val currentClassTag = MyClassTag[CartesianComplex](mB.toString, manifest[CartesianComplex])
-          val subclassTag = SubclassTag[CartesianComplex](currentClassTag, List(sc), manifest[CartesianComplex]) 
-          struct[CartesianComplex](subclassTag, Map("clzz" -> unit(manifest[CartesianComplex].erasure), "re"->
-                elems("re").asInstanceOf[Rep[Double]], "im" -> elems("im").asInstanceOf[Rep[Double]])).asInstanceOf[Exp[B]]
-        
-        }else{
-          val currentClassTag = MyClassTag[PolarComplex](mB.toString, manifest[PolarComplex])
-          val subclassTag = SubclassTag[PolarComplex](currentClassTag, List(sc), manifest[PolarComplex]) 
-
-          struct[PolarComplex](subclassTag, Map("clzz" -> unit(manifest[PolarComplex].erasure), "r"-> elems("r").asInstanceOf[Rep[Double]],
-                "phi" -> elems("phi").asInstanceOf[Rep[Double]])).asInstanceOf[Exp[B]]
-
-        }
+      //if in presence of a lub tag, instantiate a MyClassTag
+      case Def(SimpleStruct(LubTag(mT, mL, mR),elems)) =>
+          assert(mB <:< mL || mB <:< mR)
+          struct[B](MyClassTag[B](mB), elems + ("clzz" -> unit(mB)))
       case _ => 
         super.rep_asinstanceof(lhs, mA, mB)
   }
 }
 
-trait ComplexInheritStructExp extends /*ComplexInheritBase with */StructInheritanceExp{
+trait ComplexInheritStructExp extends ComplexInheritBase with StructInheritanceExp{
 
   def CartesianComplex(re: Exp[Double], im: Exp[Double]) = {
-    val superclassTag = MyClassTag[Complex]("Complex", manifest[Complex]) 
-    val cartesianTag = MyClassTag[CartesianComplex]("CartesianComplex", manifest[CartesianComplex])
-    val subclassTag = SubclassTag[CartesianComplex](cartesianTag, List(superclassTag), manifest[CartesianComplex])
+    //val superclassTag = MyClassTag[Complex](manifest[Complex]) 
+    val cartesianTag = MyClassTag[CartesianComplex](manifest[CartesianComplex])
+    //val subclassTag = SubclassTag[CartesianComplex](cartesianTag, List(superclassTag), manifest[CartesianComplex])
 
-    struct[CartesianComplex](subclassTag, Map("clzz"-> unit(manifest[CartesianComplex].erasure), "re"->re, "im"->im))
+    struct[CartesianComplex](cartesianTag, Map("clzz"-> unit(manifest[CartesianComplex]), "re"->re, "im"->im))
   }
   def infix_re(c: Exp[CartesianComplex]): Exp[Double] = field[Double](c, "re")
   def infix_im(c: Exp[CartesianComplex]): Exp[Double] = field[Double](c, "im")
 
   //Polar complex numbers
   def PolarComplex(r: Exp[Double], phi: Exp[Double]) = {
-    val superclassTag = MyClassTag[Complex]("Complex", manifest[Complex]) 
-    val polarTag = MyClassTag[PolarComplex]("PolarComplex", manifest[PolarComplex])
-    val subclassTag = SubclassTag[PolarComplex](polarTag, List(superclassTag), manifest[PolarComplex])
+    //val superclassTag = MyClassTag[Complex](manifest[Complex]) 
+    val polarTag = MyClassTag[PolarComplex](manifest[PolarComplex])
+    //val subclassTag = SubclassTag[PolarComplex](polarTag, List(superclassTag), manifest[PolarComplex])
 
-    struct[PolarComplex](subclassTag, Map("clzz"-> unit(manifest[PolarComplex].erasure), "r"->r, "phi"->phi))
+    struct[PolarComplex](polarTag, Map("clzz"-> unit(manifest[PolarComplex]), "r"->r, "phi"->phi))
   } 
   
   def infix_r(c: Exp[PolarComplex]): Exp[Double] = field[Double](c, "r")
@@ -169,18 +154,18 @@ trait ComplexInheritStructExp extends /*ComplexInheritBase with */StructInherita
 
   //subPolar complex numbers
   def SubPolarComplex(r: Exp[Double], phi: Exp[Double]) = {
-    val superclassTag = MyClassTag[Complex]("Complex", manifest[Complex]) 
-    val parentclassTag = MyClassTag[PolarComplex]("PolarComplex", manifest[PolarComplex])
-    val subpolarTag = MyClassTag[SubPolarComplex]("SubPolarComplex", manifest[SubPolarComplex])
-    val subclassTag = SubclassTag[SubPolarComplex](subpolarTag, List(parentclassTag, superclassTag), manifest[SubPolarComplex])
+    //val superclassTag = MyClassTag[Complex](manifest[Complex]) 
+    //val parentclassTag = MyClassTag[PolarComplex](manifest[PolarComplex])
+    val subpolarTag = MyClassTag[SubPolarComplex](manifest[SubPolarComplex])
+    //val subclassTag = SubclassTag[SubPolarComplex](subpolarTag, List(parentclassTag, superclassTag), manifest[SubPolarComplex])
 
-    struct[SubPolarComplex](subclassTag, Map("clzz" -> unit(manifest[SubPolarComplex].erasure), "r"->r, "phi"->phi))
+    struct[SubPolarComplex](subpolarTag, Map("clzz" -> unit(manifest[SubPolarComplex]), "r"->r, "phi"->phi))
   }
 
 }
 
 // ------ struct impl follows, will move to common once stable
-trait StructInheritExpOptLoops extends StructExpOptCommon with StructInheritanceExp /*with ArrayLoopsExp*/with NullOpsExp{
+trait StructInheritExpOptLoops extends StructExpOptCommon with StructInheritanceExp with ArrayLoopsExp with NullOpsExp{
   
   case class ArraySoaTag[T](base: StructTag[T], len: Exp[Int]) extends StructTag[T]
 
@@ -194,50 +179,51 @@ trait StructInheritExpOptLoops extends StructExpOptCommon with StructInheritance
     }
     inner(hierarchy1.reverse.head::Nil, hierarchy1.reverse.tail, hierarchy2.reverse.tail)
   }
-  
+
   override def ifThenElse[T:Manifest](cond: Exp[Boolean], a: Block[T], b: Block[T])(implicit pos: SourceContext) = {
     (deReiify(a),deReiify(b)) match {
       case ((u, Def(s1@Struct(tagA, elemsA))), (v, Def(Struct(tagB, elemsB)))) =>
         //match the tags, which can now be subclasses
         //the superclass is abstract, and has no keySet 
         (tagA, tagB) match {
-          case (SubclassTag(c1, parents1, _), SubclassTag(c2, parents2, _)) => 
+          case (MyClassTag(c1), MyClassTag(c2)) => 
+            assert(c1 <:< manifest[T] && c2 <:< manifest[T])
 
-            val hierarchy1 = (c1::parents1).asInstanceOf[List[MyClassTag[Any]]]
-            val hierarchy2 = (c2::parents2).asInstanceOf[List[MyClassTag[Any]]]
+            //val hierarchy1 = (c1::parents1).asInstanceOf[List[MyClassTag[Any]]]
+            //val hierarchy2 = (c2::parents2).asInstanceOf[List[MyClassTag[Any]]]
 
             //find the least upperbound
-            val commonAncestry: List[MyClassTag[Any]] = lub(hierarchy1, hierarchy2) 
-            val commonClass:StructTag[_] = commonAncestry match {
-              case x::Nil => x
-              case (x@MyClassTag(_,mfest))::xs => SubclassTag(x, xs, mfest) 
-            }
+            //val commonAncestry: List[MyClassTag[Any]] = lub(hierarchy1, hierarchy2) 
+            val commonClass = if(c1.equals(manifest[T]) || c2.equals(manifest[T]))
+            MyClassTag(manifest[T])
+            else LubTag(manifest[T], c1, c2)
+            //val commonClass:StructTag[_] = commonAncestry match {
+            //  case x::Nil => x
+            //  case (x@MyClassTag(mfest))::xs => SubclassTag(x, xs, mfest) 
+            //}
 
             //merge the keyset of c1 and c2
             val elemsNewkeys = elemsA.keySet union elemsB.keySet
             val elemsNew = for (k <- elemsNewkeys) yield (
               k -> ifThenElse(cond, Block(elemsA.getOrElse(k, Null)), Block(elemsB.getOrElse(k, Null))) //TODO : add sourcecontext
             )
-            struct(commonClass, elemsNew.toMap).asInstanceOf[Exp[T]]
+            struct(commonClass, elemsNew.toMap)
 
-          //another temporary hack
-          case (MyClassTag(name1,_), MyClassTag(name2,_)) =>
-            //assert(name1 == name2)
-             s1
-
+          //TODO: think about nested ifThenElse for structs
+          //case(LubTag(_,_,_), LubTag(_,_,_)) => 
           case _ => super.ifThenElse(cond, a, b)
       }
     case _ => super.ifThenElse(cond, a, b)
   }}
 
-/*override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
+override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
     case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) => 
       struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.arrayManifest))))
-    case ArrayElem(Block(Def(ArrayIndex(b,v)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
+    case ArrayElem(Block(Def(ArrayIndex(b,`v`)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
     case _ => super.simpleLoop(size, v, body)
   }
   
-  override def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
+ /* override def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
     case Def(Struct(ArraySoaTag(tag,len),elems:Map[String,Exp[Array[T]]])) =>
       def unwrap[A](m:Manifest[Array[A]]): Manifest[A] = m.typeArguments match {
         case a::_ => mtype(a)
@@ -269,94 +255,12 @@ class TestInheritedStruct extends FileDiffSuite {
   trait Impl extends DSL with ComplexInheritStructExp with ArrayLoopsExp with StructInheritExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 1
+    //import util.SymbolDependency
     val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenMathOps with ScalaGenOrderingOps with
     ScalaGenNullOps with ScalaGenEqual 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
-      with ScalaGenPrint { 
-        val IR: self.type = self
-
-          import scala.collection.mutable
-          import scala.collection.mutable.Buffer
-          import scala.virtualization.lms.util.GraphUtil
-        //import IR.{Sym, Def, Exp, Reify, Reflect, Const, Block}
-        //import IR.{SimpleStruct}
-        //import IR.{TTP, TP, SubstTransformer, Field}
-        //import IR.{findDefinition, fresh, reifyEffects, reifyEffectsHere, toAtom}
-     
-    class BlockVisitor(block: Block[_]) {
-
-      def visitAll(inputSym: Exp[Any]): List[Stm] = {
-        def getInputs(x: Exp[Any]) = x match {
-          case x: Sym[_] =>
-            findDefinition(x) match {
-              case Some(x) => syms(infix_rhs(x))
-              case None => Nil
-            }
-          case _ => Nil
-        }
-        val toVisit = mutable.Set[Sym[_]]()
-        toVisit += inputSym.asInstanceOf[Sym[_]]
-        val out = mutable.Buffer[Stm]()
-        while (!toVisit.isEmpty) {
-          val nextSym = toVisit.head
-          toVisit.remove(nextSym)
-          out ++= findDefinition(nextSym)
-          toVisit ++= getInputs(nextSym)
-        }
-        out.toList.distinct.reverse
-      }
-
-      lazy val statements = visitAll(block.res)
-      //lazy val defs = statements.flatMap(_.defs)
-   }
-
-   class Analyzer(block: Block[_]) extends BlockVisitor(block) {
-
-    private def getInputSyms(x: Sym[_]) = {
-      IR.findDefinition(x) match {
-        case Some(x) => IR.syms(x./*defs.*/rhs/*.head*/)
-        case _ => Nil
-      }
-    }
-
-    /**
-     * Exports the raw IR to .dot format.
-     */
-    def exportToGraphRaw = {
-      val buf = Buffer[String]()
-      buf += "digraph g {"
-      for (sym <- statements.flatMap(_.lhs/*syms*/)) {
-        val df = IR.findDefinition(sym)
-        buf += """%s [label="%s"];"""
-          .format(sym.id, df.get.toString)
-      }
-      for (sym <- statements.flatMap(_.lhs/*syms*/); input1 <- getInputSyms(sym)) {
-        buf += """%s -> %s [label="%s"]; """.format(sym.id, input1.id, sym.id)
-      }
-      buf += "}"
-      buf.mkString("\n")
-    }
-   }
-
-  override def emitSource[A, B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]):
-    List[(Sym[Any], Any)] = {
-      val x = fresh[A]
-      val y = /*transformTree(*/reifyBlock(f(x))//)
-      //writeGraphToFile(y, "test.dot", true)
-
-      super.emitSource(f, className, stream)
-    }
-
-  def writeGraphToFile(block: Block[_], name: String, comments: Boolean = true) {
-    val out = new FileOutputStream(name)
-    val analyzer = new Analyzer(block)
-    out.write(analyzer.exportToGraphRaw.getBytes)
-    out.close
-  }
-
-
-
-      }    
+      with ScalaGenPrint /*with SymbolDependency*/ { val IR: self.type = self}
+          
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
 
@@ -509,9 +413,25 @@ class TestInheritedStruct extends FileDiffSuite {
     }
     assertFileEqualsCheck(prefix+"inheritedstruct4b")
   }  
-  
+
   def testStruct4c = {
     withOutFile(prefix+"inheritedstruct4c") {
+      // test variable splitting
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          var c = CartesianComplex(0, x.toDouble)
+          var d = CartesianComplex(x.toDouble, 0)
+          var e = if(x > 0) c else d
+          if(e.IsInstanceOf[CartesianComplex]) print("definitely a cartesian!")
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"inheritedstruct4c")
+  } 
+ 
+  def testStruct4d = {
+    withOutFile(prefix+"inheritedstruct4d") {
       // test variable splitting
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
@@ -523,11 +443,11 @@ class TestInheritedStruct extends FileDiffSuite {
       }
       new Prog with Impl
     }
-    assertFileEqualsCheck(prefix+"inheritedstruct4c")
+    assertFileEqualsCheck(prefix+"inheritedstruct4d")
   } 
 
-  def testStruct4d = {
-    withOutFile(prefix+"inheritedstruct4d") {
+  def testStruct4e = {
+    withOutFile(prefix+"inheritedstruct4e") {
       // test variable splitting
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
@@ -540,6 +460,151 @@ class TestInheritedStruct extends FileDiffSuite {
       }
       new Prog with Impl
     }
-    assertFileEqualsCheck(prefix+"inheritedstruct4d")
-  } 
+    assertFileEqualsCheck(prefix+"inheritedstruct4e")
+  }
+
+/*  def testStruct5a = {
+    withOutFile(prefix+"inheritedstruct5a") {
+      // test basic struct flattening (loops, variables, conditionals)
+      println("REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)")
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          // split loops (rely on fusion, don't want to duplicate computation!)
+
+          val vector1 = array(100) { i => CartesianComplex(i.toDouble, 0.0 - i.toDouble) }
+          val vector2 = array(100) { i => CartesianComplex(0.0 - i.toDouble, i.toDouble) }
+
+          var vvar = vector2
+
+          // split conditionals (be careful about effects)
+
+          val vector3 = if (x > 7) vector1 else vvar
+
+          // conditional is reflected because it reads vvar -- effect ordering for split terms?
+
+          vvar = vector1
+
+          print(vvar)
+          print(vector3)
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"inheritedstruct5a")
+  }
+
+  def testStruct5b = {
+    withOutFile(prefix+"inheritedstruct5b") {
+      // test basic struct flattening (loops, variables, conditionals)
+      println("REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)")
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          // split loops (rely on fusion, don't want to duplicate computation!)
+
+          val vector1 = array[Complex](100) { i => CartesianComplex(i.toDouble, 0.0 - i.toDouble) }
+          val vector2 = array[Complex](100) { i => PolarComplex(0.0 - i.toDouble, i.toDouble) }
+
+          val vector3 = if (x > 7) vector1 else vector2
+          print(vector3)
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"inheritedstruct5b")
+  }
+  def testStruct2b = {
+    withOutFile(prefix+"struct2b") {
+      // test basic struct flattening (loops, variables, conditionals)
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          // split loops (rely on fusion, don't want to duplicate computation!)
+
+          val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
+          val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
+
+          var vvar = vector2
+
+          // split conditionals (be careful about effects)
+
+          val vector3 = if (x > 7) { 
+            print("foobar true")
+            vector1
+          } else {
+            print("foobar false")
+            vvar 
+          }
+
+          vvar = vector1
+
+          print(vvar)
+          print(vector3)
+        }
+      }
+      new Prog with ImplFused
+    }
+    assertFileEqualsCheck(prefix+"struct2b")
+  }
+
+  def testStruct3 = {
+    withOutFile(prefix+"struct3") {
+      // fuse conjugate computation with construction, essentially a no-op
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+
+          val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
+
+          def conj(c: Rep[Complex]) = Complex(c.re, 0.0 - c.im)
+          def infix_map[A:Manifest,B:Manifest](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
+
+          val vector3 = vector1.map(conj)
+
+          print(vector3)
+        }
+      }
+      new Prog with ImplFused {
+        // TODO: use a generic Opt trait instead of defining rewrites here...
+        override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
+          case (x, Def(Minus(Const(0.0),y))) => infix_+(x,y)
+          case _ => super.infix_-(x,y)
+        }
+        override def infix_+(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
+          case (Const(0.0), y) => y
+          case _ => super.infix_+(x,y)
+        }
+      }
+    }
+    assertFileEqualsCheck(prefix+"struct3")
+  }
+
+  def testStruct4 = {
+    withOutFile(prefix+"struct4") {
+      trait Prog extends DSL {
+        // recognize that only imaginary part is modified, real part untouched
+        def test(x: Rep[Int]) = {
+
+          val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
+          val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
+
+          def conj(c: Rep[Complex]) = Complex(c.re, 0.0 - c.im)
+          def infix_map[A:Manifest,B:Manifest](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
+
+          var vvar = vector1 // force access outside conditional, otherwise construction will be moved inside, defeating purpose of test
+
+          // result of this conditional should be a *single* array 
+          // containing the flattened im fields. re fields should be
+          // unconditional.
+          val vector3 = if (x > 7) {
+            vector1.map(conj)
+          } else {
+            vector1
+          }
+
+          print(vector3)
+        }
+      }
+      new Prog with ImplFused
+    }
+    assertFileEqualsCheck(prefix+"struct4")
+  }
+*/
 }
