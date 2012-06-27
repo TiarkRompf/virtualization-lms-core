@@ -200,6 +200,11 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
       case IntBitwiseNot(x) => int_bitwise_not(f(x))
       case IntDivide(x,y) => int_divide(f(x),f(y))
       case IntMod(x,y) => int_mod(f(x),f(y))
+      case IntToLong(x) => int_tolong(f(x))
+      case LongShiftLeft(x,y) => long_shiftleft(f(x),f(y))
+      case LongBinaryAnd(x,y) => long_binaryand(f(x),f(y))
+      case LongToInt(x) => long_toint(f(x))
+      case LongShiftRightUnsigned(x,y) => long_shiftright_unsigned(f(x),f(y))
       case _ => super.mirror(e,f)
     }
   }).asInstanceOf[Exp[A]]

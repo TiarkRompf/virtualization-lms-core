@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package common
 
+import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
 
 trait ForwardTransformer extends internal.AbstractSubstTransformer with internal.FatBlockTraversal { self =>
@@ -18,8 +19,11 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   override def apply[A:Manifest](xs: Block[A]): Block[A] = transformBlock(xs)
   
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
+    val save = subst
     traverseBlock(block)
-    apply(getBlockResult(block))
+    val x = apply(getBlockResult(block))
+    subst = save 
+    x
   }
 
   override def traverseStm(stm: Stm): Unit = stm match {
@@ -43,6 +47,8 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
               e.printStackTrace; 
               sym            
           }
+        // printlog("registering forward transformation: " + sym + " to " + replace)
+        // printlog("while processing stm: " + stm)          
         subst += (sym -> replace)
       } else {
         printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
