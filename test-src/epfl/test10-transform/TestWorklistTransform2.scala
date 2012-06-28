@@ -85,8 +85,6 @@ trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp wit
 
 
   val xform = new MyWorklistTransformer
-  
-
 
   override def vapply[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]) = (a,x) match {
     case (Def(VectorLiteral(ax)), Const(x)) => ax(x)
@@ -101,28 +99,19 @@ class TestForward2 extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test10-"
   
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
-
-    def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-
-
+  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
+    with IfThenElse with While with RangeOps with Print {
     def test(x: Rep[Int]): Rep[Unit]
   }
   trait Impl extends DSL with VectorExpTrans2 with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
-      with EqualExpOpt with StructFatExpOptCommon //with VariablesExpOpt 
-      with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp 
-       with FWTransform2 { self => 
+    with EqualExpOpt with StructFatExpOptCommon //with VariablesExpOpt 
+    with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp { self => 
     override val verbosity = 2
-    val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
+
+    val codegen = new ScalaGenVector with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenStruct with ScalaGenRangeOps 
-      with ScalaGenPrint with ScalaGenFatStruct { val IR: self.type = self 
-        override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-          if (rhs.toString.startsWith("Vector"))
-            emitValDef(sym, rhs.toString)
-          else
-            super.emitNode(sym,rhs)
-        }
-      }
+      with ScalaGenPrint with ScalaGenFatStruct { val IR: self.type = self }
+
     codegen.withStream(new PrintWriter(System.out)) {
       println("### first")
       val b1 = reifyEffects(test(fresh))
