@@ -129,6 +129,52 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
     
 }
 
+trait ArrayOpsExpOpt extends ArrayOpsExp {
+
+
+  override def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int])(implicit pos: SourceContext): Exp[T] = {
+    if (context ne null) {
+      // find the last modification of array x
+      // if it is an assigment at index n, just return the last value assigned 
+      val vs = x.asInstanceOf[Sym[Array[T]]]
+      //TODO: could use calculateDependencies?
+      
+      val rhs = context.reverse.collectFirst { 
+        //case w @ Def(Reflect(ArrayNew(sz: Exp[T]), _, _)) if w == x => Some(Const(0)) // FIXME: bounds check!
+        case Def(Reflect(ArrayUpdate(`x`, `n`, rhs: Exp[T]), _, _)) => Some(rhs)
+        case Def(Reflect(_, u, _)) if mayWrite(u, List(vs)) => None // not a simple assignment
+      }
+      rhs.flatten.getOrElse(super.array_apply(x,n))
+    } else {
+      super.array_apply(x,n)
+    }
+  }
+  
+  override def array_update[T:Manifest](x: Exp[Array[T]], n: Exp[Int], y: Exp[T])(implicit pos: SourceContext) = {
+    if (context ne null) {
+      // find the last modification of array x
+      // if it is an assigment at index n with the same value, just do nothing
+      val vs = x.asInstanceOf[Sym[Array[T]]]
+      //TODO: could use calculateDependencies?
+      
+      val rhs = context.reverse.collectFirst { 
+        //case w @ Def(Reflect(ArrayNew(sz: Exp[T]), _, _)) if w == x => Some(Const(())) // FIXME: bounds check!
+        case Def(Reflect(ArrayUpdate(`x`, `n`, `y`), _, _)) => Some(Const(()))
+        case Def(Reflect(_, u, _)) if mayWrite(u, List(vs)) => None // not a simple assignment
+      }
+      rhs.flatten.getOrElse(super.array_update(x,n,y))
+    } else {
+      super.array_update(x,n,y)
+    }
+  }
+
+
+
+}
+
+
+
+
 trait BaseGenArrayOps extends GenericNestedCodegen {
   val IR: ArrayOpsExp
   import IR._

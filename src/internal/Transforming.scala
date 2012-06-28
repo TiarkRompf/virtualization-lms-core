@@ -6,7 +6,7 @@ import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
 
 trait AbstractTransformer {
-  val IR: Expressions with Blocks with OverloadHack 
+  val IR: Expressions with Blocks with OverloadHack
   import IR._
   
   def hasContext = false
@@ -17,7 +17,7 @@ trait AbstractTransformer {
     // should be overridden by transformers with context
     assert(!hasContext) 
     Block(apply(xs.res)) 
-  } 
+  }
   def apply[A](xs: List[Exp[A]]): List[Exp[A]] = xs map (e => apply(e))
   def apply[A](xs: Seq[Exp[A]]): Seq[Exp[A]] = xs map (e => apply(e))
   def apply[X,A](f: X=>Exp[A]): X=>Exp[A] = (z:X) => apply(f(z))
