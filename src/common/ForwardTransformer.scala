@@ -19,11 +19,10 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   override def apply[A:Manifest](xs: Block[A]): Block[A] = transformBlock(xs)
   
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
-    val save = subst
-    traverseBlock(block)
-    val x = apply(getBlockResult(block))
-    subst = save 
-    x
+    withSubstScope {
+      traverseBlock(block)
+      apply(getBlockResult(block))
+    }
   }
 
   override def traverseStm(stm: Stm): Unit = stm match {

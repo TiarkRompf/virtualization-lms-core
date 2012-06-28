@@ -125,8 +125,13 @@ trait Effects extends Expressions with Blocks with Utils {
   def readSyms(e: Any): List[Sym[Any]] = e match {
     case Reflect(x, u, es) => readSyms(x) // ignore effect deps (they are not read!)
     case Reify(x, u, es) => 
-      if (es contains x) Nil // FIXME this piece of logic is not clear. is it a special case for unit??
-      else readSyms(x) // result of block is not read but passed through!
+      // in general: the result of a block is not read but passed through.
+      // FIXME this piece of logic is not clear. is it a special case for unit?? 
+      // it looks like this was introduced to prevent the Reify to be reflected 
+      // if x is a mutable object defined within the block.
+      // TODO the globalMutableSyms part was added later (June 2012) -- make sure it does the right thing
+      if ((es contains x) || (globalMutableSyms contains x)) Nil 
+      else readSyms(x)
     case s: Sym[Any] => List(s)
     case p: Product => p.productIterator.toList.flatMap(readSyms(_))
     case _ => Nil
@@ -162,7 +167,6 @@ trait Effects extends Expressions with Blocks with Utils {
   etc.
   
   */
-
 
   def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case Reflect(x, u, es) => aliasSyms(x)
@@ -222,8 +226,9 @@ trait Effects extends Expressions with Blocks with Utils {
   val deepAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   val allAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   
-  def utilLoadSymTP[T](s: Sym[T]) = if (!isPrimitiveType(s.tp)) globalDefs.filter{e => e.lhs contains s} else Nil
-  def utilLoadSym[T](s: Sym[T]) = utilLoadSymTP(s).map(_.rhs)
+  def utilLoadStm[T](s: Sym[T]) = if (!isPrimitiveType(s.tp)) globalDefs.filter{e => e.lhs contains s} else Nil
+  def utilLoadStms(s: List[Sym[Any]]) = s.flatMap(utilLoadStm)
+  def utilLoadSym[T](s: Sym[T]) = utilLoadStm(s).map(_.rhs)
   
   def shallowAliases(start: Any): List[Sym[Any]] = {
     val alias = noPrim(aliasSyms(start)) flatMap { a => a::shallowAliasCache.getOrElseUpdate(a, shallowAliases(utilLoadSym(a))) }
@@ -250,17 +255,16 @@ trait Effects extends Expressions with Blocks with Utils {
     r
   }
 
-  def allTransitiveAliases(start: Any): List[Stm] = transitiveAliases(allAliases(start))
-  
-  def transitiveAliases(start: List[Sym[Any]]): List[Stm] = start.flatMap(utilLoadSymTP)
+  //def allTransitiveAliases(start: Any): List[Stm] = utilLoadStms(allAliases(start))
+  //def transitiveAliases(start: List[Sym[Any]]): List[Stm] = start.flatMap(utilLoadSymTP)
   
   // TODO possible optimization: a mutable object never aliases another mutable object, so its inputs need not be followed
   
   def mutableTransitiveAliases(s: Any) = {
     val aliases = allAliases(s)
-    val globalMutable = aliases filter { o => globalMutableSyms.contains(o) }
-    val transitive = transitiveAliases(aliases) collect { case TP(s2, Reflect(_, u, _)) if mustMutable(u) => s2 }
-    globalMutable ++ transitive
+    val bareMutableSyms = aliases filter { o => globalMutableSyms.contains(o) }
+    val definedMutableSyms = utilLoadStms(aliases) collect { case TP(s2, Reflect(_, u, _)) if mustMutable(u) => s2 }
+    bareMutableSyms ++ definedMutableSyms
   }
   
   
@@ -308,18 +312,13 @@ trait Effects extends Expressions with Blocks with Utils {
         super.toAtom             // if summary is still pure
         createReflectDefinition  // if summary is not pure
 */    
+    // warn if type is Any. TODO: make optional, sometimes Exp[Any] is fine
     if (manifest[T] == manifest[Any]) printlog("warning: possible missing mtype call - toAtom with Def of type Any " + d)
-    d match {
-      case Reify(x,_,_) => 
-        // aks: this became a problem after adding global mutable vars to the read deps list. what is the proper way of handling this?
-        // specifically, if we return the reified version of a mutable bound var, we get a Reflect(Reify(..)) error, e.g. mutable Sum 
-        // printlog("ignoring read of Reify(): " + d)
-        super.toAtom(d)
-      case _ => reflectEffect(d, Pure())
-    }    
+    reflectEffect(d, Pure())
   }
 
   def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
+    // warn if type is Any. TODO: make optional, sometimes Exp[Any] is fine
     if (manifest[A] == manifest[Any]) printlog("warning: possible missing mtype call - reflectMirrored with Def of type Any: " + zd)
     context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
       //case z::_ => z.asInstanceOf[Exp[A]]  -- unsafe: we don't have a tight context, so we might pick one from a flattened subcontext
@@ -423,13 +422,6 @@ trait Effects extends Expressions with Blocks with Utils {
           - mutableAliases \ mayWrite <-- too permissive?
           - something else?
         
-        */
-        /*
-        val mutableAliases = mutableTransitiveAliases(x) filterNot (u.mayWrite contains _)
-        if (mutableAliases.nonEmpty) {
-          printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
-          printerr("at " + z + "=" + zd)
-        }
         */
         createReflectDefinition(z, zd)
       }

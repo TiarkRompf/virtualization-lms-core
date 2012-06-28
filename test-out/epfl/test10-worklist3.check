@@ -53,28 +53,28 @@ val x24 = println(x23)
 
 ### next
 install replacement for Sym(19)
-toAtom transform ArrayIndex(Sym(15),Sym(18)) List(Sym(15), Sym(18)) -> List(Sym(31), Sym(34))
+toAtom transform ArrayIndex(Sym(15),Sym(18)) List(Sym(15), Sym(18)) -> List(Sym(30), Sym(33))
 install replacement for Sym(20)
-toAtom transform ArrayIndex(Sym(9),Sym(18)) List(Sym(9), Sym(18)) -> List(Sym(28), Sym(34))
+toAtom transform ArrayIndex(Sym(9),Sym(18)) List(Sym(9), Sym(18)) -> List(Sym(27), Sym(33))
 --- code ---
 val x3 = x0 > 0
-val x28 = LoopArray(100) { x27 => 
+val x27 = LoopArray(100) { x26 => 
 0.0
 }
 // TODO: use vars instead of tuples to return multiple values
-val (x16,x31) = if (x3) {
-(100,x28)
+val (x16,x30) = if (x3) {
+(100,x27)
 } else {
-val x30 = LoopArray(50) { x29 => 
+val x29 = LoopArray(50) { x28 => 
 0.0
 }
-(50,x30)
+(50,x29)
 }
-val x38 = LoopArray(x16) { x34 => 
-val x35 = x31.apply(x34)
-val x36 = x28.apply(x34)
-val x37 = x35+x36
-x37
+val x37 = LoopArray(x16) { x33 => 
+val x34 = x30.apply(x33)
+val x35 = x27.apply(x33)
+val x36 = x34+x35
+x36
 }
-val x39 = Map("data"->x38,"length"->x16) //ClassTag(Vector)
-val x40 = println(x39)
+val x38 = Map("data"->x37,"length"->x16) //ClassTag(Vector)
+val x39 = println(x38)

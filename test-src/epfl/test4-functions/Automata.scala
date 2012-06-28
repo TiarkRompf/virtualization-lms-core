@@ -453,11 +453,11 @@ def flatMap[A,B](in: Iteratee[A])(f: A => Iteratee[B]) = in match {
 f: a -> Iteratee b
 instance Monad Iteratee where 
 return = IE_done
-IE_done a	>>= f = f a 
+IE_done a >>= f = f a 
 IE_cont e k >>= f = IE_cont e (docase . k)
 where docase 
-  (IE_done a, stream)	= case f a of
+  (IE_done a, stream) = case f a of
   IE_cont Nothing k -> k stream
-  i	-> (i,stream) 
+  i -> (i,stream) 
 docase (i, s) = (i >>= f, s)
 */

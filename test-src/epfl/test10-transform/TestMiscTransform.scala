@@ -47,7 +47,7 @@ trait SimpleBlockTransformer extends internal.FatBlockTraversal {
         def apply[A](x: Exp[A]) = x 
         override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
-      List(TP(s, mirrorDef(d, trans)))
+      List(TP(s, mirrorDef(d, trans)(mtype(s.tp),mpos(s.pos))))
     // blocks(d) map transformBlock
   }
   
@@ -113,7 +113,7 @@ trait NestedBlockTransformer extends internal.FatBlockTraversal {
         def apply[A](x: Exp[A]) = transformExp(x)
         override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
-      List(TP(s, mirrorDef(d, trans)))
+      List(TP(s, mirrorDef(d, trans)(mtype(s.tp),mpos(s.pos))))
     // blocks(d) map transformBlock
   }
   
@@ -178,7 +178,7 @@ trait MirrorBlockTransformer extends internal.FatBlockTraversal {
         def apply[A](x: Exp[A]) = transformExp(x)
         override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
-      mirror(d,trans)
+      mirror(d,trans)(mtype(s.tp),mpos(s.pos))
   }
 
 }
@@ -215,7 +215,7 @@ trait MirrorRetainBlockTransformer extends MirrorBlockTransformer {
         def apply[A](x: Exp[A]) = transformExp(x)
         override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
-      mirror(d,trans)
+      mirror(d,trans)(mtype(s.tp),mpos(s.pos))
   }
 
 }
@@ -257,7 +257,7 @@ class TestMisc extends FileDiffSuite {
   trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
 
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-    def test(x: Rep[Int]): Rep[Any]
+    def test(x: Rep[Int]): Rep[Unit]
   }
   
   trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
@@ -523,7 +523,7 @@ class TestMisc extends FileDiffSuite {
             r
           }, {
             mirrorBlock(b)
-          })
+          })(mtype(s.tp),mpos(s.pos))
         case _ => super.transformStm(stm)
       }
     }
@@ -598,7 +598,7 @@ class TestMisc extends FileDiffSuite {
             r
           }, {
             mirrorBlock(b)
-          })
+          })(mtype(s.tp),mpos(s.pos))
         case _ => super.transformStm(stm)
       }
     }

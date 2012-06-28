@@ -49,9 +49,9 @@ trait FunctionBlocksExp extends BaseExp with Blocks with Effects with OverloadHa
    
   implicit def transformerToBlockTransformer(t: ForwardTransformer{val IR: FunctionBlocksExp.this.type}) = new {
     def apply[R](x: Block0[R]): (() => Exp[R]) =  { () => t.reflectBlock(x.blockRes) }
-    def apply[T1,R](x: Block1[T1,R]): Exp[T1] => Exp[R] = { a => val save = t.subst; t.subst += (x.blockArg1 -> a); val y = t.reflectBlock(x.blockRes); t.subst = save; y }
-    def apply[T1,T2,R](x: Block2[T1,T2,R]): (Exp[T1],Exp[T2]) => Exp[R] =  { (a,b) => val save = t.subst; t.subst ++= scala.List(x.blockArg1 -> a, x.blockArg2 -> b); val y = t.reflectBlock(x.blockRes); t.subst = save; y }    
-  }  
+    def apply[T1,R](x: Block1[T1,R]): Exp[T1] => Exp[R] = { a => t.withSubstScope(x.blockArg1 -> a) { t.reflectBlock(x.blockRes) } }
+    def apply[T1,T2,R](x: Block2[T1,T2,R]): (Exp[T1],Exp[T2]) => Exp[R] = { (a,b) => t.withSubstScope(x.blockArg1 -> a, x.blockArg2 -> b) { t.reflectBlock(x.blockRes) } }
+  }
   
   /*
    * For mirroring of BlockN types without conversion to lambdas

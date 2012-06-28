@@ -106,7 +106,7 @@ class TestForward2 extends FileDiffSuite {
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
 
-    def test(x: Rep[Int]): Rep[Any]
+    def test(x: Rep[Int]): Rep[Unit]
   }
   trait Impl extends DSL with VectorExpTrans2 with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt with StructFatExpOptCommon //with VariablesExpOpt 
@@ -129,7 +129,7 @@ class TestForward2 extends FileDiffSuite {
       println("--- code ---")
       codegen.emitBlock(b1)
       codegen.stream.flush
-      def iter(n: Int, b1: Block[Any]): Unit = if (n > 0) {
+      def iter(n: Int, b1: Block[Unit]): Unit = if (n > 0) {
         println()
         println("### next")
         val b2 = xform.runOnce(b1)

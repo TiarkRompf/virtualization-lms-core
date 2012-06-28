@@ -291,9 +291,9 @@ trait CCodegen extends CLikeCodegen {
   def emitCopyOutputDtoH(sym: Sym[Any], ksym: List[Sym[Any]], contents: String): String = {
     val out = new StringBuilder
     if(isObjectType(sym.tp)) {
-    	helperFuncIdx += 1
+      helperFuncIdx += 1
       out.append("jobject copyOutputDtoH_%s(JNIEnv *env,%s) {\n".format(helperFuncIdx,remap(sym.tp)+" *"+quote(sym)+"_ptr"))
-  	  out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
+      out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
       out.append(copyOutputDtoH(sym))
       out.append("}\n")
       val tr = metaData.outputs.getOrElse(sym,new TransferFunc)
