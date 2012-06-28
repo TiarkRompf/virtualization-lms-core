@@ -1,0 +1,41 @@
+-- before transformation
+var x1 = null.asInstanceOf[scala.Function1[Double, Double]]
+var x4 = null.asInstanceOf[scala.Function1[Double, Double]]
+x4 = {x5: (Double) => 
+val x6 = x5-1.0
+val x7 = x1(x6)
+x7
+}
+x1 = {x2: (Double) => 
+val x3 = x2 == 0
+val x10 = if (x3) {
+1.0
+} else {
+val x8 = x4(x2)
+val x9 = x2*x8
+x9
+}
+x10
+}
+val x11 = x1(x0)
+-- after transformation
+var x13 = null.asInstanceOf[scala.Function1[Double, Double]]
+var x12 = null.asInstanceOf[scala.Function1[Double, Double]]
+x12 = /*2*/{x5: (Double) => 
+val x6 = x5-1.0
+val x14 = x13(x6)
+x14
+}
+x13 = /*2*/{x2: (Double) => 
+val x3 = x2 == 0
+val x18 = if (x3) {
+1.0
+} else {
+val x16 = x12(x2)
+val x17 = x2*x16
+x17
+}
+x18
+}
+val x20 = x13(x0)
+-- done

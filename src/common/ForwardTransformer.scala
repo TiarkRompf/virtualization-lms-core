@@ -32,13 +32,15 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
         val replace = transformStm(stm)
         // printlog("registering forward transformation: " + sym + " to " + replace)
         // printlog("while processing stm: " + stm)          
-        assert(!subst.contains(sym))
+        assert(!subst.contains(sym) || subst(sym) == replace)
         if (sym != replace) { // record substitution only if result is different
           subst += (sym -> replace)
         }
       } else {
-        printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
+        //printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
         // what to do? bail out? lookup def and then transform???
+        // can happen in recursive case
+        transformStm(stm)
       }
   }
   
@@ -69,6 +71,39 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   
 }
 
+
+trait RecursiveTransformer extends ForwardTransformer { self =>
+  import IR._
+
+  var allocMap: Map[Sym[Any], (Sym[Any], () => Def[Any])] = _
+  var allocPhase: Boolean = _
+
+  def run[A:Manifest](s: Block[A]): Block[A] = {
+    allocMap = Map.empty
+    allocPhase = true
+    transformBlock(s)
+
+    subst = for ((s1, (s2, _)) <- allocMap) yield (s1 -> s2)
+    allocPhase = false
+    transformBlock(s)
+  }
+
+  def transformDef[A](lhs: Sym[A], rhs: Def[A]): Option[() => Def[A]] = None
+
+  override def transformStm(stm: Stm): Exp[Any] = stm match {
+    case TP(s, rhs) if allocPhase => transformDef(s, rhs) match {
+      case Some(rhsThunk) =>
+        allocMap += (s -> ((fresh(mtype(s.tp)), rhsThunk)))
+        s
+      case None => super.transformStm(stm)
+    }
+    case TP(s, rhs) if !allocPhase && allocMap.contains(s) =>
+      val (s2, rhsThunk) = allocMap(s)
+      createDefinition(s2, rhsThunk())
+      s
+    case _ => super.transformStm(stm)
+  }
+}
 
 
 trait WorklistTransformer extends ForwardTransformer { // need backward version, too?
