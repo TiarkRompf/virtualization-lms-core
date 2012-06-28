@@ -99,8 +99,9 @@ trait WorklistTransformer extends ForwardTransformer { // need backward version,
       curSubst.get(sym) match {
         case Some(replace) =>
           printdbg("install replacement for " + sym)
-          val b = reifyEffects(replace())
-          reflectBlock(b)
+          //val b = reifyEffects(replace())
+          //reflectBlock(b)
+          replace()
         case None => 
           super.transformStm(stm)
       }
