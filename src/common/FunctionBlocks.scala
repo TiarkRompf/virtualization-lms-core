@@ -46,10 +46,19 @@ trait FunctionBlocksExp extends BaseExp with Blocks with Effects with OverloadHa
   /*
    * Enable transformation of BlockN types back to lambdas
    */
+   
   implicit def transformerToBlockTransformer(t: ForwardTransformer{val IR: FunctionBlocksExp.this.type}) = new {
     def apply[R](x: Block0[R]): (() => Exp[R]) =  { () => t.reflectBlock(x.blockRes) }
-    def apply[T1,R](x: Block1[T1,R]): Exp[T1] => Exp[R] = { a => t.subst += (x.blockArg1 -> a); t.reflectBlock(x.blockRes) }
-    def apply[T1,T2,R](x: Block2[T1,T2,R]): (Exp[T1],Exp[T2]) => Exp[R] =  { (a,b) => t.subst ++= scala.List(x.blockArg1 -> a, x.blockArg2 -> b); t.reflectBlock(x.blockRes) }    
+    def apply[T1,R](x: Block1[T1,R]): Exp[T1] => Exp[R] = { a => val save = t.subst; t.subst += (x.blockArg1 -> a); val y = t.reflectBlock(x.blockRes); t.subst = save; y }
+    def apply[T1,T2,R](x: Block2[T1,T2,R]): (Exp[T1],Exp[T2]) => Exp[R] =  { (a,b) => val save = t.subst; t.subst ++= scala.List(x.blockArg1 -> a, x.blockArg2 -> b); val y = t.reflectBlock(x.blockRes); t.subst = save; y }    
   }  
+  
+  /*
+   * For mirroring of BlockN types without conversion to lambdas
+   */
+   def copyBlock0[R:Manifest](b: Block0[R], t: Transformer) = Block0(t(b.blockRes))
+   def copyBlock1[T1:Manifest,R:Manifest](b: Block1[T1,R], t: Transformer) = Block1(t(b.blockArg1).asInstanceOf[Sym[T1]], t(b.blockRes))
+   def copyBlock2[T1:Manifest,T2:Manifest,R:Manifest](b: Block2[T1,T2,R], t: Transformer) = Block2(t(b.blockArg1).asInstanceOf[Sym[T1]], t(b.blockArg2).asInstanceOf[Sym[T2]], t(b.blockRes))
+  
 }
   
