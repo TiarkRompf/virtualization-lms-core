@@ -45,7 +45,7 @@ trait SimpleBlockTransformer extends internal.FatBlockTraversal {
       val trans = new AbstractTransformer {
         val IR: SimpleBlockTransformer.this.IR.type = SimpleBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = x 
-        override def apply[A](x: Block[A]) = transformBlock(x)
+        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
       List(TP(s, mirrorDef(d, trans)))
     // blocks(d) map transformBlock
@@ -111,7 +111,7 @@ trait NestedBlockTransformer extends internal.FatBlockTraversal {
       val trans = new AbstractTransformer {
         val IR: NestedBlockTransformer.this.IR.type = NestedBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
-        override def apply[A](x: Block[A]) = transformBlock(x)
+        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
       List(TP(s, mirrorDef(d, trans)))
     // blocks(d) map transformBlock
@@ -176,7 +176,7 @@ trait MirrorBlockTransformer extends internal.FatBlockTraversal {
       val trans = new AbstractTransformer {
         val IR: MirrorBlockTransformer.this.IR.type = MirrorBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
-        override def apply[A](x: Block[A]) = transformBlock(x)
+        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
       mirror(d,trans)
   }
@@ -213,7 +213,7 @@ trait MirrorRetainBlockTransformer extends MirrorBlockTransformer {
       val trans = new AbstractTransformer {
         val IR: MirrorRetainBlockTransformer.this.IR.type = MirrorRetainBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
-        override def apply[A](x: Block[A]) = transformBlock(x)
+        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
       mirror(d,trans)
   }
