@@ -47,10 +47,18 @@ trait FunctionBlocksExp extends BaseExp with Blocks with Effects with OverloadHa
    * Enable transformation of BlockN types back to lambdas
    */
    
+   def transformBlockWithBound[A](t: ForwardTransformer{val IR: FunctionBlocksExp.this.type}, f: Block[A], boundVars: List[(Exp[Any],Exp[Any])]) = {
+     val save = t.subst
+     t.subst ++= boundVars
+     val out = t.reflectBlock(f)
+     t.subst = save
+     out
+   }
+   
   implicit def transformerToBlockTransformer(t: ForwardTransformer{val IR: FunctionBlocksExp.this.type}) = new {
     def apply[R](x: Block0[R]): (() => Exp[R]) =  { () => t.reflectBlock(x.blockRes) }
-    def apply[T1,R](x: Block1[T1,R]): Exp[T1] => Exp[R] = { a => val save = t.subst; t.subst += (x.blockArg1 -> a); val y = t.reflectBlock(x.blockRes); t.subst = save; y }
-    def apply[T1,T2,R](x: Block2[T1,T2,R]): (Exp[T1],Exp[T2]) => Exp[R] =  { (a,b) => val save = t.subst; t.subst ++= scala.List(x.blockArg1 -> a, x.blockArg2 -> b); val y = t.reflectBlock(x.blockRes); t.subst = save; y }    
+    def apply[T1,R](x: Block1[T1,R]): Exp[T1] => Exp[R] = { a => transformBlockWithBound(t, x.blockRes, List(x.blockArg1 -> a)) }
+    def apply[T1,T2,R](x: Block2[T1,T2,R]): (Exp[T1],Exp[T2]) => Exp[R] = { (a,b) => transformBlockWithBound(t, x.blockRes, List(x.blockArg1 -> a, x.blockArg2 -> b)) }
   }  
   
   /*
