@@ -6,7 +6,7 @@ import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
 
 trait AbstractTransformer {
-  val IR: Expressions with Blocks with OverloadHack 
+  val IR: Expressions with Blocks with OverloadHack
   import IR._
   
   def hasContext = false
@@ -17,7 +17,7 @@ trait AbstractTransformer {
     // should be overridden by transformers with context
     assert(!hasContext) 
     Block(apply(xs.res)) 
-  } 
+  }
   def apply[A](xs: List[Exp[A]]): List[Exp[A]] = xs map (e => apply(e))
   def apply[A](xs: Seq[Exp[A]]): Seq[Exp[A]] = xs map (e => apply(e))
   def apply[X,A](f: X=>Exp[A]): X=>Exp[A] = (z:X) => apply(f(z))
@@ -30,6 +30,19 @@ trait AbstractTransformer {
 trait AbstractSubstTransformer extends AbstractTransformer {
   import IR._
   var subst = immutable.Map.empty[Exp[Any], Exp[Any]]
+  
+  def withSubstScope[A](extend: (Exp[Any],Exp[Any])*)(block: => A): A = 
+    withSubstScope {
+      subst ++= extend
+      block
+    }
+
+  def withSubstScope[A](block: => A): A = {
+    val save = subst
+    val r = block
+    subst = save
+    r
+  }
   
   def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
     case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x 
@@ -60,6 +73,9 @@ trait Transforming extends Expressions with Blocks with OverloadHack {
   // FIXME: mirroring for effects!
 
   def mtype[A,B](m:Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]] // hack: need to pass explicit manifest during mirroring
+  def mpos(s: List[SourceContext]): SourceContext = if (s.nonEmpty) s.head else implicitly[SourceContext] // hack: got list of pos but need to pass single pos to mirror
+
+  
   
   def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = mirrorDef(e,f)
 

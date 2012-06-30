@@ -37,7 +37,8 @@ trait ScalaCompile extends Expressions {
     settings.encoding.value = "UTF-8"
     settings.outdir.value = "."
     settings.extdirs.value = ""
-  //    settings.verbose.value = true
+    //settings.verbose.value = true
+    // -usejavacp needed on windows?
 
     reporter = new ConsoleReporter(settings, null, new PrintWriter(System.out))//writer
     compiler = new Global(settings, reporter)

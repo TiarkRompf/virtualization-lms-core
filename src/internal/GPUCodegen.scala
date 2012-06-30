@@ -480,7 +480,7 @@ trait GPUCodegen extends CLikeCodegen {
       out.append("jobject %s(JNIEnv *env,%s)".format(funcName,remap(sym.tp)+" *"+quote(sym)+"_ptr"))
       helperFuncHdrStream.append(out.toString + ";\n")
       out.append("{\n")
-  	  out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
+      out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
       out.append(contents)
       out.append("}\n")
       out.toString
@@ -519,7 +519,7 @@ trait GPUCodegen extends CLikeCodegen {
         emitBlock(allocFunc)
       }
       tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc))))
-	  }
+    }
     else {
       tempString.append("\treturn %s_ptr;\n".format(quote(sym)))
     }

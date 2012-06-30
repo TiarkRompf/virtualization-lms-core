@@ -48,11 +48,9 @@ trait FunctionBlocksExp extends BaseExp with Blocks with Effects with OverloadHa
    */
    
    def transformBlockWithBound[A](t: ForwardTransformer{val IR: FunctionBlocksExp.this.type}, f: Block[A], boundVars: List[(Exp[Any],Exp[Any])]) = {
-     val save = t.subst
-     t.subst ++= boundVars
-     val out = t.reflectBlock(f)
-     t.subst = save
-     out
+     t.withSubstScope(boundVars: _*) {
+       t.reflectBlock(f)
+     }
    }
    
   implicit def transformerToBlockTransformer(t: ForwardTransformer{val IR: FunctionBlocksExp.this.type}) = new {
@@ -66,7 +64,6 @@ trait FunctionBlocksExp extends BaseExp with Blocks with Effects with OverloadHa
    */
    def copyBlock0[R:Manifest](b: Block0[R], t: Transformer) = Block0(t(b.blockRes))
    def copyBlock1[T1:Manifest,R:Manifest](b: Block1[T1,R], t: Transformer) = Block1(t(b.blockArg1).asInstanceOf[Sym[T1]], t(b.blockRes))
-   def copyBlock2[T1:Manifest,T2:Manifest,R:Manifest](b: Block2[T1,T2,R], t: Transformer) = Block2(t(b.blockArg1).asInstanceOf[Sym[T1]], t(b.blockArg2).asInstanceOf[Sym[T2]], t(b.blockRes))
-  
+   def copyBlock2[T1:Manifest,T2:Manifest,R:Manifest](b: Block2[T1,T2,R], t: Transformer) = Block2(t(b.blockArg1).asInstanceOf[Sym[T1]], t(b.blockArg2).asInstanceOf[Sym[T2]], t(b.blockRes))  
 }
   

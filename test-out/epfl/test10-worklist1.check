@@ -49,25 +49,25 @@ val x20 = println(x19)
 
 ### next
 install replacement for Sym(10)
-toAtom transform ArrayIndex(Sym(7),Sym(9)) List(Sym(7), Sym(9)) -> List(Sym(24), Sym(26))
+toAtom transform ArrayIndex(Sym(7),Sym(9)) List(Sym(7), Sym(9)) -> List(Sym(23), Sym(25))
 install replacement for Sym(15)
-toAtom transform ArrayIndex(Sym(7),Sym(14)) List(Sym(7), Sym(14)) -> List(Sym(24), Sym(31))
+toAtom transform ArrayIndex(Sym(7),Sym(14)) List(Sym(7), Sym(14)) -> List(Sym(23), Sym(30))
 install replacement for Sym(16)
-toAtom transform ArrayIndex(Sym(12),Sym(14)) List(Sym(12), Sym(14)) -> List(Sym(29), Sym(31))
+toAtom transform ArrayIndex(Sym(12),Sym(14)) List(Sym(12), Sym(14)) -> List(Sym(28), Sym(30))
 --- code ---
-val x24 = LoopArray(100) { x23 => 
+val x23 = LoopArray(100) { x22 => 
 0.0
 }
-val x29 = LoopArray(100) { x26 => 
-val x27 = x24.apply(x26)
-val x28 = x27+x27
-x28
+val x28 = LoopArray(100) { x25 => 
+val x26 = x23.apply(x25)
+val x27 = x26+x26
+x27
 }
-val x35 = LoopArray(100) { x31 => 
-val x32 = x24.apply(x31)
-val x33 = x29.apply(x31)
-val x34 = x32+x33
-x34
+val x34 = LoopArray(100) { x30 => 
+val x31 = x23.apply(x30)
+val x32 = x28.apply(x30)
+val x33 = x31+x32
+x33
 }
-val x36 = Map("data"->x35,"length"->100) //ClassTag(Vector)
-val x37 = println(x36)
+val x35 = Map("data"->x34,"length"->100) //ClassTag(Vector)
+val x36 = println(x35)

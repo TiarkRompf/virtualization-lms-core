@@ -4,8 +4,8 @@ killing: List(Sym(1))/List(Sym(1), Sym(2), Sym(3)) by VectorUpdate(Sym(1),Const(
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 val x1 = VectorZeros(Const(100))
 val x2 = VectorLiteral(List(Sym(1)))
 // begin multi
