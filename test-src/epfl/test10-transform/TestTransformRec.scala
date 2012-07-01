@@ -37,6 +37,7 @@ class TestTransformRec extends FileDiffSuite {
 
     override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
       case Apply(x,y) => toAtom(Apply(f(x),f(y)))
+      case g@DefineFun(y) => toAtom(DefineFun(f(y))(g.arg))
       case _ => super.mirror(e,f)
     }).asInstanceOf[Exp[A]]
 
@@ -55,6 +56,19 @@ class TestTransformRec extends FileDiffSuite {
       println("-- before transformation")
       codegen.withStream(new PrintWriter(System.out)) {
         codegen.emitBlock(y)
+      }
+      val trans0 = new RecursiveTransformer {
+        val IR: p.type = p
+      }
+      try {
+        val z0 = trans0.run(y)
+        println("-- after null transformation")
+        codegen.withStream(new PrintWriter(System.out)) {
+          codegen.emitBlock(z0)
+        }
+      } catch {
+        case ex =>
+        println("error: " + ex)
       }
       val trans = new MyTransformer {
         val IR: p.type = p

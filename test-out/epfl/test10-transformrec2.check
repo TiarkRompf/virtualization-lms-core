@@ -13,9 +13,9 @@ x6
 x7
 }
 val x8 = x1(x0)
--- after transformation
+-- after null transformation
 var x9 = null.asInstanceOf[scala.Function1[Double, Double]]
-x9 = /*2*/{x2: (Double) => 
+x9 = {x2: (Double) => 
 val x3 = x2 == 0
 val x12 = if (x3) {
 1.0
@@ -28,4 +28,19 @@ x11
 x12
 }
 val x14 = x9(x0)
+-- after transformation
+var x15 = null.asInstanceOf[scala.Function1[Double, Double]]
+x15 = /*2*/{x2: (Double) => 
+val x3 = x2 == 0
+val x18 = if (x3) {
+1.0
+} else {
+val x4 = x2-1.0
+val x16 = x15(x4)
+val x17 = x2*x16
+x17
+}
+x18
+}
+val x20 = x15(x0)
 -- done

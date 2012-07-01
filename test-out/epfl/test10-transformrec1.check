@@ -4,6 +4,12 @@ val x3 = x2+1.0
 x3
 }
 val x4 = x1(x0)
+-- after null transformation
+val x1 = {x2: (Double) => 
+val x3 = x2+1.0
+x3
+}
+val x4 = x1(x0)
 -- after transformation
 val x5 = /*2*/{x2: (Double) => 
 val x3 = x2+1.0

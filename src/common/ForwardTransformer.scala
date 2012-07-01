@@ -94,12 +94,20 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
     case TP(s, rhs) => transformDef(s, rhs) match {
       case Some(rhsThunk) =>
         val s2 = subst.get(s) match {
-          case Some(s2@Sym(_)) => s2
-          case _ => fresh(mtype(s.tp))
+          case Some(s2@Sym(_)) => assert(recursive.contains(s)); s2
+          case _ => assert(!recursive.contains(s)); fresh(mtype(s.tp))
         }
         createDefinition(s2, rhsThunk())
         s2
-      case None => super.transformStm(stm)
+      case None => subst.get(s) match {
+        case Some(s2@Sym(_)) =>
+          assert(recursive.contains(s))
+          createDefinition(s2, Def.unapply(mirror(rhs, self.asInstanceOf[Transformer])(mtype(s.tp),mpos(s.pos))).get)
+          s2
+        case None =>
+          assert(!recursive.contains(s))
+          super.transformStm(stm)
+      }
     }
     case _ => super.transformStm(stm)
   }
