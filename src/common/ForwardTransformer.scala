@@ -49,28 +49,31 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   
   def transformStm(stm: Stm): Exp[Any] = stm match { // override this to implement custom transform
     case TP(sym,rhs) =>
-      try {
-        /*
-        TBD: optimization from MirrorRetainBlockTransformer in TestMiscTransform -- is it worth doing??        
-        // we want to skip those statements that don't have symbols that need substitution
-        // however we need to recurse into any blocks
-        if (!syms(rhs).exists(subst contains _) && blocks(rhs).isEmpty) {
-          if (!globalDefs.contains(stm)) reflectSubGraph(List(stm))
-          return sym
-        }
-        */
-        mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos)) // cast needed why?
-      } catch { //hack -- should not catch errors
-        case e if e.toString contains "don't know how to mirror" => 
-          printerr("error: " + e.getMessage)
-          sym
-        case e => 
-          printerr("error: exception during mirroring of "+rhs+": "+ e)
-          e.printStackTrace; 
-          sym            
-      }
+      /*
+       TBD: optimization from MirrorRetainBlockTransformer in TestMiscTransform -- is it worth doing??        
+       // we want to skip those statements that don't have symbols that need substitution
+       // however we need to recurse into any blocks
+       if (!syms(rhs).exists(subst contains _) && blocks(rhs).isEmpty) {
+       if (!globalDefs.contains(stm)) reflectSubGraph(List(stm))
+       return sym
+       }
+       */
+      self_mirror(sym, rhs)
   }
-  
+
+  def self_mirror[A](sym: Sym[A], rhs : Def[A]): Exp[A] = {
+    try {
+      mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos)) // cast needed why?
+    } catch { //hack -- should not catch errors
+      case e if e.toString contains "don't know how to mirror" => 
+        printerr("error: " + e.getMessage)
+      sym
+      case e => 
+        printerr("error: exception during mirroring of "+rhs+": "+ e)
+        e.printStackTrace; 
+        sym            
+    }
+  }
 }
 
 
@@ -102,7 +105,7 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
       case None => subst.get(s) match {
         case Some(s2@Sym(_)) =>
           assert(recursive.contains(s))
-          createDefinition(s2, Def.unapply(mirror(rhs, self.asInstanceOf[Transformer])(mtype(s.tp),mpos(s.pos))).get)
+          createDefinition(s2, Def.unapply(self_mirror(s, rhs)).get)
           s2
         case None =>
           assert(!recursive.contains(s))
