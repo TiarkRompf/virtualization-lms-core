@@ -37,10 +37,12 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
           subst += (sym -> replace)
         }
       } else {
-        //printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
-        // what to do? bail out? lookup def and then transform???
-        // can happen in recursive case
-        transformStm(stm)
+        if (recursive.contains(sym)) { // O(n) since recursive is a list!
+          transformStm(stm)
+        } else {
+          printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
+          // what to do? bail out? lookup def and then transform???
+        }
       }
   }
   
@@ -75,32 +77,30 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
 trait RecursiveTransformer extends ForwardTransformer { self =>
   import IR._
 
-  var allocMap: Map[Sym[Any], (Sym[Any], () => Def[Any])] = _
-  var allocPhase: Boolean = _
-
   def run[A:Manifest](s: Block[A]): Block[A] = {
-    allocMap = Map.empty
-    allocPhase = true
-    transformBlock(s)
-
-    subst = for ((s1, (s2, _)) <- allocMap) yield (s1 -> s2)
-    allocPhase = false
     transformBlock(s)
   }
 
   def transformDef[A](lhs: Sym[A], rhs: Def[A]): Option[() => Def[A]] = None
 
+  override def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
+    for (sym <- recursive) {
+      subst += (sym -> fresh(mtype(sym.tp)))
+    }
+    super.traverseStmsInBlock(stms)
+  }
+
   override def transformStm(stm: Stm): Exp[Any] = stm match {
-    case TP(s, rhs) if allocPhase => transformDef(s, rhs) match {
+    case TP(s, rhs) => transformDef(s, rhs) match {
       case Some(rhsThunk) =>
-        allocMap += (s -> ((fresh(mtype(s.tp)), rhsThunk)))
-        s
+        val s2 = subst.get(s) match {
+          case Some(s2@Sym(_)) => s2
+          case _ => fresh(mtype(s.tp))
+        }
+        createDefinition(s2, rhsThunk())
+        s2
       case None => super.transformStm(stm)
     }
-    case TP(s, rhs) if !allocPhase && allocMap.contains(s) =>
-      val (s2, rhsThunk) = allocMap(s)
-      createDefinition(s2, rhsThunk())
-      s
     case _ => super.transformStm(stm)
   }
 }
