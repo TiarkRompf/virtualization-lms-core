@@ -20,7 +20,7 @@ trait ArrayLoops extends Loops with OverloadHack {
   def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]]
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] // TODO: make reduce operation configurable!
   def arrayFlat[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
-
+  def concat[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]]
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T]
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int]
 }
@@ -36,7 +36,8 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
-  
+  case class Concat[T](a1: Rep[Array[T]], a2: Rep[Array[T]]) extends Def[Array[T]]
+
 /*
   example for flatMap fusion
 
@@ -79,6 +80,10 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   
   // TODO: use simpleLoop instead of SimpleLoop
 
+  def concat[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]] = {
+    Concat(a1, a2)
+  }
+  
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
     val d = reflectMutableSym(fresh[Int])
@@ -220,6 +225,8 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
       emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
     case ArrayLength(a) =>  
       emitValDef(sym, quote(a) + ".length")
+    case Concat(a, b) => 
+      emitValDef(sym, quote(a) + " ++ " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 }
