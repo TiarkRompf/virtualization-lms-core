@@ -177,7 +177,10 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
   
   override def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A = {
     val result0 = resultB.map(getBlockResultFull) flatMap { case Combine(xs) => xs case x => List(x) }
-    val (scope,result) = fuseTopLevelLoops(innerScope)(result0)
+    val (scope1, result1) = sinkConcats(innerScope)(result0)
+    innerScope = scope1
+    
+    val (scope, result) = fuseTopLevelLoops(innerScope)(result1)
     innerScope = scope
 
     // we don't currently propagate a modified result to the parent
@@ -201,10 +204,9 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
           if (r0 != r) innerScope = innerScope :+ TP(r0.asInstanceOf[Sym[Any]], Forward(r))
       }
     }
-
+   
     super.focusExactScopeFat(result0.map(Block(_)))(body)
   }
-  
 
 }
 
@@ -217,7 +219,9 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
   def unapplySimpleIndex(e: Def[Any]): Option[(Exp[Any], Exp[Int])] = None
   def unapplySimpleDomain(e: Def[Int]): Option[Exp[Any]] = None
   def unapplySimpleCollect(e: Def[Any]): Option[Exp[Any]] = None
-
+  def unapplyConcat(e: Def[Any]): Option[List[Exp[Any]]] = None
+ 
+  def applyConcat(l: List[Exp[Any]]): Exp[Any] = sys.error("not implemented")
   def plugInHelper[A, T: Manifest, U: Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = sys.error("not implemented")
   def applyPlugIntoContext(d: Def[Any], r: Def[Any]): Def[Any] = sys.error("not implemented")
   def applyExtendGenerator[A](d: Def[Any], body: Def[Any]): (Exp[A], Exp[A]) = sys.error("not implemented")
@@ -234,7 +238,11 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
   object SimpleCollect {
     def unapply(a: Def[Any]): Option[Exp[Any]] = unapplySimpleCollect(a)
   }
-
+ 
+  object Concat {
+    def unapply(a: Def[Any]): Option[List[Exp[Any]]] = unapplyConcat(a)  
+  }
+  
   def getInputSyms(x: Sym[_]) = {
       findDefinition(x) match {
         case Some(x) => syms(infix_rhs(x))
@@ -245,7 +253,8 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
   /** 
    * Exports the raw IR to .dot format. 
    */ 
-  def exportToGraphRaw(currentScope: List[Stm], file: String) = { 
+  def exportToGraphRaw(currentScope: List[Stm], file: String) = {
+    
     val buf = scala.collection.mutable.Buffer[String]() 
     buf += "digraph g {" 
     for (sym <- currentScope.flatMap(_.lhs)) { 
@@ -258,14 +267,76 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
     } 
     buf += "}" 
     buf.mkString("\n") 
-    val out = new java.io.FileOutputStream(file) 
+    val out = new java.io.FileOutputStream(file + "-" + level +".dot") 
     out.write(buf.mkString("\n").getBytes) 
     out.flush 
     out.close 
   } 
   
+  var level = 0
+  def sinkConcats(currentScope0: List[Stm])(result0: List[Exp[Any]]): (List[Stm], List[Exp[Any]]) = {
+       var result: List[Exp[Any]] = result0
+       var currentScope: List[Stm] = currentScope0
+       // collect find a concat suitable for sinking
+       var res: Option[Stm] = None 
+       do {
+        res = currentScope.find {
+         case TTP(syms,_, SimpleFatLoop(Def(SimpleDomain(c @ Def(Concat(l)))), i, body)) =>
+           
+           var t = new SubstTransformer
+           def copyLoopOnce(l: Exp[Any]) = {
+             var t = new SubstTransformer
+             var tmpRes: List[Exp[Any]] = Nil
+             var scope: List[Stm] = Nil
 
-  
+            t.subst(c) = l
+            t.subst(i) = fresh[Int]
+            transformAllFully(currentScope, syms, t) match {
+              case (a, b) => // too bad we can't use pair assignment
+                scope = a
+                tmpRes = b
+            }
+            (scope.filter(x => !currentScope.contains(x)), tmpRes)
+           }
+           val copiedLoops = l.map(copyLoopOnce)
+           currentScope = currentScope ++ copiedLoops.flatMap(_._1)
+           
+           // add a concat
+           t = new SubstTransformer
+           val saveContext = globalDefs.length
+           val newDefs = scala.collection.mutable.ArrayBuffer[Stm]()
+           val newSym = applyConcat(copiedLoops.flatMap(_._2))
+           println("list: " + l)
+           println("newSym: " + Def.unapply(newSym))
+              // extract new definitions
+           newDefs ++= globalDefs.drop(saveContext)
+           
+           // add new definitions
+           currentScope = currentScope ++ (newDefs.map(fatten))
+           
+           // remove the original loop
+           currentScope = currentScope.filter(x => infix_lhs(x).head != syms.head)
+           
+           // replace the loop with a new concat node
+           t.subst(syms.head) = newSym
+           transformAllFully(currentScope, result, t) match { case (a,b) => // too bad we can't use pair assignment
+             currentScope = a
+             result = b
+           }
+           println("Full transformation:")
+           currentScope.foreach(println)
+           
+           exportToGraphRaw(getSchedule(currentScope)(result), "/tmp/concats-after")
+           true
+         case _ => false
+       }
+       } while(res != None)
+
+       // replace loop yield symbols with the concat symbol
+       
+       level += 1
+       (currentScope, result)
+  }
   /*
     apply fusion to loops at the top level of scope 'currentScope', which has outputs 'result'.
     uses 'getExactScope' provided by CodeMotion to find top level statements.
@@ -287,7 +358,6 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
     val g1 = getFatDependentStuff(currentScope)(bound)
     g1.foreach(println)
 */
-    exportToGraphRaw(currentScope, "/tmp/whole-scope.dot")
     // find loops at current top level
     var Wloops: List[Stm] = {
       val levelScope = getExactScope(currentScope)(result) // could provide as input ...
@@ -366,7 +436,8 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
           !WtableNeg.exists(p => (a.lhs contains p._1) && (b.lhs contains p._2) || (b.lhs contains p._1) && (a.lhs contains p._2))
 
         def canFuseDirect(a: Stm, b: Stm): Boolean = (a.rhs,b.rhs) match {
-          case (SimpleFatLoop(s1,_,_), SimpleFatLoop(s2,_,_)) if s1 == s2 => true  // same size (horizontal or pipeline)
+          // TODO(VJ) rather brutal but irrelevant. Fix afterwards
+          case (SimpleFatLoop(s1,_,_), SimpleFatLoop(s2,_,_)) if s1 == s2 => false // same size (horizontal or pipeline)
           case (SimpleFatLoop(Def(SimpleDomain(a1)),_,_), SimpleFatLoop(_,_,_)) if b.lhs contains a1 => true // pipeline
           case (SimpleFatLoop(_,_,_), SimpleFatLoop(Def(SimpleDomain(b1)),_,_)) if a.lhs contains b1 => true
           case _ => false

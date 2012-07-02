@@ -163,7 +163,9 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     val body: List[Def[Any]]
   }
   
-  case class SimpleFatLoop(val size: Exp[Int], val v: Sym[Int], val body: List[Def[Any]]) extends AbstractFatLoop
+  case class SimpleFatLoop(val size: Exp[Int], val v: Sym[Int], val body: List[Def[Any]]) extends AbstractFatLoop {
+    var concatSym: Option[Sym[Any]] = None 
+  }
 
 
   override def syms(e: Any): List[Sym[Any]] = e match {

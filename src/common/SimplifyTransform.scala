@@ -134,12 +134,16 @@ trait SimplifyTransform extends internal.FatScheduling {
       printdbg("came up with: " + lhs2 + ", if " + cond2 + " then " + as2 + " else " + bs2 + " with subst " + t.subst.mkString(","))
       List(TTP(lhs2, mhs2, SimpleFatIfThenElse(cond2,as2,bs2)))
       
+    
     case TTP(lhs, mhs, SimpleFatLoop(s,x,rhs)) =>
       // alternate strategy: transform thin def, then fatten again (a little detour)
       printdbg("need to transform rhs of fat loop: " + lhs + ", " + rhs)
       val lhs2 = (lhs zip mhs).map { case (s,r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
       val mhs2 = lhs2.map(s => findDefinition(s).get.defines(s).get)
+      
       if (lhs != lhs2) {
+    	printdbg("lhs:" + lhs)
+        printdbg("lhs2:" + lhs2)
         val missing = (lhs2.map(s => findDefinition(s).get) diff scope/*innerScope*/)
         printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
         //innerScope = innerScope ::: missing
@@ -149,6 +153,7 @@ trait SimplifyTransform extends internal.FatScheduling {
         case l: AbstractLoop[_] => l
         case Reflect(l: AbstractLoop[_], _, _) => l
       }
+      // this line assumes that lhs2 is a loop
       val shape2 = if (lhs != lhs2) mhs2.map (_.toLoop.size) reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
                    else t(s)
       val rhs2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toLoop.body)))

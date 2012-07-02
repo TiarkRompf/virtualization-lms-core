@@ -36,7 +36,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
-  case class Concat[T](a1: Rep[Array[T]], a2: Rep[Array[T]]) extends Def[Array[T]]
+  case class Concat[T](l: List[Rep[T]]) extends Def[T]
 
 /*
   example for flatMap fusion
@@ -81,7 +81,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   // TODO: use simpleLoop instead of SimpleLoop
 
   def concat[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]] = {
-    Concat(a1, a2)
+    Concat(a1 :: a2 :: Nil)
   }
   
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
@@ -182,6 +182,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
       array(f(s)) { j => f.asInstanceOf[AbstractSubstTransformer{val IR:ArrayLoopsExp.this.type}].subst += (i -> j); f.reflectBlock(y) }
     case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
     case ArrayLength(a) => infix_length(f(a))(mtype(manifest[A]))
+    case Concat(a) => toAtom(Concat(f(a)))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -225,8 +226,8 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
       emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
     case ArrayLength(a) =>  
       emitValDef(sym, quote(a) + ".length")
-    case Concat(a, b) => 
-      emitValDef(sym, quote(a) + " ++ " + quote(b))
+    case Concat(a) => 
+      emitValDef(sym, a.map(quote).mkString(" ++ "))
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -237,6 +238,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
   
   override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatLoop(s,x,rhs) =>
+      
       for ((l,r) <- sym zip rhs) {
         r match {
           case ForeachElem(y) =>
