@@ -314,7 +314,18 @@ trait Effects extends Expressions with Blocks with Utils {
 */    
     // warn if type is Any. TODO: make optional, sometimes Exp[Any] is fine
     if (manifest[T] == manifest[Any]) printlog("warning: possible missing mtype call - toAtom with Def of type Any " + d)
-    reflectEffect(d, Pure())
+    
+    // AKS NOTE: this was removed on 6/27/12, but it is still a problem in OptiML apps without it,
+    // so I'm putting it back until we can get it resolved properly.
+    d match {
+      case Reify(x,_,_) => 
+        // aks: this became a problem after adding global mutable vars to the read deps list. what is the proper way of handling this?
+        // specifically, if we return the reified version of a mutable bound var, we get a Reflect(Reify(..)) error, e.g. mutable Sum 
+        // printlog("ignoring read of Reify(): " + d)
+        super.toAtom(d)
+      case _ => reflectEffect(d, Pure())
+    }
+    // reflectEffect(d, Pure())
   }
 
   def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {

@@ -10,9 +10,11 @@ trait ObjectOps extends Variables with OverloadHack {
   def infix_toString(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
   def infix_ToString(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
   def infix_unsafeImmutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext) = object_unsafe_immutable(lhs)
+  def infix_unsafeMutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext) = object_unsafe_mutable(lhs)
 
   def object_tostring(lhs: Rep[Any])(implicit pos: SourceContext): Rep[String]
   def object_unsafe_immutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext): Rep[A]
+  def object_unsafe_mutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext): Rep[A]
 }
 
 trait ObjectOpsExp extends ObjectOps with VariablesExp {
@@ -20,9 +22,17 @@ trait ObjectOpsExp extends ObjectOps with VariablesExp {
   case class ObjectUnsafeImmutable[A:Manifest](o: Exp[A]) extends Def[A] {
     val m = manifest[A]
   }
+ case class ObjectUnsafeMutable[A:Manifest](o: Exp[A]) extends Def[A] {
+   val m = manifest[A]
+ }
 
   def object_tostring(lhs: Exp[Any])(implicit pos: SourceContext) = ObjectToString(lhs)
-  def object_unsafe_immutable[A:Manifest](lhs: Exp[A])(implicit pos: SourceContext) = ObjectUnsafeImmutable(lhs)
+  def object_unsafe_immutable[A:Manifest](lhs: Exp[A])(implicit pos: SourceContext) = lhs match {
+    // INVESTIGATE: there was an issue where Const(0).unsafeImmutable == Const(0.0). How is this possible? CSE with primitive widening?
+    case c@Const(x) => c
+    case _ => ObjectUnsafeImmutable(lhs)
+  }
+  def object_unsafe_mutable[A:Manifest](lhs: Exp[A])(implicit pos: SourceContext) = reflectMutable(ObjectUnsafeMutable(lhs))
 
   //////////////
   // mirroring
@@ -30,6 +40,7 @@ trait ObjectOpsExp extends ObjectOps with VariablesExp {
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case e@ObjectUnsafeImmutable(a) => object_unsafe_immutable(f(a))(e.m,pos)
     case Reflect(e@ObjectUnsafeImmutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeImmutable(f(a))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@ObjectUnsafeMutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeMutable(f(a))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -64,6 +75,7 @@ trait ScalaGenObjectOps extends ScalaGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ObjectToString(lhs) => emitValDef(sym, "(" + quote(lhs) + ").toString()")
     case ObjectUnsafeImmutable(x) => emitValDef(sym, quote(x) + "// unsafe immutable")
+    case ObjectUnsafeMutable(x) => emitValDef(sym, quote(x) + "// unsafe mutable")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -75,6 +87,7 @@ trait CLikeGenObjectOps extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ObjectToString(lhs) => emitValDef(sym, "(" + quote(lhs) + ").toString()")
     case ObjectUnsafeImmutable(x) => emitValDef(sym, quote(x) + "; // unsafe immutable")
+    case ObjectUnsafeMutable(x) => emitValDef(sym, quote(x) + "; // unsafe mutable")
     case _ => super.emitNode(sym, rhs)
   }
 }
