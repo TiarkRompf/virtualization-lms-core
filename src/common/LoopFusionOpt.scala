@@ -356,7 +356,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
         def getShapeCond(s: Exp[Int], a: Stm) = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) match { case SimpleCollectIf(a,c) => c } }
 
         def extendLoopWithCondition(e: Stm, shape: Exp[Int], targetVar: Sym[Int], c: List[Exp[Boolean]]): List[Exp[Any]] = e.rhs match { 
-          case SimpleFatLoop(s,x,rhs) => (e.lhs zip rhs).map { case (l,r) => findOrCreateDefinitionExp(SimpleLoop(shape,targetVar,applyAddCondition(r,c)), l.pos) }
+          case SimpleFatLoop(s,x,rhs) => (e.lhs zip rhs).map { case (l,r) => findOrCreateDefinitionExp(SimpleLoop(shape,targetVar,applyAddCondition(r,c)), l.pos)(mtype(l.tp)) }
         }
 
         // partitioning: build maximal sets of loops to be fused

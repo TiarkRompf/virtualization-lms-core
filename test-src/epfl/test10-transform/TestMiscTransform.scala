@@ -15,7 +15,11 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import scala.reflect.SourceContext
 
 
-// test various transform routines
+// test various transform routines -- these are not part of the core library
+// and mostly serve to investigate alternative designs
+
+// see TestTransform.scala and TestWorklistTransform2.scala for examples
+// of the core library transformers
 
 trait SimpleBlockTransformer extends internal.FatBlockTraversal {
   val IR: Expressions with Effects with FatExpressions with Transforming //with LoopsFatExp with IfThenElseFatExp
@@ -47,7 +51,7 @@ trait SimpleBlockTransformer extends internal.FatBlockTraversal {
         def apply[A](x: Exp[A]) = x 
         override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
-      List(TP(s, mirrorDef(d, trans)))
+      List(TP(s, mirrorDef(d, trans)(mtype(s.tp),mpos(s.pos))))
     // blocks(d) map transformBlock
   }
   
@@ -113,7 +117,7 @@ trait NestedBlockTransformer extends internal.FatBlockTraversal {
         def apply[A](x: Exp[A]) = transformExp(x)
         override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
-      List(TP(s, mirrorDef(d, trans)))
+      List(TP(s, mirrorDef(d, trans)(mtype(s.tp),mpos(s.pos))))
     // blocks(d) map transformBlock
   }
   
@@ -178,7 +182,7 @@ trait MirrorBlockTransformer extends internal.FatBlockTraversal {
         def apply[A](x: Exp[A]) = transformExp(x)
         override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
-      mirror(d,trans)
+      mirror(d,trans)(mtype(s.tp),mpos(s.pos))
   }
 
 }
@@ -215,7 +219,7 @@ trait MirrorRetainBlockTransformer extends MirrorBlockTransformer {
         def apply[A](x: Exp[A]) = transformExp(x)
         override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
       }
-      mirror(d,trans)
+      mirror(d,trans)(mtype(s.tp),mpos(s.pos))
   }
 
 }
@@ -254,34 +258,22 @@ class TestMisc extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test10-"
   
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
-
-    def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-    def test(x: Rep[Int]): Rep[Any]
+  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
+    with IfThenElse with While with RangeOps with Print {
+    def test(x: Rep[Int]): Rep[Unit]
   }
   
   trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
-      with EqualExpOpt //with VariablesExpOpt 
-      with ArrayMutationExp
-      with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp 
-       
-      with FatExpressions { self => 
+    with EqualExpOpt with ArrayMutationExp with IfThenElseFatExp with LoopsFatExp with WhileExpOptSpeculative 
+    with RangeOpsExp with PrintExp with FatExpressions {
     override val verbosity = 1
   }
   
-  trait Codegen extends ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
+  trait Codegen extends ScalaGenVector with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
     with ScalaGenVariables with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative 
-    with ScalaGenRangeOps with ScalaGenPrint
-  {
-      val IR: Impl
-      import IR._
-      override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-        if (rhs.toString.startsWith("Vector"))
-          emitValDef(sym, rhs.toString)
-        else
-          super.emitNode(sym,rhs)
-      }
-  }
+    with ScalaGenRangeOps with ScalaGenPrint {
+    val IR: Impl
+  }  
   
   
   // test simple block transform
@@ -523,7 +515,7 @@ class TestMisc extends FileDiffSuite {
             r
           }, {
             mirrorBlock(b)
-          })
+          })(mtype(s.tp),mpos(s.pos))
         case _ => super.transformStm(stm)
       }
     }
@@ -598,7 +590,7 @@ class TestMisc extends FileDiffSuite {
             r
           }, {
             mirrorBlock(b)
-          })
+          })(mtype(s.tp),mpos(s.pos))
         case _ => super.transformStm(stm)
       }
     }

@@ -53,23 +53,23 @@ install replacement for Sym(20)
 install replacement for Sym(21)
 --- code ---
 val x3 = x0 > 0
-val x29 = LoopArray(100) { x28 => 
+val x28 = LoopArray(100) { x27 => 
 0.0
 }
 // TODO: use vars instead of tuples to return multiple values
-val (x16,x32) = if (x3) {
-(100,x29)
+val (x16,x31) = if (x3) {
+(100,x28)
 } else {
-val x31 = LoopArray(50) { x30 => 
+val x30 = LoopArray(50) { x29 => 
 0.0
 }
-(50,x31)
+(50,x30)
 }
-val x39 = LoopArray(x16) { x35 => 
-val x36 = x32.apply(x35)
-val x37 = x29.apply(x35)
-val x38 = x36+x37
-x38
+val x38 = LoopArray(x16) { x34 => 
+val x35 = x31.apply(x34)
+val x36 = x28.apply(x34)
+val x37 = x35+x36
+x37
 }
-val x40 = Map("data"->x39,"length"->x16) //ClassTag(Vector)
-val x41 = println(x40)
+val x39 = Map("data"->x38,"length"->x16) //ClassTag(Vector)
+val x40 = println(x39)

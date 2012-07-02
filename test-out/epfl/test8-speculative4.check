@@ -1,8 +1,8 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 while ({ // List(Sym(18))
 // dummy placeholder for previous iteration: List(Sym(11)) = Sym(3) / List()
 false

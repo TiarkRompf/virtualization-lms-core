@@ -50,17 +50,6 @@ trait StructExp extends BaseExp with EffectExp {
   //FIXME: reflectMutable has to take the Def
   //def mfield[T:Manifest](struct: Rep[Any], index: String): Rep[T] = reflectMutable(Field[T](struct, index, manifest[T]))
   
-  // FIXME: need  syms override because Map is not a Product
-  override def syms(x: Any): List[Sym[Any]] = x match {
-    case z:Iterable[_] => z.toList.flatMap(syms)
-    case _ => super.syms(x)
-  }
-
-  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
-    case z:Iterable[_] => z.toList.flatMap(symsFreq)
-    case _ => super.symsFreq(e)
-  }  
-  
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
     case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
     case Field(struct, key, mf) => field(f(struct), key)(mf,pos)
@@ -215,7 +204,7 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
       // return struct of syms
       val combinedResult = super.ifThenElse(cond,u,v)
       
-      val elemsNew = for (k <- elemsA.keySet) yield (k -> phi(cond,u,elemsA(k),v,elemsB(k))(combinedResult))
+      val elemsNew = for (k <- elemsA.keySet) yield (k -> phi(cond,u,elemsA(k),v,elemsB(k))(combinedResult)(mtype(elemsA(k).tp)))
       //println("----- " + combinedResult + " / " + elemsNew)
       struct[T](tagA, elemsNew.toMap)
       

@@ -193,8 +193,10 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
+      case ObjDoubleParseDouble(x) => obj_double_parse_double(f(x))
       case ObjDoublePositiveInfinity() => obj_double_positive_infinity
       case DoubleFloatValue(x) => double_float_value(f(x))
+      case ObjIntegerParseInt(x) => obj_integer_parse_int(f(x))
       case IntDoubleValue(x) => int_double_value(f(x))
       case IntFloatValue(x) => int_float_value(f(x))
       case IntBitwiseNot(x) => int_bitwise_not(f(x))

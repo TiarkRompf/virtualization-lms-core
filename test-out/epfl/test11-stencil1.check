@@ -1,16 +1,18 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Unit)) {
-def apply(x0:Int): Unit = {
-val x2 = println(7)
-val x3 = println(7)
-x3
+class Test extends ((Array[Int])=>(Array[Int])) {
+def apply(x0:Array[Int]): Array[Int] = {
+val x1 = new Array[Int](5)
+x1
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
 compilation: ok
-7
-7
+0
+0
+0
+0
+0

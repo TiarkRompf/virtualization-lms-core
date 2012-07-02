@@ -1,8 +1,8 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 var x46 = null.asInstanceOf[Unit]
 var x50 = null.asInstanceOf[Unit]
 var x2: Double = 0.0

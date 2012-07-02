@@ -36,7 +36,7 @@ trait OpenCLCodegen extends GPUCodegen {
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
-	/*
+  /*
   override def isObjectType[A](m: Manifest[A]) : Boolean = {
     m.toString match {
       case "scala.collection.immutable.List[Int]" => true
@@ -46,9 +46,9 @@ trait OpenCLCodegen extends GPUCodegen {
       case _ => super.isObjectType(m)
     }
   }
-	*/
+  */
 
-	/*
+  /*
   override def remap[A](m: Manifest[A]) : String = {
     checkGPUableType(m)
     if (m.erasure == classOf[Variable[AnyVal]])
@@ -75,14 +75,14 @@ trait OpenCLCodegen extends GPUCodegen {
       }
     }
   }
-	*/
+  */
 
-	/*
+  /*
   override def unpackObject[A](sym: Sym[Any]) : Map[String,Manifest[_]] = remap(sym.Type) match {
     case "OpenCLIntList" => Map("length"->Manifest.Int)    //TODO: How to initialize the data array type for the list?
     case _ => throw new GenerationFailedException("OpenCLGen: Type %s cannot be unpacked.".format(sym.Type.toString))
   }
-	*/
+  */
 
   // TODO: Move to Delite?
   def copyInputHtoD(sym: Sym[Any]) : String = {
@@ -229,9 +229,9 @@ trait OpenCLNestedCodegen extends CLikeNestedCodegen with OpenCLCodegen {
 
 trait OpenCLFatCodegen extends CLikeFatCodegen with OpenCLCodegen {
   val IR: Expressions with Effects with FatExpressions
-	import IR._
+  import IR._
   
-	def emitMultiLoopCond(sym: Sym[Any], funcs:List[Block[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]]) = {
+  def emitMultiLoopCond(sym: Sym[Any], funcs:List[Block[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]]) = {
     isNestedNode = true
     devFuncIdx += 1
     val currIdx = devFuncIdx

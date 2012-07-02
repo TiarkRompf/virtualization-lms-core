@@ -52,9 +52,12 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
     case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) => 
       struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.arrayManifest))))
-    case ArrayElem(Block(Def(ArrayIndex(b,v)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
+    case ArrayElem(Block(Def(ArrayIndex(b,`v`)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] 
+    // eta-reduce! <--- should live elsewhere, not specific to struct
+    // rewrite loop(a.length) { i => a(i) } to a
     case _ => super.simpleLoop(size, v, body)
   }
+  
   
   override def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
     case Def(Struct(ArraySoaTag(tag,len),elems:Map[String,Exp[Array[T]]])) =>
@@ -84,7 +87,7 @@ class TestStruct extends FileDiffSuite {
   
   trait DSL extends ComplexArith with ArrayLoops with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with RangeOps with Print {
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-    def test(x: Rep[Int]): Rep[Any]
+    def test(x: Rep[Int]): Rep[Unit]
   }
 
   trait Impl extends DSL with ComplexStructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 

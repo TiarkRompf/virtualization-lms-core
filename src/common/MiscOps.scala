@@ -35,9 +35,14 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   def println(x: Exp[Any])(implicit pos: SourceContext) = reflectEffect(PrintLn(x)) // TODO: simple effect
   def exit(s: Exp[Int])(implicit pos: SourceContext) = reflectEffect(Exit(s))
   def error(s: Exp[String])(implicit pos: SourceContext) = reflectEffect(Error(s))
-  def returnL(x: Exp[Any])(implicit pos: SourceContext) = reflectEffect(Return(x))
+  def returnL(x: Exp[Any])(implicit pos: SourceContext) = {
+    printlog("warning: staged return statements are unlikely to work because the surrounding source method does not exist in the generated code.")
+    printsrc("in " + quotePos(x))
+    reflectEffect(Return(x))
+  }
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case Reflect(Error(x), u, es) => reflectMirrored(Reflect(Error(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(PrintLn(x), u, es) => reflectMirrored(Reflect(PrintLn(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(Exit(x), u, es) => reflectMirrored(Reflect(Exit(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))

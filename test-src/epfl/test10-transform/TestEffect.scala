@@ -175,7 +175,7 @@ class TestEffects extends FileDiffSuite {
 
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
-    def test(x: Rep[Int]): Rep[Any]
+    def test(x: Rep[Int]): Rep[Unit]
   }
   trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt //with VariablesExpOpt 
