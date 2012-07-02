@@ -17,7 +17,7 @@ trait Expressions extends Utils {
     def tp: Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
     def pos: List[SourceContext] = Nil
   }
-
+  
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
@@ -86,6 +86,10 @@ trait Expressions extends Utils {
     sym
   }
 */
+  /**
+   * Super trait for all statements that emit results from the loop. For example: Yield and Skip.
+   */
+  abstract class Gen[+T: Manifest]
 
   abstract class Def[+T] // operations (composite)
 

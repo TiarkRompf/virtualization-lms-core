@@ -50,9 +50,9 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   case class ArraySoaTag[T](base: StructTag[T], len: Exp[Int]) extends StructTag[T]
   
   override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
-    case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) => 
-      struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.arrayManifest))))
-    case ArrayElem(Block(Def(ArrayIndex(b,v)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
+//    case ArrayElem(g, Block(Def(Struct(tag:StructTag[A], elems)))) => 
+//      struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(g, Block(p._2)))(p._2.tp.arrayManifest))))
+//    case ArrayElem(_, Block(Def(ArrayIndex(b,v)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
     case _ => super.simpleLoop(size, v, body)
   }
   

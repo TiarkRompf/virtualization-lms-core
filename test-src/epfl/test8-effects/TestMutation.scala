@@ -38,54 +38,50 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
   def infix_clone[T:Manifest](a: Rep[Array[T]]) = ArrayClone(a)
   
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
-    case SimpleLoop(s,i, ArrayElem(y)) => Nil
-    case SimpleLoop(s,i, ReduceElem(y)) => syms(y) // could also return zero value
-    case SimpleLoop(s,i, ArrayIfElem(c,y)) => Nil
-    case SimpleLoop(s,i, ReduceIfElem(c,y)) => syms(y) // could also return zero value
+    case SimpleLoop(s,i, ArrayElem(_, y)) => Nil
+    case SimpleLoop(s,i, ReduceElem(_, y)) => syms(y) // could also return zero value
     case ArrayIndex(a,i) => Nil
     case ArrayLength(a) => Nil
     case ArrayUpdate(a,i,x) => Nil // syms(a) <-- any use to return a?
     case ArrayMutable(a) => Nil
     case ArrayClone(a) => Nil
+    case Yield(g,y) => syms(y) //FIXME
     case _ => super.aliasSyms(e)
   }
 
   override def containSyms(e: Any): List[Sym[Any]] = e match {
-    case SimpleLoop(s,i, ArrayElem(y)) => syms(y)
-    case SimpleLoop(s,i, ReduceElem(y)) => Nil
-    case SimpleLoop(s,i, ArrayIfElem(c,y)) => syms(y)
-    case SimpleLoop(s,i, ReduceIfElem(c,y)) => Nil
+    case SimpleLoop(s,i, ArrayElem(_, y)) => syms(y)
+    case SimpleLoop(s,i, ReduceElem(_, y)) => Nil
     case ArrayIndex(a,i) => Nil
     case ArrayLength(a) => Nil
     case ArrayUpdate(a,i,x) => syms(x)
     case ArrayMutable(a) => Nil
     case ArrayClone(a) => Nil
+    case Yield(g,y) => Nil
     case _ => super.containSyms(e)
   }
 
   override def extractSyms(e: Any): List[Sym[Any]] = e match {
-    case SimpleLoop(s,i, ArrayElem(y)) => Nil
-    case SimpleLoop(s,i, ReduceElem(y)) => Nil
-    case SimpleLoop(s,i, ArrayIfElem(c,y)) => Nil
-    case SimpleLoop(s,i, ReduceIfElem(c,y)) => Nil
+    case SimpleLoop(s,i, ArrayElem(_, y)) => Nil
+    case SimpleLoop(s,i, ReduceElem(_, y)) => Nil
     case ArrayIndex(a,i) => syms(a)
     case ArrayLength(a) => Nil
     case ArrayUpdate(a,i,x) => Nil
     case ArrayMutable(a) => Nil
     case ArrayClone(a) => Nil
+    case Yield(g,y) => Nil
     case _ => super.extractSyms(e)
   }
 
   override def copySyms(e: Any): List[Sym[Any]] = e match {
-    case SimpleLoop(s,i, ArrayElem(y)) => Nil
-    case SimpleLoop(s,i, ReduceElem(y)) => Nil
-    case SimpleLoop(s,i, ArrayIfElem(c,y)) => Nil
-    case SimpleLoop(s,i, ReduceIfElem(c,y)) => Nil
+    case SimpleLoop(s,i, ArrayElem(_, y)) => Nil
+    case SimpleLoop(s,i, ReduceElem(_, y)) => Nil
     case ArrayIndex(a,i) => Nil
     case ArrayLength(a) => Nil
     case ArrayUpdate(a,i,x) => syms(a)
     case ArrayMutable(a) => syms(a)
     case ArrayClone(a) => syms(a)
+    case Yield(g,y) => Nil
     case _ => super.copySyms(e)
   }  
   

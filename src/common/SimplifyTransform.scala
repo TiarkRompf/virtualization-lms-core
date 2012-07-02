@@ -198,18 +198,53 @@ trait SimplifyTransform extends internal.FatScheduling {
       scope
     }
   
+// Applies the transformation several times until convergence. NOTE: The first several invocations use the whole scope as
+    // the result because we are still not sure about the order of operations.
+    // The last several operations take the scope result and clean up the code.
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getSchedule(currentScope)(currentScope) // clean things up!
+    currentScope = getSchedule(currentScope)(currentScope)
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
-    currentScope = getSchedule(currentScope)(currentScope) // clean things up!
+    currentScope = getSchedule(currentScope)(currentScope)
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getSchedule(currentScope)(currentScope)
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getSchedule(currentScope)(currentScope)
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getSchedule(currentScope)(currentScope)
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getSchedule(currentScope)(currentScope)
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getSchedule(currentScope)(currentScope)
+
+    val previousScopeWhole = currentScope
+
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getSchedule(currentScope)(currentScope)
+
+    if (currentScope != previousScopeWhole) // check convergence and avoid silent failure
+      throw new RuntimeException("The scope has not converged!!! Increase the number of cleanup steps. Scopes: " + previousScopeWhole + "\n----->\n" + currentScope)
 
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
     currentScope = getSchedule(currentScope)(result) // clean things up!
 
+    currentScope = withEffectContext { transformAll(currentScope, t) }
+    result = t(result)
+    currentScope = getSchedule(currentScope)(result) // clean things up!
 
     // once more to see if we are converged
     val previousScope = currentScope
@@ -217,16 +252,10 @@ trait SimplifyTransform extends internal.FatScheduling {
     currentScope = withEffectContext { transformAll(currentScope, t) }
     result = t(result)
     currentScope = getSchedule(currentScope)(result) // clean things up!
-  
-    if (currentScope != previousScope) { // check convergence
-      printerr("error: transformation of scope contents has not converged")
-      printdbg(previousScope + "-->" + currentScope)
-    }
-  
-    /*println("<x---"+result0+"/"+result)
-    currentScope.foreach(println)
-    println("---x>")*/
-    
+
+    if (currentScope != previousScope) // check convergence and avoid silent failure
+      throw new RuntimeException("The scope has not converged!!! Increase the number of cleanup steps. Scopes: " + previousScope + "\n----->\n" + currentScope)
+
     (currentScope, result)
   }
   

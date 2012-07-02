@@ -1,0 +1,25 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Unit)=>(Unit)) {
+def apply(x0:Unit): Unit = {
+var x80 = 0
+for (x1 <- 0 until 100) {
+val x46 = x1 > 50
+val x78 = if (x46) {
+x80 += x1
+val x74 = ()
+x74
+} else {
+val x69 = () // skip
+x69
+}
+}
+val x81 = println(x80)
+val x43 = x81
+x43
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

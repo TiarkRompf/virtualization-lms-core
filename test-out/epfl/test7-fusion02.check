@@ -3,24 +3,17 @@
 *******************************************/
 class Test extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-var x2 = new Array[Int](100)
+val x51_buff = new ArrayBuilder[Double]
 for (x1 <- 0 until 100) {
-x2(x1) = x1
+val x25 = x1+3.0
+val x46 = x25+5.0
+x51_buff += x46
+val x47 = ()
 }
-var x6 = new ArrayBuilder[Int]
-for (x3 <- 0 until 100) {
-val x4 = x2.apply(x3)
-val x5 = x4 > 50
-if (x5) x6 += x4
-}
-val x7 = x6.length
-var x10 = 0
-for (x8 <- 0 until x7) {
-val x9 = x6.apply(x8)
-x10 += x9
-}
-val x11 = println(x10)
-x11
+val x51 = x51_buff.result
+val x52 = println(x51)
+val x22 = x52
+x22
 }
 }
 /*****************************************

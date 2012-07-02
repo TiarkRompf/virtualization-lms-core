@@ -71,7 +71,16 @@ trait GenericCodegen extends BlockTraversal {
   }
   def remapImpl[A](m: Manifest[A]): String = remap(m)
   //def remapVar[A](m: Manifest[Variable[A]]) : String = remap(m.typeArguments.head)
-
+  /**
+   * Strips of the Gen type and returns the string representation of the element type.
+   */
+  def stripGen[A](m: Manifest[A]): String = {
+    if (m.erasure == classOf[Gen[Any]])
+      remap(m.typeArguments.head)
+    else
+      remap(m)
+  }
+  
   def hasMetaData: Boolean = false
   def getMetaData: String = null
 

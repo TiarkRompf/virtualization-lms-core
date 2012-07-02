@@ -174,9 +174,7 @@ import internal.Scheduling
 trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
-
   
-
   override def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A = {
     val result0 = resultB.map(getBlockResultFull) flatMap { case Combine(xs) => xs case x => List(x) }
     val (scope,result) = fuseTopLevelLoops(innerScope)(result0)
@@ -216,14 +214,14 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
   
-/*
-  TODO: moved to GenericFatCodegen -- but they don't really belong there....
-  
   def unapplySimpleIndex(e: Def[Any]): Option[(Exp[Any], Exp[Int])] = None
   def unapplySimpleDomain(e: Def[Int]): Option[Exp[Any]] = None
   def unapplySimpleCollect(e: Def[Any]): Option[Exp[Any]] = None
-  def unapplySimpleCollectIf(e: Def[Any]): Option[(Exp[Any],List[Exp[Boolean]])] = None
-*/
+
+  def plugInHelper[A, T: Manifest, U: Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = sys.error("not implemented")
+  def applyPlugIntoContext(d: Def[Any], r: Def[Any]): Def[Any] = sys.error("not implemented")
+  def applyExtendGenerator[A](d: Def[Any], body: Def[Any]): (Exp[A], Exp[A]) = sys.error("not implemented")
+  def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
 
   object SimpleIndex {
     def unapply(a: Def[Any]): Option[(Exp[Any], Exp[Int])] = unapplySimpleIndex(a)
@@ -237,11 +235,37 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
     def unapply(a: Def[Any]): Option[Exp[Any]] = unapplySimpleCollect(a)
   }
 
-  object SimpleCollectIf {
-    def unapply(a: Def[Any]): Option[(Exp[Any],List[Exp[Boolean]])] = unapplySimpleCollectIf(a)
+  def getInputSyms(x: Sym[_]) = {
+      findDefinition(x) match {
+        case Some(x) => syms(infix_rhs(x))
+        case _ => Nil
+      }
   }
+  
+  /** 
+   * Exports the raw IR to .dot format. 
+   */ 
+  def exportToGraphRaw(currentScope: List[Stm], file: String) = { 
+    val buf = scala.collection.mutable.Buffer[String]() 
+    buf += "digraph g {" 
+    for (sym <- currentScope.flatMap(_.lhs)) { 
+      val df = IR.findDefinition(sym) 
+      buf += """%s [label="%s"];""" 
+        .format(sym.id, df.get.toString) 
+    } 
+    for (sym <- currentScope.flatMap(_.lhs); input1 <- getInputSyms(sym)) { 
+      buf += """%s -> %s [label="%s"]; """.format(sym.id, input1.id, input1.id) 
+    } 
+    buf += "}" 
+    buf.mkString("\n") 
+    val out = new java.io.FileOutputStream(file) 
+    out.write(buf.mkString("\n").getBytes) 
+    out.flush 
+    out.close 
+  } 
+  
 
-
+  
   /*
     apply fusion to loops at the top level of scope 'currentScope', which has outputs 'result'.
     uses 'getExactScope' provided by CodeMotion to find top level statements.
@@ -263,7 +287,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
     val g1 = getFatDependentStuff(currentScope)(bound)
     g1.foreach(println)
 */
-
+    exportToGraphRaw(currentScope, "/tmp/whole-scope.dot")
     // find loops at current top level
     var Wloops: List[Stm] = {
       val levelScope = getExactScope(currentScope)(result) // could provide as input ...
@@ -293,7 +317,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
         def WgetLoopVar(e: Stm): List[Sym[Int]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => List(x) }
         def WgetLoopRes(e: Stm): List[Def[Any]] = e.rhs match { case SimpleFatLoop(s,x,rhs) => rhs }
 
-        val loopCollectSyms = Wloops flatMap (e => (e.lhs zip WgetLoopRes(e)) collect { case (s, SimpleCollectIf(_,_)) => s })
+        val loopCollectSyms = Wloops flatMap (e => (e.lhs zip WgetLoopRes(e)) collect { case (s, SimpleCollect(_)) => s })
 
         val loopSyms = Wloops flatMap (_.lhs)
         val loopVars = Wloops flatMap WgetLoopVar
@@ -353,12 +377,53 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
         // shape dependency helpers
 
         def isShapeDep(s: Exp[Int], a: Stm) = s match { case Def(SimpleDomain(a1)) => a.lhs contains a1 case _ => false }
-        def getShapeCond(s: Exp[Int], a: Stm) = s match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) match { case SimpleCollectIf(a,c) => c } }
 
-        def extendLoopWithCondition(e: Stm, shape: Exp[Int], targetVar: Sym[Int], c: List[Exp[Boolean]]): List[Exp[Any]] = e.rhs match { 
-          case SimpleFatLoop(s,x,rhs) => (e.lhs zip rhs).map { case (l,r) => findOrCreateDefinitionExp(SimpleLoop(shape,targetVar,applyAddCondition(r,c)), l.pos) }
+         /**
+         * Plugs Yield statements in body of loop e with the output of loop a. Also adds new definitions to the current scope.
+         *
+         *
+         * Here loop e is plugged into body of loop a. To be more precise:
+         * Shape of loop e dependsOn a
+         * s shapeOf e
+         * shape shapeOf a
+         * targetVar unified var for both loops
+         */
+        def duplicateYieldContextAndPlugInRhs(trans: SubstTransformer)(shB: Exp[Int], a: TTP)(b: TTP, shA: Exp[Int], targetVar: Sym[Int]) = {
+          // s depends on loop a (a.lhs(x).length) -- d is the result of loop a that the shape depends on
+          val d = shB match { case Def(SimpleDomain(a1)) => WgetLoopRes(a)(a.lhs indexOf a1) }
+          
+          printlog("beep bop "+d+"/"+b)
+          val newDefs = scala.collection.mutable.ArrayBuffer[Stm]()
+          var saveContext = 0
+          // TODO (VJ) this is not good as it creates one new loop for part of the rhs
+          // it is also not good because it does not track effects in the new loop. Or does it?
+          val z = b.rhs match {
+            case SimpleFatLoop(s,x,rhs) => rhs.map { r =>
+              saveContext = globalDefs.length
+
+              // concatenating loop vars of both generators (Yield) in the new Generator.
+              // This keeps the dependency between the new Yield and all added loops.
+              // effects ?
+              val newSym = SimpleLoop(shA, targetVar, applyPlugIntoContext(d, r))
+
+              // track only symbols of loops that are created in plugging. This prevents loops to be filtered afterwards.
+              UloopSyms = UloopSyms ++ globalDefs.drop(saveContext).collect{case a@ TP(lhs, SimpleLoop(_, _, _)) => List(lhs)}
+
+              // TODO (VJ) where to get source context
+              // extract new definitions
+              val z = findOrCreateDefinition(newSym, Nil).lhs.head
+              newDefs ++= globalDefs.drop(saveContext)
+              printlog("mod context. old: " + r + "; new: " + findDefinition(z))
+              z
+            }
+          }
+
+          printlog("newDefs:" + newDefs)
+//          innerScope = innerScope ++ newDefs
+          currentScope = currentScope ++ newDefs.map(fatten)
+          z
         }
-
+        
         // partitioning: build maximal sets of loops to be fused
         // already fuse loops headers (shape, index variables)
 
@@ -382,11 +447,11 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
 
               // analyze shape dependency and add appropriate conditions to loop body when fusing a filter loop
               val shape = if (isShapeDep(shapeA,b)) {
-                val loops2 = extendLoopWithCondition(a,shapeB,targetVar,getShapeCond(shapeA,b))
+                val loops2 = duplicateYieldContextAndPlugInRhs(t)(shapeB,a)(b,shapeA,targetVar)
                 (a.lhs zip loops2) foreach { p => t.subst(p._1) = p._2 }
                 shapeB
               } else if (isShapeDep(shapeB,a)) {
-                val loops2 = extendLoopWithCondition(b,shapeA,targetVar,getShapeCond(shapeB,a))
+                val loops2 = duplicateYieldContextAndPlugInRhs(t)(shapeB,a)(b,shapeA,targetVar)
                 (b.lhs zip loops2) foreach { p => t.subst(p._1) = p._2 }
                 shapeA
               } else {
@@ -426,7 +491,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
 
                   printlog("replace " + e + " at " + index + " within " + fused)
 
-                  val rhs = WgetLoopRes(fused)(index) match { case SimpleCollectIf(y,c) => y }
+                  val rhs = WgetLoopRes(fused)(index) match { case SimpleCollect(y) => y }
 
                   t.subst(s) = rhs
                 case _ => //e
