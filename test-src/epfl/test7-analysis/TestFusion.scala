@@ -77,6 +77,11 @@ trait ScalaFatLoopsFusionOpt extends ScalaGenArrayLoops with ScalaGenIfThenElseF
     case _ => super.unapplyConcat(e)
   }
   
+  override def unapplyGenerator(e: Def[Any]): Option[YieldSingle[Any]] = e match {
+    case ArrayElem(Def(Reflect(y@ YieldSingle(_, _), _, _)), _) => Some(y) 
+    case _ => super.unapplyGenerator(e)
+  }
+  
   def toAtom2[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
     val tp = findOrCreateDefinition(d, List(pos))
     tp.lhs.head.asInstanceOf[Exp[A]]

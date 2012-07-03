@@ -40,7 +40,9 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
    *  @param  g   Represents list of loop vars in which this yield is nested.
    *  @param  a   Expression for the value that is being yielded.
    */
-  case class YieldSingle[T](g: List[Exp[Int]], a: Exp[T]) extends Def[Gen[T]]
+  case class YieldSingle[T](g: List[Exp[Int]], a: Exp[T]) extends Def[Gen[T]] {
+    var concatSym: Option[Sym[T]] = None
+  }
 
   /**
    * $yieldstmt

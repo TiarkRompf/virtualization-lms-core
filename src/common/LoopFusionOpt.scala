@@ -189,6 +189,24 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
     // and if we change the result here, the caller will emit a reference to a sym
     // that doesn't exist (because it was replaced)
 
+    // replace loop yield symbols with the symbol of a Concat
+    scope.foreach {
+         case TP(sym, Concat(l)) =>
+           var t = new SubstTransformer
+           // extract the definitions
+           l.map(x => findDefinition(x.asInstanceOf[Sym[Any]]).get).foreach(x => {
+             // extract a generator from a loop
+             x match {
+               case TP(_, SimpleLoop(sh, i, Generator(y))) =>
+                 // mutate the generator
+                 y.concatSym = Some(sym)
+               case _ =>
+             }
+             // TODO: later replace it with a transformation
+           })
+         case _ =>
+       }
+
     if (result0 != result) {
       printlog("super.focusExactScopeFat with result changed from " + result0 + " to " + result)
 
@@ -220,7 +238,8 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
   def unapplySimpleDomain(e: Def[Int]): Option[Exp[Any]] = None
   def unapplySimpleCollect(e: Def[Any]): Option[Exp[Any]] = None
   def unapplyConcat(e: Def[Any]): Option[List[Exp[Any]]] = None
- 
+  def unapplyGenerator(e: Def[Any]): Option[YieldSingle[Any]] = None
+
   def applyConcat(l: List[Exp[Any]]): Exp[Any] = sys.error("not implemented")
   def plugInHelper[A, T: Manifest, U: Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = sys.error("not implemented")
   def applyPlugIntoContext(d: Def[Any], r: Def[Any]): Def[Any] = sys.error("not implemented")
@@ -241,6 +260,10 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
  
   object Concat {
     def unapply(a: Def[Any]): Option[List[Exp[Any]]] = unapplyConcat(a)  
+  }
+  
+  object Generator {
+    def unapply(a: Def[Any]): Option[YieldSingle[Any]] = unapplyGenerator(a) 
   }
   
   def getInputSyms(x: Sym[_]) = {
@@ -306,8 +329,6 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
            val saveContext = globalDefs.length
            val newDefs = scala.collection.mutable.ArrayBuffer[Stm]()
            val newSym = applyConcat(copiedLoops.flatMap(_._2))
-           println("list: " + l)
-           println("newSym: " + Def.unapply(newSym))
               // extract new definitions
            newDefs ++= globalDefs.drop(saveContext)
            
@@ -323,17 +344,42 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
              currentScope = a
              result = b
            }
-           println("Full transformation:")
-           currentScope.foreach(println)
            
-           exportToGraphRaw(getSchedule(currentScope)(result), "/tmp/concats-after")
            true
          case _ => false
        }
        } while(res != None)
 
-       // replace loop yield symbols with the concat symbol
-       
+       // merge all Concat symbols
+       def allConcats(l: List[Exp[Any]]): List[Exp[Any]] = l.flatMap {
+         case Def(Concat(l)) => allConcats(l)
+         case x => x :: Nil 
+       }
+         
+       val t = new SubstTransformer
+       currentScope.foreach { x =>
+         x match {
+           case TP(s, Concat(l)) if !currentScope.exists {
+             case TP(s1, Concat(l1)) => l1.contains(s) 
+             case _ => false
+           } =>
+           
+             val saveContext = globalDefs.length
+             val newDefs = scala.collection.mutable.ArrayBuffer[Stm]()
+             val newSym = applyConcat(allConcats(l))
+             // extract new definitions
+             newDefs ++= globalDefs.drop(saveContext)
+           
+             // add new definitions
+             currentScope = currentScope ++ (newDefs.map(fatten))
+             t.subst(s) = newSym
+           case _ =>
+         }
+       }
+       transformAllFully(currentScope, result, t) match { case (a,b) => // too bad we can't use pair assignment
+         currentScope = a
+         result = b
+       }
        level += 1
        (currentScope, result)
   }

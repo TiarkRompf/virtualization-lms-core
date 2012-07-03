@@ -4,7 +4,7 @@ package test7
 
 import common._
 import test1._
-
+import scala.collection.mutable
 import internal.AbstractSubstTransformer
 
 
@@ -227,7 +227,7 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
     case ArrayLength(a) =>  
       emitValDef(sym, quote(a) + ".length")
     case Concat(a) => 
-      emitValDef(sym, a.map(quote).mkString(" ++ "))
+      emitValDef(sym, quote(sym) + "_buff.result")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -236,19 +236,30 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
   val IR: ArrayLoopsFatExp
   import IR._
   
+  val concats = new mutable.HashSet[Sym[Any]]()
+  
   override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatLoop(s,x,rhs) =>
       
       for ((l,r) <- sym zip rhs) {
+        // extract the generator and yield the
         r match {
-          case ForeachElem(y) =>
-            stream.println("val " + quote(l) + " = () // foreach (this is perfectly fine)")
-          case ArrayElem(g,Block(y)) if g == y =>
-            stream.println("val " + quote(l) + " = new Array[" + stripGen(y.tp) + "]("+quote(s)+")")
-          case ArrayElem(g,y) =>
-            stream.println("val " + quote(l) + "_buff = new ArrayBuilder[" + stripGen(y.tp)  + "]")
-          case ReduceElem(g,y) =>
-            stream.println("var " + quote(l) + " = 0")
+           case ArrayElem(Def(Reflect(y @ YieldSingle(_, _), _, _)), Block(b)) if (y.concatSym != None) =>
+             if (!concats.contains(y.concatSym.get)) {
+               concats += (y.concatSym.get)
+               stream.println("val " + quote(y.concatSym.get) + "_buff = new ArrayBuilder[" + stripGen(b.tp)  + "]")
+             }
+          case r => 
+            r match {
+              case ForeachElem(y) =>
+                stream.println("val " + quote(l) + " = () // foreach (this is perfectly fine)")
+              case ArrayElem(g,Block(y)) if g == y =>
+                stream.println("val " + quote(l) + " = new Array[" + stripGen(y.tp) + "]("+quote(s)+")")
+              case ArrayElem(g,y) =>
+                stream.println("val " + quote(l) + "_buff = new ArrayBuilder[" + stripGen(y.tp)  + "]")
+              case ReduceElem(g,y) =>
+                stream.println("var " + quote(l) + " = 0")
+           }
         }
       }
       val ii = x
@@ -257,12 +268,17 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
       val gens = for ((l,r) <- sym zip rhs if !r.isInstanceOf[ForeachElem[_]]) yield r match {
         case ArrayElem(g,Block(y)) if g == y => // g == y should indicate selectivity 1.0 (which is not so general)
           (g, (s: List[String]) => {
+            // if generator is concat generator yield to the special symbol
             stream.println(quote(l) + "("+quote(ii)+") = " + s.head)
             stream.println("val " + quote(g) + " = ()")
           })
-        case ArrayElem(g,Block(y)) =>
+        case ArrayElem(g @ Def(Reflect(y @ YieldSingle(_, _), _, _)),Block(_)) if y.concatSym.isEmpty =>
           (g, (s: List[String]) => {
             stream.println(quote(l) + "_buff += " + s.head)
+            stream.println("val " + quote(g) + " = ()")})
+        case ArrayElem(g @ Def(Reflect(y @ YieldSingle(_, _), _, _)),Block(_)) =>
+          (g, (s: List[String]) => {
+            stream.println(quote(y.concatSym.get) + "_buff += " + s.head)
             stream.println("val " + quote(g) + " = ()")
           })
         case ReduceElem(g,y) =>
@@ -278,12 +294,17 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
 
       stream.println("}")
 
-      for ((l,r) <- sym zip rhs) r match {
+      for ((l,r) <- sym zip rhs) 
+        r match {
+          case ArrayElem(Def(Reflect(y@ YieldSingle(_, _), _, _)), _) if y.concatSym != None =>
+            // do notihng. Concat will do the result
+        case _ => r match {
         case ForeachElem(y) => 
         case ArrayElem(g,Block(y)) if g == y =>
         case ArrayElem(g,y) =>
           stream.println("val " + quote(l) + " = " + quote(l) + "_buff.result")
         case ReduceElem(g,y) =>
+      }
       }
 
     case _ => super.emitFatNode(sym, rhs)
