@@ -7,7 +7,7 @@ import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
 import collection.mutable.{Map => MMap}
 import collection.immutable.List._
 
-trait OpenCLCodegen extends GPUCodegen {
+trait OpenCLCodegen extends GPUCodegen with CppHostTransfer {
   val IR: Expressions
   import IR._
 
@@ -35,18 +35,6 @@ trait OpenCLCodegen extends GPUCodegen {
 
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
-
-	/*
-  override def isObjectType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "scala.collection.immutable.List[Int]" => true
-        //TODO: ObjectTypes needs to be able to broken down, but array does not have to be.
-        //TODO: What we need to do is to distinguish between passable types or not to the opencl kernel
-      case "Array[Int]" | "Array[Long]" | "Array[Float]" | "Array[Double]" | "Array[Boolean]" => true
-      case _ => super.isObjectType(m)
-    }
-  }
-	*/
 
 	/*
   override def remap[A](m: Manifest[A]) : String = {
@@ -84,9 +72,10 @@ trait OpenCLCodegen extends GPUCodegen {
   }
 	*/
 
-  // TODO: Move to Delite?
+
+  /*
   def copyInputHtoD(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.tp)
+    //checkGPUableType(sym.tp)
     remap(sym.tp) match {
       case "DeliteArray_bool" | "DeliteArray_char" | "DeliteArray_CHAR" | "DeliteArray_short" | "DeliteArray_int" | "DeiteArray_long" | "DeliteArray_float" | "DeliteArray_double" =>
         val out = new StringBuilder
@@ -104,7 +93,7 @@ trait OpenCLCodegen extends GPUCodegen {
   }
 
   def copyOutputDtoH(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.tp)
+    //checkGPUableType(sym.tp)
     if (isPrimitiveType(sym.tp)) {
       val out = new StringBuilder
       out.append("\t%s data;\n".format(remap(sym.tp)))
@@ -130,7 +119,7 @@ trait OpenCLCodegen extends GPUCodegen {
   }
 
   def copyMutableInputDtoH(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.tp)
+    //checkGPUableType(sym.tp)
     remap(sym.tp) match {
       case "DeliteArray_bool" | "DeliteArray_char" | "DeliteArray_CHAR" | "DeliteArray_short" | "DeliteArray_int" | "DeiteArray_long" | "DeliteArray_float" | "DeliteArray_double" =>
         val out = new StringBuilder
@@ -144,23 +133,7 @@ trait OpenCLCodegen extends GPUCodegen {
       case _ => throw new Exception("OpenCLGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
     }
   }
-
-  //TODO: Remove below methods
-  def allocOutput(newSym: Sym[_], sym: Sym[_], reset: Boolean = false) : Unit = {
-    throw new GenerationFailedException("OpenCLGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.tp)))
-  }
-  def allocReference(newSym: Sym[Any], sym: Sym[Any]) : Unit = {
-    throw new GenerationFailedException("OpenCLGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.tp)))
-  }
-
-  def positionMultDimInputs(sym: Sym[Any]) : String = {
-    throw new GenerationFailedException("OpenCLGen: positionMultDimInputs(sym) : Cannot reposition GPU memory (%s)".format(remap(sym.tp)))
-
-  }
-
-  def cloneObject(sym: Sym[Any], src: Sym[Any]) : String = {
-    throw new GenerationFailedException("OpenCLGen: cloneObject(sym)")
-  }
+  */
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
@@ -188,18 +161,6 @@ trait OpenCLCodegen extends GPUCodegen {
                      "*******************************************/")
       }
     Nil
-  }
-
-  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    stream.println(addTab() + remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
-  }
-
-  def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
-    stream.println(addTab()+ remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
-  }
-
-  def emitAssignment(lhs:String, rhs: String): Unit = {
-    stream.println(addTab() + " " + lhs + " = " + rhs + ";")
   }
 
 }

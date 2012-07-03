@@ -262,6 +262,10 @@ trait OpenCLGenStruct extends OpenCLGenBase {
   import IR._
 }
 
+trait CGenStruct extends CGenBase {
+  val IR: StructExp
+  import IR._
+}
 
 trait BaseGenFatStruct extends GenericFatCodegen {
   val IR: StructFatExpOptCommon // TODO: restructure traits, maybe move this to if then else codegen?
@@ -320,4 +324,5 @@ trait ScalaGenFatStruct extends ScalaGenStruct with BaseGenFatStruct {
 
 trait CudaGenFatStruct extends CudaGenStruct with BaseGenFatStruct
 trait OpenCLGenFatStruct extends OpenCLGenStruct with BaseGenFatStruct
+trait CGenFatStruct extends CGenStruct with BaseGenFatStruct
 

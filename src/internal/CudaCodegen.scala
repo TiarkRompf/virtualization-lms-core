@@ -7,7 +7,7 @@ import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap, ListMap
 import collection.mutable.{Map => MMap}
 import collection.immutable.List._
 
-trait CudaCodegen extends GPUCodegen {
+trait CudaCodegen extends GPUCodegen with CppHostTransfer {
   val IR: Expressions
   import IR._
 
@@ -38,9 +38,10 @@ trait CudaCodegen extends GPUCodegen {
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
+  /*
   // TODO: Move to Delite?
   def copyInputHtoD(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.tp)
+    //checkGPUableType(sym.tp)
     remap(sym.tp) match {
       case "DeliteArray<bool>" | "DeliteArray<char>" | "DeliteArray<CHAR>" | "DeliteArray<short>" | "DeliteArray<int>" | "DeiteArray<long>" | "DeliteArray<float>" | "DeliteArray<double>" =>
         val out = new StringBuilder
@@ -61,7 +62,7 @@ trait CudaCodegen extends GPUCodegen {
   }
 
   def copyOutputDtoH(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.tp)
+    //checkGPUableType(sym.tp)
     if (isPrimitiveType(sym.tp)) {
       val out = new StringBuilder
       out.append("\t%s *ptr;\n".format(remap(sym.tp)))
@@ -91,7 +92,7 @@ trait CudaCodegen extends GPUCodegen {
   }
 
   def copyMutableInputDtoH(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.tp)
+    //checkGPUableType(sym.tp)
     remap(sym.tp) match {
       case "DeliteArray<bool>" | "DeliteArray<char>" | "DeliteArray<CHAR>" | "DeliteArray<short>" | "DeliteArray<int>" | "DeiteArray<long>" | "DeliteArray<float>" | "DeliteArray<double>" =>
         val out = new StringBuilder
@@ -108,22 +109,7 @@ trait CudaCodegen extends GPUCodegen {
       case _ => throw new Exception("CudaGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
     }
   }
-
-  //TODO: Remove below methods
-  def allocOutput(newSym: Sym[_], sym: Sym[_], reset: Boolean = false) : Unit = {
-    throw new GenerationFailedException("CudaGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.tp)))
-  }
-  def allocReference(newSym: Sym[Any], sym: Sym[Any]) : Unit = {
-    throw new GenerationFailedException("CudaGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.tp)))
-  }
-
-  def positionMultDimInputs(sym: Sym[Any]) : String = {
-    throw new GenerationFailedException("CudaGen: positionMultDimInputs(sym) : Cannot reposition GPU memory (%s)".format(remap(sym.tp)))
-  }
-
-  def cloneObject(sym: Sym[Any], src: Sym[Any]) : String = {
-    throw new GenerationFailedException("CudaGen: cloneObject(sym)")
-  }
+  */
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
@@ -151,26 +137,6 @@ trait CudaCodegen extends GPUCodegen {
                      "*******************************************/")
     }
     Nil
-  }  
-
-/*
-  //TODO: is sym of type Any or Variable[Any] ?
-  def emitConstDef(sym: Sym[Any], rhs: emitK): Unit = {
-    stream.print("const ")
-    emitVarDef(sym, rhs)
-  }
-*/
-
-  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    stream.println(addTab() + remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
-  }
-
-  def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
-    stream.println(addTab()+ remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
-  }
-
-  def emitAssignment(lhs:String, rhs: String): Unit = {
-    stream.println(addTab() + " " + lhs + " = " + rhs + ";")
   }
 
 }

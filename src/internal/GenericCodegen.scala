@@ -121,7 +121,27 @@ trait GenericCodegen extends BlockTraversal {
     stream = null
     super.reset
   }
-  
+
+
+  def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
+    m.toString match {
+      case "Boolean" | "Byte" | "Char" | "Short" | "Int" | "Long" | "Float" | "Double" => true
+      case _ => false
+    }
+  }
+
+  def isVoidType[A](m: Manifest[A]) : Boolean = {
+    m.toString match {
+      case "Unit" => true
+      case _ => false
+    }
+  }
+
+  def isVariableType[A](m: Manifest[A]) : Boolean = {
+    if(m.erasure == classOf[Variable[AnyVal]]) true
+    else false
+  }
+
 }
 
 
