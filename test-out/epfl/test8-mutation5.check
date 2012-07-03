@@ -5,8 +5,8 @@ depends on  Sym(5)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 val x2 = LoopArray(100) { x1 => 
 0.0
 }

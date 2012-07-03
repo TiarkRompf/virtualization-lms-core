@@ -19,7 +19,7 @@ class TestCrossStage extends FileDiffSuite {
   
   trait DSL extends Functions with ArrayBufferOps with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with RangeOps with Print {
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-    def test(x: Rep[Int]): Rep[Any]
+    def test(x: Rep[Int]): Rep[Unit]
     
     implicit def funToRep[T:Manifest,U:Manifest](x:T=>U): Rep[T=>U]
     implicit def abToRep[T:Manifest](x:ArrayBuffer[T]): Rep[ArrayBuffer[T]]
@@ -66,11 +66,12 @@ class TestCrossStage extends FileDiffSuite {
       
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
-// Breaks test compilation          
-// FIXME: array buffer now uses implicis instead of
-// infix methods and lifting does not kick in
+// Broke test compilation:
+// array buffer switched to use implicis instead of
+// infix methods and lifting did not kick in
           acc += x
           acc += x
+          print("done")
         }
       }
       new Prog with Impl

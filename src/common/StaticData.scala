@@ -43,7 +43,7 @@ trait ScalaGenStaticData extends ScalaGenEffect with BaseGenStaticData {
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case StaticData(x) => 
-      emitValDef(sym, "p"+quote(sym) + " // static data: " + x)
+      emitValDef(sym, "p"+quote(sym) + " // static data: " + (x match { case x: Array[_] => "Array("+x.mkString(",")+")" case _ => x }))
     case _ => super.emitNode(sym, rhs)
   }
   

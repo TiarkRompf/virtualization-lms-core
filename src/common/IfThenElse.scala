@@ -4,7 +4,6 @@ package common
 import java.io.PrintWriter
 import scala.reflect.SourceContext
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
-import scala.reflect.SourceContext
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit pos: SourceContext): Rep[T]
@@ -64,7 +63,11 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
   }
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
-    case Reflect(IfThenElse(c,a,b), u, es) => reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))
+    case Reflect(IfThenElse(c,a,b), u, es) => 
+      if (f.hasContext)
+        __ifThenElse(f(c),f.reflectBlock(a),f.reflectBlock(b))
+      else
+        reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case IfThenElse(c,a,b) => 
       if (f.hasContext)
         __ifThenElse(f(c),f.reflectBlock(a),f.reflectBlock(b))

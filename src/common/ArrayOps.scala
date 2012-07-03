@@ -56,7 +56,9 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   }
   case class ArrayApply[T:Manifest](a: Exp[Array[T]], n: Exp[Int]) extends Def[T]
   case class ArrayUpdate[T:Manifest](a: Exp[Array[T]], n: Exp[Int], y: Exp[T]) extends Def[Unit]  
-  case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int]
+  case class ArrayLength[T:Manifest](a: Exp[Array[T]]) extends Def[Int] {
+    val m = manifest[T]
+  }
   case class ArrayForeach[T](a: Exp[Array[T]], x: Sym[T], block: Block[Unit]) extends Def[Unit]
   case class ArrayCopy[T:Manifest](src: Exp[Array[T]], srcPos: Exp[Int], dest: Exp[Array[T]], destPos: Exp[Int], len: Exp[Int]) extends Def[Unit] {
     val m = manifest[T]
@@ -93,17 +95,19 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   //////////////
   // mirroring
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
-    (e match {
-      case ArrayApply(a,x) => array_apply(f(a),f(x))
-      case e@ArrayCopy(a,ap,d,dp,l) => toAtom(ArrayCopy(f(a),f(ap),f(d),f(dp),f(l))(e.m))(mtype(manifest[A]),implicitly[SourceContext])
-      case Reflect(e@ArrayNew(n), u, es) => reflectMirrored(Reflect(ArrayNew(f(n))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))    
-      case Reflect(ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(ArrayUpdate(l,i,r), u, es) => reflectMirrored(Reflect(ArrayUpdate(f(l),f(i),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))   
-      case Reflect(e@ArrayCopy(a,ap,d,dp,l), u, es) => reflectMirrored(Reflect(ArrayCopy(f(a),f(ap),f(d),f(dp),f(l))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))     
-      case _ => super.mirror(e,f)
-    }).asInstanceOf[Exp[A]] // why??
-  }
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case ArrayApply(a,x) => array_apply(f(a),f(x))
+    case ArrayLength(x) => array_length(f(x))
+    case e@ArraySort(x) => array_sort(f(x))(e.m,pos)
+    case e@ArrayCopy(a,ap,d,dp,l) => toAtom(ArrayCopy(f(a),f(ap),f(d),f(dp),f(l))(e.m))(mtype(manifest[A]),pos)
+    case Reflect(e@ArrayNew(n), u, es) => reflectMirrored(Reflect(ArrayNew(f(n))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+    case Reflect(e@ArrayLength(x), u, es) => reflectMirrored(Reflect(ArrayLength(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+    case Reflect(ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@ArraySort(x), u, es) => reflectMirrored(Reflect(ArraySort(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(ArrayUpdate(l,i,r), u, es) => reflectMirrored(Reflect(ArrayUpdate(f(l),f(i),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))   
+    case Reflect(e@ArrayCopy(a,ap,d,dp,l), u, es) => reflectMirrored(Reflect(ArrayCopy(f(a),f(ap),f(d),f(dp),f(l))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))     
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]] // why??
   
   override def syms(e: Any): List[Sym[Any]] = e match {
     case ArrayForeach(a, x, body) => syms(a):::syms(body)
@@ -124,6 +128,52 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   }
     
 }
+
+trait ArrayOpsExpOpt extends ArrayOpsExp {
+
+
+  override def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int])(implicit pos: SourceContext): Exp[T] = {
+    if (context ne null) {
+      // find the last modification of array x
+      // if it is an assigment at index n, just return the last value assigned 
+      val vs = x.asInstanceOf[Sym[Array[T]]]
+      //TODO: could use calculateDependencies?
+      
+      val rhs = context.reverse.collectFirst { 
+        //case w @ Def(Reflect(ArrayNew(sz: Exp[T]), _, _)) if w == x => Some(Const(0)) // FIXME: bounds check!
+        case Def(Reflect(ArrayUpdate(`x`, `n`, rhs: Exp[T]), _, _)) => Some(rhs)
+        case Def(Reflect(_, u, _)) if mayWrite(u, List(vs)) => None // not a simple assignment
+      }
+      rhs.flatten.getOrElse(super.array_apply(x,n))
+    } else {
+      super.array_apply(x,n)
+    }
+  }
+  
+  override def array_update[T:Manifest](x: Exp[Array[T]], n: Exp[Int], y: Exp[T])(implicit pos: SourceContext) = {
+    if (context ne null) {
+      // find the last modification of array x
+      // if it is an assigment at index n with the same value, just do nothing
+      val vs = x.asInstanceOf[Sym[Array[T]]]
+      //TODO: could use calculateDependencies?
+      
+      val rhs = context.reverse.collectFirst { 
+        //case w @ Def(Reflect(ArrayNew(sz: Exp[T]), _, _)) if w == x => Some(Const(())) // FIXME: bounds check!
+        case Def(Reflect(ArrayUpdate(`x`, `n`, `y`), _, _)) => Some(Const(()))
+        case Def(Reflect(_, u, _)) if mayWrite(u, List(vs)) => None // not a simple assignment
+      }
+      rhs.flatten.getOrElse(super.array_update(x,n,y))
+    } else {
+      super.array_update(x,n,y)
+    }
+  }
+
+
+
+}
+
+
+
 
 trait BaseGenArrayOps extends GenericNestedCodegen {
   val IR: ArrayOpsExp

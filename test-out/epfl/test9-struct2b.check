@@ -8,8 +8,8 @@ super.focusExactScopeFat with result changed from List(Sym(37)) to List(Sym(48))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 var x10 = new Array[Double](100)
 var x11 = new Array[Int](100)
 for (x7 <- 0 until 100) {

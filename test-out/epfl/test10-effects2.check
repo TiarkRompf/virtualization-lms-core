@@ -4,8 +4,8 @@ killing: List(Sym(1))/List(Sym(1), Sym(2), Sym(3), Sym(4)) by VectorUpdate(Sym(1
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 val x1 = VectorZeros(Const(100))
 val x3 = VectorLiteral(List(Sym(1)))
 val x2 = x1.clone

@@ -64,6 +64,29 @@ trait NumericOpsExp extends NumericOps with VariablesExp with BaseFatExp {
 
 }
 
+
+trait NumericOpsExpOpt extends NumericOpsExp {
+  
+  override def numeric_plus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = (lhs,rhs) match {
+    case (Const(x), Const(y)) => Const(implicitly[Numeric[T]].plus(x,y))
+    case (Const(x), y) if x == implicitly[Numeric[T]].zero => y
+    case (x, Const(y)) if y == implicitly[Numeric[T]].zero => x
+    case _ => super.numeric_plus(lhs,rhs)
+  }
+  override def numeric_minus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = NumericMinus(lhs, rhs)
+  override def numeric_times[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = (lhs,rhs) match {
+    case (Const(x), Const(y)) => Const(implicitly[Numeric[T]].times(x,y))
+    case (Const(x), y) if x == implicitly[Numeric[T]].zero => Const(x)
+    case (x, Const(y)) if y == implicitly[Numeric[T]].zero => Const(y)
+    case (Const(x), y) if x == implicitly[Numeric[T]].one => y
+    case (x, Const(y)) if y == implicitly[Numeric[T]].one => x
+    case _ => super.numeric_times(lhs,rhs)
+  }
+  override def numeric_divide[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = NumericDivide(lhs, rhs)
+
+}
+
+
 trait ScalaGenNumericOps extends ScalaGenFat {
   val IR: NumericOpsExp
   import IR._

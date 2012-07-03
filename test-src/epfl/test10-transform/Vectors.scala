@@ -101,3 +101,14 @@ trait VectorExpOpt extends VectorExp {
   }
   
 }
+
+trait ScalaGenVector extends ScalaGenBase {
+  val IR: VectorExp
+  import IR._
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
+    if (rhs.toString.startsWith("Vector"))
+      emitValDef(sym, rhs.toString)
+    else
+      super.emitNode(sym,rhs)
+  }
+}

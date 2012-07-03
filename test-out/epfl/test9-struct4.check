@@ -11,8 +11,8 @@ no changes, we're done
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 var x4 = new Array[Int](100)
 var x5 = new Array[Double](100)
 for (x1 <- 0 until 100) {
