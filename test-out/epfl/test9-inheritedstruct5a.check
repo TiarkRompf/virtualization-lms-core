@@ -1,0 +1,88 @@
+REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+val x13 = LoopArray(100) { x9 => 
+manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+}
+var x17: Array[scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]] = x13
+val x14 = LoopArray(100) { x9 => 
+val x10 = x9
+val x11 = 0.0-x10
+x11
+}
+var x18: Array[Double] = x14
+val x15 = LoopArray(100) { x9 => 
+val x10 = x9
+x10
+}
+var x19: Array[Double] = x15
+val x5 = LoopArray(100) { x1 => 
+manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+}
+x17 = x5
+val x6 = LoopArray(100) { x1 => 
+val x2 = x1
+x2
+}
+x18 = x6
+val x7 = LoopArray(100) { x1 => 
+val x2 = x1
+val x3 = 0.0-x2
+x3
+}
+x19 = x7
+val x36 = x17
+val x37 = x18
+val x38 = x19
+val x39 = Map("clzz"->x36,"re"->x37,"im"->x38) //ArraySoaTag(MyClassTag(scala.virtualization.lms.epfl.test9.CartesianComplex),Const(100))
+val x40 = println(x39)
+val x21 = x0 > 7
+val x28 = if (x21) {
+x5
+} else {
+val x22 = x17
+x22
+}
+val x29 = if (x21) {
+x6
+} else {
+val x23 = x18
+x23
+}
+val x30 = if (x21) {
+x7
+} else {
+val x24 = x19
+x24
+}
+val x32 = Map("clzz"->x28,"re"->x29,"im"->x30) //ArraySoaTag(MyClassTag(scala.virtualization.lms.epfl.test9.CartesianComplex),Const(100))
+val x41 = println(x32)
+x41
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+<stdin>:6: error: not found: value LoopArray
+val x56 = LoopArray(100) { x52 => 
+          ^
+<stdin>:10: error: not found: value LoopArray
+val x57 = LoopArray(100) { x52 => 
+          ^
+<stdin>:16: error: not found: value LoopArray
+val x58 = LoopArray(100) { x52 => 
+          ^
+<stdin>:21: error: not found: value LoopArray
+val x48 = LoopArray(100) { x44 => 
+          ^
+<stdin>:25: error: not found: value LoopArray
+val x49 = LoopArray(100) { x44 => 
+          ^
+<stdin>:30: error: not found: value LoopArray
+val x50 = LoopArray(100) { x44 => 
+          ^
+6 errors found
+compilation: had errors

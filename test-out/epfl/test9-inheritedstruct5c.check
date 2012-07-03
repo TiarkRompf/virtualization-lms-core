@@ -1,0 +1,108 @@
+REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+val x17 = x0 > 7
+val x20 = if (x17) {
+val x6 = LoopArray(100) { x1 => 
+val x2 = x1
+x2
+}
+x6
+} else {
+val x19 = LoopArray(100) { x18 => 
+0.0
+}
+x19
+}
+val x23 = if (x17) {
+val x7 = LoopArray(100) { x1 => 
+val x2 = x1
+val x3 = 0.0-x2
+x3
+}
+x7
+} else {
+val x22 = LoopArray(100) { x21 => 
+0.0
+}
+x22
+}
+val x24 = if (x17) {
+val x5 = LoopArray(100) { x1 => 
+manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+}
+x5
+} else {
+val x13 = LoopArray(100) { x9 => 
+manifest[scala.virtualization.lms.epfl.test9.PolarComplex]
+}
+x13
+}
+val x27 = if (x17) {
+val x26 = LoopArray(100) { x25 => 
+0.0
+}
+x26
+} else {
+val x15 = LoopArray(100) { x9 => 
+val x10 = x9
+x10
+}
+x15
+}
+val x30 = if (x17) {
+val x29 = LoopArray(100) { x28 => 
+0.0
+}
+x29
+} else {
+val x14 = LoopArray(100) { x9 => 
+val x10 = x9
+val x11 = 0.0-x10
+x11
+}
+x14
+}
+val x32 = Map("re"->x20,"im"->x23,"clzz"->x24,"phi"->x27,"r"->x30) //ArraySoaTag(LubTag(scala.virtualization.lms.epfl.test9.Complex,scala.virtualization.lms.epfl.test9.CartesianComplex,scala.virtualization.lms.epfl.test9.PolarComplex),Const(100))
+val x33 = println(x32)
+x33
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+<stdin>:8: error: not found: value LoopArray
+val x41 = LoopArray(100) { x36 => 
+          ^
+<stdin>:14: error: not found: value LoopArray
+val x54 = LoopArray(100) { x53 => 
+          ^
+<stdin>:20: error: not found: value LoopArray
+val x42 = LoopArray(100) { x36 => 
+          ^
+<stdin>:27: error: not found: value LoopArray
+val x57 = LoopArray(100) { x56 => 
+          ^
+<stdin>:33: error: not found: value LoopArray
+val x40 = LoopArray(100) { x36 => 
+          ^
+<stdin>:38: error: not found: value LoopArray
+val x48 = LoopArray(100) { x44 => 
+          ^
+<stdin>:44: error: not found: value LoopArray
+val x61 = LoopArray(100) { x60 => 
+          ^
+<stdin>:49: error: not found: value LoopArray
+val x50 = LoopArray(100) { x44 => 
+          ^
+<stdin>:56: error: not found: value LoopArray
+val x64 = LoopArray(100) { x63 => 
+          ^
+<stdin>:61: error: not found: value LoopArray
+val x49 = LoopArray(100) { x44 => 
+          ^
+10 errors found
+compilation: had errors

@@ -1,34 +1,36 @@
-ignoring read of Reify(): Reify(Sym(29),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(2), Sym(3), Sym(4), Sym(7), Sym(8), Sym(9), Sym(11), Sym(12), Sym(13), Sym(15), Sym(16), Sym(17), Sym(22), Sym(23), Sym(24), Sym(25), Sym(26), Sym(27), Sym(29)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
-var x2: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct2a$1$$anon$4@75ba7ac3.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex] = scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct2a$1$$anon$4@75ba7ac3.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex
-var x3: Double = 0.0
-var x4: Int = x0
-var x7: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct2a$1$$anon$4@75ba7ac3.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex] = scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct2a$1$$anon$4@75ba7ac3.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex
-var x8: Int = x0
-var x9: Double = 0.0
-val x11 = x2
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+var x3: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.CartesianComplex] = manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+var x4: Double = 0.0
+val x1 = x0
+var x5: Double = x1
+var x8: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.CartesianComplex] = manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+var x9: Double = x1
+var x10: Double = 0.0
 val x12 = x3
 val x13 = x4
-val x15 = x7
+val x14 = x5
 val x16 = x8
 val x17 = x9
-x2 = scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct2a$1$$anon$4@75ba7ac3.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex
-val x19 = x12+x16
-x3 = x19
+val x18 = x10
+x3 = manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
 val x20 = x13+x17
 x4 = x20
-val x25 = x2
+val x21 = x14+x18
+x5 = x21
 val x26 = x3
 val x27 = x4
-val x28 = Map("clzz"->x25,"re"->x26,"im"->x27) //MyClassTag(scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct2a$1$$anon$4@75ba7ac3.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex)
-val x29 = println(x28)
-x29
+val x28 = x5
+val x29 = Map("clzz"->x26,"re"->x27,"im"->x28) //MyClassTag(scala.virtualization.lms.epfl.test9.CartesianComplex)
+val x30 = println(x29)
+x30
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
+compilation: ok
+Map(clzz -> scala.virtualization.lms.epfl.test9.CartesianComplex, re -> 3.0, im -> 3.0)

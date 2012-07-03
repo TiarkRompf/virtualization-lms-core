@@ -52,12 +52,14 @@ trait ComplexInheritArith extends Arith with ComplexInheritBase with OverloadHac
   }
 }
 
-trait ComplexInheritBase extends Arith with MathOps with CastingOps with IfThenElse{
+abstract class Complex
+class CartesianComplex extends Complex
+class PolarComplex extends Complex
+class SubPolarComplex extends PolarComplex
 
-  abstract class Complex
-  class CartesianComplex extends Complex
-  class PolarComplex extends Complex
-  class SubPolarComplex extends PolarComplex
+
+
+trait ComplexInheritBase extends Arith with MathOps with CastingOps with IfThenElse{
 
   //constructor
   def CartesianComplex(re: Rep[Double], im: Rep[Double]) : Rep[CartesianComplex]
@@ -87,6 +89,9 @@ trait SuperIfThenElseExp extends IfThenElseExpOpt with BooleanOpsExp with EqualE
 
 //the exps
 trait StructInheritanceExp extends StructExpOpt with CastingOpsExp with SuperIfThenElseExp with MathOpsExp with VariablesExp{
+  
+  //new node!
+  case class StructIsInstanceOf[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B]) extends Def[Boolean]
 
   case class MyClassTag[T](mT: Manifest[T]) extends StructTag[T]
 
@@ -113,9 +118,8 @@ trait StructInheritanceExp extends StructExpOpt with CastingOpsExp with SuperIfT
         case LubTag(_,_,_) =>
           val aField = elems("clzz").asInstanceOf[Rep[A]]
           //TODO: replace with generation of <:< test
-          super.rep_isinstanceof(aField, mA, mB)
-          //val myequality = equals(aField,unit(mB.erasure))
-          //myequality
+          //super.rep_isinstanceof(aField, mA, mB)
+          StructIsInstanceOf(aField, mA, mB)
         //case ArraySoaTag(mT,_) => unit(true)//lhs
         case _ => 
           super.rep_isinstanceof(lhs,mA,mB)
@@ -187,6 +191,9 @@ trait ComplexInheritStructExp extends ComplexInheritBase with StructInheritanceE
 
 // ------ struct impl follows, will move to common once stable
 trait StructInheritExpOptLoops extends StructExpOptCommon with StructInheritanceExp with ArrayLoopsExp with NullOpsExp{
+
+  //TODO
+  protected def getManifestOf[T:Manifest](mT: Manifest[T]) = manifest[Manifest[T]]
   
   case class ArraySoaTag[T](base: StructTag[T], len: Exp[Int]) extends StructTag[Array[T]]
 
@@ -214,11 +221,12 @@ trait StructInheritExpOptLoops extends StructExpOptCommon with StructInheritance
               MyClassTag(manifest[T])
             else LubTag(manifest[T], c1, c2)
 
-            val tempElems = for (k <- elemsNewkeys) yield (
-              k -> ifThenElse(cond, Block(elemsA.getOrElse(k, Null)), Block(elemsB.getOrElse(k, Null))) //TODO : add sourcecontext
-            )
-
-            (tempStructTag, tempElems)
+            val tempElems = (for (k <- elemsNewkeys) yield (
+              k -> ifThenElse(cond, Block(elemsA.getOrElse(k, Null)), Block(elemsB.getOrElse(k, Null)))(mtype(elemsA.getOrElse(k,
+                    elemsB(k)).tp), SourceContext("",Nil)) //TODO : add sourcecontext
+            )).toMap
+            val tempElems2 = tempElems + ("clzz" -> rep_asinstanceof(tempElems("clzz"), manifest[Any], manifest[Manifest[T]]))
+            (tempStructTag, tempElems2)
             
           //TODO: think about nested ifThenElse for structs
           //case(LubTag(a,_,_), LubTag(b,_,_)) => LubTag(_,a,b)
@@ -232,11 +240,13 @@ trait StructInheritExpOptLoops extends StructExpOptCommon with StructInheritance
               MyClassTag(innerManifest.asInstanceOf[Manifest[T]])
             else LubTag(innerManifest.asInstanceOf[Manifest[T]], c1, c2)
 
-            val tempElems = for (k <- elemsNewkeys) yield (
+            val tempElems = (for (k <- elemsNewkeys) yield (
               //we need an arraySoaTag of nulls here, we know this
               //TODO: is this too hackish?
-              k -> ifThenElse(cond, Block(elemsA.getOrElse(k, array(len1){i=> unit(0)})), Block(elemsB.getOrElse(k, array(len1){i => unit(0)}))) //TODO : add sourcecontext
-            )
+              k -> ifThenElse(cond, Block(elemsA.getOrElse(k, array(len1){i=> unit(0.0)})), Block(elemsB.getOrElse(k, array(len1){i =>
+                    unit(0.0)}))) //TODO : add sourcecontext
+            )).toMap
+            val tempElems2 = tempElems + ("clzz" -> rep_asinstanceof(tempElems("clzz"), manifest[Any], getManifestOf(innerManifest).arrayManifest))
 
             (ArraySoaTag(temp.asInstanceOf[StructTag[T]], len1), tempElems)
 
@@ -292,10 +302,11 @@ trait StructInheritFatExpOptLoops extends StructInheritExpOptLoops with StructFa
               MyClassTag(manifest[T])
             else LubTag(manifest[T], c1, c2)
 
-            val tempElems = for (k <- elemsNewkeys) yield (
-                k -> phi(cond, u, elemsA.getOrElse(k, Null),v, elemsB.getOrElse(k, Null))(combinedResult) //TODO : add sourcecontext
-            )
-            (tempStruct, tempElems)
+            val tempElems = (for (k <- elemsNewkeys) yield (
+                k -> phi(cond, u, elemsA.getOrElse(k, Null),v, elemsB.getOrElse(k,
+                    Null))(combinedResult)(mtype(elemsA.getOrElse(k,elemsB(k)).tp)) //TODO : add sourcecontext
+            )).toMap
+            (tempStruct, tempElems+("clzz"->rep_asinstanceof(tempElems("clzz"), manifest[Any], manifest[Manifest[T]])))
 
             
           //TODO: think about nested ifThenElse for structs
@@ -311,10 +322,11 @@ trait StructInheritFatExpOptLoops extends StructInheritExpOptLoops with StructFa
             else LubTag(innerManifest.asInstanceOf[Manifest[T]], c1, c2)
 
             val tempStruct = ArraySoaTag(temp.asInstanceOf[StructTag[T]], len1)
-            val tempElems = for (k <- elemsNewkeys) yield (
-                k -> phi(cond, u, elemsA.getOrElse(k, array(len1){i => unit(0)}),v, elemsB.getOrElse(k, array(len1){i => unit(0)}))(combinedResult) //TODO : add sourcecontext
-            )
-            (tempStruct, tempElems)
+            val tempElems = (for (k <- elemsNewkeys) yield (
+                k -> phi(cond, u, elemsA.getOrElse(k, array(len1){i => unit(0.0)}),v, elemsB.getOrElse(k, array(len1){i =>
+                    unit(0.0)}))(combinedResult)(mtype(elemsA.getOrElse(k,elemsB(k)).tp))//TODO : add sourcecontext
+            )).toMap
+            (tempStruct, tempElems+("clzz"->rep_asinstanceof(tempElems("clzz"), manifest[Any], getManifestOf(innerManifest).arrayManifest)))
 
           case _ => throw new Error("tags dont match!")//super.ifThenElse(cond, a, b)
       }
@@ -323,13 +335,25 @@ trait StructInheritFatExpOptLoops extends StructInheritExpOptLoops with StructFa
   }}
 }
 
+trait ScalaInheritedGenCastingOps extends ScalaGenCastingOps{
+    val IR: StructInheritanceExp
+    import IR._
+   //override generation of is_instanceof
+    override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match{
+      case StructIsInstanceOf(x, mA, mB) => 
+        emitValDef(sym, quote(x)+ " <:< manifest["+mB+"]")
+      case _ => super.emitNode(sym, rhs)
+    }
+}
+
 // ----- test cases
 class TestInheritedStruct extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test9-"
   
-  trait DSL extends ComplexInheritArith with ArrayLoops with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with RangeOps with Print {
-    def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+  trait DSL extends ComplexInheritArith with ArrayLoops with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with
+  RangeOps with ImplicitOps with Print with CompileScala{
+    def infix_toDouble(x: Rep[Int]): Rep[Double] = implicit_convert[Int, Double](x)//.asInstanceOf[Rep[Double]]
     def test(x: Rep[Int]): Rep[Any]
   }
 
@@ -340,15 +364,14 @@ class TestInheritedStruct extends FileDiffSuite {
     val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenMathOps with ScalaGenOrderingOps with
     ScalaGenNullOps with ScalaGenCastingOps with ScalaGenEqual 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
-      with ScalaGenPrint /*with SymbolDependency*/ { 
+      with ScalaGenImplicitOps with ScalaInheritedGenCastingOps with ScalaGenPrint /*with SymbolDependency*/ { 
         val IR: self.type = self
+
         override def quote(x: Exp[Any]) : String = x match {
-          case Const(mT: Manifest[_]) => mT.erasure.toString
+          case Const(mT: Manifest[_]) => "manifest["+mT.toString+"]"
           case _ => super.quote(x)
         }
       }
-          
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
 
   trait ImplFused extends DSL with ComplexInheritStructExp with StructInheritFatExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
@@ -357,26 +380,30 @@ class TestInheritedStruct extends FileDiffSuite {
     val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenMathOps with ScalaGenOrderingOps 
       with ScalaGenNullOps with ScalaGenCastingOps with ScalaGenEqual
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
-      with ScalaGenPrint { val IR: self.type = self;
+      with ScalaGenImplicitOps with ScalaInheritedGenCastingOps with ScalaGenPrint { val IR: self.type = self;
         override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true 
         override def quote(x: Exp[Any]) : String = x match {
-          case Const(mT: Manifest[_]) => mT.erasure.toString
+          case Const(mT: Manifest[_]) => "manifest["+mT.toString+"]"
           case _ => super.quote(x)
         }
       }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
 
   def testStruct1a = {
     withOutFile(prefix+"inheritedstruct1a") {
       // test variable splitting
-      trait Prog extends DSL {
+      trait Prog extends DSL{
         def test(x: Rep[Int]) = {
-          var c = CartesianComplex(x.toDouble, 0)
+          var c = CartesianComplex(x.toDouble, 1.3)
           print(c.toCartesian)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct1a")
   }
@@ -390,7 +417,12 @@ class TestInheritedStruct extends FileDiffSuite {
           print(c.toCartesian)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct1b")
   }
@@ -404,7 +436,12 @@ class TestInheritedStruct extends FileDiffSuite {
           print(c.toCartesian)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      } 
     }
     assertFileEqualsCheck(prefix+"inheritedstruct1c")
   }
@@ -414,13 +451,18 @@ class TestInheritedStruct extends FileDiffSuite {
       // test variable splitting
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
-          var c = CartesianComplex(0, x.toDouble)
-          var d = CartesianComplex(x.toDouble, 0)
+          var c = CartesianComplex(0.0, x.toDouble)
+          var d = CartesianComplex(x.toDouble, 0.0)
           c = c+d
           print(c)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      } 
     }
     assertFileEqualsCheck(prefix+"inheritedstruct2a")
   }
@@ -436,7 +478,12 @@ class TestInheritedStruct extends FileDiffSuite {
           print(c)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct2b")
   }  
@@ -452,7 +499,12 @@ class TestInheritedStruct extends FileDiffSuite {
           print(e)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct3a")
   }
@@ -468,7 +520,12 @@ class TestInheritedStruct extends FileDiffSuite {
           print(e)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct3b")
   }
@@ -485,7 +542,12 @@ class TestInheritedStruct extends FileDiffSuite {
           print(f)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct4a")
   }
@@ -495,14 +557,19 @@ class TestInheritedStruct extends FileDiffSuite {
       // test variable splitting
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
-          var c = PolarComplex(0, x.toDouble)
-          var d = PolarComplex(x.toDouble, 0)
+          var c = PolarComplex(3.0, x.toDouble)
+          var d = PolarComplex(x.toDouble, 2.0)
           var e = if(x > 0) c else d
           var f = e.toCartesian
           print(f)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct4b")
   }  
@@ -518,7 +585,12 @@ class TestInheritedStruct extends FileDiffSuite {
           if(e.IsInstanceOf[CartesianComplex]) print("definitely a cartesian!")
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct4c")
   } 
@@ -534,7 +606,12 @@ class TestInheritedStruct extends FileDiffSuite {
           if(e.IsInstanceOf[CartesianComplex]) print("definitely a cartesian!")
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct4d")
   } 
@@ -551,7 +628,12 @@ class TestInheritedStruct extends FileDiffSuite {
           print(f)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct4e")
   }
@@ -581,7 +663,12 @@ class TestInheritedStruct extends FileDiffSuite {
           print(vector3)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct5a")
   }
@@ -601,7 +688,12 @@ class TestInheritedStruct extends FileDiffSuite {
           print(vector3)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct5b")
   }
@@ -621,7 +713,12 @@ class TestInheritedStruct extends FileDiffSuite {
           print(vector3)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct5c")
   }
@@ -645,11 +742,16 @@ class TestInheritedStruct extends FileDiffSuite {
           print(vector1)
         }
       }
-      new Prog with Impl
+      new Prog with Impl{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct5c")
   }  
-  
+
   def testStruct6a = {
     withOutFile(prefix+"inheritedstruct6a") {
       // fuse conjugate computation with construction, essentially a no-op
@@ -672,6 +774,10 @@ class TestInheritedStruct extends FileDiffSuite {
           case (Const(0.0), y) => y
           case _ => super.infix_+(x,y)
         }
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
       }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct6a")
@@ -700,6 +806,10 @@ class TestInheritedStruct extends FileDiffSuite {
           case (Const(0.0), y) => y
           case _ => super.infix_+(x,y)
         }
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
       }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct6b")
@@ -731,6 +841,10 @@ class TestInheritedStruct extends FileDiffSuite {
           case (Const(0.0), y) => y
           case _ => super.infix_+(x,y)
         }
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
       }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct6c")
@@ -761,7 +875,12 @@ class TestInheritedStruct extends FileDiffSuite {
           print(vector3)
         }
       }
-      new Prog with ImplFused
+      new Prog with ImplFused{
+        val tests = (input: Rep[Int]) => test(input)
+        codegen.emitSource(tests, "Test", new PrintWriter(System.out))
+        val testc = compile(tests)
+        testc(3)
+      }
     }
     assertFileEqualsCheck(prefix+"inheritedstruct6d")
   }

@@ -1,62 +1,61 @@
-ignoring read of Reify(): Reify(Sym(15),Summary(false,false,false,false,false,List(Sym(2), Sym(3), Sym(4)),List(Sym(2), Sym(3), Sym(4)),List(),List()),List(Sym(12), Sym(13), Sym(14)))
-ignoring read of Reify(): Reify(Sym(20),Summary(false,false,false,false,false,List(Sym(7), Sym(8), Sym(9)),List(Sym(7), Sym(8), Sym(9)),List(),List()),List(Sym(17), Sym(18), Sym(19)))
-ignoring read of Reify(): Reify(Const(()),Summary(false,false,false,false,false,List(Sym(2), Sym(3), Sym(4)),List(Sym(2), Sym(3), Sym(4)),List(),List()),List(Sym(12), Sym(13), Sym(14)))
-ignoring read of Reify(): Reify(Const(()),Summary(false,false,false,false,false,List(Sym(7), Sym(8), Sym(9)),List(Sym(7), Sym(8), Sym(9)),List(),List()),List(Sym(17), Sym(18), Sym(19)))
-ignoring read of Reify(): Reify(Sym(49),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(2), Sym(3), Sym(4), Sym(7), Sym(8), Sym(9), Sym(28), Sym(29), Sym(30), Sym(32), Sym(33), Sym(34), Sym(41), Sym(42), Sym(43), Sym(45), Sym(46), Sym(47), Sym(49)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
-var x2: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct4b$1$$anon$9@3894dcd0.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$PolarComplex] = scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct4b$1$$anon$9@3894dcd0.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$PolarComplex
-var x3: Double = 0.0
-var x4: Int = x0
-var x7: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct4b$1$$anon$9@3894dcd0.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$PolarComplex] = scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct4b$1$$anon$9@3894dcd0.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$PolarComplex
-var x8: Int = x0
-var x9: Double = 0.0
-val x11 = x0 > 0
-val x24 = if (x11) {
-val x12 = x2
-x12
-} else {
-val x17 = x7
-x17
-}
-var x28: Any = x24
-val x25 = if (x11) {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+var x3: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.PolarComplex] = manifest[scala.virtualization.lms.epfl.test9.PolarComplex]
+var x4: Double = 3.0
+val x1 = x0
+var x5: Double = x1
+var x8: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.PolarComplex] = manifest[scala.virtualization.lms.epfl.test9.PolarComplex]
+var x9: Double = x1
+var x10: Double = 2.0
+val x12 = x0 > 0
+val x25 = if (x12) {
 val x13 = x3
 x13
 } else {
 val x18 = x8
 x18
 }
-var x29: Any = x25
-val x26 = if (x11) {
+val x28 = x25.asInstanceOf[scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.PolarComplex]]
+var x30: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.PolarComplex] = x28
+val x26 = if (x12) {
 val x14 = x4
 x14
 } else {
 val x19 = x9
 x19
 }
-var x30: Any = x26
-val x32 = x28
-val x33 = x29
+var x31: Double = x26
+val x27 = if (x12) {
+val x15 = x5
+x15
+} else {
+val x20 = x10
+x20
+}
+var x32: Double = x27
 val x34 = x30
-var x41: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct4b$1$$anon$9@3894dcd0.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex] = scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct4b$1$$anon$9@3894dcd0.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex
-val x36 = java.lang.Math.cos(x34)
-val x37 = x33*x36
-var x42: Double = x37
-val x38 = java.lang.Math.sin(x34)
-val x39 = x33*x38
-var x43: Double = x39
-val x45 = x41
-val x46 = x42
+val x35 = x31
+val x36 = x32
+var x43: scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.CartesianComplex] = manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+val x38 = java.lang.Math.cos(x36)
+val x39 = x35*x38
+var x44: Double = x39
+val x40 = java.lang.Math.sin(x36)
+val x41 = x35*x40
+var x45: Double = x41
 val x47 = x43
-val x48 = Map("clzz"->x45,"re"->x46,"im"->x47) //MyClassTag(scala.virtualization.lms.epfl.test9.TestInheritedStruct$$anonfun$testStruct4b$1$$anon$9@3894dcd0.type#scala.virtualization.lms.epfl.test9.ComplexInheritBase$CartesianComplex)
-val x49 = println(x48)
-x49
+val x48 = x44
+val x49 = x45
+val x50 = Map("clzz"->x47,"re"->x48,"im"->x49) //MyClassTag(scala.virtualization.lms.epfl.test9.CartesianComplex)
+val x51 = println(x50)
+x51
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
+compilation: ok
+Map(clzz -> scala.virtualization.lms.epfl.test9.CartesianComplex, re -> -2.9699774898013365, im -> 0.4233600241796016)

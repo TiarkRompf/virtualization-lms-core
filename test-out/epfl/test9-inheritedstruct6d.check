@@ -1,0 +1,72 @@
+wtableneg: List()
+partitions: List(TTP(List(Sym(5), Sym(6), Sym(7)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(2))), ArrayElem(Block(Sym(3)))))))
+considering TP(Sym(25),ArrayIndex(Sym(7),Sym(22)))
+try once more ...
+wtableneg: List()
+partitions: List(TTP(List(Sym(5), Sym(6), Sym(7)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(2))), ArrayElem(Block(Sym(3)))))))
+no changes, we're done
+wtableneg: List()
+partitions: List(TTP(List(Sym(30), Sym(29)),List(SimpleLoop(Const(100),Sym(22),ArrayElem(Block(Sym(27)))), SimpleLoop(Const(100),Sym(22),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))))),SimpleFatLoop(Const(100),Sym(22),List(ArrayElem(Block(Sym(27))), ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))))))
+considering TP(Sym(25),ArrayIndex(Sym(7),Sym(22)))
+try once more ...
+wtableneg: List()
+partitions: List(TTP(List(Sym(30), Sym(29)),List(SimpleLoop(Const(100),Sym(22),ArrayElem(Block(Sym(27)))), SimpleLoop(Const(100),Sym(22),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))))),SimpleFatLoop(Const(100),Sym(22),List(ArrayElem(Block(Sym(27))), ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))))))
+no changes, we're done
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+var x5 = new Array[scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]](100)
+var x6 = new Array[Double](100)
+var x7 = new Array[Double](100)
+for (x1 <- 0 until 100) {
+val x2 = x1
+val x3 = 0.0-x2
+x5(x1) = manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+x6(x1) = x2
+x7(x1) = x3
+}
+var x17: Array[scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]] = x5
+var x18: Array[Double] = x6
+var x19: Array[Double] = x7
+val x21 = x0 > 7
+// TODO: use vars instead of tuples to return multiple values
+val (x34,x33) = if (x21) {
+var x30 = new Array[Double](100)
+var x29 = new Array[scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]](100)
+for (x22 <- 0 until 100) {
+val x25 = x7.apply(x22)
+val x27 = 0.0-x25
+x30(x22) = x27
+x29(x22) = manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+}
+(x30,x29)
+} else {
+(x7,x5)
+}
+val x35 = x33.asInstanceOf[Array[scala.reflect.Manifest[_ <: Any]]]
+val x36 = Map("clzz"->x35,"re"->x6,"im"->x34) //ArraySoaTag(MyClassTag(scala.virtualization.lms.epfl.test9.CartesianComplex),Const(100))
+val x37 = println(x36)
+x37
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+wtableneg: List()
+partitions: List(TTP(List(Sym(44), Sym(45), Sym(46)),List(SimpleLoop(Const(100),Sym(40),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(40),ArrayElem(Block(Sym(41)))), SimpleLoop(Const(100),Sym(40),ArrayElem(Block(Sym(42))))),SimpleFatLoop(Const(100),Sym(40),List(ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(41))), ArrayElem(Block(Sym(42)))))))
+considering TP(Sym(64),ArrayIndex(Sym(46),Sym(61)))
+try once more ...
+wtableneg: List()
+partitions: List(TTP(List(Sym(44), Sym(45), Sym(46)),List(SimpleLoop(Const(100),Sym(40),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(40),ArrayElem(Block(Sym(41)))), SimpleLoop(Const(100),Sym(40),ArrayElem(Block(Sym(42))))),SimpleFatLoop(Const(100),Sym(40),List(ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(41))), ArrayElem(Block(Sym(42)))))))
+no changes, we're done
+wtableneg: List()
+partitions: List(TTP(List(Sym(69), Sym(68)),List(SimpleLoop(Const(100),Sym(61),ArrayElem(Block(Sym(66)))), SimpleLoop(Const(100),Sym(61),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))))),SimpleFatLoop(Const(100),Sym(61),List(ArrayElem(Block(Sym(66))), ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))))))
+considering TP(Sym(64),ArrayIndex(Sym(46),Sym(61)))
+try once more ...
+wtableneg: List()
+partitions: List(TTP(List(Sym(69), Sym(68)),List(SimpleLoop(Const(100),Sym(61),ArrayElem(Block(Sym(66)))), SimpleLoop(Const(100),Sym(61),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))))),SimpleFatLoop(Const(100),Sym(61),List(ArrayElem(Block(Sym(66))), ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))))))
+no changes, we're done
+compilation: ok
+Map(clzz -> [Lscala.reflect.Manifest;@1dabc3b0, re -> [D@77bc6707, im -> [D@721039fa)

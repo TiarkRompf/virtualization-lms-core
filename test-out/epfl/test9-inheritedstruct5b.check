@@ -1,0 +1,74 @@
+REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+val x17 = x0 > 7
+val x18 = if (x17) {
+val x5 = LoopArray(100) { x1 => 
+manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+}
+x5
+} else {
+val x13 = LoopArray(100) { x9 => 
+manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+}
+x13
+}
+val x19 = if (x17) {
+val x6 = LoopArray(100) { x1 => 
+val x2 = x1
+x2
+}
+x6
+} else {
+val x14 = LoopArray(100) { x9 => 
+val x10 = x9
+val x11 = 0.0-x10
+x11
+}
+x14
+}
+val x20 = if (x17) {
+val x7 = LoopArray(100) { x1 => 
+val x2 = x1
+val x3 = 0.0-x2
+x3
+}
+x7
+} else {
+val x15 = LoopArray(100) { x9 => 
+val x10 = x9
+x10
+}
+x15
+}
+val x22 = Map("clzz"->x18,"re"->x19,"im"->x20) //ArraySoaTag(MyClassTag(scala.virtualization.lms.epfl.test9.CartesianComplex),Const(100))
+val x23 = println(x22)
+x23
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+<stdin>:8: error: not found: value LoopArray
+val x30 = LoopArray(100) { x26 => 
+          ^
+<stdin>:13: error: not found: value LoopArray
+val x38 = LoopArray(100) { x34 => 
+          ^
+<stdin>:19: error: not found: value LoopArray
+val x31 = LoopArray(100) { x26 => 
+          ^
+<stdin>:25: error: not found: value LoopArray
+val x39 = LoopArray(100) { x34 => 
+          ^
+<stdin>:33: error: not found: value LoopArray
+val x32 = LoopArray(100) { x26 => 
+          ^
+<stdin>:40: error: not found: value LoopArray
+val x40 = LoopArray(100) { x34 => 
+          ^
+6 errors found
+compilation: had errors

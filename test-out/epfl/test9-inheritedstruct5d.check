@@ -1,0 +1,84 @@
+REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+val x7 = 0
+val x15 = LoopArray(100) { x1 => 
+val x2 = x1 < 4
+val x8 = if (x2) {
+val x3 = x1
+x3
+} else {
+x7
+}
+x8
+}
+val x16 = LoopArray(100) { x1 => 
+val x2 = x1 < 4
+val x9 = if (x2) {
+val x3 = x1
+val x4 = 0.0-x3
+x4
+} else {
+x7
+}
+x9
+}
+val x17 = LoopArray(100) { x1 => 
+val x2 = x1 < 4
+val x10 = if (x2) {
+manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+} else {
+manifest[scala.virtualization.lms.epfl.test9.PolarComplex]
+}
+val x13 = x10.asInstanceOf[scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.Complex]]
+x13
+}
+val x18 = LoopArray(100) { x1 => 
+val x2 = x1 < 4
+val x11 = if (x2) {
+x7
+} else {
+val x3 = x1
+val x4 = 0.0-x3
+x4
+}
+x11
+}
+val x19 = LoopArray(100) { x1 => 
+val x2 = x1 < 4
+val x12 = if (x2) {
+x7
+} else {
+val x3 = x1
+x3
+}
+x12
+}
+val x20 = Map("re"->x15,"im"->x16,"clzz"->x17,"phi"->x18,"r"->x19) //ArraySoaTag(LubTag(scala.virtualization.lms.epfl.test9.Complex,scala.virtualization.lms.epfl.test9.CartesianComplex,scala.virtualization.lms.epfl.test9.PolarComplex),Const(100))
+val x21 = println(x20)
+x21
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+<stdin>:7: error: not found: value LoopArray
+val x37 = LoopArray(100) { x24 => 
+          ^
+<stdin>:17: error: not found: value LoopArray
+val x38 = LoopArray(100) { x24 => 
+          ^
+<stdin>:28: error: not found: value LoopArray
+val x39 = LoopArray(100) { x24 => 
+          ^
+<stdin>:38: error: not found: value LoopArray
+val x40 = LoopArray(100) { x24 => 
+          ^
+<stdin>:49: error: not found: value LoopArray
+val x41 = LoopArray(100) { x24 => 
+          ^
+5 errors found
+compilation: had errors
