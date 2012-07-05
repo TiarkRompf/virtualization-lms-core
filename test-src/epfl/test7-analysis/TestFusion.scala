@@ -121,6 +121,10 @@ trait ScalaFatLoopsFusionOpt extends ScalaGenArrayLoops with ScalaGenIfThenElseF
       
     case (ReduceElem(g, Block(a)), ReduceElem(g2, Block(b))) =>
       ReduceElem(g2, Block(plugInHelper(g, a, b)))
+    
+    case (ArrayElem(g, Block(a)), ForeachElem(Block(b))) =>
+      ForeachElem(Block(plugInHelper(g, a, b)))
+    
       
     case _ => super.applyPlugIntoContext(d, r)
   }

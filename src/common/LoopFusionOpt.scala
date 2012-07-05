@@ -222,7 +222,7 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
           if (r0 != r) innerScope = innerScope :+ TP(r0.asInstanceOf[Sym[Any]], Forward(r))
       }
     }
-   
+    level += 1
     super.focusExactScopeFat(result0.map(Block(_)))(body)
   }
 
@@ -242,7 +242,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
 
   def applyConcat(l: List[Exp[Any]]): Exp[Any] = sys.error("not implemented")
   def plugInHelper[A, T: Manifest, U: Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = sys.error("not implemented")
-  def applyPlugIntoContext(d: Def[Any], r: Def[Any]): Def[Any] = sys.error("not implemented")
+  def applyPlugIntoContext(d: Def[Any], r: Def[Any]): Def[Any] = sys.error("not implemented d1=" + d + " " + "r1=" + r)
   def applyExtendGenerator[A](d: Def[Any], body: Def[Any]): (Exp[A], Exp[A]) = sys.error("not implemented")
   def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
 
@@ -380,7 +380,6 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
          currentScope = a
          result = b
        }
-       level += 1
        (currentScope, result)
   }
   /*
@@ -393,6 +392,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
     var result: List[Exp[Any]] = result0
     var currentScope: List[Stm] = currentScope0
 
+    exportToGraphRaw(currentScope, "/tmp/pre-fusion")
     if (!shouldApplyFusion(currentScope)(result))
       return (currentScope, result)
 /*
@@ -482,7 +482,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
           !WtableNeg.exists(p => (a.lhs contains p._1) && (b.lhs contains p._2) || (b.lhs contains p._1) && (a.lhs contains p._2))
 
         def canFuseDirect(a: Stm, b: Stm): Boolean = (a.rhs,b.rhs) match {
-          // TODO(VJ) rather brutal but irrelevant. Fix afterwards
+          // TODO(VJ) rather brutal but irrelevant. Fix afterwards by adding a shapedep node similarly to Jet iterator fusion.
           case (SimpleFatLoop(s1,_,_), SimpleFatLoop(s2,_,_)) if s1 == s2 => false // same size (horizontal or pipeline)
           case (SimpleFatLoop(Def(SimpleDomain(a1)),_,_), SimpleFatLoop(_,_,_)) if b.lhs contains a1 => true // pipeline
           case (SimpleFatLoop(_,_,_), SimpleFatLoop(Def(SimpleDomain(b1)),_,_)) if a.lhs contains b1 => true
@@ -666,6 +666,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
         printlog("no changes, we're done")
     }
 
+    exportToGraphRaw(currentScope, "/tmp/post-fusion")
 /*
     println("result "+result0+"/"+result)
     println("<---")

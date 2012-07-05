@@ -15,6 +15,10 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 trait ArrayLoops extends Loops with OverloadHack {
+  object Arr {
+    def apply[T:Manifest](x: Rep[T]) = array_obj_seq(x)
+   }
+
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]]
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] // TODO: make reduce operation configurable!
   def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]]
@@ -22,7 +26,11 @@ trait ArrayLoops extends Loops with OverloadHack {
   def arrayFlat[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
   def concat[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]]
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T]
+  def array_apply[T:Manifest](x: Rep[Array[T]], n: Rep[Int]): Rep[T] = infix_at(x, n)
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int]
+  def constArray[T: Manifest](x: Rep[T]): Rep[Array[T]]
+  def infix_++[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]]
+  def array_obj_seq[T:Manifest](x1: Rep[T]): Rep[Array[T]]
 }
 
 
@@ -37,7 +45,10 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
   case class Concat[T](l: List[Rep[T]]) extends Def[T]
-
+  case class ArrayFromSeq[T:Manifest](x: T) extends Def[Array[T]] {
+    val m = manifest[T]
+  }
+  
 /*
   example for flatMap fusion
 
@@ -80,10 +91,14 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   
   // TODO: use simpleLoop instead of SimpleLoop
 
+  def array_obj_seq[T:Manifest](x1: Rep[T]): Rep[Array[T]] = ArrayFromSeq(x)
+  
   def concat[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]] = {
     Concat(a1 :: a2 :: Nil)
   }
   
+  def infix_++[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]] = concat(a1, a2) 
+    
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
     val d = reflectMutableSym(fresh[Int])
@@ -131,6 +146,10 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 //    reflectEffect(SimpleLoop(shape, x, ArrayElem(g,y)), summarizeEffects(y).star)
   }
 
+  // constructors
+ def constArray[T: Manifest](x: Rep[T]) = {
+   array(unit(1)){v => x}
+ }
 
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] = {
     val x = fresh[Int]
@@ -228,6 +247,11 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
       emitValDef(sym, quote(a) + ".length")
     case Concat(a) => 
       emitValDef(sym, quote(sym) + "_buff.result")
+    case e@ArrayFromSeq(xs) => {
+//      emitData(sym, xs)
+//      emitValDef(sym, "Array(" + xs.mkString(",") + ")")
+      emitValDef(sym, "Array(" + xs + ")")
+    }
     case _ => super.emitNode(sym, rhs)
   }
 }
