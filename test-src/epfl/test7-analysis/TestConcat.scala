@@ -138,13 +138,13 @@ trait ConcatProg4 extends Arith with ArrayLoops with Print with OrderingOps with
 
     //    def f4(f: Rep[SimpleFile]) = Array("""-&nbsp;-&nbsp;-&nbsp;<a href="""", f.path, "\">", f.name, "</a>") ++ flatMap(f.files)(f5(_))
 
-    //    def f5(f: Rep[SimpleFile]) = Array("""-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href="""", f.path, "\">", f.name, "</a>") ++ flatMap(f.files)(f6(_))
+    def f4(f: Rep[SimpleFile]) = flatMap(f.files)(f5(_))
 
     def f5(f: Rep[SimpleFile]) = /*constArray("""-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href="""") ++ */flatMap(f.files)(f6(_)) //, f.path, "\">", f.name, "</a>")
     
-    def f6(f: Rep[SimpleFile]) = /*constArray("""-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href="""") ++ */constArray(f.path) //, f.path, "\">", f.name, "</a>")  
+    def f6(f: Rep[SimpleFile]) = /*constArray("""-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href="""") ++ */Arr(f.path) //, f.path, "\">", f.name, "</a>")  
 
-    val res = f5(file)
+    val res = f4(file)
     print(res)
   }
 
