@@ -262,6 +262,7 @@ trait ScalaGenLoops extends ScalaGenBase with BaseGenLoops {
 
    override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Yield(g, a) =>
+      stream.println("// " + sym + "yield " + genStack)
       if (genStack.nonEmpty) {
         topGen(sym.asInstanceOf[Sym[Gen[Any]]])(a.map(quote))
       } else emitValDef(sym, "yield " + a.map(quote) + " // context is messed up!")

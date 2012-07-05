@@ -130,21 +130,53 @@ trait ConcatProg4 extends Arith with ArrayLoops with Print with OrderingOps with
     def flatten[T: Manifest](x: Rep[Array[Array[T]]]): Rep[Array[T]] =
       arrayFlat(x.length) { i => x.at(i) }
 
-    //    def f1(f: Rep[SimpleFile]) = Array("""<a href="""", f.path, "\">", f.name, "</a>") ++ flatMap(f.files)(f2(_))
 
-    //    def f2(f: Rep[SimpleFile]) = Array("""-&nbsp;<a href="""", f.path, "\">", f.name, "</a>") ++ flatMap(f.files)(f3(_))
+    def f1(f: Rep[SimpleFile]) = flatMap(f.files)(f2(_))
 
-    //    def f3(f: Rep[SimpleFile]) = Array("""-&nbsp;-&nbsp;<a href="""", f.path, "\">", f.name, "</a>") ++ flatMap(f.files)(f4(_))
+    def f2(f: Rep[SimpleFile]) = flatMap(f.files)(f3(_))
 
-    //    def f4(f: Rep[SimpleFile]) = Array("""-&nbsp;-&nbsp;-&nbsp;<a href="""", f.path, "\">", f.name, "</a>") ++ flatMap(f.files)(f5(_))
+    def f3(f: Rep[SimpleFile]) = flatMap(f.files)(f4(_))
 
     def f4(f: Rep[SimpleFile]) = flatMap(f.files)(f5(_))
 
-    def f5(f: Rep[SimpleFile]) = /*constArray("""-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href="""") ++ */flatMap(f.files)(f6(_)) //, f.path, "\">", f.name, "</a>")
+    def f5(f: Rep[SimpleFile]) = flatMap(f.files)(f6(_))
     
-    def f6(f: Rep[SimpleFile]) = /*constArray("""-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href="""") ++ */Arr(f.path) //, f.path, "\">", f.name, "</a>")  
+    def f6(f: Rep[SimpleFile]) = Arr(f.path)  
 
-    val res = f4(file)
+    val res = f1(file)
+    print(res)
+  }
+}
+
+// some nesting of concats
+trait ConcatProg5 extends Arith with ArrayLoops with Print with OrderingOps with SimpleFileOps {
+
+  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+
+  def test(x: Rep[Unit]) = {
+
+    val file = SimpleFile("bla", "bla", unit(null))
+
+    def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) = array(x.length)(i => f(x.at(i)))
+
+    def flatMap[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[Array[V]]) = flatten(map(x)(x => f(x)))
+
+    def flatten[T: Manifest](x: Rep[Array[Array[T]]]): Rep[Array[T]] =
+      arrayFlat(x.length) { i => x.at(i) }
+
+    def f1(f: Rep[SimpleFile]) = Arr(f.path) ++ flatMap(f.files)(f2(_))
+
+    def f2(f: Rep[SimpleFile]) = Arr(f.path) ++ flatMap(f.files)(f3(_))
+
+    def f3(f: Rep[SimpleFile]) = Arr(f.path) ++ flatMap(f.files)(f4(_))
+
+    def f4(f: Rep[SimpleFile]) = Arr(f.path) ++ flatMap(f.files)(f5(_))
+
+    def f5(f: Rep[SimpleFile]) = Arr(f.path) ++ flatMap(f.files)(f6(_)) ++ Arr("blah") //, f.path, "\">", f.name, "</a>")
+    
+    def f6(f: Rep[SimpleFile]) = Arr("""-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href="""") ++ Arr(f.path) //, f.path, "\">", f.name, "</a>")  
+
+    val res = f1(file)
     print(res)
   }
 
@@ -214,7 +246,7 @@ class TestConcat extends FileDiffSuite {
   def testConcat04 = {
     withOutFile(prefix + "concat04") {
       printExceptions {
-        new ConcatProg4 with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+        new ConcatProg5 with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
           override val verbosity = 1
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint {
             val IR: self.type = self

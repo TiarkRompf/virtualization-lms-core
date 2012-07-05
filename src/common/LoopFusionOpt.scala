@@ -206,6 +206,8 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
            })
          case _ =>
        }
+    
+    exportToGraphRaw(scope, "/tmp/post-concat")
 
     if (result0 != result) {
       printlog("super.focusExactScopeFat with result changed from " + result0 + " to " + result)
@@ -223,7 +225,10 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
       }
     }
     level += 1
-    super.focusExactScopeFat(result0.map(Block(_)))(body)
+    super.focusExactScopeFat(result0.map(Block(_)))(x => { 
+      exportToGraphRaw(x, "/tmp/final")
+      body(x)
+      })
   }
 
 }
