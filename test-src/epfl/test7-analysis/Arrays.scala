@@ -45,7 +45,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
   case class Concat[T](l: List[Rep[T]]) extends Def[T]
-  case class ArrayFromSeq[T:Manifest](x: T) extends Def[Array[T]] {
+  case class ArrayFromSeq[T:Manifest](x: Rep[T]) extends Def[Array[T]] {
     val m = manifest[T]
   }
   
@@ -91,7 +91,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   
   // TODO: use simpleLoop instead of SimpleLoop
 
-  def array_obj_seq[T:Manifest](x1: Rep[T]): Rep[Array[T]] = ArrayFromSeq(x)
+  def array_obj_seq[T:Manifest](x: Rep[T]): Rep[Array[T]] = ArrayFromSeq(x)
   
   def concat[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]] = {
     Concat(a1 :: a2 :: Nil)
@@ -247,10 +247,10 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
       emitValDef(sym, quote(a) + ".length")
     case Concat(a) => 
       emitValDef(sym, quote(sym) + "_buff.result")
-    case e@ArrayFromSeq(xs) => {
+    case e@ArrayFromSeq(x) => {
 //      emitData(sym, xs)
 //      emitValDef(sym, "Array(" + xs.mkString(",") + ")")
-      emitValDef(sym, "Array(" + xs + ")")
+      emitValDef(sym, "Array(" + quote(x) + ")")
     }
     case _ => super.emitNode(sym, rhs)
   }
