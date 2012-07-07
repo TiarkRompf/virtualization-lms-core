@@ -323,34 +323,6 @@ trait GPUCodegen extends CLikeCodegen {
     }
   }
 
-  def remapToJNI[A](m: Manifest[A]) : String = {
-    remap(m) match {
-      case "bool" => "Boolean"
-      case "char" => "Byte"
-      case "CHAR" => "Char"
-      case "short" => "Short"
-      case "int" => "Int"
-      case "long" => "Long"
-      case "float" => "Float"
-      case "double" => "Double"
-      case _ => throw new GenerationFailedException("GPUGen: Cannot get array creation JNI function for this type " + remap(m))
-    }
-  }
-
-
-  // Map a scala primitive type to JNI type descriptor
-  def JNITypeDescriptor[A](m: Manifest[A]) : String = m.toString match {
-    case "Boolean" => "Z"
-    case "Byte" => "B"
-    case "Char" => "C"
-    case "Short" => "S"
-    case "Int" => "I"
-    case "Long" => "J"
-    case "Float" => "F"
-    case "Double" => "D"
-    case _ => throw new GenerationFailedException("Undefined GPU type")
-  }
-
   def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
     m.toString match {
       case "Boolean" | "Byte" | "Char" | "Short" | "Int" | "Long" | "Float" | "Double" => true
