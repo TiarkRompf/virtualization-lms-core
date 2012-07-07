@@ -5,11 +5,10 @@ trait AbstractHostTransfer {
   val IR: Expressions
   import IR._
 
-  def emitSend(sym: Sym[Any], host: Hosts.Value): String
-  def emitRecv(sym: Sym[Any], host: Hosts.Value): String
-  def emitUpdated(sym: Sym[Any], host: Hosts.Value): String
-  def emitUpdate(sym: Sym[Any], host: Hosts.Value): String
-
+  def emitSend(sym: Sym[Any], host: Hosts.Value): (String,String)
+  def emitRecv(sym: Sym[Any], host: Hosts.Value): (String,String)
+  def emitSendUpdate(sym: Sym[Any], host: Hosts.Value): (String,String)
+  def emitRecvUpdate(sym: Sym[Any], host: Hosts.Value): (String,String)
 }
 
 trait AbstractDeviceTransfer {

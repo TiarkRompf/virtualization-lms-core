@@ -14,11 +14,12 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   override def kernelFileExt = "cpp"
   override def toString = "cpp"
 
-  var helperFuncIdx = 0
-  var helperFuncString:StringBuilder = null
-  var hstream: PrintWriter = null
+  //var helperFuncIdx = 0
+  //var helperFuncString:StringBuilder = null
+  var helperFuncStream: PrintWriter = null
   var headerStream: PrintWriter = null
-  var kernelsList = ListBuffer[Exp[Any]]()
+  val helperFuncList = ArrayBuffer[String]()
+  //var kernelsList = ListBuffer[Exp[Any]]()
 
   /*
   override def hasMetaData: Boolean = false
@@ -47,18 +48,24 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   */
 
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
-    helperFuncString.clear
+    //helperFuncString.clear
     //metaData = new CMetaData
   }
 
   override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
-    helperFuncIdx = 0
-    helperFuncString = new StringBuilder
-    hstream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cpp"))
-    headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.hpp"))
-    headerStream.println("#include \"helperFuncs.cpp\"")
+    //helperFuncIdx = 0
+    //helperFuncString = new StringBuilder
+
+    /* file for helper functions (transfer function, allocation function) */
+    helperFuncStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cpp"))
+    helperFuncStream.println("#include <jni.h>")
+
+    /* header file for kernels and helper functions */
+    headerStream = new PrintWriter(new FileWriter(buildDir + "cppHeader.hpp"))
+    headerStream.println("#include <stdio.h>\n")
+
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
       
@@ -102,25 +109,43 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     // Emit input copy helper functions for object type inputs
     for(v <- (vals++vars) if !isVoidType(v.tp)) {
       //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
-      helperFuncString.append(emitRecv(v,Hosts.JVM))
-      helperFuncString.append(emitUpdate(v,Hosts.JVM))
+      val (recvHeader, recvSource) = emitRecv(v, Hosts.JVM)
+      if (!helperFuncList.contains(recvHeader)) {
+        headerStream.println(recvHeader)
+        helperFuncStream.println(recvSource)
+        helperFuncList.append(recvHeader)
+      }
+
+      val (updateHeader, updateSource) = emitSendUpdate(v, Hosts.JVM)
+      if (!helperFuncList.contains(updateHeader)) {
+        headerStream.println(updateHeader)
+        helperFuncStream.println(updateSource)
+        helperFuncList.append(updateHeader)
+      }
       //helperFuncString.append(emitUpdated(v,Hosts.JVM))
     }
 
     // Emit output copy helper functions for object type inputs
     for(v <- (syms) if !isVoidType(v.tp)) {
-      helperFuncString.append(emitSend(v,Hosts.JVM))
+      val (sendHeader, sendSource) = emitSend(v, Hosts.JVM)
+      if (!helperFuncList.contains(sendHeader)) {
+        headerStream.println(sendHeader)
+        helperFuncStream.println(sendSource)
+        helperFuncList.append(sendHeader)
+      }
+      //helperFuncString.append(emitSend(v,Hosts.JVM))
     }
-
-    // Print helper functions to file stream
-    hstream.print(helperFuncString)
-    hstream.flush
 
     // Print out dsl.h file
-    if(kernelsList.intersect(syms).isEmpty) {
-      headerStream.println("#include \"%s.cpp\"".format(syms.map(quote).mkString("")))
-      kernelsList ++= syms
-    }
+    //if(kernelsList.intersect(syms).isEmpty) {
+      //headerStream.println("#include \"%s.cpp\"".format(syms.map(quote).mkString("")))
+      //kernelsList ++= syms
+    //}
+
+
+    // Print helper functions to file stream
+    //helperFuncStream.print(helperFuncString)
+    helperFuncStream.flush
     headerStream.flush
 
     /*
@@ -137,18 +162,24 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
     val kernelName = syms.map(quote).mkString("")
 
-    stream.print(resultType)
-     
-    stream.print(" kernel_" + kernelName + "(")
-    stream.print(vals.map(p=>remap(p.tp) + " " + quote(p)).mkString(", "))
-    if (vals.length > 0 && vars.length > 0){
-      stream.print(", ")
-    }
-    if (vars.length > 0){
-      stream.print(vars.map(v => remap(v.tp) + " &" + quote(v)).mkString(","))
+    def kernelSignature: String = {
+      val out = new StringBuilder
+      out.append("#include <stdio.h>\n")
+      out.append(resultType)
+      out.append(" kernel_" + kernelName + "(")
+      out.append(vals.map(p=>remap(p.tp) + " " + quote(p)).mkString(", "))
+      if (vals.length > 0 && vars.length > 0){
+        out.append(", ")
+      }
+      if (vars.length > 0){
+        out.append(vars.map(v => remap(v.tp) + " &" + quote(v)).mkString(","))
+      }
+      out.append(")")
+      out.toString
     }
 
-    stream.println(") {")
+    stream.println(kernelSignature + " {")
+    headerStream.println(kernelSignature + ";")
   }
 
 

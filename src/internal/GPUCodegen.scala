@@ -21,16 +21,16 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
 
   var helperFuncIdx = 0
   val kernelsList = ArrayBuffer[Exp[Any]]()
-  val helperFuncsList = ArrayBuffer[String]()
+  val helperFuncList = ArrayBuffer[String]()
 
   var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
 
   var forceParallel = false
 
-  var helperFuncString:StringBuilder = null
-  var hstream: PrintWriter = null
-  var helperFuncHdrStream: PrintWriter = null
+  //var helperFuncString:StringBuilder = null
+  var helperFuncStream: PrintWriter = null
+  var headerStream: PrintWriter = null
   var devFuncIdx = 0
 
   var isGPUable:Boolean = false
@@ -144,7 +144,7 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
     setKernelInputs(vals)
     setKernelOutputs(syms)
 
-    helperFuncString.clear
+    //helperFuncString.clear
     metaData = new GPUMetaData
     tabWidth = 1
     isGPUable = false
@@ -176,23 +176,39 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
     tabWidth -= 1
 
     // Emit input copy helper functions for object type inputs
-    for(v <- vals) {
-      helperFuncString.append(emitRecv(v,Hosts.JVM))
-      helperFuncString.append(emitUpdate(v,Hosts.JVM))
-      //helperFuncString.append(emitCopyInputHtoD(v, syms, copyInputHtoD(v)))
-      //helperFuncString.append(emitCopyMutableInputDtoH(v, syms, copyMutableInputDtoH(v)))
+    for(v <- (vals) if !isVoidType(v.tp)) {
+      //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
+      val (recvHeader, recvSource) = emitRecv(v, Hosts.JVM)
+      if (!helperFuncList.contains(recvHeader)) {
+        headerStream.println(recvHeader)
+        helperFuncStream.println(recvSource)
+        helperFuncList.append(recvHeader)
+      }
+
+      val (updateHeader, updateSource) = emitSendUpdate(v, Hosts.JVM)
+      if (!helperFuncList.contains(updateHeader)) {
+        headerStream.println(updateHeader)
+        helperFuncStream.println(updateSource)
+        helperFuncList.append(updateHeader)
+      }
+      //helperFuncString.append(emitUpdated(v,Hosts.JVM))
     }
 
     // Emit output copy helper functions for object type inputs
     for(v <- (syms) if !isVoidType(v.tp)) {
-      helperFuncString.append(emitSend(v,Hosts.JVM))
-      //helperFuncString.append(emitCopyOutputDtoH(v, syms, copyMutableInputDtoH(v)))
+      val (sendHeader, sendSource) = emitSend(v, Hosts.JVM)
+      if (!helperFuncList.contains(sendHeader)) {
+        headerStream.println(sendHeader)
+        helperFuncStream.println(sendSource)
+        helperFuncList.append(sendHeader)
+      }
+      //helperFuncString.append(emitSend(v,Hosts.JVM))
     }
 
     // Print helper functions to file stream
-    hstream.print(helperFuncString)
-    hstream.flush
-    helperFuncHdrStream.flush
+    //hstream.print(helperFuncString)
+    helperFuncStream.flush
+    headerStream.flush
   }
 
   def registerKernel(syms: List[Sym[Any]]) {
@@ -270,8 +286,8 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
   def emitAllocOutput(sym: Sym[Any], ksym: List[Sym[Any]], contents: String, args: List[Sym[Any]], aV: Sym[Any]): String = {
     val out = new StringBuilder
     val funcName = "allocFunc_%s".format(quote(sym))
-    if(helperFuncsList contains funcName) return ""
-    helperFuncsList += funcName
+    if(helperFuncList contains funcName) return ""
+    helperFuncList += funcName
 
     if(!isPrimitiveType(sym.tp)) {
       val paramStr = args.map(ele =>
@@ -283,7 +299,7 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
          else "\t%s %s = *(%s_ptr);\n".format(remap(ele.tp),quote(ele),quote(ele))
        ).mkString("")
       out.append("%s *%s(%s %s)".format(remap(sym.tp), funcName, paramStr, if(args.nonEmpty) ",int size" else "int size"))
-      helperFuncHdrStream.append(out.toString + ";\n")
+      headerStream.append(out.toString + ";\n")
       out.append("{\n")
       out.append(derefParams)
       //out.append("\t%s *%s_ptr = new %s(size);\n".format(remap(aV.tp),quote(aV),remap(aV.tp)))
@@ -294,7 +310,7 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
     }
     else {
       out.append("%s *%s(void)".format(remap(sym.tp),funcName))
-      helperFuncHdrStream.append(out.toString + ";\n")
+      headerStream.append(out.toString + ";\n")
       out.append("{\n")
       out.append(contents)
       out.append("}\n")
@@ -335,7 +351,8 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
     val allocOutputStr = emitAllocOutput(sym, null, tempString.toString, inputs, aV)
 
     // Write to helper function string
-    helperFuncString.append(allocOutputStr)
+    helperFuncStream.println(allocOutputStr)
+    //helperFuncString.append(allocOutputStr)
 
     processingHelperFunc = false
   }
@@ -359,7 +376,8 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
     val allocOutputStr = emitAllocOutput(sym, null, tempString.toString, null, null)
 
     // Write to helper function string
-    helperFuncString.append(allocOutputStr)
+    helperFuncStream.println(allocOutputStr)
+    //helperFuncString.append(allocOutputStr)
 
     processingHelperFunc = false
   }

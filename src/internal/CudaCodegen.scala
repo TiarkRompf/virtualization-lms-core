@@ -20,21 +20,21 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer {
     val outDir = new File(buildDir)
     outDir.mkdirs
     helperFuncIdx = 0
-    helperFuncString = new StringBuilder
-    hstream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cu"))
-    helperFuncHdrStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
+    //helperFuncString = new StringBuilder
+    helperFuncStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cu"))
+    headerStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
     //headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.h"))
 
     //TODO: Put all the DELITE APIs declarations somewhere
-    hstream.print("#include \"helperFuncs.h\"\n")
-    helperFuncHdrStream.print(getDSLHeaders)
-    helperFuncHdrStream.print("#include <iostream>\n")
-    helperFuncHdrStream.print("#include <limits>\n")
-    helperFuncHdrStream.print("#include <jni.h>\n\n")
-    helperFuncHdrStream.print("#define CHAR short\n")
-    helperFuncHdrStream.print("#define jCHAR jshort\n")
-    helperFuncHdrStream.print("#include \"DeliteCuda.h\"\n")
-    helperFuncHdrStream.print("#include \"DeliteArray.h\"\n")
+    helperFuncStream.print("#include \"helperFuncs.h\"\n")
+    headerStream.print(getDSLHeaders)
+    headerStream.print("#include <iostream>\n")
+    headerStream.print("#include <limits>\n")
+    headerStream.print("#include <jni.h>\n\n")
+    headerStream.print("#define CHAR short\n")
+    headerStream.print("#define jCHAR jshort\n")
+    headerStream.print("#include \"DeliteCuda.h\"\n")
+    headerStream.print("#include \"DeliteArray.h\"\n")
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
