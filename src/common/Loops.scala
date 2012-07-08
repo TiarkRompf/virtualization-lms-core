@@ -42,6 +42,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
    */
   case class YieldSingle[T](g: List[Exp[Int]], a: Exp[T]) extends Def[Gen[T]] {
     var concatSym: Option[Sym[T]] = None
+    val previousSyms = new scala.collection.mutable.ArrayBuffer[Exp[Any]]() 
   }
 
   /**
@@ -123,8 +124,16 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
       reflectMirrored(Reflect(SimpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case SimpleLoop(s,v,body) =>
       simpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f))(mtype(manifest[A]))
-    case Reflect(YieldSingle(i, y), u, es) => 
-      reflectMirrored(Reflect(YieldSingle(f(i), f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case ry @ Reflect(pys @ YieldSingle(i, y), u, es) => 
+      val yld = YieldSingle(f(i), f(y))
+      val res = reflectMirrored(Reflect(yld, mapOver(f,u), f(es)))(mtype(manifest[A]))
+      findDefinition(ry) match {
+        case Some(TP(s, _)) => 
+          yld.previousSyms ++= pys.previousSyms
+          yld.previousSyms += s
+        case None =>
+      }
+      res
     case Reflect(YieldTuple(i, y), u, es) => 
       reflectMirrored(Reflect(YieldTuple(f(i),(f(y._1), f(y._2))), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(Skip(i), u, es) => 
@@ -261,11 +270,23 @@ trait ScalaGenLoops extends ScalaGenBase with BaseGenLoops {
   import IR._
 
    override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Yield(g, a) =>
-      stream.println("// " + sym + "yield " + genStack)
-      if (genStack.nonEmpty) {
-        topGen(sym.asInstanceOf[Sym[Gen[Any]]])(a.map(quote))
-      } else emitValDef(sym, "yield " + a.map(quote) + " // context is messed up!")
+    case yld @ Yield(g, a) =>
+      yld match {
+        case ys @ YieldSingle(g, a) if genStack.get(sym.asInstanceOf[Sym[Gen[Any]]]) == None =>
+          stream.println("// prev yields " + ys.previousSyms)
+          if (genStack.nonEmpty) {
+            val prevYld = ys.previousSyms.find(x => genStack.get(x.asInstanceOf[Sym[Gen[Any]]]) != None)
+            topGen(prevYld.get.asInstanceOf[Sym[Gen[Any]]])(List(quote(a)))
+          } else emitValDef(sym, "yield " + quote(a) + " // context is messed up!")
+          
+        case _ =>
+          stream.println("// " + sym + "yield " + genStack + "previous ")
+          if (genStack.nonEmpty) {
+            topGen(sym.asInstanceOf[Sym[Gen[Any]]])(a.map(quote))
+          } else emitValDef(sym, "yield " + a.map(quote) + " // context is messed up!")
+      }
+      
+      
     case Skip(g) =>
       emitValDef(sym, "() // skip")
     case _ => super.emitNode(sym, rhs)

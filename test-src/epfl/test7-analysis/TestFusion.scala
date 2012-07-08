@@ -88,7 +88,7 @@ trait ScalaFatLoopsFusionOpt extends ScalaGenArrayLoops with ScalaGenIfThenElseF
   }
   
   override def applyConcat(l: List[Exp[Any]]): Exp[Any] = toAtom2(IR.Concat(l))
-  
+  override def modConcat(c: Def[Any]) = c.asInstanceOf[Concat[Any]].last = true
 
   // take d's context (everything between loop body and yield) and duplicate it into r
   override def plugInHelper[A, T: Manifest, U: Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = context match {

@@ -24,7 +24,7 @@ trait ArrayLoops extends Loops with OverloadHack {
   def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]]
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] // TODO: make reduce operation configurable!
   def arrayFlat[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
-  def concat[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]]
+  def concat[T: Manifest](a: Rep[Array[T]]*): Rep[Array[T]]
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T]
   def array_apply[T:Manifest](x: Rep[Array[T]], n: Rep[Int]): Rep[T] = infix_at(x, n)
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int]
@@ -44,7 +44,9 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
-  case class Concat[T](l: List[Rep[T]]) extends Def[T]
+  case class Concat[T](l: List[Rep[T]]) extends Def[T] {
+    var last: Boolean = false
+  }
   case class ArrayFromSeq[T:Manifest](x: Rep[T]) extends Def[Array[T]] {
     val m = manifest[T]
   }
@@ -93,11 +95,11 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
   def array_obj_seq[T:Manifest](x: Rep[T]): Rep[Array[T]] = ArrayFromSeq(x)
   
-  def concat[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]] = {
-    Concat(a1 :: a2 :: Nil)
+  def concat[T: Manifest](a: Rep[Array[T]]*): Rep[Array[T]] = {
+    Concat(a.toList)
   }
   
-  def infix_++[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]] = concat(a1, a2) 
+  def infix_++[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]] = Concat(a1::a2::Nil) 
     
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
@@ -245,11 +247,16 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
       emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
     case ArrayLength(a) =>  
       emitValDef(sym, quote(a) + ".length")
-    case Concat(a) => 
-      emitValDef(sym, quote(sym) + "_buff.result")
+    case c @ Concat(l) =>
+      
+      // This is utterly wrong: This should be done at IR level. If the level is not 0 skip it
+      if (c.last){
+    	  emitValDef(sym, quote(sym) + "_buff.result")
+      } else {
+    	  emitValDef(sym, "()")
+      } 
+      
     case e@ArrayFromSeq(x) => {
-//      emitData(sym, xs)
-//      emitValDef(sym, "Array(" + xs.mkString(",") + ")")
       emitValDef(sym, "Array(" + quote(x) + ")")
     }
     case _ => super.emitNode(sym, rhs)
@@ -271,7 +278,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
            case ArrayElem(Def(Reflect(y @ YieldSingle(_, _), _, _)), Block(b)) if (y.concatSym != None) =>
              if (!concats.contains(y.concatSym.get)) {
                concats += (y.concatSym.get)
-               stream.println("val " + quote(y.concatSym.get) + "_buff = new ArrayBuilder[" + stripGen(b.tp)  + "]")
+               stream.println("val " + quote(y.concatSym.get) + "_buff = new scala.collection.mutable.ArrayBuffer[" + stripGen(b.tp)  + "]")
              }
           case r => 
             r match {
@@ -280,14 +287,15 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
               case ArrayElem(g,Block(y)) if g == y =>
                 stream.println("val " + quote(l) + " = new Array[" + stripGen(y.tp) + "]("+quote(s)+")")
               case ArrayElem(g,y) =>
-                stream.println("val " + quote(l) + "_buff = new ArrayBuilder[" + stripGen(y.tp)  + "]")
+                stream.println("val " + quote(l) + "_buff = new scala.collection.mutable.ArrayBuffer[" + stripGen(y.tp)  + "]")
               case ReduceElem(g,y) =>
                 stream.println("var " + quote(l) + " = 0")
            }
         }
       }
       val ii = x
-      stream.println("for ("+quote(ii)+" <- 0 until "+quote(s)+") {")
+      stream.println("var " + quote(ii) + "= 0")
+      stream.println("while ("+quote(ii)+" < "+quote(s)+") {")
 
       val gens = for ((l,r) <- sym zip rhs if !r.isInstanceOf[ForeachElem[_]]) yield r match {
         case ArrayElem(g,Block(y)) if g == y => // g == y should indicate selectivity 1.0 (which is not so general)
@@ -316,6 +324,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
         emitFatBlock(syms(rhs).map(Block(_)))
       }
 
+      stream.println(quote(ii) + " += 1")
       stream.println("}")
 
       for ((l,r) <- sym zip rhs) 
@@ -326,7 +335,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
         case ForeachElem(y) => 
         case ArrayElem(g,Block(y)) if g == y =>
         case ArrayElem(g,y) =>
-          stream.println("val " + quote(l) + " = " + quote(l) + "_buff.result")
+          stream.println("val " + quote(l) + " = " + quote(l) + "_buff.toArray")
         case ReduceElem(g,y) =>
       }
       }

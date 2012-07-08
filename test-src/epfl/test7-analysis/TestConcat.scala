@@ -163,20 +163,24 @@ trait ConcatProg5 extends Arith with ArrayLoops with Print with OrderingOps with
 
     def flatten[T: Manifest](x: Rep[Array[Array[T]]]): Rep[Array[T]] =
       arrayFlat(x.length) { i => x.at(i) }
-
-    def f1(f: Rep[SimpleFile]) = Arr(f.path) ++ flatMap(f.files)(f2(_))
-
-    def f2(f: Rep[SimpleFile]) = Arr(f.path) ++ flatMap(f.files)(f3(_))
-
-    def f3(f: Rep[SimpleFile]) = Arr(f.path) ++ flatMap(f.files)(f4(_))
-
-    def f4(f: Rep[SimpleFile]) = Arr(f.path) ++ flatMap(f.files)(f5(_))
-
-    def f5(f: Rep[SimpleFile]) = Arr(f.path) ++ flatMap(f.files)(f6(_)) ++ Arr("blah") //, f.path, "\">", f.name, "</a>")
     
-    def f6(f: Rep[SimpleFile]) = Arr("""-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href="""") ++ Arr(f.path) //, f.path, "\">", f.name, "</a>")  
+    def ArrM[T: Manifest](v: Rep[T]) = {
+      map(Arr(v))(x => x)
+    }
 
-    val res = f1(file)
+    def f1(f: Rep[SimpleFile]) = concat(ArrM("<a href='"), ArrM(f.path), ArrM("'>"), ArrM(f.name), ArrM("</a>"), flatMap(f.files)(f2(_)))
+
+    def f2(f: Rep[SimpleFile]) = concat(Arr("-&nbsp;<a href='"), Arr(f.path), Arr("'>"), Arr(f.name), Arr("</a>"), flatMap(f.files)(f3(_)))
+
+    def f3(f: Rep[SimpleFile]) = concat(Arr("-&nbsp;-&nbsp;<a href='"), Arr(f.path), Arr("'>"), Arr(f.name), Arr("</a>"), flatMap(f.files)(f4(_)))
+        
+    def f4(f: Rep[SimpleFile]) = concat(Arr("-&nbsp;-&nbsp;-&nbsp;<a href='"), Arr(f.path), Arr("'>"), Arr(f.name), Arr("</a>"), flatMap(f.files)(f5(_)))
+
+    def f5(f: Rep[SimpleFile]) = concat(Arr("-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href='"), Arr(f.path), Arr("'>"), Arr(f.name), Arr("</a>"), flatMap(f.files)(f6(_)))
+    
+    def f6(f: Rep[SimpleFile]) = concat(Arr("-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href='"), Arr(f.path), Arr("'>"), Arr(f.name), Arr("</a>"))  
+
+    val res = concat(ArrM("<html><body>"), f1(file), ArrM("</body></html>"))
     print(res)
   }
 

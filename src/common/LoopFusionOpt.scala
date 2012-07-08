@@ -207,6 +207,17 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
          case _ =>
        }
     
+    // this is the very poor version of the nested concat analysis
+    if (level == 0) scope.reverse.find {
+         case TP(sym, Concat(l)) =>
+           true
+         case _ => false
+    } match {
+      case Some(TP(sym, c @ Concat(l))) =>
+        modConcat(c)
+      case None =>
+    }
+    
     exportToGraphRaw(scope, "/tmp/post-concat")
 
     if (result0 != result) {
@@ -245,6 +256,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
   def unapplyConcat(e: Def[Any]): Option[List[Exp[Any]]] = None
   def unapplyGenerator(e: Def[Any]): Option[YieldSingle[Any]] = None
 
+  def modConcat(c: Def[Any]) = ()
   def applyConcat(l: List[Exp[Any]]): Exp[Any] = sys.error("not implemented")
   def plugInHelper[A, T: Manifest, U: Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = sys.error("not implemented")
   def applyPlugIntoContext(d: Def[Any], r: Def[Any]): Def[Any] = sys.error("not implemented d1=" + d + " " + "r1=" + r)
