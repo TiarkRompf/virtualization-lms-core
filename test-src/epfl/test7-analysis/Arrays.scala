@@ -257,7 +257,7 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
     case c @ Concat(l) =>
       // This is utterly wrong: This should be done at IR level. If the level is not 0 skip it
       if (fuseConcats) 
-      if (c.last){
+      if (c.last) {
     	  emitValDef(sym, quote(sym) + "_buff.result")
       } else {
     	  emitValDef(sym, "()// " + l.map(quote).mkString(" ++ "))

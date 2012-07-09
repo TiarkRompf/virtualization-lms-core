@@ -115,8 +115,29 @@ trait SimpleFileOpsExp extends SimpleFileOps with StructExp with EffectExp with 
 }
 
 trait SimpleFileOpsGen extends ScalaGenEffect {
-  val IR: SimpleFileOpsExp 
+  val IR: SimpleFileOpsExp
   import IR._
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case IR.Field(tuple, x, tp) => emitValDef(sym, "%s.%s".format(quote(tuple), x))
+    case IR.SimpleStruct(IR.ClassTag(name), map) => {
+      try {
+        val args = map.map(x => x._1 + " = " + quote(x._2))
+        emitValDef(sym, "new %s(%s)".format(name, args.mkString(", ")))
+      } catch {
+        case e =>
+          emitValDef(sym, "Exception " + e + " when accessing  of " + name)
+          e.printStackTrace
+      }
+    }
+
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait IMDBOpsGen extends ScalaGenEffect {
+  val IR: ItemOpsExp with Top250OpsExp
+  import IR._
+  
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IR.Field(tuple, x, tp) => emitValDef(sym, "%s.%s".format(quote(tuple), x))
     case IR.SimpleStruct(IR.ClassTag(name), map) => {
@@ -265,6 +286,126 @@ trait ConcatBench extends Arith with ArrayLoops with Print with OrderingOps with
   }
 }
 
+trait IMDBOps extends ItemOps with Top250Ops
+trait IMDBExp extends ItemOpsExp with Top250OpsExp
+
+trait ItemOps extends Base with Variables with OverloadHack  {
+
+ class Item 
+
+ object Item {
+ def apply(text: Rep[String], subitems: Rep[Array[Item]]) = item_obj_new(text, subitems)
+ }
+
+ implicit def repItemToItemOps(x: Rep[Item]) = new itemOpsCls(x)
+ class itemOpsCls(__x: Rep[Item]) {
+ def text = item_text(__x)
+ def subitems = item_subitems(__x)
+ }
+
+ //object defs
+ def item_obj_new(text: Rep[String], subitems: Rep[Array[Item]]): Rep[Item]
+
+ //class defs
+ def item_text(__x: Rep[Item]): Rep[String]
+ def item_subitems(__x: Rep[Item]): Rep[Array[Item]]
+}
+
+trait ItemOpsExp extends ItemOps with StructExp with EffectExp with BaseFatExp {
+ def item_obj_new(text: Exp[String], subitems: Exp[Array[Item]]) = struct[Item](ClassTag[Item]("Item"), Map( "text" -> text,  "subitems" -> subitems))
+ def item_text(__x: Rep[Item]) = field[String](__x, "text")
+ def item_subitems(__x: Rep[Item]) = field[Array[Item]](__x, "subitems")
+}
+trait Top250Ops extends Base with Variables with OverloadHack  with ItemOps {
+class Top250 
+
+ object Top250 {
+ def apply(menu: Rep[Array[Item]], movies: Rep[Array[Array[String]]], sideBar: Rep[Array[Item]]) = top250_obj_new(menu, movies, sideBar)
+ }
+
+ implicit def repTop250ToTop250Ops(x: Rep[Top250]) = new top250OpsCls(x)
+ class top250OpsCls(__x: Rep[Top250]) {
+ def menu = top250_menu(__x)
+ def movies = top250_movies(__x)
+ def sideBar = top250_sideBar(__x)
+ }
+
+ //object defs
+ def top250_obj_new(menu: Rep[Array[Item]], movies: Rep[Array[Array[String]]], sideBar: Rep[Array[Item]]): Rep[Top250]
+
+ //class defs
+ def top250_menu(__x: Rep[Top250]): Rep[Array[Item]]
+ def top250_movies(__x: Rep[Top250]): Rep[Array[Array[String]]]
+ def top250_sideBar(__x: Rep[Top250]): Rep[Array[Item]]
+}
+
+trait Top250OpsExp extends Top250Ops with StructExp with EffectExp with BaseFatExp with ItemOpsExp {
+ def top250_obj_new(menu: Exp[Array[Item]], movies: Exp[Array[Array[String]]], sideBar: Exp[Array[Item]]) = struct[Top250](ClassTag[Top250]("Top250"), Map( "menu" -> menu,  "movies" -> movies,  "sideBar" -> sideBar))
+ def top250_menu(__x: Rep[Top250]) = field[Array[Item]](__x, "menu")
+ def top250_movies(__x: Rep[Top250]) = field[Array[Array[String]]](__x, "movies")
+ def top250_sideBar(__x: Rep[Top250]) = field[Array[Item]](__x, "sideBar")
+}
+
+
+
+
+// some nesting of concats
+trait IMDBBench extends Arith with ArrayLoops with Print with OrderingOps with ItemOps with Top250Ops {
+
+  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+
+  def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) = array(x.length)(i => f(x.at(i)))
+
+  def flatMap[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[Array[V]]) = flatten(map(x)(x => f(x)))
+
+  def flatten[T: Manifest](x: Rep[Array[Array[T]]]): Rep[Array[T]] =
+      arrayFlat(x.length) { i => x.at(i) }
+  
+  def ArrayM[T: Manifest](v: Rep[T]*) = {
+      map(array_obj_seq(v))(x => x)
+    }
+
+  def printMenu(items: Rep[Array[Item]]) = {
+    concat(Array("pre"), flatMap(items)(menuItem), Array("post"))    
+  }
+  
+  def menuItem(item: Rep[Item]) = {
+    concat(Array("pre1"), flatMap(item.subitems)(innerItem), Array("post1"))
+  }
+  
+  def innerItem(item: Rep[Item]) = {
+    Array("pre2", item.text, "post2")
+  }
+  
+  def printSideMenu(items: Rep[Array[Item]]) = {
+    concat(Array("pres"), flatMap(items)(sideMenuItem), Array("posts"))    
+  }
+  
+  def sideMenuItem(item: Rep[Item]) = {
+    concat(Array("pres1"), flatMap(item.subitems)(innerItem), Array("posts1"))
+  }
+  
+  def sideInnerItem(item: Rep[Item]) = {
+    Array("pres2", item.text, "posts2")
+  }
+  
+  def movies(movies: Rep[Array[Array[String]]]) = {
+    concat(Array("prem"), flatMap(movies)(movie), Array("postm"))
+  }
+  
+  def movie(movie: Rep[Array[String]]) = 
+    concat(Array("prem1"), movie, Array("postm1"))
+  
+  def testIMDB(x: Rep[Unit]) = {
+    val page = Top250(unit(null), unit(null), unit(null))
+    val res = concat(ArrayM("prep"),
+        printMenu(page.menu),
+        ArrayM("inp"), printSideMenu(page.sideBar),
+        ArrayM("prem"), movies(page.movies))
+    print(res)
+  }
+}
+
 
 
 class TestConcat extends FileDiffSuite {
@@ -380,5 +521,34 @@ class TestConcat extends FileDiffSuite {
     assertFileEqualsCheck(prefix + "concat05")
   }
   
+  def testConcat06 = {
+    withOutFile(prefix + "concat06") {
+      printExceptions {
+        new IMDBBench with ArrayLoopsExp with ItemOpsExp with Top250OpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with IMDBOpsGen {
+            val IR: self.type = self
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+            override def shouldApplyConcatSink(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          }
+          codegen.emitSource(testIMDB, "imdbf", new PrintWriter(System.out))
+        }
+        
+        new IMDBBench with ArrayLoopsExp with ItemOpsExp with Top250OpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with IMDBOpsGen {
+            val IR: self.type = self
+      		override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
+            override def shouldApplyConcatSink(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
+            fuseConcats = false
+          }
+          codegen.emitSource(testIMDB, "imdborig", new PrintWriter(System.out))
+        }
+
+      }
+    }
+    assertFileEqualsCheck(prefix + "concat06")
+  }
+
 
 }

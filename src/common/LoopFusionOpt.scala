@@ -183,7 +183,7 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
     val (scope2, result2) = fuseTopLevelLoops(innerScope)(result1)
     innerScope = scope2
 
-    val (scope3, result3) = orderConcats(innerScope)(result2)
+    val (scope3, result3) = sinkConcatsPhase2(innerScope)(result2)
     innerScope = scope3
     
     val (scope, result) = orderConcats(innerScope)(result3)
@@ -365,18 +365,18 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
        var currentScope: List[Stm] = currentScope0
        if (!shouldApplyConcatSink(currentScope)(result)) 
          return (currentScope, result)
+         
        // collect find a concat suitable for sinking
-       var res: Option[Stm] = None 
+       var res: Option[Stm] = None
        do {
         res = currentScope.find {
          case TTP(syms,_, SimpleFatLoop(Def(SimpleDomain(c @ Def(Concat(l)))), i, body)) =>
-           
            var t = new SubstTransformer
            def copyLoopOnce(l: Exp[Any]) = {
              var t = new SubstTransformer
              var tmpRes: List[Exp[Any]] = Nil
              var scope: List[Stm] = Nil
-
+             
             t.subst(c) = l
             t.subst(i) = fresh[Int]
             transformAllFully(currentScope, syms, t) match {
@@ -411,7 +411,8 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
            }
            
            true
-         case _ => false
+         case x =>           
+           false
        }
        } while(res != None)
 
