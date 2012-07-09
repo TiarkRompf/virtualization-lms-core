@@ -180,47 +180,20 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
     val (scope1, result1) = sinkConcats(innerScope)(result0)
     innerScope = scope1
     
-    val (scope, result) = fuseTopLevelLoops(innerScope)(result1)
-    innerScope = scope
+    val (scope2, result2) = fuseTopLevelLoops(innerScope)(result1)
+    innerScope = scope2
 
+    val (scope3, result3) = orderConcats(innerScope)(result2)
+    innerScope = scope3
+    
+    val (scope, result) = orderConcats(innerScope)(result3)
+    innerScope = scope
     // we don't currently propagate a modified result to the parent
 
     // the caller of traverseBlock will quite likely call getBlockResult afterwards,
     // and if we change the result here, the caller will emit a reference to a sym
     // that doesn't exist (because it was replaced)
-
-    // replace loop yield symbols with the symbol of a Concat
-    scope.foreach {
-         case TP(sym, Concat(l)) =>
-           var t = new SubstTransformer
-           // extract the definitions
-           l.map(x => findDefinition(x.asInstanceOf[Sym[Any]]).get).foreach(x => {
-             // extract a generator from a loop
-             x match {
-               case TP(_, SimpleLoop(sh, i, Generator(y))) =>
-                 // mutate the generator
-                 y.concatSym = Some(sym)
-               case _ =>
-             }
-             // TODO: later replace it with a transformation
-           })
-         case _ =>
-       }
-    
-    // this is the very poor version of the nested concat analysis
-    if (level == 0) scope.reverse.find {
-         case TP(sym, Concat(l)) =>
-           true
-         case _ => false
-    } match {
-      case Some(TP(sym, c @ Concat(l))) =>
-        modConcat(c)
-      case None =>
-    }
-    
-    exportToGraphRaw(scope, "/tmp/post-concat")
-
-    if (result0 != result) {
+        
       printlog("super.focusExactScopeFat with result changed from " + result0 + " to " + result)
 
       (result0 zip result) foreach {
@@ -234,7 +207,7 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
         case (r0,r) => 
           if (r0 != r) innerScope = innerScope :+ TP(r0.asInstanceOf[Sym[Any]], Forward(r))
       }
-    }
+    
     level += 1
     super.focusExactScopeFat(result0.map(Block(_)))(x => { 
       exportToGraphRaw(x, "/tmp/final")
@@ -256,12 +229,15 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
   def unapplyConcat(e: Def[Any]): Option[List[Exp[Any]]] = None
   def unapplyGenerator(e: Def[Any]): Option[YieldSingle[Any]] = None
 
+  def modifyGens(x: Stm, concatSym: Sym[Any]) = ()
   def modConcat(c: Def[Any]) = ()
   def applyConcat(l: List[Exp[Any]]): Exp[Any] = sys.error("not implemented")
   def plugInHelper[A, T: Manifest, U: Manifest](oldGen: Exp[Gen[A]], context: Exp[Gen[T]], plug: Exp[Gen[U]]): Exp[Gen[U]] = sys.error("not implemented")
   def applyPlugIntoContext(d: Def[Any], r: Def[Any]): Def[Any] = sys.error("not implemented d1=" + d + " " + "r1=" + r)
   def applyExtendGenerator[A](d: Def[Any], body: Def[Any]): (Exp[A], Exp[A]) = sys.error("not implemented")
   def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+  def shouldApplyConcatSink(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+  def shouldOrderConcats(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
 
   object SimpleIndex {
     def unapply(a: Def[Any]): Option[(Exp[Any], Exp[Int])] = unapplySimpleIndex(a)
@@ -313,10 +289,82 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
     out.close 
   } 
   
+  def sinkConcatsPhase2(currentScope0: List[Stm])(result0: List[Exp[Any]]): (List[Stm], List[Exp[Any]]) = {
+    var result: List[Exp[Any]] = result0
+    var currentScope: List[Stm] = currentScope0
+    if (!shouldApplyConcatSink(currentScope)(result)) return (currentScope, result)
+    // replace loop yield symbols with the symbol of a Concat
+    currentScope.foreach {
+         case TP(sym, Concat(l)) =>
+           // extract the definitions
+           l.map(x => findDefinition(x.asInstanceOf[Sym[Any]]).get).foreach(x => {
+             // extract a generator from a loop. TODO: replace with a transformation
+             modifyGens(x, sym)
+           })
+         case _ =>
+       }
+
+    
+    // this is the very poor version of the nested concat analysis
+    if (level == 0) currentScope.reverse.find {
+         case TP(sym, Concat(l)) =>
+           true
+         case _ => false
+    } match {
+      case Some(TP(sym, c @ Concat(l))) =>
+        modConcat(c)
+      case None =>
+    }
+    (currentScope, result)
+  }
+  
+  def orderConcats(currentScope0: List[Stm])(result0: List[Exp[Any]]): (List[Stm], List[Exp[Any]]) = {
+       var result: List[Exp[Any]] = result0
+       var currentScope: List[Stm] = currentScope0
+       // order the nodes explicitly
+       if (!shouldOrderConcats(currentScope)(result)) return (currentScope, result)
+       val t = new SubstTransformer
+       
+       currentScope.foreach { case TP(conSym, Concat(l)) =>
+         val saveContext = globalDefs.length
+         val newDefs = scala.collection.mutable.ArrayBuffer[Stm]()
+         val concatSyms = scala.collection.mutable.ArrayBuffer[Stm]()
+         val nil = NilOrder()
+         val nilDef = createDefinition(fresh[NilOrder], nil)
+         // create a new order node for each sym in a list
+         l.scanRight(infix_lhs(nilDef).head){ (a, b) =>
+           val bExp = b.asInstanceOf[Exp[Order]]
+           val newDef = createDefinition(fresh[ExpOrder], ExpOrder(a, bExp))
+           concatSyms += newDef
+           println(newDef)
+           infix_lhs(newDef).head
+        }
+       
+       val newSym = applyConcat(concatSyms.map(infix_lhs(_).head).toList)
+       println(" Concat:" + l)
+       println("New Concat:" + Def.unapply(newSym).get)
+       t.subst(conSym) = newSym
+       newDefs ++= globalDefs.drop(saveContext)
+       // add new definitions
+       currentScope = currentScope ++ (newDefs.map(fatten))
+      case _ => 
+    }
+    exportToGraphRaw(currentScope, "/tmp/order")
+    println(t.subst)
+    transformAllFully(currentScope, result, t) match { case (a,b) => // too bad we can't use pair assignment
+      currentScope = a
+      result = b
+    }
+
+    (currentScope, result)
+  }
+  
   var level = 0
   def sinkConcats(currentScope0: List[Stm])(result0: List[Exp[Any]]): (List[Stm], List[Exp[Any]]) = {
        var result: List[Exp[Any]] = result0
        var currentScope: List[Stm] = currentScope0
+       if (!shouldApplyConcatSink(currentScope)(result)) 
+         return (currentScope, result)
        // collect find a concat suitable for sinking
        var res: Option[Stm] = None 
        do {

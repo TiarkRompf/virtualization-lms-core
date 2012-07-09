@@ -88,6 +88,16 @@ trait ScalaFatLoopsFusionOpt extends ScalaGenArrayLoops with ScalaGenIfThenElseF
   }
   
   override def applyConcat(l: List[Exp[Any]]): Exp[Any] = toAtom2(IR.Concat(l))
+  override def modifyGens(x: Stm, sym: Sym[Any]) = x match {
+               case TP(_, SimpleLoop(sh, i, Generator(y))) =>
+                 // mutate the generator
+                 y.concatSym = Some(sym)
+                
+                // TODO(VJ) hack. This should be done in a more generic way - probably through loops.
+               case TP(_, as @ ArrayFromSeq(values)) =>
+                 as.concatSym = Some(sym)
+               case _ =>
+             }
   override def modConcat(c: Def[Any]) = c.asInstanceOf[Concat[Any]].last = true
 
   // take d's context (everything between loop body and yield) and duplicate it into r

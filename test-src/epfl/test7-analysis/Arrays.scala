@@ -15,9 +15,9 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 trait ArrayLoops extends Loops with OverloadHack {
-  object Arr {
-    def apply[T:Manifest](x: Rep[T]) = array_obj_seq(x)
-   }
+  object Array {
+    def apply[T:Manifest](x: Rep[T]*) = array_obj_seq(x)
+  }
 
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]]
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] // TODO: make reduce operation configurable!
@@ -30,7 +30,7 @@ trait ArrayLoops extends Loops with OverloadHack {
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int]
   def constArray[T: Manifest](x: Rep[T]): Rep[Array[T]]
   def infix_++[T: Manifest](a1: Rep[Array[T]], a2: Rep[Array[T]]): Rep[Array[T]]
-  def array_obj_seq[T:Manifest](x1: Rep[T]): Rep[Array[T]]
+  def array_obj_seq[T:Manifest](x1: Seq[Rep[T]]): Rep[Array[T]]
 }
 
 
@@ -44,11 +44,14 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
 
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
+  
   case class Concat[T](l: List[Rep[T]]) extends Def[T] {
     var last: Boolean = false
   }
-  case class ArrayFromSeq[T:Manifest](x: Rep[T]) extends Def[Array[T]] {
+  
+  case class ArrayFromSeq[T:Manifest](x: Seq[Rep[T]]) extends Def[Array[T]] {
     val m = manifest[T]
+    var concatSym: Option[Sym[Any]] = None
   }
   
 /*
@@ -93,7 +96,7 @@ trait ArrayLoopsExp extends LoopsExp with IfThenElseExp {
   
   // TODO: use simpleLoop instead of SimpleLoop
 
-  def array_obj_seq[T:Manifest](x: Rep[T]): Rep[Array[T]] = ArrayFromSeq(x)
+  def array_obj_seq[T:Manifest](x: Seq[Rep[T]]): Rep[Array[T]] = ArrayFromSeq(x)
   
   def concat[T: Manifest](a: Rep[Array[T]]*): Rep[Array[T]] = {
     Concat(a.toList)
@@ -230,6 +233,10 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
   val IR: ArrayLoopsExp
   import IR._
   
+  var fuseConcats = true 
+  
+  val concats = new mutable.HashSet[Sym[Any]]()
+  
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case SimpleLoop(s,x,ArrayElem(g,y)) =>  
       stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") { " + quote(x) + " => ")
@@ -248,17 +255,28 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
     case ArrayLength(a) =>  
       emitValDef(sym, quote(a) + ".length")
     case c @ Concat(l) =>
-      
       // This is utterly wrong: This should be done at IR level. If the level is not 0 skip it
+      if (fuseConcats) 
       if (c.last){
     	  emitValDef(sym, quote(sym) + "_buff.result")
       } else {
-    	  emitValDef(sym, "()")
+    	  emitValDef(sym, "()// " + l.map(quote).mkString(" ++ "))
       } 
+      else
+        emitValDef(sym, l.map(quote).mkString(" ++ "))
       
-    case e@ArrayFromSeq(x) => {
-      emitValDef(sym, "Array(" + quote(x) + ")")
-    }
+    case e @ ArrayFromSeq(x) => 
+      emitValDef(sym, "Array(" + x.map(quote(_)).mkString(",") + ")")
+    /*case e @ ArrayFromSeq(x) =>
+            // lookup the concat sym
+      val cSym = e.concatSym.get
+      if (!concats.contains(cSym)) {
+        concats += (cSym)
+        stream.println("val " + quote(cSym) + "_buff = scala.collection.mutable.ArrayBuffer(" + x.map(quote).mkString(", ") + ")")
+      } else {
+        x.foreach(v => stream.println(quote(cSym) + "_buff += " + quote(v)))
+      }
+*/
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -266,8 +284,6 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
 trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
   val IR: ArrayLoopsFatExp
   import IR._
-  
-  val concats = new mutable.HashSet[Sym[Any]]()
   
   override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatLoop(s,x,rhs) =>
@@ -283,7 +299,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
           case r => 
             r match {
               case ForeachElem(y) =>
-                stream.println("val " + quote(l) + " = () // foreach (this is perfectly fine)")
+//                stream.println("val " + quote(l) + " = () // foreach (this is perfectly fine)")
               case ArrayElem(g,Block(y)) if g == y =>
                 stream.println("val " + quote(l) + " = new Array[" + stripGen(y.tp) + "]("+quote(s)+")")
               case ArrayElem(g,y) =>

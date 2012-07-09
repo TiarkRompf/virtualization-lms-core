@@ -90,6 +90,11 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     res
   }
   
+  trait Order extends Def[Order]
+  
+  case class ExpOrder(val st: Exp[Any], val ord: Exp[Order]) extends Order
+  case class NilOrder extends Order
+  
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
   
   def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = SimpleLoop(size, v, body)
@@ -139,6 +144,8 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case Reflect(Skip(i), u, es) => 
       reflectMirrored(Reflect(Skip(f(i)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case s @ Skip(i) => toAtom(Skip(f(i)))(mtype(manifest[A]), pos)
+    case oe @ ExpOrder(a, b) => toAtom(ExpOrder(f(a), f(b)))
+    case nil @ NilOrder() => toAtom(NilOrder())
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
   
@@ -289,6 +296,9 @@ trait ScalaGenLoops extends ScalaGenBase with BaseGenLoops {
       
     case Skip(g) =>
       emitValDef(sym, "() // skip")
+      
+    case o: Order =>
+      stream.println("// dummy order node")
     case _ => super.emitNode(sym, rhs)
   }
 }
