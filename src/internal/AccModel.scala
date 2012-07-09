@@ -7,6 +7,8 @@ trait AbstractHostTransfer {
 
   def emitSend(sym: Sym[Any], host: Hosts.Value): (String,String)
   def emitRecv(sym: Sym[Any], host: Hosts.Value): (String,String)
+  def emitSendView(sym: Sym[Any], host: Hosts.Value): (String,String)
+  def emitRecvView(sym: Sym[Any], host: Hosts.Value): (String,String)
   def emitSendUpdate(sym: Sym[Any], host: Hosts.Value): (String,String)
   def emitRecvUpdate(sym: Sym[Any], host: Hosts.Value): (String,String)
 }

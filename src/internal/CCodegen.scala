@@ -61,10 +61,15 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     /* file for helper functions (transfer function, allocation function) */
     helperFuncStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cpp"))
     helperFuncStream.println("#include <jni.h>")
+    helperFuncStream.println("#include \"cppHeader.hpp\"")
 
     /* header file for kernels and helper functions */
     headerStream = new PrintWriter(new FileWriter(buildDir + "cppHeader.hpp"))
-    headerStream.println("#include <stdio.h>\n")
+    headerStream.println("#include <stdio.h>")
+    headerStream.println("#include <string.h>")
+    headerStream.println("#include <stdlib.h>")
+    headerStream.println("#include <jni.h>")
+    headerStream.println(getDSLHeaders)
 
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
@@ -115,14 +120,19 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
         helperFuncStream.println(recvSource)
         helperFuncList.append(recvHeader)
       }
-
+      val (recvViewHeader, recvViewSource) = emitRecv(v, Hosts.JVM)
+      if (!helperFuncList.contains(recvViewHeader)) {
+        headerStream.println(recvViewHeader)
+        helperFuncStream.println(recvViewSource)
+        helperFuncList.append(recvViewHeader)
+      }
       val (updateHeader, updateSource) = emitSendUpdate(v, Hosts.JVM)
       if (!helperFuncList.contains(updateHeader)) {
         headerStream.println(updateHeader)
         helperFuncStream.println(updateSource)
         helperFuncList.append(updateHeader)
       }
-      //helperFuncString.append(emitUpdated(v,Hosts.JVM))
+      //helperFuncString.append(emitRecvUpdate(v,Hosts.JVM))
     }
 
     // Emit output copy helper functions for object type inputs
@@ -132,6 +142,12 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
         headerStream.println(sendHeader)
         helperFuncStream.println(sendSource)
         helperFuncList.append(sendHeader)
+      }
+      val (sendViewHeader, sendViewSource) = emitSendView(v, Hosts.JVM)
+      if (!helperFuncList.contains(sendViewHeader)) {
+        headerStream.println(sendViewHeader)
+        helperFuncStream.println(sendViewSource)
+        helperFuncList.append(sendViewHeader)
       }
       //helperFuncString.append(emitSend(v,Hosts.JVM))
     }
@@ -155,30 +171,42 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     */
   }
 
+
+  private def addRef[A](m: Manifest[A]): String = {
+    if (!isPrimitiveType(m) && !isVoidType(m)) " *"
+    else " "
+  }
+
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
+
+    assert(syms.length == 1) //now allow multiloop yet
 
     //TODO: fix this
     if(external) throw new GenerationFailedException("CGen: Cannot have external libraries\n")
 
     val kernelName = syms.map(quote).mkString("")
 
+
     def kernelSignature: String = {
       val out = new StringBuilder
-      out.append("#include <stdio.h>\n")
-      out.append(resultType)
+      if(resultIsVar)
+        out.append("Ref<" + resultType + ">")
+      else
+        out.append(resultType)
+      out.append(addRef(syms(0).tp))
       out.append(" kernel_" + kernelName + "(")
-      out.append(vals.map(p=>remap(p.tp) + " " + quote(p)).mkString(", "))
+      out.append(vals.map(p=>remap(p.tp) + addRef(p.tp) + quote(p)).mkString(", "))
       if (vals.length > 0 && vars.length > 0){
         out.append(", ")
       }
       if (vars.length > 0){
-        out.append(vars.map(v => remap(v.tp) + " &" + quote(v)).mkString(","))
+        out.append(vars.map(v => "Ref<" + remap(v.tp) + "> " + addRef(v.tp) + quote(v)).mkString(","))
       }
       out.append(")")
       out.toString
     }
 
-    stream.println(kernelSignature + " {")
+    stream.println("#include \"cppHeader.hpp\"\n" + kernelSignature + " {")
     headerStream.println(kernelSignature + ";")
   }
 
