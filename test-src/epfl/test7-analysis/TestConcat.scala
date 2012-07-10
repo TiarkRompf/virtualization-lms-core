@@ -396,7 +396,7 @@ trait IMDBBench extends Arith with ArrayLoops with Print with OrderingOps with I
   
   def testIMDB(x: Rep[Unit]) = {
     val page = Top250(unit(null), unit(null), unit(null))
-    val res = ArrayM("prep") ++ printMenu(page.menu) ++  ArrayM("inp") ++ printSideMenu(page.sideBar) ++  ArrayM("prem") ++ movies(page.movies)
+    val res = Array("prep") ++ printMenu(page.menu) ++  Array("inp") ++ printSideMenu(page.sideBar) ++  Array("prem") ++ movies(page.movies)
     print(res)
   }
 }
