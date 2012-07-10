@@ -162,7 +162,7 @@ trait ConcatProg4 extends Arith with ArrayLoops with Print with OrderingOps with
 
   def test(x: Rep[Unit]) = {
 
-    val file = SimpleFile("bla", "bla", unit(null))
+    val file = SimpleFile("beep", "boop", unit(null))
 
     def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) = array(x.length)(i => f(x.at(i)))
 
@@ -195,7 +195,7 @@ trait ConcatProg5 extends Arith with ArrayLoops with Print with OrderingOps with
 
   def test(x: Rep[Unit]) = {
 
-    val file = SimpleFile("bla", "bla", unit(null))
+    val file = SimpleFile("beep", "boop", unit(null))
 
     def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) = array(x.length)(i => f(x.at(i)))
 
@@ -238,50 +238,48 @@ trait ConcatBench extends Arith with ArrayLoops with Print with OrderingOps with
   def flatten[T: Manifest](x: Rep[Array[Array[T]]]): Rep[Array[T]] =
       arrayFlat(x.length) { i => x.at(i) }
   
-  def ArrayM[T: Manifest](v: Rep[T]*) = {
-      map(array_obj_seq(v))(x => x)
-    }
+  def ArrayM[T: Manifest](v: Rep[T]*) = array_obj_seq(v) //map(array_obj_seq(v))(x => x)
 
-  def f1(f: Rep[SimpleFile]) = concat(ArrayM("<a href='", f.path, "'>", f.name, "</a><br/>"), flatMap(f.files)(f2(_)))
+  def f1(f: Rep[SimpleFile]) = ArrayM("<a href='", f.path, "'>", f.name, "</a><br/>") ++ flatMap(f.files)(f2(_))
 
-  def f2(f: Rep[SimpleFile]) = concat(Array("-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>"), flatMap(f.files)(f3(_)))
+  def f2(f: Rep[SimpleFile]) = ArrayM("-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>") ++ flatMap(f.files)(f3(_))
 
-  def f3(f: Rep[SimpleFile]) = concat(Array("-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>"), flatMap(f.files)(f4(_)))
+  def f3(f: Rep[SimpleFile]) = ArrayM("-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>") ++ flatMap(f.files)(f4(_))
 
-  def f4(f: Rep[SimpleFile]) = concat(Array("-&nbsp;-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>"), flatMap(f.files)(f5(_)))
+  def f4(f: Rep[SimpleFile]) = ArrayM("-&nbsp;-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>") ++ flatMap(f.files)(f5(_))
 
-  def f5(f: Rep[SimpleFile]) = concat(Array("-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>"), flatMap(f.files)(f6(_)))
+  def f5(f: Rep[SimpleFile]) = ArrayM("-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>") ++ flatMap(f.files)(f6(_))
 
-  def f6(f: Rep[SimpleFile]) = Array("-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>")
+  def f6(f: Rep[SimpleFile]) = ArrayM("-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>")
 
   
-  def test1(x: Rep[Unit]) = {
-    val file = SimpleFile("bla", "bla", unit(null))
-    val res = concat(Array("<html><body>"), f1(file), Array("</body></html>"))
+  def testL6(x: Rep[Unit]) = {
+    val file = SimpleFile("beep", "boop", unit(null))
+    val res = ArrayM("<html><body>") ++ f1(file) ++ ArrayM("</body></html>")
     print(res)
   }
   
-  def test2(x: Rep[Unit]) = {
-    val file = SimpleFile("bla", "bla", unit(null))
-    val res = concat(Array("<html><body>"), f2(file), Array("</body></html>"))
+  def testL5(x: Rep[Unit]) = {
+    val file = SimpleFile("beep", "boop", unit(null))
+    val res = Array("<html><body>") ++ f2(file) ++ Array("</body></html>")
     print(res)
   }
   
-  def test3(x: Rep[Unit]) = {
-    val file = SimpleFile("bla", "bla", unit(null))
-    val res = concat(Array("<html><body>"), f3(file), Array("</body></html>"))
+  def testL4(x: Rep[Unit]) = {
+    val file = SimpleFile("beep", "boop", unit(null))
+    val res = Array("<html><body>") ++ f3(file) ++ Array("</body></html>")
     print(res)
   }
   
-  def test4(x: Rep[Unit]) = {
-    val file = SimpleFile("bla", "bla", unit(null))
-    val res = concat(Array("<html><body>"), f4(file), Array("</body></html>"))
+  def testL3(x: Rep[Unit]) = {
+    val file = SimpleFile("beep", "boop", unit(null))
+    val res = Array("<html><body>") ++ f4(file) ++ Array("</body></html>")
     print(res)
   }
   
-  def test5(x: Rep[Unit]) = {
-    val file = SimpleFile("bla", "bla", unit(null))
-    val res = concat(Array("<html><body>"), f5(file), Array("</body></html>"))
+  def testL2(x: Rep[Unit]) = {
+    val file = SimpleFile("beep", "boop", unit(null))
+    val res = Array("<html><body>") ++ f5(file) ++ Array("</body></html>")
     print(res)
   }
 }
@@ -366,11 +364,11 @@ trait IMDBBench extends Arith with ArrayLoops with Print with OrderingOps with I
     }
 
   def printMenu(items: Rep[Array[Item]]) = {
-    concat(Array("pre"), flatMap(items)(menuItem), Array("post"))    
+    Array("pre") ++ flatMap(items)(x => menuItem(x)) ++ Array("post")    
   }
   
   def menuItem(item: Rep[Item]) = {
-    concat(Array("pre1"), flatMap(item.subitems)(innerItem), Array("post1"))
+    Array("pre1") ++ flatMap(item.subitems)(x => innerItem(x)) ++ Array("post1")
   }
   
   def innerItem(item: Rep[Item]) = {
@@ -378,11 +376,11 @@ trait IMDBBench extends Arith with ArrayLoops with Print with OrderingOps with I
   }
   
   def printSideMenu(items: Rep[Array[Item]]) = {
-    concat(Array("pres"), flatMap(items)(sideMenuItem), Array("posts"))    
+    Array("pres") ++ flatMap(items)(x => sideMenuItem(x)) ++ Array("posts")    
   }
   
   def sideMenuItem(item: Rep[Item]) = {
-    concat(Array("pres1"), flatMap(item.subitems)(innerItem), Array("posts1"))
+    Array("pres1") ++ flatMap(item.subitems)(x => innerItem(x)) ++ Array("posts1")
   }
   
   def sideInnerItem(item: Rep[Item]) = {
@@ -390,18 +388,15 @@ trait IMDBBench extends Arith with ArrayLoops with Print with OrderingOps with I
   }
   
   def movies(movies: Rep[Array[Array[String]]]) = {
-    concat(Array("prem"), flatMap(movies)(movie), Array("postm"))
+    Array("prem") ++ flatMap(movies)(x => movie(x)) ++ Array("postm")
   }
   
   def movie(movie: Rep[Array[String]]) = 
-    concat(Array("prem1"), movie, Array("postm1"))
+    Array("prem1") ++ movie ++ Array("postm1")
   
   def testIMDB(x: Rep[Unit]) = {
     val page = Top250(unit(null), unit(null), unit(null))
-    val res = concat(ArrayM("prep"),
-        printMenu(page.menu),
-        ArrayM("inp"), printSideMenu(page.sideBar),
-        ArrayM("prem"), movies(page.movies))
+    val res = ArrayM("prep") ++ printMenu(page.menu) ++  ArrayM("inp") ++ printSideMenu(page.sideBar) ++  ArrayM("prem") ++ movies(page.movies)
     print(res)
   }
 }
@@ -494,11 +489,40 @@ class TestConcat extends FileDiffSuite {
             val IR: self.type = self
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
-          codegen.emitSource(test1, "time1", new PrintWriter(System.out))
-          codegen.emitSource(test2, "time2", new PrintWriter(System.out))
-          codegen.emitSource(test3, "time3", new PrintWriter(System.out))
-          codegen.emitSource(test4, "time4", new PrintWriter(System.out))
-          codegen.emitSource(test5, "time5", new PrintWriter(System.out))
+          codegen.emitSource(testL6, "timeL6", new PrintWriter(System.out))
+        }
+        new ConcatBench with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
+            val IR: self.type = self
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          }
+          codegen.emitSource(testL5, "timeL5", new PrintWriter(System.out))
+        }
+        new ConcatBench with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
+            val IR: self.type = self
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          }
+          codegen.emitSource(testL4, "timeL4", new PrintWriter(System.out))
+        }
+         new ConcatBench with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
+            val IR: self.type = self
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          }
+          codegen.emitSource(testL3, "timeL3", new PrintWriter(System.out))
+         }
+         new ConcatBench with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
+            val IR: self.type = self
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          } 
+          codegen.emitSource(testL2, "timeL2", new PrintWriter(System.out))
+         }
         }
         
         new ConcatBench with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
@@ -509,14 +533,12 @@ class TestConcat extends FileDiffSuite {
             override def shouldApplyConcatSink(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
             fuseConcats = false
           }
-          codegen.emitSource(test1, "time1orig", new PrintWriter(System.out))
-          codegen.emitSource(test2, "time2orig", new PrintWriter(System.out))
-          codegen.emitSource(test3, "time3orig", new PrintWriter(System.out))
-          codegen.emitSource(test4, "time4orig", new PrintWriter(System.out))
-          codegen.emitSource(test5, "time5orig", new PrintWriter(System.out))
-        }
-
-      }
+          codegen.emitSource(testL6, "timeL6orig", new PrintWriter(System.out))         
+          codegen.emitSource(testL5, "timeL5orig", new PrintWriter(System.out))                   
+          codegen.emitSource(testL4, "timeL4orig", new PrintWriter(System.out))         
+          codegen.emitSource(testL3, "timeL3orig", new PrintWriter(System.out))         
+          codegen.emitSource(testL2, "timeL2orig", new PrintWriter(System.out))
+        }      
     }
     assertFileEqualsCheck(prefix + "concat05")
   }
