@@ -47,6 +47,18 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   }
   */
 
+  private def deref[A](m: Manifest[A]): String = {
+    if (isPrimitiveType(m)) remap(m) + " "
+    else remap(m) + " * "
+  }
+
+  override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
+    if (!isVoidType(sym.tp))
+      stream.println(deref(sym.tp) + quote(sym) + " = " + rhs + ";")
+    else
+      stream.println(rhs + ";")
+  }
+
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
     //helperFuncString.clear
     //metaData = new CMetaData
@@ -106,10 +118,12 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
   override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
 
-    
-    if(resultType != "void")
+    //TODO: Remove the dependency to Multiloop to Delite
+    if(resultType != "void" && !resultType.startsWith("DeliteOpMultiLoop"))
       stream.println("return " + quote(syms(0)) + ";")
-    stream.println("}")
+
+    if(!resultType.startsWith("DeliteOpMultiLoop"))
+      stream.println("}")
 
     // Emit input copy helper functions for object type inputs
     for(v <- (vals++vars) if !isVoidType(v.tp)) {
@@ -120,7 +134,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
         helperFuncStream.println(recvSource)
         helperFuncList.append(recvHeader)
       }
-      val (recvViewHeader, recvViewSource) = emitRecv(v, Hosts.JVM)
+      val (recvViewHeader, recvViewSource) = emitRecvView(v, Hosts.JVM)
       if (!helperFuncList.contains(recvViewHeader)) {
         headerStream.println(recvViewHeader)
         helperFuncStream.println(recvViewSource)
@@ -149,7 +163,6 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
         helperFuncStream.println(sendViewSource)
         helperFuncList.append(sendViewHeader)
       }
-      //helperFuncString.append(emitSend(v,Hosts.JVM))
     }
 
     // Print out dsl.h file
@@ -206,8 +219,15 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
       out.toString
     }
 
-    stream.println("#include \"cppHeader.hpp\"\n" + kernelSignature + " {")
-    headerStream.println(kernelSignature + ";")
+    //TODO: Remove the dependency to Multiloop to Delite
+    if (resultType.startsWith("DeliteOpMultiLoop")) {
+      stream.println("#include \"cppHeader.hpp\"\n")
+      headerStream.println("#include \"" + kernelName + ".cpp\"")
+
+    } else {
+      stream.println("#include \"cppHeader.hpp\"\n" + kernelSignature + " {")
+      headerStream.println(kernelSignature + ";")
+    }
   }
 
 

@@ -101,7 +101,8 @@ trait GenericCodegen extends BlockTraversal {
   }
     
   def emitValDef(sym: Sym[Any], rhs: String): Unit
-    
+  def emitAssignment(lhs: String, rhs: String): Unit
+
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] // return free static data in block
       
   def quote(x: Exp[Any]) : String = x match {

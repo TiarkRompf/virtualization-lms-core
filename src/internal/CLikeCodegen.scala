@@ -12,7 +12,10 @@ trait CLikeCodegen extends GenericCodegen {
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
+    if (!isVoidType(sym.tp))
+      stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
+    else
+      stream.println(rhs + ";")
   }
 
   def emitAssignment(lhs:String, rhs: String): Unit = {
