@@ -4,8 +4,8 @@ package internal
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
 import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap, ListMap, HashSet}
+import collection.mutable.{Map => MMap}
 import collection.immutable.List._
-
 
 trait CudaCodegen extends GPUCodegen {
   val IR: Expressions
@@ -13,319 +13,183 @@ trait CudaCodegen extends GPUCodegen {
 
   override def kernelFileExt = "cu"
   override def toString = "cuda"
+  override def devFuncPrefix = "__device__"
 
-  override def initializeGenerator(buildDir:String): Unit = {
+  override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
 
     val outDir = new File(buildDir)
     outDir.mkdirs
     helperFuncIdx = 0
     helperFuncString = new StringBuilder
     hstream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cu"))
-    devStream = new PrintWriter(new FileWriter(buildDir+"devFuncs.cu"))
-    headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.h"))
-    headerStream.println("#include \"CudaArrayList.h\"")
-    headerStream.println("#include \"helperFuncs.cu\"")
-    headerStream.println("#include \"devFuncs.cu\"")
+    helperFuncHdrStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
+    //headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.h"))
 
     //TODO: Put all the DELITE APIs declarations somewhere
-    hstream.print(getDSLHeaders)
-    hstream.print("#include <iostream>\n")
-    hstream.print("#include <limits>\n")
-    hstream.print("#include <jni.h>\n\n")
-    hstream.print("//Delite Runtime APIs\n")
-    hstream.print("extern void DeliteCudaMallocHost(void **ptr, size_t size);\n")
-    hstream.print("extern void DeliteCudaMalloc(void **ptr, size_t size);\n")
-    hstream.print("extern void DeliteCudaMemcpyHtoDAsync(void *dptr, void *sptr, size_t size);\n")
-    hstream.print("extern void DeliteCudaMemcpyDtoHAsync(void *dptr, void *sptr, size_t size);\n")
-    hstream.print("typedef jboolean jbool;\n")              // TODO: Fix this
-    hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
+    hstream.print("#include \"helperFuncs.h\"\n")
+    helperFuncHdrStream.print(getDSLHeaders)
+    helperFuncHdrStream.print("#include <iostream>\n")
+    helperFuncHdrStream.print("#include <limits>\n")
+    helperFuncHdrStream.print("#include <jni.h>\n\n")
+    helperFuncHdrStream.print("#define CHAR short\n")
+    helperFuncHdrStream.print("#define jCHAR jshort\n")
+    helperFuncHdrStream.print("#include \"DeliteCuda.h\"\n")
+    helperFuncHdrStream.print("#include \"DeliteArray.h\"\n")
+    super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
-  /*
-  override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
-    // Set kernel input and output symbols
-    setKernelInputs(vals)
-    setKernelOutputs(syms)
-
-    // Conditions for not generating CUDA kernels (may be relaxed later)
-    for (sym <- syms) {
-      if((!isObjectType(sym.Type)) && (remap(sym.Type)!="void")) throw new GenerationFailedException("CudaGen: Not GPUable output type : %s".format(remap(sym.Type)))
-    }
-    if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("CudaGen: Not GPUable input/output types: Variable")
-
-    // Initialize global variables
-    //useLocalVar = false
-    //cudaVarMap.clear
-    optimizer = new CudaOptimizer
-
-    currDim = 0
-    xDimList.clear
-    yDimList.clear
-    multDimInputs.clear
-
-    helperFuncString.clear
-    metaData = new CudaMetaData
-    //MetaData.init
-    tabWidth = 1
-    devFuncString = new StringBuilder
-
-    forceParallel = false
-  }
-  */
-
-  /****************************************
-   *  Methods for managing GPUable Types
-   *  **************************************/
-  /*
-  // Map a scala primitive type to JNI type descriptor
-  def JNITypeDescriptor[A](m: Manifest[A]) : String = m.toString match {
-    case "Int" => "I"
-    case "Long" => "J"
-    case "Float" => "F"
-    case "Double" => "D"
-    case "Boolean" => "Z"
-    case _ => throw new GenerationFailedException("Undefined CUDA type")
-  }
-
-  def isObjectType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "scala.collection.immutable.List[Int]" => true
-      case _ => false
-    }
-  }
-
-  def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "Int" | "Long" | "Float" | "Double" | "Boolean"  => true
-      case _ => false
-    }
-  }
-
-  def isVoidType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "Unit" => true
-      case _ => false
-    }
-  }
-
-  def isVariableType[A](m: Manifest[A]) : Boolean = {
-    if(m.erasure == classOf[Variable[AnyVal]]) true
-    else false
-  }
-
-  // Check the type and generate Exception if the type is not GPUable
-  def checkGPUableType[A](m: Manifest[A]) : Unit = {
-    if(!isGPUableType(m))
-      throw new GenerationFailedException("CudaGen: Type %s is not a GPUable Type.".format(m.toString))
-  }
-
-  // All the types supported by CUDA Generation
-  def isGPUableType[A](m : Manifest[A]) : Boolean = {
-    if(!isObjectType(m) && !isPrimitiveType(m) && !isVoidType(m) && !isVariableType(m))
-      false
-    else
-      true
-  }
-  */
-
-  override def remap[A](m: Manifest[A]) : String = {
-    checkGPUableType(m)
-    if (m.erasure == classOf[Variable[AnyVal]])
-      remap(m.typeArguments.head)
-    else {
-      m.toString match {
-          case "Int" => "int"
-          case "Long" => "long"
-          case "Float" => "float"
-          case "Double" => "double"
-          case "Boolean" => "bool"
-          case "Unit" => "void"
-          case "scala.collection.immutable.List[Int]" => "CudaArrayList<int>"  //TODO: Use C++ list
-          case _ => throw new Exception("CudaGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
-      }
-    }
-  }
-
-  // TODO: Handle general C datastructure
+  // TODO: Move to Delite?
   def copyInputHtoD(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.Type)
-    remap(sym.Type) match {
-      case "CudaArrayList<int>" => {
+    checkGPUableType(sym.tp)
+    remap(sym.tp) match {
+      case "DeliteArray<bool>" | "DeliteArray<char>" | "DeliteArray<CHAR>" | "DeliteArray<short>" | "DeliteArray<int>" | "DeiteArray<long>" | "DeliteArray<float>" | "DeliteArray<double>" =>
         val out = new StringBuilder
-        out.append("\t%s *%s = new %s();\n".format(remap(sym.Type),quote(sym),remap(sym.Type)))
+        val typeArg = sym.tp.typeArguments.head
+        val numBytesStr = "length * sizeof(%s)".format(remap(typeArg))
+        out.append("\tint length = env->GetArrayLength((j%sArray)obj);\n".format(remapToJNI(typeArg).toLowerCase))
+        out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical((j%sArray)obj,0);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase))
+        out.append("\t%s *%s = new %s(length);\n".format(remap(sym.tp),quote(sym),remap(sym.tp)))
+        out.append("\t%s *hostPtr;\n".format(remap(typeArg)))
+        out.append("\tDeliteCudaMallocHost((void**)&hostPtr,%s);\n".format(numBytesStr))
+        out.append("\tmemcpy(hostPtr, dataPtr, %s);\n".format(numBytesStr))
+        out.append("\tDeliteCudaMemcpyHtoDAsync(%s->data, hostPtr, %s);\n".format(quote(sym),numBytesStr))
+        out.append("\tenv->ReleasePrimitiveArrayCritical((j%sArray)obj, dataPtr, 0);\n".format(remapToJNI(typeArg).toLowerCase))
         out.append("\treturn %s;\n".format(quote(sym)))
         out.toString
-      }
-      case _ => throw new Exception("CudaGen: copyInputHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.Type)))
+      case _ => throw new Exception("CudaGen: copyInputHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.tp)))
     }
   }
 
   def copyOutputDtoH(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.Type)
-    remap(sym.Type) match {
-      case "CudaArrayList<int>" => "\t//TODO: Implement this!\n"
-      case _ => throw new Exception("CudaGen: copyOutputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+    checkGPUableType(sym.tp)
+    if (isPrimitiveType(sym.tp)) {
+      val out = new StringBuilder
+      out.append("\t%s *ptr;\n".format(remap(sym.tp)))
+      out.append("\tDeliteCudaMallocHost((void**)&ptr,sizeof(%s));\n".format(remap(sym.tp)))
+      out.append("\tDeliteCudaMemcpyDtoHAsync(ptr, %s, sizeof(%s));\n".format(quote(sym),remap(sym.tp)))
+      out.append("\treturn *ptr;\n")
+      out.toString
+    }
+    else {
+      remap(sym.tp) match {
+        case "DeliteArray<bool>" | "DeliteArray<char>" | "DeliteArray<CHAR>" | "DeliteArray<short>" | "DeliteArray<int>" | "DeiteArray<long>" | "DeliteArray<float>" | "DeliteArray<double>" =>
+          val out = new StringBuilder
+          val typeArg = sym.tp.typeArguments.head
+          val numBytesStr = "%s.length * sizeof(%s)".format(quote(sym),remap(typeArg))
+          out.append("\tj%sArray arr = env->New%sArray(%s.length);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg),quote(sym)))
+          out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical((j%sArray)arr,0);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase))
+          out.append("\t%s *hostPtr;\n".format(remap(typeArg)))
+          out.append("\tDeliteCudaMallocHost((void**)&hostPtr,%s);\n".format(numBytesStr))
+          out.append("\tDeliteCudaMemcpyDtoHAsync(hostPtr, %s.data, %s);\n".format(quote(sym),numBytesStr))
+          out.append("\tmemcpy(dataPtr, hostPtr, %s);\n".format(numBytesStr))
+          out.append("\tenv->ReleasePrimitiveArrayCritical((j%sArray)arr, dataPtr, 0);\n".format(remapToJNI(typeArg).toLowerCase))
+          out.append("\treturn arr;\n")
+          out.toString
+        case _ => throw new Exception("CudaGen: copyOutputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
+      }
     }
   }
 
   def copyMutableInputDtoH(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.Type)
-    remap(sym.Type) match {
-      case "CudaArrayList<int>" => "\t//TODO: Implement this!\n"
-      case _ => throw new Exception("CudaGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.Type)))
+    checkGPUableType(sym.tp)
+    remap(sym.tp) match {
+      case "DeliteArray<bool>" | "DeliteArray<char>" | "DeliteArray<CHAR>" | "DeliteArray<short>" | "DeliteArray<int>" | "DeiteArray<long>" | "DeliteArray<float>" | "DeliteArray<double>" =>
+        val out = new StringBuilder
+        val typeArg = sym.tp.typeArguments.head
+        val numBytesStr = "length * sizeof(%s)".format(remap(typeArg))
+        out.append("\tint length = %s.length;\n".format(quote(sym)))
+        out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical((j%sArray)obj,0);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase))
+        out.append("\t%s *hostPtr;\n".format(remap(typeArg)))
+        out.append("\tDeliteCudaMallocHost((void**)&hostPtr,%s);\n".format(numBytesStr))
+        out.append("\tDeliteCudaMemcpyDtoHAsync(hostPtr, %s.data, %s);\n".format(quote(sym),numBytesStr))
+        out.append("\tmemcpy(dataPtr, hostPtr, %s);\n".format(numBytesStr))
+        out.append("\tenv->ReleasePrimitiveArrayCritical((j%sArray)obj, dataPtr, 0);\n".format(remapToJNI(typeArg).toLowerCase))
+        out.toString
+      case _ => throw new Exception("CudaGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
     }
   }
 
   //TODO: Remove below methods
   def allocOutput(newSym: Sym[_], sym: Sym[_], reset: Boolean = false) : Unit = {
-    throw new GenerationFailedException("CudaGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
+    throw new GenerationFailedException("CudaGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.tp)))
   }
   def allocReference(newSym: Sym[Any], sym: Sym[Any]) : Unit = {
-    throw new GenerationFailedException("CudaGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.Type)))
+    throw new GenerationFailedException("CudaGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.tp)))
   }
 
   def positionMultDimInputs(sym: Sym[Any]) : String = {
-    throw new GenerationFailedException("CudaGen: positionMultDimInputs(sym) : Cannot reposition GPU memory (%s)".format(remap(sym.Type)))
+    throw new GenerationFailedException("CudaGen: positionMultDimInputs(sym) : Cannot reposition GPU memory (%s)".format(remap(sym.tp)))
   }
 
   def cloneObject(sym: Sym[Any], src: Sym[Any]) : String = {
     throw new GenerationFailedException("CudaGen: cloneObject(sym)")
   }
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
-    val y = f(x)
+    val y = reifyBlock(f(x))
 
     val sA = mA.toString
     val sB = mB.toString
 
-    stream.println("/*****************************************\n"+
-                   "  Emitting Cuda Generated Code                  \n"+
-                   "*******************************************/\n" +
-                   "#include <stdio.h>\n" +
-                   "#include <stdlib.h>"
-    )
+    withStream(out) {
+      stream.println("/*****************************************\n"+
+                     "  Emitting Cuda Generated Code                  \n"+
+                     "*******************************************/\n" +
+                     "#include <stdio.h>\n" +
+                     "#include <stdlib.h>"
+      )
 
-    stream.println("int main(int argc, char** argv) {")
+      stream.println("int main(int argc, char** argv) {")
 
-    emitBlock(y)(stream)
-    //stream.println(quote(getBlockResult(y)))
+      emitBlock(y)
+      //stream.println(quote(getBlockResult(y)))
 
-    stream.println("}")
-    stream.println("/*****************************************\n"+
-                   "  End of Cuda Generated Code                  \n"+
-                   "*******************************************/")
-
-    stream.flush
+      stream.println("}")
+      stream.println("/*****************************************\n"+
+                     "  End of Cuda Generated Code                  \n"+
+                     "*******************************************/")
+    }
     Nil
   }  
 
 /*
   //TODO: is sym of type Any or Variable[Any] ?
-  def emitConstDef(sym: Sym[Any], rhs: emitK)(implicit stream: PrintWriter): Unit = {
+  def emitConstDef(sym: Sym[Any], rhs: emitK): Unit = {
     stream.print("const ")
     emitVarDef(sym, rhs)
   }
 */
 
-  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println(addTab() + remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
+    stream.println(addTab() + remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitVarDef(sym: Sym[Variable[Any]], rhs: String)(implicit stream: PrintWriter): Unit = {
-    stream.println(addTab()+ remap(sym.Type) + " " + quote(sym) + " = " + rhs + ";")
+  def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
+    stream.println(addTab()+ remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitAssignment(lhs:String, rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitAssignment(lhs:String, rhs: String): Unit = {
     stream.println(addTab() + " " + lhs + " = " + rhs + ";")
-  }
-  
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
-    if (external) {
-      // CUDA library ops use a C wrapper, so should be generated as a C kernel
-      stream.println(getDSLHeaders)
-      super.emitKernelHeader(syms, getKernelOutputs ::: vals, vars, resultType, resultIsVar, external)
-      return
-    }
-
-    val out = new StringBuilder
-
-    out.append("#include <cuda.h>\n\n")
-    out.append(getDSLHeaders)
-
-    val paramStr = (getKernelOutputs++getKernelInputs++getKernelTemps).filterNot(e=>isVoidType(e.Type)).map(e=>remap(e.Type) + " " + quote(e)).mkString(", ")
-
-    out.append("__global__ void kernel_%s(%s) {\n".format(syms.map(quote(_)).mkString(""), paramStr))
-    out.append(addTab()+"int idxX = blockIdx.x*blockDim.x + threadIdx.x;\n")
-    out.append(addTab()+"int idxY = blockIdx.y*blockDim.y + threadIdx.y;\n")
-    for(in <- multDimInputs) {
-      out.append(addTab()+positionMultDimInputs(in))
-    }
-    stream.print(out.toString)
-  }
-
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
-    if (external) {
-      super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external)
-      //return
-    }
-    else {
-      stream.println("}")
-    }
-
-    // aks TODO: the rest of this stuff adds to metadata and seems necessary even if we are external.
-    // should probably be refactored...
-    tabWidth -= 1
-
-    // Emit input copy helper functions for object type inputs
-    for(v <- vals if isObjectType(v.Type)) {
-      helperFuncString.append(emitCopyInputHtoD(v, syms, copyInputHtoD(v)))
-      helperFuncString.append(emitCopyMutableInputDtoH(v, syms, copyMutableInputDtoH(v)))
-    }
-
-    // Emit kernel size calculation helper functions
-    if (!external) {
-      helperFuncString.append(emitSizeFuncs(syms,external))
-    }
-
-    // Print helper functions to file stream
-    hstream.print(helperFuncString)
-    hstream.flush
-
-    // Print out dsl.h file
-    if(kernelsList.intersect(syms).isEmpty) {
-      headerStream.println("#include \"%s.cu\"".format(syms.map(quote).mkString("")))
-      kernelsList ++= syms
-    }
-    headerStream.flush
-
-    // Print out device function
-    devStream.println(devFuncString)
-    devStream.flush
   }
 
 }
 
 // TODO: do we need this for each target?
-trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
+trait CudaNestedCodegen extends CLikeNestedCodegen with CudaCodegen {
   val IR: Expressions with Effects
   import IR._
-  
-  override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
-    super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
-  }
-
 
   def CudaConsts(x:Exp[Any], s:String): String = {
     s match {
-      case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.Type))
+      case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.tp))
       case _ => s
     }
   }
   
   override def quote(x: Exp[Any]) = x match { // TODO: quirk!
     case Const(s: String) => "\""+s+"\""
+    case Const(s: Char) => "'"+s+"'"
     case Const(null) => "NULL"
     case Const(z) => CudaConsts(x, z.toString)
     case Sym(-1) => "_"
@@ -334,6 +198,43 @@ trait CudaNestedCodegen extends GenericNestedCodegen with CudaCodegen {
   
 }
 
-trait CudaFatCodegen extends GenericFatCodegen with CudaCodegen {
+trait CudaFatCodegen extends CLikeFatCodegen with CudaCodegen {
   val IR: Expressions with Effects with FatExpressions
+  import IR._
+
+  def emitMultiLoopCond(sym: Sym[Any], funcs:List[Block[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]]) = {
+    isNestedNode = true
+    devFuncIdx += 1
+    val currIdx = devFuncIdx
+    val tempString = new StringWriter
+    val tempStream = new PrintWriter(tempString, true)
+    val header = new StringWriter
+    val footer = new StringWriter
+
+    val currentTab = tabWidth
+    tabWidth = 1
+    withStream(tempStream) {
+      emitFatBlock(funcs)
+    }
+    tabWidth = currentTab
+
+    val inputs = getFreeVarBlock(Block(Combine(funcs.map(getBlockResultFull))),Nil).filterNot(quote(_)==quote(idx)).distinct
+    val paramStr = (inputs++List(idx)).map(ele=>remap(ele.tp)+" "+quote(ele)).mkString(",")
+    header.append(devFuncPrefix + " bool dev_%s(%s) {\n".format(postfix,paramStr))
+    footer.append("\treturn %s;\n".format(funcs.map(f=>quote(getBlockResult(f))).mkString("&&")))
+    footer.append("}\n")
+    stream.print(header)
+    stream.print(tempString)
+    stream.print(footer)
+
+    //Register Metadata for loop function
+    val lf = metaData.loopFuncs.getOrElse(sym,new LoopFunc)
+    lf.hasCond = true
+    lf.loopCondInputs = inputs.map(quote)
+    metaData.loopFuncs.put(sym,lf)
+    isNestedNode = false
+
+    ("dev_"+currIdx,inputs)
+  }
+
 }

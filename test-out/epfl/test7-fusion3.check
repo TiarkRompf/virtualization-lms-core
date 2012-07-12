@@ -3,11 +3,11 @@
 *******************************************/
 class Test extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-var x2 = new Array[](100)
+var x2 = new Array[Int](100)
 for (x1 <- 0 until 100) {
 x2(x1) = x1
 }
-var x6 = new ArrayBuilder[]
+var x6 = new ArrayBuilder[Int]
 for (x3 <- 0 until 100) {
 val x4 = x2.apply(x3)
 val x5 = x4 > 50

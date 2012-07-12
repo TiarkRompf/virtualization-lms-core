@@ -1,4 +1,4 @@
-promoting to effect: Sym(5)=Reflect(SimpleLoop(Const(10),Sym(4),ArrayElem(Sym(3))),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
+promoting to effect: Sym(5)=Reflect(SimpleLoop(Const(10),Sym(4),ArrayElem(Block(Sym(3)))),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
 depends on  Sym(3)
 promoting to effect: Sym(6)=Reflect(ArrayClone(Sym(5)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
 depends on  Sym(3)
@@ -12,8 +12,8 @@ depends on  Sym(3)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 val x2 = LoopArray(100) { x1 => 
 0.0
 }

@@ -1,69 +1,45 @@
-name := "virtualization-lms-core"
+name := "LMS"
 
-organization := "scala"
+version := "0.2"
 
-version := "0.1"
+organization := "EPFL"
 
-//--- Local Scala
+resolvers += ScalaToolsSnapshots
 
-scalaHome <<= baseDirectory { f =>
-  val props = new java.util.Properties()
-  IO.load(props, f / "local.properties")
-  val x = props.getProperty("scala.virtualized.home")
-  if (x == null)
-    sys.error("Did you forget to set scala.virtualized.home property in local.properties file?")
-  else Some(file(x))
-}
+resolvers += dropboxScalaTestRepo
 
-scalacOptions in Test <+= scalaHome map (_.map(f => "-Xplugin:"+f+"/misc/scala-devel/plugins/continuations.jar").get)
+scalaOrganization := "org.scala-lang"
 
-//--- End of Local Scala
+//scalaBinaryVersion := virtScala // necessary??
 
-scalaVersion := "2.10.0-virtualized-SNAPSHOT"
+scalaVersion := virtScala
 
-//--- Paths
-
-// set the main Scala source directory to be <base>/src
 scalaSource in Compile <<= baseDirectory(_ / "src")
-
-resourceDirectory in Compile <<= baseDirectory(_ / "resources")
 
 scalaSource in Test <<= baseDirectory(_ / "test-src")
 
-resourceDirectory in Test <<= baseDirectory(_ / "test-resources")
-
-//--- End of Paths
-
-//--- Dependencies
-
-resolvers ++= Seq(
-    ScalaToolsSnapshots,
-    //needed for custom build of scala test
-    "Dropbox" at "http://dl.dropbox.com/u/12870350/scala-virtualized"
-    )
-
-libraryDependencies += "org.scalatest" % "scalatest_2.10.0-virtualized-SNAPSHOT" % "1.6.1-SNAPSHOT" % "test"
-
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.10.0-virtualized-SNAPSHOT"
-
-//--- End of Dependencies
-
-scalacOptions += "-deprecation"
-
 scalacOptions += "-Yvirtualize"
 
-//Our tests are not threadsafe so disabling parallel execution for now
+//scalacOptions += "-Yvirtpatmat"
+
+//scalacOptions in Compile ++= Seq(/*Unchecked, */Deprecation)
+
+// needed for scala.tools, which is apparently not included in sbt's built in version
+libraryDependencies += "org.scala-lang" % "scala-library" % virtScala
+
+libraryDependencies += "org.scala-lang" % "scala-compiler" % virtScala
+
+libraryDependencies += scalaTest
+
+// tests are not thread safe
 parallelExecution in Test := false
 
 // disable publishing of main docs
 publishArtifact in (Compile, packageDoc) := false
 
-//continuations plugin
+// continuations
+autoCompilerPlugins := true
 
-//Uncomment the following two lines if you are not using local Scala
+addCompilerPlugin("org.scala-lang.plugins" % "continuations" % virtScala)
 
-//autoCompilerPlugins := true
-
-//addCompilerPlugin("org.scala-lang.plugins" % "continuations" % "2.10.0-virtualized-SNAPSHOT")
-
-scalacOptions in Test += "-P:continuations:enable"
+scalacOptions += "-P:continuations:enable"

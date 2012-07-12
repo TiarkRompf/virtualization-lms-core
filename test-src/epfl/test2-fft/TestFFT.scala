@@ -4,6 +4,7 @@ package test2
 
 import common._
 import test1._
+import reflect.SourceContext
 
 import java.io.PrintWriter
 
@@ -61,17 +62,17 @@ trait FFT { this: Arith with Trig =>
 
 trait ArithExpOptFFT extends ArithExpOpt {
 
-  override def infix_+(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_+(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
     case (x, Def(Minus(Const(0.0) | Const(-0.0), y))) => infix_-(x, y)
     case _ => super.infix_+(x, y)
   }
 
-  override def infix_-(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
     case (x, Def(Minus(Const(0.0) | Const(-0.0), y))) => infix_+(x, y)
     case _ => super.infix_-(x, y)
   }
 
-  override def infix_*(x: Exp[Double], y: Exp[Double]) = (x, y) match {
+  override def infix_*(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
     case (x, Const(-1.0)) => infix_-(0.0, x)
     case (Const(-1.0), y) => infix_-(0.0, y)
     case _ => super.infix_*(x, y)
@@ -96,7 +97,15 @@ trait FlatResult extends BaseExp { // just to make dot output nicer
   
 }
 
-
+trait ScalaGenFlat extends ScalaGenBase {
+   import IR._
+   type Block[+T] = Exp[T]
+   def getBlockResultFull[T](x: Block[T]): Exp[T] = x
+   def reifyBlock[T:Manifest](x: =>Exp[T]): Block[T] = x
+   def traverseBlock[A](block: Block[A]): Unit = {
+     buildScheduleForResult(block) foreach traverseStm
+   }
+}
 
 
 
@@ -151,7 +160,7 @@ class TestFFT extends FileDiffSuite {
           makeArray(r.flatMap { case Complex(re,im) => List(re,im) })
         }
         
-        val codegen = new ScalaGenArith with ScalaGenArrays { val IR: FooBar.this.type = FooBar.this } // TODO: find a better way...
+        val codegen = new ScalaGenFlat with ScalaGenArith with ScalaGenArrays { val IR: FooBar.this.type = FooBar.this } // TODO: find a better way...
       }
       val o = new FooBar
       import o._

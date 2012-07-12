@@ -1,8 +1,6 @@
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
--- found fun: scala.virtualization.lms.epfl.test4.FunctionsExternalDef2$$anonfun$3
 TP(Sym(3),Test(Sym(2),0.0))
 TP(Sym(4),Reify(Const(1.0),List(Sym(3))))
-TP(Sym(1),DefineFun(Sym(4)))
+TP(Sym(1),DefineFun(Block(Sym(4))))
 TP(Sym(5),Lambda(<function1>))
 TP(Sym(6),Apply(Sym(1),Sym(0)))
 TP(Sym(9),Minus(Sym(8),Const(1.0)))
@@ -11,7 +9,7 @@ TP(Sym(11),Lambda(<function1>))
 TP(Sym(12),Apply(Sym(7),Sym(9)))
 TP(Sym(13),OrElse(List(Sym(10), Sym(12))))
 TP(Sym(14),Times(Sym(8),Sym(13)))
-TP(Sym(7),DefineFun(Pure(Sym(14))))
+TP(Sym(7),DefineFun(Block(Pure(Sym(14)))))
 TP(Sym(15),Apply(Sym(7),Sym(0)))
 TP(Sym(16),OrElse(List(Sym(6), Sym(15))))
 Sym(16)

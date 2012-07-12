@@ -99,7 +99,7 @@ class TestFac extends FileDiffSuite {
       object FacProgExp extends FacProg2
         with ArithExpOpt with EqualExp with IfThenElseExp
         with FunctionExpUnfoldRecursion 
-        with FunctionsExternalDef2 with FunctionsExternalDef0
+        with FunctionsExternalDef2
       import FacProgExp._
 
       val r = { val x = fresh; fac(x) + fac(2*x) }
@@ -117,7 +117,7 @@ class TestFac extends FileDiffSuite {
       object FacProgExp extends FacProg2
         with ArithExpOpt with EqualExp with IfThenElseExp 
         with FunctionExpUnfoldRecursion 
-        with FunctionsExternalDef2 with FunctionsExternalDef0
+        with FunctionsExternalDef2
       import FacProgExp._
 
       val f = (x:Rep[Double]) => fac(x) + fac(2*x)
@@ -146,5 +146,5 @@ class TestFac extends FileDiffSuite {
     }
     assertFileEqualsCheck(prefix+"fac6")
   }
-
 }
+

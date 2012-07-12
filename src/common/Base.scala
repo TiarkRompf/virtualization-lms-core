@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package common
 
 import internal._
+import scala.reflect.SourceContext
 
 /**
  * This trait automatically lifts any concrete instance to a representation.
@@ -17,6 +18,7 @@ trait LiftAll extends Base {
  * @since 0.1 
  */
 trait Base extends EmbeddedControls {
+  type API <: Base
 
   type Rep[+T]
 
@@ -32,11 +34,23 @@ trait Base extends EmbeddedControls {
  *
  * @since 0.1
  */
-trait BaseExp extends Base with Expressions with Transforming {
+trait BaseExp extends Base with Expressions with Blocks with Transforming {
   type Rep[+T] = Exp[T]
 
   protected def unit[T:Manifest](x: T) = Const(x)
 }
+
+trait BlockExp extends BaseExp
+
+/*
+trait BlockExp extends BaseExp with Blocks {
+  
+  implicit object CanTransformBlock extends CanTransform[Block] {
+    def transform[A](x: Block[A], t: Transformer): Block[A] = Block(t(x.res))
+  }
+  
+}
+*/
 
 trait EffectExp extends BaseExp with Effects {
 
@@ -45,7 +59,13 @@ trait EffectExp extends BaseExp with Effects {
       mayWrite = t.onlySyms(u.mayWrite), mstWrite = t.onlySyms(u.mstWrite))
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+  override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
+    case Reflect(x, u, es) => Reflect(mirrorDef(x,f), mapOver(f,u), f(es))
+    case Reify(x, u, es) => Reify(f(x), mapOver(f,u), f(es))
+    case _ => super.mirrorDef(e,f)
+  }
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
 /*
     case Reflect(x, u, es) =>
       reifyEffects {
@@ -55,6 +75,7 @@ trait EffectExp extends BaseExp with Effects {
     
 */    
 //    case Reflect(Print(x), u, es) => Reflect(Print(f(x)), es map (e => f(e)))
+    case Reflect(x, u, es) => reflectMirrored(mirrorDef(e,f).asInstanceOf[Reflect[A]])
     case Reify(x, u, es) => Reify(f(x), mapOver(f,u), f(es)) //TODO: u
     case _ => super.mirror(e,f)
   }
@@ -64,8 +85,8 @@ trait EffectExp extends BaseExp with Effects {
 trait BaseFatExp extends BaseExp with FatExpressions with FatTransforming
 
 
-// TODO: what is the point of these, I suggest to remove them 
-// Answer: provide an interface to codegen without depending on internal._
+// The traits below provide an interface to codegen so that client do
+// not need to depend on internal._
 
 trait ScalaGenBase extends ScalaCodegen
 
@@ -75,8 +96,12 @@ trait ScalaGenFat extends ScalaFatCodegen with ScalaGenBase
 
 
 trait CLikeGenBase extends CLikeCodegen
+trait CLikeGenEffect extends CLikeNestedCodegen with CLikeGenBase
+trait CLikeGenFat extends CLikeFatCodegen with CLikeGenBase
 
 trait GPUGenBase extends GPUCodegen
+trait GPUGenEffect extends GPUGenBase with CLikeNestedCodegen
+trait GPUGenFat extends GPUGenBase with CLikeFatCodegen
 
 trait CudaGenBase extends CudaCodegen
 trait CudaGenEffect extends CudaNestedCodegen with CudaGenBase

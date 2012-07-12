@@ -1,18 +1,28 @@
-This is the common embedding framework portion of the collaboration effort between PPL and EPFL,
-with some minor tweaks for use with [JavaScript as an embedded DSL in Scala](http://github.com/namin/lms-sandbox). 
+Lightweight Modular Staging (LMS) is a runtime code generation approach. 
+This framework, LMS-Core, provides a library of core components for building 
+high performance code generators and embedded compilers in Scala. 
 
-### Setup:
+Closely related projects are [Delite](https://github.com/stanford-ppl/Delite/),
+a framework for heterogeneous parallel domain specific languages (DSLs),
+and [Scala-Virtualized](https://github.com/tiarkrompf/scala-virtualized/),
+a set of minimal extensions to the Scala compiler to make embedding DSLs
+more seamless.
 
-1. Setup Scala-Virtualized. From [`scala`](http://github.com/namin/scala):
-  * Run `git checkout js`.
-  * Run `ant`.
-  * In case of failure, run `ant all.clean` and `./pull-binary-libs.sh`, then `ant` again.
+### Background:
 
-2. Create a file `local.properties` in the root project directory, containing the following line:
+- [LMS paper](http://infoscience.epfl.ch/record/150347/files/gpce63-rompf.pdf)
 
-          scala.virtualized.home=<downloadpath>/build/pack
-    
-    Instead of `<downloadpath>` of course you use the actual path to your Scala-Virtualized repository.
-      
-3. Run `sbt`. `test` to ensure everything works. Then `publish-local`.
-  * In case of problems with sbt's compiler interface, run this [script](https://gist.github.com/1643715).
+- [Delite website](http://stanford-ppl.github.com/Delite/)
+
+- [Scala-Virtualized wiki](https://github.com/TiarkRompf/scala-virtualized/wiki)
+
+
+### How to build:
+
+1. Install the simple build tool ([SBT](http://www.scala-sbt.org/)). 
+You will need version 0.12-Beta2: [sbt-launch.jar](http://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/sbt-launch/0.12.0-Beta2/sbt-launch.jar). 
+Follow the [installation instructions](http://www.scala-sbt.org/download.html#manual) on the SBT website.
+
+2. Run `sbt test` to run the test suite.
+
+3. Run `sbt publish-local` to install LMS-Core for use in other projects.

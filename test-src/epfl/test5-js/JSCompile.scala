@@ -21,20 +21,20 @@ trait JSCodegen extends GenericCodegen {
     stream.flush
   }
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], methName: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
+  def emitSource[A,B](f: Exp[A] => Exp[B], methName: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
-    val y = f(x)
-
-    stream.println("function "+methName+"("+quote(x)+") {")
+    val y = reifyBlock(f(x))
+    withStream(out) {
+      stream.println("function "+methName+"("+quote(x)+") {")
     
-    emitBlock(y)(stream)
-    stream.println("return "+quote(getBlockResult(y)))
+      emitBlock(y)
+      stream.println("return "+quote(getBlockResult(y)))
     
-    stream.println("}")
-    stream.flush
+      stream.println("}")
+    }
     Nil
   }
-  def emitValDef(sym: Sym[Any], rhs: String)(implicit stream: PrintWriter): Unit = {
+  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     stream.println("var " + quote(sym) + " = " + rhs)
   }
 }
@@ -42,15 +42,6 @@ trait JSCodegen extends GenericCodegen {
 trait JSNestedCodegen extends GenericNestedCodegen with JSCodegen {
   import IR._
 
-  // TODO: we shouldn't need the manifests here (aks)
-  override def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)
-      (implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
-    super.emitSource[A,B](x => reifyEffects(f(x)), className, stream)
-  }
-  override def quote(x: Exp[Any]) = x match { // TODO: quirk!
-    case Sym(-1) => sys.error("Sym(-1) not supported")
-    case _ => super.quote(x)
-  }
 }
 
 trait JSGenBase extends JSCodegen {
@@ -66,7 +57,7 @@ trait JSGenIfThenElse extends BaseGenIfThenElse with JSGenEffect { // it's more 
   val IR: IfThenElseExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IfThenElse(c,a,b) =>  
       stream.println("var " + quote(sym))
       stream.println("if (" + quote(c) + ") {")
@@ -84,7 +75,7 @@ trait JSGenArith extends JSGenBase { // TODO: define a generic one
   val IR: ArithExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Plus(a,b) =>  emitValDef(sym, "" + quote(a) + "+" + quote(b))
     case Minus(a,b) => emitValDef(sym, "" + quote(a) + "-" + quote(b))
     case Times(a,b) => emitValDef(sym, "" + quote(a) + "*" + quote(b))

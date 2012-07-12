@@ -23,11 +23,13 @@ trait BaseGenStaticData extends GenericNestedCodegen {
     case _ => Nil
   }
   
-  override def getFreeDataBlock[A](start: Exp[A]): List[(Sym[Any],Any)] = {
+  override def getFreeDataBlock[A](start: Block[A]): List[(Sym[Any],Any)] = {
     focusBlock(start) {
       focusExactScope(start) { levelScope =>
-        levelScope flatMap { case TP(sym, rhs) =>
-          getFreeDataExp(sym, rhs)
+        levelScope flatMap { 
+          case TP(sym, rhs) =>
+            getFreeDataExp(sym, rhs)
+          case _ => Nil //static data is never fat
         }
       }
     }
@@ -39,9 +41,9 @@ trait ScalaGenStaticData extends ScalaGenEffect with BaseGenStaticData {
   val IR: StaticDataExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case StaticData(x) => 
-      emitValDef(sym, "p"+quote(sym) + " // static data: " + x)
+      emitValDef(sym, "p"+quote(sym) + " // static data: " + (x match { case x: Array[_] => "Array("+x.mkString(",")+")" case _ => x }))
     case _ => super.emitNode(sym, rhs)
   }
   

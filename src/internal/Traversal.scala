@@ -4,45 +4,51 @@ package internal
 import util.GraphUtil
 import java.io.{File, PrintWriter}
 
-trait Traversal extends Scheduling {
+
+// traversals are stateful (scheduling is stateless)
+
+trait GraphTraversal extends Scheduling {
   val IR: Expressions
   import IR._
-
-  def getFreeVarBlock(start: Exp[Any], local: List[Sym[Any]]): List[Sym[Any]] = { throw new Exception("Method getFreeVarBlock should be overriden.") }
-
-  def getFreeDataBlock[A](start: Exp[A]): List[(Sym[Any],Any)] = Nil // TODO: Nil or Exception??
-
-  def getBlockResult[A](s: Exp[A]): Exp[A] = s
   
+  def availableDefs: List[Stm] = globalDefs
+  
+  def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] = 
+    getSchedule(availableDefs)(result, sort)
+
+  def getDependentStuff(st: List[Sym[Any]]): List[Stm] = {
+    getFatDependentStuff(availableDefs)(st)
+  }
+
+  def getDependentStuff(st: Sym[Any]): List[Stm] = {
+    getDependentStuff(List(st))
+  }
+
 }
 
 
-trait NestedTraversal extends Traversal {
-  val IR: Expressions with Effects
+trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
+  val IR: Expressions with Effects /* effects just for sanity check */
   import IR._
   
-//  var shallow = false
+  // ----- stateful focus management
 
 //  var outerScope: List[TP[Any]] = Nil
 //  var levelScope: List[TP[Any]] = Nil
-  var innerScope: List[TP[Any]] = null  // no, it's not a typo
+  var innerScope: List[Stm] = null  // no, it's not a typo
 
   def initialDefs = super.availableDefs
 
   override def availableDefs = if (innerScope ne null) innerScope else initialDefs
 
-
-  def focusBlock[A](result: Exp[Any])(body: => A): A = {
-    val initDef = initialDefs
-    val availDef = availableDefs
-
+  def withInnerScope[A](scope: List[Stm])(body: => A): A = {
 //    val saveOuter = outerScope
 //    val saveLevel = levelScope
     val saveInner = innerScope
 
 //    outerScope = outerScope ::: levelScope
 //    levelScope = Nil
-    innerScope = buildScheduleForResult(result) // deep list of deps
+    innerScope = scope
 
     var rval = null.asInstanceOf[A]
     try {
@@ -62,148 +68,85 @@ trait NestedTraversal extends Traversal {
     rval
   }
 
-/* fom delite-develop:
-  // a block should only emit a dependency if it truly depends on it (as an input),
-  // or if it is an effect that has not been emitted yet by anybody
-  var ignoreEffects = false
-  var effectScope: List[TP[_]] = Nil // global to all blocks
-  var freeVarEffectScope: List[TP[_]] = Nil // global to all blocks
 
-  var scope: List[TP[_]] = Nil
-  var nested = 0
-  var lastNodeAttempted: TP[_] = _
-*/
+  // ----- stateful focus management
 
-
-  def focusExactScope[A](result: Exp[Any])(body: List[TP[Any]] => A): A = {
-
-    val saveInner = innerScope
-
-    val e1 = availableDefs
-    //shallow = true
-    //val e2 = buildScheduleForResult(result) // shallow list of deps (exclude stuff only needed by nested blocks)
-    //shallow = false
-
-    // shallow is 'must outside + should outside' <--- currently shallow == deep for lambdas, meaning everything 'should outside'
-    // bound is 'must inside'
-
-    // find transitive dependencies on bound syms, including their defs (in case of effects)
-    val bound = for (TP(sym, rhs) <- e1; s <- boundSyms(rhs)) yield s
-    val g1 = getDependentStuff(bound) // 'must inside'
-
-    // e1 = reachable
-    val h1 = e1 filterNot (g1 contains _) // 'may outside'
-    val f1 = g1.flatMap { t => syms(t.rhs) } flatMap { s => h1 filter (_.sym == s) } // fringe: 1 step from g1
-
-    val e2 = buildScheduleForResultM(e1)(result, false, true)       // (shallow|hot)*  no cold ref on path
-
-    val e3 = buildScheduleForResultM(e1)(result, true, false)       // (shallow|cold)* no hot ref on path
-
-    val f2 = f1 filterNot (e3 contains _)                           // fringe restricted to: any* hot any*
-
-    val h2 = buildScheduleForResultM(e1)(f2.map(_.sym), false, true)       // anything that depends non-cold on it...
-
-    // things that should live on this level:
-    // - not within conditional: no cold ref on path (shallow|hot)*
-    // - on the fringe but outside of mustInside, if on a hot path any* hot any*
-
-    val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
-
-    if (verbosity > 2) {
-      println("--- e1")
-      e1.foreach(println)
-      println("--- e2 (non-cold)")
-      e2.foreach(println)
-      println("--- g1 (bound)")
-      g1.foreach(println)
-      println("--- fringe")
-      f1.foreach(println)
-      println("--- h2 (fringe; any* hot any*; and non-cold inputs)")
-      h2.foreach(println)
+  def focusSubGraph[A](result: List[Exp[Any]])(body: => A): A = {
+    withInnerScope(buildScheduleForResult(result, false)) { // deep list of deps (unsorted, possibly recursive)
+      body
     }
-
-    // sym->sym->hot->sym->cold->sym  hot --> hoist **** iff the cold is actually inside the loop ****
-    // sym->sym->cold->sym->hot->sym  cold here, hot later --> push down, then hoist
-
-/*
-
-    loop { i =>                z = *if (x) bla
-      if (i > 0)               loop { i =>
-        *if (x)                  if (i > 0)
-          bla                      z
-    }                          }
-
-    loop { i =>                z = *bla
-      if (x)                   loop { i =>
-        if (i > 0)               if (x)
-          *bla                     if (i > 0)
-    }                                z
-                               }
-*/    
-
-    val levelScope = e1.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
-
-    // sanity check to make sure all effects are accounted for
-    result match {
-      case Def(Reify(x, u, effects)) =>
-        val actual = levelScope.filter(effects contains _.sym)
-        if (effects != actual.map(_.sym))
-          printerr("violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
-      case _ =>
-    }
-
-    innerScope = e1 diff levelScope // delay everything that remains
-
-    val rval = body(levelScope)
-
-    innerScope = saveInner
-    rval
-  }
-    
-    
-  override def getBlockResult[A](s: Exp[A]): Exp[A] = s match {
-    case Def(Reify(x, _, _)) => x
-    case _ => super.getBlockResult(s)
   }
   
+  // strong order for levelScope (as obtained by code motion), taking care of recursive dependencies.
+  def getStronglySortedSchedule2(scope: List[Stm], level: List[Stm], result: Any): (List[Stm], List[Sym[Any]]) = {
+    import util.GraphUtil
+    import scala.collection.{mutable,immutable}
 
-	def boundInScope(x: List[Exp[Any]]): List[Sym[Any]] = {
-		(x.flatMap(syms):::innerScope.flatMap(t => t.sym::boundSyms(t.rhs))).distinct
-	}
-	
-	def usedInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
-		(y.flatMap(syms):::innerScope.flatMap(t => syms(t.rhs))).distinct
-	}
-	
-	def readInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
-		(y.flatMap(syms):::innerScope.flatMap(t => readSyms(t.rhs))).distinct
-	}
-	
-  // bound/used/free variables in current scope, with input vars x (bound!) and result y (used!)
-  def boundAndUsedInScope(x: List[Exp[Any]], y: List[Exp[Any]]): (List[Sym[Any]], List[Sym[Any]]) = {
-    (boundInScope(x), usedInScope(y))
+    def deps(st: List[Sym[Any]]): List[Stm] = 
+      scope.filter(d => (st intersect d.lhs).nonEmpty)
+    val fixed = new mutable.HashMap[Any,List[Sym[Any]]]
+    def allSyms(r: Any) = fixed.getOrElse(r, syms(r) ++ softSyms(r))
+
+
+    val inner = scope diff level // TODO: restrict to things referenced by functions (not ifs) ?
+
+    var recursive: List[Sym[Any]] = Nil
+
+    var xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result)), t => deps(allSyms(t.rhs)))    
+    xx.foreach { xs => 
+      if (xs.length > 1) {
+        printdbg("warning: recursive schedule for result " + result + ": " + xs)
+
+        // find things residing on top level
+        val fs = (xs intersect level) flatMap (_.lhs)
+
+        recursive = fs ::: recursive
+
+        // eliminate all outward dependencies
+        // CAVEAT: this *only* works for lambdas
+        // problematic if sym is used both in a lambda and an if branch (may lead to NPE) 
+        // TODO: restrict 'inner' to functions
+        // CAVEAT: even for lambdas, this works *only* if the initialization happens before the first call
+        // TODO: can we check that somehow? -- maybe insert a dep from the call
+        (inner intersect xs) foreach {
+          case stm if allSyms(stm.rhs) exists (fs contains _) => 
+            fixed(stm.rhs) = allSyms(stm.rhs) filterNot (fs contains _)
+            printdbg("fixing deps of " + stm.rhs + " to " + fixed(stm.rhs))
+          case _ =>
+        }
+        
+        // also remove direct inner deps (without inner stms): x1 = Lambda { x2 => Block(x3) }
+        (level intersect xs) foreach {
+          case stm if allSyms(blocks(stm.rhs)) exists (fs contains _) => 
+            fixed(stm.rhs) = allSyms(stm.rhs) filterNot (fs contains _)
+            printdbg("fixing deps of " + stm.rhs + " to " + fixed(stm.rhs))
+          case _ =>
+        }
+      }
+    }
+    xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result) ++ allSyms(recursive)), t => deps(allSyms(t.rhs)))
+    xx.foreach { xs => 
+      if (xs.length > 1) {
+        printerr("error: recursive schedule did not go away for result " + result + ": " + xs)
+      }
+    }
+    val xxf = xx.flatten.reverse
+    (xxf filter (level contains _), recursive)
   }
-
-  def freeInScope(x: List[Exp[Any]], y: List[Exp[Any]]): List[Sym[Any]] = {
-    val (bound, used) = boundAndUsedInScope(x,y)
-    // aks: freeInScope used to collect effects that are not true input dependencies. TR, any better solution?
-    // i would expect read to be a subset of used, but there are cases where read has symbols not in used (TODO: investigate)
-    val read = readInScope(y)
-    (used intersect read) diff bound
-  }
-
-  // TODO: remove
-  override def getFreeVarBlock(start: Exp[Any], local: List[Sym[Any]]): List[Sym[Any]] = {
-    focusBlock(start) {
-      freeInScope(local, List(start))
+  
+  var recursive: List[Sym[Any]] = Nil // FIXME: should propagate differently
+  
+  def focusExactScopeSubGraph[A](result: List[Exp[Any]])(body: List[Stm] => A): A = {
+    val availDefs = availableDefs//getStronglySortedSchedule(availableDefs)(result) // resolve anti-dependencies (may still be recursive -- not sure whether that's a problem)
+    val levelScope = getExactScope(availDefs)(result)
+    val (levelScope2,recursive) = getStronglySortedSchedule2(availDefs,levelScope,result) // resolve anti-dependencies and recursive declarations
+    withInnerScope(availDefs diff levelScope2) { // delay everything that remains
+      val save = this.recursive
+      this.recursive = recursive
+      val r = body(levelScope2)
+      this.recursive = save
+      r
     }
   }
 
-  override def getFreeDataBlock[A](start: Exp[A]): List[(Sym[Any],Any)] = Nil // FIXME: should have generic impl
-
-  def reset { // used anywhere?
-    innerScope = null
-    //shallow = false
-    IR.reset
-  }
 }

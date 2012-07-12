@@ -4,17 +4,18 @@
 *******************************************/
 class Test extends ((Double)=>(Any)) {
 def apply(x0:Double): Any = {
+var x9 = null.asInstanceOf[scala.Function1[Any, Any]]
+x9 = {x10: (Any) => 
+val x11 = println("bar")
+val x12 = x9(x10)
+x12: Any
+}
 val x1 = {x2: (Any) => 
 val x3 = println("foo")
 x2: Any
 }
 val x14 = x1(x0)
 val x15 = x1(x14)
-val x9 = {x10: (Any) => 
-val x11 = println("bar")
-val x12 = x9(x10)
-x12: Any
-}
 val x16 = x9(x15)
 val x5 = {x6: (Any) => 
 val x7 = println("baz")
@@ -28,17 +29,17 @@ x17
   End of Generated Code                  
 *******************************************/
 function main(x0) {
+var x9 = function(x10) {
+var x11 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("bar"))
+var x12 = x9(x10)
+return x12
+}
 var x1 = function(x2) {
 var x3 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("foo"))
 return x2
 }
 var x14 = x1(x0)
 var x15 = x1(x14)
-var x9 = function(x10) {
-var x11 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("bar"))
-var x12 = x9(x10)
-return x12
-}
 var x16 = x9(x15)
 var x5 = function(x6) {
 var x7 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("baz"))

@@ -6,18 +6,20 @@ import java.io.PrintWriter
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
 import scala.virtualization.lms.util.ClosureCompare
 
+import scala.reflect.SourceContext
+
 trait Functions extends Base {
-  def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B]): Rep[A => B]
+
+  def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[A => B]
   implicit def fun[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
 
   implicit def toLambdaOps[A:Manifest,B:Manifest](fun: Rep[A => B]) = new LambdaOps(fun)
   
   class LambdaOps[A:Manifest,B:Manifest](f: Rep[A => B]) {
-    def apply(x: Rep[A]): Rep[B] = doApply(f,x)
+    def apply(x: Rep[A])(implicit pos: SourceContext): Rep[B] = doApply(f,x)
   }
 
-  def doApply[A:Manifest,B:Manifest](fun: Rep[A => B], arg: Rep[A]): Rep[B]
-
+  def doApply[A:Manifest,B:Manifest](fun: Rep[A => B], arg: Rep[A])(implicit pos: SourceContext): Rep[B]
 }
 
 trait TupledFunctions extends Functions with TupleOps {
@@ -61,7 +63,7 @@ trait TupledFunctions extends Functions with TupleOps {
 }
 
 trait FunctionsExp extends Functions with EffectExp {
-  case class Lambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B], x: Exp[A], y: Exp[B]) extends Def[A => B]
+  case class Lambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B], x: Exp[A], y: Block[B]) extends Def[A => B]
   case class Apply[A:Manifest,B:Manifest](f: Exp[A => B], arg: Exp[A]) extends Def[B]
 
   // unboxedFresh and unbox are hooks that can be overridden to
@@ -71,7 +73,7 @@ trait FunctionsExp extends Functions with EffectExp {
   // TupledFunctionsExp for an example.
 
   def unboxedFresh[A:Manifest] : Exp[A] = fresh[A]
-  def unbox[A:Manifest](x : Exp[A]) : Exp[A] = x
+  def unbox[A:Manifest](x : Exp[A])(implicit pos: SourceContext) : Exp[A] = x
 
   def doLambdaDef[A:Manifest,B:Manifest](f: Exp[A] => Exp[B]) : Def[A => B] = {
     val x = unboxedFresh[A]
@@ -80,10 +82,10 @@ trait FunctionsExp extends Functions with EffectExp {
     Lambda(f, x, y)
   }
 
-  def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B]) : Exp[A => B] =
+  override def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B])(implicit pos: SourceContext): Exp[A => B] =
     doLambdaDef(f)
 
-  def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A]): Exp[B] = {
+  override def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A])(implicit pos: SourceContext): Exp[B] = {
     val x1 = unbox(x)
     f match {
       case Def(Lambda(_,_,y)) =>
@@ -95,7 +97,7 @@ trait FunctionsExp extends Functions with EffectExp {
         reflectEffect(Apply(f, x1))
     }
   }
-  
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => syms(y)
     case _ => super.syms(e)
@@ -139,7 +141,7 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
     else fresh[A]
   }
 
-  override def unbox[A:Manifest](x : Exp[A]) : Exp[A] = {
+  override def unbox[A:Manifest](x : Exp[A])(implicit pos: SourceContext) : Exp[A] = {
     val mA = implicitly[Manifest[A]]
     x match {
       case _ : UnboxedTuple[A] => x
@@ -148,32 +150,32 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
       case _ if tupledManifestOf(mA, 2) =>
 	x match { case t : Rep[(a1,a2)] =>
 	  UnboxedTuple[A](List(
-	    tuple2_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]]),
-	    tuple2_get2(t)(mA.typeArguments(1).asInstanceOf[Manifest[a2]])))
+	    tuple2_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]], pos),
+	    tuple2_get2(t)(mA.typeArguments(1).asInstanceOf[Manifest[a2]], pos)))
 	}
       case _ if tupledManifestOf(mA, 3) =>
 	x match { case t : Rep[(a1,a2,a3)] =>
 	  UnboxedTuple[A](List(
-	    tuple3_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]]),
-	    tuple3_get2(t)(mA.typeArguments(0).asInstanceOf[Manifest[a2]]),
-	    tuple3_get3(t)(mA.typeArguments(1).asInstanceOf[Manifest[a3]])))
+	    tuple3_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]], pos),
+	    tuple3_get2(t)(mA.typeArguments(0).asInstanceOf[Manifest[a2]], pos),
+	    tuple3_get3(t)(mA.typeArguments(1).asInstanceOf[Manifest[a3]], pos)))
 	}
       case _ if tupledManifestOf(mA, 4) =>
 	x match { case t : Rep[(a1,a2,a3,a4)] =>
 	  UnboxedTuple[A](List(
-	    tuple4_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]]),
-	    tuple4_get2(t)(mA.typeArguments(0).asInstanceOf[Manifest[a2]]),
-	    tuple4_get3(t)(mA.typeArguments(0).asInstanceOf[Manifest[a3]]),
-	    tuple4_get4(t)(mA.typeArguments(1).asInstanceOf[Manifest[a4]])))
+	    tuple4_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]], pos),
+	    tuple4_get2(t)(mA.typeArguments(0).asInstanceOf[Manifest[a2]], pos),
+	    tuple4_get3(t)(mA.typeArguments(0).asInstanceOf[Manifest[a3]], pos),
+	    tuple4_get4(t)(mA.typeArguments(1).asInstanceOf[Manifest[a4]], pos)))
 	}
       case _ if tupledManifestOf(mA, 5) =>
 	x match { case t : Rep[(a1,a2,a3,a4,a5)] =>
 	  UnboxedTuple[A](List(
-	    tuple5_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]]),
-	    tuple5_get2(t)(mA.typeArguments(0).asInstanceOf[Manifest[a2]]),
-	    tuple5_get3(t)(mA.typeArguments(0).asInstanceOf[Manifest[a3]]),
-	    tuple5_get4(t)(mA.typeArguments(0).asInstanceOf[Manifest[a4]]),
-	    tuple5_get5(t)(mA.typeArguments(1).asInstanceOf[Manifest[a5]])))
+	    tuple5_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]], pos),
+	    tuple5_get2(t)(mA.typeArguments(0).asInstanceOf[Manifest[a2]], pos),
+	    tuple5_get3(t)(mA.typeArguments(0).asInstanceOf[Manifest[a3]], pos),
+	    tuple5_get4(t)(mA.typeArguments(0).asInstanceOf[Manifest[a4]], pos),
+	    tuple5_get5(t)(mA.typeArguments(1).asInstanceOf[Manifest[a5]], pos)))
 	}
       case _ => x
     }
@@ -187,7 +189,7 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
 
 trait FunctionsRecursiveExp extends FunctionsExp with ClosureCompare {
   var funTable: List[(Sym[_], Any)] = List()
-  override def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B]) : Exp[A => B] = {
+  override def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B])(implicit pos: SourceContext): Exp[A => B] = {
     val can = canonicalize(f)
     funTable.find(_._2 == can) match {
       case Some((funSym, _)) =>
@@ -208,7 +210,7 @@ trait GenericGenUnboxedTupleAccess extends GenericNestedCodegen {
   val IR: TupledFunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Tuple2Access1(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(0)))
     case Tuple2Access2(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(1)))
 
@@ -240,11 +242,11 @@ trait BaseGenFunctions extends GenericNestedCodegen {
 trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
-      stream.println("val " + quote(sym) + " = {" + quote(x) + ": (" + x.Type + ") => ")
+      emitValDef(sym, "{" + quote(x) + ": (" + x.tp + ") => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)) + ": " + y.Type)
+      stream.println(quote(getBlockResult(y)) + ": " + y.tp)
       stream.println("}")
 
     case Apply(fun, arg) =>
@@ -258,13 +260,13 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         // The version for inlined device function
-        stream.println(addTab() + "%s %s = %s;".format(remap(x.Type), quote(x), quote(sym)+"_1"))
+        stream.println(addTab() + "%s %s = %s;".format(remap(x.tp), quote(x), quote(sym)+"_1"))
         emitBlock(y)
-        stream.println(addTab() + "%s %s = %s;".format(remap(y.Type), quote(sym), quote(getBlockResult(y))))
+        stream.println(addTab() + "%s %s = %s;".format(remap(y.tp), quote(sym), quote(getBlockResult(y))))
 
         // The version for separate device function
         /*
@@ -289,7 +291,7 @@ trait OpenCLGenFunctions extends OpenCLGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         throw new GenerationFailedException("OpenCLGenFunctions: Lambda is not supported yet")
@@ -305,7 +307,7 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
         throw new GenerationFailedException("CGenFunctions: Lambda is not supported yet")

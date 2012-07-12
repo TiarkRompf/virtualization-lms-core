@@ -11,7 +11,7 @@ import java.io.FileOutputStream
 trait JSGenFunctions extends JSGenEffect with BaseGenFunctions {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, x, y) =>
       stream.println("var " + quote(sym) + " = function(" + quote(x) + ") {")
       emitBlock(y)
@@ -29,7 +29,7 @@ trait JSGenTupledFunctions extends JSGenFunctions {
   val IR: TupledFunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>
       stream.println("var " + quote(sym) + " = function" + xs.map(quote).mkString("(", ",", ")") + " {")
       emitBlock(y)
@@ -53,7 +53,7 @@ trait JSGenTupleOps extends JSGenBase {
   val IR: TupleOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ETuple2(a,b)  =>
       emitValDef(sym, "{_1:"+ quote(a) + ",_2:" + quote(b) + "}")
     case Tuple2Access1(t) => emitValDef(sym, quote(t) + "._1")

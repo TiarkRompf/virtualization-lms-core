@@ -3,16 +3,17 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
+import scala.reflect.SourceContext
 
 trait While extends Base {
-  def __whileDo(cond: => Rep[Boolean], body: => Rep[Unit])
+  def __whileDo(cond: => Rep[Boolean], body: => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
 }
 
 
 trait WhileExp extends While with EffectExp {
-  case class While(cond: Exp[Boolean], body: Exp[Unit]) extends Def[Unit]
+  case class While(cond: Block[Boolean], body: Block[Unit]) extends Def[Unit]
 
-  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit]) {
+  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit])(implicit pos: SourceContext) = {
     val c = reifyEffects(cond)
     val a = reifyEffects(body)
     val ce = summarizeEffects(c)
@@ -39,6 +40,47 @@ trait WhileExp extends While with EffectExp {
 }
 
 
+trait WhileExpOptSpeculative extends WhileExp with PreviousIterationDummyExp {
+  
+  override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit])(implicit pos: SourceContext) = {
+
+    val pc = fresh[Nothing]
+    val pb = fresh[Nothing]
+
+    val c = reifyEffectsHere(cond)
+    val ce = summarizeEffects(c)
+    val a = reifyEffectsHere { reflectPreviousDummy(pc,ce); body }
+    val ae = summarizeEffects(a)
+    
+    val c1 = reifyEffectsHere { reflectPreviousDummy(pb,ae); cond }
+    val ce1 = summarizeEffects(c1)
+    val a1 = reifyEffectsHere { reflectPreviousDummy(pc,ce1); body }
+    val ae1 = summarizeEffects(a1)
+
+    val c2 = reifyEffectsHere { reflectPreviousDummy(pb,ae1/*.lastIteration*/); cond }
+    val ce2 = summarizeEffects(c2)
+    val a2 = reifyEffectsHere { reflectPreviousDummy(pc,ce2); body }
+    val ae2 = summarizeEffects(a2)
+  
+    assert(ae2 == ae1, "not converged: " + ae1 + " != " + ae2)
+      
+    val cr = c2
+    val ar = a2
+    val cer = ce2
+    val aer = ae2
+    
+/*  
+    val c = reifyEffects(cond)
+    val a = reifyEffects(body)
+    val ce = summarizeEffects(c)
+    val ae = summarizeEffects(a)
+*/
+    reflectEffect(While(cr, ar), cer andThen ((aer andThen cer).star))
+  }
+
+}
+
+
 trait BaseGenWhile extends GenericNestedCodegen {
   val IR: WhileExp
   import IR._
@@ -48,7 +90,7 @@ trait BaseGenWhile extends GenericNestedCodegen {
 trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case While(c,b) =>
       stream.print("val " + quote(sym) + " = while ({")
       emitBlock(c)
@@ -63,25 +105,28 @@ trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
 }
 
 
+trait ScalaGenWhileOptSpeculative extends ScalaGenWhile with ScalaGenPreviousIterationDummy {
+  val IR: WhileExpOptSpeculative
+}
+
+
+
+
 trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case While(c,b) =>
-            // Get free variables list
-            //val freeVars = getFreeVarBlock(c,Nil)
-
-            // emit function for the condition evaluation
-            val (condFunc,freeVars) = emitDevFunc(c, Nil)
-            val argListStr = freeVars.map(quote(_)).mkString(", ")
-
-            // Emit while loop (only the result variable of condition)
+            emitBlock(c)
+            stream.println(addTab() + remap(getBlockResult(c).tp) + " " + quote(sym) + "_cond = " + quote(getBlockResult(c)) + ";")
             stream.print(addTab() + "while (")
-            stream.print("%s(%s)".format(condFunc,argListStr))
+            stream.print(quote(sym) + "_cond")
             stream.println(") {")
             tabWidth += 1
             emitBlock(b)
+            emitBlock(c)
+            stream.println(addTab() + quote(sym) + "_cond = " + quote(getBlockResult(c)) + ";")
             tabWidth -= 1
             //stream.println(quote(getBlockResult(b)))   //TODO: Is this needed?
             stream.println(addTab() + "}")
@@ -93,7 +138,7 @@ trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
 trait OpenCLGenWhile extends OpenCLGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case While(c,b) =>
         // calculate condition
@@ -111,7 +156,7 @@ trait OpenCLGenWhile extends OpenCLGenEffect with BaseGenWhile {
 trait CGenWhile extends CGenEffect with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case While(c,b) =>
         // calculate condition

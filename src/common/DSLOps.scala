@@ -12,7 +12,7 @@ import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailed
 trait DSLOpsExp extends EffectExp {
   // representation must be reified! this places the burden on the caller, but allows the caller to avoid the
   // use of function values (which can be uglier).
-  class DSLOp[A](val representation: Exp[A]) extends Def[A]
+  class DSLOp[A](val representation: Block[A]) extends Def[A]
 }
 
 trait BaseGenDSLOps extends GenericNestedCodegen {
@@ -24,7 +24,7 @@ trait ScalaGenDSLOps extends ScalaGenEffect with BaseGenDSLOps {
   val IR: DSLOpsExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case op: DSLOp[_] =>
       val b = op.representation
       stream.println("val " + quote(sym) + " = { ")
@@ -41,7 +41,7 @@ trait CLikeGenDSLOps extends BaseGenDSLOps with CLikeGenBase {
   val IR: DSLOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case op: DSLOp[_] => throw new GenerationFailedException("CLikeGenDSLOps: DSLOp is not supported")
     case _ => super.emitNode(sym, rhs)
   }

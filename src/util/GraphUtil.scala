@@ -46,7 +46,7 @@ object GraphUtil {
   }
 
   def visit[T](node: T, succ: T=>List[T], id: Ref[Int], stack: Stack[T], 
-  		      mark: Map[T,Int], res: Buffer[Buffer[T]]): Int = {
+            mark: Map[T,Int], res: Buffer[Buffer[T]]): Int = {
 
     mark.getOrElse(node, {
 
@@ -58,24 +58,24 @@ object GraphUtil {
 
       var min: Int = id.value
       for (child <- succ(node)) {
-	      val m = visit(child, succ, id, stack, mark, res)
+        val m = visit(child, succ, id, stack, mark, res)
 
-	      if (m < min) 
+        if (m < min) 
           min = m
       }
 
       if (min == mark(node)) {
 
-	      val scc: Buffer[T] = new ArrayBuffer()
-	      var loop: Boolean = true
-	      do {
-  	      val element = stack.pop()
+        val scc: Buffer[T] = new ArrayBuffer()
+        var loop: Boolean = true
+        do {
+          val element = stack.pop()
 //        println("appending " + element)
-  	      scc.append(element)
-  	      mark.put(element, Integer.MAX_VALUE)
-  	      loop = element != node
-	      } while (loop)
-	      res.append(scc)
+          scc.append(element)
+          mark.put(element, Integer.MAX_VALUE)
+          loop = element != node
+        } while (loop)
+        res.append(scc)
       }
       min
       
