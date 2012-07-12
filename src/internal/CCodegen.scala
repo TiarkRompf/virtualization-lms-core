@@ -21,6 +21,10 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   val helperFuncList = ArrayBuffer[String]()
   //var kernelsList = ListBuffer[Exp[Any]]()
 
+  var kernelInputVals: List[Sym[Any]] = Nil
+  var kernelInputVars: List[Sym[Any]] = Nil
+  var kernelOutputs: List[Sym[Any]] = Nil
+
   /*
   override def hasMetaData: Boolean = false
   override def getMetaData: String = metaData.toString
@@ -60,6 +64,9 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   }
 
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
+    kernelInputVals = vals
+    kernelInputVars = vars
+    kernelOutputs = syms
     //helperFuncString.clear
     //metaData = new CMetaData
   }
@@ -190,6 +197,8 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     else " "
   }
 
+  def kernelName = kernelOutputs.map(quote).mkString("")
+
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
 
     assert(syms.length == 1) //now allow multiloop yet
@@ -197,7 +206,6 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     //TODO: fix this
     if(external) throw new GenerationFailedException("CGen: Cannot have external libraries\n")
 
-    val kernelName = syms.map(quote).mkString("")
 
 
     def kernelSignature: String = {
@@ -222,7 +230,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     //TODO: Remove the dependency to Multiloop to Delite
     if (resultType.startsWith("DeliteOpMultiLoop")) {
       stream.println("#include \"cppHeader.hpp\"\n")
-      headerStream.println("#include \"" + kernelName + ".cpp\"")
+      //headerStream.println("#include \"" + kernelName + ".cpp\"")
 
     } else {
       stream.println("#include \"cppHeader.hpp\"\n" + kernelSignature + " {")
