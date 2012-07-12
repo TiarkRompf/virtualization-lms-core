@@ -48,7 +48,7 @@ trait ScalaGenUtil extends ScalaGenBase {
   
   // case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case StrCat(a,b) =>
       emitValDef(sym, quote(a) + ".toString + " + quote(b) + ".toString")
     case Tup(a,b) =>

@@ -11,7 +11,7 @@ shape=box
 ]
 "Sym(3)" -> "Sym(4)" [color=red]
 "Sym(1)" [
-label="Sym(1) \n DefineFun(Sym(4))"
+label="Sym(1) \n DefineFun(Block(Sym(4)))"
 shape=box
 color=green
 style=filled
@@ -59,7 +59,7 @@ shape=box
 "Sym(8)" -> "Sym(14)"
 "Sym(13)" -> "Sym(14)"
 "Sym(7)" [
-label="Sym(7) \n DefineFun(Pure(Sym(14)))"
+label="Sym(7) \n DefineFun(Block(Pure(Sym(14))))"
 shape=box
 color=green
 style=filled

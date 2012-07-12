@@ -16,7 +16,7 @@ trait Liveness extends internal.GenericNestedCodegen {
 
   var defuse: List[(Sym[Any],Sym[Any])] = Nil
 
-  override def emitBlockFocused(result: Exp[Any])(implicit stream: PrintWriter): Unit = {
+  override def traverseBlockFocused[A](result: Block[A]): Unit = {
     focusExactScope(result) { levelScope => 
       
       // TODO: what is the intended behavior for uses in innerScope?
@@ -77,7 +77,7 @@ trait ScalaGenArraysLiveOpt extends ScalaGenArrays with Liveness {
     } else false
   }
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ArrayZero(n) =>  
       emitValDef(sym, "new Array[Int](" + quote(n) + ")")
     case ArrayUpdate(a,x,v) =>  

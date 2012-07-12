@@ -4,6 +4,7 @@ package test2
 
 import common._
 import test1._
+import reflect.SourceContext
 
 import java.io.PrintWriter
 
@@ -13,10 +14,11 @@ trait Power1 { this: Arith =>
 }
 
 trait Power2 { this: Arith =>
-  def power(b: Rep[Double], x: Int): Rep[Double] = 
+  def power(b: Rep[Double], x: Int)(implicit pos: SourceContext): Rep[Double] = {
     if (x == 0) 1.0
     else if ((x&1) == 0) { val y = power(b, x/2); y * y }
     else b * power(b, x - 1)
+  }
 }
 
 
@@ -30,11 +32,13 @@ trait ArithStr extends Arith with BaseStr {
   //todo removed below
   //implicit def unit(x: Double) = x.toString
 
-  def infix_+(x: Rep[Double], y: Rep[Double]) = "(%s+%s)".format(x,y)
-  def infix_-(x: Rep[Double], y: Rep[Double]) = "(%s-%s)".format(x,y)
-  def infix_*(x: Rep[Double], y: Rep[Double]) = "(%s*%s)".format(x,y)
-  def infix_/(x: Rep[Double], y: Rep[Double]) = "(%s/%s)".format(x,y)
+  def infix_+(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s+%s)".format(x,y)
+  def infix_-(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s-%s)".format(x,y)
+  def infix_*(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s*%s)".format(x,y)
+  def infix_/(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s/%s)".format(x,y)
 }
+
+
 
 class TestPower extends FileDiffSuite {
   
@@ -106,7 +110,7 @@ class TestPower extends FileDiffSuite {
       val o = new Power1 with ArithExpOpt
       import o._
       val f = (x: Rep[Double]) => power(x + x, 4)
-      val p = new ScalaGenArith { val IR: o.type = o }
+      val p = new ScalaGenFlat with ScalaGenArith { val IR: o.type = o }
       p.emitSource(f, "Power2", new PrintWriter(System.out))
     }
 
@@ -124,14 +128,14 @@ class TestPower extends FileDiffSuite {
       val o = new Power2 with ArithExpOpt
       import o._
       val f = (x: Rep[Double]) => power(x + x, 4)
-      val p = new ScalaGenArith { val IR: o.type = o }
+      val p = new ScalaGenFlat with ScalaGenArith { val IR: o.type = o }
       p.emitSource(f, "Power3", new PrintWriter(System.out))
     }
 
 
     {
       val o = new Power1 with ArithExpOpt with CompileScala { self => 
-        val codegen = new ScalaGenArith { val IR: self.type = self }
+        val codegen = new ScalaGenFlat with ScalaGenArith { val IR: self.type = self }
       }
       import o._
 

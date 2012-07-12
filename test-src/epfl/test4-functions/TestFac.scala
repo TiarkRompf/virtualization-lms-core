@@ -99,7 +99,7 @@ class TestFac extends FileDiffSuite {
       object FacProgExp extends FacProg2
         with ArithExpOpt with EqualExp with IfThenElseExp
         with FunctionExpUnfoldRecursion 
-        with FunctionsExternalDef2 with FunctionsExternalDef0
+        with FunctionsExternalDef2
       import FacProgExp._
 
       val r = { val x = fresh; fac(x) + fac(2*x) }
@@ -117,7 +117,7 @@ class TestFac extends FileDiffSuite {
       object FacProgExp extends FacProg2
         with ArithExpOpt with EqualExp with IfThenElseExp 
         with FunctionExpUnfoldRecursion 
-        with FunctionsExternalDef2 with FunctionsExternalDef0
+        with FunctionsExternalDef2
       import FacProgExp._
 
       val f = (x:Rep[Double]) => fac(x) + fac(2*x)
@@ -128,5 +128,22 @@ class TestFac extends FileDiffSuite {
       p.emitSource(f, "Fac", new java.io.PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"fac5")
+  }
+
+  def testFac6 = {
+    withOutFile(prefix+"fac6") {
+      object FacProgExp extends FacProg2
+        with ArithExpOpt with EqualExp with IfThenElseExp 
+        with FunctionsExternalDef1
+      import FacProgExp._
+
+      val f = (x:Rep[Double]) => fac(x) + fac(2*x)
+      println(globalDefs.mkString("\n"))
+      println(f)
+      val p = new ScalaGenArith with ScalaGenEqual with 
+        ScalaGenIfThenElse with ScalaGenFunctionsExternal { val IR: FacProgExp.type = FacProgExp }
+      p.emitSource(f, "Fac", new java.io.PrintWriter(System.out))
+    }
+    assertFileEqualsCheck(prefix+"fac6")
   }
 }

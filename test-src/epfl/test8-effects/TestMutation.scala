@@ -96,7 +96,7 @@ trait ScalaGenArrayMutation extends ScalaGenArrayLoops {
   val IR: ArrayMutationExp
   import IR._
   
-  override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = rhs match {
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ArrayUpdate(a,i,x) => 
       emitValDef(sym, quote(a) + ".update(" + quote(i) + ", " + quote(x) + ")")
     case ArrayMutable(a) =>  
@@ -120,7 +120,7 @@ class TestMutation extends FileDiffSuite {
     def mzeros(l: Rep[Int]) = zeros(l).mutable
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
-    def test(x: Rep[Int]): Rep[Any]
+    def test(x: Rep[Int]): Rep[Unit]
   }
   trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with WhileExp with RangeOpsExp with PrintExp { self => 
@@ -349,7 +349,7 @@ class TestMutation extends FileDiffSuite {
           }
           if (c < x)
             c = 8
-          c
+          print(c)
         }
       }
       

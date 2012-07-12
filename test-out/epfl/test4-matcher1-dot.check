@@ -67,7 +67,7 @@ shape=box
 "Sym(15)" -> "Sym(19)" [color=red]
 "Sym(18)" -> "Sym(19)" [color=red]
 "Sym(13)" [
-label="Sym(13) \n DefineFun(Sym(19))"
+label="Sym(13) \n DefineFun(Block(Sym(19)))"
 shape=box
 color=green
 style=filled
@@ -166,7 +166,7 @@ shape=box
 "Sym(46)" -> "Sym(50)" [color=red]
 "Sym(49)" -> "Sym(50)" [color=red]
 "Sym(44)" [
-label="Sym(44) \n DefineFun(Sym(50))"
+label="Sym(44) \n DefineFun(Block(Sym(50)))"
 shape=box
 color=green
 style=filled
@@ -187,7 +187,7 @@ color=red
 ]
 "Sym(54)" -> "Sym(55)"
 "Sym(60)" [
-label="Sym(60) \n DefineFun(Pure(Const(false)))"
+label="Sym(60) \n DefineFun(Block(Pure(Const(false))))"
 shape=box
 color=green
 style=filled
@@ -201,7 +201,7 @@ style=filled
 "Sym(60)" -> "Sym(63)"
 "Sym(31)" -> "Sym(63)"
 "Sym(68)" [
-label="Sym(68) \n DefineFun(Pure(Const(false)))"
+label="Sym(68) \n DefineFun(Block(Pure(Const(false))))"
 shape=box
 color=green
 style=filled
@@ -267,7 +267,7 @@ shape=box
 "Sym(64)" -> "Sym(65)"
 "Sym(55)" -> "Sym(65)" [color=red]
 "Sym(53)" [
-label="Sym(53) \n DefineFun(Sym(65))"
+label="Sym(53) \n DefineFun(Block(Sym(65)))"
 shape=box
 color=green
 style=filled
@@ -296,7 +296,7 @@ shape=box
 "Sym(40)" -> "Sym(73)" [color=red]
 "Sym(43)" -> "Sym(73)" [color=red]
 "Sym(38)" [
-label="Sym(38) \n DefineFun(Sym(73))"
+label="Sym(38) \n DefineFun(Block(Sym(73)))"
 shape=box
 color=green
 style=filled
@@ -325,7 +325,7 @@ shape=box
 "Sym(34)" -> "Sym(79)" [color=red]
 "Sym(37)" -> "Sym(79)" [color=red]
 "Sym(32)" [
-label="Sym(32) \n DefineFun(Sym(79))"
+label="Sym(32) \n DefineFun(Block(Sym(79)))"
 shape=box
 color=green
 style=filled
@@ -353,7 +353,7 @@ shape=box
 "Sym(84)" -> "Sym(85)"
 "Sym(29)" -> "Sym(85)" [color=red]
 "Sym(27)" [
-label="Sym(27) \n DefineFun(Sym(85))"
+label="Sym(27) \n DefineFun(Block(Sym(85)))"
 shape=box
 color=green
 style=filled
@@ -388,7 +388,7 @@ shape=box
 "Sym(88)" -> "Sym(89)"
 "Sym(24)" -> "Sym(89)" [color=red]
 "Sym(22)" [
-label="Sym(22) \n DefineFun(Sym(89))"
+label="Sym(22) \n DefineFun(Block(Sym(89)))"
 shape=box
 color=green
 style=filled
@@ -425,7 +425,7 @@ shape=box
 "Sym(9)" -> "Sym(94)" [color=red]
 "Sym(12)" -> "Sym(94)" [color=red]
 "Sym(7)" [
-label="Sym(7) \n DefineFun(Sym(94))"
+label="Sym(7) \n DefineFun(Block(Sym(94)))"
 shape=box
 color=green
 style=filled
@@ -470,7 +470,7 @@ shape=box
 "Sym(3)" -> "Sym(100)" [color=red]
 "Sym(6)" -> "Sym(100)" [color=red]
 "Sym(1)" [
-label="Sym(1) \n DefineFun(Sym(100))"
+label="Sym(1) \n DefineFun(Block(Sym(100)))"
 shape=box
 color=green
 style=filled

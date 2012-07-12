@@ -1,5 +1,3 @@
--- found fun: scala.virtualization.lms.epfl.test3.MatchingExtractorsExp$$anonfun$liftAlt$1$1
--- found fun: scala.virtualization.lms.epfl.test3.MatchingExtractorsExp$$anonfun$liftAlt$1$1
 -- hit recursion: class scala.virtualization.lms.epfl.test3.MatchingExtractorsExp$$anonfun$liftAlt$1$1 Sym(5) <- Sym(0)
 TP(Sym(1),Lambda(<function1>))
 TP(Sym(2),Test(Sym(0),0.0))

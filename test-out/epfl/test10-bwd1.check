@@ -1,0 +1,22 @@
+===== first round
+{
+Sym(1) = WaitBwd(List(io),<function2>)
+Sym(2) = WaitBwd(List(),<function2>)
+Sym(5) = WaitBwd(List(io, io),<function2>)
+Const(8)
+}
+===== second round
+{
+Sym(5) = if (Sym(2))
+{
+Sym(3) = Print(Const(x))
+Const(1)
+}
+else
+{
+Sym(4) = Print(Const(x))
+Const(1)
+}
+Sym(1) = Print(Const(t))
+Const(8)
+}

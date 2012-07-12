@@ -5,8 +5,8 @@ at Sym(13)=Reflect(Assign(Variable(Sym(3)),Sym(6)),Summary(false,false,false,fal
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 val x2 = LoopArray(100) { x1 => 
 0.0
 }
