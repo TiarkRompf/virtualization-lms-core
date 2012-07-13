@@ -55,6 +55,7 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
         val out = new StringBuilder
         val signature = "j%s sendViewCPPtoJVM_%s(JNIEnv *env, %s %s)".format(remapToJNI(sym.tp).toLowerCase,quote(sym),remap(sym.tp),quote(sym))
         out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
         out.append("\treturn (j%s)%s;\n".format(remapToJNI(sym.tp).toLowerCase,quote(sym)))
         out.append("}\n")
         (signature+";\n", out.toString)
@@ -77,6 +78,7 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
         val out = new StringBuilder
         val signature = "%s recvViewCPPfromJVM_%s(JNIEnv *env, j%s %s)".format(remap(sym.tp),quote(sym),remapToJNI(sym.tp).toLowerCase,quote(sym))
         out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
         out.append("\treturn (%s)%s;\n".format(remap(sym.tp),quote(sym)))
         out.append("}\n")
         (signature+";\n", out.toString)
@@ -99,6 +101,7 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
         val out = new StringBuilder
         val signature = "void sendUpdateCPPtoJVM_%s(JNIEnv *env, %s %s)".format(quote(sym),remap(sym.tp),quote(sym))
         out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
         out.append("}\n")
         (signature+";\n", out.toString)
       }
@@ -120,6 +123,7 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
         val out = new StringBuilder
         val signature = "void recvUpdateCPPfromJVM_%s(JNIEnv *env, %s %s)".format(quote(sym),remap(sym.tp),quote(sym))
         out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
         out.append("}\n")
         (signature+";\n", out.toString)
       }

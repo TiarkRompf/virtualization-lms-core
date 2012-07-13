@@ -88,6 +88,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     headerStream.println("#include <string.h>")
     headerStream.println("#include <stdlib.h>")
     headerStream.println("#include <jni.h>")
+    headerStream.println("#include <assert.h>")
     headerStream.println(getDSLHeaders)
 
     super.initializeGenerator(buildDir, args, _analysisResults)
@@ -147,13 +148,18 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
         helperFuncStream.println(recvViewSource)
         helperFuncList.append(recvViewHeader)
       }
-      val (updateHeader, updateSource) = emitSendUpdate(v, Hosts.JVM)
-      if (!helperFuncList.contains(updateHeader)) {
-        headerStream.println(updateHeader)
-        helperFuncStream.println(updateSource)
-        helperFuncList.append(updateHeader)
+      val (sendUpdateHeader, sendUpdateSource) = emitSendUpdate(v, Hosts.JVM)
+      if (!helperFuncList.contains(sendUpdateHeader)) {
+        headerStream.println(sendUpdateHeader)
+        helperFuncStream.println(sendUpdateSource)
+        helperFuncList.append(sendUpdateHeader)
       }
-      //helperFuncString.append(emitRecvUpdate(v,Hosts.JVM))
+      val (recvUpdateHeader, recvUpdateSource) = emitRecvUpdate(v, Hosts.JVM)
+      if (!helperFuncList.contains(recvUpdateHeader)) {
+        headerStream.println(recvUpdateHeader)
+        helperFuncStream.println(recvUpdateSource)
+        helperFuncList.append(recvUpdateHeader)
+      }
     }
 
     // Emit output copy helper functions for object type inputs
