@@ -94,7 +94,7 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
 
     var xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result)), t => deps(allSyms(t.rhs)))    
     xx.foreach { xs => 
-      if (xs.length > 1) {
+      if (xs.length > 1 && (xs intersect level).nonEmpty) {
         printdbg("warning: recursive schedule for result " + result + ": " + xs)
 
         // find things residing on top level
@@ -126,7 +126,10 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
     }
     xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result) ++ allSyms(recursive)), t => deps(allSyms(t.rhs)))
     xx.foreach { xs => 
-      if (xs.length > 1) {
+      if (xs.length > 1 && (xs intersect level).nonEmpty) {
+        // see test5-schedfun. since we're only returning level scope (not inner)
+        // we're still fine if the order for strictly inner stms is not quite right
+        // but we need to ensure that levelScope's order is correct. 
         printerr("error: recursive schedule did not go away for result " + result + ": " + xs)
       }
     }

@@ -1,4 +1,3 @@
-error: recursive schedule did not go away for result List(Sym(14)): List(TP(Sym(3),Lambda(<function1>,Sym(4),Block(Sym(10)))), TP(Sym(10),Reify(Sym(9),Summary(true,false,false,false,false,List(),List(),List(),List()),List(Sym(9)))), TP(Sym(9),Reflect(IfThenElse(Sym(5),Block(Sym(2)),Block(Sym(8))),Summary(true,false,false,false,false,List(),List(),List(),List()),List())), TP(Sym(8),Reify(Sym(7),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(7)))), TP(Sym(7),Reflect(Apply(Sym(3),Sym(6)),Summary(true,true,false,false,false,List(),List(),List(),List()),List())))
 function Test(x0) {
 var x1 = function(x2) {
 var x3 = function(x4) {
