@@ -134,16 +134,17 @@ class TestFac extends FileDiffSuite {
     withOutFile(prefix+"fac6") {
       object FacProgExp extends FacProg2
         with ArithExpOpt with EqualExp with IfThenElseExp 
-        with FunctionsExternalDef1
+        with FunctionsRecursiveExp
       import FacProgExp._
 
       val f = (x:Rep[Double]) => fac(x) + fac(2*x)
       println(globalDefs.mkString("\n"))
       println(f)
       val p = new ScalaGenArith with ScalaGenEqual with 
-        ScalaGenIfThenElse with ScalaGenFunctionsExternal { val IR: FacProgExp.type = FacProgExp }
+        ScalaGenIfThenElse with ScalaGenFunctions { val IR: FacProgExp.type = FacProgExp }
       p.emitSource(f, "Fac", new java.io.PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"fac6")
   }
 }
+

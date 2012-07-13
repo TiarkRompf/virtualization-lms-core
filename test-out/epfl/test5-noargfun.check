@@ -1,0 +1,7 @@
+function main(x0) {
+var x1 = function() {
+return x0
+}
+var x2 = x1()
+return x2
+}

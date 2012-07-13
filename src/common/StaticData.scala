@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
+import scala.reflect.SourceContext
 
 trait StaticDataExp extends EffectExp {
   case class StaticData[T](x: T) extends Def[T]
@@ -12,6 +13,11 @@ trait StaticDataExp extends EffectExp {
     case Some(TP(_, StaticData(_))) => true
     case _ => super.isWritableSym(w)
   }
+  
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case StaticData(x) => staticData(x)(mtype(manifest[A]))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]   
 }
 
 trait BaseGenStaticData extends GenericNestedCodegen {

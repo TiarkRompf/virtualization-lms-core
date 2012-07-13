@@ -197,11 +197,13 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     else " "
   }
 
-  def kernelName = kernelOutputs.map(quote).mkString("")
+  def kernelName = "kernel_" + kernelOutputs.map(quote).mkString("")
+
+  override def emitFileHeader() {
+    stream.println("#include \"cppHeader.hpp\"\n")
+  }
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
-
-    assert(syms.length == 1) //now allow multiloop yet
 
     //TODO: fix this
     if(external) throw new GenerationFailedException("CGen: Cannot have external libraries\n")
@@ -215,7 +217,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
       else
         out.append(resultType)
       out.append(addRef(syms(0).tp))
-      out.append(" kernel_" + kernelName + "(")
+      out.append(kernelName + "(")
       out.append(vals.map(p=>remap(p.tp) + addRef(p.tp) + quote(p)).mkString(", "))
       if (vals.length > 0 && vars.length > 0){
         out.append(", ")
@@ -228,12 +230,8 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     }
 
     //TODO: Remove the dependency to Multiloop to Delite
-    if (resultType.startsWith("DeliteOpMultiLoop")) {
-      stream.println("#include \"cppHeader.hpp\"\n")
-      //headerStream.println("#include \"" + kernelName + ".cpp\"")
-
-    } else {
-      stream.println("#include \"cppHeader.hpp\"\n" + kernelSignature + " {")
+    if (!resultType.startsWith("DeliteOpMultiLoop")) {
+      stream.println(kernelSignature + " {")
       headerStream.println(kernelSignature + ";")
     }
   }

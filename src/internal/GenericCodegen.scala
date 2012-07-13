@@ -13,6 +13,7 @@ trait GenericCodegen extends BlockTraversal {
   // TODO: should some of the methods be moved into more specific subclasses?
   
   def kernelFileExt = ""
+  def emitFileHeader(): Unit = {}
   def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {}
   def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {}
   

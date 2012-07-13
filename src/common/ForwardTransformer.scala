@@ -32,43 +32,89 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
         val replace = transformStm(stm)
         // printlog("registering forward transformation: " + sym + " to " + replace)
         // printlog("while processing stm: " + stm)          
-        assert(!subst.contains(sym))
+        assert(!subst.contains(sym) || subst(sym) == replace)
         if (sym != replace) { // record substitution only if result is different
           subst += (sym -> replace)
         }
       } else {
-        printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
-        // what to do? bail out? lookup def and then transform???
+        if (recursive.contains(sym)) { // O(n) since recursive is a list!
+          transformStm(stm)
+        } else {
+          printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
+          // what to do? bail out? lookup def and then transform???
+        }
       }
   }
   
   
   def transformStm(stm: Stm): Exp[Any] = stm match { // override this to implement custom transform
     case TP(sym,rhs) =>
-      try {
-        /*
-        TBD: optimization from MirrorRetainBlockTransformer in TestMiscTransform -- is it worth doing??        
-        // we want to skip those statements that don't have symbols that need substitution
-        // however we need to recurse into any blocks
-        if (!syms(rhs).exists(subst contains _) && blocks(rhs).isEmpty) {
-          if (!globalDefs.contains(stm)) reflectSubGraph(List(stm))
-          return sym
-        }
-        */
-        mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos)) // cast needed why?
-      } catch { //hack -- should not catch errors
-        case e if e.toString contains "don't know how to mirror" => 
-          printerr("error: " + e.getMessage)
-          sym
-        case e => 
-          printerr("error: exception during mirroring of "+rhs+": "+ e)
-          e.printStackTrace; 
-          sym            
-      }
+      /*
+       TBD: optimization from MirrorRetainBlockTransformer in TestMiscTransform -- is it worth doing??        
+       // we want to skip those statements that don't have symbols that need substitution
+       // however we need to recurse into any blocks
+       if (!syms(rhs).exists(subst contains _) && blocks(rhs).isEmpty) {
+       if (!globalDefs.contains(stm)) reflectSubGraph(List(stm))
+       return sym
+       }
+       */
+      self_mirror(sym, rhs)
   }
-  
+
+  def self_mirror[A](sym: Sym[A], rhs : Def[A]): Exp[A] = {
+    try {
+      mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos)) // cast needed why?
+    } catch { //hack -- should not catch errors
+      case e if e.toString contains "don't know how to mirror" => 
+        printerr("error: " + e.getMessage)
+      sym
+      case e => 
+        printerr("error: exception during mirroring of "+rhs+": "+ e)
+        e.printStackTrace; 
+        sym            
+    }
+  }
 }
 
+
+trait RecursiveTransformer extends ForwardTransformer { self =>
+  import IR._
+
+  def run[A:Manifest](s: Block[A]): Block[A] = {
+    transformBlock(s)
+  }
+
+  def transformDef[A](lhs: Sym[A], rhs: Def[A]): Option[() => Def[A]] = None
+
+  override def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
+    for (sym <- recursive) {
+      subst += (sym -> fresh(mtype(sym.tp)))
+    }
+    super.traverseStmsInBlock(stms)
+  }
+
+  override def transformStm(stm: Stm): Exp[Any] = stm match {
+    case TP(s, rhs) => transformDef(s, rhs) match {
+      case Some(rhsThunk) =>
+        val s2 = subst.get(s) match {
+          case Some(s2@Sym(_)) => assert(recursive.contains(s)); s2
+          case _ => assert(!recursive.contains(s)); fresh(mtype(s.tp))
+        }
+        createDefinition(s2, rhsThunk())
+        s2
+      case None => subst.get(s) match {
+        case Some(s2@Sym(_)) =>
+          assert(recursive.contains(s))
+          createDefinition(s2, Def.unapply(self_mirror(s, rhs)).get)
+          s2
+        case None =>
+          assert(!recursive.contains(s))
+          super.transformStm(stm)
+      }
+    }
+    case _ => super.transformStm(stm)
+  }
+}
 
 
 trait WorklistTransformer extends ForwardTransformer { // need backward version, too?
