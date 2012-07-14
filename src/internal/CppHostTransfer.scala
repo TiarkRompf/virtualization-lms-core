@@ -9,9 +9,9 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
     if (host == Hosts.JVM) {
       if (isPrimitiveType(sym.tp)) {
         val out = new StringBuilder
-        val signature = "j%s sendCPPtoJVM_%s(JNIEnv *env, %s %s)".format(remapToJNI(sym.tp).toLowerCase,quote(sym),remap(sym.tp),quote(sym))
+        val signature = "%s sendCPPtoJVM_%s(JNIEnv *env, %s %s)".format(JNIType(sym.tp),quote(sym),remap(sym.tp),quote(sym))
         out.append(signature + " {\n")
-        out.append("\treturn (j%s)%s;\n".format(remapToJNI(sym.tp).toLowerCase,quote(sym)))
+        out.append("\treturn (%s)%s;\n".format(JNIType(sym.tp),quote(sym)))
         out.append("}\n")
         (signature+";\n", out.toString)
       }
@@ -31,7 +31,7 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
     if (host == Hosts.JVM) {
       if (isPrimitiveType(sym.tp)) {
         val out = new StringBuilder
-        val signature = "%s recvCPPfromJVM_%s(JNIEnv *env, j%s %s)".format(remap(sym.tp),quote(sym),remapToJNI(sym.tp).toLowerCase,quote(sym))
+        val signature = "%s recvCPPfromJVM_%s(JNIEnv *env, %s %s)".format(remap(sym.tp),quote(sym),JNIType(sym.tp),quote(sym))
         out.append(signature + " {\n")
         out.append("\treturn (%s)%s;\n".format(remap(sym.tp),quote(sym)))
         out.append("}\n")
@@ -53,10 +53,10 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
     if (host == Hosts.JVM) {
       if (isPrimitiveType(sym.tp)) {
         val out = new StringBuilder
-        val signature = "j%s sendViewCPPtoJVM_%s(JNIEnv *env, %s %s)".format(remapToJNI(sym.tp).toLowerCase,quote(sym),remap(sym.tp),quote(sym))
+        val signature = "%s sendViewCPPtoJVM_%s(JNIEnv *env, %s %s)".format(JNIType(sym.tp),quote(sym),remap(sym.tp),quote(sym))
         out.append(signature + " {\n")
         out.append("\tassert(false);\n")
-        out.append("\treturn (j%s)%s;\n".format(remapToJNI(sym.tp).toLowerCase,quote(sym)))
+        out.append("\treturn (%s)%s;\n".format(JNIType(sym.tp),quote(sym)))
         out.append("}\n")
         (signature+";\n", out.toString)
       }
@@ -76,7 +76,7 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
     if (host == Hosts.JVM) {
       if (isPrimitiveType(sym.tp)) {
         val out = new StringBuilder
-        val signature = "%s recvViewCPPfromJVM_%s(JNIEnv *env, j%s %s)".format(remap(sym.tp),quote(sym),remapToJNI(sym.tp).toLowerCase,quote(sym))
+        val signature = "%s recvViewCPPfromJVM_%s(JNIEnv *env, %s %s)".format(remap(sym.tp),quote(sym),JNIType(sym.tp),quote(sym))
         out.append(signature + " {\n")
         out.append("\tassert(false);\n")
         out.append("\treturn (%s)%s;\n".format(remap(sym.tp),quote(sym)))
@@ -139,6 +139,19 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
     }
   }
 
+  def JNIType[A](m: Manifest[A]) : String = {
+    remap(m) match {
+      case "bool" => "jboolean"
+      case "char" => "jbyte"
+      case "CHAR" => "jchar"
+      case "short" => "jshort"
+      case "int" => "jint"
+      case "long" => "jlong"
+      case "float" => "jfloat"
+      case "double" => "jdouble"
+      case _ => throw new GenerationFailedException("GPUGen: Cannot get array creation JNI function for this type " + remap(m))
+    }
+  }
 
   def remapToJNI[A](m: Manifest[A]) : String = {
     remap(m) match {
