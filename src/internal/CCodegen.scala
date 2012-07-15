@@ -220,7 +220,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     def kernelSignature: String = {
       val out = new StringBuilder
       if(resultIsVar)
-        out.append("Ref<" + resultType + ">")
+        out.append("Ref< " + resultType + " >")
       else
         out.append(resultType)
       out.append(addRef(syms(0).tp))
@@ -230,7 +230,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
         out.append(", ")
       }
       if (vars.length > 0){
-        out.append(vars.map(v => "Ref<" + remap(v.tp) + "> " + addRef(v.tp) + quote(v)).mkString(","))
+        out.append(vars.map(v => "Ref< " + remap(v.tp) + " > " + addRef(v.tp) + quote(v)).mkString(","))
       }
       out.append(")")
       out.toString
