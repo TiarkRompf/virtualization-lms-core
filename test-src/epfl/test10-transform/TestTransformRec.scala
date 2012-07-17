@@ -16,8 +16,8 @@ class TestTransformRec extends FileDiffSuite {
   val prefix = "test-out/epfl/test10-"
 
   trait DSL extends Arith with Functions with Equal with IfThenElse {
-    def fun: Rep[Double => Double]
-    def test(x: Rep[Double]): Rep[Double] = fun(x)
+    def testFun: Rep[Double => Double]
+    def test(x: Rep[Double]): Rep[Double] = testFun(x)
   }
 
   trait Impl extends DSL with ArithExpOpt with EqualExp with IfThenElseFatExp with LoopsFatExp with FunctionsExternalDef1 { self =>
@@ -114,15 +114,15 @@ class TestTransformRec extends FileDiffSuite {
 
   def testSimple = withOutFileChecked(prefix+"transformrec1") {
     trait Prog extends DSL {
-      def fun = doLambda { n => n + 1.0 }
+      def testFun = doLambda { n => n + 1.0 }
     }
     new Prog with Impl
   }
 
   def testRec = withOutFileChecked(prefix+"transformrec2") {
     trait Prog extends DSL {
-      def fun = doLambda { n =>
-        if (n == 0) 1.0 else n * fun(n - 1.0)
+      def testFun = doLambda { n =>
+        if (n == 0) 1.0 else n * testFun(n - 1.0)
       }
     }
     new Prog with Impl
@@ -130,11 +130,11 @@ class TestTransformRec extends FileDiffSuite {
 
   def testMutuallyRec = withOutFileChecked(prefix+"transformrec3") {
     trait Prog extends DSL {
-      def fun = doLambda { n =>
+      def testFun = doLambda { n =>
         if (n == 0) 1.0 else n * other(n)
       }
       def other: Rep[Double=>Double] = doLambda { n =>
-        fun(n-1.0)
+        testFun(n-1.0)
       }
     }
     new Prog with Impl

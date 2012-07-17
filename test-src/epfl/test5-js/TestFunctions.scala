@@ -121,6 +121,20 @@ trait TwoArgsRecursiveFunProg { this: TupledFunctions with Arith with Equal with
   }
 }
 
+trait SchedFunProg { this: Functions with Arith with Equal with IfThenElse =>
+  def foo: Rep[Double => Double] = fun { a =>
+    def iter : Rep[Double => Double] = fun { b =>
+      if (b == 0) a
+      else iter(b-1)
+    }
+    iter(a)
+  }
+
+  def test(x: Rep[Double]): Rep[Double] = {
+    foo(x)
+  }
+}
+
 class TestFunctions extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test5-"
@@ -211,6 +225,17 @@ class TestFunctions extends FileDiffSuite {
       }
     }
     assertFileEqualsCheck(prefix+"twoargsrecfun")
+  }
+
+  def testSchedFun = {
+    withOutFile(prefix+"schedfun") {
+      new SchedFunProg with FunctionsRecursiveExp with ArithExpOpt with EqualExp with IfThenElseExp { self =>
+        val codegen = new JSGenFunctions with JSGenArith with JSGenEqual with JSGenIfThenElse { val IR: self.type = self }
+        val f = (x: Rep[Double]) => test(x)
+        codegen.emitSource(f, "Test", new PrintWriter(System.out))
+      }
+    }
+    assertFileEqualsCheck(prefix+"schedfun")
   }
 
 }
