@@ -63,7 +63,7 @@ trait TupledFunctions extends Functions with TupleOps {
 }
 
 trait FunctionsExp extends Functions with EffectExp {
-  case class Lambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B], x: Exp[A], y: Block[B]) extends Def[A => B]
+  case class Lambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B], x: Exp[A], y: Block[B]) extends Def[A => B] { val mA = manifest[A]; val mB = manifest[B] }
   case class Apply[A:Manifest,B:Manifest](f: Exp[A => B], arg: Exp[A]) extends Def[B]
 
   // unboxedFresh and unbox are hooks that can be overridden to
@@ -98,6 +98,11 @@ trait FunctionsExp extends Functions with EffectExp {
     }
   }
 
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case e@Lambda(g,x,y) => toAtom(Lambda(f(g),f(x),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]] // why??
+    
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => syms(y)
     case _ => super.syms(e)
@@ -185,6 +190,11 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
     case Lambda(f, UnboxedTuple(xs), y) => xs.flatMap(syms) ::: effectSyms(y)
     case _ => super.boundSyms(e)
   }  
+  
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case e@Lambda(g,UnboxedTuple(xs),y) => toAtom(Lambda(f(g),UnboxedTuple(f(xs))(e.mA),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]  
 }
 
 trait FunctionsRecursiveExp extends FunctionsExp with ClosureCompare {
@@ -241,7 +251,7 @@ trait BaseGenFunctions extends GenericNestedCodegen {
 
 trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
   import IR._
-
+  
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
       emitValDef(sym, "{" + quote(x) + ": (" + x.tp + ") => ")
@@ -254,6 +264,45 @@ trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
 
     case _ => super.emitNode(sym, rhs)
   }
+}
+
+trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTupleAccess {
+  val IR: TupledFunctionsExp
+  import IR._
+
+  override def quote(x: Exp[Any]) : String = x match {
+    case UnboxedTuple(t) => t.map(quote).mkString("((", ",", "))")
+    case _ => super.quote(x)
+  }
+  
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case Lambda(fun, UnboxedTuple(xs), y) =>
+      emitValDef(sym, "{" + xs.map(s=>quote(s)+":"+remap(s.tp)).mkString("(",",",")") + " => ")
+      emitBlock(y)
+      stream.println(quote(getBlockResult(y)) + ": " + y.tp)
+      stream.println("}")
+
+    case Apply(fun, UnboxedTuple(args)) =>
+      emitValDef(sym, quote(fun) + args.map(quote).mkString("(", ",", ")"))
+    
+    case _ => super.emitNode(sym,rhs)
+  }
+  
+  def unwrapTupleStr(s: String): Array[String] = {
+    if (s.startsWith("scala.Tuple")) s.slice(s.indexOf("[")+1,s.length-1).filter(c => c != ' ').split(",")
+    else Array(s)
+  } 
+  
+  override def remap[A](m: Manifest[A]): String = m.toString match {    
+    case f if f.startsWith("scala.Function") =>
+      val targs = m.typeArguments.dropRight(1)
+      val res = remap(m.typeArguments.last)
+      val targsUnboxed = targs.flatMap(t => unwrapTupleStr(remap(t)))
+      val sep = if (targsUnboxed.length > 0) "," else ""
+      "scala.Function" + (targsUnboxed.length) + "[" + targsUnboxed.mkString(",") + sep + res + "]"      
+      
+    case _ => super.remap(m)
+  }  
 }
 
 trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
