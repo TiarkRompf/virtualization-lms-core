@@ -59,8 +59,6 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     if (!isVoidType(sym.tp))
       stream.println(deref(sym.tp) + quote(sym) + " = " + rhs + ";")
-    else
-      stream.println(rhs + ";")
   }
 
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
