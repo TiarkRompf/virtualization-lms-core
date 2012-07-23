@@ -262,12 +262,12 @@ trait GPUCodegen extends CLikeCodegen {
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     if (external) {
       // CUDA library ops use a C wrapper, so should be generated as a C kernel
-      stream.println(getDSLHeaders)
+      //stream.println(getDSLHeaders)
       super.emitKernelHeader(syms, getKernelOutputs ::: vals, vars, resultType, resultIsVar, external)
       return
     }
     val out = new StringBuilder
-    out.append(getDSLHeaders)
+    //out.append(getDSLHeaders)
     stream.print(out.toString)
   }
 
@@ -470,27 +470,35 @@ trait GPUCodegen extends CLikeCodegen {
   /* emitAllocFunc method emits code for allocating the output memory of a kernel,
        and copying  it to CPU memory with allocation of new object in CPU */
   //TODO: Separate output and temporary allocations
-  def emitAllocFunc(sym:Sym[Any], allocFunc:Block[Any], aV:Sym[Any]=null, size:Exp[Any]=null) {
+  def emitAllocFunc(sym:Sym[Any], allocFunc:List[Block[Any]], boundings:List[(Sym[Any],Exp[Any])], aV:Sym[Any]=null, size:Exp[Any]=null) {
     processingHelperFunc = true
     val tempString = new StringWriter
     val tempString2 = new StringWriter
     val tempStream = new PrintWriter(tempString,true)
 
     // Get free variables (exclude the arrayVariable)
-    val inputs = if(allocFunc==null) Nil
-    else getFreeVarBlock(allocFunc,List(aV))
+    val inputs = if(allocFunc.isEmpty) Nil
+    else ((allocFunc.flatMap(f => getFreeVarBlock(f, Nil)) ++ boundings.map(_._2).filter(_.isInstanceOf[Sym[Any]]).map(_.asInstanceOf[Sym[Any]])).filterNot(s => (boundings.map(_._1)++List(aV)) contains s)).distinct
 
     // Register metadata
     val tr = metaData.outputs.getOrElse(sym,new TransferFunc)
     tr.argsFuncHtoD = inputs
     metaData.outputs.put(sym,tr)
 
-    // Get the body (string) of the allocation function in tempString
-    if(allocFunc!=null) {
+
+    for (b <- boundings) {
       withStream(tempStream) {
-        emitBlock(allocFunc)
+        emitValDef(b._1,quote(b._2))
       }
-      tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc))))
+    }
+
+    // Get the body (string) of the allocation function in tempString
+    //if(allocFunc!=null) {
+    if(!allocFunc.isEmpty) {
+      withStream(tempStream) {
+        allocFunc.foreach(emitBlock)
+      }
+      tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc.last))))
     }
     else {
       tempString.append("\treturn %s_ptr;\n".format(quote(sym)))
