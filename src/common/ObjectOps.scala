@@ -39,6 +39,7 @@ trait ObjectOpsExp extends ObjectOps with VariablesExp {
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case e@ObjectUnsafeImmutable(a) => object_unsafe_immutable(f(a))(e.m,pos)
+    case e@ObjectToString(a) => object_tostring(f(a))
     case Reflect(e@ObjectUnsafeImmutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeImmutable(f(a))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(e@ObjectUnsafeMutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeMutable(f(a))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)

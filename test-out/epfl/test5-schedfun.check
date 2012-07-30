@@ -1,0 +1,20 @@
+function Test(x0) {
+var x1 = function(x2) {
+var x3 = function(x4) {
+var x5 = x4==0
+var x9
+if (x5) {
+x9=x2
+} else {
+var x6 = x4-1.0
+var x7 = x3(x6)
+x9=x7
+}
+return x9
+}
+var x11 = x3(x2)
+return x11
+}
+var x13 = x1(x0)
+return x13
+}

@@ -104,8 +104,12 @@ trait IOOpsExp extends IOOps with DSLOpsExp {
     e match {
       case Reflect(ObjFrApply(s), u, es) => obj_fr_apply(f(s))
       case Reflect(ObjBrApply(x), u, es) => obj_br_apply(f(x))
+      case Reflect(ObjFwApply(s), u, es) => obj_fw_apply(f(s))
+      case Reflect(ObjBwApply(x), u, es) => obj_bw_apply(f(x))      
       case Reflect(BrReadline(b), u, es) => br_readline(f(b))
+      case Reflect(BwWrite(b,s), u, es) => bw_write(f(b),f(s))
       case Reflect(BrClose(b), u, es) => br_close(f(b))
+      case Reflect(BwClose(b), u, es) => bw_close(f(b))
       case _ => super.mirror(e,f)
     }
   }).asInstanceOf[Exp[A]]  
