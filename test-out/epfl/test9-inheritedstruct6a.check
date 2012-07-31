@@ -1,41 +1,49 @@
 wtableneg: List()
-partitions: List(TTP(List(Sym(6), Sym(16), Sym(7), Sym(17)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))), SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))), SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Sym(14))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(2))), ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(3))), ArrayElem(Block(Sym(14)))))))
+partitions: List(TTP(List(Sym(16), Sym(6), Sym(7), Sym(17)),List(SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))), SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Sym(14))))),SimpleFatLoop(Const(100),Sym(9),List(ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(2))), ArrayElem(Block(Sym(3))), ArrayElem(Block(Sym(14)))))))
+considering TP(Sym(19),ArrayIndex(Sym(16),Const(0)))
+considering TP(Sym(20),ArrayIndex(Sym(6),Const(0)))
 considering TP(Sym(12),ArrayIndex(Sym(7),Sym(9)))
-replace TP(Sym(12),ArrayIndex(Sym(7),Sym(9))) at 2 within TTP(List(Sym(6), Sym(16), Sym(7), Sym(17)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))), SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))), SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Sym(14))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(2))), ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(3))), ArrayElem(Block(Sym(14))))))
+replace TP(Sym(12),ArrayIndex(Sym(7),Sym(9))) at 2 within TTP(List(Sym(16), Sym(6), Sym(7), Sym(17)),List(SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))), SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Sym(14))))),SimpleFatLoop(Const(100),Sym(9),List(ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(2))), ArrayElem(Block(Sym(3))), ArrayElem(Block(Sym(14))))))
+considering TP(Sym(21),ArrayIndex(Sym(17),Const(0)))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(6), Sym(16)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))), SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(2))), ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))))))
+partitions: List(TTP(List(Sym(16), Sym(26)),List(SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Sym(25))))),SimpleFatLoop(Const(100),Sym(9),List(ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(25)))))))
 no changes, we're done
-super.focusExactScopeFat with result changed from List(Sym(20)) to List(Sym(23))
+super.focusExactScopeFat with result changed from List(Sym(24)) to List(Sym(32))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
-var x6 = new Array[Double](100)
 var x16 = new Array[scala.reflect.Manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]](100)
-for (x1 <- 0 until 100) {
-val x2 = x1
-x6(x1) = x2
-x16(x1) = manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+var x26 = new Array[Double](100)
+for (x9 <- 0 until 100) {
+val x25 = x9
+x16(x9) = manifest[scala.virtualization.lms.epfl.test9.CartesianComplex]
+x26(x9) = x25
 }
-val x21 = Map("clzz"->x16,"re"->x6,"im"->x6) //ArraySoaTag(MyClassTag(scala.virtualization.lms.epfl.test9.CartesianComplex),Const(100))
-val x22 = println(x21)
-val x19 = x22
-x19
+val x19 = x16.apply(0)
+val x27 = x26.apply(0)
+val x30 = Map("clzz"->x19,"re"->x27,"im"->x27) //MyClassTag(scala.virtualization.lms.epfl.test9.CartesianComplex)
+val x31 = println(x30)
+val x23 = x31
+x23
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
 wtableneg: List()
-partitions: List(TTP(List(Sym(30), Sym(40), Sym(31), Sym(41)),List(SimpleLoop(Const(100),Sym(25),ArrayElem(Block(Sym(26)))), SimpleLoop(Const(100),Sym(33),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(25),ArrayElem(Block(Sym(27)))), SimpleLoop(Const(100),Sym(33),ArrayElem(Block(Sym(38))))),SimpleFatLoop(Const(100),Sym(25),List(ArrayElem(Block(Sym(26))), ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(27))), ArrayElem(Block(Sym(38)))))))
-considering TP(Sym(36),ArrayIndex(Sym(31),Sym(33)))
-replace TP(Sym(36),ArrayIndex(Sym(31),Sym(33))) at 2 within TTP(List(Sym(30), Sym(40), Sym(31), Sym(41)),List(SimpleLoop(Const(100),Sym(25),ArrayElem(Block(Sym(26)))), SimpleLoop(Const(100),Sym(33),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(25),ArrayElem(Block(Sym(27)))), SimpleLoop(Const(100),Sym(33),ArrayElem(Block(Sym(38))))),SimpleFatLoop(Const(100),Sym(25),List(ArrayElem(Block(Sym(26))), ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(27))), ArrayElem(Block(Sym(38))))))
+partitions: List(TTP(List(Sym(49), Sym(39), Sym(40), Sym(50)),List(SimpleLoop(Const(100),Sym(42),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(34),ArrayElem(Block(Sym(35)))), SimpleLoop(Const(100),Sym(34),ArrayElem(Block(Sym(36)))), SimpleLoop(Const(100),Sym(42),ArrayElem(Block(Sym(47))))),SimpleFatLoop(Const(100),Sym(42),List(ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(35))), ArrayElem(Block(Sym(36))), ArrayElem(Block(Sym(47)))))))
+considering TP(Sym(52),ArrayIndex(Sym(49),Const(0)))
+considering TP(Sym(53),ArrayIndex(Sym(39),Const(0)))
+considering TP(Sym(45),ArrayIndex(Sym(40),Sym(42)))
+replace TP(Sym(45),ArrayIndex(Sym(40),Sym(42))) at 2 within TTP(List(Sym(49), Sym(39), Sym(40), Sym(50)),List(SimpleLoop(Const(100),Sym(42),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(34),ArrayElem(Block(Sym(35)))), SimpleLoop(Const(100),Sym(34),ArrayElem(Block(Sym(36)))), SimpleLoop(Const(100),Sym(42),ArrayElem(Block(Sym(47))))),SimpleFatLoop(Const(100),Sym(42),List(ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(35))), ArrayElem(Block(Sym(36))), ArrayElem(Block(Sym(47))))))
+considering TP(Sym(54),ArrayIndex(Sym(50),Const(0)))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(30), Sym(40)),List(SimpleLoop(Const(100),Sym(25),ArrayElem(Block(Sym(26)))), SimpleLoop(Const(100),Sym(33),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))))),SimpleFatLoop(Const(100),Sym(25),List(ArrayElem(Block(Sym(26))), ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))))))
+partitions: List(TTP(List(Sym(49), Sym(59)),List(SimpleLoop(Const(100),Sym(42),ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex)))), SimpleLoop(Const(100),Sym(42),ArrayElem(Block(Sym(58))))),SimpleFatLoop(Const(100),Sym(42),List(ArrayElem(Block(Const(scala.virtualization.lms.epfl.test9.CartesianComplex))), ArrayElem(Block(Sym(58)))))))
 no changes, we're done
-super.focusExactScopeFat with result changed from List(Sym(44)) to List(Sym(47))
+super.focusExactScopeFat with result changed from List(Sym(57)) to List(Sym(65))
 compilation: ok
-Map(clzz -> [Lscala.reflect.Manifest;@705cd149, re -> [D@5db04940, im -> [D@5db04940)
+Map(clzz -> scala.virtualization.lms.epfl.test9.CartesianComplex, re -> 0.0, im -> 0.0)

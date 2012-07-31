@@ -65,20 +65,3 @@ x21
 /*****************************************
   End of Generated Code                  
 *******************************************/
-<stdin>:7: error: not found: value LoopArray
-val x37 = LoopArray(100) { x24 => 
-          ^
-<stdin>:17: error: not found: value LoopArray
-val x38 = LoopArray(100) { x24 => 
-          ^
-<stdin>:28: error: not found: value LoopArray
-val x39 = LoopArray(100) { x24 => 
-          ^
-<stdin>:38: error: not found: value LoopArray
-val x40 = LoopArray(100) { x24 => 
-          ^
-<stdin>:49: error: not found: value LoopArray
-val x41 = LoopArray(100) { x24 => 
-          ^
-5 errors found
-compilation: had errors
