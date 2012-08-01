@@ -1,0 +1,12 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class MkString extends ((scala.collection.immutable.List[Int])=>(java.lang.String)) {
+def apply(x0:scala.collection.immutable.List[Int]): java.lang.String = {
+val x1 = x0.mkString
+x1
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

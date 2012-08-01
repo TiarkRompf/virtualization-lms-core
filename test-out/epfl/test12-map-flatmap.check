@@ -1,0 +1,20 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class MapAndFlatMap extends ((scala.collection.immutable.List[Int])=>(scala.collection.immutable.List[Int])) {
+def apply(x0:scala.collection.immutable.List[Int]): scala.collection.immutable.List[Int] = {
+val x2 = List(1,2,3)
+val x6 = x0.flatMap { x1 => 
+val x5 = x2.map{
+x3 => 
+val x4 = x1 * x3
+x4
+}
+x5
+}
+x6
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
