@@ -1,0 +1,13 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Concat extends ((scala.collection.immutable.List[Int])=>(scala.collection.immutable.List[Int])) {
+def apply(x0:scala.collection.immutable.List[Int]): scala.collection.immutable.List[Int] = {
+val x1 = List(1,2,3)
+val x2 = x0 ::: x1
+x2
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
