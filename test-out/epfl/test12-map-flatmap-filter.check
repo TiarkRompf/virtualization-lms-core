@@ -1,18 +1,22 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class MapAndFlatMap extends ((scala.collection.immutable.List[Int])=>(scala.collection.immutable.List[Int])) {
+class MapFlatMapAndFilter extends ((scala.collection.immutable.List[Int])=>(scala.collection.immutable.List[Int])) {
 def apply(x0:scala.collection.immutable.List[Int]): scala.collection.immutable.List[Int] = {
 val x2 = List(1,2,3)
-val x6 = x0.flatMap { x1 => 
-val x5 = x2.map{
-x3 => 
-val x4 = x1 * x3
+val x10 = x0.flatMap { x1 => 
+val x5 = x2.filter { x3 => 
+val x4 = x3 < 3
 x4
 }
-x5
+val x8 = x5.map{
+x6 => 
+val x7 = x1 * x6
+x7
 }
-x6
+x8
+}
+x10
 }
 }
 /*****************************************
