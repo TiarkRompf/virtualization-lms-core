@@ -34,9 +34,9 @@ x13 = x11
 x14 = x10
 val x42 = x13
 val x43 = x14
-val x44 = Map("re"->x42,"im"->x43) //ArraySoaTag(ClassTag(Complex),Const(100))
+val x44 = new { val re = x42; val im = x43 }
 val x45 = println(x44)
-val x46 = Map("re"->x38,"im"->x39) //ArraySoaTag(ClassTag(Complex),Const(100))
+val x46 = new { val re = x38; val im = x39 }
 val x47 = println(x46)
 val x36 = x47
 x36

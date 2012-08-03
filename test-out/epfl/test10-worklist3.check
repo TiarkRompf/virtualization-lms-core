@@ -40,15 +40,15 @@ val x12 = LoopArray(50) { x11 =>
 }
 (50,x12)
 }
-val x17 = Map("data"->x15,"length"->x16) //ClassTag(Vector)
-val x10 = Map("data"->x9,"length"->100) //ClassTag(Vector)
+val x17 = new { val data = x15; val length = x16 }
+val x10 = new { val data = x9; val length = 100 }
 val x22 = LoopArray(x16) { x18 => 
 val x19 = VectorApply(Sym(17),Sym(18))
 val x20 = VectorApply(Sym(10),Sym(18))
 val x21 = x19+x20
 x21
 }
-val x23 = Map("data"->x22,"length"->x16) //ClassTag(Vector)
+val x23 = new { val data = x22; val length = x16 }
 val x24 = println(x23)
 
 ### next
@@ -76,5 +76,5 @@ val x35 = x27.apply(x33)
 val x36 = x34+x35
 x36
 }
-val x38 = Map("data"->x37,"length"->x16) //ClassTag(Vector)
+val x38 = new { val data = x37; val length = x16 }
 val x39 = println(x38)
