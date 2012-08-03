@@ -69,17 +69,17 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   def list_map[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[B])(implicit pos: SourceContext) = {
     val a = fresh[A]
     val b = reifyEffects(f(a))
-    reflectEffect(ListMap(l, a, b), summarizeEffects(b))    
+    reflectEffect(ListMap(l, a, b), summarizeEffects(b))
   }
   def list_flatMap[A:Manifest, B:Manifest](f: Exp[A] => Exp[List[B]])(l: Exp[List[A]])(implicit pos: SourceContext) = {
     val a = fresh[A]
     val b = reifyEffects(f(a))
-    reflectEffect(ListFlatMap(l, a, b), Alloc() andAlso summarizeEffects(b).star)
+    reflectEffect(ListFlatMap(l, a, b), summarizeEffects(b))
   }
   def list_filter[A : Manifest](l: Exp[List[A]], f: Exp[A] => Exp[Boolean])(implicit pos: SourceContext) = {
     val a = fresh[A]
     val b = reifyEffects(f(a))
-    reflectEffect(ListFilter(l, a, b), Alloc() andAlso summarizeEffects(b).star)
+    reflectEffect(ListFilter(l, a, b), summarizeEffects(b))
   }
   def list_sortby[A:Manifest,B:Manifest:Ordering](l: Exp[List[A]], f: Exp[A] => Exp[B])(implicit pos: SourceContext) = {
     val a = fresh[A]
