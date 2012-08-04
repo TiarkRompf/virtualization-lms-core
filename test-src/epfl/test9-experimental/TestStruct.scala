@@ -108,7 +108,7 @@ class TestStruct extends FileDiffSuite {
           print(c)
         }
       }
-      new Prog with Impl
+      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"struct1")
   }

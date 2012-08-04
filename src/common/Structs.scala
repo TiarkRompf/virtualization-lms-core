@@ -257,11 +257,42 @@ trait ScalaGenStruct extends ScalaGenBase {
       
       Array --> transform soa back to aos
       */
-      emitValDef(sym, "new { " + (for ((n, v) <- elems) yield "val " + n + " = " + quote(v)).mkString("; ") + " }")
+      if (sym.tp <:< manifest[Record]) {
+        registerType(sym.tp, elems)
+        emitValDef(sym, recordClassName(sym.tp) + "(" + (for ((n, v) <- elems) yield n + " = " + quote(v)).mkString(", ") + ")")
+      } else {
+        emitValDef(sym, "new { " + (for ((n, v) <- elems) yield "val " + n + " = " + quote(v)).mkString("; ") + " }")
+      }
     case Field(struct, index, tp) =>  
       emitValDef(sym, quote(struct) + "." + index)
     case _ => super.emitNode(sym, rhs)
   }
+
+  // Records generate a class
+  override def remap[A](m: Manifest[A]) = m match {
+    case m if m <:< manifest[Record] => recordClassName(m)
+    case _ => super.remap(m)
+  }
+
+  // not public because should not be called with a manifest not describing a subtype of Manifest[Record]
+  protected def recordClassName[A](m: Manifest[A]): String = m match {
+    case rm: reflect.RefinedManifest[A] => rm.erasure.getSimpleName + rm.fields.map(f => recordClassName(f._2)).mkString
+    case _ => m.erasure.getSimpleName + m.typeArguments.map(a => recordClassName(a)).mkString
+  }
+
+  private val encounteredStructs = collection.mutable.HashMap.empty[String, Map[String, Exp[_]]]
+  private def registerType[A](m: Manifest[A], fields: Map[String, Exp[_]]) {
+    encounteredStructs += (recordClassName(m) -> fields)
+  }
+
+  def emitDataStructures(out: PrintWriter) {
+    withStream(out) {
+      for ((name, fields) <- encounteredStructs) {
+        stream.println("case class " + name + "(" + (for ((n, e) <- fields) yield n + ": " + remap(e.tp)).mkString(", ") + ")")
+      }
+    }
+  }
+
 }
 
 trait CudaGenStruct extends CudaGenBase {
