@@ -21,9 +21,9 @@ trait JSCodegen extends GenericCodegen {
     stream.flush
   }
 
-  def emitSource[A : Manifest](args: List[(Sym[_], Manifest[_])], body: Block[A], methName: String, out: PrintWriter) = {
+  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], methName: String, out: PrintWriter) = {
     withStream(out) {
-      stream.println("function "+methName+"("+args.map(a => quote(a._1)).mkString(", ")+") {")
+      stream.println("function "+methName+"("+args.map(quote).mkString(", ")+") {")
     
       emitBlock(body)
       stream.println("return "+quote(getBlockResult(body)))
