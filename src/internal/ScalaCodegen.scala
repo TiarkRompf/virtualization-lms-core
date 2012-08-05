@@ -19,15 +19,11 @@ trait ScalaCodegen extends GenericCodegen with Config {
       outFile.delete
   }
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
+  def emitSource[A : Manifest](args: List[(Sym[_], Manifest[_])], body: Block[A], className: String, out: PrintWriter) = {
 
-    val x = fresh[A]
-    val y = reifyBlock(f(x))
+    val sA = remap(manifest[A])
 
-    val sA = remap(mA)
-    val sB = remap(mB)
-
-    val staticData = getFreeDataBlock(y)
+    val staticData = getFreeDataBlock(body)
 
     withStream(out) {
       stream.println("/*****************************************\n"+
@@ -35,11 +31,11 @@ trait ScalaCodegen extends GenericCodegen with Config {
                      "*******************************************/")
                    
       // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
-      stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends (("+sA+")=>("+sB+")) {")
-      stream.println("def apply("+quote(x)+":"+sA+"): "+sB+" = {")
+      stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends (("+args.map(a => remap(a._2)).mkString(", ")+")=>("+sA+")) {")
+      stream.println("def apply("+args.map(a => quote(a._1) + ":" + remap(a._2)).mkString(", ")+"): "+sA+" = {")
     
-      emitBlock(y)
-      stream.println(quote(getBlockResult(y)))
+      emitBlock(body)
+      stream.println(quote(getBlockResult(body)))
     
       stream.println("}")
     
