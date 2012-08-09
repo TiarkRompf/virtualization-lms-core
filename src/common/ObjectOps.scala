@@ -69,6 +69,13 @@ trait ObjectOpsExp extends ObjectOps with VariablesExp {
   }
 }
 
+trait ObjectOpsExpOpt extends ObjectOpsExp {
+  override def object_tostring(lhs: Exp[Any])(implicit pos: SourceContext) = {
+    if (lhs.tp <:< manifest[String]) lhs.asInstanceOf[Exp[String]]
+    else super.object_tostring(lhs)
+  }
+}
+
 trait ScalaGenObjectOps extends ScalaGenBase {
   val IR: ObjectOpsExp
   import IR._
