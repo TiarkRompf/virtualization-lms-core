@@ -24,23 +24,10 @@ trait ComplexArith extends Arith with ComplexBase with OverloadHack {
   
 }
 
-trait ComplexBase extends Arith {
-  
-  class Complex
-  
-  def Complex(re: Rep[Double], im: Rep[Double]): Rep[Complex]
-  def infix_re(c: Rep[Complex]): Rep[Double]
-  def infix_im(c: Rep[Complex]): Rep[Double]
+trait ComplexBase extends Arith with Structs {
+  type Complex = Record { val re: Double; val im: Double }
+  def Complex(r: Rep[Double], i: Rep[Double]): Rep[Complex] = new Record { val re = r; val im = i }
 }
-
-trait ComplexStructExp extends ComplexBase with StructExp {
-
-  def Complex(re: Rep[Double], im: Rep[Double]) = struct[Complex](ClassTag[Complex]("Complex"), Map("re"->re, "im"->im))
-  def infix_re(c: Rep[Complex]): Rep[Double] = field[Double](c, "re")
-  def infix_im(c: Rep[Complex]): Rep[Double] = field[Double](c, "im")
-  
-}
-
 
 
 // ------ struct impl follows, will move to common once stable
@@ -90,7 +77,7 @@ class TestStruct extends FileDiffSuite {
     def test(x: Rep[Int]): Rep[Unit]
   }
 
-  trait Impl extends DSL with ComplexStructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
+  trait Impl extends DSL with StructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 1
     val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
@@ -99,8 +86,8 @@ class TestStruct extends FileDiffSuite {
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
 
-  trait ImplFused extends DSL with ComplexStructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
-      with IfThenElseExp with RangeOpsExp with PrintExp  { self => 
+  trait ImplFused extends DSL with StructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
+      with IfThenElseExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 1
     val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
@@ -121,7 +108,7 @@ class TestStruct extends FileDiffSuite {
           print(c)
         }
       }
-      new Prog with Impl
+      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"struct1")
   }
