@@ -31,20 +31,20 @@ discarding, already have a replacement for Sym(16)
 val x7 = LoopArray(100) { x6 => 
 0.0
 }
-val x8 = Map("data"->x7,"length"->100) //ClassTag(Vector)
+val x8 = new { val data = x7; val length = 100 }
 val x12 = LoopArray(100) { x9 => 
 val x10 = VectorApply(Sym(8),Sym(9))
 val x11 = x10+x10
 x11
 }
-val x13 = Map("data"->x12,"length"->100) //ClassTag(Vector)
+val x13 = new { val data = x12; val length = 100 }
 val x18 = LoopArray(100) { x14 => 
 val x15 = VectorApply(Sym(8),Sym(14))
 val x16 = VectorApply(Sym(13),Sym(14))
 val x17 = x15+x16
 x17
 }
-val x19 = Map("data"->x18,"length"->100) //ClassTag(Vector)
+val x19 = new { val data = x18; val length = 100 }
 val x20 = println(x19)
 
 ### next
@@ -69,5 +69,5 @@ val x32 = x28.apply(x30)
 val x33 = x31+x32
 x33
 }
-val x35 = Map("data"->x34,"length"->100) //ClassTag(Vector)
+val x35 = new { val data = x34; val length = 100 }
 val x36 = println(x35)
