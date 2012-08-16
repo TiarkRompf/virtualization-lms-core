@@ -18,6 +18,7 @@ trait ListOps extends Variables {
   class ListOpsCls[A:Manifest](l: Rep[List[A]]) {
     def map[B:Manifest](f: Rep[A] => Rep[B]) = list_map(l,f)
     def flatMap[B : Manifest](f: Rep[A] => Rep[List[B]]) = list_flatMap(f)(l)
+    def filter(f: Rep[A] => Rep[Boolean]) = list_filter(l, f)
     def sortBy[B:Manifest:Ordering](f: Rep[A] => Rep[B]) = list_sortby(l,f)
     def ::(e: Rep[A]) = list_prepend(l,e)
     def ++ (l2: Rep[List[A]]) = list_concat(l, l2)
@@ -33,6 +34,7 @@ trait ListOps extends Variables {
   def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit pos: SourceContext): Rep[List[A]]  
   def list_map[A:Manifest,B:Manifest](l: Rep[List[A]], f: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[List[B]]
   def list_flatMap[A : Manifest, B : Manifest](f: Rep[A] => Rep[List[B]])(xs: Rep[List[A]])(implicit pos: SourceContext): Rep[List[B]]
+  def list_filter[A : Manifest](l: Rep[List[A]], f: Rep[A] => Rep[Boolean])(implicit pos: SourceContext): Rep[List[A]]
   def list_sortby[A:Manifest,B:Manifest:Ordering](l: Rep[List[A]], f: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[List[A]]
   def list_prepend[A:Manifest](l: Rep[List[A]], e: Rep[A])(implicit pos: SourceContext): Rep[List[A]]
   def list_toarray[A:Manifest](l: Rep[List[A]])(implicit pos: SourceContext): Rep[Array[A]]
@@ -50,6 +52,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   case class ListFromSeq[A:Manifest](xs: Rep[Seq[A]]) extends Def[List[A]]
   case class ListMap[A:Manifest,B:Manifest](l: Exp[List[A]], x: Sym[A], block: Block[B]) extends Def[List[B]]
   case class ListFlatMap[A:Manifest, B:Manifest](l: Exp[List[A]], x: Sym[A], block: Block[List[B]]) extends Def[List[B]]
+  case class ListFilter[A : Manifest](l: Exp[List[A]], x: Sym[A], block: Block[Boolean]) extends Def[List[A]]
   case class ListSortBy[A:Manifest,B:Manifest:Ordering](l: Exp[List[A]], x: Sym[A], block: Block[B]) extends Def[List[A]]
   case class ListPrepend[A:Manifest](x: Exp[List[A]], e: Exp[A]) extends Def[List[A]]
   case class ListToArray[A:Manifest](x: Exp[List[A]]) extends Def[Array[A]]
@@ -66,17 +69,22 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   def list_map[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[B])(implicit pos: SourceContext) = {
     val a = fresh[A]
     val b = reifyEffects(f(a))
-    reflectEffect(ListMap(l, a, b), summarizeEffects(b))    
+    reflectEffect(ListMap(l, a, b), summarizeEffects(b).star)
   }
   def list_flatMap[A:Manifest, B:Manifest](f: Exp[A] => Exp[List[B]])(l: Exp[List[A]])(implicit pos: SourceContext) = {
     val a = fresh[A]
     val b = reifyEffects(f(a))
-    reflectEffect(ListFlatMap(l, a, b), Alloc() andAlso summarizeEffects(b).star)
+    reflectEffect(ListFlatMap(l, a, b), summarizeEffects(b).star)
+  }
+  def list_filter[A : Manifest](l: Exp[List[A]], f: Exp[A] => Exp[Boolean])(implicit pos: SourceContext) = {
+    val a = fresh[A]
+    val b = reifyEffects(f(a))
+    reflectEffect(ListFilter(l, a, b), summarizeEffects(b).star)
   }
   def list_sortby[A:Manifest,B:Manifest:Ordering](l: Exp[List[A]], f: Exp[A] => Exp[B])(implicit pos: SourceContext) = {
     val a = fresh[A]
     val b = reifyEffects(f(a))
-    reflectEffect(ListSortBy(l, a, b), summarizeEffects(b))
+    reflectEffect(ListSortBy(l, a, b), summarizeEffects(b).star)
   }
   def list_toarray[A:Manifest](l: Exp[List[A]])(implicit pos: SourceContext) = ListToArray(l)
   def list_toseq[A:Manifest](l: Exp[List[A]])(implicit pos: SourceContext) = ListToSeq(l)
@@ -98,6 +106,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   override def syms(e: Any): List[Sym[Any]] = e match {
     case ListMap(a, x, body) => syms(a):::syms(body)
     case ListFlatMap(a, _, body) => syms(a) ::: syms(body)
+    case ListFilter(a, _, body) => syms(a) ::: syms(body)
     case ListSortBy(a, x, body) => syms(a):::syms(body)
     case _ => super.syms(e)
   }
@@ -105,6 +114,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case ListMap(a, x, body) => x :: effectSyms(body)
     case ListFlatMap(_, x, body) => x :: effectSyms(body)
+    case ListFilter(_, x, body) => x :: effectSyms(body)
     case ListSortBy(a, x, body) => x :: effectSyms(body)
     case _ => super.boundSyms(e)
   }
@@ -112,6 +122,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case ListMap(a, x, body) => freqNormal(a):::freqHot(body)
     case ListFlatMap(a, _, body) => freqNormal(a) ::: freqHot(body)
+    case ListFilter(a, _, body) => freqNormal(a) ::: freqHot(body)
     case ListSortBy(a, x, body) => freqNormal(a):::freqHot(body)
     case _ => super.symsFreq(e)
   }  
@@ -151,6 +162,12 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
       stream.println("}")
     case ListFlatMap(l, x, b) => {
       stream.println("val " + quote(sym) + " = " + quote(l) + ".flatMap { " + quote(x) + " => ")
+      emitBlock(b)
+      stream.println(quote(getBlockResult(b)))
+      stream.println("}")
+    }
+    case ListFilter(l, x, b) => {
+      stream.println("val " + quote(sym) + " = " + quote(l) + ".filter { " + quote(x) + " => ")
       emitBlock(b)
       stream.println(quote(getBlockResult(b)))
       stream.println("}")

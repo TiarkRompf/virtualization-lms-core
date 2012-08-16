@@ -7,11 +7,12 @@ import java.io.PrintWriter
 
 class TestList extends FileDiffSuite {
 
-  trait MapAndFlatMap { this: ListOps with NumericOps =>
+  trait MapFlatMapAndFilter { this: ListOps with NumericOps with OrderingOps =>
     def test(xs: Rep[List[Int]]): Rep[List[Int]] = {
       for {
         x <- xs
         y <- List(unit(1), unit(2), unit(3))
+        if y < unit(3)
       } yield x * y
     }
   }
@@ -28,13 +29,13 @@ class TestList extends FileDiffSuite {
 
   val prefix = "test-out/epfl/test12-"
 
-  def testMapAndFlatMap() {
-    withOutFile(prefix+"map-flatmap") {
-      val prog = new MapAndFlatMap with ListOpsExp with NumericOpsExp
-      val codegen = new ScalaGenEffect with ScalaGenListOps with ScalaGenNumericOps { val IR: prog.type = prog }
-      codegen.emitSource(prog.test, "MapAndFlatMap", new PrintWriter(System.out))
+  def testMapFlatMapAndFilter() {
+    withOutFile(prefix+"map-flatmap-filter") {
+      val prog = new MapFlatMapAndFilter with ListOpsExp with NumericOpsExp with OrderingOpsExp
+      val codegen = new ScalaGenEffect with ScalaGenListOps with ScalaGenNumericOps with ScalaGenOrderingOps { val IR: prog.type = prog }
+      codegen.emitSource(prog.test, "MapFlatMapAndFilter", new PrintWriter(System.out))
     }
-    assertFileEqualsCheck(prefix+"map-flatmap")
+    assertFileEqualsCheck(prefix+"map-flatmap-filter")
   }
 
   def testConcat() {
