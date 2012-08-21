@@ -8,9 +8,10 @@ object LMSBuild extends Build {
   val prereleaseScalaTest = "XXX" at "https://oss.sonatype.org/content/groups/public" // "org/scalatest/scalatest_2.10.0-M5/1.9-2.10.0-M5-B2/"
   
   //val scalaTest = "org.scalatest" % "scalatest_2.10.0-virtualized-SNAPSHOT" % "1.6.1-SNAPSHOT" % "test"
-  val scalaTest = "org.scalatest" % "scalatest_2.10.0-M5" % "1.9-2.10.0-M5-B2" % "test"
+  // TODO: use M7 version
+  val scalaTest = "org.scalatest" % "scalatest_2.10.0-M6" % "1.9-2.10.0-M6-B2" % "test"
   
-  val virtScala = Option(System.getenv("SCALA_VIRTUALIZED_VERSION")).getOrElse("2.10.0-M5")
+  val virtScala = Option(System.getenv("SCALA_VIRTUALIZED_VERSION")).getOrElse("2.10.0-M7")
 
   lazy val lms = Project("LMS", file("."))
 }
