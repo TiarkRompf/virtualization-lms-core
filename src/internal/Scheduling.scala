@@ -3,7 +3,7 @@ package internal
 
 import util.GraphUtil
 import scala.collection.mutable.HashMap
-import scala.collection.mutable.Set
+import scala.collection.mutable.HashSet
 import java.util.IdentityHashMap
 import scala.collection.JavaConversions._
 
@@ -92,6 +92,7 @@ trait Scheduling {
   */
   
   def getFatDependentStuff(scope: List[Stm])(sts: List[Sym[Any]]): List[Stm] = {
+    if (sts.isEmpty) return Nil
     /*
      precompute:
      s => all d in scope such that: d.lhs contains s || syms(d.rhs).contains(s)
@@ -140,57 +141,38 @@ trait Scheduling {
     }
     
     /*
-    optimization idea:
-      topologically sort sts
-      find dependent stuff for first s in sts, save as R
-      start looking at next s in sts, but stop when hittin a stm that is already in R
-      continue
-    
-    hopefully this will prevent traversing lots of things multiple times.
-    why does it work?
+    optimization:
+      traverse syms by ascending id. if sym s1 is used by s2, do not evaluate further 
+      uses of s2 because they are already there.
 
-    the assumption is that a stm st when depending on sym s1 (that comes topologically 
-    before s2) also entails all the dependent stuff it does when depending on sym s2. 
+    assumption: if s2 uses s1, the scope of s2 is completely included in s1's scope:
 
-    this assumption would be violated if the frontier stopped earlier when triggered
-    by s1 than when triggered from s2. 
-    
-    this could be the case if s1 in boundSyms(x1) and s2 in boundSyms(x2) (and only for x2) where
-    there is a path s1 ... x1 ... x2
+      val A = loop { s1 => ... val B = sum { s2 => ... val y = s2 + s1; .../* use y */ ... } }
 
-    a consequence is that the last one before x2 cannot already be in R (otherwise R would 
-    contain all dep stuff)
-
-    can this be tested (easily)?
-
-    -----------
-    
-    new optimization idea, based on this observation:
-
-      topologically sort sts
-      find dependent stuff for first s in sts, save as R
-      consider next s in sts
-        if all stms with s in boundSyms can be reached in 1 step from R, do nothing
-        else find dependent stuff, add to R
-      continue
-
-
-      condition: all stms with s in boundSyms can be reached in 1 step from R
-                 R contains at least one sym from each stm with s in boundSyms
+      once we reach y the second time (from s2) we can stop, because the uses of
+      y have been tracked up to A, which includes all of B
     */
+
+    val seen = new HashSet[Sym[Any]]
     
-    sts.distinct.flatMap { st =>
+    def getDepStuff(st: Sym[Any]) = {
       // could also precalculate uses, but computing all combinations eagerly is also expensive
-      def uses(s: Sym[Any]): List[Stm] = {
+      def uses(s: Sym[Any]): List[Stm] = if (seen(s)) Nil else { 
+        seen += s
         lhsCache.getOrElse(s,Nil) ::: symsCache.getOrElse(s,Nil) filterNot (boundSymsCache.getOrElse(st, Nil) contains _)
       }
       GraphUtil.stronglyConnectedComponents[Stm](
         uses(st),
-        t => t match {
-          case TP(s,d) => uses(s)
-          case _ => t.lhs flatMap uses
-        }).flatten
-    }.distinct
+        t => t.lhs flatMap uses
+      ).flatten
+    }
+    
+    /* 
+    reference impl:
+    sts.flatMap(getDepStuff).distinct
+    */
+    
+    sts.sortBy(_.id).flatMap(getDepStuff)
   }
   
   /** end performance hotspot **/

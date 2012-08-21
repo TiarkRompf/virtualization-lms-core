@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.reflect.SourceContext
-import scala.virtualization.lms.internal.{GenericNestedCodegen,GenericFatCodegen}
+import scala.virtualization.lms.internal.{FatBlockTraversal,GenericNestedCodegen,GenericFatCodegen}
 import scala.reflect.SourceContext
 
 trait Loops extends Base { // no surface constructs for now
@@ -132,15 +132,7 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
 }
 
 
-
-
-trait BaseGenLoops extends GenericNestedCodegen {
-  val IR: LoopsExp
-  import IR._
-
-}
-
-trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
+trait BaseLoopsTraversalFat extends FatBlockTraversal {
   val IR: LoopsFatExp
   import IR._
 
@@ -152,10 +144,20 @@ trait BaseGenLoopsFat extends BaseGenLoops with GenericFatCodegen {
       TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)))
     case _ => super.fatten(e)
   }
+  
+}
+
+trait BaseGenLoops extends GenericNestedCodegen {
+  val IR: LoopsExp
+  import IR._
 
 }
 
+trait BaseGenLoopsFat extends BaseGenLoops with BaseLoopsTraversalFat with GenericFatCodegen {
+  val IR: LoopsFatExp
+  import IR._
 
+}
 
 trait ScalaGenLoops extends ScalaGenBase with BaseGenLoops {
   import IR._

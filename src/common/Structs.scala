@@ -12,13 +12,25 @@ import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
-/*
-  Right now there is no user facing trait Struct. Should we have one? It seems like
-  structs are most useful as an implementation detail.
-*/
+trait Structs extends Base {
 
+  /**
+   * Allows to write things lik “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
+   */
+  abstract class Record extends Struct[Rep]
+  def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
 
-trait StructExp extends BaseExp with EffectExp {
+  class RecordOps(record: Rep[Record]) {
+    def selectDynamic[T : Manifest](field: String): Rep[T] = record_select[T](record, field)
+  }
+  implicit def recordToRecordOps(record: Rep[Record]) = new RecordOps(record)
+
+  def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T]
+  def record_select[T : Manifest](record: Rep[Record], field: String): Rep[T]
+
+}
+
+trait StructExp extends Structs with BaseExp with EffectExp {
 
   // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
 
@@ -46,7 +58,19 @@ trait StructExp extends BaseExp with EffectExp {
   def struct[T:Manifest](tag: StructTag[T], elems: Map[String, Rep[Any]])(implicit pos: SourceContext): Rep[T] = SimpleStruct[T](tag, elems)
   
   def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = Field[T](struct, index, manifest[T])
-  
+
+  override def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]) = {
+    val r = fresh[T]
+    if (fields exists { case (_, mutable, _) => mutable })  throw new RuntimeException("ERROR: \"var\" fields in Records not yet supported") //FIXME
+    val fieldSyms = fields map { case (index, _, rhs) => (index, rhs(r)) }
+    val struct = SimpleStruct(ClassTag[T]("Record"), Map(fieldSyms:_*))
+    createDefinition(r, struct)
+    r
+  }
+  override def record_select[T : Manifest](record: Rep[Record], fieldName: String) = {
+    field(record, fieldName)
+  }
+
   //FIXME: reflectMutable has to take the Def
   //def mfield[T:Manifest](struct: Rep[Any], index: String): Rep[T] = reflectMutable(Field[T](struct, index, manifest[T]))
   
@@ -55,6 +79,9 @@ trait StructExp extends BaseExp with EffectExp {
     case Field(struct, key, mf) => field(f(struct), key)(mf,pos)
     case _ => super.mirror(e,f)
   }
+
+  // FIXME Define a custom `object_toString` for structs?
+
 }
   
 trait StructExpOpt extends StructExp {
@@ -230,15 +257,42 @@ trait ScalaGenStruct extends ScalaGenBase {
       
       Array --> transform soa back to aos
       */
-    
-      //emitValDef(sym, "new " + tag.last + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
-      emitValDef(sym, "Map(" + elems.map(e => "\"" + e._1 + "\"->" + quote(e._2)).mkString(",") + ") //" + tag)
+      if (sym.tp <:< manifest[Record]) {
+        registerType(sym.tp, elems)
+        emitValDef(sym, recordClassName(sym.tp) + "(" + (for ((n, v) <- elems) yield n + " = " + quote(v)).mkString(", ") + ")")
+      } else {
+        emitValDef(sym, "new { " + (for ((n, v) <- elems) yield "val " + n + " = " + quote(v)).mkString("; ") + " }")
+      }
     case Field(struct, index, tp) =>  
-      //emitValDef(sym, quote(struct) + "." + index)
-      println("WARNING: emitting field access: " + quote(struct) + "." + index)
-      emitValDef(sym, quote(struct) + "(\"" + index + "\").asInstanceOf[" + remap(tp) + "]")
+      emitValDef(sym, quote(struct) + "." + index)
     case _ => super.emitNode(sym, rhs)
   }
+
+  // Records generate a class
+  override def remap[A](m: Manifest[A]) = m match {
+    case m if m <:< manifest[Record] => recordClassName(m)
+    case _ => super.remap(m)
+  }
+
+  // not public because should not be called with a manifest not describing a subtype of Manifest[Record]
+  protected def recordClassName[A](m: Manifest[A]): String = m match {
+    case rm: reflect.RefinedManifest[A] => rm.erasure.getSimpleName + rm.fields.map(f => recordClassName(f._2)).mkString
+    case _ => m.erasure.getSimpleName + m.typeArguments.map(a => recordClassName(a)).mkString
+  }
+
+  private val encounteredStructs = collection.mutable.HashMap.empty[String, Map[String, Exp[_]]]
+  private def registerType[A](m: Manifest[A], fields: Map[String, Exp[_]]) {
+    encounteredStructs += (recordClassName(m) -> fields)
+  }
+
+  def emitDataStructures(out: PrintWriter) {
+    withStream(out) {
+      for ((name, fields) <- encounteredStructs) {
+        stream.println("case class " + name + "(" + (for ((n, e) <- fields) yield n + ": " + remap(e.tp)).mkString(", ") + ")")
+      }
+    }
+  }
+
 }
 
 trait CudaGenStruct extends CudaGenBase {
