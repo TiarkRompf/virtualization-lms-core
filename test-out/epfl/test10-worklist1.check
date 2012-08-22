@@ -1,0 +1,73 @@
+### first
+register replacement for Sym(1)
+discarding, already have a replacement for Sym(1)
+register replacement for Sym(2)
+register replacement for Sym(3)
+--- code ---
+val x1 = VectorZeros(Const(100))
+val x2 = VectorPlus(Sym(1),Sym(1))
+val x3 = VectorPlus(Sym(1),Sym(2))
+val x4 = println(x3)
+
+### next
+install replacement for Sym(1)
+install replacement for Sym(2)
+toAtom transform Field(Sym(1),length,Int) List(Sym(1)) -> List(Sym(8))
+toAtom transform VectorApply(Sym(1),Sym(9)) List(Sym(1), Sym(9)) -> List(Sym(8), Sym(9))
+register replacement for Sym(10)
+discarding, already have a replacement for Sym(10)
+toAtom transform VectorApply(Sym(1),Sym(9)) List(Sym(1), Sym(9)) -> List(Sym(8), Sym(9))
+discarding, already have a replacement for Sym(10)
+discarding, already have a replacement for Sym(10)
+install replacement for Sym(3)
+toAtom transform Field(Sym(1),length,Int) List(Sym(1)) -> List(Sym(8))
+toAtom transform VectorApply(Sym(1),Sym(14)) List(Sym(1), Sym(14)) -> List(Sym(8), Sym(14))
+register replacement for Sym(15)
+discarding, already have a replacement for Sym(15)
+toAtom transform VectorApply(Sym(2),Sym(14)) List(Sym(2), Sym(14)) -> List(Sym(13), Sym(14))
+register replacement for Sym(16)
+discarding, already have a replacement for Sym(16)
+--- code ---
+val x7 = LoopArray(100) { x6 => 
+0.0
+}
+val x8 = Map("data"->x7,"length"->100) //ClassTag(Vector)
+val x12 = LoopArray(100) { x9 => 
+val x10 = VectorApply(Sym(8),Sym(9))
+val x11 = x10+x10
+x11
+}
+val x13 = Map("data"->x12,"length"->100) //ClassTag(Vector)
+val x18 = LoopArray(100) { x14 => 
+val x15 = VectorApply(Sym(8),Sym(14))
+val x16 = VectorApply(Sym(13),Sym(14))
+val x17 = x15+x16
+x17
+}
+val x19 = Map("data"->x18,"length"->100) //ClassTag(Vector)
+val x20 = println(x19)
+
+### next
+install replacement for Sym(10)
+toAtom transform ArrayIndex(Sym(7),Sym(9)) List(Sym(7), Sym(9)) -> List(Sym(23), Sym(25))
+install replacement for Sym(15)
+toAtom transform ArrayIndex(Sym(7),Sym(14)) List(Sym(7), Sym(14)) -> List(Sym(23), Sym(30))
+install replacement for Sym(16)
+toAtom transform ArrayIndex(Sym(12),Sym(14)) List(Sym(12), Sym(14)) -> List(Sym(28), Sym(30))
+--- code ---
+val x23 = LoopArray(100) { x22 => 
+0.0
+}
+val x28 = LoopArray(100) { x25 => 
+val x26 = x23.apply(x25)
+val x27 = x26+x26
+x27
+}
+val x34 = LoopArray(100) { x30 => 
+val x31 = x23.apply(x30)
+val x32 = x28.apply(x30)
+val x33 = x31+x32
+x33
+}
+val x35 = Map("data"->x34,"length"->100) //ClassTag(Vector)
+val x36 = println(x35)

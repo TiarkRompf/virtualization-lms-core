@@ -3,7 +3,9 @@ package internal
 
 import scala.reflect.SourceContext
 import scala.annotation.unchecked.uncheckedVariance
+import scala.collection.mutable.ListBuffer
 import java.lang.{StackTraceElement,Thread}
+
 
 /**
  * The Expressions trait houses common AST nodes. It also manages a list of encountered Definitions which
@@ -14,14 +16,14 @@ import java.lang.{StackTraceElement,Thread}
 trait Expressions extends Utils {
 
   abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
-    def Type : Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
+    def tp: Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
     def pos: List[SourceContext] = Nil
   }
 
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
-    var sourceInfo = Thread.currentThread.getStackTrace // TODO: make use of SourceContext instead
+    var sourceInfo = Thread.currentThread.getStackTrace // will go away
     var sourceContexts: List[SourceContext] = Nil
     override def pos = sourceContexts
     def withPos(pos: List[SourceContext]) = { sourceContexts :::= pos; this }
@@ -89,37 +91,82 @@ trait Expressions extends Utils {
 
   abstract class Def[+T] // operations (composite)
 
-  //abstract class Stm // statement (links syms and definitions)
+  abstract class Stm // statement (links syms and definitions)
   
-  case class TP[+T](sym: Sym[T], rhs: Def[T]) //extends Stm
+  def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {
+    case TP(sym, rhs) => List(sym)
+  }
+  
+  def infix_rhs(stm: Stm): Any = stm match { // clients use syms(e.rhs), boundSyms(e.rhs) etc.
+    case TP(sym, rhs) => rhs
+  }
 
-  var globalDefs: List[TP[Any]] = Nil
+  def infix_defines[A](stm: Stm, sym: Sym[A]): Option[Def[A]] = stm match {
+    case TP(`sym`, rhs: Def[A]) => Some(rhs)
+    case _ => None
+  }
 
-  def findDefinition[T](s: Sym[T]): Option[TP[T]] =
-    globalDefs.find(_.sym == s).asInstanceOf[Option[TP[T]]]
+  def infix_defines[A](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
+    case TP(sym: Sym[A], `rhs`) => Some(sym)
+    case _ => None
+  }
+  
+  case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
 
-  def findDefinition[T](d: Def[T]): Option[TP[T]] =
-    globalDefs.find(_.rhs == d).asInstanceOf[Option[TP[T]]]
+  // graph construction state
+  
+  var globalDefs: List[Stm] = Nil
+  var localDefs: List[Stm] = Nil
 
-  def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): TP[T] =
-    findDefinition[T](d) map { f => f.sym.withPos(pos); f } getOrElse {
+  def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
+    val saveLocal = localDefs
+    val saveGlobal = globalDefs
+    localDefs = Nil
+    val r = b
+    val defs = localDefs
+    localDefs = saveLocal
+    globalDefs = saveGlobal
+    (r, defs)
+  }
+
+  def reflectSubGraph(ds: List[Stm]): Unit = {
+    val lhs = ds.flatMap(_.lhs)
+    assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
+    val existing = globalDefs filter (_.lhs exists (lhs contains _))
+    assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
+    localDefs = localDefs ::: ds
+    globalDefs = globalDefs ::: ds
+  }
+
+  def findDefinition[T](s: Sym[T]): Option[Stm] =
+    globalDefs.find(x => x.defines(s).nonEmpty)
+
+  def findDefinition[T](d: Def[T]): Option[Stm] =
+    globalDefs.find(x => x.defines(d).nonEmpty)
+
+  def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): Stm =
+    findDefinition[T](d) map { x => x.defines(d).foreach(_.withPos(pos)); x } getOrElse {
       createDefinition(fresh[T](pos), d)
     }
 
-  def createDefinition[T](s: Sym[T], d: Def[T]): TP[T] = {
+  def findOrCreateDefinitionExp[T:Manifest](d: Def[T], pos: List[SourceContext]): Exp[T] =
+    findOrCreateDefinition(d, pos).defines(d).get
+
+  def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
     val f = TP(s, d)
-    globalDefs = globalDefs:::List(f)
+    reflectSubGraph(List(f))
     f
   }
+  
 
-  protected implicit def toAtom[T:Manifest](d: Def[T])(implicit ctx: SourceContext): Exp[T] = {
-    findOrCreateDefinition(d, List(ctx)).sym // TODO: return Const(()) if type is Unit??
+  protected implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
+    findOrCreateDefinitionExp(d, List(pos)) // TBD: return Const(()) if type is Unit??
   }
 
   object Def {
     def unapply[T](e: Exp[T]): Option[Def[T]] = e match { // really need to test for sym?
       case s @ Sym(_) =>
-        findDefinition(s).map(_.rhs)
+        findDefinition(s).flatMap(_.defines(s))
       case _ =>
         None
     }
@@ -130,35 +177,54 @@ trait Expressions extends Utils {
 
   def syms(e: Any): List[Sym[Any]] = e match {
     case s: Sym[Any] => List(s)
-    case p: Product => p.productIterator.toList.flatMap(syms(_))
+    case ss: Iterable[Any] => ss.toList.flatMap(syms(_))
+    // All case classes extend Product!
+    case p: Product => 
+      //return p.productIterator.toList.flatMap(syms(_))
+      /* performance hotspot */
+      val iter = p.productIterator
+      val out = new ListBuffer[Sym[Any]]
+      while (iter.hasNext) {
+        val e = iter.next()
+        out ++= syms(e)
+      }
+      out.result
     case _ => Nil
   }
 
   def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case ss: Iterable[Any] => ss.toList.flatMap(boundSyms(_))
     case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
-
-
-
     case _ => Nil
   }
 
   def effectSyms(x: Any): List[Sym[Any]] = x match {
+    case ss: Iterable[Any] => ss.toList.flatMap(effectSyms(_))
     case p: Product => p.productIterator.toList.flatMap(effectSyms(_))
     case _ => Nil
   }
 
+  def softSyms(e: Any): List[Sym[Any]] = e match {
+    // empty by default
+    //case s: Sym[Any] => List(s)
+    case ss: Iterable[Any] => ss.toList.flatMap(softSyms(_))
+    case p: Product => p.productIterator.toList.flatMap(softSyms(_))
+    case _ => Nil
+  }
 
 
   def rsyms[T](e: Any)(f: Any=>List[T]): List[T] = e match {
     case s: Sym[Any] => f(s)
+    case ss: Iterable[Any] => ss.toList.flatMap(f)
     case p: Product => p.productIterator.toList.flatMap(f)
     case _ => Nil
   }
 
   def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case s: Sym[Any] => List((s,1.0))
-//    case _ => rsyms(e)(symsFreq)
+    case ss: Iterable[Any] => ss.toList.flatMap(symsFreq(_))
     case p: Product => p.productIterator.toList.flatMap(symsFreq(_))
+    //case _ => rsyms(e)(symsFreq)
     case _ => Nil
   }
 

@@ -1,0 +1,61 @@
+### first
+register replacement for Sym(1)
+register replacement for Sym(2)
+register replacement for Sym(3)
+--- code ---
+val x1 = VectorZeros(Const(100))
+val x2 = VectorPlus(Sym(1),Sym(1))
+val x3 = VectorPlus(Sym(1),Sym(2))
+val x4 = println(x3)
+
+### next
+install replacement for Sym(1)
+install replacement for Sym(2)
+register replacement for Sym(9)
+register replacement for Sym(11)
+install replacement for Sym(3)
+register replacement for Sym(16)
+register replacement for Sym(17)
+--- code ---
+val x7 = LoopArray(100) { x6 => 
+0.0
+}
+val x8 = Map("data"->x7,"length"->100) //ClassTag(Vector)
+val x9 = VectorLength(Sym(8))
+val x13 = LoopArray(x9) { x10 => 
+val x11 = VectorApply(Sym(8),Sym(10))
+val x12 = x11+x11
+x12
+}
+val x14 = Map("data"->x13,"length"->x9) //ClassTag(Vector)
+val x19 = LoopArray(x9) { x15 => 
+val x16 = VectorApply(Sym(8),Sym(15))
+val x17 = VectorApply(Sym(14),Sym(15))
+val x18 = x16+x17
+x18
+}
+val x20 = Map("data"->x19,"length"->x9) //ClassTag(Vector)
+val x21 = println(x20)
+
+### next
+install replacement for Sym(9)
+install replacement for Sym(11)
+install replacement for Sym(16)
+install replacement for Sym(17)
+--- code ---
+val x24 = LoopArray(100) { x23 => 
+0.0
+}
+val x29 = LoopArray(100) { x26 => 
+val x27 = x24.apply(x26)
+val x28 = x27+x27
+x28
+}
+val x35 = LoopArray(100) { x31 => 
+val x32 = x24.apply(x31)
+val x33 = x29.apply(x31)
+val x34 = x32+x33
+x34
+}
+val x36 = Map("data"->x35,"length"->100) //ClassTag(Vector)
+val x37 = println(x36)

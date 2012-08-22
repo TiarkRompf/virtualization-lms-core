@@ -1,0 +1,14 @@
+### first
+register replacement for Sym(1)
+--- code ---
+val x1 = VectorZeros(Const(100))
+val x3 = println(x1)
+
+### next
+install replacement for Sym(1)
+--- code ---
+val x6 = LoopArray(100) { x5 => 
+0.0
+}
+val x7 = Map("data"->x6,"length"->100) //ClassTag(Vector)
+val x8 = println(x7)

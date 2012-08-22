@@ -37,7 +37,8 @@ trait ScalaCompile extends Expressions {
     settings.encoding.value = "UTF-8"
     settings.outdir.value = "."
     settings.extdirs.value = ""
-  //    settings.verbose.value = true
+    //settings.verbose.value = true
+    // -usejavacp needed on windows?
 
     reporter = new ConsoleReporter(settings, null, new PrintWriter(System.out))//writer
     compiler = new Global(settings, reporter)
@@ -77,7 +78,7 @@ trait ScalaCompile extends Expressions {
     val loader = new AbstractFileClassLoader(fileSystem, this.getClass.getClassLoader)
 
     val cls: Class[_] = loader.loadClass(className)
-    val cons = cls.getConstructor(staticData.map(_._1.Type.erasure):_*)
+    val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
     
     val obj: A=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[A=>B]
     obj

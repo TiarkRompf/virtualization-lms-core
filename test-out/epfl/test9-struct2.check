@@ -5,8 +5,8 @@ depends on  Sym(14)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 val x10 = LoopArray(100) { x7 => 
 val x8 = 0.0-x7
 x8
@@ -25,19 +25,19 @@ x2
 }
 val x16 = x0 > 7
 val x21 = if (x16) {
-val x6 = Map("re"->x4,"im"->x5) //Array Complex
+val x6 = Map("re"->x4,"im"->x5) //ArraySoaTag(ClassTag(Complex),Const(100))
 x6
 } else {
 val x17 = x13
 val x18 = x14
-val x19 = Map("re"->x17,"im"->x18) //Array Complex
+val x19 = Map("re"->x17,"im"->x18) //ArraySoaTag(ClassTag(Complex),Const(100))
 x19
 }
 x13 = x4
 x14 = x5
 val x24 = x13
 val x25 = x14
-val x26 = Map("re"->x24,"im"->x25) //Array Complex
+val x26 = Map("re"->x24,"im"->x25) //ArraySoaTag(ClassTag(Complex),Const(100))
 val x27 = println(x26)
 val x28 = println(x21)
 x28

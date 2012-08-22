@@ -2,14 +2,14 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.NestedTraversal
+import scala.virtualization.lms.internal.NestedBlockTraversal
 
 import scala.collection.mutable
 
-trait LivenessOpt extends NestedTraversal {
+trait LivenessOpt extends NestedBlockTraversal {
   import IR._  
   
-  def calculateLivenessTransform[A](used: mutable.HashSet[Sym[Any]], t: TP[A]): List[TP[_]] = t match {
+  def calculateLivenessTransform(used: mutable.HashSet[Sym[Any]], t: Stm): List[Stm] = t match {
     case TP(sym, Reify(x, u, es)) if used(sym) => 
       used ++= syms(x) // ignore effect dependencies!
       used ++= u.mayWrite // writes to external data
@@ -18,13 +18,18 @@ trait LivenessOpt extends NestedTraversal {
       mayWrite(u, used.toList) || maySimple(u) => 
       used ++= syms(rhs)
       List(t)
-    case TP(sym, rhs) if used(sym) => 
+/*    case TP(sym, rhs) if used(sym) => 
       used ++= syms(rhs)
       //printlog("** add used at " + t + ": " + syms(rhs))
-      List(t)
+      List(t)*/
     case e => 
-      printlog("dropping " + e)
-      Nil
+      if (e.lhs exists used) {
+        used ++= syms(e.rhs)
+        List(t)
+      } else {
+        printlog("dropping " + e)
+        Nil
+      }
   }
 
 
@@ -47,7 +52,7 @@ trait LivenessOpt extends NestedTraversal {
 }
 
 
-trait DefUseAnalysis extends NestedTraversal {
+trait DefUseAnalysis extends NestedBlockTraversal {
   import IR._  
   
   var defUseMap: Map[Exp[Any], Set[Exp[Any]]] = _

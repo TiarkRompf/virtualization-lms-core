@@ -134,14 +134,16 @@ trait GPUCodegen extends CLikeCodegen {
 
     val currentTab = tabWidth
     tabWidth = 1
-    emitBlock(func)(tempStream)
+    withStream(tempStream) {
+      emitBlock(func)
+    }
     tabWidth = currentTab
 
     val inputs = getFreeVarBlock(func,lastInputs).distinct
-    val paramStr = (inputs++lastInputs).map(ele=>remap(ele.Type)+" "+quote(ele)).mkString(",")
+    val paramStr = (inputs++lastInputs).map(ele=>remap(ele.tp)+" "+quote(ele)).mkString(",")
 
-    header.append(devFuncPrefix + " %s dev_%s(%s) {\n".format(remap(getBlockResult(func).Type),postfix,paramStr))
-    if(remap(getBlockResult(func).Type) != "void")
+    header.append(devFuncPrefix + " %s dev_%s(%s) {\n".format(remap(getBlockResult(func).tp),postfix,paramStr))
+    if(remap(getBlockResult(func).tp) != "void")
       footer.append("\treturn %s;\n".format(quote(getBlockResult(func))))
     footer.append("}\n")
     stream.print(header)
@@ -209,8 +211,8 @@ trait GPUCodegen extends CLikeCodegen {
       out.append("{")
 
       //if (kernelFileExt == "cu") {
-        out.append("\"gpuInputs\":["+getKernelInputs.filter(in=>isObjectType(in.Type)).map(in=>"{\""+quote(in)+"\":[\""+remap(in.Type)+"\"]}").mkString(",")+"],")
-        out.append("\"gpuOutputs\":["+outputs.toList.reverse.map(out=>"{\""+quote(out._1)+"\":[\""+remap(out._1.Type)+"\",["+ out._2.argsFuncHtoD.map("\""+quote(_)+"\"").mkString(",")+"],"+loopFuncs.getOrElse(out._1,new LoopFunc).toString+"]}").mkString(",")+"]")
+        out.append("\"gpuInputs\":["+getKernelInputs.filter(in=>isObjectType(in.tp)).map(in=>"{\""+quote(in)+"\":[\""+remap(in.tp)+"\"]}").mkString(",")+"],")
+        out.append("\"gpuOutputs\":["+outputs.toList.reverse.map(out=>"{\""+quote(out._1)+"\":[\""+remap(out._1.tp)+"\",["+ out._2.argsFuncHtoD.map("\""+quote(_)+"\"").mkString(",")+"],"+loopFuncs.getOrElse(out._1,new LoopFunc).toString+"]}").mkString(",")+"]")
       //}
       //else { //opencl
       //  out.append("\"gpuInputs\":["+getKernelInputs.filter(in=>isObjectType(in.Type)).map(in=>"{\""+quote(in)+"\":[\""+remap(in.Type)+"\",{"+unpackObject(in).map(f => "\"%s\":\"%s\"".format(f._1,remap(f._2)).replaceAll("__global ","")).mkString(",")+"}]}").mkString(",")+"],")
@@ -257,7 +259,7 @@ trait GPUCodegen extends CLikeCodegen {
     isNestedNode = false
   }
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     if (external) {
       // CUDA library ops use a C wrapper, so should be generated as a C kernel
       stream.println(getDSLHeaders)
@@ -269,7 +271,7 @@ trait GPUCodegen extends CLikeCodegen {
     stream.print(out.toString)
   }
 
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean)(implicit stream: PrintWriter): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     if (!isGPUable) throw new GenerationFailedException("This kernel is not GPUable")
 
     if (external) {
@@ -281,7 +283,7 @@ trait GPUCodegen extends CLikeCodegen {
     tabWidth -= 1
 
     // Emit input copy helper functions for object type inputs
-    for(v <- vals if isObjectType(v.Type)) {
+    for(v <- vals if isObjectType(v.tp)) {
       helperFuncString.append(emitCopyInputHtoD(v, syms, copyInputHtoD(v)))
       helperFuncString.append(emitCopyMutableInputDtoH(v, syms, copyMutableInputDtoH(v)))
     }
@@ -321,34 +323,6 @@ trait GPUCodegen extends CLikeCodegen {
     }
   }
 
-  def remapToJNI[A](m: Manifest[A]) : String = {
-    remap(m) match {
-      case "bool" => "Boolean"
-      case "char" => "Byte"
-      case "CHAR" => "Char"
-      case "short" => "Short"
-      case "int" => "Int"
-      case "long" => "Long"
-      case "float" => "Float"
-      case "double" => "Double"
-      case _ => throw new GenerationFailedException("GPUGen: Cannot get array creation JNI function for this type " + remap(m))
-    }
-  }
-
-
-  // Map a scala primitive type to JNI type descriptor
-  def JNITypeDescriptor[A](m: Manifest[A]) : String = m.toString match {
-    case "Boolean" => "Z"
-    case "Byte" => "B"
-    case "Char" => "C"
-    case "Short" => "S"
-    case "Int" => "I"
-    case "Long" => "J"
-    case "Float" => "F"
-    case "Double" => "D"
-    case _ => throw new GenerationFailedException("Undefined GPU type")
-  }
-
   def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
     m.toString match {
       case "Boolean" | "Byte" | "Char" | "Short" | "Int" | "Long" | "Float" | "Double" => true
@@ -382,8 +356,8 @@ trait GPUCodegen extends CLikeCodegen {
       true
   }
 
-  def unpackObject[A](sym: Sym[Any]) : Map[String,Manifest[_]] = remap(sym.Type) match {
-    case _ => throw new GenerationFailedException("GPUCodegen: Type %s cannot be unpacked.".format(sym.Type.toString))
+  def unpackObject[A](sym: Sym[Any]) : Map[String,Manifest[_]] = remap(sym.tp) match {
+    case _ => throw new GenerationFailedException("GPUCodegen: Type %s cannot be unpacked.".format(sym.tp.toString))
   }
 
   def copyInputHtoD(sym: Sym[Any]) : String
@@ -404,9 +378,9 @@ trait GPUCodegen extends CLikeCodegen {
   def emitCopyInputHtoD(sym: Sym[Any], ksym: List[Sym[Any]], contents: String) : String = {
     val out = new StringBuilder
     val funcName = "copyInputHtoD_%s_%s".format(ksym.map(quote).mkString(""),quote(sym))
-    if(isObjectType(sym.Type) && !helperFuncsList.contains(funcName)) {
+    if(isObjectType(sym.tp) && !helperFuncsList.contains(funcName)) {
       helperFuncsList += funcName
-      out.append("%s *%s(JNIEnv *env, jobject obj)".format(remap(sym.Type),funcName))
+      out.append("%s *%s(JNIEnv *env, jobject obj)".format(remap(sym.tp),funcName))
       helperFuncHdrStream.append(out.toString + ";\n")
       out.append("{\n")
       out.append(contents)
@@ -420,12 +394,12 @@ trait GPUCodegen extends CLikeCodegen {
   def emitCopyMutableInputDtoH(sym: Sym[Any], ksym: List[Sym[Any]], contents: String): String = {
     val out = new StringBuilder
     val funcName = "copyMutableInputDtoH_%s_%s".format(ksym.map(quote).mkString(""),quote(sym))
-    if(isObjectType(sym.Type) && !helperFuncsList.contains(funcName)) {
+    if(isObjectType(sym.tp) && !helperFuncsList.contains(funcName)) {
       helperFuncsList += funcName
-      out.append("void %s(JNIEnv *env, jobject obj, %s *%s_ptr)".format(funcName,remap(sym.Type),quote(sym)))
+      out.append("void %s(JNIEnv *env, jobject obj, %s *%s_ptr)".format(funcName,remap(sym.tp),quote(sym)))
       helperFuncHdrStream.append(out.toString + ";\n")
       out.append("{\n")
-      out.append("%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
+      out.append("%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
       out.append(contents)
       out.append("}\n")
       out.toString
@@ -439,27 +413,27 @@ trait GPUCodegen extends CLikeCodegen {
     if(helperFuncsList contains funcName) return ""
     helperFuncsList += funcName
 
-    if(!isPrimitiveType(sym.Type)) {
+    if(!isPrimitiveType(sym.tp)) {
       val paramStr = args.map(ele =>
-        if(isPrimitiveType(ele.Type)) remap(ele.Type) + " " + quote(ele)
-        else remap(ele.Type) + " *" + quote(ele) + "_ptr"
+        if(isPrimitiveType(ele.tp)) remap(ele.tp) + " " + quote(ele)
+        else remap(ele.tp) + " *" + quote(ele) + "_ptr"
       ).mkString(",")
       val derefParams = args.map(ele=>
-         if(isPrimitiveType(ele.Type)) ""
-         else "\t%s %s = *(%s_ptr);\n".format(remap(ele.Type),quote(ele),quote(ele))
+         if(isPrimitiveType(ele.tp)) ""
+         else "\t%s %s = *(%s_ptr);\n".format(remap(ele.tp),quote(ele),quote(ele))
        ).mkString("")
-      out.append("%s *%s(%s %s)".format(remap(sym.Type), funcName, paramStr, if(args.nonEmpty) ",int size" else "int size"))
+      out.append("%s *%s(%s %s)".format(remap(sym.tp), funcName, paramStr, if(args.nonEmpty) ",int size" else "int size"))
       helperFuncHdrStream.append(out.toString + ";\n")
       out.append("{\n")
       out.append(derefParams)
-      out.append("\t%s *%s_ptr = new %s(size);\n".format(remap(aV.Type),quote(aV),remap(aV.Type)))
-      out.append("\t%s %s = *%s_ptr;\n".format(remap(aV.Type),quote(aV),quote(aV)))
+      //out.append("\t%s *%s_ptr = new %s(size);\n".format(remap(aV.tp),quote(aV),remap(aV.tp)))
+      //out.append("\t%s %s = *%s_ptr;\n".format(remap(aV.tp),quote(aV),quote(aV)))
       out.append(contents)
       out.append("}\n")
       out.toString
     }
     else {
-      out.append("%s *%s(void)".format(remap(sym.Type),funcName))
+      out.append("%s *%s(void)".format(remap(sym.tp),funcName))
       helperFuncHdrStream.append(out.toString + ";\n")
       out.append("{\n")
       out.append(contents)
@@ -474,17 +448,17 @@ trait GPUCodegen extends CLikeCodegen {
     if(helperFuncsList contains funcName) return ""
     helperFuncsList += funcName
 
-    if(isObjectType(sym.Type)) {
-      out.append("jobject %s(JNIEnv *env,%s)".format(funcName,remap(sym.Type)+" *"+quote(sym)+"_ptr"))
+    if(isObjectType(sym.tp)) {
+      out.append("jobject %s(JNIEnv *env,%s)".format(funcName,remap(sym.tp)+" *"+quote(sym)+"_ptr"))
       helperFuncHdrStream.append(out.toString + ";\n")
       out.append("{\n")
-  	  out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.Type),quote(sym),quote(sym)))
+      out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
       out.append(contents)
       out.append("}\n")
       out.toString
     }
     else {
-      out.append("%s %s(JNIEnv *env,%s)".format(remap(sym.Type),funcName,remap(sym.Type)+" *"+quote(sym)))
+      out.append("%s %s(JNIEnv *env,%s)".format(remap(sym.tp),funcName,remap(sym.tp)+" *"+quote(sym)))
       helperFuncHdrStream.append(out.toString + ";\n")
       out.append("{\n")
       out.append(contents)
@@ -513,9 +487,11 @@ trait GPUCodegen extends CLikeCodegen {
 
     // Get the body (string) of the allocation function in tempString
     if(allocFunc!=null) {
-      emitBlock(allocFunc)(tempStream)
+      withStream(tempStream) {
+        emitBlock(allocFunc)
+      }
       tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc))))
-	}
+    }
     else {
       tempString.append("\treturn %s_ptr;\n".format(quote(sym)))
     }
@@ -536,7 +512,7 @@ trait GPUCodegen extends CLikeCodegen {
 
   def emitAllocFuncPrimitive(sym:Sym[Any]) {
     processingHelperFunc = true
-    assert(isPrimitiveType(sym.Type))
+    assert(isPrimitiveType(sym.tp))
 
     val tempString = new StringWriter
     val tempString2 = new StringWriter
@@ -546,8 +522,8 @@ trait GPUCodegen extends CLikeCodegen {
     tr.argsFuncHtoD = Nil
     metaData.outputs.put(sym,tr)
 
-    tempString.append("\t%s *ptr;\n".format(remap(sym.Type)))
-    tempString.append("\tDeliteCudaMalloc((void**)&ptr, sizeof(%s));\n".format(remap(sym.Type)))
+    tempString.append("\t%s *ptr;\n".format(remap(sym.tp)))
+    tempString.append("\tDeliteCudaMalloc((void**)&ptr, sizeof(%s));\n".format(remap(sym.tp)))
     tempString.append("\treturn ptr;\n")
 
     // Emit the full allocation function

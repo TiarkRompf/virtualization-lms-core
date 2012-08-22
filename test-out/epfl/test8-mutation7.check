@@ -1,8 +1,8 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 var x1: Double = 0.0
 val x9 = while ({val x2 = x1
 val x3 = x2 < x0
@@ -21,7 +21,8 @@ x1 = 8
 ()
 }
 val x15 = x1
-x15
+val x16 = println(x15)
+x16
 }
 }
 /*****************************************

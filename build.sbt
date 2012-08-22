@@ -1,6 +1,6 @@
 name := "LMS"
 
-version := "0.1"
+version := "0.2"
 
 organization := "EPFL"
 
@@ -8,17 +8,19 @@ resolvers += ScalaToolsSnapshots
 
 resolvers += dropboxScalaTestRepo
 
-scalaVersion := virtScala
+scalaOrganization := "org.scala-lang"
 
-// quick way of getting artifact naming compatibility right now
-//crossPaths := false
-scalaBinaryVersion := virtScala // necessary??
+//scalaBinaryVersion := virtScala // necessary??
+
+scalaVersion := virtScala
 
 scalaSource in Compile <<= baseDirectory(_ / "src")
 
 scalaSource in Test <<= baseDirectory(_ / "test-src")
 
-scalacOptions += "-Yvirtualize" 
+scalacOptions += "-Yvirtualize"
+
+//scalacOptions += "-Yvirtpatmat"
 
 //scalacOptions in Compile ++= Seq(/*Unchecked, */Deprecation)
 

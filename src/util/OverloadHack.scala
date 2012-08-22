@@ -53,5 +53,4 @@ trait OverloadHack {
   implicit val overloaded22 = new Overloaded22  
   implicit val overloaded23 = new Overloaded23
   implicit val overloaded24 = new Overloaded24
-      
 }

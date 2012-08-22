@@ -1,8 +1,8 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test(px1:scala.Function1[Int, Unit]) extends ((Int)=>(Any)) {
-def apply(x0:Int): Any = {
+class Test(px1:scala.Function1[Int, Unit]) extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
 val x1 = px1 // static data: <function1>
 val x2 = x1(x0)
 x2
