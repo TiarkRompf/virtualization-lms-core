@@ -119,8 +119,8 @@ trait PrimitiveOps extends Variables with OverloadHack {
    */
   def infix_&(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded1, pos: SourceContext) = long_binaryand(lhs, rhs)
   def infix_|(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded1, pos: SourceContext) = long_binaryor(lhs, rhs)
-  def infix_<<(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext) = long_shiftleft(lhs, rhs)
-  def infix_>>>(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext) = long_shiftright_unsigned(lhs, rhs)
+  def infix_<<(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = long_shiftleft(lhs, rhs)
+  def infix_>>>(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = long_shiftright_unsigned(lhs, rhs)
   def infix_toInt(lhs: Rep[Long])(implicit o: Overloaded1, pos: SourceContext) = long_toint(lhs)
     
   def long_binaryand(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
