@@ -226,7 +226,7 @@ trait Effects extends Expressions with Blocks with Utils {
   val deepAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   val allAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   
-  def utilLoadStm[T](s: Sym[T]) = if (!isPrimitiveType(s.tp)) globalDefs.filter{e => e.lhs contains s} else Nil
+  def utilLoadStm[T](s: Sym[T]) = if (!isPrimitiveType(s.tp)) /*globalDefs.filter{e => e.lhs contains s}*/ findDefinition(s).toList else Nil
   def utilLoadStms(s: List[Sym[Any]]) = s.flatMap(utilLoadStm)
   def utilLoadSym[T](s: Sym[T]) = utilLoadStm(s).map(_.rhs)
   
