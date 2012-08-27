@@ -314,6 +314,13 @@ trait ScalaGenStruct extends ScalaGenBase {
     }
   }
 
+  override def emitDataStructures(path: String) {
+    val out = new PrintWriter(path)
+    emitDataStructures(out)
+    out.close()
+    super.emitDataStructures(path)
+  }
+
 }
 
 trait CudaGenStruct extends CudaGenBase {
