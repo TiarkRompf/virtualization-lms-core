@@ -3,22 +3,15 @@
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
-var x2: Int = x0
-var x3: Double = 0.0
-val x5 = x2
-val x6 = x3
-val x9 = x5+0.0
-x2 = x9
-val x10 = x6+x0
-x3 = x10
-val x14 = x2
-val x15 = x3
-val x16 = C0(re = x14, im = x15)
-val x17 = println(x16)
-x17
+val x1 = C0(x = 1.0, y = 2.0)
+val x2 = println(x1)
+val x3 = C1(re = 3.0, im = 4.0)
+val x4 = println(x3)
+x4
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
-case class C0(re: Double, im: Double)
+case class C0(x: Double, y: Double)
+case class C1(re: Double, im: Double)
