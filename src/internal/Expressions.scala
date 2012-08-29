@@ -89,7 +89,9 @@ trait Expressions extends Utils {
   }
 */
 
-  abstract class Def[+T] // operations (composite)
+  abstract class Def[+T] { // operations (composite)
+    override final lazy val hashCode = scala.runtime.ScalaRunTime._hashCode(this.asInstanceOf[Product])
+  }
 
   abstract class Stm // statement (links syms and definitions)
   

@@ -2,8 +2,7 @@ package scala.virtualization.lms
 package internal
 
 import util.GraphUtil
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.HashSet
+import scala.collection.mutable
 import java.util.IdentityHashMap
 import scala.collection.JavaConversions._
 
@@ -32,6 +31,7 @@ trait Scheduling {
     false
   }
    
+  //TBD: not used?
   def getStronglySortedSchedule(scope: List[Stm])(result: Any): List[Stm] = {
     def deps(st: List[Sym[Any]]): List[Stm] = 
       scope.filter(d => containsAny(st, d.lhs))
@@ -48,10 +48,17 @@ trait Scheduling {
     xx.flatten.reverse
   }
 
+  //FIXME: hotspot
   def getSchedule(scope: List[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
-    def deps(st: List[Sym[Any]]): List[Stm] = 
-      scope.filter(d => containsAny(st, d.lhs))
+    val scopeCache = new mutable.HashMap[Sym[Any],Stm]
+    for (stm <- scope; s <- stm.lhs)
+      scopeCache(s) = stm
+
+    def deps(st: List[Sym[Any]]): List[Stm] = {//st flatMap (scopeCache.get(_).toList)
       // scope.filter(d => (st intersect d.lhs).nonEmpty)
+      // scope.filter(d => containsAny(st, d.lhs))
+      st flatMap (scopeCache.get(_).toList)
+    }
 
     val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(syms(result)), t => deps(syms(t.rhs)))
     if (sort) xx.foreach { x => 
@@ -63,6 +70,7 @@ trait Scheduling {
     xx.flatten.reverse
   }
 
+  //FIXME: hotspot
   def getScheduleM(scope: List[Stm])(result: Any, cold: Boolean, hot: Boolean): List[Stm] = {
     def mysyms(st: Any) = {
       val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
@@ -73,9 +81,15 @@ trait Scheduling {
       else db.withFilter(p=>p._2 > 0.75 && p._2 < 100.0).map(_._1)
     }
 
-    def deps(st: List[Sym[Any]]): List[Stm] =
-      scope.filter(d => containsAny(st, d.lhs))
+    val scopeCache = new mutable.HashMap[Sym[Any],Stm]
+    for (stm <- scope; s <- stm.lhs)
+      scopeCache(s) = stm
+
+    def deps(st: List[Sym[Any]]): List[Stm] = {//st flatMap (scopeCache.get(_).toList)
       // scope.filter(d => (st intersect d.lhs).nonEmpty)
+      // scope.filter(d => containsAny(st, d.lhs))
+      st flatMap (scopeCache.get(_).toList)
+    }
 
     GraphUtil.stronglyConnectedComponents[Stm](deps(mysyms(result)), t => deps(mysyms(t.rhs))).flatten.reverse
   }
@@ -153,7 +167,7 @@ trait Scheduling {
       y have been tracked up to A, which includes all of B
     */
 
-    val seen = new HashSet[Sym[Any]]
+    val seen = new mutable.HashSet[Sym[Any]]
     
     def getDepStuff(st: Sym[Any]) = {
       // could also precalculate uses, but computing all combinations eagerly is also expensive
