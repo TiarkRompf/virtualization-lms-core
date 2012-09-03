@@ -21,4 +21,4 @@ x17
 /*****************************************
   End of Generated Code                  
 *******************************************/
-case class C0(re: Double, im: Double)
+case class C0(re: Int, im: Double)

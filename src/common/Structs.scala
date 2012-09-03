@@ -258,8 +258,8 @@ trait ScalaGenStruct extends ScalaGenBase {
       
       Array --> transform soa back to aos
       */
-      if (sym.tp.isInstanceOf[RefinedManifest[_]] && sym.tp <:< manifest[Record]) {
-        registerType(sym.tp.asInstanceOf[RefinedManifest[Record]], elems)
+      if (sym.tp <:< manifest[Record]) {
+        registerType(sym.tp.asInstanceOf[Manifest[Record]], elems)
         emitValDef(sym, remap(sym.tp) + "(" + (for ((n, v) <- elems) yield n + " = " + quote(v)).mkString(", ") + ")")
       } else {
         emitValDef(sym, "new { " + (for ((n, v) <- elems) yield "val " + n + " = " + quote(v)).mkString("; ") + " }")
@@ -275,41 +275,47 @@ trait ScalaGenStruct extends ScalaGenBase {
     case _ => super.remap(m)
   }
 
-  private val encounteredStructs = new collection.mutable.ListBuffer[RefinedManifest[_ <: Record]]
-  private def registerType(m: RefinedManifest[_ <: Record], elems: Map[String, Rep[_]]) {
-    assert(elems.size == m.fields.size, "Record fields don’t contain as many elements as reflected in manifest: %s vs %s".format(elems.size, m.fields.size))
-    for ((n, tp) <- m.fields) {
-      assert(elems.contains(n), "Record field not reflected in manifest: %s".format(n))
-      // assert(elems(n).tp == tp, "Record field type different than the one reflected in manifest: %s vs %s".format(elems(n).tp, tp))
+  private val encounteredStructs = new collection.mutable.ListBuffer[(Manifest[_ <: Record], Map[String, Exp[_]])]
+  private def registerType(m: Manifest[_ <: Record], elems: Map[String, Rep[_]]) {
+    // Check that the manifest and elems are consistent
+    m match {
+      case m: RefinedManifest[_] =>
+        assert(elems.size == m.fields.size, "Record doesn’t contain as many fields as reflected in manifest: %s vs %s".format(elems.size, m.fields.size))
+        for ((n, tp) <- m.fields) {
+          assert(elems.contains(n), "Record field not reflected in manifest: %s".format(n))
+          // assert(elems(n).tp == tp, "Record field type different than the one reflected in manifest: %s vs %s".format(elems(n).tp, tp))
+        }
+      case _ =>
+        // Nothing yet
     }
     if (indexOfEncountered(m).isEmpty) {
-      encounteredStructs += m
+      encounteredStructs += (m -> elems)
     }
   }
 
   /**
    * Look for a type equivalent to `m` in the already encountered record manifests.
    */
-  private def indexOfEncountered(m: Manifest[_]): Option[Int] = m match {
-    case rm: RefinedManifest[_] if rm <:< manifest[Record] => {
-      encounteredStructs.foldLeft(Option.empty[Int], 0) { case ((found, i), m) =>
-        def sameManifest(m1: Manifest[_], m2: Manifest[_]): Boolean = (m1, m2) match {
-          case (rm1: RefinedManifest[_], rm2: RefinedManifest[_]) =>
-            rm1 == rm2 && rm1.fields.size == rm2.fields.size && (rm1.fields zip rm2.fields).foldLeft(true) { case (same, (lhs, rhs)) =>
-              same && lhs._1 == rhs._1 && sameManifest(lhs._2, rhs._2)
-            }
-          case _ => m1 == m2
+  private def indexOfEncountered(m: Manifest[_]): Option[Int] = {
+    def sameManifest(m1: Manifest[_], m2: Manifest[_]): Boolean = (m1, m2) match {
+      case (rm1: RefinedManifest[_], rm2: RefinedManifest[_]) =>
+        rm1 == rm2 && rm1.fields.size == rm2.fields.size && (rm1.fields zip rm2.fields).foldLeft(true) { case (same, (lhs, rhs)) =>
+          same && lhs._1 == rhs._1 && sameManifest(lhs._2, rhs._2)
         }
-        (found.orElse(if (sameManifest(m, rm)) Some(i) else None), i + 1)
-      }._1
+      case _ => m1 == m2
     }
-    case _ => None
+    
+    if (m <:< manifest[Record]) {
+      encounteredStructs.foldLeft(Option.empty[Int], 0) { case ((found, i), (mm, _)) =>
+        (found.orElse(if (sameManifest(m, mm)) Some(i) else None), i + 1)
+      }._1
+    } else None
   }
 
   def emitDataStructures(out: PrintWriter) {
     withStream(out) {
-      for (m <- encounteredStructs) {
-        stream.println("case class " + remap(m) + "(" + (for ((n, m) <- m.fields) yield n + ": " + remap(m)).mkString(", ") + ")")
+      for ((m, fields) <- encounteredStructs) {
+        stream.println("case class " + remap(m) + "(" + (for ((n, e) <- fields) yield n + ": " + remap(e.tp)).mkString(", ") + ")")
       }
     }
   }
