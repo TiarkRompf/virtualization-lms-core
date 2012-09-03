@@ -29,7 +29,6 @@ trait ComplexBase extends Arith with Structs {
   def Complex(r: Rep[Double], i: Rep[Double]): Rep[Complex] = new Record { val re = r; val im = i }
 }
 
-
 // ------ struct impl follows, will move to common once stable
 
 trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
@@ -238,4 +237,45 @@ class TestStruct extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"struct4")
   }
 
+  // Two classes are generated if the refined type’s fields have the same type but different names
+  def testStruct5 = {
+    withOutFile(prefix+"struct5") {
+
+      trait Vectors extends Structs {
+        type Vector2D = Record { val x: Double; val y: Double }
+        def Vector2D(px: Rep[Double], py: Rep[Double]): Rep[Vector2D] = new Record { val x = px; val y = py }
+      }
+
+      trait Prog extends DSL with Vectors {
+        def test(x: Rep[Int]) = {
+          print(Vector2D(1, 2))
+          print(Complex(3, 4))
+        }
+      }
+
+      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
+    }
+    assertFileEqualsCheck(prefix+"struct5")
+  }
+
+  // Only one class is generated if refined types are equivalent (their fields have the same names and types)
+  def testStruct6 = {
+    withOutFile(prefix+"struct6") {
+
+      trait Complex2 extends Arith with Structs {
+        type Complex2 = Record { val re: Double; val im: Double }
+        def Complex2(r: Rep[Double], i: Rep[Double]): Rep[Complex2] = new Record { val re = r; val im = i }
+      }
+
+      trait Prog extends DSL with Complex2 {
+        def test(x: Rep[Int]) = {
+          print(Complex2(1, 2))
+          print(Complex(3, 4))
+        }
+      }
+
+      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
+    }
+    assertFileEqualsCheck(prefix+"struct6")
+  }
 }
