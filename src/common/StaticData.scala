@@ -31,13 +31,18 @@ trait BaseGenStaticData extends GenericNestedCodegen {
   
   override def getFreeDataBlock[A](start: Block[A]): List[(Sym[Any],Any)] = {
     focusBlock(start) {
-      focusExactScope(start) { levelScope =>
+      innerScope flatMap {
+        case TP(sym, rhs) =>
+          getFreeDataExp(sym, rhs)
+        case _ => Nil //static data is never fat
+      }
+      /*focusExactScope(start) { levelScope =>
         levelScope flatMap { 
           case TP(sym, rhs) =>
             getFreeDataExp(sym, rhs)
           case _ => Nil //static data is never fat
         }
-      }
+      }*/
     }
   }
   
