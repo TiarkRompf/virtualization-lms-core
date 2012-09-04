@@ -1,18 +1,107 @@
+Map(Sym(14) -> Sym(22), Sym(10) -> Sym(12), Sym(17) -> Sym(13), Sym(13) -> Sym(21), Sym(11) -> Sym(19), Sym(12) -> Sym(20), Sym(15) -> Sym(9), Sym(9) -> Sym(11), Sym(16) -> Sym(10), Sym(18) -> Sym(23))
+r0:
+TP(Sym(10),ArrayApply(Sym(0),Sym(9)))
+TP(Sym(11),NumericPlus(Sym(9),Const(1)))
+TP(Sym(12),ArrayApply(Sym(0),Sym(11)))
+TP(Sym(13),NumericTimes(Sym(10),Sym(12)))
+TP(Sym(14),NumericMinus(Sym(10),Sym(13)))
+TP(Sym(15),NumericMinus(Sym(9),Const(1)))
+TP(Sym(16),ArrayApply(Sym(0),Sym(15)))
+TP(Sym(17),NumericTimes(Sym(16),Sym(10)))
+TP(Sym(18),NumericPlus(Sym(14),Sym(17)))
+r1:
+TP(Sym(19),NumericPlus(Sym(11),Const(1)))
+TP(Sym(20),ArrayApply(Sym(0),Sym(19)))
+TP(Sym(21),NumericTimes(Sym(12),Sym(20)))
+TP(Sym(22),NumericMinus(Sym(12),Sym(21)))
+TP(Sym(23),NumericPlus(Sym(22),Sym(13)))
+r2:
+TP(Sym(24),NumericPlus(Sym(19),Const(1)))
+TP(Sym(25),ArrayApply(Sym(0),Sym(24)))
+TP(Sym(26),NumericTimes(Sym(20),Sym(25)))
+TP(Sym(27),NumericMinus(Sym(20),Sym(26)))
+TP(Sym(28),NumericPlus(Sym(27),Sym(21)))
+Map(Sym(14) -> Sym(22), Sym(10) -> Sym(12), Sym(17) -> Sym(13), Sym(13) -> Sym(21), Sym(11) -> Sym(19), Sym(12) -> Sym(20), Sym(15) -> Sym(9), Sym(9) -> Sym(11), Sym(16) -> Sym(10), Sym(18) -> Sym(23))
+overlap1:
+(Sym(11),Sym(19))
+(Sym(12),Sym(20))
+(Sym(13),Sym(21))
+overlap2:
+var inits: List(Sym(11), Sym(12), Sym(13)) -> List(Variable(Sym(37)), Variable(Sym(38)), Variable(Sym(39)))
+will become var reads: List(Sym(11), Sym(12), Sym(13))
+will become var writes: List(Sym(19), Sym(20), Sym(21))
+var reads: List((Sym(11),Sym(43)), (Sym(12),Sym(44)), (Sym(13),Sym(45)))
+var writes: List((Sym(19),Const(())), (Sym(20),Const(())), (Sym(21),Const(())))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Array[Int])=>(Array[Int])) {
-def apply(x0:Array[Int]): Array[Int] = {
-val x1 = new Array[Int](5)
-x1
+class staged$0 extends ((Array[Double])=>(Array[Double])) {
+def apply(x0:Array[Double]): Array[Double] = {
+val x1 = x0.length
+val x2 = new Array[Double](x1)
+var x4 : Int = 0
+val x7 = while (x4 < x1) {
+val x5 = x2(x4) = -1.0
+x5
+x4 = x4 + 1
+}
+val x8 = x1 - 1
+val x29 = x8 > 1
+val x59 = if (x29) {
+var x37: Int = 2
+val x31 = x0(2)
+var x38: Double = x31
+val x30 = x0(1)
+val x32 = x30 * x31
+var x39: Double = x32
+val x33 = x30 - x32
+val x34 = x0(0)
+val x35 = x34 * x30
+val x36 = x33 + x35
+val x40 = x2(1) = x36
+var x42 : Int = 2
+val x57 = while (x42 < x8) {
+val x43 = x37
+val x44 = x38
+val x45 = x39
+val x47 = x43 + 1
+x37 = x47
+val x48 = x0(x47)
+x38 = x48
+val x49 = x44 * x48
+x39 = x49
+val x50 = x44 - x49
+val x51 = x50 + x45
+val x55 = x2(x42) = x51
+x55
+x42 = x42 + 1
+}
+x57
+} else {
+()
+}
+x2
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
+
+<stdin>:11: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
+x5
+^
+<stdin>:42: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
+x55
+^
+two warnings found
 compilation: ok
-0
-0
-0
-0
-0
+-1.0
+0.8800000000000001
+0.96
+1.0400000000000003
+1.12
+1.1999999999999993
+1.2799999999999998
+1.3600000000000003
+1.4400000000000006
+-1.0

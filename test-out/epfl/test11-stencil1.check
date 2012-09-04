@@ -1,46 +1,65 @@
-Map(Sym(4) -> Sym(7), Sym(6) -> Sym(10), Sym(7) -> Sym(11), Sym(3) -> Sym(6), Sym(5) -> Sym(9), Sym(8) -> Sym(12), Sym(2) -> Sym(5))
+Map(Sym(10) -> Sym(15), Sym(4) -> Sym(8), Sym(6) -> Sym(11), Sym(7) -> Sym(12), Sym(3) -> Sym(7), Sym(5) -> Sym(9), Sym(8) -> Sym(13), Sym(9) -> Sym(14), Sym(2) -> Sym(6))
 r0:
-TP(Sym(3),NumericTimes(Const(2),Sym(2)))
-TP(Sym(4),NumericPlus(Sym(3),Const(3)))
-TP(Sym(5),NumericPlus(Sym(2),Const(1)))
-TP(Sym(6),NumericTimes(Const(2),Sym(5)))
-TP(Sym(7),NumericPlus(Sym(6),Const(3)))
-TP(Sym(8),NumericPlus(Sym(4),Sym(7)))
+TP(Sym(3),IntDoubleValue(Sym(2)))
+TP(Sym(4),NumericTimes(Const(2.0),Sym(3)))
+TP(Sym(5),NumericPlus(Sym(4),Const(3.0)))
+TP(Sym(6),NumericPlus(Sym(2),Const(1)))
+TP(Sym(7),IntDoubleValue(Sym(6)))
+TP(Sym(8),NumericTimes(Const(2.0),Sym(7)))
+TP(Sym(9),NumericPlus(Sym(8),Const(3.0)))
+TP(Sym(10),NumericPlus(Sym(5),Sym(9)))
 r1:
-TP(Sym(9),NumericPlus(Sym(5),Const(1)))
-TP(Sym(10),NumericTimes(Const(2),Sym(9)))
-TP(Sym(11),NumericPlus(Sym(10),Const(3)))
-TP(Sym(12),NumericPlus(Sym(7),Sym(11)))
-Map(Sym(4) -> Sym(7), Sym(6) -> Sym(10), Sym(7) -> Sym(11), Sym(3) -> Sym(6), Sym(5) -> Sym(9), Sym(8) -> Sym(12), Sym(2) -> Sym(5))
-(Sym(5),Sym(9))
-(Sym(7),Sym(11))
-var inits: List(Sym(5), Sym(7)) -> List(Variable(Sym(13)), Variable(Sym(14)))
-will become var reads: List(Sym(5), Sym(7))
-will become var writes: List(Sym(9), Sym(11))
-var reads: List((Sym(5),Sym(18)), (Sym(7),Sym(19)))
-var writes: List((Sym(9),Const(())), (Sym(11),Const(())))
+TP(Sym(11),NumericPlus(Sym(6),Const(1)))
+TP(Sym(12),IntDoubleValue(Sym(11)))
+TP(Sym(13),NumericTimes(Const(2.0),Sym(12)))
+TP(Sym(14),NumericPlus(Sym(13),Const(3.0)))
+TP(Sym(15),NumericPlus(Sym(9),Sym(14)))
+r2:
+TP(Sym(16),NumericPlus(Sym(11),Const(1)))
+TP(Sym(17),IntDoubleValue(Sym(16)))
+TP(Sym(18),NumericTimes(Const(2.0),Sym(17)))
+TP(Sym(19),NumericPlus(Sym(18),Const(3.0)))
+TP(Sym(20),NumericPlus(Sym(14),Sym(19)))
+Map(Sym(10) -> Sym(15), Sym(4) -> Sym(8), Sym(6) -> Sym(11), Sym(7) -> Sym(12), Sym(3) -> Sym(7), Sym(5) -> Sym(9), Sym(8) -> Sym(13), Sym(9) -> Sym(14), Sym(2) -> Sym(6))
+overlap1:
+(Sym(6),Sym(11))
+(Sym(9),Sym(14))
+overlap2:
+var inits: List(Sym(6), Sym(9)) -> List(Variable(Sym(28)), Variable(Sym(29)))
+will become var reads: List(Sym(6), Sym(9))
+will become var writes: List(Sym(11), Sym(14))
+var reads: List((Sym(6),Sym(33)), (Sym(9),Sym(34)))
+var writes: List((Sym(11),Const(())), (Sym(14),Const(())))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0 extends ((Array[Int])=>(Array[Int])) {
-def apply(x0:Array[Int]): Array[Int] = {
-val x1 = new Array[Int](20)
-var x13: Int = 1
-var x14: Int = 5
-val x15 = x1(0) = 8
-var x17 : Int = 1
-val x29 = while (x17 < 20) {
-val x18 = x13
-val x19 = x14
-val x21 = x18 + 1
-x13 = x21
-val x22 = 2 * x21
-val x23 = x22 + 3
-x14 = x23
-val x24 = x19 + x23
-val x27 = x1(x17) = x24
-x27
-x17 = x17 + 1
+class staged$0 extends ((Array[Double])=>(Array[Double])) {
+def apply(x0:Array[Double]): Array[Double] = {
+val x1 = new Array[Double](20)
+var x28: Int = 1
+val x24 = 1.doubleValue()
+val x25 = 2.0 * x24
+val x26 = x25 + 3.0
+var x29: Double = x26
+val x21 = 0.doubleValue()
+val x22 = 2.0 * x21
+val x23 = x22 + 3.0
+val x27 = x23 + x26
+val x30 = x1(0) = x27
+var x32 : Int = 1
+val x45 = while (x32 < 20) {
+val x33 = x28
+val x34 = x29
+val x36 = x33 + 1
+x28 = x36
+val x37 = x36.doubleValue()
+val x38 = 2.0 * x37
+val x39 = x38 + 3.0
+x29 = x39
+val x40 = x34 + x39
+val x43 = x1(x32) = x40
+x43
+x32 = x32 + 1
 }
 x1
 }
@@ -49,28 +68,28 @@ x1
   End of Generated Code                  
 *******************************************/
 
-<stdin>:21: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
-x27
+<stdin>:29: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
+x43
 ^
 one warning found
 compilation: ok
-8
-12
-16
-20
-24
-28
-32
-36
-40
-44
-48
-52
-56
-60
-64
-68
-72
-76
-80
-84
+8.0
+12.0
+16.0
+20.0
+24.0
+28.0
+32.0
+36.0
+40.0
+44.0
+48.0
+52.0
+56.0
+60.0
+64.0
+68.0
+72.0
+76.0
+80.0
+84.0

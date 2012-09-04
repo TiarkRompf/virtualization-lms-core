@@ -1,19 +1,21 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0 extends ((Array[Int])=>(Array[Int])) {
-def apply(x0:Array[Int]): Array[Int] = {
-val x1 = new Array[Int](20)
+class staged$0 extends ((Array[Double])=>(Array[Double])) {
+def apply(x0:Array[Double]): Array[Double] = {
+val x1 = new Array[Double](20)
 var x3 : Int = 0
-val x12 = while (x3 < 20) {
-val x4 = 2 * x3
-val x5 = x4 + 3
-val x6 = x3 + 1
-val x7 = 2 * x6
-val x8 = x7 + 3
-val x9 = x5 + x8
-val x10 = x1(x3) = x9
-x10
+val x14 = while (x3 < 20) {
+val x4 = x3.doubleValue()
+val x5 = 2.0 * x4
+val x6 = x5 + 3.0
+val x7 = x3 + 1
+val x8 = x7.doubleValue()
+val x9 = 2.0 * x8
+val x10 = x9 + 3.0
+val x11 = x6 + x10
+val x12 = x1(x3) = x11
+x12
 x3 = x3 + 1
 }
 x1
@@ -23,28 +25,28 @@ x1
   End of Generated Code                  
 *******************************************/
 
-<stdin>:16: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
-x10
+<stdin>:18: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
+x12
 ^
 one warning found
 compilation: ok
-8
-12
-16
-20
-24
-28
-32
-36
-40
-44
-48
-52
-56
-60
-64
-68
-72
-76
-80
-84
+8.0
+12.0
+16.0
+20.0
+24.0
+28.0
+32.0
+36.0
+40.0
+44.0
+48.0
+52.0
+56.0
+60.0
+64.0
+68.0
+72.0
+76.0
+80.0
+84.0

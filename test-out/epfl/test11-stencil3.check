@@ -1,0 +1,150 @@
+Map(Sym(14) -> Sym(22), Sym(10) -> Sym(12), Sym(17) -> Sym(13), Sym(24) -> Sym(38), Sym(20) -> Sym(34), Sym(32) -> Sym(40), Sym(27) -> Sym(15), Sym(13) -> Sym(21), Sym(11) -> Sym(19), Sym(12) -> Sym(20), Sym(19) -> Sym(33), Sym(23) -> Sym(37), Sym(15) -> Sym(9), Sym(9) -> Sym(11), Sym(21) -> Sym(35), Sym(28) -> Sym(16), Sym(16) -> Sym(10), Sym(18) -> Sym(23), Sym(26) -> Sym(14), Sym(31) -> Sym(24), Sym(29) -> Sym(17), Sym(25) -> Sym(39), Sym(22) -> Sym(36), Sym(30) -> Sym(18))
+r0:
+TP(Sym(10),ArrayApply(Sym(0),Sym(9)))
+TP(Sym(11),NumericPlus(Sym(9),Const(1)))
+TP(Sym(12),ArrayApply(Sym(0),Sym(11)))
+TP(Sym(13),NumericTimes(Sym(10),Sym(12)))
+TP(Sym(14),NumericMinus(Sym(10),Sym(13)))
+TP(Sym(15),NumericMinus(Sym(9),Const(1)))
+TP(Sym(16),ArrayApply(Sym(0),Sym(15)))
+TP(Sym(17),NumericTimes(Sym(16),Sym(10)))
+TP(Sym(18),NumericPlus(Sym(14),Sym(17)))
+TP(Sym(19),NumericPlus(Sym(11),Const(1)))
+TP(Sym(20),ArrayApply(Sym(0),Sym(19)))
+TP(Sym(21),NumericTimes(Sym(12),Sym(20)))
+TP(Sym(22),NumericMinus(Sym(12),Sym(21)))
+TP(Sym(23),NumericPlus(Sym(22),Sym(13)))
+TP(Sym(24),NumericTimes(Sym(18),Sym(23)))
+TP(Sym(25),NumericMinus(Sym(18),Sym(24)))
+TP(Sym(26),NumericMinus(Sym(16),Sym(17)))
+TP(Sym(27),NumericMinus(Sym(15),Const(1)))
+TP(Sym(28),ArrayApply(Sym(0),Sym(27)))
+TP(Sym(29),NumericTimes(Sym(28),Sym(16)))
+TP(Sym(30),NumericPlus(Sym(26),Sym(29)))
+TP(Sym(31),NumericTimes(Sym(30),Sym(18)))
+TP(Sym(32),NumericPlus(Sym(25),Sym(31)))
+r1:
+TP(Sym(33),NumericPlus(Sym(19),Const(1)))
+TP(Sym(34),ArrayApply(Sym(0),Sym(33)))
+TP(Sym(35),NumericTimes(Sym(20),Sym(34)))
+TP(Sym(36),NumericMinus(Sym(20),Sym(35)))
+TP(Sym(37),NumericPlus(Sym(36),Sym(21)))
+TP(Sym(38),NumericTimes(Sym(23),Sym(37)))
+TP(Sym(39),NumericMinus(Sym(23),Sym(38)))
+TP(Sym(40),NumericPlus(Sym(39),Sym(24)))
+r2:
+TP(Sym(41),NumericPlus(Sym(33),Const(1)))
+TP(Sym(42),ArrayApply(Sym(0),Sym(41)))
+TP(Sym(43),NumericTimes(Sym(34),Sym(42)))
+TP(Sym(44),NumericMinus(Sym(34),Sym(43)))
+TP(Sym(45),NumericPlus(Sym(44),Sym(35)))
+TP(Sym(46),NumericTimes(Sym(37),Sym(45)))
+TP(Sym(47),NumericMinus(Sym(37),Sym(46)))
+TP(Sym(48),NumericPlus(Sym(47),Sym(38)))
+Map(Sym(14) -> Sym(22), Sym(10) -> Sym(12), Sym(17) -> Sym(13), Sym(24) -> Sym(38), Sym(20) -> Sym(34), Sym(32) -> Sym(40), Sym(27) -> Sym(15), Sym(13) -> Sym(21), Sym(11) -> Sym(19), Sym(12) -> Sym(20), Sym(19) -> Sym(33), Sym(23) -> Sym(37), Sym(15) -> Sym(9), Sym(9) -> Sym(11), Sym(21) -> Sym(35), Sym(28) -> Sym(16), Sym(16) -> Sym(10), Sym(18) -> Sym(23), Sym(26) -> Sym(14), Sym(31) -> Sym(24), Sym(29) -> Sym(17), Sym(25) -> Sym(39), Sym(22) -> Sym(36), Sym(30) -> Sym(18))
+overlap1:
+(Sym(19),Sym(33))
+(Sym(20),Sym(34))
+(Sym(21),Sym(35))
+(Sym(23),Sym(37))
+(Sym(24),Sym(38))
+overlap2:
+var inits: List(Sym(19), Sym(20), Sym(21), Sym(23), Sym(24)) -> List(Variable(Sym(69)), Variable(Sym(70)), Variable(Sym(71)), Variable(Sym(72)), Variable(Sym(73)))
+will become var reads: List(Sym(19), Sym(20), Sym(21), Sym(23), Sym(24))
+will become var writes: List(Sym(33), Sym(34), Sym(35), Sym(37), Sym(38))
+var reads: List((Sym(19),Sym(77)), (Sym(20),Sym(78)), (Sym(21),Sym(79)), (Sym(23),Sym(80)), (Sym(24),Sym(81)))
+var writes: List((Sym(33),Const(())), (Sym(34),Const(())), (Sym(35),Const(())), (Sym(37),Const(())), (Sym(38),Const(())))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged$0 extends ((Array[Double])=>(Array[Double])) {
+def apply(x0:Array[Double]): Array[Double] = {
+val x1 = x0.length
+val x2 = new Array[Double](x1)
+var x4 : Int = 0
+val x7 = while (x4 < x1) {
+val x5 = x2(x4) = -1.0
+x5
+x4 = x4 + 1
+}
+val x8 = x1 - 2
+val x49 = x8 > 2
+val x100 = if (x49) {
+var x69: Int = 4
+val x57 = x0(4)
+var x70: Double = x57
+val x51 = x0(3)
+val x58 = x51 * x57
+var x71: Double = x58
+val x50 = x0(2)
+val x52 = x50 * x51
+val x59 = x51 - x58
+val x60 = x59 + x52
+var x72: Double = x60
+val x53 = x50 - x52
+val x54 = x0(1)
+val x55 = x54 * x50
+val x56 = x53 + x55
+val x61 = x56 * x60
+var x73: Double = x61
+val x62 = x56 - x61
+val x63 = x54 - x55
+val x64 = x0(0)
+val x65 = x64 * x54
+val x66 = x63 + x65
+val x67 = x66 * x56
+val x68 = x62 + x67
+val x74 = x2(2) = x68
+var x76 : Int = 3
+val x98 = while (x76 < x8) {
+val x77 = x69
+val x78 = x70
+val x79 = x71
+val x80 = x72
+val x81 = x73
+val x83 = x77 + 1
+x69 = x83
+val x84 = x0(x83)
+x70 = x84
+val x85 = x78 * x84
+x71 = x85
+val x86 = x78 - x85
+val x87 = x86 + x79
+x72 = x87
+val x88 = x80 * x87
+x73 = x88
+val x89 = x80 - x88
+val x90 = x89 + x81
+val x96 = x2(x76) = x90
+x96
+x76 = x76 + 1
+}
+x98
+} else {
+()
+}
+x2
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+<stdin>:11: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
+x5
+^
+<stdin>:63: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
+x96
+^
+two warnings found
+compilation: ok
+-1.0
+-1.0
+0.8063999999999999
+0.8735999999999999
+0.9408000000000012
+1.0079999999999998
+1.0751999999999986
+1.1423999999999992
+-1.0
+-1.0
