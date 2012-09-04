@@ -5,7 +5,6 @@ import reflect.{SourceContext, RefinedManifest}
 import util.OverloadHack
 import java.io.PrintWriter
 import internal.{GenericNestedCodegen, GenericFatCodegen}
-import collection.mutable
 
 trait StructOps extends Base {
 
@@ -30,7 +29,7 @@ trait StructExp extends StructOps with BaseExp with EffectExp with ObjectOpsExp 
     val x = fresh[T]
     if (fields exists { case (_, mutable, _) => mutable })  throw new RuntimeException("ERROR: \"var\" fields in Records not yet supported") //FIXME
     val fieldSyms = fields map { case (index, _, rhs) => (index, rhs(x)) }
-    struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fieldSyms:_*)
+    struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fieldSyms)
   }
 
   abstract class StructTag[T]
@@ -41,27 +40,34 @@ trait StructExp extends StructOps with BaseExp with EffectExp with ObjectOpsExp 
 
   abstract class AbstractStruct[T] extends Def[T] {
     val tag: StructTag[T]
-    val elems: Map[String, Rep[Any]]
+    val elems: Seq[(String, Rep[Any])]
   }
+
+  /* override def fresh[T:Manifest] = manifest[T] match {
+    case s if s <:< manifest[Record] => 
+      val m = spawnRefinedManifest
+      super.fresh(m)
+    case _ => super.fresh
+  } */ //TODO: best way to ensure full structural type is always available?
 
   object Struct {
     def unapply[T](d: Def[T]) = unapplyStruct(d)
   }
 
-  def unapplyStruct[T](d: Def[T]): Option[(StructTag[T], Map[String, Rep[Any]])] = d match {
+  def unapplyStruct[T](d: Def[T]): Option[(StructTag[T], Seq[(String, Rep[Any])])] = d match {
     case s: AbstractStruct[T] => Some((s.tag, s.elems))
     case _ => None
   }
 
-  case class SimpleStruct[T](tag: StructTag[T], elems: Map[String,Rep[Any]]) extends AbstractStruct[T]
+  case class SimpleStruct[T](tag: StructTag[T], elems: Seq[(String,Rep[Any])]) extends AbstractStruct[T]
   case class Field[T](struct: Rep[Any], index: String) extends Def[T]
 
-  def struct[T:Manifest](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit pos: SourceContext): Rep[T] = struct(tag, Map(elems:_*))
-  def struct[T:Manifest](tag: StructTag[T], elems: Map[String, Rep[Any]])(implicit pos: SourceContext): Rep[T] = SimpleStruct[T](tag, elems)
+  def struct[T:Manifest](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit pos: SourceContext): Rep[T] = SimpleStruct(tag, elems)
+  def struct[T:Manifest](tag: StructTag[T], elems: Seq[(String, Rep[Any])])(implicit o: Overloaded1, pos: SourceContext): Rep[T] = SimpleStruct(tag, elems)
 
   def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = Field[T](struct, index)
 
-  // FIXME: need  syms override because Map is not a Product
+  // FIXME: need  syms override because Seq is not a Product
   override def syms(x: Any): List[Sym[Any]] = x match {
     case z:Iterable[_] => z.toList.flatMap(syms)
     case _ => super.syms(x)
@@ -78,13 +84,13 @@ trait StructExp extends StructOps with BaseExp with EffectExp with ObjectOpsExp 
     case _ => super.mirror(e,f)
   }
 
-  def structName(m: Manifest[_]): String = m match {
+  def structName[T](m: Manifest[T]): String = m match {
     case rm: RefinedManifest[_] => rm.erasure.getSimpleName + rm.fields.map(f => structName(f._2)).mkString("")
     case _ if (m <:< manifest[AnyVal]) => m.toString
     case _ => m.erasure.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
   }
 
-  def structName(tag: StructTag[_]): String = tag match {
+  def structName[T](tag: StructTag[T]): String = tag match {
     case AnonTag(m) => structName(m)
     case ClassTag(name) => name
     case NestClassTag(elem) => structName(elem)
@@ -101,8 +107,11 @@ trait StructExp extends StructOps with BaseExp with EffectExp with ObjectOpsExp 
 
 trait StructExpOpt extends StructExp {
 
-  override def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = struct match {
-    case Def(Struct(tag, elems)) => elems(index).asInstanceOf[Rep[T]]
+  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = struct match {
+    case Def(Struct(tag, elems)) => 
+      elems.find(_._1 == index).getOrElse(
+        throw new RuntimeException("ERROR: " + index + " is not a field of type " + struct.tp)
+      )._2.asInstanceOf[Rep[T]]
     case _ => super.field[T](struct, index)
   }
 
@@ -119,17 +128,18 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
   }
 
   override def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = (lhs,rhs) match {
-    case (Variable(Def(Struct(NestClassTag(tagL),elemsL: Map[String,Exp[Variable[Any]]]))), Def(Struct(tagR, elemsR))) =>
+    case (Variable(Def(Struct(NestClassTag(tagL),elemsL: Seq[(String,Exp[Variable[Any]])]))), Def(Struct(tagR, elemsR))) =>
       assert(tagL == tagR)
-      assert(elemsL.keySet == elemsR.keySet)
-      for (k <- elemsL.keySet)
-        var_assign(Variable(elemsL(k)), elemsR(k))(elemsR(k).tp, pos)
+      for (((lk,lv), (rk,rv)) <- elemsL zip elemsR) {
+        assert(lk == rk)
+        var_assign(Variable(lv), rv)(rv.tp, pos)
+      }
       Const(())
     case _ => super.var_assign(lhs, rhs)
   }
 
   override def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {
-    case Variable(Def(Struct(NestClassTag(tag), elems: Map[String,Exp[Variable[Any]]]))) =>
+    case Variable(Def(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]))) =>
       def unwrap[A](m:Manifest[Variable[A]]): Manifest[A] = m.typeArguments match {
         case a::_ => mtype(a)
         case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
@@ -141,9 +151,11 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
   override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T])(implicit pos: SourceContext) = (a,b) match {
     case (Block(Def(Struct(tagA,elemsA))), Block(Def(Struct(tagB, elemsB)))) =>
       assert(tagA == tagB)
-      assert(elemsA.keySet == elemsB.keySet)
-      val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, Block(elemsA(k)), Block(elemsB(k)))(elemsB(k).tp, pos))
-      struct[T](tagA, elemsNew.toMap)
+      val elemsNew = for (((lk,lv), (rk,rv)) <- elemsA zip elemsB) yield {
+        assert(lk == rk)
+        lk -> ifThenElse(cond, Block(lv), Block(rv))(rv.tp, pos)
+      }
+      struct[T](tagA, elemsNew)
     case _ => super.ifThenElse(cond,a,b)
   }
 
@@ -193,13 +205,15 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
   override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T])(implicit pos: SourceContext) = (deReify(a),deReify(b)) match {
     case ((u, Def(Struct(tagA,elemsA))), (v, Def(Struct(tagB, elemsB)))) =>
       assert(tagA == tagB)
-      assert(elemsA.keySet == elemsB.keySet)
       // create stm that computes all values at once
       // return struct of syms
       val combinedResult = super.ifThenElse(cond,u,v)
 
-      val elemsNew = for (k <- elemsA.keySet) yield (k -> phi(cond,u,elemsA(k),v,elemsB(k))(combinedResult))
-      struct[T](tagA, elemsNew.toMap)
+      val elemsNew = for (((lk,lv), (rk,rv)) <- elemsA zip elemsB) yield {
+        assert(lk == rk)
+        lk -> phi(cond,u,lv,v,rv)(combinedResult)
+      }
+      struct[T](tagA, elemsNew)
 
     case _ => super.ifThenElse(cond,a,b)
   }
@@ -266,10 +280,10 @@ trait BaseGenStruct extends GenericNestedCodegen {
   val IR: StructExp
   import IR._
 
-  def registerStruct[T](tag: StructTag[T], elems: Map[String, Rep[Any]]) {
+  def registerStruct[T](tag: StructTag[T], elems: Seq[(String, Rep[Any])]) {
     encounteredStructs += tag -> elems.map(e => (e._1, e._2.tp))
   }
-  val encounteredStructs = new mutable.HashMap[StructTag[_], Map[String, Manifest[_]]]
+  val encounteredStructs = new scala.collection.mutable.HashMap[StructTag[_], Seq[(String, Manifest[_])]]
 }
 
 trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
@@ -277,15 +291,22 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    //case Struct(t,e) if e.length == 2 && e(0)_2.tp == manifest[Char] && e(1)_2.tp == manifest[Char] =>
+    //  emitValDef(sym, "("+ quote(a) + ".toInt << 16) + " + quote(b)) 
+    //case Field(struct, index) if //TODO 
+    //  emitValDef(sym, "((" + quote(t) + " & 0xffff0000) >>> 16).toChar")
+    //  emitValDef(sym, "(" + quote(t) + " & 0xffff).toChar")
+
     case Struct(tag, elems) =>
       registerStruct(tag, elems)
       //emitValDef(sym, "Map(" + elems.map(e => "\"" + e._1 + "\"->" + quote(e._2)).mkString(",") + ") //" + tag)
       emitValDef(sym, "new " + structName(tag) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
-      printlog("WARNING: emitting " + structName(tag) + " struct " + quote(sym))
+      printlog("WARNING: emitting " + structName(tag) + " struct " + quote(sym))    
     case f@Field(struct, index) =>
       //emitValDef(sym, quote(struct) + "(\"" + index + "\").asInstanceOf[" + remap(sym.Type) + "]")
       emitValDef(sym, quote(struct) + "." + index)
       printlog("WARNING: emitting field access: " + quote(struct) + "." + index)
+    
     case _ => super.emitNode(sym, rhs)
   }
 
