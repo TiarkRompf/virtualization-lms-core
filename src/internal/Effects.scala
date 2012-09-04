@@ -448,7 +448,7 @@ trait Effects extends Expressions with Blocks with Utils {
       val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
       val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
       val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || write.contains(e) }
-      val simpleDeps = if (!u.maySimple) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.maySimple }
+      val simpleDeps = if (!u.maySimple) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.maySimple } takeRight 1 // TBD: depend on all or just the last?
       val globalDeps = scope filter { case e@Def(Reflect(_, u, _)) => u.mayGlobal }
 
       // TODO: write-on-read deps should be weak
