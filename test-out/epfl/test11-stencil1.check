@@ -1,4 +1,4 @@
-Map(Sym(10) -> Sym(15), Sym(4) -> Sym(8), Sym(6) -> Sym(11), Sym(7) -> Sym(12), Sym(3) -> Sym(7), Sym(5) -> Sym(9), Sym(8) -> Sym(13), Sym(9) -> Sym(14), Sym(2) -> Sym(6))
+Map(Sym(10) -> Sym(16), Sym(4) -> Sym(8), Sym(6) -> Sym(12), Sym(7) -> Sym(13), Sym(11) -> Sym(17), Sym(3) -> Sym(7), Sym(5) -> Sym(9), Sym(8) -> Sym(14), Sym(9) -> Sym(15), Sym(2) -> Sym(6))
 r0:
 TP(Sym(3),IntDoubleValue(Sym(2)))
 TP(Sym(4),NumericTimes(Const(2.0),Sym(3)))
@@ -8,58 +8,61 @@ TP(Sym(7),IntDoubleValue(Sym(6)))
 TP(Sym(8),NumericTimes(Const(2.0),Sym(7)))
 TP(Sym(9),NumericPlus(Sym(8),Const(3.0)))
 TP(Sym(10),NumericPlus(Sym(5),Sym(9)))
+TP(Sym(11),Reflect(ArrayUpdate(Sym(1),Sym(2),Sym(10)),Summary(false,false,false,false,false,List(Sym(1)),List(Sym(1)),List(Sym(1)),List(Sym(1))),List(Sym(1))))
 r1:
-TP(Sym(11),NumericPlus(Sym(6),Const(1)))
-TP(Sym(12),IntDoubleValue(Sym(11)))
-TP(Sym(13),NumericTimes(Const(2.0),Sym(12)))
-TP(Sym(14),NumericPlus(Sym(13),Const(3.0)))
-TP(Sym(15),NumericPlus(Sym(9),Sym(14)))
+TP(Sym(12),NumericPlus(Sym(2),Const(2)))
+TP(Sym(13),IntDoubleValue(Sym(12)))
+TP(Sym(14),NumericTimes(Const(2.0),Sym(13)))
+TP(Sym(15),NumericPlus(Sym(14),Const(3.0)))
+TP(Sym(16),NumericPlus(Sym(9),Sym(15)))
+TP(Sym(17),Reflect(ArrayUpdate(Sym(1),Sym(6),Sym(16)),Summary(false,false,false,false,false,List(Sym(1)),List(Sym(1)),List(Sym(1)),List(Sym(1))),List(Sym(1))))
 r2:
-TP(Sym(16),NumericPlus(Sym(11),Const(1)))
-TP(Sym(17),IntDoubleValue(Sym(16)))
-TP(Sym(18),NumericTimes(Const(2.0),Sym(17)))
-TP(Sym(19),NumericPlus(Sym(18),Const(3.0)))
-TP(Sym(20),NumericPlus(Sym(14),Sym(19)))
-Map(Sym(10) -> Sym(15), Sym(4) -> Sym(8), Sym(6) -> Sym(11), Sym(7) -> Sym(12), Sym(3) -> Sym(7), Sym(5) -> Sym(9), Sym(8) -> Sym(13), Sym(9) -> Sym(14), Sym(2) -> Sym(6))
+TP(Sym(18),NumericPlus(Sym(2),Const(3)))
+TP(Sym(19),IntDoubleValue(Sym(18)))
+TP(Sym(20),NumericTimes(Const(2.0),Sym(19)))
+TP(Sym(21),NumericPlus(Sym(20),Const(3.0)))
+TP(Sym(22),NumericPlus(Sym(15),Sym(21)))
+TP(Sym(23),Reflect(ArrayUpdate(Sym(1),Sym(12),Sym(22)),Summary(false,false,false,false,false,List(Sym(1)),List(Sym(1)),List(Sym(1)),List(Sym(1))),List(Sym(1))))
+Map(Sym(10) -> Sym(16), Sym(4) -> Sym(8), Sym(6) -> Sym(12), Sym(7) -> Sym(13), Sym(11) -> Sym(17), Sym(3) -> Sym(7), Sym(5) -> Sym(9), Sym(8) -> Sym(14), Sym(9) -> Sym(15), Sym(2) -> Sym(6))
 overlap1:
-(Sym(6),Sym(11))
-(Sym(9),Sym(14))
+(Sym(9),Sym(15))
+(Sym(6),Sym(12))
 overlap2:
-var inits: List(Sym(6), Sym(9)) -> List(Variable(Sym(28)), Variable(Sym(29)))
-will become var reads: List(Sym(6), Sym(9))
-will become var writes: List(Sym(11), Sym(14))
-var reads: List((Sym(6),Sym(33)), (Sym(9),Sym(34)))
-var writes: List((Sym(11),Const(())), (Sym(14),Const(())))
+var inits: List(Sym(9), Sym(6)) -> List(Variable(Sym(32)), Variable(Sym(33)))
+will become var reads: List(Sym(9), Sym(6))
+will become var writes: List(Sym(15), Sym(12))
+var reads: List((Sym(9),Sym(36)), (Sym(6),Sym(37)))
+var writes: List((Sym(15),Const(())), (Sym(12),Const(())))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class staged$0 extends ((Array[Double])=>(Array[Double])) {
 def apply(x0:Array[Double]): Array[Double] = {
 val x1 = new Array[Double](20)
-var x28: Int = 1
-val x24 = 1.doubleValue()
+val x24 = 0.doubleValue()
 val x25 = 2.0 * x24
 val x26 = x25 + 3.0
-var x29: Double = x26
-val x21 = 0.doubleValue()
-val x22 = 2.0 * x21
-val x23 = x22 + 3.0
-val x27 = x23 + x26
-val x30 = x1(0) = x27
-var x32 : Int = 1
-val x45 = while (x32 < 20) {
-val x33 = x28
-val x34 = x29
-val x36 = x33 + 1
-x28 = x36
-val x37 = x36.doubleValue()
-val x38 = 2.0 * x37
-val x39 = x38 + 3.0
-x29 = x39
-val x40 = x34 + x39
-val x43 = x1(x32) = x40
-x43
-x32 = x32 + 1
+val x27 = 1.doubleValue()
+val x28 = 2.0 * x27
+val x29 = x28 + 3.0
+val x30 = x26 + x29
+val x31 = x1(0) = x30
+var x32: Double = x29
+var x33: Int = 1
+var x35 : Int = 1
+val x49 = while (x35 < 20) {
+val x36 = x32
+val x37 = x33
+val x39 = x35 + 1
+val x40 = x39.doubleValue()
+val x41 = 2.0 * x40
+val x42 = x41 + 3.0
+val x43 = x36 + x42
+val x44 = x1(x37) = x43
+x32 = x42
+x33 = x39
+()
+x35 = x35 + 1
 }
 x1
 }
@@ -68,10 +71,6 @@ x1
   End of Generated Code                  
 *******************************************/
 
-<stdin>:29: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
-x43
-^
-one warning found
 compilation: ok
 8.0
 12.0

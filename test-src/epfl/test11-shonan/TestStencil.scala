@@ -51,10 +51,18 @@ class TestStencil extends FileDiffSuite {
   trait Sliding extends DSL {
     
     def infix_sliding[T:Manifest](n: Rep[Int], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
-      sliding(NewArray[T](n),0,n)(f)
+      val a = NewArray[T](n)
+      sliding(0,n)(i => a(i) = f(i))
+      a
     }
 
-    def sliding[T:Manifest](array: Rep[Array[T]], start: Rep[Int], end: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]]
+
+    def infix_sliding(r: Rep[Range]) = new {
+      def foreach(f: Rep[Int] => Rep[Unit]): Rep[Unit] =
+        sliding(r.start, r.end)(f)
+    }
+
+    def sliding(start: Rep[Int], end: Rep[Int])(f: Rep[Int] => Rep[Unit]): Rep[Unit]
 
     
   }
@@ -99,6 +107,7 @@ class TestStencil extends FileDiffSuite {
     
     // some arithemetic rewrites
     override def numeric_plus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = ((lhs,rhs) match {
+      case (Def(NumericPlus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_plus(x, unit(y+z)) // (x+y)+z --> x+(y+z)
       case (Def(NumericMinus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => if (y > z) numeric_minus(x, unit(y-z)) else numeric_plus(x,unit(z-y))  // (x-y)+z --> x-(y-z) or x+(z-y)
       case _ => super.numeric_plus(lhs,rhs)
     }).asInstanceOf[Exp[T]]
@@ -109,8 +118,10 @@ class TestStencil extends FileDiffSuite {
     
     
     // stencil implementation
-    def sliding[T:Manifest](a: Rep[Array[T]], start: Rep[Int], end: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
+    def sliding(start: Rep[Int], end: Rep[Int])(f: Rep[Int] => Rep[Unit]): Rep[Unit] = {
       val i = fresh[Int]
+      
+      val save = context // reset effect context
       
       // evaluate loop contents f(i)
       val (r0,stms0) = reifySubGraph(f(i))
@@ -118,11 +129,10 @@ class TestStencil extends FileDiffSuite {
       val (((r1,stms1,subst1),(r2,stms2,subst2)), _) = reifySubGraph {
         
         reflectSubGraph(stms0)
-        
-        val iPlusOne = i+1
+        context = save
         
         // evaluate loop contents f(i+1)
-        val ((r1,subst1),stms1) = reifySubGraph(trans.withSubstScope(i -> iPlusOne) {
+        val ((r1,subst1),stms1) = reifySubGraph(trans.withSubstScope(i -> (i+1)) {
           stms0.foreach(s=>trans.traverseStm(s))
           (trans(r0), trans.subst)
         })
@@ -131,11 +141,10 @@ class TestStencil extends FileDiffSuite {
         val ((r2,stms2,subst2), _) = reifySubGraph {
 
           reflectSubGraph(stms1)
-
-          val iPlusTwo = iPlusOne+1
+          context = save
           
           // evaluate loop contents f(i+2)
-          val ((r2,subst2),stms2) = reifySubGraph(trans.withSubstScope(i -> iPlusTwo) {
+          val ((r2,subst2),stms2) = reifySubGraph(trans.withSubstScope(i -> (i+2)) {
             stms0.foreach(s=>trans.traverseStm(s))
             (trans(r0), trans.subst)
           })
@@ -148,6 +157,8 @@ class TestStencil extends FileDiffSuite {
 
       }
 
+      context = Nil
+      
       val defs = stms0.flatMap(_.lhs)
       
       println("r0:")
@@ -193,8 +204,6 @@ class TestStencil extends FileDiffSuite {
 
         val vars = overlap0 map (x => var_new(substX(x))(x.tp,x.pos.head))
 
-        a(start) = rX
-
         println("var inits: " + overlap0 + " -> " + vars)
         println("will become var reads: " + overlap0)
         println("will become var writes: " + overlap1)
@@ -202,7 +211,7 @@ class TestStencil extends FileDiffSuite {
       
         // now generate the loop
       
-        for (j <- (start+unit(1)) until end) {
+        for (j <- (start + unit(1)) until end) {
         
           // read the overlap variables
         
@@ -212,7 +221,7 @@ class TestStencil extends FileDiffSuite {
         
           // emit the transformed loop body
         
-          val (r,jPlusOne,substY1) = trans.withSubstScope((reads:+((i+1)->j)): _*) {
+          val (r,jPlusOne,substY1) = trans.withSubstScope((reads:+(i->(j-unit(1)))): _*) {
             stms1.foreach(s=>trans.traverseStm(s))
             (trans(r1), trans(i+1), trans.subst)
           }
@@ -222,12 +231,9 @@ class TestStencil extends FileDiffSuite {
           val writes = (overlap1 zip vars) map (p => (p._1, var_assign(p._2, substY1(p._1))))
 
           println("var writes: " + writes)
-        
-          a(j) = r
         }
       
       }
-      a
     }
     
     
@@ -284,8 +290,8 @@ class TestStencil extends FileDiffSuite {
   }
 
 
-
   /*
+
   const int N = 20;
   void program0(vector<double> input, vector<double>& output) {
     vector<double> input2(N);
@@ -309,19 +315,20 @@ class TestStencil extends FileDiffSuite {
         val n = v.length
         val input = v
         val output = NewArray[Double](v.length)
-        for (i <- 0 until n) output(i) = -1.0
         
+        // single iteration
 
         def a(j: Rep[Int]) = input(j) //if (j > 0 && j < input.length) input(j) else 0
         
         def w(j: Rep[Int]) = a(j) * a(j+1)
-
         
         // result has 1 read, 1 write, 3 flops = 16/3 bytes/flop
 
-        sliding(output,1,n-1) { i =>
-          a(i) - w(i) + w(i-1)
+        for (i <- (1 until n-1).sliding) {
+          output(i) = a(i) - w(i) + w(i-1)
         }
+        
+        output
       }
     }
     new Prog with Impl with SlidingExp
@@ -333,9 +340,7 @@ class TestStencil extends FileDiffSuite {
 
         val n = v.length
         val input = v
-
         val output = NewArray[Double](v.length)
-        for (i <- 0 until n) output(i) = -1.0
         
         // perform two iterations at once
 
@@ -351,9 +356,10 @@ class TestStencil extends FileDiffSuite {
 
         // result has 1 read, 1 write, 6 flops = 16/6 bytes/flop
         
-        sliding(output,2,n-2) { i =>
-          b(i)
+        for (i <- (2 until n-2).sliding) {
+          output(i) = b(i)
         }
+        output
       }
     }
     new Prog with Impl with SlidingExp

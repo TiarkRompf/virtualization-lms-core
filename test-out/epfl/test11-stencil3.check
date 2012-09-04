@@ -1,59 +1,64 @@
-Map(Sym(14) -> Sym(22), Sym(10) -> Sym(12), Sym(17) -> Sym(13), Sym(24) -> Sym(38), Sym(20) -> Sym(34), Sym(32) -> Sym(40), Sym(27) -> Sym(15), Sym(13) -> Sym(21), Sym(11) -> Sym(19), Sym(12) -> Sym(20), Sym(19) -> Sym(33), Sym(23) -> Sym(37), Sym(15) -> Sym(9), Sym(9) -> Sym(11), Sym(21) -> Sym(35), Sym(28) -> Sym(16), Sym(16) -> Sym(10), Sym(18) -> Sym(23), Sym(26) -> Sym(14), Sym(31) -> Sym(24), Sym(29) -> Sym(17), Sym(25) -> Sym(39), Sym(22) -> Sym(36), Sym(30) -> Sym(18))
+Map(Sym(14) -> Sym(19), Sym(10) -> Sym(18), Sym(17) -> Sym(32), Sym(24) -> Sym(12), Sym(6) -> Sym(8), Sym(20) -> Sym(35), Sym(7) -> Sym(15), Sym(27) -> Sym(20), Sym(13) -> Sym(9), Sym(11) -> Sym(5), Sym(12) -> Sym(6), Sym(5) -> Sym(7), Sym(19) -> Sym(34), Sym(23) -> Sym(11), Sym(15) -> Sym(30), Sym(8) -> Sym(16), Sym(9) -> Sym(17), Sym(21) -> Sym(36), Sym(28) -> Sym(37), Sym(16) -> Sym(31), Sym(18) -> Sym(33), Sym(26) -> Sym(14), Sym(29) -> Sym(38), Sym(25) -> Sym(13), Sym(22) -> Sym(10))
 r0:
-TP(Sym(10),ArrayApply(Sym(0),Sym(9)))
-TP(Sym(11),NumericPlus(Sym(9),Const(1)))
+TP(Sym(6),ArrayApply(Sym(0),Sym(5)))
+TP(Sym(7),NumericPlus(Sym(5),Const(1)))
+TP(Sym(8),ArrayApply(Sym(0),Sym(7)))
+TP(Sym(9),NumericTimes(Sym(6),Sym(8)))
+TP(Sym(10),NumericMinus(Sym(6),Sym(9)))
+TP(Sym(11),NumericMinus(Sym(5),Const(1)))
 TP(Sym(12),ArrayApply(Sym(0),Sym(11)))
-TP(Sym(13),NumericTimes(Sym(10),Sym(12)))
-TP(Sym(14),NumericMinus(Sym(10),Sym(13)))
-TP(Sym(15),NumericMinus(Sym(9),Const(1)))
+TP(Sym(13),NumericTimes(Sym(12),Sym(6)))
+TP(Sym(14),NumericPlus(Sym(10),Sym(13)))
+TP(Sym(15),NumericPlus(Sym(5),Const(2)))
 TP(Sym(16),ArrayApply(Sym(0),Sym(15)))
-TP(Sym(17),NumericTimes(Sym(16),Sym(10)))
-TP(Sym(18),NumericPlus(Sym(14),Sym(17)))
-TP(Sym(19),NumericPlus(Sym(11),Const(1)))
-TP(Sym(20),ArrayApply(Sym(0),Sym(19)))
-TP(Sym(21),NumericTimes(Sym(12),Sym(20)))
-TP(Sym(22),NumericMinus(Sym(12),Sym(21)))
-TP(Sym(23),NumericPlus(Sym(22),Sym(13)))
-TP(Sym(24),NumericTimes(Sym(18),Sym(23)))
-TP(Sym(25),NumericMinus(Sym(18),Sym(24)))
-TP(Sym(26),NumericMinus(Sym(16),Sym(17)))
-TP(Sym(27),NumericMinus(Sym(15),Const(1)))
-TP(Sym(28),ArrayApply(Sym(0),Sym(27)))
-TP(Sym(29),NumericTimes(Sym(28),Sym(16)))
-TP(Sym(30),NumericPlus(Sym(26),Sym(29)))
-TP(Sym(31),NumericTimes(Sym(30),Sym(18)))
-TP(Sym(32),NumericPlus(Sym(25),Sym(31)))
+TP(Sym(17),NumericTimes(Sym(8),Sym(16)))
+TP(Sym(18),NumericMinus(Sym(8),Sym(17)))
+TP(Sym(19),NumericPlus(Sym(18),Sym(9)))
+TP(Sym(20),NumericTimes(Sym(14),Sym(19)))
+TP(Sym(21),NumericMinus(Sym(14),Sym(20)))
+TP(Sym(22),NumericMinus(Sym(12),Sym(13)))
+TP(Sym(23),NumericMinus(Sym(11),Const(1)))
+TP(Sym(24),ArrayApply(Sym(0),Sym(23)))
+TP(Sym(25),NumericTimes(Sym(24),Sym(12)))
+TP(Sym(26),NumericPlus(Sym(22),Sym(25)))
+TP(Sym(27),NumericTimes(Sym(26),Sym(14)))
+TP(Sym(28),NumericPlus(Sym(21),Sym(27)))
+TP(Sym(29),Reflect(ArrayUpdate(Sym(2),Sym(5),Sym(28)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
 r1:
-TP(Sym(33),NumericPlus(Sym(19),Const(1)))
-TP(Sym(34),ArrayApply(Sym(0),Sym(33)))
-TP(Sym(35),NumericTimes(Sym(20),Sym(34)))
-TP(Sym(36),NumericMinus(Sym(20),Sym(35)))
-TP(Sym(37),NumericPlus(Sym(36),Sym(21)))
-TP(Sym(38),NumericTimes(Sym(23),Sym(37)))
-TP(Sym(39),NumericMinus(Sym(23),Sym(38)))
-TP(Sym(40),NumericPlus(Sym(39),Sym(24)))
+TP(Sym(30),NumericPlus(Sym(5),Const(3)))
+TP(Sym(31),ArrayApply(Sym(0),Sym(30)))
+TP(Sym(32),NumericTimes(Sym(16),Sym(31)))
+TP(Sym(33),NumericMinus(Sym(16),Sym(32)))
+TP(Sym(34),NumericPlus(Sym(33),Sym(17)))
+TP(Sym(35),NumericTimes(Sym(19),Sym(34)))
+TP(Sym(36),NumericMinus(Sym(19),Sym(35)))
+TP(Sym(37),NumericPlus(Sym(36),Sym(20)))
+TP(Sym(38),Reflect(ArrayUpdate(Sym(2),Sym(7),Sym(37)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
 r2:
-TP(Sym(41),NumericPlus(Sym(33),Const(1)))
-TP(Sym(42),ArrayApply(Sym(0),Sym(41)))
-TP(Sym(43),NumericTimes(Sym(34),Sym(42)))
-TP(Sym(44),NumericMinus(Sym(34),Sym(43)))
-TP(Sym(45),NumericPlus(Sym(44),Sym(35)))
-TP(Sym(46),NumericTimes(Sym(37),Sym(45)))
-TP(Sym(47),NumericMinus(Sym(37),Sym(46)))
-TP(Sym(48),NumericPlus(Sym(47),Sym(38)))
-Map(Sym(14) -> Sym(22), Sym(10) -> Sym(12), Sym(17) -> Sym(13), Sym(24) -> Sym(38), Sym(20) -> Sym(34), Sym(32) -> Sym(40), Sym(27) -> Sym(15), Sym(13) -> Sym(21), Sym(11) -> Sym(19), Sym(12) -> Sym(20), Sym(19) -> Sym(33), Sym(23) -> Sym(37), Sym(15) -> Sym(9), Sym(9) -> Sym(11), Sym(21) -> Sym(35), Sym(28) -> Sym(16), Sym(16) -> Sym(10), Sym(18) -> Sym(23), Sym(26) -> Sym(14), Sym(31) -> Sym(24), Sym(29) -> Sym(17), Sym(25) -> Sym(39), Sym(22) -> Sym(36), Sym(30) -> Sym(18))
+TP(Sym(39),NumericPlus(Sym(5),Const(4)))
+TP(Sym(40),ArrayApply(Sym(0),Sym(39)))
+TP(Sym(41),NumericTimes(Sym(31),Sym(40)))
+TP(Sym(42),NumericMinus(Sym(31),Sym(41)))
+TP(Sym(43),NumericPlus(Sym(42),Sym(32)))
+TP(Sym(44),NumericTimes(Sym(34),Sym(43)))
+TP(Sym(45),NumericMinus(Sym(34),Sym(44)))
+TP(Sym(46),NumericPlus(Sym(45),Sym(35)))
+TP(Sym(47),Reflect(ArrayUpdate(Sym(2),Sym(15),Sym(46)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
+Map(Sym(14) -> Sym(19), Sym(10) -> Sym(18), Sym(17) -> Sym(32), Sym(24) -> Sym(12), Sym(6) -> Sym(8), Sym(20) -> Sym(35), Sym(7) -> Sym(15), Sym(27) -> Sym(20), Sym(13) -> Sym(9), Sym(11) -> Sym(5), Sym(12) -> Sym(6), Sym(5) -> Sym(7), Sym(19) -> Sym(34), Sym(23) -> Sym(11), Sym(15) -> Sym(30), Sym(8) -> Sym(16), Sym(9) -> Sym(17), Sym(21) -> Sym(36), Sym(28) -> Sym(37), Sym(16) -> Sym(31), Sym(18) -> Sym(33), Sym(26) -> Sym(14), Sym(29) -> Sym(38), Sym(25) -> Sym(13), Sym(22) -> Sym(10))
 overlap1:
-(Sym(19),Sym(33))
-(Sym(20),Sym(34))
-(Sym(21),Sym(35))
-(Sym(23),Sym(37))
-(Sym(24),Sym(38))
+(Sym(16),Sym(31))
+(Sym(17),Sym(32))
+(Sym(19),Sym(34))
+(Sym(20),Sym(35))
+(Sym(7),Sym(15))
 overlap2:
-var inits: List(Sym(19), Sym(20), Sym(21), Sym(23), Sym(24)) -> List(Variable(Sym(69)), Variable(Sym(70)), Variable(Sym(71)), Variable(Sym(72)), Variable(Sym(73)))
-will become var reads: List(Sym(19), Sym(20), Sym(21), Sym(23), Sym(24))
-will become var writes: List(Sym(33), Sym(34), Sym(35), Sym(37), Sym(38))
-var reads: List((Sym(19),Sym(77)), (Sym(20),Sym(78)), (Sym(21),Sym(79)), (Sym(23),Sym(80)), (Sym(24),Sym(81)))
-var writes: List((Sym(33),Const(())), (Sym(34),Const(())), (Sym(35),Const(())), (Sym(37),Const(())), (Sym(38),Const(())))
+(Sym(15),Sym(39))
+WARNING: overlap beyond a single loop iteration not yet implemented
+var inits: List(Sym(16), Sym(17), Sym(19), Sym(20), Sym(7), Sym(15)) -> List(Variable(Sym(69)), Variable(Sym(70)), Variable(Sym(71)), Variable(Sym(72)), Variable(Sym(73)), Variable(Sym(74)))
+will become var reads: List(Sym(16), Sym(17), Sym(19), Sym(20), Sym(7), Sym(15))
+will become var writes: List(Sym(31), Sym(32), Sym(34), Sym(35), Sym(15), Sym(30))
+var reads: List((Sym(16),Sym(77)), (Sym(17),Sym(78)), (Sym(19),Sym(79)), (Sym(20),Sym(80)), (Sym(7),Sym(81)), (Sym(15),Sym(82)))
+var writes: List((Sym(31),Const(())), (Sym(32),Const(())), (Sym(34),Const(())), (Sym(35),Const(())), (Sym(15),Const(())), (Sym(30),Const(())))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -61,65 +66,62 @@ class staged$0 extends ((Array[Double])=>(Array[Double])) {
 def apply(x0:Array[Double]): Array[Double] = {
 val x1 = x0.length
 val x2 = new Array[Double](x1)
-var x4 : Int = 0
-val x7 = while (x4 < x1) {
-val x5 = x2(x4) = -1.0
-x5
-x4 = x4 + 1
-}
-val x8 = x1 - 2
-val x49 = x8 > 2
-val x100 = if (x49) {
-var x69: Int = 4
-val x57 = x0(4)
+val x3 = x1 - 2
+val x48 = x3 > 2
+val x103 = if (x48) {
+val x49 = x0(2)
+val x50 = x0(3)
+val x51 = x49 * x50
+val x52 = x49 - x51
+val x53 = x0(1)
+val x54 = x53 * x49
+val x55 = x52 + x54
+val x56 = x0(4)
+val x57 = x50 * x56
+val x58 = x50 - x57
+val x59 = x58 + x51
+val x60 = x55 * x59
+val x61 = x55 - x60
+val x62 = x53 - x54
+val x63 = x0(0)
+val x64 = x63 * x53
+val x65 = x62 + x64
+val x66 = x65 * x55
+val x67 = x61 + x66
+val x68 = x2(2) = x67
+var x69: Double = x56
 var x70: Double = x57
-val x51 = x0(3)
-val x58 = x51 * x57
-var x71: Double = x58
-val x50 = x0(2)
-val x52 = x50 * x51
-val x59 = x51 - x58
-val x60 = x59 + x52
+var x71: Double = x59
 var x72: Double = x60
-val x53 = x50 - x52
-val x54 = x0(1)
-val x55 = x54 * x50
-val x56 = x53 + x55
-val x61 = x56 * x60
-var x73: Double = x61
-val x62 = x56 - x61
-val x63 = x54 - x55
-val x64 = x0(0)
-val x65 = x64 * x54
-val x66 = x63 + x65
-val x67 = x66 * x56
-val x68 = x62 + x67
-val x74 = x2(2) = x68
+var x73: Int = 3
+var x74: Int = 4
 var x76 : Int = 3
-val x98 = while (x76 < x8) {
+val x101 = while (x76 < x3) {
 val x77 = x69
 val x78 = x70
 val x79 = x71
 val x80 = x72
 val x81 = x73
-val x83 = x77 + 1
-x69 = x83
-val x84 = x0(x83)
-x70 = x84
-val x85 = x78 * x84
-x71 = x85
-val x86 = x78 - x85
-val x87 = x86 + x79
-x72 = x87
-val x88 = x80 * x87
-x73 = x88
-val x89 = x80 - x88
-val x90 = x89 + x81
-val x96 = x2(x76) = x90
-x96
+val x82 = x74
+val x84 = x76 + 2
+val x85 = x0(x84)
+val x86 = x77 * x85
+val x87 = x77 - x86
+val x88 = x87 + x78
+val x89 = x79 * x88
+val x90 = x79 - x89
+val x91 = x90 + x80
+val x92 = x2(x81) = x91
+x69 = x85
+x70 = x86
+x71 = x88
+x72 = x89
+x73 = x82
+x74 = x84
+()
 x76 = x76 + 1
 }
-x98
+x101
 } else {
 ()
 }
@@ -130,21 +132,14 @@ x2
   End of Generated Code                  
 *******************************************/
 
-<stdin>:11: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
-x5
-^
-<stdin>:63: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
-x96
-^
-two warnings found
 compilation: ok
--1.0
--1.0
+0.0
+0.0
 0.8063999999999999
 0.8735999999999999
 0.9408000000000012
 1.0079999999999998
 1.0751999999999986
 1.1423999999999992
--1.0
--1.0
+0.0
+0.0
