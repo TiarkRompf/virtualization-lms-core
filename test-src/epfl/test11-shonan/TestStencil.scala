@@ -56,7 +56,6 @@ class TestStencil extends FileDiffSuite {
       a
     }
 
-
     def infix_sliding(r: Rep[Range]) = new {
       def foreach(f: Rep[Int] => Rep[Unit]): Rep[Unit] =
         sliding(r.start, r.end)(f)
@@ -64,7 +63,6 @@ class TestStencil extends FileDiffSuite {
 
     def sliding(start: Rep[Int], end: Rep[Int])(f: Rep[Int] => Rep[Unit]): Rep[Unit]
 
-    
   }
   
   //trait SlidingExp extends Impl with Sliding {
@@ -72,18 +70,6 @@ class TestStencil extends FileDiffSuite {
       with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp
       with IfThenElseExpOpt {
-    
-    /*
-    idea:
-      
-      loop(n) { i => f(i) }
-      
-      evaluate f(i), stms0 be all statements computed
-      treat all defined syms as outputs: (s1,s2,s3,r)
-      
-      loop(n) { i => (s1,s2,s3,r) }
-    */
-    
     
     object trans extends ForwardTransformer { 
       val IR: SlidingExp.this.type = SlidingExp.this
@@ -126,7 +112,7 @@ class TestStencil extends FileDiffSuite {
     def sliding(start: Rep[Int], end: Rep[Int])(f: Rep[Int] => Rep[Unit]): Rep[Unit] = {
       val i = fresh[Int]
       
-      val save = context // reset effect context
+      val save = context // reset effect context later
       
       // evaluate loop contents f(i)
       val (r0,stms0) = reifySubGraph(f(i))
@@ -162,7 +148,7 @@ class TestStencil extends FileDiffSuite {
 
       }
 
-      context = Nil
+      context = save
       
       val defs = stms0.flatMap(_.lhs)
       
@@ -245,6 +231,9 @@ class TestStencil extends FileDiffSuite {
     
   }
 
+
+
+  // test cases below
 
   val prefix = "test-out/epfl/test11-"
 
