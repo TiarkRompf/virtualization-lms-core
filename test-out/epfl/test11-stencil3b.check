@@ -17,7 +17,7 @@ TP(Sym(19),NumericPlus(Sym(18),Sym(9)))
 TP(Sym(20),NumericTimes(Sym(14),Sym(19)))
 TP(Sym(21),NumericMinus(Sym(14),Sym(20)))
 TP(Sym(22),NumericMinus(Sym(12),Sym(13)))
-TP(Sym(23),NumericMinus(Sym(11),Const(1)))
+TP(Sym(23),NumericMinus(Sym(5),Const(2)))
 TP(Sym(24),ArrayApply(Sym(0),Sym(23)))
 TP(Sym(25),NumericTimes(Sym(24),Sym(12)))
 TP(Sym(26),NumericPlus(Sym(22),Sym(25)))
@@ -53,7 +53,7 @@ overlap1:
 (Sym(7),Sym(15))
 overlap2:
 (Sym(15),Sym(39))
-WARNING: overlap beyond a single loop iteration not yet implemented
+NOTE: overlap beyond a single loop iteration will be ignored (not yet implemented)
 var inits: List(Sym(16), Sym(17), Sym(19), Sym(20), Sym(7), Sym(15)) -> List(Variable(Sym(69)), Variable(Sym(70)), Variable(Sym(71)), Variable(Sym(72)), Variable(Sym(73)), Variable(Sym(74)))
 will become var reads: List(Sym(16), Sym(17), Sym(19), Sym(20), Sym(7), Sym(15))
 will become var writes: List(Sym(31), Sym(32), Sym(34), Sym(35), Sym(15), Sym(30))
@@ -68,7 +68,7 @@ val x1 = x0.length
 val x2 = new Array[Double](x1)
 val x3 = x1 - 2
 val x48 = x3 > 2
-val x103 = if (x48) {
+val x102 = if (x48) {
 val x49 = x0(2)
 val x50 = x0(3)
 val x51 = x49 * x50
@@ -96,7 +96,7 @@ var x72: Double = x60
 var x73: Int = 3
 var x74: Int = 4
 var x76 : Int = 3
-val x101 = while (x76 < x3) {
+val x100 = while (x76 < x3) {
 val x77 = x69
 val x78 = x70
 val x79 = x71
@@ -121,7 +121,7 @@ x74 = x84
 ()
 x76 = x76 + 1
 }
-x101
+x100
 } else {
 ()
 }

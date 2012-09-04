@@ -1,0 +1,45 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged$0 extends ((Array[Double])=>(Array[Double])) {
+def apply(x0:Array[Double]): Array[Double] = {
+val x1 = x0.length
+val x2 = new Array[Double](x1)
+val x3 = x1 - 1
+var x5 : Int = 1
+val x17 = while (x5 < x3) {
+val x6 = x0(x5)
+val x7 = x5 + 1
+val x8 = x0(x7)
+val x9 = x6 * x8
+val x10 = x6 - x9
+val x11 = x5 - 1
+val x12 = x0(x11)
+val x13 = x12 * x6
+val x14 = x10 + x13
+val x15 = x2(x5) = x14
+x15
+x5 = x5 + 1
+}
+x2
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+<stdin>:21: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
+x15
+^
+one warning found
+compilation: ok
+0.0
+0.8800000000000001
+0.96
+1.0400000000000003
+1.12
+1.1999999999999993
+1.2799999999999998
+1.3600000000000003
+1.4400000000000006
+0.0

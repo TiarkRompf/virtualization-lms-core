@@ -108,11 +108,16 @@ class TestStencil extends FileDiffSuite {
     // some arithemetic rewrites
     override def numeric_plus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = ((lhs,rhs) match {
       case (Def(NumericPlus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_plus(x, unit(y+z)) // (x+y)+z --> x+(y+z)
-      case (Def(NumericMinus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => if (y > z) numeric_minus(x, unit(y-z)) else numeric_plus(x,unit(z-y))  // (x-y)+z --> x-(y-z) or x+(z-y)
+      case (Def(NumericMinus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_minus(x, unit(y-z)) // (x-y)+z --> x-(y-z)
+      case (x: Exp[Int], Const(z:Int)) if z < 0 => numeric_minus(x, unit(-z))
+      case (x: Exp[Int], Const(0)) => x
       case _ => super.numeric_plus(lhs,rhs)
     }).asInstanceOf[Exp[T]]
     override def numeric_minus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = ((lhs,rhs) match {
+      case (Def(NumericMinus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_minus(x, unit(y+z)) // (x-y)-z --> x-(y+z)
       case (Def(NumericPlus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_plus(x, unit(y-z)) // (x+y)-z --> x+(y-z)
+      case (x: Exp[Int], Const(z:Int)) if z < 0 => numeric_plus(x, unit(-z))
+      case (x: Exp[Int], Const(0)) => x
       case _ => super.numeric_minus(lhs,rhs)
     }).asInstanceOf[Exp[T]]
     
@@ -178,19 +183,20 @@ class TestStencil extends FileDiffSuite {
       val overlap01 = stms1.flatMap { case TP(s,d) => syms(d) filter (defs contains _) }.distinct
       val overlap02 = stms2.flatMap { case TP(s,d) => syms(d) filter (defs contains _) }.distinct
 
-      val overlap0 = (stms1++stms2).flatMap { case TP(s,d) => syms(d) filter (defs contains _) }.distinct
-      val overlap1 = overlap0 map subst1
-      val overlap2 = overlap0 map subst2
-
       println("overlap1:")
       overlap01 map (x=>(x,subst1(x))) foreach println
 
       println("overlap2:")
       overlap02 map (x=>(x,subst2(x))) foreach println
 
-
       if (overlap02.nonEmpty)
-        println("WARNING: overlap beyond a single loop iteration not yet implemented")
+        println("NOTE: overlap beyond a single loop iteration will be ignored (not yet implemented)")
+
+
+      val overlap0 = (overlap01++overlap02).distinct
+      val overlap1 = overlap0 map subst1
+      //val overlap2 = overlap0 map subst2
+
 
       // build a variable for each overlap sym.
       // init variables by peeling first loop iteration.
@@ -221,9 +227,9 @@ class TestStencil extends FileDiffSuite {
         
           // emit the transformed loop body
         
-          val (r,jPlusOne,substY1) = trans.withSubstScope((reads:+(i->(j-unit(1)))): _*) {
+          val (r,substY1) = trans.withSubstScope((reads:+(i->(j-unit(1)))): _*) {
             stms1.foreach(s=>trans.traverseStm(s))
-            (trans(r1), trans(i+1), trans.subst)
+            (trans(r1), trans.subst)
           }
         
           // write the new values to the overlap vars
@@ -308,19 +314,49 @@ class TestStencil extends FileDiffSuite {
   }
   */
 
-  def testStencil2 = withOutFileChecked(prefix+"stencil2") {
+  def testStencil2a = withOutFileChecked(prefix+"stencil2a") {
     trait Prog extends DSL with Sliding {
       def test(v: Rep[Array[Double]]) = {
 
         val n = v.length
         val input = v
-        val output = NewArray[Double](v.length)
+        val output = NewArray[Double](n)
         
         // single iteration
 
-        def a(j: Rep[Int]) = input(j) //if (j > 0 && j < input.length) input(j) else 0
+        def a(j: Rep[Int]) = input(j)
         
         def w(j: Rep[Int]) = a(j) * a(j+1)
+        
+        // regular for loop
+        
+        // result has 3 reads, 1 write, 4 flops = 32/4 bytes/flop
+
+        for (i <- (1 until n-1)) {
+          output(i) = a(i) - w(i) + w(i-1)
+        }
+        
+        output
+      }
+    }
+    new Prog with Impl with SlidingExp
+  }
+
+  def testStencil2b = withOutFileChecked(prefix+"stencil2b") {
+    trait Prog extends DSL with Sliding {
+      def test(v: Rep[Array[Double]]) = {
+
+        val n = v.length
+        val input = v
+        val output = NewArray[Double](n)
+        
+        // single iteration
+
+        def a(j: Rep[Int]) = input(j)
+        
+        def w(j: Rep[Int]) = a(j) * a(j+1)
+        
+        // sliding for loop
         
         // result has 1 read, 1 write, 3 flops = 16/3 bytes/flop
 
@@ -334,17 +370,18 @@ class TestStencil extends FileDiffSuite {
     new Prog with Impl with SlidingExp
   }
 
-  def testStencil3 = withOutFileChecked(prefix+"stencil3") {
+
+  def testStencil3a = withOutFileChecked(prefix+"stencil3a") {
     trait Prog extends DSL with Sliding {
       def test(v: Rep[Array[Double]]) = {
 
         val n = v.length
         val input = v
-        val output = NewArray[Double](v.length)
+        val output = NewArray[Double](n)
         
         // perform two iterations at once
 
-        def a(j: Rep[Int]) = input(j) //if (j > 0 && j < input.length) input(j) else 0.0
+        def a(j: Rep[Int]) = input(j)
         
         def w1(j: Rep[Int]) = a(j) * a(j+1)
 
@@ -354,6 +391,41 @@ class TestStencil extends FileDiffSuite {
         
         def b(j: Rep[Int]) = wm(j) - w2(j) + w2(j-1)
 
+        // regular for loop
+
+        // result has 5 reads, 1 write, 14 flops = 48/14 bytes/flop
+        
+        for (i <- (2 until n-2)) {
+          output(i) = b(i)
+        }
+        output
+      }
+    }
+    new Prog with Impl with SlidingExp
+  }
+
+  def testStencil3b = withOutFileChecked(prefix+"stencil3b") {
+    trait Prog extends DSL with Sliding {
+      def test(v: Rep[Array[Double]]) = {
+
+        val n = v.length
+        val input = v
+        val output = NewArray[Double](n)
+        
+        // perform two iterations at once
+
+        def a(j: Rep[Int]) = input(j)
+        
+        def w1(j: Rep[Int]) = a(j) * a(j+1)
+
+        def wm(j: Rep[Int]) = a(j) - w1(j) + w1(j-1)
+
+        def w2(j: Rep[Int]) = wm(j) * wm(j+1)
+        
+        def b(j: Rep[Int]) = wm(j) - w2(j) + w2(j-1)
+
+        // sliding for loop
+        
         // result has 1 read, 1 write, 6 flops = 16/6 bytes/flop
         
         for (i <- (2 until n-2).sliding) {
