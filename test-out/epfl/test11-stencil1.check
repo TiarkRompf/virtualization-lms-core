@@ -1,18 +1,76 @@
+Map(Sym(4) -> Sym(7), Sym(6) -> Sym(10), Sym(7) -> Sym(11), Sym(3) -> Sym(6), Sym(5) -> Sym(9), Sym(8) -> Sym(12), Sym(2) -> Sym(5))
+r0:
+TP(Sym(3),NumericTimes(Const(2),Sym(2)))
+TP(Sym(4),NumericPlus(Sym(3),Const(3)))
+TP(Sym(5),NumericPlus(Sym(2),Const(1)))
+TP(Sym(6),NumericTimes(Const(2),Sym(5)))
+TP(Sym(7),NumericPlus(Sym(6),Const(3)))
+TP(Sym(8),NumericPlus(Sym(4),Sym(7)))
+r1:
+TP(Sym(9),NumericPlus(Sym(5),Const(1)))
+TP(Sym(10),NumericTimes(Const(2),Sym(9)))
+TP(Sym(11),NumericPlus(Sym(10),Const(3)))
+TP(Sym(12),NumericPlus(Sym(7),Sym(11)))
+Map(Sym(4) -> Sym(7), Sym(6) -> Sym(10), Sym(7) -> Sym(11), Sym(3) -> Sym(6), Sym(5) -> Sym(9), Sym(8) -> Sym(12), Sym(2) -> Sym(5))
+(Sym(5),Sym(9))
+(Sym(7),Sym(11))
+var inits: List(Sym(5), Sym(7)) -> List(Variable(Sym(13)), Variable(Sym(14)))
+will become var reads: List(Sym(5), Sym(7))
+will become var writes: List(Sym(9), Sym(11))
+var reads: List((Sym(5),Sym(18)), (Sym(7),Sym(19)))
+var writes: List((Sym(9),Const(())), (Sym(11),Const(())))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Array[Int])=>(Array[Int])) {
+class staged$0 extends ((Array[Int])=>(Array[Int])) {
 def apply(x0:Array[Int]): Array[Int] = {
-val x1 = new Array[Int](5)
+val x1 = new Array[Int](20)
+var x13: Int = 1
+var x14: Int = 5
+val x15 = x1(0) = 8
+var x17 : Int = 1
+val x29 = while (x17 < 20) {
+val x18 = x13
+val x19 = x14
+val x21 = x18 + 1
+x13 = x21
+val x22 = 2 * x21
+val x23 = x22 + 3
+x14 = x23
+val x24 = x19 + x23
+val x27 = x1(x17) = x24
+x27
+x17 = x17 + 1
+}
 x1
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
+
+<stdin>:21: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
+x27
+^
+one warning found
 compilation: ok
-0
-0
-0
-0
-0
+8
+12
+16
+20
+24
+28
+32
+36
+40
+44
+48
+52
+56
+60
+64
+68
+72
+76
+80
+84

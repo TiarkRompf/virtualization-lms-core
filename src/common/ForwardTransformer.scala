@@ -5,7 +5,7 @@ import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
 
 trait ForwardTransformer extends internal.AbstractSubstTransformer with internal.FatBlockTraversal { self =>
-  val IR: LoopsFatExp with IfThenElseFatExp
+  val IR: BaseFatExp with EffectExp //LoopsFatExp with IfThenElseFatExp
   import IR._
   
   def transformBlock[A:Manifest](block: Block[A]): Block[A] = {

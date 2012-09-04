@@ -48,14 +48,17 @@ trait OrderingOps extends Base with Variables with OverloadHack {
 
 
 trait OrderingOpsExp extends OrderingOps with VariablesExp {
-
-  case class OrderingLT[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[Boolean]
-  case class OrderingLTEQ[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[Boolean]
-  case class OrderingGT[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[Boolean]
-  case class OrderingGTEQ[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[Boolean]
-  case class OrderingEquiv[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[Boolean]
-  case class OrderingMax[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
-  case class OrderingMin[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends Def[T]
+  abstract class DefMN[T:Ordering:Manifest,A] extends Def[A] {
+    def mev = manifest[T]
+    def aev = implicitly[Ordering[T]]
+  }
+  case class OrderingLT[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T,Boolean]
+  case class OrderingLTEQ[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T,Boolean]
+  case class OrderingGT[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T,Boolean]
+  case class OrderingGTEQ[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T,Boolean]
+  case class OrderingEquiv[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T,Boolean]
+  case class OrderingMax[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T,T]
+  case class OrderingMin[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T,T]
 
   def ordering_lt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = OrderingLT(lhs,rhs)
   def ordering_lteq[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = OrderingLTEQ(lhs,rhs)
@@ -66,16 +69,14 @@ trait OrderingOpsExp extends OrderingOps with VariablesExp {
   def ordering_min[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[T] = OrderingMin(lhs,rhs)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
-    implicit val z1: Ordering[Any] = null // hack!! need to store it in Def instances??
-    implicit val z2: Ordering[A] = null // hack!! need to store it in Def instances??
     (e match {
-    case OrderingLT(a,b) => ordering_lt(f(a),f(b))
-    case OrderingLTEQ(a,b) => ordering_lteq(f(a),f(b))
-    case OrderingGT(a,b) => ordering_gt(f(a),f(b))
-    case OrderingGTEQ(a,b) => ordering_gteq(f(a),f(b))
-    case OrderingEquiv(a,b) => ordering_equiv(f(a),f(b))
-    case OrderingMax(a,b) => ordering_max(f(a),f(b))
-    case OrderingMin(a,b) => ordering_min(f(a),f(b))
+    case e@OrderingLT(a,b) => ordering_lt(f(a),f(b))(e.aev,e.mev,pos)
+    case e@OrderingLTEQ(a,b) => ordering_lteq(f(a),f(b))(e.aev,e.mev,pos)
+    case e@OrderingGT(a,b) => ordering_gt(f(a),f(b))(e.aev,e.mev,pos)
+    case e@OrderingGTEQ(a,b) => ordering_gteq(f(a),f(b))(e.aev,e.mev,pos)
+    case e@OrderingEquiv(a,b) => ordering_equiv(f(a),f(b))(e.aev,e.mev,pos)
+    case e@OrderingMax(a,b) => ordering_max(f(a),f(b))(e.aev,e.mev,pos)
+    case e@OrderingMin(a,b) => ordering_min(f(a),f(b))(e.aev,e.mev,pos)
     case _ => super.mirror(e, f)
     }).asInstanceOf[Exp[A]]
   }
