@@ -32,7 +32,7 @@ class TestStencil extends FileDiffSuite {
       with ScalaGenArrayOps with ScalaGenRangeOps with ScalaGenBooleanOps
       with ScalaGenVariables with ScalaGenIfThenElse
       with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self }
-    dump = true
+    dumpGeneratedCode = true
     run()
   }
   trait Runner extends Compile {
