@@ -18,6 +18,8 @@ trait GenericCodegen extends BlockTraversal {
   
   var analysisResults: MMap[String,Any] = null.asInstanceOf[MMap[String,Any]]
   
+  def emitFileHeader(): Unit = {}
+  
   // Initializer
   def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = { analysisResults = _analysisResults }
   def finalizeGenerator(): Unit = {}

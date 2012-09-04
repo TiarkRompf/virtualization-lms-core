@@ -29,7 +29,8 @@ trait ScalaCodegen extends GenericCodegen with Config {
       stream.println("/*****************************************\n"+
                      "  Emitting Generated Code                  \n"+
                      "*******************************************/")
-                   
+      emitFileHeader()
+
       // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
       stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends (("+args.map(a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
       stream.println("def apply("+args.map(a => quote(a) + ":" + remap(a.tp)).mkString(", ")+"): "+sA+" = {")
