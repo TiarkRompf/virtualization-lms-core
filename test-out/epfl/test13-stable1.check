@@ -1,0 +1,86 @@
+free vars: List(Sym(1), Sym(2))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged$0(px3:scala.virtualization.lms.common.Compile with scala.virtualization.lms.common.StaticDataExp,px4:Object,px6:scala.virtualization.lms.epfl.test13.SCell[Int]) extends ((Int)=>(Int)) {
+def apply(x0:Int): Int = {
+val x1 = x0 + 1
+val x2 = x0 * 2
+val x3 = px3 // static data: IR:scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testStable1$1$$anon$1
+val x4 = px4 // static data: <function1>
+val x5 = {import x3._;
+val s1 = infix_lhs(findDefinition(Sym(1)).get).head;
+val s2 = infix_lhs(findDefinition(Sym(2)).get).head;
+reset;x3.nVars=3;compile{(x:Rep[Int]) => 
+createDefinition(s1,StaticData(x1));
+createDefinition(s2,StaticData(x2));
+val r = x4.asInstanceOf[Rep[Int]=>Rep[Int]](x)
+println(globalDefs); r}}//List(Sym(1), Sym(2))
+val x6 = px6 // static data: SCell(stable)
+val x7 = x6.value
+val x8 = x5(x7)
+x8
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+compilation: ok
+List(TP(Sym(1),StaticData(10)), TP(Sym(2),StaticData(18)), TP(Sym(4),NumericPlus(Sym(1),Sym(2))), TP(Sym(5),NumericTimes(Sym(3),Sym(4))))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged$1(px1:Int,px2:Int) extends ((Int)=>(Int)) {
+def apply(x3:Int): Int = {
+val x1 = px1 // static data: 10
+val x2 = px2 // static data: 18
+val x4 = x1 + x2
+val x5 = x3 * x4
+x5
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+compilation: ok
+28
+List(TP(Sym(1),StaticData(10)), TP(Sym(2),StaticData(18)), TP(Sym(4),NumericPlus(Sym(1),Sym(2))), TP(Sym(5),NumericTimes(Sym(3),Sym(4))))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged$2(px1:Int,px2:Int) extends ((Int)=>(Int)) {
+def apply(x3:Int): Int = {
+val x1 = px1 // static data: 10
+val x2 = px2 // static data: 18
+val x4 = x1 + x2
+val x5 = x3 * x4
+x5
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+compilation: ok
+140
+List(TP(Sym(1),StaticData(10)), TP(Sym(2),StaticData(18)), TP(Sym(4),NumericPlus(Sym(1),Sym(2))), TP(Sym(5),NumericTimes(Sym(3),Sym(4))))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged$3(px1:Int,px2:Int) extends ((Int)=>(Int)) {
+def apply(x3:Int): Int = {
+val x1 = px1 // static data: 10
+val x2 = px2 // static data: 18
+val x4 = x1 + x2
+val x5 = x3 * x4
+x5
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+compilation: ok
+56
