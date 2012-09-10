@@ -5,6 +5,10 @@ import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
 import scala.reflect.SourceContext
 
+trait StaticData extends Base {
+  def staticData[T:Manifest](x: T): Rep[T]
+}
+
 trait StaticDataExp extends EffectExp {
   case class StaticData[T](x: T) extends Def[T]
   def staticData[T:Manifest](x: T): Exp[T] = StaticData(x)
