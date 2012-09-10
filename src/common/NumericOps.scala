@@ -10,7 +10,7 @@ trait LiftNumeric {
   implicit def numericToNumericRep[T:Numeric:Manifest](x: T) = unit(x)
 }
 
-trait NumericOps extends Variables {
+trait NumericOps extends Variables { this: ImplicitOps =>
 
   // workaround for infix not working with manifests
   implicit def numericToNumericOps[T:Numeric:Manifest](n: T) = new NumericOpsCls(unit(n))
@@ -20,9 +20,16 @@ trait NumericOps extends Variables {
   class NumericOpsCls[T:Numeric:Manifest](lhs: Rep[T]){
     def +[A](rhs: A)(implicit c: A => T, pos: SourceContext) = numeric_plus(lhs,unit(c(rhs)))
     def +(rhs: Rep[T])(implicit pos: SourceContext) = numeric_plus(lhs,rhs)
+    def +[A:Manifest](rhs: Rep[A])(implicit c: A => T, pos: SourceContext) = numeric_plus(lhs,implicit_convert[A, T](rhs))
+    def -[A](rhs: A)(implicit c: A => T, pos: SourceContext) = numeric_minus(lhs,unit(c(rhs)))
     def -(rhs: Rep[T])(implicit pos: SourceContext) = numeric_minus(lhs,rhs)
+    def -[A:Manifest](rhs: Rep[A])(implicit c: A => T, pos: SourceContext) = numeric_minus(lhs,implicit_convert[A, T](rhs))
+    def *[A](rhs: A)(implicit c: A => T, pos: SourceContext) = numeric_times(lhs,unit(c(rhs)))
     def *(rhs: Rep[T])(implicit pos: SourceContext) = numeric_times(lhs,rhs)
+    def *[A:Manifest](rhs: Rep[A])(implicit c: A => T, pos: SourceContext) = numeric_times(lhs,implicit_convert[A, T](rhs))
+    def /[A](rhs: A)(implicit c: A => T, pos: SourceContext) = numeric_divide(lhs,unit(c(rhs)))
     def /(rhs: Rep[T])(implicit pos: SourceContext) = numeric_divide(lhs,rhs)
+    def /[A:Manifest](rhs: Rep[A])(implicit c: A => T, pos: SourceContext) = numeric_divide(lhs,implicit_convert[A, T](rhs))
   }
 
   //def infix_+[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_plus(lhs,rhs)
