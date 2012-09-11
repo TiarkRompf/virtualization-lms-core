@@ -258,9 +258,9 @@ trait ScalaGenStruct extends ScalaGenBase {
       
       Array --> transform soa back to aos
       */
-      if (sym.tp <:< manifest[Record]) {
-        registerType(sym.tp.asInstanceOf[Manifest[Record]], elems)
-        emitValDef(sym, remap(sym.tp) + "(" + (for ((n, v) <- elems) yield n + " = " + quote(v)).mkString(", ") + ")")
+      if (sym.tp.isInstanceOf[RefinedManifest[_]] && sym.tp <:< manifest[Record]) {
+        val name = registerAndGetName(sym.tp.asInstanceOf[RefinedManifest[Record]])
+        emitValDef(sym, name + "(" + (for ((n, v) <- elems) yield n + " = " + quote(v)).mkString(", ") + ")")
       } else {
         emitValDef(sym, "new { " + (for ((n, v) <- elems) yield "val " + n + " = " + quote(v)).mkString("; ") + " }")
       }
@@ -270,33 +270,14 @@ trait ScalaGenStruct extends ScalaGenBase {
   }
 
   // Records generate a class
-  override def remap[A](m: Manifest[A]) = indexOfEncountered(m) match {
-    case Some(i) => "C" + i
+  override def remap[A](m: Manifest[A]) = m match {
+    case rm: RefinedManifest[_] if rm <:< manifest[Record] =>
+      registerAndGetName(rm.asInstanceOf[RefinedManifest[Record]])
     case _ => super.remap(m)
   }
 
-  private val encounteredStructs = new collection.mutable.ListBuffer[(Manifest[_ <: Record], Map[String, Exp[_]])]
-  private def registerType(m: Manifest[_ <: Record], elems: Map[String, Rep[_]]) {
-    // Check that the manifest and elems are consistent
-    m match {
-      case m: RefinedManifest[_] =>
-        assert(elems.size == m.fields.size, "Record doesn’t contain as many fields as reflected in manifest: %s vs %s".format(elems.size, m.fields.size))
-        for ((n, tp) <- m.fields) {
-          assert(elems.contains(n), "Record field not reflected in manifest: %s".format(n))
-          // assert(elems(n).tp == tp, "Record field type different than the one reflected in manifest: %s vs %s".format(elems(n).tp, tp))
-        }
-      case _ =>
-        // Nothing yet
-    }
-    if (indexOfEncountered(m).isEmpty) {
-      encounteredStructs += (m -> elems)
-    }
-  }
-
-  /**
-   * Look for a type equivalent to `m` in the already encountered record manifests.
-   */
-  private def indexOfEncountered(m: Manifest[_]): Option[Int] = {
+  private val encounteredStructs = new collection.mutable.ListBuffer[(RefinedManifest[_ <: Record], String)]
+  private def registerAndGetName(m: RefinedManifest[_ <: Record]): String = {
     def sameManifest(m1: Manifest[_], m2: Manifest[_]): Boolean = (m1, m2) match {
       case (rm1: RefinedManifest[_], rm2: RefinedManifest[_]) =>
         rm1 == rm2 && rm1.fields.size == rm2.fields.size && (rm1.fields zip rm2.fields).foldLeft(true) { case (same, (lhs, rhs)) =>
@@ -304,18 +285,28 @@ trait ScalaGenStruct extends ScalaGenBase {
         }
       case _ => m1 == m2
     }
-    
-    if (m <:< manifest[Record]) {
-      encounteredStructs.foldLeft(Option.empty[Int], 0) { case ((found, i), (mm, _)) =>
-        (found.orElse(if (sameManifest(m, mm)) Some(i) else None), i + 1)
-      }._1
-    } else None
+
+    encounteredStructs.find(s => sameManifest(m, s._1)) match {
+      case Some((_, name)) => name
+      case None => {
+        def hash(m: Manifest[_]): Int = m match {
+          case rm: RefinedManifest[_] =>
+            rm.fields.sortBy(_._1).foldLeft(1) { (h, field) =>
+              (41 * (h * 41 + field._1.##) + hash(field._2))
+            }
+          case m => m.erasure.getName.##
+        }
+        val name = "C" + Math.abs(hash(m))
+        encounteredStructs += (m -> name)
+        name
+      }
+    }
   }
 
   def emitDataStructures(out: PrintWriter) {
     withStream(out) {
-      for ((m, fields) <- encounteredStructs) {
-        stream.println("case class " + remap(m) + "(" + (for ((n, e) <- fields) yield n + ": " + remap(e.tp)).mkString(", ") + ")")
+      for ((m, name) <- encounteredStructs) {
+        stream.println("case class " + name + "(" + (for ((n, tp) <- m.fields) yield n + ": " + remap(tp)).mkString(", ") + ")")
       }
     }
   }

@@ -13,7 +13,7 @@ val x10 = x6+x0
 x3 = x10
 val x14 = x2
 val x15 = x3
-val x16 = C0(re = x14, im = x15)
+val x16 = C938825598(re = x14, im = x15)
 val x17 = println(x16)
 x17
 }
@@ -21,4 +21,4 @@ x17
 /*****************************************
   End of Generated Code                  
 *******************************************/
-case class C0(re: Int, im: Double)
+case class C938825598(re: Double, im: Double)
