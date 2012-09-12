@@ -124,6 +124,27 @@ trait NestCondProg6 extends Arith with Functions with IfThenElse with Print {
 }
 
 
+trait NestCondProg7 extends Arith with OrderingOps with Functions with IfThenElse with Print {
+  
+  // FIXME
+
+  def test(x: Rep[Unit]) = {    
+    doLambda { y: Rep[Double] => 
+      if (y < 100) {
+        val z = y + unit(9.0) // should stay inside conditional: 
+                              // apparently z is moved up because it is also used in the lambda (z+u)
+        doLambda { u: Rep[Double] =>
+          z + u
+        }
+      } else {
+      }
+    }
+  }
+  
+}
+
+
+
 
 class TestCodemotion extends FileDiffSuite {
   
@@ -194,6 +215,18 @@ class TestCodemotion extends FileDiffSuite {
       }
     }
     assertFileEqualsCheck(prefix+"codemotion6")
+  }
+
+  def testCodemotion7 = {
+    // test loop hoisting (should use loops but lambdas will do for now)
+    withOutFile(prefix+"codemotion7") {
+      new NestCondProg7 with ArithExp with OrderingOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenArith with ScalaGenOrderingOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        println("// NOTE: trying to reproduce Delite issue (Scratchpad in optiml-beta).")
+      }
+    }
+    assertFileEqualsCheck(prefix+"codemotion7")
   }
 
 

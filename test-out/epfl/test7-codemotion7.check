@@ -1,0 +1,26 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Unit)=>(scala.Function1[Double, Any])) {
+def apply(x0:Unit): scala.Function1[Double, Any] = {
+val x8 = {x1: (Double) => 
+val x3 = x1 < 100.0
+val x7 = if (x3) {
+val x2 = x1+9.0
+val x6 = {x4: (Double) => 
+val x5 = x2+x4
+x5: Double
+}
+x6
+} else {
+()
+}
+x7: Any
+}
+x8
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+// NOTE: trying to reproduce Delite issue (Scratchpad in optiml-beta).
