@@ -6,7 +6,6 @@ import scala.reflect.SourceContext
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
 
 
-
 trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIterationDummyExp { this: BooleanOpsExp with EqualExpBridge =>
   
   // split effectful statements: one piece for each affected mutable object.
@@ -17,7 +16,7 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
   // or rather individually in ifThenElse and whileDo ?
   
   // TODO: SimpleLoops
-
+  
   override def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = x match {
     case IfThenElse(cond, thenp, elsep) =>
       val affected = (u.mayRead ++ u.mayWrite).distinct
@@ -62,8 +61,8 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
             TP(s1, Reflect(PreviousIteration(k),u,es:+loopSym))
           case t => t
         }
-        globalDefs = globalDefs map xform
-        localDefs = localDefs map xform   
+        (this: EmbeddedControls).__assign(globalDefs, globalDefs map xform) // FIXME: SI-6100
+        (this: EmbeddedControls).__assign(localDefs, localDefs map xform) // FIXME: SI-6100
       }
 
       if (u.maySimple)
