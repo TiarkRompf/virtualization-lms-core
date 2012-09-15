@@ -4,11 +4,11 @@
 class Test extends ((Unit)=>(scala.Function1[Double, Any])) {
 def apply(x0:Unit): scala.Function1[Double, Any] = {
 val x8 = {x1: (Double) => 
-val x3 = x1 < 100.0
-val x7 = if (x3) {
-val x2 = x1+9.0
+val x2 = x1 < 100.0
+val x7 = if (x2) {
+val x3 = x1+9.0
 val x6 = {x4: (Double) => 
-val x5 = x2+x4
+val x5 = x3+x4
 x5: Double
 }
 x6
