@@ -75,8 +75,8 @@ trait OrderingOpsExp extends OrderingOps with VariablesExp {
     case e@OrderingGT(a,b) => ordering_gt(f(a),f(b))(e.aev,e.mev,pos)
     case e@OrderingGTEQ(a,b) => ordering_gteq(f(a),f(b))(e.aev,e.mev,pos)
     case e@OrderingEquiv(a,b) => ordering_equiv(f(a),f(b))(e.aev,e.mev,pos)
-    case e@OrderingMax(a,b) => ordering_max(f(a),f(b))(e.aev,e.mev,pos)
-    case e@OrderingMin(a,b) => ordering_min(f(a),f(b))(e.aev,e.mev,pos)
+    case e@OrderingMax(a,b) => ordering_max(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev),pos)
+    case e@OrderingMin(a,b) => ordering_min(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev),pos)
     case _ => super.mirror(e, f)
     }).asInstanceOf[Exp[A]]
   }

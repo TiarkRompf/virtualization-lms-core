@@ -28,10 +28,6 @@ x2
   End of Generated Code                  
 *******************************************/
 
-<stdin>:21: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
-x15
-^
-one warning found
 compilation: ok
 0.0
 0.8800000000000001
