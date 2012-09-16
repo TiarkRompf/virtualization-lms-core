@@ -57,7 +57,7 @@ trait Scheduling {
     def deps(st: List[Sym[Any]]): List[Stm] = {//st flatMap (scopeCache.get(_).toList)
       // scope.filter(d => (st intersect d.lhs).nonEmpty)
       // scope.filter(d => containsAny(st, d.lhs))
-      st flatMap (scopeCache.get(_).toList)
+      st sortBy(_.id) flatMap (scopeCache.get(_).toList)
     }
 
     val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(syms(result)), t => deps(syms(t.rhs)))

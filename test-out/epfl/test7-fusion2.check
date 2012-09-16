@@ -15,9 +15,9 @@ considering TP(Sym(16),ArrayIndex(Sym(10),Sym(15)))
 considering TP(Sym(21),ArrayIndex(Sym(10),Sym(20)))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(32), Sym(34), Sym(38)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(31)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(33)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(37))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(31))), ReduceElem(Block(Sym(33))), ReduceElem(Block(Sym(37)))))))
+partitions: List(TTP(List(Sym(32), Sym(34), Sym(37)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(31)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(33)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(36))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(31))), ReduceElem(Block(Sym(33))), ReduceElem(Block(Sym(36)))))))
 considering TP(Sym(33),ArrayIndex(Sym(32),Sym(11)))
-replace TP(Sym(33),ArrayIndex(Sym(32),Sym(11))) at 0 within TTP(List(Sym(32), Sym(34), Sym(38)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(31)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(33)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(37))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(31))), ReduceElem(Block(Sym(33))), ReduceElem(Block(Sym(37))))))
+replace TP(Sym(33),ArrayIndex(Sym(32),Sym(11))) at 0 within TTP(List(Sym(32), Sym(34), Sym(37)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(31)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(33)))), SimpleLoop(Const(100),Sym(11),ReduceElem(Block(Sym(36))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(31))), ReduceElem(Block(Sym(33))), ReduceElem(Block(Sym(36))))))
 try once more ...
 wtableneg: List()
 partitions: List(TTP(List(Sym(45), Sym(46)),List(SimpleLoop(Const(100),Sym(1),ReduceElem(Block(Sym(31)))), SimpleLoop(Const(100),Sym(1),ReduceElem(Block(Sym(44))))),SimpleFatLoop(Const(100),Sym(1),List(ReduceElem(Block(Sym(31))), ReduceElem(Block(Sym(44)))))))
@@ -37,12 +37,12 @@ val x44 = x31*x31
 x45 += x31
 x46 += x44
 }
+val x48 = x46/100
 val x47 = x45/100
-val x48 = println(x47)
-val x49 = x46/100
-val x50 = x47*x47
-val x51 = x49-x50
-val x52 = println(x51)
+val x49 = x47*x47
+val x50 = x48-x49
+val x51 = println(x47)
+val x52 = println(x50)
 val x27 = x52
 x27
 }

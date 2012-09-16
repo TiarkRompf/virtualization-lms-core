@@ -445,15 +445,25 @@ trait Effects extends Expressions with Blocks with Utils {
       val read = u.mayRead
       val write = u.mayWrite
 
+      // TODO: in order to reduce the number of deps (need to traverse all those!)
+      // we should only store those that are not transitively implied.
+      // For simple effects, take the last one (implemented). 
+      // For mutations, take the last write to a particular mutable sym (TOOD).
+
+      def canonic(xs: List[Exp[Any]]) = xs // TODO 
+      def canonicLinear(xs: List[Exp[Any]]) = xs.takeRight(1)
+
+      // CAVEAT: this breaks testSpeculative4
+
       val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
       val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
       val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || write.contains(e) }
-      val simpleDeps = if (!u.maySimple) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.maySimple } takeRight 1 // TBD: depend on all or just the last?
+      val simpleDeps = if (!u.maySimple) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.maySimple }
       val globalDeps = scope filter { case e@Def(Reflect(_, u, _)) => u.mayGlobal }
 
       // TODO: write-on-read deps should be weak
       // TODO: optimize!!
-      val allDeps = readDeps ++ softWriteDeps ++ writeDeps ++ simpleDeps ++ globalDeps
+      val allDeps = canonic(readDeps ++ softWriteDeps ++ writeDeps ++ canonicLinear(simpleDeps) ++ canonicLinear(globalDeps))
       scope filter (allDeps contains _)
     }
   }
