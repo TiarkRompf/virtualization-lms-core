@@ -12,16 +12,16 @@ read value RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$In
 -- Sym(2)
 warning: possible missing mtype call - toAtom with Def of type Any StaticData(-1)
 warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(29),Summary(true,true,false,false,false,List(),List(),List(Sym(3)),List()),List(Sym(29)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(36),Summary(true,true,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(32), Sym(35), Sym(36)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(38),Summary(true,true,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(38)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(43),Summary(true,true,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(40), Sym(42), Sym(43)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(45),Summary(true,true,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(45)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(50),Summary(true,true,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(47), Sym(49), Sym(50)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(52),Summary(true,true,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(1), Sym(2), Sym(52)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(37),Summary(true,true,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(32), Sym(36), Sym(37)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(39),Summary(true,true,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(39)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(45),Summary(true,true,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(41), Sym(44), Sym(45)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(47),Summary(true,true,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(47)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(53),Summary(true,true,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(49), Sym(52), Sym(53)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(55),Summary(true,true,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(1), Sym(2), Sym(55)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0(px3:scala.virtualization.lms.epfl.test13.RCell[Object],px5:Object,px7:scala.virtualization.lms.epfl.test13.RCell[Object],px9:Object,px12:scala.virtualization.lms.epfl.test13.RCell[Object],px14:Object,px16:Any,px21:Object,px31:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[scala.collection.mutable.HashMap[java.lang.String, Any], Any]],px33:scala.virtualization.lms.common.Compile with scala.virtualization.lms.common.StaticDataExp,px34:Object,px41:Object,px48:Object) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
+class staged$0(px3:scala.virtualization.lms.epfl.test13.RCell[Object],px5:Object,px7:scala.virtualization.lms.epfl.test13.RCell[Object],px9:Object,px12:scala.virtualization.lms.epfl.test13.RCell[Object],px14:Object,px16:Any,px21:Object,px31:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[scala.collection.mutable.HashMap[java.lang.String, Any], Any]],px35:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px43:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px51:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
 def apply(x0:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
 var x1: scala.collection.mutable.HashMap[java.lang.String, Any] = x0
 val x2 = x1
@@ -29,17 +29,17 @@ val x3 = px3 // static data: RCell(dyn - FUN:scala.virtualization.lms.epfl.test1
 val x4 = x3.value
 val x5 = px5 // static data: FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$AddN$$anon$23@XXX
 val x6 = x4 == x5
-val x52 = if (x6) {
+val x55 = if (x6) {
 val x7 = px7 // static data: RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$LookupN@XXX)
 val x8 = x7.value
 val x9 = px9 // static data: FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$LookupN$$anon$27@XXX
 val x10 = x8 == x9
-val x45 = if (x10) {
+val x47 = if (x10) {
 val x12 = px12 // static data: RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$ConstN@XXX)
 val x13 = x12.value
 val x14 = px14 // static data: FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$ConstN$$anon$29@XXX
 val x15 = x13 == x14
-val x38 = if (x15) {
+val x39 = if (x15) {
 val x11 = x2("n")
 val x17 = x11.isInstanceOf[Int]
 val x16 = px16 // static data: -1
@@ -61,63 +61,30 @@ x29
 } else {
 val x31 = px31 // static data: RCell(code)
 val x32 = x31.set(null)
-val x33 = px33 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret3$1$$anon$1
-val x34 = px34 // static data: <function1>
-val x35 = {import x33._;
-val s13 = findDefinition(Sym(13)).map(infix_lhs(_).head).getOrElse(Sym(13));
-val s2 = findDefinition(Sym(2)).map(infix_lhs(_).head).getOrElse(Sym(2));
-x33.reset;x33.nVars=14
-compile{(x:Rep[Unit]) => 
-createDefinition(s13,StaticData(x13));
-createDefinition(s2,StaticData(x2));
-val y = x34.asInstanceOf[Object=>Rep[Any]](x13)
-println("freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.StableVarsExp$$anonfun$compPart$1$2$$anonfun$apply$4: List(Sym(13), Sym(2))")
-println(globalDefs)
-y}}//List(Sym(13), Sym(2))
-val x36 = x35.apply(())
-x36
+val x35 = px35 // static data: <function1>
+val x36 = x35.apply(List(x13, x2))// compile dynamic: fv = List(Sym(13), Sym(2))
+val x37 = x36.apply(())
+x37
 }
-x38
+x39
 } else {
 val x31 = px31 // static data: RCell(code)
-val x40 = x31.set(null)
-val x33 = px33 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret3$1$$anon$1
-val x41 = px41 // static data: <function1>
-val x42 = {import x33._;
-val s8 = findDefinition(Sym(8)).map(infix_lhs(_).head).getOrElse(Sym(8));
-val s2 = findDefinition(Sym(2)).map(infix_lhs(_).head).getOrElse(Sym(2));
-x33.reset;x33.nVars=9
-compile{(x:Rep[Unit]) => 
-createDefinition(s8,StaticData(x8));
-createDefinition(s2,StaticData(x2));
-val y = x41.asInstanceOf[Object=>Rep[Any]](x8)
-println("freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.StableVarsExp$$anonfun$compPart$1$2$$anonfun$apply$4: List(Sym(8), Sym(2))")
-println(globalDefs)
-y}}//List(Sym(8), Sym(2))
-val x43 = x42.apply(())
-x43
-}
+val x41 = x31.set(null)
+val x43 = px43 // static data: <function1>
+val x44 = x43.apply(List(x8, x2))// compile dynamic: fv = List(Sym(8), Sym(2))
+val x45 = x44.apply(())
 x45
+}
+x47
 } else {
 val x31 = px31 // static data: RCell(code)
-val x47 = x31.set(null)
-val x33 = px33 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret3$1$$anon$1
-val x48 = px48 // static data: <function1>
-val x49 = {import x33._;
-val s4 = findDefinition(Sym(4)).map(infix_lhs(_).head).getOrElse(Sym(4));
-val s2 = findDefinition(Sym(2)).map(infix_lhs(_).head).getOrElse(Sym(2));
-x33.reset;x33.nVars=5
-compile{(x:Rep[Unit]) => 
-createDefinition(s4,StaticData(x4));
-createDefinition(s2,StaticData(x2));
-val y = x48.asInstanceOf[Object=>Rep[Any]](x4)
-println("freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.StableVarsExp$$anonfun$compPart$1$2$$anonfun$apply$4: List(Sym(4), Sym(2))")
-println(globalDefs)
-y}}//List(Sym(4), Sym(2))
-val x50 = x49.apply(())
-x50
+val x49 = x31.set(null)
+val x51 = px51 // static data: <function1>
+val x52 = x51.apply(List(x4, x2))// compile dynamic: fv = List(Sym(4), Sym(2))
+val x53 = x52.apply(())
+x53
 }
-x52
+x55
 }
 }
 /*****************************************
@@ -137,47 +104,25 @@ free vars: List(Sym(2))
 read value RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$ConstN@XXX) sym Sym(12)
 -- Sym(2)
 warning: possible missing mtype call - toAtom with Def of type Any StaticData(-1)
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(24),Summary(true,true,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List(Sym(20), Sym(23), Sym(24)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(26),Summary(true,false,false,false,false,List(),List(),List(Sym(19)),List()),List(Sym(26)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(31),Summary(true,true,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List(Sym(28), Sym(30), Sym(31)))
-freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.StableVarsExp$$anonfun$compPart$1$2$$anonfun$apply$4: List(Sym(4), Sym(2))
-List(TP(Sym(4),StaticData(FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$AddN$$anon$24@XXX)), TP(Sym(2),StaticData(Map(n -> 256, a -> SomethingElse))), TP(Sym(6),StaticData(RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$LookupN@XXX))), TP(Sym(7),CellGet(Sym(6))), TP(Sym(8),StaticData(FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$LookupN$$anon$27@XXX)), TP(Sym(9),Equal(Sym(7),Sym(8))), TP(Sym(10),HashMapApply(Sym(2),Const(n))), TP(Sym(11),RepAsInstanceOf(Sym(10),Any,Int)), TP(Sym(12),StaticData(RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$ConstN@XXX))), TP(Sym(13),CellGet(Sym(12))), TP(Sym(14),StaticData(FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$ConstN$$anon$29@XXX)), TP(Sym(15),Equal(Sym(13),Sym(14))), TP(Sym(16),StaticData(-1)), TP(Sym(17),RepAsInstanceOf(Sym(16),Any,Int)), TP(Sym(18),NumericPlus(Sym(11),Sym(17))), TP(Sym(19),StaticData(RCell(code))), TP(Sym(20),Reflect(CellSet(Sym(19),Const(null)),Summary(false,false,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List())), TP(Sym(21),StaticData(IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret3$1$$anon$1)), TP(Sym(22),StaticData(<function1>)), TP(Sym(23),Reflect(Unchecked(List({import , Sym(21), ._;
-, val s13 = findDefinition(Sym(13)).map(infix_lhs(_).head).getOrElse(Sym(13));
-val s2 = findDefinition(Sym(2)).map(infix_lhs(_).head).getOrElse(Sym(2));
-, Sym(21), .reset;, Sym(21), .nVars=14
-, compile{(x:, Rep[Unit], ) => 
-, createDefinition(s13,StaticData(x13));
-createDefinition(s2,StaticData(x2));
-, val y = , Sym(22), .asInstanceOf[, Object=>Rep[Any], ](, Sym(13), )
-, println("freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.StableVarsExp$$anonfun$compPart$1$2$$anonfun$apply$4: List(Sym(13), Sym(2))")
-, println(globalDefs)
-, y}}, //, List(Sym(13), Sym(2)))),Summary(true,true,false,false,false,List(),List(),List(),List()),List())), TP(Sym(24),Reflect(Unchecked(List(Sym(23), .apply(()))),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(23)))), TP(Sym(25),Reify(Sym(24),Summary(true,true,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List(Sym(20), Sym(23), Sym(24)))), TP(Sym(26),Reflect(IfThenElse(Sym(15),Block(Sym(18)),Block(Sym(25))),Summary(true,false,false,false,false,List(),List(),List(Sym(19)),List()),List())), TP(Sym(27),Reify(Sym(26),Summary(true,false,false,false,false,List(),List(),List(Sym(19)),List()),List(Sym(26)))), TP(Sym(28),Reflect(CellSet(Sym(19),Const(null)),Summary(false,false,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List())), TP(Sym(29),StaticData(<function1>)), TP(Sym(30),Reflect(Unchecked(List({import , Sym(21), ._;
-, val s7 = findDefinition(Sym(7)).map(infix_lhs(_).head).getOrElse(Sym(7));
-val s2 = findDefinition(Sym(2)).map(infix_lhs(_).head).getOrElse(Sym(2));
-, Sym(21), .reset;, Sym(21), .nVars=8
-, compile{(x:, Rep[Unit], ) => 
-, createDefinition(s7,StaticData(x7));
-createDefinition(s2,StaticData(x2));
-, val y = , Sym(29), .asInstanceOf[, Object=>Rep[Any], ](, Sym(7), )
-, println("freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.StableVarsExp$$anonfun$compPart$1$2$$anonfun$apply$4: List(Sym(7), Sym(2))")
-, println(globalDefs)
-, y}}, //, List(Sym(7), Sym(2)))),Summary(true,true,false,false,false,List(),List(),List(),List()),List())), TP(Sym(31),Reflect(Unchecked(List(Sym(30), .apply(()))),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(30)))), TP(Sym(32),Reify(Sym(31),Summary(true,true,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List(Sym(28), Sym(30), Sym(31)))), TP(Sym(33),Reflect(IfThenElse(Sym(9),Block(Sym(27)),Block(Sym(32))),Summary(true,false,false,false,false,List(),List(),List(Sym(19)),List()),List())))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(33),Summary(true,false,false,false,false,List(),List(),List(Sym(19)),List()),List(Sym(33)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(25),Summary(true,true,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List(Sym(20), Sym(24), Sym(25)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(27),Summary(true,false,false,false,false,List(),List(),List(Sym(19)),List()),List(Sym(27)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(33),Summary(true,true,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List(Sym(29), Sym(32), Sym(33)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(35),Summary(true,false,false,false,false,List(),List(),List(Sym(19)),List()),List(Sym(35)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$1(px6:scala.virtualization.lms.epfl.test13.RCell[Object],px8:Object,px12:scala.virtualization.lms.epfl.test13.RCell[Object],px14:Object,px2:scala.collection.mutable.HashMap[java.lang.String, Any],px16:Any,px19:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[scala.collection.mutable.HashMap[java.lang.String, Any], Any]],px21:scala.virtualization.lms.common.Compile with scala.virtualization.lms.common.StaticDataExp,px22:Object,px29:Object) extends ((Unit)=>(Any)) {
+class staged$1(px6:scala.virtualization.lms.epfl.test13.RCell[Object],px8:Object,px12:scala.virtualization.lms.epfl.test13.RCell[Object],px14:Object,px2:scala.collection.mutable.HashMap[java.lang.String, Any],px16:Any,px19:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[scala.collection.mutable.HashMap[java.lang.String, Any], Any]],px23:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px31:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]]) extends ((Unit)=>(Any)) {
 def apply(x5:Unit): Any = {
 val x6 = px6 // static data: RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$LookupN@XXX)
 val x7 = x6.value
 val x8 = px8 // static data: FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$LookupN$$anon$27@XXX
 val x9 = x7 == x8
-val x33 = if (x9) {
+val x35 = if (x9) {
 val x12 = px12 // static data: RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$ConstN@XXX)
 val x13 = x12.value
 val x14 = px14 // static data: FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$ConstN$$anon$29@XXX
 val x15 = x13 == x14
-val x26 = if (x15) {
+val x27 = if (x15) {
 val x2 = px2 // static data: Map(n -> 256, a -> SomethingElse)
 val x10 = x2("n")
 val x11 = x10.asInstanceOf[Int]
@@ -189,44 +134,22 @@ x18
 val x19 = px19 // static data: RCell(code)
 val x20 = x19.set(null)
 val x2 = px2 // static data: Map(n -> 256, a -> SomethingElse)
-val x21 = px21 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret3$1$$anon$1
-val x22 = px22 // static data: <function1>
-val x23 = {import x21._;
-val s13 = findDefinition(Sym(13)).map(infix_lhs(_).head).getOrElse(Sym(13));
-val s2 = findDefinition(Sym(2)).map(infix_lhs(_).head).getOrElse(Sym(2));
-x21.reset;x21.nVars=14
-compile{(x:Rep[Unit]) => 
-createDefinition(s13,StaticData(x13));
-createDefinition(s2,StaticData(x2));
-val y = x22.asInstanceOf[Object=>Rep[Any]](x13)
-println("freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.StableVarsExp$$anonfun$compPart$1$2$$anonfun$apply$4: List(Sym(13), Sym(2))")
-println(globalDefs)
-y}}//List(Sym(13), Sym(2))
-val x24 = x23.apply(())
-x24
+val x23 = px23 // static data: <function1>
+val x24 = x23.apply(List(x13, x2))// compile dynamic: fv = List(Sym(13), Sym(2))
+val x25 = x24.apply(())
+x25
 }
-x26
+x27
 } else {
 val x19 = px19 // static data: RCell(code)
-val x28 = x19.set(null)
+val x29 = x19.set(null)
 val x2 = px2 // static data: Map(n -> 256, a -> SomethingElse)
-val x21 = px21 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret3$1$$anon$1
-val x29 = px29 // static data: <function1>
-val x30 = {import x21._;
-val s7 = findDefinition(Sym(7)).map(infix_lhs(_).head).getOrElse(Sym(7));
-val s2 = findDefinition(Sym(2)).map(infix_lhs(_).head).getOrElse(Sym(2));
-x21.reset;x21.nVars=8
-compile{(x:Rep[Unit]) => 
-createDefinition(s7,StaticData(x7));
-createDefinition(s2,StaticData(x2));
-val y = x29.asInstanceOf[Object=>Rep[Any]](x7)
-println("freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.StableVarsExp$$anonfun$compPart$1$2$$anonfun$apply$4: List(Sym(7), Sym(2))")
-println(globalDefs)
-y}}//List(Sym(7), Sym(2))
-val x31 = x30.apply(())
-x31
-}
+val x31 = px31 // static data: <function1>
+val x32 = x31.apply(List(x7, x2))// compile dynamic: fv = List(Sym(7), Sym(2))
+val x33 = x32.apply(())
 x33
+}
+x35
 }
 }
 /*****************************************

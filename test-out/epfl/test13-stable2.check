@@ -5,13 +5,13 @@ read value RCell(stable) sym Sym(3)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0(px3:scala.virtualization.lms.epfl.test13.RCell[Int],px5:Int,px9:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[Int, Int]],px11:scala.virtualization.lms.common.Compile with scala.virtualization.lms.common.StaticDataExp,px12:Object) extends ((Int)=>(Int)) {
+class staged$0(px3:scala.virtualization.lms.epfl.test13.RCell[Int],px5:Int,px9:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[Int, Int]],px13:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
 def apply(x0:Int): Int = {
 val x3 = px3 // static data: RCell(stable)
 val x4 = x3.value
 val x5 = px5 // static data: 1
 val x6 = x4 == x5
-val x16 = if (x6) {
+val x17 = if (x6) {
 val x1 = x0 + 1
 val x2 = x0 * 2
 val x7 = x1 + x2
@@ -22,25 +22,12 @@ val x9 = px9 // static data: RCell(code)
 val x10 = x9.set(null)
 val x1 = x0 + 1
 val x2 = x0 * 2
-val x11 = px11 // static data: IR:scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testStable2$1$$anon$3
-val x12 = px12 // static data: <function1>
-val x13 = {import x11._;
-val s4 = findDefinition(Sym(4)).map(infix_lhs(_).head).getOrElse(Sym(4));
-val s1 = findDefinition(Sym(1)).map(infix_lhs(_).head).getOrElse(Sym(1));
-val s2 = findDefinition(Sym(2)).map(infix_lhs(_).head).getOrElse(Sym(2));
-x11.reset;x11.nVars=5
-compile{(x:Rep[Unit]) => 
-createDefinition(s4,StaticData(x4));
-createDefinition(s1,StaticData(x1));
-createDefinition(s2,StaticData(x2));
-val y = x12.asInstanceOf[Int=>Rep[Int]](x4)
-println("freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.StableVarsExp$$anonfun$compPart$1$2$$anonfun$apply$4: List(Sym(4), Sym(1), Sym(2))")
-println(globalDefs)
-y}}//List(Sym(4), Sym(1), Sym(2))
-val x14 = x13.apply(())
-x14
+val x13 = px13 // static data: <function1>
+val x14 = x13.apply(List(x4, x1, x2))// compile dynamic: fv = List(Sym(4), Sym(1), Sym(2))
+val x15 = x14.apply(())
+x15
 }
-x16
+x17
 }
 }
 /*****************************************
@@ -50,8 +37,6 @@ x16
 compilation: ok
 28
 call with arg 9
-freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.StableVarsExp$$anonfun$compPart$1$2$$anonfun$apply$4: List(Sym(4), Sym(1), Sym(2))
-List(TP(Sym(4),StaticData(5)), TP(Sym(1),StaticData(10)), TP(Sym(2),StaticData(18)), TP(Sym(6),NumericPlus(Sym(1),Sym(2))), TP(Sym(7),NumericTimes(Const(5),Sym(6))))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -77,13 +62,13 @@ read value RCell(stable) sym Sym(11)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$2(px11:scala.virtualization.lms.epfl.test13.RCell[Int],px13:Int,px17:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[Int, Int]],px19:scala.virtualization.lms.common.Compile with scala.virtualization.lms.common.StaticDataExp,px20:Object) extends ((Int)=>(Int)) {
+class staged$2(px11:scala.virtualization.lms.epfl.test13.RCell[Int],px13:Int,px17:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[Int, Int]],px21:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
 def apply(x8:Int): Int = {
 val x11 = px11 // static data: RCell(stable)
 val x12 = x11.value
 val x13 = px13 // static data: 2
 val x14 = x12 == x13
-val x24 = if (x14) {
+val x25 = if (x14) {
 val x9 = x8 + 1
 val x10 = x8 * 2
 val x15 = x9 + x10
@@ -94,25 +79,12 @@ val x17 = px17 // static data: RCell(code)
 val x18 = x17.set(null)
 val x9 = x8 + 1
 val x10 = x8 * 2
-val x19 = px19 // static data: IR:scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testStable2$1$$anon$3
-val x20 = px20 // static data: <function1>
-val x21 = {import x19._;
-val s12 = findDefinition(Sym(12)).map(infix_lhs(_).head).getOrElse(Sym(12));
-val s9 = findDefinition(Sym(9)).map(infix_lhs(_).head).getOrElse(Sym(9));
-val s10 = findDefinition(Sym(10)).map(infix_lhs(_).head).getOrElse(Sym(10));
-x19.reset;x19.nVars=13
-compile{(x:Rep[Unit]) => 
-createDefinition(s12,StaticData(x12));
-createDefinition(s9,StaticData(x9));
-createDefinition(s10,StaticData(x10));
-val y = x20.asInstanceOf[Int=>Rep[Int]](x12)
-println("freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.StableVarsExp$$anonfun$compPart$1$2$$anonfun$apply$4: List(Sym(12), Sym(9), Sym(10))")
-println(globalDefs)
-y}}//List(Sym(12), Sym(9), Sym(10))
-val x22 = x21.apply(())
-x22
+val x21 = px21 // static data: <function1>
+val x22 = x21.apply(List(x12, x9, x10))// compile dynamic: fv = List(Sym(12), Sym(9), Sym(10))
+val x23 = x22.apply(())
+x23
 }
-x24
+x25
 }
 }
 /*****************************************

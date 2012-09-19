@@ -2,27 +2,16 @@ free vars: List(Sym(1), Sym(2))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0(px3:scala.virtualization.lms.common.Compile with scala.virtualization.lms.common.StaticDataExp,px4:Object,px6:scala.virtualization.lms.epfl.test13.RCell[Int]) extends ((Int)=>(Int)) {
+class staged$0(px5:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Int, Int]],px7:scala.virtualization.lms.epfl.test13.RCell[Int]) extends ((Int)=>(Int)) {
 def apply(x0:Int): Int = {
 val x1 = x0 + 1
 val x2 = x0 * 2
-val x3 = px3 // static data: IR:scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testStable1$1$$anon$2
-val x4 = px4 // static data: <function1>
-val x5 = {import x3._;
-val s1 = findDefinition(Sym(1)).map(infix_lhs(_).head).getOrElse(Sym(1));
-val s2 = findDefinition(Sym(2)).map(infix_lhs(_).head).getOrElse(Sym(2));
-x3.reset;x3.nVars=3
-compile{(x:Rep[Int]) => 
-createDefinition(s1,StaticData(x1));
-createDefinition(s2,StaticData(x2));
-val y = x4.asInstanceOf[Rep[Int]=>Rep[Int]](x)
-println("freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testStable1$1$Prog$2$$anonfun$6$$anonfun$7: List(Sym(1), Sym(2))")
-println(globalDefs)
-y}}//List(Sym(1), Sym(2))
-val x6 = px6 // static data: RCell(stable)
-val x7 = x6.value
-val x8 = x5(x7)
-x8
+val x5 = px5 // static data: <function1>
+val x6 = x5.apply(List(x1, x2))// compile dynamic: fv = List(Sym(1), Sym(2))
+val x7 = px7 // static data: RCell(stable)
+val x8 = x7.value
+val x9 = x6(x8)
+x9
 }
 }
 /*****************************************
@@ -30,8 +19,6 @@ x8
 *******************************************/
 
 compilation: ok
-freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testStable1$1$Prog$2$$anonfun$6$$anonfun$7: List(Sym(1), Sym(2))
-List(TP(Sym(1),StaticData(10)), TP(Sym(2),StaticData(18)), TP(Sym(4),NumericPlus(Sym(1),Sym(2))), TP(Sym(5),NumericTimes(Sym(3),Sym(4))))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -50,8 +37,6 @@ x5
 
 compilation: ok
 28
-freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testStable1$1$Prog$2$$anonfun$6$$anonfun$7: List(Sym(1), Sym(2))
-List(TP(Sym(1),StaticData(10)), TP(Sym(2),StaticData(18)), TP(Sym(4),NumericPlus(Sym(1),Sym(2))), TP(Sym(5),NumericTimes(Sym(3),Sym(4))))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -70,8 +55,6 @@ x5
 
 compilation: ok
 140
-freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testStable1$1$Prog$2$$anonfun$6$$anonfun$7: List(Sym(1), Sym(2))
-List(TP(Sym(1),StaticData(10)), TP(Sym(2),StaticData(18)), TP(Sym(4),NumericPlus(Sym(1),Sym(2))), TP(Sym(5),NumericTimes(Sym(3),Sym(4))))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/

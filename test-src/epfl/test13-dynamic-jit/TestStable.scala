@@ -87,23 +87,18 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
     
     // compile { u: Rep[A] => f(u) }
 
-    val atyp = "Rep["+manifest[A]+"]"
-    val ftyp = atyp+"=>"+"Rep["+manifest[B]+"]"
-
-    dcompileInternal[A,Rep[A],B](fv, atyp, u => u)(ftyp, f)
+    dcompileInternal[A,Rep[A],B](fv, (u,v) => u)(f)
   }
   
   def dlet[A:Manifest,B:Manifest](x:Exp[A], fv: List[Exp[Any]])(f: A => Rep[B]): Rep[B] = {
     
     // compile { u: Rep[Unit] => f(x) }  <--- x is runtime value
 
-    val ftyp = manifest[A]+"=>"+"Rep["+manifest[B]+"]"
-
-    val fc = dcompileInternal[Unit,A,B](x::fv, "Rep[Unit]", u => x)(ftyp, f) // dont"t really want x as free var but need lower bound on sym id for fresh ones
+    val fc = dcompileInternal[Unit,A,B](x::fv, (u,v) => v.head.asInstanceOf[A])(f) // dont"t really want x as free var but need lower bound on sym id for fresh ones
     unchecked(fc,".apply(())")    
   }
 
-  def dcompileInternal[U,A,B](fv: List[Exp[Any]], atyp: String, g: String => Any)(ftyp: String, f: A => Rep[B]): Rep[U=>B] = {
+  def dcompileInternal[U:Manifest,A,B:Manifest](fv: List[Exp[Any]], g: (Rep[U],List[Any]) => A)(f: A => Rep[B]): Rep[U=>B] = {
 
     // will generate:  compile { u => f(g(u)) }
 
@@ -112,7 +107,19 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
     val maxid = (0::fvIds).max + 1
     val IR = staticData[Compile with StaticDataExp](this)
     val f2 = staticData(f.asInstanceOf[AnyRef])
-    unchecked("{import ",IR,"._;\n",
+
+    val callback = { (fvVals: List[Any]) => 
+      this.reset
+      this.nVars = maxid
+      compile { x: Rep[U] =>
+        (fv zip fvVals).foreach { case (si:Sym[_],xi) => createDefinition(si, StaticData(xi)) }
+        f(g(x,fvVals))
+      }
+    }
+
+    unchecked(staticData(callback),".apply("+fvIds.map(i=>"x"+i)+")","// compile dynamic: fv = ",fv)
+
+    /*unchecked("{import ",IR,"._;\n",
       fvIds.map(i => "val s"+i+" = findDefinition(Sym("+i+")).map(infix_lhs(_).head).getOrElse(Sym("+i+"));\n").mkString, // XX codegen uses identity hash map ...
       IR,".reset;",IR,".nVars="+maxid+"\n",                                                      // FIXME: reset harmful ???
       "compile{(x:",atyp,") => \n",
@@ -120,14 +127,7 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
       "val y = ",f2,".asInstanceOf[",ftyp,"](",g("x"),")\n",
       "println(\"freeVars/globalDefs for function of type "+f.getClass.getName+": "+fv+"\")\n",
       "println(globalDefs)\n",
-      "y}}","//",fv) // last comment item necessary for dependency
-
-    /*raw"""{import $p._
-      ${ fvIds.map(x => "val s"+x+" = infix_lhs(findDefinition(Sym("+x+")).get).head;\n").mkString }
-      reset;$p.nVars="+maxid+";compile{(x:Rep[",manifest[A],"]) => \n",
-      fvIds.map(x => "createDefinition(s"+x+",StaticData(x"+x+"));\n").mkString,
-      "val r = ",f2,".asInstanceOf[Rep[",manifest[A],"]=>Rep[",manifest[B],"]](x)\n",
-      "println(globalDefs); r}}","//",$fv""".as) // last comment item necessary for dependency*/
+      "y}}","//",fv) // last comment item necessary for dependency*/
 
   }
 }
