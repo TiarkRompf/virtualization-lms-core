@@ -78,7 +78,7 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
     val fields = x.getClass.getDeclaredFields
     fields.foreach(_.setAccessible(true))
     val res = fields.map(_.get(x)).collect{case x: Sym[Any] => x}.toList
-    println("free vars: " + res)
+    //println("free vars: " + res)
     res
   }
 
@@ -94,7 +94,7 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
     
     // compile { u: Rep[Unit] => f(x) }  <--- x is runtime value
 
-    val fc = dcompileInternal[Unit,A,B](x::fv, (u,v) => v.head.asInstanceOf[A])(f) // dont"t really want x as free var but need lower bound on sym id for fresh ones
+    val fc = dcompileInternal[Unit,A,B](x::fv, (u,v) => v.head.asInstanceOf[A])(f) // don't really want x as free var but need lower bound on sym id for fresh ones
     unchecked(fc,".apply(())")    
   }
 
@@ -105,8 +105,6 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
     // the tricky bit: we must insert all free variables as staticData, redefining the corresponding symbols
     val fvIds = fv map { case Sym(i) =>  i }
     val maxid = (0::fvIds).max + 1
-    val IR = staticData[Compile with StaticDataExp](this)
-    val f2 = staticData(f.asInstanceOf[AnyRef])
 
     val callback = { (fvVals: List[Any]) => 
       this.reset

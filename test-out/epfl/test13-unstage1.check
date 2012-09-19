@@ -1,16 +1,15 @@
-free vars: List(Sym(1), Sym(2))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0(px6:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
+class staged$0(px4:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
 def apply(x0:Int): Int = {
 val x1 = x0 + 1
 val x2 = x0 * 2
 val x3 = x1 + x2
-val x6 = px6 // static data: <function1>
-val x7 = x6.apply(List(x3, x1, x2))// compile dynamic: fv = List(Sym(3), Sym(1), Sym(2))
-val x8 = x7.apply(())
-x8
+val x4 = px4 // static data: <function1>
+val x5 = x4.apply(List(x3, x1, x2))// compile dynamic: fv = List(Sym(3), Sym(1), Sym(2))
+val x6 = x5.apply(())
+x6
 }
 }
 /*****************************************
