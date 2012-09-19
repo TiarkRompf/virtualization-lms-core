@@ -15,107 +15,164 @@ import util.OverloadHack
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import scala.reflect.SourceContext
 
-case class SCell[T](tag: String) {
+case class RCell[T](tag: String) {
   var value: T = _
   def set(x: T) = { value = x; this }
 }
 
 
+trait CellOps extends Base {
+  type Cell[T] = Rep[RCell[T]]
+  def cell[T:Manifest](tag: String): Cell[T]
+  def infix_set[T:Manifest](c: Cell[T], x: Rep[T]): Rep[Unit]
+  def infix_get[T:Manifest](c: Cell[T]): Rep[T]
+}
 
-class TestStable extends FileDiffSuite {
+trait CellOpsExp extends CellOps with BaseExp with StaticDataExp {
+  case class CellInit[T](tag: String, x: Rep[T]) extends Def[RCell[T]]
+  case class CellSet[T](c: Cell[T], x: Rep[T]) extends Def[Unit]
+  case class CellGet[T](c: Cell[T]) extends Def[T]
   
-  val prefix = "test-out/epfl/test13-"
+  def cell[T:Manifest](tag: String): Cell[T] = staticData(new RCell[T](tag))//reflectMutable(CellInit(tag, x))
+  def infix_set[T:Manifest](c: Cell[T], x: Rep[T]): Rep[Unit] = reflectWrite(c)(CellSet(c,x))
+  def infix_get[T:Manifest](c: Cell[T]): Rep[T] = CellGet(c)
+}
+
+trait ScalaGenCellOps extends ScalaGenBase {
+  val IR: CellOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case CellInit(tag,x) =>  emitValDef(sym, "scala.virtualization.lms.epfl.test13.RCell[" + remap(x.tp) + "](\"" + tag + "\")")
+    case CellSet(c,x) =>  emitValDef(sym, quote(c) + ".set(" + quote(x) + ")")
+    case CellGet(c) =>  emitValDef(sym, quote(c) + ".value")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+
+trait CompileDyn extends Base with Compile {
   
+  def dcompile[A:Manifest,B:Manifest](fv: List[Rep[Any]])(f: Rep[A] => Rep[B]): Rep[A=>B]
+
+  def dcompile[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = dcompile(freesyms(f))(f)
+
+  def dlet[A:Manifest,B:Manifest](x:Rep[A], fv: List[Rep[Any]])(f: A => Rep[B]): Rep[B]
+
+  def dlet[A:Manifest,B:Manifest](x:Rep[A])(f: A => Rep[B]): Rep[B] = dlet(x, freesyms(f))(f)
+
+  def unstage[A:Manifest,B:Manifest](x:Rep[A])(f: A => Rep[B]): Rep[B] = dlet(x)(f)
+
+  // TODO: @cps version of unstage
+
+  def freesyms(x:Any): List[Rep[Any]]
+
+
+}
+
+trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with UncheckedOpsExp {
+
+  override def toString = "IR:" + getClass.getName
+    
+  def freesyms(x:Any): List[Sym[Any]] = { // switch to syms again ...
+    val fields = x.getClass.getDeclaredFields
+    fields.foreach(_.setAccessible(true))
+    val res = fields.map(_.get(x)).collect{case x: Sym[Any] => x}.toList
+    println("free vars: " + res)
+    res
+  }
+
+
+  def dcompile[A:Manifest,B:Manifest](fv: List[Exp[Any]])(f: Rep[A] => Rep[B]): Rep[A=>B] = {
+    
+    // compile { u: Rep[A] => f(u) }
+
+    val atyp = "Rep["+manifest[A]+"]"
+    val ftyp = atyp+"=>"+"Rep["+manifest[B]+"]"
+
+    dcompileInternal[A,Rep[A],B](fv, atyp, u => u)(ftyp, f)
+  }
   
-  trait StableVars extends Equal with NumericOps with HashMapOps with ArrayOps with Compile { self =>
+  def dlet[A:Manifest,B:Manifest](x:Exp[A], fv: List[Exp[Any]])(f: A => Rep[B]): Rep[B] = {
+    
+    // compile { u: Rep[Unit] => f(x) }  <--- x is runtime value
+
+    val ftyp = manifest[A]+"=>"+"Rep["+manifest[B]+"]"
+
+    val fc = dcompileInternal[Unit,A,B](x::fv, "Rep[Unit]", u => x)(ftyp, f) // dont"t really want x as free var but need lower bound on sym id for fresh ones
+    unchecked(fc,".apply(())")    
+  }
+
+  def dcompileInternal[U,A,B](fv: List[Exp[Any]], atyp: String, g: String => Any)(ftyp: String, f: A => Rep[B]): Rep[U=>B] = {
+
+    // will generate:  compile { u => f(g(u)) }
+
+    // the tricky bit: we must insert all free variables as staticData, redefining the corresponding symbols
+    val fvIds = fv map { case Sym(i) =>  i }
+    val maxid = (0::fvIds).max + 1
+    val IR = staticData[Compile with StaticDataExp](this)
+    val f2 = staticData(f.asInstanceOf[AnyRef])
+    unchecked("{import ",IR,"._;\n",
+      fvIds.map(i => "val s"+i+" = findDefinition(Sym("+i+")).map(infix_lhs(_).head).getOrElse(Sym("+i+"));\n").mkString, // XX codegen uses identity hash map ...
+      IR,".reset;",IR,".nVars="+maxid+"\n",                                                      // FIXME: reset harmful ???
+      "compile{(x:",atyp,") => \n",
+      fvIds.map(i => "createDefinition(s"+i+",StaticData(x"+i+"));\n").mkString,
+      "val y = ",f2,".asInstanceOf[",ftyp,"](",g("x"),")\n",
+      "println(\"freeVars/globalDefs for function of type "+f.getClass.getName+": "+fv+"\")\n",
+      "println(globalDefs)\n",
+      "y}}","//",fv) // last comment item necessary for dependency
+
+    /*raw"""{import $p._
+      ${ fvIds.map(x => "val s"+x+" = infix_lhs(findDefinition(Sym("+x+")).get).head;\n").mkString }
+      reset;$p.nVars="+maxid+";compile{(x:Rep[",manifest[A],"]) => \n",
+      fvIds.map(x => "createDefinition(s"+x+",StaticData(x"+x+"));\n").mkString,
+      "val r = ",f2,".asInstanceOf[Rep[",manifest[A],"]=>Rep[",manifest[B],"]](x)\n",
+      "println(globalDefs); r}}","//",$fv""".as) // last comment item necessary for dependency*/
+
+  }
+}
+
+
+trait StableVars extends CellOps with CompileDyn with Equal with NumericOps with HashMapOps with ArrayOps with Compile { self =>
     
     abstract class Continue[A]
     case class Done[A](x: Rep[A]) extends Continue[A]
-    case class ReadValue[A:Manifest,B](s: SCell[A], f: Rep[A] => Continue[B], fv: List[Rep[Any]]) extends Continue[B] { val m = manifest[A] }
+    case class ReadValue[A:Manifest,B](s: RCell[A], f: A => Continue[B], fv: List[Rep[Any]]) extends Continue[B] { val m = manifest[A] }
 
-    def readValue[A:Manifest,B](s: SCell[A])(f: Rep[A] => Rep[B]) = ReadValue(s, (x:Rep[A]) => Done(f(x)), freesyms(f))
-    def compileStable[A:Manifest,B:Manifest](f: Rep[A] => Continue[B]): A=>B 
+    def readValue[A:Manifest,B](s: RCell[A])(f: A => Rep[B]) = ReadValue(s, (x:A) => Done(f(x)), freesyms(f))
+    def readOneValue[A:Manifest,B](s: RCell[A])(f: A => Continue[B]) = ReadValue(s, f, freesyms(f))
+    def compileStable[A:Manifest,B:Manifest](f: Rep[A] => Continue[B]): A=>B
 
-    def dcompile[A:Manifest,B:Manifest](fv: List[Rep[Any]])(f: Rep[A] => Rep[B]): Rep[A=>B]
-
-    def dcompile[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = dcompile(freesyms(f))(f)
-
-    def freesyms(x:Any): List[Rep[Any]]
-
-    type Cell[T] = Rep[SCell[T]]
-    def infix_set[T:Manifest](c: Cell[T], x: Rep[T]): Rep[Unit]
-    def infix_get[T:Manifest](c: Cell[T]): Rep[T]
   }
 
-  trait StableVarsExp extends EffectExp with StaticDataExp with FunctionsExp with StableVars with EqualExpOpt with IfThenElseFatExp with UncheckedOpsExp {
+  trait StableVarsExp extends CellOpsExp with CompileDynExp with EffectExp with StaticDataExp with FunctionsExp with StableVars with EqualExpOpt with IfThenElseFatExp with UncheckedOpsExp {
     
     import scala.collection.mutable.HashMap
-    
-    override def toString = "IR:" + getClass.getName
-
-    case class CellInit[T](tag: String, x: Rep[T]) extends Def[SCell[T]]
-    case class CellSet[T](c: Cell[T], x: Rep[T]) extends Def[Unit]
-    case class CellGet[T](c: Cell[T]) extends Def[T]
-    
-    def cell[T:Manifest](tag: String): Cell[T] = staticData(new SCell[T](tag))//reflectMutable(CellInit(tag, x))
-    def infix_set[T:Manifest](c: Cell[T], x: Rep[T]): Rep[Unit] = reflectWrite(c)(CellSet(c,x))
-    def infix_get[T:Manifest](c: Cell[T]): Rep[T] = CellGet(c)
-
-    
-    def freesyms(x:Any): List[Sym[Any]] = { // switch to syms again ...
-      val fields = x.getClass.getDeclaredFields
-      fields.foreach(_.setAccessible(true))
-      val res = fields.map(_.get(x)).collect{case x: Sym[Any] => x}.toList
-      println("free vars: " + res)
-      res
-    }
-
-
-    def dcompile[A:Manifest,B:Manifest](fv: List[Exp[Any]])(f: Rep[A] => Rep[B]): Rep[A=>B] = {
-      
-      // the tricky bit: we must insert all free variables as staticData, redefining the corresponding symbols
-      val fvIds = fv map { case Sym(i) =>  i }
-      val maxid = (0::fvIds).max + 1
-      val p = staticData[Compile with StaticDataExp](this)
-      val f2 = staticData(f.asInstanceOf[AnyRef])
-      unchecked("{import ",p,"._;\n",
-        fvIds.map(x => "val s"+x+" = infix_lhs(findDefinition(Sym("+x+")).get).head;\n").mkString, // XX codegen uses identity hash map ...
-        "reset;",p,".nVars="+maxid+";compile{(x:Rep[",manifest[A],"]) => \n",                         // FIXME: reset harmful ???
-        fvIds.map(x => "createDefinition(s"+x+",StaticData(x"+x+"));\n").mkString,
-        "val r = ",f2,".asInstanceOf[Rep[",manifest[A],"]=>Rep[",manifest[B],"]](x)\n",
-        "println(globalDefs); r}}","//",fv) // last comment item necessary for dependency
-
-      /*raw"""{import $p._
-        ${ fvIds.map(x => "val s"+x+" = infix_lhs(findDefinition(Sym("+x+")).get).head;\n").mkString } // XX codegen uses identity hash map ...
-        reset;$p.nVars="+maxid+";compile{(x:Rep[",manifest[A],"]) => \n",                          // FIXME: reset harmful ???
-        fvIds.map(x => "createDefinition(s"+x+",StaticData(x"+x+"));\n").mkString,
-        "val r = ",f2,".asInstanceOf[Rep[",manifest[A],"]=>Rep[",manifest[B],"]](x)\n",
-        "println(globalDefs); r}}","//",$fv""".as) // last comment item necessary for dependency*/
-      
-    }
       
     
     def compileStable[A:Manifest,B:Manifest](f: Rep[A] => Continue[B]): A=>B = {
 
-      val codeHolder = SCell[A=>B]("code")
+      val codeHolder = RCell[A=>B]("code")
 
       def compPart[A:Manifest](m: Continue[A]): Rep[A] = m match {
-        case e@ReadValue(s,f:(Rep[a]=>Continue[A]), fv) => 
+        case e@ReadValue(s,f:((a)=>Continue[A]), fv) => 
           implicit val m = e.m 
 
           val s2 = staticData(s)
           println("read value " + s + " sym " + s2)
           
           val s2val = s2.get
-          if (s2val == s.value) {
-            compPart(f(unit(s.value)))
+          if (s2val == staticData(s.value)) {
+            compPart(f(s.value))
           } else {
             staticData(codeHolder).set(unit(null))
             // TODO: we're not *really* specializing the continuation yet,
             // just using s2val as static data (we should use unit(..))
-            val compiledCont = dcompile(s2val::fv)((x:Rep[a]) => compPart(f(s2val)))  // <---- should specialize this to new value!  (OSR!!)
-            println("compiled " + compiledCont)
-            doApply(compiledCont, s2.get) 
+            //val compiledCont = dcompile(s2val::fv)((x:Rep[a]) => compPart(f(s2val)))  // <---- should specialize this to new value!  (OSR!!)
+            //println("compiled " + compiledCont)
+            //doApply(compiledCont, s2val)
+            // BETTER YET: have f take static arg instead of Rep
+            dlet(s2val,fv)(z => compPart(f(z)))
           }
 
         case Done(c) => c
@@ -135,18 +192,12 @@ class TestStable extends FileDiffSuite {
     }
 
   }
-  
-  trait ScalaGenStableVars extends ScalaGenBase with ScalaGenUncheckedOps {
-    val IR: StableVarsExp
-    import IR._
 
-    override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-      case CellInit(tag,x) =>  emitValDef(sym, "scala.virtualization.lms.epfl.test12.SCell[" + remap(x.tp) + "](\"" + tag + "\")")
-      case CellSet(c,x) =>  emitValDef(sym, quote(c) + ".set(" + quote(x) + ")")
-      case CellGet(c) =>  emitValDef(sym, quote(c) + ".value")
-      case _ => super.emitNode(sym, rhs)
-    }
-  }
+
+
+class TestStable extends FileDiffSuite {
+  
+  val prefix = "test-out/epfl/test13-"
   
   
   trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
@@ -172,7 +223,7 @@ class TestStable extends FileDiffSuite {
     with ScalaGenVariables with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenWhile
     with ScalaGenRangeOps with ScalaGenPrint with ScalaGenFunctions
     with ScalaGenNumericOps with ScalaGenArrayOps with ScalaGenHashMapOps with ScalaGenCastingOps with ScalaGenStaticData 
-    with ScalaGenStableVars {
+    with ScalaGenCellOps with ScalaGenUncheckedOps {
     val IR: Impl
   }
   
@@ -184,13 +235,46 @@ class TestStable extends FileDiffSuite {
     }
   }
   
+
+
+  def testUnstage = withOutFileChecked(prefix+"unstage1") {
+    trait Prog extends DSL with Functions with StaticData {
+      def test() = {
+
+        val f = compile { x: Rep[Int] =>
+
+          val a = x + 1
+          val b = x * 2
+
+          // specialize continuation at runtime to value of a+b
+
+          unstage(a+b) { y: Int =>
+
+            val z = unit(y) * (a + b)
+
+            z
+          }
+        }
+
+        println(f(9))
+
+        println(f(3))
+
+        println(f(1))
+
+      }
+    }
+    new Prog with Impl
+  }
+
+
   
   def testStable1 = withOutFileChecked(prefix+"stable1") {
     trait Prog extends DSL with Functions with StaticData {
       def test() = {
 
 
-        val s = new SCell[Int]("stable")
+        val s = new RCell[Int]("stable")
         s.value = 0
 
         val f = compile { x: Rep[Int] =>
@@ -237,7 +321,7 @@ class TestStable extends FileDiffSuite {
       def test() = {
 
 
-        val s = SCell[Int]("stable")
+        val s = RCell[Int]("stable")
 
         s.value = 0
 

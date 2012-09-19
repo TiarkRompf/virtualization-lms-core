@@ -1,0 +1,93 @@
+free vars: List(Sym(1), Sym(2))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged$0(px4:scala.virtualization.lms.common.Compile with scala.virtualization.lms.common.StaticDataExp,px5:Object) extends ((Int)=>(Int)) {
+def apply(x0:Int): Int = {
+val x1 = x0 + 1
+val x2 = x0 * 2
+val x3 = x1 + x2
+val x4 = px4 // static data: IR:scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testUnstage$1$$anon$1
+val x5 = px5 // static data: <function1>
+val x6 = {import x4._;
+val s3 = findDefinition(Sym(3)).map(infix_lhs(_).head).getOrElse(Sym(3));
+val s1 = findDefinition(Sym(1)).map(infix_lhs(_).head).getOrElse(Sym(1));
+val s2 = findDefinition(Sym(2)).map(infix_lhs(_).head).getOrElse(Sym(2));
+x4.reset;x4.nVars=4
+compile{(x:Rep[Unit]) => 
+createDefinition(s3,StaticData(x3));
+createDefinition(s1,StaticData(x1));
+createDefinition(s2,StaticData(x2));
+val y = x5.asInstanceOf[Int=>Rep[Int]](x3)
+println("freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testUnstage$1$Prog$1$$anonfun$5$$anonfun$apply$5: List(Sym(3), Sym(1), Sym(2))")
+println(globalDefs)
+y}}//List(Sym(3), Sym(1), Sym(2))
+val x7 = x6.apply(())
+x7
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+compilation: ok
+freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testUnstage$1$Prog$1$$anonfun$5$$anonfun$apply$5: List(Sym(3), Sym(1), Sym(2))
+List(TP(Sym(3),StaticData(28)), TP(Sym(1),StaticData(10)), TP(Sym(2),StaticData(18)), TP(Sym(5),NumericPlus(Sym(1),Sym(2))), TP(Sym(6),NumericTimes(Const(28),Sym(5))))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged$1(px1:Int,px2:Int) extends ((Unit)=>(Int)) {
+def apply(x4:Unit): Int = {
+val x1 = px1 // static data: 10
+val x2 = px2 // static data: 18
+val x5 = x1 + x2
+val x6 = 28 * x5
+x6
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+compilation: ok
+784
+freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testUnstage$1$Prog$1$$anonfun$5$$anonfun$apply$5: List(Sym(3), Sym(1), Sym(2))
+List(TP(Sym(3),StaticData(10)), TP(Sym(1),StaticData(4)), TP(Sym(2),StaticData(6)), TP(Sym(5),NumericPlus(Sym(1),Sym(2))), TP(Sym(6),NumericTimes(Const(10),Sym(5))))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged$2(px1:Int,px2:Int) extends ((Unit)=>(Int)) {
+def apply(x4:Unit): Int = {
+val x1 = px1 // static data: 4
+val x2 = px2 // static data: 6
+val x5 = x1 + x2
+val x6 = 10 * x5
+x6
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+compilation: ok
+100
+freeVars/globalDefs for function of type scala.virtualization.lms.epfl.test13.TestStable$$anonfun$testUnstage$1$Prog$1$$anonfun$5$$anonfun$apply$5: List(Sym(3), Sym(1), Sym(2))
+List(TP(Sym(3),StaticData(4)), TP(Sym(1),StaticData(2)), TP(Sym(2),StaticData(2)), TP(Sym(5),NumericPlus(Sym(1),Sym(2))), TP(Sym(6),NumericTimes(Const(4),Sym(5))))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged$3(px1:Int,px2:Int) extends ((Unit)=>(Int)) {
+def apply(x4:Unit): Int = {
+val x1 = px1 // static data: 2
+val x2 = px2 // static data: 2
+val x5 = x1 + x2
+val x6 = 4 * x5
+x6
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+compilation: ok
+16
