@@ -7,7 +7,7 @@ import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
 import collection.mutable.{Map => MMap}
 import collection.immutable.List._
 
-trait OpenCLCodegen extends GPUCodegen {
+trait OpenCLCodegen extends GPUCodegen with CppHostTransfer {
   val IR: Expressions
   import IR._
 
@@ -18,37 +18,25 @@ trait OpenCLCodegen extends GPUCodegen {
     val outDir = new File(buildDir)
     outDir.mkdirs
     helperFuncIdx = 0
-    helperFuncString = new StringBuilder
-    hstream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cpp"))
-    helperFuncHdrStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
+    //helperFuncString = new StringBuilder
+    helperFuncStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cpp"))
+    headerStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
 
     //TODO: Put all the DELITE APIs declarations somewhere
-    hstream.print("#include \"helperFuncs.h\"\n")
-    helperFuncHdrStream.print(getDSLHeaders)
-    helperFuncHdrStream.print("#include <iostream>\n")
-    helperFuncHdrStream.print("#include <limits>\n")
-    helperFuncHdrStream.print("#include <jni.h>\n\n")
-    helperFuncHdrStream.print("#define CHAR short\n")
-    helperFuncHdrStream.print("#define jCHAR jshort\n")
-    helperFuncHdrStream.print("#include \"DeliteOpenCL.h\"\n")
-    helperFuncHdrStream.print("#include \"DeliteArray.h\"\n")
+    helperFuncStream.print("#include \"helperFuncs.h\"\n")
+    headerStream.print(getDSLHeaders)
+    headerStream.print("#include <iostream>\n")
+    headerStream.print("#include <limits>\n")
+    headerStream.print("#include <jni.h>\n\n")
+    headerStream.print("#define CHAR short\n")
+    headerStream.print("#define jCHAR jshort\n")
+    headerStream.print("#include \"DeliteOpenCL.h\"\n")
+    headerStream.print("#include \"DeliteArray.h\"\n")
 
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
-  /*
-  override def isObjectType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "scala.collection.immutable.List[Int]" => true
-        //TODO: ObjectTypes needs to be able to broken down, but array does not have to be.
-        //TODO: What we need to do is to distinguish between passable types or not to the opencl kernel
-      case "Array[Int]" | "Array[Long]" | "Array[Float]" | "Array[Double]" | "Array[Boolean]" => true
-      case _ => super.isObjectType(m)
-    }
-  }
-  */
-
-  /*
+	/*
   override def remap[A](m: Manifest[A]) : String = {
     checkGPUableType(m)
     if (m.erasure == classOf[Variable[AnyVal]])
@@ -75,18 +63,19 @@ trait OpenCLCodegen extends GPUCodegen {
       }
     }
   }
-  */
+	*/
 
-  /*
+	/*
   override def unpackObject[A](sym: Sym[Any]) : Map[String,Manifest[_]] = remap(sym.Type) match {
     case "OpenCLIntList" => Map("length"->Manifest.Int)    //TODO: How to initialize the data array type for the list?
     case _ => throw new GenerationFailedException("OpenCLGen: Type %s cannot be unpacked.".format(sym.Type.toString))
   }
-  */
+	*/
 
-  // TODO: Move to Delite?
+
+  /*
   def copyInputHtoD(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.tp)
+    //checkGPUableType(sym.tp)
     remap(sym.tp) match {
       case "DeliteArray_bool" | "DeliteArray_char" | "DeliteArray_CHAR" | "DeliteArray_short" | "DeliteArray_int" | "DeiteArray_long" | "DeliteArray_float" | "DeliteArray_double" =>
         val out = new StringBuilder
@@ -104,7 +93,7 @@ trait OpenCLCodegen extends GPUCodegen {
   }
 
   def copyOutputDtoH(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.tp)
+    //checkGPUableType(sym.tp)
     if (isPrimitiveType(sym.tp)) {
       val out = new StringBuilder
       out.append("\t%s data;\n".format(remap(sym.tp)))
@@ -130,7 +119,7 @@ trait OpenCLCodegen extends GPUCodegen {
   }
 
   def copyMutableInputDtoH(sym: Sym[Any]) : String = {
-    checkGPUableType(sym.tp)
+    //checkGPUableType(sym.tp)
     remap(sym.tp) match {
       case "DeliteArray_bool" | "DeliteArray_char" | "DeliteArray_CHAR" | "DeliteArray_short" | "DeliteArray_int" | "DeiteArray_long" | "DeliteArray_float" | "DeliteArray_double" =>
         val out = new StringBuilder
@@ -144,23 +133,7 @@ trait OpenCLCodegen extends GPUCodegen {
       case _ => throw new Exception("OpenCLGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
     }
   }
-
-  //TODO: Remove below methods
-  def allocOutput(newSym: Sym[_], sym: Sym[_], reset: Boolean = false) : Unit = {
-    throw new GenerationFailedException("OpenCLGen: allocOutput(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.tp)))
-  }
-  def allocReference(newSym: Sym[Any], sym: Sym[Any]) : Unit = {
-    throw new GenerationFailedException("OpenCLGen: allocReference(newSym, sym) : Cannot allocate GPU memory (%s)".format(remap(sym.tp)))
-  }
-
-  def positionMultDimInputs(sym: Sym[Any]) : String = {
-    throw new GenerationFailedException("OpenCLGen: positionMultDimInputs(sym) : Cannot reposition GPU memory (%s)".format(remap(sym.tp)))
-
-  }
-
-  def cloneObject(sym: Sym[Any], src: Sym[Any]) : String = {
-    throw new GenerationFailedException("OpenCLGen: cloneObject(sym)")
-  }
+  */
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
@@ -190,18 +163,6 @@ trait OpenCLCodegen extends GPUCodegen {
     Nil
   }
 
-  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    stream.println(addTab() + remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
-  }
-
-  def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
-    stream.println(addTab()+ remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
-  }
-
-  def emitAssignment(lhs:String, rhs: String): Unit = {
-    stream.println(addTab() + " " + lhs + " = " + rhs + ";")
-  }
-
 }
 
 // TODO: do we need this for each target?
@@ -229,9 +190,9 @@ trait OpenCLNestedCodegen extends CLikeNestedCodegen with OpenCLCodegen {
 
 trait OpenCLFatCodegen extends CLikeFatCodegen with OpenCLCodegen {
   val IR: Expressions with Effects with FatExpressions
-  import IR._
+	import IR._
   
-  def emitMultiLoopCond(sym: Sym[Any], funcs:List[Block[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]]) = {
+	def emitMultiLoopCond(sym: Sym[Any], funcs:List[Block[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]]) = {
     isNestedNode = true
     devFuncIdx += 1
     val currIdx = devFuncIdx

@@ -52,10 +52,12 @@ trait ScalaCodegen extends GenericCodegen with Config {
     staticData
   }
 
+  override def emitFileHeader() {
+    stream.println("package generated." + this.toString)
+  }
+
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
-    
-    stream.println("package generated." + this.toString)
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
     stream.print(vals.map(p => quote(p) + ":" + remap(p.tp)).mkString(","))

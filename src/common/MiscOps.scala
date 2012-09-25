@@ -70,9 +70,19 @@ trait CGenMiscOps extends CGenEffect {
   val IR: MiscOpsExp
   import IR._
 
+  private def format(s: Exp[Any]): String = {
+    remap(s.tp) match {
+      case "CHAR" => "\"%c"
+      case "bool" | "char" | "short" | "int" => "\"%d"
+      case "long" => "\"%ld"
+      case "float" | "double" => "\"%f"
+      case _ => throw new Exception("CGenMiscOps: Non-primitive type error")
+    }
+  }
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case PrintLn(s) => stream.println("printf(\"%s\\n\"," + quote(s) + ");")
-    case Print(s) => stream.println("printf(\"%s\"," + quote(s) + ");")
+    case PrintLn(s) if(isPrimitiveType(s.tp)) => stream.println("printf(" + format(s) + "\\n\"," + quote(s) + ");")
+    case Print(s) if(isPrimitiveType(s.tp)) => stream.println("printf(" + format(s) + "\"," + quote(s) + ");")
     case Exit(a) => stream.println("exit(" + quote(a) + ");")
     case _ => super.emitNode(sym, rhs)
   }

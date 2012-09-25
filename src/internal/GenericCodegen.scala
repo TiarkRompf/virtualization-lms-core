@@ -13,6 +13,7 @@ trait GenericCodegen extends BlockTraversal {
   // TODO: should some of the methods be moved into more specific subclasses?
   
   def kernelFileExt = ""
+  def emitFileHeader(): Unit = {}
   def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {}
   def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {}
   
@@ -101,7 +102,8 @@ trait GenericCodegen extends BlockTraversal {
   }
     
   def emitValDef(sym: Sym[Any], rhs: String): Unit
-    
+  def emitAssignment(lhs: String, rhs: String): Unit
+
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, stream: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] // return free static data in block
       
   def quote(x: Exp[Any]) : String = x match {
@@ -121,7 +123,27 @@ trait GenericCodegen extends BlockTraversal {
     stream = null
     super.reset
   }
-  
+
+
+  def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
+    m.toString match {
+      case "Boolean" | "Byte" | "Char" | "Short" | "Int" | "Long" | "Float" | "Double" => true
+      case _ => false
+    }
+  }
+
+  def isVoidType[A](m: Manifest[A]) : Boolean = {
+    m.toString match {
+      case "Unit" => true
+      case _ => false
+    }
+  }
+
+  def isVariableType[A](m: Manifest[A]) : Boolean = {
+    if(m.erasure == classOf[Variable[AnyVal]]) true
+    else false
+  }
+
 }
 
 
