@@ -18,10 +18,14 @@ trait AbstractDeviceTransfer {
   val IR: Expressions
   import IR._
 
-  def copyInputHtoD(sym: Sym[Any]) : String
-  def copyOutputDtoH(sym: Sym[Any]) : String
-  def copyMutableInputDtoH(sym: Sym[Any]) : String
-  def allocOutput(newSym: Sym[_], sym: Sym[_], reset: Boolean = false) : Unit
+  def emitSendSlave(sym: Sym[Any]) : (String,String)
+  def emitRecvSlave(sym: Sym[Any]) : (String,String)
+  //def emitSendViewSlave(sym: Sym[Any]) : (String,String)
+  //def emitRecvViewSlave(sym: Sym[Any]) : (String,String)
+  def emitSendUpdateSlave(sym: Sym[Any]) : (String,String)
+  def emitRecvUpdateSlave(sym: Sym[Any]) : (String,String)
+
+  //def allocOutput(newSym: Sym[_], sym: Sym[_], reset: Boolean = false) : Unit
 }
 
 object Hosts extends Enumeration {

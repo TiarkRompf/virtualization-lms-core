@@ -7,7 +7,7 @@ import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap, ListMap
 import collection.mutable.{Map => MMap}
 import collection.immutable.List._
 
-trait CudaCodegen extends GPUCodegen with CppHostTransfer {
+trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfer {
   val IR: Expressions
   import IR._
 
