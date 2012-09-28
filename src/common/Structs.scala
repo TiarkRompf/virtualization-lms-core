@@ -244,7 +244,7 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
 
 
 
-trait ScalaGenStruct extends ScalaGenBase {
+trait ScalaGenStructBase extends ScalaGenBase {
   val IR: StructExp
   import IR._
   import reflect.RefinedManifest
@@ -319,14 +319,18 @@ trait ScalaGenStruct extends ScalaGenBase {
       }
     }
   }
+}
 
-  override def emitDataStructures(path: String) {
+trait ScalaGenStruct extends ScalaGenStructBase {
+  val IR: StructExp
+  import IR._
+
+   override def emitDataStructures(path: String) {
     val out = new PrintWriter(path)
     emitDataStructures(out)
     out.close()
     super.emitDataStructures(path)
-  }
-
+  } 
 }
 
 trait CudaGenStruct extends CudaGenBase {
