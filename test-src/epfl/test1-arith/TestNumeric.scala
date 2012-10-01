@@ -74,11 +74,30 @@ class TestNumeric extends FileDiffSuite {
         def test = {
           val numRows = unit(7)
 
-          //val xstep = 25.0/numRows //FIXME FIXME: "erroneous or inaccessible type"
+          //val xstep = 25.0/numRows //FIXME: "erroneous or inaccessible type"
         }
 
       }
     }
   }
+
+
+  def testBugNumeric3 = {
+    withOutFile(prefix+"numeric3") {
+      trait Prog extends Base with NumericOps with LiftNumeric with StringOps {
+
+        def test = {
+          val numRows = unit(7)
+
+          //val xstep = 25.0/numRows // could not find implicit Numeric[AnyVal]  (this is ok)
+          //val msg = "step = " + xstep  //FIXME: "EMBEDDING: cannot resolve target method (sym=<none>): infix_$plus("res = ", xstep)"
+
+        }
+
+      }
+    }
+  }
+
+
 
 }
