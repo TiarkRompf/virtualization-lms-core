@@ -2,6 +2,10 @@ import sbt._
 import java.io.File
 
 object LMSBuild extends Build {
+
+  // -DshowSuppressedErrors=false
+  System.setProperty("showSuppressedErrors", "false")
+
   // FIXME: custom-built scalatest
   val dropboxScalaTestRepo = "Dropbox" at "http://dl.dropbox.com/u/12870350/scala-virtualized"
   

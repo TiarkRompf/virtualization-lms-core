@@ -19,6 +19,7 @@ trait LiftPrimitives {
 }
 
 
+
 /**
  * This file is extremely boilerplate and redundant and does not take advantage of any of
  * Scala's type hierarchy to reduce the amount of IR nodes or code generation require.
@@ -88,7 +89,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
     def toLong(implicit pos: SourceContext) = int_tolong(lhs)
   }
 
-  def infix_/(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_divide(lhs, rhs)
+  //def infix_/(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_divide(lhs, rhs) //TR triggers bug in Scala-Virtualized 2.10.0 M7 together with Delite ArithOps
   def infix_%(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_mod(lhs, rhs)
   def infix_&(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_binaryand(lhs, rhs)
   def infix_|(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_binaryor(lhs, rhs)
