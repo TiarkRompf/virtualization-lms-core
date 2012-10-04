@@ -5,29 +5,38 @@ import java.io.PrintWriter
 import scala.reflect.SourceContext
 
 trait LiftNumeric {
-  this: Base =>
+  this: Base with NumericOps =>
 
+  // HACK The Numeric context bound is not *required* but it is useful to reduce the applicability of this implicit conversion
   implicit def numericToNumericRep[T:Numeric:Manifest](x: T) = unit(x)
+  // Explicit `1 + unit(1)` support because it needs two implicit conversions (FIXME Doesn’t work)
+  implicit def anyToNumericOps[A](a: A)(implicit lift: A => Rep[A]) = new NumericOpsCls(lift(a))
+  // implicit def numericToNumericOps[A : Numeric : Manifest](a: A) = new NumericOpsCls(unit(a))
 }
 
 trait NumericOps extends Variables {
 
-  // workaround for infix not working with manifests
-  implicit def numericToNumericOps[T:Numeric:Manifest](n: T) = new NumericOpsCls(unit(n))
-  implicit def repNumericToNumericOps[T:Numeric:Manifest](n: Rep[T]) = new NumericOpsCls(n)
-  implicit def varNumericToNumericOps[T:Numeric:Manifest](n: Var[T]) = new NumericOpsCls(readVar(n))
-  
-  class NumericOpsCls[T:Numeric:Manifest](lhs: Rep[T]){
-    def +[A](rhs: A)(implicit c: A => T, pos: SourceContext) = numeric_plus(lhs,unit(c(rhs)))
-    def +(rhs: Rep[T])(implicit pos: SourceContext) = numeric_plus(lhs,rhs)
-    def -(rhs: Rep[T])(implicit pos: SourceContext) = numeric_minus(lhs,rhs)
-    def *(rhs: Rep[T])(implicit pos: SourceContext) = numeric_times(lhs,rhs)
-    def /(rhs: Rep[T])(implicit pos: SourceContext) = numeric_divide(lhs,rhs)
+  // Type constraints allowing an eventual type promotion (e.g. Int to Float) before performing the numeric operation
+  object NumericOpsTypes {
+    trait Args { type Lhs; type Rhs }
+    trait ~[A, B] extends Args { type Lhs = A; type Rhs = B }
+    class :=[A <: Args, B](val lhs: Rep[A#Lhs] => Rep[B], val rhs: Rep[A#Rhs] => Rep[B])(implicit val Numeric: Numeric[B])
   }
+  import NumericOpsTypes._
+  implicit def numericSameArgs[A : Numeric] = new (A ~ A := A) (identity, identity)
 
-  //def infix_+[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_plus(lhs,rhs)
-  //def infix_-[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_minus(lhs,rhs)
-  //def infix_*[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_times(lhs,rhs)
+  /* FIXME
+   * I’d like to define numeric operators as follows:
+   * def infix_+[A, B](lhs: A, rhs: B)(implicit someAdditionnalConstraints...)
+   * But this signature leads to an ambiguous reference to overloaded definition with an infix_+(s: String, a: Any) method defined in EmbeddedControls (?)
+   */
+  implicit class NumericOpsCls[A](lhs: Rep[A]) {
+    def + [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_plus(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
+    def - [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_minus(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
+    def * [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_times(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
+    def / [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_divide(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
+  }
+  implicit def varNumericToNumericOps[T : Numeric : Manifest](n: Var[T]) = new NumericOpsCls(readVar(n))
 
   def numeric_plus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[T]
   def numeric_minus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[T]
@@ -36,6 +45,16 @@ trait NumericOps extends Variables {
   //def numeric_negate[T:Numeric](x: T): Rep[T]
   //def numeric_abs[T:Numeric](x: T): Rep[T]
   //def numeric_signum[T:Numeric](x: T): Rep[Int]
+}
+
+/*
+ * Enable promotion of arguments involved in a numeric operation provided there exists an implicit conversion to perform the promotion.
+ * For instance, it allows to mix Int values and Double values in a numeric operation.
+ */
+trait NumericPromotions { this: ImplicitOps with NumericOps =>
+  import NumericOpsTypes._
+  implicit def numericPromoteLhs[A : Manifest, B : Numeric : Manifest](implicit aToB: A => B) = new (A ~ B := B) (lhs = implicit_convert[A, B](_), rhs = identity)
+  implicit def numericPromoteRhs[A : Manifest, B : Numeric : Manifest](implicit aToB: A => B) = new (B ~ A := B) (lhs = identity, rhs = implicit_convert[A, B](_))
 }
 
 trait NumericOpsExp extends NumericOps with VariablesExp with BaseFatExp {
