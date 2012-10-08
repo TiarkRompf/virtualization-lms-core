@@ -23,12 +23,14 @@ trait StructOps extends Base {
 
 }
 
-trait StructExp extends StructOps with BaseExp with EffectExp with ObjectOpsExp with StringOpsExp with OverloadHack {
+trait StructExp extends StructOps with BaseExp with EffectExp with VariablesExp with ObjectOpsExp with StringOpsExp with OverloadHack {
 
   def anonStruct[T:Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T] = {
     val x = fresh[T]
-    if (fields exists { case (_, mutable, _) => mutable })  throw new RuntimeException("ERROR: \"var\" fields in Records not yet supported") //FIXME
-    val fieldSyms = fields map { case (index, _, rhs) => (index, rhs(x)) }
+    val fieldSyms = fields map {
+      case (index, false, rhs) => (index, rhs(x)) 
+      case (index, true, rhs) => (index, var_new(rhs(x)).e)
+    }
     struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fieldSyms)
   }
 
@@ -41,6 +43,11 @@ trait StructExp extends StructOps with BaseExp with EffectExp with ObjectOpsExp 
   abstract class AbstractStruct[T] extends Def[T] {
     val tag: StructTag[T]
     val elems: Seq[(String, Rep[Any])]
+  }
+
+  abstract class AbstractField[T] extends Def[T] {
+    val struct: Rep[Any]
+    val index: String
   }
 
   /* override def fresh[T:Manifest] = manifest[T] match {
@@ -59,30 +66,54 @@ trait StructExp extends StructOps with BaseExp with EffectExp with ObjectOpsExp 
     case _ => None
   }
 
-  case class SimpleStruct[T](tag: StructTag[T], elems: Seq[(String,Rep[Any])]) extends AbstractStruct[T]
-  case class Field[T](struct: Rep[Any], index: String) extends Def[T]
+  object Field {
+    def unapply[T](d: Def[T]) = unapplyField(d)
+  }
 
-  def struct[T:Manifest](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit pos: SourceContext): Rep[T] = SimpleStruct(tag, elems)
-  def struct[T:Manifest](tag: StructTag[T], elems: Seq[(String, Rep[Any])])(implicit o: Overloaded1, pos: SourceContext): Rep[T] = SimpleStruct(tag, elems)
+  def unapplyField[T](d: Def[T]): Option[(Rep[Any], String)] = d match {
+    case f: AbstractField[T] => Some((f.struct, f.index))
+    case _ => None
+  }
 
-  def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = Field[T](struct, index)
+  case class SimpleStruct[T](tag: StructTag[T], elems: Seq[(String, Rep[Any])]) extends AbstractStruct[T]
+  case class FieldApply[T](struct: Rep[Any], index: String) extends AbstractField[T]
+  case class FieldUpdate[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]) extends Def[Unit]
 
-  // FIXME: need  syms override because Seq is not a Product
-  override def syms(x: Any): List[Sym[Any]] = x match {
-    case z:Iterable[_] => z.toList.flatMap(syms)
-    case _ => super.syms(x)
+
+  def struct[T:Manifest](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit o: Overloaded1, pos: SourceContext): Rep[T] = struct[T](tag, elems)
+  def struct[T:Manifest](tag: StructTag[T], elems: Seq[(String, Rep[Any])])(implicit pos: SourceContext): Rep[T] = SimpleStruct(tag, elems)
+
+  def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = FieldApply[T](struct, index)
+  def var_field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Var[T] = Variable(FieldApply[Var[T]](struct, index))
+  def field_update[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]): Exp[Unit] = reflectWrite(struct)(FieldUpdate(struct, index, rhs))
+
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case s:AbstractStruct[_] => s.elems.flatMap(e => syms(e._2)).toList
+    case _ => super.syms(e)
   }
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
-    case z:Iterable[_] => z.toList.flatMap(symsFreq)
+    case s:AbstractStruct[_] => s.elems.flatMap(e => symsFreq(e._2)).toList
     case _ => super.symsFreq(e)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
-    case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
-    case Field(struct, key) => field(f(struct), key)
-    case _ => super.mirror(e,f)
+  override def effectSyms(e: Any): List[Sym[Any]] = e match {
+    case s:AbstractStruct[_] => s.elems.flatMap(e => effectSyms(e._2)).toList
+    case _ => super.effectSyms(e)
   }
+
+  override def readSyms(e: Any): List[Sym[Any]] = e match {
+    case s:AbstractStruct[_] => Nil //struct creation doesn't de-reference any of its inputs
+    case _ => super.readSyms(e)
+  }
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
+    case FieldApply(struct, key) => field(f(struct), key)
+    case Reflect(FieldApply(struct, key), u, es) => reflectMirrored(Reflect(FieldApply(f(struct), key), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(FieldUpdate(struct, key, rhs), u, es) => reflectMirrored(Reflect(FieldUpdate(f(struct), key, f(rhs)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
 
   def structName[T](m: Manifest[T]): String = m match {
     case rm: RefinedManifest[_] => rm.erasure.getSimpleName + rm.fields.map(f => structName(f._2)).mkString("")
@@ -103,17 +134,37 @@ trait StructExp extends StructOps with BaseExp with EffectExp with ObjectOpsExp 
       string_plus(unit(structName(tag)+"("),string_plus(e,unit(")")))
     case _ => super.object_toString(x)
   }
+
 }
 
 trait StructExpOpt extends StructExp {
 
-  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = struct match {
-    case Def(Struct(tag, elems)) => 
-      elems.find(_._1 == index).getOrElse(
-        throw new RuntimeException("ERROR: " + index + " is not a field of type " + struct.tp)
-      )._2.asInstanceOf[Rep[T]]
+  //this is factored out so it can be called by domain-specific field access methods
+  def fieldLookup[T](struct: Exp[Any], index: String): Option[Exp[T]] = {
+    def lookup(elems: Seq[(String, Exp[Any])]) = elems.find(_._1 == index).getOrElse(
+      throw new RuntimeException("ERROR: " + index + " is not a field of type " + struct.tp)
+    )._2.asInstanceOf[Exp[T]]
+
+    struct match {
+      case Def(Struct(tag, elems)) => Some(lookup(elems))
+      case Def(Reflect(Struct(tag, elems),u,es)) => assert(u == Alloc()); Some(lookup(elems)) //mutable should be the only effect attachable to a Struct, and only because of the mutable field problem (?)
+      case _ => None
+    }
+  }
+
+  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = fieldLookup(struct, index) match {
+    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
+    case Some(x) => x
     case _ => super.field[T](struct, index)
   }
+
+  //TODO: need to be careful unwrapping Structs of vars since partial unwrapping can result in reads & writes to two different memory locations in the generated code
+  //(the original var and the struct); could solve this problem by generating Ref[T] for vars  
+  /* override def var_field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Var[T] = fieldLookup(struct, index) match {
+    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => Variable(x)
+    case Some(x) => throw new RuntimeException("ERROR: " + index + " is not a variable field of type " + struct.tp)
+    case None => super.var_field(struct, index)
+  } */
 
 }
 
@@ -135,6 +186,8 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
         var_assign(Variable(lv), rv)(rv.tp, pos)
       }
       Const(())
+    case (Variable(Def(Reflect(Field(struct,idx),_,_))), rhs) => 
+      field_update(struct, idx, rhs)
     case _ => super.var_assign(lhs, rhs)
   }
 
@@ -145,6 +198,8 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
         case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
       }
       struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.tp), pos))))
+    case Variable(Def(Field(struct,idx))) =>
+      field[T](struct, idx)
     case _ => super.readVar(v)
   }
 
@@ -291,22 +346,16 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    //case Struct(t,e) if e.length == 2 && e(0)_2.tp == manifest[Char] && e(1)_2.tp == manifest[Char] =>
-    //  emitValDef(sym, "("+ quote(a) + ".toInt << 16) + " + quote(b)) 
-    //case Field(struct, index) if //TODO 
-    //  emitValDef(sym, "((" + quote(t) + " & 0xffff0000) >>> 16).toChar")
-    //  emitValDef(sym, "(" + quote(t) + " & 0xffff).toChar")
-
     case Struct(tag, elems) =>
       registerStruct(tag, elems)
-      //emitValDef(sym, "Map(" + elems.map(e => "\"" + e._1 + "\"->" + quote(e._2)).mkString(",") + ") //" + tag)
       emitValDef(sym, "new " + structName(tag) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
       printlog("WARNING: emitting " + structName(tag) + " struct " + quote(sym))    
-    case f@Field(struct, index) =>
-      //emitValDef(sym, quote(struct) + "(\"" + index + "\").asInstanceOf[" + remap(sym.Type) + "]")
+    case FieldApply(struct, index) =>
       emitValDef(sym, quote(struct) + "." + index)
       printlog("WARNING: emitting field access: " + quote(struct) + "." + index)
-    
+    case FieldUpdate(struct, index, rhs) =>
+      emitValDef(sym, quote(struct) + "." + index + " = " + quote(rhs))
+      printlog("WARNING: emitting field update: " + quote(struct) + "." + index)
     case _ => super.emitNode(sym, rhs)
   }
 
