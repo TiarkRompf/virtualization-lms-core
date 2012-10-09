@@ -103,7 +103,8 @@ trait StructExp extends StructOps with BaseExp with EffectExp with VariablesExp 
   }
 
   override def readSyms(e: Any): List[Sym[Any]] = e match {
-    case s:AbstractStruct[_] => Nil //struct creation doesn't de-reference any of its inputs
+    case s:AbstractStruct[_] => s.elems.flatMap(e => readSyms(e._2)).toList
+    //case s:AbstractStruct[_] => Nil //struct creation doesn't de-reference any of its inputs
     case _ => super.readSyms(e)
   }
 
@@ -121,17 +122,12 @@ trait StructExp extends StructOps with BaseExp with EffectExp with VariablesExp 
     case _ => m.erasure.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
   }
 
-  def structName[T](tag: StructTag[T]): String = tag match {
-    case AnonTag(m) => structName(m)
-    case ClassTag(name) => name
-    case NestClassTag(elem) => structName(elem)
-    case _ => throw new RuntimeException("don't know how to generate struct for " + tag.toString)
-  }
+  def classTag[T:Manifest] = ClassTag[T](structName(manifest[T]))
 
   override def object_toString(x: Exp[Any])(implicit pos: SourceContext): Exp[String] = x match {
-    case Def(Struct(tag, elems)) => //tag(elem1, elem2, ...)
+    case Def(e@Struct(tag, elems)) => //tag(elem1, elem2, ...)
       val e = elems.map(e=>string_plus(unit(e._1 + " = "), object_toString(e._2))).reduceLeft((l,r)=>string_plus(string_plus(l,unit(", ")),r))
-      string_plus(unit(structName(tag)+"("),string_plus(e,unit(")")))
+      string_plus(unit(structName(e.tp)+"("),string_plus(e,unit(")")))
     case _ => super.object_toString(x)
   }
 
@@ -147,7 +143,7 @@ trait StructExpOpt extends StructExp {
 
     struct match {
       case Def(Struct(tag, elems)) => Some(lookup(elems))
-      case Def(Reflect(Struct(tag, elems),u,es)) => assert(u == Alloc()); Some(lookup(elems)) //mutable should be the only effect attachable to a Struct, and only because of the mutable field problem (?)
+      case Def(Reflect(Struct(tag, elems),u,es)) => Some(lookup(elems))
       case _ => None
     }
   }
@@ -170,6 +166,11 @@ trait StructExpOpt extends StructExp {
 
 trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseExp {
 
+  override def structName[T](m: Manifest[T]): String = m.erasure.getSimpleName match {
+    case "Variable" => structName(m.typeArguments(0))
+    case _ => super.structName(m)
+  }
+
   override def var_new[T:Manifest](init: Exp[T])(implicit pos: SourceContext): Var[T] = init match {
     case Def(Struct(tag, elems)) =>
       //val r = Variable(struct(tag, elems.mapValues(e=>var_new(e).e))) // DON'T use mapValues!! <--lazy
@@ -186,18 +187,26 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
         var_assign(Variable(lv), rv)(rv.tp, pos)
       }
       Const(())
+    case (Variable(Def(Reflect(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]),_,_))), Def(r)) => //TODO: keep this?
+      for ((k,v) <- elems) {
+        var_assign(Variable(v), field(r,k)(mtype(v.tp),pos))(unwrap(v.tp),pos)
+      }
+      Const(())
     case (Variable(Def(Reflect(Field(struct,idx),_,_))), rhs) => 
       field_update(struct, idx, rhs)
     case _ => super.var_assign(lhs, rhs)
   }
 
+  private def unwrap[A](m:Manifest[Variable[A]]): Manifest[A] = m.typeArguments match {
+    case a::_ => mtype(a)
+    case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
+  }
+
   override def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {
     case Variable(Def(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]))) =>
-      def unwrap[A](m:Manifest[Variable[A]]): Manifest[A] = m.typeArguments match {
-        case a::_ => mtype(a)
-        case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
-      }
       struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.tp), pos))))
+    case Variable(Def(Reflect(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]),_,_))) =>
+      struct[T](tag, elems.map(p=>(p._1, readVar(Variable(p._2))(unwrap(p._2.tp), pos))))
     case Variable(Def(Field(struct,idx))) =>
       field[T](struct, idx)
     case _ => super.readVar(v)
@@ -335,10 +344,10 @@ trait BaseGenStruct extends GenericNestedCodegen {
   val IR: StructExp
   import IR._
 
-  def registerStruct[T](tag: StructTag[T], elems: Seq[(String, Rep[Any])]) {
-    encounteredStructs += tag -> elems.map(e => (e._1, e._2.tp))
+  def registerStruct[T](name: String, elems: Seq[(String, Rep[Any])]) {
+    encounteredStructs += name -> elems.map(e => (e._1, e._2.tp))
   }
-  val encounteredStructs = new scala.collection.mutable.HashMap[StructTag[_], Seq[(String, Manifest[_])]]
+  val encounteredStructs = new scala.collection.mutable.HashMap[String, Seq[(String, Manifest[_])]]
 }
 
 trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
@@ -347,9 +356,9 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Struct(tag, elems) =>
-      registerStruct(tag, elems)
-      emitValDef(sym, "new " + structName(tag) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
-      printlog("WARNING: emitting " + structName(tag) + " struct " + quote(sym))    
+      registerStruct(structName(sym.tp), elems)
+      emitValDef(sym, "new " + structName(sym.tp) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
+      printlog("WARNING: emitting " + structName(sym.tp) + " struct " + quote(sym))    
     case FieldApply(struct, index) =>
       emitValDef(sym, quote(struct) + "." + index)
       printlog("WARNING: emitting field access: " + quote(struct) + "." + index)
@@ -367,9 +376,9 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
   override def emitDataStructures(path: String) {
     val stream = new PrintWriter(path + "Structs.scala")
     stream.println("package generated.scala")
-    for ((tag, elems) <- encounteredStructs) {
+    for ((name, elems) <- encounteredStructs) {
       stream.println()
-      stream.print("case class " + structName(tag) + "(")
+      stream.print("case class " + name + "(")
       stream.println(elems.map(e => e._1 + ": " + remap(e._2)).mkString(", ") + ")")
     }
     stream.close()

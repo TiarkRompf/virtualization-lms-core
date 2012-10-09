@@ -221,24 +221,11 @@ trait GenericGenUnboxedTupleAccess extends GenericNestedCodegen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Tuple2Access1(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(0)))
-    case Tuple2Access2(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(1)))
-
-    case Tuple3Access1(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(0)))
-    case Tuple3Access2(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(1)))
-    case Tuple3Access3(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(2)))
-
-    case Tuple4Access1(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(0)))
-    case Tuple4Access2(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(1)))
-    case Tuple4Access3(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(2)))
-    case Tuple4Access4(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(3)))
-
-    case Tuple5Access1(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(0)))
-    case Tuple5Access2(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(1)))
-    case Tuple5Access3(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(2)))
-    case Tuple5Access4(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(3)))
-    case Tuple5Access5(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(4)))
-
+    case FieldApply(UnboxedTuple(vars), "_1") => emitValDef(sym, quote(vars(0)))
+    case FieldApply(UnboxedTuple(vars), "_2") => emitValDef(sym, quote(vars(1)))
+    case FieldApply(UnboxedTuple(vars), "_3") => emitValDef(sym, quote(vars(2)))
+    case FieldApply(UnboxedTuple(vars), "_4") => emitValDef(sym, quote(vars(3)))
+    case FieldApply(UnboxedTuple(vars), "_5") => emitValDef(sym, quote(vars(4)))
     case _ => super.emitNode(sym, rhs)
   }
 }
