@@ -54,7 +54,9 @@ trait ScalaCompile extends Expressions {
     compileCount += 1
     
     val source = new StringWriter()
-    val staticData = codegen.emitSource(f, className, new PrintWriter(source))
+    val out = new PrintWriter(source)
+    val staticData = codegen.emitSource(f, className, out)
+    codegen.emitDataStructures(out)
 
     val compiler = this.compiler
     val run = new compiler.Run

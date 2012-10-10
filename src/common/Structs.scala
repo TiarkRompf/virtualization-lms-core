@@ -303,19 +303,13 @@ trait ScalaGenStruct extends ScalaGenBase {
     }
   }
 
-  def emitDataStructures(out: PrintWriter) {
+  override def emitDataStructures(out: PrintWriter) {
     withStream(out) {
       for ((m, name) <- encounteredStructs) {
         stream.println("case class " + name + "(" + (for ((n, tp) <- m.fields) yield n + ": " + remap(tp)).mkString(", ") + ")")
       }
     }
-  }
-
-  override def emitDataStructures(path: String) {
-    val out = new PrintWriter(path)
-    emitDataStructures(out)
-    out.close()
-    super.emitDataStructures(path)
+    super.emitDataStructures(out)
   }
 
 }
