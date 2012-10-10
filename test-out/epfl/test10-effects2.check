@@ -7,8 +7,8 @@ killing: List(Sym(1))/List(Sym(1), Sym(2), Sym(3), Sym(4)) by VectorUpdate(Sym(1
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
 val x1 = VectorZeros(Const(100))
-val x3 = VectorLiteral(List(Sym(1)))
 val x2 = x1.clone
+val x3 = VectorLiteral(List(Sym(1)))
 val x4 = VectorLiteral(List(Sym(2)))
 // begin multi
 // soft deps: x1,x2,x3,x4

@@ -226,7 +226,7 @@ trait Effects extends Expressions with Blocks with Utils {
   val deepAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   val allAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   
-  def utilLoadStm[T](s: Sym[T]) = if (!isPrimitiveType(s.tp)) globalDefs.filter{e => e.lhs contains s} else Nil
+  def utilLoadStm[T](s: Sym[T]) = if (!isPrimitiveType(s.tp)) /*globalDefs.filter{e => e.lhs contains s}*/ findDefinition(s).toList else Nil
   def utilLoadStms(s: List[Sym[Any]]) = s.flatMap(utilLoadStm)
   def utilLoadSym[T](s: Sym[T]) = utilLoadStm(s).map(_.rhs)
   
@@ -445,6 +445,16 @@ trait Effects extends Expressions with Blocks with Utils {
       val read = u.mayRead
       val write = u.mayWrite
 
+      // TODO: in order to reduce the number of deps (need to traverse all those!)
+      // we should only store those that are not transitively implied.
+      // For simple effects, take the last one (implemented). 
+      // For mutations, take the last write to a particular mutable sym (TOOD).
+
+      def canonic(xs: List[Exp[Any]]) = xs // TODO 
+      def canonicLinear(xs: List[Exp[Any]]) = xs.takeRight(1)
+
+      // CAVEAT: this breaks testSpeculative4
+
       val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
       val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
       val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || write.contains(e) }
@@ -453,7 +463,7 @@ trait Effects extends Expressions with Blocks with Utils {
 
       // TODO: write-on-read deps should be weak
       // TODO: optimize!!
-      val allDeps = readDeps ++ softWriteDeps ++ writeDeps ++ simpleDeps ++ globalDeps
+      val allDeps = canonic(readDeps ++ softWriteDeps ++ writeDeps ++ canonicLinear(simpleDeps) ++ canonicLinear(globalDeps))
       scope filter (allDeps contains _)
     }
   }
