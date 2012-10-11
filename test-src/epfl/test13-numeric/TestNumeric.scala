@@ -20,12 +20,10 @@ trait TestNumeric {
 
   trait UsageWithLift { this: Base with NumericOps with LiftNumeric =>
 
-    // val a = 1 + unit(1)
-    val a = anyToNumericOps(1) + unit(1)
+    val a = 1 + unit(1)
     typed[Rep[Int]](a)
 
-    // val b = 1.0 + unit(1.0)
-    val b = anyToNumericOps(1.0) + unit(1.0)
+    val b = 1.0 + unit(1.0)
     typed[Rep[Double]](b)
 
     val c = unit(1) + 1
@@ -50,15 +48,13 @@ trait TestNumeric {
     typed[Rep[Double]](a)
 
     // val b = 1 + unit(1.0)
-    val b = anyToNumericOps(1) + unit(1.0)
-    typed[Rep[Double]](b)
+    // typed[Rep[Double]](b)
 
     val c = unit(1.0) + 1
     typed[Rep[Double]](c)
-    // val d = 1.0 + unit(1)
 
-    val d = anyToNumericOps(1.0) + unit(1)
-    typed[Rep[Double]](d)
+    // val d = 1.0 + unit(1)
+    // typed[Rep[Double]](d)
   }
 
 }

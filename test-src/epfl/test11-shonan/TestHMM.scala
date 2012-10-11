@@ -77,7 +77,7 @@ class TestHMM extends FileDiffSuite {
               if ((a(i) filter (_ != 0)).length < 3) {
                 for (j <- 0 until n: Range) {
                   if (a(i)(j) != 0)
-                    v1(i) = v1(i) + unit(a(i)(j)) * v(j)
+                    v1(i) = v1(i) + a(i)(j) * v(j)
                 }
               } else {
                 for (j <- 0 until n: Rep[Range]) {

@@ -9,9 +9,15 @@ trait LiftNumeric {
 
   // HACK The Numeric context bound is not *required* but it is useful to reduce the applicability of this implicit conversion
   implicit def numericToNumericRep[T:Numeric:Manifest](x: T) = unit(x)
-  // Explicit `1 + unit(1)` support because it needs two implicit conversions (FIXME Doesn’t work)
-  implicit def anyToNumericOps[A](a: A)(implicit lift: A => Rep[A]) = new NumericOpsCls(lift(a))
-  // implicit def numericToNumericOps[A : Numeric : Manifest](a: A) = new NumericOpsCls(unit(a))
+
+  // Explicit `1 + unit(1)` (partial) support because it needs two implicit conversions
+  import NumericOpsTypes._
+  implicit class NumericOpsCls[A : Numeric : Manifest](lhs: A) {
+    def + (rhs: Rep[A])(implicit op: (A ~ A := A), sc: SourceContext) = numeric_plus(op.lhs(unit(lhs)), op.rhs(rhs))
+    def - (rhs: Rep[A])(implicit op: (A ~ A := A), sc: SourceContext) = numeric_minus(op.lhs(unit(lhs)), op.rhs(rhs))
+    def * (rhs: Rep[A])(implicit op: (A ~ A := A), sc: SourceContext) = numeric_times(op.lhs(unit(lhs)), op.rhs(rhs))
+    def / (rhs: Rep[A])(implicit op: (A ~ A := A), sc: SourceContext) = numeric_divide(op.lhs(unit(lhs)), op.rhs(rhs))
+  }
 }
 
 trait NumericOps extends Variables {
@@ -30,13 +36,14 @@ trait NumericOps extends Variables {
    * def infix_+[A, B](lhs: A, rhs: B)(implicit someAdditionnalConstraints...)
    * But this signature leads to an ambiguous reference to overloaded definition with an infix_+(s: String, a: Any) method defined in EmbeddedControls (?)
    */
-  implicit class NumericOpsCls[A](lhs: Rep[A]) {
+  implicit class RepNumericOpsCls[A](lhs: Rep[A]) {
     def + [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_plus(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
     def - [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_minus(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
     def * [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_times(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
     def / [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_divide(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
   }
-  implicit def varNumericToNumericOps[T : Numeric : Manifest](n: Var[T]) = new NumericOpsCls(readVar(n))
+
+  implicit def varNumericToNumericOps[T : Numeric : Manifest](n: Var[T]) = new RepNumericOpsCls(readVar(n))
 
   def numeric_plus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[T]
   def numeric_minus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[T]
