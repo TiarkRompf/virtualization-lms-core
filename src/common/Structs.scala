@@ -103,8 +103,7 @@ trait StructExp extends StructOps with BaseExp with EffectExp with VariablesExp 
   }
 
   override def readSyms(e: Any): List[Sym[Any]] = e match {
-    case s:AbstractStruct[_] => s.elems.flatMap(e => readSyms(e._2)).toList
-    //case s:AbstractStruct[_] => Nil //struct creation doesn't de-reference any of its inputs
+    case s:AbstractStruct[_] => Nil //struct creation doesn't de-reference any of its inputs
     case _ => super.readSyms(e)
   }
 
@@ -125,9 +124,9 @@ trait StructExp extends StructOps with BaseExp with EffectExp with VariablesExp 
   def classTag[T:Manifest] = ClassTag[T](structName(manifest[T]))
 
   override def object_toString(x: Exp[Any])(implicit pos: SourceContext): Exp[String] = x match {
-    case Def(e@Struct(tag, elems)) => //tag(elem1, elem2, ...)
+    case Def(s@Struct(tag, elems)) => //tag(elem1, elem2, ...)
       val e = elems.map(e=>string_plus(unit(e._1 + " = "), object_toString(e._2))).reduceLeft((l,r)=>string_plus(string_plus(l,unit(", ")),r))
-      string_plus(unit(structName(e.tp)+"("),string_plus(e,unit(")")))
+      string_plus(unit(structName(s.tp)+"("),string_plus(e,unit(")")))
     case _ => super.object_toString(x)
   }
 
@@ -155,7 +154,7 @@ trait StructExpOpt extends StructExp {
   }
 
   //TODO: need to be careful unwrapping Structs of vars since partial unwrapping can result in reads & writes to two different memory locations in the generated code
-  //(the original var and the struct); could solve this problem by generating Ref[T] for vars  
+  //(the original var and the struct)
   /* override def var_field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Var[T] = fieldLookup(struct, index) match {
     case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => Variable(x)
     case Some(x) => throw new RuntimeException("ERROR: " + index + " is not a variable field of type " + struct.tp)
