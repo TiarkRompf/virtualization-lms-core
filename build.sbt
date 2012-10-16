@@ -4,21 +4,14 @@ version := "0.3-SNAPSHOT"
 
 organization := "EPFL"
 
-resolvers := Seq(mavenLocal, prereleaseScalaTest, Resolver.sonatypeRepo("snapshots"), Resolver.sonatypeRepo("releases"))
+//resolvers += Resolver.sonatypeRepo("snapshots") // for ScalaTest
 
-//resolvers += 
 
-//resolvers += ScalaToolsSnapshots
-
-//resolvers += dropboxScalaTestRepo
-
-//resolvers += prereleaseScalaTest
-
-scalaHome := Some(file(Path.userHome + "/scala/build/pack"))
+//scalaHome := Some(file(Path.userHome + "/scala/build/pack"))
 
 scalaOrganization := "org.scala-lang.virtualized"
 
-//scalaBinaryVersion := virtScala // necessary??
+scalaBinaryVersion := virtScala // necessary??
 
 scalaVersion := virtScala
 
@@ -32,18 +25,23 @@ scalacOptions += "-Yvirtualize"
 
 //scalacOptions in Compile ++= Seq(/*Unchecked, */Deprecation)
 
+
 // needed for scala.tools, which is apparently not included in sbt's built in version
 libraryDependencies += "org.scala-lang.virtualized" % "scala-library" % virtScala
 
 libraryDependencies += "org.scala-lang.virtualized" % "scala-compiler" % virtScala
 
+libraryDependencies += "org.scala-lang" % "scala-actors" % virtScala // for ScalaTest
+
 libraryDependencies += scalaTest
+
 
 // tests are not thread safe
 parallelExecution in Test := false
 
 // disable publishing of main docs
 publishArtifact in (Compile, packageDoc) := false
+
 
 // continuations
 autoCompilerPlugins := true
