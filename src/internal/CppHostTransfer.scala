@@ -1,22 +1,23 @@
 package scala.virtualization.lms.internal
 
-trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
+trait CppHostTransfer extends AbstractHostTransfer {
+  this: CLikeCodegen =>
 
   val IR: Expressions
   import IR._
 
-  def emitSend(sym: Sym[Any], host: Hosts.Value): (String,String) = {
+  def emitSend(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
     if (host == Hosts.JVM) {
-      if (isPrimitiveType(sym.tp)) {
+      if (isPrimitiveType(tp)) {
         val out = new StringBuilder
-        val signature = "%s sendCPPtoJVM_%s(JNIEnv *env, %s %s)".format(JNIType(sym.tp),quote(sym),remap(sym.tp),quote(sym))
+        val signature = "%s sendCPPtoJVM_%s(JNIEnv *env, %s sym)".format(JNIType(tp),mangledName(remap(tp)),remap(tp))
         out.append(signature + " {\n")
-        out.append("\treturn (%s)%s;\n".format(JNIType(sym.tp),quote(sym)))
+        out.append("\treturn (%s)sym;\n".format(JNIType(tp)))
         out.append("}\n")
         (signature+";\n", out.toString)
       }
       else {
-        throw new GenerationFailedException("CppHostTransfer: Unknown type " + sym.tp.toString)
+        throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
       }
     }
     else if (host == Hosts.CPP) {
@@ -27,18 +28,18 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
     }
   }
 
-  def emitRecv(sym: Sym[Any], host: Hosts.Value): (String,String) = {
+  def emitRecv(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
     if (host == Hosts.JVM) {
-      if (isPrimitiveType(sym.tp)) {
+      if (isPrimitiveType(tp)) {
         val out = new StringBuilder
-        val signature = "%s recvCPPfromJVM_%s(JNIEnv *env, %s %s)".format(remap(sym.tp),quote(sym),JNIType(sym.tp),quote(sym))
+        val signature = "%s recvCPPfromJVM_%s(JNIEnv *env, %s sym)".format(remap(tp),mangledName(remap(tp)),JNIType(tp))
         out.append(signature + " {\n")
-        out.append("\treturn (%s)%s;\n".format(remap(sym.tp),quote(sym)))
+        out.append("\treturn (%s)sym;\n".format(remap(tp)))
         out.append("}\n")
         (signature+";\n", out.toString)
       }
       else {
-        throw new GenerationFailedException("CppHostTransfer: Unknown type " + sym.tp.toString)
+        throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
       }
     }
     else if (host == Hosts.CPP) {
@@ -49,42 +50,19 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
     }
   }
 
-  def emitSendView(sym: Sym[Any], host: Hosts.Value): (String,String) = {
+  def emitSendView(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
     if (host == Hosts.JVM) {
-      if (isPrimitiveType(sym.tp)) {
+      if (isPrimitiveType(tp)) {
         val out = new StringBuilder
-        val signature = "%s sendViewCPPtoJVM_%s(JNIEnv *env, %s %s)".format(JNIType(sym.tp),quote(sym),remap(sym.tp),quote(sym))
-        out.append(signature + " {\n")
-        out.append("\tassert(false);\n")
-        out.append("\treturn (%s)%s;\n".format(JNIType(sym.tp),quote(sym)))
-        out.append("}\n")
-        (signature+";\n", out.toString)
-      }
-      else {
-        throw new GenerationFailedException("CppHostTransfer: Unknown type " + sym.tp.toString)
-      }
-    }
-    else if (host == Hosts.CPP) {
-      throw new GenerationFailedException("CppHostTransfer: Unknown host " + host.toString)
-    }
-    else {
-      throw new GenerationFailedException("CppHostTransfer: Unknown host " + host.toString)
-    }
-  }
-
-  def emitRecvView(sym: Sym[Any], host: Hosts.Value): (String,String) = {
-    if (host == Hosts.JVM) {
-      if (isPrimitiveType(sym.tp)) {
-        val out = new StringBuilder
-        val signature = "%s recvViewCPPfromJVM_%s(JNIEnv *env, %s %s)".format(remap(sym.tp),quote(sym),JNIType(sym.tp),quote(sym))
+        val signature = "%s sendViewCPPtoJVM_%s(JNIEnv *env, %s sym)".format(JNIType(tp),mangledName(remap(tp)),remap(tp))
         out.append(signature + " {\n")
         out.append("\tassert(false);\n")
-        out.append("\treturn (%s)%s;\n".format(remap(sym.tp),quote(sym)))
+        out.append("\treturn (%s)sym;\n".format(JNIType(tp)))
         out.append("}\n")
         (signature+";\n", out.toString)
       }
       else {
-        throw new GenerationFailedException("CppHostTransfer: Unknown type " + sym.tp.toString)
+        throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
       }
     }
     else if (host == Hosts.CPP) {
@@ -95,18 +73,19 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
     }
   }
 
-  def emitSendUpdate(sym: Sym[Any], host: Hosts.Value): (String,String) = {
+  def emitRecvView(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
     if (host == Hosts.JVM) {
-      if(isPrimitiveType(sym.tp)) {
+      if (isPrimitiveType(tp)) {
         val out = new StringBuilder
-        val signature = "void sendUpdateCPPtoJVM_%s(JNIEnv *env, %s %s)".format(quote(sym),remap(sym.tp),quote(sym))
+        val signature = "%s recvViewCPPfromJVM_%s(JNIEnv *env, %s sym)".format(remap(tp),mangledName(remap(tp)),JNIType(tp))
         out.append(signature + " {\n")
         out.append("\tassert(false);\n")
+        out.append("\treturn (%s)sym;\n".format(remap(tp)))
         out.append("}\n")
         (signature+";\n", out.toString)
       }
       else {
-        throw new GenerationFailedException("CppHostTransfer: Unknown type " + sym.tp.toString)
+        throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
       }
     }
     else if (host == Hosts.CPP) {
@@ -117,18 +96,40 @@ trait CppHostTransfer extends AbstractHostTransfer with CLikeCodegen {
     }
   }
 
-  def emitRecvUpdate(sym: Sym[Any], host: Hosts.Value): (String,String) = {
+  def emitSendUpdate(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
     if (host == Hosts.JVM) {
-      if(isPrimitiveType(sym.tp)) {
+      if(isPrimitiveType(tp)) {
         val out = new StringBuilder
-        val signature = "void recvUpdateCPPfromJVM_%s(JNIEnv *env, %s %s)".format(quote(sym),remap(sym.tp),quote(sym))
+        val signature = "void sendUpdateCPPtoJVM_%s(JNIEnv *env, %s sym)".format(mangledName(remap(tp)),remap(tp))
         out.append(signature + " {\n")
         out.append("\tassert(false);\n")
         out.append("}\n")
         (signature+";\n", out.toString)
       }
       else {
-        throw new GenerationFailedException("CppHostTransfer: Unknown type " + sym.tp.toString)
+        throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
+      }
+    }
+    else if (host == Hosts.CPP) {
+      throw new GenerationFailedException("CppHostTransfer: Unknown host " + host.toString)
+    }
+    else {
+      throw new GenerationFailedException("CppHostTransfer: Unknown host " + host.toString)
+    }
+  }
+
+  def emitRecvUpdate(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
+    if (host == Hosts.JVM) {
+      if(isPrimitiveType(tp)) {
+        val out = new StringBuilder
+        val signature = "void recvUpdateCPPfromJVM_%s(JNIEnv *env, %s sym)".format(mangledName(remap(tp)),remap(tp))
+        out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
+        out.append("}\n")
+        (signature+";\n", out.toString)
+      }
+      else {
+        throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
       }
     }
     else if (host == Hosts.CPP) {

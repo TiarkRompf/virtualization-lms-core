@@ -2,10 +2,16 @@ package scala.virtualization.lms
 package internal
 
 import java.io.PrintWriter
+import collection.mutable.HashSet
 
 trait CLikeCodegen extends GenericCodegen {
   val IR: Expressions
   import IR._
+
+  def mangledName(name: String) = name.map(c => if(!c.isDigit && !c.isLetter) '_' else c) 
+
+  // List of datastructure types that requires transfer functions to be generated for this target
+  protected val dsTypesList = HashSet[Manifest[Any]]()
 
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
@@ -40,6 +46,7 @@ trait CLikeCodegen extends GenericCodegen {
       }
     }
   }
+
 }
 
 trait CLikeNestedCodegen extends GenericNestedCodegen with CLikeCodegen {

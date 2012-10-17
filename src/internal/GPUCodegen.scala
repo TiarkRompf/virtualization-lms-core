@@ -2,39 +2,31 @@ package scala.virtualization.lms
 package internal
 
 import java.io.{StringWriter, PrintWriter, File}
-import collection.mutable.{ArrayBuffer, HashMap, ListMap, HashSet}
 import collection.immutable.List._
 import scala.reflect.SourceContext
+import collection.mutable.{HashSet, ArrayBuffer, ListMap}
 
-trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
+trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDeviceTransfer {
   val IR: Expressions
   import IR._
 
-  /* Kernel input / output symbols */
-  private var kernelInputs: List[Sym[Any]] = null
-  private var kernelOutputs: List[Sym[Any]] = null
-  def getKernelInputs = kernelInputs
-  def setKernelInputs(syms: List[Sym[Any]]): Unit = { kernelInputs = syms }
-  def getKernelOutputs = kernelOutputs
-  def setKernelOutputs(syms: List[Sym[Any]]): Unit = { kernelOutputs = syms }
-  def devFuncPrefix = ""
+  // Prefix string for device functions on the target GPU programming model (e.g., __device__ for CUDA)
+  def devFuncPrefix:String = ""
 
-  var helperFuncIdx = 0
-  val kernelsList = ArrayBuffer[Exp[Any]]()
-  val helperFuncList = ArrayBuffer[String]()
+  // List of kernels and helper functions emitted so far (not to emit the same thing multiple times)
+  private val kernelsList = ArrayBuffer[Exp[Any]]()
+  private val helperFuncList = ArrayBuffer[String]()
 
-  var tabWidth:Int = 0
+  // Current tab location for pretty printing
+  protected var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
 
-  var forceParallel = false
+  // Streams for helper functions and its header
+  protected var helperFuncStream: PrintWriter = _
+  protected var headerStream: PrintWriter = _
 
-  //var helperFuncString:StringBuilder = null
-  var helperFuncStream: PrintWriter = null
-  var headerStream: PrintWriter = null
   var devFuncIdx = 0
-
   var isGPUable:Boolean = false
-
   var processingHelperFunc: Boolean = false
   var isNestedNode: Boolean = false
 
@@ -113,7 +105,7 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
     //override def toString: String = {  }
   }
 
-  final class GPUMetaData {
+  final class GPUMetaData(val kernelInputs: List[Sym[Any]]) {
     val inputs: ListMap[Sym[Any],TransferFunc] = ListMap()
     val outputs: ListMap[Sym[Any],TransferFunc] = ListMap()
     var gpuLibCall: String = ""
@@ -123,7 +115,7 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
       out.append("{")
 
       //if (kernelFileExt == "cu") {
-        out.append("\"gpuInputs\":["+getKernelInputs.filter(in => !isPrimitiveType(in.tp)).map(in=>"{\""+quote(in)+"\":[\""+remap(in.tp)+"\"]}").mkString(",")+"],")
+        out.append("\"gpuInputs\":["+kernelInputs.filter(in => !isPrimitiveType(in.tp)).map(in=>"{\""+quote(in)+"\":[\""+remap(in.tp)+"\"]}").mkString(",")+"],")
         out.append("\"gpuOutputs\":["+outputs.toList.reverse.map(out=>"{\""+quote(out._1)+"\":[\""+remap(out._1.tp)+"\",["+ out._2.argsFuncHtoD.map("\""+quote(_)+"\"").mkString(",")+"],"+loopFuncs.getOrElse(out._1,new LoopFunc).toString+"]}").mkString(",")+"]")
       //}
       //else { //opencl
@@ -141,11 +133,11 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
     if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("GPUGen: Not GPUable input/output types: Variable")
 
     // Set kernel input and output symbols
-    setKernelInputs(vals)
-    setKernelOutputs(syms)
+    //kernelInputs = vals
+    //kernelOutputs = syms
 
     //helperFuncString.clear
-    metaData = new GPUMetaData
+    metaData = new GPUMetaData(vals)
     tabWidth = 1
     isGPUable = false
     processingHelperFunc = false
@@ -155,12 +147,12 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     if (external) {
       // CUDA library ops use a C wrapper, so should be generated as a C kernel
-      stream.println(getDSLHeaders)
-      super.emitKernelHeader(syms, getKernelOutputs ::: vals, vars, resultType, resultIsVar, external)
+      //stream.println(getDSLHeaders)
+      super.emitKernelHeader(syms, syms ::: vals, vars, resultType, resultIsVar, external)
       return
     }
     val out = new StringBuilder
-    out.append(getDSLHeaders)
+    //out.append(getDSLHeaders)
     stream.print(out.toString)
   }
 
@@ -175,38 +167,91 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
     // should probably be refactored...
     tabWidth -= 1
 
-    // Emit input copy helper functions for object type inputs
-    for(v <- (vals) if !isVoidType(v.tp)) {
-      //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
-      val (recvHeader, recvSource) = emitRecv(v, Hosts.JVM)
-      if (!helperFuncList.contains(recvHeader)) {
-        headerStream.println(recvHeader)
-        helperFuncStream.println(recvSource)
-        helperFuncList.append(recvHeader)
-      }
-
-      val (updateHeader, updateSource) = emitSendUpdate(v, Hosts.JVM)
-      if (!helperFuncList.contains(updateHeader)) {
-        headerStream.println(updateHeader)
-        helperFuncStream.println(updateSource)
-        helperFuncList.append(updateHeader)
-      }
-      //helperFuncString.append(emitUpdated(v,Hosts.JVM))
-    }
-
-    // Emit output copy helper functions for object type inputs
-    for(v <- (syms) if !isVoidType(v.tp)) {
-      val (sendHeader, sendSource) = emitSend(v, Hosts.JVM)
-      if (!helperFuncList.contains(sendHeader)) {
-        headerStream.println(sendHeader)
-        helperFuncStream.println(sendSource)
-        helperFuncList.append(sendHeader)
-      }
-      //helperFuncString.append(emitSend(v,Hosts.JVM))
-    }
+    dsTypesList ++= (syms++vals++vars).map(_.tp)
 
     // Print helper functions to file stream
-    //hstream.print(helperFuncString)
+    helperFuncStream.flush
+    headerStream.flush
+  }
+
+  override def emitTransferFunctions() {
+
+    
+    for (tp <- dsTypesList) {
+      // Emit input copy helper functions for object type inputs
+      //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
+      try {
+        val (recvHeader, recvSource) = emitRecv(tp, Hosts.JVM)
+        if (!helperFuncList.contains(recvHeader)) {
+          headerStream.println(recvHeader)
+          helperFuncStream.println(recvSource)
+          helperFuncList.append(recvHeader)
+        }
+        val (recvViewHeader, recvViewSource) = emitRecvView(tp, Hosts.JVM)
+        if (!helperFuncList.contains(recvViewHeader)) {
+          headerStream.println(recvViewHeader)
+          helperFuncStream.println(recvViewSource)
+          helperFuncList.append(recvViewHeader)
+        }
+        val (sendUpdateHeader, sendUpdateSource) = emitSendUpdate(tp, Hosts.JVM)
+        if (!helperFuncList.contains(sendUpdateHeader)) {
+          headerStream.println(sendUpdateHeader)
+          helperFuncStream.println(sendUpdateSource)
+          helperFuncList.append(sendUpdateHeader)
+        }
+        val (recvUpdateHeader, recvUpdateSource) = emitRecvUpdate(tp, Hosts.JVM)
+        if (!helperFuncList.contains(recvUpdateHeader)) {
+          headerStream.println(recvUpdateHeader)
+          helperFuncStream.println(recvUpdateSource)
+          helperFuncList.append(recvUpdateHeader)
+        }
+        val (sendSlaveHeader, sendSlaveSource) = emitSendSlave(tp)
+        if (!helperFuncList.contains(sendSlaveHeader)) {
+          headerStream.println(sendSlaveHeader)
+          helperFuncStream.println(sendSlaveSource)
+          helperFuncList.append(sendSlaveHeader)
+        }
+        val (sendUpdateSlaveHeader, sendUpdateSlaveSource) = emitSendUpdateSlave(tp)
+        if (!helperFuncList.contains(sendUpdateSlaveHeader)) {
+          headerStream.println(sendUpdateSlaveHeader)
+          helperFuncStream.println(sendUpdateSlaveSource)
+          helperFuncList.append(sendUpdateSlaveHeader)
+        }
+        val (recvUpdateSlaveHeader, recvUpdateSlaveSource) = emitRecvUpdateSlave(tp)
+        if (!helperFuncList.contains(recvUpdateSlaveHeader)) {
+          headerStream.println(recvUpdateSlaveHeader)
+          helperFuncStream.println(recvUpdateSlaveSource)
+          helperFuncList.append(recvUpdateSlaveHeader)
+        }
+
+      // Emit output copy helper functions for object type inputs
+        val (sendHeader, sendSource) = emitSend(tp, Hosts.JVM)
+        if (!helperFuncList.contains(sendHeader)) {
+          headerStream.println(sendHeader)
+          helperFuncStream.println(sendSource)
+          helperFuncList.append(sendHeader)
+        }
+        val (sendViewHeader, sendViewSource) = emitSendView(tp, Hosts.JVM)
+        if (!helperFuncList.contains(sendViewHeader)) {
+          headerStream.println(sendViewHeader)
+          helperFuncStream.println(sendViewSource)
+          helperFuncList.append(sendViewHeader)
+        }
+        val (recvSlaveHeader, recvSlaveSource) = emitRecvSlave(tp)
+        if (!helperFuncList.contains(recvSlaveHeader)) {
+          headerStream.println(recvSlaveHeader)
+          helperFuncStream.println(recvSlaveSource)
+          helperFuncList.append(recvSlaveHeader)
+        }
+      }
+      catch {
+        case e: GenerationFailedException => 
+          helperFuncStream.flush
+          headerStream.flush
+        case e: Exception => throw(e)
+      }
+    }
+
     helperFuncStream.flush
     headerStream.flush
   }
@@ -218,70 +263,6 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
       kernelsList ++= syms
     }
   }
-
-  /*******************************************************
-   * Methods below are for emitting helper functions
-   *******************************************************/
-  // For object type inputs, allocate GPU memory and copy from CPU to GPU.
-  /*
-  def emitCopyInputHtoD(sym: Sym[Any], ksym: List[Sym[Any]], contents: String) : String = {
-    val out = new StringBuilder
-    val funcName = "copyInputHtoD_%s_%s".format(ksym.map(quote).mkString(""),quote(sym))
-    if(!isPrimitiveType(sym.tp) && !helperFuncsList.contains(funcName)) {
-      helperFuncsList += funcName
-      out.append("%s *%s(%s *%s)".format(remap(sym.tp),funcName))
-      helperFuncHdrStream.append(out.toString + ";\n")
-      out.append("{\n")
-      out.append(contents)
-      out.append("}\n")
-      out.toString
-    }
-    else ""
-  }
-
-  // For mutable inputs, copy the mutated datastructure from GPU to CPU after the kernel is terminated
-  def emitCopyMutableInputDtoH(sym: Sym[Any], ksym: List[Sym[Any]], contents: String): String = {
-    val out = new StringBuilder
-    val funcName = "copyMutableInputDtoH_%s_%s".format(ksym.map(quote).mkString(""),quote(sym))
-    if(!isPrimitiveType(sym.tp) && !helperFuncsList.contains(funcName)) {
-      helperFuncsList += funcName
-      out.append("void %s(JNIEnv *env, jobject obj, %s *%s_ptr)".format(funcName,remap(sym.tp),quote(sym)))
-      helperFuncHdrStream.append(out.toString + ";\n")
-      out.append("{\n")
-      out.append("%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
-      out.append(contents)
-      out.append("}\n")
-      out.toString
-    }
-    else ""
-  }
-
-
-  def emitCopyOutputDtoH(sym: Sym[Any], ksym: List[Sym[Any]], contents: String): String = {
-    val out = new StringBuilder
-    val funcName = "copyOutputDtoH_%s".format(quote(sym))
-    if(helperFuncsList contains funcName) return ""
-    helperFuncsList += funcName
-
-    if(!isPrimitiveType(sym.tp)) {
-      out.append("jobject %s(JNIEnv *env,%s)".format(funcName,remap(sym.tp)+" *"+quote(sym)+"_ptr"))
-      helperFuncHdrStream.append(out.toString + ";\n")
-      out.append("{\n")
-  	  out.append("\t%s %s = *(%s_ptr);\n".format(remap(sym.tp),quote(sym),quote(sym)))
-      out.append(contents)
-      out.append("}\n")
-      out.toString
-    }
-    else {
-      out.append("%s %s(JNIEnv *env,%s)".format(remap(sym.tp),funcName,remap(sym.tp)+" *"+quote(sym)))
-      helperFuncHdrStream.append(out.toString + ";\n")
-      out.append("{\n")
-      out.append(contents)
-      out.append("}\n")
-      out.toString
-    }
-  }
-  */
 
   def emitAllocOutput(sym: Sym[Any], ksym: List[Sym[Any]], contents: String, args: List[Sym[Any]], aV: Sym[Any]): String = {
     val out = new StringBuilder
@@ -322,27 +303,35 @@ trait GPUCodegen extends CLikeCodegen with CppHostTransfer {
   /* emitAllocFunc method emits code for allocating the output memory of a kernel,
        and copying  it to CPU memory with allocation of new object in CPU */
   //TODO: Separate output and temporary allocations
-  def emitAllocFunc(sym:Sym[Any], allocFunc:Block[Any], aV:Sym[Any]=null, size:Exp[Any]=null) {
+  def emitAllocFunc(sym:Sym[Any], allocFunc:List[Block[Any]], boundings:List[(Sym[Any],Exp[Any])], aV:Sym[Any]=null, size:Exp[Any]=null) {
     processingHelperFunc = true
     val tempString = new StringWriter
     val tempStream = new PrintWriter(tempString,true)
 
     // Get free variables (exclude the arrayVariable)
-    val inputs = if(allocFunc==null) Nil
-    else getFreeVarBlock(allocFunc,List(aV))
+    val inputs = if(allocFunc.isEmpty) Nil
+    else ((allocFunc.flatMap(f => getFreeVarBlock(f, Nil)) ++ boundings.map(_._2).filter(_.isInstanceOf[Sym[Any]]).map(_.asInstanceOf[Sym[Any]])).filterNot(s => (boundings.map(_._1)++List(aV)) contains s)).distinct
 
     // Register metadata
     val tr = metaData.outputs.getOrElse(sym,new TransferFunc)
     tr.argsFuncHtoD = inputs
     metaData.outputs.put(sym,tr)
 
-    // Get the body (string) of the allocation function in tempString
-    if(allocFunc!=null) {
+
+    for (b <- boundings) {
       withStream(tempStream) {
-        emitBlock(allocFunc)
+        emitValDef(b._1,quote(b._2))
       }
-      tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc))))
-	  }
+    }
+
+    // Get the body (string) of the allocation function in tempString
+    //if(allocFunc!=null) {
+    if(!allocFunc.isEmpty) {
+      withStream(tempStream) {
+        allocFunc.foreach(emitBlock)
+      }
+      tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc.last))))
+    }
     else {
       tempString.append("\treturn %s_ptr;\n".format(quote(sym)))
     }

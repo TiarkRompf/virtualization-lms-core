@@ -1,11 +1,9 @@
 package scala.virtualization.lms
 package internal
 
-import java.io.{FileWriter, StringWriter, PrintWriter, File}
-import java.util.ArrayList
-import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap, ListMap, HashSet, Map => MMap}
+import java.io.{FileWriter, PrintWriter, File}
+import collection.mutable.{ArrayBuffer, Map => MMap}
 import collection.immutable.List._
-
 
 trait CCodegen extends CLikeCodegen with CppHostTransfer {
   val IR: Expressions
@@ -14,42 +12,13 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   override def kernelFileExt = "cpp"
   override def toString = "cpp"
 
-  //var helperFuncIdx = 0
-  //var helperFuncString:StringBuilder = null
   var helperFuncStream: PrintWriter = null
   var headerStream: PrintWriter = null
   val helperFuncList = ArrayBuffer[String]()
-  //var kernelsList = ListBuffer[Exp[Any]]()
 
   var kernelInputVals: List[Sym[Any]] = Nil
   var kernelInputVars: List[Sym[Any]] = Nil
   var kernelOutputs: List[Sym[Any]] = Nil
-
-  /*
-  override def hasMetaData: Boolean = false
-  override def getMetaData: String = metaData.toString
-  var metaData: CMetaData = null
-
-  final class TransferFunc {
-    var funcHtoD:String = _
-    var argsFuncHtoD:List[Sym[Any]] = _
-    var funcDtoH:String = _
-    var argsFuncDtoH:List[Sym[Any]] = _
-  }
-  final class CMetaData {
-    val inputs: ListMap[Sym[Any],TransferFunc] = ListMap()
-    val outputs: ListMap[Sym[Any],TransferFunc] = ListMap()
-    override def toString: String = {
-      val out = new StringBuilder
-      out.append("{")
-
-      out.append("\"cppInputs\":["+inputs.toList.reverse.map(in=>"{\""+quote(in._1)+"\":[\""+remap(in._1.tp)+"\",\""+in._2.funcHtoD+"\",\""+in._2.funcDtoH+"\"]}").mkString(",")+"],")
-      out.append("\"cppOutputs\":["+outputs.toList.reverse.map(out=>"{\""+quote(out._1)+"\":[\""+remap(out._1.tp)+"\",\""+out._2.funcDtoH+"\"]}").mkString(",")+"]")
-      out.append("}")
-      out.toString
-    }
-  }
-  */
 
   private def deref[A](m: Manifest[A]): String = {
     if (isPrimitiveType(m)) remap(m) + " "
@@ -65,23 +34,19 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     kernelInputVals = vals
     kernelInputVars = vars
     kernelOutputs = syms
-    //helperFuncString.clear
-    //metaData = new CMetaData
   }
 
   override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
-    //helperFuncIdx = 0
-    //helperFuncString = new StringBuilder
 
     /* file for helper functions (transfer function, allocation function) */
     helperFuncStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cpp"))
     helperFuncStream.println("#include <jni.h>")
-    helperFuncStream.println("#include \"cppHeader.hpp\"")
+    helperFuncStream.println("#include \"cppHeader.h\"")
 
     /* header file for kernels and helper functions */
-    headerStream = new PrintWriter(new FileWriter(buildDir + "cppHeader.hpp"))
+    headerStream = new PrintWriter(new FileWriter(buildDir + "cppHeader.h"))
     headerStream.println("#include <stdio.h>")
     headerStream.println("#include <string.h>")
     headerStream.println("#include <stdlib.h>")
@@ -132,44 +97,47 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     if(!resultType.startsWith("DeliteOpMultiLoop"))
       stream.println("}")
 
-    // Emit input copy helper functions for object type inputs
-    for(v <- (vals++vars) if !isVoidType(v.tp)) {
+    dsTypesList ++= (syms++vals++vars).map(_.tp)
+  }
+
+  override def emitTransferFunctions() {
+
+    for (tp <- dsTypesList) {
+      // Emit input copy helper functions for object type inputs
       //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
-      val (recvHeader, recvSource) = emitRecv(v, Hosts.JVM)
+      val (recvHeader, recvSource) = emitRecv(tp, Hosts.JVM)
       if (!helperFuncList.contains(recvHeader)) {
         headerStream.println(recvHeader)
         helperFuncStream.println(recvSource)
         helperFuncList.append(recvHeader)
       }
-      val (recvViewHeader, recvViewSource) = emitRecvView(v, Hosts.JVM)
+      val (recvViewHeader, recvViewSource) = emitRecvView(tp, Hosts.JVM)
       if (!helperFuncList.contains(recvViewHeader)) {
         headerStream.println(recvViewHeader)
         helperFuncStream.println(recvViewSource)
         helperFuncList.append(recvViewHeader)
       }
-      val (sendUpdateHeader, sendUpdateSource) = emitSendUpdate(v, Hosts.JVM)
+      val (sendUpdateHeader, sendUpdateSource) = emitSendUpdate(tp, Hosts.JVM)
       if (!helperFuncList.contains(sendUpdateHeader)) {
         headerStream.println(sendUpdateHeader)
         helperFuncStream.println(sendUpdateSource)
         helperFuncList.append(sendUpdateHeader)
       }
-      val (recvUpdateHeader, recvUpdateSource) = emitRecvUpdate(v, Hosts.JVM)
+      val (recvUpdateHeader, recvUpdateSource) = emitRecvUpdate(tp, Hosts.JVM)
       if (!helperFuncList.contains(recvUpdateHeader)) {
         headerStream.println(recvUpdateHeader)
         helperFuncStream.println(recvUpdateSource)
         helperFuncList.append(recvUpdateHeader)
       }
-    }
 
-    // Emit output copy helper functions for object type inputs
-    for(v <- (syms) if !isVoidType(v.tp)) {
-      val (sendHeader, sendSource) = emitSend(v, Hosts.JVM)
+      // Emit output copy helper functions for object type inputs
+      val (sendHeader, sendSource) = emitSend(tp, Hosts.JVM)
       if (!helperFuncList.contains(sendHeader)) {
         headerStream.println(sendHeader)
         helperFuncStream.println(sendSource)
         helperFuncList.append(sendHeader)
       }
-      val (sendViewHeader, sendViewSource) = emitSendView(v, Hosts.JVM)
+      val (sendViewHeader, sendViewSource) = emitSendView(tp, Hosts.JVM)
       if (!helperFuncList.contains(sendViewHeader)) {
         headerStream.println(sendViewHeader)
         helperFuncStream.println(sendViewSource)
@@ -177,25 +145,9 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
       }
     }
 
-    // Print out dsl.h file
-    //if(kernelsList.intersect(syms).isEmpty) {
-      //headerStream.println("#include \"%s.cpp\"".format(syms.map(quote).mkString("")))
-      //kernelsList ++= syms
-    //}
-
-
-    // Print helper functions to file stream
-    //helperFuncStream.print(helperFuncString)
     helperFuncStream.flush
     headerStream.flush
-
-    /*
-    // Print out device function
-    devStream.println(devFuncString)
-    devStream.flush
-    */
   }
-
 
   private def addRef[A](m: Manifest[A]): String = {
     if (!isPrimitiveType(m) && !isVoidType(m)) " *"
@@ -204,16 +156,11 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
   def kernelName = "kernel_" + kernelOutputs.map(quote).mkString("")
 
-  override def emitFileHeader() {
-    stream.println("#include \"cppHeader.hpp\"\n")
-  }
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
 
     //TODO: fix this
     if(external) throw new GenerationFailedException("CGen: Cannot have external libraries\n")
-
-
 
     def kernelSignature: String = {
       val out = new StringBuilder
@@ -234,6 +181,8 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
       out.toString
     }
 
+    stream.println("#include \"cppHeader.h\"")
+
     //TODO: Remove the dependency to Multiloop to Delite
     if (!resultType.startsWith("DeliteOpMultiLoop")) {
       stream.println(kernelSignature + " {")
@@ -241,10 +190,8 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     }
   }
 
-
 }
 
-// TODO: do we need this for each target?
 trait CNestedCodegen extends CLikeNestedCodegen with CCodegen {
   val IR: Expressions with Effects
   import IR._

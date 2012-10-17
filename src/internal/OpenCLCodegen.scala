@@ -7,7 +7,7 @@ import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
 import collection.mutable.{Map => MMap}
 import collection.immutable.List._
 
-trait OpenCLCodegen extends GPUCodegen with CppHostTransfer {
+trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTransfer {
   val IR: Expressions
   import IR._
 
@@ -17,8 +17,6 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer {
   override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
-    helperFuncIdx = 0
-    //helperFuncString = new StringBuilder
     helperFuncStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cpp"))
     headerStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
 
@@ -35,105 +33,6 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer {
 
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
-
-	/*
-  override def remap[A](m: Manifest[A]) : String = {
-    checkGPUableType(m)
-    if (m.erasure == classOf[Variable[AnyVal]])
-      remap(m.typeArguments.head)
-    else {
-      m.toString match {
-          case "Int" => "int"
-          case "Long" => "long"
-          case "Float" => "float"
-          case "Double" => "double"
-          case "Boolean" => "char"
-          case "Unit" => "void"
-          case "scala.Tuple2[Int,Float]" => "Tuple2_Int_Float"
-          case "scala.collection.immutable.List[Int]" => "OpenCLIntList"  //TODO: Use C++ list
-          //TODO: When retrieving the type arguments of array from Manifest works, then below can be simplified
-          //case "Array[Int]" | "Array[Long]" | "Array[Float]" | "Array[Double]" | "Array[Boolean]" => remap(m.typeArguments(0)) + " *"
-          //TODO: Is it appropriate to put global here?
-          case "Array[Int]" => "__global int *"
-          case "Array[Long]" => "__global long *"
-          case "Array[Float]" => "__global float *"
-          case "Array[Double]" => "__global double *"
-          case "Array[Boolean]" => "__global char *"
-          case _ => throw new Exception("OpenCLGen: remap(m) : GPUable Type %s does not have mapping table.".format(m.toString))
-      }
-    }
-  }
-	*/
-
-	/*
-  override def unpackObject[A](sym: Sym[Any]) : Map[String,Manifest[_]] = remap(sym.Type) match {
-    case "OpenCLIntList" => Map("length"->Manifest.Int)    //TODO: How to initialize the data array type for the list?
-    case _ => throw new GenerationFailedException("OpenCLGen: Type %s cannot be unpacked.".format(sym.Type.toString))
-  }
-	*/
-
-
-  /*
-  def copyInputHtoD(sym: Sym[Any]) : String = {
-    //checkGPUableType(sym.tp)
-    remap(sym.tp) match {
-      case "DeliteArray_bool" | "DeliteArray_char" | "DeliteArray_CHAR" | "DeliteArray_short" | "DeliteArray_int" | "DeiteArray_long" | "DeliteArray_float" | "DeliteArray_double" =>
-        val out = new StringBuilder
-        val typeArg = sym.tp.typeArguments.head
-        val numBytesStr = "length * sizeof(%s)".format(remap(typeArg))
-        out.append("\tint length = env->GetArrayLength((j%sArray)obj);\n".format(remapToJNI(typeArg).toLowerCase))
-        out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical((j%sArray)obj,0);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase))
-        out.append("\t%s *%s = new %s(length);\n".format(remap(sym.tp),quote(sym),remap(sym.tp)))
-        out.append("\tDeliteOpenCLMemcpyHtoDAsync(%s->data, dataPtr, %s);\n".format(quote(sym),numBytesStr))
-        out.append("\tenv->ReleasePrimitiveArrayCritical((j%sArray)obj, dataPtr, 0);\n".format(remapToJNI(typeArg).toLowerCase))
-        out.append("\treturn %s;\n".format(quote(sym)))
-        out.toString
-      case _ => throw new Exception("OpenCLGen: copyInputHtoD(sym) : Cannot copy to GPU device (%s)".format(remap(sym.tp)))
-    }
-  }
-
-  def copyOutputDtoH(sym: Sym[Any]) : String = {
-    //checkGPUableType(sym.tp)
-    if (isPrimitiveType(sym.tp)) {
-      val out = new StringBuilder
-      out.append("\t%s data;\n".format(remap(sym.tp)))
-      out.append("\tDeliteOpenCLMemcpyDtoHAsync(&data, %s, sizeof(%s));\n".format(quote(sym),remap(sym.tp)))
-      out.append("\treturn data;\n")
-      out.toString
-    }
-    else {
-      remap(sym.tp) match {
-        case "DeliteArray_bool" | "DeliteArray_char" | "DeliteArray_CHAR" | "DeliteArray_short" | "DeliteArray_int" | "DeiteArray_long" | "DeliteArray_float" | "DeliteArray_double" =>
-          val out = new StringBuilder
-          val typeArg = sym.tp.typeArguments.head
-          val numBytesStr = "%s.length * sizeof(%s)".format(quote(sym),remap(typeArg))
-          out.append("\tj%sArray arr = env->New%sArray(%s.length);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg),quote(sym)))
-          out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical((j%sArray)arr,0);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase))
-          out.append("\tDeliteOpenCLMemcpyDtoHAsync(dataPtr, %s.data, %s);\n".format(quote(sym),numBytesStr))
-          out.append("\tenv->ReleasePrimitiveArrayCritical((j%sArray)arr, dataPtr, 0);\n".format(remapToJNI(typeArg).toLowerCase))
-          out.append("\treturn arr;\n")
-          out.toString
-        case _ => throw new Exception("OpenCLGen: copyOutputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
-      }
-    }
-  }
-
-  def copyMutableInputDtoH(sym: Sym[Any]) : String = {
-    //checkGPUableType(sym.tp)
-    remap(sym.tp) match {
-      case "DeliteArray_bool" | "DeliteArray_char" | "DeliteArray_CHAR" | "DeliteArray_short" | "DeliteArray_int" | "DeiteArray_long" | "DeliteArray_float" | "DeliteArray_double" =>
-        val out = new StringBuilder
-        val typeArg = sym.tp.typeArguments.head
-        val numBytesStr = "length * sizeof(%s)".format(remap(typeArg))
-        out.append("\tint length = %s.length;\n".format(quote(sym)))
-        out.append("\tj%s *dataPtr = (j%s *)env->GetPrimitiveArrayCritical((j%sArray)obj,0);\n".format(remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase,remapToJNI(typeArg).toLowerCase))
-        out.append("\tDeliteOpenCLMemcpyDtoHAsync(dataPtr, %s.data, %s);\n".format(quote(sym),numBytesStr))
-        out.append("\tenv->ReleasePrimitiveArrayCritical((j%sArray)obj, dataPtr, 0);\n".format(remapToJNI(typeArg).toLowerCase))
-        out.toString
-      case _ => throw new Exception("OpenCLGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
-    }
-  }
-  */
 
   def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
     val x = fresh[A]
