@@ -24,15 +24,15 @@ trait MiscOps extends Base {
 
 
 
-trait MiscOpsExp extends MiscOps with EffectExp {
-  case class Print(x: Exp[Any]) extends Def[Unit]
-  case class PrintLn(x: Exp[Any]) extends Def[Unit]
+trait MiscOpsExp extends MiscOps with ObjectOps with EffectExp {
+  case class Print(x: Exp[String]) extends Def[Unit]
+  case class PrintLn(x: Exp[String]) extends Def[Unit]
   case class Exit(s: Exp[Int]) extends Def[Nothing]
   case class Error(s: Exp[String]) extends Def[Nothing]
   case class Return(x: Exp[Any]) extends Def[Unit]
 
-  def print(x: Exp[Any])(implicit pos: SourceContext) = reflectEffect(Print(x)) // TODO: simple effect
-  def println(x: Exp[Any])(implicit pos: SourceContext) = reflectEffect(PrintLn(x)) // TODO: simple effect
+  def print(x: Exp[Any])(implicit pos: SourceContext) = reflectEffect(Print(x.ToString)) // TODO: simple effect
+  def println(x: Exp[Any])(implicit pos: SourceContext) = reflectEffect(PrintLn(x.ToString)) // TODO: simple effect
   def exit(s: Exp[Int])(implicit pos: SourceContext) = reflectEffect(Exit(s))
   def error(s: Exp[String])(implicit pos: SourceContext) = reflectEffect(Error(s))
   def returnL(x: Exp[Any])(implicit pos: SourceContext) = {

@@ -15,7 +15,7 @@ var x13: Array[Double] = x10
 val x11 = LoopArray(100) { x7 => 
 x7
 }
-var x14: Array[Int] = x11
+var x14: Array[Double] = x11
 val x4 = LoopArray(100) { x1 => 
 x1
 }

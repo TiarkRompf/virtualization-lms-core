@@ -4,7 +4,6 @@ package common
 import java.io.PrintWriter
 import scala.reflect.SourceContext
 import scala.virtualization.lms.internal.{GenericNestedCodegen,GenericFatCodegen}
-import scala.reflect.SourceContext
 
 trait Loops extends Base { // no surface constructs for now
 
@@ -18,6 +17,10 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val body: Def[A]
   }
 
+  object Loop {
+    def unapply[A](l: AbstractLoop[A]): Option[(Exp[Int], Sym[Int], Def[A])] = Some((l.size, l.v, l.body))
+  }
+  
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
   
   def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = SimpleLoop(size, v, body)

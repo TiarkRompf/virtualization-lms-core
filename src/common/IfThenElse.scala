@@ -200,12 +200,6 @@ trait IfThenElseExpOpt extends IfThenElseExp { this: BooleanOpsExp with EqualExp
   }
 }
 
-
-
-
-
-
-
 trait BaseGenIfThenElse extends GenericNestedCodegen {
   val IR: IfThenElseExp
   import IR._
