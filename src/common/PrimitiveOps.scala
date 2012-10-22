@@ -88,6 +88,9 @@ trait PrimitiveOps extends Variables with OverloadHack {
     def toLong(implicit pos: SourceContext) = int_tolong(lhs)
   }
 
+  def infix_+(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_plus(lhs, rhs)
+  def infix_-(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_minus(lhs, rhs)
+  def infix_*(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_times(lhs, rhs)
   def infix_/(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_divide(lhs, rhs)
   def infix_%(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_mod(lhs, rhs)
   def infix_&(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_binaryand(lhs, rhs)
@@ -100,6 +103,9 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def obj_integer_parse_int(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
   def obj_int_max_value(implicit pos: SourceContext): Rep[Int]
   def obj_int_min_value(implicit pos: SourceContext): Rep[Int]
+  def int_plus(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_minus(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_times(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
   def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A])(implicit pos: SourceContext): Rep[A]
   def int_divide(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
   def int_mod(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
@@ -156,6 +162,9 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class ObjIntegerParseInt(s: Exp[String]) extends Def[Int]
   case class ObjIntMaxValue() extends Def[Int]
   case class ObjIntMinValue() extends Def[Int]
+  case class IntPlus(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntMinus(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntTimes(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntDivideFrac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) extends Def[A]
   case class IntDivide(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntMod(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
@@ -173,6 +182,9 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   def obj_integer_parse_int(s: Rep[String])(implicit pos: SourceContext) = ObjIntegerParseInt(s)
   def obj_int_max_value(implicit pos: SourceContext) = ObjIntMaxValue()
   def obj_int_min_value(implicit pos: SourceContext) = ObjIntMinValue()
+  def int_plus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntPlus(lhs, rhs)
+  def int_minus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntMinus(lhs, rhs)
+  def int_times(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntTimes(lhs, rhs)
   def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A])(implicit pos: SourceContext) : Exp[A] = IntDivideFrac(lhs, rhs)
   def int_divide(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntDivide(lhs, rhs)
   def int_mod(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntMod(lhs, rhs)
@@ -213,6 +225,9 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
       case IntDoubleValue(x) => int_double_value(f(x))
       case IntFloatValue(x) => int_float_value(f(x))
       case IntBitwiseNot(x) => int_bitwise_not(f(x))
+      case IntPlus(x,y) => int_plus(f(x),f(y))
+      case IntMinus(x,y) => int_minus(f(x),f(y))
+      case IntTimes(x,y) => int_times(f(x),f(y))
       case IntDivide(x,y) => int_divide(f(x),f(y))
       case IntMod(x,y) => int_mod(f(x),f(y))
       case IntToLong(x) => int_tolong(f(x))
@@ -242,6 +257,9 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")
     case ObjIntMaxValue() => emitValDef(sym, "scala.Int.MaxValue")
     case ObjIntMinValue() => emitValDef(sym, "scala.Int.MinValue")
+    case IntPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
+    case IntMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
+    case IntTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
     case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
@@ -277,6 +295,9 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       case DoubleFloatValue(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       //case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")
       //case ObjIntMaxValue() => emitValDef(sym, "scala.Int.MaxValue")
+      case IntPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
+      case IntMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
+      case IntTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
       case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
       case IntDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
       case IntMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
