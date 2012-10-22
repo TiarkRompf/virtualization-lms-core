@@ -186,7 +186,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
         var_assign(Variable(lv), rv)(rv.tp, pos)
       }
       Const(())
-    case (Variable(Def(Reflect(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]),_,_))), Def(r)) => //TODO: keep this?
+    case (Variable(Def(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]))), Def(r)) => //TODO: keep this?
       for ((k,v) <- elems) {
         var_assign(Variable(v), field(r,k)(mtype(v.tp),pos))(unwrap(v.tp),pos)
       }
@@ -204,8 +204,6 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
   override def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {
     case Variable(Def(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]))) =>
       struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.tp), pos))))
-    case Variable(Def(Reflect(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]),_,_))) =>
-      struct[T](tag, elems.map(p=>(p._1, readVar(Variable(p._2))(unwrap(p._2.tp), pos))))
     case Variable(Def(Field(struct,idx))) =>
       field[T](struct, idx)
     case _ => super.readVar(v)

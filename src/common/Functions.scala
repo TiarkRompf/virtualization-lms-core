@@ -275,16 +275,17 @@ trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTu
     case _ => super.emitNode(sym,rhs)
   }
   
-  def unwrapTupleStr(s: String): Array[String] = {
+  def unwrapTupleStr[A](m: Manifest[A]): Array[String] = {
+    val s = m.toString
     if (s.startsWith("scala.Tuple")) s.slice(s.indexOf("[")+1,s.length-1).filter(c => c != ' ').split(",")
-    else Array(s)
+    else Array(remap(m))
   } 
   
   override def remap[A](m: Manifest[A]): String = m.toString match {    
     case f if f.startsWith("scala.Function") =>
       val targs = m.typeArguments.dropRight(1)
       val res = remap(m.typeArguments.last)
-      val targsUnboxed = targs.flatMap(t => unwrapTupleStr(remap(t)))
+      val targsUnboxed = targs.flatMap(t => unwrapTupleStr(t))
       val sep = if (targsUnboxed.length > 0) "," else ""
       "scala.Function" + (targsUnboxed.length) + "[" + targsUnboxed.mkString(",") + sep + res + "]"      
       
