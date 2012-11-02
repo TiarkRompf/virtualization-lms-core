@@ -266,6 +266,13 @@ trait Effects extends Expressions with Blocks with Utils {
   val deepAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   val allAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   
+  def resetAliasCaches() = {
+    shallowAliasCache.clear()
+    deepAliasCache.clear()
+    allAliasCache.clear()
+    globalMutableSyms = Nil
+  }
+
   def utilLoadStm[T](s: Sym[T]) = if (!isPrimitiveType(s.tp)) /*globalDefs.filter{e => e.lhs contains s}*/ findDefinition(s).toList else Nil
   def utilLoadStms(s: List[Sym[Any]]) = s.flatMap(utilLoadStm)
   def utilLoadSym[T](s: Sym[T]) = utilLoadStm(s).map(_.rhs)
@@ -373,7 +380,7 @@ trait Effects extends Expressions with Blocks with Utils {
     checkContext()
     // warn if type is Any. TODO: make optional, sometimes Exp[Any] is fine
     if (manifest[A] == manifest[Any]) printlog("warning: possible missing mtype call - reflectMirrored with Def of type Any: " + zd)
-    context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
+    context.filter { case Def(d) => d == zd }.reverse match { // TODO: opt
       //case z::_ => z.asInstanceOf[Exp[A]]  -- unsafe: we don't have a tight context, so we might pick one from a flattened subcontext
       case _ => createReflectDefinition(fresh[A], zd)
     }
@@ -496,50 +503,13 @@ trait Effects extends Expressions with Blocks with Utils {
       val read = u.mayRead
       val write = u.mayWrite
 
-      // TODO: in order to reduce the number of deps (need to traverse all those!)
-      // we should only store those that are not transitively implied.
-      // For simple effects, take the last one (implemented). 
-      // For mutations, take the last write to a particular mutable sym (TODO).
+      val readDeps = read flatMap depWriteState
+      val softWriteDeps = write flatMap depReadState
+      val writeDeps = write flatMap depWriteState
+      val simpleDeps = if (u.maySimple) depSimpleState else Nil
+      val globalDeps = if (u.mayGlobal) depGlobalState else Nil
 
-      def canonic(xs: List[Exp[Any]]) = xs // TODO 
-      def canonicLinear(xs: List[Exp[Any]]) = if (mayPrune) xs.takeRight(1) else xs
-
-      // the mayPrune flag is for test8-speculative4: with pruning on, the 'previous iteration' 
-      // dummy is moved out of the loop. this is not per se a problem -- need to look some more into it.
-
-      // TODO: maintain index from writable symbols to reads and writes
-
-      var depAllocState: Set[Exp[Any]] = Set.empty
-      var depSimpleState: List[Exp[Any]] = Nil
-      var depGlobalState: List[Exp[Any]] = Nil
-      var depReadState: Map[Sym[Any], List[Exp[Any]]] = Map.empty withDefaultValue Nil
-      var depWriteState: Map[Sym[Any], List[Exp[Any]]] = Map.empty withDefaultValue Nil
-
-      scope foreach { case e@Def(Reflect(_, u, _)) =>
-        if (u.resAlloc) {
-          depAlloc = depAlloc + e
-        }
-        if (u.maySimple) {
-          // depend on depSimple
-          depSimple = List(e)
-        }
-        if (u.mayGlobal) {
-          // depend on depGlobal
-          depGlobal = List(e)
-        }
-        u.mayRead foreach { g =>
-          // depend on g and depWrite(g)
-          depRead += (g -> (e::depRead.getOrElse(g, Nil)))
-        }
-        u.mayWrite foreach { g =>
-          // depend on g and depWrite(g)
-          // depend soft on depRead(g)
-          depWrite += (g -> List(e))
-          depRead += (g -> Nil)
-        }
-      }
-
-      ((read flatMap depWrite) ++ (write flatMap depRead) ++ (write flatMap depWrite) ++ (if (u.maySimple) depSimple else Nil) ++ (if (u.mayGlobal) depSimple else Nil)).distinct
+      (readDeps ++ softWriteDeps ++ writeDeps ++ simpleDeps ++ globalDeps).distinct
 
 /*
       val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
@@ -566,6 +536,9 @@ trait Effects extends Expressions with Blocks with Utils {
     }
   }
 
+  // TODO: should we override reflectSubGraph to make sure things are
+  // kept track of ?
+
   def createReflectDefinition[A](s: Sym[A], x: Reflect[A]): Sym[A] = {
     x match {
       case Reflect(Reify(_,_,_),_,_) =>
@@ -576,12 +549,52 @@ trait Effects extends Expressions with Blocks with Utils {
     }
     createDefinition(s, x)
     context :+= s
+    updateDepState(s, x)
     s
   }
   
   def checkContext() {
     if (context == null)
       sys.error("uninitialized effect context: effectful statements may only be used within a reifyEffects { .. } block")
+  }
+
+
+  var depAllocState: Set[Exp[Any]] = _
+  var depSimpleState: List[Exp[Any]] = _
+  var depGlobalState: List[Exp[Any]] = _
+  var depReadState: Map[Sym[Any], List[Exp[Any]]] = _
+  var depWriteState: Map[Sym[Any], List[Exp[Any]]] = _
+
+  def resetDepState() = {
+    depAllocState = Set.empty
+    depSimpleState = Nil
+    depGlobalState = Nil
+    depReadState = Map.empty withDefaultValue Nil
+    depWriteState = Map.empty withDefaultValue Nil
+  }
+
+  def updateDepState[A](e: Sym[A], d: Reflect[A]) = {
+    if (d.summary.resAlloc) {
+      depAllocState = depAllocState + e
+    }
+    if (d.summary.maySimple) {
+      // depend on depSimple
+      depSimpleState = List(e)
+    }
+    if (d.summary.mayGlobal) {
+      // depend on depGlobal
+      depGlobalState = List(e)
+    }
+    d.summary.mayRead foreach { g =>
+      // depend on g and depWrite(g)
+      depReadState += (g -> (e::depReadState.getOrElse(g, Nil)))
+    }
+    d.summary.mayWrite foreach { g =>
+      // depend on g and depWrite(g)
+      // depend soft on depRead(g)
+      depWriteState += (g -> List(e))
+      depReadState += (g -> Nil)
+    }
   }
 
 
@@ -610,7 +623,13 @@ trait Effects extends Expressions with Blocks with Utils {
   // no assumptions about the current context remain valid.
   def reifyEffects[A:Manifest](block: => Exp[A], controlScope: Boolean = false): Block[A] = {
     val save = context
+    val saveAlloc  = depAllocState
+    val saveSimple = depSimpleState
+    val saveGlobal = depGlobalState
+    val saveRead   = depReadState
+    val saveWrite  = depWriteState
     context = Nil
+    resetDepState
     
     // only add control dependencies scopes where controlScope is explicitly true (i.e., the first-level of an IfThenElse)
     val saveControl = conditionalScope
@@ -624,6 +643,11 @@ trait Effects extends Expressions with Blocks with Utils {
     val deps = context
     val summary = summarizeAll(deps)
     context = save
+    depAllocState  = saveAlloc
+    depSimpleState = saveSimple
+    depGlobalState = saveGlobal
+    depReadState   = saveRead
+    depWriteState  = saveWrite
     
     if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
   }
@@ -632,8 +656,15 @@ trait Effects extends Expressions with Blocks with Utils {
   // all assumptions about the current context carry over unchanged.
   def reifyEffectsHere[A:Manifest](block: => Exp[A], controlScope: Boolean = false): Block[A] = {
     val save = context
-    if (save eq null)
+    val saveAlloc  = depAllocState
+    val saveSimple = depSimpleState
+    val saveGlobal = depGlobalState
+    val saveRead   = depReadState
+    val saveWrite  = depWriteState
+    if (save eq null) {
       context = Nil
+      resetDepState()
+    }
     
     val saveControl = conditionalScope
     conditionalScope = controlScope
@@ -650,6 +681,11 @@ trait Effects extends Expressions with Blocks with Utils {
     
     val summary = summarizeAll(deps)
     context = save
+    depAllocState  = saveAlloc
+    depSimpleState = saveSimple
+    depGlobalState = saveGlobal
+    depReadState   = saveRead
+    depWriteState  = saveWrite
     
     if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
   }
@@ -657,10 +693,8 @@ trait Effects extends Expressions with Blocks with Utils {
   // --- bookkeping
 
   override def reset = {
-    shallowAliasCache.clear()
-    deepAliasCache.clear()
-    allAliasCache.clear()
-    globalMutableSyms = Nil
+    resetAliasCaches()
+    resetDepState()
     context = null
     super.reset
   }

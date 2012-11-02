@@ -139,7 +139,7 @@ trait Expressions extends Utils {
     assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
     val existing = lhs flatMap (globalDefsCache get _)//globalDefs filter (_.lhs exists (lhs contains _))
     assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
-    localDefs = localDefs ::: ds
+    localDefs = localDefs ::: ds // TODO: opt
     globalDefs = globalDefs ::: ds
     for (stm <- ds; s <- stm.lhs) {      
       globalDefsCache += (s->stm)
@@ -151,7 +151,7 @@ trait Expressions extends Utils {
     //globalDefs.find(x => x.defines(s).nonEmpty)
 
   def findDefinition[T](d: Def[T]): Option[Stm] =
-    globalDefs.find(x => x.defines(d).nonEmpty)
+    globalDefs.find(x => x.defines(d).nonEmpty) // TODO: opt
 
   def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): Stm =
     findDefinition[T](d) map { x => x.defines(d).foreach(_.withPos(pos)); x } getOrElse {
