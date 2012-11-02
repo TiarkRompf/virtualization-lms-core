@@ -439,6 +439,8 @@ trait Effects extends Expressions with Blocks with Utils {
     }
   }
   
+  // DEBUG var counter = 0
+
   def calculateDependencies(u: Summary): State = calculateDependencies(context, u)
   def calculateDependencies(scope: State, u: Summary): State = {
     if (u.mayGlobal) scope else {
@@ -453,6 +455,8 @@ trait Effects extends Expressions with Blocks with Utils {
       def canonic(xs: List[Exp[Any]]) = xs // TODO 
       def canonicLinear(xs: List[Exp[Any]]) = xs.takeRight(1)
 
+      // TODO: maintain index from writable symbols to reads and writes
+
       // CAVEAT: this breaks testSpeculative4
 
       val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
@@ -463,8 +467,16 @@ trait Effects extends Expressions with Blocks with Utils {
 
       // TODO: write-on-read deps should be weak
       // TODO: optimize!!
-      val allDeps = canonic(readDeps ++ softWriteDeps ++ writeDeps ++ canonicLinear(simpleDeps) ++ canonicLinear(globalDeps))
-      scope filter (allDeps contains _)
+      val allDeps = canonic(readDeps ++ softWriteDeps ++ writeDeps ++ canonicLinear(simpleDeps) ++ canonicLinear(globalDeps)).toSet
+      val transDeps = allDeps.flatMap { case Def(e) => syms(e):List[Exp[Any]] }
+
+      // DEBUG
+      /*if (counter % 10 == 0)
+        println(scope.length + "/" + allDeps.size + "/" + transDeps.size)
+
+      counter += 10*/
+
+      scope filter (z => (allDeps contains z) && !(transDeps contains z)) // opt: keep scope as Set instead of traversing
     }
   }
 
