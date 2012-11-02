@@ -11,26 +11,30 @@ trait CodeMotion extends Scheduling {
 
   def getExactScope[A](currentScope: List[Stm])(result: List[Exp[Any]]): List[Stm] = {
     // currentScope must be tight for result and strongly sorted
-    val e1 = currentScope
+    val e1 = currentScope.toSet
 
     // shallow is 'must outside + should outside' <--- currently shallow == deep for lambdas, meaning everything 'should outside'
     // bound is 'must inside'
 
     // find transitive dependencies on bound syms, including their defs (in case of effects)
     val bound = e1.flatMap(z => boundSyms(z.rhs))
-    val g1 = getFatDependentStuff(currentScope)(bound)
+    val g1 = getFatDependentStuff(currentScope)(bound.toList).toSet
 
     // e1 = reachable
-    val h1 = e1 filterNot (g1 contains _) // 'may outside'
-    val f1 = g1.flatMap { t => syms(t.rhs) } flatMap { s => h1 filter (_.lhs contains s) } // fringe: 1 step from g1
+    val h1 = (e1 diff g1) // 'may outside'
 
-    val e2 = getScheduleM(e1)(result, false, true)       // (shallow|hot)*  no cold ref on path
+    val h1Inv = new scala.collection.mutable.HashMap[Sym[Any], List[Stm]] { override def default(k:Sym[Any]) = Nil }
+    h1 foreach { stm => stm.lhs.foreach { s => h1Inv(s) = stm::h1Inv(s) }}
 
-    val e3 = getScheduleM(e1)(result, true, false)       // (shallow|cold)* no hot ref on path
+    val f1 = g1.flatMap { t => syms(t.rhs) flatMap h1Inv }   // g1.flatMap { t => syms(t.rhs) } flatMap { s => h1 filter (_.lhs contains s) } // fringe: 1 step from g1
 
-    val f2 = f1 filterNot (e3 contains _)                   // fringe restricted to: any* hot any*
+    val e2 = getScheduleM(currentScope)(result, false, true).toSet       // (shallow|hot)*  no cold ref on path
 
-    val h2 = getScheduleM(e1)(f2.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
+    val e3 = getScheduleM(currentScope)(result, true, false).toSet       // (shallow|cold)* no hot ref on path
+
+    val f2 = f1 diff e3                                  // fringe restricted to: any* hot any*
+
+    val h2 = getScheduleM(currentScope)(f2.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
 
     // things that should live on this level:
     // - not within conditional: no cold ref on path (shallow|hot)*
@@ -47,19 +51,21 @@ trait CodeMotion extends Scheduling {
     //* 
     //TODO: uncomment after resolving the issue above
     
-    val loopsNotInIfs = e2 filterNot (e3 contains _)    // (shallow|hot)* hot (shallow|hot)*   <---- a hot ref on all paths!
-    val reachFromTopLoops = getSchedule(e1)(loopsNotInIfs,false)
+    val loopsNotInIfs = e2 diff e3    // (shallow|hot)* hot (shallow|hot)*   <---- a hot ref on all paths!
+    val reachFromTopLoops = getSchedule(currentScope)(loopsNotInIfs,false).toSet
 
-    val f3 = f1 filter (reachFromTopLoops contains _)    // fringe restricted to: (shallow|hot)* hot any*
-    val h3 = getScheduleM(e1)(f3.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
+    val f3 = f1 intersect reachFromTopLoops    // fringe restricted to: (shallow|hot)* hot any*
+    val h3 = getScheduleM(currentScope)(f3.flatMap(_.lhs), false, true).toSet    // anything that depends non-cold on it...
     
-    val shouldOutside = e1 filter (z => (e2 contains z) || (h3 contains z))
+    val shouldOutside = e1 intersect (e2 union h3) //e1 filter (z => (e2 contains z) || (h3 contains z))
     
     //val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
     //*/
 
-    val levelScope = e1.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
+    val levelScope = currentScope.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
     
+    return levelScope
+
     // ---- end FIXME ----
 
     // sym->sym->hot->sym->cold->sym  hot --> hoist **** iff the cold is actually inside the loop ****

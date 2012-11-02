@@ -102,8 +102,9 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
     val fixed = new mutable.HashMap[Any,List[Sym[Any]]]
     def allSyms(r: Any) = fixed.getOrElse(r, syms(r) ++ softSyms(r))
 
+    val levelSet = level.toSet
 
-    val inner = scope diff level // TODO: restrict to things referenced by functions (not ifs) ?
+    val inner = scope filterNot(levelSet) // TODO: restrict to things referenced by functions (not ifs) ?
 
     var recursive: List[Sym[Any]] = Nil
 
@@ -149,7 +150,7 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
       }
     }
     val xxf = xx.flatten.reverse
-    (xxf filter (level contains _), recursive)
+    (xxf filter levelSet, recursive)
   }
   
   var recursive: List[Sym[Any]] = Nil // FIXME: should propagate differently
