@@ -492,8 +492,6 @@ trait Effects extends Expressions with Blocks with Utils {
     }
   }
   
-  var counter = 0
-
   def calculateDependencies(u: Summary): State = {
     checkContext();
     calculateDependencies(context, u, true)
@@ -510,29 +508,6 @@ trait Effects extends Expressions with Blocks with Utils {
       val globalDeps = if (u.mayGlobal) depGlobalState else Nil
 
       (readDeps ++ softWriteDeps ++ writeDeps ++ simpleDeps ++ globalDeps).distinct
-
-/*
-      val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
-      val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
-      val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || write.contains(e) }
-      val simpleDeps = if (!u.maySimple) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.maySimple }
-      val controlDeps = if (!u.control) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.control }
-      val globalDeps = scope filter { case e@Def(Reflect(_, u, _)) => u.mayGlobal }
-
-      // TODO: write-on-read deps should be weak
-      // TODO: optimize!!
-      val allDeps = canonic(readDeps ++ softWriteDeps ++ writeDeps ++ canonicLinear(simpleDeps) ++ canonicLinear(controlDeps) ++ canonicLinear(globalDeps)).toSet
-      val transDeps = allDeps.flatMap { case Def(e) => syms(e):List[Exp[Any]] }
-
-      if (counter % 10 == 0)
-        println(scope.length + "/" + allDeps.size + "/" + transDeps.size)
-
-      counter += 10
-
-      scope filter (z => (allDeps contains z) && !(transDeps contains z)) // opt: keep scope as Set instead of traversing
-*/      
-
-
     }
   }
 
