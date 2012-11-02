@@ -395,7 +395,7 @@ trait Effects extends Expressions with Blocks with Utils {
       val deps = calculateDependencies(u)
       val zd = Reflect(x,u,deps)
       if (mustIdempotent(u)) {
-        context find { case Def(d) => d == zd } map { _.asInstanceOf[Exp[A]] } getOrElse {
+        context find { case Def(d) => d == zd } map { _.asInstanceOf[Exp[A]] } getOrElse { // TODO: opt -- use HashMap
 //        findDefinition(zd) map (_.sym) filter (context contains _) getOrElse { // local cse TODO: turn around and look at context first??
           val z = fresh[A]
           if (!x.toString.startsWith("ReadVar")) { // supress output for ReadVar
@@ -439,7 +439,7 @@ trait Effects extends Expressions with Blocks with Utils {
     }
   }
   
-  // DEBUG var counter = 0
+  var counter = 0
 
   def calculateDependencies(u: Summary): State = calculateDependencies(context, u)
   def calculateDependencies(scope: State, u: Summary): State = {
@@ -459,6 +459,39 @@ trait Effects extends Expressions with Blocks with Utils {
 
       // CAVEAT: this breaks testSpeculative4
 
+      var depAllocState: Set[Exp[Any]] = Set.empty
+      var depSimpleState: List[Exp[Any]] = Nil
+      var depGlobalState: List[Exp[Any]] = Nil
+      var depReadState: Map[Sym[Any], List[Exp[Any]]] = Map.empty withDefaultValue Nil
+      var depWriteState: Map[Sym[Any], List[Exp[Any]]] = Map.empty withDefaultValue Nil
+
+      scope foreach { case e@Def(Reflect(_, u, _)) =>
+        if (u.resAlloc) {
+          depAlloc = depAlloc + e
+        }
+        if (u.maySimple) {
+          // depend on depSimple
+          depSimple = List(e)
+        }
+        if (u.mayGlobal) {
+          // depend on depGlobal
+          depGlobal = List(e)
+        }
+        u.mayRead foreach { g =>
+          // depend on g and depWrite(g)
+          depRead += (g -> (e::depRead.getOrElse(g, Nil)))
+        }
+        u.mayWrite foreach { g =>
+          // depend on g and depWrite(g)
+          // depend soft on depRead(g)
+          depWrite += (g -> List(e))
+          depRead += (g -> Nil)
+        }
+      }
+
+      ((read flatMap depWrite) ++ (write flatMap depRead) ++ (write flatMap depWrite) ++ (if (u.maySimple) depSimple else Nil) ++ (if (u.mayGlobal) depSimple else Nil)).distinct
+
+/*
       val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
       val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
       val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || write.contains(e) }
@@ -470,13 +503,15 @@ trait Effects extends Expressions with Blocks with Utils {
       val allDeps = canonic(readDeps ++ softWriteDeps ++ writeDeps ++ canonicLinear(simpleDeps) ++ canonicLinear(globalDeps)).toSet
       val transDeps = allDeps.flatMap { case Def(e) => syms(e):List[Exp[Any]] }
 
-      // DEBUG
-      /*if (counter % 10 == 0)
+      if (counter % 10 == 0)
         println(scope.length + "/" + allDeps.size + "/" + transDeps.size)
 
-      counter += 10*/
+      counter += 10
 
       scope filter (z => (allDeps contains z) && !(transDeps contains z)) // opt: keep scope as Set instead of traversing
+*/      
+
+
     }
   }
 
