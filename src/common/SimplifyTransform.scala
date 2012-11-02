@@ -187,8 +187,9 @@ trait SimplifyTransform extends internal.FatScheduling {
     // SIMPLIFY! <--- multiple steps necessary???
   
     def withEffectContext(body: =>List[Stm]): List[Stm] = {
+      assert(false, "FIXME: withEffectContext <-- need to handle depXState")
       val save = context
-      context = Nil
+      context = Vector.empty
       val scope = body
       val leftovereffects = context.filterNot((scope.flatMap(_.lhs)) contains _)
       if (leftovereffects.nonEmpty) 

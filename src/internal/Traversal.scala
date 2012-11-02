@@ -11,7 +11,7 @@ trait GraphTraversal extends Scheduling {
   val IR: Expressions
   import IR._
   
-  def availableDefs: List[Stm] = globalDefs
+  def availableDefs: List[Stm] = globalDefs.toList // TODO: opt
   
   def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] = 
     getSchedule(availableDefs)(result, sort)

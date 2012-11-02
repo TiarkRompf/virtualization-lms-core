@@ -117,33 +117,59 @@ trait Expressions extends Utils {
 
   // graph construction state
   
-  var globalDefs: List[Stm] = Nil
-  var localDefs: List[Stm] = Nil
+  var globalDefs: Vector[Stm] = Vector.empty
+  var localDefs: Vector[Stm] = Vector.empty
   var globalDefsCache: Map[Sym[Any],Stm] = Map.empty
+  var localDefsCache: Map[Sym[Any],Stm] = Map.empty
+  var globalDefsInvCache: Map[Any,Stm] = Map.empty
+  var localDefsInvCache: Map[Any,Stm] = Map.empty
 
   def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
     val saveLocal = localDefs
     val saveGlobal = globalDefs
     val saveGlobalCache = globalDefsCache
-    localDefs = Nil
+    val saveLocalCache = localDefsCache
+    val saveGlobalInvCache = globalDefsInvCache
+    val saveLocalInvCache = localDefsInvCache
+    localDefs = Vector.empty
     val r = b
     val defs = localDefs
     localDefs = saveLocal
     globalDefs = saveGlobal
     globalDefsCache = saveGlobalCache
-    (r, defs)
+    localDefsCache = saveLocalCache
+    globalDefsInvCache = saveGlobalInvCache
+    localDefsInvCache = saveLocalInvCache
+    (r, defs.toList)
   }
 
-  def reflectSubGraph(ds: List[Stm]): Unit = {
-    val lhs = ds.flatMap(_.lhs)
-    assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
-    val existing = lhs flatMap (globalDefsCache get _)//globalDefs filter (_.lhs exists (lhs contains _))
-    assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
-    localDefs = localDefs ::: ds // TODO: opt
-    globalDefs = globalDefs ::: ds
-    for (stm <- ds; s <- stm.lhs) {      
-      globalDefsCache += (s->stm)
-    }
+  def reflectSubGraph(ds: List[Stm]): Unit = ds match {
+      case d::Nil =>
+        val lhs = d.lhs
+        assert(lhs.length == lhs.distinct.length, "multiple defs: " + d)
+        val existing = lhs flatMap (globalDefsCache get _)//globalDefs filter (_.lhs exists (lhs contains _))
+        assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
+        localDefs = localDefs :+ d
+        globalDefs = globalDefs :+ d
+        for (s <- lhs) {
+          globalDefsCache += (s->d)
+          localDefsCache += (s->d)
+          globalDefsInvCache += (d.rhs->d)
+          localDefsInvCache += (d.rhs->d)
+        }
+      case _ =>
+        val lhs = ds.flatMap(_.lhs)
+        assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
+        val existing = lhs flatMap (globalDefsCache get _)//globalDefs filter (_.lhs exists (lhs contains _))
+        assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
+        localDefs = localDefs ++ ds // TODO: opt?
+        globalDefs = globalDefs ++ ds
+        for (stm <- ds; s <- stm.lhs) {
+          globalDefsCache += (s->stm)
+          localDefsCache += (s->stm)
+          globalDefsInvCache += (stm.rhs->stm)
+          localDefsInvCache += (stm.rhs->stm)
+        }
   }
 
   def findDefinition[T](s: Sym[T]): Option[Stm] =
@@ -151,7 +177,17 @@ trait Expressions extends Utils {
     //globalDefs.find(x => x.defines(s).nonEmpty)
 
   def findDefinition[T](d: Def[T]): Option[Stm] =
-    globalDefs.find(x => x.defines(d).nonEmpty) // TODO: opt
+    globalDefsInvCache.get(d)
+    //globalDefs.find(x => x.defines(d).nonEmpty)
+
+  def findLocalDefinition[T](s: Sym[T]): Option[Stm] =
+    localDefsCache.get(s)
+    //globalDefs.find(x => x.defines(s).nonEmpty)
+
+  def findLocalDefinition[T](d: Def[T]): Option[Stm] =
+    localDefsInvCache.get(d)
+    //localDefs.find(x => x.defines(d).nonEmpty)
+
 
   def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): Stm =
     findDefinition[T](d) map { x => x.defines(d).foreach(_.withPos(pos)); x } getOrElse {
@@ -265,9 +301,12 @@ trait Expressions extends Utils {
 
   def reset { // used by delite?
     nVars = 0
-    globalDefs = Nil
-    localDefs = Nil
+    globalDefs = Vector.empty
+    localDefs = Vector.empty
     globalDefsCache = Map.empty
+    localDefsCache = Map.empty
+    globalDefsInvCache = Map.empty
+    localDefsInvCache = Map.empty
   }
 
 }
