@@ -24,7 +24,7 @@ trait Effects extends Expressions with Blocks with Utils {
   // TODO: transform over Summary currently lives in common/Base.scala. move it here?
   // --- context
 
-  type State = List[Exp[Any]] // TODO: maybe use TP instead to save lookup
+  type State = Vector[Exp[Any]] // TODO: maybe use TP instead to save lookup
   
   var context: State = _
 
@@ -380,10 +380,11 @@ trait Effects extends Expressions with Blocks with Utils {
     checkContext()
     // warn if type is Any. TODO: make optional, sometimes Exp[Any] is fine
     if (manifest[A] == manifest[Any]) printlog("warning: possible missing mtype call - reflectMirrored with Def of type Any: " + zd)
-    context.filter { case Def(d) => d == zd }.reverse match { // TODO: opt
+    //context.filter { case Def(d) => d == zd }.reverse match { // TODO: opt
       //case z::_ => z.asInstanceOf[Exp[A]]  -- unsafe: we don't have a tight context, so we might pick one from a flattened subcontext
-      case _ => createReflectDefinition(fresh[A], zd)
-    }
+      //case _ => createReflectDefinition(fresh[A], zd)
+    //}
+    createReflectDefinition(fresh[A], zd)
   }
 
   def checkIllegalSharing(z: Exp[Any], mutableAliases: List[Sym[Any]]) {
@@ -448,7 +449,7 @@ trait Effects extends Expressions with Blocks with Utils {
       val deps = calculateDependencies(u)
       val zd = Reflect(x,u,deps)
       if (mustIdempotent(u)) {
-        context find { case Def(d) => d == zd } map { _.asInstanceOf[Exp[A]] } getOrElse { // TODO: opt -- use HashMap
+        findLocalDefinition(zd) map { _.asInstanceOf[Exp[A]] } getOrElse { // TODO: opt -- use HashMap
 //        findDefinition(zd) map (_.sym) filter (context contains _) getOrElse { // local cse TODO: turn around and look at context first??
           val z = fresh[A]
           if (!x.toString.startsWith("ReadVar")) { // supress output for ReadVar
@@ -492,12 +493,9 @@ trait Effects extends Expressions with Blocks with Utils {
     }
   }
   
-  def calculateDependencies(u: Summary): State = {
+  def calculateDependencies(u: Summary): List[Exp[Any]] = {
     checkContext();
-    calculateDependencies(context, u, true)
-  }
-  def calculateDependencies(scope: State, u: Summary, mayPrune: Boolean): State = {
-    if (u.mayGlobal) scope else {
+    if (u.mayGlobal) context.toList else { // global won't perform well but that's ok (seldomly used) ...
       val read = u.mayRead
       val write = u.mayWrite
 
@@ -509,6 +507,11 @@ trait Effects extends Expressions with Blocks with Utils {
 
       (readDeps ++ softWriteDeps ++ writeDeps ++ simpleDeps ++ globalDeps).distinct
     }
+  }
+  
+  def calculateDependencies(scope: List[Exp[Any]], u: Summary, mayPrune: Boolean): List[Exp[Any]] = {
+    assert(false, "Can't calculateDependencies for arbitrary contexts at the moment (FIXME)")
+    scope
   }
 
   // TODO: should we override reflectSubGraph to make sure things are
@@ -603,7 +606,7 @@ trait Effects extends Expressions with Blocks with Utils {
     val saveGlobal = depGlobalState
     val saveRead   = depReadState
     val saveWrite  = depWriteState
-    context = Nil
+    context = Vector.empty
     resetDepState
     
     // only add control dependencies scopes where controlScope is explicitly true (i.e., the first-level of an IfThenElse)
@@ -615,7 +618,7 @@ trait Effects extends Expressions with Blocks with Utils {
 
     conditionalScope = saveControl
     
-    val deps = context
+    val deps = context.toList
     val summary = summarizeAll(deps)
     context = save
     depAllocState  = saveAlloc
@@ -637,7 +640,7 @@ trait Effects extends Expressions with Blocks with Utils {
     val saveRead   = depReadState
     val saveWrite  = depWriteState
     if (save eq null) {
-      context = Nil
+      context = Vector.empty
       resetDepState()
     }
     
@@ -652,7 +655,7 @@ trait Effects extends Expressions with Blocks with Utils {
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
       printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
 
-    val deps = if (save eq null) context else context.drop(save.length)
+    val deps = if (save eq null) context.toList else context.drop(save.length).toList
     
     val summary = summarizeAll(deps)
     context = save
