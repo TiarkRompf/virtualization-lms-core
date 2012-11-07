@@ -13,10 +13,10 @@ trait LiftNumeric {
   // Explicit `1 + unit(1)` (partial) support because it needs two implicit conversions
   import NumericOpsTypes._
   implicit class NumericOpsCls[A : Numeric : Manifest](lhs: A) {
-    def + (rhs: Rep[A])(implicit op: (A ~ A := A), sc: SourceContext) = numeric_plus(op.lhs(unit(lhs)), op.rhs(rhs))
-    def - (rhs: Rep[A])(implicit op: (A ~ A := A), sc: SourceContext) = numeric_minus(op.lhs(unit(lhs)), op.rhs(rhs))
-    def * (rhs: Rep[A])(implicit op: (A ~ A := A), sc: SourceContext) = numeric_times(op.lhs(unit(lhs)), op.rhs(rhs))
-    def / (rhs: Rep[A])(implicit op: (A ~ A := A), sc: SourceContext) = numeric_divide(op.lhs(unit(lhs)), op.rhs(rhs))
+    def + (rhs: Rep[A])(implicit op: (A ~ A) ~> A, sc: SourceContext) = numeric_plus(op.lhs(unit(lhs)), op.rhs(rhs))
+    def - (rhs: Rep[A])(implicit op: (A ~ A) ~> A, sc: SourceContext) = numeric_minus(op.lhs(unit(lhs)), op.rhs(rhs))
+    def * (rhs: Rep[A])(implicit op: (A ~ A) ~> A, sc: SourceContext) = numeric_times(op.lhs(unit(lhs)), op.rhs(rhs))
+    def / (rhs: Rep[A])(implicit op: (A ~ A) ~> A, sc: SourceContext) = numeric_divide(op.lhs(unit(lhs)), op.rhs(rhs))
   }
 }
 
@@ -26,10 +26,10 @@ trait NumericOps extends Variables {
   object NumericOpsTypes {
     trait Args { type Lhs; type Rhs }
     trait ~[A, B] extends Args { type Lhs = A; type Rhs = B }
-    class :=[A <: Args, B](val lhs: Rep[A#Lhs] => Rep[B], val rhs: Rep[A#Rhs] => Rep[B])(implicit val Numeric: Numeric[B])
+    class ~>[A <: Args, B](val lhs: Rep[A#Lhs] => Rep[B], val rhs: Rep[A#Rhs] => Rep[B])(implicit val Numeric: Numeric[B])
   }
   import NumericOpsTypes._
-  implicit def numericSameArgs[A : Numeric] = new (A ~ A := A) (identity, identity)
+  implicit def numericSameArgs[A : Numeric] = new ((A ~ A) ~> A) (identity, identity)
 
   /* FIXME
    * I’d like to define numeric operators as follows:
@@ -37,10 +37,10 @@ trait NumericOps extends Variables {
    * But this signature leads to an ambiguous reference to overloaded definition with an infix_+(s: String, a: Any) method defined in EmbeddedControls (?)
    */
   implicit class RepNumericOpsCls[A](lhs: Rep[A]) {
-    def + [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_plus(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
-    def - [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_minus(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
-    def * [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_times(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
-    def / [B, C](rhs: Rep[B])(implicit op: (A ~ B := C), mC: Manifest[C], sc: SourceContext) = numeric_divide(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
+    def + [B, C](rhs: Rep[B])(implicit op: (A ~ B) ~> C, mC: Manifest[C], sc: SourceContext) = numeric_plus(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
+    def - [B, C](rhs: Rep[B])(implicit op: (A ~ B) ~> C, mC: Manifest[C], sc: SourceContext) = numeric_minus(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
+    def * [B, C](rhs: Rep[B])(implicit op: (A ~ B) ~> C, mC: Manifest[C], sc: SourceContext) = numeric_times(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
+    def / [B, C](rhs: Rep[B])(implicit op: (A ~ B) ~> C, mC: Manifest[C], sc: SourceContext) = numeric_divide(op.lhs(lhs), op.rhs(rhs))(op.Numeric, mC, sc)
   }
 
   implicit def varNumericToNumericOps[T : Numeric : Manifest](n: Var[T]) = new RepNumericOpsCls(readVar(n))
@@ -60,8 +60,8 @@ trait NumericOps extends Variables {
  */
 trait NumericPromotions { this: ImplicitOps with NumericOps =>
   import NumericOpsTypes._
-  implicit def numericPromoteLhs[A : Manifest, B : Numeric : Manifest](implicit aToB: A => B) = new (A ~ B := B) (lhs = implicit_convert[A, B](_), rhs = identity)
-  implicit def numericPromoteRhs[A : Manifest, B : Numeric : Manifest](implicit aToB: A => B) = new (B ~ A := B) (lhs = identity, rhs = implicit_convert[A, B](_))
+  implicit def numericPromoteLhs[A : Manifest, B : Numeric : Manifest](implicit aToB: A => B) = new ((A ~ B) ~> B) (lhs = implicit_convert[A, B](_), rhs = identity)
+  implicit def numericPromoteRhs[A : Manifest, B : Numeric : Manifest](implicit aToB: A => B) = new ((B ~ A) ~> B) (lhs = identity, rhs = implicit_convert[A, B](_))
 }
 
 trait NumericOpsExp extends NumericOps with VariablesExp with BaseFatExp {
