@@ -108,9 +108,9 @@ trait CCodegen extends CLikeCodegen {
     }
   }
       
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
+  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
 
-    val sB = manifest[A].toString
+    val sA = remap(manifest[A])
 
     withStream(out) {
       stream.println("/*****************************************\n"+
@@ -120,13 +120,20 @@ trait CCodegen extends CLikeCodegen {
                      "#include <stdlib.h>"
       )
 
-      //stream.println("class "+className+" extends (("+sA+")=>("+sB+")) {")
-      stream.println("int main(int argc, char** argv) {")
+
+      // TODO: static data
+
+      //stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" 
+      //extends (("+args.map(a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
+
+      stream.println(sA+" "+functionName+"("+args.map(a => remap(a.tp)+" "+quote(a)).mkString(", ")+") {")
 
       emitBlock(body)
-      //stream.println(quote(getBlockResult(y)))
 
-      //stream.println("}")
+      val y = getBlockResult(body)
+      if (remap(y.tp) != "void")
+        stream.println("return " + quote(getBlockResult(body)) + ";")
+
       stream.println("}")
       stream.println("/*****************************************\n"+
                      "  End of C Generated Code                  \n"+
@@ -143,14 +150,19 @@ trait CCodegen extends CLikeCodegen {
   }
 */
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
+    // TODO: check void type?
     stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
+    if (remap(sym.tp) == "void")
+      stream.println(rhs + "; // " + quote(sym))
+    else
+      stream.println("const " + remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
   def emitAssignment(lhs:String, rhs: String): Unit = {
+    // TODO: check void type?
     stream.println(lhs + " = " + rhs + ";")
   }
   
