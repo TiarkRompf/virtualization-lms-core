@@ -96,7 +96,7 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
   def projectB(b: Block[Any], s: List[Sym[Any]]): Block[Unit] = b match {
     case Block(Def(Reify(x, u, es))) => 
       //println("project block " + s + ": " + es.map(e=>findDefinition(e.asInstanceOf[Sym[Any]])))
-      val deps = calculateDependencies(es, Write(s))
+      val deps = calculateDependencies(es, Write(s), false)
       //println("deps: " + deps.map(e=>findDefinition(e.asInstanceOf[Sym[Any]])))
       
       Block(Reify(Const(), projectS(u,s), deps))
@@ -106,7 +106,7 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
   def projectSimpleS(u: Summary) = 
     Pure().copy(maySimple = u.maySimple, mstSimple = u.mstSimple)
   def projectSimpleB(b: Block[Any]): Block[Unit] = b match {
-    case Block(Def(Reify(x, u, es))) => Block(Reify(Const(), projectSimpleS(u), calculateDependencies(es, Simple())))
+    case Block(Def(Reify(x, u, es))) => Block(Reify(Const(), projectSimpleS(u), calculateDependencies(es, Simple(), false)))
     case _ => Block(Const(()))
   }
 
@@ -147,7 +147,7 @@ override def boundSyms(e: Any): List[Sym[Any]] = e match {
 }
 
 override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
-  case x@SimpleFatWhile(c, b) => freqHot(c) ++ freqHot(b)      ++ freqNormal(x.extradeps)
+  case x@SimpleFatWhile(c, b) => freqHot(c) ++ freqHot(b) ++ freqNormal(x.extradeps)
   case _ => super.symsFreq(e)
 }
 

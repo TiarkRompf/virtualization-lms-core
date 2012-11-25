@@ -439,8 +439,8 @@ trait Effects extends Expressions with Blocks with Utils {
     }
   }
   
-  def calculateDependencies(u: Summary): State = calculateDependencies(context, u)
-  def calculateDependencies(scope: State, u: Summary): State = {
+  def calculateDependencies(u: Summary): State = calculateDependencies(context, u, true)
+  def calculateDependencies(scope: State, u: Summary, mayPrune: Boolean): State = {
     if (u.mayGlobal) scope else {
       val read = u.mayRead
       val write = u.mayWrite
@@ -448,12 +448,13 @@ trait Effects extends Expressions with Blocks with Utils {
       // TODO: in order to reduce the number of deps (need to traverse all those!)
       // we should only store those that are not transitively implied.
       // For simple effects, take the last one (implemented). 
-      // For mutations, take the last write to a particular mutable sym (TOOD).
+      // For mutations, take the last write to a particular mutable sym (TODO).
 
       def canonic(xs: List[Exp[Any]]) = xs // TODO 
-      def canonicLinear(xs: List[Exp[Any]]) = xs.takeRight(1)
+      def canonicLinear(xs: List[Exp[Any]]) = if (mayPrune) xs.takeRight(1) else xs
 
-      // CAVEAT: this breaks testSpeculative4
+      // the mayPrune flag is for test8-speculative4: with pruning on, the 'previous iteration' 
+      // dummy is moved out of the loop. this is not per se a problem -- need to look some more into it.
 
       val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
       val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
