@@ -73,22 +73,6 @@ class TestStencil extends FileDiffSuite {
     
     object trans extends ForwardTransformer { 
       val IR: SlidingExp.this.type = SlidingExp.this
-
-      // perform only one step of lookup, otherwise we confuse things: 
-      // TODO is this a general problem?
-      //
-      //                     x4 --> x7 (input)
-      // val x5 = 2 * x4     x5 --> x8
-      // val x6 = x5 + 3     x6 --> x9          
-      // val x7 = x4 + 1                val x12 = x7 + 1
-      // val x8 = 2 * x7                val x13 = 2 * x12
-      // val x9 = x8 + 3                val x14 = x13 + 3     // this sets x9 --> x14
-      // val x10 = x6 + x9              val x15 = x14 + x14   // here, transitively x6 --> x9 --> x14
-      //                                                      // but we'd rather have x15 = x9 + x14
-      
-      override def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
-        case Some(y) => y.asInstanceOf[Exp[A]] case _ => x 
-      }
     }
     
     // some arithemetic rewrites
