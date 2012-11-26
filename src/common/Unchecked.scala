@@ -7,8 +7,8 @@ import scala.reflect.SourceContext
 
 trait UncheckedOps extends Base {
   
-  def unchecked[T](s: Any*): Rep[T]
-  def uncheckedPure[T](s: Any*): Rep[T]
+  def unchecked[T:Manifest](s: Any*): Rep[T]
+  def uncheckedPure[T:Manifest](s: Any*): Rep[T]
 
   implicit def richQuote(c: StringContext) = new {
     def raw(args: Thunk[Rep[Any]]*) = new {
@@ -34,8 +34,8 @@ trait UncheckedOpsExp extends EffectExp {
   // TODO: use reifyEffects
 
   case class Unchecked[T](s: List[Any]) extends Def[T]
-  def unchecked[T](s: Any*): Rep[T] = reflectEffect(Unchecked(s.toList))
-  def uncheckedPure[T](s: Any*): Rep[T] = toAtom(Unchecked(s.toList))
+  def unchecked[T:Manifest](s: Any*): Rep[T] = reflectEffect[T](Unchecked(s.toList))
+  def uncheckedPure[T:Manifest](s: Any*): Rep[T] = toAtom[T](Unchecked(s.toList))
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     //case Reflect(ThrowException(s), u, es) => reflectMirrored(Reflect(ThrowException(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))
