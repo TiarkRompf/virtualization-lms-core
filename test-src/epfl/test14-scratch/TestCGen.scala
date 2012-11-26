@@ -15,13 +15,12 @@ class TestCGen extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test14-"
   
-  trait DSL extends ScalaOpsPkg with LiftPrimitives with LiftString with LiftVariables {
+  trait DSL extends ScalaOpsPkg with TupledFunctions with LiftPrimitives with LiftString with LiftVariables {
     def test(x: Rep[Int]): Rep[Int]
   }
 
-  trait Impl extends DSL with ScalaOpsPkgExp { self => 
-    override val verbosity = 2
-    val codegen = new CCodeGenPkg with CLikeGenVariables { val IR: self.type = self }
+  trait Impl extends DSL with ScalaOpsPkgExp with TupledFunctionsRecursiveExp { self => 
+    val codegen = new CCodeGenPkg with CGenVariables with CGenTupledFunctions { val IR: self.type = self }
     codegen.emitSource(test, "main", new PrintWriter(System.out))
   }
   
@@ -42,6 +41,28 @@ class TestCGen extends FileDiffSuite {
       new Prog with Impl
     }
     assertFileEqualsCheck(prefix+"cgen1")
+  }
+
+
+  // the generated code will contain nested functions; it needs to be
+  // compiled with gcc -fnested-functions
+  def testCGen2 = {
+    withOutFile(prefix+"cgen2") {
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+
+          def fac: Rep[((Int,Int))=>Int] = fun { (n, dummy) =>
+            if (n == 0) 1 else n * fac(n - 1, dummy)
+          }
+
+          printf("Hello, world! %d\n", fac(4,0))
+
+          0
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"cgen2")
   }
 
 

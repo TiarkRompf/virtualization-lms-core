@@ -117,7 +117,8 @@ trait CCodegen extends CLikeCodegen {
                      "  Emitting C Generated Code                  \n"+
                      "*******************************************/\n" +
                      "#include <stdio.h>\n" +
-                     "#include <stdlib.h>"
+                     "#include <stdlib.h>\n" +
+                     "#include <stdbool.h>"
       )
 
 
@@ -132,7 +133,7 @@ trait CCodegen extends CLikeCodegen {
 
       val y = getBlockResult(body)
       if (remap(y.tp) != "void")
-        stream.println("return " + quote(getBlockResult(body)) + ";")
+        stream.println("return " + quote(y) + ";")
 
       stream.println("}")
       stream.println("/*****************************************\n"+
