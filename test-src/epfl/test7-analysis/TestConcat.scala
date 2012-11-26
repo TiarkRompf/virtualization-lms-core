@@ -155,6 +155,49 @@ trait IMDBOpsGen extends ScalaGenEffect {
   }
 }
 
+trait CNNOpsGen extends ScalaGenEffect {
+  val IR: ItemOpsExp with CNNOpsExp
+  import IR._
+  
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case IR.Field(tuple, x, tp) => emitValDef(sym, "%s.%s".format(quote(tuple), x))
+    case IR.SimpleStruct(IR.ClassTag(name), map) => {
+      try {
+        val args = map.map(x => x._1 + " = " + quote(x._2))
+        emitValDef(sym, "new %s(%s)".format(name, args.mkString(", ")))
+      } catch {
+        case e =>
+          emitValDef(sym, "Exception " + e + " when accessing  of " + name)
+          e.printStackTrace
+      }
+    }
+
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait DELLOpsGen extends ScalaGenEffect {
+  val IR: DELLOpsExp with ItemOpsExp  
+  import IR._
+  
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case IR.Field(tuple, x, tp) => emitValDef(sym, "%s.%s".format(quote(tuple), x))
+    case IR.SimpleStruct(IR.ClassTag(name), map) => {
+      try {
+        val args = map.map(x => x._1 + " = " + quote(x._2))
+        emitValDef(sym, "new %s(%s)".format(name, args.mkString(", ")))
+      } catch {
+        case e =>
+          emitValDef(sym, "Exception " + e + " when accessing  of " + name)
+          e.printStackTrace
+      }
+    }
+
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+
 // some nesting of concats
 trait ConcatProg4 extends Arith with ArrayLoops with Print with OrderingOps with SimpleFileOps {
 
@@ -188,58 +231,38 @@ trait ConcatProg4 extends Arith with ArrayLoops with Print with OrderingOps with
   }
 }
 
-// some nesting of concats
-trait ConcatProg5 extends Arith with ArrayLoops with Print with OrderingOps with SimpleFileOps {
-
-  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-
-  def test(x: Rep[Unit]) = {
-
-    val file = SimpleFile("beep", "boop", unit(null))
-
-    def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) = array(x.length)(i => f(x.at(i)))
-
-    def flatMap[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[Array[V]]) = flatten(map(x)(x => f(x)))
-
-    def flatten[T: Manifest](x: Rep[Array[Array[T]]]): Rep[Array[T]] =
-      arrayFlat(x.length) { i => x.at(i) }
-
-    def ArrayM[T: Manifest](v: Rep[T]) = {
-      map(Array(v))(x => x)
-    }
-
-    def f1(f: Rep[SimpleFile]) = concat(Array("<a href='", f.path, "'>", f.name, "</a><br/>"), flatMap(f.files)(f2(_)))
-
-    def f2(f: Rep[SimpleFile]) = concat(Array("-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>"), flatMap(f.files)(f3(_)))
-
-    def f3(f: Rep[SimpleFile]) = concat(Array("-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>"), flatMap(f.files)(f4(_)))
-
-    def f4(f: Rep[SimpleFile]) = concat(Array("-&nbsp;-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>"), flatMap(f.files)(f5(_)))
-
-    def f5(f: Rep[SimpleFile]) = concat(Array("-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>"), flatMap(f.files)(f6(_)))
-
-    def f6(f: Rep[SimpleFile]) = Array("-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>")
-
-    val res = concat(Array("<html><body>"), f1(file), Array("</body></html>"))
-    print(res)
-  }
-
+trait FlatMap extends Arith with ArrayLoops {
+  def flatMap[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[Array[V]]): Rep[Array[V]]
+  
+}
+trait FlatMapO extends FlatMap with Arith with ArrayLoops with OrderingOps {
+  def flatMap[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[Array[V]]) = arrayFlat(x.length) { i => f(x.at(i)) }   
 }
 
-// some nesting of concats
-trait ConcatBench extends Arith with ArrayLoops with Print with OrderingOps with SimpleFileOps {
-
-  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-
+trait FlatMapF extends FlatMap with Arith with ArrayLoops with Print with OrderingOps {
   def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) = array(x.length)(i => f(x.at(i)))
 
   def flatMap[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[Array[V]]) = flatten(map(x)(x => f(x)))
 
   def flatten[T: Manifest](x: Rep[Array[Array[T]]]): Rep[Array[T]] =
-      arrayFlat(x.length) { i => x.at(i) }
+      arrayFlat(x.length) { i => x.at(i) }   
+}
+
+// some nesting of concats
+trait ConcatBench extends Arith with ArrayLoops with Print with OrderingOps with SimpleFileOps with FlatMap {
   
+  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]  
+ 
   def ArrayM[T: Manifest](v: Rep[T]*) = array_obj_seq(v) //map(array_obj_seq(v))(x => x)
 
+  def f01(f: Rep[SimpleFile]) = ArrayM("<a href='", f.path, "'>", f.name, "</a></br>") ++ flatMap(f.files)(f02(_))
+  
+  def f02(f: Rep[SimpleFile]) = ArrayM("<a href='", f.path, "'>", f.name, "</a></br>") ++ flatMap(f.files)(f03(_))
+  
+  def f03(f: Rep[SimpleFile]) = ArrayM("<a href='", f.path, "'>", f.name, "</a></br>") ++ flatMap(f.files)(f04(_))
+  
+  def f04(f: Rep[SimpleFile]) = ArrayM("<a href='", f.path, "'>", f.name, "</a></br>") ++ flatMap(f.files)(f1(_))
+  
   def f1(f: Rep[SimpleFile]) = ArrayM("<a href='", f.path, "'>", f.name, "</a><br/>") ++ flatMap(f.files)(f2(_))
 
   def f2(f: Rep[SimpleFile]) = ArrayM("-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>") ++ flatMap(f.files)(f3(_))
@@ -252,6 +275,27 @@ trait ConcatBench extends Arith with ArrayLoops with Print with OrderingOps with
 
   def f6(f: Rep[SimpleFile]) = ArrayM("-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<a href='", f.path, "'>", f.name, "</a><br/>")
 
+  def testL10(x: Rep[Unit]) = {
+    val file = SimpleFile("beep", "boop", unit(null))
+    val res = ArrayM("<html><body>") ++ f01(file) ++ ArrayM("</body></html>")
+    print(res)
+  }
+  
+  def testL9(x: Rep[Unit]) = {
+    val file = SimpleFile("beep", "boop", unit(null))
+    val res = ArrayM("<html><body>") ++ f02(file) ++ ArrayM("</body></html>")
+    print(res)
+  }
+  def testL8(x: Rep[Unit]) = {
+    val file = SimpleFile("beep", "boop", unit(null))
+    val res = ArrayM("<html><body>") ++ f03(file) ++ ArrayM("</body></html>")
+    print(res)
+  }
+  def testL7(x: Rep[Unit]) = {
+    val file = SimpleFile("beep", "boop", unit(null))
+    val res = ArrayM("<html><body>") ++ f04(file) ++ ArrayM("</body></html>")
+    print(res)
+  }
   
   def testL6(x: Rep[Unit]) = {
     val file = SimpleFile("beep", "boop", unit(null))
@@ -348,19 +392,13 @@ trait Top250OpsExp extends Top250Ops with StructExp with EffectExp with BaseFatE
 
 
 // some nesting of concats
-trait IMDBBench extends Arith with ArrayLoops with Print with OrderingOps with ItemOps with Top250Ops {
+trait IMDBBench extends Arith with ArrayLoops with Print with OrderingOps with FlatMap with ItemOps with Top250Ops {
 
   implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
-  def map[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[V]) = array(x.length)(i => f(x.at(i)))
-
-  def flatMap[T: Manifest, V: Manifest](x: Rep[Array[T]])(f: Rep[T] => Rep[Array[V]]) = flatten(map(x)(x => f(x)))
-
-  def flatten[T: Manifest](x: Rep[Array[Array[T]]]): Rep[Array[T]] =
-      arrayFlat(x.length) { i => x.at(i) }
-  
   def ArrayM[T: Manifest](v: Rep[T]*) = {
-      map(array_obj_seq(v))(x => x)
+      //map(array_obj_seq(v))(x => x)
+      array_obj_seq(v)
     }
 
   def printMenu(items: Rep[Array[Item]]) = {
@@ -401,7 +439,180 @@ trait IMDBBench extends Arith with ArrayLoops with Print with OrderingOps with I
   }
 }
 
+trait CNNOps extends Base with Variables with OverloadHack  with ItemOps {
 
+ class CNN 
+
+ object CNN {
+ def apply(sideMenu: Rep[Array[Item]], central: Rep[Array[String]], centralBelow1: Rep[Item], centralBelow2: Rep[Item]) = cnn_obj_new(sideMenu, central, centralBelow1, centralBelow2)
+ }
+
+ implicit def repCNNToCNNOps(x: Rep[CNN]) = new cnnOpsCls(x)
+ class cnnOpsCls(__x: Rep[CNN]) {
+ def sideMenu = cnn_sideMenu(__x)
+ def central = cnn_central(__x)
+ def centralBelow1 = cnn_centralBelow1(__x)
+ def centralBelow2 = cnn_centralBelow2(__x)
+ }
+
+ //object defs
+ def cnn_obj_new(sideMenu: Rep[Array[Item]], central: Rep[Array[String]], centralBelow1: Rep[Item], centralBelow2: Rep[Item]): Rep[CNN]
+
+ //class defs
+ def cnn_sideMenu(__x: Rep[CNN]): Rep[Array[Item]]
+ def cnn_central(__x: Rep[CNN]): Rep[Array[String]]
+ def cnn_centralBelow1(__x: Rep[CNN]): Rep[Item]
+ def cnn_centralBelow2(__x: Rep[CNN]): Rep[Item]
+}
+
+trait CNNOpsExp extends CNNOps with StructExp with EffectExp with BaseFatExp with  ItemOpsExp {
+ def cnn_obj_new(sideMenu: Exp[Array[Item]], central: Exp[Array[String]], centralBelow1: Exp[Item], centralBelow2: Exp[Item]) = struct[CNN](ClassTag[CNN]("CNN"), Map( "sideMenu" -> sideMenu,  "central" -> central,  "centralBelow1" -> centralBelow1,  "centralBelow2" -> centralBelow2))
+ def cnn_sideMenu(__x: Rep[CNN]) = field[Array[Item]](__x, "sideMenu")
+ def cnn_central(__x: Rep[CNN]) = field[Array[String]](__x, "central")
+ def cnn_centralBelow1(__x: Rep[CNN]) = field[Item](__x, "centralBelow1")
+ def cnn_centralBelow2(__x: Rep[CNN]) = field[Item](__x, "centralBelow2")
+}
+
+
+trait CNNBench extends Arith with ArrayLoops with Print with OrderingOps with FlatMap with ItemOps with Top250Ops with CNNOps {
+
+  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+
+  def ArrayM[T: Manifest](v: Rep[T]*) = {
+      //map(array_obj_seq(v))(x => x)
+      array_obj_seq(v)
+    }
+
+  def printSide(items: Rep[Array[Item]]) = {
+    ArrayM("pre") ++ flatMap(items)(x => sideItem(x)) ++ ArrayM("post")
+  }
+
+  def sideItem(item: Rep[Item]): Rep[Array[String]] = {
+    ArrayM("pre1", item.text) ++ flatMap(item.subitems)(x => ArrayM("post", x.text, "pre")) ++ ArrayM("post1")
+  }
+
+  def central(items: Rep[Array[String]]): Rep[Array[String]] = {    
+    ArrayM("prec") ++ items ++ ArrayM("postc")
+  }
+  
+  def centralBelow1(item: Rep[Item]): Rep[Array[String]] = {
+    ArrayM("prec") ++ flatMap(item.subitems)(x => c1i(x)) ++ ArrayM("postc")
+  }
+  
+  def c1i(item: Rep[Item]): Rep[Array[String]] = {
+    ArrayM("prec",  item.text) ++ flatMap(item.subitems)(c1ii) ++ ArrayM("postc")
+  }
+  
+  def c1ii(item: Rep[Item]) = {    
+    ArrayM("prec",  item.text, "postc")
+  }
+  
+  
+  def centralBelow2(item: Rep[Item]) = {
+    ArrayM("prec",  item.text) ++ flatMap(item.subitems)(c2i) ++ ArrayM("postc")
+  }
+    
+  def c2i(item: Rep[Item]) = {    
+    ArrayM("prec",  item.text) ++ flatMap(item.subitems)(c2ii) ++ ArrayM("postc")
+  }
+  
+  def c2ii(item: Rep[Item]) = ArrayM("prec",  item.text, "postc")
+  
+  def testCNN(x: Rep[Unit]) = {
+    val cnnPage = CNN(unit(null), unit(null), unit(null), unit(null))
+    val res = ArrayM("prep") ++ printSide(cnnPage.sideMenu) ++ ArrayM("inp") ++ central(cnnPage.central) ++ ArrayM("prem") ++
+    centralBelow1(cnnPage.centralBelow1) ++ ArrayM("postm", "pre") ++ centralBelow2(cnnPage.centralBelow2)
+    print(res)
+  }  
+  
+}
+
+trait DELLOps extends Base with Variables with ItemOps with OverloadHack  {
+
+ class DELL
+
+ object DELL {
+ def apply(menu: Rep[Array[Item]], center: Rep[Array[Item]], links: Rep[Array[Item]]) = dell_obj_new(menu, center, links)
+ }
+
+ implicit def repDELLToDELLOps(x: Rep[DELL]) = new dellOpsCls(x)
+ class dellOpsCls(__x: Rep[DELL]) {
+ def menu = dell_menu(__x)
+ def center = dell_center(__x)
+ def links = dell_links(__x)
+ }
+
+ //object defs
+ def dell_obj_new(menu: Rep[Array[Item]], center: Rep[Array[Item]], links: Rep[Array[Item]]): Rep[DELL]
+
+ //class defs
+ def dell_menu(__x: Rep[DELL]): Rep[Array[Item]]
+ def dell_center(__x: Rep[DELL]): Rep[Array[Item]]
+ def dell_links(__x: Rep[DELL]): Rep[Array[Item]]
+}
+
+trait DELLOpsExp extends DELLOps with StructExp with EffectExp with BaseFatExp {
+ def dell_obj_new(menu: Exp[Array[Item]], center: Exp[Array[Item]], links: Exp[Array[Item]]) = struct[DELL](ClassTag[DELL]("DELL"), Map( "menu" -> menu,  "center" -> center,  "links" -> links))
+ def dell_menu(__x: Rep[DELL]) = field[Array[Item]](__x, "menu")
+ def dell_center(__x: Rep[DELL]) = field[Array[Item]](__x, "center")
+ def dell_links(__x: Rep[DELL]) = field[Array[Item]](__x, "links")
+}
+
+
+trait DELLBench extends Arith with ArrayLoops with Print with OrderingOps with FlatMap with ItemOps with Top250Ops  with DELLOps {
+
+  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+
+  def ArrayM[T: Manifest](v: Rep[T]*) = {
+      //map(array_obj_seq(v))(x => x)
+      array_obj_seq(v)
+    }
+
+  def printMenu1(items: Rep[Array[Item]]) = {
+    ArrayM("pre") ++ flatMap(items)(menuItem1) ++ ArrayM("post")
+  }
+
+  def menuItem1(item: Rep[Item]) = {
+    ArrayM("pre1") ++ flatMap(item.subitems)(innerItem1) ++ ArrayM("post1")
+  }
+
+  def innerItem1(item: Rep[Item]) = {
+    ArrayM("pre2", item.text, "post2")
+  }
+
+  def printCenter(items: Rep[Array[Item]]) = {
+    ArrayM("pre") ++ flatMap(items)(centerItem) ++ ArrayM("post")
+  }
+
+  def centerItem(item: Rep[Item]) = {
+    ArrayM("pre1") ++ flatMap(item.subitems)(innerCenterItem) ++ ArrayM("post1")
+  }
+  
+  def innerCenterItem(item: Rep[Item]) = {    
+    ArrayM("pre2", item.text, "post2")
+  }
+
+  def printBottomMenu(items: Rep[Array[Item]]) = {
+    ArrayM("pre") ++ flatMap(items)(bottomItem) ++ ArrayM("post")
+  }
+  
+  def bottomItem(item: Rep[Item]) = {
+    ArrayM("pre1") ++ flatMap(item.subitems)(bottomInnerItem) ++ ArrayM("post1")
+  }
+  
+  def bottomInnerItem(item: Rep[Item]) = {
+    ArrayM("pre2", item.text, "post2")
+  }
+  
+  def testDELL(x: Rep[Unit]) = {
+    val dellPage = DELL(unit(null), unit(null), unit(null))
+    val res = ArrayM("prep") ++ printMenu1(dellPage.menu) ++ ArrayM("inp") ++ printCenter(dellPage.center) ++ ArrayM("prem") ++ printBottomMenu(dellPage.links)
+    res
+  }
+  
+  
+}
+ 
 
 class TestConcat extends FileDiffSuite {
 
@@ -467,7 +678,7 @@ class TestConcat extends FileDiffSuite {
   def testConcat04 = {
     withOutFile(prefix + "concat04") {
       printExceptions {
-        new ConcatProg5 with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+        new ConcatProg4 with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
           override val verbosity = 1
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
             val IR: self.type = self
@@ -483,49 +694,82 @@ class TestConcat extends FileDiffSuite {
   def testConcat05 = {
     withOutFile(prefix + "concat05") {
       printExceptions {
-        new ConcatBench with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+        new ConcatBench with FlatMapF with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
             val IR: self.type = self
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
-          codegen.emitSource(testL6, "timeL6", new PrintWriter(System.out))
+          codegen.emitSource(testL10, "timeL10C", new PrintWriter(System.out))
         }
-        new ConcatBench with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+        new ConcatBench with FlatMapF with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
             val IR: self.type = self
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
-          codegen.emitSource(testL5, "timeL5", new PrintWriter(System.out))
+          codegen.emitSource(testL9, "timeL9C", new PrintWriter(System.out))
         }
-        new ConcatBench with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+        new ConcatBench with FlatMapF with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
             val IR: self.type = self
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
-          codegen.emitSource(testL4, "timeL4", new PrintWriter(System.out))
+          codegen.emitSource(testL8, "timeL8C", new PrintWriter(System.out))
         }
-         new ConcatBench with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+        new ConcatBench with FlatMapF with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
             val IR: self.type = self
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
-          codegen.emitSource(testL3, "timeL3", new PrintWriter(System.out))
+          codegen.emitSource(testL7, "timeL7C", new PrintWriter(System.out))
+        }
+        
+        new ConcatBench with FlatMapF with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
+            val IR: self.type = self
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          }
+          codegen.emitSource(testL6, "timeL6C", new PrintWriter(System.out))
+        }
+        new ConcatBench with FlatMapF with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
+            val IR: self.type = self
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          }
+          codegen.emitSource(testL5, "timeL5C", new PrintWriter(System.out))
+        }
+        new ConcatBench with FlatMapF with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
+            val IR: self.type = self
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          }
+          codegen.emitSource(testL4, "timeL4C", new PrintWriter(System.out))
+        }
+         new ConcatBench with FlatMapF with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
+            val IR: self.type = self
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          }
+          codegen.emitSource(testL3, "timeL3C", new PrintWriter(System.out))
          }
-         new ConcatBench with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+         new ConcatBench with FlatMapF with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
             val IR: self.type = self
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           } 
-          codegen.emitSource(testL2, "timeL2", new PrintWriter(System.out))
+          codegen.emitSource(testL2, "timeL2C", new PrintWriter(System.out))
          }
         }
         
-        new ConcatBench with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+        new ConcatBench with FlatMapO with ArrayLoopsExp with SimpleFileOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with SimpleFileOpsGen {
             val IR: self.type = self
@@ -533,11 +777,15 @@ class TestConcat extends FileDiffSuite {
             override def shouldApplyConcatSink(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
             fuseConcats = false
           }
-          codegen.emitSource(testL6, "timeL6orig", new PrintWriter(System.out))         
-          codegen.emitSource(testL5, "timeL5orig", new PrintWriter(System.out))                   
-          codegen.emitSource(testL4, "timeL4orig", new PrintWriter(System.out))         
-          codegen.emitSource(testL3, "timeL3orig", new PrintWriter(System.out))         
-          codegen.emitSource(testL2, "timeL2orig", new PrintWriter(System.out))
+          codegen.emitSource(testL10, "timeL10origC", new PrintWriter(System.out))
+          codegen.emitSource(testL9, "timeL9origC", new PrintWriter(System.out))
+          codegen.emitSource(testL8, "timeL8origC", new PrintWriter(System.out))
+          codegen.emitSource(testL7, "timeL7origC", new PrintWriter(System.out))
+          codegen.emitSource(testL6, "timeL6origC", new PrintWriter(System.out))         
+          codegen.emitSource(testL5, "timeL5origC", new PrintWriter(System.out))                   
+          codegen.emitSource(testL4, "timeL4origC", new PrintWriter(System.out))         
+          codegen.emitSource(testL3, "timeL3origC", new PrintWriter(System.out))         
+          codegen.emitSource(testL2, "timeL2origC", new PrintWriter(System.out))
         }      
     }
     assertFileEqualsCheck(prefix + "concat05")
@@ -546,17 +794,17 @@ class TestConcat extends FileDiffSuite {
   def testConcat06 = {
     withOutFile(prefix + "concat06") {
       printExceptions {
-        new IMDBBench with ArrayLoopsExp with ItemOpsExp with Top250OpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+        new IMDBBench with FlatMapF with ArrayLoopsExp with ItemOpsExp with Top250OpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with IMDBOpsGen {
             val IR: self.type = self
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
             override def shouldApplyConcatSink(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
           }
-          codegen.emitSource(testIMDB, "imdbf", new PrintWriter(System.out))
+          codegen.emitSource(testIMDB, "imdbfC", new PrintWriter(System.out))
         }
         
-        new IMDBBench with ArrayLoopsExp with ItemOpsExp with Top250OpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+        new IMDBBench with FlatMapO with ArrayLoopsExp with ItemOpsExp with Top250OpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
           override val verbosity = 0
           val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with IMDBOpsGen {
             val IR: self.type = self
@@ -564,12 +812,70 @@ class TestConcat extends FileDiffSuite {
             override def shouldApplyConcatSink(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
             fuseConcats = false
           }
-          codegen.emitSource(testIMDB, "imdborig", new PrintWriter(System.out))
+          codegen.emitSource(testIMDB, "imdborigC", new PrintWriter(System.out))
         }
 
       }
     }
     assertFileEqualsCheck(prefix + "concat06")
+  }
+
+  def testConcat07 = {
+    withOutFile(prefix + "concat07") {
+      printExceptions {
+        new CNNBench with FlatMapF with ArrayLoopsExp with ItemOpsExp with Top250OpsExp with CNNOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with IMDBOpsGen with CNNOpsGen {
+            val IR: self.type = self
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+            override def shouldApplyConcatSink(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          }
+          codegen.emitSource(testCNN, "cnnC", new PrintWriter(System.out))
+        }
+        
+        new CNNBench with FlatMapO with ArrayLoopsExp with ItemOpsExp with Top250OpsExp with CNNOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with IMDBOpsGen with CNNOpsGen {
+            val IR: self.type = self
+      		override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
+            override def shouldApplyConcatSink(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
+            fuseConcats = false
+          }
+          codegen.emitSource(testCNN, "cnnorigC", new PrintWriter(System.out))
+        }
+
+      }
+    }
+    assertFileEqualsCheck(prefix + "concat07")
+  }
+  
+  def testConcat08 = {
+    withOutFile(prefix + "concat08") {
+      printExceptions {
+        new DELLBench with FlatMapF with ArrayLoopsExp with ItemOpsExp with Top250OpsExp with DELLOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with IMDBOpsGen with DELLOpsGen {
+            val IR: self.type = self
+            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+            override def shouldApplyConcatSink(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+          }
+          codegen.emitSource(testDELL, "dellC", new PrintWriter(System.out))
+        }
+        
+        new DELLBench with FlatMapO with ArrayLoopsExp with ItemOpsExp with Top250OpsExp with DELLOpsExp with ArithExp with ArrayLoopsFatExp with PrintExp with IfThenElseFatExp with OrderingOpsExp with TransformingStuff { self =>
+          override val verbosity = 0
+          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint with IMDBOpsGen with DELLOpsGen {
+            val IR: self.type = self
+      		override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
+            override def shouldApplyConcatSink(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = false
+            fuseConcats = false
+          }
+          codegen.emitSource(testDELL, "dellorigC", new PrintWriter(System.out))
+        }
+
+      }
+    }
+    assertFileEqualsCheck(prefix + "concat08")
   }
 
 
