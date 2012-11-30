@@ -69,7 +69,7 @@ trait SimplifyTransform extends internal.FatScheduling {
       case e if e.toString contains "don't know how to mirror" => 
         printerr("error: " + e.getMessage)
         s
-      case e => 
+      case e: Throwable => 
         printerr("error: exception during mirroring of "+x+": "+ e)
         e.printStackTrace; 
         s

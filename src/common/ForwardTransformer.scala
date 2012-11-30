@@ -84,7 +84,7 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
       case e if e.toString contains "don't know how to mirror" => 
         printerr("error: " + e.getMessage)
       sym
-      case e => 
+      case e: Throwable => 
         printerr("error: exception during mirroring of "+rhs+": "+ e)
         e.printStackTrace; 
         sym            

@@ -107,8 +107,12 @@ trait CCodegen extends CLikeCodegen {
       case _ => throw new GenerationFailedException("CGen: copyMutableInputDtoH(sym) : Cannot copy from GPU device (%s)".format(remap(sym.tp)))
     }
   }
+
+  def emitForwardDef[A:Manifest](args: List[Manifest[_]], functionName: String, out: PrintWriter) = {
+    out.println(remap(manifest[A])+" "+functionName+"("+args.map(a => remap(a)).mkString(", ")+");")
+  }
       
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
+  def emitSource[A:Manifest](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
 
     val sA = remap(manifest[A])
 
