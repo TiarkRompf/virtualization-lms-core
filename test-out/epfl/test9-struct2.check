@@ -25,19 +25,19 @@ x2
 }
 val x16 = x0 > 7
 val x21 = if (x16) {
-val x6 = Map("re"->x4,"im"->x5) //ArraySoaTag(ClassTag(Complex),Const(100))
+val x6 = new { val re = x4; val im = x5 }
 x6
 } else {
 val x17 = x13
 val x18 = x14
-val x19 = Map("re"->x17,"im"->x18) //ArraySoaTag(ClassTag(Complex),Const(100))
+val x19 = new { val re = x17; val im = x18 }
 x19
 }
 x13 = x4
 x14 = x5
 val x24 = x13
 val x25 = x14
-val x26 = Map("re"->x24,"im"->x25) //ArraySoaTag(ClassTag(Complex),Const(100))
+val x26 = new { val re = x24; val im = x25 }
 val x27 = println(x26)
 val x28 = println(x21)
 x28

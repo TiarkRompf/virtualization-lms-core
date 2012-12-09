@@ -278,7 +278,6 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
 
     case _ => super.ifThenElse(cond,a,b)
   }
-
 }
 
 

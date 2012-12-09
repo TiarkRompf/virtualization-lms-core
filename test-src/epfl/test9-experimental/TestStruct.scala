@@ -24,24 +24,10 @@ trait ComplexArith extends Arith with ComplexBase with OverloadHack {
   
 }
 
-trait ComplexBase extends Arith {
-  
-  class Complex
-  
-  def Complex(re: Rep[Double], im: Rep[Double]): Rep[Complex]
-  def infix_re(c: Rep[Complex]): Rep[Double]
-  def infix_im(c: Rep[Complex]): Rep[Double]
+trait ComplexBase extends Arith with Structs {
+  type Complex = Record { val re: Double; val im: Double }
+  def Complex(r: Rep[Double], i: Rep[Double]): Rep[Complex] = new Record { val re = r; val im = i }
 }
-
-trait ComplexStructExp extends ComplexBase with StructExp {
-
-  def Complex(re: Rep[Double], im: Rep[Double]) = struct[Complex](ClassTag[Complex]("Complex"), Map("re"->re, "im"->im))
-  def infix_re(c: Rep[Complex]): Rep[Double] = field[Double](c, "re")
-  def infix_im(c: Rep[Complex]): Rep[Double] = field[Double](c, "im")
-  
-}
-
-
 
 // ------ struct impl follows, will move to common once stable
 
@@ -90,7 +76,7 @@ class TestStruct extends FileDiffSuite {
     def test(x: Rep[Int]): Rep[Unit]
   }
 
-  trait Impl extends DSL with ComplexStructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
+  trait Impl extends DSL with StructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 1
     val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
@@ -99,8 +85,8 @@ class TestStruct extends FileDiffSuite {
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
 
-  trait ImplFused extends DSL with ComplexStructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
-      with IfThenElseExp with RangeOpsExp with PrintExp  { self => 
+  trait ImplFused extends DSL with StructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
+      with IfThenElseExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 1
     val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
@@ -121,7 +107,7 @@ class TestStruct extends FileDiffSuite {
           print(c)
         }
       }
-      new Prog with Impl
+      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"struct1")
   }
@@ -251,4 +237,45 @@ class TestStruct extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"struct4")
   }
 
+  // Two classes are generated if the refined type’s fields have the same type but different names
+  def testStruct5 = {
+    withOutFile(prefix+"struct5") {
+
+      trait Vectors extends Structs {
+        type Vector2D = Record { val x: Double; val y: Double }
+        def Vector2D(px: Rep[Double], py: Rep[Double]): Rep[Vector2D] = new Record { val x = px; val y = py }
+      }
+
+      trait Prog extends DSL with Vectors {
+        def test(x: Rep[Int]) = {
+          print(Vector2D(1, 2))
+          print(Complex(3, 4))
+        }
+      }
+
+      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
+    }
+    assertFileEqualsCheck(prefix+"struct5")
+  }
+
+  // Only one class is generated if refined types are equivalent (their fields have the same names and types)
+  def testStruct6 = {
+    withOutFile(prefix+"struct6") {
+
+      trait Complex2 extends Arith with Structs {
+        type Complex2 = Record { val re: Double; val im: Double }
+        def Complex2(r: Rep[Double], i: Rep[Double]): Rep[Complex2] = new Record { val re = r; val im = i }
+      }
+
+      trait Prog extends DSL with Complex2 {
+        def test(x: Rep[Int]) = {
+          print(Complex2(1, 2))
+          print(Complex(3, 4))
+        }
+      }
+
+      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
+    }
+    assertFileEqualsCheck(prefix+"struct6")
+  }
 }
