@@ -182,9 +182,22 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   def obj_integer_parse_int(s: Rep[String])(implicit pos: SourceContext) = ObjIntegerParseInt(s)
   def obj_int_max_value(implicit pos: SourceContext) = ObjIntMaxValue()
   def obj_int_min_value(implicit pos: SourceContext) = ObjIntMinValue()
-  def int_plus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntPlus(lhs, rhs)
-  def int_minus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntMinus(lhs, rhs)
-  def int_times(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntTimes(lhs, rhs)
+  def int_plus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs, rhs) match {
+    case (Const(0), r) => r
+    case (l, Const(0)) => l
+    case _ => IntPlus(lhs,rhs)
+  }
+  def int_minus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs, rhs) match {
+    case (l, Const(0)) => l
+    case _ => IntMinus(lhs, rhs)
+  }
+  def int_times(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs, rhs) match {
+    case (l@Const(0), r) => l
+    case (l, r@Const(0)) => r
+    case (Const(1), r) => r
+    case (l, Const(1)) => l
+    case _ => IntTimes(lhs, rhs)
+  }
   def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A])(implicit pos: SourceContext) : Exp[A] = IntDivideFrac(lhs, rhs)
   def int_divide(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntDivide(lhs, rhs)
   def int_mod(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntMod(lhs, rhs)

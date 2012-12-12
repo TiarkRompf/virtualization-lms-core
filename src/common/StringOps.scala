@@ -92,12 +92,15 @@ trait StringOpsExp extends StringOps with VariablesExp {
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case StringPlus(a,b) => string_plus(f(a),f(b))
+    case StringStartsWith(s1, s2) => string_startswith(f(s1), f(s2))
     case StringTrim(s) => string_trim(f(s))
     case StringSplit(s,sep) => string_split(f(s),f(sep))
     case StringToDouble(s) => string_todouble(f(s))
     case StringToFloat(s) => string_tofloat(f(s))
+    case StringToInt(s) => string_toint(f(s))
     case StringEndsWith(s, e) => string_endsWith(f(s),f(e))
     case StringCharAt(s,i) => string_charAt(f(s),f(i))
+    case StringValueOf(a) => string_valueof(f(a))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
