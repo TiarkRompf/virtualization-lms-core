@@ -24,7 +24,7 @@ trait ComplexArith extends Arith with ComplexBase with OverloadHack {
   
 }
 
-trait ComplexBase extends Arith with Structs {
+trait ComplexBase extends Arith with StructOps {
   type Complex = Record { val re: Double; val im: Double }
   def Complex(r: Rep[Double], i: Rep[Double]): Rep[Complex] = new Record { val re = r; val im = i }
 }
@@ -53,7 +53,8 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
           if (m.erasure.isArray) mtype(Manifest.classType(m.erasure.getComponentType))
           else { printerr("warning: expect type Array[A] but got "+m); mtype(manifest[Any]) }
       }
-      struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))
+      sys.error("FIXME !!")
+      //struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))
     case _ => super.infix_at(a,i)
   }
   
@@ -241,7 +242,7 @@ class TestStruct extends FileDiffSuite {
   def testStruct5 = {
     withOutFile(prefix+"struct5") {
 
-      trait Vectors extends Structs {
+      trait Vectors extends StructOps {
         type Vector2D = Record { val x: Double; val y: Double }
         def Vector2D(px: Rep[Double], py: Rep[Double]): Rep[Vector2D] = new Record { val x = px; val y = py }
       }
@@ -262,7 +263,7 @@ class TestStruct extends FileDiffSuite {
   def testStruct6 = {
     withOutFile(prefix+"struct6") {
 
-      trait Complex2 extends Arith with Structs {
+      trait Complex2 extends Arith with StructOps {
         type Complex2 = Record { val re: Double; val im: Double }
         def Complex2(r: Rep[Double], i: Rep[Double]): Rep[Complex2] = new Record { val re = r; val im = i }
       }

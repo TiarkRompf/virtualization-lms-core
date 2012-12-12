@@ -371,6 +371,17 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
     case _ => super.remap(m)
   }
 
+  override def emitDataStructures(stream: PrintWriter) {
+    for ((name, elems) <- encounteredStructs) {
+      stream.println()
+      stream.print("case class " + name + "(")
+      stream.println(elems.map(e => e._1 + ": " + remap(e._2)).mkString(", ") + ")")
+    }
+    stream.flush()
+    super.emitDataStructures(stream)
+  }
+
+
   override def emitDataStructures(path: String) {
     val stream = new PrintWriter(path + "Structs.scala")
     stream.println("package generated.scala")

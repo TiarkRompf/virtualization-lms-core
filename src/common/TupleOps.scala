@@ -65,7 +65,7 @@ trait TupleOpsExp extends TupleOps with StructExp {
 
 }
 
-trait ScalaGenTupleOps extends ScalaGenBase {
+trait ScalaGenTupleOps extends ScalaGenBase with ScalaGenStruct {
   val IR: TupleOpsExp
 
   override def remap[A](m: Manifest[A]) = m.erasure.getSimpleName match {
