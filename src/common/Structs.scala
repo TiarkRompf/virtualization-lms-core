@@ -23,7 +23,15 @@ trait StructOps extends Base {
 
 }
 
-trait StructExp extends StructOps with BaseExp with EffectExp with VariablesExp with ObjectOpsExp with StringOpsExp with OverloadHack {
+trait StructTags {
+  abstract class StructTag[T]
+  case class ClassTag[T](name: String) extends StructTag[T]
+  case class NestClassTag[C[_],T](elem: StructTag[T]) extends StructTag[C[T]]
+  case class AnonTag[T](fields: RefinedManifest[T]) extends StructTag[T]
+  case class MapTag[T] extends StructTag[T]  
+}
+
+trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with ObjectOpsExp with StringOpsExp with OverloadHack {
 
   def anonStruct[T:Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T] = {
     val x = fresh[T]
@@ -33,12 +41,6 @@ trait StructExp extends StructOps with BaseExp with EffectExp with VariablesExp 
     }
     struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fieldSyms)
   }
-
-  abstract class StructTag[T]
-  case class ClassTag[T](name: String) extends StructTag[T]
-  case class NestClassTag[C[_],T](elem: StructTag[T]) extends StructTag[C[T]]
-  case class AnonTag[T](fields: RefinedManifest[T]) extends StructTag[T]
-  case class MapTag[T] extends StructTag[T]
 
   abstract class AbstractStruct[T] extends Def[T] {
     val tag: StructTag[T]
