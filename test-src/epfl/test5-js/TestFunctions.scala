@@ -53,6 +53,7 @@ trait JSGenTupleOps extends JSGenBase {
   val IR: TupleOpsExp
   import IR._
 
+/* FIXME: now using structs to implement tuples
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ETuple2(a,b)  =>
       emitValDef(sym, "{_1:"+ quote(a) + ",_2:" + quote(b) + "}")
@@ -61,6 +62,7 @@ trait JSGenTupleOps extends JSGenBase {
 
     case _ => super.emitNode(sym, rhs)
   }
+*/
 }
 
 trait FunctionsProg { this: Print with Functions =>
