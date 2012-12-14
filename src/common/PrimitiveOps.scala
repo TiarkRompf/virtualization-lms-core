@@ -233,8 +233,13 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
     e match {
       case ObjDoubleParseDouble(x) => obj_double_parse_double(f(x))
       case ObjDoublePositiveInfinity() => obj_double_positive_infinity
+      case ObjDoubleNegativeInfinity() => obj_double_negative_infinity
+      case ObjDoubleMinValue() => obj_double_min_value
+      case ObjDoubleMaxValue() => obj_double_max_value
       case DoubleFloatValue(x) => double_float_value(f(x))
       case ObjIntegerParseInt(x) => obj_integer_parse_int(f(x))
+      case ObjIntMaxValue() => obj_int_max_value
+      case ObjIntMinValue() => obj_int_min_value
       case IntDoubleValue(x) => int_double_value(f(x))
       case IntFloatValue(x) => int_float_value(f(x))
       case IntBitwiseNot(x) => int_bitwise_not(f(x))
@@ -243,11 +248,15 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
       case IntTimes(x,y) => int_times(f(x),f(y))
       case IntDivide(x,y) => int_divide(f(x),f(y))
       case IntMod(x,y) => int_mod(f(x),f(y))
+      case IntBinaryOr(x,y) => int_binaryor(f(x),f(y))
+      case IntBinaryAnd(x,y) => int_binaryand(f(x),f(y))
+      case IntBinaryXor(x,y) => int_binaryxor(f(x),f(y))
       case IntToLong(x) => int_tolong(f(x))
       case IntShiftLeft(x,y) => int_leftshift(f(x),f(y))
       case IntShiftRightLogical(x,y) => int_rightshiftlogical(f(x),f(y))
       case IntShiftRightArith(x,y) => int_rightshiftarith(f(x),f(y))
       case LongShiftLeft(x,y) => long_shiftleft(f(x),f(y))
+      case LongBinaryOr(x,y) => long_binaryor(f(x),f(y))
       case LongBinaryAnd(x,y) => long_binaryand(f(x),f(y))
       case LongToInt(x) => long_toint(f(x))
       case LongShiftRightUnsigned(x,y) => long_shiftright_unsigned(f(x),f(y))
