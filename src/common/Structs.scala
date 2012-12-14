@@ -381,7 +381,8 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
     super.emitDataStructures(stream)
   }
 
-
+  //This is quite delite-specific..
+  /*
   override def emitDataStructures(path: String) {
     val stream = new PrintWriter(path + "Structs.scala")
     stream.println("package generated.scala")
@@ -393,6 +394,7 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
     stream.close()
     super.emitDataStructures(path)
   }
+  */
 
 }
 
