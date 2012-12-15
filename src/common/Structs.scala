@@ -114,6 +114,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     case FieldApply(struct, key) => field(f(struct), key)
     case Reflect(FieldApply(struct, key), u, es) => reflectMirrored(Reflect(FieldApply(f(struct), key), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(FieldUpdate(struct, key, rhs), u, es) => reflectMirrored(Reflect(FieldUpdate(f(struct), key, f(rhs)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(SimpleStruct(tag, elems), u, es) => reflectMirrored(Reflect(SimpleStruct(tag, elems map { case (k,v) => (k, f(v)) }), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -150,7 +151,9 @@ trait StructExpOpt extends StructExp {
   }
 
   override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = fieldLookup(struct, index) match {
-    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
+    // this seems to work in more cases than below for unknown reasons. this is fine as long as we don't expect vars to be in structs that were not freshly created
+    case Some(Def(Reflect(NewVar(x),u,es))) => super.field(struct, index)
+    // case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
     case Some(x) => x
     case _ => super.field[T](struct, index)
   }
