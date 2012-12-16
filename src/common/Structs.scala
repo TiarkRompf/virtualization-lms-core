@@ -24,7 +24,7 @@ trait StructOps extends Base {
 }
 
 trait StructTags {
-  abstract class StructTag[T]
+  abstract class StructTag[+T]
   case class ClassTag[T](name: String) extends StructTag[T]
   case class NestClassTag[C[_],T](elem: StructTag[T]) extends StructTag[C[T]]
   case class AnonTag[T](fields: RefinedManifest[T]) extends StructTag[T]
