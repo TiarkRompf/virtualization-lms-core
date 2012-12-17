@@ -3,7 +3,8 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal._
-import scala.collection.mutable.{HashMap,Set}
+import scala.collection.mutable.Set
+import java.util.HashMap
 import scala.reflect.SourceContext
 
 trait HashMapOps extends Base {
@@ -98,7 +99,7 @@ trait ScalaGenHashMapOps extends BaseGenHashMapOps with ScalaGenEffect {
     case HashMapSize(m) => emitValDef(sym, quote(m) + ".size")
     case HashMapValues(m) => emitValDef(sym, quote(m) + ".values")
     case HashMapClear(m) => emitValDef(sym, quote(m) + ".clear()")
-    case HashMapKeySet(m) => emitValDef(sym, quote(m) + ".keySet")
+    case HashMapKeySet(m) => emitValDef(sym, "scala.collection.JavaConverters.asScalaSetConverter("+quote(m)+".keySet)).asScala")
     case HashMapKeys(m) => emitValDef(sym, quote(m) + ".keys")
     case _ => super.emitNode(sym, rhs)
   }
