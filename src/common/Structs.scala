@@ -151,9 +151,9 @@ trait StructExpOpt extends StructExp {
   }
 
   override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = fieldLookup[T](struct, index) match {
-    // this seems to work in more cases than below for unknown reasons. this is fine as long as we don't expect vars to be in structs that were not freshly created
+    // the two variable pattern matches each seem to miss certain cases, so both are needed. why?
     case Some(Def(Reflect(NewVar(x),u,es))) => super.field(struct, index)
-    // case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
+    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
     case Some(x) => x
     case _ => super.field[T](struct, index)
   }
