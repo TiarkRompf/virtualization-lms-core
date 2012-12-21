@@ -145,6 +145,8 @@ trait Scheduling {
       traverse syms by ascending id. if sym s1 is used by s2, do not evaluate further 
       uses of s2 because they are already there.
 
+    CAVEAT: TRANSFORMERS !!!
+
     assumption: if s2 uses s1, the scope of s2 is completely included in s1's scope:
 
       val A = loop { s1 => ... val B = sum { s2 => ... val y = s2 + s1; .../* use y */ ... } }
@@ -158,7 +160,7 @@ trait Scheduling {
     def getDepStuff(st: Sym[Any]) = {
       // could also precalculate uses, but computing all combinations eagerly is also expensive
       def uses(s: Sym[Any]): List[Stm] = if (seen(s)) Nil else { 
-        seen += s
+        //seen += s
         lhsCache.getOrElse(s,Nil) ::: symsCache.getOrElse(s,Nil) filterNot (boundSymsCache.getOrElse(st, Nil) contains _)
       }
       GraphUtil.stronglyConnectedComponents[Stm](
@@ -168,11 +170,19 @@ trait Scheduling {
     }
     
     /* 
-    reference impl:
-    sts.flatMap(getDepStuff).distinct
-    */
+    reference impl:*/
+    val res = sts.flatMap(getDepStuff).distinct
     
-    sts.sortBy(_.id).flatMap(getDepStuff)
+    /*if (sts.contains(Sym(1064))) {
+      println("dep on x1064:")
+      res.foreach { r =>
+        println("   " + r)
+      }
+    }*/
+    res
+
+    // CAVEAT: TRANSFORMERS !!!  see CloseWorldRestage app in Delite
+    //sts.sortBy(_.id).flatMap(getDepStuff)
   }
   
   /** end performance hotspot **/
