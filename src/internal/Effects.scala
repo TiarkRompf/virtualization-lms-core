@@ -441,7 +441,10 @@ trait Effects extends Expressions with Blocks with Utils {
     }
   }
   
-  def calculateDependencies(u: Summary): State = calculateDependencies(context, u, true)
+  def calculateDependencies(u: Summary): State = {
+    checkContext();
+    calculateDependencies(context, u, true)
+  }
   def calculateDependencies(scope: State, u: Summary, mayPrune: Boolean): State = {
     if (u.mayGlobal) scope else {
       val read = u.mayRead
