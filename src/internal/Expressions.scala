@@ -32,7 +32,7 @@ trait Expressions extends Utils {
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
   var nVars = 0
-  def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1; nVars -1 }
+  def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) println("nVars="+nVars);  nVars -1 }
 
   def fresh[T:Manifest](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
 
@@ -89,12 +89,14 @@ trait Expressions extends Utils {
   }
 */
 
-  abstract class Def[+T] // operations (composite)
+  abstract class Def[+T] { // operations (composite)
+    override final lazy val hashCode = scala.runtime.ScalaRunTime._hashCode(this.asInstanceOf[Product])
+  }
 
   abstract class Stm // statement (links syms and definitions)
   
   def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {
-    case TP(sym, rhs) => List(sym)
+    case TP(sym, rhs) => sym::Nil
   }
   
   def infix_rhs(stm: Stm): Any = stm match { // clients use syms(e.rhs), boundSyms(e.rhs) etc.
@@ -117,29 +119,36 @@ trait Expressions extends Utils {
   
   var globalDefs: List[Stm] = Nil
   var localDefs: List[Stm] = Nil
+  var globalDefsCache: Map[Sym[Any],Stm] = Map.empty
 
   def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
     val saveLocal = localDefs
     val saveGlobal = globalDefs
+    val saveGlobalCache = globalDefsCache
     localDefs = Nil
     val r = b
     val defs = localDefs
     localDefs = saveLocal
     globalDefs = saveGlobal
+    globalDefsCache = saveGlobalCache
     (r, defs)
   }
 
   def reflectSubGraph(ds: List[Stm]): Unit = {
     val lhs = ds.flatMap(_.lhs)
     assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
-    val existing = globalDefs filter (_.lhs exists (lhs contains _))
+    val existing = lhs flatMap (globalDefsCache get _)//globalDefs filter (_.lhs exists (lhs contains _))
     assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
     localDefs = localDefs ::: ds
     globalDefs = globalDefs ::: ds
+    for (stm <- ds; s <- stm.lhs) {      
+      globalDefsCache += (s->stm)
+    }
   }
 
   def findDefinition[T](s: Sym[T]): Option[Stm] =
-    globalDefs.find(x => x.defines(s).nonEmpty)
+    globalDefsCache.get(s)
+    //globalDefs.find(x => x.defines(s).nonEmpty)
 
   def findDefinition[T](d: Def[T]): Option[Stm] =
     globalDefs.find(x => x.defines(d).nonEmpty)
@@ -257,6 +266,8 @@ trait Expressions extends Utils {
   def reset { // used by delite?
     nVars = 0
     globalDefs = Nil
+    localDefs = Nil
+    globalDefsCache = Map.empty
   }
 
 }
