@@ -226,7 +226,7 @@ trait Effects extends Expressions with Blocks with Utils {
   val deepAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   val allAliasCache = new mutable.HashMap[Sym[Any], List[Sym[Any]]]
   
-  def utilLoadStm[T](s: Sym[T]) = if (!isPrimitiveType(s.tp)) globalDefs.filter{e => e.lhs contains s} else Nil
+  def utilLoadStm[T](s: Sym[T]) = if (!isPrimitiveType(s.tp)) /*globalDefs.filter{e => e.lhs contains s}*/ findDefinition(s).toList else Nil
   def utilLoadStms(s: List[Sym[Any]]) = s.flatMap(utilLoadStm)
   def utilLoadSym[T](s: Sym[T]) = utilLoadStm(s).map(_.rhs)
   
@@ -441,11 +441,25 @@ trait Effects extends Expressions with Blocks with Utils {
     }
   }
   
-  def calculateDependencies(u: Summary): State = { checkContext(); calculateDependencies(context, u) }
-  def calculateDependencies(scope: State, u: Summary): State = {
+  def calculateDependencies(u: Summary): State = {
+    checkContext();
+    calculateDependencies(context, u, true)
+  }
+  def calculateDependencies(scope: State, u: Summary, mayPrune: Boolean): State = {
     if (u.mayGlobal) scope else {
       val read = u.mayRead
       val write = u.mayWrite
+
+      // TODO: in order to reduce the number of deps (need to traverse all those!)
+      // we should only store those that are not transitively implied.
+      // For simple effects, take the last one (implemented). 
+      // For mutations, take the last write to a particular mutable sym (TODO).
+
+      def canonic(xs: List[Exp[Any]]) = xs // TODO 
+      def canonicLinear(xs: List[Exp[Any]]) = if (mayPrune) xs.takeRight(1) else xs
+
+      // the mayPrune flag is for test8-speculative4: with pruning on, the 'previous iteration' 
+      // dummy is moved out of the loop. this is not per se a problem -- need to look some more into it.
 
       val readDeps = if (read.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, read) || read.contains(e) }
       val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
@@ -455,7 +469,7 @@ trait Effects extends Expressions with Blocks with Utils {
 
       // TODO: write-on-read deps should be weak
       // TODO: optimize!!
-      val allDeps = readDeps ++ softWriteDeps ++ writeDeps ++ simpleDeps ++ globalDeps
+      val allDeps = canonic(readDeps ++ softWriteDeps ++ writeDeps ++ canonicLinear(simpleDeps) ++ canonicLinear(globalDeps))
       scope filter (allDeps contains _)
     }
   }
