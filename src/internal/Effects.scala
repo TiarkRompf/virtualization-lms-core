@@ -329,6 +329,7 @@ trait Effects extends Expressions with Blocks with Utils {
   }
 
   def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
+    checkContext()
     // warn if type is Any. TODO: make optional, sometimes Exp[Any] is fine
     if (manifest[A] == manifest[Any]) printlog("warning: possible missing mtype call - reflectMirrored with Def of type Any: " + zd)
     context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
@@ -390,6 +391,7 @@ trait Effects extends Expressions with Blocks with Utils {
   
   def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
     if (mustPure(u)) super.toAtom(x) else {
+      checkContext()
       // NOTE: reflecting mutable stuff *during mirroring* doesn't work right now.
       
       val deps = calculateDependencies(u)
@@ -482,6 +484,11 @@ trait Effects extends Expressions with Blocks with Utils {
     s
   }
   
+  def checkContext() {
+    if (context == null)
+      sys.error("uninitialized effect context: effectful statements may only be used within a reifyEffects { .. } block")
+  }
+
 
   // --- reify
 

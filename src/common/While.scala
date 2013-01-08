@@ -84,7 +84,6 @@ trait WhileExpOptSpeculative extends WhileExp with PreviousIterationDummyExp {
 trait BaseGenWhile extends GenericNestedCodegen {
   val IR: WhileExp
   import IR._
-
 }
 
 trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
@@ -110,63 +109,23 @@ trait ScalaGenWhileOptSpeculative extends ScalaGenWhile with ScalaGenPreviousIte
 }
 
 
-
-
-trait CudaGenWhile extends CudaGenEffect with BaseGenWhile {
+trait CLikeGenWhile extends CLikeGenBase with BaseGenWhile {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-      rhs match {
-        case While(c,b) =>
-            emitBlock(c)
-            stream.println(addTab() + remap(getBlockResult(c).tp) + " " + quote(sym) + "_cond = " + quote(getBlockResult(c)) + ";")
-            stream.print(addTab() + "while (")
-            stream.print(quote(sym) + "_cond")
-            stream.println(") {")
-            tabWidth += 1
-            emitBlock(b)
-            emitBlock(c)
-            stream.println(addTab() + quote(sym) + "_cond = " + quote(getBlockResult(c)) + ";")
-            tabWidth -= 1
-            //stream.println(quote(getBlockResult(b)))   //TODO: Is this needed?
-            stream.println(addTab() + "}")
-        case _ => super.emitNode(sym, rhs)
-      }
-    }
-}
-
-trait OpenCLGenWhile extends OpenCLGenEffect with BaseGenWhile {
-  import IR._
-
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-    rhs match {
-      case While(c,b) =>
-        // calculate condition
-        emitBlock(c)
-        stream.println("bool cond_%s = %s;".format(quote(sym),quote(getBlockResult(c))))
-        // Emit while loop
-        stream.print("while (cond_%s) {".format(quote(sym)))
-        emitBlock(b)
-        stream.println("}")
-      case _ => super.emitNode(sym, rhs)
-    }
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case While(c,b) =>
+      stream.println("for (;;) {")
+      emitBlock(c)
+      stream.println("if (!"+quote(getBlockResult(c))+") break;")
+      emitBlock(b)
+      stream.println("}")
+    case _ => super.emitNode(sym, rhs)
   }
 }
 
-trait CGenWhile extends CGenEffect with BaseGenWhile {
-  import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-    rhs match {
-      case While(c,b) =>
-        // calculate condition
-        emitBlock(c)
-        stream.println("bool cond_%s = %s;".format(quote(sym),quote(getBlockResult(c))))
-        // Emit while loop
-        stream.print("while (cond_%s) {".format(quote(sym)))
-        emitBlock(b)
-        stream.println("}")
-      case _ => super.emitNode(sym, rhs)
-    }
-  }
-}
+trait CudaGenWhile extends CudaGenEffect with CLikeGenWhile
+
+trait OpenCLGenWhile extends OpenCLGenEffect with CLikeGenWhile
+
+trait CGenWhile extends CGenEffect with CLikeGenWhile
