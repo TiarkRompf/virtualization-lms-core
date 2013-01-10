@@ -26,3 +26,9 @@ Follow the [installation instructions](http://www.scala-sbt.org/download.html#ma
 2. Run `sbt test` to run the test suite.
 
 3. Run `sbt publish-local` to install LMS-Core for use in other projects.
+
+### Generating documentation
+
+1. Install the latest [Sphinx framework](http://sphinx-doc.org/)
+
+2. Run `docs/test` and if all tests pass `docs/sphinx:generate`
