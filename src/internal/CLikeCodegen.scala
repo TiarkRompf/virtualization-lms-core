@@ -18,10 +18,8 @@ trait CLikeCodegen extends GenericCodegen {
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    if (!isVoidType(sym.tp))
+    if(!isVoidType(sym.tp)) 
       stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
-    else
-      stream.println(rhs + ";")
   }
 
   def emitAssignment(lhs:String, rhs: String): Unit = {
@@ -31,8 +29,12 @@ trait CLikeCodegen extends GenericCodegen {
   override def remap[A](m: Manifest[A]) : String = {
     if (m.erasure == classOf[Variable[AnyVal]])
       remap(m.typeArguments.head)
+    else if (m.erasure == classOf[List[Any]]) { // Use case: Delite Foreach sync list 
+      "List< " + remap(m.typeArguments.head) + " >"
+    }
     else {
       m.toString match {
+        case "scala.collection.immutable.List[Float]" => "List"
         case "Boolean" => "bool"
         case "Byte" => "char"
         case "Char" => "CHAR"
