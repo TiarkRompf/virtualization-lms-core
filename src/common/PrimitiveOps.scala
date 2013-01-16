@@ -220,6 +220,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
     e match {
       case ObjDoubleParseDouble(x) => obj_double_parse_double(f(x))
       case ObjDoublePositiveInfinity() => obj_double_positive_infinity
+      case ObjDoubleMaxValue() => obj_double_max_value
       case DoubleFloatValue(x) => double_float_value(f(x))
       case ObjIntegerParseInt(x) => obj_integer_parse_int(f(x))
       case IntDoubleValue(x) => int_double_value(f(x))

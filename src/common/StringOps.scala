@@ -98,6 +98,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
     case StringToFloat(s) => string_tofloat(f(s))
     case StringEndsWith(s, e) => string_endsWith(f(s),f(e))
     case StringCharAt(s,i) => string_charAt(f(s),f(i))
+    case StringToInt(s) => string_toint(f(s))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
