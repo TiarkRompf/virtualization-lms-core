@@ -58,7 +58,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     }
 
     val inputs = getFreeVarBlock(func,lastInputs).distinct
-    val paramStr = ((inputs++lastInputs).map(ele => addRef(ele,remap(ele.tp)) + " " + quote(ele)) ++ metaData.temps.map(t=>t.tp + " *" + t.sym) ++ (if(postfix.contains("collect") || postfix.contains("foreach")) List("size_t tempMemSize","char *tempMemPtr") else List())).mkString(",")
+    val paramStr = ((inputs++lastInputs).map(ele => addRef(ele,remap(ele.tp)) + " " + quote(ele)) ++ metaData.temps.map(t=>t.tp + " *" + t.sym) ++ List("size_t tempMemSize","char *tempMemPtr","int *tempMemUsage")).mkString(",")
 
     header.append(devFuncPrefix + " %s dev_%s(%s) {\n".format(remap(getBlockResult(func).tp),postfix,paramStr))
     if(remap(getBlockResult(func).tp) != "void")
@@ -294,7 +294,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     val blockString = new StringWriter
     val blockStream = new PrintWriter(blockString,true)
 
-    val inputs = (blocks.flatMap(f => getFreeVarBlock(f._2, Nil)) ++ boundVals.values.filter(_.isInstanceOf[Sym[Any]]).map(_.asInstanceOf[Sym[Any]]).toList).distinct.filterNot(i => boundVals.keySet.contains(i) || lastInputs.contains(i)) ++ lastInputs
+    val inputs = (blocks.flatMap(f => getFreeVarBlock(f._2, Nil)) ++ boundVals.values.filter(_.isInstanceOf[Sym[Any]]).map(_.asInstanceOf[Sym[Any]]).toList).distinct.filterNot(i => blocks.map(_._1).contains(i) || boundVals.keySet.contains(i) || lastInputs.contains(i)) ++ lastInputs
 
     // register metadata
     val tr = metaData.outputs.getOrElse(sym,new TransferFunc)
@@ -313,9 +313,10 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
       withStream(blockStream) {
         emitBlock(b._2)
         emitValDef(b._1, quote(getBlockResult(b._2)))
+        stream.println("\t%s *%s_ptr = %s_ptr;\n".format(remap(b._1.tp),quote(b._1),quote(getBlockResult(b._2))))
       }
     }
-    blockString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(blocks.last._2))))
+    blockString.append("\treturn %s_ptr;\n".format(quote(blocks.last._1)))
 
     val paramStr = inputs.map(s =>
       if(isPrimitiveType(s.tp)) remap(s.tp) + " " + quote(s)
