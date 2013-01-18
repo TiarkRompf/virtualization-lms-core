@@ -3,7 +3,8 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal._
-import scala.collection.mutable.{HashMap,Set}
+import scala.collection.mutable.Set
+import java.util.HashMap
 import scala.reflect.SourceContext
 
 trait HashMapOps extends Base {
@@ -91,14 +92,14 @@ trait ScalaGenHashMapOps extends BaseGenHashMapOps with ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case m@HashMapNew() => emitValDef(sym, "collection.mutable.HashMap[" + remap(m.mK) + "," + remap(m.mV) + "]()")
-    case HashMapApply(m,k) => emitValDef(sym, quote(m) + "(" + quote(k) + ")")
-    case HashMapUpdate(m,k,v)  => emitValDef(sym, quote(m) + "(" + quote(k) + ") = " + quote(v))
-    case HashMapContains(m,i) => emitValDef(sym, quote(m) + ".contains(" + quote(i) + ")")
+    case m@HashMapNew() => emitValDef(sym, "new java.util.HashMap[" + remap(m.mK) + "," + remap(m.mV) + "]()")
+    case HashMapApply(m,k) => emitValDef(sym, quote(m) + ".get(" + quote(k) + ")")
+    case HashMapUpdate(m,k,v)  => emitValDef(sym, quote(m) + ".put(" + quote(k) + ", " + quote(v) + ")")
+    case HashMapContains(m,i) => emitValDef(sym, quote(m) + ".containsKey(" + quote(i) + ")")
     case HashMapSize(m) => emitValDef(sym, quote(m) + ".size")
     case HashMapValues(m) => emitValDef(sym, quote(m) + ".values")
     case HashMapClear(m) => emitValDef(sym, quote(m) + ".clear()")
-    case HashMapKeySet(m) => emitValDef(sym, quote(m) + ".keySet")
+    case HashMapKeySet(m) => emitValDef(sym, "scala.collection.JavaConverters.asScalaSetConverter("+quote(m)+".keySet)).asScala")
     case HashMapKeys(m) => emitValDef(sym, quote(m) + ".keys")
     case _ => super.emitNode(sym, rhs)
   }

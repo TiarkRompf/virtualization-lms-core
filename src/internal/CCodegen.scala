@@ -58,12 +58,9 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
       
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
-    val x = fresh[A]
-    val y = reifyBlock(f(x))
+  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
 
-    val sA = mA.toString
-    val sB = mB.toString
+    val sB = manifest[A].toString
 
     withStream(out) {
       stream.println("/*****************************************\n"+
@@ -76,7 +73,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
       //stream.println("class "+className+" extends (("+sA+")=>("+sB+")) {")
       stream.println("int main(int argc, char** argv) {")
 
-      emitBlock(y)
+      emitBlock(body)
       //stream.println(quote(getBlockResult(y)))
 
       //stream.println("}")

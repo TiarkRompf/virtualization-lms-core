@@ -50,6 +50,7 @@ trait StringOps extends Variables with OverloadHack {
   def infix_toInt(s: Rep[String])(implicit pos: SourceContext) = string_toint(s)
   def infix_charAt(s: Rep[String], i: Rep[Int])(implicit pos: SourceContext) = string_charAt(s,i)
   def infix_endsWith(s: Rep[String], e: Rep[String])(implicit pos: SourceContext) = string_endsWith(s,e)
+  def infix_contains(s1: Rep[String], s2: Rep[String])(implicit pos: SourceContext) = string_contains(s1,s2)
 
   object String {
     def valueOf(a: Rep[Any])(implicit pos: SourceContext) = string_valueof(a)
@@ -65,6 +66,7 @@ trait StringOps extends Variables with OverloadHack {
   def string_toint(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
   def string_charAt(s: Rep[String], i: Rep[Int])(implicit pos: SourceContext): Rep[Char]
   def string_endsWith(s: Rep[String], e: Rep[String])(implicit pos: SourceContext): Rep[Boolean]
+  def string_contains(s1: Rep[String], s2: Rep[String])(implicit pos: SourceContext): Rep[Boolean]
 }
 
 trait StringOpsExp extends StringOps with VariablesExp {
@@ -78,6 +80,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
   case class StringToDouble(s: Exp[String]) extends Def[Double]
   case class StringToFloat(s: Exp[String]) extends Def[Float]
   case class StringToInt(s: Exp[String]) extends Def[Int]
+  case class StringContains(s1: Exp[String], s2: Exp[String]) extends Def[Boolean]
 
   def string_plus(s: Exp[Any], o: Exp[Any])(implicit pos: SourceContext): Rep[String] = StringPlus(s,o)
   def string_startswith(s1: Exp[String], s2: Exp[String])(implicit pos: SourceContext) = StringStartsWith(s1,s2)
@@ -89,16 +92,20 @@ trait StringOpsExp extends StringOps with VariablesExp {
   def string_toint(s: Exp[String])(implicit pos: SourceContext) = StringToInt(s)
   def string_charAt(s: Exp[String], i: Exp[Int])(implicit pos: SourceContext) = StringCharAt(s,i)
   def string_endsWith(s: Exp[String], e: Exp[String])(implicit pos: SourceContext) = StringEndsWith(s,e)
+  def string_contains(s1: Rep[String], s2: Rep[String])(implicit pos: SourceContext) = StringContains(s1,s2)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case StringPlus(a,b) => string_plus(f(a),f(b))
+    case StringStartsWith(s1, s2) => string_startswith(f(s1), f(s2))
     case StringTrim(s) => string_trim(f(s))
     case StringSplit(s,sep) => string_split(f(s),f(sep))
     case StringToDouble(s) => string_todouble(f(s))
     case StringToFloat(s) => string_tofloat(f(s))
+    case StringToInt(s) => string_toint(f(s))
     case StringEndsWith(s, e) => string_endsWith(f(s),f(e))
     case StringCharAt(s,i) => string_charAt(f(s),f(i))
-    case StringToInt(s) => string_toint(f(s))
+    case StringValueOf(a) => string_valueof(f(a))
+    case StringContains(s1,s2) => string_contains(f(s1),f(s2))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
@@ -118,6 +125,7 @@ trait ScalaGenStringOps extends ScalaGenBase {
     case StringToDouble(s) => emitValDef(sym, "%s.toDouble".format(quote(s)))
     case StringToFloat(s) => emitValDef(sym, "%s.toFloat".format(quote(s)))
     case StringToInt(s) => emitValDef(sym, "%s.toInt".format(quote(s)))
+    case StringContains(s1,s2) => emitValDef(sym, "%s.contains(%s)".format(quote(s1),quote(s2)))
     case _ => super.emitNode(sym, rhs)
   }
 }

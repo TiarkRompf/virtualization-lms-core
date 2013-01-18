@@ -23,7 +23,15 @@ trait StructOps extends Base {
 
 }
 
-trait StructExp extends StructOps with BaseExp with EffectExp with VariablesExp with ObjectOpsExp with StringOpsExp with OverloadHack {
+trait StructTags {
+  abstract class StructTag[+T]
+  case class ClassTag[T](name: String) extends StructTag[T]
+  case class NestClassTag[C[_],T](elem: StructTag[T]) extends StructTag[C[T]]
+  case class AnonTag[T](fields: RefinedManifest[T]) extends StructTag[T]
+  case class MapTag[T] extends StructTag[T]  
+}
+
+trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with ObjectOpsExp with StringOpsExp with OverloadHack {
 
   def anonStruct[T:Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T] = {
     val x = fresh[T]
@@ -33,12 +41,6 @@ trait StructExp extends StructOps with BaseExp with EffectExp with VariablesExp 
     }
     struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fieldSyms)
   }
-
-  abstract class StructTag[T]
-  case class ClassTag[T](name: String) extends StructTag[T]
-  case class NestClassTag[C[_],T](elem: StructTag[T]) extends StructTag[C[T]]
-  case class AnonTag[T](fields: RefinedManifest[T]) extends StructTag[T]
-  case class MapTag[T] extends StructTag[T]
 
   abstract class AbstractStruct[T] extends Def[T] {
     val tag: StructTag[T]
@@ -112,6 +114,7 @@ trait StructExp extends StructOps with BaseExp with EffectExp with VariablesExp 
     case FieldApply(struct, key) => field(f(struct), key)
     case Reflect(FieldApply(struct, key), u, es) => reflectMirrored(Reflect(FieldApply(f(struct), key), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(FieldUpdate(struct, key, rhs), u, es) => reflectMirrored(Reflect(FieldUpdate(f(struct), key, f(rhs)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(SimpleStruct(tag, elems), u, es) => reflectMirrored(Reflect(SimpleStruct(tag, elems map { case (k,v) => (k, f(v)) }), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -151,7 +154,9 @@ trait StructExpOpt extends StructExp {
     }
   }
 
-  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = fieldLookup(struct, index) match {
+  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = fieldLookup[T](struct, index) match {
+    // the two variable pattern matches each seem to miss certain cases, so both are needed. why?
+    case Some(Def(Reflect(NewVar(x),u,es))) => super.field(struct, index)
     case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
     case Some(x) => x
     case _ => super.field[T](struct, index)
@@ -282,7 +287,6 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
 
     case _ => super.ifThenElse(cond,a,b)
   }
-
 }
 
 trait BaseGenFatStruct extends GenericFatCodegen {
@@ -370,6 +374,18 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
     case _ => super.remap(m)
   }
 
+  override def emitDataStructures(stream: PrintWriter) {
+    for ((name, elems) <- encounteredStructs) {
+      stream.println()
+      stream.print("case class " + name + "(")
+      stream.println(elems.map(e => e._1 + ": " + remap(e._2)).mkString(", ") + ")")
+    }
+    stream.flush()
+    super.emitDataStructures(stream)
+  }
+
+  //This is quite delite-specific..
+  /*
   override def emitDataStructures(path: String) {
     val stream = new PrintWriter(path + "Structs.scala")
     stream.println("package generated.scala")
@@ -381,6 +397,7 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
     stream.close()
     super.emitDataStructures(path)
   }
+  */
 
 }
 

@@ -34,7 +34,7 @@ x23
 } else {
 x5
 }
-val x27 = Map("re"->x4,"im"->x26) //ArraySoaTag(ClassTag(Complex),Const(100))
+val x27 = new { val re = x4; val im = x26 }
 val x28 = println(x27)
 x28
 }

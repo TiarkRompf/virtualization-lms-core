@@ -21,14 +21,12 @@ trait JSCodegen extends GenericCodegen {
     stream.flush
   }
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], methName: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
-    val x = fresh[A]
-    val y = reifyBlock(f(x))
+  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], methName: String, out: PrintWriter) = {
     withStream(out) {
-      stream.println("function "+methName+"("+quote(x)+") {")
+      stream.println("function "+methName+"("+args.map(quote).mkString(", ")+") {")
     
-      emitBlock(y)
-      stream.println("return "+quote(getBlockResult(y)))
+      emitBlock(body)
+      stream.println("return "+quote(getBlockResult(body)))
     
       stream.println("}")
     }

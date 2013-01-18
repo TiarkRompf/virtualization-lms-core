@@ -182,9 +182,22 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   def obj_integer_parse_int(s: Rep[String])(implicit pos: SourceContext) = ObjIntegerParseInt(s)
   def obj_int_max_value(implicit pos: SourceContext) = ObjIntMaxValue()
   def obj_int_min_value(implicit pos: SourceContext) = ObjIntMinValue()
-  def int_plus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntPlus(lhs, rhs)
-  def int_minus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntMinus(lhs, rhs)
-  def int_times(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntTimes(lhs, rhs)
+  def int_plus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs, rhs) match {
+    case (Const(0), r) => r
+    case (l, Const(0)) => l
+    case _ => IntPlus(lhs,rhs)
+  }
+  def int_minus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs, rhs) match {
+    case (l, Const(0)) => l
+    case _ => IntMinus(lhs, rhs)
+  }
+  def int_times(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs, rhs) match {
+    case (l@Const(0), r) => l
+    case (l, r@Const(0)) => r
+    case (Const(1), r) => r
+    case (l, Const(1)) => l
+    case _ => IntTimes(lhs, rhs)
+  }
   def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A])(implicit pos: SourceContext) : Exp[A] = IntDivideFrac(lhs, rhs)
   def int_divide(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntDivide(lhs, rhs)
   def int_mod(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntMod(lhs, rhs)
@@ -220,9 +233,13 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
     e match {
       case ObjDoubleParseDouble(x) => obj_double_parse_double(f(x))
       case ObjDoublePositiveInfinity() => obj_double_positive_infinity
+      case ObjDoubleNegativeInfinity() => obj_double_negative_infinity
+      case ObjDoubleMinValue() => obj_double_min_value
       case ObjDoubleMaxValue() => obj_double_max_value
       case DoubleFloatValue(x) => double_float_value(f(x))
       case ObjIntegerParseInt(x) => obj_integer_parse_int(f(x))
+      case ObjIntMaxValue() => obj_int_max_value
+      case ObjIntMinValue() => obj_int_min_value
       case IntDoubleValue(x) => int_double_value(f(x))
       case IntFloatValue(x) => int_float_value(f(x))
       case IntBitwiseNot(x) => int_bitwise_not(f(x))
@@ -231,11 +248,15 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
       case IntTimes(x,y) => int_times(f(x),f(y))
       case IntDivide(x,y) => int_divide(f(x),f(y))
       case IntMod(x,y) => int_mod(f(x),f(y))
+      case IntBinaryOr(x,y) => int_binaryor(f(x),f(y))
+      case IntBinaryAnd(x,y) => int_binaryand(f(x),f(y))
+      case IntBinaryXor(x,y) => int_binaryxor(f(x),f(y))
       case IntToLong(x) => int_tolong(f(x))
       case IntShiftLeft(x,y) => int_leftshift(f(x),f(y))
       case IntShiftRightLogical(x,y) => int_rightshiftlogical(f(x),f(y))
       case IntShiftRightArith(x,y) => int_rightshiftarith(f(x),f(y))
       case LongShiftLeft(x,y) => long_shiftleft(f(x),f(y))
+      case LongBinaryOr(x,y) => long_binaryor(f(x),f(y))
       case LongBinaryAnd(x,y) => long_binaryand(f(x),f(y))
       case LongToInt(x) => long_toint(f(x))
       case LongShiftRightUnsigned(x,y) => long_shiftright_unsigned(f(x),f(y))

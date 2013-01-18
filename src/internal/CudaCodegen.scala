@@ -33,12 +33,8 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
-  def emitSource[A,B](f: Exp[A] => Exp[B], className: String, out: PrintWriter)(implicit mA: Manifest[A], mB: Manifest[B]): List[(Sym[Any], Any)] = {
-    val x = fresh[A]
-    val y = reifyBlock(f(x))
-
-    val sA = mA.toString
-    val sB = mB.toString
+  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
+    val sB = manifest[A].toString
 
     withStream(out) {
       stream.println("/*****************************************\n"+
@@ -50,7 +46,7 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
 
       stream.println("int main(int argc, char** argv) {")
 
-      emitBlock(y)
+      emitBlock(body)
       //stream.println(quote(getBlockResult(y)))
 
       stream.println("}")
