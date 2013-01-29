@@ -105,7 +105,6 @@ trait GenericCodegen extends BlockTraversal {
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit
-  def emitAssignment(lhs: String, rhs: String): Unit
 
   def emitSource[T : Manifest, R : Manifest](f: Exp[T] => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s = fresh[T]

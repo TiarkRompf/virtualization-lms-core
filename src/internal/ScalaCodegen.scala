@@ -99,9 +99,6 @@ trait ScalaCodegen extends GenericCodegen with Config {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
   
-  def emitAssignment(lhs: String, rhs: String): Unit = {
-    stream.println(lhs + " = " + rhs)
-  }
 }
 
 trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
