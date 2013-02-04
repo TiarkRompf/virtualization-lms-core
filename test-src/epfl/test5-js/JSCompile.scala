@@ -37,6 +37,10 @@ trait JSCodegen extends GenericCodegen {
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     stream.println("var " + quote(sym) + " = " + rhs)
   }
+
+  def emitAssignment(lhs: String, rhs: String): Unit = {
+    stream.println(lhs + " = " + rhs)
+  }
 }
 
 trait JSNestedCodegen extends GenericNestedCodegen with JSCodegen {
