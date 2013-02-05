@@ -54,11 +54,21 @@ trait JSGenTupleOps extends JSGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case ETuple2(a,b)  =>
-      emitValDef(sym, "{_1:"+ quote(a) + ",_2:" + quote(b) + "}")
-    case Tuple2Access1(t) => emitValDef(sym, quote(t) + "._1")
-    case Tuple2Access2(t) => emitValDef(sym, quote(t) + "._2")
 
+    // The patterns
+    //
+    // case ETuple2(a,b)  =>
+    // case Tuple2Access2(t) =>
+    // case Tuple2Access2(t) =>
+    //
+    // are converted to be compilable after
+    //
+    // virtualization-lms-core/commit/e6b9ea00be575001c74cae67c2fbda195172ee2f
+
+    case SimpleStruct(ClassTag(name), Seq(a_kv, b_kv)) if (name startsWith "Tuple2") =>
+      emitValDef(sym, "{_1:"+ quote(a_kv._2) + ",_2:" + quote(b_kv._2) + "}")
+    case FieldApply(t, "_1") => emitValDef(sym, quote(t) + "._1")
+    case FieldApply(t, "_2") => emitValDef(sym, quote(t) + "._2")
     case _ => super.emitNode(sym, rhs)
   }
 }

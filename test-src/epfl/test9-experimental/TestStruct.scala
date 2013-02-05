@@ -35,7 +35,7 @@ trait ComplexBase extends Arith {
 
 trait ComplexStructExp extends ComplexBase with StructExp {
 
-  def Complex(re: Rep[Double], im: Rep[Double]) = struct[Complex](ClassTag[Complex]("Complex"), Map("re"->re, "im"->im))
+  def Complex(re: Rep[Double], im: Rep[Double]) = struct[Complex](ClassTag[Complex]("Complex"), "re"->re, "im"->im)
   def infix_re(c: Rep[Complex]): Rep[Double] = field[Double](c, "re")
   def infix_im(c: Rep[Complex]): Rep[Double] = field[Double](c, "im")
   
@@ -67,7 +67,7 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
           if (m.erasure.isArray) mtype(Manifest.classType(m.erasure.getComponentType))
           else { printerr("warning: expect type Array[A] but got "+m); mtype(manifest[Any]) }
       }
-      struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))
+      struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp))))(Seq.canBuildFrom))
     case _ => super.infix_at(a,i)
   }
   
