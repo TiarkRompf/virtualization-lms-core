@@ -1,6 +1,6 @@
 name := "LMS"
 
-version := "0.2"
+version := "0.2-wip-merge-SNAPSHOT"
 
 organization := "EPFL"
 
