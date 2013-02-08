@@ -4,13 +4,7 @@ version := "0.2"
 
 organization := "EPFL"
 
-resolvers += ScalaToolsSnapshots
-
-resolvers += dropboxScalaTestRepo
-
-scalaOrganization := "org.scala-lang"
-
-//scalaBinaryVersion := virtScala // necessary??
+scalaOrganization := "org.scala-lang.virtualized"
 
 scalaVersion := virtScala
 
@@ -25,11 +19,11 @@ scalacOptions += "-Yvirtualize"
 //scalacOptions in Compile ++= Seq(/*Unchecked, */Deprecation)
 
 // needed for scala.tools, which is apparently not included in sbt's built in version
-libraryDependencies += "org.scala-lang" % "scala-library" % virtScala
+libraryDependencies += "org.scala-lang.virtualized" % "scala-library" % virtScala
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % virtScala
+libraryDependencies += "org.scala-lang.virtualized" % "scala-compiler" % virtScala
 
-libraryDependencies += scalaTest
+libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
 // tests are not thread safe
 parallelExecution in Test := false
@@ -40,6 +34,6 @@ publishArtifact in (Compile, packageDoc) := false
 // continuations
 autoCompilerPlugins := true
 
-addCompilerPlugin("org.scala-lang.plugins" % "continuations" % virtScala)
+addCompilerPlugin("org.scala-lang.virtualized.plugins" % "continuations" % virtScala)
 
 scalacOptions += "-P:continuations:enable"
