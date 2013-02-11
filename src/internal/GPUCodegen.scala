@@ -32,7 +32,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   var outerLoopSize: Exp[Int] = null
 
   //TODO: Get rid of this variable
-  private var inVars = List[Sym[Any]]()
+  protected var inVars = List[Sym[Any]]()
   protected val boundMap = HashMap[Exp[Int],Exp[Int]]()
 
   def emitMultiLoopFunc(func:Block[Any], postfix: String, lastInputs: List[Sym[Any]], stream:PrintWriter): List[String] = {
