@@ -151,7 +151,7 @@ trait TestDSL extends BaseExp with LiftAll {
   def flowBwd[T](e: Effects, block: BlockStm[T]) = {
     var ee = e ++ List(block.res.toString)
     val stms2 = block.stms.reverse.flatMap {
-      case TP(sym, WaitBwd(e, r)) =>
+      case TP(sym, WaitBwd(e, r: ((Sym[Any], BwdInfo) => (List[Stm], BwdInfo)))) => // FIXME: type annot?
         val (stm2, ee2) = r(sym, e)
         ee = ee2
         stm2
