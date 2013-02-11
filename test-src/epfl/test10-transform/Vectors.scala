@@ -56,7 +56,7 @@ trait VectorExp extends VectorOps with EffectExp {
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case VectorZeros(n) => vzeros(f(n))
     case VectorLiteral(a) => vliteral(f(a))
-    case VectorApply(a,x) => vapply(f(a),f(x))
+    case VectorApply(a,x) => vapply(f(a),f(x))(mtype(manifest[A]))
     case VectorUpdate(a,x,y) => vupdate(f(a),f(x),f(y))
     case VectorLength(a) => vlength(f(a))
     case VectorPlus(a, b) => vplus(f(a),f(b))
