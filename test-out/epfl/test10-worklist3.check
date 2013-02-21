@@ -18,8 +18,10 @@ val x6 = println(x5)
 ### next
 install replacement for Sym(1)
 install replacement for Sym(2)
+warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Sym(9)),Block(Const(())),Block(Sym(12)))
+warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Const(100)),Block(Const(())),Block(Const(50)))
 install replacement for Sym(5)
-toAtom transform Field(Sym(4),length,Int) List(Sym(4)) -> List(Sym(17))
+toAtom transform FieldApply(Sym(4),length) List(Sym(4)) -> List(Sym(17))
 toAtom transform VectorApply(Sym(4),Sym(18)) List(Sym(4), Sym(18)) -> List(Sym(17), Sym(18))
 register replacement for Sym(19)
 discarding, already have a replacement for Sym(19)
@@ -40,18 +42,20 @@ val x12 = LoopArray(50) { x11 =>
 }
 (50,x12)
 }
-val x17 = new { val data = x15; val length = x16 }
-val x10 = new { val data = x9; val length = 100 }
+val x17 = new VectorDouble(x15,x16)
+val x10 = new VectorDouble(x9,100)
 val x22 = LoopArray(x16) { x18 => 
 val x19 = VectorApply(Sym(17),Sym(18))
 val x20 = VectorApply(Sym(10),Sym(18))
 val x21 = x19+x20
 x21
 }
-val x23 = new { val data = x22; val length = x16 }
+val x23 = new VectorDouble(x22,x16)
 val x24 = println(x23)
 
 ### next
+warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Const(100)),Block(Const(())),Block(Const(50)))
+warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Sym(27)),Block(Const(())),Block(Sym(29)))
 install replacement for Sym(19)
 toAtom transform ArrayIndex(Sym(15),Sym(18)) List(Sym(15), Sym(18)) -> List(Sym(30), Sym(33))
 install replacement for Sym(20)
@@ -76,5 +80,5 @@ val x35 = x27.apply(x33)
 val x36 = x34+x35
 x36
 }
-val x38 = new { val data = x37; val length = x16 }
+val x38 = new VectorDouble(x37,x16)
 val x39 = println(x38)

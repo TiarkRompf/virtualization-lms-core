@@ -17,6 +17,8 @@ val x6 = println(x5)
 ### next
 install replacement for Sym(1)
 install replacement for Sym(2)
+warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Sym(9)),Block(Const(())),Block(Sym(12)))
+warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Const(100)),Block(Const(())),Block(Const(50)))
 install replacement for Sym(5)
 register replacement for Sym(18)
 register replacement for Sym(20)
@@ -35,19 +37,21 @@ val x12 = LoopArray(50) { x11 =>
 }
 (x12,50)
 }
-val x17 = new { val data = x15; val length = x16 }
+val x17 = new VectorDouble(x15,x16)
 val x18 = VectorLength(Sym(17))
-val x10 = new { val data = x9; val length = 100 }
+val x10 = new VectorDouble(x9,100)
 val x23 = LoopArray(x18) { x19 => 
 val x20 = VectorApply(Sym(17),Sym(19))
 val x21 = VectorApply(Sym(10),Sym(19))
 val x22 = x20+x21
 x22
 }
-val x24 = new { val data = x23; val length = x18 }
+val x24 = new VectorDouble(x23,x18)
 val x25 = println(x24)
 
 ### next
+warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Sym(28)),Block(Const(())),Block(Sym(30)))
+warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Const(100)),Block(Const(())),Block(Const(50)))
 install replacement for Sym(18)
 install replacement for Sym(20)
 install replacement for Sym(21)
@@ -71,5 +75,5 @@ val x36 = x28.apply(x34)
 val x37 = x35+x36
 x37
 }
-val x39 = new { val data = x38; val length = x16 }
+val x39 = new VectorDouble(x38,x16)
 val x40 = println(x39)
