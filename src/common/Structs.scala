@@ -109,6 +109,8 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     case _ => super.readSyms(e)
   }
 
+  // TODO: read/write/copy summary
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
     case FieldApply(struct, key) => field(f(struct), key)
@@ -359,13 +361,13 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
     case Struct(tag, elems) =>
       registerStruct(structName(sym.tp), elems)
       emitValDef(sym, "new " + structName(sym.tp) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
-      printlog("WARNING: emitting " + structName(sym.tp) + " struct " + quote(sym))    
+//      printlog("WARNING: emitting " + structName(sym.tp) + " struct " + quote(sym))    
     case FieldApply(struct, index) =>
       emitValDef(sym, quote(struct) + "." + index)
-      printlog("WARNING: emitting field access: " + quote(struct) + "." + index)
+//      printlog("WARNING: emitting field access: " + quote(struct) + "." + index)
     case FieldUpdate(struct, index, rhs) =>
       emitValDef(sym, quote(struct) + "." + index + " = " + quote(rhs))
-      printlog("WARNING: emitting field update: " + quote(struct) + "." + index)
+//      printlog("WARNING: emitting field update: " + quote(struct) + "." + index)
     case _ => super.emitNode(sym, rhs)
   }
 
