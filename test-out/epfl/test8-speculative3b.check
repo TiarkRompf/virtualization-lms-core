@@ -15,7 +15,7 @@ x39
 // dummy placeholder for previous iteration: List(Sym(41), Sym(43)) = Sym(4) / List(Sym(3), Sym(58))
 val x45 = x3
 val x48 = x45+1.0
-x3 = x48
+val x49 = x3 = x48
 val x44 = println(7)
 val x46 = println(x45)
 val x50 = println(2)
