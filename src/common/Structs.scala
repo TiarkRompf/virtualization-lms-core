@@ -121,7 +121,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   }).asInstanceOf[Exp[A]]
 
   def structName[T](m: Manifest[T]): String = m match {
-    case rm: RefinedManifest[_] => rm.erasure.getSimpleName + rm.fields.map(f => structName(f._2)).mkString("")
+    case rm: RefinedManifest[_] => rm.erasure.getSimpleName + rm.fields.map(f => f._1 + structName(f._2)).mkString("")
     case _ if (m <:< manifest[AnyVal]) => m.toString
     case _ => m.erasure.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
   }
