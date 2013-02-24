@@ -66,7 +66,7 @@ trait TupleOpsExp extends TupleOps with StructExp {
 
 }
 
-trait TupleGenBase extends GenericCodegen { 
+trait TupleGenBase extends GenericCodegen with BaseGenStruct { 
   val IR: TupleOpsExp
 
   override def remap[A](m: Manifest[A]) = m.erasure.getSimpleName match {
@@ -78,7 +78,7 @@ trait TupleGenBase extends GenericCodegen {
   }
 }
 
-trait ScalaGenTupleOps extends ScalaGenBase with TupleGenBase 
-trait CGenTupleOps extends CGenBase with TupleGenBase
-trait CudaGenTupleOps extends CudaGenBase with TupleGenBase
-trait OpenCLGenTupleOps extends OpenCLGenBase with TupleGenBase
+trait ScalaGenTupleOps extends ScalaGenBase with TupleGenBase with ScalaGenStruct { val IR: TupleOpsExp }
+trait CGenTupleOps extends CGenBase with TupleGenBase with CGenStruct
+trait CudaGenTupleOps extends CudaGenBase with TupleGenBase with CudaGenStruct
+trait OpenCLGenTupleOps extends OpenCLGenBase with TupleGenBase with OpenCLGenStruct
