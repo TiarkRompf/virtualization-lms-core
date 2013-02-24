@@ -49,7 +49,26 @@ trait JSGenTupledFunctions extends JSGenFunctions {
   }
 }
 
-trait JSGenTupleOps extends JSGenBase {
+trait JSGenStruct extends JSGenBase {
+  val IR: StructExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case Struct(tag, elems) =>
+      registerStruct(structName(sym.tp), elems)
+      emitValDef(sym, "{__structName:" + structName(sym.tp) + "," + elems.map(e => e._1+":"+quote(e._2)).mkString(",") + "}")
+//      printlog("WARNING: emitting " + structName(sym.tp) + " struct " + quote(sym))    
+    case FieldApply(struct, index) =>
+      emitValDef(sym, quote(struct) + "." + index)
+//      printlog("WARNING: emitting field access: " + quote(struct) + "." + index)
+    case FieldUpdate(struct, index, rhs) =>
+      emitValDef(sym, quote(struct) + "." + index + " = " + quote(rhs))
+//      printlog("WARNING: emitting field update: " + quote(struct) + "." + index)
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait JSGenTupleOps extends JSGenBase with JSGenStruct {
   val IR: TupleOpsExp
   import IR._
 
