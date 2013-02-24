@@ -791,6 +791,7 @@ class TestMatcherNew extends FileDiffSuite {
       
       val f = (x:Rep[Unit]) => test(x)
       codegen.emitSource(f, "Match", new java.io.PrintWriter(System.out))
+      codegen.emitDataStructures(new java.io.PrintWriter(System.out))
       val fc = compile(f)
       runtest()
   }

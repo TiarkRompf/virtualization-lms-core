@@ -94,6 +94,7 @@ class TestStruct extends FileDiffSuite {
       with ScalaGenPrint { val IR: self.type = self;
         override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
+    codegen.emitDataStructures(new PrintWriter(System.out))
   }
 
   
@@ -108,7 +109,7 @@ class TestStruct extends FileDiffSuite {
           print(c)
         }
       }
-      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
+      new Prog with Impl
     }
     assertFileEqualsCheck(prefix+"struct1")
   }
@@ -254,7 +255,7 @@ class TestStruct extends FileDiffSuite {
         }
       }
 
-      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
+      new Prog with Impl
     }
     assertFileEqualsCheck(prefix+"struct5")
   }
@@ -275,7 +276,7 @@ class TestStruct extends FileDiffSuite {
         }
       }
 
-      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
+      new Prog with Impl
     }
     assertFileEqualsCheck(prefix+"struct6")
   }
