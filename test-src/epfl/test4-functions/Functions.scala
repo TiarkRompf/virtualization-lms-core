@@ -197,7 +197,7 @@ trait ScalaGenFunctionsExternal extends ScalaGenEffect {
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@DefineFun(y) =>
-      emitValDef(sym, "{" + quote(e.arg) + ": (" + e.arg.tp + ") => "/*}*/)
+      emitValDef(sym, "{" + quote(e.arg) + ": (" + remap(e.arg.tp) + ") => "/*}*/)
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")

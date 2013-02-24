@@ -241,9 +241,9 @@ trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
-      emitValDef(sym, "{" + quote(x) + ": (" + x.tp + ") => ")
+      emitValDef(sym, "{" + quote(x) + ": (" + remap(x.tp) + ") => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)) + ": " + y.tp)
+      stream.println(quote(getBlockResult(y)) + ": " + remap(y.tp))
       stream.println("}")
 
     case Apply(fun, arg) =>
@@ -266,7 +266,7 @@ trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTu
     case Lambda(fun, UnboxedTuple(xs), y) =>
       emitValDef(sym, "{" + xs.map(s=>quote(s)+":"+remap(s.tp)).mkString("(",",",")") + " => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)) + ": " + y.tp)
+      stream.println(quote(getBlockResult(y)) + ": " + remap(y.tp))
       stream.println("}")
 
     case Apply(fun, UnboxedTuple(args)) =>
