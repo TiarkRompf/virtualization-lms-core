@@ -109,6 +109,36 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     case _ => super.readSyms(e)
   }
 
+  override def aliasSyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleStruct(tag,elems) => Nil
+    case FieldApply(s,x) => Nil
+    case FieldUpdate(s,x,b) => Nil
+    case _ => super.aliasSyms(e)
+  }
+
+  override def containSyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleStruct(tag,elems) => elems.collect { case (k,v:Sym[Any]) => v }.toList
+    case FieldApply(s,x) => Nil
+    case FieldUpdate(s,x,b) => syms(b)
+    case _ => super.containSyms(e)
+  }
+
+  override def extractSyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleStruct(tag,elems) => Nil
+    case FieldApply(s,x) => syms(s)
+    case FieldUpdate(s,x,b) => Nil
+    case _ => super.extractSyms(e)
+  }
+
+  override def copySyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleStruct(tag,elems) => Nil
+    case FieldApply(s,x) => Nil
+    case FieldUpdate(s,x,b) => Nil
+    case _ => super.copySyms(e)
+  }
+
+
+
   // TODO: read/write/copy summary
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {

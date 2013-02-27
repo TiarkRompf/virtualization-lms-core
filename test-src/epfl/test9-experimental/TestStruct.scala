@@ -46,20 +46,19 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   
   
   override def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
-    case Def(Struct(ArraySoaTag(tag,len),elems:Map[String,Exp[Array[T]]])) =>
+    case Def(Struct(ArraySoaTag(tag,len),elems: Iterable[(String,Rep[Array[T]])])) =>
       def unwrap[A](m:Manifest[Array[A]]): Manifest[A] = m.typeArguments match {
         case a::_ => mtype(a)
         case _ =>
           if (m.erasure.isArray) mtype(Manifest.classType(m.erasure.getComponentType))
           else { printerr("warning: expect type Array[A] but got "+m); mtype(manifest[Any]) }
       }
-      sys.error("FIXME !!")
-      //struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))
+      struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))
     case _ => super.infix_at(a,i)
   }
   
   override def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
-    case Def(Struct(ArraySoaTag(tag,len),elems:Map[String,Exp[Array[T]]])) => len
+    case Def(Struct(ArraySoaTag(tag,len),elems)) => len
     case _ => super.infix_length(a)
   }
 
