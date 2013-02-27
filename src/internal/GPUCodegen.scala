@@ -4,7 +4,7 @@ package internal
 import java.io.{StringWriter, PrintWriter, File}
 import collection.immutable.List._
 import scala.reflect.SourceContext
-import collection.mutable.{HashSet, ArrayBuffer, ListMap}
+import collection.mutable.{HashMap, HashSet, ArrayBuffer, ListMap, ListBuffer}
 
 trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDeviceTransfer {
   val IR: Expressions
@@ -29,6 +29,11 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   var isGPUable:Boolean = false
   var processingHelperFunc: Boolean = false
   var isNestedNode: Boolean = false
+  var outerLoopSize: Exp[Int] = null
+
+  //TODO: Get rid of this variable
+  protected var inVars = List[Sym[Any]]()
+  protected val boundMap = HashMap[Exp[Int],Exp[Int]]()
 
   def emitMultiLoopFunc(func:Block[Any], postfix: String, lastInputs: List[Sym[Any]], stream:PrintWriter): List[String] = {
     isNestedNode = true
@@ -44,8 +49,16 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     }
     tabWidth = currentTab
 
+    def addRef(elem: Sym[Any], tp: String): String = {
+      if(inVars contains elem) {
+        "Ref< " + tp + " >"
+      }
+      else 
+        tp
+    }
+
     val inputs = getFreeVarBlock(func,lastInputs).distinct
-    val paramStr = (inputs++lastInputs).map(ele=>remap(ele.tp)+" "+quote(ele)).mkString(",")
+    val paramStr = ((inputs++lastInputs).map(ele => addRef(ele,remap(ele.tp)) + " " + quote(ele)) ++ metaData.temps.map(t=>t.tp + " *" + t.sym) ++ List("size_t tempMemSize","char *tempMemPtr","int *tempMemUsage")).mkString(",")
 
     header.append(devFuncPrefix + " %s dev_%s(%s) {\n".format(remap(getBlockResult(func).tp),postfix,paramStr))
     if(remap(getBlockResult(func).tp) != "void")
@@ -69,6 +82,11 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     inputs.map(quote(_))
   }
 
+
+  protected def registerTempAlloc(sym:Sym[Any], tp:Manifest[Any], size:Exp[Int]):String = {
+    metaData.temps prepend TempAlloc(quote(sym)+"_temp",remap(tp),quote(size))
+    quote(sym) + "_temp"
+  }
 
   // MetaData
   override def hasMetaData: Boolean = true
@@ -97,6 +115,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
       ",[" + loopZeroInputs.map(i => "\""+ i +"\"").mkString(",") + "],[" + loopZeroInputs_2.map(i => "\""+ i +"\"").mkString(",") + "]"
     }
   }
+
   final class TransferFunc {
     var funcHtoD:String = ""
     var argsFuncHtoD:List[Sym[Any]] = Nil
@@ -105,9 +124,12 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     //override def toString: String = {  }
   }
 
+  case class TempAlloc(sym: String, tp: String, size:String)
+
   final class GPUMetaData(val kernelInputs: List[Sym[Any]]) {
     val inputs: ListMap[Sym[Any],TransferFunc] = ListMap()
     val outputs: ListMap[Sym[Any],TransferFunc] = ListMap()
+    val temps: ListBuffer[TempAlloc] = ListBuffer()
     var gpuLibCall: String = ""
     var loopFuncs: ListMap[Sym[Any],LoopFunc] = ListMap()
     override def toString: String = {
@@ -116,7 +138,8 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
 
       //if (kernelFileExt == "cu") {
         out.append("\"gpuInputs\":["+kernelInputs.filter(in => !isPrimitiveType(in.tp)).map(in=>"{\""+quote(in)+"\":[\""+remap(in.tp)+"\"]}").mkString(",")+"],")
-        out.append("\"gpuOutputs\":["+outputs.toList.reverse.map(out=>"{\""+quote(out._1)+"\":[\""+remap(out._1.tp)+"\",["+ out._2.argsFuncHtoD.map("\""+quote(_)+"\"").mkString(",")+"],"+loopFuncs.getOrElse(out._1,new LoopFunc).toString+"]}").mkString(",")+"]")
+        out.append("\"gpuOutputs\":["+outputs.toList.reverse.map(out=>"{\""+quote(out._1)+"\":[\""+remap(out._1.tp)+"\",["+ out._2.argsFuncHtoD.map("\""+quote(_)+"\"").mkString(",")+"],"+loopFuncs.getOrElse(out._1,new LoopFunc).toString+"]}").mkString(",")+"],")
+        out.append("\"gpuTemps\":["+temps.map(t=>"{\""+t.sym+"\":[\""+t.tp+"\",\""+t.size+"\"]}").mkString(",")+"]")
       //}
       //else { //opencl
       //  out.append("\"gpuInputs\":["+getKernelInputs.filter(in=>isObjectType(in.Type)).map(in=>"{\""+quote(in)+"\":[\""+remap(in.Type)+"\",{"+unpackObject(in).map(f => "\"%s\":\"%s\"".format(f._1,remap(f._2)).replaceAll("__global ","")).mkString(",")+"}]}").mkString(",")+"],")
@@ -129,12 +152,8 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   }
 
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
-
-    if((vars.length > 0)  || (resultIsVar)) throw new GenerationFailedException("GPUGen: Not GPUable input/output types: Variable")
-
-    // Set kernel input and output symbols
-    //kernelInputs = vals
-    //kernelOutputs = syms
+    inVars = vars
+    boundMap.clear
 
     //helperFuncString.clear
     metaData = new GPUMetaData(vals)
@@ -264,109 +283,89 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     }
   }
 
-  def emitAllocOutput(sym: Sym[Any], ksym: List[Sym[Any]], contents: String, args: List[Sym[Any]], aV: Sym[Any]): String = {
-    val out = new StringBuilder
-    val funcName = "allocFunc_%s".format(quote(sym))
-    if(helperFuncList contains funcName) return ""
+  def emitAllocFunc(blocks: List[(Sym[Any],Block[Any])], funcName: String, lastInputs: List[Sym[Any]], boundVals:Map[Sym[Any],Exp[Any]]) {
+    processingHelperFunc = true
+    
+    if(helperFuncList contains funcName) return 
     helperFuncList += funcName
 
-    if(!isPrimitiveType(sym.tp)) {
-      val paramStr = args.map(ele =>
-        if(isPrimitiveType(ele.tp)) remap(ele.tp) + " " + quote(ele)
-        else remap(ele.tp) + " *" + quote(ele) + "_ptr"
-      ).mkString(",")
-      val derefParams = args.map(ele=>
-         if(isPrimitiveType(ele.tp)) ""
-         else "\t%s %s = *(%s_ptr);\n".format(remap(ele.tp),quote(ele),quote(ele))
-       ).mkString("")
-      out.append("%s *%s(%s %s)".format(remap(sym.tp), funcName, paramStr, if(args.nonEmpty) ",int size" else "int size"))
-      headerStream.append(out.toString + ";\n")
-      out.append("{\n")
-      out.append(derefParams)
-      //out.append("\t%s *%s_ptr = new %s(size);\n".format(remap(aV.tp),quote(aV),remap(aV.tp)))
-      //out.append("\t%s %s = *%s_ptr;\n".format(remap(aV.tp),quote(aV),quote(aV)))
-      out.append(contents)
-      out.append("}\n")
-      out.toString
-    }
-    else {
-      out.append("%s *%s(void)".format(remap(sym.tp),funcName))
-      headerStream.append(out.toString + ";\n")
-      out.append("{\n")
-      out.append(contents)
-      out.append("}\n")
-      out.toString
-    }
-  }
+    val sym = blocks.last._1
+    val out = new StringBuilder
+    val blockString = new StringWriter
+    val blockStream = new PrintWriter(blockString,true)
 
+    val inputs = (blocks.flatMap(f => getFreeVarBlock(f._2, Nil)) ++ boundVals.values.filter(_.isInstanceOf[Sym[Any]]).map(_.asInstanceOf[Sym[Any]]).toList).distinct.filterNot(i => blocks.map(_._1).contains(i) || boundVals.keySet.contains(i) || lastInputs.contains(i)) ++ lastInputs
 
-  /* emitAllocFunc method emits code for allocating the output memory of a kernel,
-       and copying  it to CPU memory with allocation of new object in CPU */
-  //TODO: Separate output and temporary allocations
-  def emitAllocFunc(sym:Sym[Any], allocFunc:List[Block[Any]], boundings:List[(Sym[Any],Exp[Any])], aV:Sym[Any]=null, size:Exp[Any]=null) {
-    processingHelperFunc = true
-    val tempString = new StringWriter
-    val tempStream = new PrintWriter(tempString,true)
-
-    // Get free variables (exclude the arrayVariable)
-    val inputs = if(allocFunc.isEmpty) Nil
-    else ((allocFunc.flatMap(f => getFreeVarBlock(f, Nil)) ++ boundings.map(_._2).filter(_.isInstanceOf[Sym[Any]]).map(_.asInstanceOf[Sym[Any]])).filterNot(s => (boundings.map(_._1)++List(aV)) contains s)).distinct
-
-    // Register metadata
+    // register metadata
     val tr = metaData.outputs.getOrElse(sym,new TransferFunc)
     tr.argsFuncHtoD = inputs
     metaData.outputs.put(sym,tr)
 
-
-    for (b <- boundings) {
-      withStream(tempStream) {
+    // emit bouding symbols
+    for (b <- boundVals) {
+      withStream(blockStream) {
         emitValDef(b._1,quote(b._2))
       }
     }
 
-    // Get the body (string) of the allocation function in tempString
-    //if(allocFunc!=null) {
-    if(!allocFunc.isEmpty) {
-      withStream(tempStream) {
-        allocFunc.foreach(emitBlock)
+    // emit block bodies
+    for (b <- blocks) {
+      withStream(blockStream) {
+        emitBlock(b._2)
+        emitValDef(b._1, quote(getBlockResult(b._2)))
+        stream.println("\t%s *%s_ptr = %s_ptr;\n".format(remap(b._1.tp),quote(b._1),quote(getBlockResult(b._2))))
       }
-      tempString.append("\treturn %s_ptr;\n".format(quote(getBlockResult(allocFunc.last))))
     }
-    else {
-      tempString.append("\treturn %s_ptr;\n".format(quote(sym)))
-    }
+    blockString.append("\treturn %s_ptr;\n".format(quote(blocks.last._1)))
 
-    // Emit the full allocation function
-    val allocOutputStr = emitAllocOutput(sym, null, tempString.toString, inputs, aV)
+    val paramStr = inputs.map(s =>
+      if(isPrimitiveType(s.tp)) remap(s.tp) + " " + quote(s)
+      else remap(s.tp) + " *" + quote(s) + "_ptr"
+    ).mkString(",")
+    val derefParams = inputs.map(s =>
+      if(isPrimitiveType(s.tp)) ""
+      else "\t%s %s = *(%s_ptr);\n".format(remap(s.tp),quote(s),quote(s))
+    ).mkString("")
 
-    // Write to helper function string
-    helperFuncStream.println(allocOutputStr)
-    //helperFuncString.append(allocOutputStr)
+    // emit header and complete host function
+    out.append("%s *%s(%s)".format(remap(sym.tp), funcName, paramStr))
+    headerStream.append(out.toString + ";\n")
+    out.append("{\n")
+    out.append(derefParams)
+    out.append(blockString)
+    out.append("}\n")
+    helperFuncStream.println(out.toString)
 
     processingHelperFunc = false
   }
 
-  def emitAllocFuncPrimitive(sym:Sym[Any]) {
+  def emitAllocFuncPrimitive(sym:Sym[Any], funcName: String) {
     processingHelperFunc = true
     assert(isPrimitiveType(sym.tp))
-
-    val tempString = new StringWriter
+    
+    if(helperFuncList contains funcName) return 
+    helperFuncList += funcName
+    val out = new StringBuilder
+    val allocString = new StringWriter
 
     // Register metadata
     val tr = metaData.outputs.getOrElse(sym,new TransferFunc)
     tr.argsFuncHtoD = Nil
     metaData.outputs.put(sym,tr)
 
-    tempString.append("\t%s *ptr;\n".format(remap(sym.tp)))
-    tempString.append("\tDeliteCudaMalloc((void**)&ptr, sizeof(%s));\n".format(remap(sym.tp)))
-    tempString.append("\treturn ptr;\n")
+    allocString.append("\t%s *ptr;\n".format(remap(sym.tp)))
+    allocString.append("\tDeliteCudaMalloc((void**)&ptr, sizeof(%s));\n".format(remap(sym.tp)))
+    allocString.append("\treturn ptr;\n")
 
     // Emit the full allocation function
-    val allocOutputStr = emitAllocOutput(sym, null, tempString.toString, null, null)
+    out.append("%s *%s(void)".format(remap(sym.tp),funcName))
+    headerStream.append(out.toString + ";\n")
+    out.append("{\n")
+    out.append(allocString)
+    out.append("}\n")
 
     // Write to helper function string
-    helperFuncStream.println(allocOutputStr)
-    //helperFuncString.append(allocOutputStr)
+    helperFuncStream.println(out.toString)
 
     processingHelperFunc = false
   }

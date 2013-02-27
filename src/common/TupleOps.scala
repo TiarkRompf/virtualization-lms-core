@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package common
 
+import scala.virtualization.lms.internal.GenericCodegen
 import java.io.PrintWriter
 import scala.reflect.SourceContext
 
@@ -65,7 +66,7 @@ trait TupleOpsExp extends TupleOps with StructExp {
 
 }
 
-trait ScalaGenTupleOps extends ScalaGenBase {
+trait TupleGenBase extends GenericCodegen { 
   val IR: TupleOpsExp
 
   override def remap[A](m: Manifest[A]) = m.erasure.getSimpleName match {
@@ -76,3 +77,8 @@ trait ScalaGenTupleOps extends ScalaGenBase {
     case _ => super.remap(m)
   }
 }
+
+trait ScalaGenTupleOps extends ScalaGenBase with TupleGenBase 
+trait CGenTupleOps extends CGenBase with TupleGenBase
+trait CudaGenTupleOps extends CudaGenBase with TupleGenBase
+trait OpenCLGenTupleOps extends OpenCLGenBase with TupleGenBase

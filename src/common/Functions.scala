@@ -300,10 +300,11 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
+        throw new GenerationFailedException("CudaGenFunctions: Lambda is not supported yet")
         // The version for inlined device function
-        stream.println(addTab() + "%s %s = %s;".format(remap(x.tp), quote(x), quote(sym)+"_1"))
-        emitBlock(y)
-        stream.println(addTab() + "%s %s = %s;".format(remap(y.tp), quote(sym), quote(getBlockResult(y))))
+        //stream.println(addTab() + "%s %s = %s;".format(remap(x.tp), quote(x), quote(sym)+"_1"))
+        //emitBlock(y)
+        //stream.println(addTab() + "%s %s = %s;".format(remap(y.tp), quote(sym), quote(getBlockResult(y))))
 
         // The version for separate device function
         /*
@@ -315,7 +316,6 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
         stream.println("return %s;".format(quote(getBlockResult(y))))
         stream.println("}")
         */
-
       case Apply(fun, arg) =>
         emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 

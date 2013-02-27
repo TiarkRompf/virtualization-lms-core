@@ -16,6 +16,15 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
+      else if (tp.erasure == classOf[List[Any]]) {
+        val out = new StringBuilder
+        val signature = "jobject sendCPPtoJVM_%s(JNIEnv *env, Host%s *sym)".format(mangledName(remap(tp)),remap(tp))
+        out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
+        out.append("\treturn NULL;\n")
+        out.append("}\n")
+        (signature+";\n", out.toString)
+      }
       else {
         throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
       }
@@ -35,6 +44,15 @@ trait CppHostTransfer extends AbstractHostTransfer {
         val signature = "%s recvCPPfromJVM_%s(JNIEnv *env, %s sym)".format(remap(tp),mangledName(remap(tp)),JNIType(tp))
         out.append(signature + " {\n")
         out.append("\treturn (%s)sym;\n".format(remap(tp)))
+        out.append("}\n")
+        (signature+";\n", out.toString)
+      }
+      else if (tp.erasure == classOf[List[Any]]) {
+        val out = new StringBuilder
+        val signature = "Host%s *recvCPPfromJVM_%s(JNIEnv *env, jobject obj)".format(remap(tp),mangledName(remap(tp)))
+        out.append(signature + " {\n")
+        out.append("\tHost%s *sym = new Host%s();\n".format(remap(tp),remap(tp)))
+        out.append("\treturn sym;\n")
         out.append("}\n")
         (signature+";\n", out.toString)
       }
@@ -61,6 +79,15 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
+      else if (tp.erasure == classOf[List[Any]]) {
+        val out = new StringBuilder
+        val signature = "jobject sendViewCPPtoJVM_%s(JNIEnv *env, Host%s *sym)".format(mangledName(remap(tp)),remap(tp))
+        out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
+        out.append("\treturn NULL;\n")
+        out.append("}\n")
+        (signature+";\n", out.toString)
+      }
       else {
         throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
       }
@@ -84,6 +111,15 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
+      else if (tp.erasure == classOf[List[Any]]) {
+        val out = new StringBuilder
+        val signature = "Host%s *recvViewCPPfromJVM_%s(JNIEnv *env, jobject *obj)".format(remap(tp),mangledName(remap(tp)))
+        out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
+        out.append("\treturn NULL;\n")
+        out.append("}\n")
+        (signature+";\n", out.toString)
+      }
       else {
         throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
       }
@@ -101,6 +137,14 @@ trait CppHostTransfer extends AbstractHostTransfer {
       if(isPrimitiveType(tp)) {
         val out = new StringBuilder
         val signature = "void sendUpdateCPPtoJVM_%s(JNIEnv *env, %s sym)".format(mangledName(remap(tp)),remap(tp))
+        out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
+        out.append("}\n")
+        (signature+";\n", out.toString)
+      }
+      else if (tp.erasure == classOf[List[Any]]) {
+        val out = new StringBuilder
+        val signature = "void sendUpdateCPPtoJVM_%s(JNIEnv *env, jobject obj, Host%s *sym)".format(mangledName(remap(tp)),remap(tp))
         out.append(signature + " {\n")
         out.append("\tassert(false);\n")
         out.append("}\n")
@@ -128,6 +172,14 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
+      else if (tp.erasure == classOf[List[Any]]) {
+        val out = new StringBuilder
+        val signature = "void recvUpdateCPPfromJVM_%s(JNIEnv *env, jobject obj, Host%s *sym)".format(mangledName(remap(tp)),remap(tp))
+        out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
+        out.append("}\n")
+        (signature+";\n", out.toString)
+      }
       else {
         throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
       }
@@ -150,7 +202,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
       case "long" => "jlong"
       case "float" => "jfloat"
       case "double" => "jdouble"
-      case _ => throw new GenerationFailedException("GPUGen: Cannot get array creation JNI function for this type " + remap(m))
+      case _ => "jobject"//all other types are objects
     }
   }
 
@@ -164,11 +216,12 @@ trait CppHostTransfer extends AbstractHostTransfer {
       case "long" => "Long"
       case "float" => "Float"
       case "double" => "Double"
-      case _ => throw new GenerationFailedException("GPUGen: Cannot get array creation JNI function for this type " + remap(m))
+      case _ => "Object"
     }
   }
 
-  def JNITypeDescriptor[A](m: Manifest[A]) : String = m.toString match {
+  def JNITypeDescriptor[A](m: Manifest[A]) : String = JNITypeDescriptor(m.toString)
+  def JNITypeDescriptor(tp: String): String = tp match {
     case "Boolean" => "Z"
     case "Byte" => "B"
     case "Char" => "C"
@@ -177,7 +230,13 @@ trait CppHostTransfer extends AbstractHostTransfer {
     case "Long" => "J"
     case "Float" => "F"
     case "Double" => "D"
-    case _ => throw new GenerationFailedException("Undefined JNI type")
+    case array if array.startsWith("Array[") => "[" + JNITypeDescriptor(array.slice(6,array.length-1))
+    case _ => { //all other types are objects
+      var objectType = tp.replace('.','/')
+      if (objectType.indexOf('[') != -1) objectType = objectType.substring(0, objectType.indexOf('[')) //erasure
+      "L"+objectType+";" //'L' + fully qualified type + ';'
+    }
+    //case _ => throw new GenerationFailedException("Undefined JNI type")
   }
 
 }

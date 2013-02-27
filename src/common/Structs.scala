@@ -130,6 +130,10 @@ trait StructExp extends StructOps with BaseExp with EffectExp with VariablesExp 
     case _ => super.object_toString(x)
   }
 
+  def registerStruct[T](name: String, elems: Seq[(String, Rep[Any])]) {
+    encounteredStructs += name -> elems.map(e => (e._1, e._2.tp))
+  }
+  val encounteredStructs = new scala.collection.mutable.HashMap[String, Seq[(String, Manifest[_])]]
 }
 
 trait StructExpOpt extends StructExp {
@@ -281,11 +285,6 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
 
 }
 
-trait CGenStruct extends CGenBase {
-  val IR: StructExp
-  import IR._
-}
-
 trait BaseGenFatStruct extends GenericFatCodegen {
   val IR: StructFatExpOptCommon // TODO: restructure traits, maybe move this to if then else codegen?
   import IR._
@@ -345,10 +344,7 @@ trait BaseGenStruct extends GenericNestedCodegen {
   val IR: StructExp
   import IR._
 
-  def registerStruct[T](name: String, elems: Seq[(String, Rep[Any])]) {
-    encounteredStructs += name -> elems.map(e => (e._1, e._2.tp))
-  }
-  val encounteredStructs = new scala.collection.mutable.HashMap[String, Seq[(String, Manifest[_])]]
+  //Moved encounteredStructs to IR
 }
 
 trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
@@ -388,6 +384,7 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
 
 }
 
+trait CGenStruct extends CGenBase with BaseGenStruct
 trait CudaGenStruct extends CudaGenBase with BaseGenStruct
 trait OpenCLGenStruct extends OpenCLGenBase with BaseGenStruct
 
