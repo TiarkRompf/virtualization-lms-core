@@ -112,8 +112,8 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   // TODO: read/write/copy summary
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
-    case FieldApply(struct, key) => field(f(struct), key)
+    case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })(mtype(manifest[A]),pos)
+    case FieldApply(struct, key) => field(f(struct), key)(mtype(manifest[A]),pos)
     case Reflect(FieldApply(struct, key), u, es) => reflectMirrored(Reflect(FieldApply(f(struct), key), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(FieldUpdate(struct, key, rhs), u, es) => reflectMirrored(Reflect(FieldUpdate(f(struct), key, f(rhs)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(SimpleStruct(tag, elems), u, es) => reflectMirrored(Reflect(SimpleStruct(tag, elems map { case (k,v) => (k, f(v)) }), mapOver(f,u), f(es)))(mtype(manifest[A]))
@@ -276,14 +276,15 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
 
   override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T])(implicit pos: SourceContext) = (deReify(a),deReify(b)) match {
     case ((u, Def(Struct(tagA,elemsA))), (v, Def(Struct(tagB, elemsB)))) =>
-      assert(tagA == tagB)
+      //assert(tagA == tagB, tagA+" !== "+tagB)
+      if (tagA != tagB) println("ERROR: "+tagA+" !== "+tagB)
       // create stm that computes all values at once
       // return struct of syms
       val combinedResult = super.ifThenElse(cond,u,v)
 
       val elemsNew = for (((lk,lv), (rk,rv)) <- elemsA zip elemsB) yield {
         assert(lk == rk)
-        lk -> phi(cond,u,lv,v,rv)(combinedResult)
+        lk -> phi(cond,u,lv,v,rv)(combinedResult)(mtype(lv.tp))
       }
       struct[T](tagA, elemsNew)
 

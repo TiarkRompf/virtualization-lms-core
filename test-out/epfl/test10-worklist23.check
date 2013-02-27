@@ -17,8 +17,6 @@ val x6 = println(x5)
 ### next
 install replacement for Sym(1)
 install replacement for Sym(2)
-warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Sym(9)),Block(Const(())),Block(Sym(12)))
-warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Const(100)),Block(Const(())),Block(Const(50)))
 install replacement for Sym(5)
 register replacement for Sym(18)
 register replacement for Sym(20)
@@ -50,8 +48,6 @@ val x24 = new VectorDouble(x23,x18)
 val x25 = println(x24)
 
 ### next
-warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Sym(28)),Block(Const(())),Block(Sym(30)))
-warning: possible missing mtype call - toAtom with Def of type Any Phi(Sym(3),Block(Const(())),Block(Const(100)),Block(Const(())),Block(Const(50)))
 install replacement for Sym(18)
 install replacement for Sym(20)
 install replacement for Sym(21)

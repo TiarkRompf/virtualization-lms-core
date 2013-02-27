@@ -83,7 +83,23 @@ class TestStruct extends FileDiffSuite {
     val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
+
+  /*override def fresh[T:Manifest]: Sym[T] = Sym[T] { 
+    if (nVars < 3) {
+      System.out.println(nVars)
+      (new Exception).printStackTrace
+    }
+
+    nVars += 1; nVars -1 
+  }*/
+
+    {
+      val x = fresh[Int]
+      val y = reifyEffects(test(x))
+      //globalDefs.foreach(Console.println _)
+      codegen.emitSource(List(x),y, "Test", new PrintWriter(System.out))
+      codegen.emitDataStructures(new PrintWriter(System.out))
+    }
   }
 
   trait ImplFused extends DSL with StructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
@@ -93,8 +109,13 @@ class TestStruct extends FileDiffSuite {
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self;
         override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
-    codegen.emitDataStructures(new PrintWriter(System.out))
+    {
+      val x = fresh[Int]
+      val y = reifyEffects(test(x))
+      //globalDefs.foreach(Console.println _)
+      codegen.emitSource(List(x),y, "Test", new PrintWriter(System.out))
+      codegen.emitDataStructures(new PrintWriter(System.out))
+    }
   }
 
   
