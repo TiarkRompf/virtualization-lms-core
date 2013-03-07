@@ -255,7 +255,9 @@ trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
     case _ => super.int_minus(lhs,rhs)    
   }
   override def int_times(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs,rhs) match {
+    case (Const(0),b) => Const(0)
     case (Const(1),b) => b
+    case (a,Const(0)) => Const(0)
     case (a,Const(1)) => a
     case _ => super.int_times(lhs,rhs)    
   }
