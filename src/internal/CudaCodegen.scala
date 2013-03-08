@@ -22,7 +22,7 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
 
     //TODO: Put all the DELITE APIs declarations somewhere
     helperFuncStream.print("#include \"helperFuncs.h\"\n")
-    headerStream.print(getDSLHeaders)
+    headerStream.print(getDataStructureHeaders())
     headerStream.print("#include <iostream>\n")
     headerStream.print("#include <limits>\n")
     headerStream.print("#include <assert.h>\n")
