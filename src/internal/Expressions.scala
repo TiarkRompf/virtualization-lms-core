@@ -184,6 +184,7 @@ trait Expressions extends Utils {
 
   // dependencies
 
+  // regular data (and effect) dependencies
   def syms(e: Any): List[Sym[Any]] = e match {
     case s: Sym[Any] => List(s)
     case ss: Iterable[Any] => ss.toList.flatMap(syms(_))
@@ -201,18 +202,29 @@ trait Expressions extends Utils {
     case _ => Nil
   }
 
+  // symbols which are bound in a definition
   def boundSyms(e: Any): List[Sym[Any]] = e match {
     case ss: Iterable[Any] => ss.toList.flatMap(boundSyms(_))
     case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
     case _ => Nil
   }
 
+  // symbols which are bound in a definition, but also defined elsewhere
+  def tunnelSyms(e: Any): List[Sym[Any]] = e match {
+    case ss: Iterable[Any] => ss.toList.flatMap(tunnelSyms(_))
+    case p: Product => p.productIterator.toList.flatMap(tunnelSyms(_))
+    case _ => Nil
+  }
+
+  // symbols of effectful components of a definition
   def effectSyms(x: Any): List[Sym[Any]] = x match {
     case ss: Iterable[Any] => ss.toList.flatMap(effectSyms(_))
     case p: Product => p.productIterator.toList.flatMap(effectSyms(_))
     case _ => Nil
   }
 
+  // soft dependencies: they are not required but if they occur, 
+  // they must be scheduled before
   def softSyms(e: Any): List[Sym[Any]] = e match {
     // empty by default
     //case s: Sym[Any] => List(s)
@@ -229,6 +241,8 @@ trait Expressions extends Utils {
     case _ => Nil
   }
 
+  // frequency information for dependencies: used/computed
+  // often (hot) or not often (cold). used to drive code motion.
   def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case s: Sym[Any] => List((s,1.0))
     case ss: Iterable[Any] => ss.toList.flatMap(symsFreq(_))

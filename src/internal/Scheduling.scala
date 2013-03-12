@@ -152,6 +152,7 @@ trait Scheduling {
       d.lhs.foreach(s => putDef(lhsCache, s, d))
       syms(d.rhs).foreach(s => putDef(symsCache, s, d))      
       boundSyms(d.rhs).foreach(st => putDef(boundSymsCache, st, d))
+      tunnelSyms(d.rhs).foreach(st => putDef(boundSymsCache, st, d)) // treat tunnel like bound
     }
     
     /*
