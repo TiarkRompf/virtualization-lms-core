@@ -222,8 +222,8 @@ trait ScalaGenVariables extends ScalaGenEffect {
     //case Assign(a, b) => emitAssignment(quote(a), quote(b))
     case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(b))
     case VarMinusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(b))
-    case VarTimesEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(b))
-    case VarDivideEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(b))
+    case VarTimesEquals(Variable(a), b) => emitValDef(sym, quote(a) + " *= " + quote(b))
+    case VarDivideEquals(Variable(a), b) => emitValDef(sym, quote(a) + " /= " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 }
