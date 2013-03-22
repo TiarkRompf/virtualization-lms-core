@@ -8,7 +8,7 @@ import internal.{GenericNestedCodegen, GenericFatCodegen}
 
 trait StructOps extends Base {
 
-  abstract class Record extends Struct[Rep]
+  trait Record extends Struct[Rep]
 
   implicit def repToStructOps(s: Rep[Record]) = new StructOpsCls(s)
   class StructOpsCls(s: Rep[Record]) {
