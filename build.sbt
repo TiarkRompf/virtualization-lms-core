@@ -10,7 +10,7 @@ resolvers += dropboxScalaTestRepo
 
 scalaOrganization := "org.scala-lang"
 
-//scalaBinaryVersion := virtScala // necessary??
+scalaBinaryVersion := virtScala // publish as lms_2.10.0-M1-virtualized
 
 scalaVersion := virtScala
 
