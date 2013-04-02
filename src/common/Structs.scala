@@ -8,7 +8,7 @@ import internal.{GenericNestedCodegen, GenericFatCodegen}
 
 trait StructOps extends Base {
 
-  trait Record extends Struct[Rep]
+  abstract class Record extends Struct[Rep]
 
   implicit def repToStructOps(s: Rep[Record]) = new StructOpsCls(s)
   class StructOpsCls(s: Rep[Record]) {
@@ -151,7 +151,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   }).asInstanceOf[Exp[A]]
 
   def structName[T](m: Manifest[T]): String = m match {
-    case rm: RefinedManifest[_] => rm.erasure.getSimpleName + rm.fields.map(f => f._1 + structName(f._2)).mkString("")
+    case rm: RefinedManifest[_] => "Anon" + math.abs(rm.fields.map(f => f._1.## + f._2.##).sum)
     case _ if (m <:< manifest[AnyVal]) => m.toString
     case _ => m.erasure.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
   }
