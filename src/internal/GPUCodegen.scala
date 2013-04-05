@@ -30,6 +30,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   var processingHelperFunc: Boolean = false
   var isNestedNode: Boolean = false
   var outerLoopSize: Exp[Int] = null
+  var outerLoopSym: Exp[Int] = null
 
   //TODO: Get rid of this variable
   protected var inVars = List[Sym[Any]]()
