@@ -3,7 +3,7 @@ import java.io.File
 
 object LMSBuild extends Build {
   // -DshowSuppressedErrors=false
-  System.setProperty("showSuppressedErrors", "true")
+  System.setProperty("showSuppressedErrors", "false")
 
   val mavenLocal = "Maven Local" at "file://"+Path.userHome+"/.m2/repository" // for custom-built scala version
 

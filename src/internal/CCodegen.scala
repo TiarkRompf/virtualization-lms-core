@@ -98,7 +98,6 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   }  
   
   override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
-
     //TODO: Remove the dependency to Multiloop to Delite
     if(resultType != "void" && !resultType.startsWith("DeliteOpMultiLoop"))
       stream.println("return " + quote(syms(0)) + ";")

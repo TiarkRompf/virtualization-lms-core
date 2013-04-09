@@ -24,6 +24,8 @@ x2
 }
 x8
 }
+val x9 = x1(0.0)
+val x10 = (0.0,x9)
 x33 = {x34: (Double) => 
 val x36 = x34%2 == 0
 val x37 = if (x36) {
@@ -81,9 +83,7 @@ x20
 }
 x48
 }
-val x9 = x1(0.0)
-val x10 = new Tuple2DoubleDouble(0.0,x9)
-x12 = {x13: (scala.collection.immutable.List[Tuple2DoubleDouble]) => 
+x12 = {x13: (scala.collection.immutable.List[scala.Tuple2[Double, Double]]) => 
 val x14 = List(x13)
 val x15 = {x16: (Char) => 
 val x17 = x13 // x16

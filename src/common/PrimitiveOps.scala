@@ -89,10 +89,12 @@ trait PrimitiveOps extends Variables with OverloadHack {
     def toLong(implicit pos: SourceContext) = int_tolong(lhs)
   }
 
+  // currently needed by Delite framework. TODO: refactor
   def infix_+(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext) = int_plus(lhs, rhs)
   def infix_-(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_minus(lhs, rhs)
   def infix_*(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_times(lhs, rhs)
   //def infix_/(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_divide(lhs, rhs) //TR triggers bug in Scala-Virtualized 2.10.0 M7 together with Delite ArithOps
+  
   def infix_%(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_mod(lhs, rhs)
   def infix_&(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_binaryand(lhs, rhs)
   def infix_|(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext) = int_binaryor(lhs, rhs)

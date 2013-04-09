@@ -61,6 +61,8 @@ trait ScalaCompile extends Expressions {
 
     if (dumpGeneratedCode) println(source)
 
+    if (dumpGeneratedCode) println(source)
+
     val compiler = this.compiler
     val run = new compiler.Run
 
