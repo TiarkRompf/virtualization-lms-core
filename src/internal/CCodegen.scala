@@ -29,7 +29,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     if (!isVoidType(sym.tp))
       stream.println(deref(sym.tp) + quote(sym) + " = " + rhs + ";")
   }
-
+  
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
     kernelInputVals = vals
     kernelInputVars = vars
@@ -57,26 +57,38 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
-      
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
 
-    val sB = manifest[A].toString
+  def emitForwardDef[A:Manifest](args: List[Manifest[_]], functionName: String, out: PrintWriter) = {
+    out.println(remap(manifest[A])+" "+functionName+"("+args.map(a => remap(a)).mkString(", ")+");")
+  }
+      
+  def emitSource[A:Manifest](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
+
+    val sA = remap(manifest[A])
 
     withStream(out) {
       stream.println("/*****************************************\n"+
                      "  Emitting C Generated Code                  \n"+
                      "*******************************************/\n" +
                      "#include <stdio.h>\n" +
-                     "#include <stdlib.h>"
+                     "#include <stdlib.h>\n" +
+                     "#include <stdbool.h>"
       )
 
-      //stream.println("class "+className+" extends (("+sA+")=>("+sB+")) {")
-      stream.println("int main(int argc, char** argv) {")
+
+      // TODO: static data
+
+      //stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" 
+      //extends (("+args.map(a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
+
+      stream.println(sA+" "+functionName+"("+args.map(a => remap(a.tp)+" "+quote(a)).mkString(", ")+") {")
 
       emitBlock(body)
-      //stream.println(quote(getBlockResult(y)))
 
-      //stream.println("}")
+      val y = getBlockResult(body)
+      if (remap(y.tp) != "void")
+        stream.println("return " + quote(y) + ";")
+
       stream.println("}")
       stream.println("/*****************************************\n"+
                      "  End of C Generated Code                  \n"+
@@ -84,7 +96,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     }
     Nil
   }  
-
+  
   override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
 
     //TODO: Remove the dependency to Multiloop to Delite

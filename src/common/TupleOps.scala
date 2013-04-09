@@ -64,6 +64,7 @@ trait TupleOpsExp extends TupleOps with StructExpOpt {
   def tuple5_get4[D:Manifest](t: Exp[(_,_,_,D,_)])(implicit pos: SourceContext) = field[D](t, "_4")
   def tuple5_get5[E:Manifest](t: Exp[(_,_,_,_,E)])(implicit pos: SourceContext) = field[E](t, "_5")
 
+  object Both { def unapply[T](x:T):Some[(T,T)] = Some((x,x)) }
 }
 
 trait TupleGenBase extends GenericCodegen with BaseGenStruct { 

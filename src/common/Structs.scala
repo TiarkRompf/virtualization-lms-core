@@ -8,19 +8,20 @@ import internal.{GenericNestedCodegen, GenericFatCodegen}
 
 trait StructOps extends Base {
 
+  /**
+   * Allows to write things lik “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
+   */
   abstract class Record extends Struct[Rep]
+  def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
 
-  implicit def repToStructOps(s: Rep[Record]) = new StructOpsCls(s)
-  class StructOpsCls(s: Rep[Record]) {
-    def selectDynamic[T:Manifest](index: String): Rep[T] = field(s, index)
+  class RecordOps(record: Rep[Record]) {
+    def selectDynamic[T : Manifest](field: String): Rep[T] = record_select[T](record, field)
   }
+  implicit def recordToRecordOps(record: Rep[Record]) = new RecordOps(record)
 
-  def __new[T<:Struct[Rep]:Manifest](fields: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = anonStruct[T](fields)
-
-  def anonStruct[T:Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T]
-
+  def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T]
+  def record_select[T : Manifest](record: Rep[Record], field: String): Rep[T]  
   def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T]
-
 }
 
 trait StructTags {
@@ -32,16 +33,9 @@ trait StructTags {
 }
 
 trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with ObjectOpsExp with StringOpsExp with OverloadHack {
-
-  def anonStruct[T:Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T] = {
-    val x: Sym[T] = Sym[T](-99) // self symbol -- not defined anywhere, so make it obvious!! (TODO)
-    val fieldSyms = fields map {
-      case (index, false, rhs) => (index, rhs(x)) 
-      case (index, true, rhs) => (index, var_new(rhs(x)).e)
-    }
-    struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fieldSyms)
-  }
-
+  
+  // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
+    
   abstract class AbstractStruct[T] extends Def[T] {
     val tag: StructTag[T]
     val elems: Seq[(String, Rep[Any])]
@@ -81,7 +75,6 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   case class FieldApply[T](struct: Rep[Any], index: String) extends AbstractField[T]
   case class FieldUpdate[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]) extends Def[Unit]
 
-
   def struct[T:Manifest](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit o: Overloaded1, pos: SourceContext): Rep[T] = struct[T](tag, elems)
   def struct[T:Manifest](tag: StructTag[T], elems: Seq[(String, Rep[Any])])(implicit pos: SourceContext): Rep[T] = SimpleStruct(tag, elems)
 
@@ -89,6 +82,22 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   def var_field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Var[T] = Variable(FieldApply[Var[T]](struct, index))
   def field_update[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]): Exp[Unit] = reflectWrite(struct)(FieldUpdate(struct, index, rhs))
 
+  def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]) = {
+    val x: Sym[T] = Sym[T](-99) // self symbol -- not defined anywhere, so make it obvious!! (TODO)
+    val fieldSyms = fields map {
+      case (index, false, rhs) => (index, rhs(x)) 
+      case (index, true, rhs) => (index, var_new(rhs(x)).e)
+    }
+    struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fieldSyms)
+  }
+  
+  def record_select[T : Manifest](record: Rep[Record], fieldName: String) = {
+    field(record, fieldName)
+  }
+  
+  //FIXME: reflectMutable has to take the Def
+  //def mfield[T:Manifest](struct: Rep[Any], index: String): Rep[T] = reflectMutable(Field[T](struct, index, manifest[T]))
+  
   override def syms(e: Any): List[Sym[Any]] = e match {
     case s:AbstractStruct[_] => s.elems.flatMap(e => syms(e._2)).toList
     case _ => super.syms(e)
@@ -158,11 +167,11 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
 
   def classTag[T:Manifest] = ClassTag[T](structName(manifest[T]))
 
-  override def object_toString(x: Exp[Any])(implicit pos: SourceContext): Exp[String] = x match {
+  override def object_tostring(x: Exp[Any])(implicit pos: SourceContext): Exp[String] = x match {
     case Def(s@Struct(tag, elems)) => //tag(elem1, elem2, ...)
-      val e = elems.map(e=>string_plus(unit(e._1 + " = "), object_toString(e._2))).reduceLeft((l,r)=>string_plus(string_plus(l,unit(", ")),r))
+      val e = elems.map(e=>string_plus(unit(e._1 + " = "), object_tostring(e._2))).reduceLeft((l,r)=>string_plus(string_plus(l,unit(", ")),r))
       string_plus(unit(structName(s.tp)+"("),string_plus(e,unit(")")))
-    case _ => super.object_toString(x)
+    case _ => super.object_tostring(x)
   }
 
   def registerStruct[T](name: String, elems: Seq[(String, Rep[Any])]) {

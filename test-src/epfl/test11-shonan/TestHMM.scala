@@ -18,17 +18,17 @@ class TestHMM extends FileDiffSuite {
   
   // boilerplate definitions for DSL interface
   
-  trait DSL extends LiftNumeric with NumericOps with ArrayOps with RangeOps with BooleanOps 
+  trait DSL extends LiftNumeric with NumericOps with PrimitiveOps with ArrayOps with RangeOps with BooleanOps 
     with LiftVariables with IfThenElse with Print {
     def staticData[T:Manifest](x: T): Rep[T]
     def test(x: Rep[Array[Int]]): Rep[Array[Int]]
   }
-  trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt with OrderingOpsExpOpt with BooleanOpsExp 
+  trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp with StaticDataExp
       with IfThenElseExpOpt with PrintExp 
       with CompileScala { self => 
     //override val verbosity = 1
-    val codegen = new ScalaGenNumericOps with ScalaGenStaticData with ScalaGenOrderingOps with ScalaGenArrayOps with ScalaGenRangeOps
+    val codegen = new ScalaGenNumericOps with ScalaGenPrimitiveOps with ScalaGenStaticData with ScalaGenOrderingOps with ScalaGenArrayOps with ScalaGenRangeOps
       with ScalaGenVariables with ScalaGenIfThenElse
       with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))

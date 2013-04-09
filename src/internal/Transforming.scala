@@ -46,7 +46,8 @@ trait AbstractSubstTransformer extends AbstractTransformer {
     subst = save
     r
   }
-  
+
+  // TBD: should this be transitive or not? see note in ForwardTransformer
   def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
     case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x 
   }
