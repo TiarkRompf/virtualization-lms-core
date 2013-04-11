@@ -99,10 +99,10 @@ trait ScalaGenHashMapOps extends BaseGenHashMapOps with ScalaGenEffect {
     case HashMapUpdate(m,k,v)  => emitValDef(sym, quote(m) + ".put(" + quote(k) + ", " + quote(v) + ")")
     case HashMapContains(m,i) => emitValDef(sym, quote(m) + ".containsKey(" + quote(i) + ")")
     case HashMapSize(m) => emitValDef(sym, quote(m) + ".size")
-    case HashMapValues(m) => emitValDef(sym, quote(m) + ".values")
+    case HashMapValues(m) => emitValDef(sym, "scala.collection.JavaConverters.collectionAsScalaIterableConverter("+quote(m)+".values).asScala")
     case HashMapClear(m) => emitValDef(sym, quote(m) + ".clear()")
-    case HashMapKeySet(m) => emitValDef(sym, "scala.collection.JavaConverters.asScalaSetConverter("+quote(m)+".keySet)).asScala")
-    case HashMapKeys(m) => emitValDef(sym, quote(m) + ".keys")
+    case HashMapKeySet(m) => emitValDef(sym, "scala.collection.JavaConverters.asScalaSetConverter("+quote(m)+".keySet).asScala")
+    case HashMapKeys(m) => emitValDef(sym, "scala.collection.JavaConverters.asScalaSetConverter("+quote(m)+".keySet).asScala.toIterable")
     case _ => super.emitNode(sym, rhs)
   }
 }
