@@ -21,10 +21,6 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   protected var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
 
-  // Streams for helper functions and its header
-  protected var helperFuncStream: PrintWriter = _
-  protected var headerStream: PrintWriter = _
-
   var devFuncIdx = 0
   var isGPUable:Boolean = false
   var processingHelperFunc: Boolean = false
@@ -167,13 +163,8 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     if (external) {
       // CUDA library ops use a C wrapper, so should be generated as a C kernel
-      //stream.println(getDSLHeaders)
       super.emitKernelHeader(syms, syms ::: vals, vars, resultType, resultIsVar, external)
-      return
     }
-    val out = new StringBuilder
-    //out.append(getDSLHeaders)
-    stream.print(out.toString)
   }
 
   override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {

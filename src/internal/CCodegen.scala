@@ -12,8 +12,6 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   override def kernelFileExt = "cpp"
   override def toString = "cpp"
 
-  var helperFuncStream: PrintWriter = null
-  var headerStream: PrintWriter = null
   val helperFuncList = ArrayBuffer[String]()
 
   var kernelInputVals: List[Sym[Any]] = Nil
@@ -96,17 +94,6 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     }
     Nil
   }  
-  
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
-    //TODO: Remove the dependency to Multiloop to Delite
-    if(resultType != "void" && !resultType.startsWith("DeliteOpMultiLoop"))
-      stream.println("return " + quote(syms(0)) + ";")
-
-    if(!resultType.startsWith("DeliteOpMultiLoop"))
-      stream.println("}")
-
-    dsTypesList ++= (syms++vals++vars).map(_.tp)
-  }
 
   override def emitTransferFunctions() {
 
@@ -157,45 +144,21 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     headerStream.flush
   }
 
-  private def addRef[A](m: Manifest[A]): String = {
-    if (!isPrimitiveType(m) && !isVoidType(m)) " *"
-    else " "
-  }
-
   def kernelName = "kernel_" + kernelOutputs.map(quote).mkString("")
-
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
 
     //TODO: fix this
     if(external) throw new GenerationFailedException("CGen: Cannot have external libraries\n")
 
-    def kernelSignature: String = {
-      val out = new StringBuilder
-      if(resultIsVar)
-        out.append("Ref< " + resultType + " >")
-      else
-        out.append(resultType)
-      out.append(addRef(syms(0).tp))
-      out.append(kernelName + "(")
-      out.append(vals.map(p=>remap(p.tp) + addRef(p.tp) + quote(p)).mkString(", "))
-      if (vals.length > 0 && vars.length > 0){
-        out.append(", ")
-      }
-      if (vars.length > 0){
-        out.append(vars.map(v => "Ref< " + remap(v.tp) + " > " + addRef(v.tp) + quote(v)).mkString(","))
-      }
-      out.append(")")
-      out.toString
-    }
-
     stream.println("#include \"cppHeader.h\"")
 
-    //TODO: Remove the dependency to Multiloop to Delite
-    if (!resultType.startsWith("DeliteOpMultiLoop")) {
-      stream.println(kernelSignature + " {")
-      headerStream.println(kernelSignature + ";")
-    }
+    super.emitKernelHeader(syms, syms ::: vals, vars, resultType, resultIsVar, external)
+
+  }
+
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
+    super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external)
   }
 
 }

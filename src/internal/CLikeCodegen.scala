@@ -13,6 +13,10 @@ trait CLikeCodegen extends GenericCodegen {
   // List of datastructure types that requires transfer functions to be generated for this target
   protected val dsTypesList = HashSet[Manifest[Any]]()
 
+  // Streams for helper functions and its header
+  protected var helperFuncStream: PrintWriter = _
+  protected var headerStream: PrintWriter = _
+  
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
@@ -43,6 +47,52 @@ trait CLikeCodegen extends GenericCodegen {
         case _ => throw new GenerationFailedException("CLikeGen: remap(m) : Type %s cannot be remapped.".format(m.toString))
       }
     }
+  }
+
+  private def addRef[A](m: Manifest[A]): String = {
+    if (!isPrimitiveType(m) && !isVoidType(m)) " *"
+    else " "
+  }
+ 
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
+
+    stream.append("#include \"helperFuncs.h\"\n")
+    
+    def kernelSignature: String = {
+      val out = new StringBuilder
+      if(resultIsVar)
+        out.append("Ref< " + resultType + " >")
+      else
+        out.append(resultType)
+      if (!external) out.append(addRef(syms(0).tp))
+      out.append(" kernel_" + syms.map(quote).mkString("") + "(")
+      out.append(vals.map(p=>remap(p.tp) + addRef(p.tp) + quote(p)).mkString(", "))
+      if (vals.length > 0 && vars.length > 0){
+        out.append(", ")
+      }
+      if (vars.length > 0){
+        out.append(vars.map(v => "Ref< " + remap(v.tp) + " > " + addRef(v.tp) + quote(v)).mkString(","))
+      }
+      out.append(")")
+      out.toString
+    }
+
+    //TODO: Remove the dependency to Multiloop to Delite
+    if (!resultType.startsWith("DeliteOpMultiLoop")) {
+      stream.println(kernelSignature + " {")
+      headerStream.println(kernelSignature + ";")
+    }
+  }
+
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
+    //TODO: Remove the dependency to Multiloop to Delite
+    if(resultType != "void" && !resultType.startsWith("DeliteOpMultiLoop"))
+      stream.println("return " + quote(syms(0)) + ";")
+
+    if(!resultType.startsWith("DeliteOpMultiLoop"))
+      stream.println("}")
+
+    dsTypesList ++= (syms++vals++vars).map(_.tp)
   }
 
 }
