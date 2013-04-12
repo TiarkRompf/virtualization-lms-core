@@ -9,7 +9,7 @@ import internal.{GenericNestedCodegen, GenericFatCodegen}
 trait StructOps extends Base {
 
   /**
-   * Allows to write things lik “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
+   * Allows to write things like “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
    */
   abstract class Record extends Struct[Rep]
   def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
@@ -95,9 +95,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     field(record, fieldName)
   }
   
-  //FIXME: reflectMutable has to take the Def
-  //def mfield[T:Manifest](struct: Rep[Any], index: String): Rep[T] = reflectMutable(Field[T](struct, index, manifest[T]))
-  
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case s:AbstractStruct[_] => s.elems.flatMap(e => syms(e._2)).toList
     case _ => super.syms(e)
@@ -160,7 +158,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   }).asInstanceOf[Exp[A]]
 
   def structName[T](m: Manifest[T]): String = m match {
-    case rm: RefinedManifest[_] => "Anon" + math.abs(rm.fields.map(f => f._1.## + f._2.##).sum)
+    case rm: RefinedManifest[_] => "Anon" + math.abs(rm.fields.map(f => f._1.## + f._2.toString.##).sum)
     case _ if (m <:< manifest[AnyVal]) => m.toString
     case _ => m.erasure.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
   }
@@ -401,13 +399,10 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
     case Struct(tag, elems) =>
       registerStruct(structName(sym.tp), elems)
       emitValDef(sym, "new " + structName(sym.tp) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
-//      printlog("WARNING: emitting " + structName(sym.tp) + " struct " + quote(sym))    
     case FieldApply(struct, index) =>
       emitValDef(sym, quote(struct) + "." + index)
-//      printlog("WARNING: emitting field access: " + quote(struct) + "." + index)
     case FieldUpdate(struct, index, rhs) =>
       emitValDef(sym, quote(struct) + "." + index + " = " + quote(rhs))
-//      printlog("WARNING: emitting field update: " + quote(struct) + "." + index)
     case _ => super.emitNode(sym, rhs)
   }
 
@@ -425,21 +420,6 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
     stream.flush()
     super.emitDataStructures(stream)
   }
-
-  //This is quite delite-specific..
-  /*
-  override def emitDataStructures(path: String) {
-    val stream = new PrintWriter(path + "Structs.scala")
-    stream.println("package generated.scala")
-    for ((name, elems) <- encounteredStructs) {
-      stream.println()
-      stream.print("case class " + name + "(")
-      stream.println(elems.map(e => e._1 + ": " + remap(e._2)).mkString(", ") + ")")
-    }
-    stream.close()
-    super.emitDataStructures(path)
-  }
-  */
 
 }
 
