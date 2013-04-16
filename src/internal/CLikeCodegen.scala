@@ -16,6 +16,7 @@ trait CLikeCodegen extends GenericCodegen {
   // Streams for helper functions and its header
   protected var helperFuncStream: PrintWriter = _
   protected var headerStream: PrintWriter = _
+  protected var actRecordStream: PrintWriter = _
   
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
@@ -105,7 +106,4 @@ trait CLikeNestedCodegen extends GenericNestedCodegen with CLikeCodegen {
 trait CLikeFatCodegen extends GenericFatCodegen with CLikeCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
-
-  def emitMultiLoopCond(sym: Sym[Any], funcs:List[Block[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]])
-
 }

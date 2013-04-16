@@ -87,40 +87,4 @@ trait OpenCLNestedCodegen extends CLikeNestedCodegen with OpenCLCodegen {
 trait OpenCLFatCodegen extends CLikeFatCodegen with OpenCLCodegen {
   val IR: Expressions with Effects with FatExpressions
 	import IR._
-  
-	def emitMultiLoopCond(sym: Sym[Any], funcs:List[Block[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]]) = {
-    isNestedNode = true
-    devFuncIdx += 1
-    val currIdx = devFuncIdx
-    val tempString = new StringWriter
-    val tempStream = new PrintWriter(tempString, true)
-    val header = new StringWriter
-    val footer = new StringWriter
-
-    val currentTab = tabWidth
-    tabWidth = 1
-    withStream(tempStream) {
-      emitFatBlock(funcs)
-    }
-    tabWidth = currentTab
-
-    val inputs = getFreeVarBlock(Block(Combine(funcs.map(getBlockResultFull))),Nil).filterNot(quote(_)==quote(idx)).distinct
-    val paramStr = (inputs++List(idx)).map(ele=>remap(ele.tp)+" "+quote(ele)).mkString(",")
-    header.append("bool dev_%s(%s) {\n".format(postfix,paramStr))
-    footer.append("\treturn %s;\n".format(funcs.map(f=>quote(getBlockResult(f))).mkString("&&")))
-    footer.append("}\n")
-    stream.print(header)
-    stream.print(tempString)
-    stream.print(footer)
-
-    //Register Metadata for loop function
-    val lf = metaData.loopFuncs.getOrElse(sym,new LoopFunc)
-    lf.hasCond = true
-    lf.loopCondInputs = inputs.map(quote)
-    metaData.loopFuncs.put(sym,lf)
-    isNestedNode = false
-
-    ("dev_"+currIdx,inputs)
-  }
-
 }

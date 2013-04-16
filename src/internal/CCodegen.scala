@@ -173,7 +173,4 @@ trait CFatCodegen extends CLikeFatCodegen with CCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
 
-  def emitMultiLoopCond(sym: Sym[Any], funcs:List[Block[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]]) = {
-    throw new GenerationFailedException("CGen: emitMultiLoopCond not supported yet.")
-  }
 }
