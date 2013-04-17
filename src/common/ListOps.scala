@@ -131,6 +131,8 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
 trait ListOpsExpOpt extends ListOpsExp {
   override def list_concat[A : Manifest](xs1: Exp[List[A]], xs2: Exp[List[A]])(implicit pos: SourceContext): Exp[List[A]] = (xs1, xs2) match {
     case (Def(ListNew(xs1)), Def(ListNew(xs2))) => ListNew(xs1 ++ xs2)
+    case (Def(ListNew(Seq())), xs2) => xs2
+    case (xs1, Def(ListNew(Seq()))) => xs1
     case _ => super.list_concat(xs1, xs2)
   }
 }
