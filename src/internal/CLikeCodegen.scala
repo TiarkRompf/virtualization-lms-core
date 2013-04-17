@@ -19,12 +19,12 @@ trait CLikeCodegen extends GenericCodegen {
   protected var actRecordStream: PrintWriter = _
   
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
-    stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
+    stream.println(remapWithRef(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     if(!isVoidType(sym.tp)) 
-      stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
+      stream.println(remapWithRef(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
   override def remap[A](m: Manifest[A]) : String = {
@@ -51,8 +51,13 @@ trait CLikeCodegen extends GenericCodegen {
   }
 
   private def addRef[A](m: Manifest[A]): String = {
-    if (!isPrimitiveType(m) && !isVoidType(m)) " *"
-    else " "
+    val baseType = if (m.erasure.getSimpleName == "Variable") m.typeArguments(0) else m 
+    if (!isPrimitiveType(baseType) && !isVoidType(baseType)) "*"
+    else ""
+  }
+
+  def remapWithRef[A](m: Manifest[A]): String = {
+    remap(m) + addRef(m)
   }
  
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
@@ -67,12 +72,12 @@ trait CLikeCodegen extends GenericCodegen {
         out.append(resultType)
       if (!external) out.append(addRef(syms(0).tp))
       out.append(" kernel_" + syms.map(quote).mkString("") + "(")
-      out.append(vals.map(p=>remap(p.tp) + addRef(p.tp) + quote(p)).mkString(", "))
+      out.append(vals.map(p=>remapWithRef(p.tp) + " " + quote(p)).mkString(","))
       if (vals.length > 0 && vars.length > 0){
         out.append(", ")
       }
       if (vars.length > 0){
-        out.append(vars.map(v => "Ref< " + remap(v.tp) + " > " + addRef(v.tp) + quote(v)).mkString(","))
+        out.append(vars.map(v => "Ref< " + remap(v.tp) + " >*" + " " + quote(v)).mkString(","))
       }
       out.append(")")
       out.toString

@@ -31,10 +31,12 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   //TODO: Get rid of this variable
   protected var inVars = List[Sym[Any]]()
   protected val boundMap = HashMap[Exp[Int],Exp[Int]]()
-
-  protected def registerTempAlloc(sym:Sym[Any], tp:Manifest[Any], size:Exp[Int]):String = {
-    metaData.temps prepend TempAlloc(quote(sym)+"_temp",remap(tp),quote(size))
-    quote(sym) + "_temp"
+  
+  private var tempIdx = 0
+  protected def registerTempAlloc(sym:Sym[Any], tp:Manifest[Any], size:String):String = {
+    tempIdx += 1
+    metaData.temps prepend TempAlloc(quote(sym)+"_temp"+tempIdx,remap(tp),size)
+    quote(sym) + "_temp" + tempIdx
   }
 
   // MetaData
@@ -92,6 +94,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     isGPUable = false
     processingHelperFunc = false
     isNestedNode = false
+    tempIdx = 0
   }
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
