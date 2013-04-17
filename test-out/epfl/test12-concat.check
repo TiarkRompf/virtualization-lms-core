@@ -11,3 +11,25 @@ x2
 /*****************************************
   End of Generated Code                  
 *******************************************/
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class ConcatEmptyLeft extends ((scala.collection.immutable.List[Int])=>(scala.collection.immutable.List[Int])) {
+def apply(x3:scala.collection.immutable.List[Int]): scala.collection.immutable.List[Int] = {
+x3
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class ConcatEmptyRight extends ((scala.collection.immutable.List[Int])=>(scala.collection.immutable.List[Int])) {
+def apply(x5:scala.collection.immutable.List[Int]): scala.collection.immutable.List[Int] = {
+x5
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
