@@ -56,9 +56,9 @@ trait CLikeCodegen extends GenericCodegen {
     else ""
   }
 
-  def remapWithRef[A](m: Manifest[A]): String = remap(m) + addRef(m)
+  def remap[A](m: Manifest[A], prefix: String): String = prefix + remap(m).replaceAll("< ","< " + prefix)
 
-  def remapHost[A](m: Manifest[A]): String = "Host" + remap(m).replaceAll("< ","< Host")
+  def remapWithRef[A](m: Manifest[A], prefix: String = ""): String = remap(m,prefix) + addRef(m)
  
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
 
