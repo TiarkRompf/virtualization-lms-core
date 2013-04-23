@@ -17,6 +17,7 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
     val outDir = new File(buildDir)
     outDir.mkdirs
 
+    actRecordStream = new PrintWriter(new FileWriter(buildDir + "actRecords.h"))
     helperFuncStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cu"))
     headerStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
 
@@ -30,6 +31,7 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
     headerStream.print("#define CHAR short\n")
     headerStream.print("#define jCHAR jshort\n")
     headerStream.print("#include \"DeliteCuda.h\"\n")
+    headerStream.print("#include \"actRecords.h\"\n")
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
@@ -85,40 +87,4 @@ trait CudaNestedCodegen extends CLikeNestedCodegen with CudaCodegen {
 trait CudaFatCodegen extends CLikeFatCodegen with CudaCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
-
-  def emitMultiLoopCond(sym: Sym[Any], funcs:List[Block[Any]], idx: Sym[Int], postfix: String="", stream:PrintWriter):(String,List[Exp[Any]]) = {
-    isNestedNode = true
-    devFuncIdx += 1
-    val currIdx = devFuncIdx
-    val tempString = new StringWriter
-    val tempStream = new PrintWriter(tempString, true)
-    val header = new StringWriter
-    val footer = new StringWriter
-
-    val currentTab = tabWidth
-    tabWidth = 1
-    withStream(tempStream) {
-      emitFatBlock(funcs)
-    }
-    tabWidth = currentTab
-
-    val inputs = getFreeVarBlock(Block(Combine(funcs.map(getBlockResultFull))),Nil).filterNot(quote(_)==quote(idx)).distinct
-    val paramStr = (inputs++List(idx)).map(ele=>remap(ele.tp)+" "+quote(ele)).mkString(",")
-    header.append(devFuncPrefix + " bool dev_%s(%s) {\n".format(postfix,paramStr))
-    footer.append("\treturn %s;\n".format(funcs.map(f=>quote(getBlockResult(f))).mkString("&&")))
-    footer.append("}\n")
-    stream.print(header)
-    stream.print(tempString)
-    stream.print(footer)
-
-    //Register Metadata for loop function
-    val lf = metaData.loopFuncs.getOrElse(sym,new LoopFunc)
-    lf.hasCond = true
-    lf.loopCondInputs = inputs.map(quote)
-    metaData.loopFuncs.put(sym,lf)
-    isNestedNode = false
-
-    ("dev_"+currIdx,inputs)
-  }
-
 }
