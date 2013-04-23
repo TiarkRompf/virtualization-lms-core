@@ -268,6 +268,25 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   }).asInstanceOf[Exp[A]]
 }
 
+trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
+  override def int_plus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs,rhs) match {
+    case (Const(0),b) => b
+    case (a,Const(0)) => a
+    case _ => super.int_plus(lhs,rhs)
+  }
+  override def int_minus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs,rhs) match {
+    case (a,Const(0)) => a
+    case _ => super.int_minus(lhs,rhs)    
+  }
+  override def int_times(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs,rhs) match {
+    case (Const(0),b) => Const(0)
+    case (Const(1),b) => b
+    case (a,Const(0)) => Const(0)
+    case (a,Const(1)) => a
+    case _ => super.int_times(lhs,rhs)    
+  }
+}
+
 trait ScalaGenPrimitiveOps extends ScalaGenBase {
   val IR: PrimitiveOpsExp
   import IR._

@@ -51,7 +51,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     headerStream.println("#include <jni.h>")
     headerStream.println("#include <assert.h>")
     headerStream.println("#include <math.h>")
-    headerStream.println(getDSLHeaders)
+    headerStream.println(getDataStructureHeaders())
 
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
