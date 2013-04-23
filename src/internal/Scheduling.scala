@@ -50,14 +50,14 @@ trait Scheduling {
 
   //FIXME: hotspot
   def getSchedule(scope: List[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
-    val scopeCache = new mutable.HashMap[Sym[Any],Stm]
+    /*val scopeCache = new mutable.HashMap[Sym[Any],Stm]
     for (stm <- scope; s <- stm.lhs)
-      scopeCache(s) = stm
+      scopeCache(s) = stm*/
 
     def deps(st: List[Sym[Any]]): List[Stm] = {//st flatMap (scopeCache.get(_).toList)
-      // scope.filter(d => (st intersect d.lhs).nonEmpty)
+      scope.filter(d => (st intersect d.lhs).nonEmpty)
       // scope.filter(d => containsAny(st, d.lhs))
-      st sortBy(_.id) flatMap (scopeCache.get(_).toList)
+      //st sortBy(_.id) flatMap (scopeCache.get(_).toList)
     }
 
     val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(syms(result)), t => deps(syms(t.rhs)))
@@ -81,14 +81,14 @@ trait Scheduling {
       else db.withFilter(p=>p._2 > 0.75 && p._2 < 100.0).map(_._1)
     }
 
-    val scopeCache = new mutable.HashMap[Sym[Any],Stm]
+    /*val scopeCache = new mutable.HashMap[Sym[Any],Stm]
     for (stm <- scope; s <- stm.lhs)
-      scopeCache(s) = stm
+      scopeCache(s) = stm*/
 
     def deps(st: List[Sym[Any]]): List[Stm] = {//st flatMap (scopeCache.get(_).toList)
-      // scope.filter(d => (st intersect d.lhs).nonEmpty)
+      scope.filter(d => (st intersect d.lhs).nonEmpty)
       // scope.filter(d => containsAny(st, d.lhs))
-      st flatMap (scopeCache.get(_).toList)
+      //st flatMap (scopeCache.get(_).toList)
     }
 
     GraphUtil.stronglyConnectedComponents[Stm](deps(mysyms(result)), t => deps(mysyms(t.rhs))).flatten.reverse
