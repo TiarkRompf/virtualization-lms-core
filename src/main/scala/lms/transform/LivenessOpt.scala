@@ -1,5 +1,5 @@
 package scala.lms
-package ops
+package transform
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.NestedBlockTraversal
