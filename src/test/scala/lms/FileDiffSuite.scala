@@ -44,11 +44,12 @@ trait FileDiffSuite extends Suite {
       readFile(name + ".check").split("[\n\r]").filterNot(_.isEmpty)
     assert(expected.length == actual.length,
       name + ": actual length (" + actual.length +
-        ") != expected length (" + expected.length)
+        ") != expected length (" + expected.length + ")")
     (actual zip expected) foreach {
       case ((al, ln), el) =>
         assert(al.trim == el.trim, name + ".check and " + name +
-          " differ on line " + ln + ":\n  --" + el + "\n  ++" + al)
+          " differ on line " + (ln + 1) + ":\n  =====\n  -- " + el.trim +
+          "\n  ++ " + al.trim + "\n  =====")
     }
     new File(name) delete ()
   }
