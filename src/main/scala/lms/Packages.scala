@@ -21,7 +21,7 @@ trait ScalaOpsPkgExp extends ScalaOpsPkg
     with ImplicitOpsExp with NumericOpsExp with FractionalOpsExp with OrderingOpsExp with StringOpsExp
     with RangeOpsExp with IOOpsExp with ArrayOpsExp with BooleanOpsExp with PrimitiveOpsExp with MiscOpsExp
     with FunctionsExp with EqualExp with IfThenElseExp with VariablesExp with WhileExp with TupleOpsExp with ListOpsExp
-    with SeqOpsExp with DSLOpsExp with MathOpsExp with CastingOpsExp with SetOpsExp with ObjectOpsExp with ArrayBufferOpsExp
+    with SeqOpsExp with MathOpsExp with CastingOpsExp with SetOpsExp with ObjectOpsExp with ArrayBufferOpsExp
 
 
 /**
@@ -35,14 +35,14 @@ trait ScalaCodeGenPkg extends ScalaGenImplicitOps with ScalaGenNumericOps with S
     with ScalaGenStringOps with ScalaGenRangeOps with ScalaGenIOOps with ScalaGenArrayOps with ScalaGenBooleanOps
     with ScalaGenPrimitiveOps with ScalaGenMiscOps with ScalaGenFunctions with ScalaGenEqual with ScalaGenIfThenElse
     with ScalaGenVariables with ScalaGenWhile with ScalaGenTupleOps with ScalaGenListOps
-    with ScalaGenSeqOps with ScalaGenDSLOps with ScalaGenMathOps with ScalaGenCastingOps with ScalaGenSetOps
+    with ScalaGenSeqOps with ScalaGenMathOps with ScalaGenCastingOps with ScalaGenSetOps
     with ScalaGenObjectOps with ScalaGenArrayBufferOps
   { val IR: ScalaOpsPkgExp  }
 
 
 /////
 // C
-trait CCodeGenPkg extends CGenDSLOps with CGenImplicitOps with CGenNumericOps with CGenFractionalOps with CGenOrderingOps
+trait CCodeGenPkg extends CGenImplicitOps with CGenNumericOps with CGenFractionalOps with CGenOrderingOps
     with CGenStringOps with CGenRangeOps with CGenIOOps with CGenArrayOps with CGenBooleanOps
     with CGenPrimitiveOps with CGenMiscOps with CGenFunctions with CGenEqual with CGenIfThenElse
     with CGenVariables with CGenWhile
@@ -51,18 +51,14 @@ trait CCodeGenPkg extends CGenDSLOps with CGenImplicitOps with CGenNumericOps wi
 
 ///////
 // Cuda
-// CudaGenDSLOps will be used after all the basic generators are passed
-trait CudaCodeGenPkg extends CudaGenDSLOps with CudaGenImplicitOps with CudaGenNumericOps with CudaGenFractionalOps with CudaGenOrderingOps
+trait CudaCodeGenPkg extends CudaGenImplicitOps with CudaGenNumericOps with CudaGenFractionalOps with CudaGenOrderingOps
     with CudaGenStringOps with CudaGenRangeOps with CudaGenIOOps with CudaGenArrayOps with CudaGenBooleanOps
     with CudaGenPrimitiveOps with CudaGenMiscOps with CudaGenFunctions with CudaGenEqual with CudaGenIfThenElse
     with CudaGenVariables with CudaGenWhile
     with CudaGenMathOps with CudaGenCastingOps with CudaGenSetOps with CudaGenArrayBufferOps
     { val IR: ScalaOpsPkgExp  }
 
-//trait CudaCodeGenPkg extends CudaGenNumericOps with CudaGenRangeOps with CudaGenFractionalOps
-//    with CudaGenMiscOps with CudaGenFunctions with CudaGenVariables with CudaGenDSLOps with CudaGenImplicitOps { val IR: ScalaOpsPkgExp  }
-
-trait OpenCLCodeGenPkg extends OpenCLGenDSLOps with OpenCLGenImplicitOps with OpenCLGenNumericOps with OpenCLGenFractionalOps with OpenCLGenOrderingOps
+trait OpenCLCodeGenPkg extends OpenCLGenImplicitOps with OpenCLGenNumericOps with OpenCLGenFractionalOps with OpenCLGenOrderingOps
     with OpenCLGenStringOps with OpenCLGenRangeOps with OpenCLGenIOOps with OpenCLGenArrayOps with OpenCLGenBooleanOps
     with OpenCLGenPrimitiveOps with OpenCLGenMiscOps with OpenCLGenFunctions with OpenCLGenEqual with OpenCLGenIfThenElse
     with OpenCLGenVariables with OpenCLGenWhile

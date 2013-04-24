@@ -1,6 +1,6 @@
 package scala.lms
 
-//import internal._
+import internal._
 import scala.reflect.SourceContext
 
 /**
@@ -93,7 +93,7 @@ trait ScalaGenEffect extends ScalaNestedCodegen with ScalaGenBase
 
 trait ScalaGenFat extends ScalaFatCodegen with ScalaGenBase
 
-
+// FIXME: add this to target/
 trait CLikeGenBase extends CLikeCodegen
 trait CLikeGenEffect extends CLikeNestedCodegen with CLikeGenBase
 trait CLikeGenFat extends CLikeFatCodegen with CLikeGenBase

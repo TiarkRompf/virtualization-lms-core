@@ -1,6 +1,8 @@
 package scala.lms
 package transform
 
+import ops.{LoopsFatExp, IfThenElseFatExp}
+
 import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
 
