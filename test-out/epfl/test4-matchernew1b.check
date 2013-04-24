@@ -1,15 +1,15 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Match extends ((Unit)=>(scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
-def apply(x0:Unit): scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
-var x12 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
-var x1 = null.asInstanceOf[scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
-var x17 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
-var x4 = null.asInstanceOf[scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
-var x10 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
-var x7 = null.asInstanceOf[scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
-var x13 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
+class Match extends ((Unit)=>(scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
+def apply(x0:Unit): scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
+var x12 = null.asInstanceOf[scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
+var x1 = null.asInstanceOf[scala.Function1[Char, scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+var x17 = null.asInstanceOf[scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
+var x4 = null.asInstanceOf[scala.Function1[Char, scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+var x10 = null.asInstanceOf[scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
+var x7 = null.asInstanceOf[scala.Function1[Char, scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+var x13 = null.asInstanceOf[scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
 x1 = {x2: (Char) => 
 val x3 = x2 == 'A'
 val x18 = if (x3) {
@@ -43,10 +43,10 @@ x14
 }
 x15
 }
-x10 = scala.virtualization.lms.epfl.test4.Automaton(List(),x7)
-x12 = scala.virtualization.lms.epfl.test4.Automaton(List(),x1)
+x10 = scala.lms.test4.Automaton(List(),x7)
+x12 = scala.lms.test4.Automaton(List(),x1)
 x13 = x12.copy(out = "found"::x12.out)
-x17 = scala.virtualization.lms.epfl.test4.Automaton(List(),x4)
+x17 = scala.lms.test4.Automaton(List(),x4)
 x12
 }
 }

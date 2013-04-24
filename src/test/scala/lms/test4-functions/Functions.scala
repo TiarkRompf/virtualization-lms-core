@@ -1,8 +1,6 @@
 package scala.lms
 package test4
 
-import common.{BlockExp,EffectExp}
-import common.ScalaGenEffect // don't import FunctionsExp
 import util.ClosureCompare
 
 import test2._

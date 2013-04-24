@@ -3,6 +3,7 @@ package test10
 
 import ops._
 import internal._
+import transform.ForwardTransformer
 import util.OverloadHack
 
 import test1._

@@ -4,7 +4,7 @@ read value RCell(stable) sym Sym(3)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0(px3:scala.virtualization.lms.epfl.test13.RCell[Int],px5:Int,px9:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[Int, Int]],px11:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
+class staged$0(px3:scala.lms.test13.RCell[Int],px5:Int,px9:scala.lms.test13.RCell[scala.Function1[Int, Int]],px11:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
 def apply(x0:Int): Int = {
 val x3 = px3 // static data: RCell(stable)
 val x4 = x3.value
@@ -60,7 +60,7 @@ read value RCell(stable) sym Sym(11)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$2(px11:scala.virtualization.lms.epfl.test13.RCell[Int],px13:Int,px17:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[Int, Int]],px19:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
+class staged$2(px11:scala.lms.test13.RCell[Int],px13:Int,px17:scala.lms.test13.RCell[scala.Function1[Int, Int]],px19:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
 def apply(x8:Int): Int = {
 val x11 = px11 // static data: RCell(stable)
 val x12 = x11.value

@@ -2,8 +2,8 @@ package scala.lms
 package test10
 
 import ops._
+import transform.WorklistTransformer
 import internal.{NestedBlockTraversal}
-import util.OverloadHack
 
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
@@ -12,6 +12,7 @@ import test8._
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import scala.reflect.SourceContext
+import util.OverloadHack
 
 // investigate worklist transform phases (separate from optimization).
 // in particular notation like this:

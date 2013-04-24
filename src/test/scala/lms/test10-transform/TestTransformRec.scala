@@ -2,6 +2,7 @@ package scala.lms
 package test10
 
 import ops._
+import transform.RecursiveTransformer
 
 import test1._
 import test2._
