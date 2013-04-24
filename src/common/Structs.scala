@@ -158,6 +158,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   }).asInstanceOf[Exp[A]]
 
   def structName[T](m: Manifest[T]): String = m match {
+    // FIXME: move to codegen? we should be able to have different policies/naming schemes
     case rm: RefinedManifest[_] => "Anon" + math.abs(rm.fields.map(f => f._1.## + f._2.toString.##).sum)
     case _ if (m <:< manifest[AnyVal]) => m.toString
     case _ => m.erasure.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
