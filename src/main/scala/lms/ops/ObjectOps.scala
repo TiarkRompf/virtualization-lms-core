@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
@@ -79,7 +79,7 @@ trait ObjectOpsExpOpt extends ObjectOpsExp {
 trait ScalaGenObjectOps extends ScalaGenBase {
   val IR: ObjectOpsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ObjectToString(lhs) => emitValDef(sym, "(" + quote(lhs) + ").toString()")
     case ObjectUnsafeImmutable(x) => emitValDef(sym, quote(x) + "// unsafe immutable")

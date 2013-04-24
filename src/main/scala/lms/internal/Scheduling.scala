@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import util.GraphUtil
@@ -13,7 +13,7 @@ trait Scheduling {
   def getUnsortedSchedule(scope: List[Stm])(result: Any): List[Stm] = {
     getSchedule(scope)(result, false)
   }
-  
+
   // PERFORMANCE: 'intersect' calls appear to be a hotspot
 
   // checks if a and b share at least one element. O(N^2), but with no allocation and possible early exit.
@@ -30,16 +30,16 @@ trait Scheduling {
     }
     false
   }
-   
+
   //TBD: not used?
   def getStronglySortedSchedule(scope: List[Stm])(result: Any): List[Stm] = {
-    def deps(st: List[Sym[Any]]): List[Stm] = 
+    def deps(st: List[Sym[Any]]): List[Stm] =
       scope.filter(d => containsAny(st, d.lhs))
       // scope.filter(d => (st intersect d.lhs).nonEmpty)
     def allSyms(r: Any) = syms(r) ++ softSyms(r)
-    
+
     val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result)), t => deps(allSyms(t.rhs)))
-    xx.foreach { x => 
+    xx.foreach { x =>
       if (x.length > 1) {
         printerr("warning: recursive schedule for result " + result + ": " + x)
         (new Exception) printStackTrace
@@ -61,7 +61,7 @@ trait Scheduling {
     }
 
     val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(syms(result)), t => deps(syms(t.rhs)))
-    if (sort) xx.foreach { x => 
+    if (sort) xx.foreach { x =>
       if (x.length > 1) {
         printerr("warning: recursive schedule for result " + result + ": " + x)
         (new Exception) printStackTrace
@@ -93,18 +93,18 @@ trait Scheduling {
 
     GraphUtil.stronglyConnectedComponents[Stm](deps(mysyms(result)), t => deps(mysyms(t.rhs))).flatten.reverse
   }
-    
-  
+
+
   /** begin performance hotspot **/
-  
+
   /*
   for each symbol s in sts, find all statements that depend on it.
   we need to stop when we reach the statement where s is bound.
-  
+
   it would be tempting to do only one scc call but then we mix
   up the locations where different symbols are bound.
   */
-  
+
   def getFatDependentStuff(scope: List[Stm])(sts: List[Sym[Any]]): List[Stm] = {
     if (sts.isEmpty) return Nil
     /*
@@ -112,23 +112,23 @@ trait Scheduling {
      s => all d in scope such that: d.lhs contains s || syms(d.rhs).contains(s)
      st => all d in scope such that: boundSyms(d.rhs) contains st
     */
-    
+
     //type IdentityHashMap[K,V] = HashMap[K,V]
-    
+
     // IdentityHashMap appears faster than scala.collection.mutable.HashMap here (based on perf. testing)
     // possible improvement: use an integer hashmap that works directly with sym ids
-    
+
     val lhsCache = new IdentityHashMap[Sym[Any], List[Stm]]()
     val symsCache = new IdentityHashMap[Sym[Any], List[Stm]]()
     val boundSymsCache = new IdentityHashMap[Sym[Any], List[Stm]]()
     //val boundSymsCache = new IdentityHashMap[Sym[Any], Set[Stm]]()
-    
+
     def infix_getOrElse[K,V](map: IdentityHashMap[K, V], s: K, f: => V) = {
       var res = map.get(s) //map(s)
       if (res == null) res = f
       res
     }
-    
+
     def putDef(map: IdentityHashMap[Sym[Any], List[Stm]], s: Sym[Any], d: Stm): Unit = {
       var res = map.get(s) //map(s)
       if (res == null) res = Nil
@@ -138,7 +138,7 @@ trait Scheduling {
         case ds => map.update(s,d::ds) //map.put(s,d::ds)
       }
     }
-    
+
     def putDefSet(map: IdentityHashMap[Sym[Any], Set[Stm]], s: Sym[Any], d: Stm): Unit = {
       var res = map(s) //map.get(s)
       if (res == null) {
@@ -147,17 +147,17 @@ trait Scheduling {
       }
       res += d
     }
-    
+
     for (d <- scope) {
       d.lhs.foreach(s => putDef(lhsCache, s, d))
-      syms(d.rhs).foreach(s => putDef(symsCache, s, d))      
+      syms(d.rhs).foreach(s => putDef(symsCache, s, d))
       boundSyms(d.rhs).foreach(st => putDef(boundSymsCache, st, d))
       tunnelSyms(d.rhs).foreach(st => putDef(boundSymsCache, st, d)) // treat tunnel like bound
     }
-    
+
     /*
     optimization:
-      traverse syms by ascending id. if sym s1 is used by s2, do not evaluate further 
+      traverse syms by ascending id. if sym s1 is used by s2, do not evaluate further
       uses of s2 because they are already there.
 
     CAVEAT: TRANSFORMERS !!!
@@ -171,7 +171,7 @@ trait Scheduling {
     */
 
     val seen = new mutable.HashSet[Sym[Any]]
-    
+
     def getDepStuff(st: Sym[Any]) = {
       // could also precalculate uses, but computing all combinations eagerly is also expensive
       def uses(s: Sym[Any]): List[Stm] = if (seen(s)) Nil else { 
@@ -186,20 +186,12 @@ trait Scheduling {
     
     /* 
     reference impl:*/
-    val res = sts.flatMap(getDepStuff).distinct
+    sts.flatMap(getDepStuff).distinct
     
-    /*if (sts.contains(Sym(1064))) {
-      println("dep on x1064:")
-      res.foreach { r =>
-        println("   " + r)
-      }
-    }*/
-    res
-
     // CAVEAT: TRANSFORMERS !!!  see CloseWorldRestage app in Delite
     //sts.sortBy(_.id).flatMap(getDepStuff)
   }
-  
+
   /** end performance hotspot **/
 
 }

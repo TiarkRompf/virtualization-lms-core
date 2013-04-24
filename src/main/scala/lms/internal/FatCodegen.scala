@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import util.GraphUtil
@@ -6,9 +6,9 @@ import java.io.{File, PrintWriter}
 
 trait GenericFatCodegen extends GenericNestedCodegen with FatBlockTraversal {
   val IR: Expressions with Effects with FatExpressions
-  import IR._  
-  
-  
+  import IR._
+
+
   override def traverseStm(stm: Stm) = stm match {
     case TTP(lhs, mhs, rhs) => emitFatNode(lhs, rhs)
     case _ => super.traverseStm(stm)
@@ -18,7 +18,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatBlockTraversal {
     case Forward(x) => emitValDef(sym, quote(x))
     case _ => super.emitNode(sym, rhs)
   }
-  
+
   def emitFatNode(sym: List[Sym[Any]], rhs: FatDef): Unit = rhs match {
     case _ => sys.error("don't know how to generate code for: "+rhs)
   }

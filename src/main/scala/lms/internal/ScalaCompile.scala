@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import java.io._
@@ -17,7 +17,7 @@ trait ScalaCompile extends Expressions {
 
   var compiler: Global = _
   var reporter: ConsoleReporter = _
-  //var output: ByteArrayOutputStream = _ 
+  //var output: ByteArrayOutputStream = _
 
   def setupCompiler() = {
     /*
@@ -46,16 +46,16 @@ trait ScalaCompile extends Expressions {
   }
 
   var compileCount = 0
-  
+
   var dumpGeneratedCode = false
 
   def compile[A,B](f: Exp[A] => Exp[B])(implicit mA: Manifest[A], mB: Manifest[B]): A=>B = {
     if (this.compiler eq null)
       setupCompiler()
-    
+
     val className = "staged$" + compileCount
     compileCount += 1
-    
+
     val source = new StringWriter()
     val staticData = codegen.emitSource(f, className, new PrintWriter(source))
     codegen.emitDataStructures(new PrintWriter(source))
@@ -85,7 +85,7 @@ trait ScalaCompile extends Expressions {
 
     val cls: Class[_] = loader.loadClass(className)
     val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
-    
+
     val obj: A=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[A=>B]
     obj
   }

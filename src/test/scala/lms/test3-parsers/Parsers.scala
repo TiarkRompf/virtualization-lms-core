@@ -1,14 +1,13 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test3
 
 trait Parsers { this: Matching with Extractors =>
-  
+
   type Elem
   type Input = List[Elem]
   implicit val mE: Manifest[Elem]
   //implicit val mI: Manifest[List[Elem]]
-  
+
   abstract class Parser {
     def apply(in: Rep[Input]): Rep[ParseResult]
   }
@@ -46,7 +45,7 @@ trait Parsers { this: Matching with Extractors =>
       } end
     }
   }
-  
+
   def seq(a: Parser, b: Parser) = {
     new Parser {
       def apply(in: Rep[Input]) = a(in) switch {
@@ -56,7 +55,7 @@ trait Parsers { this: Matching with Extractors =>
       } end
     }
   }
-  
+
   def alt(a: Parser, b: Parser) = {
     new Parser {
       def apply(in: Rep[Input]) = a(in) switch {
@@ -66,10 +65,10 @@ trait Parsers { this: Matching with Extractors =>
       } end
     }
   }
-  
+
 //  def acceptElem(elem: Elem) = acceptIf(_ == elem)
   def acceptElems(elems: List[Elem]) = {
     elems.map(acceptElem).reduceLeft(seq)
   }
-  
+
 }

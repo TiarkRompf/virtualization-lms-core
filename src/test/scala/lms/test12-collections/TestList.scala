@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test12
 
-import common._
+import ops._
 import java.io.PrintWriter
 
 class TestList extends FileDiffSuite {

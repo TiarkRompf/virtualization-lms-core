@@ -1,5 +1,4 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test4
 
 // unused code -- just a sanity check to make sure it compiles
@@ -15,7 +14,7 @@ trait FooA {
 
   def foo(xs: Rep[List[Int]]): Unit = xs match {
     case Foo(a,b) => foo(b)
-    case _ => 
+    case _ =>
   }
 }
 
@@ -26,7 +25,7 @@ trait FooB {
 
   case class Sym[T]() extends Exp[T]
   case class Const[T]() extends Exp[T]
-  
+
   def lookup[A](x: Sym[A]): Option[Const[A]]
 
   object Lookup {

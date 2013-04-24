@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test1
 
-import common._
+import ops._
 
 import java.io.PrintWriter
 
@@ -32,7 +31,7 @@ trait ArraysExp extends Arrays with BaseExp {
 trait ScalaGenArrays extends ScalaGenBase {
   val IR: ArraysExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ArrayApply(x,i) =>  emitValDef(sym, "" + quote(x) + ".apply(" + i + ")")
     case MakeArray(x) =>  emitValDef(sym, "Array(" + x.map(quote).mkString(",") + ")")

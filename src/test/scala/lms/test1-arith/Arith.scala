@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test1
 
-import common._
+import ops._
 
 import scala.reflect.SourceContext
 import java.io.PrintWriter
@@ -39,7 +38,7 @@ trait Arith extends Base with LiftArith {
 trait ArithExp extends Arith with BaseExp {
   //todo removed below as now handled in Base traits
   //implicit def unit(x: Double) = Const(x)
-  
+
   case class Plus(x: Exp[Double], y: Exp[Double]) extends Def[Double]
   case class Minus(x: Exp[Double], y: Exp[Double]) extends Def[Double]
   case class Times(x: Exp[Double], y: Exp[Double]) extends Def[Double]
@@ -49,7 +48,7 @@ trait ArithExp extends Arith with BaseExp {
   def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = Minus(x, y)
   def infix_*(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = Times(x, y)
   def infix_/(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = Div(x, y)
-  
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Plus(x,y) => f(x) + f(y)
     case Minus(x,y) => f(x) - f(y)
@@ -96,7 +95,7 @@ trait ArithExpOpt extends ArithExp {
 trait ScalaGenArith extends ScalaGenBase {
   val IR: ArithExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Plus(a,b) =>  emitValDef(sym, "" + quote(a) + "+" + quote(b))
     case Minus(a,b) => emitValDef(sym, "" + quote(a) + "-" + quote(b))

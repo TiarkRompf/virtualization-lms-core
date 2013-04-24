@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package util
 
 import scala.collection.mutable.Map
@@ -9,11 +9,11 @@ import scala.collection.mutable.ArrayBuffer
 
 
 object GraphUtil {
-  
+
   class Ref[T](init: T) {
     var value: T = init
   }
-  
+
   /* test cases
 
      stronglyConnectedComponents[String](List("A"), { case "A" => List("B") case "B" => List("C") case "C" => List("A","D") case "D" => Nil})
@@ -22,7 +22,7 @@ object GraphUtil {
      stronglyConnectedComponents[String](List("A","B","C"), { case "A" => List("B") case "B" => List("C") case "C" => List("A","D") case "D" => Nil})
   */
 
-  /** 
+  /**
       Returns the strongly connected components
       of the graph rooted at the first argument,
       whose edges are given by the function argument.
@@ -45,7 +45,7 @@ object GraphUtil {
     (for (scc <- res) yield scc.toList.reverse).toList.reverse
   }
 
-  def visit[T](node: T, succ: T=>List[T], id: Ref[Int], stack: Stack[T], 
+  def visit[T](node: T, succ: T=>List[T], id: Ref[Int], stack: Stack[T],
             mark: Map[T,Int], res: Buffer[Buffer[T]]): Int = {
 
     mark.getOrElse(node, {
@@ -60,7 +60,7 @@ object GraphUtil {
       for (child <- succ(node)) {
         val m = visit(child, succ, id, stack, mark, res)
 
-        if (m < min) 
+        if (m < min)
           min = m
       }
 
@@ -78,9 +78,9 @@ object GraphUtil {
         res.append(scc)
       }
       min
-      
+
     })
   }
-  
-  
+
+
 }

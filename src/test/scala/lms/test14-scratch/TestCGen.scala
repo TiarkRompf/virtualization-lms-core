@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test14
 
-import common._
+import ops._
 import test1._
 
 import util.OverloadHack
@@ -12,9 +11,9 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 class TestCGen extends FileDiffSuite {
-  
+
   val prefix = "test-out/epfl/test14-"
-  
+
   trait DSL extends ScalaOpsPkg with TupledFunctions with UncheckedOps with LiftPrimitives with LiftString with LiftVariables {
     // keep track of top level functions
     case class TopLevel[A,B](name: String, mA: Manifest[A], mB:Manifest[B], f: Rep[A] => Rep[B])
@@ -26,7 +25,7 @@ class TestCGen extends FileDiffSuite {
     }
   }
 
-  trait Impl extends DSL with ScalaOpsPkgExp with TupledFunctionsRecursiveExp with UncheckedOpsExp { self => 
+  trait Impl extends DSL with ScalaOpsPkgExp with TupledFunctionsRecursiveExp with UncheckedOpsExp { self =>
     val codegen = new CCodeGenPkg with CGenVariables with CGenTupledFunctions with CGenUncheckedOps { val IR: self.type = self }
     def emitAll(): Unit = {
       assert(codegen ne null) //careful about initialization order
@@ -40,7 +39,7 @@ class TestCGen extends FileDiffSuite {
     emitAll()
   }
 
-  
+
   def testCGen1 = {
     withOutFile(prefix+"cgen1") {
       trait Prog extends DSL {

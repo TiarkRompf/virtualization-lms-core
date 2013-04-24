@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test5
 
-import common._
+import ops._
 import test1._
 
 import java.io.PrintWriter
@@ -89,7 +88,7 @@ trait FunctionsProg { this: Print with Functions =>
     val f = fun { x : Rep[Any] =>
       print("foo")
       x
-    } 
+    }
     f(f(x))
   }
 }
@@ -99,7 +98,7 @@ trait FunctionsRecursiveProg { this: Arith with Print with Functions =>
     val f = fun { x : Rep[Any] =>
       print("foo")
       x
-    } 
+    }
     lazy val g : Rep[Any => Any] = fun { x =>
       print("bar")
       g(x)
@@ -157,24 +156,24 @@ trait SchedFunProg { this: Functions with Arith with Equal with IfThenElse =>
 }
 
 class TestFunctions extends FileDiffSuite {
-  
+
   val prefix = "test-out/epfl/test5-"
-  
+
   def testFunctions = {
     withOutFile(prefix+"functions") {
-    
+
       println("-- begin")
 
       new FunctionsProg with PrintExp with FunctionsExp { self =>
         val codegen = new ScalaGenPrint with ScalaGenFunctions { val IR: self.type = self }
-        
+
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "Test", new PrintWriter(System.out))
       }
-    
+
       new FunctionsProg with PrintExp with FunctionsExp { self =>
         val codegen = new JSGenPrint with JSGenFunctions { val IR: self.type = self }
-        
+
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "main", new PrintWriter(System.out))
       }
@@ -186,19 +185,19 @@ class TestFunctions extends FileDiffSuite {
 
   def testFunctionsRecursive = {
     withOutFile(prefix+"functionsrecursive") {
-    
+
       println("-- begin")
 
       new FunctionsRecursiveProg with ArithExpOpt with PrintExp with FunctionsRecursiveExp { self =>
         val codegen = new ScalaGenArith with ScalaGenPrint with ScalaGenFunctions { val IR: self.type = self }
-        
+
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "Test", new PrintWriter(System.out))
       }
-    
+
       new FunctionsRecursiveProg with ArithExpOpt with PrintExp with FunctionsRecursiveExp { self =>
         val codegen = new JSGenArith with JSGenPrint with JSGenFunctions { val IR: self.type = self }
-        
+
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "main", new PrintWriter(System.out))
       }

@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import util.GraphUtil
@@ -11,14 +11,14 @@ trait GenericCodegen extends BlockTraversal {
   import IR._
 
   // TODO: should some of the methods be moved into more specific subclasses?
-  
+
   def kernelFileExt = ""
   def emitFileHeader(): Unit = {}
   def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {}
   def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {}
-  
+
   var analysisResults: MMap[String,Any] = null.asInstanceOf[MMap[String,Any]]
-  
+
   // Initializer
   def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = { analysisResults = _analysisResults }
   def finalizeGenerator(): Unit = {}
@@ -32,34 +32,34 @@ trait GenericCodegen extends BlockTraversal {
   def dataPath = {
     "data" + java.io.File.separator
   }
-  
+
   def symDataPath(sym: Sym[Any]) = {
     dataPath + sym.id
   }
- 
+
   def emitData(sym: Sym[Any], data: Seq[Any]) {
     val outDir = new File(dataPath)
     outDir.mkdirs()
     val outFile = new File(symDataPath(sym))
     val stream = new PrintWriter(outFile)
-    
+
     for(v <- data) {
       stream.println(v)
     }
-    
+
     stream.close()
   }
-  
+
   // exception handler
   def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
       kstream.close()
       outFile.delete
   }
-  
+
   // optional type remapping (default is identity)
   def remap(s: String): String = s
   def remap[A](s: String, method: String, t: Manifest[A]) : String = remap(s, method, t.toString)
-  def remap(s: String, method: String, t: String) : String = s + method + "[" + remap(t) + "]"    
+  def remap(s: String, method: String, t: String) : String = s + method + "[" + remap(t) + "]"
   def remap[A](m: Manifest[A]): String = m match {
     case rm: RefinedManifest[A] =>  "AnyRef{" + rm.fields.foldLeft(""){(acc, f) => {val (n,mnf) = f; acc + "val " + n + ": " + remap(mnf) + ";"}} + "}"
     case _ if m.erasure == classOf[Variable[Any]] =>
@@ -71,7 +71,7 @@ trait GenericCodegen extends BlockTraversal {
         val ms = m.toString
         ms.take(ms.indexOf("[")+1) + targs.map(tp => remap(tp)).mkString(", ") + "]"
       }
-      else m.toString    
+      else m.toString
   }
   def remapImpl[A](m: Manifest[A]): String = remap(m)
   //def remapVar[A](m: Manifest[Variable[A]]) : String = remap(m.typeArguments.head)
@@ -95,9 +95,9 @@ trait GenericCodegen extends BlockTraversal {
     case TP(sym, rhs) => emitNode(sym,rhs)
     case _ => throw new GenerationFailedException("don't know how to generate code for statement: " + stm)
   }
-    
+
   def emitBlock(y: Block[Any]): Unit = traverseBlock(y)
-    
+
   def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = {
     throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
@@ -162,14 +162,13 @@ trait GenericCodegen extends BlockTraversal {
     case Sym(n) => "x"+n
     case _ => throw new RuntimeException("could not quote " + x)
   }
-  
+
   // ----------
-  
+
   override def reset {
     stream = null
     super.reset
   }
-
 
   def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
     m.toString match {
@@ -189,7 +188,6 @@ trait GenericCodegen extends BlockTraversal {
     if(m.erasure == classOf[Variable[AnyVal]]) true
     else false
   }
-
 }
 
 
@@ -199,7 +197,7 @@ trait GenericNestedCodegen extends NestedBlockTraversal with GenericCodegen {
   import IR._
 
   override def traverseStm(stm: Stm) = super[GenericCodegen].traverseStm(stm)
-    
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
 //    case Read(s) =>
 //      emitValDef(sym, quote(s))

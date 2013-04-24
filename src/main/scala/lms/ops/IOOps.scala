@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.{File, FileReader, FileWriter, BufferedReader, BufferedWriter, PrintWriter}
 import scala.virtualization.lms.internal.{GenerationFailedException}
@@ -24,7 +24,7 @@ trait IOOps extends Variables with OverloadHack {
   def file_getcanonicalfile(f: Rep[File])(implicit pos: SourceContext): Rep[File]
   def file_getpath(f: Rep[File])(implicit pos: SourceContext): Rep[String]
   def file_listfiles(f: Rep[File])(implicit pos: SourceContext): Rep[Array[File]]
-  
+
   /**
    * BufferedReader
    */
@@ -42,7 +42,7 @@ trait IOOps extends Variables with OverloadHack {
    * BufferedWriter
    */
   object BufferedWriter {
-    def apply(f: Rep[FileWriter])(implicit pos: SourceContext) = obj_bw_apply(f)    
+    def apply(f: Rep[FileWriter])(implicit pos: SourceContext) = obj_bw_apply(f)
   }
 
   def infix_write(b: Rep[BufferedWriter], s: Rep[String])(implicit pos: SourceContext) = bw_write(b,s)
@@ -89,7 +89,7 @@ trait IOOpsExp extends IOOps with DSLOpsExp {
   def file_getcanonicalfile(f: Exp[File])(implicit pos: SourceContext) = FileGetCanonicalFile(f)
   def file_getpath(f: Exp[File])(implicit pos: SourceContext) = FileGetPath(f)
   def file_listfiles(f: Exp[File])(implicit pos: SourceContext) = FileListFiles(f)
-  
+
   def obj_br_apply(f: Exp[FileReader])(implicit pos: SourceContext): Exp[BufferedReader] = reflectEffect(ObjBrApply(f))
   def obj_bw_apply(f: Exp[FileWriter])(implicit pos: SourceContext): Exp[BufferedWriter] = reflectEffect(ObjBwApply(f))
   def obj_fr_apply(s: Exp[String])(implicit pos: SourceContext): Exp[FileReader] = reflectEffect(ObjFrApply(s))
@@ -99,7 +99,7 @@ trait IOOpsExp extends IOOps with DSLOpsExp {
   def bw_close(b: Exp[BufferedWriter])(implicit pos: SourceContext) = reflectEffect(BwClose(b))
   def br_readline(b: Exp[BufferedReader])(implicit pos: SourceContext) : Exp[String] = reflectEffect(BrReadline(b))
   def br_close(b: Exp[BufferedReader])(implicit pos: SourceContext) : Exp[Unit] = reflectEffect(BrClose(b))
-  
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     e match {
       case Reflect(ObjFrApply(s), u, es) => reflectMirrored(Reflect(ObjFrApply(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))
@@ -112,13 +112,13 @@ trait IOOpsExp extends IOOps with DSLOpsExp {
       case Reflect(BwClose(b), u, es) => reflectMirrored(Reflect(BwClose(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
       case _ => super.mirror(e,f)
     }
-  }).asInstanceOf[Exp[A]]  
+  }).asInstanceOf[Exp[A]]
 }
 
 trait ScalaGenIOOps extends ScalaGenBase {
   val IR: IOOpsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ObjFileApply(dir) => emitValDef(sym, "new java.io.File(" + quote(dir) + ")")
     case FileGetCanonicalFile(f) => emitValDef(sym, quote(f) + ".getCanonicalFile()")

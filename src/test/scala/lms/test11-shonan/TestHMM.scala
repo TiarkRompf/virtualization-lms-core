@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test11
 
-import common._
+import ops._
 import test1._
 import test7._
 import test8.{ArrayMutation,ArrayMutationExp,ScalaGenArrayMutation,OrderingOpsExpOpt}
@@ -15,7 +14,7 @@ import scala.reflect.SourceContext
 
 
 class TestHMM extends FileDiffSuite {
-  
+
   // boilerplate definitions for DSL interface
   
   trait DSL extends LiftNumeric with NumericOps with PrimitiveOps with ArrayOps with RangeOps with BooleanOps 
@@ -25,8 +24,8 @@ class TestHMM extends FileDiffSuite {
   }
   trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp with StaticDataExp
-      with IfThenElseExpOpt with PrintExp 
-      with CompileScala { self => 
+      with IfThenElseExpOpt with PrintExp
+      with CompileScala { self =>
     //override val verbosity = 1
     val codegen = new ScalaGenNumericOps with ScalaGenPrimitiveOps with ScalaGenStaticData with ScalaGenOrderingOps with ScalaGenArrayOps with ScalaGenRangeOps
       with ScalaGenVariables with ScalaGenIfThenElse
@@ -51,14 +50,14 @@ class TestHMM extends FileDiffSuite {
   // staged program implementations
 
   val prefix = "test-out/epfl/test11-"
-  
+
   def testHmm1 = {
     withOutFileChecked(prefix+"hmm1") {
       trait Prog extends DSL {
         def test(v: Rep[Array[Int]]) = {
 
           val A = scala.Array
-          
+
           val a = A(A(1,0,0,1,0),
                     A(0,0,1,0,0),
                     A(0,1,0,0,0),
@@ -70,7 +69,7 @@ class TestHMM extends FileDiffSuite {
           // matrix vector product, matrix is statically known
           // for dense rows, generate a loop
           // for sparse rows, inline all computations
-          
+
           def sparse_mv_prod(a: Array[Array[Int]], v: Rep[Array[Int]]) = {
             val v1 = NewArray[Int](n)
             for (i <- 0 until n: Range) {
@@ -109,7 +108,7 @@ class TestHMM extends FileDiffSuite {
           }
 
           val A = scala.Array
-          
+
           val a = A(A(1,0,0,1,0),
                     A(0,0,1,0,0),
                     A(0,1,0,0,0),
@@ -122,7 +121,7 @@ class TestHMM extends FileDiffSuite {
           // for dense rows, generate a loop
           // for sparse rows, inline all computations
           // use unrollIf to abstract over these cases
-          
+
           def sparse_mv_prod(a: Array[Array[Int]], v: Rep[Array[Int]]) = {
             val v1 = NewArray[Int](n)
             for (i <- 0 until n: Range) {
@@ -140,10 +139,10 @@ class TestHMM extends FileDiffSuite {
         override def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int])(implicit pos: SourceContext): Exp[T] = (x,n) match {
           case (Def(StaticData(x:Array[T])), Const(n)) => Const(x(n))
           case _ => super.array_apply(x,n)
-        }        
+        }
       }
     }
   }
 
- 
+
 }

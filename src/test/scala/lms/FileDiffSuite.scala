@@ -1,12 +1,11 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 
 import java.io.{PrintStream,File,FileInputStream,FileOutputStream,ByteArrayOutputStream}
 import org.scalatest._
 
 
 trait FileDiffSuite extends Suite {
-  
+
   def withOutFile(name: String)(func: => Unit): Unit = {
     val file = new File(name)
     file.getParentFile.mkdirs()
@@ -31,7 +30,7 @@ trait FileDiffSuite extends Suite {
       System.setErr(oldStdErr)
     }
   }
-  
+
   def readFile(name: String): String = {
     val source = scala.io.Source.fromFile(name)
     val lines = source.getLines.mkString("\n")

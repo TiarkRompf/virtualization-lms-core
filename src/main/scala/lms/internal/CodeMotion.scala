@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import util.GraphUtil
@@ -35,31 +35,31 @@ trait CodeMotion extends Scheduling {
     // things that should live on this level:
     // - not within conditional: no cold ref on path (shallow|hot)*
     // - on the fringe but outside of mustInside, if on a hot path any* hot any*
-    
+
     // TODO: use (shallow|hot)* hot any* instead
-    
+
     // ---- begin FIXME ----
-    
+
     // AKS: temporarily reverted to old code here to patch a bug in OptiML's MiniMSMBuilder application
-    // then/else branches were being unsafely hoisted out of a conditional 
+    // then/else branches were being unsafely hoisted out of a conditional
     //val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
 
-    //* 
+    //*
     //TODO: uncomment after resolving the issue above
-    
+
     val loopsNotInIfs = e2 filterNot (e3 contains _)    // (shallow|hot)* hot (shallow|hot)*   <---- a hot ref on all paths!
     val reachFromTopLoops = getSchedule(e1)(loopsNotInIfs,false)
 
     val f3 = f1 filter (reachFromTopLoops contains _)    // fringe restricted to: (shallow|hot)* hot any*
     val h3 = getScheduleM(e1)(f3.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
-    
+
     val shouldOutside = e1 filter (z => (e2 contains z) || (h3 contains z))
-    
+
     //val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
     //*/
 
     val levelScope = e1.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
-    
+
     // ---- end FIXME ----
 
     // sym->sym->hot->sym->cold->sym  hot --> hoist **** iff the cold is actually inside the loop ****
@@ -81,20 +81,20 @@ trait CodeMotion extends Scheduling {
                                }
 */
 
-    
+
     // TODO: recursion!!!  identify recursive up-pointers
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
 
     object LocalDef {
       def unapply[A](x: Exp[A]): Option[Stm] = { // fusion may have rewritten Reify contents so we look at local scope
         currentScope.find(_.lhs contains x)
       }
-    }    
+    }
 
     // sanity check to make sure all effects are accounted for
     result foreach {
@@ -110,12 +110,12 @@ trait CodeMotion extends Scheduling {
           expected.foreach(d => printfn("    "+d))
           printfn("  actual:")
           actual.foreach(d => printfn("    "+d))
-          // stuff going missing because of stray dependencies is the most likely cause 
+          // stuff going missing because of stray dependencies is the most likely cause
           // so let's print some debugging hints
           printfn("  missing:")
           if (missing.isEmpty)
             printfn("  note: there is nothing missing so the different order might in fact be ok (artifact of new effect handling? TODO)")
-          missing.foreach { d => 
+          missing.foreach { d =>
             val inDeep = e1 contains d
             val inShallow = e2 contains d
             val inDep = g1 contains d

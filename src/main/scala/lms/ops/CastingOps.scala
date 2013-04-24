@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
@@ -11,7 +11,7 @@ trait CastingOps extends Variables with OverloadHack {
   //implicit def anyToCastingOps[A:Manifest](lhs: A) = new CastingOpsCls(lhs)
   implicit def repAnyToCastingOps[A:Manifest](lhs: Rep[A]) = new CastingOpsCls(lhs)
   implicit def varAnyToCastingOps[A:Manifest](lhs: Var[A]) = new CastingOpsCls(readVar(lhs))
-    
+
   class CastingOpsCls[A:Manifest](lhs: Rep[A]){
     def IsInstanceOf[B:Manifest](implicit pos: SourceContext): Rep[Boolean] = rep_isinstanceof(lhs, manifest[A], manifest[B])
     def AsInstanceOf[B:Manifest](implicit pos: SourceContext): Rep[B] = rep_asinstanceof(lhs, manifest[A], manifest[B])
@@ -40,7 +40,7 @@ trait CastingOpsExp extends CastingOps with BaseExp with EffectExp {
 trait ScalaGenCastingOps extends ScalaGenBase {
   val IR: CastingOpsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case RepIsInstanceOf(x,mA,mB) => emitValDef(sym, quote(x) + ".isInstanceOf[" + remap(mB) + "]")
     case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, quote(x) + ".asInstanceOf[" + remap(mB) + "]")
@@ -48,7 +48,7 @@ trait ScalaGenCastingOps extends ScalaGenBase {
   }
 }
 
-trait CLikeGenCastingOps extends CLikeGenBase { 
+trait CLikeGenCastingOps extends CLikeGenBase {
   val IR: CastingOpsExp
   import IR._
 
@@ -61,6 +61,6 @@ trait CLikeGenCastingOps extends CLikeGenBase {
     }
 }
 
-trait CudaGenCastingOps extends CudaGenBase with CLikeGenCastingOps 
-trait OpenCLGenCastingOps extends OpenCLGenBase with CLikeGenCastingOps 
-trait CGenCastingOps extends CGenBase with CLikeGenCastingOps 
+trait CudaGenCastingOps extends CudaGenBase with CLikeGenCastingOps
+trait OpenCLGenCastingOps extends OpenCLGenBase with CLikeGenCastingOps
+trait CGenCastingOps extends CGenBase with CLikeGenCastingOps

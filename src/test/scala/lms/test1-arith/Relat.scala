@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test1
 
-import common._
+import ops._
 
 trait Relat extends Base {
 
@@ -18,11 +17,11 @@ trait Relat extends Base {
     def !=(y: Rep[Double]) = notEqual(x,y)
   }
 */
-  
+
   def min(x: Rep[Double], y: Rep[Double]): Rep[Double]
   def max(x: Rep[Double], y: Rep[Double]): Rep[Double]
 
-/*  
+/*
   def greater(x: Rep[Double], y: Rep[Double]): Rep[Double]
   def less(x: Rep[Double], y: Rep[Double]): Rep[Double]
   def greaterEqual(x: Rep[Double], y: Rep[Double]): Rep[Double]
@@ -33,16 +32,16 @@ trait Relat extends Base {
 }
 
 trait RelatExp extends Relat with BaseExp {
-  
+
   case class Min(x: Rep[Double], y: Rep[Double]) extends Def[Double]
   case class Max(x: Rep[Double], y: Rep[Double]) extends Def[Double]
-  
+
   def min(x: Rep[Double], y: Rep[Double]) = Min(x,y)
   def max(x: Rep[Double], y: Rep[Double]) = Max(x,y)
 }
 
 trait RelatExpOpt extends RelatExp {
-  
+
   override def min(x: Rep[Double], y: Rep[Double]) = (x,y) match {
     case (Const(x), Const(y)) => math.min(x,y)
     case _ => super.min(x,y)

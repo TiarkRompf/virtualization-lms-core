@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import internal._
 import scala.reflect.SourceContext
@@ -15,7 +15,7 @@ trait LiftAll extends Base {
  * The Base trait defines the type constructor Rep, which is the higher-kinded type that allows for other DSL types to be
  * polymorphically embedded.
  *
- * @since 0.1 
+ * @since 0.1
  */
 trait Base extends EmbeddedControls {
   type API <: Base
@@ -44,11 +44,11 @@ trait BlockExp extends BaseExp
 
 /*
 trait BlockExp extends BaseExp with Blocks {
-  
+
   implicit object CanTransformBlock extends CanTransform[Block] {
     def transform[A](x: Block[A], t: Transformer): Block[A] = Block(t(x.res))
   }
-  
+
 }
 */
 
@@ -72,14 +72,14 @@ trait EffectExp extends BaseExp with Effects {
         context = f(es)
         mirror(x)
       }
-    
-*/    
+
+*/
 //    case Reflect(Print(x), u, es) => Reflect(Print(f(x)), es map (e => f(e)))
     case Reflect(x, u, es) => reflectMirrored(mirrorDef(e,f).asInstanceOf[Reflect[A]])
     case Reify(x, u, es) => Reify(f(x), mapOver(f,u), f(es)) //TODO: u
     case _ => super.mirror(e,f)
   }
-    
+
 }
 
 trait BaseFatExp extends BaseExp with FatExpressions with FatTransforming

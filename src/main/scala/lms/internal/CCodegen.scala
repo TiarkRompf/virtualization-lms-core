@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import java.io.{FileWriter, PrintWriter, File}
@@ -59,7 +59,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   def emitForwardDef[A:Manifest](args: List[Manifest[_]], functionName: String, out: PrintWriter) = {
     out.println(remap(manifest[A])+" "+functionName+"("+args.map(a => remap(a)).mkString(", ")+");")
   }
-      
+
   def emitSource[A:Manifest](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
 
     val sA = remap(manifest[A])
@@ -76,7 +76,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
       // TODO: static data
 
-      //stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" 
+      //stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+"
       //extends (("+args.map(a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
 
       stream.println(sA+" "+functionName+"("+args.map(a => remap(a.tp)+" "+quote(a)).mkString(", ")+") {")
@@ -93,7 +93,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
                      "*******************************************/")
     }
     Nil
-  }  
+  }
 
   override def emitTransferFunctions() {
 
@@ -166,7 +166,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 trait CNestedCodegen extends CLikeNestedCodegen with CCodegen {
   val IR: Expressions with Effects
   import IR._
-  
+
 }
 
 trait CFatCodegen extends CLikeFatCodegen with CCodegen {

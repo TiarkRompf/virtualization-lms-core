@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
@@ -72,7 +72,7 @@ trait CudaNestedCodegen extends CLikeNestedCodegen with CudaCodegen {
       case _ => s
     }
   }
-  
+
   override def quote(x: Exp[Any]) = x match { // TODO: quirk!
     case Const(s: String) => "\""+s+"\""
     case Const(s: Char) => "'"+s+"'"
@@ -81,7 +81,7 @@ trait CudaNestedCodegen extends CLikeNestedCodegen with CudaCodegen {
     case Sym(-1) => "_"
     case _ => super.quote(x)
   }
-  
+
 }
 
 trait CudaFatCodegen extends CLikeFatCodegen with CudaCodegen {

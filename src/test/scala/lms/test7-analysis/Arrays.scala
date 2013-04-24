@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test7
 
-import common._
+import ops._
 import test1._
 
 import internal.AbstractSubstTransformer
@@ -27,7 +26,7 @@ trait ArrayLoops extends Loops with OverloadHack {
 
 
 trait ArrayLoopsExp extends LoopsExp {
-  
+
   case class ArrayElem[T](y: Block[T]) extends Def[Array[T]]
   case class ReduceElem(y: Block[Double]) extends Def[Double]
 
@@ -36,9 +35,9 @@ trait ArrayLoopsExp extends LoopsExp {
 
   case class FlattenElem[T](y: Block[Array[T]]) extends Def[Array[T]]
 
-  case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
+  case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
-  
+
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
     val y = reifyEffects(f(x))
@@ -91,7 +90,7 @@ trait ArrayLoopsExp extends LoopsExp {
 
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case SimpleLoop(s,i, ArrayElem(y)) if f.hasContext => 
+    case SimpleLoop(s,i, ArrayElem(y)) if f.hasContext =>
       array(f(s)) { j => f.asInstanceOf[AbstractSubstTransformer{val IR:ArrayLoopsExp.this.type}].withSubstScope(i -> j) { f.reflectBlock(y) } }
     case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
     case ArrayLength(a) => infix_length(f(a))(mtype(manifest[A]))
@@ -117,27 +116,27 @@ trait ArrayLoopsFatExp extends ArrayLoopsExp with LoopsFatExp
 trait ScalaGenArrayLoops extends ScalaGenLoops {
   val IR: ArrayLoopsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case SimpleLoop(s,x,ArrayElem(y)) =>  
+    case SimpleLoop(s,x,ArrayElem(y)) =>
       stream.println("val " + quote(sym) + " = LoopArray("+quote(s)+") { " + quote(x) + " => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")
-    case SimpleLoop(s,x,ReduceElem(y)) =>  
+    case SimpleLoop(s,x,ReduceElem(y)) =>
       stream.println("val " + quote(sym) + " = LoopReduce("+quote(s)+") { " + quote(x) + " => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")
     // TODO: conditional variants ...
-    case SimpleLoop(s,x,FlattenElem(y)) =>  
+    case SimpleLoop(s,x,FlattenElem(y)) =>
       stream.println("val " + quote(sym) + " = LoopFlatten("+quote(s)+") { " + quote(x) + " => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y)))
       stream.println("}")
-    case ArrayIndex(a,i) =>  
+    case ArrayIndex(a,i) =>
       emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
-    case ArrayLength(a) =>  
+    case ArrayLength(a) =>
       emitValDef(sym, quote(a) + ".length")
     case _ => super.emitNode(sym, rhs)
   }
@@ -146,9 +145,9 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
 trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
   val IR: ArrayLoopsFatExp
   import IR._
-  
+
   override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef) = rhs match {
-    case SimpleFatLoop(s,x,rhs) => 
+    case SimpleFatLoop(s,x,rhs) =>
       for ((l,r) <- sym zip rhs) {
         r match {
           case ArrayElem(y) =>
@@ -216,14 +215,14 @@ trait ArraysExp extends Arrays with EffectExp {
 trait ScalaGenArrays extends ScalaGenEffect {
   val IR: ArraysExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case ArrayZero(n) =>  
+    case ArrayZero(n) =>
       emitValDef(sym, "new Array[Int](" + quote(n) + ")")
-    case ArrayUpdate(a,x,v) =>  
+    case ArrayUpdate(a,x,v) =>
       emitValDef(sym, quote(a) +".clone()")
       stream.println(quote(sym) + "(" + quote(x) + ") = " + quote(v))
-    case ArrayPlus(a,b) =>  
+    case ArrayPlus(a,b) =>
       emitValDef(sym, "new Array[Int](" + quote(a) + ".length)")
       stream.println("arrayPlus("+ quote(sym) + "," + quote(a) + "," + quote(b) + ")")
     case _ => super.emitNode(sym, rhs)

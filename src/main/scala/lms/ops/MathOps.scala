@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import internal.{GenericNestedCodegen}
@@ -249,7 +249,7 @@ trait CudaGenMathOps extends CLikeGenMathOps with CudaGenEffect {
     case MathPi() => emitValDef(sym, "CUDART_PI_F")
     case MathE() => emitValDef(sym, "2.7182818284f")
     case _ => super.emitNode(sym, rhs)
-  }        
+  }
 }
 
 trait OpenCLGenMathOps extends CLikeGenMathOps with OpenCLGenEffect {
@@ -266,7 +266,7 @@ trait OpenCLGenMathOps extends CLikeGenMathOps with OpenCLGenEffect {
 trait CGenMathOps extends CLikeGenMathOps with CGenEffect {
   val IR: MathOpsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case MathPi() => emitValDef(sym, "M_PI")
     case MathE() => emitValDef(sym, "M_E")

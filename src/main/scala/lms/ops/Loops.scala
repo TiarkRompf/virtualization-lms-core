@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import scala.reflect.SourceContext
@@ -22,7 +22,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   }
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
-  
+
   def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = SimpleLoop(size, v, body)
 
 
@@ -86,7 +86,7 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     val v: Sym[Int]
     val body: List[Def[Any]]
   }
-  
+
   case class SimpleFatLoop(val size: Exp[Int], val v: Sym[Int], val body: List[Def[Any]]) extends AbstractFatLoop
 
 
@@ -94,8 +94,8 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     case e: AbstractFatLoop => syms(e.size) ::: syms(e.body)
     case _ => super.syms(e)
   }
-  
-  override def readSyms(e: Any): List[Sym[Any]] = e match { 
+
+  override def readSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => readSyms(e.size) ::: readSyms(e.body)
     case _ => super.readSyms(e)
   }
@@ -147,7 +147,7 @@ trait BaseLoopsTraversalFat extends FatBlockTraversal {
       TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)))
     case _ => super.fatten(e)
   }
-  
+
 }
 
 trait BaseGenLoops extends GenericNestedCodegen {
@@ -183,7 +183,7 @@ trait CGenLoops extends CGenBase with CLikeGenLoops
 trait CGenLoopsFat extends CGenLoops with CGenFat with CLikeGenLoopsFat
 
 trait GPUGenLoops extends GPUGenBase with CLikeGenLoops
-trait GPUGenLoopsFat extends GPUGenLoops with GPUGenFat with CLikeGenLoopsFat 
+trait GPUGenLoopsFat extends GPUGenLoops with GPUGenFat with CLikeGenLoopsFat
 
 trait CudaGenLoops extends CudaGenBase with GPUGenLoops
 trait CudaGenLoopsFat extends CudaGenLoops with CudaGenFat with GPUGenLoopsFat

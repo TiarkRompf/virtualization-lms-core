@@ -1,9 +1,8 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test2
 
 /*
-import common._
+import ops._
 import test1._
 
 trait TestSort { this: Relat =>
@@ -23,7 +22,7 @@ trait TestSort { this: Relat =>
       o :: (e :: mergeOddEven(os, es))
     // cases?
   }
-  
+
   def merge(xs: List[Rep[Double]]): List[Rep[Double]] = (xs: @unchecked) match {
     case o :: e :: Nil =>
       min(o, e) :: max(o, e) :: Nil
@@ -31,7 +30,7 @@ trait TestSort { this: Relat =>
       val (odd0, even0) = splitOddEven(xs)
       val (odd1, even1) = (merge(odd0), merge(even0))
       val (odd2, even2) = odd1 zip even1 map {
-        case (x, y) => 
+        case (x, y) =>
           (min(x,y), max(x,y))
       } unzip;
       mergeOddEven(odd2, even2)
@@ -44,9 +43,9 @@ trait TestSort { this: Relat =>
       val N = xs.length // should assert it's power of two
 
       val (left0, right0) = xs.splitAt(N/2)
-      
+
       val (left1, right1) = (sort(left0), sort(right0))
-      
+
       merge(left1 ::: right1)
   }
 

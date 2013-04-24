@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import internal._
@@ -28,7 +28,7 @@ trait IterableOpsExp extends IterableOps with EffectExp with VariablesExp {
   case class IterableToArray[T:Manifest](a: Exp[Iterable[T]]) extends Def[Array[T]] {
     val m = manifest[T]
   }
-  
+
   def iterable_foreach[T:Manifest](a: Exp[Iterable[T]], block: Exp[T] => Exp[Unit])(implicit pos: SourceContext): Exp[Unit] = {
     val x = fresh[T]
     val b = reifyEffects(block(x))
@@ -39,12 +39,12 @@ trait IterableOpsExp extends IterableOps with EffectExp with VariablesExp {
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
     (e match {
       case e@IterableToArray(x) => iterable_toarray(f(x))(e.m,pos)
-      case Reflect(e@IterableForeach(x,y,b), u, es) => reflectMirrored(Reflect(IterableForeach(f(x),f(y).asInstanceOf[Sym[_]],f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
-      case Reflect(e@IterableToArray(x), u, es) => reflectMirrored(Reflect(IterableToArray(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+      case Reflect(e@IterableForeach(x,y,b), u, es) => reflectMirrored(Reflect(IterableForeach(f(x),f(y).asInstanceOf[Sym[_]],f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(e@IterableToArray(x), u, es) => reflectMirrored(Reflect(IterableToArray(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
       case _ => super.mirror(e,f)
     }).asInstanceOf[Exp[A]] // why??
   }
-  
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case IterableForeach(a, x, body) => syms(a):::syms(body)
     case _ => super.syms(e)

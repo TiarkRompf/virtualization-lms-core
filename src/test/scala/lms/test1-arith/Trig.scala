@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test1
 
-import common._
+import ops._
 
 trait Trig extends Base {
 
@@ -29,7 +28,7 @@ trait TrigExpOpt extends TrigExp {
     case Const(x) => unit(math.sin(x))
     case _ => super.sin(x)
   }
-  
+
   override def cos(x: Exp[Double]) = x match {
     case Const(x) => unit(math.cos(x))
     case _ => super.cos(x)

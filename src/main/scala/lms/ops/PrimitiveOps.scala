@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 
@@ -9,10 +9,10 @@ import scala.reflect.SourceContext
 trait LiftPrimitives {
   this: PrimitiveOps =>
 
-  implicit def intToRepInt(x: Int) = unit(x)  
+  implicit def intToRepInt(x: Int) = unit(x)
   implicit def floatToRepFloat(x: Float) = unit(x)
   implicit def doubleToRepDouble(x: Double) = unit(x)
-  
+
   // precision-widening promotions
   implicit def chainIntToRepFloat[A:Manifest](x: A)(implicit c: A => Rep[Int]): Rep[Float] = repIntToRepFloat(c(x))
   implicit def chainFloatToRepDouble[A:Manifest](x: A)(implicit c: A => Rep[Float]): Rep[Double] = repFloatToRepDouble(c(x))
@@ -25,7 +25,7 @@ trait LiftPrimitives {
  * Scala's type hierarchy to reduce the amount of IR nodes or code generation require.
  * It is in semi-desperate need of a refactor.
  */
-trait PrimitiveOps extends Variables with OverloadHack { 
+trait PrimitiveOps extends Variables with OverloadHack {
   this: ImplicitOps =>
 
   /**
@@ -33,7 +33,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
    */
   implicit def repIntToRepDouble(x: Rep[Int]): Rep[Double] = implicit_convert[Int,Double](x)
   implicit def repIntToRepFloat(x: Rep[Int]): Rep[Float] = implicit_convert[Int,Float](x)
-  implicit def repFloatToRepDouble(x: Rep[Float]): Rep[Double] = implicit_convert[Float,Double](x)  
+  implicit def repFloatToRepDouble(x: Rep[Float]): Rep[Double] = implicit_convert[Float,Double](x)
 
   /**
    *  Double
@@ -41,7 +41,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
   implicit def doubleToDoubleOps(n: Double) = new DoubleOpsCls(unit(n))
   implicit def repDoubleToDoubleOps(n: Rep[Double]) = new DoubleOpsCls(n)
   implicit def varDoubleToDoubleOps(n: Var[Double]) = new DoubleOpsCls(readVar(n))
-  
+
   object Double {
     def parseDouble(s: Rep[String])(implicit pos: SourceContext) = obj_double_parse_double(s)
     def PositiveInfinity(implicit pos: SourceContext) = obj_double_positive_infinity
@@ -77,9 +77,9 @@ trait PrimitiveOps extends Variables with OverloadHack {
   implicit def intToIntOps(n: Int) = new IntOpsCls(unit(n))
   implicit def repIntToIntOps(n: Rep[Int]) = new IntOpsCls(n)
   implicit def varIntToIntOps(n: Var[Int]) = new IntOpsCls(readVar(n))
-    
+
   class IntOpsCls(lhs: Rep[Int]){
-    // TODO (tiark): either of these cause scalac to crash        
+    // TODO (tiark): either of these cause scalac to crash
     //def /[A](rhs: Rep[A])(implicit mA: Manifest[A], f: Fractional[A], o: Overloaded1) = int_divide_frac(lhs, rhs)
     //def /(rhs: Rep[Int]) = int_divide(lhs, rhs)
     // TODO Something is wrong if we just use floatValue. implicits get confused
@@ -131,7 +131,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def infix_<<(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = long_shiftleft(lhs, rhs)
   def infix_>>>(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = long_shiftright_unsigned(lhs, rhs)
   def infix_toInt(lhs: Rep[Long])(implicit o: Overloaded1, pos: SourceContext) = long_toint(lhs)
-    
+
   def long_binaryand(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
   def long_binaryor(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
   def long_shiftleft(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Long]
@@ -229,11 +229,11 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class LongToInt(lhs: Exp[Long]) extends Def[Int]
 
   def long_binaryor(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBinaryOr(lhs,rhs)
-  def long_binaryand(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBinaryAnd(lhs,rhs)  
+  def long_binaryand(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBinaryAnd(lhs,rhs)
   def long_shiftleft(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = LongShiftLeft(lhs,rhs)
   def long_shiftright_unsigned(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = LongShiftRightUnsigned(lhs,rhs)
   def long_toint(lhs: Exp[Long])(implicit pos: SourceContext) = LongToInt(lhs)
-    
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
@@ -293,7 +293,7 @@ trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
 trait ScalaGenPrimitiveOps extends ScalaGenBase {
   val IR: PrimitiveOpsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ObjDoubleParseDouble(s) => emitValDef(sym, "java.lang.Double.parseDouble(" + quote(s) + ")")
     case ObjDoublePositiveInfinity() => emitValDef(sym, "scala.Double.PositiveInfinity")
@@ -321,9 +321,9 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntBitwiseNot(lhs) => emitValDef(sym, "~" + quote(lhs))
     case IntToLong(lhs) => emitValDef(sym, quote(lhs) + ".toLong")
     case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
-    case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))    
+    case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
     case LongShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
-    case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, quote(lhs) + " >>> " + quote(rhs))    
+    case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, quote(lhs) + " >>> " + quote(rhs))
     case LongToInt(lhs) => emitValDef(sym, quote(lhs) + ".toInt")
     case _ => super.emitNode(sym, rhs)
   }

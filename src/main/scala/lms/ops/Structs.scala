@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import reflect.{SourceContext, RefinedManifest}
 import util.OverloadHack

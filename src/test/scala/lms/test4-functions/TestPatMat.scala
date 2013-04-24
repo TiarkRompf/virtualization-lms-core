@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test4
 
-import common._
+import ops._
 import internal.GraphVizExport
 import test1._
 import test2._
@@ -39,13 +38,13 @@ trait Impl extends Intf {
  type Rep[+T] = String
 
  object __match extends Matcher {
-   def runOrElse[T, U](in: Rep[T])(matcher: Rep[T] => M[U]): Rep[U] = 
+   def runOrElse[T, U](in: Rep[T])(matcher: Rep[T] => M[U]): Rep[U] =
     ("runOrElse("+ in +", ?" + matcher("?") + ")")
    def zero: M[Nothing] = "zero"
    def one[T](x: Rep[T]): M[T] = "one("+x.toString+")"
-   def guard[T](cond: Rep[Boolean], then: => Rep[T]): M[T] = 
+   def guard[T](cond: Rep[Boolean], then: => Rep[T]): M[T] =
     "guard("+cond+","+then+")"
-   def isSuccess[T, U](x: Rep[T])(f: Rep[T] => M[U]): Rep[Boolean] = 
+   def isSuccess[T, U](x: Rep[T])(f: Rep[T] => M[U]): Rep[Boolean] =
     ("isSuccess("+x+", ?" + f("?") + ")")
  }
 
@@ -62,9 +61,9 @@ trait Impl extends Intf {
 
 
 class TestPatMat extends FileDiffSuite {
-  
+
   val prefix = "test-out/epfl/test4-"
-  
+
   def testPatMat1 = {
     withOutFile(prefix+"patmat1") {
       trait Prog extends Intf {

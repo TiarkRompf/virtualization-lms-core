@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import scala.reflect.SourceContext
@@ -54,7 +54,7 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
   def var_minusequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
   def var_timesequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
   def var_divideequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
-  
+
   def __assign[T:Manifest](lhs: Var[T], rhs: T)(implicit pos: SourceContext) = var_assign(lhs, unit(rhs))
   def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_assign(lhs, rhs)
   def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_assign(lhs, readVar(rhs))
@@ -115,12 +115,12 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
     reflectWrite(lhs.e)(VarMinusEquals(lhs, rhs))
     Const()
   }
-  
+
   def var_timesequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarTimesEquals(lhs, rhs))
     Const()
   }
-  
+
   def var_divideequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarDivideEquals(lhs, rhs))
     Const()
@@ -192,11 +192,11 @@ trait VariablesExpOpt extends VariablesExp {
   override implicit def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext) : Exp[T] = {
     if (context ne null) {
       // find the last modification of variable v
-      // if it is an assigment, just return the last value assigned 
+      // if it is an assigment, just return the last value assigned
       val vs = v.e.asInstanceOf[Sym[Variable[T]]]
       //TODO: could use calculateDependencies(Read(v))
-      
-      val rhs = context.reverse.collectFirst { 
+
+      val rhs = context.reverse.collectFirst {
         case w @ Def(Reflect(NewVar(rhs: Exp[T]), _, _)) if w == vs => Some(rhs)
         case Def(Reflect(Assign(`v`, rhs: Exp[T]), _, _)) => Some(rhs)
         case Def(Reflect(_, u, _)) if mayWrite(u, List(vs)) => None // not a simple assignment
@@ -206,7 +206,7 @@ trait VariablesExpOpt extends VariablesExp {
       super.readVar(v)
     }
   }
-  
+
   // TODO: could eliminate redundant stores, too
   // by overriding assign ...
 

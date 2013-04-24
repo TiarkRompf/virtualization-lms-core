@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import util.GraphUtil
@@ -10,7 +10,7 @@ trait BlockTraversal extends GraphTraversal {
   import IR._
 
   type Block[+T]
-  
+
   def reifyBlock[T: Manifest](x: => Exp[T]): Block[T]
 
   def compactize(start: Block[Any], local: List[Sym[Any]]): List[Sym[Any]] = { throw new Exception("Method compactize should be overriden.") }
@@ -21,10 +21,10 @@ trait BlockTraversal extends GraphTraversal {
 
   def getBlockResult[A](s: Block[A]): Exp[A] = getBlockResultFull(s) // = s.res
   def getBlockResultFull[A](s: Block[A]): Exp[A] // = s.res
-  
+
   def traverseBlock[A](block: Block[A]): Unit
   def traverseStm(stm: Stm): Unit
-  
+
   def reset: Unit = ()
 }
 
@@ -41,40 +41,40 @@ trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
   def reifyBlock[T: Manifest](x: => Exp[T]): Block[T] = IR.reifyEffects(x)
 
   override def getBlockResultFull[A](s: Block[A]): Exp[A] = s.res
-  
+
   override def getBlockResult[A](s: Block[A]): Exp[A] = s match {
     case Block(Def(Reify(x, _, _))) => x
     case Block(x) => x
   }
 
-  
-  def focusBlock[A](result: Block[Any])(body: => A): A = 
+
+  def focusBlock[A](result: Block[Any])(body: => A): A =
     focusFatBlock(List(result))(body)
-    
-  def focusFatBlock[A](result: List[Block[Any]])(body: => A): A = 
+
+  def focusFatBlock[A](result: List[Block[Any]])(body: => A): A =
     focusSubGraph[A](result.map(getBlockResultFull))(body)
 
 
-  def focusExactScope[A](resultB: Block[Any])(body: List[Stm] => A): A = 
+  def focusExactScope[A](resultB: Block[Any])(body: List[Stm] => A): A =
     focusExactScopeFat(List(resultB))(body)
-  
-  def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A = 
+
+  def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A =
     focusExactScopeSubGraph[A](resultB.map(getBlockResultFull))(body)
-  
+
   // ---- bound and free vars
 
   def boundInScope(x: List[Exp[Any]]): List[Sym[Any]] = {
     (x.flatMap(syms):::innerScope.flatMap(t => t.lhs:::boundSyms(t.rhs))).distinct
   }
-  
+
   def usedInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
     (y.flatMap(syms):::innerScope.flatMap(t => syms(t.rhs))).distinct
   }
-  
+
   def readInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
     (y.flatMap(syms):::innerScope.flatMap(t => readSyms(t.rhs))).distinct
   }
-  
+
   // bound/used/free variables in current scope, with input vars x (bound!) and result y (used!)
   def boundAndUsedInScope(x: List[Exp[Any]], y: List[Exp[Any]]): (List[Sym[Any]], List[Sym[Any]]) = {
     (boundInScope(x), usedInScope(y))

@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import scala.virtualization.lms.internal.GenericCodegen
 import java.io.PrintWriter

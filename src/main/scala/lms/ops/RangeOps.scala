@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 
@@ -35,12 +35,12 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Sym[Int], body: Block[Unit]) extends Def[Unit]
 
   def range_until(start: Exp[Int], end: Exp[Int])(implicit pos: SourceContext) : Exp[Range] = Until(start, end)
-  def range_start(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = r match { 
+  def range_start(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = r match {
     case Def(Until(start, end)) => start
     case _ => RangeStart(r)
   }
   def range_step(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = RangeStep(r)
-  def range_end(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = r match { 
+  def range_end(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = r match {
     case Def(Until(start, end)) => end
     case _ => RangeEnd(r)
   }
@@ -49,7 +49,7 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
     val a = reifyEffects(block(i))
     reflectEffect(RangeForeach(r.start, r.end, i, a), summarizeEffects(a).star)
   }
-  
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Reflect(RangeForeach(s,e,i,b), u, es) => reflectMirrored(Reflect(RangeForeach(f(s),f(e),f(i).asInstanceOf[Sym[Int]],f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e,f)

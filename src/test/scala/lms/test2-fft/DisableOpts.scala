@@ -1,5 +1,4 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test2
 
 import internal._

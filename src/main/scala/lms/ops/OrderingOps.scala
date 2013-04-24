@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
@@ -101,7 +101,7 @@ trait ScalaGenOrderingOps extends ScalaGenBase {
 trait CLikeGenOrderingOps extends CLikeGenBase {
   val IR: OrderingOpsExp
   import IR._
-  
+
   // TODO: Add MIN/MAX macro needs to C-like header file
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {

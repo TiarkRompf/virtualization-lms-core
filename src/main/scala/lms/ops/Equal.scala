@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
@@ -68,7 +68,7 @@ trait EqualExpBridgeOpt extends EqualExp {
     case (Const(a),Const(b)) => Const(a == b)
     case _ => super.equals(a,b)
   }
-  
+
   override def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = if (a == b) Const(false) else (a,b) match {
     case (Const(a),Const(b)) => Const(a != b)
     case _ => super.notequals(a,b)
@@ -81,7 +81,7 @@ trait EqualExpOpt extends EqualExp with EqualExpBridgeOpt
 trait ScalaGenEqual extends ScalaGenBase {
   val IR: EqualExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Equal(a,b) =>  emitValDef(sym, quote(a) + " == " + quote(b))
     case NotEqual(a,b) =>  emitValDef(sym, quote(a) + " != " + quote(b))
