@@ -113,7 +113,7 @@ val x76 = new Tuple2Tuple2Tuple2Tuple2DoubleTuple2DoubleDoubleDoubleDoubleListCh
 val x77 = x7(x76)
 x77
 }
-val x78 = scala.virtualization.lms.epfl.test4.Automaton(x23,x24)
+val x78 = scala.lms.test4.Automaton(x23,x24)
 x78
 }
 val x1 = List()

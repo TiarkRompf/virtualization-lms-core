@@ -1,12 +1,12 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Match extends ((Unit)=>(scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
-def apply(x0:Unit): scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
+class Match extends ((Unit)=>(scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
+def apply(x0:Unit): scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
 var x1 = null.asInstanceOf[scala.Function1[Double, Double]]
 var x33 = null.asInstanceOf[scala.Function1[Double, Double]]
-var x19 = null.asInstanceOf[scala.Function1[Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble, Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble]]
-var x12 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[Tuple2DoubleDouble], scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+var x19 = null.asInstanceOf[scala.Function1[scala.Tuple2[scala.Tuple2[Double, Double], scala.collection.immutable.List[scala.Tuple2[Double, Double]]], scala.Tuple2[scala.Tuple2[Double, Double], scala.collection.immutable.List[scala.Tuple2[Double, Double]]]]]
+var x12 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[scala.Tuple2[Double, Double]], scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
 x1 = {x2: (Double) => 
 val x4 = x2%2 == 0
 val x5 = if (x4) {
@@ -93,7 +93,7 @@ val x51 = x49._2
 val x52 = x12(x51)
 x52
 }
-val x53 = scala.virtualization.lms.epfl.test4.Automaton(x14,x15)
+val x53 = scala.lms.test4.Automaton(x14,x15)
 x53
 }
 val x11 = List()

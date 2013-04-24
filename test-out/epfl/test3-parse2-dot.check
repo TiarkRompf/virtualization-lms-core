@@ -22,7 +22,7 @@ shape=box
 ]
 "Sym(2)" -> "Sym(4)"
 "Sym(6)" [
-label="Sym(6) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(4))"
+label="Sym(6) \n Construct(class scala.lms.test3.Parsers$Success,Sym(4))"
 shape=box
 ]
 "Sym(4)" -> "Sym(6)"
@@ -39,7 +39,7 @@ shape=box
 ]
 "Sym(7)" -> "Sym(9)"
 "Sym(11)" [
-label="Sym(11) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(9))"
+label="Sym(11) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(9))"
 shape=box
 color=red
 ]
@@ -67,7 +67,7 @@ shape=box
 ]
 "Sym(13)" -> "Sym(15)"
 "Sym(17)" [
-label="Sym(17) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(15))"
+label="Sym(17) \n Construct(class scala.lms.test3.Parsers$Success,Sym(15))"
 shape=box
 ]
 "Sym(15)" -> "Sym(17)"
@@ -95,7 +95,7 @@ shape=box
 ]
 "Sym(21)" -> "Sym(23)"
 "Sym(25)" [
-label="Sym(25) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(23))"
+label="Sym(25) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(23))"
 shape=box
 color=red
 ]
@@ -123,7 +123,7 @@ shape=box
 ]
 "Sym(27)" -> "Sym(29)"
 "Sym(31)" [
-label="Sym(31) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(29))"
+label="Sym(31) \n Construct(class scala.lms.test3.Parsers$Success,Sym(29))"
 shape=box
 ]
 "Sym(29)" -> "Sym(31)"
@@ -151,7 +151,7 @@ shape=box
 ]
 "Sym(35)" -> "Sym(37)"
 "Sym(39)" [
-label="Sym(39) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(37))"
+label="Sym(39) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(37))"
 shape=box
 color=red
 ]
@@ -179,7 +179,7 @@ shape=box
 ]
 "Sym(41)" -> "Sym(43)"
 "Sym(45)" [
-label="Sym(45) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(43))"
+label="Sym(45) \n Construct(class scala.lms.test3.Parsers$Success,Sym(43))"
 shape=box
 ]
 "Sym(43)" -> "Sym(45)"
@@ -207,7 +207,7 @@ shape=box
 ]
 "Sym(49)" -> "Sym(51)"
 "Sym(53)" [
-label="Sym(53) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(51))"
+label="Sym(53) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(51))"
 shape=box
 color=red
 ]
@@ -235,7 +235,7 @@ shape=box
 ]
 "Sym(55)" -> "Sym(57)"
 "Sym(59)" [
-label="Sym(59) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(57))"
+label="Sym(59) \n Construct(class scala.lms.test3.Parsers$Success,Sym(57))"
 shape=box
 ]
 "Sym(57)" -> "Sym(59)"
@@ -263,7 +263,7 @@ shape=box
 ]
 "Sym(63)" -> "Sym(65)"
 "Sym(67)" [
-label="Sym(67) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(65))"
+label="Sym(67) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(65))"
 shape=box
 color=red
 ]
@@ -291,7 +291,7 @@ shape=box
 ]
 "Sym(69)" -> "Sym(71)"
 "Sym(73)" [
-label="Sym(73) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(71))"
+label="Sym(73) \n Construct(class scala.lms.test3.Parsers$Success,Sym(71))"
 shape=box
 ]
 "Sym(71)" -> "Sym(73)"
@@ -308,7 +308,7 @@ shape=box
 ]
 "Sym(74)" -> "Sym(76)"
 "Sym(78)" [
-label="Sym(78) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(76))"
+label="Sym(78) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(76))"
 shape=box
 color=red
 ]
@@ -336,7 +336,7 @@ shape=box
 ]
 "Sym(80)" -> "Sym(82)"
 "Sym(84)" [
-label="Sym(84) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(82))"
+label="Sym(84) \n Construct(class scala.lms.test3.Parsers$Success,Sym(82))"
 shape=box
 ]
 "Sym(82)" -> "Sym(84)"
@@ -353,7 +353,7 @@ shape=box
 ]
 "Sym(85)" -> "Sym(87)"
 "Sym(89)" [
-label="Sym(89) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(87))"
+label="Sym(89) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(87))"
 shape=box
 color=red
 ]
@@ -381,7 +381,7 @@ shape=box
 ]
 "Sym(91)" -> "Sym(93)"
 "Sym(95)" [
-label="Sym(95) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(93))"
+label="Sym(95) \n Construct(class scala.lms.test3.Parsers$Success,Sym(93))"
 shape=box
 ]
 "Sym(93)" -> "Sym(95)"
@@ -409,7 +409,7 @@ shape=box
 ]
 "Sym(99)" -> "Sym(101)"
 "Sym(103)" [
-label="Sym(103) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(101))"
+label="Sym(103) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(101))"
 shape=box
 color=red
 ]
@@ -437,7 +437,7 @@ shape=box
 ]
 "Sym(105)" -> "Sym(107)"
 "Sym(109)" [
-label="Sym(109) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(107))"
+label="Sym(109) \n Construct(class scala.lms.test3.Parsers$Success,Sym(107))"
 shape=box
 ]
 "Sym(107)" -> "Sym(109)"
@@ -465,7 +465,7 @@ shape=box
 ]
 "Sym(113)" -> "Sym(115)"
 "Sym(117)" [
-label="Sym(117) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(115))"
+label="Sym(117) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(115))"
 shape=box
 color=red
 ]
@@ -493,7 +493,7 @@ shape=box
 ]
 "Sym(119)" -> "Sym(121)"
 "Sym(123)" [
-label="Sym(123) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(121))"
+label="Sym(123) \n Construct(class scala.lms.test3.Parsers$Success,Sym(121))"
 shape=box
 ]
 "Sym(121)" -> "Sym(123)"
@@ -521,7 +521,7 @@ shape=box
 ]
 "Sym(127)" -> "Sym(129)"
 "Sym(131)" [
-label="Sym(131) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(129))"
+label="Sym(131) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(129))"
 shape=box
 color=red
 ]
@@ -549,7 +549,7 @@ shape=box
 ]
 "Sym(133)" -> "Sym(135)"
 "Sym(137)" [
-label="Sym(137) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(135))"
+label="Sym(137) \n Construct(class scala.lms.test3.Parsers$Success,Sym(135))"
 shape=box
 ]
 "Sym(135)" -> "Sym(137)"
@@ -599,7 +599,7 @@ shape=box
 ]
 "Sym(147)" -> "Sym(149)"
 "Sym(151)" [
-label="Sym(151) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(149))"
+label="Sym(151) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(149))"
 shape=box
 color=red
 ]
@@ -640,7 +640,7 @@ shape=box
 ]
 "Sym(184)" -> "Sym(186)"
 "Sym(188)" [
-label="Sym(188) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(186))"
+label="Sym(188) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(186))"
 shape=box
 color=red
 ]
@@ -668,7 +668,7 @@ shape=box
 ]
 "Sym(190)" -> "Sym(192)"
 "Sym(194)" [
-label="Sym(194) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(192))"
+label="Sym(194) \n Construct(class scala.lms.test3.Parsers$Success,Sym(192))"
 shape=box
 ]
 "Sym(192)" -> "Sym(194)"
@@ -696,7 +696,7 @@ shape=box
 ]
 "Sym(198)" -> "Sym(200)"
 "Sym(202)" [
-label="Sym(202) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(200))"
+label="Sym(202) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(200))"
 shape=box
 color=red
 ]
@@ -724,7 +724,7 @@ shape=box
 ]
 "Sym(204)" -> "Sym(206)"
 "Sym(208)" [
-label="Sym(208) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(206))"
+label="Sym(208) \n Construct(class scala.lms.test3.Parsers$Success,Sym(206))"
 shape=box
 ]
 "Sym(206)" -> "Sym(208)"
@@ -752,7 +752,7 @@ shape=box
 ]
 "Sym(212)" -> "Sym(214)"
 "Sym(216)" [
-label="Sym(216) \n Deconstruct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(214))"
+label="Sym(216) \n Deconstruct(class scala.lms.test3.Parsers$Success,Sym(214))"
 shape=box
 color=red
 ]
@@ -780,7 +780,7 @@ shape=box
 ]
 "Sym(218)" -> "Sym(220)"
 "Sym(222)" [
-label="Sym(222) \n Construct(class scala.virtualization.lms.epfl.test3.Parsers$Success,Sym(220))"
+label="Sym(222) \n Construct(class scala.lms.test3.Parsers$Success,Sym(220))"
 shape=box
 ]
 "Sym(220)" -> "Sym(222)"

@@ -2,6 +2,7 @@ package scala.lms
 package test7
 
 import ops._
+import transform.LoopFusionOpt
 import test1._
 
 import util.OverloadHack

@@ -2,6 +2,7 @@ package scala.lms
 package test10
 
 import ops._
+import transform.WorklistTransformer
 import internal.{NestedBlockTraversal}
 import util.OverloadHack
 

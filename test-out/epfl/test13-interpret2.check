@@ -2,12 +2,12 @@ warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(85)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0(px2:scala.virtualization.lms.common.Compile,px3:Object,px4:Object,px1:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px8:Object,px9:Object,px7:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px13:Object,px14:Object,px12:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px17:Object,px18:Object,px22:Object,px23:Object,px21:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px27:Object,px28:Object,px26:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px32:Object,px33:Object,px31:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px37:Object,px38:Object,px36:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px42:Object,px43:Object,px41:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px46:Object,px47:Object,px51:Object,px52:Object,px50:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px56:Object,px57:Object,px55:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px61:Object,px62:Object,px60:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px66:Object,px67:Object,px65:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px71:Object,px72:Object,px70:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px75:Object,px76:Object,px80:Object,px81:Object,px79:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x0:java.util.HashMap[java.lang.String, Any]): Any = {
-val x2 = px2 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
+class staged$0(px2:scala.lms.Compile,px3:Object,px4:Object,px1:scala.lms.test13.RCell[scala.lms.test13.RFun],px8:Object,px9:Object,px7:scala.lms.test13.RCell[scala.lms.test13.RFun],px13:Object,px14:Object,px12:scala.lms.test13.RCell[scala.lms.test13.RFun],px17:Object,px18:Object,px22:Object,px23:Object,px21:scala.lms.test13.RCell[scala.lms.test13.RFun],px27:Object,px28:Object,px26:scala.lms.test13.RCell[scala.lms.test13.RFun],px32:Object,px33:Object,px31:scala.lms.test13.RCell[scala.lms.test13.RFun],px37:Object,px38:Object,px36:scala.lms.test13.RCell[scala.lms.test13.RFun],px42:Object,px43:Object,px41:scala.lms.test13.RCell[scala.lms.test13.RFun],px46:Object,px47:Object,px51:Object,px52:Object,px50:scala.lms.test13.RCell[scala.lms.test13.RFun],px56:Object,px57:Object,px55:scala.lms.test13.RCell[scala.lms.test13.RFun],px61:Object,px62:Object,px60:scala.lms.test13.RCell[scala.lms.test13.RFun],px66:Object,px67:Object,px65:scala.lms.test13.RCell[scala.lms.test13.RFun],px71:Object,px72:Object,px70:scala.lms.test13.RCell[scala.lms.test13.RFun],px75:Object,px76:Object,px80:Object,px81:Object,px79:scala.lms.test13.RCell[scala.lms.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x0:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+val x2 = px2 // static data: IR:scala.lms.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
 val x3 = px3 // static data: <function1>
 val x4 = px4 // static data: <function1>
-val x5 = new scala.virtualization.lms.epfl.test13.RFun {
+val x5 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x3.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -19,7 +19,7 @@ val x1 = px1 // static data: RCell(dyn - ConstN(0))
 val x6 = x1.set(x5)
 val x8 = px8 // static data: <function1>
 val x9 = px9 // static data: <function1>
-val x10 = new scala.virtualization.lms.epfl.test13.RFun {
+val x10 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x8.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -31,7 +31,7 @@ val x7 = px7 // static data: RCell(dyn - AssignN(x,ConstN(0)))
 val x11 = x7.set(x10)
 val x13 = px13 // static data: <function1>
 val x14 = px14 // static data: <function1>
-val x15 = new scala.virtualization.lms.epfl.test13.RFun {
+val x15 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x13.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -43,7 +43,7 @@ val x12 = px12 // static data: RCell(dyn - LookupN(n))
 val x16 = x12.set(x15)
 val x17 = px17 // static data: <function1>
 val x18 = px18 // static data: <function1>
-val x19 = new scala.virtualization.lms.epfl.test13.RFun {
+val x19 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x17.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -54,7 +54,7 @@ def execInt(f: HM): Int = fInt(f)
 val x20 = x12.set(x19)
 val x22 = px22 // static data: <function1>
 val x23 = px23 // static data: <function1>
-val x24 = new scala.virtualization.lms.epfl.test13.RFun {
+val x24 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x22.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -66,7 +66,7 @@ val x21 = px21 // static data: RCell(dyn - ConstN(-1))
 val x25 = x21.set(x24)
 val x27 = px27 // static data: <function1>
 val x28 = px28 // static data: <function1>
-val x29 = new scala.virtualization.lms.epfl.test13.RFun {
+val x29 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x27.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -78,7 +78,7 @@ val x26 = px26 // static data: RCell(dyn - AddN(LookupN(n),ConstN(-1)))
 val x30 = x26.set(x29)
 val x32 = px32 // static data: <function1>
 val x33 = px33 // static data: <function1>
-val x34 = new scala.virtualization.lms.epfl.test13.RFun {
+val x34 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x32.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -90,7 +90,7 @@ val x31 = px31 // static data: RCell(dyn - AssignN(n,AddN(LookupN(n),ConstN(-1))
 val x35 = x31.set(x34)
 val x37 = px37 // static data: <function1>
 val x38 = px38 // static data: <function1>
-val x39 = new scala.virtualization.lms.epfl.test13.RFun {
+val x39 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x37.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -102,7 +102,7 @@ val x36 = px36 // static data: RCell(dyn - LookupN(x))
 val x40 = x36.set(x39)
 val x42 = px42 // static data: <function1>
 val x43 = px43 // static data: <function1>
-val x44 = new scala.virtualization.lms.epfl.test13.RFun {
+val x44 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x42.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -114,7 +114,7 @@ val x41 = px41 // static data: RCell(dyn - LookupN(a))
 val x45 = x41.set(x44)
 val x46 = px46 // static data: <function1>
 val x47 = px47 // static data: <function1>
-val x48 = new scala.virtualization.lms.epfl.test13.RFun {
+val x48 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x46.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -125,7 +125,7 @@ def execInt(f: HM): Int = fInt(f)
 val x49 = x12.set(x48)
 val x51 = px51 // static data: <function1>
 val x52 = px52 // static data: <function1>
-val x53 = new scala.virtualization.lms.epfl.test13.RFun {
+val x53 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x51.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -137,7 +137,7 @@ val x50 = px50 // static data: RCell(dyn - AppN(LookupN(a),LookupN(n)))
 val x54 = x50.set(x53)
 val x56 = px56 // static data: <function1>
 val x57 = px57 // static data: <function1>
-val x58 = new scala.virtualization.lms.epfl.test13.RFun {
+val x58 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x56.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -149,7 +149,7 @@ val x55 = px55 // static data: RCell(dyn - AddN(LookupN(x),AppN(LookupN(a),Looku
 val x59 = x55.set(x58)
 val x61 = px61 // static data: <function1>
 val x62 = px62 // static data: <function1>
-val x63 = new scala.virtualization.lms.epfl.test13.RFun {
+val x63 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x61.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -161,7 +161,7 @@ val x60 = px60 // static data: RCell(dyn - AssignN(x,AddN(LookupN(x),AppN(Lookup
 val x64 = x60.set(x63)
 val x66 = px66 // static data: <function1>
 val x67 = px67 // static data: <function1>
-val x68 = new scala.virtualization.lms.epfl.test13.RFun {
+val x68 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x66.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -173,7 +173,7 @@ val x65 = px65 // static data: RCell(dyn - SeqN(List(AssignN(n,AddN(LookupN(n),C
 val x69 = x65.set(x68)
 val x71 = px71 // static data: <function1>
 val x72 = px72 // static data: <function1>
-val x73 = new scala.virtualization.lms.epfl.test13.RFun {
+val x73 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x71.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -185,7 +185,7 @@ val x70 = px70 // static data: RCell(dyn - WhileN(LookupN(n),SeqN(List(AssignN(n
 val x74 = x70.set(x73)
 val x75 = px75 // static data: <function1>
 val x76 = px76 // static data: <function1>
-val x77 = new scala.virtualization.lms.epfl.test13.RFun {
+val x77 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x75.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -196,7 +196,7 @@ def execInt(f: HM): Int = fInt(f)
 val x78 = x36.set(x77)
 val x80 = px80 // static data: <function1>
 val x81 = px81 // static data: <function1>
-val x82 = new scala.virtualization.lms.epfl.test13.RFun {
+val x82 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x80.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -397,10 +397,10 @@ val x121 = x119.isInstanceOf[Int]
 val x122 = x120 && x121
 val x134 = if (x122) {
 val x123 = println("spec-add-int: AddN(LookupN(n),ConstN(-1))")
-val x2 = px2 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
+val x2 = px2 // static data: IR:scala.lms.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
 val x124 = px124 // static data: <function1>
 val x125 = px125 // static data: <function1>
-val x126 = new scala.virtualization.lms.epfl.test13.RFun {
+val x126 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x124.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -442,10 +442,10 @@ val x140 = x138.isInstanceOf[Int]
 val x141 = x139 && x140
 val x153 = if (x141) {
 val x142 = println("spec-add-int: AddN(LookupN(n),ConstN(-1))")
-val x2 = px2 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
+val x2 = px2 // static data: IR:scala.lms.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
 val x143 = px143 // static data: <function1>
 val x144 = px144 // static data: <function1>
-val x145 = new scala.virtualization.lms.epfl.test13.RFun {
+val x145 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x143.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -666,10 +666,10 @@ val x201 = x199.isInstanceOf[Int]
 val x202 = x200 && x201
 val x214 = if (x202) {
 val x203 = println("spec-add-int: AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))")
-val x2 = px2 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
+val x2 = px2 // static data: IR:scala.lms.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
 val x204 = px204 // static data: <function1>
 val x205 = px205 // static data: <function1>
-val x206 = new scala.virtualization.lms.epfl.test13.RFun {
+val x206 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x204.asInstanceOf[Rep[HM]=>Rep[Any]])
@@ -711,10 +711,10 @@ val x220 = x218.isInstanceOf[Int]
 val x221 = x219 && x220
 val x233 = if (x221) {
 val x222 = println("spec-add-int: AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))")
-val x2 = px2 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
+val x2 = px2 // static data: IR:scala.lms.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
 val x223 = px223 // static data: <function1>
 val x224 = px224 // static data: <function1>
-val x225 = new scala.virtualization.lms.epfl.test13.RFun {
+val x225 = new scala.lms.test13.RFun {
 type Rep[T] = x2.Rep[T]
 type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x223.asInstanceOf[Rep[HM]=>Rep[Any]])
