@@ -1,9 +1,9 @@
 package scala.lms
 package transform
 
-import java.io.PrintWriter
-import scala.virtualization.lms.internal.NestedBlockTraversal
+import internal.NestedBlockTraversal
 
+import java.io.PrintWriter
 import scala.collection.mutable
 
 trait LivenessOpt extends NestedBlockTraversal {
