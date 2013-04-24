@@ -1,3 +1,4 @@
+/*
 package scala.lms
 package targets.clike.codegen
 
@@ -33,3 +34,5 @@ trait OpenCLCodeGenPkg extends OpenCLGenDSLOps with OpenCLGenImplicitOps with Op
     with OpenCLGenVariables with OpenCLGenWhile
     with OpenCLGenMathOps with OpenCLGenCastingOps with OpenCLGenSetOps with OpenCLGenArrayBufferOps
     { val IR: ScalaOpsPkgExp  }
+
+*/
