@@ -1,5 +1,4 @@
 package scala.lms
-package ops
 
 //import internal._
 import scala.reflect.SourceContext
