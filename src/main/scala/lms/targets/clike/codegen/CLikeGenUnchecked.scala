@@ -1,10 +1,9 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import internal._
 import ops.UncheckedOpsExp
 
+import java.io.PrintWriter
 
 trait CGenUncheckedOps extends CGenBase {
   val IR: UncheckedOpsExp

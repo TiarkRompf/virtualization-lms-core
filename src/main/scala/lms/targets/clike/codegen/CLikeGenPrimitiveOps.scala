@@ -1,7 +1,7 @@
 package scala.lms
 package targets.clike.codegen
 
-import ops.{PrimitiveOpsExp}
+import ops.PrimitiveOpsExp
 
 import java.io.PrintWriter
 

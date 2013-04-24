@@ -1,9 +1,9 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
 import ops.CastingOpsExp
 
+import java.io.PrintWriter
 
 trait CLikeGenCastingOps extends CLikeGenBase { 
   val IR: CastingOpsExp

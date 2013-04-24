@@ -1,7 +1,6 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
 import ops.VariablesExp
 
 

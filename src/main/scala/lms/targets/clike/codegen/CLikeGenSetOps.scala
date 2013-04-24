@@ -1,11 +1,11 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import scala.lms.internal._
 import ops.{SetOpsExp, BaseGenSetOps}
 
-trait CLikeGenSetOps extends BaseGenSetOps with CLikeCodegen {
+import java.io.PrintWriter
+
+trait CLikeGenSetOps extends BaseGenSetOps with CLikeGenBase {
   val IR: SetOpsExp
   import IR._
 
