@@ -1,5 +1,5 @@
 package scala.lms
-package ops
+package transform
 
 import internal.CodeMotion
 import internal.Scheduling

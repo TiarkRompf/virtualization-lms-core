@@ -1,5 +1,5 @@
 package scala.lms
-package ops
+package transform
 
 import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
