@@ -130,23 +130,23 @@ x79
   End of Generated Code                  
 *******************************************/
 
-case class Tuple2ListCharListChar(_1: scala.collection.immutable.List[Char], _2: scala.collection.immutable.List[Char])
-
-case class Tuple2Tuple2Tuple2Tuple2DoubleDoubleDoubleDoubleListChar(_1: Tuple2Tuple2Tuple2DoubleDoubleDoubleDouble, _2: scala.collection.immutable.List[Char])
-
-case class Tuple2Tuple2DoubleDoubleDouble(_1: Tuple2DoubleDouble, _2: Double)
-
 case class Tuple2Tuple2Tuple2DoubleTuple2DoubleDoubleDoubleDouble(_1: Tuple2Tuple2DoubleTuple2DoubleDoubleDouble, _2: Double)
 
-case class Tuple2Tuple2DoubleTuple2DoubleDoubleDouble(_1: Tuple2DoubleTuple2DoubleDouble, _2: Double)
-
-case class Tuple2DoubleDouble(_1: Double, _2: Double)
+case class Tuple2Tuple2Tuple2Tuple2DoubleDoubleDoubleDoubleListChar(_1: Tuple2Tuple2Tuple2DoubleDoubleDoubleDouble, _2: scala.collection.immutable.List[Char])
 
 case class Tuple2Tuple2Tuple2DoubleDoubleDoubleDouble(_1: Tuple2Tuple2DoubleDoubleDouble, _2: Double)
 
 case class Tuple2DoubleTuple2DoubleDouble(_1: Double, _2: Tuple2DoubleDouble)
 
+case class Tuple2ListCharListChar(_1: scala.collection.immutable.List[Char], _2: scala.collection.immutable.List[Char])
+
+case class Tuple2DoubleDouble(_1: Double, _2: Double)
+
 case class Tuple2Tuple2Tuple2Tuple2DoubleTuple2DoubleDoubleDoubleDoubleListChar(_1: Tuple2Tuple2Tuple2DoubleTuple2DoubleDoubleDoubleDouble, _2: scala.collection.immutable.List[Char])
+
+case class Tuple2Tuple2DoubleDoubleDouble(_1: Tuple2DoubleDouble, _2: Double)
+
+case class Tuple2Tuple2DoubleTuple2DoubleDoubleDouble(_1: Tuple2DoubleTuple2DoubleDouble, _2: Double)
 compilation: ok
 idx:   0
 out:   List(Tuple2Tuple2Tuple2Tuple2DoubleDoubleDoubleDoubleListChar(Tuple2Tuple2Tuple2DoubleDoubleDoubleDouble(Tuple2Tuple2DoubleDoubleDouble(Tuple2DoubleDouble(0.0,0.0),0.0),0.0),List()))
