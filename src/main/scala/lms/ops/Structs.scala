@@ -1,10 +1,13 @@
 package scala.lms
 package ops
 
-import reflect.{SourceContext, RefinedManifest}
+import internal.{FatExpressions, GenericNestedCodegen, GenericFatCodegen}
+
 import util.OverloadHack
 import java.io.PrintWriter
-import internal.{GenericNestedCodegen, GenericFatCodegen}
+import scala.reflect.{SourceContext, RefinedManifest}
+
+//import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt} // TODO: eliminate deps
 
 trait StructOps extends Base {
 

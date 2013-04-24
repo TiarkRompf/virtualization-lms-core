@@ -1,9 +1,10 @@
 package scala.lms
 package ops
 
+import util.OverloadHack
+import internal.GenerationFailedException
+
 import java.io.PrintWriter
-import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.{GenerationFailedException}
 import scala.reflect.SourceContext
 
 trait ObjectOps extends Variables with OverloadHack {

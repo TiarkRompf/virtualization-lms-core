@@ -1,8 +1,9 @@
 package scala.lms
 package ops
 
+import internal.GenericNestedCodegen
+
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.GenericNestedCodegen
 import scala.reflect.SourceContext
 
 trait StaticData extends Base {

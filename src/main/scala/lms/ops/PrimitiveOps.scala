@@ -1,9 +1,9 @@
 package scala.lms
 package ops
 
-import java.io.PrintWriter
+import util.OverloadHack
 
-import scala.virtualization.lms.util.OverloadHack
+import java.io.PrintWriter
 import scala.reflect.SourceContext
 
 trait LiftPrimitives {

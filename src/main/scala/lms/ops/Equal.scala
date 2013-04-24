@@ -1,8 +1,9 @@
 package scala.lms
 package ops
 
+import util.OverloadHack
+
 import java.io.PrintWriter
-import scala.virtualization.lms.util.OverloadHack
 import scala.reflect.SourceContext
 
 trait LiftEquals extends Base {

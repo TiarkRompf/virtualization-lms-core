@@ -1,9 +1,9 @@
 package scala.lms
 package ops
 
-import java.io.PrintWriter
+import internal.{GenericNestedCodegen, GenerationFailedException}
 
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
+import java.io.PrintWriter
 import scala.reflect.SourceContext
 
 trait RangeOps extends Base {

@@ -1,11 +1,10 @@
 package scala.lms
 package ops
 
+import internal.{GenericNestedCodegen, GenerationFailedException}
+import util.ClosureCompare
+
 import java.io.PrintWriter
-
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
-import scala.virtualization.lms.util.ClosureCompare
-
 import scala.reflect.SourceContext
 
 trait Functions extends Base {
