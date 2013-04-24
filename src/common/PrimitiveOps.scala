@@ -188,10 +188,12 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   def int_plus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs, rhs) match {
     case (Const(0), r) => r
     case (l, Const(0)) => l
+    case (Const(x), Const(y)) => Const(x+y)
     case _ => IntPlus(lhs,rhs)
   }
   def int_minus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs, rhs) match {
     case (l, Const(0)) => l
+    case (Const(x), Const(y)) => Const(x-y)
     case _ => IntMinus(lhs, rhs)
   }
   def int_times(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs, rhs) match {
@@ -199,6 +201,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
     case (l, r@Const(0)) => r
     case (Const(1), r) => r
     case (l, Const(1)) => l
+    case (Const(x), Const(y)) => Const(x*y)
     case _ => IntTimes(lhs, rhs)
   }
   def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A])(implicit pos: SourceContext) : Exp[A] = IntDivideFrac(lhs, rhs)
