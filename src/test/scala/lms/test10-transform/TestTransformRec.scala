@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test10
 
-import common._
+import ops._
 import test1._
 import test2._
 import test3._

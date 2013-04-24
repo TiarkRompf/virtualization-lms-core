@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import internal._
@@ -10,7 +10,7 @@ trait SeqOps extends Variables {
   object Seq {
     def apply[A:Manifest](xs: Rep[A]*)(implicit pos: SourceContext) = seq_new(xs)
   }
-  
+
   implicit def varToSeqOps[A:Manifest](x: Var[Seq[A]]) = new SeqOpsCls(readVar(x))
   implicit def repSeqToSeqOps[T:Manifest](a: Rep[Seq[T]]) = new SeqOpsCls(a)
   implicit def seqToSeqOps[T:Manifest](a: Seq[T]) = new SeqOpsCls(unit(a))
@@ -29,7 +29,7 @@ trait SeqOpsExp extends SeqOps with EffectExp {
   case class SeqNew[A:Manifest](xs: List[Rep[A]]) extends Def[Seq[A]]
   case class SeqLength[T:Manifest](a: Exp[Seq[T]]) extends Def[Int]
   case class SeqApply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int]) extends Def[T]
-  
+
   def seq_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext) = SeqNew(xs.toList)
   def seq_apply[T:Manifest](x: Exp[Seq[T]], n: Exp[Int])(implicit pos: SourceContext): Exp[T] = SeqApply(x, n)
   def seq_length[T:Manifest](a: Exp[Seq[T]])(implicit pos: SourceContext): Exp[Int] = SeqLength(a)

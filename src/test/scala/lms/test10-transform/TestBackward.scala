@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test10
 
-import common._
+import ops._
 import internal._
 
 import scala.reflect.SourceContext
@@ -11,15 +10,15 @@ import scala.reflect.SourceContext
 //
 //  def foobar(x: Exp[Int]) = onBwdInfo { bw => ...  }
 //
-//  def mutableClone[T](x: Exp[Vector[T]]) = 
-//    MutableClone(x) onBwdInfo { (selfsym, bw) => 
+//  def mutableClone[T](x: Exp[Vector[T]]) =
+//    MutableClone(x) onBwdInfo { (selfsym, bw) =>
 //      if (!bw.isMutated(selfsym)) x  // <---  question: this replaces a mutable with a non-mutable symbol
 //      else selfsym
 //    }
 //
 
 trait TestDSL extends BaseExp with LiftAll {
-  
+
   case class BlockStm[+T](stms: List[Stm], res: Exp[T])
 
   case class IfThenElse[T](c: Rep[Boolean], a: BlockStm[T], b: BlockStm[T]) extends Def[T]
@@ -29,7 +28,7 @@ trait TestDSL extends BaseExp with LiftAll {
   case class WaitBwd[T](e: Effects, body: (Sym[T], BwdInfo) => (List[Stm], BwdInfo)) extends Def[T]
 
   type Effects = List[String]
-  
+
   case class Print(e: Exp[Any]) extends Def[Unit]
   case class Forward[T](e: Exp[T]) extends Def[Unit]
   case class Abstract[T]() extends Def[T]
@@ -49,51 +48,51 @@ trait TestDSL extends BaseExp with LiftAll {
     case TP(s, _) => List(s.toString)
   }
 
-/*  
+/*
   def readVar[T](v: Rep[Variable[T]]): Rep[T] = {
     onContext(v) { fw =>
       fs.last(v) match {
         case Assign(v, rhs) => rhs
-        case NewVar(rhs) => 
+        case NewVar(rhs) =>
       }
     }
   }
 */
 
   def ifThenElse[T](c: Rep[Boolean], a: => Rep[T], b: => Rep[T]): Rep[T] = {
-    
+
     //onReachableFw { // automatically called
       if (c == Const(true)) a
       else if (c == Const(false)) b
-      else {      
-      
+      else {
+
         val ab = reifyBlock(a)
         val bb = reifyBlock(b) // result is what statements can be computed ...
         onValuesEffectsNeeded(getEffects(ab) ++ getEffects(bb)) { (s,bw) =>
           val (au, ae) = flowBwd(bw filterNot (_ == s.toString), ab)
           val (bu, be) = flowBwd(bw filterNot (_ == s.toString), bb)
-          
+
           if (au == bu && ae == be)
             (au.stms:+createDefinition(s,Forward(au.res)), ae)
           else
             (List(createDefinition(s,IfThenElse(c, au, bu))), ae ++ be ++ List(c.toString))
         }
-      
+
       }
     //}
   }
-  
+
 
   def print(e: Rep[Any]): Rep[Unit] = {
     reflectIO(Print(e))
   }
-  
+
   def onValuesEffectsNeeded[T](e: Effects)(body: (Sym[T], BwdInfo) => (List[Stm], Effects)): Exp[T] = {
     reflect(WaitBwd(e,body))
   }
 
   def reflectPure[T](d: => Def[T]) = {
-    onValuesEffectsNeeded(List()) { (s,bw) => 
+    onValuesEffectsNeeded(List()) { (s,bw) =>
       if (bw contains s.toString)
         (List(createDefinition(s,d)), (bw filterNot (_ == s.toString)) ++ (syms(d) map (_.toString)))
       else
@@ -102,7 +101,7 @@ trait TestDSL extends BaseExp with LiftAll {
   }
 
   def reflectIO[T](d: => Def[T]) = {
-    onValuesEffectsNeeded(List("io")) { (s,bw) => 
+    onValuesEffectsNeeded(List("io")) { (s,bw) =>
       if ((bw contains "io") || (bw contains s.toString))
         (List(createDefinition(s,d)), (bw filterNot (_ == s.toString)) ++ (syms(d) map (_.toString)))
       else
@@ -123,8 +122,8 @@ trait TestDSL extends BaseExp with LiftAll {
     curStms = curStms :+ createDefinition(sym,d)
     sym
   }
-    
-  
+
+
   var curStms: List[Stm] = null
   def reifyBlock[T](body: => Rep[T]): BlockStm[T] = {
     val save = curStms
@@ -134,8 +133,8 @@ trait TestDSL extends BaseExp with LiftAll {
     curStms = save
     BlockStm(stms, res)
   }
-  
-  
+
+
   def emitStm[T](stm: Stm): Unit = stm match {
     case TP(sym, IfThenElse(c,a,b)) => println(sym + " = if (" + c + ")"); emitBlock(a); println("else"); emitBlock(b)
     case TP(sym, rhs) => println(sym + " = " + rhs)
@@ -144,11 +143,11 @@ trait TestDSL extends BaseExp with LiftAll {
   def emitBlock[T](block: BlockStm[T]): Unit = {
     println("{")
     block.stms.foreach(emitStm)
-    println(block.res)    
+    println(block.res)
     println("}")
   }
-  
-  
+
+
   def flowBwd[T](e: Effects, block: BlockStm[T]) = {
     var ee = e ++ List(block.res.toString)
     val stms2 = block.stms.reverse.flatMap {
@@ -159,25 +158,25 @@ trait TestDSL extends BaseExp with LiftAll {
     }
     (BlockStm(stms2,block.res), ee)
   }
-  
-  
+
+
   def emitSource[A,B](f: Rep[A] => Rep[B]) = {
-    
+
     val block1 = reifyBlock {
       f(fresh[A](List(implicitly[SourceContext]))(mtype(manifest[Any])))
     }
-    
+
     println("===== first round")
     emitBlock(block1)
-    
+
     val (block2, _) = flowBwd(List("io"), block1)
-    
+
     println("===== second round")
     emitBlock(block2)
   }
-  
-  
-  
+
+
+
 }
 
 
@@ -185,9 +184,9 @@ trait TestDSL extends BaseExp with LiftAll {
 
 
 class TestBackwards extends FileDiffSuite {
-  
+
   val prefix = "test-out/epfl/test10-"
-  
+
   def testBwd1 = {
     withOutFile(prefix+"bwd1") {
       object Prog extends TestDSL {

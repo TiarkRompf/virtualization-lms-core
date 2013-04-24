@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test3
 
-import common._
+import ops._
 import internal.GraphVizExport
 
 import test1._
@@ -12,7 +11,7 @@ import test2._
 trait ExtractorsGraphViz extends GraphVizExport {
   val IR: MatchingExtractorsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
 /*
     case Result(x) =>
@@ -31,7 +30,7 @@ trait ExtractorsGraphViz extends GraphVizExport {
     case _ =>
       super.emitNode(sym, rhs)
   }
-  
+
   override def emitDeps(sym: Sym[Any], rhs: Def[Any], deps: List[Sym[Any]])(implicit stream: java.io.PrintWriter) = rhs match {
 
     case Reify(x, effects) =>

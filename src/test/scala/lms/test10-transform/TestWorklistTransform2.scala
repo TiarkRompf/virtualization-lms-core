@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test10
 
-import common._
+import ops._
 import internal.{NestedBlockTraversal}
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
@@ -25,28 +24,28 @@ import scala.reflect.SourceContext
 
 
 trait FWTransform2 extends BaseFatExp with EffectExp with IfThenElseFatExp with LoopsFatExp { self =>
-  
+
   class MyWorklistTransformer extends WorklistTransformer { val IR: self.type = self }
-  
+
   // ---------- Exp api
-  
+
   implicit def toAfter[A:Manifest](x: Def[A]) = new { def atPhase(t: MyWorklistTransformer)(y: => Exp[A]) = transformAtPhase(x)(t)(y) }
   implicit def toAfter[A](x: Exp[A]) = new { def atPhase(t: MyWorklistTransformer)(y: => Exp[A]) = transformAtPhase(x)(t)(y) }
 
-  // transform x to y at the *next* iteration of t. 
+  // transform x to y at the *next* iteration of t.
   // note: if t is currently active, it will continue the current pass with x = x.
   // do we need a variant that replaces x -> y immediately if t is active?
-  
+
   def transformAtPhase[A](x: Exp[A])(t: MyWorklistTransformer)(y: => Exp[A]): Exp[A] = {
     t.register(x)(y)
     x
   }
-    
-  
+
+
   def onCreate[A:Manifest](s: Sym[A], d: Def[A]): Exp[A] = s
 
   // ----------
-  
+
   override def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
     onCreate(s,d)(s.tp)
     super.createDefinition(s,d)
@@ -54,11 +53,11 @@ trait FWTransform2 extends BaseFatExp with EffectExp with IfThenElseFatExp with 
 
 }
 
-trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
-    with EqualExpOpt with StructExp //with VariablesExpOpt 
+trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp
+    with EqualExpOpt with StructExp //with VariablesExpOpt
     with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp {
-  
-  
+
+
   def vzeros_xform(n: Rep[Int]) = vfromarray(array(n) { i => 0 })
 
   def vapply_xform[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]) = vtoarray(a).at(x)
@@ -69,7 +68,7 @@ trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp wit
   }
 
   def vlength_xform[T:Manifest](a: Rep[Vector[T]]) = field[Int](a, "length")
-  
+
 
   def vfromarray[A:Manifest](x: Exp[Array[A]]): Exp[Vector[A]] = struct(ClassTag[Vector[A]]("Vector"), "data" -> x, "length" -> x.length)
   def vtoarray[A:Manifest](x: Exp[Vector[A]]): Exp[Array[A]] = field[Array[A]](x, "data")
@@ -90,26 +89,26 @@ trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp wit
     case (Def(VectorLiteral(ax)), Const(x)) => ax(x)
     case _ => super.vapply(a,x)
   }
-  
+
 }
 
 
 
 class TestForward2 extends FileDiffSuite {
-  
+
   val prefix = "test-out/epfl/test10-"
-  
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
+
+  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables
     with IfThenElse with While with RangeOps with Print {
     def test(x: Rep[Int]): Rep[Unit]
   }
-  trait Impl extends DSL with VectorExpTrans2 with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
-    with EqualExpOpt with StructFatExpOptCommon //with VariablesExpOpt 
-    with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp { self => 
+  trait Impl extends DSL with VectorExpTrans2 with ArithExp with OrderingOpsExpOpt with BooleanOpsExp
+    with EqualExpOpt with StructFatExpOptCommon //with VariablesExpOpt
+    with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp { self =>
     override val verbosity = 2
 
-    val codegen = new ScalaGenVector with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
-      with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenStruct with ScalaGenRangeOps 
+    val codegen = new ScalaGenVector with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps
+      with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenStruct with ScalaGenRangeOps
       with ScalaGenPrint with ScalaGenFatStruct { val IR: self.type = self }
 
     codegen.withStream(new PrintWriter(System.out)) {
@@ -130,7 +129,7 @@ class TestForward2 extends FileDiffSuite {
       iter(10,b1) // fixed num of iterations for now
     }
   }
-  
+
   def testWorklist1 = withOutFileChecked(prefix+"worklist21") {
     trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {

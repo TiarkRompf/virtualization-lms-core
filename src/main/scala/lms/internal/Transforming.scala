@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import util.OverloadHack
@@ -8,15 +8,15 @@ import scala.reflect.SourceContext
 trait AbstractTransformer {
   val IR: Expressions with Blocks with OverloadHack
   import IR._
-  
+
   def hasContext = false
   def reflectBlock[A](xs: Block[A]): Exp[A] = sys.error("reflectBlock not supported by context-free transformers")
-  
+
   def apply[A](x: Exp[A]): Exp[A]
   def apply[A:Manifest](xs: Block[A]): Block[A] = {
     // should be overridden by transformers with context
-    assert(!hasContext) 
-    Block(apply(xs.res)) 
+    assert(!hasContext)
+    Block(apply(xs.res))
   }
   def apply[A](xs: List[Exp[A]]): List[Exp[A]] = xs map (e => apply(e))
   def apply[A](xs: Seq[Exp[A]]): Seq[Exp[A]] = xs map (e => apply(e))
@@ -24,14 +24,14 @@ trait AbstractTransformer {
   def apply[X,Y,A](f: (X,Y)=>Exp[A]): (X,Y)=>Exp[A] = (z1:X,z2:Y) => apply(f(z1,z2))
   //def apply[A](xs: Summary): Summary = xs //TODO
   def onlySyms[A](xs: List[Sym[A]]): List[Sym[A]] = xs map (e => apply(e)) collect { case e: Sym[A] => e }
-  
+
 }
 
 trait AbstractSubstTransformer extends AbstractTransformer {
   import IR._
   var subst = immutable.Map.empty[Exp[Any], Exp[Any]]
-  
-  def withSubstScope[A](extend: (Exp[Any],Exp[Any])*)(block: => A): A = 
+
+  def withSubstScope[A](extend: (Exp[Any],Exp[Any])*)(block: => A): A =
     withSubstScope {
       subst ++= extend
       block
@@ -45,25 +45,25 @@ trait AbstractSubstTransformer extends AbstractTransformer {
   }
 
   // TBD: should this be transitive or not? see note in ForwardTransformer
-  def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
-    case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x 
+  def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match {
+    case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x
   }
 }
 
 
 trait Transforming extends Expressions with Blocks with OverloadHack {
-  self => 
-  
+  self =>
+
   /*abstract class Transformer extends AbstractTransformer { // a polymorphic function, basically...
-    val IR: self.type = self    
+    val IR: self.type = self
   }*/
 
   type Transformer = AbstractTransformer { val IR: self.type }
 
-  class SubstTransformer extends /*AbstractSubstTransformer*/ AbstractTransformer { val IR: self.type = self 
+  class SubstTransformer extends /*AbstractSubstTransformer*/ AbstractTransformer { val IR: self.type = self
     val subst = new mutable.HashMap[Exp[Any], Exp[Any]]
-    def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
-      case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x 
+    def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match {
+      case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x
     }
   }
 
@@ -76,24 +76,24 @@ trait Transforming extends Expressions with Blocks with OverloadHack {
   def mtype[A,B](m:Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]] // hack: need to pass explicit manifest during mirroring
   def mpos(s: List[SourceContext]): SourceContext = if (s.nonEmpty) s.head else implicitly[SourceContext] // hack: got list of pos but need to pass single pos to mirror
 
-  
-  
+
+
   def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = mirrorDef(e,f)
 
   def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = sys.error("don't know how to mirror " + e)
 
   def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = sys.error("don't know how to mirror " + e) //hm...
-  
+
 }
 
 
 trait FatTransforming extends Transforming with FatExpressions {
-  
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Forward(x) => toAtom(Forward(f(x)))(mtype(manifest[A]),pos)
     case _ => super.mirror(e,f)
-  }).asInstanceOf[Exp[A]] 
-  
-  //def mirror[A:Manifest](e: FatDef, f: Transformer): Exp[A] = sys.error("don't know how to mirror " + e)  
-  
+  }).asInstanceOf[Exp[A]]
+
+  //def mirror[A:Manifest](e: FatDef, f: Transformer): Exp[A] = sys.error("don't know how to mirror " + e)
+
 }

@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal._
@@ -43,7 +43,7 @@ trait MiscOpsExp extends MiscOps with EffectExp {
     printsrc("in " + quotePos(x))
     reflectEffect(Return(x))
   }
-  
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Reflect(Error(x), u, es) => reflectMirrored(Reflect(Error(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))

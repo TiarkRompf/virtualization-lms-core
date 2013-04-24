@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 // TODO: add logging, etc.
@@ -10,6 +10,6 @@ trait Utils extends Config {
   def printerr(x: =>Any) { System.err.println(x); hadErrors = true }
 
   def printsrc(x: =>Any) { if (sourceinfo >= 1) System.err.println(x) }
-  
+
   var hadErrors = false
 }

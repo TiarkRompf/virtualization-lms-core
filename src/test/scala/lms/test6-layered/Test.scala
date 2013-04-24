@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test6
 
-import common._
+import ops._
 import test1._
 
 import util.OverloadHack
@@ -12,15 +11,15 @@ import java.io.FileOutputStream
 
 
 trait Utils extends Base with OverloadHack {
-  
+
   def infix_+(a: Rep[String], b: Rep[Any])(implicit x: Overloaded1): Rep[String]
   def infix_+(a: Rep[Any], b: Rep[String])(implicit x: Overloaded2): Rep[String]
   def infix_+(a: String, b: Rep[Any])(implicit x: Overloaded4): Rep[String]
   def infix_+(a: Rep[Any], b: String)(implicit x: Overloaded5): Rep[String]
-  
+
   implicit def unit(x:String): Rep[String]
   implicit def unit(x:Int): Rep[Int]
-  
+
 }
 
 
@@ -28,7 +27,7 @@ trait UtilExp extends BaseExp with Utils {
 
   implicit def unit(x:Int): Rep[Int] = Const(x)
   implicit def unit(x:String): Rep[String] = Const(x)
-  
+
   def infix_+(a: Rep[String], b: Rep[Any])(implicit x: Overloaded1): Rep[String] = StrCat(a,b)
   def infix_+(a: Rep[Any], b: Rep[String])(implicit x: Overloaded2): Rep[String] = StrCat(a,b)
   def infix_+(a: String, b: Rep[Any])(implicit x: Overloaded4): Rep[String] = StrCat(Const(a),b)
@@ -37,17 +36,17 @@ trait UtilExp extends BaseExp with Utils {
   case class StrCat(a: Exp[Any],b: Exp[Any]) extends Def[String]
 
   case class Tup[A,B](a: Exp[A],b: Exp[B]) extends Def[(A,B)]
-  
+
   case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
-  
+
 }
 
 trait ScalaGenUtil extends ScalaGenBase {
   val IR: UtilExp
   import IR._
-  
+
   // case External(s: String, args: List[Exp[Any]]) => s.format(args map (quote(_)) : _*)
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case StrCat(a,b) =>
       emitValDef(sym, quote(a) + ".toString + " + quote(b) + ".toString")
@@ -86,7 +85,7 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
     case (a, Def(ZeroVector(_))) => a
     case _ => Apply(vectorPlus, toAtom(Tup(a, b)))
   }
-  
+
   class ApplyExtractor[A:Manifest,B:Manifest](f: Exp[A => B]) {
     def apply(x: Exp[A]): Exp[B] = Apply(f,x)
     def unapply(e: Def[B]): Option[Exp[A]] = e match {
@@ -95,18 +94,18 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
     }
   }
 
-  object ZeroVector extends ApplyExtractor[Int,Vector](vectorZero)  
-  
-/*  
+  object ZeroVector extends ApplyExtractor[Int,Vector](vectorZero)
+
+/*
   object ZeroVector {
     def unapply(e: Def[Vector]): Option[Exp[Int]] = e match {
       case Apply(`vectorZero`, n: Exp[Int]) => Some(n)
-      case _ => 
+      case _ =>
         None
     }
   }
-*/  
-  
+*/
+
 }
 
 
@@ -125,9 +124,9 @@ trait VectorsImplExternal extends VectorsImpl {
   def mV = manifest[Array[Double]]
 
   val base = "scala.virtualization.lms.epfl.test6.VectorOps.%s"
-  
+
   // FIXME: using base + "zero" crashes the compiler!
-  
+
   val vectorZero = External[Int => Vector](base format "zero")
   val vectorRandom = External[Int => Vector](base format "random")
   val vectorPlus = External[((Vector,Vector)) => Vector](base format "plus")
@@ -135,11 +134,11 @@ trait VectorsImplExternal extends VectorsImpl {
 }
 
 object VectorOps {
-  
+
   def zero(n: Int) = new Array[Double](n)
   def random(n: Int) = new Array[Double](n)
   def plus(p: (Array[Double], Array[Double])) = p._1
-  
+
 }
 
 
@@ -178,31 +177,31 @@ trait VectorImplInternal extends VectorImpl {
 
 
 trait VectorsProg extends Vectors {
-  
+
   def test(x: Rep[Unit]): Rep[Vector] = {
     RandomVector(7) + (ZeroVector(7) + RandomVector(7))
   }
-  
+
 }
 
 trait StringsProg extends Vectors {
-  
+
   def test(x: Rep[Any]) = {
     val s: Rep[Any] = "hi " + "yo " + x + " done"
     s
   }
-  
+
 }
 
 
 
 class TestVectors extends FileDiffSuite {
-  
+
   val prefix = "test-out/epfl/test6-"
-  
+
   def testVectors = {
     withOutFile(prefix+"vectors") {
-    
+
       println("-- begin")
 
       new VectorsProg with VectorsExp with VectorsImplExternal
@@ -212,7 +211,7 @@ class TestVectors extends FileDiffSuite {
         val g = compile(test)
         println(g().mkString(","))
       }
-    
+
       new StringsProg with VectorsExp with VectorsImplExternal
       with CompileScala { self =>
         val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
@@ -234,6 +233,6 @@ class TestVectors extends FileDiffSuite {
       println("-- end")
     }
     assertFileEqualsCheck(prefix+"vectors")
-    
+
   }
 }

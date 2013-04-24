@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import java.io.{StringWriter, PrintWriter, File}
@@ -536,7 +536,7 @@ trait GPUCodegen extends CLikeCodegen {
     // Write to helper function string
     helperFuncString.append(allocOutputStr)
     helperFuncString.append(copyOutputStr)
-    
+
     processingHelperFunc = false
   }
 

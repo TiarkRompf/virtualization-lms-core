@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import scala.reflect.SourceContext
@@ -39,7 +39,7 @@ trait TupleOps extends Base {
 }
 
 trait TupleOpsExp extends TupleOps with EffectExp {
-  
+
   implicit def make_tuple2[A:Manifest,B:Manifest](t: (Exp[A],Exp[B]))(implicit pos: SourceContext) : Exp[(A,B)] = ETuple2(t._1, t._2)
   implicit def make_tuple3[A:Manifest,B:Manifest,C:Manifest](t: (Exp[A],Exp[B],Exp[C]))(implicit pos: SourceContext) : Exp[(A,B,C)] = ETuple3(t._1, t._2, t._3)
   implicit def make_tuple4[A:Manifest,B:Manifest,C:Manifest,D:Manifest](t: (Exp[A],Exp[B],Exp[C],Exp[D]))(implicit pos: SourceContext) : Exp[(A,B,C,D)] = ETuple4(t._1, t._2, t._3, t._4)
@@ -151,7 +151,7 @@ trait TupleOpsExp extends TupleOps with EffectExp {
     case e@Tuple2Access2(t) => tuple2_get2(f(t))(mtype(e.m),pos)
     case Reflect(e@Tuple2Access1(t), u, es) => reflectMirrored(Reflect(Tuple2Access1(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(e@Tuple2Access2(t), u, es) => reflectMirrored(Reflect(Tuple2Access2(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    
+
     case e@ETuple3(a,b,c)   => make_tuple3(f(a),f(b),f(c))(e.m1,e.m2,e.m3,pos)
     case e@Tuple3Access1(t) => tuple3_get1(f(t))(mtype(e.m),pos)
     case e@Tuple3Access2(t) => tuple3_get2(f(t))(mtype(e.m),pos)
@@ -167,8 +167,8 @@ trait TupleOpsExp extends TupleOps with EffectExp {
     case e@Tuple4Access4(t) => tuple4_get4(f(t))(mtype(e.m),pos)
     case Reflect(e@Tuple4Access1(t), u, es) => reflectMirrored(Reflect(Tuple4Access1(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(e@Tuple4Access2(t), u, es) => reflectMirrored(Reflect(Tuple4Access2(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(e@Tuple4Access3(t), u, es) => reflectMirrored(Reflect(Tuple4Access3(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
-    case Reflect(e@Tuple4Access4(t), u, es) => reflectMirrored(Reflect(Tuple4Access4(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+    case Reflect(e@Tuple4Access3(t), u, es) => reflectMirrored(Reflect(Tuple4Access3(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple4Access4(t), u, es) => reflectMirrored(Reflect(Tuple4Access4(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
 
     case e@ETuple5(a,b,c,d,g) => make_tuple5(f(a),f(b),f(c),f(d),f(g))(e.m1,e.m2,e.m3,e.m4,e.m5,pos)
     case e@Tuple5Access1(t)   => tuple5_get1(f(t))(mtype(e.m),pos)
@@ -178,10 +178,10 @@ trait TupleOpsExp extends TupleOps with EffectExp {
     case e@Tuple5Access5(t)   => tuple5_get5(f(t))(mtype(e.m),pos)
     case Reflect(e@Tuple5Access1(t), u, es) => reflectMirrored(Reflect(Tuple5Access1(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(e@Tuple5Access2(t), u, es) => reflectMirrored(Reflect(Tuple5Access2(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(e@Tuple5Access3(t), u, es) => reflectMirrored(Reflect(Tuple5Access3(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
-    case Reflect(e@Tuple5Access4(t), u, es) => reflectMirrored(Reflect(Tuple5Access4(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
-    case Reflect(e@Tuple5Access5(t), u, es) => reflectMirrored(Reflect(Tuple5Access5(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
-    
+    case Reflect(e@Tuple5Access3(t), u, es) => reflectMirrored(Reflect(Tuple5Access3(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple5Access4(t), u, es) => reflectMirrored(Reflect(Tuple5Access4(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple5Access5(t), u, es) => reflectMirrored(Reflect(Tuple5Access5(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 

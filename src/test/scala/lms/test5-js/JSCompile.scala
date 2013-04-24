@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test5
 
-import common._
+import ops._
 import internal._
 import test1._
 
@@ -10,12 +9,12 @@ import java.io.PrintWriter
 
 trait JSCodegen extends GenericCodegen {
   import IR._
-  
+
   def emitHTMLPage[B](f: () => Exp[B], stream: PrintWriter)(implicit mB: Manifest[B]): Unit = {
     stream.println("<html><head><title>Scala2JS</title><script type=\"text/JavaScript\">")
-    
+
     emitSource((x:Exp[Int]) => f(), "main", stream)
-    
+
     stream.println("</script><body onload=\"main(0)\">")
     stream.println("</body></html>")
     stream.flush
@@ -24,10 +23,10 @@ trait JSCodegen extends GenericCodegen {
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], methName: String, out: PrintWriter) = {
     withStream(out) {
       stream.println("function "+methName+"("+args.map(quote).mkString(", ")+") {")
-    
+
       emitBlock(body)
       stream.println("return "+quote(getBlockResult(body)))
-    
+
       stream.println("}")
     }
     Nil
@@ -47,7 +46,7 @@ trait JSGenBase extends JSCodegen {
 }
 
 trait JSGenEffect extends JSNestedCodegen with JSGenBase {
-  val IR: EffectExp  
+  val IR: EffectExp
 }
 
 
@@ -56,7 +55,7 @@ trait JSGenIfThenElse extends BaseGenIfThenElse with JSGenEffect { // it's more 
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case IfThenElse(c,a,b) =>  
+    case IfThenElse(c,a,b) =>
       stream.println("var " + quote(sym))
       stream.println("if (" + quote(c) + ") {")
       emitBlock(a)
@@ -80,4 +79,4 @@ trait JSGenArith extends JSGenBase { // TODO: define a generic one
     case Div(a,b) =>   emitValDef(sym, "" + quote(a) + "/" + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
-} 
+}

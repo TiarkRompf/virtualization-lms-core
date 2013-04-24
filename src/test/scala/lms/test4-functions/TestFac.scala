@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test4
 
-import common._
+import ops._
 import internal.GraphVizExport
 import test1._
 import test2._
@@ -37,7 +36,7 @@ trait FacProg2 { this: Arith with Functions with Equal with IfThenElse =>
 
 
 class TestFac extends FileDiffSuite {
-  
+
   val prefix = "test-out/epfl/test4-"
 
   def testFac1 = {
@@ -80,7 +79,7 @@ class TestFac extends FileDiffSuite {
     withOutFile(prefix+"fac3") {
       object FacProgExp extends FacProg with Matching with Extractors
         with ArithExpOpt with MatchingExtractorsExpOpt
-        with FunctionExpUnfoldRecursion 
+        with FunctionExpUnfoldRecursion
         with FunctionsExternalDef0
       import FacProgExp._
 
@@ -98,7 +97,7 @@ class TestFac extends FileDiffSuite {
     withOutFile(prefix+"fac4") {
       object FacProgExp extends FacProg2
         with ArithExpOpt with EqualExp with IfThenElseExp
-        with FunctionExpUnfoldRecursion 
+        with FunctionExpUnfoldRecursion
         with FunctionsExternalDef2
       import FacProgExp._
 
@@ -111,19 +110,19 @@ class TestFac extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"fac4")
     assertFileEqualsCheck(prefix+"fac4-dot")
   }
-  
+
   def testFac5 = {
     withOutFile(prefix+"fac5") {
       object FacProgExp extends FacProg2
-        with ArithExpOpt with EqualExp with IfThenElseExp 
-        with FunctionExpUnfoldRecursion 
+        with ArithExpOpt with EqualExp with IfThenElseExp
+        with FunctionExpUnfoldRecursion
         with FunctionsExternalDef2
       import FacProgExp._
 
       val f = (x:Rep[Double]) => fac(x) + fac(2*x)
       println(globalDefs.mkString("\n"))
       println(f)
-      val p = new ScalaGenArith with ScalaGenEqual with 
+      val p = new ScalaGenArith with ScalaGenEqual with
         ScalaGenIfThenElse with ScalaGenFunctionsExternal { val IR: FacProgExp.type = FacProgExp }
       p.emitSource(f, "Fac", new java.io.PrintWriter(System.out))
     }
@@ -133,14 +132,14 @@ class TestFac extends FileDiffSuite {
   def testFac6 = {
     withOutFile(prefix+"fac6") {
       object FacProgExp extends FacProg2
-        with ArithExpOpt with EqualExp with IfThenElseExp 
+        with ArithExpOpt with EqualExp with IfThenElseExp
         with FunctionsRecursiveExp
       import FacProgExp._
 
       val f = (x:Rep[Double]) => fac(x) + fac(2*x)
       println(globalDefs.mkString("\n"))
       println(f)
-      val p = new ScalaGenArith with ScalaGenEqual with 
+      val p = new ScalaGenArith with ScalaGenEqual with
         ScalaGenIfThenElse with ScalaGenFunctions { val IR: FacProgExp.type = FacProgExp }
       p.emitSource(f, "Fac", new java.io.PrintWriter(System.out))
     }

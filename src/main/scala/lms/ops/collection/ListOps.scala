@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
@@ -14,7 +14,7 @@ trait ListOps extends Variables {
   implicit def varToListOps[T:Manifest](x: Var[List[T]]) = new ListOpsCls(readVar(x)) // FIXME: dep on var is not nice
   implicit def repToListOps[T:Manifest](a: Rep[List[T]]) = new ListOpsCls(a)
   implicit def listToListOps[T:Manifest](a: List[T]) = new ListOpsCls(unit(a))
-  
+
   class ListOpsCls[A:Manifest](l: Rep[List[A]]) {
     def map[B:Manifest](f: Rep[A] => Rep[B]) = list_map(l,f)
     def flatMap[B : Manifest](f: Rep[A] => Rep[List[B]]) = list_flatMap(f)(l)
@@ -29,9 +29,9 @@ trait ListOps extends Variables {
     def toArray = list_toarray(l)
     def toSeq = list_toseq(l)
   }
-  
+
   def list_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext): Rep[List[A]]
-  def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit pos: SourceContext): Rep[List[A]]  
+  def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit pos: SourceContext): Rep[List[A]]
   def list_map[A:Manifest,B:Manifest](l: Rep[List[A]], f: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[List[B]]
   def list_flatMap[A : Manifest, B : Manifest](f: Rep[A] => Rep[List[B]])(xs: Rep[List[A]])(implicit pos: SourceContext): Rep[List[B]]
   def list_filter[A : Manifest](l: Rep[List[A]], f: Rep[A] => Rep[Boolean])(implicit pos: SourceContext): Rep[List[A]]
@@ -63,7 +63,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   case class ListHead[A:Manifest](xs: Rep[List[A]]) extends Def[A]
   case class ListTail[A:Manifest](xs: Rep[List[A]]) extends Def[List[A]]
   case class ListIsEmpty[A:Manifest](xs: Rep[List[A]]) extends Def[Boolean]
-  
+
   def list_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext) = ListNew(xs)
   def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit pos: SourceContext) = ListFromSeq(xs)
   def list_map[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[B])(implicit pos: SourceContext) = {
@@ -95,14 +95,14 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   def list_head[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListHead(xs)
   def list_tail[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListTail(xs)
   def list_isEmpty[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListIsEmpty(xs)
-  
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
     (e match {
       case ListNew(xs) => list_new(f(xs))
       case _ => super.mirror(e,f)
     }).asInstanceOf[Exp[A]] // why??
   }
-  
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case ListMap(a, x, body) => syms(a):::syms(body)
     case ListFlatMap(a, _, body) => syms(a) ::: syms(body)
@@ -125,7 +125,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
     case ListFilter(a, _, body) => freqNormal(a) ::: freqHot(body)
     case ListSortBy(a, x, body) => freqNormal(a):::freqHot(body)
     case _ => super.symsFreq(e)
-  }  
+  }
 }
 
 trait ListOpsExpOpt extends ListOpsExp {
@@ -156,7 +156,7 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
     case ListIsEmpty(xs) => emitValDef(sym, quote(xs) + ".isEmpty")
     case ListFromSeq(xs) => emitValDef(sym, "List(" + quote(xs) + ": _*)")
     case ListMkString(xs) => emitValDef(sym, quote(xs) + ".mkString")
-    case ListMap(l,x,blk) => 
+    case ListMap(l,x,blk) =>
       stream.println("val " + quote(sym) + " = " + quote(l) + ".map{")
       stream.println(quote(x) + " => ")
       emitBlock(blk)
@@ -180,7 +180,7 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
       emitBlock(blk)
       stream.println(quote(getBlockResult(blk)))
       stream.println("}")
-    case ListPrepend(l,e) => emitValDef(sym, quote(e) + " :: " + quote(l))    
+    case ListPrepend(l,e) => emitValDef(sym, quote(e) + " :: " + quote(l))
     case ListToArray(l) => emitValDef(sym, quote(l) + ".toArray")
     case ListToSeq(l) => emitValDef(sym, quote(l) + ".toSeq")
     case _ => super.emitNode(sym, rhs)
@@ -197,7 +197,7 @@ trait CLikeGenListOps extends BaseGenListOps with CLikeGenBase {
         case _ => super.emitNode(sym, rhs)
       }
     }
-*/    
+*/
 }
 
 trait CudaGenListOps extends CudaGenEffect with CLikeGenListOps

@@ -1,5 +1,4 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test4
 
 import internal.GraphVizExport
@@ -10,7 +9,7 @@ import test3._
 trait FunctionsGraphViz extends GraphVizExport {
   val IR: FunctionsExternalDef0
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: java.io.PrintWriter) = rhs match {
 /*
     case Result(x) =>
@@ -32,7 +31,7 @@ trait FunctionsGraphViz extends GraphVizExport {
       super.emitNode(sym, rhs)
 //      stream.println("shape=point")
   }
-  
+
 /*
   override def emitDeps(sym: Sym[Any], rhs: Def[Any], deps: List[Sym[Any]], stream: java.io.PrintWriter) = rhs match {
     case AndAlso(x, effects) =>

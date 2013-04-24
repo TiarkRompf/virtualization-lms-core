@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package util
 
 // hack to appease erasure
@@ -26,7 +26,7 @@ trait OverloadHack {
   class Overloaded20
   class Overloaded21
   class Overloaded22
-  class Overloaded23  
+  class Overloaded23
   class Overloaded24
 
   implicit val overloaded1 = new Overloaded1
@@ -47,10 +47,10 @@ trait OverloadHack {
   implicit val overloaded16 = new Overloaded16
   implicit val overloaded17 = new Overloaded17
   implicit val overloaded18 = new Overloaded18
-  implicit val overloaded19 = new Overloaded19  
+  implicit val overloaded19 = new Overloaded19
   implicit val overloaded20 = new Overloaded20
-  implicit val overloaded21 = new Overloaded21  
-  implicit val overloaded22 = new Overloaded22  
+  implicit val overloaded21 = new Overloaded21
+  implicit val overloaded22 = new Overloaded22
   implicit val overloaded23 = new Overloaded23
   implicit val overloaded24 = new Overloaded24
 }

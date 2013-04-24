@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
@@ -41,7 +41,7 @@ trait WhileExp extends While with EffectExp {
 
 
 trait WhileExpOptSpeculative extends WhileExp with PreviousIterationDummyExp {
-  
+
   override def __whileDo(cond: => Exp[Boolean], body: => Rep[Unit])(implicit pos: SourceContext) = {
 
     val pc = fresh[Nothing]
@@ -51,7 +51,7 @@ trait WhileExpOptSpeculative extends WhileExp with PreviousIterationDummyExp {
     val ce = summarizeEffects(c)
     val a = reifyEffectsHere { reflectPreviousDummy(pc,ce); body }
     val ae = summarizeEffects(a)
-    
+
     val c1 = reifyEffectsHere { reflectPreviousDummy(pb,ae); cond }
     val ce1 = summarizeEffects(c1)
     val a1 = reifyEffectsHere { reflectPreviousDummy(pc,ce1); body }
@@ -61,15 +61,15 @@ trait WhileExpOptSpeculative extends WhileExp with PreviousIterationDummyExp {
     val ce2 = summarizeEffects(c2)
     val a2 = reifyEffectsHere { reflectPreviousDummy(pc,ce2); body }
     val ae2 = summarizeEffects(a2)
-  
+
     assert(ae2 == ae1, "not converged: " + ae1 + " != " + ae2)
-      
+
     val cr = c2
     val ar = a2
     val cer = ce2
     val aer = ae2
-    
-/*  
+
+/*
     val c = reifyEffects(cond)
     val a = reifyEffects(body)
     val ce = summarizeEffects(c)

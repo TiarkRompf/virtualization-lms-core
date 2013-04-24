@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import java.io.PrintWriter
@@ -13,7 +13,7 @@ trait CLikeCodegen extends GenericCodegen {
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit
   def emitValDef(sym: Sym[Any], rhs: String): Unit
   def emitAssignment(lhs:String, rhs: String): Unit
-  
+
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     val List(sym) = syms // TODO
 
@@ -25,12 +25,12 @@ trait CLikeCodegen extends GenericCodegen {
 
   override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     val List(sym) = syms // TODO
-    
+
     if(resultType != "void")
       stream.println("return " + quote(sym) + ";")
     stream.println("}")
   }
-  
+
   def isObjectType[A](m: Manifest[A]) : Boolean = {
     m.toString match {
       case _ => false

@@ -1,5 +1,5 @@
-package scala.virtualization.lms
-package common
+package scala.lms
+package ops
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal._
@@ -82,7 +82,7 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
       stream.println("var i = 0")
       stream.println("while (i < in.length) {")
       stream.println("out(i) = in(i)")
-      stream.println("i += 1")      
+      stream.println("i += 1")
       stream.println("}")
       stream.println("out")
       stream.println("}")

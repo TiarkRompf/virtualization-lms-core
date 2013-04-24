@@ -1,8 +1,7 @@
-package scala.virtualization.lms
-package epfl
+package scala.lms
 package test9
 
-import common._
+import ops._
 import internal.{FatExpressions,GenericFatCodegen}
 
 
@@ -17,11 +16,11 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 trait ComplexArith extends Arith with ComplexBase with OverloadHack {
-  
+
   def infix_+(x: Rep[Complex], y: Rep[Complex])(implicit o: Overloaded1): Rep[Complex] = Complex(x.re + y.re, x.im + y.im)
   def infix_-(x: Rep[Complex], y: Rep[Complex])(implicit o: Overloaded1): Rep[Complex] = Complex(x.re - y.re, x.im - y.im)
   //def infix_*(x: Rep[Complex], y: Rep[Complex]): Rep[Complex] = Complex(x.re + y.re, x.im + y.im)
-  
+
 }
 
 trait ComplexBase extends Arith with Structs {
@@ -33,19 +32,19 @@ trait ComplexBase extends Arith with Structs {
 // ------ struct impl follows, will move to common once stable
 
 trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
-  
+
   case class ArraySoaTag[T](base: StructTag[T], len: Exp[Int]) extends StructTag[T]
-  
+
   override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
-    case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) => 
+    case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) =>
       struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.arrayManifest))))
-    case ArrayElem(Block(Def(ArrayIndex(b,`v`)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] 
+    case ArrayElem(Block(Def(ArrayIndex(b,`v`)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]]
     // eta-reduce! <--- should live elsewhere, not specific to struct
     // rewrite loop(a.length) { i => a(i) } to a
     case _ => super.simpleLoop(size, v, body)
   }
-  
-  
+
+
   override def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
     case Def(Struct(ArraySoaTag(tag,len),elems:Map[String,Exp[Array[T]]])) =>
       def unwrap[A](m:Manifest[Array[A]]): Manifest[A] = m.typeArguments match {
@@ -57,7 +56,7 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
       struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))
     case _ => super.infix_at(a,i)
   }
-  
+
   override def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
     case Def(Struct(ArraySoaTag(tag,len),elems:Map[String,Exp[Array[T]]])) => len
     case _ => super.infix_length(a)
@@ -69,35 +68,35 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
 
 
 class TestStruct extends FileDiffSuite {
-  
+
   val prefix = "test-out/epfl/test9-"
-  
+
   trait DSL extends ComplexArith with ArrayLoops with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with RangeOps with Print {
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
     def test(x: Rep[Int]): Rep[Unit]
   }
 
-  trait Impl extends DSL with StructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
-      with IfThenElseExp with RangeOpsExp with PrintExp { self => 
+  trait Impl extends DSL with StructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp
+      with IfThenElseExp with RangeOpsExp with PrintExp { self =>
     override val verbosity = 1
-    val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
-      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
+    val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps
+      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps
       with ScalaGenPrint { val IR: self.type = self }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
 
-  trait ImplFused extends DSL with StructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
-      with IfThenElseExp with RangeOpsExp with PrintExp { self => 
+  trait ImplFused extends DSL with StructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp
+      with IfThenElseExp with RangeOpsExp with PrintExp { self =>
     override val verbosity = 1
-    val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
-      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
+    val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps
+      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps
       with ScalaGenPrint { val IR: self.type = self;
         override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
 
-  
-  
+
+
   def testStruct1 = {
     withOutFile(prefix+"struct1") {
       // test variable splitting
@@ -157,12 +156,12 @@ class TestStruct extends FileDiffSuite {
 
           // split conditionals (be careful about effects)
 
-          val vector3 = if (x > 7) { 
+          val vector3 = if (x > 7) {
             print("foobar true")
             vector1
           } else {
             print("foobar false")
-            vvar 
+            vvar
           }
 
           vvar = vector1
@@ -221,7 +220,7 @@ class TestStruct extends FileDiffSuite {
 
           var vvar = vector1 // force access outside conditional, otherwise construction will be moved inside, defeating purpose of test
 
-          // result of this conditional should be a *single* array 
+          // result of this conditional should be a *single* array
           // containing the flattened im fields. re fields should be
           // unconditional.
           val vector3 = if (x > 7) {
