@@ -38,7 +38,18 @@ trait FileDiffSuite extends Suite {
     lines
   }
   def assertFileEqualsCheck(name: String): Unit = {
-    assert(readFile(name) == readFile(name+".check"), name) // TODO: diff output
+    val actual =
+      readFile(name).split("[\n\r]").zipWithIndex.filterNot(_._1.isEmpty)
+    val expected =
+      readFile(name + ".check").split("[\n\r]").filterNot(_.isEmpty)
+    assert(expected.length == actual.length,
+      name + ": actual length (" + actual.length +
+        ") != expected length (" + expected.length)
+    (actual zip expected) foreach {
+      case ((al, ln), el) =>
+        assert(al.trim == el.trim, name + ".check and " + name +
+          " differ on line " + ln + ":\n  --" + el + "\n  ++" + al)
+    }
     new File(name) delete ()
   }
   def withOutFileChecked(name: String)(func: => Unit): Unit = {
