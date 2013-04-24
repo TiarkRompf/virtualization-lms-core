@@ -6,7 +6,7 @@ import util.OverloadHack
 
 import test1._
 import test7._
-import test8.{ArrayMutation,ArrayMutationExp,ScalaGenArrayMutation,OrderingOpsExpOpt}
+import test8.{ArrayMutation,ArrayMutationExp,ScalaGenArrayMutation}
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import scala.reflect.SourceContext

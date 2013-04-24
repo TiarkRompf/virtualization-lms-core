@@ -83,6 +83,37 @@ trait OrderingOpsExp extends OrderingOps with VariablesExp {
   }
 }
 
+trait OrderingOpsExpOpt extends OrderingOpsExp {
+  override def ordering_lt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs, rhs) match {
+    case (Const(l), Const(r)) => unit(implicitly[Ordering[T]].lt(l, r))
+    case _ => super.ordering_lt(lhs, rhs)
+  }
+  override def ordering_lteq[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs, rhs) match {
+    case (Const(l), Const(r)) => unit(implicitly[Ordering[T]].lteq(l, r))
+    case _ => super.ordering_lteq(lhs, rhs)
+  }
+  override def ordering_gt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs, rhs) match {
+    case (Const(l), Const(r)) => unit(implicitly[Ordering[T]].gt(l, r))
+    case _ => super.ordering_gt(lhs, rhs)
+  }
+  override def ordering_gteq[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs, rhs) match {
+    case (Const(l), Const(r)) => unit(implicitly[Ordering[T]].gteq(l, r))
+    case _ => super.ordering_gteq(lhs, rhs)
+  }
+  override def ordering_equiv[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs, rhs) match {
+    case (Const(l), Const(r)) => unit(implicitly[Ordering[T]].equiv(l, r))
+    case _ => super.ordering_equiv(lhs, rhs)
+  }
+  override def ordering_max[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[T] = (lhs, rhs) match {
+    case (Const(l), Const(r)) => unit(implicitly[Ordering[T]].max(l, r))
+    case _ => super.ordering_max(lhs, rhs)
+  }
+  override def ordering_min[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[T] = (lhs, rhs) match {
+    case (Const(l), Const(r)) => unit(implicitly[Ordering[T]].min(l, r))
+    case _ => super.ordering_min(lhs, rhs)
+  }
+}
+
 trait ScalaGenOrderingOps extends ScalaGenBase {
   val IR: OrderingOpsExp
   import IR._

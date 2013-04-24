@@ -186,6 +186,8 @@ trait IfThenElseFatExp extends IfThenElseExp with BaseFatExp {
 trait IfThenElseExpOpt extends IfThenElseExp { this: BooleanOpsExp with EqualExpBridge =>
 
   //TODO: eliminate conditional if both branches return same value!
+  // Note: this is only correct since the condition has no side effects
+  // (effects are done before the if-then-else)
 
   // it would be nice to handle rewrites in method ifThenElse but we'll need to
   // 'de-reify' blocks in case we rewrite if(true) to thenp.
