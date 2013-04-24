@@ -13,7 +13,7 @@ val x10 = x6+x0
 val x13 = x3 = x10
 val x14 = x2
 val x15 = x3
-val x16 = new RecordreDoubleimDouble(x14,x15)
+val x16 = new Anon189207751(x14,x15)
 val x17 = println(x16)
 x17
 }
@@ -22,4 +22,4 @@ x17
   End of Generated Code                  
 *******************************************/
 
-case class RecordreDoubleimDouble(re: Int, im: Double)
+case class Anon189207751(re: Int, im: Double)
