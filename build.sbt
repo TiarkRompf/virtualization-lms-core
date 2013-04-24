@@ -1,8 +1,8 @@
-name := "LMS"
+name := "scala.lms"
 
-version := "0.3-SNAPSHOT"
+version := "0.4-SNAPSHOT"
 
-organization := "EPFL"
+organization := "ch.epfl"
 
 //resolvers += Resolver.sonatypeRepo("snapshots") // for ScalaTest
 
@@ -15,9 +15,9 @@ scalaOrganization := "org.scala-lang.virtualized"
 
 scalaVersion := virtScala
 
-scalaSource in Compile <<= baseDirectory(_ / "src")
+//scalaSource in Compile <<= baseDirectory(_ / "src")
 
-scalaSource in Test <<= baseDirectory(_ / "test-src")
+//scalaSource in Test <<= baseDirectory(_ / "test-src")
 
 scalacOptions += "-Yvirtualize"
 
