@@ -1,10 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import internal._
-import scala.reflect.SourceContext
 import ops.{BaseGenIterableOps, IterableOpsExp}
+
+import java.io.PrintWriter
+
 
 trait CLikeGenIterableOps extends BaseGenIterableOps with CLikeGenBase {
   val IR: IterableOpsExp

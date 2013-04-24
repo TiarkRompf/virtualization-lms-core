@@ -1,9 +1,9 @@
-/*package scala.lms
+package scala.lms
 package targets.clike.codegen
 
 import java.io.PrintWriter
 import internal._
-import ops.BaseGenArrayOps
+import ops.{BaseGenArrayOps, ArrayOpsExp}
 
 
 trait CLikeGenArrayOps extends BaseGenArrayOps with CLikeGenBase {
@@ -23,5 +23,3 @@ trait CLikeGenArrayOps extends BaseGenArrayOps with CLikeGenBase {
 trait CudaGenArrayOps extends CudaGenBase with CLikeGenArrayOps
 trait OpenCLGenArrayOps extends OpenCLGenBase with CLikeGenArrayOps
 trait CGenArrayOps extends CGenBase with CLikeGenArrayOps
-
-*/

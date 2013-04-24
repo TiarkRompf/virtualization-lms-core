@@ -1,11 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import scala.lms.internal.{GenerationFailedException}
+import internal.{GenerationFailedException}
 import ops.StringOpsExp
 
-
+import java.io.PrintWriter
 
 trait CudaGenStringOps extends CudaGenBase {
   val IR: StringOpsExp

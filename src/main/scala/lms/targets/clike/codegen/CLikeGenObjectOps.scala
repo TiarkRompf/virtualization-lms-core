@@ -1,10 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import scala.lms.internal.{GenerationFailedException}
+import internal.{GenerationFailedException}
 import ops.ObjectOpsExp
 
+import java.io.PrintWriter
 
 trait CLikeGenObjectOps extends CLikeGenBase {
   val IR: ObjectOpsExp

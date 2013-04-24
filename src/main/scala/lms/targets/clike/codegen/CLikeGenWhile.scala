@@ -1,10 +1,9 @@
 package scala.lms
 package targets.clike.codegen
 
-import scala.lms.internal.GenericNestedCodegen
-import scala.lms.ops.BaseGenWhile
+import internal.GenericNestedCodegen
+import ops.BaseGenWhile
 import java.io.PrintWriter
-import ops._
 
 trait CLikeGenWhile extends CLikeGenBase with BaseGenWhile {
   import IR._

@@ -1,8 +1,9 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
 import ops.OrderingOpsExp
+
+import java.io.PrintWriter
 
 trait CLikeGenOrderingOps extends CLikeGenBase {
   val IR: OrderingOpsExp

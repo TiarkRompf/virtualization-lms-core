@@ -1,11 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.{File, FileReader, FileWriter, BufferedReader, BufferedWriter, PrintWriter}
-import scala.lms.internal.{GenerationFailedException}
+import internal.{GenerationFailedException}
 import ops.IOOpsExp
 
-
+import java.io.{File, FileReader, FileWriter, BufferedReader, BufferedWriter, PrintWriter}
 
 trait CLikeGenIOOps extends CLikeGenBase {
   val IR: IOOpsExp

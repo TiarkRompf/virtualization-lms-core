@@ -1,9 +1,9 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import scala.reflect.SourceContext
 import ops.FractionalOpsExp
+
+import java.io.PrintWriter
 
 trait CLikeGenFractionalOps extends CLikeGenBase {
   val IR: FractionalOpsExp

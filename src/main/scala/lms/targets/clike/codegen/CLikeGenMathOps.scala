@@ -1,10 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
 import internal.GenericNestedCodegen
 import ops.{BaseGenMathOps, MathOpsExp}
 
+import java.io.PrintWriter
 
 trait CudaGenMathOps extends BaseGenMathOps with CudaGenEffect {
   val IR: MathOpsExp

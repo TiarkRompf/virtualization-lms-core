@@ -3,7 +3,7 @@ package targets.clike.codegen
 
 import java.io.PrintWriter
 import scala.lms.internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
-import ops._
+import ops.{BaseGenIfThenElse, BaseGenIfThenElseFat}
 
 
 trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {

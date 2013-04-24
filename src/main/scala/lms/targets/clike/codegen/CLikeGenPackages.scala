@@ -2,8 +2,7 @@
 package scala.lms
 package targets.clike.codegen
 
-import scala.lms.common._
-import ops.ScalaOpsPkgExp
+import ops._
 
 
 /////

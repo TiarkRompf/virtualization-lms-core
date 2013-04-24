@@ -1,4 +1,4 @@
-/*package scala.lms
+package scala.lms
 package targets.clike.codegen
 
 import java.io.PrintWriter
@@ -21,4 +21,3 @@ trait CudaGenSynchronizedArrayBufferOps extends CudaGenEffect with CLikeGenSynch
 trait OpenCLGenSynchronizedArrayBufferOps extends OpenCLGenEffect with CLikeGenSynchronizedArrayBufferOps
 trait CGenSynchronizedArrayBufferOps extends CGenEffect with CLikeGenSynchronizedArrayBufferOps
 
-*/

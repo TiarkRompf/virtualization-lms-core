@@ -1,9 +1,9 @@
-/*package scala.lms
+package scala.lms
 package targets.clike.codegen
 
 import java.io.PrintWriter
 import scala.lms.internal._
-import ops.{SetOpsExp}
+import ops.{SetOpsExp, BaseGenSetOps}
 
 trait CLikeGenSetOps extends BaseGenSetOps with CLikeCodegen {
   val IR: SetOpsExp
@@ -17,4 +17,3 @@ trait CLikeGenSetOps extends BaseGenSetOps with CLikeCodegen {
 trait CudaGenSetOps extends CudaGenEffect with CLikeGenSetOps
 trait OpenCLGenSetOps extends OpenCLGenEffect with CLikeGenSetOps
 trait CGenSetOps extends CGenEffect with CLikeGenSetOps
-*/
