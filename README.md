@@ -38,7 +38,7 @@ where and how to implement new features to improve LMS.
      +--internal/                 The sources of the code LMS library. To modify/extend LMS
      +--util/                     Utilities used by LMS
      +--ops/                      The sources of ops provided by LMS. The main entry point for DSL developers.
-                                  The Scala generation traits reside inside the ops source files.
+     |   |                          Note: The Scala generation traits reside inside the ops source files.
      |   +--collection/           The sources of collection ops
      +--transformers/             The sources of transformers.
      +--targets                   The sources of target specific code.
