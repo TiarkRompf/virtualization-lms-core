@@ -1,9 +1,10 @@
 package scala.lms
 package ops
 
+import internal.GenericNestedCodegen
+
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.GenericNestedCodegen
-import collection.mutable.ArrayBuffer
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.SourceContext
 
 trait SynchronizedArrayBufferOps extends ArrayBufferOps {

@@ -1,11 +1,11 @@
 package scala.lms
 package ops
 
+import internal.GenericNestedCodegen
+
 import java.io.PrintWriter
 import scala.reflect.SourceContext
 import scala.collection.mutable.ArrayBuffer
-import scala.virtualization.lms.internal.GenericNestedCodegen
-import collection.mutable.ArrayBuffer
 import scala.reflect.SourceContext
 
 trait ArrayBufferOps extends Base {

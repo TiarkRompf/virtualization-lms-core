@@ -1,8 +1,9 @@
 package scala.lms
 package ops
 
-import java.io.PrintWriter
 import internal._
+
+import java.io.PrintWriter
 import scala.reflect.SourceContext
 
 trait ArrayOps extends Variables {
