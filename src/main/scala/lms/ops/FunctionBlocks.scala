@@ -2,6 +2,7 @@ package scala.lms
 package ops
 
 import internal.{Blocks, Effects, AbstractTransformer}
+import transform.ForwardTransformer
 import util.OverloadHack
 
 import java.io.PrintWriter

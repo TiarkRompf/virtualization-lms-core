@@ -70,7 +70,7 @@ trait IOOps extends Variables with OverloadHack {
   def obj_fw_apply(s: Rep[String])(implicit pos: SourceContext): Rep[FileWriter]
 }
 
-trait IOOpsExp extends IOOps with DSLOpsExp {
+trait IOOpsExp extends IOOps with EffectExp {
   case class ObjFileApply(dir: Exp[String]) extends Def[File]
   case class FileGetCanonicalFile(f: Exp[File]) extends Def[File]
   case class FileGetPath(f: Exp[File]) extends Def[String]

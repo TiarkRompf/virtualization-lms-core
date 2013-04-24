@@ -1,8 +1,9 @@
 package scala.lms
 package transform
 
-import internal.CodeMotion
-import internal.Scheduling
+import ops.{LoopsFatExp, IfThenElseFatExp}
+import internal.{CodeMotion, Scheduling}
+
 
 /*
   current fusion algorithm:
