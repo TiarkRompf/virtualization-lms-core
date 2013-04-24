@@ -1,8 +1,9 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
 import ops.{PrimitiveOpsExp}
+
+import java.io.PrintWriter
 
 trait CLikeGenPrimitiveOps extends CLikeGenBase {
   val IR: PrimitiveOpsExp

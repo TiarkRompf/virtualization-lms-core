@@ -1,9 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
 import scala.lms.internal.{FatBlockTraversal,GenericNestedCodegen,GenericFatCodegen}
 import ops.{BaseGenLoops, BaseGenLoopsFat}
+
+import java.io.PrintWriter
 
 trait CLikeGenLoops extends CLikeGenBase with BaseGenLoops
 trait CLikeGenLoopsFat extends CLikeGenLoops with CLikeGenFat with BaseGenLoopsFat

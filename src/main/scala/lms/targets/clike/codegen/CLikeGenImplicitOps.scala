@@ -1,9 +1,9 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import scala.reflect.SourceContext
 import ops.ImplicitOpsExp
+
+import java.io.PrintWriter
 
 trait CLikeGenImplicitOps extends CLikeGenBase {
   val IR: ImplicitOpsExp

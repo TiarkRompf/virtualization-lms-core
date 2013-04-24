@@ -1,10 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
-import scala.lms.internal.{FatExpressions,GenericNestedCodegen,GenericFatCodegen}
-import java.io.{PrintWriter,StringWriter,FileOutputStream}
+import internal.{FatExpressions,GenericNestedCodegen,GenericFatCodegen}
 import ops.{StructExp, StructFatExpOptCommon}
 
+import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 trait CudaGenStruct extends CudaGenBase {

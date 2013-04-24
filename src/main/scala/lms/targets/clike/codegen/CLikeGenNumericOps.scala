@@ -1,9 +1,9 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
 import ops.NumericOpsExp
 
+import java.io.PrintWriter
 
 trait CLikeGenNumericOps extends CLikeGenBase {
   val IR: NumericOpsExp

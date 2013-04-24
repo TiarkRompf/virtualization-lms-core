@@ -1,9 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import scala.lms.internal.GenericNestedCodegen
+import internal.GenericNestedCodegen
 import ops.{BaseGenListOps, ListOpsExp}
+
+import java.io.PrintWriter
 
 trait CLikeGenListOps extends BaseGenListOps with CLikeGenBase {
   val IR: ListOpsExp

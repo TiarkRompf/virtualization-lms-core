@@ -1,10 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import scala.lms.internal.{GenericNestedCodegen, GenerationFailedException}
+import internal.{GenericNestedCodegen, GenerationFailedException}
 import ops.{BaseGenRangeOps, RangeOpsExp}
 
+import java.io.PrintWriter
 
 trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
   val IR: RangeOpsExp

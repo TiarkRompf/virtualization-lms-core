@@ -1,9 +1,9 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import internal._
 import ops.{BaseGenSeqOps, SeqOpsExp}
+
+import java.io.PrintWriter
 
 trait CLikeGenSeqOps extends BaseGenSeqOps with CLikeGenBase  {
   val IR: SeqOpsExp

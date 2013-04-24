@@ -1,9 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
+import internal.CLikeCodegen
+import ops.{HashMapOpsExp, BaseGenHashMapOps}
+
 import java.io.PrintWriter
-import scala.lms.internal._
-import ops._
 
 trait CLikeGenHashMapOps extends BaseGenHashMapOps with CLikeCodegen {
   val IR: HashMapOpsExp
