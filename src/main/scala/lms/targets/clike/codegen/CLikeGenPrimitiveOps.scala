@@ -18,6 +18,9 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       case DoubleFloatValue(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       //case ObjIntegerParseInt(s) => emitValDef(sym, "java.lang.Integer.parseInt(" + quote(s) + ")")
       //case ObjIntMaxValue() => emitValDef(sym, "scala.Int.MaxValue")
+      case IntPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
+      case IntMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
+      case IntTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
       case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
       case IntDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
       case IntMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
@@ -32,4 +35,3 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
 trait CudaGenPrimitiveOps extends CudaGenBase with CLikeGenPrimitiveOps
 trait OpenCLGenPrimitiveOps extends OpenCLGenBase with CLikeGenPrimitiveOps
 trait CGenPrimitiveOps extends CGenBase with CLikeGenPrimitiveOps
-

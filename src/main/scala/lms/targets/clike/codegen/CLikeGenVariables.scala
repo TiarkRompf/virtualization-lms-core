@@ -4,6 +4,7 @@ package targets.clike.codegen
 import java.io.PrintWriter
 import ops.VariablesExp
 
+
 trait CLikeGenVariables extends CLikeGenBase {
   val IR: VariablesExp
   import IR._

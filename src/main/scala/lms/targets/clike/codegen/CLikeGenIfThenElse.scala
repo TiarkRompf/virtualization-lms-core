@@ -122,7 +122,7 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case IfThenElse(c,a,b) =>
-        //TODO: using if-else does not work 
+        //TODO: using if-else does not work
         remap(sym.tp) match {
           case "void" =>
             stream.println("if (" + quote(c) + ") {")
@@ -131,7 +131,10 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
             emitBlock(b)
             stream.println("}")
           case _ =>
-            stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
+            if (isPrimitiveType(sym.tp))
+              stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
+            else
+              stream.println("%s *%s;".format(remap(sym.tp),quote(sym)))
             stream.println("if (" + quote(c) + ") {")
             emitBlock(a)
             stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(a))))
@@ -173,4 +176,3 @@ trait CGenIfThenElseFat extends CGenIfThenElse with CGenFat with BaseGenIfThenEl
     case _ => super.emitFatNode(symList, rhs)
   }
 }
-
