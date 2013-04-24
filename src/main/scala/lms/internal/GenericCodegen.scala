@@ -143,6 +143,141 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4, s5))
     emitSource(List(s1, s2, s3, s4, s5), body, className, stream)
   }
+  
+  def emitSource6[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+    val s1 = fresh[T1]
+    val s2 = fresh[T2]
+    val s3 = fresh[T3]
+    val s4 = fresh[T4]
+    val s5 = fresh[T5]
+    val s6 = fresh[T6]
+    val body = reifyBlock(f(s1, s2, s3, s4, s5, s6))
+    emitSource(List(s1, s2, s3, s4, s5, s6), body, className, stream)
+  }
+  
+  def emitSource7[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+    val s1 = fresh[T1]
+    val s2 = fresh[T2]
+    val s3 = fresh[T3]
+    val s4 = fresh[T4]
+    val s5 = fresh[T5]
+    val s6 = fresh[T6]
+    val s7 = fresh[T7]
+    val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7))
+    emitSource(List(s1, s2, s3, s4, s5, s6, s7), body, className, stream)
+  }
+  
+  def emitSource8[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+    val s1 = fresh[T1]
+    val s2 = fresh[T2]
+    val s3 = fresh[T3]
+    val s4 = fresh[T4]
+    val s5 = fresh[T5]
+    val s6 = fresh[T6]
+    val s7 = fresh[T7]
+    val s8 = fresh[T8]
+    val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8))
+    emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8), body, className, stream)
+  }
+  
+  def emitSource9[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+    val s1 = fresh[T1]
+    val s2 = fresh[T2]
+    val s3 = fresh[T3]
+    val s4 = fresh[T4]
+    val s5 = fresh[T5]
+    val s6 = fresh[T6]
+    val s7 = fresh[T7]
+    val s8 = fresh[T8]
+    val s9 = fresh[T9]
+    val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8, s9))
+    emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8, s9), body, className, stream)
+  }
+  
+  def emitSource10[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, T10 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+    val s1 = fresh[T1]
+    val s2 = fresh[T2]
+    val s3 = fresh[T3]
+    val s4 = fresh[T4]
+    val s5 = fresh[T5]
+    val s6 = fresh[T6]
+    val s7 = fresh[T7]
+    val s8 = fresh[T8]
+    val s9 = fresh[T9]
+    val s10 = fresh[T10]
+    val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10))
+    emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10), body, className, stream)
+  }
+  
+  def emitSource11[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, T10 : Manifest, T11 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+    val s1 = fresh[T1]
+    val s2 = fresh[T2]
+    val s3 = fresh[T3]
+    val s4 = fresh[T4]
+    val s5 = fresh[T5]
+    val s6 = fresh[T6]
+    val s7 = fresh[T7]
+    val s8 = fresh[T8]
+    val s9 = fresh[T9]
+    val s10 = fresh[T10]
+    val s11 = fresh[T11]
+    val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11))
+    emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11), body, className, stream)
+  }
+  
+  def emitSource12[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, T10 : Manifest, T11 : Manifest, T12 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11], Exp[T12]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+    val s1 = fresh[T1]
+    val s2 = fresh[T2]
+    val s3 = fresh[T3]
+    val s4 = fresh[T4]
+    val s5 = fresh[T5]
+    val s6 = fresh[T6]
+    val s7 = fresh[T7]
+    val s8 = fresh[T8]
+    val s9 = fresh[T9]
+    val s10 = fresh[T10]
+    val s11 = fresh[T11]
+    val s12 = fresh[T12]
+    val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12))
+    emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12), body, className, stream)
+  }
+  
+  def emitSource13[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, T10 : Manifest, T11 : Manifest, T12 : Manifest, T13 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11], Exp[T12], Exp[T13]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+    val s1 = fresh[T1]
+    val s2 = fresh[T2]
+    val s3 = fresh[T3]
+    val s4 = fresh[T4]
+    val s5 = fresh[T5]
+    val s6 = fresh[T6]
+    val s7 = fresh[T7]
+    val s8 = fresh[T8]
+    val s9 = fresh[T9]
+    val s10 = fresh[T10]
+    val s11 = fresh[T11]
+    val s12 = fresh[T12]
+    val s13 = fresh[T13]
+    val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13))
+    emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13), body, className, stream)
+  }
+  
+  def emitSource14[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, T10 : Manifest, T11 : Manifest, T12 : Manifest, T13 : Manifest, T14 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11], Exp[T12], Exp[T13], Exp[T14]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+    val s1 = fresh[T1]
+    val s2 = fresh[T2]
+    val s3 = fresh[T3]
+    val s4 = fresh[T4]
+    val s5 = fresh[T5]
+    val s6 = fresh[T6]
+    val s7 = fresh[T7]
+    val s8 = fresh[T8]
+    val s9 = fresh[T9]
+    val s10 = fresh[T10]
+    val s11 = fresh[T11]
+    val s12 = fresh[T12]
+    val s13 = fresh[T13]
+    val s14 = fresh[T14]
+    val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14))
+    emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14), body, className, stream)
+  }
 
   /**
    * @param args List of symbols bound to `body`
