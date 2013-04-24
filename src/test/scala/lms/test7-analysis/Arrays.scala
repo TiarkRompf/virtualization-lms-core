@@ -5,13 +5,10 @@ import ops._
 import test1._
 
 import internal.AbstractSubstTransformer
-
-
 import util.OverloadHack
+
 import scala.reflect.SourceContext
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-
-
 
 trait ArrayLoops extends Loops with OverloadHack {
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]]

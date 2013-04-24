@@ -2,15 +2,13 @@ package scala.lms
 package test9
 
 import ops._
-import test1._
-
-import test7.{Print,PrintExp,ScalaGenPrint}
 import internal.ScalaCompile
-
-import scala.util.continuations._
-
 import util.OverloadHack
 
+import test1._
+import test7.{Print,PrintExp,ScalaGenPrint}
+
+import scala.util.continuations._
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
