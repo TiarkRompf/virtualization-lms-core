@@ -5,7 +5,6 @@ import ops._
 import test1._
 
 import util.OverloadHack
-import scala.reflect.SourceContext
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import scala.reflect.SourceContext

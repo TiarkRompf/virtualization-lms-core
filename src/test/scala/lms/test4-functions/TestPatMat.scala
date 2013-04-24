@@ -3,10 +3,10 @@ package test4
 
 import ops._
 import internal.GraphVizExport
+
 import test1._
 import test2._
 import test3._
-
 
 trait Intf {
  type Rep[+T]

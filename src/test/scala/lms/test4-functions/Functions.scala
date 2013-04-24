@@ -3,11 +3,12 @@ package test4
 
 import common.{BlockExp,EffectExp}
 import common.ScalaGenEffect // don't import FunctionsExp
+import util.ClosureCompare
+
 import test2._
 import test3._
-import util.ClosureCompare
-import scala.reflect.SourceContext
 
+import scala.reflect.SourceContext
 import scala.collection.{immutable, mutable}
 
 trait FunctionsExpClever extends test3.FunctionsExp {

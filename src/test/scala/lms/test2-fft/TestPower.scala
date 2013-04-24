@@ -2,9 +2,10 @@ package scala.lms
 package test2
 
 import ops._
-import test1._
-import reflect.SourceContext
 
+import test1._
+
+import reflect.SourceContext
 import java.io.PrintWriter
 
 trait Power1 { this: Arith =>

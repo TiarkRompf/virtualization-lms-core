@@ -2,9 +2,9 @@ package scala.lms
 package test14
 
 import ops._
-import test1._
-
 import util.OverloadHack
+
+import test1._
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 

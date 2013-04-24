@@ -3,12 +3,12 @@ package test10
 
 import ops._
 import internal._
+import util.OverloadHack
+
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
 import test7.{ArrayLoops,ArrayLoopsExp,ScalaGenArrayLoops}
 import test8._
-
-import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import scala.reflect.SourceContext

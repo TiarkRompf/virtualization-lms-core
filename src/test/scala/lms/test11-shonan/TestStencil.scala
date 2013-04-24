@@ -2,12 +2,11 @@ package scala.lms
 package test11
 
 import ops._
+import util.OverloadHack
+
 import test1._
 import test7._
 import test8.{ArrayMutation,ArrayMutationExp,ScalaGenArrayMutation,OrderingOpsExpOpt}
-
-import util.OverloadHack
-import scala.reflect.SourceContext
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import scala.reflect.SourceContext

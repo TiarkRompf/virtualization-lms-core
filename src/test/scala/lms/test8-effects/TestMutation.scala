@@ -2,14 +2,13 @@ package scala.lms
 package test8
 
 import ops._
+import util.OverloadHack
+
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
 import test7.{ArrayLoops,ArrayLoopsExp,ScalaGenArrayLoops}
 
-import util.OverloadHack
-
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-
 
 /*
   if there's a crash here during compilation, it's likely due to #4363 (need latest scala-virtualized for fix)
