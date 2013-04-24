@@ -18,7 +18,7 @@ var x4 = new Array[Int](100)
 for (x1 <- 0 until 100) {
 x4(x1) = x1
 }
-val x17 = new Record[]RecordreDoubleimDouble(x4,x4)
+val x17 = new Record[]Anon189207751(x4,x4)
 val x18 = println(x17)
 val x15 = x18
 x15
@@ -28,4 +28,4 @@ x15
   End of Generated Code                  
 *******************************************/
 
-case class Record[]RecordreDoubleimDouble(re: Array[Int], im: Array[Int])
+case class Record[]Anon189207751(re: Array[Int], im: Array[Int])
