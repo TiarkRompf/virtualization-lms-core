@@ -56,3 +56,8 @@ where and how to implement new features to improve LMS.
      +--examples                  The sources of examples.
 
 
+### Generating documentation
+
+1. Install the latest [Sphinx framework](http://sphinx-doc.org/)
+
+2. Run `docs/test` and if all tests pass `docs/sphinx:generate`
