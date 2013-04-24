@@ -1,4 +1,4 @@
-call with arg Map(n -> 256, a -> SomethingElse)
+call with arg {a=SomethingElse, n=256}
 (re) compiling
 read value RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$AddN@XXX) sym Sym(3)
 -- Sym(2)
@@ -18,9 +18,9 @@ warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(51)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0(px3:scala.virtualization.lms.epfl.test13.RCell[Object],px5:Object,px7:scala.virtualization.lms.epfl.test13.RCell[Object],px9:Object,px12:scala.virtualization.lms.epfl.test13.RCell[Object],px14:Object,px16:Any,px21:Object,px31:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[scala.collection.mutable.HashMap[java.lang.String, Any], Any]],px33:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px40:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px47:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x0:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
-var x1: scala.collection.mutable.HashMap[java.lang.String, Any] = x0
+class staged$0(px3:scala.virtualization.lms.epfl.test13.RCell[Object],px5:Object,px7:scala.virtualization.lms.epfl.test13.RCell[Object],px9:Object,px12:scala.virtualization.lms.epfl.test13.RCell[Object],px14:Object,px16:Any,px21:Object,px31:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[java.util.HashMap[java.lang.String, Any], Any]],px33:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px40:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px47:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x0:java.util.HashMap[java.lang.String, Any]): Any = {
+var x1: java.util.HashMap[java.lang.String, Any] = x0
 val x2 = x1
 val x3 = px3 // static data: RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$AddN@XXX)
 val x4 = x3.value
@@ -37,7 +37,7 @@ val x13 = x12.value
 val x14 = px14 // static data: FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$ConstN$$anon$29@XXX
 val x15 = x13 == x14
 val x37 = if (x15) {
-val x11 = x2("n")
+val x11 = x2.get("n")
 val x17 = x11.isInstanceOf[Int]
 val x16 = px16 // static data: -1
 val x18 = x16.isInstanceOf[Int]
@@ -91,7 +91,7 @@ x51
 compilation: ok
 spec-add-int: FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$AddN@XXX
 255
-call with arg Map(n -> 256, a -> SomethingElse)
+call with arg {a=SomethingElse, n=256}
 -- Sym(2)
 read value RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$LookupN@XXX) sym Sym(6)
 -- Sym(2)
@@ -106,7 +106,7 @@ warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(32)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$1(px6:scala.virtualization.lms.epfl.test13.RCell[Object],px8:Object,px12:scala.virtualization.lms.epfl.test13.RCell[Object],px14:Object,px2:scala.collection.mutable.HashMap[java.lang.String, Any],px16:Any,px19:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[scala.collection.mutable.HashMap[java.lang.String, Any], Any]],px21:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px28:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]]) extends ((Unit)=>(Any)) {
+class staged$1(px6:scala.virtualization.lms.epfl.test13.RCell[Object],px8:Object,px12:scala.virtualization.lms.epfl.test13.RCell[Object],px14:Object,px2:java.util.HashMap[java.lang.String, Any],px16:Any,px19:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[java.util.HashMap[java.lang.String, Any], Any]],px21:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px28:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]]) extends ((Unit)=>(Any)) {
 def apply(x5:Unit): Any = {
 val x6 = px6 // static data: RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$LookupN@XXX)
 val x7 = x6.value
@@ -118,8 +118,8 @@ val x13 = x12.value
 val x14 = px14 // static data: FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$ConstN$$anon$29@XXX
 val x15 = x13 == x14
 val x25 = if (x15) {
-val x2 = px2 // static data: Map(n -> 256, a -> SomethingElse)
-val x10 = x2("n")
+val x2 = px2 // static data: {a=SomethingElse, n=256}
+val x10 = x2.get("n")
 val x11 = x10.asInstanceOf[Int]
 val x16 = px16 // static data: -1
 val x17 = x16.asInstanceOf[Int]
@@ -128,7 +128,7 @@ x18
 } else {
 val x19 = px19 // static data: RCell(code)
 val x20 = x19.set(null)
-val x2 = px2 // static data: Map(n -> 256, a -> SomethingElse)
+val x2 = px2 // static data: {a=SomethingElse, n=256}
 val x21 = px21 // static data: <function1>
 val x22 = x21.apply(List(x13, x2))// compile dynamic: fv = List(Sym(13), Sym(2))
 val x23 = x22.apply(())
@@ -138,7 +138,7 @@ x25
 } else {
 val x19 = px19 // static data: RCell(code)
 val x27 = x19.set(null)
-val x2 = px2 // static data: Map(n -> 256, a -> SomethingElse)
+val x2 = px2 // static data: {a=SomethingElse, n=256}
 val x28 = px28 // static data: <function1>
 val x29 = x28.apply(List(x7, x2))// compile dynamic: fv = List(Sym(7), Sym(2))
 val x30 = x29.apply(())
