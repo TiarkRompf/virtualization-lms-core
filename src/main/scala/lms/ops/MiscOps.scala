@@ -1,8 +1,9 @@
 package scala.lms
 package ops
 
+//import internal._
+
 import java.io.PrintWriter
-import scala.virtualization.lms.internal._
 import scala.reflect.SourceContext
 
 trait MiscOps extends Base {

@@ -1,5 +1,7 @@
 package scala.lms
 
+import ops._
+
 /**
  * IR: this is the front-end that defines what operations are available in user applications. Backends can share
  *     packages if they choose.

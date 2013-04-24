@@ -1,9 +1,10 @@
 package scala.lms
 package ops
 
-import java.io.{File, FileReader, FileWriter, BufferedReader, BufferedWriter, PrintWriter}
-import scala.virtualization.lms.internal.{GenerationFailedException}
+import internal.GenerationFailedException
 import util.OverloadHack
+
+import java.io.{File, FileReader, FileWriter, BufferedReader, BufferedWriter, PrintWriter}
 import scala.reflect.SourceContext
 
 // TODO: fine grained effects

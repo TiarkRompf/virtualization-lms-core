@@ -1,9 +1,9 @@
 package scala.lms
 package ops
 
+import internal.{FatExpressions, GenericNestedCodegen, GenericFatCodegen}
+
 import java.io.PrintWriter
-import scala.reflect.SourceContext
-import scala.virtualization.lms.internal.{FatExpressions,GenericNestedCodegen,GenericFatCodegen}
 import scala.reflect.SourceContext
 
 //import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt} // TODO: eliminate deps

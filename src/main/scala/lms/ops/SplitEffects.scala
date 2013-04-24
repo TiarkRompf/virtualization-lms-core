@@ -1,9 +1,10 @@
 package scala.lms
 package ops
 
+import internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
+
 import java.io.PrintWriter
 import scala.reflect.SourceContext
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
 
 
 trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIterationDummyExp { this: BooleanOpsExp with EqualExpBridge =>

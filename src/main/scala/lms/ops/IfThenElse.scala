@@ -1,9 +1,10 @@
 package scala.lms
 package ops
 
+import internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
+
 import java.io.PrintWriter
 import scala.reflect.SourceContext
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit pos: SourceContext): Rep[T]
