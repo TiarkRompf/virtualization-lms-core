@@ -136,6 +136,20 @@ trait ListOpsExpOpt extends ListOpsExp {
     case (xs1, Def(ListNew(Seq()))) => xs1
     case _ => super.list_concat(xs1, xs2)
   }
+  override def list_isEmpty[A:Manifest](xs: Exp[List[A]])(implicit pos: SourceContext) : Exp[Boolean] = xs match {
+    case Def(ListNew(Seq())) => unit(true)
+    case Def(ListNew(_)) => unit(false)
+    case _ => super.list_isEmpty(xs)
+  }
+  override def list_head[A:Manifest](xs: Exp[List[A]])(implicit pos: SourceContext): Exp[A] = xs match {
+    case Def(ListNew(Seq(y, _*))) => y
+    case _ => super.list_head(xs)
+  }
+  override def list_tail[A:Manifest](xs: Exp[List[A]])(implicit pos: SourceContext): Exp[List[A]] = xs match {
+    case Def(ListNew(Seq(y, ys@_*))) => list_new(ys)
+    case _ => super.list_tail(xs)
+  } 
+
 }
 
 trait BaseGenListOps extends GenericNestedCodegen {

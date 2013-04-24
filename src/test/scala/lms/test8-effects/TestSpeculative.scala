@@ -13,17 +13,6 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import scala.reflect.SourceContext
 
 
-trait OrderingOpsExpOpt extends OrderingOpsExp {
-  override def ordering_lt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs,rhs) match {
-    case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].lt(a,b))
-    case _ => super.ordering_lt(lhs,rhs)
-  }
-  override def ordering_gt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs,rhs) match {
-    case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].gt(a,b))
-    case _ => super.ordering_gt(lhs,rhs)
-  }
-}
-
 
 class TestSpeculative extends FileDiffSuite {
 

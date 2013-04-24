@@ -1,0 +1,29 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class test1 extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+val x7 = println(true)
+val x8 = println(true)
+val x9 = println(true)
+val x10 = println(true)
+val x11 = println(true)
+val x13 = println(true)
+val x15 = println(true)
+val x16 = println(true)
+val x17 = println(true)
+val x18 = println(true)
+val x19 = println(true)
+val x21 = println(true)
+val x23 = println(true)
+val x24 = println(true)
+val x25 = println(true)
+val x26 = println(true)
+val x27 = println(true)
+val x29 = println(true)
+x29
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

@@ -1,0 +1,31 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class test1 extends ((Boolean)=>(Unit)) {
+def apply(x0:Boolean): Unit = {
+val x1 = println(true)
+val x2 = println(true)
+val x3 = println(true)
+val x4 = println(true)
+val x5 = println(true)
+val x6 = println(true)
+val x7 = println(true)
+val x8 = println(true)
+val x9 = println(true)
+val x10 = println(true)
+val x11 = println(true)
+val x12 = println(true)
+val x13 = println(true)
+val x14 = println(true)
+val x15 = !x0
+val x16 = println(x15)
+val x17 = x0 && x0
+val x18 = println(x17)
+val x19 = x0 || x0
+val x20 = println(x19)
+x20
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
