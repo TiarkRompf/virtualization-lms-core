@@ -2,7 +2,7 @@ package scala.lms
 package internal
 
 import util.GraphUtil
-import java.io.{File, PrintWriter}
+import java.io.{File, PrintWriter, StringWriter}
 import scala.reflect.RefinedManifest
 import scala.collection.mutable.{Map => MMap}
 
@@ -85,8 +85,45 @@ trait GenericCodegen extends BlockTraversal {
 
   def withStream[A](out: PrintWriter)(body: => A): A = {
     val save = stream
-    stream = out
-    try { body } finally { stream.flush; stream = save }
+    val sw = new StringWriter
+    stream = new PrintWriter(sw)
+    try { body } finally {
+      stream.flush
+      printIndented(sw.toString)(out)
+      out.flush
+      stream = save
+    }
+  }
+
+  def printIndented(str: String)(out: PrintWriter): Unit = {
+    val lines = str.split("[\n\r]")
+    var indent = 0
+    for (l0 <- lines) {
+      val l = l0.trim
+      if (l.length > 0) {
+        var open = 0
+        var close = 0
+        var initClose = 0
+        var nonWsChar = false
+        l foreach {
+          case '{' | '(' | '[' => {
+            open += 1
+            if (!nonWsChar) {
+              nonWsChar = true
+              initClose = close
+            }
+          }
+          case '}' | ')' | ']' => close += 1
+          case x => if (!nonWsChar && !x.isWhitespace) {
+            nonWsChar = true
+            initClose = close
+          }
+        }
+        if (!nonWsChar) initClose = close
+        out.println("  " * (indent - initClose) + l)
+        indent += (open - close)
+      }
+    }
   }
 
   // ----------

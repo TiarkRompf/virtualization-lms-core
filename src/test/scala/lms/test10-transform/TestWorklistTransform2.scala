@@ -112,23 +112,24 @@ class TestForward2 extends FileDiffSuite {
       with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenStruct with ScalaGenRangeOps
       with ScalaGenPrint with ScalaGenFatStruct { val IR: self.type = self }
 
-    codegen.withStream(new PrintWriter(System.out)) {
-      println("### first")
-      val b1 = reifyEffects(test(fresh))
-      println("--- code ---")
+    def writer = new PrintWriter(System.out)
+    println("### first")
+    val b1 = reifyEffects(test(fresh))
+    println("--- code ---")
+    codegen.withStream(writer) {
       codegen.emitBlock(b1)
-      codegen.stream.flush
-      def iter(n: Int, b1: Block[Unit]): Unit = if (n > 0) {
-        println()
-        println("### next")
-        val b2 = xform.runOnce(b1)
-        println("--- code ---")
-        codegen.emitBlock(b2)
-        codegen.stream.flush
-        if (!xform.isDone) iter(n-1,b2)
-      }
-      iter(10,b1) // fixed num of iterations for now
     }
+    def iter(n: Int, b1: Block[Unit]): Unit = if (n > 0) {
+      println()
+      println("### next")
+      val b2 = xform.runOnce(b1)
+      println("--- code ---")
+      codegen.withStream(writer) {
+        codegen.emitBlock(b2)
+      }
+      if (!xform.isDone) iter(n-1,b2)
+    }
+    iter(10,b1) // fixed num of iterations for now
   }
 
   def testWorklist1 = withOutFileChecked(prefix+"worklist21") {
