@@ -1,7 +1,7 @@
 package scala.lms
 package targets.clike.codegen
 
-import scala.lms.internal.{FatBlockTraversal,GenericNestedCodegen,GenericFatCodegen}
+import internal.{FatBlockTraversal,GenericNestedCodegen,GenericFatCodegen}
 import ops.{BaseGenLoops, BaseGenLoopsFat}
 
 import java.io.PrintWriter

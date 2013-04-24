@@ -1,10 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import scala.lms.internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
+import internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
 import ops.{BaseGenIfThenElse, BaseGenIfThenElseFat}
 
+import java.io.PrintWriter
 
 trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
   import IR._

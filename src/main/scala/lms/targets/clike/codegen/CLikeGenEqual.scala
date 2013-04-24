@@ -1,8 +1,9 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
 import ops.EqualExp
+
+import java.io.PrintWriter
 
 trait CLikeGenEqual extends CLikeGenBase {
   val IR: EqualExp

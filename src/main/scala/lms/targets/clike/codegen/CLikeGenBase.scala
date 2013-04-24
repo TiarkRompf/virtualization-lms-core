@@ -2,7 +2,6 @@ package scala.lms
 package targets.clike.codegen
 
 import internal._
-import scala.reflect.SourceContext
 
 trait CLikeGenBase extends CLikeCodegen
 trait CLikeGenEffect extends CLikeNestedCodegen with CLikeGenBase

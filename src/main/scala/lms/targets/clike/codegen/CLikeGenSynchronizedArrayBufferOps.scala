@@ -1,10 +1,10 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import scala.lms.internal.GenericNestedCodegen
+import internal.GenericNestedCodegen
 import ops.{BaseGenSynchronizedArrayBufferOps, SynchronizedArrayBufferOpsExp}
 
+import java.io.PrintWriter
 
 trait CLikeGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferOps with CLikeGenArrayBufferOps {
   val IR: SynchronizedArrayBufferOpsExp

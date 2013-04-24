@@ -1,9 +1,9 @@
 package scala.lms
 package targets.clike.codegen
 
-import java.io.PrintWriter
-import scala.lms.ops.{BaseGenArrayBufferOps, ArrayBufferOpsExp}
+import ops.{BaseGenArrayBufferOps, ArrayBufferOpsExp}
 
+import java.io.PrintWriter
 
 trait CLikeGenArrayBufferOps extends BaseGenArrayBufferOps with CLikeGenBase {
   val IR: ArrayBufferOpsExp
