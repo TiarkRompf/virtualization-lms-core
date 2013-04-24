@@ -3,9 +3,9 @@
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
-val x1 = new RecordreDoubleimDouble(1.0,2.0)
+val x1 = new Anon189207751(1.0,2.0)
 val x2 = println(x1)
-val x3 = new RecordreDoubleimDouble(3.0,4.0)
+val x3 = new Anon189207751(3.0,4.0)
 val x4 = println(x3)
 x4
 }
@@ -14,4 +14,4 @@ x4
   End of Generated Code                  
 *******************************************/
 
-case class RecordreDoubleimDouble(re: Double, im: Double)
+case class Anon189207751(re: Double, im: Double)
