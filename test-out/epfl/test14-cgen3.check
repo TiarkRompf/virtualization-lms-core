@@ -9,7 +9,7 @@ int main(int);
 #include <stdlib.h>
 #include <stdbool.h>
 int test2(int x0) {
-printf("Hello, world: test2\n"); // x1
+printf("Hello, world: test2\n");
 return x0;
 }
 /*****************************************
@@ -26,8 +26,8 @@ int main(int);
 #include <stdlib.h>
 #include <stdbool.h>
 int test1(int x3) {
-printf("Hello, world: test1\n"); // x4
-const int x5 = test2(x3);
+printf("Hello, world: test1\n");
+int x5 = test2(x3);
 return x5;
 }
 /*****************************************
@@ -44,8 +44,8 @@ int main(int);
 #include <stdlib.h>
 #include <stdbool.h>
 int main(int x7) {
-printf("Hello, world: main\n"); // x8
-const int x9 = test1(x7);
+printf("Hello, world: main\n");
+int x9 = test1(x7);
 return x9;
 }
 /*****************************************
