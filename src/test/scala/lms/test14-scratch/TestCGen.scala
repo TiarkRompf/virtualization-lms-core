@@ -2,6 +2,8 @@ package scala.lms
 package test14
 
 import ops._
+import targets.clike.codegen._
+
 import util.OverloadHack
 
 import test1._
