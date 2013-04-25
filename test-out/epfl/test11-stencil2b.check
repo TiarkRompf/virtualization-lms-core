@@ -67,10 +67,9 @@ val x48 = x42 * x47
 val x49 = x42 - x48
 val x50 = x49 + x43
 val x51 = x2(x44) = x50
-val x52 = x37 = x47
-val x53 = x38 = x48
-val x54 = x39 = x46
-()
+x37 = x47
+x38 = x48
+x39 = x46
 x41 = x41 + 1
 }
 x56
