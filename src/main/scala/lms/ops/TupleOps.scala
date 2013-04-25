@@ -1,7 +1,7 @@
 package scala.lms
 package ops
 
-import scala.virtualization.lms.internal.GenericCodegen
+import internal.GenericCodegen
 import java.io.PrintWriter
 import scala.reflect.SourceContext
 
@@ -80,6 +80,3 @@ trait TupleGenBase extends GenericCodegen with BaseGenStruct {
 }
 
 trait ScalaGenTupleOps extends ScalaGenBase with TupleGenBase with ScalaGenStruct { val IR: TupleOpsExp }
-trait CGenTupleOps extends CGenBase with TupleGenBase with CGenStruct
-trait CudaGenTupleOps extends CudaGenBase with TupleGenBase with CudaGenStruct
-trait OpenCLGenTupleOps extends OpenCLGenBase with TupleGenBase with OpenCLGenStruct

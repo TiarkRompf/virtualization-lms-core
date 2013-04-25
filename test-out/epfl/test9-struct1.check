@@ -8,9 +8,9 @@ var x3: Double = 0.0
 val x5 = x2
 val x6 = x3
 val x9 = x5+0.0
-val x12 = x2 = x9
+x2 = x9
 val x10 = x6+x0
-val x13 = x3 = x10
+x3 = x10
 val x14 = x2
 val x15 = x3
 val x16 = new Anon189207751(x14,x15)

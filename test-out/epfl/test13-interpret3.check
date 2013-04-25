@@ -18,9 +18,9 @@ warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(51)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0(px3:scala.lms.test13.RCell[Object],px5:Object,px7:scala.lms.test13.RCell[Object],px9:Object,px12:scala.lms.test13.RCell[Object],px14:Object,px16:Any,px21:Object,px31:scala.lms.test13.RCell[scala.Function1[scala.collection.mutable.HashMap[java.lang.String, Any], Any]],px33:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px40:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px47:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x0:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
-var x1: scala.collection.mutable.HashMap[java.lang.String, Any] = x0
+class staged$0(px3:scala.lms.test13.RCell[Object],px5:Object,px7:scala.lms.test13.RCell[Object],px9:Object,px12:scala.lms.test13.RCell[Object],px14:Object,px16:Any,px21:Object,px31:scala.lms.test13.RCell[scala.Function1[java.util.HashMap[java.lang.String, Any], Any]],px33:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px40:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px47:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x0:java.util.HashMap[java.lang.String, Any]): Any = {
+var x1: java.util.HashMap[java.lang.String, Any] = x0
 val x2 = x1
 val x3 = px3 // static data: RCell(dyn - FUN:scala.lms.test13.TestInterpret$InterpretStagedReopt$AddN@XXX)
 val x4 = x3.value
@@ -106,7 +106,7 @@ warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(32)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$1(px6:scala.virtualization.lms.epfl.test13.RCell[Object],px8:Object,px12:scala.virtualization.lms.epfl.test13.RCell[Object],px14:Object,px2:java.util.HashMap[java.lang.String, Any],px16:Any,px19:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[java.util.HashMap[java.lang.String, Any], Any]],px21:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px28:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]]) extends ((Unit)=>(Any)) {
+class staged$1(px6:scala.lms.test13.RCell[Object],px8:Object,px12:scala.lms.test13.RCell[Object],px14:Object,px2:java.util.HashMap[java.lang.String, Any],px16:Any,px19:scala.lms.test13.RCell[scala.Function1[java.util.HashMap[java.lang.String, Any], Any]],px21:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]],px28:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Any]]) extends ((Unit)=>(Any)) {
 def apply(x5:Unit): Any = {
 val x6 = px6 // static data: RCell(dyn - FUN:scala.lms.test13.TestInterpret$InterpretStagedReopt$LookupN@XXX)
 val x7 = x6.value

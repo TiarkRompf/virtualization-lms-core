@@ -1,4 +1,5 @@
-package scala.virtualization.lms.internal
+package scala.lms
+package internal
 
 trait AbstractHostTransfer {
   this: GenericCodegen =>

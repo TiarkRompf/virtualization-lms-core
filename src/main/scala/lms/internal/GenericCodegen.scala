@@ -89,7 +89,8 @@ trait GenericCodegen extends BlockTraversal {
     stream = new PrintWriter(sw)
     try { body } finally {
       stream.flush
-      printIndented(sw.toString)(out)
+      //printIndented(sw.toString)(out)
+      out.print(sw.toString)
       out.flush
       stream = save
     }

@@ -5,8 +5,8 @@ class Match extends ((Unit)=>(scala.lms.test4.Automaton[Char, scala.collection.i
 def apply(x0:Unit): scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
 var x1 = null.asInstanceOf[scala.Function1[Double, Double]]
 var x33 = null.asInstanceOf[scala.Function1[Double, Double]]
-var x19 = null.asInstanceOf[scala.Function1[scala.Tuple2[scala.Tuple2[Double, Double], scala.collection.immutable.List[scala.Tuple2[Double, Double]]], scala.Tuple2[scala.Tuple2[Double, Double], scala.collection.immutable.List[scala.Tuple2[Double, Double]]]]]
-var x12 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[scala.Tuple2[Double, Double]], scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+var x19 = null.asInstanceOf[scala.Function1[Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble, Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble]]
+var x12 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[Tuple2DoubleDouble], scala.lms.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
 x1 = {x2: (Double) => 
 val x4 = x2%2 == 0
 val x5 = if (x4) {

@@ -2,7 +2,7 @@ package scala.lms
 package targets.clike.codegen
 
 import internal.{FatExpressions,GenericNestedCodegen,GenericFatCodegen}
-import ops.{StructExp, StructFatExpOptCommon, BaseGenFatStruct}
+import ops.{StructExp, StructFatExpOptCommon, BaseGenStruct, BaseGenFatStruct}
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 

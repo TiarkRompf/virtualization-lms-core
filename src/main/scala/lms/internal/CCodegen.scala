@@ -24,7 +24,9 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   }
 
   override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    if (!isVoidType(sym.tp))
+    if (isVoidType(sym.tp))
+      stream.println(rhs + "; // " + quote(sym))
+    else
       stream.println(deref(sym.tp) + quote(sym) + " = " + rhs + ";")
   }
   

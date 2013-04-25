@@ -1,4 +1,5 @@
-package scala.virtualization.lms.internal
+package scala.lms
+package internal
 
 /* Defines OpenCL specific device transfer functions */
 trait OpenCLDeviceTransfer extends AbstractDeviceTransfer {

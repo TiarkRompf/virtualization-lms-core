@@ -1,4 +1,5 @@
-package scala.virtualization.lms.internal
+package scala.lms
+package internal
 
 /* Defines Cuda specific device transfer functions */
 trait CudaDeviceTransfer extends AbstractDeviceTransfer {

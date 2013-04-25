@@ -19,7 +19,7 @@ x12
 }
 x18
 }
-x12 = scala.virtualization.lms.epfl.test4.Automaton(List(),x1)
+x12 = scala.lms.test4.Automaton(List(),x1)
 x13 = x12.copy(out = "found"::x12.out)
 x7 = {x8: (Char) => 
 val x9 = x8 == 'A'
@@ -36,7 +36,7 @@ x14
 }
 x15
 }
-x10 = scala.virtualization.lms.epfl.test4.Automaton(List(),x7)
+x10 = scala.lms.test4.Automaton(List(),x7)
 x4 = {x5: (Char) => 
 val x6 = x5 == 'A'
 val x16 = if (x6) {
@@ -46,7 +46,7 @@ x12
 }
 x16
 }
-x17 = scala.virtualization.lms.epfl.test4.Automaton(List(),x4)
+x17 = scala.lms.test4.Automaton(List(),x4)
 x12
 }
 }
