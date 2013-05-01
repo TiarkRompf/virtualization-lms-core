@@ -29,10 +29,10 @@ import scala.reflect.SourceContext
 trait VectorOps extends Base {
   trait Vector[T]
   def vzeros(n: Rep[Int]): Rep[Vector[Double]]
-  def vliteral[T:Manifest](a: List[Rep[T]]): Rep[Vector[T]]
-  def vapply[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]): Rep[T]
-  def vupdate[T:Manifest](a: Rep[Vector[T]], x: Rep[Int], y: Rep[T]): Rep[Unit]
-  def vlength[T:Manifest](a: Rep[Vector[T]]): Rep[Int]
+  def vliteral[T:TypeRep](a: List[Rep[T]]): Rep[Vector[T]]
+  def vapply[T:TypeRep](a: Rep[Vector[T]], x: Rep[Int]): Rep[T]
+  def vupdate[T:TypeRep](a: Rep[Vector[T]], x: Rep[Int], y: Rep[T]): Rep[Unit]
+  def vlength[T:TypeRep](a: Rep[Vector[T]]): Rep[Int]
   def vplus(a: Rep[Vector[Double]], b: Rep[Vector[Double]]): Rep[Vector[Double]]
 }
 
@@ -46,23 +46,23 @@ trait VectorExp extends VectorOps with EffectExp {
   case class VectorPlus(a: Rep[Vector[Double]], b: Rep[Vector[Double]]) extends Def[Vector[Double]]
 
   def vzeros(n: Rep[Int]): Rep[Vector[Double]] = VectorZeros(n)
-  def vliteral[T:Manifest](a: List[Rep[T]]): Rep[Vector[T]] = VectorLiteral(a)
+  def vliteral[T:TypeRep](a: List[Rep[T]]): Rep[Vector[T]] = VectorLiteral(a)
   def vplus(a: Rep[Vector[Double]], b: Rep[Vector[Double]]): Rep[Vector[Double]] = VectorPlus(a,b)
-  def vapply[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]): Rep[T] = VectorApply(a,x)
-  def vupdate[T:Manifest](a: Rep[Vector[T]], x: Rep[Int], y: Rep[T]): Rep[Unit] = VectorUpdate(a,x,y)
-  def vlength[T:Manifest](a: Rep[Vector[T]]): Rep[Int] = VectorLength(a)
+  def vapply[T:TypeRep](a: Rep[Vector[T]], x: Rep[Int]): Rep[T] = VectorApply(a,x)
+  def vupdate[T:TypeRep](a: Rep[Vector[T]], x: Rep[Int], y: Rep[T]): Rep[Unit] = VectorUpdate(a,x,y)
+  def vlength[T:TypeRep](a: Rep[Vector[T]]): Rep[Int] = VectorLength(a)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+  override def mirror[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case VectorZeros(n) => vzeros(f(n))
     case VectorLiteral(a) => vliteral(f(a))
-    case VectorApply(a,x) => vapply(f(a),f(x))(mtype(manifest[A]))
+    case VectorApply(a,x) => vapply(f(a),f(x))(mtype(typeRep[A]))
     case VectorUpdate(a,x,y) => vupdate(f(a),f(x),f(y))
     case VectorLength(a) => vlength(f(a))
     case VectorPlus(a, b) => vplus(f(a),f(b))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 
-  override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+  override def mirrorDef[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
     case VectorZeros(n) => VectorZeros(f(n))
     case VectorLiteral(a) => VectorLiteral(f(a))
     case VectorApply(a,x) => VectorApply(f(a),f(x))

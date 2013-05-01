@@ -14,16 +14,16 @@ import scala.reflect.SourceContext
 
 
 class TestStencil extends FileDiffSuite {
-  
-  trait DSL extends LiftNumeric with NumericOps with PrimitiveOps with ArrayOps with RangeOps 
+
+  trait DSL extends LiftNumeric with NumericOps with PrimitiveOps with ArrayOps with RangeOps
     with BooleanOps with OrderingOps
     with LiftVariables with IfThenElse with Print {
-    def staticData[T:Manifest](x: T): Rep[T]
+    def staticData[T:TypeRep](x: T): Rep[T]
     def infix_toDouble(x: Rep[Int]): Rep[Double]
     def test(x: Rep[Array[Double]]): Rep[Array[Double]]
   }
   trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt
-      with OrderingOpsExpOpt with BooleanOpsExp 
+      with OrderingOpsExpOpt with BooleanOpsExp
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp with StaticDataExp
       with IfThenElseExpOpt with PrintExp with PrimitiveOpsExp
       with CompileScala { self =>
@@ -49,7 +49,7 @@ class TestStencil extends FileDiffSuite {
 
   trait Sliding extends DSL {
 
-    def infix_sliding[T:Manifest](n: Rep[Int], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
+    def infix_sliding[T:TypeRep](n: Rep[Int], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
       val a = NewArray[T](n)
       sliding(0,n)(i => a(i) = f(i))
       a
@@ -66,7 +66,7 @@ class TestStencil extends FileDiffSuite {
 
   //trait SlidingExp extends Impl with Sliding {
   trait SlidingExp extends ArrayOpsExpOpt with NumericOpsExpOpt with PrimitiveOpsExp
-      with OrderingOpsExpOpt with BooleanOpsExp 
+      with OrderingOpsExpOpt with BooleanOpsExp
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp
       with IfThenElseExpOpt {
 
@@ -75,7 +75,7 @@ class TestStencil extends FileDiffSuite {
     }
 
     // some arithemetic rewrites
-    override def numeric_plus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = ((lhs,rhs) match {
+    override def numeric_plus[T:Numeric:TypeRep](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = ((lhs,rhs) match {
       case (Def(IntPlus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_plus(x, unit(y+z)) // (x+y)+z --> x+(y+z)
       case (Def(IntMinus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_minus(x, unit(y-z)) // (x-y)+z --> x-(y-z)
       case (Def(NumericPlus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_plus(x, unit(y+z)) // (x+y)+z --> x+(y+z)
@@ -84,7 +84,7 @@ class TestStencil extends FileDiffSuite {
       case (x: Exp[Int], Const(0)) => x
       case _ => super.numeric_plus(lhs,rhs)
     }).asInstanceOf[Exp[T]]
-    override def numeric_minus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = ((lhs,rhs) match {
+    override def numeric_minus[T:Numeric:TypeRep](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = ((lhs,rhs) match {
       case (Def(IntMinus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_minus(x, unit(y+z)) // (x-y)-z --> x-(y+z)
       case (Def(IntPlus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_plus(x, unit(y-z)) // (x+y)-z --> x+(y-z)
       case (Def(NumericMinus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_minus(x, unit(y+z)) // (x-y)-z --> x-(y+z)
@@ -228,7 +228,7 @@ class TestStencil extends FileDiffSuite {
     trait Prog extends DSL {
 
       // not actually sliding -- just to have a baseline reference
-      def infix_sliding[T:Manifest](n: Rep[Int], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
+      def infix_sliding[T:TypeRep](n: Rep[Int], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
         val a = NewArray[T](n)
         (0 until n) foreach { i =>
           a(i) = f(i)

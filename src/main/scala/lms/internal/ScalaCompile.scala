@@ -49,7 +49,7 @@ trait ScalaCompile extends Expressions {
 
   var dumpGeneratedCode = false
 
-  def compile[A,B](f: Exp[A] => Exp[B])(implicit mA: Manifest[A], mB: Manifest[B]): A=>B = {
+  def compile[A,B](f: Exp[A] => Exp[B])(implicit mA:TypeRep[A], mB:TypeRep[B]): A=>B = {
     if (this.compiler eq null)
       setupCompiler()
 

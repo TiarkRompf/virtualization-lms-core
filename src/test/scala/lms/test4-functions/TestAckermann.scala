@@ -10,10 +10,10 @@ import test3._
 
 trait AckProg { this: Arith with Functions with Equal with IfThenElse =>
 
-  class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
+  class LambdaOps[A:TypeRep,B:TypeRep](f: Rep[A=>B]) {
     def apply(x:Rep[A]): Rep[B] = doApply(f, x)
   }
-  implicit def lam[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
+  implicit def lam[A:TypeRep,B:TypeRep](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
   //implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
 
   implicit def toDouble(f: Rep[Int]): Rep[Double] = f.asInstanceOf[Rep[Double]]

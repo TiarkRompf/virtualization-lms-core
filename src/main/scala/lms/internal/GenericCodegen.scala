@@ -58,9 +58,9 @@ trait GenericCodegen extends BlockTraversal {
 
   // optional type remapping (default is identity)
   def remap(s: String): String = s
-  def remap[A](s: String, method: String, t: Manifest[A]) : String = remap(s, method, t.toString)
+  def remap[A](s: String, method: String, t:TypeRep[A]) : String = remap(s, method, t.toString)
   def remap(s: String, method: String, t: String) : String = s + method + "[" + remap(t) + "]"
-  def remap[A](m: Manifest[A]): String = m match {
+  def remap[A](m:TypeRep[A]): String = m match {
     case rm: RefinedManifest[A] =>  "AnyRef{" + rm.fields.foldLeft(""){(acc, f) => {val (n,mnf) = f; acc + "val " + n + ": " + remap(mnf) + ";"}} + "}"
     case _ if m.erasure == classOf[Variable[Any]] =>
         remap(m.typeArguments.head)
@@ -73,8 +73,8 @@ trait GenericCodegen extends BlockTraversal {
       }
       else m.toString
   }
-  def remapImpl[A](m: Manifest[A]): String = remap(m)
-  //def remapVar[A](m: Manifest[Variable[A]]) : String = remap(m.typeArguments.head)
+  def remapImpl[A](m:TypeRep[A]): String = remap(m)
+  //def remapVar[A](m:TypeRep[Variable[A]]) : String = remap(m.typeArguments.head)
 
   def hasMetaData: Boolean = false
   def getMetaData: String = null
@@ -142,20 +142,20 @@ trait GenericCodegen extends BlockTraversal {
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit
 
-  def emitSource[T : Manifest, R : Manifest](f: Exp[T] => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+  def emitSource[T:TypeRep, R:TypeRep](f: Exp[T] => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s = fresh[T]
     val body = reifyBlock(f(s))
     emitSource(List(s), body, className, stream)
   }
 
-  def emitSource2[T1 : Manifest, T2 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+  def emitSource2[T1:TypeRep, T2:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val body = reifyBlock(f(s1, s2))
     emitSource(List(s1, s2), body, className, stream)
   }
 
-  def emitSource3[T1 : Manifest, T2 : Manifest, T3 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+  def emitSource3[T1:TypeRep, T2:TypeRep, T3:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -163,7 +163,7 @@ trait GenericCodegen extends BlockTraversal {
     emitSource(List(s1, s2, s3), body, className, stream)
   }
 
-  def emitSource4[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+  def emitSource4[T1:TypeRep, T2:TypeRep, T3:TypeRep, T4:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -172,7 +172,7 @@ trait GenericCodegen extends BlockTraversal {
     emitSource(List(s1, s2, s3, s4), body, className, stream)
   }
 
-  def emitSource5[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+  def emitSource5[T1:TypeRep, T2:TypeRep, T3:TypeRep, T4:TypeRep, T5:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -181,8 +181,8 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4, s5))
     emitSource(List(s1, s2, s3, s4, s5), body, className, stream)
   }
-  
-  def emitSource6[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+
+  def emitSource6[T1:TypeRep, T2:TypeRep, T3:TypeRep, T4:TypeRep, T5:TypeRep, T6:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -192,8 +192,8 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4, s5, s6))
     emitSource(List(s1, s2, s3, s4, s5, s6), body, className, stream)
   }
-  
-  def emitSource7[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+
+  def emitSource7[T1:TypeRep, T2:TypeRep, T3:TypeRep, T4:TypeRep, T5:TypeRep, T6:TypeRep, T7:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -204,8 +204,8 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7))
     emitSource(List(s1, s2, s3, s4, s5, s6, s7), body, className, stream)
   }
-  
-  def emitSource8[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+
+  def emitSource8[T1:TypeRep, T2:TypeRep, T3:TypeRep, T4:TypeRep, T5:TypeRep, T6:TypeRep, T7:TypeRep, T8:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -217,8 +217,8 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8))
     emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8), body, className, stream)
   }
-  
-  def emitSource9[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+
+  def emitSource9[T1:TypeRep, T2:TypeRep, T3:TypeRep, T4:TypeRep, T5:TypeRep, T6:TypeRep, T7:TypeRep, T8:TypeRep, T9:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -231,8 +231,8 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8, s9))
     emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8, s9), body, className, stream)
   }
-  
-  def emitSource10[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, T10 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+
+  def emitSource10[T1:TypeRep, T2:TypeRep, T3:TypeRep, T4:TypeRep, T5:TypeRep, T6:TypeRep, T7:TypeRep, T8:TypeRep, T9:TypeRep, T10:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -246,8 +246,8 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10))
     emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10), body, className, stream)
   }
-  
-  def emitSource11[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, T10 : Manifest, T11 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+
+  def emitSource11[T1:TypeRep, T2:TypeRep, T3:TypeRep, T4:TypeRep, T5:TypeRep, T6:TypeRep, T7:TypeRep, T8:TypeRep, T9:TypeRep, T10:TypeRep, T11:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -262,8 +262,8 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11))
     emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11), body, className, stream)
   }
-  
-  def emitSource12[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, T10 : Manifest, T11 : Manifest, T12 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11], Exp[T12]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+
+  def emitSource12[T1:TypeRep, T2:TypeRep, T3:TypeRep, T4:TypeRep, T5:TypeRep, T6:TypeRep, T7:TypeRep, T8:TypeRep, T9:TypeRep, T10:TypeRep, T11:TypeRep, T12:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11], Exp[T12]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -279,8 +279,8 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12))
     emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12), body, className, stream)
   }
-  
-  def emitSource13[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, T10 : Manifest, T11 : Manifest, T12 : Manifest, T13 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11], Exp[T12], Exp[T13]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+
+  def emitSource13[T1:TypeRep, T2:TypeRep, T3:TypeRep, T4:TypeRep, T5:TypeRep, T6:TypeRep, T7:TypeRep, T8:TypeRep, T9:TypeRep, T10:TypeRep, T11:TypeRep, T12:TypeRep, T13:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11], Exp[T12], Exp[T13]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -297,8 +297,8 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13))
     emitSource(List(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13), body, className, stream)
   }
-  
-  def emitSource14[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, T6 : Manifest, T7 : Manifest, T8 : Manifest, T9 : Manifest, T10 : Manifest, T11 : Manifest, T12 : Manifest, T13 : Manifest, T14 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11], Exp[T12], Exp[T13], Exp[T14]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+
+  def emitSource14[T1:TypeRep, T2:TypeRep, T3:TypeRep, T4:TypeRep, T5:TypeRep, T6:TypeRep, T7:TypeRep, T8:TypeRep, T9:TypeRep, T10:TypeRep, T11:TypeRep, T12:TypeRep, T13:TypeRep, T14:TypeRep, R:TypeRep](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6], Exp[T7], Exp[T8], Exp[T9], Exp[T10], Exp[T11], Exp[T12], Exp[T13], Exp[T14]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
@@ -323,7 +323,7 @@ trait GenericCodegen extends BlockTraversal {
    * @param className Name of the generated identifier
    * @param stream Output stream
    */
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, stream: PrintWriter): List[(Sym[Any], Any)] // return free static data in block
+  def emitSource[A:TypeRep](args: List[Sym[_]], body: Block[A], className: String, stream: PrintWriter): List[(Sym[Any], Any)] // return free static data in block
 
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s.replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
@@ -343,21 +343,21 @@ trait GenericCodegen extends BlockTraversal {
     super.reset
   }
 
-  def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
+  def isPrimitiveType[A](m:TypeRep[A]) : Boolean = {
     m.toString match {
       case "Boolean" | "Byte" | "Char" | "Short" | "Int" | "Long" | "Float" | "Double" => true
       case _ => false
     }
   }
 
-  def isVoidType[A](m: Manifest[A]) : Boolean = {
+  def isVoidType[A](m:TypeRep[A]) : Boolean = {
     m.toString match {
       case "Unit" => true
       case _ => false
     }
   }
 
-  def isVariableType[A](m: Manifest[A]) : Boolean = {
+  def isVariableType[A](m:TypeRep[A]) : Boolean = {
     if(m.erasure == classOf[Variable[AnyVal]]) true
     else false
   }

@@ -13,43 +13,43 @@ trait ObjectOps extends Variables with OverloadHack {
   def infix_hashCode(lhs: Rep[Any])(implicit pos: SourceContext) = object_hashcode(lhs)
   def infix_##(lhs: Rep[Any])(implicit pos: SourceContext) = object_hashcode(lhs)
   def infix_HashCode(lhs: Rep[Any])(implicit pos: SourceContext) = object_hashcode(lhs)
-  def infix_unsafeImmutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext) = object_unsafe_immutable(lhs)
-  def infix_unsafeMutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext) = object_unsafe_mutable(lhs)
+  def infix_unsafeImmutable[A:TypeRep](lhs: Rep[A])(implicit pos: SourceContext) = object_unsafe_immutable(lhs)
+  def infix_unsafeMutable[A:TypeRep](lhs: Rep[A])(implicit pos: SourceContext) = object_unsafe_mutable(lhs)
 
   def object_tostring(lhs: Rep[Any])(implicit pos: SourceContext): Rep[String]
   def object_hashcode(lhs: Rep[Any])(implicit pos: SourceContext): Rep[Int]
-  def object_unsafe_immutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext): Rep[A]
-  def object_unsafe_mutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext): Rep[A]
+  def object_unsafe_immutable[A:TypeRep](lhs: Rep[A])(implicit pos: SourceContext): Rep[A]
+  def object_unsafe_mutable[A:TypeRep](lhs: Rep[A])(implicit pos: SourceContext): Rep[A]
 }
 
 trait ObjectOpsExp extends ObjectOps with VariablesExp {
   case class ObjectToString(o: Exp[Any]) extends Def[String]
   case class ObjectHashCode(o: Exp[Any]) extends Def[Int]
-  case class ObjectUnsafeImmutable[A:Manifest](o: Exp[A]) extends Def[A] {
-    val m = manifest[A]
+  case class ObjectUnsafeImmutable[A:TypeRep](o: Exp[A]) extends Def[A] {
+    val m = typeRep[A]
   }
- case class ObjectUnsafeMutable[A:Manifest](o: Exp[A]) extends Def[A] {
-   val m = manifest[A]
+ case class ObjectUnsafeMutable[A:TypeRep](o: Exp[A]) extends Def[A] {
+   val m = typeRep[A]
  }
 
   def object_tostring(lhs: Exp[Any])(implicit pos: SourceContext) = ObjectToString(lhs)
   def object_hashcode(lhs: Exp[Any])(implicit pos: SourceContext) = ObjectHashCode(lhs)
-  def object_unsafe_immutable[A:Manifest](lhs: Exp[A])(implicit pos: SourceContext) = lhs match {
+  def object_unsafe_immutable[A:TypeRep](lhs: Exp[A])(implicit pos: SourceContext) = lhs match {
     // INVESTIGATE: there was an issue where Const(0).unsafeImmutable == Const(0.0). How is this possible? CSE with primitive widening?
     case c@Const(x) => c
     case _ => ObjectUnsafeImmutable(lhs)
   }
-  def object_unsafe_mutable[A:Manifest](lhs: Exp[A])(implicit pos: SourceContext) = reflectMutable(ObjectUnsafeMutable(lhs))
+  def object_unsafe_mutable[A:TypeRep](lhs: Exp[A])(implicit pos: SourceContext) = reflectMutable(ObjectUnsafeMutable(lhs))
 
   //////////////
   // mirroring
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+  override def mirror[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case e@ObjectUnsafeImmutable(a) => object_unsafe_immutable(f(a))(mtype(e.m),pos)
     case e@ObjectToString(a) => object_tostring(f(a))
     case e@ObjectHashCode(a) => object_hashcode(f(a))
-    case Reflect(e@ObjectUnsafeImmutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeImmutable(f(a))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(e@ObjectUnsafeMutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeMutable(f(a))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@ObjectUnsafeImmutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeImmutable(f(a))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+    case Reflect(e@ObjectUnsafeMutable(a), u, es) => reflectMirrored(Reflect(ObjectUnsafeMutable(f(a))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -79,7 +79,7 @@ trait ObjectOpsExp extends ObjectOps with VariablesExp {
 
 trait ObjectOpsExpOpt extends ObjectOpsExp {
   override def object_tostring(lhs: Exp[Any])(implicit pos: SourceContext) = {
-    if (lhs.tp <:< manifest[String]) lhs.asInstanceOf[Exp[String]]
+    if (lhs.tp <:< typeRep[String]) lhs.asInstanceOf[Exp[String]]
     else super.object_tostring(lhs)
   }
 }

@@ -9,7 +9,7 @@ import java.io.PrintWriter
 trait LiftArith {
   this: Arith =>
 
-  implicit def numericToRep[T:Numeric:Manifest](x: T) = unit(x)
+  implicit def numericToRep[T:Numeric:TypeRep](x: T) = unit(x)
 }
 
 trait Arith extends Base with LiftArith {
@@ -17,7 +17,7 @@ trait Arith extends Base with LiftArith {
   //types that are allowed to be lifted more explicitly
   //implicit def unit(x: Double): Rep[Double]
 
-  // aks: this is a workaround for the infix methods not intercepting after Manifests were added everywhere
+  // aks: this is a workaround for the infix methods not intercepting after TypeReps were added everywhere
   implicit def intToArithOps(i: Int) = new arithOps(unit(i))
   implicit def intToRepDbl(i: Int) : Rep[Double] = unit(i)
 
@@ -49,7 +49,7 @@ trait ArithExp extends Arith with BaseExp {
   def infix_*(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = Times(x, y)
   def infix_/(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = Div(x, y)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+  override def mirror[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Plus(x,y) => f(x) + f(y)
     case Minus(x,y) => f(x) - f(y)
     case Times(x,y) => f(x) * f(y)

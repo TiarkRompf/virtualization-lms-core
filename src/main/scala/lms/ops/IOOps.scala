@@ -101,16 +101,16 @@ trait IOOpsExp extends IOOps with EffectExp {
   def br_readline(b: Exp[BufferedReader])(implicit pos: SourceContext) : Exp[String] = reflectEffect(BrReadline(b))
   def br_close(b: Exp[BufferedReader])(implicit pos: SourceContext) : Exp[Unit] = reflectEffect(BrClose(b))
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
+  override def mirror[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     e match {
-      case Reflect(ObjFrApply(s), u, es) => reflectMirrored(Reflect(ObjFrApply(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(ObjBrApply(x), u, es) => reflectMirrored(Reflect(ObjBrApply(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(ObjFwApply(s), u, es) => reflectMirrored(Reflect(ObjFwApply(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(ObjBwApply(x), u, es) => reflectMirrored(Reflect(ObjBwApply(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(BrReadline(b), u, es) => reflectMirrored(Reflect(BrReadline(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(BwWrite(b,s), u, es) => reflectMirrored(Reflect(BwWrite(f(b),f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(BrClose(b), u, es) => reflectMirrored(Reflect(BrClose(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(BwClose(b), u, es) => reflectMirrored(Reflect(BwClose(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(ObjFrApply(s), u, es) => reflectMirrored(Reflect(ObjFrApply(f(s)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(ObjBrApply(x), u, es) => reflectMirrored(Reflect(ObjBrApply(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(ObjFwApply(s), u, es) => reflectMirrored(Reflect(ObjFwApply(f(s)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(ObjBwApply(x), u, es) => reflectMirrored(Reflect(ObjBwApply(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(BrReadline(b), u, es) => reflectMirrored(Reflect(BrReadline(f(b)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(BwWrite(b,s), u, es) => reflectMirrored(Reflect(BwWrite(f(b),f(s)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(BrClose(b), u, es) => reflectMirrored(Reflect(BrClose(f(b)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(BwClose(b), u, es) => reflectMirrored(Reflect(BwClose(f(b)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
       case _ => super.mirror(e,f)
     }
   }).asInstanceOf[Exp[A]]

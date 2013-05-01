@@ -18,7 +18,7 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
 
   // TODO: SimpleLoops
 
-  override def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = x match {
+  override def reflectEffectInternal[A:TypeRep](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = x match {
     case IfThenElse(cond, thenp, elsep) =>
       val affected = (u.mayRead ++ u.mayWrite).distinct
 
@@ -117,13 +117,13 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
     case _ => b
   }
 
-  def projectPureWithB[A:Manifest](b: Block[A], s: List[Sym[Any]]): Block[A] = {
+  def projectPureWithB[A:TypeRep](b: Block[A], s: List[Sym[Any]]): Block[A] = {
     (projectPureB(b), projectB(b,s)) match {
       case (Block(x), Block(Def(Reify(Const(()), u, es)))) => Block(Reify(x, u, es))
       case (a,_) => a
     }
   }
-  def projectPureWithSimpleB[A:Manifest](b: Block[A]): Block[A] = {
+  def projectPureWithSimpleB[A:TypeRep](b: Block[A]): Block[A] = {
     (projectPureB(b), projectSimpleB(b)) match {
       case (Block(x), Block(Def(Reify(Const(()), u, es)))) => Block(Reify(x, u, es))
       case (a,_) => a
@@ -174,7 +174,7 @@ trait BaseGenSplitEffects extends BaseGenIfThenElseFat with GenericFatCodegen {
   val IR: SplitEffectsExpFat
   import IR._
 
-  override def reifyBlock[T: Manifest](x: => Exp[T]): Block[T] = {
+  override def reifyBlock[T:TypeRep](x: => Exp[T]): Block[T] = {
     val sup = super.reifyBlock(x)
     projectPureWithSimpleB(sup)
   }

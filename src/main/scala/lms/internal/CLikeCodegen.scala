@@ -8,16 +8,16 @@ trait CLikeCodegen extends GenericCodegen {
   val IR: Expressions
   import IR._
 
-  def mangledName(name: String) = name.map(c => if(!c.isDigit && !c.isLetter) '_' else c) 
+  def mangledName(name: String) = name.map(c => if(!c.isDigit && !c.isLetter) '_' else c)
 
   // List of datastructure types that requires transfer functions to be generated for this target
-  protected val dsTypesList = HashSet[Manifest[Any]]()
+  protected val dsTypesList = HashSet[TypeRep[Any]]()
 
   // Streams for helper functions and its header
   protected var helperFuncStream: PrintWriter = _
   protected var headerStream: PrintWriter = _
   protected var actRecordStream: PrintWriter = _
-  
+
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
@@ -34,10 +34,10 @@ trait CLikeCodegen extends GenericCodegen {
     stream.println(lhs + " = " + rhs + ";")
   }
 
-  override def remap[A](m: Manifest[A]) : String = {
+  override def remap[A](m:TypeRep[A]) : String = {
     if (m.erasure == classOf[Variable[AnyVal]])
       remap(m.typeArguments.head)
-    else if (m.erasure == classOf[List[Any]]) { // Use case: Delite Foreach sync list 
+    else if (m.erasure == classOf[List[Any]]) { // Use case: Delite Foreach sync list
       "List< " + remap(m.typeArguments.head) + " >"
     }
     else {
@@ -57,15 +57,15 @@ trait CLikeCodegen extends GenericCodegen {
     }
   }
 
-  private def addRef[A](m: Manifest[A]): String = {
+  private def addRef[A](m:TypeRep[A]): String = {
     if (!isPrimitiveType(m) && !isVoidType(m)) " *"
     else " "
   }
- 
+
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
 
     stream.append("#include \"helperFuncs.h\"\n")
-    
+
     def kernelSignature: String = {
       val out = new StringBuilder
       if(resultIsVar)
