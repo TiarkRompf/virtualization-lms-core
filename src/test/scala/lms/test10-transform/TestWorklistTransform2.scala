@@ -30,7 +30,7 @@ trait FWTransform2 extends BaseFatExp with EffectExp with IfThenElseFatExp with 
 
   // ---------- Exp api
 
-  implicit def toAfter[A:Manifest](x: Def[A]) = new { def atPhase(t: MyWorklistTransformer)(y: => Exp[A]) = transformAtPhase(x)(t)(y) }
+  implicit def toAfter[A:TypeRep](x: Def[A]) = new { def atPhase(t: MyWorklistTransformer)(y: => Exp[A]) = transformAtPhase(x)(t)(y) }
   implicit def toAfter[A](x: Exp[A]) = new { def atPhase(t: MyWorklistTransformer)(y: => Exp[A]) = transformAtPhase(x)(t)(y) }
 
   // transform x to y at the *next* iteration of t.
@@ -43,7 +43,7 @@ trait FWTransform2 extends BaseFatExp with EffectExp with IfThenElseFatExp with 
   }
 
 
-  def onCreate[A:Manifest](s: Sym[A], d: Def[A]): Exp[A] = s
+  def onCreate[A:TypeRep](s: Sym[A], d: Def[A]): Exp[A] = s
 
   // ----------
 
@@ -61,23 +61,23 @@ trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp wit
 
   def vzeros_xform(n: Rep[Int]) = vfromarray(array(n) { i => 0 })
 
-  def vapply_xform[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]) = vtoarray(a).at(x)
+  def vapply_xform[T:TypeRep](a: Rep[Vector[T]], x: Rep[Int]) = vtoarray(a).at(x)
 
   def vplus_xform(a: Rep[Vector[Double]], b: Rep[Vector[Double]]): Rep[Vector[Double]] = {
     val data = array(vlength(a)) { i => vapply(a,i) + vapply(b,i) }
     vfromarray(data)
   }
 
-  def vlength_xform[T:Manifest](a: Rep[Vector[T]]) = field[Int](a, "length")
+  def vlength_xform[T:TypeRep](a: Rep[Vector[T]]) = field[Int](a, "length")
 
 
-  def vfromarray[A:Manifest](x: Exp[Array[A]]): Exp[Vector[A]] = struct(ClassTag[Vector[A]]("Vector"), "data" -> x, "length" -> x.length)
-  def vtoarray[A:Manifest](x: Exp[Vector[A]]): Exp[Array[A]] = field[Array[A]](x, "data")
+  def vfromarray[A:TypeRep](x: Exp[Array[A]]): Exp[Vector[A]] = struct(ClassTag[Vector[A]]("Vector"), "data" -> x, "length" -> x.length)
+  def vtoarray[A:TypeRep](x: Exp[Vector[A]]): Exp[Array[A]] = field[Array[A]](x, "data")
 
 
-  override def onCreate[A:Manifest](s: Sym[A], d: Def[A]) = (d match {
+  override def onCreate[A:TypeRep](s: Sym[A], d: Def[A]) = (d match {
     case VectorZeros(n)   => s.atPhase(xform) { vzeros_xform(xform(n)).asInstanceOf[Exp[A]] }
-    case VectorApply(a,x) => s.atPhase(xform) { vapply_xform(xform(a), xform(x))(mtype(manifest[A])).asInstanceOf[Exp[A]] }
+    case VectorApply(a,x) => s.atPhase(xform) { vapply_xform(xform(a), xform(x))(mtype(typeRep[A])).asInstanceOf[Exp[A]] }
     case VectorLength(x)  => s.atPhase(xform) { vlength_xform(xform(x)).asInstanceOf[Exp[A]] }
     case VectorPlus(a,b)  => s.atPhase(xform) { vplus_xform(xform(a),xform(b)).asInstanceOf[Exp[A]] }
     case _ => super.onCreate(s,d)
@@ -86,7 +86,7 @@ trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp wit
 
   val xform = new MyWorklistTransformer
 
-  override def vapply[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]) = (a,x) match {
+  override def vapply[T:TypeRep](a: Rep[Vector[T]], x: Rep[Int]) = (a,x) match {
     case (Def(VectorLiteral(ax)), Const(x)) => ax(x)
     case _ => super.vapply(a,x)
   }

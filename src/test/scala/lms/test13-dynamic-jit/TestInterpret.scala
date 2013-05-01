@@ -28,7 +28,7 @@ class TestInterpret extends FileDiffSuite {
   trait InterpretPlain {
 
     import java.util.HashMap
-    
+
     case class Unexpected(x: Any) extends Exception
 
     class Frame {
@@ -149,8 +149,8 @@ class TestInterpret extends FileDiffSuite {
     }
 
   }
-  
-  
+
+
   trait InterpretStaged extends DSL with Equal with NumericOps with PrimitiveOps with HashMapOps with ArrayOps with CellOps with StaticData { self =>
 
     // option 1: stage fully, one big method -- remove interpreter abstraction overhead but retain generic types
@@ -159,15 +159,15 @@ class TestInterpret extends FileDiffSuite {
     // (this one uses option 2)
 
     import java.util.HashMap
-    
+
     def infix_exec(x: Rep[RFun], f: Rep[HashMap[String,Any]]): Rep[Any]
     def infix_execInt(x: Rep[RFun], f: Rep[HashMap[String,Any]]): Rep[Int]
-    
-    def dcompile(x: Rep[Compile], fA: Rep[HashMap[String,Any]]=>Rep[Any], 
+
+    def dcompile(x: Rep[Compile], fA: Rep[HashMap[String,Any]]=>Rep[Any],
                                   fI: Rep[HashMap[String,Any]]=>Rep[Int]): Rep[RFun]
-    
+
     class Frame(val data: Rep[HashMap[String, Any]])
-    
+
     abstract class Fun {
       def exec(f: Frame): Rep[Any]
       def execInt(f: Frame): Rep[Int] = exec(f).AsInstanceOf[Int] //= exec(f) match { case x: Int => x case x => throw Unexpected(x) }
@@ -184,15 +184,15 @@ class TestInterpret extends FileDiffSuite {
       }
     }
 
-    def compileFun(f: Fun): Rep[RFun] = dcompile(staticData[Compile](self), 
+    def compileFun(f: Fun): Rep[RFun] = dcompile(staticData[Compile](self),
       (x: Rep[HashMap[String,Any]]) => f.exec(new Frame(x)),
       (x: Rep[HashMap[String,Any]]) => f.execInt(new Frame(x)))
-    
+
     def compileFun1(f: Fun): Rep[RFun] = staticData[RFun](new RFun {
-      
+
       val fAny = compile((x: Rep[HashMap[String,Any]]) => f.exec(new Frame(x)))
       val fInt = compile((x: Rep[HashMap[String,Any]]) => f.execInt(new Frame(x)))
-      
+
       def exec(f: HashMap[String,Any]): Any = fAny(f)
       def execInt(f: HashMap[String,Any]): Int = fInt(f)
     })
@@ -322,7 +322,7 @@ class TestInterpret extends FileDiffSuite {
 
   }
 
-  trait InterpretStagedReopt extends DSL with Equal with NumericOps with PrimitiveOps with HashMapOps 
+  trait InterpretStagedReopt extends DSL with Equal with NumericOps with PrimitiveOps with HashMapOps
       with ArrayOps with CellOps with StableVars with StaticData { self =>
 
     // option 1: stage fully, one big method -- remove interpreter abstraction overhead but retain generic types
@@ -331,15 +331,15 @@ class TestInterpret extends FileDiffSuite {
     // (this one uses option 3)
 
     import java.util.HashMap
-    
+
     //def infix_exec(x: Rep[Fun], f: Rep[HashMap[String,Any]]): Rep[Any]
     //def infix_execInt(x: Rep[Fun], f: Rep[HashMap[String,Any]]): Rep[Int]
-    
-    //def dcompile(x: Rep[Compile], fA: Rep[HashMap[String,Any]]=>Rep[Any], 
+
+    //def dcompile(x: Rep[Compile], fA: Rep[HashMap[String,Any]]=>Rep[Any],
     //                              fI: Rep[HashMap[String,Any]]=>Rep[Int]): Rep[RFun]
-    
+
     class Frame(val data: Rep[HashMap[String, Any]])
-    
+
     abstract class Fun {
       override def toString = "FUN:"+ this.getClass.getName + "@XXX"
       def exec(f: Frame)(k: Rep[Any] => Continue[Any]): Continue[Any]
@@ -478,7 +478,7 @@ class TestInterpret extends FileDiffSuite {
     override def toString = "IR:" + getClass.getName
 
     import java.util.HashMap
-        
+
     case class RFunExec(x: Rep[RFun], f: Rep[HashMap[String,Any]]) extends Def[Any]
     case class RFunExecInt(x: Rep[RFun], f: Rep[HashMap[String,Any]]) extends Def[Int]
 
@@ -489,7 +489,7 @@ class TestInterpret extends FileDiffSuite {
 
     def dcompile(x: Rep[Compile], fA: Rep[HashMap[String,Any]]=>Rep[Any],
       fI: Rep[HashMap[String,Any]]=>Rep[Int]): Rep[RFun] =
-      unchecked("new ",manifest[RFun]," {\n"+/*}*/
+      unchecked("new ",typeRep[RFun]," {\n"+/*}*/
         "type Rep[T] = ",x,".Rep[T]\n"+
         "type HM = java.util.HashMap[String,Any]\n"+
         "val fAny = ",x,".compile(",staticData[AnyRef](fA),".asInstanceOf[Rep[HM]=>Rep[Any]])\n"+
@@ -509,10 +509,10 @@ class TestInterpret extends FileDiffSuite {
       case _ => super.emitNode(sym, rhs)
     }
   }
-  
-  
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
-    with IfThenElse with While with RangeOps with Print with Compile with NumericOps with PrimitiveOps 
+
+
+  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables
+    with IfThenElse with While with RangeOps with Print with Compile with NumericOps with PrimitiveOps
     with ArrayOps with HashMapOps with CastingOps {
 
     def test(): Unit
@@ -521,7 +521,7 @@ class TestInterpret extends FileDiffSuite {
   trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp
     with EqualExpOpt with IfThenElseFatExp with LoopsFatExp with WhileExp
     with RangeOpsExp with PrintExp with FatExpressions with CompileScala
-    with NumericOpsExp with PrimitiveOpsExp with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp 
+    with NumericOpsExp with PrimitiveOpsExp with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp
     with InterpretStagedExp { self =>
     override val verbosity = 1
     dumpGeneratedCode = true
@@ -532,8 +532,8 @@ class TestInterpret extends FileDiffSuite {
 
   trait Codegen extends ScalaGenVector with ScalaGenArith with ScalaGenOrderingOps with ScalaGenBooleanOps
     with ScalaGenVariables with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenWhile
-    with ScalaGenRangeOps with ScalaGenPrint 
-    with ScalaGenNumericOps with ScalaGenPrimitiveOps with ScalaGenArrayOps with ScalaGenHashMapOps with ScalaGenCastingOps with ScalaGenStaticData 
+    with ScalaGenRangeOps with ScalaGenPrint
+    with ScalaGenNumericOps with ScalaGenPrimitiveOps with ScalaGenArrayOps with ScalaGenHashMapOps with ScalaGenCastingOps with ScalaGenStaticData
     with ScalaGenInterp with ScalaGenCellOps with ScalaGenUncheckedOps {
     val IR: Impl
   }
@@ -597,8 +597,8 @@ class TestInterpret extends FileDiffSuite {
         }
         */
 
-        val q = compile { env: Rep[java.util.HashMap[String,Any]] => 
-        
+        val q = compile { env: Rep[java.util.HashMap[String,Any]] =>
+
           val p = SeqN(List(
             AssignN("x", ConstN(0)),
             WhileN(LookupN("n"), SeqN(List(
@@ -610,7 +610,7 @@ class TestInterpret extends FileDiffSuite {
 
           p.exec(new Frame(env))
         }
-        
+
         val env = new java.util.HashMap[String,Any]()
         env.put("n",256)
         env.put("a", scala.Array.tabulate(256)(2*_))
@@ -636,8 +636,8 @@ class TestInterpret extends FileDiffSuite {
         }
         */
 
-        val q = compileStable { env: Rep[java.util.HashMap[String,Any]] => 
-        
+        val q = compileStable { env: Rep[java.util.HashMap[String,Any]] =>
+
           var x = env// go through a var, because we currently rely on def lookup which fails for free syms
           val env1 = x
 
@@ -652,7 +652,7 @@ class TestInterpret extends FileDiffSuite {
 
           p.exec(new Frame(env1))(r=>Done(r))
         }
-        
+
         val env = new java.util.HashMap[String,Any]()
         env.put("n",256)
         env.put("a", "SomethingElse") // "a" -> scala.Array.tabulate(256)(2*_)

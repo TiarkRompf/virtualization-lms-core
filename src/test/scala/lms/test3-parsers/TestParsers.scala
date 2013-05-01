@@ -34,8 +34,8 @@ class TestParsers extends FileDiffSuite {
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll with FlatResult // with ControlOpt
         with DisableCSE {
           type Elem = Char
-          implicit val mE = manifest[Char]
-          //implicit val mI = manifest[List[Char]]
+          implicit val mE = typeRep[Char]
+          //implicit val mI = typeRep[List[Char]]
           def toElem(c: Char) = c
         }
       import ParsersProgExp._
@@ -56,8 +56,8 @@ class TestParsers extends FileDiffSuite {
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll with FlatResult // with ControlOpt
         {
           type Elem = Char
-          implicit val mE = manifest[Char]
-          //implicit val mI = manifest[List[Char]]
+          implicit val mE = typeRep[Char]
+          //implicit val mI = typeRep[List[Char]]
           def toElem(c: Char) = c
         }
       import ParsersProgExp._

@@ -18,7 +18,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   var kernelInputVars: List[Sym[Any]] = Nil
   var kernelOutputs: List[Sym[Any]] = Nil
 
-  private def deref[A](m: Manifest[A]): String = {
+  private def deref[A](m:TypeRep[A]): String = {
     if (isPrimitiveType(m)) remap(m) + " "
     else remap(m) + " * "
   }
@@ -29,7 +29,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     else
       stream.println(deref(sym.tp) + quote(sym) + " = " + rhs + ";")
   }
-  
+
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
     kernelInputVals = vals
     kernelInputVars = vars
@@ -58,13 +58,13 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
-  def emitForwardDef[A:Manifest](args: List[Manifest[_]], functionName: String, out: PrintWriter) = {
-    out.println(remap(manifest[A])+" "+functionName+"("+args.map(a => remap(a)).mkString(", ")+");")
+  def emitForwardDef[A:TypeRep](args: List[TypeRep[_]], functionName: String, out: PrintWriter) = {
+    out.println(remap(typeRep[A])+" "+functionName+"("+args.map(a => remap(a)).mkString(", ")+");")
   }
 
-  def emitSource[A:Manifest](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
+  def emitSource[A:TypeRep](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
 
-    val sA = remap(manifest[A])
+    val sA = remap(typeRep[A])
 
     withStream(out) {
       stream.println("/*****************************************\n"+

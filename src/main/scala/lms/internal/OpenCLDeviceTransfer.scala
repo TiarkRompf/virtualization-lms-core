@@ -8,7 +8,7 @@ trait OpenCLDeviceTransfer extends AbstractDeviceTransfer {
   val IR: Expressions
   import IR._
 
-  def emitSendSlave(tp: Manifest[Any]): (String,String) = {
+  def emitSendSlave(tp:TypeRep[Any]): (String,String) = {
     if (isPrimitiveType(tp)) {
       val out = new StringBuilder
       val signature = "%s sendOpenCL_%s(%s sym)".format(remap(tp),mangledName(remap(tp)),remap(tp))
@@ -22,7 +22,7 @@ trait OpenCLDeviceTransfer extends AbstractDeviceTransfer {
     }
   }
 
-  def emitRecvSlave(tp: Manifest[Any]): (String,String) = {
+  def emitRecvSlave(tp:TypeRep[Any]): (String,String) = {
     if (isPrimitiveType(tp)) {
       val out = new StringBuilder
       val signature = "%s recvOpenCL_%s(%s sym)".format(remap(tp),mangledName(remap(tp)),remap(tp))
@@ -66,7 +66,7 @@ trait OpenCLDeviceTransfer extends AbstractDeviceTransfer {
     }
   }
 */
-  def emitSendUpdateSlave(tp: Manifest[Any]): (String,String) = {
+  def emitSendUpdateSlave(tp:TypeRep[Any]): (String,String) = {
     if(isPrimitiveType(tp)) {
       val out = new StringBuilder
       val signature = "void sendUpdateOpenCL_%s(%s sym)".format(mangledName(remap(tp)),remap(tp))
@@ -80,7 +80,7 @@ trait OpenCLDeviceTransfer extends AbstractDeviceTransfer {
     }
   }
 
-  def emitRecvUpdateSlave(tp: Manifest[Any]): (String,String) = {
+  def emitRecvUpdateSlave(tp:TypeRep[Any]): (String,String) = {
     if(isPrimitiveType(tp)) {
       val out = new StringBuilder
       val signature = "void recvUpdateOpenCL_%s(%s sym)".format(mangledName(remap(tp)),remap(tp))

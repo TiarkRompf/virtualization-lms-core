@@ -7,7 +7,42 @@ import scala.reflect.SourceContext
  * This trait automatically lifts any concrete instance to a representation.
  */
 trait LiftAll extends Base {
-  protected implicit def __unit[T:Manifest](x: T) = unit(x)
+  protected implicit def __unit[T:TypeRep](x: T) = unit(x)
+}
+
+/**
+ * Component for abstraction over the run-time representation of types. The `TypeRep` abstraction
+ * can carry additional information with the run-time type (e.g. bit width for hardware representation).
+ *
+ * NOTE: Parametric types must be lifted explicitly since compiler does not generate
+ * TypeRep[X[T]] if implict TypeRep[T] is in scope. For example, @see LiftArrayType.
+ */
+trait TypeRepBase {
+  trait TypeRep[T] {
+    def mf: Manifest[T]
+
+    def typeArguments: List[Manifest[_]]
+    def arrayManifest: Manifest[Array[T]]
+    def runtimeClass: java.lang.Class[_]
+    def erasure: java.lang.Class[_]
+    def <:<(that: TypeRep[_]): Boolean
+  }
+
+  case class TypeExp[T](mf: Manifest[T]) extends TypeRep[T] {
+    def typeArguments: List[Manifest[_]]   = mf.typeArguments
+    def arrayManifest: Manifest[Array[T]] = mf.arrayManifest
+    def runtimeClass: java.lang.Class[_] = mf.runtimeClass
+    def <:<(that: TypeRep[_]): Boolean = mf.<:<(that.mf)
+    def erasure: java.lang.Class[_] = mf.erasure
+    override def canEqual(that: Any): Boolean = mf.canEqual(that)
+    override def equals(that: Any): Boolean = mf.equals(that)
+    override def hashCode = mf.hashCode
+    override def toString = mf.toString
+  }
+
+  def typeRep[T](implicit tr: TypeRep[T]): TypeRep[T] = tr
+  implicit def typeRepFromManifest[T](implicit mf: Manifest[T]): TypeRep[T] = TypeExp(mf)
+  implicit def convertFromManifest[T](mf: Manifest[T]): TypeRep[T] = TypeExp(mf)
 }
 
 /**
@@ -16,12 +51,12 @@ trait LiftAll extends Base {
  *
  * @since 0.1
  */
-trait Base extends EmbeddedControls {
+trait Base extends EmbeddedControls with TypeRepBase {
   type API <: Base
 
   type Rep[+T]
 
-  protected def unit[T:Manifest](x: T): Rep[T]
+  protected def unit[T:TypeRep](x: T): Rep[T]
 
   // always lift Unit and Null (for now)
   implicit def unitToRepUnit(x: Unit) = unit(x)
@@ -36,7 +71,7 @@ trait Base extends EmbeddedControls {
 trait BaseExp extends Base with Expressions with Blocks with Transforming {
   type Rep[+T] = Exp[T]
 
-  protected def unit[T:Manifest](x: T) = Const(x)
+  protected def unit[T:TypeRep](x: T) = Const(x)
 }
 
 trait BlockExp extends BaseExp
@@ -58,13 +93,13 @@ trait EffectExp extends BaseExp with Effects {
       mayWrite = t.onlySyms(u.mayWrite), mstWrite = t.onlySyms(u.mstWrite))
   }
 
-  override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
+  override def mirrorDef[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
     case Reflect(x, u, es) => Reflect(mirrorDef(x,f), mapOver(f,u), f(es))
     case Reify(x, u, es) => Reify(f(x), mapOver(f,u), f(es))
     case _ => super.mirrorDef(e,f)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
+  override def mirror[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
 /*
     case Reflect(x, u, es) =>
       reifyEffects {

@@ -32,7 +32,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   protected var inVars = List[Sym[Any]]()
   protected val boundMap = HashMap[Exp[Int],Exp[Int]]()
 
-  protected def registerTempAlloc(sym:Sym[Any], tp:Manifest[Any], size:Exp[Int]):String = {
+  protected def registerTempAlloc(sym:Sym[Any], tp:TypeRep[Any], size:Exp[Int]):String = {
     metaData.temps prepend TempAlloc(quote(sym)+"_temp",remap(tp),quote(size))
     quote(sym) + "_temp"
   }
@@ -43,19 +43,19 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   var metaData: GPUMetaData = null
 
   final class LoopElem(val elemType: String, val types: Map[String,String]) {
-    val funcs = new HashMap[String,List[String]]() // Mapping of function name to the argument list   
+    val funcs = new HashMap[String,List[String]]() // Mapping of function name to the argument list
 
     override def toString: String = {
-      "{\"elemType\":\"" + 
-      elemType + 
-      "\",\"types\":" + 
-      types.map(t => "\"" + t._1 + "\":\"" + t._2 + "\"").mkString("{",",","}") + 
-      ",\"funcs\":" + 
-      funcs.map(f => "\"" + f._1 + "\":[" + f._2.map(i => "\"" + i +  "\"").mkString(",") + "]").mkString("{",",","}") + 
+      "{\"elemType\":\"" +
+      elemType +
+      "\",\"types\":" +
+      types.map(t => "\"" + t._1 + "\":\"" + t._2 + "\"").mkString("{",",","}") +
+      ",\"funcs\":" +
+      funcs.map(f => "\"" + f._1 + "\":[" + f._2.map(i => "\"" + i +  "\"").mkString(",") + "]").mkString("{",",","}") +
       "}"
     }
   }
-  
+
   case class TempAlloc(sym: String, tp: String, size:String)
 
   final class GPUMetaData(val kernelInputs: List[Sym[Any]]) {
@@ -120,7 +120,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     actRecordStream.flush
   }
 
-  override def emitTransferFunctions() {    
+  override def emitTransferFunctions() {
     for (tp <- dsTypesList) {
       // Emit input copy helper functions for object type inputs
       //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
@@ -189,7 +189,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
         }
       }
       catch {
-        case e: GenerationFailedException => 
+        case e: GenerationFailedException =>
           helperFuncStream.flush
           headerStream.flush
         case e: Exception => throw(e)
