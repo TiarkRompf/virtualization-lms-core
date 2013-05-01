@@ -17,7 +17,7 @@ object LMSBuild extends Build {
   //val prereleaseScalaTest = "Pre-Release ScalaTest" at "https://scala-webapps.epfl.ch/jenkins/view/2.10.x/job/community-nightly-2.10.0/ws/target/repositories/bccb0f4eb0bf6024577064915da437e3574281cb/"
 
   lazy val scalaTest = "org.scalatest" % "scalatest_2.10" % "2.0.M5b" % "test"
-  
+
   val virtScala = Option(System.getenv("SCALA_VIRTUALIZED_VERSION")).getOrElse("2.10.1")
 
   lazy val buildSettings = Seq(

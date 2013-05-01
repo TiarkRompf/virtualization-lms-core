@@ -1,7 +1,7 @@
 package scala.lms
 package util
 
-// hack to appease erasure
+// hack to appease.runtimeClass
 
 trait OverloadHack {
   class Overloaded1

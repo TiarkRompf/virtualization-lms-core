@@ -303,9 +303,9 @@ trait GPUCodegen extends CLikeCodegen {
     }
   }
 
-  override def remap[A](m: Manifest[A]) : String = {
+  override def remap[A](m: TypeRep[A]) : String = {
     checkGPUableType(m)
-    if (m.erasure == classOf[Variable[AnyVal]])
+    if (m.runtimeClass == classOf[Variable[AnyVal]])
       remap(m.typeArguments.head)
     else {
       m.toString match {
@@ -323,40 +323,40 @@ trait GPUCodegen extends CLikeCodegen {
     }
   }
 
-  def isPrimitiveType[A](m: Manifest[A]) : Boolean = {
+  def isPrimitiveType[A](m: TypeRep[A]) : Boolean = {
     m.toString match {
       case "Boolean" | "Byte" | "Char" | "Short" | "Int" | "Long" | "Float" | "Double" => true
       case _ => false
     }
   }
 
-  def isVoidType[A](m: Manifest[A]) : Boolean = {
+  def isVoidType[A](m: TypeRep[A]) : Boolean = {
     m.toString match {
       case "Unit" => true
       case _ => false
     }
   }
 
-  def isVariableType[A](m: Manifest[A]) : Boolean = {
-    if(m.erasure == classOf[Variable[AnyVal]]) true
+  def isVariableType[A](m: TypeRep[A]) : Boolean = {
+    if(m.runtimeClass == classOf[Variable[AnyVal]]) true
     else false
   }
 
   // Check the type and generate Exception if the type is not GPUable
-  def checkGPUableType[A](m: Manifest[A]) : Unit = {
+  def checkGPUableType[A](m: TypeRep[A]) : Unit = {
     if(!isGPUableType(m))
       throw new GenerationFailedException("GPUGen: Type %s is not a GPUable Type.".format(m.toString))
   }
 
   // All the types supported by GPU Generation
-  def isGPUableType[A](m : Manifest[A]) : Boolean = {
+  def isGPUableType[A](m : TypeRep[A]) : Boolean = {
     if(!isObjectType(m) && !isPrimitiveType(m) && !isVoidType(m) && !isVariableType(m))
       false
     else
       true
   }
 
-  def unpackObject[A](sym: Sym[Any]) : Map[String,Manifest[_]] = remap(sym.tp) match {
+  def unpackObject[A](sym: Sym[Any]) : Map[String,TypeRep[_]] = remap(sym.tp) match {
     case _ => throw new GenerationFailedException("GPUCodegen: Type %s cannot be unpacked.".format(sym.tp.toString))
   }
 

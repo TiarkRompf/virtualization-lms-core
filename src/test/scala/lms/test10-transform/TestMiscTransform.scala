@@ -48,7 +48,7 @@ trait SimpleBlockTransformer extends internal.FatBlockTraversal {
       val trans = new AbstractTransformer {
         val IR: SimpleBlockTransformer.this.IR.type = SimpleBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = x
-        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
+        override def apply[A:TypeRep](x: Block[A]) = transformBlock(x)
       }
       List(TP(s, mirrorDef(d, trans)(mtype(s.tp),mpos(s.pos))))
     // blocks(d) map transformBlock
@@ -114,7 +114,7 @@ trait NestedBlockTransformer extends internal.FatBlockTraversal {
       val trans = new AbstractTransformer {
         val IR: NestedBlockTransformer.this.IR.type = NestedBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
-        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
+        override def apply[A:TypeRep](x: Block[A]) = transformBlock(x)
       }
       List(TP(s, mirrorDef(d, trans)(mtype(s.tp),mpos(s.pos))))
     // blocks(d) map transformBlock
@@ -179,7 +179,7 @@ trait MirrorBlockTransformer extends internal.FatBlockTraversal {
       val trans = new AbstractTransformer {
         val IR: MirrorBlockTransformer.this.IR.type = MirrorBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
-        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
+        override def apply[A:TypeRep](x: Block[A]) = transformBlock(x)
       }
       mirror(d,trans)(mtype(s.tp),mpos(s.pos))
   }
@@ -216,7 +216,7 @@ trait MirrorRetainBlockTransformer extends MirrorBlockTransformer {
       val trans = new AbstractTransformer {
         val IR: MirrorRetainBlockTransformer.this.IR.type = MirrorRetainBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
-        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
+        override def apply[A:TypeRep](x: Block[A]) = transformBlock(x)
       }
       mirror(d,trans)(mtype(s.tp),mpos(s.pos))
   }
@@ -233,7 +233,7 @@ trait FWXTransform extends BaseFatExp with EffectExp with IfThenElseFatExp with 
 
   var subst: Map[Sym[_], Exp[_]] = xform.subst
 
-  override implicit def toAtom[A:Manifest](d: Def[A]): Exp[A] = { // override createDefinition instead?
+  override implicit def toAtom[A:TypeRep](d: Def[A]): Exp[A] = { // override createDefinition instead?
     val in = syms(d)
     val actual = in map (s => subst.getOrElse(s,s))
 
@@ -286,9 +286,10 @@ class TestMisc extends FileDiffSuite {
         print(b)
       }
     }
-    val p = new Prog with Impl
-    val x = p.fresh[Int]
-    val y = p.reifyEffects(p.test(x))
+    val p = new Prog with Impl {
+      val x = fresh[Int]
+      val y = reifyEffects(test(x))
+    }
 
     val codegen = new Codegen { val IR: p.type = p }
 
@@ -298,7 +299,7 @@ class TestMisc extends FileDiffSuite {
 
     println("-- before transformation")
     codegen.withStream(new PrintWriter(System.out)) {
-      codegen.emitBlock(y)
+      codegen.emitBlock(p.y)
     }
 
     p.globalDefs = Nil // reset graph, transformer will build anew

@@ -125,9 +125,9 @@ trait CudaCodegen extends GPUCodegen {
     throw new GenerationFailedException("CudaGen: cloneObject(sym)")
   }
 
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
+  def emitSource[A :TypeRep](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
 
-    val sB = manifest[A].toString
+    val sB = typeRep[A].toString
 
     withStream(out) {
       stream.println("/*****************************************\n"+

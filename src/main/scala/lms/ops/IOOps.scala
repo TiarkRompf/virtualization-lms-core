@@ -101,7 +101,7 @@ trait IOOpsExp extends IOOps with EffectExp {
   def br_readline(b: Exp[BufferedReader])(implicit pos: SourceContext) : Exp[String] = reflectEffect(BrReadline(b))
   def br_close(b: Exp[BufferedReader])(implicit pos: SourceContext) : Exp[Unit] = reflectEffect(BrClose(b))
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
+  override def mirror[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     e match {
       case Reflect(ObjFrApply(s), u, es) => obj_fr_apply(f(s))
       case Reflect(ObjBrApply(x), u, es) => obj_br_apply(f(x))

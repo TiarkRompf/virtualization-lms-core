@@ -37,7 +37,7 @@ trait OpenCLCodegen extends GPUCodegen {
   }
 
   /*
-  override def isObjectType[A](m: Manifest[A]) : Boolean = {
+  override def isObjectType[A](m: TypeRep[A]) : Boolean = {
     m.toString match {
       case "scala.collection.immutable.List[Int]" => true
         //TODO: ObjectTypes needs to be able to broken down, but array does not have to be.
@@ -49,9 +49,9 @@ trait OpenCLCodegen extends GPUCodegen {
   */
 
   /*
-  override def remap[A](m: Manifest[A]) : String = {
+  override def remap[A](m: TypeRep[A]) : String = {
     checkGPUableType(m)
-    if (m.erasure == classOf[Variable[AnyVal]])
+    if (m.runtimeClass == classOf[Variable[AnyVal]])
       remap(m.typeArguments.head)
     else {
       m.toString match {
@@ -78,7 +78,7 @@ trait OpenCLCodegen extends GPUCodegen {
   */
 
   /*
-  override def unpackObject[A](sym: Sym[Any]) : Map[String,Manifest[_]] = remap(sym.Type) match {
+  override def unpackObject[A](sym: Sym[Any]) : Map[String,TypeRep[_]] = remap(sym.Type) match {
     case "OpenCLIntList" => Map("length"->Manifest.Int)    //TODO: How to initialize the data array type for the list?
     case _ => throw new GenerationFailedException("OpenCLGen: Type %s cannot be unpacked.".format(sym.Type.toString))
   }
@@ -162,8 +162,8 @@ trait OpenCLCodegen extends GPUCodegen {
     throw new GenerationFailedException("OpenCLGen: cloneObject(sym)")
   }
 
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
-    val sB = manifest[A].toString
+  def emitSource[A :TypeRep](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
+    val sB = typeRep[A].toString
 
     withStream(out) {
       stream.println("/*****************************************\n"+

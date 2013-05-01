@@ -18,7 +18,7 @@ class TestHMM extends FileDiffSuite {
 
   trait DSL extends LiftNumeric with NumericOps with ArrayOps with RangeOps with BooleanOps
     with LiftVariables with IfThenElse with Print {
-    def staticData[T:Manifest](x: T): Rep[T]
+    def staticData[T:TypeRep](x: T): Rep[T]
     def test(x: Rep[Array[Int]]): Rep[Array[Int]]
   }
   trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt with OrderingOpsExpOpt with BooleanOpsExp
@@ -135,7 +135,7 @@ class TestHMM extends FileDiffSuite {
         }
       }
       new Prog with Impl {
-        override def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int])(implicit pos: SourceContext): Exp[T] = (x,n) match {
+        override def array_apply[T:TypeRep](x: Exp[Array[T]], n: Exp[Int])(implicit pos: SourceContext): Exp[T] = (x,n) match {
           case (Def(StaticData(x:Array[T])), Const(n)) => Const(x(n))
           case _ => super.array_apply(x,n)
         }

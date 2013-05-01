@@ -19,9 +19,9 @@ trait ScalaCodegen extends GenericCodegen with Config {
       outFile.delete
   }
 
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
+  def emitSource[A :TypeRep](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
 
-    val sA = remap(manifest[A])
+    val sA = remap(typeRep[A])
 
     val staticData = getFreeDataBlock(body)
 

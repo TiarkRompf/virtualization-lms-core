@@ -21,7 +21,7 @@ class TestList extends FileDiffSuite {
       xs ++ List(unit(1), unit(2), unit(3))
 
     def emptyLeft(xs: Rep[List[Int]]): Rep[List[Int]] =
-      List() ++ xs
+      (List(): Rep[List[Int]]) ++ xs
 
     def emptyRight(xs: Rep[List[Int]]): Rep[List[Int]] =
       xs ++ List()

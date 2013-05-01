@@ -11,20 +11,20 @@ trait SynchronizedArrayBufferOps extends ArrayBufferOps {
 
 /*
   object SynchronizedArrayBuffer {
-    def apply[A:Manifest](xs: Rep[A]*)(implicit pos: SourceContext) = arraybuffer_new(xs)
+    def apply[A:TypeRep](xs: Rep[A]*)(implicit pos: SourceContext) = arraybuffer_new(xs)
   }
 */
 
 }
 
-trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with ArrayBufferOpsExp {
-  case class SyncArrayBufferNew[A:Manifest](xs: Seq[Exp[A]]) extends Def[ArrayBuffer[A]]  {
-    val mA = manifest[A]
+trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with ArrayBufferOpsExp with LiftArrayBufferType {
+  case class SyncArrayBufferNew[A:TypeRep](xs: Seq[Exp[A]]) extends Def[ArrayBuffer[A]]  {
+    val mA = typeRep[A]
   }
 
   // all array buffers are synchronized (nackward compat). TODO: separate constructor
 
-  override def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]])(implicit pos: SourceContext) = reflectMutable(SyncArrayBufferNew(xs))
+  override def arraybuffer_new[A:TypeRep](xs: Seq[Exp[A]])(implicit pos: SourceContext) = reflectMutable(SyncArrayBufferNew(xs))
 }
 
 trait BaseGenSynchronizedArrayBufferOps extends BaseGenArrayBufferOps {

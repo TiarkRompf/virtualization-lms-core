@@ -11,7 +11,7 @@ import java.io.PrintWriter
 trait JSCodegen extends GenericCodegen {
   import IR._
 
-  def emitHTMLPage[B](f: () => Exp[B], stream: PrintWriter)(implicit mB: Manifest[B]): Unit = {
+  def emitHTMLPage[B](f: () => Exp[B], stream: PrintWriter)(implicit mB: TypeRep[B]): Unit = {
     stream.println("<html><head><title>Scala2JS</title><script type=\"text/JavaScript\">")
 
     emitSource((x:Exp[Int]) => f(), "main", stream)
@@ -21,7 +21,7 @@ trait JSCodegen extends GenericCodegen {
     stream.flush
   }
 
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], methName: String, out: PrintWriter) = {
+  def emitSource[A :TypeRep](args: List[Sym[_]], body: Block[A], methName: String, out: PrintWriter) = {
     withStream(out) {
       stream.println("function "+methName+"("+args.map(quote).mkString(", ")+") {")
 

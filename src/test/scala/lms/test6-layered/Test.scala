@@ -37,7 +37,7 @@ trait UtilExp extends BaseExp with Utils {
 
   case class Tup[A,B](a: Exp[A],b: Exp[B]) extends Def[(A,B)]
 
-  case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
+  case class External[A:TypeRep](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
 
 }
 
@@ -66,7 +66,7 @@ trait ScalaGenUtil extends ScalaGenBase {
 trait Vectors extends Utils {
 
   type Vector
-  implicit def mV: Manifest[Vector]
+  implicit def mV:TypeRep[Vector]
 
   def ZeroVector(n: Rep[Int]): Rep[Vector]
   def RandomVector(n: Rep[Int]): Rep[Vector]
@@ -86,7 +86,7 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
     case _ => Apply(vectorPlus, toAtom(Tup(a, b)))
   }
 
-  class ApplyExtractor[A:Manifest,B:Manifest](f: Exp[A => B]) {
+  class ApplyExtractor[A:TypeRep,B:TypeRep](f: Exp[A => B]) {
     def apply(x: Exp[A]): Exp[B] = Apply(f,x)
     def unapply(e: Def[B]): Option[Exp[A]] = e match {
       case Apply(`f`, x: Exp[A]) => Some(x)

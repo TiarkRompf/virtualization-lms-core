@@ -6,12 +6,19 @@ import util.OverloadHack
 import java.io.PrintWriter
 import scala.reflect.SourceContext
 
+trait LiftVarType { this: Variables =>
+  implicit def liftVar[T](implicit t: TypeRep[T]): TypeRep[Var[T]] = {
+    implicit val mf = t.mf
+    typeRep[Var[T]]
+  }
+}
+
 trait LiftVariables extends Base {
   this: Variables =>
 
-  def __newVar[T:Manifest](init: T)(implicit pos: SourceContext) = var_new(unit(init))
-  def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_new(init)
-  def __newVar[T](init: Var[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_new(init)
+  def __newVar[T:TypeRep](init: T)(implicit pos: SourceContext) = var_new(unit(init))
+  def __newVar[T](init: Rep[T])(implicit o: Overloaded1, mT: TypeRep[T], pos: SourceContext) = var_new(init)
+  def __newVar[T](init: Var[T])(implicit o: Overloaded2, mT: TypeRep[T], pos: SourceContext) = var_new(init)
 }
 
 // ReadVar is factored out so that it does not have higher priority than VariableImplicits when mixed in
@@ -19,16 +26,16 @@ trait LiftVariables extends Base {
 trait ReadVarImplicit {
   this: Variables =>
 
-  implicit def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext) : Rep[T]
+  implicit def readVar[T:TypeRep](v: Var[T])(implicit pos: SourceContext) : Rep[T]
 }
 
 trait ReadVarImplicitExp extends EffectExp {
   this: VariablesExp =>
 
-  implicit def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext) : Exp[T] = ReadVar(v)
+  implicit def readVar[T:TypeRep](v: Var[T])(implicit pos: SourceContext) : Exp[T] = ReadVar(v)
 }
 
-trait LowPriorityVariableImplicits extends ImplicitOps {
+trait LowPriorityVariableImplicits extends ImplicitOps with LiftVariables {
   this: Variables =>
 
   implicit def varIntToRepDouble(x: Var[Int])(implicit pos: SourceContext): Rep[Double] = implicit_convert[Int,Double](readVar(x))
@@ -48,37 +55,44 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
   type Var[+T] //FIXME: should be invariant
 
   //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
-  def var_new[T:Manifest](init: Rep[T])(implicit pos: SourceContext): Var[T]
-  def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
-  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
-  def var_minusequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
-  def var_timesequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
-  def var_divideequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
+  def var_new[T:TypeRep](init: Rep[T])(implicit pos: SourceContext): Var[T]
+  def var_assign[T:TypeRep](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
+  def var_plusequals[T:TypeRep](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
+  def var_minusequals[T:TypeRep](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
+  def var_timesequals[T:TypeRep](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
+  def var_divideequals[T:TypeRep](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
 
-  def __assign[T:Manifest](lhs: Var[T], rhs: T)(implicit pos: SourceContext) = var_assign(lhs, unit(rhs))
-  def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_assign(lhs, rhs)
-  def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_assign(lhs, readVar(rhs))
+  def __assign[T:TypeRep](lhs: Var[T], rhs: T)(implicit pos: SourceContext) = var_assign(lhs, unit(rhs))
+  def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: TypeRep[T], pos: SourceContext) = var_assign(lhs, rhs)
+  def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: TypeRep[T], pos: SourceContext) = var_assign(lhs, readVar(rhs))
 /*
-  def __assign[T,U](lhs: Var[T], rhs: Rep[U])(implicit o: Overloaded2, mT: Manifest[T], mU: Manifest[U], conv: Rep[U]=>Rep[T]) = var_assign(lhs, conv(rhs))
+  def __assign[T,U](lhs: Var[T], rhs: Rep[U])(implicit o: Overloaded2, mT: TypeRep[T], mU: TypeRep[U], conv: Rep[U]=>Rep[T]) = var_assign(lhs, conv(rhs))
 */
 
   // TODO: why doesn't this implicit kick in automatically? <--- do they belong here? maybe better move to NumericOps
   // we really need to refactor this. +=/-= shouldn't be here or in Arith, but in some other type class, which includes Numeric variables
-  def infix_+=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_plusequals(lhs, unit(rhs))
-  def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_plusequals(lhs,rhs)
-  def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T], pos: SourceContext) = var_plusequals(lhs,readVar(rhs))
-  def infix_-=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_minusequals(lhs, unit(rhs))
-  def infix_-=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_minusequals(lhs,rhs)
-  def infix_-=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T], pos: SourceContext) = var_minusequals(lhs,readVar(rhs))
-  def infix_*=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_timesequals(lhs, unit(rhs))
-  def infix_*=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_timesequals(lhs,rhs)
-  def infix_*=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T], pos: SourceContext) = var_timesequals(lhs,readVar(rhs))
-  def infix_/=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_divideequals(lhs, unit(rhs))
-  def infix_/=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_divideequals(lhs,rhs)
-  def infix_/=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T], pos: SourceContext) = var_divideequals(lhs,readVar(rhs))
+  def infix_+=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: TypeRep[T], pos: SourceContext) = var_plusequals(lhs, unit(rhs))
+  def infix_+=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: TypeRep[T], pos: SourceContext) = var_plusequals(lhs,rhs)
+  def infix_+=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: TypeRep[T], pos: SourceContext) = var_plusequals(lhs,readVar(rhs))
+  def infix_-=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: TypeRep[T], pos: SourceContext) = var_minusequals(lhs, unit(rhs))
+  def infix_-=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: TypeRep[T], pos: SourceContext) = var_minusequals(lhs,rhs)
+  def infix_-=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: TypeRep[T], pos: SourceContext) = var_minusequals(lhs,readVar(rhs))
+  def infix_*=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: TypeRep[T], pos: SourceContext) = var_timesequals(lhs, unit(rhs))
+  def infix_*=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: TypeRep[T], pos: SourceContext) = var_timesequals(lhs,rhs)
+  def infix_*=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: TypeRep[T], pos: SourceContext) = var_timesequals(lhs,readVar(rhs))
+  def infix_/=[T](lhs: Var[T], rhs: T)(implicit o: Overloaded1, mT: TypeRep[T], pos: SourceContext) = var_divideequals(lhs, unit(rhs))
+  def infix_/=[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded2, mT: TypeRep[T], pos: SourceContext) = var_divideequals(lhs,rhs)
+  def infix_/=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: TypeRep[T], pos: SourceContext) = var_divideequals(lhs,readVar(rhs))
 }
 
-trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits with ReadVarImplicitExp {
+trait LiftVariableType { this: VariablesExp =>
+  implicit def liftVariable[T](implicit t: TypeRep[T]): TypeRep[Variable[T]] = {
+    implicit val mf = t.mf
+    typeRep[Variable[T]]
+  }
+}
+
+trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits with ReadVarImplicitExp with LiftVariableType {
   // REMARK:
   // defining Var[T] as Sym[T] is dangerous. If someone forgets to define a more-specific implicit conversion from
   // Var[T] to Ops, e.g. implicit def varToRepStrOps(s: Var[String]) = new RepStrOpsCls(varToRep(s))
@@ -88,40 +102,40 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
   //case class Variable[+T](val e: Exp[Variable[T]]) // FIXME: in Expressions because used by codegen...
   type Var[+T] = Variable[T] //FIXME: should be invariant
 
-  case class ReadVar[T:Manifest](v: Var[T]) extends Def[T]
-  case class NewVar[T:Manifest](init: Exp[T]) extends Def[Variable[T]]
-  case class Assign[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
-  case class VarPlusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
-  case class VarMinusEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
-  case class VarTimesEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
-  case class VarDivideEquals[T:Manifest](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
+  case class ReadVar[T:TypeRep](v: Var[T]) extends Def[T]
+  case class NewVar[T:TypeRep](init: Exp[T]) extends Def[Var[T]]
+  case class Assign[T:TypeRep](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
+  case class VarPlusEquals[T:TypeRep](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
+  case class VarMinusEquals[T:TypeRep](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
+  case class VarTimesEquals[T:TypeRep](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
+  case class VarDivideEquals[T:TypeRep](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
 
-  def var_new[T:Manifest](init: Exp[T])(implicit pos: SourceContext): Var[T] = {
+  def var_new[T:TypeRep](init: Exp[T])(implicit pos: SourceContext): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
     Variable(reflectMutable(NewVar(init)))
   }
 
-  def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
+  def var_assign[T:TypeRep](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(Assign(lhs, rhs))
     Const()
   }
 
-  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
+  def var_plusequals[T:TypeRep](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarPlusEquals(lhs, rhs))
     Const()
   }
 
-  def var_minusequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
+  def var_minusequals[T:TypeRep](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarMinusEquals(lhs, rhs))
     Const()
   }
 
-  def var_timesequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
+  def var_timesequals[T:TypeRep](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarTimesEquals(lhs, rhs))
     Const()
   }
 
-  def var_divideequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
+  def var_divideequals[T:TypeRep](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarDivideEquals(lhs, rhs))
     Const()
   }
@@ -172,14 +186,14 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
 
 
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case Reflect(NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(Assign(Variable(a),b), u, es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(VarPlusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(VarMinusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarMinusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(VarTimesEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarTimesEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(VarDivideEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarDivideEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+  override def mirror[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case Reflect(NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+    case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+    case Reflect(Assign(Variable(a),b), u, es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+    case Reflect(VarPlusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+    case Reflect(VarMinusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarMinusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+    case Reflect(VarTimesEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarTimesEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+    case Reflect(VarDivideEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarDivideEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -188,7 +202,7 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
 
 trait VariablesExpOpt extends VariablesExp {
 
-  override implicit def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext) : Exp[T] = {
+  override implicit def readVar[T:TypeRep](v: Var[T])(implicit pos: SourceContext) : Exp[T] = {
     if (context ne null) {
       // find the last modification of variable v
       // if it is an assigment, just return the last value assigned

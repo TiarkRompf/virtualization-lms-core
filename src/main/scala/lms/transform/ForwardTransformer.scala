@@ -10,7 +10,7 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   val IR: BaseFatExp with EffectExp //LoopsFatExp with IfThenElseFatExp
   import IR._
 
-  def transformBlock[A:Manifest](block: Block[A]): Block[A] = {
+  def transformBlock[A:TypeRep](block: Block[A]): Block[A] = {
     reifyEffects {
       reflectBlock(block)
     }
@@ -18,7 +18,7 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
 
   override def hasContext = true
 
-  override def apply[A:Manifest](xs: Block[A]): Block[A] = transformBlock(xs)
+  override def apply[A:TypeRep](xs: Block[A]): Block[A] = transformBlock(xs)
 
   // perform only one step of lookup, otherwise we confuse things:
   // TODO: should this be changed in AbstractSubstTransformer, too?
@@ -98,7 +98,7 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
 trait RecursiveTransformer extends ForwardTransformer { self =>
   import IR._
 
-  def run[A:Manifest](s: Block[A]): Block[A] = {
+  def run[A:TypeRep](s: Block[A]): Block[A] = {
     transformBlock(s)
   }
 
@@ -149,13 +149,13 @@ trait WorklistTransformer extends ForwardTransformer { // need backward version,
     }
   }
   def isDone = nextSubst.isEmpty
-  def runOnce[A:Manifest](s: Block[A]): Block[A] = {
+  def runOnce[A:TypeRep](s: Block[A]): Block[A] = {
     subst = Map.empty
     curSubst = nextSubst
     nextSubst = Map.empty
     transformBlock(s)
   }
-  def run[A:Manifest](s: Block[A]): Block[A] = {
+  def run[A:TypeRep](s: Block[A]): Block[A] = {
     if (isDone) s else run(runOnce(s))
   }
   override def transformStm(stm: Stm): Exp[Any] = stm match {

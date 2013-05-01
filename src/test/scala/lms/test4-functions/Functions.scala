@@ -11,9 +11,9 @@ import scala.collection.{immutable, mutable}
 
 trait FunctionsExpClever extends test3.FunctionsExp {
 
-  def exec[A:Manifest,B:Manifest](fun: Exp[A]=>Exp[B], arg: Exp[A]): Exp[B]
+  def exec[A:TypeRep,B:TypeRep](fun: Exp[A]=>Exp[B], arg: Exp[A]): Exp[B]
 
-  override def doApply[A:Manifest,B:Manifest](fun: Exp[A => B], arg: Exp[A])(implicit pos: SourceContext): Exp[B] = fun match {
+  override def doApply[A:TypeRep,B:TypeRep](fun: Exp[A => B], arg: Exp[A])(implicit pos: SourceContext): Exp[B] = fun match {
     case Def(Lambda(fun)) =>
       exec(fun, arg)
     case _ => super.doApply(fun, arg)
@@ -23,7 +23,7 @@ trait FunctionsExpClever extends test3.FunctionsExp {
 
 
 trait FunctionExpUnfoldAll extends FunctionsExpClever {
-  def exec[A:Manifest,B:Manifest](fun: Exp[A]=>Exp[B], arg: Exp[A]): Exp[B] = {
+  def exec[A:TypeRep,B:TypeRep](fun: Exp[A]=>Exp[B], arg: Exp[A]): Exp[B] = {
     fun(arg)
   }
 }
@@ -33,7 +33,7 @@ trait FunctionExpUnfoldFixedDepth extends FunctionsExpClever {
   var curDepth: Int = 0
   def maxDepth: Int = 5
 
-  def exec[A:Manifest,B:Manifest](fun: Exp[A]=>Exp[B], arg: Exp[A]): Exp[B] = {
+  def exec[A:TypeRep,B:TypeRep](fun: Exp[A]=>Exp[B], arg: Exp[A]): Exp[B] = {
     if (curDepth < maxDepth) {
       curDepth += 1
       val res = fun(arg)
@@ -50,7 +50,7 @@ trait FunctionExpUnfoldRecursion extends FunctionsExpClever with FunctionsCanoni
   var recursion: List[(Function[_,_], Exp[Any], Int)] = List()
   val maxDepth: Int = 1
 
-  def exec[A:Manifest,B:Manifest](f: Exp[A]=>Exp[B], x: Exp[A]): Exp[B] = {
+  def exec[A:TypeRep,B:TypeRep](f: Exp[A]=>Exp[B], x: Exp[A]): Exp[B] = {
     recursion.find(m => m._1 == f) match {
       case Some((_, y, `maxDepth`)) => // hit recursion bound!
         println("-- hit recursion: " + f.getClass + " " + x + " <- "+ y)
@@ -80,7 +80,7 @@ trait FunctionsCanonical extends FunctionsExp with ClosureCompare {
 
   var funTable: List[(Function[_,_], Any)] = List()
 
-  def lookupFun[A:Manifest,B:Manifest](f: Exp[A]=>Exp[B]): (Exp[A]=>Exp[B]) = {
+  def lookupFun[A:TypeRep,B:TypeRep](f: Exp[A]=>Exp[B]): (Exp[A]=>Exp[B]) = {
     var can = canonicalize(f)
 
     funTable.find(_._2 == can) match {
@@ -94,7 +94,7 @@ trait FunctionsCanonical extends FunctionsExp with ClosureCompare {
   }
 
 
-  override def doLambda[A:Manifest,B:Manifest](fun: Exp[A]=>Exp[B])(implicit pos: SourceContext) = {
+  override def doLambda[A:TypeRep,B:TypeRep](fun: Exp[A]=>Exp[B])(implicit pos: SourceContext) = {
     super.doLambda(lookupFun(fun))
   }
 }
@@ -118,7 +118,7 @@ trait FunctionsExternalDef0 extends FunctionsExp with BlockExp {
 
 trait FunctionsExternalDef01 extends FunctionsExternalDef0 { // not used
 
-  override def doLambda[A:Manifest,B:Manifest](f: Exp[A]=>Exp[B])(implicit pos: SourceContext): Exp[A=>B] = {
+  override def doLambda[A:TypeRep,B:TypeRep](f: Exp[A]=>Exp[B])(implicit pos: SourceContext): Exp[A=>B] = {
     var funSym = fresh[A=>B]
     var argSym = fresh[A]//Sym(-1)
 
@@ -132,7 +132,7 @@ trait FunctionsExternalDef1 extends FunctionsExternalDef0 with ClosureCompare { 
 
   var funTable: List[(Function[_,_], Any, Sym[_])] = List()
 
-  override def doLambda[A:Manifest,B:Manifest](f: Exp[A]=>Exp[B])(implicit pos: SourceContext): Exp[A=>B] = {
+  override def doLambda[A:TypeRep,B:TypeRep](f: Exp[A]=>Exp[B])(implicit pos: SourceContext): Exp[A=>B] = {
     var can = canonicalize(f)
 
     funTable.find(_._2 == can) match {
@@ -160,7 +160,7 @@ trait FunctionsExternalDef1 extends FunctionsExternalDef0 with ClosureCompare { 
 
 trait FunctionsExternalDef2 extends FunctionsCanonical with FunctionsExternalDef0 {
 
-  override def lookupFun[A:Manifest,B:Manifest](f: Exp[A]=>Exp[B]): (Exp[A]=>Exp[B]) = {
+  override def lookupFun[A:TypeRep,B:TypeRep](f: Exp[A]=>Exp[B]): (Exp[A]=>Exp[B]) = {
     var can = canonicalize(f)
 
     funTable.find(_._2 == can) match {

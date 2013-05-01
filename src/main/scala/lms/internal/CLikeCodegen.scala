@@ -31,13 +31,13 @@ trait CLikeCodegen extends GenericCodegen {
     stream.println("}")
   }
 
-  def isObjectType[A](m: Manifest[A]) : Boolean = {
+  def isObjectType[A](m: IR.TypeRep[A]) : Boolean = {
     m.toString match {
       case _ => false
     }
   }
 
-  def remapToJNI[A](m: Manifest[A]) : String = {
+  def remapToJNI[A](m: IR.TypeRep[A]) : String = {
     remap(m) match {
       case "bool" => "Boolean"
       case "char" => "Byte"
@@ -53,7 +53,7 @@ trait CLikeCodegen extends GenericCodegen {
 
 
   // Map a scala primitive type to JNI type descriptor
-  def JNITypeDescriptor[A](m: Manifest[A]) : String = m.toString match {
+  def JNITypeDescriptor[A](m: TypeRep[A]) : String = m.toString match {
     case "Boolean" => "Z"
     case "Byte" => "B"
     case "Char" => "C"

@@ -108,13 +108,13 @@ trait CCodegen extends CLikeCodegen {
     }
   }
 
-  def emitForwardDef[A:Manifest](args: List[Manifest[_]], functionName: String, out: PrintWriter) = {
-    out.println(remap(manifest[A])+" "+functionName+"("+args.map(a => remap(a)).mkString(", ")+");")
+  def emitForwardDef[A:TypeRep](args: List[TypeRep[_]], functionName: String, out: PrintWriter) = {
+    out.println(remap(typeRep[A])+" "+functionName+"("+args.map(a => remap(a)).mkString(", ")+");")
   }
 
-  def emitSource[A:Manifest](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
+  def emitSource[A:TypeRep](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
 
-    val sA = remap(manifest[A])
+    val sA = remap(typeRep[A])
 
     withStream(out) {
       stream.println("/*****************************************\n"+
@@ -239,8 +239,8 @@ trait CCodegen extends CLikeCodegen {
     stream.println(") {")
   }
 
-  override def remap[A](m: Manifest[A]) : String = {
-    if (m.erasure == classOf[Variable[Any]] ) {
+  override def remap[A](m: TypeRep[A]) : String = {
+    if (m.runtimeClass == classOf[Variable[Any]] ) {
       remap(m.typeArguments.head)
     }
     else {
