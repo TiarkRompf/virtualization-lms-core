@@ -7,7 +7,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
   val IR: Expressions
   import IR._
 
-  def emitSend(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
+  def emitSend(tp:TypeRep[Any], host: Hosts.Value): (String,String) = {
     if (host == Hosts.JVM) {
       if (isPrimitiveType(tp)) {
         val out = new StringBuilder
@@ -38,7 +38,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def emitRecv(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
+  def emitRecv(tp:TypeRep[Any], host: Hosts.Value): (String,String) = {
     if (host == Hosts.JVM) {
       if (isPrimitiveType(tp)) {
         val out = new StringBuilder
@@ -69,7 +69,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def emitSendView(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
+  def emitSendView(tp:TypeRep[Any], host: Hosts.Value): (String,String) = {
     if (host == Hosts.JVM) {
       if (isPrimitiveType(tp)) {
         val out = new StringBuilder
@@ -101,7 +101,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def emitRecvView(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
+  def emitRecvView(tp:TypeRep[Any], host: Hosts.Value): (String,String) = {
     if (host == Hosts.JVM) {
       if (isPrimitiveType(tp)) {
         val out = new StringBuilder
@@ -133,7 +133,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def emitSendUpdate(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
+  def emitSendUpdate(tp:TypeRep[Any], host: Hosts.Value): (String,String) = {
     if (host == Hosts.JVM) {
       if(isPrimitiveType(tp)) {
         val out = new StringBuilder
@@ -163,7 +163,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def emitRecvUpdate(tp: Manifest[Any], host: Hosts.Value): (String,String) = {
+  def emitRecvUpdate(tp:TypeRep[Any], host: Hosts.Value): (String,String) = {
     if (host == Hosts.JVM) {
       if(isPrimitiveType(tp)) {
         val out = new StringBuilder
@@ -193,7 +193,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def JNIType[A](m: Manifest[A]) : String = {
+  def JNIType[A](m:TypeRep[A]) : String = {
     remap(m) match {
       case "bool" => "jboolean"
       case "char" => "jbyte"
@@ -207,7 +207,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def remapToJNI[A](m: Manifest[A]) : String = {
+  def remapToJNI[A](m:TypeRep[A]) : String = {
     remap(m) match {
       case "bool" => "Boolean"
       case "char" => "Byte"
@@ -221,7 +221,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def JNITypeDescriptor[A](m: Manifest[A]) : String = JNITypeDescriptor(m.toString)
+  def JNITypeDescriptor[A](m:TypeRep[A]) : String = JNITypeDescriptor(m.toString)
   def JNITypeDescriptor(tp: String): String = tp match {
     case "Boolean" => "Z"
     case "Byte" => "B"

@@ -12,7 +12,7 @@ trait MathOps extends Base {
     def floor(x: Rep[Double])(implicit pos: SourceContext) = math_floor(x)
     def exp(x: Rep[Double])(implicit pos: SourceContext) = math_exp(x)
     def log(x: Rep[Double])(implicit pos: SourceContext) = math_log(x)
-    def log10(x: Rep[Double])(implicit ctx: SourceContext) = math_log10(x)    
+    def log10(x: Rep[Double])(implicit ctx: SourceContext) = math_log10(x)
     def sqrt(x: Rep[Double])(implicit pos: SourceContext) = math_sqrt(x)
     def sin(x: Rep[Double])(implicit pos: SourceContext) = math_sin(x)
     def sinh(x: Rep[Double])(implicit ctx: SourceContext) = math_sinh(x)
@@ -21,13 +21,13 @@ trait MathOps extends Base {
     def cosh(x: Rep[Double])(implicit ctx: SourceContext) = math_cosh(x)
     def acos(x: Rep[Double])(implicit pos: SourceContext) = math_acos(x)
     def tan(x: Rep[Double])(implicit ctx: SourceContext) = math_tan(x)
-    def tanh(x: Rep[Double])(implicit ctx: SourceContext) = math_tanh(x)      
+    def tanh(x: Rep[Double])(implicit ctx: SourceContext) = math_tanh(x)
     def atan(x: Rep[Double])(implicit pos: SourceContext) = math_atan(x)
     def atan2(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = math_atan2(x,y)
     def pow(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = math_pow(x,y)
-    def abs[A:Manifest:Numeric](x: Rep[A])(implicit pos: SourceContext) = math_abs(x)
-    def max[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext) = math_max(x,y)
-    def min[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext) = math_min(x,y)
+    def abs[A:TypeRep:Numeric](x: Rep[A])(implicit pos: SourceContext) = math_abs(x)
+    def max[A:TypeRep:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext) = math_max(x,y)
+    def min[A:TypeRep:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext) = math_min(x,y)
     def Pi(implicit pos: SourceContext) = math_pi
     def E(implicit pos: SourceContext) = math_e
   }
@@ -36,7 +36,7 @@ trait MathOps extends Base {
   def math_floor(x: Rep[Double])(implicit pos: SourceContext) : Rep[Double]
   def math_exp(x: Rep[Double])(implicit pos: SourceContext) : Rep[Double]
   def math_log(x: Rep[Double])(implicit pos: SourceContext) : Rep[Double]
-  def math_log10(x: Rep[Double])(implicit ctx: SourceContext): Rep[Double]  
+  def math_log10(x: Rep[Double])(implicit ctx: SourceContext): Rep[Double]
   def math_sqrt(x: Rep[Double])(implicit pos: SourceContext) : Rep[Double]
   def math_sin(x: Rep[Double])(implicit pos: SourceContext) : Rep[Double]
   def math_sinh(x: Rep[Double])(implicit ctx: SourceContext): Rep[Double]
@@ -45,13 +45,13 @@ trait MathOps extends Base {
   def math_cosh(x: Rep[Double])(implicit ctx: SourceContext): Rep[Double]
   def math_acos(x: Rep[Double])(implicit pos: SourceContext) : Rep[Double]
   def math_tan(x: Rep[Double])(implicit ctx: SourceContext): Rep[Double]
-  def math_tanh(x: Rep[Double])(implicit ctx: SourceContext): Rep[Double]    
+  def math_tanh(x: Rep[Double])(implicit ctx: SourceContext): Rep[Double]
   def math_atan(x: Rep[Double])(implicit pos: SourceContext) : Rep[Double]
   def math_atan2(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) : Rep[Double]
   def math_pow(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext): Rep[Double]
-  def math_abs[A:Manifest:Numeric](x: Rep[A])(implicit pos: SourceContext) : Rep[A]
-  def math_max[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext): Rep[A]
-  def math_min[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext): Rep[A]
+  def math_abs[A:TypeRep:Numeric](x: Rep[A])(implicit pos: SourceContext) : Rep[A]
+  def math_max[A:TypeRep:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext): Rep[A]
+  def math_min[A:TypeRep:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext): Rep[A]
   def math_pi(implicit pos: SourceContext): Rep[Double]
   def math_e(implicit pos: SourceContext): Rep[Double]
 }
@@ -70,13 +70,13 @@ trait MathOpsExp extends MathOps with EffectExp {
   case class MathCosh(x: Exp[Double]) extends Def[Double]
   case class MathAcos(x: Exp[Double]) extends Def[Double]
   case class MathTan(x: Exp[Double]) extends Def[Double]
-  case class MathTanh(x: Exp[Double]) extends Def[Double]      
+  case class MathTanh(x: Exp[Double]) extends Def[Double]
   case class MathAtan(x: Exp[Double]) extends Def[Double]
   case class MathAtan2(x: Exp[Double], y: Exp[Double]) extends Def[Double]
   case class MathPow(x: Exp[Double], y: Exp[Double]) extends Def[Double]
-  case class MathAbs[A:Manifest:Numeric](x: Exp[A]) extends Def[A]
-  case class MathMax[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
-  case class MathMin[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
+  case class MathAbs[A:TypeRep:Numeric](x: Exp[A]) extends Def[A]
+  case class MathMax[A:TypeRep:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
+  case class MathMin[A:TypeRep:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
   case class MathPi() extends Def[Double]
   case class MathE() extends Def[Double]
 
@@ -93,17 +93,17 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_cosh(x: Exp[Double])(implicit ctx: SourceContext) = MathCosh(x)
   def math_acos(x: Exp[Double])(implicit pos: SourceContext) = MathAcos(x)
   def math_tan(x: Exp[Double])(implicit ctx: SourceContext) = MathTan(x)
-  def math_tanh(x: Exp[Double])(implicit ctx: SourceContext) = MathTanh(x)    
+  def math_tanh(x: Exp[Double])(implicit ctx: SourceContext) = MathTanh(x)
   def math_atan(x: Exp[Double])(implicit pos: SourceContext) = MathAtan(x)
   def math_atan2(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = MathAtan2(x,y)
   def math_pow(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = MathPow(x,y)
-  def math_abs[A:Manifest:Numeric](x: Exp[A])(implicit pos: SourceContext) = MathAbs(x)
-  def math_max[A:Manifest:Numeric](x: Exp[A], y: Exp[A])(implicit pos: SourceContext) = MathMax(x, y)
-  def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A])(implicit pos: SourceContext) = MathMin(x, y)
+  def math_abs[A:TypeRep:Numeric](x: Exp[A])(implicit pos: SourceContext) = MathAbs(x)
+  def math_max[A:TypeRep:Numeric](x: Exp[A], y: Exp[A])(implicit pos: SourceContext) = MathMax(x, y)
+  def math_min[A:TypeRep:Numeric](x: Exp[A], y: Exp[A])(implicit pos: SourceContext) = MathMin(x, y)
   def math_pi(implicit pos: SourceContext) = MathPi()
-  def math_e(implicit pos: SourceContext) = MathE()  
+  def math_e(implicit pos: SourceContext) = MathE()
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
+  override def mirror[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case MathCeil(x) => math_ceil(f(x))
@@ -126,25 +126,25 @@ trait MathOpsExp extends MathOps with EffectExp {
       case MathTan(x) => math_tan(f(x))
       case MathTanh(x) => math_tanh(f(x))
 
-      case Reflect(MathCeil(x), u, es) => reflectMirrored(Reflect(MathCeil(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathFloor(x), u, es) => reflectMirrored(Reflect(MathFloor(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathExp(x), u, es) => reflectMirrored(Reflect(MathExp(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathPow(x,y), u, es) => reflectMirrored(Reflect(MathPow(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathAbs(x), u, es) => reflectMirrored(Reflect(MathAbs(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathSin(x), u, es) => reflectMirrored(Reflect(MathSin(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathCos(x), u, es) => reflectMirrored(Reflect(MathCos(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathAcos(x), u, es) => reflectMirrored(Reflect(MathAcos(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathLog(x), u, es) => reflectMirrored(Reflect(MathLog(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathSqrt(x), u, es) => reflectMirrored(Reflect(MathSqrt(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathAtan2(x,y), u, es) => reflectMirrored(Reflect(MathAtan2(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathMin(x,y), u, es) => reflectMirrored(Reflect(MathMin(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathMax(x,y), u, es) => reflectMirrored(Reflect(MathMax(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathLog10(x), u, es) => reflectMirrored(Reflect(MathLog10(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathSinh(x), u, es) => reflectMirrored(Reflect(MathSinh(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathAsin(x), u, es) => reflectMirrored(Reflect(MathAsin(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathCosh(x), u, es) => reflectMirrored(Reflect(MathCosh(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathTan(x), u, es) => reflectMirrored(Reflect(MathTan(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(MathTanh(x), u, es) => reflectMirrored(Reflect(MathTanh(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))      
+      case Reflect(MathCeil(x), u, es) => reflectMirrored(Reflect(MathCeil(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathFloor(x), u, es) => reflectMirrored(Reflect(MathFloor(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathExp(x), u, es) => reflectMirrored(Reflect(MathExp(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathPow(x,y), u, es) => reflectMirrored(Reflect(MathPow(f(x),f(y)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathAbs(x), u, es) => reflectMirrored(Reflect(MathAbs(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathSin(x), u, es) => reflectMirrored(Reflect(MathSin(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathCos(x), u, es) => reflectMirrored(Reflect(MathCos(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathAcos(x), u, es) => reflectMirrored(Reflect(MathAcos(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathLog(x), u, es) => reflectMirrored(Reflect(MathLog(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathSqrt(x), u, es) => reflectMirrored(Reflect(MathSqrt(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathAtan2(x,y), u, es) => reflectMirrored(Reflect(MathAtan2(f(x),f(y)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathMin(x,y), u, es) => reflectMirrored(Reflect(MathMin(f(x),f(y)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathMax(x,y), u, es) => reflectMirrored(Reflect(MathMax(f(x),f(y)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathLog10(x), u, es) => reflectMirrored(Reflect(MathLog10(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathSinh(x), u, es) => reflectMirrored(Reflect(MathSinh(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathAsin(x), u, es) => reflectMirrored(Reflect(MathAsin(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathCosh(x), u, es) => reflectMirrored(Reflect(MathCosh(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathTan(x), u, es) => reflectMirrored(Reflect(MathTan(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
+      case Reflect(MathTanh(x), u, es) => reflectMirrored(Reflect(MathTanh(f(x)), mapOver(f,u), f(es)))(mtype(typeRep[A]))
 
       case _ => super.mirror(e,f)
     }
@@ -176,7 +176,7 @@ trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {
     case MathCosh(x) => emitValDef(sym, "java.lang.Math.cosh(" + quote(x) + ")")
     case MathAcos(x) => emitValDef(sym, "java.lang.Math.acos(" + quote(x) + ")")
     case MathTan(x) => emitValDef(sym, "java.lang.Math.tan(" + quote(x) + ")")
-    case MathTanh(x) => emitValDef(sym, "java.lang.Math.tanh(" + quote(x) + ")")        
+    case MathTanh(x) => emitValDef(sym, "java.lang.Math.tanh(" + quote(x) + ")")
     case MathAtan(x) => emitValDef(sym, "java.lang.Math.atan(" + quote(x) + ")")
     case MathAtan2(x,y) => emitValDef(sym, "java.lang.Math.atan2(" + quote(x) + ", " + quote(y) + ")")
     case MathPow(x,y) => emitValDef(sym, "java.lang.Math.pow(" + quote(x) + "," + quote(y) + ")")
@@ -184,7 +184,7 @@ trait ScalaGenMathOps extends BaseGenMathOps with ScalaGenEffect {
     case MathMax(x,y) => emitValDef(sym, "java.lang.Math.max(" + quote(x) + ", " + quote(y) + ")")
     case MathMin(x,y) => emitValDef(sym, "java.lang.Math.min(" + quote(x) + ", " + quote(y) + ")")
     case MathPi() => emitValDef(sym, "java.lang.Math.PI")
-    case MathE() => emitValDef(sym, "java.lang.Math.E")    
+    case MathE() => emitValDef(sym, "java.lang.Math.E")
     case _ => super.emitNode(sym, rhs)
   }
 }

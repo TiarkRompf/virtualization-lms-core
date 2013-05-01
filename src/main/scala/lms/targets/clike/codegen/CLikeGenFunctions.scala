@@ -98,7 +98,7 @@ trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAcces
     else Array(s)
   }*/
 
-  /*override def remap[A](m: Manifest[A]): String = m.toString match {
+  /*override def remap[A](m:TypeRep[A]): String = m.toString match {
     case f if f.startsWith("scala.Function") =>
       val targs = m.typeArguments.dropRight(1)
       val res = remap(m.typeArguments.last)

@@ -12,17 +12,17 @@ trait Effects extends Base {
   type Effectful[A]
 
   def noEffect: State
-  def bindEffect[A:Manifest](x: State, y: Rep[A]): State
-  def reifyState[A:Manifest](x: Rep[A], y: State): Rep[Effectful[A]]
+  def bindEffect[A:TypeRep](x: State, y: Rep[A]): State
+  def reifyState[A:TypeRep](x: Rep[A], y: State): Rep[Effectful[A]]
 
   var context: State = _
 
-  def reflectEffect[A:Manifest](x: Rep[A]): Rep[A] = {
+  def reflectEffect[A:TypeRep](x: Rep[A]): Rep[A] = {
     context = bindEffect(context, x)
     x
   }
 
-  def reifyEffects[A:Manifest](block: => Rep[A]): Rep[Effectful[A]] = {
+  def reifyEffects[A:TypeRep](block: => Rep[A]): Rep[Effectful[A]] = {
     val save = context
     context = noEffect
 
@@ -67,10 +67,10 @@ trait Effects2 extends Effects {
 
 trait Control extends Effects with BaseExp {
 
-  case class OrElse[A:Manifest](x: List[Rep[Effectful[A]]]) extends Def[A]
+  case class OrElse[A:TypeRep](x: List[Rep[Effectful[A]]]) extends Def[A]
 
 //  def orElse[A](xs: List[Rep[Effectful[A]]]): Rep[A] = reflectEffect(OrElse(xs))
-  def orElse[A:Manifest](xs: List[Rep[Effectful[A]]]): Rep[A] = OrElse(xs)
+  def orElse[A:TypeRep](xs: List[Rep[Effectful[A]]]): Rep[A] = OrElse(xs)
 
   // OrElse will be pure if all branches contain only match effects!!
   // if any branch contains output, OrElse will be impure
@@ -81,12 +81,12 @@ trait Control extends Effects with BaseExp {
   type State = List[Rep[Any]]
   abstract class Effectful[A]
 
-  case class Reify[A:Manifest](x: Rep[A], es: List[Rep[Any]]) extends Def[Effectful[A]]
-  case class Pure[A:Manifest](x: Rep[A]) extends Exp[Effectful[A]]
+  case class Reify[A:TypeRep](x: Rep[A], es: List[Rep[Any]]) extends Def[Effectful[A]]
+  case class Pure[A:TypeRep](x: Rep[A]) extends Exp[Effectful[A]]
 
   def noEffect: State = Nil
-  def bindEffect[A:Manifest](x: State, y: Rep[A]): State = x:::List(y)
-  def reifyState[A:Manifest](x: Rep[A], y: State): Rep[Effectful[A]] = y match {
+  def bindEffect[A:TypeRep](x: State, y: Rep[A]): State = x:::List(y)
+  def reifyState[A:TypeRep](x: Rep[A], y: State): Rep[Effectful[A]] = y match {
     case Nil => Pure(x)
     case _ => Reify(x, y)
   }

@@ -7,20 +7,20 @@ import java.io.PrintWriter
 import scala.reflect.SourceContext
 
 trait StaticData extends Base {
-  def staticData[T:Manifest](x: T): Rep[T]
+  def staticData[T:TypeRep](x: T): Rep[T]
 }
 
 trait StaticDataExp extends EffectExp {
   case class StaticData[T](x: T) extends Def[T]
-  def staticData[T:Manifest](x: T): Exp[T] = StaticData(x)
+  def staticData[T:TypeRep](x: T): Exp[T] = StaticData(x)
 
   override def isWritableSym[A](w: Sym[A]): Boolean = findDefinition(w) match {
     case Some(TP(_, StaticData(_))) => true
     case _ => super.isWritableSym(w)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case StaticData(x) => staticData(x)(mtype(manifest[A]))
+  override def mirror[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case StaticData(x) => staticData(x)(mtype(typeRep[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }

@@ -102,7 +102,7 @@ trait ScalaGenFlat extends ScalaGenBase {
    import IR._
    type Block[+T] = Exp[T]
    def getBlockResultFull[T](x: Block[T]): Exp[T] = x
-   def reifyBlock[T:Manifest](x: =>Exp[T]): Block[T] = x
+   def reifyBlock[T:TypeRep](x: =>Exp[T]): Block[T] = x
    def traverseBlock[A](block: Block[A]): Unit = {
      buildScheduleForResult(block) foreach traverseStm
    }

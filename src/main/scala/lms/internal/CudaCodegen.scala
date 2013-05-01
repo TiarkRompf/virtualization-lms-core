@@ -35,8 +35,8 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
-    val sB = manifest[A].toString
+  def emitSource[A:TypeRep](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
+    val sB = typeRep[A].toString
 
     withStream(out) {
       stream.println("/*****************************************\n"+

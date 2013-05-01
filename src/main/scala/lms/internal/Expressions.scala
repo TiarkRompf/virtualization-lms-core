@@ -13,16 +13,16 @@ import java.lang.{StackTraceElement,Thread}
  *
  * @since 0.1
  */
-trait Expressions extends Utils {
+trait Expressions extends Utils with TypeRepBase {
 
-  abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
-    def tp: Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
+  abstract class Exp[+T:TypeRep] { // constants/symbols (atomic)
+    def tp:TypeRep[T @uncheckedVariance] = typeRep[T] //invariant position! but hey...
     def pos: List[SourceContext] = Nil
   }
 
-  case class Const[+T:Manifest](x: T) extends Exp[T]
+  case class Const[+T:TypeRep](x: T) extends Exp[T]
 
-  case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
+  case class Sym[+T:TypeRep](val id: Int) extends Exp[T] {
     var sourceInfo = Thread.currentThread.getStackTrace // will go away
     var sourceContexts: List[SourceContext] = Nil
     override def pos = sourceContexts
@@ -32,9 +32,9 @@ trait Expressions extends Utils {
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
   var nVars = 0
-  def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) printlog("nVars="+nVars);  nVars -1 }
+  def fresh[T:TypeRep]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) printlog("nVars="+nVars);  nVars -1 }
 
-  def fresh[T:Manifest](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
+  def fresh[T:TypeRep](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
 
   def quotePos(e: Exp[Any]): String = e.pos match {
     case Nil => "<unknown>"
@@ -47,7 +47,7 @@ trait Expressions extends Utils {
   }
 
 /*
-  def fresh[T:Manifest] = {
+  def fresh[T:TypeRep] = {
     val (name, id, nameId) = nextName("x")
     val sym = Sym[T](id)
     sym.name = name
@@ -55,7 +55,7 @@ trait Expressions extends Utils {
     sym
   }
 
-  def fresh[T:Manifest](d: Def[T], ctx: Option[SourceContext]) = {
+  def fresh[T:TypeRep](d: Def[T], ctx: Option[SourceContext]) = {
     def enclosingNamedContext(sc: SourceContext): Option[SourceContext] = sc.bindings match {
       case (null, _) :: _ =>
         if (!sc.parent.isEmpty) enclosingNamedContext(sc.parent.get)
@@ -153,12 +153,12 @@ trait Expressions extends Utils {
   def findDefinition[T](d: Def[T]): Option[Stm] =
     globalDefs.find(x => x.defines(d).nonEmpty)
 
-  def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): Stm =
+  def findOrCreateDefinition[T:TypeRep](d: Def[T], pos: List[SourceContext]): Stm =
     findDefinition[T](d) map { x => x.defines(d).foreach(_.withPos(pos)); x } getOrElse {
       createDefinition(fresh[T](pos), d)
     }
 
-  def findOrCreateDefinitionExp[T:Manifest](d: Def[T], pos: List[SourceContext]): Exp[T] =
+  def findOrCreateDefinitionExp[T:TypeRep](d: Def[T], pos: List[SourceContext]): Exp[T] =
     findOrCreateDefinition(d, pos).defines(d).get
 
   def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
@@ -168,7 +168,7 @@ trait Expressions extends Utils {
   }
 
 
-  protected implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
+  protected implicit def toAtom[T:TypeRep](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
     findOrCreateDefinitionExp(d, List(pos)) // TBD: return Const(()) if type is Unit??
   }
 

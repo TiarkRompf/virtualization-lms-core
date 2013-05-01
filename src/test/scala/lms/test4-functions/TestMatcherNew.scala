@@ -496,7 +496,7 @@ trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with 
     }
 
     // run all combinations of conditions
-    def combinations[A,B:Manifest](rest: List[(Rep[Boolean], List[A])],
+    def combinations[A,B:TypeRep](rest: List[(Rep[Boolean], List[A])],
       acc: List[A] = Nil)(handler: List[A] => Rep[B]): Rep[B] = rest match {
 
       case Nil =>
@@ -578,7 +578,7 @@ trait MatcherNewProgB extends Util { this: Arith with Functions with Equal with 
   }
 
 
-  def interpret[A:Manifest](xs: IO)(k: List[Rep[Char]=>IO] => Rep[A]): Rep[A] = xs match {
+  def interpret[A:TypeRep](xs: IO)(k: List[Rep[Char]=>IO] => Rep[A]): Rep[A] = xs match {
     case Nil => k(Nil)
     case ID(s,e)::rest =>
       val rec = interpret(rest)(k)
@@ -669,16 +669,16 @@ trait MemoUtils extends util.ClosureCompare {
 
 trait Util extends Base with Arith with Functions {
 
-  class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
+  class LambdaOps[A:TypeRep,B:TypeRep](f: Rep[A=>B]) {
     def apply(x:Rep[A]): Rep[B] = doApply(f, x)
   }
-  implicit def lam[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
+  implicit def lam[A:TypeRep,B:TypeRep](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
   //implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
 
   implicit def toDouble(f: Rep[Int]): Rep[Double] = f.asInstanceOf[Rep[Double]]
 
   def collectall(in: List[Rep[Any]]): Rep[Unit]
-  def protect[A:Manifest](x: Rep[A], in: List[Rep[Any]]): Rep[A]
+  def protect[A:TypeRep](x: Rep[A], in: List[Rep[Any]]): Rep[A]
 }
 
 
@@ -732,7 +732,7 @@ class TestMatcherNew extends FileDiffSuite {
   val prefix = "test-out/epfl/test4-"
 
   trait DSL extends MatcherNewProg with Arith with Functions with Equal with IfThenElse {
-    def bare[T:Manifest](x: Rep[Any], f: String => String): Rep[T]
+    def bare[T:TypeRep](x: Rep[Any], f: String => String): Rep[T]
     def test(x: Rep[Unit]): DIO
   }
 
@@ -768,8 +768,8 @@ class TestMatcherNew extends FileDiffSuite {
       case class ResultA[A](x: Exp[A], in: List[Exp[Any]]) extends Def[A] //FIXME
       case class Bare[T](x: Exp[Any], f: String => String) extends Def[T] //FIXME
       def collectall(in: List[Rep[Any]]): Rep[Unit] = Result(in)
-      def protect[A:Manifest](x: Exp[A], in: List[Rep[Any]]): Rep[A] = ResultA(x,in)
-      def bare[T:Manifest](x: Exp[Any], f: String => String): Exp[T] = Bare[T](x,f)
+      def protect[A:TypeRep](x: Exp[A], in: List[Rep[Any]]): Rep[A] = ResultA(x,in)
+      def bare[T:TypeRep](x: Exp[Any], f: String => String): Exp[T] = Bare[T](x,f)
       //def printL(in: Rep[Any]): Rep[Unit] = /*reflectEffect*/(Result(List(in))) //FIXME violate ordering
       override val verbosity = 1
       object codegen extends ScalaGenArith with ScalaGenEqual with ScalaGenListOps with ScalaGenTupleOps
@@ -926,7 +926,7 @@ class TestMatcherNew extends FileDiffSuite {
   def testCounter1 = withOutFileChecked(prefix+"counter1") {
     trait Prog extends DSL with ListOps with Arith {
 
-      def protect[A:Manifest](a:Rep[A],b:Rep[Any]): Rep[A] = protect(a, Seq(b).toList)
+      def protect[A:TypeRep](a:Rep[A],b:Rep[Any]): Rep[A] = protect(a, Seq(b).toList)
 
       def test(x: Rep[Unit]) = {
 
@@ -947,15 +947,15 @@ class TestMatcherNew extends FileDiffSuite {
     def countChar(c:Rep[Char]) = Stream[Char] filter (_ == c) into fcount
 
     def pcount(n: Rep[Double]) = Prod[Double](0, _ < n, _ + 1)
-    def ptails[T:Manifest](xs: Rep[List[T]]) = Prod[List[T]](xs, !list_isEmpty(_), list_tail(_))
-    def plist[T:Manifest](xs: Rep[List[T]]) = ptails(xs) map (list_head(_))
+    def ptails[T:TypeRep](xs: Rep[List[T]]) = Prod[List[T]](xs, !list_isEmpty(_), list_tail(_))
+    def plist[T:TypeRep](xs: Rep[List[T]]) = ptails(xs) map (list_head(_))
 
-    def fcount[T:Manifest] = Foreach[T,Double](0, c => s => s + 1)
-    def fwhile[T:Manifest](p: Rep[T] => Rep[Boolean]) = Foreach[T,Boolean](unit(true), c => s => if (s && p(c)) unit(true) else unit(false))
-    def flast[T:Manifest](s: Rep[T]) = Foreach[T,T](s, c => s => c)
-    def fcollect[T:Manifest] = Foreach[T,List[T]](List(), c => s => list_concat(s,List(c)))
+    def fcount[T:TypeRep] = Foreach[T,Double](0, c => s => s + 1)
+    def fwhile[T:TypeRep](p: Rep[T] => Rep[Boolean]) = Foreach[T,Boolean](unit(true), c => s => if (s && p(c)) unit(true) else unit(false))
+    def flast[T:TypeRep](s: Rep[T]) = Foreach[T,T](s, c => s => c)
+    def fcollect[T:TypeRep] = Foreach[T,List[T]](List(), c => s => list_concat(s,List(c)))
 
-    def switcher[T:Manifest,S1:Manifest,S2:Manifest,O1:Manifest,O2:Manifest](s: Stream[T])(p: Rep[T]=>Rep[Boolean])(a: Stepper2[T,S1,O1], b: Stepper2[O1,S2,O2]) =
+    def switcher[T:TypeRep,S1:TypeRep,S2:TypeRep,O1:TypeRep,O2:TypeRep](s: Stream[T])(p: Rep[T]=>Rep[Boolean])(a: Stepper2[T,S1,O1], b: Stepper2[O1,S2,O2]) =
       Stepper2[T,(S1,S2),O2]((a.s,b.s), ss => b.cond(ss._2), c => ss => if (p(c)) (a.s, b.yld(a.res(ss._1))(ss._2)) else (a.yld(c)(ss._1), ss._2), ss => b.res(ss._2))
 
   }

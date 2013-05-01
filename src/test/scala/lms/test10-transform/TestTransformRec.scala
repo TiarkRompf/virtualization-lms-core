@@ -36,7 +36,7 @@ class TestTransformRec extends FileDiffSuite {
       case _ => super.symsFreq(e)
     }
 
-    override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    override def mirror[A:TypeRep](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
       case Apply(x,y) => toAtom(Apply(f(x),f(y)))
       case g@DefineFun(y) => toAtom(DefineFun(f(y))(g.arg))
       case _ => super.mirror(e,f)
