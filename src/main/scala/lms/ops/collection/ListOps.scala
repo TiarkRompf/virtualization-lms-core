@@ -16,7 +16,8 @@ trait LiftListType { this: TypeRepBase =>
 trait ListOps extends Variables with LiftListType with LiftSeqType with LiftArrayType {
 
   object List {
-    def apply[A:TypeRep](xs: Rep[A]*)(implicit pos: SourceContext) = list_new(xs)
+    def apply()(implicit pos: SourceContext) = list_new[Nothing](Seq())
+    def apply[A:TypeRep](x: Rep[A], xs: Rep[A]*)(implicit pos: SourceContext) = list_new(x+:xs)
   }
 
   implicit def varToListOps[T:TypeRep](x: Var[List[T]]) = new ListOpsCls(readVar(x)) // FIXME: dep on var is not nice

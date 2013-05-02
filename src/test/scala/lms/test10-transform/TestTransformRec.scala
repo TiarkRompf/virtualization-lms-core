@@ -49,6 +49,7 @@ class TestTransformRec extends FileDiffSuite {
   trait Runner {
     val p: Impl
     def run() = {
+      import p.typeRepFromManifest
       val x = p.fresh[Double]
       val y = p.reifyEffects(p.test(x))
 

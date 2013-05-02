@@ -114,7 +114,7 @@ class TestForward2 extends FileDiffSuite {
 
     def writer = new PrintWriter(System.out)
     println("### first")
-    val b1 = reifyEffects(test(fresh))
+    val b1 = reifyEffects(test(fresh[Int]))
     println("--- code ---")
     codegen.withStream(writer) {
       codegen.emitBlock(b1)

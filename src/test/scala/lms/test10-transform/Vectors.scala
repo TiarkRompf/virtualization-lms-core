@@ -38,6 +38,11 @@ trait VectorOps extends Base {
 
 trait VectorExp extends VectorOps with EffectExp {
 
+  implicit def vectorTypeRep[T](implicit t: TypeRep[T]): TypeRep[Vector[T]] = {
+    implicit val mf = t.mf
+    typeRep[Vector[T]]
+  }
+
   case class VectorZeros(n: Rep[Int]) extends Def[Vector[Double]]
   case class VectorLiteral[T](a: List[Rep[T]]) extends Def[Vector[T]]
   case class VectorApply[T](a: Rep[Vector[T]], x: Rep[Int]) extends Def[T]

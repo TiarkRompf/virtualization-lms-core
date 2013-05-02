@@ -20,13 +20,22 @@ trait Arrays extends Base {
 }
 
 trait ArraysExp extends Arrays with BaseExp {
+
+  implicit def arrayTypeRep[T](implicit t: TypeRep[T]): TypeRep[Array[T]] = {
+    implicit val mf = t.mf
+    typeRep[Array[T]]
+  }
+
   case class ArrayApply[T:TypeRep](x:Rep[Array[T]], i:Int) extends Def[T]
   //case class ArrayUpdate[T](x:Rep[Array[T]], i:Int) extends Def[T]
   case class MakeArray[T:TypeRep](x:List[Rep[T]]) extends Def[Array[T]]
 
   def arrayApply[T:TypeRep](x: Rep[Array[T]], i:Int) = ArrayApply(x, i)
   //def arrayUpdate(x: Rep[Double]) = ArrayUpdate(x)
-  def makeArray[T:TypeRep](x: List[Rep[T]]) = MakeArray(x)
+  def makeArray[T:TypeRep](x: List[Rep[T]]) = {
+    implicit val mf = typeRep[Array[T]]
+    MakeArray[T](x)
+  }
 }
 
 trait ScalaGenArrays extends ScalaGenBase {

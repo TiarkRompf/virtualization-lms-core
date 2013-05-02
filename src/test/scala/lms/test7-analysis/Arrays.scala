@@ -24,6 +24,11 @@ trait ArrayLoops extends Loops with OverloadHack {
 
 trait ArrayLoopsExp extends LoopsExp {
 
+  implicit def arrayTypeRep[T](implicit t: TypeRep[T]): TypeRep[Array[T]] = {
+    implicit val mf = t.mf
+    typeRep[Array[T]]
+  }
+
   case class ArrayElem[T](y: Block[T]) extends Def[Array[T]]
   case class ReduceElem(y: Block[Double]) extends Def[Double]
 

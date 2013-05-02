@@ -287,6 +287,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.typeRepFromManifest
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
 
@@ -339,6 +340,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.typeRepFromManifest
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
 
@@ -409,6 +411,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.typeRepFromManifest
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
 
@@ -483,6 +486,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.typeRepFromManifest
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
 
@@ -559,6 +563,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.typeRepFromManifest
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
 

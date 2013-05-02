@@ -121,6 +121,7 @@ trait VectorExpTrans1 extends FWTransform1 with VectorExp with ArrayLoopsExp wit
   }).asInstanceOf[Exp[A]] // gadt fail
 */
 
+
   def vfromarray[A:TypeRep](x: Exp[Array[A]]): Exp[Vector[A]] = struct(ClassTag[Vector[A]]("Vector"), "data" -> x, "length" -> x.length)
   def vtoarray[A:TypeRep](x: Exp[Vector[A]]): Exp[Array[A]] = field[Array[A]](x, "data")
 
@@ -156,7 +157,7 @@ class TestForward1 extends FileDiffSuite {
 
     val writer = new PrintWriter(System.out)
     println("### first")
-    val b1 = reifyEffects(test(fresh))
+    val b1 = reifyEffects(test(fresh[Int]))
     println("--- code ---")
     codegen.withStream(writer) {
       codegen.emitBlock(b1)
