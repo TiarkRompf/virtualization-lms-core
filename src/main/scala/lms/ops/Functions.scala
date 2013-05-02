@@ -7,8 +7,8 @@ import util.ClosureCompare
 import java.io.PrintWriter
 import scala.reflect.SourceContext
 
-trait LiftFunctionTypes { this: Functions =>
-  implicit def liftFunction2[T, R](implicit t: TypeRep[T], r: TypeRep[R]): TypeRep[T => R] = {
+trait LiftFunctionTypes extends Base {
+  implicit def liftFunction1[T, R](implicit t: TypeRep[T], r: TypeRep[R]): TypeRep[T => R] = {
     implicit val mf = t.mf
     implicit val rmf = r.mf
     typeRep[T => R]

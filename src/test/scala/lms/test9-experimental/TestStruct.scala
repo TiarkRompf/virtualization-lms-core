@@ -36,7 +36,7 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
 
   override def simpleLoop[A:TypeRep](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
     case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) =>
-      struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.arrayTypeRep))))
+      struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.mf.arrayManifest))))
     case ArrayElem(Block(Def(ArrayIndex(b,`v`)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]]
     // eta-reduce! <--- should live elsewhere, not specific to struct
     // rewrite loop(a.length) { i => a(i) } to a
@@ -49,7 +49,7 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
       def unwrap[A](m:TypeRep[Array[A]]):TypeRep[A] = m.typeArguments match {
         case a::_ => mtype(a)
         case _ =>
-          if (m.erasure.isArray) mtype(TypeRep.classType(m.erasure.getComponentType))
+          if (m.erasure.isArray) mtype(typeRepFromManifest(Manifest.classType(m.erasure.getComponentType)))
           else { printerr("warning: expect type Array[A] but got "+m); mtype(typeRep[Any]) }
       }
       struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))

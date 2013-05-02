@@ -28,6 +28,11 @@ trait CellOps extends Base {
 }
 
 trait CellOpsExp extends CellOps with BaseExp with StaticDataExp {
+  implicit def cellTypeRep[T](implicit t: TypeRep[T]): TypeRep[RCell[T]] = {
+    implicit val mf = t.mf
+    typeRep[RCell[T]]
+  }
+
   case class CellInit[T](tag: String, x: Rep[T]) extends Def[RCell[T]]
   case class CellSet[T](c: Cell[T], x: Rep[T]) extends Def[Unit]
   case class CellGet[T](c: Cell[T]) extends Def[T]
@@ -69,7 +74,7 @@ trait CompileDyn extends Base with Compile {
 
 }
 
-trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with UncheckedOpsExp {
+trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with UncheckedOpsExp with LiftListType with LiftFunctionTypes {
 
   override def toString = "IR:" + getClass.getName
 
@@ -94,7 +99,7 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
     // compile { u: Rep[Unit] => f(x) }  <--- x is runtime value
 
     val fc = dcompileInternal[Unit,A,B](x::fv, (u,v) => v.head.asInstanceOf[A])(f) // don't really want x as free var but need lower bound on sym id for fresh ones
-    unchecked(fc,".apply(())")
+    unchecked[B](fc,".apply(())")
   }
 
   def dcompileInternal[U:TypeRep,A,B:TypeRep](fv: List[Exp[Any]], g: (Rep[U],List[Any]) => A)(f: A => Rep[B]): Rep[U=>B] = {
@@ -114,7 +119,7 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
       }
     }
 
-    unchecked(staticData(callback),".apply("+fvIds.map(i=>"x"+i)+")","// compile dynamic: fv = ",fv)
+    unchecked[U=>B](staticData(callback),".apply("+fvIds.map(i=>"x"+i)+")","// compile dynamic: fv = ",fv)
 
     /*unchecked("{import ",IR,"._;\n",
       fvIds.map(i => "val s"+i+" = findDefinition(Sym("+i+")).map(infix_lhs(_).head).getOrElse(Sym("+i+"));\n").mkString, // XX codegen uses identity hash map ...
