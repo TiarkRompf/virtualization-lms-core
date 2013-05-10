@@ -58,6 +58,14 @@ trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
   def focusExactScope[A](resultB: Block[Any])(body: List[Stm] => A): A =
     focusExactScopeFat(List(resultB))(body)
 
+  /** This method receives one scope at a time, containing a list of blocks in itself
+    * 
+    * We need this method for Fat IRs, where one IR contains a list of statements
+    *
+    * @param resultB List of result blocks
+    * @param body: body function
+    * @return result of executing body
+    */
   def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A =
     focusExactScopeSubGraph[A](resultB.map(getBlockResultFull))(body)
 

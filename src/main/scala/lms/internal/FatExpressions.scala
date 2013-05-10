@@ -1,12 +1,16 @@
 package scala.lms
 package internal
 
+/** FatExpressions are expressions containing several result symbols
+  * rather than only one symbol for in their normal counterpart (Expressions)
+  */
 trait FatExpressions extends Expressions {
 
   abstract class FatDef
 
   //case class ThinDef(rhs: Def[Any]) extends FatDef
 
+  /** TTP is a Stm to represent a FatExpression*/
   case class TTP(val lhs: List[Sym[Any]], val mhs: List[Def[Any]], val rhs: FatDef) extends Stm
 
   override def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {

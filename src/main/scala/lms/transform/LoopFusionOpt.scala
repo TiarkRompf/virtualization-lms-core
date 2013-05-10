@@ -6,6 +6,11 @@ import internal.{CodeMotion, Scheduling}
 
 
 /*
+  Terminology:
+    - a(i) expressions: Expressions that intend to read an element of array(a), given its index (i)
+    - DCE: Dead Code Elimination
+    - multi loop statements: FatLoops or better explained, loops that contain several expressions in their body
+
   current fusion algorithm:
 
     - start with a given scope, as obtained by focusBlock
@@ -226,18 +231,30 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
   def unapplySimpleCollectIf(e: Def[Any]): Option[(Exp[Any],List[Exp[Boolean]])] = None
 */
 
+  /** Extractor for the operation of accessing an element of the data structure 
+    * which you are iterating over it (corresponding to "v" in AbstractLoop)
+    */
   object SimpleIndex {
     def unapply(a: Def[Any]): Option[(Exp[Any], Exp[Int])] = unapplySimpleIndex(a)
   }
 
+  /** Extractor for the whole domain in which you are going to iterate over it
+    * (corresponding to "size" in AbstractLoop)
+    */
   object SimpleDomain {
     def unapply(a: Def[Int]): Option[Exp[Any]] = unapplySimpleDomain(a)
   }
 
+  /** Extractor for the operation in which you are going to apply in each 
+    * iteration of loop (corresponding to "body" in AbstractLoop)
+    */
   object SimpleCollect {
     def unapply(a: Def[Any]): Option[Exp[Any]] = unapplySimpleCollect(a)
   }
 
+  /** Just a hack! Similar to SimpleCollect, except that, the function 
+    * will be applied, only if list of Booleans are all true
+    */
   object SimpleCollectIf {
     def unapply(a: Def[Any]): Option[(Exp[Any],List[Exp[Boolean]])] = unapplySimpleCollectIf(a)
   }
