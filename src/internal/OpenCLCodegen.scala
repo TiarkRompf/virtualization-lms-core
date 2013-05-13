@@ -11,17 +11,19 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
   val IR: Expressions
   import IR._
 
+  override def deviceTarget: Targets.Value = Targets.OpenCL
+
   override def kernelFileExt = "cl"
   override def toString = "opencl"
 
   override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
-    helperFuncStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.cpp"))
-    headerStream = new PrintWriter(new FileWriter(buildDir + "helperFuncs.h"))
+    helperFuncStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.cpp"))
+    headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
 
     //TODO: Put all the DELITE APIs declarations somewhere
-    helperFuncStream.print("#include \"helperFuncs.h\"\n")
+    helperFuncStream.print("#include \"" + deviceTarget + "helperFuncs.h\"\n")
     headerStream.print(getDSLHeaders)
     headerStream.print("#include <iostream>\n")
     headerStream.print("#include <limits>\n")
@@ -65,22 +67,6 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
 trait OpenCLNestedCodegen extends CLikeNestedCodegen with OpenCLCodegen {
   val IR: Expressions with Effects
   import IR._
-
-  def OpenCLConsts(x:Exp[Any], s:String): String = {
-    s match {
-      case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.tp))
-      case _ => s
-    }
-  }
-  
-  override def quote(x: Exp[Any]) = x match { // TODO: quirk!
-    case Const(s: String) => "\""+s+"\""
-    case Const(s: Char) => "'"+s+"'"
-    case Const(null) => "NULL"
-    case Const(z) => OpenCLConsts(x, z.toString)
-    case Sym(-1) => "_"
-    case _ => super.quote(x)
-  }
   
 }
 

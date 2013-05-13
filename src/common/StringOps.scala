@@ -133,34 +133,29 @@ trait ScalaGenStringOps extends ScalaGenBase {
 trait CudaGenStringOps extends CudaGenBase {
   val IR: StringOpsExp
   import IR._
-
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StringPlus(s1,s2) => throw new GenerationFailedException("CudaGen: Not GPUable")
-    case StringTrim(s) => throw new GenerationFailedException("CudaGen: Not GPUable")
-    case StringSplit(s, sep) => throw new GenerationFailedException("CudaGen: Not GPUable")
-    case _ => super.emitNode(sym, rhs)
-  }
 }
 
 trait OpenCLGenStringOps extends OpenCLGenBase {
   val IR: StringOpsExp
   import IR._
-
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StringPlus(s1,s2) => throw new GenerationFailedException("OpenCLGen: Not GPUable")
-    case StringTrim(s) => throw new GenerationFailedException("OpenCLGen: Not GPUable")
-    case StringSplit(s, sep) => throw new GenerationFailedException("OpenCLGen: Not GPUable")
-    case _ => super.emitNode(sym, rhs)
-  }
 }
+
 trait CGenStringOps extends CGenBase {
   val IR: StringOpsExp
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StringPlus(s1,s2) => emitValDef(sym,"strcat(%s,%s);".format(quote(s1),quote(s2)))
-    case StringTrim(s) => throw new GenerationFailedException("CGenStringOps: StringTrim not implemented yet")
-    case StringSplit(s, sep) => throw new GenerationFailedException("CGenStringOps: StringSplit not implemented yet")
+    //case StringPlus(s1,s2) => emitValDef(sym,"strcat(%s,%s)".format(quote(s1),quote(s2)))
+    case StringStartsWith(s1,s2) => emitValDef(sym, "(strlen(%s)>=strlen(%s)) && strncmp(%s,%s,strlen(%s))".format(quote(s1),quote(s2),quote(s1),quote(s2),quote(s2)))
+    //case StringTrim(s) => 
+    //case StringSplit(s, sep) => 
+    case StringEndsWith(s, e) => emitValDef(sym, "(strlen(%s)>=strlen(%s)) && strncmp(%s+strlen(%s)-strlen(%s),%s,strlen(%s))".format(quote(s),quote(e),quote(s),quote(e),quote(s),quote(e),quote(e)))    
+    case StringCharAt(s,i) => emitValDef(sym, "%s[%s]".format(quote(s), quote(i)))
+    //case StringValueOf(a) => 
+    case StringToDouble(s) => emitValDef(sym, "strtod(%s,NULL)".format(quote(s)))
+    case StringToFloat(s) => emitValDef(sym, "strtodf(%s,NULL)".format(quote(s)))
+    case StringToInt(s) => emitValDef(sym, "atoi(%s)".format(quote(s)))
+    case StringContains(s1,s2) => emitValDef(sym, "(strstr(%s,%s)!=NULL)".format(quote(s1),quote(s2)))
     case _ => super.emitNode(sym, rhs)
   }
 }

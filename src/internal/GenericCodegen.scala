@@ -12,6 +12,10 @@ trait GenericCodegen extends BlockTraversal {
 
   // TODO: should some of the methods be moved into more specific subclasses?
   
+  def deviceTarget: Targets.Value = throw new Exception("deviceTarget is not defined for this codegen.")
+  def hostTarget: Targets.Value = Targets.getHostTarget(deviceTarget)
+  def isAcceleratorTarget: Boolean = hostTarget != deviceTarget
+  
   def kernelFileExt = ""
   def emitFileHeader(): Unit = {}
   def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {}
@@ -75,6 +79,8 @@ trait GenericCodegen extends BlockTraversal {
   }
   def remapImpl[A](m: Manifest[A]): String = remap(m)
   //def remapVar[A](m: Manifest[Variable[A]]) : String = remap(m.typeArguments.head)
+ 
+  def remapHost[A](m: Manifest[A]): String = remap(m).replaceAll(deviceTarget.toString,hostTarget.toString)
 
   def hasMetaData: Boolean = false
   def getMetaData: String = null
