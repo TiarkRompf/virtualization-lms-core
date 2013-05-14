@@ -19,21 +19,28 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
     val outDir = new File(buildDir)
     outDir.mkdirs
 
-    actRecordStream = new PrintWriter(new FileWriter(buildDir + "actRecords.h"))
+    actRecordStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "actRecords.h"))
+    
     helperFuncStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.cu"))
-    headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
-
-    //TODO: Put all the DELITE APIs declarations somewhere
     helperFuncStream.print("#include \"" + deviceTarget + "helperFuncs.h\"\n")    
-    headerStream.print(getDSLHeaders)
-    headerStream.print("#include <iostream>\n")
-    headerStream.print("#include <limits>\n")
-    headerStream.print("#include <assert.h>\n")
-    headerStream.print("#include <jni.h>\n\n")
-    headerStream.print("#define CHAR short\n")
-    headerStream.print("#define jCHAR jshort\n")
-    headerStream.print("#include \"DeliteCuda.h\"\n")
-    headerStream.print("#include \"actRecords.h\"\n")
+    
+    typesStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "types.h"))
+    typesStream.println("#define CHAR short")
+    typesStream.println("#define jCHAR jshort")
+    typesStream.flush
+    
+    //TODO: Put all the DELITE APIs declarations somewhere
+    headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
+    headerStream.println("#include <iostream>")
+    headerStream.println("#include <limits>")
+    headerStream.println("#include <float.h>")
+    headerStream.println("#include <assert.h>")
+    headerStream.println("#include <jni.h>")
+    headerStream.println("#include \"DeliteCuda.h\"")
+    headerStream.println("#include \"" + deviceTarget + "types.h\"")
+    headerStream.println(getDataStructureHeaders())
+    headerStream.println("#include \"" + deviceTarget + "actRecords.h\"")
+
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
 

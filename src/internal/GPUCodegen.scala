@@ -118,6 +118,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     helperFuncStream.flush
     headerStream.flush
     actRecordStream.flush
+    typesStream.flush
   }
 
   override def emitTransferFunctions() {    

@@ -17,6 +17,7 @@ trait CLikeCodegen extends GenericCodegen {
   protected var helperFuncStream: PrintWriter = _
   protected var headerStream: PrintWriter = _
   protected var actRecordStream: PrintWriter = _
+  protected var typesStream: PrintWriter = _
 
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
@@ -118,15 +119,13 @@ trait CLikeCodegen extends GenericCodegen {
   def CLikeConsts(x:Exp[Any], s:String): String = {
     s match {
       case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.tp))
-      case _ => s
+      case _ => super.quote(x)
     }
   }
   
   override def quote(x: Exp[Any]) = x match {
     case Const(s: Unit) => ""
-    case Const(s: Char) => "'"+s+"'"
     case Const(s: Float) => s+"f"
-    case Const(s: String) => "\""+s+"\""
     case Const(null) => "NULL"
     case Const(z) => CLikeConsts(x, z.toString)
     case Sym(-1) => "_"

@@ -56,15 +56,21 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     helperFuncStream.println("#include <jni.h>")
     helperFuncStream.println("#include \"" + deviceTarget + "helperFuncs.h\"")
 
+    /* type aliases */
+    typesStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "types.h"))
+    typesStream.println("#define string char")
+
     /* header file for kernels and helper functions */
     headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
     headerStream.println("#include <stdio.h>")
     headerStream.println("#include <string.h>")
     headerStream.println("#include <stdlib.h>")
+    headerStream.println("#include <float.h>")
     headerStream.println("#include <jni.h>")
     headerStream.println("#include <assert.h>")
     headerStream.println("#include <math.h>")
-    headerStream.println(getDSLHeaders)
+    headerStream.println("#include \"" + deviceTarget + "types.h\"")
+    headerStream.println(getDataStructureHeaders())
 
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
@@ -163,6 +169,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
     helperFuncStream.flush
     headerStream.flush
+    typesStream.flush
   }
 
   def kernelName = "kernel_" + kernelOutputs.map(quote).mkString("")

@@ -112,12 +112,12 @@ val x89 = x79 * x88
 val x90 = x79 - x89
 val x91 = x90 + x80
 val x92 = x2(x81) = x91
-x69 = x85
-x70 = x86
-x71 = x88
-x72 = x89
-x73 = x82
-x74 = x84
+val x93 = x69 = x85
+val x94 = x70 = x86
+val x95 = x71 = x88
+val x96 = x72 = x89
+val x97 = x73 = x82
+val x98 = x74 = x84
 ()
 x76 = x76 + 1
 }

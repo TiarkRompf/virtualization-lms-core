@@ -29,8 +29,8 @@ trait GenericCodegen extends BlockTraversal {
   def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
 
   def emitDataStructures(stream: PrintWriter): Unit = {}
-
   def emitDataStructures(path: String): Unit = {}
+  def getDataStructureHeaders(): String = ""
   def emitTransferFunctions(): Unit = {}
 
   def dataPath = {
@@ -84,8 +84,6 @@ trait GenericCodegen extends BlockTraversal {
 
   def hasMetaData: Boolean = false
   def getMetaData: String = null
-
-  def getDSLHeaders: String = null
 
   // ---------
 

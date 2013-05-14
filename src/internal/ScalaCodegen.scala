@@ -52,7 +52,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
   }
 
   override def emitFileHeader() {
-    stream.println("package generated." + this.toString)
+    // empty by default. override to emit package or import declarations.
   }
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {

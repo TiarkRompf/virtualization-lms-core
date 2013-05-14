@@ -394,6 +394,9 @@ trait Effects extends Expressions with Blocks with Utils {
       checkContext()
       // NOTE: reflecting mutable stuff *during mirroring* doesn't work right now.
       
+      // FIXME: Reflect(Reflect(ObjectUnsafeImmutable(..))) on delite
+      assert(!x.isInstanceOf[Reflect[_]], x)
+
       val deps = calculateDependencies(u)
       val zd = Reflect(x,u,deps)
       if (mustIdempotent(u)) {
