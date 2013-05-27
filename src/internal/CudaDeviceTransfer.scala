@@ -19,7 +19,7 @@ trait CudaDeviceTransfer extends AbstractDeviceTransfer {
     }
     else if (tp.erasure == classOf[List[Any]]) {
       val out = new StringBuilder
-      val signature = "%s *sendCuda_%s(Host%s *sym)".format(remap(tp),mangledName(remap(tp)),remap(tp))
+      val signature = "%s *sendCuda_%s(%s *sym)".format(remap(tp),mangledName(remap(tp)),remapHost(tp))
       out.append(signature + " {\n")
       out.append("\t%s *sym_dev = new %s();\n".format(remap(tp),remap(tp)))
       out.append("\treturn sym_dev;\n")
@@ -45,9 +45,9 @@ trait CudaDeviceTransfer extends AbstractDeviceTransfer {
     }
     else if (tp.erasure == classOf[List[Any]]) {
       val out = new StringBuilder
-      val signature = "Host%s *recvCuda_%s(%s *sym_dev)".format(remap(tp),mangledName(remap(tp)),remap(tp))
+      val signature = "%s *recvCuda_%s(%s *sym_dev)".format(remapHost(tp),mangledName(remap(tp)),remap(tp))
       out.append(signature + " {\n")
-      out.append("\tHost%s *sym = new Host%s();\n".format(remap(tp),remap(tp)))
+      out.append("\t%s *sym = new %s();\n".format(remapHost(tp),remapHost(tp)))
       out.append("\treturn sym;\n")
       out.append("}\n")
       (signature+";\n", out.toString)
@@ -98,7 +98,7 @@ trait CudaDeviceTransfer extends AbstractDeviceTransfer {
     }
     else if (tp.erasure == classOf[List[Any]]) {
       val out = new StringBuilder
-      val signature = "void sendUpdateCuda_%s(Host%s *sym, %s *sym_dev)".format(mangledName(remap(tp)),remap(tp),remap(tp))
+      val signature = "void sendUpdateCuda_%s(%s *sym_dev, %s *sym)".format(mangledName(remap(tp)),remap(tp),remapHost(tp))
       out.append(signature + " {\n")
       out.append("\tassert(false);\n")
       out.append("}\n")
@@ -120,7 +120,7 @@ trait CudaDeviceTransfer extends AbstractDeviceTransfer {
     }
     else if (tp.erasure == classOf[List[Any]]) {
       val out = new StringBuilder
-      val signature = "void recvUpdateCuda_%s(Host%s *sym, %s *sym_dev)".format(mangledName(remap(tp)),remap(tp),remap(tp))
+      val signature = "void recvUpdateCuda_%s(%s *sym_dev, %s *sym)".format(mangledName(remap(tp)),remap(tp),remapHost(tp))
       out.append(signature + " {\n")
       out.append("\tassert(false);\n")
       out.append("}\n")

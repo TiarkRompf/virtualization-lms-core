@@ -344,6 +344,9 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
+  // Nested functions are not allowed in standard C.
+  // TODO: Either emit the function other place or use C++11 (or only gcc)
+  /*
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
       stream.println(remap(y.tp)+" "+quote(sym)+"("+remap(x.tp)+" "+quote(x)+") {")
@@ -356,17 +359,19 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
       emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
     case _ => super.emitNode(sym, rhs)
   }
+  */
 }
 
 trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAccess {
   val IR: TupledFunctionsExp
   import IR._
-
+  
   /*override def quote(x: Exp[Any]) : String = x match {
     case UnboxedTuple(t) => t.map(quote).mkString("((", ",", "))")
     case _ => super.quote(x)
   }*/
-  
+ 
+  /*
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>
       stream.println(remap(y.tp)+" "+quote(sym)+"("+xs.map(s=>remap(s.tp)+" "+quote(s)).mkString(",")+") {")
@@ -379,6 +384,7 @@ trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAcces
       emitValDef(sym, quote(fun) + args.map(quote).mkString("(", ",", ")"))    
     case _ => super.emitNode(sym,rhs)
   }
+  */
   
   /*def unwrapTupleStr(s: String): Array[String] = {
     if (s.startsWith("scala.Tuple")) s.slice(s.indexOf("[")+1,s.length-1).filter(c => c != ' ').split(",")

@@ -118,6 +118,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     helperFuncStream.flush
     headerStream.flush
     actRecordStream.flush
+    typesStream.flush
   }
 
   override def emitTransferFunctions() {    
@@ -125,25 +126,25 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
       // Emit input copy helper functions for object type inputs
       //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
       try {
-        val (recvHeader, recvSource) = emitRecv(tp, Hosts.JVM)
+        val (recvHeader, recvSource) = emitRecv(tp, Targets.JVM)
         if (!helperFuncList.contains(recvHeader)) {
           headerStream.println(recvHeader)
           helperFuncStream.println(recvSource)
           helperFuncList.append(recvHeader)
         }
-        val (recvViewHeader, recvViewSource) = emitRecvView(tp, Hosts.JVM)
+        val (recvViewHeader, recvViewSource) = emitRecvView(tp, Targets.JVM)
         if (!helperFuncList.contains(recvViewHeader)) {
           headerStream.println(recvViewHeader)
           helperFuncStream.println(recvViewSource)
           helperFuncList.append(recvViewHeader)
         }
-        val (sendUpdateHeader, sendUpdateSource) = emitSendUpdate(tp, Hosts.JVM)
+        val (sendUpdateHeader, sendUpdateSource) = emitSendUpdate(tp, Targets.JVM)
         if (!helperFuncList.contains(sendUpdateHeader)) {
           headerStream.println(sendUpdateHeader)
           helperFuncStream.println(sendUpdateSource)
           helperFuncList.append(sendUpdateHeader)
         }
-        val (recvUpdateHeader, recvUpdateSource) = emitRecvUpdate(tp, Hosts.JVM)
+        val (recvUpdateHeader, recvUpdateSource) = emitRecvUpdate(tp, Targets.JVM)
         if (!helperFuncList.contains(recvUpdateHeader)) {
           headerStream.println(recvUpdateHeader)
           helperFuncStream.println(recvUpdateSource)
@@ -169,13 +170,13 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
         }
 
       // Emit output copy helper functions for object type inputs
-        val (sendHeader, sendSource) = emitSend(tp, Hosts.JVM)
+        val (sendHeader, sendSource) = emitSend(tp, Targets.JVM)
         if (!helperFuncList.contains(sendHeader)) {
           headerStream.println(sendHeader)
           helperFuncStream.println(sendSource)
           helperFuncList.append(sendHeader)
         }
-        val (sendViewHeader, sendViewSource) = emitSendView(tp, Hosts.JVM)
+        val (sendViewHeader, sendViewSource) = emitSendView(tp, Targets.JVM)
         if (!helperFuncList.contains(sendViewHeader)) {
           headerStream.println(sendViewHeader)
           helperFuncStream.println(sendViewSource)

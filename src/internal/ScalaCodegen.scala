@@ -9,6 +9,8 @@ trait ScalaCodegen extends GenericCodegen with Config {
   val IR: Expressions
   import IR._
 
+  override def deviceTarget: Targets.Value = Targets.Scala
+
   override def kernelFileExt = "scala"
 
   override def toString = "scala"

@@ -95,7 +95,7 @@ trait CLikeGenEqual extends CLikeGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
-        case Equal(a,b) =>
+        case Equal(a,b) => 
           emitValDef(sym, quote(a) + " == " + quote(b))
         case NotEqual(a,b) =>
           emitValDef(sym, quote(a) + " != " + quote(b))
@@ -106,4 +106,17 @@ trait CLikeGenEqual extends CLikeGenBase {
 
 trait CudaGenEqual extends CudaGenBase with CLikeGenEqual
 trait OpenCLGenEqual extends OpenCLGenBase with CLikeGenEqual
-trait CGenEqual extends CGenBase with CLikeGenEqual
+trait CGenEqual extends CGenBase with CLikeGenEqual {
+  val IR: EqualExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
+    rhs match {
+      case Equal(a,b) if(remap(a.tp) == "string" && remap(b.tp) == "string") => 
+        emitValDef(sym, "strcmp(" + quote(a) + "," + quote(b) + ") == 0")
+      case NotEqual(a,b) if(remap(a.tp) == "string" && remap(b.tp) == "string") =>
+        emitValDef(sym, "strcmp(" + quote(a) + "," + quote(b) + ") == 0")
+      case _ => super.emitNode(sym, rhs)
+    }
+  } 
+}
