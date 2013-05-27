@@ -217,7 +217,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
       )
     }
     case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
-    case ArrayUpdate(x,n,y) => emitValDef(sym, quote(x) + "(" + quote(n) + ") = " + quote(y))
+    case ArrayUpdate(x,n,y) => emitAssignment("" + quote(x) + "(" + quote(n) + ")", quote(y))
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
     case ArrayForeach(a,x,block) => stream.println("val " + quote(sym) + " = " + quote(a) + ".foreach{")
       stream.println(quote(x) + " => ")

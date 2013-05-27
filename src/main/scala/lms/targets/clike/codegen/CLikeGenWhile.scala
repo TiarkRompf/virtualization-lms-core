@@ -16,6 +16,15 @@ trait CLikeGenWhile extends CLikeGenBase with BaseGenWhile {
       stream.println("if (!"+quote(getBlockResult(c))+") break;")
       emitBlock(b)
       stream.println("}")
+    case DoWhile(b, c) =>
+      stream.println("{")
+      emitBlock(b)
+      stream.println("}")
+      stream.println("for (;;) {")
+      emitBlock(c)
+      stream.println("if (!"+quote(getBlockResult(c))+") break;")
+      emitBlock(b)
+      stream.println("}")
     case _ => super.emitNode(sym, rhs)
   }
 }
