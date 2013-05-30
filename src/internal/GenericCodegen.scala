@@ -159,7 +159,7 @@ trait GenericCodegen extends BlockTraversal {
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, stream: PrintWriter): List[(Sym[Any], Any)] // return free static data in block
 
   def quote(x: Exp[Any]) : String = x match {
-    case Const(s: String) => "\""+s.replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
+    case Const(s: String) => "\""+s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
     case Const(c: Char) => "'"+c+"'"
     case Const(f: Float) => "%1.10f".format(f) + "f"
     case Const(l: Long) => l.toString + "L"
