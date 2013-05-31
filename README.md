@@ -17,6 +17,12 @@ more seamless.
 - [Scala-Virtualized wiki](https://github.com/TiarkRompf/scala-virtualized/wiki)
 
 
+### Note:
+
+This is branch `master`, which has been outdated for a while. 
+The most recent semi-stable version is in branch `delite-develop`.
+
+
 ### How to build:
 
 1. Install the simple build tool ([SBT](http://www.scala-sbt.org/)). 
