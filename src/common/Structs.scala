@@ -17,7 +17,7 @@ trait Structs extends Base {
   /**
    * Allows to write things lik “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
    */
-  abstract class Record extends Struct[Rep]
+  abstract class Record extends Struct
   def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
 
   class RecordOps(record: Rep[Record]) {
