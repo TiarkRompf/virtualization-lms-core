@@ -99,7 +99,8 @@ trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
       stream.println("var " + quote(i) + " : Int = " + quote(start))
       stream.println("val " + quote(sym) + " = " + "while (" + quote(i) + " < " + quote(end) + ") {")
       emitBlock(body)
-      stream.println(quote(getBlockResult(body)))
+      // do not need to print unit result
+      //stream.println(quote(getBlockResult(body)))
       stream.println(quote(i) + " = " + quote(i) + " + 1")
       stream.println("}")
     }
