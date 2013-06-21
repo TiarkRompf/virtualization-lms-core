@@ -71,6 +71,7 @@ trait Schema extends Util {
       val name = w.name
     }
 
+  val thirtySomethings2 = satisfies(x => 30 <= x && x < 40)
   val evenAge = satisfies(_ % 2 == 0)
 
   // 2.5 Composing queries
@@ -90,6 +91,30 @@ trait Schema extends Util {
     } yield r
 
   val rangeBertEdna = rangeFromNames("Edna", "Bert")
+
+  // 2.6 Dynamically generated queries
+
+  abstract class Predicate
+  case class Above(x: Int) extends Predicate
+  case class Below(x: Int) extends Predicate
+  case class And(x: Predicate, y: Predicate) extends Predicate
+  case class Or(x: Predicate, y: Predicate) extends Predicate
+  case class Not(x: Predicate) extends Predicate
+
+  val t0: Predicate = And(Above(30), Below(40))
+  val t1: Predicate = Not(Or(Below(30), Above(40)))
+
+  def P(t: Predicate)(x: Int): Boolean = t match {
+    case Above(a) => a <= x
+    case Below(a) => x < a
+    case And(t, u) => P(t)(x) && P(u)(x)
+    case Or(t, u) => P(t)(x) || P(u)(x)
+    case Not(t)=> !P(t)(x)
+  }
+
+  val thirtySomethings3 = satisfies(P(t0))
+  val thirtySomethings4 = satisfies(P(t1))
+
 }
 
 trait Util {
@@ -149,8 +174,11 @@ class TestQueries extends FileDiffSuite {
         Console.println(db)
         Console.println(differences)
         Console.println(thirtySomethings)
+        Console.println(thirtySomethings2)
         Console.println(evenAge)
         Console.println(rangeBertEdna)
+        Console.println(thirtySomethings3)
+        Console.println(thirtySomethings4)
 
 
         val f = compile { x: Rep[Int] =>
