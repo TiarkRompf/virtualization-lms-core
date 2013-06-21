@@ -15,6 +15,26 @@ Staged SQL-like queries, inspired by "the essence of LINQ":
 http://homepages.inf.ed.ac.uk/slindley/papers/essence-of-linq-draft-december2012.pdf
 */
 
+trait Schema {
+  
+  case class Person(name: String, age: Int)
+  case class Couple(her: String, him: String)
+  case class PeopleDB(people: List[Person], couples: List[Couple])
+
+  val db = PeopleDB(
+    people = List(
+      Person("Alex", 60),
+      Person("Bert", 55),
+      Person("Cora", 33),
+      Person("Drew", 31),
+      Person("Edna", 21),
+      Person("Fred", 60)),
+    couples = List(
+      Couple("Alex", "Bert"),
+      Couple("Cora", "Drew")))
+}
+
+
 class TestQueries extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test14-"
