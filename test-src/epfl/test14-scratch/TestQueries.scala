@@ -60,15 +60,6 @@ trait Schema {
     override def toString = elems.map(e => s"${e._1}:${e._2}").mkString("{",",","}")
   }
 
-
-
-/*let differences′ : {name : string; diff : int} list = for c in db′.couples do
-for w in db′.people do
-for m in db′.people do
-if c.her = w.name && c.him = m.name && w.age > m.age then
-yield {name : w.name; diff : w.age − m.age}
-*/
-
 }
 
 
