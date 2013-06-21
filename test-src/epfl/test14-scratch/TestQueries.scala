@@ -66,13 +66,28 @@ trait Schema {
 
   val evenAge = satisfies(_ % 2 == 0)
 
+  def ageFromName(s: String): List[Int] =  // paper has return type 'int' but says 'list of int' in the text (?)
+    for {
+      u <- db.people
+      if u.name == s
+    } yield u.age
+
+
+  def rangeFromNames(s: String, t: String): Names =
+    for {
+      a <- ageFromName(s)
+      b <- ageFromName(t)
+      r <- range(a,b)
+    } yield r
+
+  val rangeBertEdna = rangeFromNames("Edna", "Bert")
+
 
   abstract class Record extends Product {
     lazy val elems = {
       val fields = getClass.getDeclaredFields.toList
       fields.map { f => 
         f.setAccessible(true)
-        println(f.get(this))
         (f.getName, f.get(this))
       }
     }
@@ -123,6 +138,7 @@ class TestQueries extends FileDiffSuite {
         Console.println(differences)
         Console.println(thirtySomethings)
         Console.println(evenAge)
+        Console.println(rangeBertEdna)
 
 
         val f = compile { x: Rep[Int] =>
