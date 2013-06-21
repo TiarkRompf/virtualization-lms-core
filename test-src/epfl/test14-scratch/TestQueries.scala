@@ -44,6 +44,19 @@ trait Schema {
       val diff = w.age - m.age
     }
 
+  type Names = List[{ val name: String}]
+  def range(a: Int, b: Int): Names =
+    for {
+      w <- db.people
+      if a <= w.age && w.age < b
+    } yield new Record {
+      val name = w.name
+    }
+
+  val thirtySomethings = range(30,40)
+
+
+
   abstract class Record extends Product {
     lazy val elems = {
       val fields = getClass.getDeclaredFields.toList
@@ -97,8 +110,8 @@ class TestQueries extends FileDiffSuite {
       def test() = {
 
         Console.println(db)
-
         Console.println(differences)
+        Console.println(thirtySomethings)
 
 
         val f = compile { x: Rep[Int] =>
