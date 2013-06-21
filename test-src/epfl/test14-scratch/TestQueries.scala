@@ -32,6 +32,28 @@ trait Schema {
     couples = List(
       Couple("Alex", "Bert"),
       Couple("Cora", "Drew")))
+
+  val differences: List[{ val name: String; val diff: Int }] =
+    for {
+      c <- db.couples
+      w <- db.people
+      m <- db.people
+      if c.her == w.name && c.him == m.name && w.age > m.age
+    } yield new Record { 
+      val name = w.name
+      val diff = w.age - m.age
+    }
+
+  abstract class Record
+
+
+/*let differences′ : {name : string; diff : int} list = for c in db′.couples do
+for w in db′.people do
+for m in db′.people do
+if c.her = w.name && c.him = m.name && w.age > m.age then
+yield {name : w.name; diff : w.age − m.age}
+*/
+
 }
 
 
@@ -65,8 +87,13 @@ class TestQueries extends FileDiffSuite {
 
 
   def testQueries1 = withOutFileChecked(prefix+"queries1") {
-    trait Prog extends DSL {
+    trait Prog extends DSL with Schema {
       def test() = {
+
+        Console.println(db)
+
+        Console.println(differences)
+
 
         val f = compile { x: Rep[Int] =>
 
