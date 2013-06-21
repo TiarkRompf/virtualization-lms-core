@@ -56,6 +56,16 @@ trait Schema {
   val thirtySomethings = range(30,40)
 
 
+  def satisfies(p: Int => Boolean): Names = 
+    for {
+      w <- db.people
+      if p(w.age)
+    } yield new Record {
+      val name = w.name
+    }
+
+  val evenAge = satisfies(_ % 2 == 0)
+
 
   abstract class Record extends Product {
     lazy val elems = {
@@ -112,6 +122,7 @@ class TestQueries extends FileDiffSuite {
         Console.println(db)
         Console.println(differences)
         Console.println(thirtySomethings)
+        Console.println(evenAge)
 
 
         val f = compile { x: Rep[Int] =>
