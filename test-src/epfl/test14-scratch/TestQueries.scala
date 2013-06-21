@@ -19,9 +19,9 @@ trait Schema extends Util {
   
   // people db schema
 
-  case class Person(name: String, age: Int)
-  case class Couple(her: String, him: String)
-  case class PeopleDB(people: List[Person], couples: List[Couple])
+  case class Person(name: String, age: Int) extends Record
+  case class Couple(her: String, him: String) extends Record
+  case class PeopleDB(people: List[Person], couples: List[Couple]) extends Record
 
   val db = PeopleDB(
     people = List(
@@ -114,6 +114,43 @@ trait Schema extends Util {
 
   val thirtySomethings3 = satisfies(P(t0))
   val thirtySomethings4 = satisfies(P(t1))
+
+  // 3 nesting
+
+  // corporate schema
+
+  type Org = List[{
+    val departments: List[{val dpt: String}]
+    val employees: List[{val dpt: String; val emp: String}]
+    val tasks: List[{val emp: String; val tsk: String}]
+  }]
+
+  val org = new Record {
+    val departments = List(
+      new Record { val dpt = "Product"},
+      new Record { val dpt = "Quality"},
+      new Record { val dpt = "Research"},
+      new Record { val dpt = "Sales"})
+    val employees = List(
+      new Record { val dpt = "Product"; val emp = "Alex"},
+      new Record { val dpt = "Product"; val emp = "Bert"},
+      new Record { val dpt = "Research"; val emp = "Cora"}, 
+      new Record { val dpt = "Research"; val emp = "Drew"}, 
+      new Record { val dpt = "Research"; val emp = "Edna"}, 
+      new Record { val dpt = "Sales"; val emp = "Fred"})
+    val tasks = List(
+      new Record { val emp = "Alex"; val tsk = "build"},
+      new Record { val emp = "Bert"; val tsk = "build"}, 
+      new Record { val emp = "Cora"; val tsk = "abstract"},
+      new Record { val emp = "Cora"; val tsk = "build"},
+      new Record { val emp = "Cora"; val tsk = "design"},
+      new Record { val emp = "Drew"; val tsk = "abstract"},
+      new Record { val emp = "Drew"; val tsk = "design"},
+      new Record { val emp = "Edna"; val tsk = "abstract"},
+      new Record { val emp = "Edna"; val tsk = "call"},
+      new Record { val emp = "Edna"; val tsk = "design"},
+      new Record { val emp = "Fred"; val tsk = "call"})
+  }
 
 }
 
