@@ -15,8 +15,10 @@ Staged SQL-like queries, inspired by "the essence of LINQ":
 http://homepages.inf.ed.ac.uk/slindley/papers/essence-of-linq-draft-december2012.pdf
 */
 
-trait Schema {
+trait Schema extends Util {
   
+  // people db schema
+
   case class Person(name: String, age: Int)
   case class Couple(her: String, him: String)
   case class PeopleDB(people: List[Person], couples: List[Couple])
@@ -33,6 +35,8 @@ trait Schema {
       Couple("Alex", "Bert"),
       Couple("Cora", "Drew")))
 
+  // 2.1 Comprehensions and queries / 2.2 Query via quotation
+
   val differences: List[{ val name: String; val diff: Int }] =
     for {
       c <- db.couples
@@ -43,6 +47,8 @@ trait Schema {
       val name = w.name
       val diff = w.age - m.age
     }
+
+  // 2.3 Abstracting over values
 
   type Names = List[{ val name: String}]
   def range(a: Int, b: Int): Names =
@@ -55,6 +61,7 @@ trait Schema {
 
   val thirtySomethings = range(30,40)
 
+  // 2.4 Abstracting over a predicate
 
   def satisfies(p: Int => Boolean): Names = 
     for {
@@ -65,6 +72,8 @@ trait Schema {
     }
 
   val evenAge = satisfies(_ % 2 == 0)
+
+  // 2.5 Composing queries
 
   def ageFromName(s: String): List[Int] =  // paper has return type 'int' but says 'list of int' in the text (?)
     for {
@@ -81,8 +90,10 @@ trait Schema {
     } yield r
 
   val rangeBertEdna = rangeFromNames("Edna", "Bert")
+}
 
-
+trait Util {
+  // Record supertype: pretty printing etc
   abstract class Record extends Product {
     lazy val elems = {
       val fields = getClass.getDeclaredFields.toList
@@ -99,6 +110,7 @@ trait Schema {
   }
 
 }
+
 
 
 class TestQueries extends FileDiffSuite {
