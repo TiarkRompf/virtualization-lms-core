@@ -44,7 +44,22 @@ trait Schema {
       val diff = w.age - m.age
     }
 
-  abstract class Record
+  abstract class Record extends Product {
+    lazy val elems = {
+      val fields = getClass.getDeclaredFields.toList
+      fields.map { f => 
+        f.setAccessible(true)
+        println(f.get(this))
+        (f.getName, f.get(this))
+      }
+    }
+    def canEqual(that: Any) = true
+    def productElement(n: Int) = elems(n)
+    def productArity = elems.length
+    override def productIterator = elems.iterator
+    override def toString = elems.map(e => s"${e._1}:${e._2}").mkString("{",",","}")
+  }
+
 
 
 /*let differences′ : {name : string; diff : int} list = for c in db′.couples do
