@@ -217,6 +217,22 @@ trait Schema extends Util {
   val departmentsFullOfAbstracters2 = expertise2("abstract")
 
 
+  // 4 From XPath to SQl
+
+  /*
+  +----+--------+------+-----+------+
+  | id | parent | name | pre | post |
+  +----+--------+------+-----+------+
+  |  0 |   -1   | #doc |  0  |  13  |
+  |  1 |    0   |   a  |  1  |  12  |
+  |  2 |    1   |   b  |  2  |   5  |
+  |  3 |    2   |   c  |  3  |   4  |
+  |  4 |    1   |   d  |  6  |  11  |
+  |  5 |    4   |   e  |  7  |   8  |
+  |  6 |    4   |   f  |  9  |  10  |
+  +----+--------+------+-----+------+
+  */
+
 
 
 }
