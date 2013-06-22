@@ -260,6 +260,10 @@ trait Schema extends Util {
   case object FollowingSibling extends Axis
   case class Rev(x: Axis) extends Axis
  
+  def parent = PAxis(Rev(Child))
+  def ancestor = PAxis(Rev(Descendant))
+  def preceding = PAxis(Rev(Following))
+
   abstract class Path
   case class PSeq(x: Path, y: Path) extends Path
   case class PAxis(x: Axis) extends Path
@@ -292,11 +296,28 @@ trait Schema extends Util {
       s.id == u.id && any(db_xml)(t => path(p)(s, t))
   }
 
-  def xpath(p : Path): List[Node] = for {
+  def xpath(p : Path): List[Int] = for {
     root <- db_xml
     s <- db_xml
     if (root.parent == -1) && path(p)(root, s)
-  } yield s
+  } yield s.id
+
+
+  //  /*/*
+  val xp0 = PSeq(PAxis(Child), PAxis(Child))
+  //  //*/parent::*
+  val xp1 = PSeq(PAxis(Descendant), parent)
+  // Q: this produces 0,1,2,4 but the paper says 1,2,4 (?)
+
+  //  //*[following-sibling::d]
+  val xp2 = PSeq(PAxis(Descendant), Filter(PSeq(PAxis(FollowingSibling),NameTest("d"))))
+  //  //f[ancestor::*/preceding::b]()
+  val xp3 = PSeq(PSeq(PAxis(Descendant), NameTest("f")), Filter(PSeq(ancestor,PSeq(preceding, NameTest("b")))))
+
+  val xr0 = xpath(xp0)
+  val xr1 = xpath(xp1)
+  val xr2 = xpath(xp2)
+  val xr3 = xpath(xp3)
 
 }
 
@@ -365,6 +386,11 @@ class TestQueries extends FileDiffSuite {
         Console.println(departmentsFullOfAbstracters)
         Console.println(nestedOrg)
         Console.println(departmentsFullOfAbstracters2)
+
+        Console.println(xr0)
+        Console.println(xr1)
+        Console.println(xr2)
+        Console.println(xr3)
 
         val f = compile { x: Rep[Int] =>
 
