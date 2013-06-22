@@ -251,7 +251,15 @@ trait Schema extends Util {
     Node(6,  4, "f",    9, 10))
 
 
-
+  abstract class Axis
+  case object Self
+  case object Child
+  case object Descendant
+  case object DescendantOrSelf
+  case object Following
+  case object FollowingSibling
+  case class Rev(x: Axis)
+ 
 
 }
 
