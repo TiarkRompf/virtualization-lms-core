@@ -152,6 +152,24 @@ trait Schema extends Util {
       new Record { val emp = "Fred"; val tsk = "call"})
   }
 
+  def exists[T](xs: List[T]) = xs.nonEmpty // helper method
+
+  def expertise(u: String): List[{ val dpt: String }] =
+    for {
+      d <- org.departments
+      if !exists(
+        for {
+          e <- org.employees
+          if d.dpt == e.dpt && !exists(
+            for {
+              t <- org.tasks
+              if e.emp == t.emp && t.tsk == u 
+            } yield new Record {})
+        } yield new Record {})
+    } yield new Record { val dpt = d.dpt }
+
+  val departmentsFullOfAbstracters = expertise("abstract")
+
 }
 
 trait Util {
@@ -159,7 +177,7 @@ trait Util {
   abstract class Record extends Product {
     lazy val elems = {
       val fields = getClass.getDeclaredFields.toList
-      fields.map { f => 
+      for (f <- fields if !f.getName.contains("$Cache")) yield {
         f.setAccessible(true)
         (f.getName, f.get(this))
       }
@@ -216,7 +234,7 @@ class TestQueries extends FileDiffSuite {
         Console.println(rangeBertEdna)
         Console.println(thirtySomethings3)
         Console.println(thirtySomethings4)
-
+        Console.println(departmentsFullOfAbstracters)
 
         val f = compile { x: Rep[Int] =>
 
