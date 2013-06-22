@@ -241,7 +241,7 @@ trait Schema extends Util {
     val post: Int 
   ) extends Record
 
-  val xml = List(
+  val db_xml = List(
     Node(0, -1, "#doc", 0, 13),
     Node(1,  0, "a",    1, 12),
     Node(2,  1, "b",    2,  5),
@@ -266,7 +266,37 @@ trait Schema extends Util {
   case class NameTest(x: String) extends Path
   case class Filter(x: Path) extends Path
 
+  def axis(ax: Axis)(s: Node, t: Node): Boolean = ax match {
+    case Self             => s.id == t.id
+    case Child            => s.id == t.parent
+    case Descendant       => s.pre < t.pre && t.post < s.post
+    case DescendantOrSelf => s.pre <= t.pre && t.post <= s.post
+    case Following        => s.pre < t.pre 
+    case FollowingSibling => s.post < t.pre && s.parent == t.parent
+    case Rev(ax)          => axis(ax)(t, s)
+  }
 
+  // code in paper:
+  // | Rev(axis) → <@ fun(s, t) → (%axis(ax))(t, s) @> 
+  //       ^^^^                     ^^^^
+  //   should be ax?
+
+  def path(p : Path)(s: Node, u: Node): Boolean = p match {
+    case PSeq(p, q) => 
+      any(db_xml)(t => path(p)(s, t) && path(q)(t, u))
+    case PAxis(ax) => 
+      axis(ax)(s, u)
+    case NameTest(name) =>
+      s.id == u.id && s.name == name
+    case Filter(p) => 
+      s.id == u.id && any(db_xml)(t => path(p)(s, t))
+  }
+
+  def xpath(p : Path): List[Node] = for {
+    root <- db_xml
+    s <- db_xml
+    if (root.parent == -1) && path(p)(root, s)
+  } yield s
 
 }
 
