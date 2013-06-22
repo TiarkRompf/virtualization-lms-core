@@ -218,7 +218,7 @@ class TestEffects extends FileDiffSuite {
             stream.println("// soft deps: "+es.map(quote).mkString(","))
             emitNode(sym,x)
           case Mutate(a,b) =>
-            emitValDef(sym, quote(a) + " // mutated by "+ quote(b))
+            emitValDef(sym, quote(a) + " // mutated by "+ quote(b, true))
           case Copy(a) =>
             emitValDef(sym, quote(a) + ".clone")
           case _ =>

@@ -16,7 +16,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x1 = px1 // static data: RCell(dyn - ConstN(0))
-val x6 = x1.set(x5)
+x1.set(x5)
 val x8 = px8 // static data: <function1>
 val x9 = px9 // static data: <function1>
 val x10 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -28,7 +28,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x7 = px7 // static data: RCell(dyn - AssignN(x,ConstN(0)))
-val x11 = x7.set(x10)
+x7.set(x10)
 val x13 = px13 // static data: <function1>
 val x14 = px14 // static data: <function1>
 val x15 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -40,7 +40,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x12 = px12 // static data: RCell(dyn - LookupN(n))
-val x16 = x12.set(x15)
+x12.set(x15)
 val x17 = px17 // static data: <function1>
 val x18 = px18 // static data: <function1>
 val x19 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -51,7 +51,7 @@ val fInt = x2.compile(x18.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
-val x20 = x12.set(x19)
+x12.set(x19)
 val x22 = px22 // static data: <function1>
 val x23 = px23 // static data: <function1>
 val x24 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -63,7 +63,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x21 = px21 // static data: RCell(dyn - ConstN(-1))
-val x25 = x21.set(x24)
+x21.set(x24)
 val x27 = px27 // static data: <function1>
 val x28 = px28 // static data: <function1>
 val x29 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -75,7 +75,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x26 = px26 // static data: RCell(dyn - AddN(LookupN(n),ConstN(-1)))
-val x30 = x26.set(x29)
+x26.set(x29)
 val x32 = px32 // static data: <function1>
 val x33 = px33 // static data: <function1>
 val x34 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -87,7 +87,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x31 = px31 // static data: RCell(dyn - AssignN(n,AddN(LookupN(n),ConstN(-1))))
-val x35 = x31.set(x34)
+x31.set(x34)
 val x37 = px37 // static data: <function1>
 val x38 = px38 // static data: <function1>
 val x39 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -99,7 +99,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x36 = px36 // static data: RCell(dyn - LookupN(x))
-val x40 = x36.set(x39)
+x36.set(x39)
 val x42 = px42 // static data: <function1>
 val x43 = px43 // static data: <function1>
 val x44 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -111,7 +111,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x41 = px41 // static data: RCell(dyn - LookupN(a))
-val x45 = x41.set(x44)
+x41.set(x44)
 val x46 = px46 // static data: <function1>
 val x47 = px47 // static data: <function1>
 val x48 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -122,7 +122,7 @@ val fInt = x2.compile(x47.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
-val x49 = x12.set(x48)
+x12.set(x48)
 val x51 = px51 // static data: <function1>
 val x52 = px52 // static data: <function1>
 val x53 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -134,7 +134,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x50 = px50 // static data: RCell(dyn - AppN(LookupN(a),LookupN(n)))
-val x54 = x50.set(x53)
+x50.set(x53)
 val x56 = px56 // static data: <function1>
 val x57 = px57 // static data: <function1>
 val x58 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -146,7 +146,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x55 = px55 // static data: RCell(dyn - AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))
-val x59 = x55.set(x58)
+x55.set(x58)
 val x61 = px61 // static data: <function1>
 val x62 = px62 // static data: <function1>
 val x63 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -158,7 +158,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x60 = px60 // static data: RCell(dyn - AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))))
-val x64 = x60.set(x63)
+x60.set(x63)
 val x66 = px66 // static data: <function1>
 val x67 = px67 // static data: <function1>
 val x68 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -170,7 +170,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x65 = px65 // static data: RCell(dyn - SeqN(List(AssignN(n,AddN(LookupN(n),ConstN(-1))), AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))))))
-val x69 = x65.set(x68)
+x65.set(x68)
 val x71 = px71 // static data: <function1>
 val x72 = px72 // static data: <function1>
 val x73 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -182,7 +182,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x70 = px70 // static data: RCell(dyn - WhileN(LookupN(n),SeqN(List(AssignN(n,AddN(LookupN(n),ConstN(-1))), AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))))))
-val x74 = x70.set(x73)
+x70.set(x73)
 val x75 = px75 // static data: <function1>
 val x76 = px76 // static data: <function1>
 val x77 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -193,7 +193,7 @@ val fInt = x2.compile(x76.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
-val x78 = x36.set(x77)
+x36.set(x77)
 val x80 = px80 // static data: <function1>
 val x81 = px81 // static data: <function1>
 val x82 = new scala.virtualization.lms.epfl.test13.RFun {
@@ -205,7 +205,7 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x79 = px79 // static data: RCell(dyn - SeqN(List(AssignN(x,ConstN(0)), WhileN(LookupN(n),SeqN(List(AssignN(n,AddN(LookupN(n),ConstN(-1))), AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))))), LookupN(x))))
-val x83 = x79.set(x82)
+x79.set(x82)
 val x84 = x79.value
 val x85 = x84.exec(x0)
 x85
@@ -247,8 +247,8 @@ x90
 *******************************************/
 
 compilation: ok
-error: write to non-mutable Sym(91) -> None
-at Sym(94)=Reflect(HashMapUpdate(Sym(91),Const(x),Sym(93)),Summary(false,false,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List())
+//error: write to non-mutable Sym(91) -> None
+//at Sym(94)=Reflect(HashMapUpdate(Sym(91),Const(x),Sym(93)),Summary(false,false,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List())
 warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(94),Summary(true,true,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List(Sym(93), Sym(94)))
 /*****************************************
   Emitting Generated Code                  
@@ -258,8 +258,8 @@ def apply(x91:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
 val x1 = px1 // static data: RCell(dyn - ConstN(0))
 val x92 = x1.value
 val x93 = x92.exec(x91)
-val x94 = x91("x") = x93
-x94
+x91("x") = x93
+()
 }
 }
 /*****************************************
@@ -267,8 +267,8 @@ x94
 *******************************************/
 
 compilation: ok
-error: write to non-mutable Sym(96) -> None
-at Sym(98)=Reflect(HashMapUpdate(Sym(96),Const(x),Sym(97)),Summary(false,false,false,false,false,List(),List(),List(Sym(96)),List(Sym(96))),List())
+//error: write to non-mutable Sym(96) -> None
+//at Sym(98)=Reflect(HashMapUpdate(Sym(96),Const(x),Sym(97)),Summary(false,false,false,false,false,List(),List(),List(Sym(96)),List(Sym(96))),List())
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -277,8 +277,8 @@ def apply(x96:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
 val x1 = px1 // static data: RCell(dyn - ConstN(0))
 val x92 = x1.value
 val x97 = x92.exec(x96)
-val x98 = x96("x") = x97
-val x99 = x98.asInstanceOf[Int]
+x96("x") = x97
+val x99 = ().asInstanceOf[Int]
 x99
 }
 }
@@ -396,7 +396,7 @@ val x120 = x117.isInstanceOf[Int]
 val x121 = x119.isInstanceOf[Int]
 val x122 = x120 && x121
 val x134 = if (x122) {
-val x123 = println("spec-add-int: AddN(LookupN(n),ConstN(-1))")
+println("spec-add-int: AddN(LookupN(n),ConstN(-1))")
 val x2 = px2 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
 val x124 = px124 // static data: <function1>
 val x125 = px125 // static data: <function1>
@@ -409,14 +409,14 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x26 = px26 // static data: RCell(dyn - AddN(LookupN(n),ConstN(-1)))
-val x127 = x26.set(x126)
+x26.set(x126)
 val x128 = x117.asInstanceOf[Int]
 val x129 = x119.asInstanceOf[Int]
 val x130 = x128 + x129
 x130
 } else {
-val x132 = println("GENERIC")
-x132
+println("GENERIC")
+()
 }
 x134
 }
@@ -441,7 +441,7 @@ val x139 = x137.isInstanceOf[Int]
 val x140 = x138.isInstanceOf[Int]
 val x141 = x139 && x140
 val x153 = if (x141) {
-val x142 = println("spec-add-int: AddN(LookupN(n),ConstN(-1))")
+println("spec-add-int: AddN(LookupN(n),ConstN(-1))")
 val x2 = px2 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
 val x143 = px143 // static data: <function1>
 val x144 = px144 // static data: <function1>
@@ -454,14 +454,14 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x26 = px26 // static data: RCell(dyn - AddN(LookupN(n),ConstN(-1)))
-val x146 = x26.set(x145)
+x26.set(x145)
 val x147 = x137.asInstanceOf[Int]
 val x148 = x138.asInstanceOf[Int]
 val x149 = x147 + x148
 x149
 } else {
-val x151 = println("GENERIC")
-x151
+println("GENERIC")
+()
 }
 val x154 = x153.asInstanceOf[Int]
 x154
@@ -472,8 +472,8 @@ x154
 *******************************************/
 
 compilation: ok
-error: write to non-mutable Sym(156) -> None
-at Sym(159)=Reflect(HashMapUpdate(Sym(156),Const(n),Sym(158)),Summary(false,false,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List())
+//error: write to non-mutable Sym(156) -> None
+//at Sym(159)=Reflect(HashMapUpdate(Sym(156),Const(n),Sym(158)),Summary(false,false,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List())
 warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(159),Summary(true,true,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List(Sym(158), Sym(159)))
 /*****************************************
   Emitting Generated Code                  
@@ -483,8 +483,8 @@ def apply(x156:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
 val x26 = px26 // static data: RCell(dyn - AddN(LookupN(n),ConstN(-1)))
 val x157 = x26.value
 val x158 = x157.exec(x156)
-val x159 = x156("n") = x158
-x159
+x156("n") = x158
+()
 }
 }
 /*****************************************
@@ -492,8 +492,8 @@ x159
 *******************************************/
 
 compilation: ok
-error: write to non-mutable Sym(161) -> None
-at Sym(163)=Reflect(HashMapUpdate(Sym(161),Const(n),Sym(162)),Summary(false,false,false,false,false,List(),List(),List(Sym(161)),List(Sym(161))),List())
+//error: write to non-mutable Sym(161) -> None
+//at Sym(163)=Reflect(HashMapUpdate(Sym(161),Const(n),Sym(162)),Summary(false,false,false,false,false,List(),List(),List(Sym(161)),List(Sym(161))),List())
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -502,8 +502,8 @@ def apply(x161:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
 val x26 = px26 // static data: RCell(dyn - AddN(LookupN(n),ConstN(-1)))
 val x157 = x26.value
 val x162 = x157.exec(x161)
-val x163 = x161("n") = x162
-val x164 = x163.asInstanceOf[Int]
+x161("n") = x162
+val x164 = ().asInstanceOf[Int]
 x164
 }
 }
@@ -665,7 +665,7 @@ val x200 = x197.isInstanceOf[Int]
 val x201 = x199.isInstanceOf[Int]
 val x202 = x200 && x201
 val x214 = if (x202) {
-val x203 = println("spec-add-int: AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))")
+println("spec-add-int: AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))")
 val x2 = px2 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
 val x204 = px204 // static data: <function1>
 val x205 = px205 // static data: <function1>
@@ -678,14 +678,14 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x55 = px55 // static data: RCell(dyn - AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))
-val x207 = x55.set(x206)
+x55.set(x206)
 val x208 = x197.asInstanceOf[Int]
 val x209 = x199.asInstanceOf[Int]
 val x210 = x208 + x209
 x210
 } else {
-val x212 = println("GENERIC")
-x212
+println("GENERIC")
+()
 }
 x214
 }
@@ -710,7 +710,7 @@ val x219 = x217.isInstanceOf[Int]
 val x220 = x218.isInstanceOf[Int]
 val x221 = x219 && x220
 val x233 = if (x221) {
-val x222 = println("spec-add-int: AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))")
+println("spec-add-int: AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))")
 val x2 = px2 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
 val x223 = px223 // static data: <function1>
 val x224 = px224 // static data: <function1>
@@ -723,14 +723,14 @@ def exec(f: HM): Any = fAny(f)
 def execInt(f: HM): Int = fInt(f)
 }
 val x55 = px55 // static data: RCell(dyn - AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))
-val x226 = x55.set(x225)
+x55.set(x225)
 val x227 = x217.asInstanceOf[Int]
 val x228 = x218.asInstanceOf[Int]
 val x229 = x227 + x228
 x229
 } else {
-val x231 = println("GENERIC")
-x231
+println("GENERIC")
+()
 }
 val x234 = x233.asInstanceOf[Int]
 x234
@@ -741,8 +741,8 @@ x234
 *******************************************/
 
 compilation: ok
-error: write to non-mutable Sym(236) -> None
-at Sym(239)=Reflect(HashMapUpdate(Sym(236),Const(x),Sym(238)),Summary(false,false,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List())
+//error: write to non-mutable Sym(236) -> None
+//at Sym(239)=Reflect(HashMapUpdate(Sym(236),Const(x),Sym(238)),Summary(false,false,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List())
 warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(239),Summary(true,true,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List(Sym(238), Sym(239)))
 /*****************************************
   Emitting Generated Code                  
@@ -752,8 +752,8 @@ def apply(x236:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
 val x55 = px55 // static data: RCell(dyn - AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))
 val x237 = x55.value
 val x238 = x237.exec(x236)
-val x239 = x236("x") = x238
-x239
+x236("x") = x238
+()
 }
 }
 /*****************************************
@@ -761,8 +761,8 @@ x239
 *******************************************/
 
 compilation: ok
-error: write to non-mutable Sym(241) -> None
-at Sym(243)=Reflect(HashMapUpdate(Sym(241),Const(x),Sym(242)),Summary(false,false,false,false,false,List(),List(),List(Sym(241)),List(Sym(241))),List())
+//error: write to non-mutable Sym(241) -> None
+//at Sym(243)=Reflect(HashMapUpdate(Sym(241),Const(x),Sym(242)),Summary(false,false,false,false,false,List(),List(),List(Sym(241)),List(Sym(241))),List())
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -771,8 +771,8 @@ def apply(x241:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
 val x55 = px55 // static data: RCell(dyn - AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))
 val x237 = x55.value
 val x242 = x237.exec(x241)
-val x243 = x241("x") = x242
-val x244 = x243.asInstanceOf[Int]
+x241("x") = x242
+val x244 = ().asInstanceOf[Int]
 x244
 }
 }
@@ -831,13 +831,13 @@ val x12 = px12 // static data: RCell(dyn - LookupN(n))
 val x116 = x12.value
 val x65 = px65 // static data: RCell(dyn - SeqN(List(AssignN(n,AddN(LookupN(n),ConstN(-1))), AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))))))
 val x261 = x65.value
-val x264 = while ({val x258 = x116.execInt(x257)
+while ({val x258 = x116.execInt(x257)
 val x259 = x258 != 0
 x259}) {
 val x262 = x261.exec(x257)
 ()
 }
-x264
+()
 }
 }
 /*****************************************
@@ -854,13 +854,13 @@ val x12 = px12 // static data: RCell(dyn - LookupN(n))
 val x116 = x12.value
 val x65 = px65 // static data: RCell(dyn - SeqN(List(AssignN(n,AddN(LookupN(n),ConstN(-1))), AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))))))
 val x261 = x65.value
-val x272 = while ({val x267 = x116.execInt(x266)
+while ({val x267 = x116.execInt(x266)
 val x268 = x267 != 0
 x268}) {
 val x270 = x261.exec(x266)
 ()
 }
-val x273 = x272.asInstanceOf[Int]
+val x273 = ().asInstanceOf[Int]
 x273
 }
 }

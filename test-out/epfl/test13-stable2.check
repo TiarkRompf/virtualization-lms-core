@@ -18,7 +18,7 @@ val x8 = 1 * x7
 x8
 } else {
 val x9 = px9 // static data: RCell(code)
-val x10 = x9.set(null)
+x9.set(null)
 val x1 = x0 + 1
 val x2 = x0 * 2
 val x11 = px11 // static data: <function1>
@@ -74,7 +74,7 @@ val x16 = 2 * x15
 x16
 } else {
 val x17 = px17 // static data: RCell(code)
-val x18 = x17.set(null)
+x17.set(null)
 val x9 = x8 + 1
 val x10 = x8 * 2
 val x19 = px19 // static data: <function1>

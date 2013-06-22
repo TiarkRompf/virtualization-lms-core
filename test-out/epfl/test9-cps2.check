@@ -3,14 +3,12 @@
 *******************************************/
 class Test extends ((Boolean)=>(Unit)) {
 def apply(x0:Boolean): Unit = {
-val x5 = if (x0) {
-val x1 = println(7)
-x1
+if (x0) {
+println(7)
 } else {
-val x3 = println(9)
-x3
+println(9)
 }
-x5
+()
 }
 }
 /*****************************************

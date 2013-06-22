@@ -9,14 +9,14 @@ def apply(x0:Int): Unit = {
 val x1 = VectorZeros(Const(100))
 val x2 = x1.clone
 val x3 = VectorLiteral(List(Sym(2)))
-val x4 = println(x3)
+println(x3)
 // begin multi
-// soft deps: x1,x2,x3,x4
-val x5 = VectorUpdate(Sym(1),Const(5),Const(7.0))
-val x9 = x4 // mutated by x5
+// soft deps: x1,x2,x3,()
+VectorUpdate(Sym(1),Const(5),Const(7.0))
+val x9 = () // mutated by x5
 // end multi
-val x10 = println(x3)
-x10
+println(x3)
+()
 }
 }
 /*****************************************

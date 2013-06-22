@@ -46,11 +46,11 @@ val x27 = 1.doubleValue()
 val x28 = 2.0 * x27
 val x29 = x28 + 3.0
 val x30 = x26 + x29
-val x31 = x1(0) = x30
+x1(0) = x30
 var x32: Double = x29
 var x33: Int = 1
 var x35 : Int = 1
-val x48 = while (x35 < 20) {
+while (x35 < 20) {
 val x36 = x32
 val x37 = x33
 val x39 = x35 + 1
@@ -58,7 +58,7 @@ val x40 = x39.doubleValue()
 val x41 = 2.0 * x40
 val x42 = x41 + 3.0
 val x43 = x36 + x42
-val x44 = x1(x37) = x43
+x1(x37) = x43
 x32 = x42
 x33 = x39
 x35 = x35 + 1

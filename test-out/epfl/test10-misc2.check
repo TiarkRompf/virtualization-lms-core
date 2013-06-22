@@ -12,20 +12,18 @@ TP(Sym(10),Reflect(IfThenElse(Sym(4),Block(Sym(7)),Block(Sym(9))),Summary(true,t
 TP(Sym(11),Reify(Sym(10),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(10))))
 -- before transformation
 val x4 = x0 == 0
-val x10 = if (x4) {
+if (x4) {
 val x1 = VectorZeros(Const(100))
 val x2 = VectorZeros(Const(50))
 val x3 = VectorPlus(Sym(1),Sym(2))
 val x5 = VectorLength(Sym(3))
-val x6 = println(x5)
-x6
+println(x5)
 } else {
 val x1 = VectorZeros(Const(100))
 val x2 = VectorZeros(Const(50))
 val x3 = VectorPlus(Sym(1),Sym(2))
 val x5 = VectorLength(Sym(3))
-val x8 = println(x5)
-x8
+println(x5)
 }
 encountering if then else TP(Sym(10),Reflect(IfThenElse(Sym(4),Block(Sym(7)),Block(Sym(9))),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
 replacing TP(Sym(3),VectorPlus(Sym(1),Sym(2)))

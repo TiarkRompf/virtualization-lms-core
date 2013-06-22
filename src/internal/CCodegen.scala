@@ -161,12 +161,12 @@ trait CCodegen extends CLikeCodegen {
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     if (remap(sym.tp) == "void")
-      stream.println(rhs + "; // " + quote(sym))
+      stream.println(rhs + "; // " + quote(sym, true))
     else
       stream.println("const " + remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitAssignment(lhs:String, rhs: String): Unit = {
+  def emitAssignment(sym: Sym[Any], lhs:String, rhs: String): Unit = {
     // TODO: check void type?
     stream.println(lhs + " = " + rhs + ";")
   }

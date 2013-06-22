@@ -41,10 +41,10 @@ val x48 = x46/100
 val x47 = x45/100
 val x49 = x47*x47
 val x50 = x48-x49
-val x51 = println(x47)
-val x52 = println(x50)
-val x27 = x52
-x27
+println(x47)
+println(x50)
+()
+()
 }
 }
 /*****************************************

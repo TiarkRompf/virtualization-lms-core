@@ -235,13 +235,22 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
  
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IfThenElse(c,a,b) =>
-      stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
-      emitBlock(a)
-      stream.println(quote(getBlockResult(a)))
-      stream.println("} else {")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
+      isVoidType(sym.tp) match {
+        case true =>
+          stream.println("if (" + quote(c) + ") {")
+          emitBlock(a)
+          stream.println("} else {")
+          emitBlock(b)
+          stream.println("}")
+        case false =>
+          stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
+          emitBlock(a)
+          stream.println(quote(getBlockResult(a)))
+          stream.println("} else {")
+          emitBlock(b)
+          stream.println(quote(getBlockResult(b)))
+          stream.println("}")
+      }
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -251,7 +260,7 @@ trait ScalaGenIfThenElseFat extends ScalaGenIfThenElse with ScalaGenFat with Bas
 
   override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatIfThenElse(c,as,bs) => 
-      def quoteList[T](xs: List[Exp[T]]) = if (xs.length > 1) xs.map(quote).mkString("(",",",")") else xs.map(quote).mkString(",")
+      def quoteList[T](xs: List[Exp[T]]) = if (xs.length > 1) xs.map(x => quote(x, true)).mkString("(",",",")") else xs.map(quote).mkString(",")
       if (symList.length > 1) stream.println("// TODO: use vars instead of tuples to return multiple values")
       stream.println("val " + quoteList(symList) + " = if (" + quote(c) + ") {")
       emitFatBlock(as)
@@ -382,14 +391,14 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
     rhs match {
       case IfThenElse(c,a,b) =>
         //TODO: using if-else does not work 
-        remap(sym.tp) match {
-          case "void" =>
+        isVoidType(sym.tp) match {
+          case true =>
             stream.println("if (" + quote(c) + ") {")
             emitBlock(a)
             stream.println("} else {")
             emitBlock(b)
             stream.println("}")
-          case _ =>
+          case false =>
             stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
             stream.println("if (" + quote(c) + ") {")
             emitBlock(a)

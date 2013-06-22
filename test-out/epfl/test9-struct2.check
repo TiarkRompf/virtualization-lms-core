@@ -38,9 +38,9 @@ x14 = x5
 val x24 = x13
 val x25 = x14
 val x26 = new { val re = x24; val im = x25 }
-val x27 = println(x26)
-val x28 = println(x21)
-x28
+println(x26)
+println(x21)
+()
 }
 }
 /*****************************************

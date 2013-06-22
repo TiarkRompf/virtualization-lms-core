@@ -6,8 +6,8 @@ def apply(x0:Unit): Any = {
 val x6 = if (true) {
 val x2 = 7.0+9.0
 val x5 = {x1: (Double) => 
-val x3 = println(x2)
-x3: Unit
+println(x2)
+(): Unit
 }
 x5
 } else {

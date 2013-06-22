@@ -77,8 +77,8 @@ trait CGenMiscOps extends CGenEffect {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case PrintF(f,x) => emitValDef(sym, "printf(" + ((Const(f:String)::x).map(quote)).mkString(",") + ")")
-    case PrintLn(s) => stream.println("printf(\"%s\\n\"," + quote(s) + ");")
-    case Print(s) => stream.println("printf(\"%s\"," + quote(s) + ");")
+    case PrintLn(s) => emitValDef(sym, "printf(\"%s\\n\"," + quote(s) + ");")
+    case Print(s) => emitValDef(sym, "printf(\"%s\"," + quote(s) + ");")
     case Exit(a) => stream.println("exit(" + quote(a) + ");")
     case _ => super.emitNode(sym, rhs)
   }

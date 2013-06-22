@@ -341,9 +341,9 @@ trait Effects extends Expressions with Blocks with Utils {
   def checkIllegalSharing(z: Exp[Any], mutableAliases: List[Sym[Any]]) {
     if (mutableAliases.nonEmpty) {
       val zd = z match { case Def(zd) => zd }
-      printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
-      printerr("at " + z + "=" + zd)
-      printsrc("in " + quotePos(z))
+      printerr("//error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
+      printerr("//at " + z + "=" + zd)
+      printsrc("//in " + quotePos(z))
     }
   }
   
@@ -411,9 +411,9 @@ trait Effects extends Expressions with Blocks with Utils {
         val z = fresh[A](List(pos))
         // make sure all writes go to allocs
         for (w <- u.mayWrite if !isWritableSym(w)) {
-          printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
-          printerr("at " + z + "=" + zd)
-          printsrc("in " + quotePos(z))
+          printerr("//error: write to non-mutable " + w + " -> " + findDefinition(w))
+          printerr("//at " + z + "=" + zd)
+          printsrc("//in " + quotePos(z))
         }
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
         // make sure no mutable object becomes part of mutable result (in case of allocation)
@@ -477,9 +477,9 @@ trait Effects extends Expressions with Blocks with Utils {
   def createReflectDefinition[A](s: Sym[A], x: Reflect[A]): Sym[A] = {
     x match {
       case Reflect(Reify(_,_,_),_,_) =>
-        printerr("error: reflecting a reify node.")
-        printerr("at " + s + "=" + x)
-        printsrc("in " + quotePos(s))
+        printerr("//error: reflecting a reify node.")
+        printerr("//at " + s + "=" + x)
+        printsrc("//in " + quotePos(s))
       case _ => //ok
     }
     createDefinition(s, x)
@@ -541,7 +541,7 @@ trait Effects extends Expressions with Blocks with Utils {
     reflectSubGraph(defs)
 
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
-      printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
+      printerr("//error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
 
     val deps = if (save eq null) context else context.drop(save.length)
     

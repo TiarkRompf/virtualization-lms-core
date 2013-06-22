@@ -8,10 +8,10 @@ while ({ // List(Sym(18))
 false
 }) {
 // dummy placeholder for previous iteration: List(Sym(13)) = Sym(2) / List()
-val x14 = println("booooring!")
+println("booooring!")
 }
-val x19 = println("done")
-x19
+println("done")
+()
 }
 }
 /*****************************************

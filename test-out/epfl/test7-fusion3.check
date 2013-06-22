@@ -19,8 +19,8 @@ for (x8 <- 0 until x7) {
 val x9 = x6.apply(x8)
 x10 += x9
 }
-val x11 = println(x10)
-x11
+println(x10)
+()
 }
 }
 /*****************************************

@@ -33,7 +33,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
 
       // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
       stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends (("+args.map(a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
-      stream.println("def apply("+args.map(a => quote(a) + ":" + remap(a.tp)).mkString(", ")+"): "+sA+" = {")
+      stream.println("def apply("+args.map(a => quote(a, true) + ":" + remap(a.tp)).mkString(", ")+"): "+sA+" = {")
     
       emitBlock(body)
       stream.println(quote(getBlockResult(body)))
@@ -55,7 +55,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
     stream.println("package generated." + this.toString)
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
-    stream.print(vals.map(p => quote(p) + ":" + remap(p.tp)).mkString(","))
+    stream.print(vals.map(p => quote(p, true) + ":" + remap(p.tp)).mkString(","))
 
     // variable name mangling
     if (vals.length > 0 && vars.length > 0){
@@ -63,7 +63,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
     }
     // TODO: remap Ref instead of explicitly adding generated.scala
     if (vars.length > 0){
-      stream.print(vars.map(v => quote(v) + ":" + "generated.scala.Ref[" + remap(v.tp) +"]").mkString(","))
+      stream.print(vars.map(v => quote(v, true) + ":" + "generated.scala.Ref[" + remap(v.tp) +"]").mkString(","))
     }
     if (resultIsVar){
       stream.print("): " + "generated.scala.Ref[" + resultType + "] = {")
@@ -91,15 +91,25 @@ trait ScalaCodegen extends GenericCodegen with Config {
       val context = sym.pos(0)
       "      // " + relativePath(context.fileName) + ":" + context.line
     }
-    stream.println("val " + quote(sym) + " = " + rhs + extra)
+    sym match {
+      case s@Sym(n) => isVoidType(s.tp) match {
+        case true => stream.println(/*"val " + quote(sym) + " = " +*/ "" + rhs + extra)
+        case false => stream.println("val " + quote(sym) + " = " + rhs + extra)
+      }
+      case _ => stream.println("val " + quote(sym) + " = " + rhs + extra)
+    }
   }
   
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
-    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
+    stream.println("var " + quote(sym, true) + ": " + remap(sym.tp) + " = " + rhs)
   }
   
-  def emitAssignment(lhs: String, rhs: String): Unit = {
-    stream.println(lhs + " = " + rhs)
+  def emitAssignment(sym: Sym[Any], lhs: String, rhs: String): Unit = {
+    if(isVoidType(sym.tp)) {
+      stream.println(lhs + " = " + rhs)
+    } else {
+      emitValDef(sym, lhs + " = " + rhs)
+    }
   }
 }
 
@@ -114,7 +124,7 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   }
   
   def emitForwardDef(sym: Sym[Any]): Unit = {
-    stream.println("var " + quote(sym) + /*": " + remap(sym.tp) +*/ " = null.asInstanceOf[" + remap(sym.tp) + "]")
+    if(!isVoidType(sym.tp)) { stream.println("var " + quote(sym, true) + /*": " + remap(sym.tp) +*/ " = null.asInstanceOf[" + remap(sym.tp) + "]") }
   }
   
   // special case for recursive vals

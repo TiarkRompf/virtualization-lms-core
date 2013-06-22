@@ -13,7 +13,7 @@ trait JSGenFunctions extends JSGenEffect with BaseGenFunctions {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, x, y) =>
-      stream.println("var " + quote(sym) + " = function(" + quote(x) + ") {")
+      stream.println("var " + quote(sym, true) + " = function(" + quote(x) + ") {")
       emitBlock(y)
       stream.println("return " + quote(getBlockResult(y)))
       stream.println("}")
@@ -31,7 +31,7 @@ trait JSGenTupledFunctions extends JSGenFunctions {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>
-      stream.println("var " + quote(sym) + " = function" + xs.map(quote).mkString("(", ",", ")") + " {")
+      stream.println("var " + quote(sym, true) + " = function" + xs.map(quote).mkString("(", ",", ")") + " {")
       emitBlock(y)
       stream.println("return " + quote(getBlockResult(y)))
       stream.println("}")

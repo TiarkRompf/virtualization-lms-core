@@ -12,15 +12,15 @@ val x3 = VectorLiteral(List(Sym(1)))
 val x4 = VectorLiteral(List(Sym(2)))
 // begin multi
 // soft deps: x1,x2,x3,x4
-val x5 = VectorUpdate(Sym(1),Const(5),Const(7.0))
+VectorUpdate(Sym(1),Const(5),Const(7.0))
 val x8 = x3 // mutated by x5
 val x9 = x4 // mutated by x5
 // end multi
 val x10 = VectorApply(Sym(8),Const(0))
-val x12 = println(x10)
+println(x10)
 val x11 = VectorApply(Sym(9),Const(0))
-val x13 = println(x11)
-x13
+println(x11)
+()
 }
 }
 /*****************************************

@@ -33,7 +33,7 @@ trait JSCodegen extends GenericCodegen {
     Nil
   }
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    stream.println("var " + quote(sym) + " = " + rhs)
+    stream.println("var " + quote(sym, true) + " = " + rhs)
   }
 }
 
@@ -57,7 +57,7 @@ trait JSGenIfThenElse extends BaseGenIfThenElse with JSGenEffect { // it's more 
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IfThenElse(c,a,b) =>  
-      stream.println("var " + quote(sym))
+      stream.println("var " + quote(sym, true))
       stream.println("if (" + quote(c) + ") {")
       emitBlock(a)
       stream.println(quote(sym) + "=" + quote(getBlockResult(a)))
