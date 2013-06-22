@@ -9,6 +9,9 @@ trait TupleOps extends Base {
   implicit def make_tuple3[A:Manifest,B:Manifest,C:Manifest](t: (Rep[A], Rep[B], Rep[C]))(implicit pos: SourceContext) : Rep[(A,B,C)]
   implicit def make_tuple4[A:Manifest,B:Manifest,C:Manifest,D:Manifest](t: (Rep[A], Rep[B], Rep[C], Rep[D]))(implicit pos: SourceContext) : Rep[(A,B,C,D)]
   implicit def make_tuple5[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest](t: (Rep[A], Rep[B], Rep[C], Rep[D], Rep[E]))(implicit pos: SourceContext) : Rep[(A,B,C,D,E)]
+  implicit def make_tuple6[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest,F:Manifest](t: (Rep[A], Rep[B], Rep[C], Rep[D], Rep[E], Rep[F]))(implicit pos: SourceContext) : Rep[(A,B,C,D,E,F)]
+  //implicit def make_tuple7[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest,F:Manifest,G:Manifest](t: (Rep[A], Rep[B], Rep[C], Rep[D], Rep[E], Rep[F], Rep[G]))(implicit pos: SourceContext) : Rep[(A,B,C,D,E,F,G)]
+  //implicit def make_tuple8[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest,F:Manifest,G:Manifest,H:Manifest](t: (Rep[A], Rep[B], Rep[C], Rep[D], Rep[E], Rep[F], Rep[G], Rep[H]))(implicit pos: SourceContext) : Rep[(A,B,C,D,E,F,G,H)]
 
   implicit def t2[A:Manifest,B:Manifest](t: Rep[(A,B)])(implicit pos: SourceContext) =
     ((tuple2_get1(t),tuple2_get2(t)))
@@ -18,6 +21,8 @@ trait TupleOps extends Base {
     ((tuple4_get1(t),tuple4_get2(t),tuple4_get3(t),tuple4_get4(t)))
   implicit def t5[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest](t: Rep[(A,B,C,D,E)])(implicit pos: SourceContext) =
     ((tuple5_get1(t),tuple5_get2(t),tuple5_get3(t),tuple5_get4(t),tuple5_get5(t)))
+  implicit def t6[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest,F:Manifest](t: Rep[(A,B,C,D,E,F)])(implicit pos: SourceContext) =
+    ((tuple6_get1(t),tuple6_get2(t),tuple6_get3(t),tuple6_get4(t),tuple6_get5(t),tuple6_get6(t)))
 
   def tuple2_get1[A:Manifest](t: Rep[(A,_)])(implicit pos: SourceContext) : Rep[A]
   def tuple2_get2[B:Manifest](t: Rep[(_,B)])(implicit pos: SourceContext) : Rep[B]
@@ -36,6 +41,13 @@ trait TupleOps extends Base {
   def tuple5_get3[C:Manifest](t: Rep[(_,_,C,_,_)])(implicit pos: SourceContext) : Rep[C]
   def tuple5_get4[D:Manifest](t: Rep[(_,_,_,D,_)])(implicit pos: SourceContext) : Rep[D]
   def tuple5_get5[E:Manifest](t: Rep[(_,_,_,_,E)])(implicit pos: SourceContext) : Rep[E]
+
+  def tuple6_get1[A:Manifest](t: Rep[(A,_,_,_,_,_)])(implicit pos: SourceContext) : Rep[A]
+  def tuple6_get2[B:Manifest](t: Rep[(_,B,_,_,_,_)])(implicit pos: SourceContext) : Rep[B]
+  def tuple6_get3[C:Manifest](t: Rep[(_,_,C,_,_,_)])(implicit pos: SourceContext) : Rep[C]
+  def tuple6_get4[D:Manifest](t: Rep[(_,_,_,D,_,_)])(implicit pos: SourceContext) : Rep[D]
+  def tuple6_get5[E:Manifest](t: Rep[(_,_,_,_,E,_)])(implicit pos: SourceContext) : Rep[E]
+  def tuple6_get6[F:Manifest](t: Rep[(_,_,_,_,_,F)])(implicit pos: SourceContext) : Rep[F]
 }
 
 trait TupleOpsExp extends TupleOps with EffectExp {
@@ -44,6 +56,7 @@ trait TupleOpsExp extends TupleOps with EffectExp {
   implicit def make_tuple3[A:Manifest,B:Manifest,C:Manifest](t: (Exp[A],Exp[B],Exp[C]))(implicit pos: SourceContext) : Exp[(A,B,C)] = ETuple3(t._1, t._2, t._3)
   implicit def make_tuple4[A:Manifest,B:Manifest,C:Manifest,D:Manifest](t: (Exp[A],Exp[B],Exp[C],Exp[D]))(implicit pos: SourceContext) : Exp[(A,B,C,D)] = ETuple4(t._1, t._2, t._3, t._4)
   implicit def make_tuple5[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest](t: (Exp[A],Exp[B],Exp[C],Exp[D],Exp[E]))(implicit pos: SourceContext) : Exp[(A,B,C,D,E)] = ETuple5(t._1, t._2, t._3, t._4, t._5)
+  implicit def make_tuple6[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest,F:Manifest](t: (Rep[A], Rep[B], Rep[C], Rep[D], Rep[E], Rep[F]))(implicit pos: SourceContext) : Rep[(A,B,C,D,E,F)] = ETuple6(t._1, t._2, t._3, t._4, t._5, t._6)
 
   case class ETuple2[A:Manifest,B:Manifest](_1: Exp[A],_2: Exp[B]) extends Def[(A,B)] {
     val m1 = manifest[A]
@@ -67,6 +80,14 @@ trait TupleOpsExp extends TupleOps with EffectExp {
     val m4 = manifest[D]
     val m5 = manifest[E]
   }
+  case class ETuple6[A:Manifest,B:Manifest,C:Manifest,D:Manifest,E:Manifest,F:Manifest](_1: Exp[A],_2: Exp[B],_3: Exp[C],_4: Exp[D],_5: Exp[E],_6: Exp[F]) extends Def[(A,B,C,D,E,F)] {
+    val m1 = manifest[A]
+    val m2 = manifest[B]
+    val m3 = manifest[C]
+    val m4 = manifest[D]
+    val m5 = manifest[E]
+    val m6 = manifest[F]
+  }
 
   case class Tuple2Access1[A:Manifest](t: Exp[(A,_)]) extends Def[A] { val m = manifest[A] }
   case class Tuple2Access2[B:Manifest](t: Exp[(_,B)]) extends Def[B] { val m = manifest[B] }
@@ -82,6 +103,12 @@ trait TupleOpsExp extends TupleOps with EffectExp {
   case class Tuple5Access3[C:Manifest](t: Exp[(_,_,C,_,_)]) extends Def[C] { val m = manifest[C] }
   case class Tuple5Access4[D:Manifest](t: Exp[(_,_,_,D,_)]) extends Def[D] { val m = manifest[D] }
   case class Tuple5Access5[E:Manifest](t: Exp[(_,_,_,_,E)]) extends Def[E] { val m = manifest[E] }
+  case class Tuple6Access1[A:Manifest](t: Exp[(A,_,_,_,_,_)]) extends Def[A] { val m = manifest[A] }
+  case class Tuple6Access2[B:Manifest](t: Exp[(_,B,_,_,_,_)]) extends Def[B] { val m = manifest[B] }
+  case class Tuple6Access3[C:Manifest](t: Exp[(_,_,C,_,_,_)]) extends Def[C] { val m = manifest[C] }
+  case class Tuple6Access4[D:Manifest](t: Exp[(_,_,_,D,_,_)]) extends Def[D] { val m = manifest[D] }
+  case class Tuple6Access5[E:Manifest](t: Exp[(_,_,_,_,E,_)]) extends Def[E] { val m = manifest[E] }
+  case class Tuple6Access6[F:Manifest](t: Exp[(_,_,_,_,_,F)]) extends Def[F] { val m = manifest[F] }
 
   def tuple2_get1[A:Manifest](t: Exp[(A,_)])(implicit pos: SourceContext) = t match {
     case Def(ETuple2(a,b)) => a
@@ -143,6 +170,31 @@ trait TupleOpsExp extends TupleOps with EffectExp {
     case _ => Tuple5Access5(t)
   }
 
+  def tuple6_get1[A:Manifest](t: Exp[(A,_,_,_,_,_)])(implicit pos: SourceContext) = t match {
+    case Def(ETuple6(a,b,c,d,e,f)) => a
+    case _ => Tuple6Access1(t)
+  }
+  def tuple6_get2[B:Manifest](t: Exp[(_,B,_,_,_,_)])(implicit pos: SourceContext) = t match {
+    case Def(ETuple6(a,b,c,d,e,f)) => b
+    case _ => Tuple6Access2(t)
+  }
+  def tuple6_get3[C:Manifest](t: Exp[(_,_,C,_,_,_)])(implicit pos: SourceContext) = t match {
+    case Def(ETuple6(a,b,c,d,e,f)) => c
+    case _ => Tuple6Access3(t)
+  }
+  def tuple6_get4[D:Manifest](t: Exp[(_,_,_,D,_,_)])(implicit pos: SourceContext) = t match {
+    case Def(ETuple6(a,b,c,d,e,f)) => d
+    case _ => Tuple6Access4(t)
+  }
+  def tuple6_get5[E:Manifest](t: Exp[(_,_,_,_,E,_)])(implicit pos: SourceContext) = t match {
+    case Def(ETuple6(a,b,c,d,e,f)) => e
+    case _ => Tuple6Access5(t)
+  }
+  def tuple6_get6[F:Manifest](t: Exp[(_,_,_,_,_,F)])(implicit pos: SourceContext) = t match {
+    case Def(ETuple6(a,b,c,d,e,f)) => f
+    case _ => Tuple6Access6(t)
+  }
+
   object Both { def unapply[T](x:T):Some[(T,T)] = Some((x,x)) }
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
@@ -180,7 +232,21 @@ trait TupleOpsExp extends TupleOps with EffectExp {
     case Reflect(e@Tuple5Access2(t), u, es) => reflectMirrored(Reflect(Tuple5Access2(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(e@Tuple5Access3(t), u, es) => reflectMirrored(Reflect(Tuple5Access3(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
     case Reflect(e@Tuple5Access4(t), u, es) => reflectMirrored(Reflect(Tuple5Access4(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
-    case Reflect(e@Tuple5Access5(t), u, es) => reflectMirrored(Reflect(Tuple5Access5(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+    case Reflect(e@Tuple5Access5(t), u, es) => reflectMirrored(Reflect(Tuple5Access5(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))      
+
+    case e@ETuple6(a,b,c,d,g,h) => make_tuple6(f(a),f(b),f(c),f(d),f(g),f(h))(e.m1,e.m2,e.m3,e.m4,e.m5,e.m6,pos)
+    case e@Tuple6Access1(t)   => tuple6_get1(f(t))(mtype(e.m),pos)
+    case e@Tuple6Access2(t)   => tuple6_get2(f(t))(mtype(e.m),pos)
+    case e@Tuple6Access3(t)   => tuple6_get3(f(t))(mtype(e.m),pos)
+    case e@Tuple6Access4(t)   => tuple6_get4(f(t))(mtype(e.m),pos)
+    case e@Tuple6Access5(t)   => tuple6_get5(f(t))(mtype(e.m),pos)
+    case e@Tuple6Access6(t)   => tuple6_get6(f(t))(mtype(e.m),pos)
+    case Reflect(e@Tuple6Access1(t), u, es) => reflectMirrored(Reflect(Tuple6Access1(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple6Access2(t), u, es) => reflectMirrored(Reflect(Tuple6Access2(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@Tuple6Access3(t), u, es) => reflectMirrored(Reflect(Tuple6Access3(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+    case Reflect(e@Tuple6Access4(t), u, es) => reflectMirrored(Reflect(Tuple6Access4(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+    case Reflect(e@Tuple6Access5(t), u, es) => reflectMirrored(Reflect(Tuple6Access5(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+    case Reflect(e@Tuple6Access6(t), u, es) => reflectMirrored(Reflect(Tuple6Access6(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
     
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
@@ -194,30 +260,39 @@ trait ScalaGenTupleOps extends ScalaGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ETuple2(a,b)  =>
-      emitValDef(sym, "("+ quote(a) + "," + quote(b) + ")")
+      emitValDef(sym, "("+ quote(a, true) + "," + quote(b, true) + ")")
     case Tuple2Access1(t) => emitValDef(sym, quote(t) + "._1")
     case Tuple2Access2(t) => emitValDef(sym, quote(t) + "._2")
 
     case ETuple3(a,b,c)  =>
-      emitValDef(sym, "("+ quote(a) + "," + quote(b) + "," + quote(c) + ")")
+      emitValDef(sym, "("+ quote(a, true) + "," + quote(b, true) + "," + quote(c, true) + ")")
     case Tuple3Access1(t) => emitValDef(sym, quote(t) + "._1")
     case Tuple3Access2(t) => emitValDef(sym, quote(t) + "._2")
     case Tuple3Access3(t) => emitValDef(sym, quote(t) + "._3")
 
     case ETuple4(a,b,c,d)  =>
-      emitValDef(sym, "("+ quote(a) + "," + quote(b) + "," + quote(c) + "," + quote(d) + ")")
+      emitValDef(sym, "("+ quote(a, true) + "," + quote(b, true) + "," + quote(c, true) + "," + quote(d, true) + ")")
     case Tuple4Access1(t) => emitValDef(sym, quote(t) + "._1")
     case Tuple4Access2(t) => emitValDef(sym, quote(t) + "._2")
     case Tuple4Access3(t) => emitValDef(sym, quote(t) + "._3")
     case Tuple4Access4(t) => emitValDef(sym, quote(t) + "._4")
 
     case ETuple5(a,b,c,d,e)  =>
-      emitValDef(sym, "("+ quote(a) + "," + quote(b) + "," + quote(c) + "," + quote(d) + "," + quote(e) + ")")
+      emitValDef(sym, "("+ quote(a, true) + "," + quote(b, true) + "," + quote(c, true) + "," + quote(d, true) + "," + quote(e, true) + ")")
     case Tuple5Access1(t) => emitValDef(sym, quote(t) + "._1")
     case Tuple5Access2(t) => emitValDef(sym, quote(t) + "._2")
     case Tuple5Access3(t) => emitValDef(sym, quote(t) + "._3")
     case Tuple5Access4(t) => emitValDef(sym, quote(t) + "._4")
     case Tuple5Access5(t) => emitValDef(sym, quote(t) + "._5")
+
+    case ETuple6(a,b,c,d,e,f)  =>
+      emitValDef(sym, "("+ quote(a, true) + "," + quote(b, true) + "," + quote(c, true) + "," + quote(d, true) + "," + quote(e, true) + "," + quote(f, true) + ")")
+    case Tuple6Access1(t) => emitValDef(sym, quote(t) + "._1")
+    case Tuple6Access2(t) => emitValDef(sym, quote(t) + "._2")
+    case Tuple6Access3(t) => emitValDef(sym, quote(t) + "._3")
+    case Tuple6Access4(t) => emitValDef(sym, quote(t) + "._4")
+    case Tuple6Access5(t) => emitValDef(sym, quote(t) + "._5")
+    case Tuple6Access6(t) => emitValDef(sym, quote(t) + "._6")
 
     case _ => super.emitNode(sym, rhs)
   }
