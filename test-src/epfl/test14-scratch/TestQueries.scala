@@ -170,6 +170,33 @@ trait Schema extends Util {
 
   val departmentsFullOfAbstracters = expertise("abstract")
 
+  // 3.1 Nested structures
+
+  type NestedOrg = List[{
+    val dpt: String
+    val employees: List[{
+      val emp: String
+      val tasks: List[String]
+    }]
+  }]
+
+  val nestedOrg: NestedOrg =
+    for { 
+      d <- org.departments
+    } yield new Record {
+      val dpt = d.dpt
+      val employees = for {
+        e <- org.employees
+        if d.dpt == e.dpt
+      } yield new Record {
+        val emp = e.emp 
+        val tasks = for {
+          t <- org.tasks 
+          if e.emp == t.emp
+        } yield t.tsk
+      }
+    }
+
 }
 
 trait Util {
@@ -177,7 +204,7 @@ trait Util {
   abstract class Record extends Product {
     lazy val elems = {
       val fields = getClass.getDeclaredFields.toList
-      for (f <- fields if !f.getName.contains("$Cache")) yield {
+      for (f <- fields if !f.getName.contains("$")) yield {
         f.setAccessible(true)
         (f.getName, f.get(this))
       }
@@ -235,6 +262,7 @@ class TestQueries extends FileDiffSuite {
         Console.println(thirtySomethings3)
         Console.println(thirtySomethings4)
         Console.println(departmentsFullOfAbstracters)
+        Console.println(nestedOrg)
 
         val f = compile { x: Rep[Int] =>
 
