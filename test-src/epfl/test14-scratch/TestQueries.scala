@@ -233,13 +233,13 @@ trait Schema extends Util {
   +----+--------+------+-----+------+
   */
 
-  case class Node extends Record(
-    val id: Int
-    val parent: Int
-    val name: String
-    val pre: Int
+  case class Node(
+    val id: Int,
+    val parent: Int,
+    val name: String,
+    val pre: Int,
     val post: Int 
-  )
+  ) extends Record
 
   val xml = List(
     Node(0, -1, "#doc", 0, 13),
@@ -252,14 +252,21 @@ trait Schema extends Util {
 
 
   abstract class Axis
-  case object Self
-  case object Child
-  case object Descendant
-  case object DescendantOrSelf
-  case object Following
-  case object FollowingSibling
-  case class Rev(x: Axis)
+  case object Self extends Axis
+  case object Child extends Axis
+  case object Descendant extends Axis
+  case object DescendantOrSelf extends Axis
+  case object Following extends Axis
+  case object FollowingSibling extends Axis
+  case class Rev(x: Axis) extends Axis
  
+  abstract class Path
+  case class PSeq(x: Path, y: Path) extends Path
+  case class PAxis(x: Axis) extends Path
+  case class NameTest(x: String) extends Path
+  case class Filter(x: Path) extends Path
+
+
 
 }
 
