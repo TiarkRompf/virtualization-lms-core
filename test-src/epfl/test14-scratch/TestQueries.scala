@@ -197,6 +197,28 @@ trait Schema extends Util {
       }
     }
 
+  // 3.2 Higher-order queries
+
+  def any[A](xs: List[A])(p: A => Boolean): Boolean =
+    exists(for (x <- xs if p(x)) yield new Record { })
+
+  def all[A](xs: List[A])(p: A => Boolean): Boolean =
+    !any(xs)(x => !p(x))
+
+  def contains[A](xs: List[A], u: A): Boolean =
+    any(xs)(x => x == u)
+
+  def expertise2(u: String): List[{ val dpt: String }] =
+    for {
+      d <- nestedOrg
+      if all(d.employees)(e => contains(e.tasks, u)) 
+    } yield new Record { val dpt = d.dpt }
+
+  val departmentsFullOfAbstracters2 = expertise2("abstract")
+
+
+
+
 }
 
 trait Util {
@@ -263,6 +285,7 @@ class TestQueries extends FileDiffSuite {
         Console.println(thirtySomethings4)
         Console.println(departmentsFullOfAbstracters)
         Console.println(nestedOrg)
+        Console.println(departmentsFullOfAbstracters2)
 
         val f = compile { x: Rep[Int] =>
 
