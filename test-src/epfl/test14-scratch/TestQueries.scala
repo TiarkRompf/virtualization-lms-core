@@ -321,6 +321,48 @@ trait Schema extends Util {
 
 }
 
+
+trait Deep extends Schema {
+
+/*
+normalized syntax:
+
+(SQLquery)      S ::= [] | X | X1@X2
+(collection)    X ::= database(db) | yield Y | if Z then yield Y | for x in database(db).l do X
+(record)        Y ::= x | {l=Z}
+(base)          Z ::= c | x.l | op(X) | exists S
+*/
+
+abstract class Query
+case object QEmpty extends Query
+case object QColl extends Query
+case class QApp(x: Coll, y: Coll) extends Query
+
+abstract class Coll
+case class CDatabase(db: Any) extends Coll
+case class CYield(x: Rec) extends Coll
+case class CIfYield(c: Op, x: Rec) extends Coll
+case class CFor(x: String, db: Any, l: String, inner: Coll) extends Coll
+
+abstract class Rec
+case class RId(x: String) extends Rec
+case class RStruct(x: Any) extends Rec
+
+abstract class Op
+case class OConst(c: Any) extends Op
+case class OField(x: String, l: String) extends Op
+case class OPrim(x: String, args: List[Coll]) extends Op
+case class OExists(q: Query) extends Op
+
+}
+
+
+
+
+
+
+
+
 trait Util {
   // Record supertype: pretty printing etc
   abstract class Record extends Product {
