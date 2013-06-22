@@ -233,6 +233,24 @@ trait Schema extends Util {
   +----+--------+------+-----+------+
   */
 
+  case class Node extends Record(
+    val id: Int
+    val parent: Int
+    val name: String
+    val pre: Int
+    val post: Int 
+  )
+
+  val xml = List(
+    Node(0, -1, "#doc", 0, 13),
+    Node(1,  0, "a",    1, 12),
+    Node(2,  1, "b",    2,  5),
+    Node(3,  2, "c",    3,  4),
+    Node(4,  1, "d",    6, 11),
+    Node(5,  4, "e",    7,  8),
+    Node(6,  4, "f",    9, 10))
+
+
 
 
 }
