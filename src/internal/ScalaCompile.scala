@@ -88,4 +88,164 @@ trait ScalaCompile extends Expressions {
     val obj: A=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[A=>B]
     obj
   }
+
+  def compile2[A1,A2,B](f: (Exp[A1], Exp[A2]) => Exp[B])(implicit mA1: Manifest[A1], mA2: Manifest[A2], mB: Manifest[B]): (A1,A2)=>B = {
+    if (this.compiler eq null)
+      setupCompiler()
+    
+    val className = "staged$" + compileCount
+    compileCount += 1
+    
+    val source = new StringWriter()
+    val staticData = codegen.emitSource2(f, className, new PrintWriter(source))
+
+    if (dumpGeneratedCode) println(source)
+
+    val compiler = this.compiler
+    val run = new compiler.Run
+
+    val fileSystem = new VirtualDirectory("<vfs>", None)
+    compiler.settings.outputDirs.setSingleOutput(fileSystem)
+  //      compiler.genJVM.outputDir = fileSystem
+
+    run.compileSources(List(new util.BatchSourceFile("<stdin>", source.toString)))
+    reporter.printSummary()
+
+    if (!reporter.hasErrors)
+      println("compilation: ok")
+    else
+      println("compilation: had errors")
+
+    reporter.reset
+    //output.reset
+
+    val parent = this.getClass.getClassLoader
+    val loader = new AbstractFileClassLoader(fileSystem, this.getClass.getClassLoader)
+
+    val cls: Class[_] = loader.loadClass(className)
+    val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
+    
+    val obj: (A1,A2)=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[(A1,A2)=>B]
+    obj
+  }
+
+  def compile3[A1,A2,A3,B](f: (Exp[A1], Exp[A2], Exp[A3]) => Exp[B])(implicit mA1: Manifest[A1], mA2: Manifest[A2], mA3: Manifest[A3], mB: Manifest[B]): (A1,A2,A3)=>B = {
+    if (this.compiler eq null)
+      setupCompiler()
+    
+    val className = "staged$" + compileCount
+    compileCount += 1
+    
+    val source = new StringWriter()
+    val staticData = codegen.emitSource3(f, className, new PrintWriter(source))
+
+    if (dumpGeneratedCode) println(source)
+
+    val compiler = this.compiler
+    val run = new compiler.Run
+
+    val fileSystem = new VirtualDirectory("<vfs>", None)
+    compiler.settings.outputDirs.setSingleOutput(fileSystem)
+  //      compiler.genJVM.outputDir = fileSystem
+
+    run.compileSources(List(new util.BatchSourceFile("<stdin>", source.toString)))
+    reporter.printSummary()
+
+    if (!reporter.hasErrors)
+      println("compilation: ok")
+    else
+      println("compilation: had errors")
+
+    reporter.reset
+    //output.reset
+
+    val parent = this.getClass.getClassLoader
+    val loader = new AbstractFileClassLoader(fileSystem, this.getClass.getClassLoader)
+
+    val cls: Class[_] = loader.loadClass(className)
+    val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
+    
+    val obj: (A1,A2,A3)=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[(A1,A2,A3)=>B]
+    obj
+  }
+
+  def compile4[A1,A2,A3,A4,B](f: (Exp[A1], Exp[A2], Exp[A3], Exp[A4]) => Exp[B])(implicit mA1: Manifest[A1], mA2: Manifest[A2], mA3: Manifest[A3], mA4: Manifest[A4], mB: Manifest[B]): (A1,A2,A3,A4)=>B = {
+    if (this.compiler eq null)
+      setupCompiler()
+    
+    val className = "staged$" + compileCount
+    compileCount += 1
+    
+    val source = new StringWriter()
+    val staticData = codegen.emitSource4(f, className, new PrintWriter(source))
+
+    if (dumpGeneratedCode) println(source)
+
+    val compiler = this.compiler
+    val run = new compiler.Run
+
+    val fileSystem = new VirtualDirectory("<vfs>", None)
+    compiler.settings.outputDirs.setSingleOutput(fileSystem)
+  //      compiler.genJVM.outputDir = fileSystem
+
+    run.compileSources(List(new util.BatchSourceFile("<stdin>", source.toString)))
+    reporter.printSummary()
+
+    if (!reporter.hasErrors)
+      println("compilation: ok")
+    else
+      println("compilation: had errors")
+
+    reporter.reset
+    //output.reset
+
+    val parent = this.getClass.getClassLoader
+    val loader = new AbstractFileClassLoader(fileSystem, this.getClass.getClassLoader)
+
+    val cls: Class[_] = loader.loadClass(className)
+    val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
+    
+    val obj: (A1,A2,A3,A4)=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[(A1,A2,A3,A4)=>B]
+    obj
+  }
+
+  def compile5[A1,A2,A3,A4,A5,B](f: (Exp[A1], Exp[A2], Exp[A3], Exp[A4], Exp[A5]) => Exp[B])(implicit mA1: Manifest[A1], mA2: Manifest[A2], mA3: Manifest[A3], mA4: Manifest[A4], mA5: Manifest[A5], mB: Manifest[B]): (A1,A2,A3,A4,A5)=>B = {
+    if (this.compiler eq null)
+      setupCompiler()
+    
+    val className = "staged$" + compileCount
+    compileCount += 1
+    
+    val source = new StringWriter()
+    val staticData = codegen.emitSource5(f, className, new PrintWriter(source))
+
+    if (dumpGeneratedCode) println(source)
+
+    val compiler = this.compiler
+    val run = new compiler.Run
+
+    val fileSystem = new VirtualDirectory("<vfs>", None)
+    compiler.settings.outputDirs.setSingleOutput(fileSystem)
+  //      compiler.genJVM.outputDir = fileSystem
+
+    run.compileSources(List(new util.BatchSourceFile("<stdin>", source.toString)))
+    reporter.printSummary()
+
+    if (!reporter.hasErrors)
+      println("//compilation: ok")
+    else
+      println("//compilation: had errors")
+
+    reporter.reset
+    //output.reset
+
+    val parent = this.getClass.getClassLoader
+    val loader = new AbstractFileClassLoader(fileSystem, this.getClass.getClassLoader)
+
+    val cls: Class[_] = loader.loadClass(className)
+    val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
+    
+    val obj: (A1,A2,A3,A4,A5)=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[(A1,A2,A3,A4,A5)=>B]
+    obj
+  }
 }
