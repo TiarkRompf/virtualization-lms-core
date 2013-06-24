@@ -322,15 +322,32 @@ trait Shallow extends Util {
 }
 
 
-trait Staged extends ScalaOpsPkg with Util {
+trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Structs { //with Util {
   
+  def database[T:Manifest](s: String): Rep[T]
+
+  trait Inner {
+
   // people db schema
 
-  case class Person(name: String, age: Int) extends Record
-  case class Couple(her: String, him: String) extends Record
-  case class PeopleDB(people: List[Person], couples: List[Couple]) extends Record
+  type Person = Record {
+    val name: String
+    val age: Int
+  }
 
-  val db = PeopleDB(
+  type Couple = Record {
+    val her: String
+    val him: String
+  }
+
+  type PeopleDB = Record {
+    val people: List[Person]
+    val couples: List[Couple]
+  }
+
+  //val db = staticData//database[PeopleDB]("PeopleDB")
+  val db = database[PeopleDB]("PeopleDB")
+  /*PeopleDB(
     people = List(
       Person("Alex", 60),
       Person("Bert", 55),
@@ -340,11 +357,11 @@ trait Staged extends ScalaOpsPkg with Util {
       Person("Fred", 60)),
     couples = List(
       Couple("Alex", "Bert"),
-      Couple("Cora", "Drew")))
+      Couple("Cora", "Drew")))*/
 
   // 2.1 Comprehensions and queries / 2.2 Query via quotation
 
-  val differences: List[{ val name: String; val diff: Int }] =
+  val differences: Rep[List[{ val name: String; val diff: Int }]] =
     for {
       c <- db.couples
       w <- db.people
@@ -358,7 +375,7 @@ trait Staged extends ScalaOpsPkg with Util {
   // 2.3 Abstracting over values
 
   type Names = List[{ val name: String}]
-  def range(a: Int, b: Int): Names =
+  def range(a: Rep[Int], b: Rep[Int]): Rep[Names] =
     for {
       w <- db.people
       if a <= w.age && w.age < b
@@ -370,7 +387,7 @@ trait Staged extends ScalaOpsPkg with Util {
 
   // 2.4 Abstracting over a predicate
 
-  def satisfies(p: Int => Boolean): Names = 
+  def satisfies(p: Rep[Int] => Rep[Boolean]): Rep[Names] = 
     for {
       w <- db.people
       if p(w.age)
@@ -383,14 +400,14 @@ trait Staged extends ScalaOpsPkg with Util {
 
   // 2.5 Composing queries
 
-  def ageFromName(s: String): List[Int] =  // paper has return type 'int' but says 'list of int' in the text (?)
+  def ageFromName(s: Rep[String]): Rep[List[Int]] =  // paper has return type 'int' but says 'list of int' in the text (?)
     for {
       u <- db.people
       if u.name == s
     } yield u.age
 
 
-  def rangeFromNames(s: String, t: String): Names =
+  def rangeFromNames(s: Rep[String], t: Rep[String]): Rep[Names] =
     for {
       a <- ageFromName(s)
       b <- ageFromName(t)
@@ -411,7 +428,7 @@ trait Staged extends ScalaOpsPkg with Util {
   val t0: Predicate = And(Above(30), Below(40))
   val t1: Predicate = Not(Or(Below(30), Above(40)))
 
-  def P(t: Predicate)(x: Int): Boolean = t match {
+  def P(t: Predicate)(x: Rep[Int]): Rep[Boolean] = t match {
     case Above(a) => a <= x
     case Below(a) => x < a
     case And(t, u) => P(t)(x) && P(u)(x)
@@ -426,13 +443,15 @@ trait Staged extends ScalaOpsPkg with Util {
 
   // corporate schema
 
-  type Org = List[{
-    val departments: List[{val dpt: String}]
-    val employees: List[{val dpt: String; val emp: String}]
-    val tasks: List[{val emp: String; val tsk: String}]
-  }]
+  type Org = Record {
+    val departments: List[Record {val dpt: String}]
+    val employees: List[Record {val dpt: String; val emp: String}]
+    val tasks: List[Record {val emp: String; val tsk: String}]
+  }
 
-  val org = new Record {
+  val org = database[Org]("Org")
+
+  /*val org = new Record {
     val departments = List(
       new Record { val dpt = "Product"},
       new Record { val dpt = "Quality"},
@@ -457,11 +476,13 @@ trait Staged extends ScalaOpsPkg with Util {
       new Record { val emp = "Edna"; val tsk = "call"},
       new Record { val emp = "Edna"; val tsk = "design"},
       new Record { val emp = "Fred"; val tsk = "call"})
-  }
+  }*/
 
-  def exists[T](xs: List[T]) = xs.nonEmpty // helper method
+  def exists(xs: Rep[List[Record]]) = !xs.isEmpty // helper method
 
-  def expertise(u: String): List[{ val dpt: String }] =
+  val empty = new Record { val ignore = () }
+
+  def expertise(u: Rep[String]): Rep[List[Record { val dpt: String }]] =
     for {
       d <- org.departments
       if !exists(
@@ -471,28 +492,27 @@ trait Staged extends ScalaOpsPkg with Util {
             for {
               t <- org.tasks
               if e.emp == t.emp && t.tsk == u 
-            } yield new Record {})
-        } yield new Record {})
+            } yield empty)
+        } yield empty )
     } yield new Record { val dpt = d.dpt }
 
   val departmentsFullOfAbstracters = expertise("abstract")
 
   // 3.1 Nested structures
 
-  type NestedOrg = List[{
+  type NestedOrg = List[Record {
     val dpt: String
-    val employees: List[{
+    val employees: List[Record {
       val emp: String
       val tasks: List[String]
     }]
   }]
 
-  val nestedOrg: NestedOrg =
+  val nestedOrg: Rep[NestedOrg] =
     for { 
       d <- org.departments
-    } yield new Record {
-      val dpt = d.dpt
-      val employees = for {
+    } yield {
+      val employees1 = for {
         e <- org.employees
         if d.dpt == e.dpt
       } yield new Record {
@@ -502,20 +522,24 @@ trait Staged extends ScalaOpsPkg with Util {
           if e.emp == t.emp
         } yield t.tsk
       }
+      new Record {
+        val dpt = d.dpt
+        val employees = employees1  // FIXME: scalac crash with outer field if records are nested
+      }
     }
 
   // 3.2 Higher-order queries
 
-  def any[A](xs: List[A])(p: A => Boolean): Boolean =
-    exists(for (x <- xs if p(x)) yield new Record { })
+  def any[A:Manifest](xs: Rep[List[A]])(p: Rep[A] => Rep[Boolean]): Rep[Boolean] =
+    exists(for (x <- xs if p(x)) yield empty)
 
-  def all[A](xs: List[A])(p: A => Boolean): Boolean =
+  def all[A:Manifest](xs: Rep[List[A]])(p: Rep[A] => Rep[Boolean]): Rep[Boolean] =
     !any(xs)(x => !p(x))
 
-  def contains[A](xs: List[A], u: A): Boolean =
+  def contains[A:Manifest](xs: Rep[List[A]], u: Rep[A]): Rep[Boolean] =
     any(xs)(x => x == u)
 
-  def expertise2(u: String): List[{ val dpt: String }] =
+  def expertise2(u: Rep[String]): Rep[List[{ val dpt: String }]] =
     for {
       d <- nestedOrg
       if all(d.employees)(e => contains(e.tasks, u)) 
@@ -540,22 +564,24 @@ trait Staged extends ScalaOpsPkg with Util {
   +----+--------+------+-----+------+
   */
 
-  case class Node(
-    val id: Int,
-    val parent: Int,
-    val name: String,
-    val pre: Int,
+  type Node = Record {
+    val id: Int
+    val parent: Int
+    val name: String
+    val pre: Int
     val post: Int 
-  ) extends Record
+  }
 
-  val db_xml = List(
+  val db_xml = database[List[Node]]("xml")
+
+  /*val db_xml = List(
     Node(0, -1, "#doc", 0, 13),
     Node(1,  0, "a",    1, 12),
     Node(2,  1, "b",    2,  5),
     Node(3,  2, "c",    3,  4),
     Node(4,  1, "d",    6, 11),
     Node(5,  4, "e",    7,  8),
-    Node(6,  4, "f",    9, 10))
+    Node(6,  4, "f",    9, 10))*/
 
 
   abstract class Axis
@@ -577,7 +603,7 @@ trait Staged extends ScalaOpsPkg with Util {
   case class NameTest(x: String) extends Path
   case class Filter(x: Path) extends Path
 
-  def axis(ax: Axis)(s: Node, t: Node): Boolean = ax match {
+  def axis(ax: Axis)(s: Rep[Node], t: Rep[Node]): Rep[Boolean] = ax match {
     case Self             => s.id == t.id
     case Child            => s.id == t.parent
     case Descendant       => s.pre < t.pre && t.post < s.post
@@ -592,7 +618,7 @@ trait Staged extends ScalaOpsPkg with Util {
   //       ^^^^                     ^^^^
   //   should be ax?
 
-  def path(p : Path)(s: Node, u: Node): Boolean = p match {
+  def path(p : Path)(s: Rep[Node], u: Rep[Node]): Rep[Boolean] = p match {
     case PSeq(p, q) => 
       any(db_xml)(t => path(p)(s, t) && path(q)(t, u))
     case PAxis(ax) => 
@@ -603,7 +629,7 @@ trait Staged extends ScalaOpsPkg with Util {
       s.id == u.id && any(db_xml)(t => path(p)(s, t))
   }
 
-  def xpath(p : Path): List[Int] = for {
+  def xpath(p : Path): Rep[List[Int]] = for {
     root <- db_xml
     s <- db_xml
     if (root.parent == -1) && path(p)(root, s)
@@ -626,10 +652,27 @@ trait Staged extends ScalaOpsPkg with Util {
   val xr2 = xpath(xp2)
   val xr3 = xpath(xp3)
 
+  }
+
 }
 
+trait StagedExp extends Staged with ScalaOpsPkgExp with StructExp {
 
+  case class Database[T](s: String) extends Def[T]
+  def database[T:Manifest](s: String): Exp[T] = Database[T](s)
 
+}
+
+trait ScalaGenStaged extends ScalaCodeGenPkg with ScalaGenStruct {
+  val IR: StagedExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case Database(s) => 
+      emitValDef(sym, "/*database*/(" + quote(s) + ").asInstanceOf["+remap(sym.tp)+"]")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
 
 
 
@@ -704,11 +747,11 @@ class TestQueries extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test14-"
   
-  trait DSL extends ScalaOpsPkg with Compile with LiftPrimitives {
+  trait DSL extends Staged with Compile {
     def test(): Unit
   }
   
-  trait Impl extends DSL with ScalaOpsPkgExp with ScalaCompile { self =>
+  trait Impl extends DSL with StagedExp with ScalaCompile { self =>
     override val verbosity = 1
     dumpGeneratedCode = true
     val codegen = new Codegen { val IR: self.type = self }
@@ -716,7 +759,7 @@ class TestQueries extends FileDiffSuite {
     runner.run()
   }
   
-  trait Codegen extends ScalaCodeGenPkg {
+  trait Codegen extends ScalaGenStaged {
     val IR: Impl
   }  
   
@@ -757,34 +800,30 @@ class TestQueries extends FileDiffSuite {
     trait Prog extends DSL with Staged {
       def test() = {
 
-        Console.println(db)
-        Console.println(differences)
-        Console.println(thirtySomethings)
-        Console.println(thirtySomethings2)
-        Console.println(evenAge)
-        Console.println(rangeBertEdna)
-        Console.println(thirtySomethings3)
-        Console.println(thirtySomethings4)
-        Console.println(departmentsFullOfAbstracters)
-        Console.println(nestedOrg)
-        Console.println(departmentsFullOfAbstracters2)
-
-        Console.println(xr0)
-        Console.println(xr1)
-        Console.println(xr2)
-        Console.println(xr3)
-
         val f = compile { x: Rep[Int] =>
 
-          val a = x + 1
-          val b = x * 2
+          val x = new Inner {}
+          import x._
 
-          a+b
+          println(db)
+          println(differences)
+          println(thirtySomethings)
+          println(thirtySomethings2)
+          println(evenAge)
+          println(rangeBertEdna)
+          println(thirtySomethings3)
+          println(thirtySomethings4)
+          println(departmentsFullOfAbstracters)
+          println(nestedOrg)
+          println(departmentsFullOfAbstracters2)
+
+          println(xr0)
+          println(xr1)
+          println(xr2)
+          println(xr3)
+
+
         }
-
-        Console.println(f(9))
-        Console.println(f(3))
-        Console.println(f(1))
 
       }
     }
