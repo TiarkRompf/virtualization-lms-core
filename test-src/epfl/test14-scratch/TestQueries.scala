@@ -713,6 +713,30 @@ case class OField(x: String, l: String) extends Op
 case class OPrim(x: String, args: List[Coll]) extends Op
 case class OExists(q: Query) extends Op
 
+/*
+normalization 1:
+
+                 (fun(x) → R) Q --> R[x:=Q] 
+                       {l=Q}.li --> Qi
+
+         for x in (yield Q)do R --> R[x:=Q]
+for y in (for x in P do Q) do R --> for x in P do (for y in Q do R)
+    for x in (if P then Q) do R --> if P then (for x in Q do R)
+               for x in [] do N --> []
+          for x in (P @ Q) do R --> (for x in P do R) @ (for x in Q do R)
+                 if true then Q --> Q
+                if false then Q --> []
+
+normalization 2:
+
+          for x in P do (Q @ R) --> (for x in P do Q) @ (for x in P do R)
+               for x in P do [] --> []
+              if P then (Q @ R) --> (if P then Q) @ (if P then R)
+                   if P then [] --> []
+        if P then (if Q then R) --> if (P && Q) then R
+    if P then (for x in Q do R) --> for x in Q do (if P then R)
+*/
+
 }
 
 
@@ -827,7 +851,8 @@ class TestQueries extends FileDiffSuite {
 
       }
     }
-    new Prog with Impl
+    val o = new Prog with Impl
+    println(o.)
   }
 
 
