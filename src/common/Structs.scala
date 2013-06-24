@@ -285,7 +285,7 @@ trait ScalaGenStruct extends ScalaGenBase {
     encounteredStructs += (recordClassName(m) -> fields)
   }
 
-  def emitDataStructures(out: PrintWriter) {
+  override def emitDataStructures(out: PrintWriter) {
     withStream(out) {
       for ((name, fields) <- encounteredStructs) {
         stream.println("case class " + name + "(" + (for ((n, e) <- fields) yield n + ": " + remap(e.tp)).mkString(", ") + ")")
