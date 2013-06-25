@@ -663,6 +663,27 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with StructExp {
   case class Database[T](s: String) extends Def[T]
   def database[T:Manifest](s: String): Exp[T] = Database[T](s)
 
+  case class For[A:Manifest, B:Manifest](l: Exp[List[A]], x: Sym[A], block: Block[List[B]]) extends Def[List[B]]
+
+
+  override def list_flatMap[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]])(implicit pos: SourceContext) = {
+    val a = fresh[A]
+    val b = reifyEffects(f(a))
+    reflectEffect(ListFlatMap(l, a, b), summarizeEffects(b).star)
+  }
+  override def list_map[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[B])(implicit pos: SourceContext) = {
+    val a = fresh[A]
+    val b = reifyEffects(f(a))
+    reflectEffect(ListMap(l, a, b), summarizeEffects(b).star)
+  }
+  override def list_filter[A : Manifest](l: Exp[List[A]], f: Exp[A] => Exp[Boolean])(implicit pos: SourceContext) = {
+    val a = fresh[A]
+    val b = reifyEffects(f(a))
+    reflectEffect(ListFilter(l, a, b), summarizeEffects(b).star)
+  }
+
+
+
 }
 
 trait ScalaGenStaged extends ScalaCodeGenPkg with ScalaGenStruct {
