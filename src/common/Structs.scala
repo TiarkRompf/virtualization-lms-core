@@ -1,23 +1,18 @@
 package scala.virtualization.lms
 package common
 
-import java.io.PrintWriter
-import scala.reflect.SourceContext
-import scala.virtualization.lms.internal.{FatExpressions,GenericNestedCodegen,GenericFatCodegen}
-import scala.reflect.SourceContext
-
-//import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt} // TODO: eliminate deps
-
+import reflect.{SourceContext, RefinedManifest}
 import util.OverloadHack
+import java.io.PrintWriter
+import internal.{GenericNestedCodegen, GenericFatCodegen}
 
-import java.io.{PrintWriter,StringWriter,FileOutputStream}
+abstract class Record extends Struct
 
-trait Structs extends Base {
+trait StructOps extends Base {
 
   /**
-   * Allows to write things lik “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
+   * Allows to write things like “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
    */
-  abstract class Record extends Struct[Rep]
   def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
 
   class RecordOps(record: Rep[Record]) {
@@ -26,187 +21,282 @@ trait Structs extends Base {
   implicit def recordToRecordOps(record: Rep[Record]) = new RecordOps(record)
 
   def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T]
-  def record_select[T : Manifest](record: Rep[Record], field: String): Rep[T]
-
+  def record_select[T : Manifest](record: Rep[Record], field: String): Rep[T]  
+  def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T]
 }
 
-trait StructExp extends Structs with BaseExp with EffectExp {
-
-  // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
-
-  abstract class StructTag[T]
+trait StructTags {
+  abstract class StructTag[+T]
   case class ClassTag[T](name: String) extends StructTag[T]
   case class NestClassTag[C[_],T](elem: StructTag[T]) extends StructTag[C[T]]
-  case class MapTag[T] extends StructTag[T]
+  case class AnonTag[T](fields: RefinedManifest[T]) extends StructTag[T]
+  case class MapTag[T] extends StructTag[T]  
+}
 
+trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with ObjectOpsExp with StringOpsExp with OverloadHack {
+  
+  // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
+    
   abstract class AbstractStruct[T] extends Def[T] {
     val tag: StructTag[T]
-    val elems: Map[String, Rep[Any]]
+    val elems: Seq[(String, Rep[Any])]
   }
 
+  abstract class AbstractField[T] extends Def[T] {
+    val struct: Rep[Any]
+    val index: String
+  }
+
+  /* override def fresh[T:Manifest] = manifest[T] match {
+    case s if s <:< manifest[Record] => 
+      val m = spawnRefinedManifest
+      super.fresh(m)
+    case _ => super.fresh
+  } */ //TODO: best way to ensure full structural type is always available?
+
   object Struct {
-    def unapply[T](s: Def[T]): Option[(StructTag[T], Map[String, Rep[Any]])] = s match {
-      case s: AbstractStruct[T] => Some((s.tag, s.elems))
+    def unapply[T](d: Def[T]) = unapplyStruct(d)
+  }
+
+  def unapplyStruct[T](d: Def[T]): Option[(StructTag[T], Seq[(String, Rep[Any])])] = d match {
+    case s: AbstractStruct[T] => Some((s.tag, s.elems))
+    case _ => None
+  }
+
+  object Field {
+    def unapply[T](d: Def[T]) = unapplyField(d)
+  }
+
+  def unapplyField[T](d: Def[T]): Option[(Rep[Any], String)] = d match {
+    case f: AbstractField[T] => Some((f.struct, f.index))
+    case _ => None
+  }
+
+  case class SimpleStruct[T](tag: StructTag[T], elems: Seq[(String, Rep[Any])]) extends AbstractStruct[T]
+  case class FieldApply[T](struct: Rep[Any], index: String) extends AbstractField[T]
+  case class FieldUpdate[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]) extends Def[Unit]
+
+  def struct[T:Manifest](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit o: Overloaded1, pos: SourceContext): Rep[T] = struct[T](tag, elems)
+  def struct[T:Manifest](tag: StructTag[T], elems: Seq[(String, Rep[Any])])(implicit pos: SourceContext): Rep[T] = SimpleStruct(tag, elems)
+
+  def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = FieldApply[T](struct, index)
+  def var_field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Var[T] = Variable(FieldApply[Var[T]](struct, index))
+  def field_update[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]): Exp[Unit] = reflectWrite(struct)(FieldUpdate(struct, index, rhs))
+
+  def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]) = {
+    val x: Sym[T] = Sym[T](-99) // self symbol -- not defined anywhere, so make it obvious!! (TODO)
+    val fieldSyms = fields map {
+      case (index, false, rhs) => (index, rhs(x)) 
+      case (index, true, rhs) => (index, var_new(rhs(x)).e)
+    }
+    struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fieldSyms)
+  }
+  
+  def record_select[T : Manifest](record: Rep[Record], fieldName: String) = {
+    field(record, fieldName)
+  }
+  
+
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case s:AbstractStruct[_] => s.elems.flatMap(e => syms(e._2)).toList
+    case _ => super.syms(e)
+  }
+
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case s:AbstractStruct[_] => s.elems.flatMap(e => symsFreq(e._2)).toList
+    case _ => super.symsFreq(e)
+  }
+
+  override def effectSyms(e: Any): List[Sym[Any]] = e match {
+    case s:AbstractStruct[_] => s.elems.flatMap(e => effectSyms(e._2)).toList
+    case _ => super.effectSyms(e)
+  }
+
+  override def readSyms(e: Any): List[Sym[Any]] = e match {
+    case s:AbstractStruct[_] => Nil //struct creation doesn't de-reference any of its inputs
+    case _ => super.readSyms(e)
+  }
+
+  override def aliasSyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleStruct(tag,elems) => Nil
+    case FieldApply(s,x) => Nil
+    case FieldUpdate(s,x,b) => Nil
+    case _ => super.aliasSyms(e)
+  }
+
+  override def containSyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleStruct(tag,elems) => elems.collect { case (k,v:Sym[Any]) => v }.toList
+    case FieldApply(s,x) => Nil
+    case FieldUpdate(s,x,b) => syms(b)
+    case _ => super.containSyms(e)
+  }
+
+  override def extractSyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleStruct(tag,elems) => Nil
+    case FieldApply(s,x) => syms(s)
+    case FieldUpdate(s,x,b) => Nil
+    case _ => super.extractSyms(e)
+  }
+
+  override def copySyms(e: Any): List[Sym[Any]] = e match {
+    case SimpleStruct(tag,elems) => Nil
+    case FieldApply(s,x) => Nil
+    case FieldUpdate(s,x,b) => Nil
+    case _ => super.copySyms(e)
+  }
+
+
+
+  // TODO: read/write/copy summary
+
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })(mtype(manifest[A]),pos)
+    case FieldApply(struct, key) => field(f(struct), key)(mtype(manifest[A]),pos)
+    case Reflect(FieldApply(struct, key), u, es) => reflectMirrored(Reflect(FieldApply(f(struct), key), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(FieldUpdate(struct, key, rhs), u, es) => reflectMirrored(Reflect(FieldUpdate(f(struct), key, f(rhs)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(SimpleStruct(tag, elems), u, es) => reflectMirrored(Reflect(SimpleStruct(tag, elems map { case (k,v) => (k, f(v)) }), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
+
+  def structName[T](m: Manifest[T]): String = m match {
+    // FIXME: move to codegen? we should be able to have different policies/naming schemes
+    case rm: RefinedManifest[_] => "Anon" + math.abs(rm.fields.map(f => f._1.## + f._2.toString.##).sum)
+    case _ if (m <:< manifest[AnyVal]) => m.toString
+    case _ => m.erasure.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
+  }
+
+  def classTag[T:Manifest] = ClassTag[T](structName(manifest[T]))
+
+  override def object_tostring(x: Exp[Any])(implicit pos: SourceContext): Exp[String] = x match {
+    case Def(s@Struct(tag, elems)) => //tag(elem1, elem2, ...)
+      val e = elems.map(e=>string_plus(unit(e._1 + " = "), object_tostring(e._2))).reduceLeft((l,r)=>string_plus(string_plus(l,unit(", ")),r))
+      string_plus(unit(structName(s.tp)+"("),string_plus(e,unit(")")))
+    case _ => super.object_tostring(x)
+  }
+
+  def registerStruct[T](name: String, elems: Seq[(String, Rep[Any])]) {
+    encounteredStructs += name -> elems.map(e => (e._1, e._2.tp))
+  }
+  val encounteredStructs = new scala.collection.mutable.HashMap[String, Seq[(String, Manifest[_])]]
+}
+
+trait StructExpOpt extends StructExp {
+
+  //this is factored out so it can be called by domain-specific field access methods
+  def fieldLookup[T](struct: Exp[Any], index: String): Option[Exp[T]] = {
+    def lookup(elems: Seq[(String, Exp[Any])]) = elems.find(_._1 == index).getOrElse(
+      throw new RuntimeException("ERROR: " + index + " is not a field of type " + struct.tp)
+    )._2.asInstanceOf[Exp[T]]
+
+    struct match {
+      case Def(Struct(tag, elems)) => Some(lookup(elems))
+      case Def(Reflect(Struct(tag, elems),u,es)) => Some(lookup(elems))
       case _ => None
     }
   }
-  
-  case class SimpleStruct[T](tag: StructTag[T], elems: Map[String,Rep[Any]]) extends AbstractStruct[T]
-  case class Field[T](struct: Rep[Any], index: String, tp: Manifest[T]) extends Def[T]
-  
-  def struct[T:Manifest](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit pos: SourceContext): Rep[T] = struct(tag, Map(elems:_*))
-  def struct[T:Manifest](tag: StructTag[T], elems: Map[String, Rep[Any]])(implicit pos: SourceContext): Rep[T] = SimpleStruct[T](tag, elems)
-  
-  def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = Field[T](struct, index, manifest[T])
 
-  override def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]) = {
-    val r = fresh[T]
-    if (fields exists { case (_, mutable, _) => mutable })  throw new RuntimeException("ERROR: \"var\" fields in Records not yet supported") //FIXME
-    val fieldSyms = fields map { case (index, _, rhs) => (index, rhs(r)) }
-    val struct = SimpleStruct(ClassTag[T]("Record"), Map(fieldSyms:_*))
-    createDefinition(r, struct)
-    r
-  }
-  override def record_select[T : Manifest](record: Rep[Record], fieldName: String) = {
-    field(record, fieldName)
-  }
-
-  //FIXME: reflectMutable has to take the Def
-  //def mfield[T:Manifest](struct: Rep[Any], index: String): Rep[T] = reflectMutable(Field[T](struct, index, manifest[T]))
-  
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
-    case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })
-    case Field(struct, key, mf) => field(f(struct), key)(mf,pos)
-    case _ => super.mirror(e,f)
-  }
-
-  // FIXME Define a custom `object_toString` for structs?
-
-}
-  
-trait StructExpOpt extends StructExp {
-
-  override def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = struct match {
-    case Def(Struct(tag, elems)) => elems(index).asInstanceOf[Rep[T]]
+  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = fieldLookup[T](struct, index) match {
+    // the two variable pattern matches each seem to miss certain cases, so both are needed. why?
+    case Some(Def(Reflect(NewVar(x),u,es))) => super.field(struct, index)
+    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
+    case Some(x) => x
     case _ => super.field[T](struct, index)
   }
+
+  //TODO: need to be careful unwrapping Structs of vars since partial unwrapping can result in reads & writes to two different memory locations in the generated code
+  //(the original var and the struct)
+  /* override def var_field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Var[T] = fieldLookup(struct, index) match {
+    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => Variable(x)
+    case Some(x) => throw new RuntimeException("ERROR: " + index + " is not a variable field of type " + struct.tp)
+    case None => super.var_field(struct, index)
+  } */
 
 }
 
 trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseExp {
-  
+
+  override def structName[T](m: Manifest[T]): String = m.erasure.getSimpleName match {
+    case "Variable" => structName(m.typeArguments(0))
+    case _ => super.structName(m)
+  }
+
   override def var_new[T:Manifest](init: Exp[T])(implicit pos: SourceContext): Var[T] = init match {
     case Def(Struct(tag, elems)) =>
       //val r = Variable(struct(tag, elems.mapValues(e=>var_new(e).e))) // DON'T use mapValues!! <--lazy
       Variable(struct[Variable[T]](NestClassTag[Variable,T](tag), elems.map(p=>(p._1,var_new(p._2)(p._2.tp,pos).e))))
-    case _ => 
+    case _ =>
       super.var_new(init)
   }
 
   override def var_assign[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = (lhs,rhs) match {
-    case (Variable(Def(Struct(NestClassTag(tagL),elemsL: Map[String,Exp[Variable[Any]]]))), Def(Struct(tagR, elemsR))) => 
+    case (Variable(Def(Struct(NestClassTag(tagL),elemsL: Seq[(String,Exp[Variable[Any]])]))), Def(Struct(tagR, elemsR))) =>
       assert(tagL == tagR)
-      assert(elemsL.keySet == elemsR.keySet)
-      for (k <- elemsL.keySet)
-        var_assign(Variable(elemsL(k)), elemsR(k))(elemsR(k).tp, pos)
+      for (((lk,lv), (rk,rv)) <- elemsL zip elemsR) {
+        assert(lk == rk)
+        var_assign(Variable(lv), rv)(rv.tp, pos)
+      }
       Const(())
+    case (Variable(Def(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]))), Def(r)) => //TODO: keep this?
+      for ((k,v) <- elems) {
+        var_assign(Variable(v), field(r,k)(mtype(v.tp),pos))(unwrap(v.tp),pos)
+      }
+      Const(())
+    case (Variable(Def(Reflect(Field(struct,idx),_,_))), rhs) => 
+      field_update(struct, idx, rhs)
     case _ => super.var_assign(lhs, rhs)
   }
-  
+
+  private def unwrap[A](m:Manifest[Variable[A]]): Manifest[A] = m.typeArguments match {
+    case a::_ => mtype(a)
+    case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
+  }
+
   override def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {
-    case Variable(Def(Struct(NestClassTag(tag), elems: Map[String,Exp[Variable[Any]]]))) => 
-      def unwrap[A](m:Manifest[Variable[A]]): Manifest[A] = m.typeArguments match {
-        case a::_ => mtype(a)
-        case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
-      }
+    case Variable(Def(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]))) =>
       struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.tp), pos))))
+    case Variable(Def(Field(struct,idx))) =>
+      field[T](struct, idx)
     case _ => super.readVar(v)
   }
-  
-  
-  /*def reReify[T:Manifest](a: Rep[T]): Rep[T] = a match { // TODO: should work with loop bodies, too (Def!)
-    // TODO: this seems inherently unsafe because it duplicates effects. what should we do about it?
-    case Def(Reify(Def(Struct(tag,elems)),es,u)) =>
-      struct[T](tag, elems.map(p=>(p._1,toAtom(Reify(p._2, es, u))))) // result is struct(reify(...))
-    case _ => a
-  }
-  override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Rep[T], b: Rep[T]) = (reReify(a),reReify(b)) match {
-    case (Def(Struct(tagA,elemsA)), Def(Struct(tagB, elemsB))) => 
-      assert(tagA == tagB)
-      assert(elemsA.keySet == elemsB.keySet)
-      val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, elemsA(k), elemsB(k)))
-      struct[T](tagA, elemsNew.toMap)
-    case _ => super.ifThenElse(cond,a,b)
-  }*/
-
 
   override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T])(implicit pos: SourceContext) = (a,b) match {
-    case (Block(Def(Struct(tagA,elemsA))), Block(Def(Struct(tagB, elemsB)))) => 
+    case (Block(Def(Struct(tagA,elemsA))), Block(Def(Struct(tagB, elemsB)))) =>
       assert(tagA == tagB)
-      assert(elemsA.keySet == elemsB.keySet)
-      val elemsNew = for (k <- elemsA.keySet) yield (k -> ifThenElse(cond, Block(elemsA(k)), Block(elemsB(k)))(elemsB(k).tp, pos))
-      struct[T](tagA, elemsNew.toMap)
+      val elemsNew = for (((lk,lv), (rk,rv)) <- elemsA zip elemsB) yield {
+        assert(lk == rk)
+        lk -> ifThenElse(cond, Block(lv), Block(rv))(rv.tp, pos)
+      }
+      struct[T](tagA, elemsNew)
     case _ => super.ifThenElse(cond,a,b)
   }
-  
-}
-
-/*
-
-At the moment arrays still live in test case land, not in lms.common.
-
-trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
-  
-  override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
-    case ArrayElem(Def(Struct(tag, elems))) => 
-      struct[A]("Array"::tag, elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(p._2)))))
-    case ArrayElem(Def(ArrayIndex(b,v))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] // eta-reduce! <--- should live elsewhere, not specific to struct
-    case _ => super.simpleLoop(size, v, body)
-  }
-  
-  override def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
-    case Def(Struct(pre::tag,elems:Map[String,Exp[Array[T]]])) =>
-      assert(pre == "Array")
-      struct[T](tag, elems.map(p=>(p._1,infix_at(p._2, i))))
-    case _ => super.infix_at(a,i)
-  }
-  
-  override def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
-    case Def(Struct(pre::tag,elems:Map[String,Exp[Array[T]]])) =>
-      assert(pre == "Array")
-      val ll = elems.map(p=>infix_length(p._2)) // all arrays must have same length!
-      ll reduceLeft { (a1,a2) => assert(a1 == a2); a1 }
-    case _ => super.infix_length(a)
-  }
 
 }
-*/
 
 
 // the if/phi stuff is more general than structs -- could be used for variable assignments as well
 
 trait StructFatExp extends StructExp with BaseFatExp
 
-trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with IfThenElseFatExp { 
+trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with IfThenElseFatExp {
 
-  // Phi nodes: 
+  // Phi nodes:
   // created by splitting an IfThenElse node
   // a1 and b1 will be the effects of the original IfThenElse, packaged into blocks with a unit result
-  
+
   case class Phi[T](cond: Exp[Boolean], a1: Block[Unit], val thenp: Block[T], b1: Block[Unit], val elsep: Block[T])(val parent: Exp[Unit]) extends AbstractIfThenElse[T] // parent points to conditional
   def phi[T:Manifest](c: Exp[Boolean], a1: Block[Unit], a2: Exp[T], b1: Block[Unit], b2: Exp[T])(parent: Exp[Unit]): Exp[T] = if (a2 == b2) a2 else Phi(c,a1,Block(a2),b1,Block(b2))(parent)
   def phiB[T:Manifest](c: Exp[Boolean], a1: Block[Unit], a2: Block[T], b1: Block[Unit], b2: Block[T])(parent: Exp[Unit]): Exp[T] = if (a2 == b2) a2.res else Phi(c,a1,a2,b1,b2)(parent) // FIXME: duplicate
 
   override def syms(x: Any): List[Sym[Any]] = x match {
-//    case Phi(c,a,u,b,v) => syms(List(c,a,b))
+    //    case Phi(c,a,u,b,v) => syms(List(c,a,b))
     case _ => super.syms(x)
   }
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
-//    case Phi(c,a,u,b,v) => freqNormal(c) ++ freqCold(a) ++ freqCold(b)
+    //    case Phi(c,a,u,b,v) => freqNormal(c) ++ freqCold(a) ++ freqCold(b)
     case _ => super.symsFreq(e)
   }
-  
+
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case Phi(c,a,u,b,v) => effectSyms(a):::effectSyms(b)
     case _ => super.boundSyms(e)
@@ -221,134 +311,31 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
     case Block(Def(Reify(x,es,u))) => (Block(Reify(Const(()), es, u)), x)
     case Block(x) => (Block(Const(())), x)
   }
-  
-  
+
+
   override def ifThenElse[T:Manifest](cond: Rep[Boolean], a: Block[T], b: Block[T])(implicit pos: SourceContext) = (deReify(a),deReify(b)) match {
-    case ((u, Def(Struct(tagA,elemsA))), (v, Def(Struct(tagB, elemsB)))) => 
-      assert(tagA == tagB)
-      assert(elemsA.keySet == elemsB.keySet)
+    case ((u, Def(Struct(tagA,elemsA))), (v, Def(Struct(tagB, elemsB)))) =>
+      //assert(tagA == tagB, tagA+" !== "+tagB)
+      if (tagA != tagB) println("ERROR: "+tagA+" !== "+tagB)
       // create stm that computes all values at once
       // return struct of syms
       val combinedResult = super.ifThenElse(cond,u,v)
-      
-      val elemsNew = for (k <- elemsA.keySet) yield (k -> phi(cond,u,elemsA(k),v,elemsB(k))(combinedResult)(mtype(elemsA(k).tp)))
-      //println("----- " + combinedResult + " / " + elemsNew)
-      struct[T](tagA, elemsNew.toMap)
-      
+
+      val elemsNew = for (((lk,lv), (rk,rv)) <- elemsA zip elemsB) yield {
+        assert(lk == rk)
+        lk -> phi(cond,u,lv,v,rv)(combinedResult)(mtype(lv.tp))
+      }
+      struct[T](tagA, elemsNew)
+
     case _ => super.ifThenElse(cond,a,b)
   }
-
-
-
 }
-
-
-
-trait ScalaGenStructBase extends ScalaGenBase {
-  val IR: StructExp
-  import IR._
-  import reflect.RefinedManifest
-  
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Struct(tag, elems) =>
-      /* TODO: emit code that creates an object corresponding to the tag and the manifest 
-      
-      RefinedManifest  -->  new Base { def field = value }
-      Class --> new Base(field = value)
-      
-      Array --> transform soa back to aos
-      */
-      if (sym.tp <:< manifest[Record]) {
-        registerType(sym.tp.asInstanceOf[Manifest[Record]], elems)
-        emitValDef(sym, remap(sym.tp) + "(" + (for ((n, v) <- elems) yield n + " = " + quote(v)).mkString(", ") + ")")
-      } else {
-        emitValDef(sym, "new { " + (for ((n, v) <- elems) yield "val " + n + " = " + quote(v)).mkString("; ") + " }")
-      }
-    case Field(struct, index, tp) =>  
-      emitValDef(sym, quote(struct) + "." + index)
-    case _ => super.emitNode(sym, rhs)
-  }
-
-  // Records generate a class
-  override def remap[A](m: Manifest[A]) = indexOfEncountered(m) match {
-    case Some(i) => "C" + i
-    case _ => super.remap(m)
-  }
-
-  private val encounteredStructs = new collection.mutable.ListBuffer[(Manifest[_ <: Record], Map[String, Exp[_]])]
-  private def registerType(m: Manifest[_ <: Record], elems: Map[String, Rep[_]]) {
-    // Check that the manifest and elems are consistent
-    m match {
-      case m: RefinedManifest[_] =>
-        assert(elems.size == m.fields.size, "Record doesn’t contain as many fields as reflected in manifest: %s vs %s".format(elems.size, m.fields.size))
-        for ((n, tp) <- m.fields) {
-          assert(elems.contains(n), "Record field not reflected in manifest: %s".format(n))
-          // assert(elems(n).tp == tp, "Record field type different than the one reflected in manifest: %s vs %s".format(elems(n).tp, tp))
-        }
-      case _ =>
-        // Nothing yet
-    }
-    if (indexOfEncountered(m).isEmpty) {
-      encounteredStructs += (m -> elems)
-    }
-  }
-
-  /**
-   * Look for a type equivalent to `m` in the already encountered record manifests.
-   */
-  private def indexOfEncountered(m: Manifest[_]): Option[Int] = {
-    def sameManifest(m1: Manifest[_], m2: Manifest[_]): Boolean = (m1, m2) match {
-      case (rm1: RefinedManifest[_], rm2: RefinedManifest[_]) =>
-        rm1 == rm2 && rm1.fields.size == rm2.fields.size && (rm1.fields zip rm2.fields).foldLeft(true) { case (same, (lhs, rhs)) =>
-          same && lhs._1 == rhs._1 && sameManifest(lhs._2, rhs._2)
-        }
-      case _ => m1 == m2
-    }
-    
-    if (m <:< manifest[Record]) {
-      encounteredStructs.foldLeft(Option.empty[Int], 0) { case ((found, i), (mm, _)) =>
-        (found.orElse(if (sameManifest(m, mm)) Some(i) else None), i + 1)
-      }._1
-    } else None
-  }
-
-  def emitDataStructures(out: PrintWriter) {
-    withStream(out) {
-      for ((m, fields) <- encounteredStructs) {
-        stream.println("case class " + remap(m) + "(" + (for ((n, e) <- fields) yield n + ": " + remap(e.tp)).mkString(", ") + ")")
-      }
-    }
-  }
-}
-
-trait ScalaGenStruct extends ScalaGenStructBase {
-  val IR: StructExp
-  import IR._
-
-   override def emitDataStructures(path: String) {
-    val out = new PrintWriter(path)
-    emitDataStructures(out)
-    out.close()
-    super.emitDataStructures(path)
-  } 
-}
-
-trait CudaGenStruct extends CudaGenBase {
-  val IR: StructExp
-  import IR._
-}
-
-trait OpenCLGenStruct extends OpenCLGenBase {
-  val IR: StructExp
-  import IR._
-}
-
 
 trait BaseGenFatStruct extends GenericFatCodegen {
   val IR: StructFatExpOptCommon // TODO: restructure traits, maybe move this to if then else codegen?
   import IR._
 
-   // TODO: implement regular fatten ?
+  // TODO: implement regular fatten ?
 
   override def fattenAll(e: List[Stm]): List[Stm] = {
     val m = e collect {
@@ -391,7 +378,7 @@ trait BaseGenFatStruct extends GenericFatCodegen {
 trait ScalaGenFatStruct extends ScalaGenStruct with BaseGenFatStruct {
   val IR: StructFatExpOptCommon // TODO: restructure traits, maybe move this to if then else codegen?
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case p@Phi(c,a,u,b,v) =>
       emitValDef(sym, "XXX " + rhs + " // parent " + quote(p.parent))
@@ -399,6 +386,49 @@ trait ScalaGenFatStruct extends ScalaGenStruct with BaseGenFatStruct {
   }
 }
 
+trait BaseGenStruct extends GenericNestedCodegen {
+  val IR: StructExp
+  import IR._
+
+  //Moved encounteredStructs to IR
+}
+
+trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
+  val IR: StructExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case Struct(tag, elems) =>
+      registerStruct(structName(sym.tp), elems)
+      emitValDef(sym, "new " + structName(sym.tp) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
+    case FieldApply(struct, index) =>
+      emitValDef(sym, quote(struct) + "." + index)
+    case FieldUpdate(struct, index, rhs) =>
+      emitValDef(sym, quote(struct) + "." + index + " = " + quote(rhs))
+    case _ => super.emitNode(sym, rhs)
+  }
+
+  override def remap[A](m: Manifest[A]) = m match {
+    case s if s <:< manifest[Record] => structName(m)
+    case _ => super.remap(m)
+  }
+
+  override def emitDataStructures(stream: PrintWriter) {
+    for ((name, elems) <- encounteredStructs) {
+      stream.println()
+      stream.print("case class " + name + "(")
+      stream.println(elems.map(e => e._1 + ": " + remap(e._2)).mkString(", ") + ")")
+    }
+    stream.flush()
+    super.emitDataStructures(stream)
+  }
+
+}
+
+trait CGenStruct extends CGenBase with BaseGenStruct
+trait CudaGenStruct extends CudaGenBase with BaseGenStruct
+trait OpenCLGenStruct extends OpenCLGenBase with BaseGenStruct
+
 trait CudaGenFatStruct extends CudaGenStruct with BaseGenFatStruct
 trait OpenCLGenFatStruct extends OpenCLGenStruct with BaseGenFatStruct
-
+trait CGenFatStruct extends CGenStruct with BaseGenFatStruct

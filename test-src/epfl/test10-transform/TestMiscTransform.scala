@@ -303,6 +303,7 @@ class TestMisc extends FileDiffSuite {
     }
     
     p.globalDefs = Nil // reset graph, transformer will build anew
+    p.globalDefsCache = Map.empty
     val trans = new SimpleBlockTransformer { // a + b --> b + a
       val IR: p.type = p
       import IR._
@@ -354,6 +355,7 @@ class TestMisc extends FileDiffSuite {
     }
     
     p.globalDefs = Nil // reset graph, transformer will build anew
+    p.globalDefsCache = Map.empty
     val trans = new SimpleBlockTransformer { // a + b --> b + a, but only in then-branches of an if-then-else
       val IR: p.type = p
       import IR.{__newVar => _, _}
@@ -423,6 +425,7 @@ class TestMisc extends FileDiffSuite {
     }
     
     p.globalDefs = Nil // reset graph, transformer will build anew
+    p.globalDefsCache = Map.empty
     val trans = new NestedBlockTransformer { // a + b --> b + a, but only in then-branches of an if-then-else
       val IR: p.type = p
       import IR.{__newVar => _, _}
@@ -496,6 +499,7 @@ class TestMisc extends FileDiffSuite {
     }
     
     p.globalDefs = Nil // reset graph, transformer will build anew
+    p.globalDefsCache = Map.empty
     val trans = new MirrorBlockTransformer { // a + b --> b + a, but only in then-branches of an if-then-else
       val IR: p.type = p
       import IR.{__newVar => _, _}

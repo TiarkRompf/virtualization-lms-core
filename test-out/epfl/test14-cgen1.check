@@ -1,0 +1,24 @@
+/* FILE: main.c */
+int main(int);
+/*****************************************
+  Emitting C Generated Code                  
+*******************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+int main(int x0) {
+int x1 = 0;
+for (;;) {
+int x2 = x1;
+bool x3 = x2 < 10;
+if (!x3) break;
+int x5 = x1;
+printf("Hello, world! %d\n",x5);
+int x7 = x5 + 1;
+x1 = x7;
+}
+return 0;
+}
+/*****************************************
+  End of C Generated Code                  
+*******************************************/

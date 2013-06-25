@@ -35,7 +35,8 @@ trait FooB {
 
   object IsSym {
     def unapply[U](x: Exp[U]): Option[Sym[U]] = x match {
-      case s @ Sym() => Some(s)
+//2.10 M%      case s @ Sym() => Some(s)
+      case s: Sym[U] => Some(s)
       case _ => None
     }
   }
@@ -43,7 +44,8 @@ trait FooB {
   def eval[A](term: Exp[A]): Const[A] = term match {
     case IsSym(Lookup(c)) => c
 //    case Lookup(c) => c
-    case c @ Const() => c
+//2.10 M5    case c @ Const() => c
+      case c: Const[A] => c
   }
 
 }

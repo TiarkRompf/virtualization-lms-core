@@ -34,7 +34,7 @@ x23
 } else {
 x5
 }
-val x27 = new { val re = x4; val im = x26 }
+val x27 = new Record[]Anon189207751(x4,x26)
 val x28 = println(x27)
 x28
 }
@@ -42,3 +42,5 @@ x28
 /*****************************************
   End of Generated Code                  
 *******************************************/
+
+case class Record[]Anon189207751(re: Array[Int], im: Array[Double])

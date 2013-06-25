@@ -173,6 +173,7 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
 
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case ReadVar(Variable(a)) => readVar(Variable(f(a)))
     case Reflect(NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(Assign(Variable(a),b), u, es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
@@ -218,12 +219,11 @@ trait ScalaGenVariables extends ScalaGenEffect {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
     case NewVar(init) => emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
-    case Assign(Variable(a), b) => emitAssignment(quote(a), quote(b))
-    //case Assign(a, b) => emitAssignment(quote(a), quote(b))
+    case Assign(Variable(a), b) => emitValDef(sym, quote(a) + " = " + quote(b))
     case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(b))
     case VarMinusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(b))
-    case VarTimesEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(b))
-    case VarDivideEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(b))
+    case VarTimesEquals(Variable(a), b) => emitValDef(sym, quote(a) + " *= " + quote(b))
+    case VarDivideEquals(Variable(a), b) => emitValDef(sym, quote(a) + " /= " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -234,20 +234,13 @@ trait CLikeGenVariables extends CLikeGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
-        case ReadVar(Variable(a)) =>
-          emitValDef(sym, quote(a))
-        case NewVar(init) =>
-          emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
-        case Assign(Variable(a), b) =>
-          emitAssignment(quote(a), quote(b))
-        case VarPlusEquals(Variable(a), b) =>
-          emitAssignment(quote(a), quote(a) + " + " + quote(b))
-        case VarMinusEquals(Variable(a), b) =>
-          emitAssignment(quote(a), quote(a) + " - " + quote(b))
-        case VarTimesEquals(Variable(a), b) =>
-          emitAssignment(quote(a), quote(a) + " * " + quote(b))
-        case VarDivideEquals(Variable(a), b) =>
-          emitAssignment(quote(a), quote(a) + " / " + quote(b))
+        case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
+        case NewVar(init) => emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
+        case Assign(Variable(a), b) => stream.println(quote(a) + " = " + quote(b) + ";")
+        case VarPlusEquals(Variable(a), b) => stream.println(quote(a) + " += " + quote(b) + ";")
+        case VarMinusEquals(Variable(a), b) =>stream.println(quote(a) + " -= " + quote(b) + ";")
+        case VarTimesEquals(Variable(a), b) => stream.println(quote(a) + " *= " + quote(b) + ";")
+        case VarDivideEquals(Variable(a), b) => stream.println(quote(a) + " /= " + quote(b) + ";")
         case _ => super.emitNode(sym, rhs)
       }
     }

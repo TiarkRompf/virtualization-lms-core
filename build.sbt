@@ -1,16 +1,17 @@
 name := "LMS"
 
-version := "0.2"
+version := "0.3-SNAPSHOT"
 
 organization := "EPFL"
 
-resolvers += ScalaToolsSnapshots
+//resolvers += Resolver.sonatypeRepo("snapshots") // for ScalaTest
 
-resolvers += dropboxScalaTestRepo
 
-scalaOrganization := "org.scala-lang"
+//scalaHome := Some(file(Path.userHome + "/scala/build/pack"))
 
-//scalaBinaryVersion := virtScala // necessary??
+scalaOrganization := "org.scala-lang.virtualized"
+
+//scalaBinaryVersion := virtScala
 
 scalaVersion := virtScala
 
@@ -24,12 +25,16 @@ scalacOptions += "-Yvirtualize"
 
 //scalacOptions in Compile ++= Seq(/*Unchecked, */Deprecation)
 
-// needed for scala.tools, which is apparently not included in sbt's built in version
-libraryDependencies += "org.scala-lang" % "scala-library" % virtScala
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % virtScala
+// needed for scala.tools, which is apparently not included in sbt's built in version
+libraryDependencies += "org.scala-lang.virtualized" % "scala-library" % virtScala
+
+libraryDependencies += "org.scala-lang.virtualized" % "scala-compiler" % virtScala
+
+libraryDependencies += "org.scala-lang" % "scala-actors" % virtScala // for ScalaTest
 
 libraryDependencies += scalaTest
+
 
 // tests are not thread safe
 parallelExecution in Test := false
@@ -37,9 +42,10 @@ parallelExecution in Test := false
 // disable publishing of main docs
 publishArtifact in (Compile, packageDoc) := false
 
+
 // continuations
 autoCompilerPlugins := true
 
-addCompilerPlugin("org.scala-lang.plugins" % "continuations" % virtScala)
+addCompilerPlugin("org.scala-lang.virtualized.plugins" % "continuations" % virtScala)
 
 scalacOptions += "-P:continuations:enable"

@@ -9,6 +9,8 @@ trait ScalaCodegen extends GenericCodegen with Config {
   val IR: Expressions
   import IR._
 
+  override def deviceTarget: Targets.Value = Targets.Scala
+
   override def kernelFileExt = "scala"
 
   override def toString = "scala"
@@ -29,7 +31,8 @@ trait ScalaCodegen extends GenericCodegen with Config {
       stream.println("/*****************************************\n"+
                      "  Emitting Generated Code                  \n"+
                      "*******************************************/")
-                   
+      emitFileHeader()
+
       // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
       stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends (("+args.map(a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
       stream.println("def apply("+args.map(a => quote(a) + ":" + remap(a.tp)).mkString(", ")+"): "+sA+" = {")
@@ -48,10 +51,12 @@ trait ScalaCodegen extends GenericCodegen with Config {
     staticData
   }
 
+  override def emitFileHeader() {
+    // empty by default. override to emit package or import declarations.
+  }
+
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
-    
-    stream.println("package generated." + this.toString)
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
     stream.print(vals.map(p => quote(p) + ":" + remap(p.tp)).mkString(","))
@@ -97,9 +102,6 @@ trait ScalaCodegen extends GenericCodegen with Config {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
   
-  def emitAssignment(lhs: String, rhs: String): Unit = {
-    stream.println(lhs + " = " + rhs)
-  }
 }
 
 trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {

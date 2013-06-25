@@ -163,7 +163,6 @@ trait FusionProg24 extends Arith with ArrayLoops with Print with OrderingOps {
 
 
 
-
 class TestFusion2 extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test7-"

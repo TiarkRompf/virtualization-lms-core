@@ -24,7 +24,7 @@ trait ComplexArith extends Arith with ComplexBase with OverloadHack {
   
 }
 
-trait ComplexBase extends Arith with Structs {
+trait ComplexBase extends Arith with StructOps {
   type Complex = Record { val re: Double; val im: Double }
   def Complex(r: Rep[Double], i: Rep[Double]): Rep[Complex] = new Record { val re = r; val im = i }
 }
@@ -46,7 +46,7 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   
   
   override def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
-    case Def(Struct(ArraySoaTag(tag,len),elems:Map[String,Exp[Array[T]]])) =>
+    case Def(Struct(ArraySoaTag(tag,len),elems: Iterable[(String,Rep[Array[T]])])) =>
       def unwrap[A](m:Manifest[Array[A]]): Manifest[A] = m.typeArguments match {
         case a::_ => mtype(a)
         case _ =>
@@ -58,7 +58,7 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   }
   
   override def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
-    case Def(Struct(ArraySoaTag(tag,len),elems:Map[String,Exp[Array[T]]])) => len
+    case Def(Struct(ArraySoaTag(tag,len),elems)) => len
     case _ => super.infix_length(a)
   }
 
@@ -82,7 +82,23 @@ class TestStruct extends FileDiffSuite {
     val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
+
+  /*override def fresh[T:Manifest]: Sym[T] = Sym[T] { 
+    if (nVars < 3) {
+      System.out.println(nVars)
+      (new Exception).printStackTrace
+    }
+
+    nVars += 1; nVars -1 
+  }*/
+
+    {
+      val x = fresh[Int]
+      val y = reifyEffects(test(x))
+      //globalDefs.foreach(Console.println _)
+      codegen.emitSource(List(x),y, "Test", new PrintWriter(System.out))
+      codegen.emitDataStructures(new PrintWriter(System.out))
+    }
   }
 
   trait ImplFused extends DSL with StructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
@@ -92,7 +108,13 @@ class TestStruct extends FileDiffSuite {
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self;
         override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
+    {
+      val x = fresh[Int]
+      val y = reifyEffects(test(x))
+      //globalDefs.foreach(Console.println _)
+      codegen.emitSource(List(x),y, "Test", new PrintWriter(System.out))
+      codegen.emitDataStructures(new PrintWriter(System.out))
+    }
   }
 
   
@@ -107,7 +129,7 @@ class TestStruct extends FileDiffSuite {
           print(c)
         }
       }
-      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
+      new Prog with Impl
     }
     assertFileEqualsCheck(prefix+"struct1")
   }
@@ -241,7 +263,7 @@ class TestStruct extends FileDiffSuite {
   def testStruct5 = {
     withOutFile(prefix+"struct5") {
 
-      trait Vectors extends Structs {
+      trait Vectors extends StructOps {
         type Vector2D = Record { val x: Double; val y: Double }
         def Vector2D(px: Rep[Double], py: Rep[Double]): Rep[Vector2D] = new Record { val x = px; val y = py }
       }
@@ -253,7 +275,7 @@ class TestStruct extends FileDiffSuite {
         }
       }
 
-      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
+      new Prog with Impl
     }
     assertFileEqualsCheck(prefix+"struct5")
   }
@@ -262,7 +284,7 @@ class TestStruct extends FileDiffSuite {
   def testStruct6 = {
     withOutFile(prefix+"struct6") {
 
-      trait Complex2 extends Arith with Structs {
+      trait Complex2 extends Arith with StructOps {
         type Complex2 = Record { val re: Double; val im: Double }
         def Complex2(r: Rep[Double], i: Rep[Double]): Rep[Complex2] = new Record { val re = r; val im = i }
       }
@@ -274,7 +296,7 @@ class TestStruct extends FileDiffSuite {
         }
       }
 
-      (new Prog with Impl).codegen.emitDataStructures(new PrintWriter(System.out))
+      new Prog with Impl
     }
     assertFileEqualsCheck(prefix+"struct6")
   }

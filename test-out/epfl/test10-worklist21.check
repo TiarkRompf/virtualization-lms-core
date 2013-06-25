@@ -20,21 +20,21 @@ register replacement for Sym(17)
 val x7 = LoopArray(100) { x6 => 
 0.0
 }
-val x8 = new { val data = x7; val length = 100 }
+val x8 = new VectorDouble(x7,100)
 val x9 = VectorLength(Sym(8))
 val x13 = LoopArray(x9) { x10 => 
 val x11 = VectorApply(Sym(8),Sym(10))
 val x12 = x11+x11
 x12
 }
-val x14 = new { val data = x13; val length = x9 }
+val x14 = new VectorDouble(x13,x9)
 val x19 = LoopArray(x9) { x15 => 
 val x16 = VectorApply(Sym(8),Sym(15))
 val x17 = VectorApply(Sym(14),Sym(15))
 val x18 = x16+x17
 x18
 }
-val x20 = new { val data = x19; val length = x9 }
+val x20 = new VectorDouble(x19,x9)
 val x21 = println(x20)
 
 ### next
@@ -57,5 +57,5 @@ val x33 = x29.apply(x31)
 val x34 = x32+x33
 x34
 }
-val x36 = new { val data = x35; val length = 100 }
+val x36 = new VectorDouble(x35,100)
 val x37 = println(x36)

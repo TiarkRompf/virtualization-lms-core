@@ -9,13 +9,13 @@ val x3 = x2 < x0
 x3}) {
 val x5 = x1
 val x6 = x5+1.0
-x1 = x6
+val x7 = x1 = x6
 ()
 }
 val x10 = x1
 val x11 = x10 < x0
 val x14 = if (x11) {
-x1 = 8
+val x12 = x1 = 8
 ()
 } else {
 ()

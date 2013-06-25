@@ -114,6 +114,7 @@ trait TestDSL extends BaseExp with LiftAll {
   override def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
     // remove previous definition and update in place. TODO: find a better way ...
     globalDefs = globalDefs filterNot (_.lhs contains s)
+    globalDefsCache = globalDefsCache - s
     super.createDefinition(s,d)
   }
 
@@ -151,7 +152,7 @@ trait TestDSL extends BaseExp with LiftAll {
   def flowBwd[T](e: Effects, block: BlockStm[T]) = {
     var ee = e ++ List(block.res.toString)
     val stms2 = block.stms.reverse.flatMap {
-      case TP(sym, WaitBwd(e, r)) =>
+      case TP(sym, WaitBwd(e, r: ((Sym[Any], BwdInfo) => (List[Stm], BwdInfo)))) => // FIXME: type annot?
         val (stm2, ee2) = r(sym, e)
         ee = ee2
         stm2

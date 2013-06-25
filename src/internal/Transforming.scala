@@ -22,6 +22,9 @@ trait AbstractTransformer {
   def apply[A](xs: Seq[Exp[A]]): Seq[Exp[A]] = xs map (e => apply(e))
   def apply[X,A](f: X=>Exp[A]): X=>Exp[A] = (z:X) => apply(f(z))
   def apply[X,Y,A](f: (X,Y)=>Exp[A]): (X,Y)=>Exp[A] = (z1:X,z2:Y) => apply(f(z1,z2))
+  def apply[X,Y,Z,A](f: (X,Y,Z)=>Exp[A]): (X,Y,Z)=>Exp[A] = (z1:X,z2:Y,z3:Z) => apply(f(z1,z2,z3))
+  def apply[W,X,Y,Z,A](f: (W,X,Y,Z)=>Exp[A]): (W,X,Y,Z)=>Exp[A] = (z1:W,z2:X,z3:Y,z4:Z) => apply(f(z1,z2,z3,z4))
+  def apply[V,W,X,Y,Z,A](f: (V,W,X,Y,Z)=>Exp[A]): (V,W,X,Y,Z)=>Exp[A] = (z1:V,z2:W,z3:X,z4:Y,z5:Z) => apply(f(z1,z2,z3,z4,z5))
   //def apply[A](xs: Summary): Summary = xs //TODO
   def onlySyms[A](xs: List[Sym[A]]): List[Sym[A]] = xs map (e => apply(e)) collect { case e: Sym[A] => e }
   
@@ -43,7 +46,8 @@ trait AbstractSubstTransformer extends AbstractTransformer {
     subst = save
     r
   }
-  
+
+  // TBD: should this be transitive or not? see note in ForwardTransformer
   def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
     case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x 
   }

@@ -10,11 +10,17 @@ trait FractionalOps extends ImplicitOps {
   def fractional_divide[T:Fractional:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[T]
 }
 
-trait FractionalOpsExp extends FractionalOps with ImplicitOpsExp {
+trait FractionalOpsExp extends FractionalOps with ImplicitOpsExp with EffectExp {
   
-  case class FractionalDivide[T](lhs: Exp[T], rhs: Exp[T])(implicit f: Fractional[T], val mT: Manifest[T]) extends Def[T]
+  case class FractionalDivide[T](lhs: Exp[T], rhs: Exp[T])(implicit val f: Fractional[T], val mT: Manifest[T]) extends Def[T]
 
   def fractional_divide[T:Fractional:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext) : Rep[T] = FractionalDivide(lhs, rhs)
+  
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case e@FractionalDivide(a,b) => fractional_divide(f(a),f(b))(e.f.asInstanceOf[Fractional[A]],mtype(e.mT),pos)
+    case Reflect(e@FractionalDivide(a,b), u, es) => reflectMirrored(Reflect(FractionalDivide(f(a),f(b))(e.f.asInstanceOf[Fractional[A]],mtype(e.mT)), mapOver(f,u), f(es)))(mtype(manifest[A]))        
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]    
 }
 
 trait ScalaGenFractionalOps extends ScalaGenBase {

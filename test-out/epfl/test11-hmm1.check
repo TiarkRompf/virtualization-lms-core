@@ -43,10 +43,6 @@ x1
 /*****************************************
   End of Generated Code                  
 *******************************************/
-<stdin>:31: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
-x59
-^
-one warning found
 compilation: ok
 1
 5

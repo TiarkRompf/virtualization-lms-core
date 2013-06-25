@@ -5,6 +5,10 @@ import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
 import scala.reflect.SourceContext
 
+trait StaticData extends Base {
+  def staticData[T:Manifest](x: T): Rep[T]
+}
+
 trait StaticDataExp extends EffectExp {
   case class StaticData[T](x: T) extends Def[T]
   def staticData[T:Manifest](x: T): Exp[T] = StaticData(x)
@@ -31,13 +35,18 @@ trait BaseGenStaticData extends GenericNestedCodegen {
   
   override def getFreeDataBlock[A](start: Block[A]): List[(Sym[Any],Any)] = {
     focusBlock(start) {
-      focusExactScope(start) { levelScope =>
+      innerScope flatMap {
+        case TP(sym, rhs) =>
+          getFreeDataExp(sym, rhs)
+        case _ => Nil //static data is never fat
+      }
+      /*focusExactScope(start) { levelScope =>
         levelScope flatMap { 
           case TP(sym, rhs) =>
             getFreeDataExp(sym, rhs)
           case _ => Nil //static data is never fat
         }
-      }
+      }*/
     }
   }
   

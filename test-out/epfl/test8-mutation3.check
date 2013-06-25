@@ -20,7 +20,7 @@ var x9 : Int = 0
 val x15 = while (x9 < x7) {
 val x10 = x3
 val x12 = x6.update(x9, 8.0)
-x3 = x6
+val x13 = x3 = x6
 ()
 x9 = x9 + 1
 }

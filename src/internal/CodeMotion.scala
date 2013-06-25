@@ -42,10 +42,10 @@ trait CodeMotion extends Scheduling {
     
     // AKS: temporarily reverted to old code here to patch a bug in OptiML's MiniMSMBuilder application
     // then/else branches were being unsafely hoisted out of a conditional 
-    val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
+    //val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
 
-    /* 
-    TODO: uncomment after resolving the issue above
+    //* 
+    //TODO: uncomment after resolving the issue above
     
     val loopsNotInIfs = e2 filterNot (e3 contains _)    // (shallow|hot)* hot (shallow|hot)*   <---- a hot ref on all paths!
     val reachFromTopLoops = getSchedule(e1)(loopsNotInIfs,false)
@@ -56,7 +56,7 @@ trait CodeMotion extends Scheduling {
     val shouldOutside = e1 filter (z => (e2 contains z) || (h3 contains z))
     
     //val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
-    */
+    //*/
 
     val levelScope = e1.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
     

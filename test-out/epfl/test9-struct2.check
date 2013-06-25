@@ -25,19 +25,19 @@ x2
 }
 val x16 = x0 > 7
 val x21 = if (x16) {
-val x6 = new { val re = x4; val im = x5 }
+val x6 = new Record[]Anon189207751(x4,x5)
 x6
 } else {
 val x17 = x13
 val x18 = x14
-val x19 = new { val re = x17; val im = x18 }
+val x19 = new Record[]Anon189207751(x17,x18)
 x19
 }
-x13 = x4
-x14 = x5
+val x22 = x13 = x4
+val x23 = x14 = x5
 val x24 = x13
 val x25 = x14
-val x26 = new { val re = x24; val im = x25 }
+val x26 = new Record[]Anon189207751(x24,x25)
 val x27 = println(x26)
 val x28 = println(x21)
 x28
@@ -46,3 +46,5 @@ x28
 /*****************************************
   End of Generated Code                  
 *******************************************/
+
+case class Record[]Anon189207751(re: Array[Double], im: Array[Int])
