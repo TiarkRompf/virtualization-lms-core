@@ -325,6 +325,8 @@ trait Shallow extends Util {
 trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Structs { //with Util {
   
   def database[T:Manifest](s: String): Rep[T]
+  trait Record extends Struct
+  implicit def recordToRecordOps2(record: Rep[Record]) = new RecordOps(record.asInstanceOf[Rep[super.Record]])
 
   trait Inner {
 
@@ -694,7 +696,7 @@ normalized syntax:
 
 abstract class Query
 case object QEmpty extends Query
-case object QColl extends Query
+case class QSingle(x: Coll) extends Query
 case class QConcat(x: Coll, y: Coll) extends Query
 
 abstract class Coll
@@ -834,22 +836,22 @@ class TestQueries extends FileDiffSuite {
           val x = new Inner {}
           import x._
 
-          println(db)
-          println(differences)
-          println(thirtySomethings)
-          println(thirtySomethings2)
-          println(evenAge)
+          //println(db)
+          //println(differences)
+          //println(thirtySomethings)
+          //println(thirtySomethings2)
+          //println(evenAge)
           println(rangeBertEdna)
-          println(thirtySomethings3)
-          println(thirtySomethings4)
-          println(departmentsFullOfAbstracters)
-          println(nestedOrg)
-          println(departmentsFullOfAbstracters2)
+          //println(thirtySomethings3)
+          //println(thirtySomethings4)
+          //println(departmentsFullOfAbstracters)
+          //println(nestedOrg)
+          //println(departmentsFullOfAbstracters2)
 
-          println(xr0)
-          println(xr1)
-          println(xr2)
-          println(xr3)
+          //println(xr0)
+          //println(xr1)
+          //println(xr2)
+          //println(xr3)
 
 
         }
