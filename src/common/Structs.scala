@@ -6,12 +6,13 @@ import util.OverloadHack
 import java.io.PrintWriter
 import internal.{GenericNestedCodegen, GenericFatCodegen}
 
+abstract class Record extends Struct
+
 trait StructOps extends Base {
 
   /**
    * Allows to write things like “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
    */
-  abstract class Record extends Struct[Rep]
   def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
 
   class RecordOps(record: Rep[Record]) {
