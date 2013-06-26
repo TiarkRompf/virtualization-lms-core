@@ -841,17 +841,22 @@ trait ScalaGenStaged extends ScalaCodeGenPkg with ScalaGenStruct {
   val IR: StagedExp
   import IR._
 
+  override def emitFileHeader(): Unit = {
+    super.emitFileHeader()
+    stream.println("import scala.virtualization.lms.epfl.test14.Schema")
+  }
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Database(s) => 
-      emitValDef(sym, "/*database*/(" + quote(s) + ").asInstanceOf["+remap(sym.tp)+"]")
+      emitValDef(sym, "Schema."+s)
     case DBFor(l, f, db, tbl, x, b) => 
-      val sdb = "scala.virtualization.lms.epfl.test14.Schema."+db+"."+tbl
+      val sdb = "Schema."+db+"."+tbl
       stream.println("val " + quote(sym) + " = " + sdb + ".flatMap { " + quote(x) + " => ")
       emitBlock(b)
       stream.println(quote(getBlockResult(b)))
       stream.println("}")
     case Struct(tag, elems) =>
-      emitValDef(sym, "new scala.virtualization.lms.epfl.test14.Schema.Record { " + (for ((n, v) <- elems) yield "val " + n + " = " + quote(v)).mkString("; ") + " }")
+      emitValDef(sym, "new Schema.Record { " + (for ((n, v) <- elems) yield "val " + n + " = " + quote(v)).mkString("; ") + " }")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -912,22 +917,23 @@ class TestQueries extends FileDiffSuite {
   def testQueries1 = withOutFileChecked(prefix+"queries1") {
     trait Prog extends Shallow {
       def test() = {
-        Console.println(db)
-        Console.println(differences)
-        Console.println(thirtySomethings)
-        Console.println(thirtySomethings2)
-        Console.println(evenAge)
-        Console.println(rangeBertEdna)
-        Console.println(thirtySomethings3)
-        Console.println(thirtySomethings4)
-        Console.println(departmentsFullOfAbstracters)
-        Console.println(nestedOrg)
-        Console.println(departmentsFullOfAbstracters2)
+        println("db")
+        println(db)
+        println(differences)
+        println(thirtySomethings)
+        println(thirtySomethings2)
+        println(evenAge)
+        println(rangeBertEdna)
+        println(thirtySomethings3)
+        println(thirtySomethings4)
+        println(departmentsFullOfAbstracters)
+        println(nestedOrg)
+        println(departmentsFullOfAbstracters2)
 
-        Console.println(xr0)
-        Console.println(xr1)
-        Console.println(xr2)
-        Console.println(xr3)
+        println(xr0)
+        println(xr1)
+        println(xr2)
+        println(xr3)
       }
     }
     new Prog {} test
@@ -937,8 +943,7 @@ class TestQueries extends FileDiffSuite {
     trait Prog extends DSL with Staged {
       def test() = {
 
-        val f = compile { x: Rep[Int] =>
-
+        val f = compile { x: Rep[Unit] =>
           val x = new Inner {}
           import x._
 
@@ -962,7 +967,7 @@ class TestQueries extends FileDiffSuite {
 
         }
 
-        f(0)
+        f()
 
       }
     }
