@@ -830,7 +830,9 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
   }
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
-    case DBFor(_, _, _, _, _, body) => freqHot(body) 
+    // normally we'd want `freqHot` to hoist code out of the loop, 
+    // but here we want to keep it inside for clarity
+    case DBFor(_, _, _, _, _, body) => freqCold(body) 
     case _ => super.symsFreq(e)
   }
 
