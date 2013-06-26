@@ -37,6 +37,13 @@ trait BooleanOpsExp extends BooleanOps with BaseExp {
   }).asInstanceOf[Exp[A]] // why??
 }
 
+trait BooleanOpsExpOpt extends BooleanOpsExp {
+  override def boolean_negate(lhs: Exp[Boolean])(implicit pos: SourceContext) = lhs match {
+    case Def(BooleanNegate(x)) => x
+    case _ => super.boolean_negate(lhs)
+  }
+}
+
 trait ScalaGenBooleanOps extends ScalaGenBase {
   val IR: BooleanOpsExp
   import IR._
