@@ -830,7 +830,7 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
   }
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
-    case DBFor(_, _, _, _, _, body) => freqHot(body)
+    case DBFor(_, _, _, _, _, body) => freqHot(body) 
     case _ => super.symsFreq(e)
   }
 
@@ -953,6 +953,7 @@ class TestQueries extends FileDiffSuite {
           //println(thirtySomethings)
           //println(thirtySomethings2)
           //println(evenAge)
+          println("rangeFromNames(\"Edna\",\"Bert\"):")
           println(rangeBertEdna)
           //println(thirtySomethings3)
           //println(thirtySomethings4)
@@ -992,6 +993,7 @@ class TestQueries extends FileDiffSuite {
           //println(rangeBertEdna)
           //println(thirtySomethings3)
           //println(thirtySomethings4)
+          println("expertise(\"abstract\"):")
           println(departmentsFullOfAbstracters)
           //println(nestedOrg)
           //println(departmentsFullOfAbstracters2)
@@ -1029,6 +1031,7 @@ class TestQueries extends FileDiffSuite {
           //println(thirtySomethings4)
           //println(departmentsFullOfAbstracters)
           //println(nestedOrg)
+          println("expertise2(\"abstract\"):")
           println(departmentsFullOfAbstracters2)
 
           //println(xr0)
