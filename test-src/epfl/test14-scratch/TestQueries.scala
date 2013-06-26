@@ -15,6 +15,8 @@ Staged SQL-like queries, inspired by "the essence of LINQ":
 http://homepages.inf.ed.ac.uk/slindley/papers/essence-of-linq-draft-december2012.pdf
 */
 
+
+// a non-staged, pure library implementation
 trait Shallow extends Util {
   
   // people db schema
@@ -322,7 +324,8 @@ trait Shallow extends Util {
 }
 
 
-trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Structs { //with Util {
+// a staged implementation
+trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Structs {
   
   def database[T:Manifest](s: String): Rep[T]
   trait Record extends Struct
@@ -348,7 +351,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   }
 
   //val db = staticData//database[PeopleDB]("PeopleDB")
-  val db = database[PeopleDB]("PeopleDB")
+  val db = database[PeopleDB]("db")
   /*PeopleDB(
     people = List(
       Person("Alex", 60),
@@ -451,7 +454,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
     val tasks: List[Record {val emp: String; val tsk: String}]
   }
 
-  val org = database[Org]("Org")
+  val org = database[Org]("org")
 
   /*val org = new Record {
     val departments = List(
@@ -574,7 +577,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
     val post: Int 
   }
 
-  val db_xml = database[List[Node]]("xml")
+  val db_xml = database[Record { val nodes: List[Node]}]("xml").nodes
 
   /*val db_xml = List(
     Node(0, -1, "#doc", 0, 13),
@@ -655,37 +658,185 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   val xr3 = xpath(xp3)
 
   }
-
 }
 
-trait StagedExp extends Staged with ScalaOpsPkgExp with StructExp {
 
+
+
+// internal staged implementation: IR node classes, rewrites for normalization
+trait StagedExp extends Staged with ScalaOpsPkgExp with StructExpOpt {
+
+  // IR node representing database("name")
   case class Database[T](s: String) extends Def[T]
   def database[T:Manifest](s: String): Exp[T] = Database[T](s)
 
-  case class For[A:Manifest, B:Manifest](l: Exp[List[A]], x: Sym[A], block: Block[List[B]]) extends Def[List[B]]
+  // IR node representing for (x <- l) yield f(x)
+  // we store two representations at the same time:
+  // (l,f) and (db.tbl, x => block)
+  // both serve different purposes:
+  // - the latter is the normalized form, intensional representation,
+  //   used for code generation
+  // - the former is the input form, extensional representation,
+  //   used to perform rewriting in NBE style ("normalization by evaluation")
+  case class DBFor[A:Manifest, B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]], 
+    db: String, tbl: String, x: Sym[A], block: Block[List[B]]) extends Def[List[B]]
 
 
+  // some extractor objects to make pattern matching more convenient
+  // (these are not strictly necessary)
+  object Empty {
+    def apply() = List()
+    def unapply[A](x:Exp[List[A]]): Boolean = x match {
+      case Def(ListNew(xs)) if xs.length == 0 => true
+      case _ => false
+    }
+  }
+
+  object Yield {
+    def apply[A:Manifest](x:Exp[A]) = List(x)
+    def unapply[A](x:Exp[List[A]]): Option[Exp[A]] = x match {
+      case Def(ListNew(xs)) if xs.length == 1 => Some(xs.head)
+      case _ => None
+    }
+  }
+
+  object IfThen {
+    def unapply[A](x:Exp[List[A]]): Option[(Exp[Boolean], Exp[List[A]])] = x match {
+      case Def(IfThenElse(c,Block(a),Block(Empty()))) => Some((c,a))
+      case _ => None
+    }
+  }
+
+  object For {
+    def unapply[B](x:Exp[List[B]]): Option[(Exp[List[Any]], Exp[Any] => Exp[List[B]])] = x match {
+      case Def(DBFor(l,f,d,t,a,b)) => Some((l,f))
+      case _ => None
+    }
+  }
+
+  object Concat {
+    def unapply[A](x:Exp[List[A]]): Option[(Exp[List[A]], Exp[List[A]])] = x match {
+      case Def(ListConcat(a,b)) => Some((a,b))
+      case _ => None
+    }
+  }
+
+
+/*
+  normalized syntax:
+
+      (SQLquery)      S ::= [] | X | X1@X2
+      (collection)    X ::= database(db) | yield Y | if Z then yield Y | for x in database(db).l do X
+      (record)        Y ::= x | {l=Z}
+      (base)          Z ::= c | x.l | op(X) | exists S
+
+  normalization 1:
+
+                       (fun(x) → R) Q --> R[x:=Q] 
+                             {l=Q}.li --> Qi
+      
+               for x in (yield Q)do R --> R[x:=Q]
+      for y in (for x in P do Q) do R --> for x in P do (for y in Q do R)
+          for x in (if P then Q) do R --> if P then (for x in Q do R)
+                     for x in [] do N --> []
+                for x in (P @ Q) do R --> (for x in P do R) @ (for x in Q do R)
+                       if true then Q --> Q
+                      if false then Q --> []
+      
+  normalization 2:
+
+                for x in P do (Q @ R) --> (for x in P do Q) @ (for x in P do R)
+                     for x in P do [] --> []
+                    if P then (Q @ R) --> (if P then Q) @ (if P then R)
+                         if P then [] --> []
+              if P then (if Q then R) --> if (P && Q) then R
+          if P then (for x in Q do R) --> for x in Q do (if P then R)
+*/
+
+
+
+  // implement smart constructor for For nodes; perform normalization
+  def dbfor[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]])(implicit pos: SourceContext): Exp[List[B]] = l match {
+/*
+             for x in (yield Q)do R --> R[x:=Q]
+    for y in (for x in P do Q) do R --> for x in P do (for y in Q do R)
+        for x in (if P then Q) do R --> if P then (for x in Q do R)
+                   for x in [] do N --> []
+              for x in (P @ Q) do R --> (for x in P do R) @ (for x in Q do R)
+*/
+    case Empty()              => List()
+    case Yield(a)             => f(a)
+    case IfThen(c,a)          => if (c) for (x <- a; y <- f(x)) yield y else List()
+    case For(l2,f2)           => for (x <- l2; y <- f2(x); z <- f(y)) yield z
+    case Concat(a,b)          => a.flatMap(f) ++ b.flatMap(f)
+    case (Def(Field(Def(Database(db)), tbl, tpe))) => 
+      val a = fresh[A]
+      val b = reifyEffects(f(a))
+      b match {
+/*                 for x in P do [] --> []           */
+        case Block(Empty())              => List()
+        case _ =>
+          // no rewrites match, go ahead and create IR node
+          reflectEffect(DBFor(l, f, db, tbl, a, b), summarizeEffects(b).star)
+      }
+    case (Def(ld)) => 
+      // cannot normalize, report error and throw exception
+      printerr("error: cannot normalize for expression")
+      printerr(s"at $l=$ld")
+      printsrc(s"in ${quotePos(fresh.withPos(pos::Nil))}")
+      throw new MatchError(l)
+  }
+
+
+  // override `if (c) a else b` smart constructor to add rewrites
+  override def ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: Block[T], elsep: Block[T])(implicit pos: SourceContext) = ((thenp.res,elsep.res) match {
+/*
+                  if P then (Q @ R) --> (if P then Q) @ (if P then R)
+                       if P then [] --> []
+            if P then (if Q then R) --> if (P && Q) then R
+        if P then (for x in Q do R) --> for x in Q do (if P then R)
+*/
+    case (Empty(),Empty())       => List()
+    case (IfThen(c,a),Empty())   => if (cond && c) a else List()
+    case (For(l,f),Empty())      => for (x <- l if cond; y <- f(x)) yield y
+    case (Concat(a,b),Empty())   => (if (cond) a else List()) ++ (if (cond) b else List())
+    case _                       => super.ifThenElse(cond,thenp,elsep)
+  }).asInstanceOf[Exp[T]]
+
+
+
+  // override Rep[List[T]] methods to create For nodes
   override def list_flatMap[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]])(implicit pos: SourceContext) = {
-    val a = fresh[A]
-    val b = reifyEffects(f(a))
-    reflectEffect(ListFlatMap(l, a, b), summarizeEffects(b).star)
+    dbfor[A,B](l,f)
   }
   override def list_map[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[B])(implicit pos: SourceContext) = {
-    val a = fresh[A]
-    val b = reifyEffects(f(a))
-    reflectEffect(ListMap(l, a, b), summarizeEffects(b).star)
+    list_flatMap[A,B](l, x => List(f(x)))
   }
   override def list_filter[A : Manifest](l: Exp[List[A]], f: Exp[A] => Exp[Boolean])(implicit pos: SourceContext) = {
-    val a = fresh[A]
-    val b = reifyEffects(f(a))
-    reflectEffect(ListFilter(l, a, b), summarizeEffects(b).star)
+    list_flatMap[A,A](l, x => if (f(x)) List(x) else List())
   }
 
 
+  // implement some internal methods for new IR nodes
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case DBFor(_, _, _, _, _, body) => syms(body)
+    case _ => super.syms(e)
+  }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case DBFor(_, _, _, _, x, body) => x :: effectSyms(body)
+    case _ => super.boundSyms(e)
+  }
+
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case DBFor(_, _, _, _, _, body) => freqHot(body)
+    case _ => super.symsFreq(e)
+  }
 
 }
 
+
+// code generator for specific IR nodes -- alternative impl would emit SQL
 trait ScalaGenStaged extends ScalaCodeGenPkg with ScalaGenStruct {
   val IR: StagedExp
   import IR._
@@ -693,89 +844,24 @@ trait ScalaGenStaged extends ScalaCodeGenPkg with ScalaGenStruct {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Database(s) => 
       emitValDef(sym, "/*database*/(" + quote(s) + ").asInstanceOf["+remap(sym.tp)+"]")
+    case DBFor(l, f, db, tbl, x, b) => 
+      val sdb = "scala.virtualization.lms.epfl.test14.Schema."+db+"."+tbl
+      stream.println("val " + quote(sym) + " = " + sdb + ".flatMap { " + quote(x) + " => ")
+      emitBlock(b)
+      stream.println(quote(getBlockResult(b)))
+      stream.println("}")
+    case Struct(tag, elems) =>
+      emitValDef(sym, "new scala.virtualization.lms.epfl.test14.Schema.Record { " + (for ((n, v) <- elems) yield "val " + n + " = " + quote(v)).mkString("; ") + " }")
     case _ => super.emitNode(sym, rhs)
   }
 }
 
+// accessed by generated code
+object Schema extends Shallow
 
 
-
-
-
-
-
-trait Deep extends Shallow {
-
-/*
-normalized syntax:
-
-(SQLquery)      S ::= [] | X | X1@X2
-(collection)    X ::= database(db) | yield Y | if Z then yield Y | for x in database(db).l do X
-(record)        Y ::= x | {l=Z}
-(base)          Z ::= c | x.l | op(X) | exists S
-*/
-
-abstract class Query
-case object QEmpty extends Query
-case class QSingle(x: Coll) extends Query
-case class QConcat(x: Coll, y: Coll) extends Query
-
-abstract class Coll
-case class CDatabase(db: Any) extends Coll
-case class CYield(x: Rec) extends Coll
-case class CIfYield(c: Op, x: Rec) extends Coll
-case class CFor(x: String, db: Any, l: String, inner: Coll) extends Coll
-
-abstract class Rec
-case class RId(x: String) extends Rec
-case class RStruct(x: Any) extends Rec
-
-abstract class Op
-case class OConst(c: Any) extends Op
-case class OField(x: String, l: String) extends Op
-case class OPrim(x: String, args: List[Coll]) extends Op
-case class OExists(q: Query) extends Op
-
-/*
-normalization 1:
-
-                     (fun(x) → R) Q --> R[x:=Q] 
-                           {l=Q}.li --> Qi
-    
-             for x in (yield Q)do R --> R[x:=Q]
-    for y in (for x in P do Q) do R --> for x in P do (for y in Q do R)
-        for x in (if P then Q) do R --> if P then (for x in Q do R)
-                   for x in [] do N --> []
-              for x in (P @ Q) do R --> (for x in P do R) @ (for x in Q do R)
-                     if true then Q --> Q
-                    if false then Q --> []
-    
-normalization 2:
-
-              for x in P do (Q @ R) --> (for x in P do Q) @ (for x in P do R)
-                   for x in P do [] --> []
-                  if P then (Q @ R) --> (if P then Q) @ (if P then R)
-                       if P then [] --> []
-            if P then (if Q then R) --> if (P && Q) then R
-        if P then (for x in Q do R) --> for x in Q do (if P then R)
-*/
-
-}
-
-
-/*
-TODO:
-- normalization
-  - need `for` rep instead of ListMap, ListFilter?
-    - `for` is bind, `yield` is unit. encode all as flatMap?
-  - need transformer for second step?
-    - or can we merge them?
-- SQL extraction
-*/
-
-
+// pretty printing for records
 trait Util {
-  // Record supertype: pretty printing etc
   abstract class Record extends Product {
     lazy val elems = {
       val fields = getClass.getDeclaredFields.toList
@@ -790,11 +876,10 @@ trait Util {
     override def productIterator = elems.iterator
     override def toString = elems.map(e => s"${e._1}:${e._2}").mkString("{",",","}")
   }
-
 }
 
 
-
+// test cases
 class TestQueries extends FileDiffSuite {
   
   val prefix = "test-out/epfl/test14-"
@@ -876,6 +961,8 @@ class TestQueries extends FileDiffSuite {
 
 
         }
+
+        f(0)
 
       }
     }
