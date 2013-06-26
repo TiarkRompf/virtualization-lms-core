@@ -664,7 +664,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
 
 
 // internal staged implementation: IR node classes, rewrites for normalization
-trait StagedExp extends Staged with ScalaOpsPkgExp with StructExpOpt {
+trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with StructExpOpt {
 
   // IR node representing database("name")
   case class Database[T](s: String) extends Def[T]
@@ -976,5 +976,75 @@ class TestQueries extends FileDiffSuite {
     //println(o.)
   }
 
+  def testQueries3 = withOutFileChecked(prefix+"queries3") {
+    trait Prog extends DSL with Staged {
+      def test() = {
+
+        val f = compile { x: Rep[Unit] =>
+          val x = new Inner {}
+          import x._
+
+          //println(db)
+          //println(differences)
+          //println(thirtySomethings)
+          //println(thirtySomethings2)
+          //println(evenAge)
+          //println(rangeBertEdna)
+          //println(thirtySomethings3)
+          //println(thirtySomethings4)
+          println(departmentsFullOfAbstracters)
+          //println(nestedOrg)
+          //println(departmentsFullOfAbstracters2)
+
+          //println(xr0)
+          //println(xr1)
+          //println(xr2)
+          //println(xr3)
+
+
+        }
+
+        f()
+
+      }
+    }
+    val o = new Prog with Impl
+    //println(o.)
+  }
+  def testQueries4 = withOutFileChecked(prefix+"queries4") {
+    trait Prog extends DSL with Staged {
+      def test() = {
+
+        val f = compile { x: Rep[Unit] =>
+          val x = new Inner {}
+          import x._
+
+          //println(db)
+          //println(differences)
+          //println(thirtySomethings)
+          //println(thirtySomethings2)
+          //println(evenAge)
+          //println(rangeBertEdna)
+          //println(thirtySomethings3)
+          //println(thirtySomethings4)
+          //println(departmentsFullOfAbstracters)
+          //println(nestedOrg)
+          println(departmentsFullOfAbstracters2)
+
+          //println(xr0)
+          //println(xr1)
+          //println(xr2)
+          //println(xr3)
+
+
+        }
+
+        f()
+
+      }
+    }
+    val o = new Prog with Impl
+    //println(o.)
+  }
 
 }
