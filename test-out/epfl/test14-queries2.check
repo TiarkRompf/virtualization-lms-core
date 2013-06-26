@@ -1,0 +1,48 @@
+nVars=1000
+nVars=2000
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+import scala.virtualization.lms.epfl.test14.Schema
+class staged$0 extends ((Unit)=>(Unit)) {
+def apply(x0:Unit): Unit = {
+val x19 = List()
+val x617 = Schema.db.people.flatMap { x111 => 
+val x112 = x111.name
+val x113 = x112 == "Edna"
+val x116 = x111.age
+val x616 = Schema.db.people.flatMap { x435 => 
+val x438 = x435.name
+val x439 = x438 == "Bert"
+val x441 = x435.age
+val x615 = Schema.db.people.flatMap { x598 => 
+val x602 = x598.age
+val x603 = x116 <= x602
+val x604 = x602 < x441
+val x605 = x603 && x604
+val x611 = x439 && x605
+val x613 = x113 && x611
+val x614 = if (x613) {
+val x608 = x598.name
+val x607 = new Schema.Record { val name = x608 }
+val x609 = List(x607)
+x609
+} else {
+x19
+}
+x614
+}
+x615
+}
+x616
+}
+val x2562 = println(x617)
+x2562
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+compilation: ok
+List({name:Cora}, {name:Drew}, {name:Edna})
