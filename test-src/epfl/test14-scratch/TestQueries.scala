@@ -755,7 +755,8 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with StructExpOpt {
 
 
 
-  // implement smart constructor for For nodes; perform normalization
+  // implement smart constructor for DBFor nodes; perform normalization.
+  // note that we map IR nodes to staged code, not directly to other IR nodes.
   def dbfor[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]])(implicit pos: SourceContext): Exp[List[B]] = l match {
 /*
              for x in (yield Q)do R --> R[x:=Q]
