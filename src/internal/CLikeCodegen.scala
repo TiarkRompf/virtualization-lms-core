@@ -19,13 +19,12 @@ trait CLikeCodegen extends GenericCodegen {
   protected var actRecordStream: PrintWriter = _
   protected var typesStream: PrintWriter = _
 
-  def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
-    stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
-  }
+  def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = emitValDef(sym, rhs)
 
-  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    if(!isVoidType(sym.tp)) 
-      stream.println(remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
+  def emitValDef(sym: Sym[Any], rhs: String): Unit = emitValDef(quote(sym), sym.tp, rhs)
+
+  def emitValDef(sym: String, tpe: Manifest[_], rhs: String): Unit = {
+    if(remap(tpe) != "void") stream.println(remap(tpe) + " " + sym + " = " + rhs + ";")
   }
 
   override def remap[A](m: Manifest[A]) : String = {
