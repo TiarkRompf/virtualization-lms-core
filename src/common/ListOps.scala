@@ -168,34 +168,56 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
     case ListFromSeq(xs) => emitValDef(sym, "List(" + quote(xs) + ": _*)")
     case ListMkString(xs) => emitValDef(sym, quote(xs) + ".mkString")
     case ListMap(l,x,blk) => 
-      stream.println("val " + quote(sym) + " = " + quote(l) + ".map{")
-      stream.println(quote(x) + " => ")
-      emitBlock(blk)
-      stream.println(quote(getBlockResult(blk)))
-      stream.println("}")
-    case ListForeach(l,x,blk) => 
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.println(quote(l) + ".map{")
+        stream.println(quote(x) + " => ")
+        emitBlock(blk)
+        stream.println(quote(getBlockResult(blk)))
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
+    case ListForeach(l,x,blk) => {
       stream.println(quote(l) + ".foreach{")
       stream.println(quote(x) + " => ")
       emitBlock(blk)
       stream.println("}")
+    }
     case ListFlatMap(l, x, b) => {
-      stream.println("val " + quote(sym) + " = " + quote(l) + ".flatMap { " + quote(x) + " => ")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.println(quote(l) + ".flatMap { " + quote(x) + " => ")
+        emitBlock(b)
+        stream.println(quote(getBlockResult(b)))
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
     }
     case ListFilter(l, x, b) => {
-      stream.println("val " + quote(sym) + " = " + quote(l) + ".filter { " + quote(x) + " => ")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.println(quote(l) + ".filter { " + quote(x) + " => ")
+        emitBlock(b)
+        stream.println(quote(getBlockResult(b)))
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
     }
-    case ListSortBy(l,x,blk) =>
-      stream.println("val " + quote(sym) + " = " + quote(l) + ".sortBy{")
-      stream.println(quote(x) + " => ")
-      emitBlock(blk)
-      stream.println(quote(getBlockResult(blk)))
-      stream.println("}")
+    case ListSortBy(l,x,blk) => {
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.println(quote(l) + ".sortBy{")
+        stream.println(quote(x) + " => ")
+        emitBlock(blk)
+        stream.println(quote(getBlockResult(blk)))
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
+    }
     case ListPrepend(l,e) => emitValDef(sym, quote(e) + " :: " + quote(l))    
     case ListToArray(l) => emitValDef(sym, quote(l) + ".toArray")
     case ListToSeq(l) => emitValDef(sym, quote(l) + ".toSeq")

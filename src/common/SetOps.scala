@@ -75,17 +75,16 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
     case SetClear(s) => emitValDef(sym, quote(s) + ".clear()")
     case SetToSeq(s) => emitValDef(sym, quote(s) + ".toSeq")
     case n@SetToArray(s) => //emitValDef(sym, quote(s) + ".toArray")
-      stream.println("// workaround for refinedManifest problem")
-      stream.println("val " + quote(sym) + " = {")
-      stream.println("val out = " + quote(n.array))
-      stream.println("val in = " + quote(s) + ".toSeq")
-      stream.println("var i = 0")
-      stream.println("while (i < in.length) {")
-      stream.println("out(i) = in(i)")
-      stream.println("i += 1")      
-      stream.println("}")
-      stream.println("out")
-      stream.println("}")
+      emitValDef(sym, "{ // workaround for refinedManifest problem" +
+      "\nval out = " + quote(n.array) +
+      "\nval in = " + quote(s) + ".toSeq" +
+      "\nvar i = 0" +
+      "\nwhile (i < in.length) {" +
+      "\nout(i) = in(i)" +
+      "\ni += 1" +
+      "\n}" +
+      "\nout" +
+      "\n}")
     case _ => super.emitNode(sym, rhs)
   }
 }
