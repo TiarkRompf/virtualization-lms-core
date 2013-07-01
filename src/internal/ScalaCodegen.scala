@@ -13,6 +13,8 @@ trait ScalaCodegen extends GenericCodegen with Config {
 
   override def toString = "scala"
 
+  var transformers: List[AbstractTransformer] = List[AbstractTransformer]()
+
   override def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
       e.printStackTrace()
       kstream.close()
@@ -31,12 +33,16 @@ trait ScalaCodegen extends GenericCodegen with Config {
                      "*******************************************/")
       emitFileHeader()
 
+      var transformedBody = body
+      transformers foreach { trans =>
+        transformedBody = trans.apply[A](body.asInstanceOf[trans.IR.Block[A]]).asInstanceOf[this.Block[A]]
+      }
+
       // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
-      stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends (("+args.map(a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
+      stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1, true)+":"+p._1.tp).mkString(",")+")")+" extends (("+args.map( a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
       stream.println("def apply("+args.map(a => quote(a, true) + ":" + remap(a.tp)).mkString(", ")+"): "+sA+" = {")
-    
-      emitBlock(body)
-      stream.println(quote(getBlockResult(body)))
+      emitBlock(transformedBody)
+      stream.println(quote(getBlockResult(transformedBody)))
     
       stream.println("}")
     
