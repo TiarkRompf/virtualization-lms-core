@@ -59,8 +59,12 @@ trait GenericCodegen extends BlockTraversal {
       outFile.delete
   }
   
-  // optional type remapping (default is identity)
-  def remap(s: String): String = s
+  /**
+   * optional type remapping (default is identity)
+   * except that we should replace all '$' by '.'
+   * because inner class names might contain $ sign
+   */
+  def remap(s: String): String = s.replace('$', '.')
   def remap[A](s: String, method: String, t: Manifest[A]) : String = remap(s, method, t.toString)
   def remap(s: String, method: String, t: String) : String = s + method + "[" + remap(t) + "]"    
   def remap[A](m: Manifest[A]): String = m match {
