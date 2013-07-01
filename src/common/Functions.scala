@@ -279,7 +279,8 @@ trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTu
     case Lambda(fun, UnboxedTuple(xs), y) =>
       emitValDef(sym, "{" + xs.map(s=>quote(s, true)+":"+remap(s.tp)).mkString("(",",",")") + " => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)) + ": " + y.tp)
+      var ytp = remap(y.tp).toString;
+      stream.println(quote(getBlockResult(y)) + ": " + ytp )
       stream.println("}")
 
     case Apply(fun, UnboxedTuple(args)) =>
