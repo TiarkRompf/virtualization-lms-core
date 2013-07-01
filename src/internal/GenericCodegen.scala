@@ -17,6 +17,11 @@ trait GenericCodegen extends BlockTraversal {
   def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {}
   
   var analysisResults: MMap[String,Any] = null.asInstanceOf[MMap[String,Any]]
+
+  /**
+   * List of transformers that should be applied before code generation
+   */
+  var transformers: List[AbstractTransformer] = List[AbstractTransformer]()
   
   def emitFileHeader(): Unit = {}
   

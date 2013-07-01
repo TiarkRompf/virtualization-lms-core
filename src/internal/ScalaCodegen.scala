@@ -13,8 +13,6 @@ trait ScalaCodegen extends GenericCodegen with Config {
 
   override def toString = "scala"
 
-  var transformers: List[AbstractTransformer] = List[AbstractTransformer]()
-
   override def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
       e.printStackTrace()
       kstream.close()
