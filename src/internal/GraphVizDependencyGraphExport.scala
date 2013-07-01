@@ -39,7 +39,7 @@ trait GraphVizDependencyGraphExport extends GenericCodegen with NestedBlockTrave
     var indentation = indentString(levelCounter)
     var output = {
       indentation + "\"" + quote(a, true) + "\" [ " + extra +
-        " label = <" + quote(a, true) + ":" +
+        " label = <" + getNodeLabel(a) + ":" +
         atp.substring(if (atp.length-50 > 0) atp.length-50 else 0,atp.length) +
         " = " + kind + ">];"
     }
@@ -176,6 +176,8 @@ trait GraphVizDependencyGraphExport extends GenericCodegen with NestedBlockTrave
       case s@Sym(n) => quote(s, true)
     }
   }
+
+  def getNodeLabel(s: Sym[_]): String = quote(s, true);
 
   /**
    * utility method for generating proper indentation prefix
