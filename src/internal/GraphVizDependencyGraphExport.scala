@@ -194,6 +194,13 @@ trait GraphVizDependencyGraphExport extends GenericCodegen with NestedBlockTrave
   // emitValDef is not used in this code generator
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {}
 
+  override def performTransformations[A:Manifest](body: Block[A]): Block[A] = {
+    val transformedBody = super.performTransformations[A](body)
+    val fixer = new SymMetaDataFixerTransform{ val IR: self.IR.type = self.IR }
+    fixer.traverseBlock(transformedBody.asInstanceOf[fixer.Block[A]])
+    transformedBody
+  }
+
   override def remap(s: String): String = {
     val rs = super.remap(s)
     val lastDot = rs.lastIndexOf('.')
