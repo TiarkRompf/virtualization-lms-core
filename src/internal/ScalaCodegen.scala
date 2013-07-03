@@ -31,10 +31,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
                      "*******************************************/")
       emitFileHeader()
 
-      var transformedBody = body
-      transformers foreach { trans =>
-        transformedBody = trans.apply[A](body.asInstanceOf[trans.IR.Block[A]]).asInstanceOf[this.Block[A]]
-      }
+      val transformedBody = performTransformations(body)
 
       // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
       stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1, true)+":"+p._1.tp).mkString(",")+")")+" extends (("+args.map( a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")

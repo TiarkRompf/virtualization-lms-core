@@ -23,6 +23,14 @@ trait GenericCodegen extends BlockTraversal {
    */
   var transformers: List[AbstractTransformer] = List[AbstractTransformer]()
   
+  def performTransformations[A:Manifest](body: Block[A]): Block[A] = {
+    var transformedBody = body
+    transformers foreach { trans =>
+      transformedBody = trans.apply[A](body.asInstanceOf[trans.IR.Block[A]]).asInstanceOf[this.Block[A]]
+    }
+    transformedBody
+  }
+
   def emitFileHeader(): Unit = {}
   
   // Initializer

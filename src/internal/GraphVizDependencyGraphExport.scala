@@ -12,7 +12,7 @@ import scala.reflect.SourceContext
  * ScalaCodegen or etc.
  */
 trait GraphVizDependencyGraphExport extends GenericCodegen with NestedBlockTraversal { self =>
-  val IR: Expressions with Effects
+  val IR: ExtendedExpressions with Effects
   import IR._
 
   val GraphNodeKindInput = "input"
@@ -40,8 +40,7 @@ trait GraphVizDependencyGraphExport extends GenericCodegen with NestedBlockTrave
     var output = {
       indentation + "\"" + quote(a, true) + "\" [ " + extra +
         " label = <" + getNodeLabel(a) + ":" +
-        atp.substring(if (atp.length-50 > 0) atp.length-50 else 0,atp.length) +
-        " = " + kind + ">];"
+        atp + " = " + kind + ">];"
     }
     indentation = indentString(levelCounter+1)
     if(rhs != null) {
@@ -97,10 +96,7 @@ trait GraphVizDependencyGraphExport extends GenericCodegen with NestedBlockTrave
       
       emitFileHeader()
 
-      var transformedBody = body
-      transformers foreach { trans =>
-        transformedBody = trans.apply[A](body.asInstanceOf[trans.IR.Block[A]]).asInstanceOf[self.Block[A]]
-      }
+      var transformedBody = performTransformations(body)
 
       stream.println(args.map( a => getGraphNodeString(a, GraphNodeKindInput, null)).mkString("\n"))
       emitBlock(transformedBody)
@@ -177,6 +173,10 @@ trait GraphVizDependencyGraphExport extends GenericCodegen with NestedBlockTrave
     }
   }
 
+  /**
+   * It is possible to print more meta-data in the node-label
+   * by overriding this method
+   */
   def getNodeLabel(s: Sym[_]): String = quote(s, true);
 
   /**
@@ -193,4 +193,15 @@ trait GraphVizDependencyGraphExport extends GenericCodegen with NestedBlockTrave
 
   // emitValDef is not used in this code generator
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {}
+
+  override def remap(s: String): String = {
+    val rs = super.remap(s)
+    val lastDot = rs.lastIndexOf('.')
+    val len = rs.length
+    if(lastDot > 0 && lastDot+1 < len) {
+      rs.substring(lastDot+1, len)
+    } else {
+      rs
+    }
+  }
 }
