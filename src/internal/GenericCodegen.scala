@@ -333,14 +333,7 @@ trait GenericCodegen extends BlockTraversal {
     case Const(l: Long) => l.toString + "L"
     case Const(null) => "null"
     case Const(z) => z.toString
-    case s@Sym(n) => if (forcePrintSymbol) {
-      "x"+n
-    } else { 
-      isVoidType(s.tp) match {
-        case true => "(" + /*"x" + n +*/ ")"
-        case false => "x"+n
-      }
-    }
+    case s@Sym(n) => "x"+n
     case _ => throw new RuntimeException("could not quote " + x)
   }
   

@@ -5,7 +5,7 @@
 class Test extends ((Double)=>(Any)) {
 def apply(x0:Double): Any = {
 val x4 = {x1: (Any) => 
-println("foo")
+val x2 = println("foo")
 x1: Any
 }
 val x5 = x4(x0)

@@ -3,32 +3,38 @@
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
-println("found:")
-println(1)
-println(1)
-println("found:")
-println(2)
-println(2)
+val x1 = println("found:")
+val x2 = println(1)
+val x3 = println(1)
+val x4 = println("found:")
+val x5 = println(2)
+val x6 = println(2)
 val x7 = x0 == 1
-if (x7) {
-println("found:")
-println(x0)
-println(1)
+val x12 = if (x7) {
+val x8 = println("found:")
+val x9 = println(x0)
+val x10 = println(1)
+x10
 } else {
+()
 }
 val x13 = x0 == 2
-if (x13) {
-println("found:")
-println(x0)
-println(2)
+val x18 = if (x13) {
+val x14 = println("found:")
+val x15 = println(x0)
+val x16 = println(2)
+x16
 } else {
+()
 }
 val x19 = x0 == 3
-if (x19) {
-println("found:")
-println(x0)
-println(3)
+val x24 = if (x19) {
+val x20 = println("found:")
+val x21 = println(x0)
+val x22 = println(3)
+x22
 } else {
+()
 }
 ()
 }

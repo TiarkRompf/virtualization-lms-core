@@ -10,12 +10,12 @@ val (x15,x11) = if (x3) {
 x1 = 5
 ((),())
 } else {
-println("no")
+val x7 = println("no")
 ((),())
 }
 val x17 = x1
-println(x17)
-()
+val x18 = println(x17)
+x18
 }
 }
 /*****************************************

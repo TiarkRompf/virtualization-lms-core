@@ -20,7 +20,7 @@ x7
 
 class Anonfun_x7(x4) {
 def apply(x2) = {
-println("yo")
+val x3 = println("yo")
 val x5 = x2+x4
 x5
 }

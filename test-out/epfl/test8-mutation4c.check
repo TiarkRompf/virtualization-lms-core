@@ -18,8 +18,8 @@ x5
 val x8 = x7.clone // mutable
 val x9 = x8.apply(5)
 val x10 = x9.apply(50)
-println(x10)
-()
+val x11 = println(x10)
+x11
 }
 }
 /*****************************************

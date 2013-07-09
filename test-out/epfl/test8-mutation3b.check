@@ -17,14 +17,14 @@ val x5 = LoopArray(100) { x4 =>
 val x6 = x5.clone // mutable
 val x7 = x6.length
 var x9 : Int = 0
-while (x9 < x7) {
+val x16 = while (x9 < x7) {
 val x10 = x3
-x6.update(x9, 8.0)
+val x12 = x6.update(x9, 8.0)
 val x13 = x6.clone
 x3 = x13
 x9 = x9 + 1
 }
-()
+x16
 }
 }
 /*****************************************

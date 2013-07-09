@@ -4,10 +4,10 @@
 class Test(px1:scala.collection.mutable.ArrayBuffer[Int]) extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
 val x1 = px1 // static data: ArrayBuffer()
-x1 += x0
-x1 += x0
-println("done")
-()
+val x2 = x1 += x0
+val x3 = x1 += x0
+val x4 = println("done")
+x4
 }
 }
 /*****************************************

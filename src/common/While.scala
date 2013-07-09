@@ -120,22 +120,32 @@ trait ScalaGenWhile extends ScalaGenEffect with BaseGenWhile {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case While(c,b) =>
       //while-do's output is unit, so why do we need to assign its result to a val
-      stream.print(/*"val " + quote(sym) + " = " +*/ "while ({")
-      emitBlock(c)
-      stream.print(quote(getBlockResult(c)))
-      stream.println("}) {")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.print("while ({")
+        emitBlock(c)
+        stream.print(quote(getBlockResult(c)))
+        stream.println("}) {")
+        emitBlock(b)
+        stream.println(quote(getBlockResult(b)))
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
     case DoWhile(b,c) =>
       //do-while's output is unit, so why do we need to assign its result to a val
-      stream.print(/*"val " + quote(sym) + " = " +*/ "do {")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("} while ({")
-      emitBlock(c)
-      stream.print(quote(getBlockResult(c)))
-      stream.println("})")
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.print("do {")
+        emitBlock(b)
+        stream.println(quote(getBlockResult(b)))
+        stream.println("} while ({")
+        emitBlock(c)
+        stream.print(quote(getBlockResult(c)))
+        stream.print("})")
+      }
+      emitValDef(sym, strWriter.toString)
 
     case _ => super.emitNode(sym, rhs)
   }

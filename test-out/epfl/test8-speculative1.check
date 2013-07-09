@@ -3,9 +3,9 @@
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
-println(7)
-println(7)
-()
+val x2 = println(7)
+val x3 = println(7)
+x3
 }
 }
 /*****************************************

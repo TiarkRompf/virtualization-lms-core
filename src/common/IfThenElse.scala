@@ -235,27 +235,18 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
  
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IfThenElse(c,a,b) =>
-      isVoidType(sym.tp) match {
-        case true =>
-          stream.println("if (" + quote(c) + ") {")
-          emitBlock(a)
-          stream.println("} else {")
-          emitBlock(b)
-          stream.println("}")
-        case false =>
-          val strWriter = new java.io.StringWriter
-          val localStream = new PrintWriter(strWriter);
-          withStream(localStream) {
-            stream.println("if (" + quote(c) + ") {")
-            emitBlock(a)
-            stream.println(quote(getBlockResult(a)))
-            stream.println("} else {")
-            emitBlock(b)
-            stream.println(quote(getBlockResult(b)))
-            stream.print("}")
-          }
-          emitValDef(sym, strWriter.toString)
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.println("if (" + quote(c) + ") {")
+        emitBlock(a)
+        stream.println(quote(getBlockResult(a)))
+        stream.println("} else {")
+        emitBlock(b)
+        stream.println(quote(getBlockResult(b)))
+        stream.print("}")
       }
+      emitValDef(sym, strWriter.toString)
     case _ => super.emitNode(sym, rhs)
   }
 }

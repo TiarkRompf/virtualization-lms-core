@@ -34,6 +34,18 @@ trait ScalaConciseCodegen extends ScalaCodegen with NestedBlockTraversal { self 
       case _ => stream.println("val " + quote(sym) + " = " + rhs + extra)
     }
   }
+  
+  override def emitAssignment(sym: Sym[Any], lhs: String, rhs: String): Unit = {
+    if(isVoidType(sym.tp)) {
+      stream.println(lhs + " = " + rhs)
+    } else {
+      emitValDef(sym, lhs + " = " + rhs)
+    }
+  }
+  
+  def emitForwardDef(sym: Sym[Any]): Unit = {
+    if(!isVoidType(sym.tp)) { stream.println("var " + quote(sym, true) + /*": " + remap(sym.tp) +*/ " = null.asInstanceOf[" + remap(sym.tp) + "]") }
+  }
 
   override def traverseStm(stm: Stm) = stm match {
     case TP(sym, rhs) => if(!sym.possibleToInline && sym.refCount > 0 /*for eliminating read-only effect-ful statements*/) emitNode(sym,rhs)

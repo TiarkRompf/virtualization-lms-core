@@ -2,8 +2,8 @@ promoting to effect: Sym(5)=Reflect(SimpleLoop(Const(10),Sym(4),ArrayElem(Block(
 depends on  Sym(3)
 promoting to effect: Sym(6)=Reflect(ArrayClone(Sym(5)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
 depends on  Sym(3)
-//error: illegal sharing of mutable objects Sym(3)
-//at Sym(7)=Reflect(ArrayMutable(Sym(6)),Summary(false,false,false,false,true,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
+error: illegal sharing of mutable objects Sym(3)
+at Sym(7)=Reflect(ArrayMutable(Sym(6)),Summary(false,false,false,false,true,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
 promoting to effect: Sym(8)=Reflect(ArrayIndex(Sym(7),Const(5)),Summary(false,false,false,false,false,List(Sym(7), Sym(3)),List(Sym(7), Sym(3)),List(),List()),List(Sym(3), Sym(7)))
 depends on  Sym(7)
 depends on  Sym(3)
@@ -25,8 +25,8 @@ val x6 = x5.clone
 val x7 = x6.clone // mutable
 val x8 = x7.apply(5)
 val x9 = x8.apply(50)
-println(x9)
-()
+val x10 = println(x9)
+x10
 }
 }
 /*****************************************

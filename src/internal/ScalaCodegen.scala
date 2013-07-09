@@ -93,10 +93,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
       "      // " + relativePath(context.fileName) + ":" + context.line
     }
     sym match {
-      case s@Sym(n) => isVoidType(s.tp) match {
-        case true => stream.println(/*"val " + quote(sym) + " = " +*/ "" + rhs + extra)
-        case false => stream.println("val " + quote(sym) + " = " + rhs + extra)
-      }
+      case s@Sym(n) => stream.println("val " + quote(sym) + " = " + rhs + extra)
       case _ => stream.println("val " + quote(sym) + " = " + rhs + extra)
     }
   }
@@ -105,13 +102,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
     stream.println("var " + quote(sym, true) + ": " + remap(sym.tp) + " = " + rhs)
   }
   
-  def emitAssignment(sym: Sym[Any], lhs: String, rhs: String): Unit = {
-    if(isVoidType(sym.tp)) {
-      stream.println(lhs + " = " + rhs)
-    } else {
-      emitValDef(sym, lhs + " = " + rhs)
-    }
-  }
+  def emitAssignment(sym: Sym[Any], lhs: String, rhs: String): Unit = emitValDef(sym, lhs + " = " + rhs)
 }
 
 trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
@@ -125,7 +116,7 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   }
   
   def emitForwardDef(sym: Sym[Any]): Unit = {
-    if(!isVoidType(sym.tp)) { stream.println("var " + quote(sym, true) + /*": " + remap(sym.tp) +*/ " = null.asInstanceOf[" + remap(sym.tp) + "]") }
+    stream.println("var " + quote(sym, true) + /*": " + remap(sym.tp) +*/ " = null.asInstanceOf[" + remap(sym.tp) + "]")
   }
   
   // special case for recursive vals
