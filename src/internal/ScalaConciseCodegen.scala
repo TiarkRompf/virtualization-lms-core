@@ -13,7 +13,7 @@ import scala.reflect.SourceContext
  * 
  * @author Mohammad Dashti (mohammad.dashti@epfl.ch)
  */
-trait ScalaConciseCodegen extends ScalaCodegen with NestedBlockTraversal { self =>
+trait ScalaConciseCodegen extends ScalaNestedCodegen { self =>
   val IR: ExtendedExpressions with Effects
   import IR._
 
@@ -43,7 +43,7 @@ trait ScalaConciseCodegen extends ScalaCodegen with NestedBlockTraversal { self 
     }
   }
   
-  def emitForwardDef(sym: Sym[Any]): Unit = {
+  override def emitForwardDef(sym: Sym[Any]): Unit = {
     if(!isVoidType(sym.tp)) { stream.println("var " + quote(sym, true) + /*": " + remap(sym.tp) +*/ " = null.asInstanceOf[" + remap(sym.tp) + "]") }
   }
 
