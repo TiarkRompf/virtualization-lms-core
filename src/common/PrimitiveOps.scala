@@ -189,9 +189,14 @@ trait PrimitiveOps extends Variables with OverloadHack {
   /**
    * Float
    */
+  object Float {
+    def parseFloat(s: Rep[String])(implicit pos: SourceContext) = obj_float_parse_float(s)
+  }
+
   def infix_toInt(lhs: Rep[Float])(implicit o: Overloaded1, pos: SourceContext): Rep[Int] = float_to_int(lhs)
   def infix_toDouble(lhs: Rep[Float])(implicit o: Overloaded1, pos: SourceContext): Rep[Double] = float_to_double(lhs) 
   
+  def obj_float_parse_float(s: Rep[String])(implicit pos: SourceContext): Rep[Float]
   def float_plus(lhs: Rep[Float], rhs: Rep[Float])(implicit pos: SourceContext): Rep[Float]
   def float_minus(lhs: Rep[Float], rhs: Rep[Float])(implicit pos: SourceContext): Rep[Float]
   def float_times(lhs: Rep[Float], rhs: Rep[Float])(implicit pos: SourceContext): Rep[Float]
@@ -263,12 +268,17 @@ trait PrimitiveOps extends Variables with OverloadHack {
   /**
    * Long
    */
+  object Long {
+    def parseLong(s: Rep[String])(implicit pos: SourceContext) = obj_long_parse_long(s)
+  }
+
   def infix_&(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_binaryand(lhs, rhs)
   def infix_|(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_binaryor(lhs, rhs)
   def infix_<<(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext) = long_shiftleft(lhs, rhs)
   def infix_>>>(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext) = long_shiftright_unsigned(lhs, rhs)
   def infix_toInt(lhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_toint(lhs)
     
+  def obj_long_parse_long(s: Rep[String])(implicit pos: SourceContext): Rep[Long]
   def long_binaryand(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
   def long_binaryor(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
   def long_shiftleft(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Long]
@@ -311,6 +321,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   /**
    * Float
    */  
+  case class ObjFloatParseFloat(s: Exp[String]) extends Def[Float]
   case class FloatToInt(lhs: Exp[Float]) extends Def[Int]
   case class FloatToDouble(lhs: Exp[Float]) extends Def[Double]  
   case class FloatPlus(lhs: Exp[Float], rhs: Exp[Float]) extends Def[Float]
@@ -318,6 +329,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   case class FloatTimes(lhs: Exp[Float], rhs: Exp[Float]) extends Def[Float]
   case class FloatDivide(lhs: Exp[Float], rhs: Exp[Float]) extends Def[Float]  
   
+  def obj_float_parse_float(s: Exp[String])(implicit pos: SourceContext) = ObjFloatParseFloat(s)
   def float_to_int(lhs: Exp[Float])(implicit pos: SourceContext) = FloatToInt(lhs)
   def float_to_double(lhs: Exp[Float])(implicit pos: SourceContext) = FloatToDouble(lhs)  
   def float_plus(lhs: Exp[Float], rhs: Exp[Float])(implicit pos: SourceContext) : Exp[Float] = FloatPlus(lhs,rhs)
@@ -392,12 +404,14 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   /**
    * Long
    */
+  case class ObjLongParseLong(s: Exp[String]) extends Def[Long]
   case class LongBinaryOr(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
   case class LongBinaryAnd(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
   case class LongShiftLeft(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
   case class LongShiftRightUnsigned(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
   case class LongToInt(lhs: Exp[Long]) extends Def[Int]
 
+  def obj_long_parse_long(s: Exp[String])(implicit pos: SourceContext) = ObjLongParseLong(s)
   def long_binaryor(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBinaryOr(lhs,rhs)
   def long_binaryand(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBinaryAnd(lhs,rhs)  
   def long_shiftleft(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = LongShiftLeft(lhs,rhs)
@@ -418,7 +432,8 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
       case DoublePlus(x,y) => double_plus(f(x),f(y))
       case DoubleMinus(x,y) => double_minus(f(x),f(y))
       case DoubleTimes(x,y) => double_times(f(x),f(y))
-      case DoubleDivide(x,y) => double_divide(f(x),f(y))    
+      case DoubleDivide(x,y) => double_divide(f(x),f(y)) 
+      case ObjFloatParseFloat(x) => obj_float_parse_float(f(x))   
       case FloatToInt(x) => float_to_int(f(x))
       case FloatToDouble(x) => float_to_double(f(x))  
       case FloatPlus(x,y) => float_plus(f(x),f(y))
@@ -445,6 +460,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
       case IntShiftLeft(x,y) => int_leftshift(f(x),f(y))
       case IntShiftRightLogical(x,y) => int_rightshiftlogical(f(x),f(y))
       case IntShiftRightArith(x,y) => int_rightshiftarith(f(x),f(y))
+      case ObjLongParseLong(x) => obj_long_parse_long(f(x))
       case LongShiftLeft(x,y) => long_shiftleft(f(x),f(y))
       case LongBinaryOr(x,y) => long_binaryor(f(x),f(y))
       case LongBinaryAnd(x,y) => long_binaryand(f(x),f(y))
@@ -491,6 +507,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case DoubleDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))    
     case DoubleToInt(lhs) => emitValDef(sym, quote(lhs) + ".toInt")
     case DoubleToFloat(lhs) => emitValDef(sym, quote(lhs) + ".toFloat")    
+    case ObjFloatParseFloat(s) => emitValDef(sym, "java.lang.Float.parseFloat(" + quote(s) + ")")
     case FloatToInt(lhs) => emitValDef(sym, quote(lhs) + ".toInt")
     case FloatToDouble(lhs) => emitValDef(sym, quote(lhs) + ".toDouble")        
     case FloatPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
@@ -518,6 +535,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntToLong(lhs) => emitValDef(sym, quote(lhs) + ".toLong")
     case IntToFloat(lhs) => emitValDef(sym, quote(lhs) + ".toFloat")
     case IntToDouble(lhs) => emitValDef(sym, quote(lhs) + ".toDouble")
+    case ObjLongParseLong(s) => emitValDef(sym, "java.lang.Long.parseLong(" + quote(s) + ")")
     case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
     case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))    
     case LongShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
