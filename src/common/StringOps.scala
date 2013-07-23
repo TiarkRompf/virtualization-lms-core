@@ -44,7 +44,8 @@ trait StringOps extends Variables with OverloadHack {
   
   def infix_startsWith(s1: Rep[String], s2: Rep[String])(implicit pos: SourceContext) = string_startswith(s1,s2)
   def infix_trim(s: Rep[String])(implicit pos: SourceContext) = string_trim(s)
-  def infix_split(s: Rep[String], separators: Rep[String])(implicit pos: SourceContext) = string_split(s, separators)
+  def infix_split(s: Rep[String], separators: Rep[String])(implicit pos: SourceContext) = string_split(s, separators, unit(0))
+  def infix_split(s: Rep[String], separators: Rep[String], limit: Rep[Int])(implicit pos: SourceContext) = string_split(s, separators, limit)
   def infix_toDouble(s: Rep[String])(implicit pos: SourceContext) = string_todouble(s)
   def infix_toFloat(s: Rep[String])(implicit pos: SourceContext) = string_tofloat(s)
   def infix_toInt(s: Rep[String])(implicit pos: SourceContext) = string_toint(s)
@@ -59,7 +60,7 @@ trait StringOps extends Variables with OverloadHack {
   def string_plus(s: Rep[Any], o: Rep[Any])(implicit pos: SourceContext): Rep[String]
   def string_startswith(s1: Rep[String], s2: Rep[String])(implicit pos: SourceContext): Rep[Boolean]
   def string_trim(s: Rep[String])(implicit pos: SourceContext): Rep[String]
-  def string_split(s: Rep[String], separators: Rep[String])(implicit pos: SourceContext): Rep[Array[String]]
+  def string_split(s: Rep[String], separators: Rep[String], limit: Rep[Int])(implicit pos: SourceContext): Rep[Array[String]]
   def string_valueof(d: Rep[Any])(implicit pos: SourceContext): Rep[String]
   def string_todouble(s: Rep[String])(implicit pos: SourceContext): Rep[Double]
   def string_tofloat(s: Rep[String])(implicit pos: SourceContext): Rep[Float]
@@ -73,7 +74,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
   case class StringPlus(s: Exp[Any], o: Exp[Any]) extends Def[String]
   case class StringStartsWith(s1: Exp[String], s2: Exp[String]) extends Def[Boolean]
   case class StringTrim(s: Exp[String]) extends Def[String]
-  case class StringSplit(s: Exp[String], separators: Exp[String]) extends Def[Array[String]]
+  case class StringSplit(s: Exp[String], separators: Exp[String], limit: Exp[Int]) extends Def[Array[String]]
   case class StringEndsWith(s: Exp[String], e: Exp[String]) extends Def[Boolean]  
   case class StringCharAt(s: Exp[String], i: Exp[Int]) extends Def[Char]
   case class StringValueOf(a: Exp[Any]) extends Def[String]
@@ -85,7 +86,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
   def string_plus(s: Exp[Any], o: Exp[Any])(implicit pos: SourceContext): Rep[String] = StringPlus(s,o)
   def string_startswith(s1: Exp[String], s2: Exp[String])(implicit pos: SourceContext) = StringStartsWith(s1,s2)
   def string_trim(s: Exp[String])(implicit pos: SourceContext) : Rep[String] = StringTrim(s)
-  def string_split(s: Exp[String], separators: Exp[String])(implicit pos: SourceContext) : Rep[Array[String]] = StringSplit(s, separators)
+  def string_split(s: Exp[String], separators: Exp[String], limit: Exp[Int])(implicit pos: SourceContext) : Rep[Array[String]] = StringSplit(s, separators, limit)
   def string_valueof(a: Exp[Any])(implicit pos: SourceContext) = StringValueOf(a)
   def string_todouble(s: Exp[String])(implicit pos: SourceContext) = StringToDouble(s)
   def string_tofloat(s: Exp[String])(implicit pos: SourceContext) = StringToFloat(s)
@@ -98,7 +99,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
     case StringPlus(a,b) => string_plus(f(a),f(b))
     case StringStartsWith(s1, s2) => string_startswith(f(s1), f(s2))
     case StringTrim(s) => string_trim(f(s))
-    case StringSplit(s,sep) => string_split(f(s),f(sep))
+    case StringSplit(s,sep,l) => string_split(f(s),f(sep),f(l))
     case StringToDouble(s) => string_todouble(f(s))
     case StringToFloat(s) => string_tofloat(f(s))
     case StringToInt(s) => string_toint(f(s))
@@ -118,7 +119,7 @@ trait ScalaGenStringOps extends ScalaGenBase {
     case StringPlus(s1,s2) => emitValDef(sym, "%s+%s".format(quote(s1), quote(s2)))
     case StringStartsWith(s1,s2) => emitValDef(sym, "%s.startsWith(%s)".format(quote(s1),quote(s2)))
     case StringTrim(s) => emitValDef(sym, "%s.trim()".format(quote(s)))
-    case StringSplit(s, sep) => emitValDef(sym, "%s.split(%s)".format(quote(s), quote(sep)))
+    case StringSplit(s, sep, lim) => emitValDef(sym, "%s.split(%s,%s)".format(quote(s), quote(sep), quote(lim)))
     case StringEndsWith(s, e) => emitValDef(sym, "%s.endsWith(%s)".format(quote(s), quote(e)))    
     case StringCharAt(s,i) => emitValDef(sym, "%s.charAt(%s)".format(quote(s), quote(i)))
     case StringValueOf(a) => emitValDef(sym, "java.lang.String.valueOf(%s)".format(quote(a)))
