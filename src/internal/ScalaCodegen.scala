@@ -21,10 +21,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
 
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter, dynamicClass: Class[_] = null) = {
 
-    val sA = {
-        if (manifest[A] <:< manifest[scala.collection.mutable.TreeSet[scala.virtualization.lms.common.DynamicRecord]]) "scala.collection.mutable.TreeSet[" + dynamicClass.toString.replaceAll("class ","") +"]"
-        else remap(manifest[A])
-    }
+    val sA = remap(manifest[A])
 
     val staticData = getFreeDataBlock(body)
 
