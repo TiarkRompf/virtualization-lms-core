@@ -10,7 +10,6 @@ import scala.tools.nsc.io._
 
 import scala.tools.nsc.interpreter.AbstractFileClassLoader
 
-
 trait ScalaCompile extends Expressions {
 
   val codegen: ScalaCodegen { val IR: ScalaCompile.this.type }
@@ -18,6 +17,8 @@ trait ScalaCompile extends Expressions {
   var compiler: Global = _
   var reporter: ConsoleReporter = _
   //var output: ByteArrayOutputStream = _ 
+  val source = new StringWriter()
+  val writer = new PrintWriter(source)
 
   def setupCompiler() = {
     /*
@@ -49,46 +50,62 @@ trait ScalaCompile extends Expressions {
   
   var dumpGeneratedCode = false
 
-  def compile[A,B](f: Exp[A] => Exp[B])(implicit mA: Manifest[A], mB: Manifest[B]): A=>B = {
-    if (this.compiler eq null)
-      setupCompiler()
-    
+  def initCompile = {
+    source.getBuffer().setLength(0) 
     val className = "staged$" + compileCount
     compileCount += 1
-    
-    val source = new StringWriter()
-    val writer = new PrintWriter(source)
-    val staticData = codegen.emitSource(f, className, writer)
+    className
+  }
 
-    codegen.emitDataStructures(writer)
-
-    if (dumpGeneratedCode) println(source)
+  def compileLoadClass(src: StringWriter, className: String) = {
+    if (this.compiler eq null)
+        setupCompiler()
+    if (dumpGeneratedCode) println(src)
 
     val compiler = this.compiler
     val run = new compiler.Run
-
     val fileSystem = new VirtualDirectory("<vfs>", None)
     compiler.settings.outputDirs.setSingleOutput(fileSystem)
-  //      compiler.genJVM.outputDir = fileSystem
-
-    run.compileSources(List(new util.BatchSourceFile("<stdin>", source.toString)))
+    run.compileSources(List(new util.BatchSourceFile("<stdin>", src.toString)))
     reporter.printSummary()
-
-    if (!reporter.hasErrors)
-      println("compilation: ok")
-    else
-      println("compilation: had errors")
-
+    if (reporter.hasErrors) {
+      println("compilation of the following code had errors:")
+      println(src)
+    }
     reporter.reset
-    //output.reset
 
-    val parent = this.getClass.getClassLoader
     val loader = new AbstractFileClassLoader(fileSystem, this.getClass.getClassLoader)
-
     val cls: Class[_] = loader.loadClass(className)
+    cls
+  }
+
+  def compile0[B](f: () => Exp[B], dynamicClass: Class[_] = null)(implicit mB: Manifest[B]): () =>B = {
+    val className = initCompile 
+    val staticData = codegen.emitSource0(f, className, writer, dynamicClass)
+    codegen.emitDataStructures(writer)
+    val cls = compileLoadClass(source, className)
     val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
-    
+    val obj: ()=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[()=>B]
+    obj
+  }
+
+  def compile[A,B](f: Exp[A] => Exp[B], dynamicClass: Class[_] = null)(implicit mA: Manifest[A], mB: Manifest[B]): A=>B = {
+    val className = initCompile 
+    val staticData = codegen.emitSource1(f, className, writer, dynamicClass)
+    codegen.emitDataStructures(writer)
+    val cls = compileLoadClass(source, className)
+    val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
     val obj: A=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[A=>B]
+    obj
+  }
+
+  def compile2[A1,A2,B](f: (Exp[A1],Exp[A2]) => Exp[B], dynamicClass: Class[_] = null)(implicit mA1: Manifest[A1], mA2: Manifest[A2], mB: Manifest[B]): (A1,A2)=>B = {
+    val className = initCompile 
+    val staticData = codegen.emitSource2(f, className, writer, dynamicClass)
+    codegen.emitDataStructures(writer)
+    val cls = compileLoadClass(source, className)
+    val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
+    val obj: (A1,A2)=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[(A1,A2)=>B]
     obj
   }
 }

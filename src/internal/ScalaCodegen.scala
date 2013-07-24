@@ -19,9 +19,12 @@ trait ScalaCodegen extends GenericCodegen with Config {
       outFile.delete
   }
 
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
+  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter, dynamicClass: Class[_] = null) = {
 
-    val sA = remap(manifest[A])
+    val sA = {
+        if (manifest[A] <:< manifest[scala.collection.mutable.TreeSet[scala.virtualization.lms.common.DynamicRecord]]) "scala.collection.mutable.TreeSet[" + dynamicClass.toString.replaceAll("class ","") +"]"
+        else remap(manifest[A])
+    }
 
     val staticData = getFreeDataBlock(body)
 
@@ -32,8 +35,18 @@ trait ScalaCodegen extends GenericCodegen with Config {
       emitFileHeader()
 
       // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
-      stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends (("+args.map(a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
-      stream.println("def apply("+args.map(a => quote(a) + ":" + remap(a.tp)).mkString(", ")+"): "+sA+" = {")
+      stream.print("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends ((")
+      stream.print(args.map(a => {
+            if ((dynamicClass != null) && (a.tp <:< manifest[scala.virtualization.lms.common.DynamicRecord])) dynamicClass.toString.replaceAll("class ", "") else remap(a.tp)
+      }).mkString(", "))
+      stream.println(")=>("+sA+")) with Serializable {")
+      stream.print("def apply(")
+      stream.print(args.map(a => {
+            quote(a) + ":" + {   
+                if ((dynamicClass != null) && (a.tp <:< manifest[scala.virtualization.lms.common.DynamicRecord])) dynamicClass.toString.replaceAll("class ", "") else remap(a.tp)
+            }}).mkString(", ")
+      )
+      stream.println("): "+sA+" = {")
     
       emitBlock(body)
       stream.println(quote(getBlockResult(body)))
