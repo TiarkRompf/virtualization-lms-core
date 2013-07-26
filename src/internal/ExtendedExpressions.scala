@@ -49,4 +49,6 @@ trait ExtendedExpressions extends Expressions with Blocks {
   }
 
   def infix_possibleToInline(s: Sym[Any]): Boolean = s.refCount == 1
+
+  def infix_noReference(s: Sym[Any]): Boolean = s.refCount == 0
 }

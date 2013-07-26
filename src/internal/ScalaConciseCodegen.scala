@@ -25,7 +25,7 @@ trait ScalaConciseCodegen extends ScalaNestedCodegen { self =>
     sym match {
       case s@Sym(n) => isVoidType(s.tp) match {
         case true => stream.println("" + rhs + extra)
-        case false => if(s.possibleToInline) {
+        case false => if(s.possibleToInline || s.noReference) {
             stream.print("("+rhs+")")
           } else {
             stream.println("val " + quote(sym) + " = " + rhs + extra)
@@ -54,7 +54,7 @@ trait ScalaConciseCodegen extends ScalaNestedCodegen { self =>
 
   override def quote(x: Exp[Any], forcePrintSymbol: Boolean) : String = {
     def printSym(s: Sym[Any]): String = {
-      if(s.possibleToInline) {
+      if(s.possibleToInline || s.noReference) {
         Def.unapply(s) match {
           case Some(d: Def[Any]) => {
             val strWriter: java.io.StringWriter = new java.io.StringWriter;
