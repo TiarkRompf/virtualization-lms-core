@@ -38,6 +38,7 @@ trait GenericCodegen extends BlockTraversal {
   def finalizeGenerator(): Unit = {}
   def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
 
+  def emitDataStructures(out: PrintWriter): Unit = {}
   def emitDataStructures(path: String): Unit = {}
  
   def dataPath = {

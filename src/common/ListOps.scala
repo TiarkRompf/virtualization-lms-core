@@ -18,7 +18,7 @@ trait ListOps extends Variables {
   class ListOpsCls[A:Manifest](l: Rep[List[A]]) {
     def map[B:Manifest](f: Rep[A] => Rep[B]) = list_map(l,f)
     def foreach(f: Rep[A] => Rep[Unit]) = list_foreach(l,f)
-    def flatMap[B : Manifest](f: Rep[A] => Rep[List[B]]) = list_flatMap(f)(l)
+    def flatMap[B : Manifest](f: Rep[A] => Rep[List[B]]) = list_flatMap(l,f)
     def filter(f: Rep[A] => Rep[Boolean]) = list_filter(l, f)
     def sortBy[B:Manifest:Ordering](f: Rep[A] => Rep[B]) = list_sortby(l,f)
     def ::(e: Rep[A]) = list_prepend(l,e)
@@ -35,7 +35,7 @@ trait ListOps extends Variables {
   def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit pos: SourceContext): Rep[List[A]]  
   def list_map[A:Manifest,B:Manifest](l: Rep[List[A]], f: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[List[B]]
   def list_foreach[A:Manifest](l: Rep[List[A]], f: Rep[A] => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
-  def list_flatMap[A : Manifest, B : Manifest](f: Rep[A] => Rep[List[B]])(xs: Rep[List[A]])(implicit pos: SourceContext): Rep[List[B]]
+  def list_flatMap[A : Manifest, B : Manifest](xs: Rep[List[A]], f: Rep[A] => Rep[List[B]])(implicit pos: SourceContext): Rep[List[B]]
   def list_filter[A : Manifest](l: Rep[List[A]], f: Rep[A] => Rep[Boolean])(implicit pos: SourceContext): Rep[List[A]]
   def list_sortby[A:Manifest,B:Manifest:Ordering](l: Rep[List[A]], f: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[List[A]]
   def list_prepend[A:Manifest](l: Rep[List[A]], e: Rep[A])(implicit pos: SourceContext): Rep[List[A]]
@@ -79,7 +79,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
     val b = reifyEffects(f(a))
     reflectEffect(ListForeach(l, a, b), summarizeEffects(b).star)
   }
-  def list_flatMap[A:Manifest, B:Manifest](f: Exp[A] => Exp[List[B]])(l: Exp[List[A]])(implicit pos: SourceContext) = {
+  def list_flatMap[A:Manifest, B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]])(implicit pos: SourceContext) = {
     val a = fresh[A]
     val b = reifyEffects(f(a))
     reflectEffect(ListFlatMap(l, a, b), summarizeEffects(b).star)

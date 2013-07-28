@@ -11,7 +11,7 @@ organization := "EPFL"
 
 scalaOrganization := "org.scala-lang.virtualized"
 
-//scalaBinaryVersion := virtScala // necessary??
+//scalaBinaryVersion := virtScala
 
 scalaVersion := virtScala
 
