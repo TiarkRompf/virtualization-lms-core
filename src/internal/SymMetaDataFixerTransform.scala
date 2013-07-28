@@ -35,6 +35,8 @@ trait SymMetaDataFixerTransform extends NestedBlockTraversal {
           case Reflect(s, u, effects) => {
             if(!mustOnlyRead(u) && !mustOnlyAlloc(u)) {
               sym.incRefCount(100)
+            } else if(mustOnlyAlloc(u)) {
+              sym.incRefCount(1)
             }
             increaseRefCountsOnRhs(sym, s)
           }
