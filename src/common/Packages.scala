@@ -17,20 +17,20 @@ trait ScalaOpsPkg extends Base
     with RangeOps with IOOps with ArrayOps with BooleanOps with PrimitiveOps with MiscOps
     with TupledFunctions with Equal with IfThenElse with Variables with While with TupleOps with ListOps
     with SeqOps with MathOps with CastingOps with SetOps with ObjectOps with ArrayBufferOps
-    with UncheckedOps
+    with DateOps with GregorianCalendarOps with SimpleDateFormatOps with UncheckedOps
 
 trait ScalaOpsPkgExp extends ScalaOpsPkg
     with StructExp with ImplicitOpsExp with NumericOpsExp with FractionalOpsExp with OrderingOpsExp with StringOpsExp
     with RangeOpsExp with IOOpsExp with ArrayOpsExp with BooleanOpsExp with PrimitiveOpsExp with MiscOpsExp
     with TupledFunctionsRecursiveExp with EqualExp with IfThenElseExp with VariablesExp with WhileExp with TupleOpsExp with ListOpsExp
     with SeqOpsExp with DSLOpsExp with MathOpsExp with CastingOpsExp with SetOpsExp with ObjectOpsExp with ArrayBufferOpsExp
-    with UncheckedOpsExp
+    with DateExp with GregorianCalendarExp with SimpleDateFormatExp with UncheckedOpsExp
 
 trait ScalaOpsPkgExpOpt extends ScalaOpsPkgExp
     with StructExpOptCommon with NumericOpsExpOpt
     with ArrayOpsExpOpt with ListOpsExpOpt
     with EqualExpOpt with IfThenElseExpOpt with VariablesExpOpt with WhileExpOpt
-    with ObjectOpsExpOpt
+    with DateExpOpt with GregorianCalendarExpOpt with SimpleDateFormatExpOpt with ObjectOpsExpOpt
 
 
 /**
@@ -45,7 +45,8 @@ trait ScalaCodeGenPkg extends ScalaGenImplicitOps with ScalaGenNumericOps with S
     with ScalaGenPrimitiveOps with ScalaGenMiscOps with ScalaGenTupledFunctions with ScalaGenEqual with ScalaGenIfThenElse
     with ScalaGenVariables with ScalaGenWhile with ScalaGenTupleOps with ScalaGenListOps
     with ScalaGenSeqOps with ScalaGenDSLOps with ScalaGenMathOps with ScalaGenCastingOps with ScalaGenSetOps
-    with ScalaGenObjectOps with ScalaGenArrayBufferOps with ScalaGenUncheckedOps
+    with ScalaGenObjectOps with ScalaGenArrayBufferOps with ScalaGenDate with ScalaGenGregorianCalendar
+    with ScalaGenSimpleDateFormat with ScalaGenUncheckedOps
   { val IR: ScalaOpsPkgExp  }
 
 
