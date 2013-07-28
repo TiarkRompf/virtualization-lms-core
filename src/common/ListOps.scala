@@ -171,16 +171,14 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
       val strWriter = new java.io.StringWriter
       val localStream = new PrintWriter(strWriter);
       withStream(localStream) {
-        stream.println(quote(l) + ".map{")
-        stream.println(quote(x) + " => ")
+        stream.println(quote(l) + ".map { " + quote(x) + " => ")
         emitBlock(blk)
         stream.println(quote(getBlockResult(blk)))
         stream.print("}")
       }
       emitValDef(sym, strWriter.toString)
     case ListForeach(l,x,blk) => {
-      stream.println(quote(l) + ".foreach{")
-      stream.println(quote(x) + " => ")
+      stream.println(quote(l) + ".foreach { " + quote(x) + " => ")
       emitBlock(blk)
       stream.println("}")
     }
@@ -210,8 +208,7 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
       val strWriter = new java.io.StringWriter
       val localStream = new PrintWriter(strWriter);
       withStream(localStream) {
-        stream.println(quote(l) + ".sortBy{")
-        stream.println(quote(x) + " => ")
+        stream.println(quote(l) + ".sortBy { " + quote(x) + " => ")
         emitBlock(blk)
         stream.println(quote(getBlockResult(blk)))
         stream.print("}")
