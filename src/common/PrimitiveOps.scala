@@ -457,20 +457,45 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
 
 trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
   override def int_plus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs,rhs) match {
+    case (Const(a),Const(b)) => unit(a+b)
     case (Const(0),b) => b
     case (a,Const(0)) => a
     case _ => super.int_plus(lhs,rhs)
   }
   override def int_minus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs,rhs) match {
+    case (Const(a),Const(b)) => unit(a-b)
     case (a,Const(0)) => a
+    case (Def(IntPlus(llhs,lrhs)), rhs) if lrhs.equals(rhs) => llhs
     case _ => super.int_minus(lhs,rhs)    
   }
   override def int_times(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs,rhs) match {
+    case (Const(a),Const(b)) => unit(a*b)
     case (Const(0),b) => Const(0)
     case (Const(1),b) => b
     case (a,Const(0)) => Const(0)
     case (a,Const(1)) => a
     case _ => super.int_times(lhs,rhs)    
+  }
+  override def int_to_float(lhs: Rep[Int])(implicit pos: SourceContext): Rep[Float] = lhs match {
+    case Const(x) => Const(x.toFloat)
+    case _ => super.int_to_float(lhs)
+  }
+
+  override def int_to_double(lhs: Rep[Int])(implicit pos: SourceContext): Rep[Double] = lhs match {
+    case Const(x) => Const(x.toDouble)
+    case _ => super.int_to_double(lhs)
+  }
+
+  override def float_to_double(lhs: Rep[Float])(implicit pos: SourceContext): Rep[Double] = lhs match {
+    case Const(x) => Const(x.toDouble)
+    case Def(IntToFloat(x)) => int_to_double(x)
+    case _ => super.float_to_double(lhs)
+  }
+  
+  override def double_to_int(lhs: Rep[Double])(implicit pos: SourceContext): Rep[Int] = lhs match {
+    case Const(x) => Const(x.toInt)
+    case Def(IntToDouble(x)) => x
+    case _ => super.double_to_int(lhs)
   }
 }
 
