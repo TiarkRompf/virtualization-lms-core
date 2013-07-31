@@ -13,7 +13,7 @@ scalaOrganization := "org.scala-lang.virtualized"
 
 //scalaBinaryVersion := virtScala
 
-scalaVersion := virtScala
+scalaVersion := "2.10.2-RC1"
 
 scalaSource in Compile <<= baseDirectory(_ / "src")
 

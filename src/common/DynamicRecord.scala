@@ -4,52 +4,36 @@ package common
 import java.io._
 import reflect.ClassManifest
 import scala.collection.mutable.HashMap
+import scala.virtualization.lms.internal._
+import scala.virtualization.lms.util._
 
 object DynamicRecordsMap extends Serializable {
     var mapInitialized: Boolean = false;
     var dataPath: String = null;
     var registeredDynamicRecords: HashMap[String, List[(String, Class[_])]] = null
     
-    private def serializeObject[T](obj: T, file: String) {
-		val store = new ObjectOutputStream(new FileOutputStream(new File(file))) 
-		store.writeObject(obj) 
-		store.close 
-	}
-
-  	private def deSerializeObject(file: String) = {
-		val in = new ObjectInputStream(new FileInputStream(file)) {
-			override def resolveClass(desc: java.io.ObjectStreamClass): Class[_] = {
-		    		try { Class.forName(desc.getName, false, getClass.getClassLoader) }
-				    catch { case ex: ClassNotFoundException => super.resolveClass(desc) }
-  			}
-		}
-  		val obj = in.readObject() 
-		in.close
-		obj
-	}
-
     def initialize(rootFolder: String) = {
         if (mapInitialized)
             throw new RuntimeException("DynamicRecordsMap already initialized");
         mapInitialized = true
         dataPath = rootFolder 
-        registeredDynamicRecords = {
-            if (!(new File(dataPath + "/dynamic_records_file").exists()))
-                new HashMap[String, List[(String, Class[_])]]
-	        else deSerializeObject(dataPath + "/dynamic_records_file").asInstanceOf[
-                HashMap[String, List[(String, Class[_])]]]
-        }
+        registeredDynamicRecords = new HashMap[String, List[(String, Class[_])]]
     }
 
     def writeRecord(out: PrintWriter, className: String, attrs: List[(String, Class[_])]) {
         out.print("class " + className + " extends scala.virtualization.lms.common.DynamicRecordExp {\n")
         for ((p1,p2) <- attrs) {
-             val str = p2.toString.replaceAll("class ","").replaceAll("int", "scala.Int").replaceAll("double","scala.Double").replaceAll("char", "Char")
+             val str = {
+                 if (ClassManifest.fromClass(p2) == classManifest[Array[Byte]])
+                    "Array[Byte]"
+                 else 
+                    p2.toString.replaceAll("class ","").replaceAll("int", "scala.Int").replaceAll("double","scala.Double").replaceAll("char", "Char")
+             }
              out.print("var " + p1 + ": " + str + " = null.asInstanceOf[" + str + "];\n")
         }
         // Custom toString function
-        out.print("override def toString() = {\n")
-        out.print( (for ((p1,p2) <- attrs) yield p1).mkString("+\"|\"+") )
+        out.print("override def toString() = {\n\"\"+")
+        out.print( (for ((p1,p2) <- attrs) yield if (ClassManifest.fromClass(p2) == classManifest[Array[Byte]]) "new String(" + p1 + ")" else p1).mkString("+\"|\"+") )
         out.print("}\n");
         // Custom serialization/deserialization routines
         out.println("@throws(classOf[java.io.IOException])")
@@ -66,12 +50,14 @@ object DynamicRecordsMap extends Serializable {
         out.println("}")
         out.println("@throws(classOf[java.io.IOException])")
         out.println("private def readObject(in: java.io.ObjectInputStream): Unit = {")
+        out.println("var length: Int = 0");
         for ((p1,p2) <- attrs) {
             ClassManifest.fromClass(p2) match {
                 case m if m <:< classManifest[scala.Int]        => out.println(p1 + " = in.readInt()")
                 case m if m <:< classManifest[scala.Double]     => out.println(p1 + " = in.readDouble()")
                 case m if m <:< classManifest[scala.Char]       => out.println(p1 + " = in.readChar()")
                 case m if m <:< classManifest[java.lang.String] => out.println(p1 + " = in.readUTF()")
+                case m if m == classManifest[Array[Byte]]       => out.println(p1 + " = in.readObject().asInstanceOf[Array[Byte]]")
                 case _ => out.println(p1 + " = in.readObject().asInstanceOf[" + p2.toString.replaceAll("class ","") + "]")
             }
         }
@@ -79,15 +65,34 @@ object DynamicRecordsMap extends Serializable {
         out.println("}") // End of class
         out.flush
     }
+
 	def newDynamicRecordType(name: String, attrs: List[(String, Class[_])]) {
         // Register for first use
         registeredDynamicRecords += (name -> attrs)
         // Write to file (for persistence)
         val writer = new PrintWriter(new java.io.File(dataPath + name + ".scala"))
         writeRecord(writer, name, attrs)
+        writer.close()
     }
-	
-    def serialize = serializeObject(registeredDynamicRecords, dataPath+ "/dynamic_records_file")
+}
+
+object DynamicRecordGenericReflectionFields {
+    val genericDynamicRecord = { 
+        trait Optimized extends ScalaOpsPkg with DynamicRecord with ScalaCompile {
+            def __getGenericRecord() = newDynamicRecord("K2DBGenericDynamicRecord")
+        }
+        // Now compile method
+        val code = new Optimized with ScalaOpsPkgExp with DynamicRecordExp { 
+            self => val codegen = new ScalaCodeGenPkg with ScalaGenDynamicRecord {
+                val IR: self.type = self 
+            }
+        }
+        DynamicRecordsMap.registeredDynamicRecords += ("K2DBGenericDynamicRecord" -> 
+                                     List(("K2DBGenericDynamicRecordField",classOf[java.lang.String])))
+        code.compile0(code.__getGenericRecord)
+    }
+    val genericNames = genericDynamicRecord().getClass.getDeclaredFields.map(x => x.getName)
+    val genericTypes = genericDynamicRecord().getClass.getDeclaredFields.map(x => x.getType)
 }
 
 trait DynamicRecord extends Base with Serializable {
@@ -100,6 +105,14 @@ trait DynamicRecord extends Base with Serializable {
     def newDynamicRecord(name: String): Rep[DynamicRecordExp]
 	def dynamicTypeGet(x: Rep[DynamicRecord], field: Rep[String]): Rep[Any]
 	def dynamicTypeSet(x: Rep[DynamicRecord], field: Rep[String], value: Rep[Any]): Rep[Unit]
+    def getAttrNames() = {
+        val fields = this.getClass.getDeclaredFields.filter(x => DynamicRecordGenericReflectionFields.genericNames.contains(x.getName) == false)
+        fields.map(x => x.getName)
+    }
+    def getAttrTypes() = {
+        val fields = this.getClass.getDeclaredFields.filter(x => DynamicRecordGenericReflectionFields.genericNames.contains(x.getName) == false)
+        fields.map(x => x.getType)
+    }
 }
 
 trait DynamicRecordExp extends DynamicRecord with BaseExp with EffectExp {
@@ -129,5 +142,6 @@ trait ScalaGenDynamicRecord extends ScalaGenBase  {
         DynamicRecordsMap.registeredDynamicRecords.foreach(
             rec => DynamicRecordsMap.writeRecord(out, rec._1, rec._2)
         )
+        DynamicRecordsMap.registeredDynamicRecords.clear
     }
 }

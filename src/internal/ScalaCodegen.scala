@@ -19,9 +19,12 @@ trait ScalaCodegen extends GenericCodegen with Config {
       outFile.delete
   }
 
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter, dynamicClass: Class[_] = null) = {
+  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter, dynamicClasses: List[Class[_]] = null) = {
 
-    val sA = remap(manifest[A])
+    val sA = {
+        if (manifest[A] <:< manifest[scala.collection.mutable.TreeSet[scala.virtualization.lms.common.DynamicRecord]]) "scala.collection.mutable.TreeSet[AGGRECORD]"
+        else remap(manifest[A])
+    }
 
     val staticData = getFreeDataBlock(body)
 
@@ -33,16 +36,19 @@ trait ScalaCodegen extends GenericCodegen with Config {
 
       // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
       stream.print("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends ((")
-      stream.print(args.map(a => {
-            if ((dynamicClass != null) && (a.tp <:< manifest[scala.virtualization.lms.common.DynamicRecord])) dynamicClass.toString.replaceAll("class ", "") else remap(a.tp)
-      }).mkString(", "))
+      if (dynamicClasses == null)
+        stream.print(args.map(a => remap(a.tp)).mkString(", "))
+      else
+        stream.print(dynamicClasses.map(a => a.toString.replaceAll("class ", "").replaceAll("double","Double")).mkString(", "))
+       //     if  && (a.tp <:< manifest[scala.virtualization.lms.common.DynamicRecord])) dynamicClasses.toString.replaceAll("class ", "") else remap(a.tp)
       stream.println(")=>("+sA+")) with Serializable {")
       stream.print("def apply(")
-      stream.print(args.map(a => {
-            quote(a) + ":" + {   
-                if ((dynamicClass != null) && (a.tp <:< manifest[scala.virtualization.lms.common.DynamicRecord])) dynamicClass.toString.replaceAll("class ", "") else remap(a.tp)
-            }}).mkString(", ")
-      )
+      if (dynamicClasses == null)
+        stream.print(args.map(a => quote(a) + ":" + remap(a.tp)).mkString(", "))
+      else {
+        val zipped = args zip dynamicClasses
+        stream.print(zipped.map(arg => quote(arg._1) + ":" + arg._2.toString.replaceAll("class ", "").replaceAll("double", "Double")).mkString(", "))
+      }
       stream.println("): "+sA+" = {")
     
       emitBlock(body)

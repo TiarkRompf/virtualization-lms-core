@@ -5,7 +5,7 @@ import internal.ScalaCompile
 
 trait Compile extends Base {
   
-  def compile[A,B](f: Rep[A] => Rep[B], dynamicClass: Class[_] = null)(implicit mA: Manifest[A], mB: Manifest[B]): A=>B
+  def compile[A,B](f: Rep[A] => Rep[B], dynamicClasses: Class[_]*)(implicit mA: Manifest[A], mB: Manifest[B]): A=>B
   
 }
 
