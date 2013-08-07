@@ -55,7 +55,7 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
       rval = body
     }
     catch {
-      case e => throw e
+      case e: Throwable => throw e
     }
     finally {
       innerScope = saveInner
