@@ -29,13 +29,14 @@ trait OrderingOps extends Base with Variables with OverloadHack {
     def min[B](rhs: B)(implicit c: B => Rep[T], pos: SourceContext) = ordering_min[T](lhs, c(rhs))
 
     // We need these methods, e.g. when we are comparing a Double (on rhs) with a Long (on lhs)
-    def <[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_lt[B](c(lhs), rhs)
-    def <=[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_lteq[B](c(lhs), rhs)
-    def >[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_gt[B](c(lhs), rhs)
-    def >=[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_gteq[B](c(lhs), rhs)
-    def equiv[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_equiv[B](c(lhs), rhs)
-    def max[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_max[B](c(lhs), rhs)
-    def min[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_min[B](c(lhs), rhs)
+    // But, they will not solve the problem, because it will happen again other way around!
+    // def <[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_lt[B](c(lhs), rhs)
+    // def <=[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_lteq[B](c(lhs), rhs)
+    // def >[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_gt[B](c(lhs), rhs)
+    // def >=[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_gteq[B](c(lhs), rhs)
+    // def equiv[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_equiv[B](c(lhs), rhs)
+    // def max[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_max[B](c(lhs), rhs)
+    // def min[B:Ordering:Manifest](rhs: Rep[B])(implicit c: Rep[T] => Rep[B], pos: SourceContext) = ordering_min[B](c(lhs), rhs)
   }
 
 //  def infix_<[T,B](lhs: Rep[T], rhs: B)(implicit o: Ordering[T], c: B => Rep[T], mT: Manifest[T]) = ordering_lt(lhs,c(rhs))
