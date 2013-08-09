@@ -93,9 +93,32 @@ trait Expressions extends Utils {
     *       compilation: ok
     */
     override def equals(that: Any) = that match {
-      case c@Const(y) => if(y == x && tp == c.tp) true else false
+      case c@Const(y) => if(y == x) {
+        val thisTp = tp
+        //val thatTp = c.tp
+        if (Const.isNumeric[T](thisTp) /*&& isNumeric(thatTp)*/)
+          thisTp == c.tp //thatTp
+        else
+          true
+      } else false
       case _ => false 
     }
+  }
+
+  object Const {
+    val doubleManifest: Manifest[Double] = manifest[Double]
+    val floatManifest: Manifest[Float] = manifest[Float]
+    val longManifest: Manifest[Long] = manifest[Long]
+    val intManifest: Manifest[Int] = manifest[Int]
+    val shortManifest: Manifest[Short] = manifest[Short]
+    val byteManifest: Manifest[Byte] = manifest[Byte]
+
+    def isNumeric[T:Manifest](m: Manifest[T]) = m == doubleManifest ||
+                                                m == floatManifest ||
+                                                m == longManifest ||
+                                                m == intManifest ||
+                                                m == shortManifest ||
+                                                m == byteManifest
   }
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
