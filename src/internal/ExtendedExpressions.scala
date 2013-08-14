@@ -10,7 +10,6 @@ import java.lang.{StackTraceElement,Thread}
 trait ExtendedExpressions extends Expressions with Blocks {
   val RefCountAttributeKey = "refCnt"
   val ParentBlockAttributeKey = "pBlk"
-  val BlockSizeAttributeKey = "blkSz"
 
   def infix_refCount(s: Sym[Any]): Int = {
     s.attributes.get(RefCountAttributeKey).getOrElse(0).asInstanceOf[Int]
