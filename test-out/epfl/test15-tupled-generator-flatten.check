@@ -1,0 +1,27 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class test1 extends ((Double, Long, Long, Double, Double, org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Long, Double], org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Double], org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Long], org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Long], org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Double])=>(scala.collection.immutable.List[scala.Tuple2[scala.Tuple2[Double, Long], Long]])) {
+def apply(x0:Double, x1:Long, x2:Long, x3:Double, x4:Double, x5:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Long, Double], x6:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Double], x7:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Long], x8:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Long], x9:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Double]): scala.collection.immutable.List[scala.Tuple2[scala.Tuple2[Double, Long], Long]] = {
+val x13 = x8 // mutable K3PersistentCollection
+var x18: scala.collection.immutable.List[scala.Tuple2[scala.Tuple2[Double, Long], Long]] = (List())
+val x25 = -1L * x4
+(x13.slice(x2,(List(0)))).foreach{
+x19 => 
+val x23 = (x19._1)._2
+x18 = (((((x23,((if ((1000.0 < (x23 + x25))) {
+1L
+} else {
+0L
+}) + (if ((1000.0 < (x4 + (-1L * x23)))) {
+1L
+} else {
+0L
+})))),((x19._2) * 1L))) :: (x18))
+}
+(x18)
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
