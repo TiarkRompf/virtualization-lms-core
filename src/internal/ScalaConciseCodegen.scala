@@ -36,11 +36,11 @@ trait ScalaConciseCodegen extends ScalaNestedCodegen { self =>
   }
   
   override def emitAssignment(sym: Sym[Any], lhs: String, rhs: String): Unit = {
-    if(isVoidType(sym.tp)) {
+    // if(isVoidType(sym.tp)) {
       stream.println(lhs + " = " + rhs)
-    } else {
-      emitValDef(sym, lhs + " = " + rhs)
-    }
+    // } else {
+    //   emitValDef(sym, lhs + " = " + rhs)
+    // }
   }
   
   override def emitForwardDef(sym: Sym[Any]): Unit = {
