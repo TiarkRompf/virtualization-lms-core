@@ -68,10 +68,8 @@ trait GeneratorOps extends Base with Variables with LiftVariables
       }
     }
 
-    /*override*/ def flatten[K2:Manifest, V2:Manifest] = new TupleGenerator[K2,V2] {
-      def apply(f: Rep[(K2,V2)] => Rep[Unit]) = self.apply {
-        x:Rep[(K,V)] => dematerializeTupleGenerator[(K,V),K2,V2](x).apply(f)
-      }
+    /*override*/ def flatten[K2:Manifest, V2:Manifest] = flatMap[K2,V2] {
+      x:Rep[(K,V)] => dematerializeTupleGenerator[(K,V),K2,V2](x)
     }
 
     /*override*/ def fold[Y:Manifest](init: Rep[Y], g: Rep[(K,V)] => (Rep[Y] => Rep[Y])): Rep[Y] = {
@@ -163,10 +161,8 @@ trait GeneratorOps extends Base with Variables with LiftVariables
       }
     }
 
-    def flatten[U:Manifest] = new Generator[U] {
-      def apply(f: Rep[U] => Rep[Unit]) = self.apply {
-        x:Rep[T] => dematerializeGenerator[T,U](x).apply(f)
-      }
+    def flatten[U:Manifest] = flatMap[U] {
+      x:Rep[T] => dematerializeGenerator[T,U](x)
     }
 
     def fold[Y:Manifest](init: Rep[Y], g: Rep[T] => (Rep[Y] => Rep[Y])): Rep[Y] = {
@@ -246,7 +242,7 @@ trait ScalaGenGeneratorOps extends ScalaGenVariables
 
   /*override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     // currently, we shoud explicitly call toList method on a generator, in order to convert it again to list
-    
+
     // case TupleGeneratorContainer(gen) => val genList = gen.toList; emitNode(sym, Def.unapply(genList).get)
     // case GeneratorContainer(gen) => ...
     case _ => super.emitNode(sym, rhs)
