@@ -200,45 +200,20 @@ compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class test7 extends ((Int, Int)=>(Int)) {
-def apply(x207:Int, x208:Int): Int = {
-var x210: Int = 0
-val x211 = x207 + 1
-val x212 = x211 == x208
-val x216 = if (x212) {
-val x209 = Array(1,2,3)
-val x213 = x209(x207)
-x210 = x213
-()
-} else {
-()
-}
-val x217 = x210
-x217
-}
-}
-/*****************************************
-  End of Generated Code                  
-*******************************************/
-compilation: ok
-2
-/*****************************************
-  Emitting Generated Code                  
-*******************************************/
 class test8 extends ((Int)=>(Int)) {
-def apply(x230:Int): Int = {
-var x231: Int = 0
-val x232 = x231
-val x233 = x232 + 1
-x231 = x233
-val x235 = x231
-val x236 = x235 + 2
-x231 = x236
-val x238 = x231
-val x239 = x238 + 3
-x231 = x239
-val x241 = x231
-x241
+def apply(x207:Int): Int = {
+var x208: Int = 0
+val x209 = x208
+val x210 = x209 + 1
+x208 = x210
+val x212 = x208
+val x213 = x212 + 2
+x208 = x213
+val x215 = x208
+val x216 = x215 + 3
+x208 = x216
+val x218 = x208
+x218
 }
 }
 /*****************************************
@@ -250,33 +225,33 @@ compilation: ok
   Emitting Generated Code                  
 *******************************************/
 class test6b extends ((Int, Int)=>(Int)) {
-def apply(x256:Int, x257:Int): Int = {
-var x259: Int = 0
-val x258 = x256 < x257
-val x275 = if (x258) {
-var x261 : Int = x256
-val x273 = while (x261 < x257) {
-val x262 = x256 < x261
-val x271 = if (x262) {
-var x264 : Int = x256
-val x269 = while (x264 < x261) {
-val x265 = x259
-val x266 = x265 + x264
-x259 = x266
-x264 = x264 + 1
+def apply(x233:Int, x234:Int): Int = {
+var x236: Int = 0
+val x235 = x233 < x234
+val x252 = if (x235) {
+var x238 : Int = x233
+val x250 = while (x238 < x234) {
+val x239 = x233 < x238
+val x248 = if (x239) {
+var x241 : Int = x233
+val x246 = while (x241 < x238) {
+val x242 = x236
+val x243 = x242 + x241
+x236 = x243
+x241 = x241 + 1
 }
 true
 } else {
 false
 }
-x261 = x261 + 1
+x238 = x238 + 1
 }
 true
 } else {
 false
 }
-val x276 = x259
-x276
+val x253 = x236
+x253
 }
 }
 /*****************************************
@@ -288,26 +263,26 @@ compilation: ok
   Emitting Generated Code                  
 *******************************************/
 class test9 extends ((Int, Int)=>(Int)) {
-def apply(x300:Int, x301:Int): Int = {
-var x303: Int = 0
-val x302 = x300 < x301
-val x315 = if (x302) {
-var x305 : Int = x300
-val x313 = while (x305 < x301) {
-val x309 = x303
-val x306 = x305 * 2
-val x307 = x306 + 1
-val x308 = x307 * 3
-val x310 = x309 + x308
-x303 = x310
-x305 = x305 + 1
+def apply(x277:Int, x278:Int): Int = {
+var x280: Int = 0
+val x279 = x277 < x278
+val x292 = if (x279) {
+var x282 : Int = x277
+val x290 = while (x282 < x278) {
+val x286 = x280
+val x283 = x282 * 2
+val x284 = x283 + 1
+val x285 = x284 * 3
+val x287 = x286 + x285
+x280 = x287
+x282 = x282 + 1
 }
-x313
+x290
 } else {
 ()
 }
-val x316 = x303
-x316
+val x293 = x280
+x293
 }
 }
 /*****************************************
@@ -319,34 +294,34 @@ compilation: ok
   Emitting Generated Code                  
 *******************************************/
 class test10 extends ((Int)=>(Int)) {
-def apply(x336:Int): Int = {
-var x338: Int = 0
-val x337 = 1 < x336
-val x355 = if (x337) {
-var x340 : Int = 1
-val x353 = while (x340 < x336) {
-val x341 = 1 < x340
-val x351 = if (x341) {
-var x343 : Int = 1
-val x349 = while (x343 < x340) {
-val x345 = x338
-val x344 = x340 * x343
-val x346 = x345 + x344
-x338 = x346
-x343 = x343 + 1
+def apply(x313:Int): Int = {
+var x315: Int = 0
+val x314 = 1 < x313
+val x332 = if (x314) {
+var x317 : Int = 1
+val x330 = while (x317 < x313) {
+val x318 = 1 < x317
+val x328 = if (x318) {
+var x320 : Int = 1
+val x326 = while (x320 < x317) {
+val x322 = x315
+val x321 = x317 * x320
+val x323 = x322 + x321
+x315 = x323
+x320 = x320 + 1
 }
-x349
+x326
 } else {
 ()
 }
-x340 = x340 + 1
+x317 = x317 + 1
 }
-x353
+x330
 } else {
 ()
 }
-val x356 = x338
-x356
+val x333 = x315
+x333
 }
 }
 /*****************************************
@@ -358,33 +333,33 @@ compilation: ok
   Emitting Generated Code                  
 *******************************************/
 class test11 extends ((Int, Int)=>(Int)) {
-def apply(x380:Int, x381:Int): Int = {
-var x383: Int = 0
-val x382 = x380 < x381
-val x400 = if (x382) {
-var x385 : Int = x380
-val x398 = while (x385 < x381) {
-val x386 = x380 < x385
-val x396 = if (x386) {
-var x389 : Int = x380
-val x394 = while (x389 < x385) {
-val x390 = x383
-val x391 = x390 + x389
-x383 = x391
-x389 = x389 + 1
+def apply(x357:Int, x358:Int): Int = {
+var x360: Int = 0
+val x359 = x357 < x358
+val x377 = if (x359) {
+var x362 : Int = x357
+val x375 = while (x362 < x358) {
+val x363 = x357 < x362
+val x373 = if (x363) {
+var x366 : Int = x357
+val x371 = while (x366 < x362) {
+val x367 = x360
+val x368 = x367 + x366
+x360 = x368
+x366 = x366 + 1
 }
-x394
+x371
 } else {
 ()
 }
-x385 = x385 + 1
+x362 = x362 + 1
 }
-x398
+x375
 } else {
 ()
 }
-val x401 = x383
-x401
+val x378 = x360
+x378
 }
 }
 /*****************************************

@@ -349,9 +349,9 @@ class TestGeneratorOps extends FileDiffSuite {
         scala.Console.println(testc6(1,6))
 
         //test7: single elem from Array
-        codegen.emitSource2(test7 _ , "test7", printWriter)
-        val testc7 = compile2(test7)
-        scala.Console.println(testc7(1,2))
+        // codegen.emitSource2(test7 _ , "test7", printWriter)
+        // val testc7 = compile2(test7)
+        // scala.Console.println(testc7(1,2))
 
         //test8: fromSeq
         codegen.emitSource(test8 _ , "test8", printWriter)
