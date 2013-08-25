@@ -28,7 +28,9 @@ trait OverloadHack extends Serializable {
   class Overloaded22 extends Serializable
   class Overloaded23 extends Serializable 
   class Overloaded24 extends Serializable
+}
 
+trait OverloadHackImpl extends OverloadHack {
   implicit val overloaded1 = new Overloaded1
   implicit val overloaded2 = new Overloaded2
   implicit val overloaded3 = new Overloaded3

@@ -32,7 +32,11 @@ trait Expressions extends Utils {
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
   var nVars = 0
-  def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) println("nVars="+nVars);  nVars -1 }
+  def fresh[T:Manifest]: Sym[T] = Sym[T] { 
+    nVars += 1;  
+    //if (nVars%1000 == 0) println("nVars="+nVars);  
+    nVars - 1 
+  }
 
   def fresh[T:Manifest](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
 

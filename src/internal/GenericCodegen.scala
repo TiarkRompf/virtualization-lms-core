@@ -105,59 +105,61 @@ trait GenericCodegen extends BlockTraversal {
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit
 
-  private def generateDynamicClassesList(dynamicClasses: Class[_]*) = {
+  private def generateDynamicClassesList(dynamicClasses: String*) = {
      val notnull = dynamicClasses.filter (c => c!=null)
      /* Either all of them are not null or all of them are null */
-     if ((notnull.length != 0) && (notnull.length != dynamicClasses.length))
-        throw new RuntimeException("invalid number of dynamicClasses encountered when compiling DynamicRecords")
+     //if ((notnull.length != 0) && (notnull.length != dynamicClasses.length))
+       // throw new RuntimeException("invalid number of dynamicClasses encountered when compiling DynamicRecords")
      if (notnull.length == 0) null
-     else List(dynamicClasses:_*)
+     else {
+        val x = dynamicClasses.toList
+        (x.dropRight(1), x.last)
+     }
   }  
 
-  // emitSource0 should never take dynamicClasses as argument (to rep to handle)
-  def emitSource0[T : Manifest, R : Manifest](f: () => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+  def emitSource0[T : Manifest, R : Manifest](f: () => Exp[R], className: String, stream: PrintWriter, dynamicReturn: String = null): List[(Sym[Any], Any)] = {
     val body = reifyBlock(f())
-    emitSource(List(), body, className, stream, null)
+    emitSource(List(), body, className, stream, generateDynamicClassesList(dynamicReturn))
   }
 
-  def emitSource1[T : Manifest, R : Manifest](f: Exp[T] => Exp[R], className: String, stream: PrintWriter, dynamicClass: Class[_] = null): List[(Sym[Any], Any)] = {
+  def emitSource1[T : Manifest, R : Manifest](f: Exp[T] => Exp[R], className: String, stream: PrintWriter, dynamicClass: String = null, dynamicReturn: String = null): List[(Sym[Any], Any)] = {
     val s = fresh[T]
     val body = reifyBlock(f(s))
-    emitSource(List(s), body, className, stream, generateDynamicClassesList(dynamicClass))
+    emitSource(List(s), body, className, stream, generateDynamicClassesList(dynamicClass, dynamicReturn))
   }
 
-  def emitSource2[T1 : Manifest, T2 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2]) => Exp[R], className: String, stream: PrintWriter, dynamicClass: Class[_] = null, dynamicClass2: Class[_] = null): List[(Sym[Any], Any)] = {
+  def emitSource2[T1 : Manifest, T2 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2]) => Exp[R], className: String, stream: PrintWriter, dynamicClass: String = null, dynamicClass2: String = null, dynamicReturn: String = null): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val body = reifyBlock(f(s1, s2))
-    emitSource(List(s1, s2), body, className, stream, generateDynamicClassesList(dynamicClass, dynamicClass2))
+    emitSource(List(s1, s2), body, className, stream, generateDynamicClassesList(dynamicClass, dynamicClass2, dynamicReturn))
   }
 
-  def emitSource3[T1 : Manifest, T2 : Manifest, T3 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3]) => Exp[R], className: String, stream: PrintWriter, dynamicClass: Class[_] = null, dynamicClass2: Class[_] = null, dynamicClass3: Class[_] = null): List[(Sym[Any], Any)] = {
+  def emitSource3[T1 : Manifest, T2 : Manifest, T3 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3]) => Exp[R], className: String, stream: PrintWriter, dynamicClass: String = null, dynamicClass2: String = null, dynamicClass3: String = null, dynamicReturn: String = null): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
     val body = reifyBlock(f(s1, s2, s3))
-    emitSource(List(s1, s2, s3), body, className, stream, generateDynamicClassesList(dynamicClass, dynamicClass2, dynamicClass3))
+    emitSource(List(s1, s2, s3), body, className, stream, generateDynamicClassesList(dynamicClass, dynamicClass2, dynamicClass3, dynamicReturn))
   }
 
-  def emitSource4[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4]) => Exp[R], className: String, stream: PrintWriter, dynamicClass: Class[_] = null, dynamicClass2: Class[_] = null, dynamicClass3: Class[_] = null, dynamicClass4: Class[_] = null): List[(Sym[Any], Any)] = {
+  def emitSource4[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4]) => Exp[R], className: String, stream: PrintWriter, dynamicClass: String = null, dynamicClass2: String = null, dynamicClass3: String = null, dynamicClass4: String = null, dynamicReturn: String = null): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
     val s4 = fresh[T4]
     val body = reifyBlock(f(s1, s2, s3, s4))
-    emitSource(List(s1, s2, s3, s4), body, className, stream, generateDynamicClassesList(dynamicClass, dynamicClass2, dynamicClass3, dynamicClass4))
+    emitSource(List(s1, s2, s3, s4), body, className, stream, generateDynamicClassesList(dynamicClass, dynamicClass2, dynamicClass3, dynamicClass4, dynamicReturn))
   }
 
-  def emitSource5[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5]) => Exp[R], className: String, stream: PrintWriter, dynamicClass: Class[_] = null, dynamicClass2: Class[_] = null, dynamicClass3: Class[_] = null, dynamicClass4: Class[_] = null, dynamicClass5: Class[_] = null): List[(Sym[Any], Any)] = {
+  def emitSource5[T1 : Manifest, T2 : Manifest, T3 : Manifest, T4 : Manifest, T5 : Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5]) => Exp[R], className: String, stream: PrintWriter, dynamicClass: String = null, dynamicClass2: String = null, dynamicClass3: String = null, dynamicClass4: String = null, dynamicClass5: String = null, dynamicReturn: String = null): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val s3 = fresh[T3]
     val s4 = fresh[T4]
     val s5 = fresh[T5]
     val body = reifyBlock(f(s1, s2, s3, s4, s5))
-    emitSource(List(s1, s2, s3, s4, s5), body, className, stream, generateDynamicClassesList(dynamicClass, dynamicClass2, dynamicClass3, dynamicClass4, dynamicClass5))
+    emitSource(List(s1, s2, s3, s4, s5), body, className, stream, generateDynamicClassesList(dynamicClass, dynamicClass2, dynamicClass3, dynamicClass4, dynamicClass5, dynamicReturn))
   }
 
   /**
@@ -166,7 +168,7 @@ trait GenericCodegen extends BlockTraversal {
    * @param className Name of the generated identifier
    * @param stream Output stream
    */
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, stream: PrintWriter, dynamicClasses: List[Class[_]]): List[(Sym[Any], Any)] // return free static data in block
+  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, stream: PrintWriter, dynamicTypes: Tuple2[List[String],String] = null): List[(Sym[Any], Any)] // return free static data in block
 
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s.replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
@@ -176,6 +178,8 @@ trait GenericCodegen extends BlockTraversal {
     case Const(null) => "null"
     case Const(z) => z.toString
     case Sym(n) => "x"+n
+    case x@_ if x == Const(null) => "null"
+    case null => "null" 
     case _ => throw new RuntimeException("could not quote " + x)
   }
   

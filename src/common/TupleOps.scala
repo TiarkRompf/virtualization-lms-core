@@ -36,6 +36,13 @@ trait TupleOps extends Base {
   def tuple5_get3[C:Manifest](t: Rep[(_,_,C,_,_)])(implicit pos: SourceContext) : Rep[C]
   def tuple5_get4[D:Manifest](t: Rep[(_,_,_,D,_)])(implicit pos: SourceContext) : Rep[D]
   def tuple5_get5[E:Manifest](t: Rep[(_,_,_,_,E)])(implicit pos: SourceContext) : Rep[E]
+
+  class ProductOps(x: Rep[Product]) {
+    def apply(i: Rep[Int]) = product_apply(x,i)
+  }
+  implicit def repProductToProductOps(x: Rep[Product]) = new ProductOps(x)
+  def product_apply(x: Rep[Product], i: Rep[Int]): Rep[Any]
+  def listToTuple(y: List[Rep[Any]]): Rep[Product]
 }
 
 trait TupleOpsExp extends TupleOps with EffectExp {
@@ -82,6 +89,9 @@ trait TupleOpsExp extends TupleOps with EffectExp {
   case class Tuple5Access3[C:Manifest](t: Exp[(_,_,C,_,_)]) extends Def[C] { val m = manifest[C] }
   case class Tuple5Access4[D:Manifest](t: Exp[(_,_,_,D,_)]) extends Def[D] { val m = manifest[D] }
   case class Tuple5Access5[E:Manifest](t: Exp[(_,_,_,_,E)]) extends Def[E] { val m = manifest[E] }
+
+  case class ProductApply(x: Rep[Product], i: Rep[Int]) extends Def[Any]
+  case class ListToTuple(i: List[Rep[Any]]) extends Def[Product]
 
   def tuple2_get1[A:Manifest](t: Exp[(A,_)])(implicit pos: SourceContext) = t match {
     case Def(ETuple2(a,b)) => a
@@ -143,6 +153,9 @@ trait TupleOpsExp extends TupleOps with EffectExp {
     case _ => Tuple5Access5(t)
   }
 
+  def product_apply(x: Rep[Product], i: Rep[Int]) = reflectEffect(ProductApply(x,i))
+  def listToTuple(y: List[Rep[Any]]) = reflectEffect(ListToTuple(y))
+
   object Both { def unapply[T](x:T):Some[(T,T)] = Some((x,x)) }
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
@@ -181,7 +194,7 @@ trait TupleOpsExp extends TupleOps with EffectExp {
     case Reflect(e@Tuple5Access3(t), u, es) => reflectMirrored(Reflect(Tuple5Access3(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
     case Reflect(e@Tuple5Access4(t), u, es) => reflectMirrored(Reflect(Tuple5Access4(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
     case Reflect(e@Tuple5Access5(t), u, es) => reflectMirrored(Reflect(Tuple5Access5(f(t))(mtype(e.m)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
-    
+
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -219,6 +232,11 @@ trait ScalaGenTupleOps extends ScalaGenBase {
     case Tuple5Access4(t) => emitValDef(sym, quote(t) + "._4")
     case Tuple5Access5(t) => emitValDef(sym, quote(t) + "._5")
 
+    case ProductApply(x,i) => emitValDef(sym, quote(x) + "._" + quote(i))    
+    case ListToTuple(y) => {
+        emitValDef(sym, "(" + y.map(n => quote(n)).mkString(",") + ")")
+    }   
+ 
     case _ => super.emitNode(sym, rhs)
   }
 }

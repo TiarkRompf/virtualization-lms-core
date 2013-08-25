@@ -18,8 +18,12 @@ trait StringOps extends Variables with OverloadHack {
   
   def infix_+(s1: String, s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(unit(s1), s2)
   def infix_+[T:Manifest](s1: String, s2: Var[T])(implicit o: Overloaded2, pos: SourceContext) = string_plus(unit(s1), readVar(s2))
-  def infix_+(s1: Rep[String], s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(s1, s2)
-  def infix_+[T:Manifest](s1: Rep[String], s2: Var[T])(implicit o: Overloaded2, pos: SourceContext) = string_plus(s1, readVar(s2))
+  def infix_+[T:Manifest](s1: Rep[String], s2: Rep[T])(implicit o: Overloaded1, pos: SourceContext): Rep[String] = {
+    if (manifest[T] == classManifest[Array[Byte]])
+        string_plus(s1, string_new(s2))
+    else string_plus(s1, s2)
+  }
+  def infix_+[T:Manifest](s1: Rep[String], s2: Var[T])(implicit o: Overloaded2, pos: SourceContext): Rep[String] = string_plus(s1, readVar(s2))
   def infix_+(s1: Rep[String], s2: Rep[String])(implicit o: Overloaded3, pos: SourceContext) = string_plus(s1, s2)
   def infix_+(s1: Rep[String], s2: Var[String])(implicit o: Overloaded4, pos: SourceContext) = string_plus(s1, readVar(s2))
   def infix_+(s1: Rep[Any], s2: Rep[String])(implicit o: Overloaded5, pos: SourceContext) = string_plus(s1, s2)
@@ -53,6 +57,7 @@ trait StringOps extends Variables with OverloadHack {
     def valueOf(a: Rep[Any])(implicit pos: SourceContext) = string_valueof(a)
   }
 
+  def string_new(s: Rep[Any]): Rep[String]
   def string_plus(s: Rep[Any], o: Rep[Any])(implicit pos: SourceContext): Rep[String]
   def string_startswith(s1: Rep[String], s2: Rep[String])(implicit pos: SourceContext): Rep[Boolean]
   def string_trim(s: Rep[String])(implicit pos: SourceContext): Rep[String]
@@ -64,6 +69,7 @@ trait StringOps extends Variables with OverloadHack {
 }
 
 trait StringOpsExp extends StringOps with VariablesExp {
+  case class StringNew(s: Rep[Any]) extends Def[String]
   case class StringPlus(s: Exp[Any], o: Exp[Any]) extends Def[String]
   case class StringStartsWith(s1: Exp[String], s2: Exp[String]) extends Def[Boolean]
   case class StringTrim(s: Exp[String]) extends Def[String]
@@ -73,6 +79,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
   case class StringToFloat(s: Exp[String]) extends Def[Float]
   case class StringToInt(s: Exp[String]) extends Def[Int]
 
+  def string_new(s: Rep[Any]) = StringNew(s)
   def string_plus(s: Exp[Any], o: Exp[Any])(implicit pos: SourceContext): Rep[String] = StringPlus(s,o)
   def string_startswith(s1: Exp[String], s2: Exp[String])(implicit pos: SourceContext) = StringStartsWith(s1,s2)
   def string_trim(s: Exp[String])(implicit pos: SourceContext) : Rep[String] = StringTrim(s)
@@ -97,6 +104,7 @@ trait ScalaGenStringOps extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case StringNew(s1) => emitValDef(sym, "new String(" + quote(s1) + ")")
     case StringPlus(s1,s2) => emitValDef(sym, "%s+%s".format(quote(s1), quote(s2)))
     case StringStartsWith(s1,s2) => emitValDef(sym, "%s.startsWith(%s)".format(quote(s1),quote(s2)))
     case StringTrim(s) => emitValDef(sym, "%s.trim()".format(quote(s)))

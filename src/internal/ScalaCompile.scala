@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package internal
 
 import java.io._
+import scala.virtualization.lms.util._
 
 import scala.tools.nsc._
 import scala.tools.nsc.util._
@@ -15,6 +16,7 @@ object ScalaCompile {
   var dumpGeneratedCode = false
   var compiler: Global = _
   var reporter: ConsoleReporter = _
+  var cleanerEnabled: Boolean = true 
   //var output: ByteArrayOutputStream = _ 
   val source = new StringWriter()
   val writer = new PrintWriter(source)
@@ -54,6 +56,7 @@ trait ScalaCompile extends Expressions {
   }
 
   def initCompile = {
+    System.out.println("Initializing compiler...")
     ScalaCompile.source.getBuffer().setLength(0) 
     ScalaCompile.compileCount = ScalaCompile.compileCount + 1
     val className = "staged$" + ScalaCompile.compileCount
@@ -61,15 +64,25 @@ trait ScalaCompile extends Expressions {
   }
 
   def compileLoadClass(src: StringWriter, className: String) = {
-    if (ScalaCompile.compiler eq null) {
-        println("Initializing compiler")
+    if (ScalaCompile.compiler eq null)
         setupCompiler()
-    }
     if (ScalaCompile.dumpGeneratedCode) println(src)
 
     ScalaCompile.compiler.settings.outputDirs.setSingleOutput(ScalaCompile.fileSystem)
     val run = new ScalaCompile.comp.Run
-    run.compileSources(List(new util.BatchSourceFile("<stdin>", src.toString)))
+    var parsedsrc = src.toString
+
+    if (ScalaCompile.cleanerEnabled) {
+        println("\n\n------------------------------------------------")
+        println("EXPERIMENTAL:: CODE BEFORE RUNNING CODEGEN CLEANER")
+        println(src.toString)
+        parsedsrc = CodegenCleaner.clean(src.toString)
+        println("EXPERIMENTAL:: CODE AFTER RUNNING CODEGEN CLEANER")
+        println(parsedsrc)
+        println("\n\n------------------------------------------------")
+    }
+
+    run.compileSources(List(new util.BatchSourceFile("<stdin>", parsedsrc)))
     ScalaCompile.reporter.printSummary()
     if (ScalaCompile.reporter.hasErrors) {
       println("compilation of the following code had errors:")
@@ -82,9 +95,9 @@ trait ScalaCompile extends Expressions {
   }
 
   // Compile0 should never take dynamicClasses as argument (to rep to handle)
-  def compile0[B](f: () => Exp[B])(implicit mB: Manifest[B]): () =>B = {
+  def compile0[B](f: () => Exp[B],dynamicReturnType: String = null)(implicit mB: Manifest[B]): () =>B = {
     val className = initCompile 
-    val staticData = codegen.emitSource0(f, className, ScalaCompile.writer)
+    val staticData = codegen.emitSource0(f, className, ScalaCompile.writer, dynamicReturnType)
     codegen.emitDataStructures(ScalaCompile.writer)
     val cls = compileLoadClass(ScalaCompile.source, className)
     val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
@@ -92,9 +105,9 @@ trait ScalaCompile extends Expressions {
     obj
   }
 
-  def compile1[A,B](f: Exp[A] => Exp[B], dynamicClass: Class[_] = null)(implicit mA: Manifest[A], mB: Manifest[B]): A=>B = {
+  def compile1[A,B](f: Exp[A] => Exp[B], dynamicClass: String = null, dynamicReturnType: String = null)(implicit mA: Manifest[A], mB: Manifest[B]): A=>B = {
     val className = initCompile 
-    val staticData = codegen.emitSource1(f, className, ScalaCompile.writer, dynamicClass)
+    val staticData = codegen.emitSource1(f, className, ScalaCompile.writer, dynamicClass, dynamicReturnType)
     codegen.emitDataStructures(ScalaCompile.writer)
     val cls = compileLoadClass(ScalaCompile.source, className)
     val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
@@ -102,13 +115,15 @@ trait ScalaCompile extends Expressions {
     obj
   }
 
-  def compile2[A1,A2,B](f: (Exp[A1],Exp[A2]) => Exp[B], dynamicClass: Class[_] = null, dynamicClass2: Class[_] = null)(implicit mA1: Manifest[A1], mA2: Manifest[A2], mB: Manifest[B]): (A1,A2)=>B = {
+  def compile2[A1,A2,B](f: (Exp[A1],Exp[A2]) => Exp[B], dynamicClass: String = null, dynamicClass2: String = null, dynamicReturnType: String = null)(implicit mA1: Manifest[A1], mA2: Manifest[A2], mB: Manifest[B]): (A1,A2)=>B = {
     val className = initCompile 
-    val staticData = codegen.emitSource2(f, className, ScalaCompile.writer, dynamicClass, dynamicClass2)
+    val staticData = codegen.emitSource2(f, className, ScalaCompile.writer, dynamicClass, dynamicClass2, dynamicReturnType)
     codegen.emitDataStructures(ScalaCompile.writer)
     val cls = compileLoadClass(ScalaCompile.source, className)
     val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
     val obj: (A1,A2)=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[(A1,A2)=>B]
     obj
   }
+
+    
 }

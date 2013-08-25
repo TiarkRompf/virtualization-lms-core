@@ -9,7 +9,7 @@ import scala.virtualization.lms.util.ClosureCompare
 import scala.reflect.SourceContext
 
 trait Functions extends Base {
-
+ 
   def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[A => B]
   implicit def fun[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
 
@@ -256,7 +256,7 @@ trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
     case e@Lambda(fun, x, y) =>
       emitValDef(sym, "{" + quote(x) + ": (" + x.tp + ") => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)) + ": " + y.tp)
+      stream.println(quote(getBlockResult(y))/* + ": " + y.tp*/)
       stream.println("}")
 
     case Apply(fun, arg) =>

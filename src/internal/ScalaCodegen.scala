@@ -19,11 +19,14 @@ trait ScalaCodegen extends GenericCodegen with Config {
       outFile.delete
   }
 
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter, dynamicClasses: List[Class[_]] = null) = {
+  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter, dynamicTypes: Tuple2[List[String],String] = null) = {
 
+    val dynamicClasses = if (dynamicTypes == null) null else dynamicTypes._1
+    val dynamicReturnType = if (dynamicTypes == null) null else dynamicTypes._2
+    // Handle return type
     val sA = {
-        if (manifest[A] <:< manifest[scala.collection.mutable.TreeSet[scala.virtualization.lms.common.DynamicRecord]]) "scala.collection.mutable.TreeSet[AGGRECORD]"
-        else remap(manifest[A])
+        if (dynamicReturnType == null) remap(manifest[A])
+        else dynamicReturnType
     }
 
     val staticData = getFreeDataBlock(body)
@@ -39,15 +42,14 @@ trait ScalaCodegen extends GenericCodegen with Config {
       if (dynamicClasses == null)
         stream.print(args.map(a => remap(a.tp)).mkString(", "))
       else
-        stream.print(dynamicClasses.map(a => a.toString.replaceAll("class ", "").replaceAll("double","Double")).mkString(", "))
-       //     if  && (a.tp <:< manifest[scala.virtualization.lms.common.DynamicRecord])) dynamicClasses.toString.replaceAll("class ", "") else remap(a.tp)
+        stream.print(dynamicClasses.map(a => a.replaceAll("double","Double")).mkString(", "))
       stream.println(")=>("+sA+")) with Serializable {")
       stream.print("def apply(")
       if (dynamicClasses == null)
         stream.print(args.map(a => quote(a) + ":" + remap(a.tp)).mkString(", "))
       else {
         val zipped = args zip dynamicClasses
-        stream.print(zipped.map(arg => quote(arg._1) + ":" + arg._2.toString.replaceAll("class ", "").replaceAll("double", "Double")).mkString(", "))
+        stream.print(zipped.map(arg => quote(arg._1) + ":" + arg._2.replaceAll("double", "Double")).mkString(", "))
       }
       stream.println("): "+sA+" = {")
     
@@ -111,7 +113,8 @@ trait ScalaCodegen extends GenericCodegen with Config {
   }
   
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
-    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
+//    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
+    stream.println("var " + quote(sym) + " = " + rhs)
   }
   
   def emitAssignment(lhs: String, rhs: String): Unit = {
@@ -130,7 +133,7 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   }
   
   def emitForwardDef(sym: Sym[Any]): Unit = {
-    stream.println("var " + quote(sym) + /*": " + remap(sym.tp) +*/ " = null.asInstanceOf[" + remap(sym.tp) + "]")
+    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = null.asInstanceOf[" + remap(sym.tp) + "]")
   }
   
   // special case for recursive vals

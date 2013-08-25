@@ -21,6 +21,7 @@ trait SetOps extends Base {
     def clear()(implicit pos: SourceContext) = set_clear(s)
     def toSeq(implicit pos: SourceContext) = set_toseq(s)
     def toArray(implicit pos: SourceContext) = set_toarray(s)
+    def foreach(block: Rep[A] => Rep[Unit])(implicit pos: SourceContext) = set_foreach(s, block)
   }
 
   def set_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext) : Rep[Set[A]]
@@ -31,6 +32,7 @@ trait SetOps extends Base {
   def set_clear[A:Manifest](s: Rep[Set[A]])(implicit pos: SourceContext) : Rep[Unit]
   def set_toseq[A:Manifest](s: Rep[Set[A]])(implicit pos: SourceContext): Rep[Seq[A]]
   def set_toarray[A:Manifest](s: Rep[Set[A]])(implicit pos: SourceContext): Rep[Array[A]]
+  def set_foreach[T:Manifest](x: Rep[Set[T]], block: Rep[T] => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
 }
 
 trait SetOpsExp extends SetOps with ArrayOps with EffectExp {
@@ -45,6 +47,7 @@ trait SetOpsExp extends SetOps with ArrayOps with EffectExp {
     //val array = unit(manifest[A].newArray(0))
     val array = NewArray[A](s.size)
   }
+  case class SetForeach[T](a: Exp[Set[T]], x: Sym[T], block: Block[Unit]) extends Def[Unit]
 
   def set_new[A:Manifest](xs: Seq[Exp[A]])(implicit pos: SourceContext) = reflectMutable(SetNew(xs, manifest[A]))
   def set_contains[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit pos: SourceContext) = SetContains(s, i)
@@ -54,6 +57,27 @@ trait SetOpsExp extends SetOps with ArrayOps with EffectExp {
   def set_clear[A:Manifest](s: Exp[Set[A]])(implicit pos: SourceContext) = reflectWrite(s)(SetClear(s))
   def set_toseq[A:Manifest](s: Exp[Set[A]])(implicit pos: SourceContext) = SetToSeq(s)
   def set_toarray[A:Manifest](s: Exp[Set[A]])(implicit pos: SourceContext) = SetToArray(s)
+  def set_foreach[T:Manifest](a: Exp[Set[T]], block: Exp[T] => Exp[Unit])(implicit pos: SourceContext): Exp[Unit] = {
+    val x = fresh[T]
+    val b = reifyEffects(block(x))
+    reflectEffect(SetForeach(a, x, b), summarizeEffects(b).star)
+  }
+  
+  override def syms(e: Any): List[Sym[Any]] = e match {
+    case SetForeach(a, x, body) => syms(a):::syms(body)
+    case _ => super.syms(e)
+  }
+
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case SetForeach(a, x, body) => x :: effectSyms(body)
+    case _ => super.boundSyms(e)
+  }
+
+  override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case SetForeach(a, x, body) => freqNormal(a):::freqHot(body)
+    case _ => super.symsFreq(e)
+  }
+
 }
 
 trait BaseGenSetOps extends GenericNestedCodegen {
@@ -85,6 +109,11 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
       stream.println("i += 1")      
       stream.println("}")
       stream.println("out")
+      stream.println("}")
+    case SetForeach(a,x,block) => stream.println("val " + quote(sym) + " = " + quote(a) + ".foreach{")    
+      stream.println(quote(x) + " => ")
+      emitBlock(block)
+      stream.println(quote(getBlockResult(block)))
       stream.println("}")
     case _ => super.emitNode(sym, rhs)
   }
