@@ -9,13 +9,13 @@ val x7 = if (x2) {
 val x3 = x1+9.0
 val x6 = {x4: (Double) => 
 val x5 = x3+x4
-x5: Double
+x5
 }
 x6
 } else {
 ()
 }
-x7: Any
+x7
 }
 x8
 }

@@ -7,10 +7,10 @@ val x4 = 4.0*3.0
 val x7 = {x2: (Double) => 
 val x3 = println("yo")
 val x5 = x2+x4
-x5: Double
+x5
 }
 val x8 = {x1: (Double) => 
-x7: scala.Function1[Double, Double]
+x7
 }
 x8
 }

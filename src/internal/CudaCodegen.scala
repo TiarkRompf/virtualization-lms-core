@@ -127,7 +127,7 @@ trait CudaCodegen extends GPUCodegen {
 
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
 
-    val sB = manifest[A].toString
+    val sB = remap(manifest[A])
 
     withStream(out) {
       stream.println("/*****************************************\n"+
@@ -148,7 +148,7 @@ trait CudaCodegen extends GPUCodegen {
                      "*******************************************/")
     }
     Nil
-  }  
+  }
 
 /*
   //TODO: is sym of type Any or Variable[Any] ?
@@ -183,7 +183,7 @@ trait CudaNestedCodegen extends CLikeNestedCodegen with CudaCodegen {
       case _ => s
     }
   }
-  
+
   override def quote(x: Exp[Any]) = x match { // TODO: quirk!
     case Const(s: String) => "\""+s+"\""
     case Const(s: Char) => "'"+s+"'"
@@ -192,7 +192,7 @@ trait CudaNestedCodegen extends CLikeNestedCodegen with CudaCodegen {
     case Sym(-1) => "_"
     case _ => super.quote(x)
   }
-  
+
 }
 
 trait CudaFatCodegen extends CLikeFatCodegen with CudaCodegen {
