@@ -27,7 +27,7 @@ object DynamicRecordsMap extends Serializable {
     }
  
     def writeRecord(out: PrintWriter, className: String, attrs: List[(String, Class[_])]) {
-        out.print("class " + className + " extends scala.virtualization.lms.common.DynamicRecordExp {\n")
+        out.print("class " + className + " extends Serializable with Cloneable " +/*scala.virtualization.lms.common.DynamicRecordExp*/ " {\n")
         for ((p1,p2) <- attrs) {
              val str = {
                  if (ClassManifest.fromClass(p2) == classManifest[Array[Byte]])
@@ -37,7 +37,23 @@ object DynamicRecordsMap extends Serializable {
              }
              out.print("var " + p1 + ": " + str + " = null.asInstanceOf[" + str + "];\n")
         }
-        out.println("@transient var next: " + className + " = null ") 
+        out.println("@transient var next: " + className + " = null ")
+        // Override hashcode 
+        //out.println("var __hashCode: Function0[Int] = null")
+        //out.println("override def hashCode = __hashCode()")
+        // Override equals
+        //out.println("var __equals: Function1[" + className /* "," + className + ",*/ + ", Boolean] = null")
+        //out.println("def equals(x: " + className + ") = __equals(x)")
+        // Override clone 
+        out.println("override def clone() = {")
+        out.println("val __copy  = new " + className + "()")
+        out.print( (for ((p1,p2) <- attrs) yield 
+            if (ClassManifest.fromClass(p2) == classManifest[Array[Byte]]) 
+                "Array.copy(this." + p1 + ", 0, new Array[Byte](this." + p1 + ".size), 0, this." + p1 + ".size)\n"
+            else "__copy." + p1 + " = this." + p1 + "\n" 
+        ).mkString )
+        out.println("__copy")
+        out.println("}")
         // Custom toString function
         out.print("override def toString() = {\n\"\"+")
         out.print( (for ((p1,p2) <- attrs) yield 
@@ -98,10 +114,15 @@ object DynamicRecordsMap extends Serializable {
     }
 }
 
+object DynamicRecordEffectsMap {
+    val effectsMap = new collection.mutable.HashMap[(String,String), Any]()
+}
+
 trait DynamicRecord extends Base with Serializable with VariablesExp {
 	class DynamicRecordOps(x: Rep[DynamicRecord]) {
         def get(field: Rep[Any]) = dynamicRecordGet(x, field)
-		def set(field: Rep[Any], value: Rep[Any]) = dynamicRecordSet(x, field, value)
+		def set(field: Rep[Any], value: Block[Any]) = dynamicRecordSet(x, field, value)
+		def set(field: Rep[Any], value: => Rep[Any]) = dynamicRecordSet(x, field, value)
         def foreach(f: Rep[DynamicRecordExp] => Rep[Unit]) = dynamicRecordForEach(x,f)
     }
 	implicit def varDynamicType2dynamicRecordOps(x: Var[DynamicRecord]) = new DynamicRecordOps(readVar(x))
@@ -111,38 +132,64 @@ trait DynamicRecord extends Base with Serializable with VariablesExp {
 
     def newDynamicRecord(name: String, reuse: Boolean = false): Rep[DynamicRecordExp]
 	def dynamicRecordGet(x: Rep[DynamicRecord], field: Rep[Any]): Rep[Any]
-	def dynamicRecordSet(x: Rep[DynamicRecord], field: Rep[Any], value: Rep[Any]): Rep[Unit]
+	def dynamicRecordSet(x: Rep[DynamicRecord], field: Rep[Any], value: Block[Any]): Rep[Unit]
+	def dynamicRecordSet(x: Rep[DynamicRecord], field: Rep[Any], value: => Rep[Any]): Rep[Unit] = {
+        // By using Block[T], we can avoid creating temporary val when you only copy from another
+        // record (e.g. case of projections)
+        dynamicRecordSet(x,field, reifyEffects(value))
+    }
     def dynamicRecordForEach(x: Rep[DynamicRecord], f: Rep[DynamicRecordExp] => Rep[Unit]): Rep[Unit]
 }
 
 trait DynamicRecordExp extends DynamicRecord with BaseExp with EffectExp {
     case class NewDynamicRecord(n: String) extends Def[DynamicRecordExp]
 	case class DynamicRecordGet(x: Rep[DynamicRecord], field: Rep[Any]) extends Def[Any]
-	case class DynamicRecordSet(x: Rep[DynamicRecord], field: Rep[Any], value: Rep[Any]) extends Def[Unit]
+	case class DynamicRecordSet(x: Rep[DynamicRecord], field: Rep[Any], value: Block[Any]) extends Def[Unit]
     case class DynamicRecordForEach(l: Rep[DynamicRecord], x: Sym[DynamicRecordExp], block: Block[Unit]) extends Def[Unit]
 
     def newDynamicRecord(name: String, reuse: Boolean = false) = 
         if (reuse) NewDynamicRecord(name) else reflectEffect(NewDynamicRecord(name))
-	def dynamicRecordGet(x: Rep[DynamicRecord], field: Rep[Any]) = reflectEffect(DynamicRecordGet(x, field))
-	def dynamicRecordSet(x: Rep[DynamicRecord], field: Rep[Any], value: Rep[Any]) = reflectEffect(DynamicRecordSet(x,field,value))
+
+	def dynamicRecordGet(x: Rep[DynamicRecord], field: Rep[Any]) = {
+        val key = (x.toString, field.toString)
+        DynamicRecordEffectsMap.effectsMap.get(key) match {
+            case Some(e) => e.asInstanceOf[Rep[_]]
+            case None => {
+                val rE = reflectEffect(DynamicRecordGet(x, field))
+                DynamicRecordEffectsMap.effectsMap += key -> rE
+                rE
+            }
+        }
+    }
+
+	def dynamicRecordSet(x: Rep[DynamicRecord], field: Rep[Any], value: Block[Any]) = { 
+        val key = (x.toString, field.toString)
+        // Forces new gets that follow to re-read the entry.
+        val e = DynamicRecordEffectsMap.effectsMap.remove(key) 
+        reflectEffect(DynamicRecordSet(x,field,value))
+    }
+
     def dynamicRecordForEach(x: Rep[DynamicRecord], f: Exp[DynamicRecordExp] => Exp[Unit])={
         val a = fresh[DynamicRecordExp]
         val b = reifyEffects(f(a))
         reflectEffect(DynamicRecordForEach(x, a, b), summarizeEffects(b).star)
     }
-
+    
     override def syms(e: Any): List[Sym[Any]] = e match {
         case DynamicRecordForEach(a, x, body) => syms(a):::syms(body)
+        case DynamicRecordSet(a, x, body) => syms(a):::syms(body)
         case _ => super.syms(e)
     }
 
     override def boundSyms(e: Any): List[Sym[Any]] = e match {
         case DynamicRecordForEach(a, x, body) => x :: effectSyms(body)
+        case DynamicRecordSet(a, x, body) => effectSyms(x)::: effectSyms(body)
         case _ => super.boundSyms(e)
     }
 
     override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
         case DynamicRecordForEach(a, x, body) => freqNormal(a):::freqHot(body)
+        case DynamicRecordSet(a, x, body) => freqNormal(a):::freqHot(body)
         case _ => super.symsFreq(e)
     }  
 }
@@ -155,8 +202,12 @@ trait ScalaGenDynamicRecord extends ScalaGenBase with GenericNestedCodegen {
         rhs match {
             case NewDynamicRecord(x) => emitValDef(sym, "new " + x + "()")
 		    case DynamicRecordGet(x, field) => emitValDef(sym, quote(x) + "." + quote(field).replaceAll("\"",""))
-		    case DynamicRecordSet(x, field, value) =>
-                 stream.println(quote(x) + "." + quote(field).replaceAll("\"","") + " = " + quote(value))
+		    case DynamicRecordSet(x, field, value) => {
+                stream.println(quote(x) + "." + quote(field).replaceAll("\"","") + " = {")
+                emitBlock(value)
+                stream.println(quote(getBlockResult(value)))
+                stream.println("}")
+            }
             case DynamicRecordForEach(x, init, block) => 
                 stream.println("val " + quote(sym) + " = {")
                 stream.println("\tvar " + quote(init) + "=" + quote(x))
@@ -165,6 +216,7 @@ trait ScalaGenDynamicRecord extends ScalaGenBase with GenericNestedCodegen {
                 stream.println("\t\t" + quote(init) + "=" + quote(init) + ".next")
                 stream.println("\t}")
                 stream.println("}")
+                       
 		    case _ => super.emitNode(sym, rhs)
   	    }
     }
@@ -175,4 +227,143 @@ trait ScalaGenDynamicRecord extends ScalaGenBase with GenericNestedCodegen {
         )
         //DynamicRecordsMap.registeredDynamicRecords.clear
     }
+}
+
+/* HASHMAP */
+trait DynamicRecordHashMap extends Base with Variables {
+  implicit def HashMapToRepHashMapOps[K:Manifest,V:Manifest](m: HashMap[K,V]) = new hashmapOpsCls[K,V](unit(m))
+  implicit def repHashMapToHashMapOps[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]]) = new hashmapOpsCls[K,V](m)
+  implicit def varrepHashMapToHashMapOps[K:Manifest,V:Manifest](m: Var[HashMap[K,V]]) = new hashmapOpsCls[K,V](readVar(m))
+
+  class hashmapOpsCls[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]]) {
+    def apply(k: Rep[K])(implicit pos: SourceContext) = hashmap_apply(m, k)
+    def size(implicit pos: SourceContext) = hashmap_size(m)
+    def removeHead(implicit pos:SourceContext) = hashmap_removehead(m)
+    def getOrElseUpdate(k: Rep[K], v: => Rep[V], h: Rep[DynamicRecord] => Rep[Int], e: (Rep[DynamicRecord],Rep[DynamicRecord])=>Rep[Boolean] )(implicit pos: SourceContext) = hashmap_getorelseupdate[K,V](m,k,v,h,e)
+    def mkString(delimiter: Rep[String]) = hashmap_mkString(m, delimiter)
+  }
+
+  def hashmap_new[K:Manifest,V:Manifest](specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) : Rep[HashMap[K,V]]
+  def hashmap_apply[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K])(implicit pos: SourceContext): Rep[V]
+  def hashmap_size[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Int]
+  def hashmap_removehead[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[(K,V)]
+  def hashmap_getorelseupdate[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K], v: => Rep[V], h: Rep[DynamicRecord] => Rep[Int], e: (Rep[DynamicRecord],Rep[DynamicRecord])=>Rep[Boolean])(implicit pos: SourceContext): Rep[V]
+  def hashmap_mkString[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]], v: Rep[String])(implicit pos: SourceContext): Rep[String]
+}
+
+
+trait DynamicRecordHashMapExp extends DynamicRecordHashMap with EffectExp with DynamicRecordExp {
+  abstract class HashMapDef[K:Manifest,V:Manifest,R:Manifest] extends Def[R] {
+    val mK = manifest[K]
+    val mV = manifest[V]
+  }
+  case class HashMapNew[K:Manifest,V:Manifest](specializedKey: String = "", specializedValue: String ="") extends HashMapDef[K,V,HashMap[K,V]] 
+  case class HashMapApply[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K]) extends HashMapDef[K,V,V]
+  case class HashMapSize[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Int]
+  case class HashMapRemoveHead[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,(K,V)]
+  case class HashMapGetOrElseUpdate[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K], v: Block[V], h: Block[Int], e: Block[Boolean], d: Sym[DynamicRecord]) extends HashMapDef[K,V,V]
+  case class HashMapMkString[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], v:Rep[String]) extends HashMapDef[K,V,String]
+
+  def hashmap_new[K:Manifest,V:Manifest](specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) = reflectEffect(HashMapNew[K,V](specializedKey, specializedValue))
+  def hashmap_apply[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K])(implicit pos: SourceContext) = HashMapApply(m,k)
+  def hashmap_size[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]])(implicit pos: SourceContext) = reflectEffect(HashMapSize(m))
+  def hashmap_removehead[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext) = reflectEffect(HashMapRemoveHead(m))
+  def hashmap_getorelseupdate[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K], v: => Exp[V], h: Exp[DynamicRecord] => Exp[Int], e: (Exp[DynamicRecord],Exp[DynamicRecord])=>Exp[Boolean])(implicit pos: SourceContext) = {
+    val b = reifyEffects(v)
+    val f = reifyEffects(h(k.asInstanceOf[Rep[DynamicRecord]]))
+    val ff = fresh[DynamicRecord]
+    val g = reifyEffects(e(k.asInstanceOf[Rep[DynamicRecord]],ff))
+    reflectEffect(HashMapGetOrElseUpdate(m,k,b,f,g,ff))
+  }
+  def hashmap_mkString[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]], v: Rep[String])(implicit pos: SourceContext) = reflectEffect(HashMapMkString(m, v))
+  
+  /*override def syms(p: Any): List[Sym[Any]] = p match {
+    case HashMapGetOrElseUpdate(m, k, v,h,e) => syms(m):::syms(v)
+    case _ => super.syms(p)
+  }*/
+
+  override def boundSyms(p: Any): List[Sym[Any]] = p match {
+    case HashMapGetOrElseUpdate(m, k, v,h,e,d) => effectSyms(h) ::: effectSyms(v) ::: effectSyms(e)
+    case _ => super.boundSyms(p)
+  }
+
+  /*override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
+    case HashMapGetOrElseUpdate(m, k, v,h,e) => freqNormal(m) ::: freqHot(v)
+    case _ => super.symsFreq(e)
+  } */ 
+}
+
+trait ScalaGenDynamicRecordHashMap extends ScalaGenBase with GenericNestedCodegen with ScalaGenEffect {
+  val IR: DynamicRecordHashMapExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case m@HashMapNew(spkey, spvalue) => {
+        val key = if (spkey != "") spkey else remap(m.mK)
+        val value = if (spvalue != "") spvalue else remap(m.mV)
+        stream.println("import scala.collection.mutable.DefaultEntry")
+        stream.println("var " + quote(sym) + " = new Array[DefaultEntry[" + key + "," + value +"]](16)")
+        stream.println("var __" + quote(sym) + "Size = 0")
+    }
+    case HashMapSize(m) => emitValDef(sym, "__" + quote(m) + "Size")
+    case HashMapRemoveHead(m) => {
+        stream.println("val " + quote(sym) + "= {")
+        stream.println("var __idx = 0")
+        stream.println("var __elem = " + quote(m) + "(__idx)")
+        stream.println("while (__elem == null && __idx < " + quote(m) + ".length) {")
+        stream.println("__idx = __idx + 1")
+        stream.println("__elem = " + quote(m) + "(__idx)")
+        stream.println("}")
+        stream.println(quote(m) + "(__idx) = __elem.next")
+        stream.println("__" + quote(m) + "Size -= 1")
+        stream.println("(__elem.key, __elem.value)")
+        stream.println("}")
+    }
+    case HashMapGetOrElseUpdate(m,k,v,h,e,d)  => {
+        stream.println("val ones = " + quote(m) + ".length - 1")
+        stream.println("var bc = ones")
+        stream.println("bc = bc - ((bc >>> 1) & 0x55555555);")
+        stream.println("bc = (bc & 0x33333333) + ((bc >>> 2) & 0x33333333);")
+        stream.println("bc = (bc + (bc >>> 4)) & 0x0f0f0f0f;")
+        stream.println("bc = bc + (bc >>> 8);")
+        stream.println("bc = bc + (bc >>> 16);")
+        stream.println("bc = bc & 0x3f;")
+        stream.println("var hc = {")
+        emitBlock(h)
+        stream.println(quote(getBlockResult(h)))
+        stream.println("} * 0x9e3775cd")
+        stream.println("hc = ((hc >>> 24)           ) |")
+        stream.println("     ((hc >>   8) &   0xFF00) |")
+        stream.println("     ((hc <<   8) & 0xFF0000) |")
+        stream.println("     ((hc << 24));")
+        stream.println("hc * 0x9e3775cd")
+        stream.println("val rotation = bc % 32")
+        stream.println("val improved = (hc >>> rotation) | (hc << (32 - rotation))")
+        stream.println("val h = (improved >> (32 - bc)) & ones")
+        stream.println("var e = " + quote(m) + "(h)")
+        stream.println("while (e != null && !{")
+        val savedStream = stream
+        val newSource = new StringWriter()
+        stream = new PrintWriter(newSource)
+        emitBlock(e)
+        stream = savedStream
+        val outStream = newSource.toString.replaceAll(quote(d), "e.key")
+        stream.println(outStream)
+        stream.println(quote(getBlockResult(e)))
+        stream.println("}) e = e.next")
+        stream.println("val " + quote(sym) + " = {")
+        stream.println("if (e eq null) {")
+        stream.println("val entry = new DefaultEntry(" + quote(k) + ".clone, {")
+        emitBlock(v)
+        stream.println(quote(getBlockResult(v)))
+        stream.println("})")
+        stream.println("entry.next = " + quote(m) + "(h)")
+        stream.println(quote(m) + "(h) = entry")
+        stream.println("__" + quote(m) + "Size = __" + quote(m) + "Size + 1")
+        stream.println("entry.value")
+        stream.println("} else e.value")
+        stream.println("}")
+    }
+    case _ => super.emitNode(sym, rhs)
+  }
 }

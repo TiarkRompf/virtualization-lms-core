@@ -235,7 +235,7 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
  
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IfThenElse(c,a,b) =>
-      stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
+      emitValDef(sym,"if (" + quote(c) + ") {")
       emitBlock(a)
       stream.println(quote(getBlockResult(a)))
       stream.println("} else {")

@@ -234,7 +234,9 @@ trait ScalaGenTupleOps extends ScalaGenBase {
 
     case ProductApply(x,i) => emitValDef(sym, quote(x) + "._" + quote(i))    
     case ListToTuple(y) => {
-        emitValDef(sym, "(" + y.map(n => quote(n)).mkString(",") + ")")
+        // Avoid unnecessary tuple construction
+        if (y.size == 1) emitValDef(sym, y.map(n => quote(n)).mkString(","))
+        else emitValDef(sym, "new Tuple" + y.size + "(" + y.map(n => quote(n)).mkString(",") + ")")
     }   
  
     case _ => super.emitNode(sym, rhs)

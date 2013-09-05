@@ -60,12 +60,12 @@ trait ScalaGenMiscOps extends ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case PrintF(f,x) => emitValDef(sym, "printf(" + (f::x.map(quote)).mkString(",") + ")")
-    case PrintLn(s) => emitValDef(sym, "println(" + quote(s) + ")")
-    case Print(s) => emitValDef(sym, "print(" + quote(s) + ")")
-    case Exit(a) => emitValDef(sym, "exit(" + quote(a) + ")")
-    case Return(x) => emitValDef(sym, "return " + quote(x))
-    case Error(s) => emitValDef(sym, "error(" + quote(s) + ")")
+    case PrintF(f,x) => stream.println("printf(" + (f::x.map(quote)).mkString(",") + ")")
+    case PrintLn(s) => stream.println("println(" + quote(s) + ")")
+    case Print(s) => stream.println("print(" + quote(s) + ")")
+    case Exit(a) => stream.println("exit(" + quote(a) + ")")
+    case Return(x) => stream.println("return " + quote(x))
+    case Error(s) => stream.println("error(" + quote(s) + ")")
     case _ => super.emitNode(sym, rhs)
   }
 }

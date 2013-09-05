@@ -6,12 +6,13 @@ import scala.virtualization.lms.internal._
 import scala.collection.mutable.Set
 import scala.reflect.SourceContext
 
-trait SetOps extends Base {
+trait SetOps extends Base with Variables {
   object Set {
     def apply[A:Manifest](xs: Rep[A]*)(implicit pos: SourceContext) = set_new[A](xs)
   }
 
   implicit def repSetToSetOps[A:Manifest](v: Rep[Set[A]]) = new setOpsCls(v)
+  implicit def varSetToSetOps[A:Manifest](v: Var[Set[A]]) = new setOpsCls(readVar(v))
 
   class setOpsCls[A:Manifest](s: Rep[Set[A]]) {
     def contains(i: Rep[A])(implicit pos: SourceContext) = set_contains(s, i)
@@ -27,7 +28,7 @@ trait SetOps extends Base {
   def set_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext) : Rep[Set[A]]
   def set_contains[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit pos: SourceContext) : Rep[Boolean]
   def set_add[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit pos: SourceContext) : Rep[Unit]
-  def set_remove[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit pos: SourceContext) : Rep[Unit]
+  def set_remove[A:Manifest](s: Rep[Set[A]], i: Rep[A])(implicit pos: SourceContext) : Rep[Boolean]
   def set_size[A:Manifest](s: Rep[Set[A]])(implicit pos: SourceContext) : Rep[Int]
   def set_clear[A:Manifest](s: Rep[Set[A]])(implicit pos: SourceContext) : Rep[Unit]
   def set_toseq[A:Manifest](s: Rep[Set[A]])(implicit pos: SourceContext): Rep[Seq[A]]
@@ -39,7 +40,7 @@ trait SetOpsExp extends SetOps with ArrayOps with EffectExp {
   case class SetNew[A:Manifest](xs: Seq[Exp[A]], mA: Manifest[A]) extends Def[Set[A]]
   case class SetContains[A:Manifest](s: Exp[Set[A]], i: Exp[A]) extends Def[Boolean]
   case class SetAdd[A:Manifest](s: Exp[Set[A]], i: Exp[A]) extends Def[Unit]
-  case class SetRemove[A:Manifest](s: Exp[Set[A]], i: Exp[A]) extends Def[Unit]
+  case class SetRemove[A:Manifest](s: Exp[Set[A]], i: Exp[A]) extends Def[Boolean]
   case class SetSize[A:Manifest](s: Exp[Set[A]]) extends Def[Int]
   case class SetClear[A:Manifest](s: Exp[Set[A]]) extends Def[Unit]
   case class SetToSeq[A:Manifest](s: Exp[Set[A]]) extends Def[Seq[A]]
@@ -52,7 +53,7 @@ trait SetOpsExp extends SetOps with ArrayOps with EffectExp {
   def set_new[A:Manifest](xs: Seq[Exp[A]])(implicit pos: SourceContext) = reflectMutable(SetNew(xs, manifest[A]))
   def set_contains[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit pos: SourceContext) = SetContains(s, i)
   def set_add[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit pos: SourceContext) = reflectWrite(s)(SetAdd(s, i))
-  def set_remove[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit pos: SourceContext) = reflectWrite(s)(SetRemove(s, i))
+  def set_remove[A:Manifest](s: Exp[Set[A]], i: Exp[A])(implicit pos: SourceContext) = reflectEffect(SetRemove(s, i))
   def set_size[A:Manifest](s: Exp[Set[A]])(implicit pos: SourceContext) = SetSize(s)
   def set_clear[A:Manifest](s: Exp[Set[A]])(implicit pos: SourceContext) = reflectWrite(s)(SetClear(s))
   def set_toseq[A:Manifest](s: Exp[Set[A]])(implicit pos: SourceContext) = SetToSeq(s)

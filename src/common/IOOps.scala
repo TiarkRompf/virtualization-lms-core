@@ -86,9 +86,11 @@ trait IOOps extends Variables with OverloadHack {
   }
   class ObjectInputStreamOps(x: Rep[ObjectInputStream]) {
     def readObject(dynamicType: String = null)(implicit pos: SourceContext) = obj_ois_readObject(x, dynamicType)
+    def close()(implicit pos: SourceContext) = obj_ois_close(x)
   }
   implicit def oisTooisOps(x: Rep[ObjectInputStream]) = new ObjectInputStreamOps(x)
   def obj_ois_apply(s: Rep[FileInputStream]): Rep[ObjectInputStream]
+  def obj_ois_close(s: Rep[ObjectInputStream]): Rep[Unit]
   def obj_ois_readObject(x: Rep[ObjectInputStream], dynamicType: String = null): Rep[Object]
 
   object ObjectOutputStream {
@@ -130,6 +132,7 @@ trait IOOpsExp extends IOOps with DSLOpsExp {
   case class ObjFosApply(s: Exp[File]) extends Def[FileOutputStream]
   case class ObjFisApply(s: Exp[String]) extends Def[FileInputStream]
   case class ObjOisApply(s: Exp[FileInputStream]) extends Def[ObjectInputStream]
+  case class ObjOisClose(s: Exp[ObjectInputStream]) extends Def[Unit]
   case class ObjOisAvailable(s: Exp[FileInputStream]) extends Def[Int]
   case class ObjOisReadObject(s: Exp[ObjectInputStream], dynamicType: String = null) extends Def[Object]
 
@@ -153,6 +156,7 @@ trait IOOpsExp extends IOOps with DSLOpsExp {
   def obj_fos_apply(s: Exp[File])(implicit pos: SourceContext): Exp[FileOutputStream] = reflectEffect(ObjFosApply(s))
   def obj_fis_apply(s: Rep[String]) = reflectEffect(ObjFisApply(s))
   def obj_ois_apply(s: Rep[FileInputStream]) = reflectEffect(ObjOisApply(s))
+  def obj_ois_close(s: Rep[ObjectInputStream]) = reflectEffect(ObjOisClose(s))
   def obj_fis_available(s: Rep[FileInputStream]) = reflectEffect(ObjOisAvailable(s))
   def obj_ois_readObject(x: Rep[ObjectInputStream], dynamicType: String = null) = reflectEffect(ObjOisReadObject(x, dynamicType))
 
@@ -202,6 +206,7 @@ trait ScalaGenIOOps extends ScalaGenBase {
     case ObjFosApply(s) => emitValDef(sym, "new java.io.FileOutputStream(" + quote(s) + ",true)")
     case ObjFisApply(s) => emitValDef(sym, "new java.io.FileInputStream(" + quote(s) + ")")
     case ObjOisApply(s) => emitValDef(sym, "new java.io.ObjectInputStream(" + quote(s) + ")")
+    case ObjOisClose(s) => emitValDef(sym, quote(s) + ".close")
     case ObjOisAvailable(s) => emitValDef(sym, quote(s) + ".available")
     case ObjOisReadObject(s, dtype) => {
         if (dtype == null) emitValDef(sym, quote(s) + ".readObject")

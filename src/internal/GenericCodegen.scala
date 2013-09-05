@@ -177,7 +177,11 @@ trait GenericCodegen extends BlockTraversal {
     case Const(l: Long) => l.toString + "L"
     case Const(null) => "null"
     case Const(z) => z.toString
-    case Sym(n) => "x"+n
+    case s@Sym(n) => {
+        // Avoid printing symbols that are of type null
+        if (s.tp.toString == "Unit") ""
+        else "x"+n
+    }
     case x@_ if x == Const(null) => "null"
     case null => "null" 
     case _ => throw new RuntimeException("could not quote " + x)

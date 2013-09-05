@@ -1,27 +1,35 @@
 package scala.virtualization.lms
 package internal
 
-import java.io._
+import java.io.{StringWriter, PrintWriter}
 import scala.virtualization.lms.util._
 
+import scala.sys.process._
 import scala.tools.nsc._
 import scala.tools.nsc.util._
 import scala.tools.nsc.reporters._
 import scala.tools.nsc.io._
-
 import scala.tools.nsc.interpreter.AbstractFileClassLoader
+
+import java.lang.management.ManagementFactory;
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.CompositeDataSupport;
 
 object ScalaCompile {
   var compileCount = 0
   var dumpGeneratedCode = false
   var compiler: Global = _
   var reporter: ConsoleReporter = _
+  // From what I understand, this is not currently exported from the JVM, but it used internally.
+  // (To check, run java -XX:+PrintFlagsFinal -version | grep Huge) and check for the limit.
+  val maximumHugeMethodLimit = 8000 
+  val byteCodeSizeCheckEnabled: Boolean = true
   var cleanerEnabled: Boolean = true 
-  //var output: ByteArrayOutputStream = _ 
   val source = new StringWriter()
-  val writer = new PrintWriter(source)
-  val fileSystem = new VirtualDirectory("<vfs>", None)
-  val loader = new AbstractFileClassLoader(fileSystem, this.getClass.getClassLoader)
+  var writer = new PrintWriter(source)
+  val workingDir = System.getProperty("user.dir") + "/CompiledClasses"
+  val loader = new AbstractFileClassLoader(AbstractFile.getDirectory(workingDir), this.getClass.getClassLoader)
   lazy val comp = this.compiler
 }
 
@@ -30,10 +38,6 @@ trait ScalaCompile extends Expressions {
   val codegen: ScalaCodegen { val IR: ScalaCompile.this.type }
 
   def setupCompiler() = {
-    /*
-      output = new ByteArrayOutputStream()
-      val writer = new PrintWriter(new OutputStreamWriter(output))
-    */
     val settings = new Settings()
 	val pathSeparator = System.getProperty("path.separator")
 
@@ -46,7 +50,13 @@ trait ScalaCompile extends Expressions {
       case _ => System.getProperty("sun.boot.class.path")
     }
     settings.encoding.value = "UTF-8"
-    settings.outdir.value = "."
+
+    // Create output directory if it does not exist
+    val f = new java.io.File(ScalaCompile.workingDir)
+    if (!f.exists)
+        f.mkdirs()
+
+    settings.outdir.value = ScalaCompile.workingDir
     settings.extdirs.value = ""
     //settings.verbose.value = true
     // -usejavacp needed on windows?
@@ -59,8 +69,39 @@ trait ScalaCompile extends Expressions {
     System.out.println("Initializing compiler...")
     ScalaCompile.source.getBuffer().setLength(0) 
     ScalaCompile.compileCount = ScalaCompile.compileCount + 1
-    val className = "staged$" + ScalaCompile.compileCount
+    val className = "staged" + ScalaCompile.compileCount
     className
+  }
+
+  def checkByteCodeSize(className: String): Int = {
+    lazy val runtime: Runtime = Runtime.getRuntime();
+    // Is compiling huge methods allowed?
+    val mserver = ManagementFactory.getPlatformMBeanServer();
+    val name = new ObjectName("com.sun.management:type=HotSpotDiagnostic");
+    val operationName = "getVMOption";
+    val params = Array[Object]("DontCompileHugeMethods")
+    val signature = Array[String](classOf[String].getName())
+    val result = mserver.invoke(name,operationName,params,signature).asInstanceOf[CompositeDataSupport].get("value")
+    // If yes, then check the size
+    if (result == "true") {
+        val cmd = Seq("javap","-classpath",ScalaCompile.workingDir,"-c",className) #| Seq("cut","-d:","-f1") #| Seq("sort","-n") #| Seq("tail","-n1")
+        val size = cmd.!!.trim.toInt
+        if (size > ScalaCompile.maximumHugeMethodLimit) {
+            println("\n\n--------------------------------------------------------------------------------")
+            println("CATASTROPHIC ERROR ENCOUNTERED!!! YOUR CODE IS TOO BIG TO BE COMPILED BY THE JVM")
+            println("AND WILL BE INTERPRETED INSTEAD. THIS WILL CAUSE A DRAMATIC PERFORMANCE DROP.")
+            println("THE DEVELOPERS WORRY ABOUT YOUR MENTAL HEALTH, AND CANNOT ALLOW YOU TO EXPERIENCE")
+            println("THAT. EXITING NOW!")
+            println("")
+            println("Note: You have two alternatives:")
+            println("\t(a) Refactor your code so that the generated code size is smaller.(advised)")
+            println("\t(b) Set JVM Option DontCompileHugeMethods to false and rerun (Not advised).")
+            println("--------------------------------------------------------------------------------")
+            System.exit(0)
+        }
+        return size;
+    }
+    -1;
   }
 
   def compileLoadClass(src: StringWriter, className: String) = {
@@ -68,21 +109,25 @@ trait ScalaCompile extends Expressions {
         setupCompiler()
     if (ScalaCompile.dumpGeneratedCode) println(src)
 
-    ScalaCompile.compiler.settings.outputDirs.setSingleOutput(ScalaCompile.fileSystem)
+    ScalaCompile.compiler.settings.outputDirs.setSingleOutput(AbstractFile.getDirectory(ScalaCompile.workingDir))
     val run = new ScalaCompile.comp.Run
     var parsedsrc = src.toString
 
     if (ScalaCompile.cleanerEnabled) {
         println("\n\n------------------------------------------------")
-        println("EXPERIMENTAL:: CODE BEFORE RUNNING CODEGEN CLEANER")
-        println(src.toString)
+        println("EXPERIMENTAL:: CODE BEFORE RUNNING CODEGEN CLEANER.\n" + parsedsrc)
         parsedsrc = CodegenCleaner.clean(src.toString)
-        println("EXPERIMENTAL:: CODE AFTER RUNNING CODEGEN CLEANER")
-        println(parsedsrc)
         println("\n\n------------------------------------------------")
+        println("EXPERIMENTAL:: CODE AFTER RUNNING CODEGEN CLEANER\n" + parsedsrc)
     }
 
     run.compileSources(List(new util.BatchSourceFile("<stdin>", parsedsrc)))
+
+    if (ScalaCompile.byteCodeSizeCheckEnabled) {
+        val size = checkByteCodeSize(className)
+        if (size != -1) println("ByteCode size of the compiled code is: " + size)
+    }
+
     ScalaCompile.reporter.printSummary()
     if (ScalaCompile.reporter.hasErrors) {
       println("compilation of the following code had errors:")

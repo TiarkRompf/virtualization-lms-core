@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.reflect.SourceContext
+import scala.virtualization.lms.internal.Expressions
 
 trait LiftBoolean {
   this: Base =>
@@ -10,10 +11,18 @@ trait LiftBoolean {
   implicit def boolToBoolRep(b: Boolean) = unit(b)
 }
 
-trait BooleanOps extends Variables {
+trait BooleanOps extends Variables with Expressions {
   def infix_unary_!(x: Rep[Boolean])(implicit pos: SourceContext) = boolean_negate(x)
   def infix_&&(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext) = boolean_and(lhs,rhs)
+  def infix_&&(lhs: Boolean, rhs: Rep[Boolean])(implicit pos: SourceContext): Exp[Boolean] = {
+    if (lhs == true) rhs.asInstanceOf[Exp[Boolean]]
+    else Const(false)
+  }
   def infix_||(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext) = boolean_or(lhs,rhs)
+  def infix_||(lhs: Boolean, rhs: Rep[Boolean])(implicit pos: SourceContext): Exp[Boolean] = {
+    if (lhs == true) Const(true)
+    else rhs.asInstanceOf[Exp[Boolean]]
+  }
 
   def boolean_negate(lhs: Rep[Boolean])(implicit pos: SourceContext): Rep[Boolean]
   def boolean_and(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext): Rep[Boolean]
@@ -26,8 +35,18 @@ trait BooleanOpsExp extends BooleanOps with BaseExp {
   case class BooleanOr(lhs: Exp[Boolean], rhs: Exp[Boolean]) extends Def[Boolean]
 
   def boolean_negate(lhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = BooleanNegate(lhs)
-  def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = BooleanAnd(lhs,rhs)
-  def boolean_or(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = BooleanOr(lhs,rhs)
+  def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = {
+    lhs match {
+        case x@Const(true) => x
+        case _ => BooleanAnd(lhs,rhs)
+    }
+  }
+  def boolean_or(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = {
+    lhs match {
+        case x@Const(false) => rhs
+        case _ => BooleanOr(lhs,rhs)
+    }
+  }
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case BooleanNegate(x) => boolean_negate(f(x))

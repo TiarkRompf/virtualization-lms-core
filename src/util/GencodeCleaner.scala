@@ -38,12 +38,36 @@ object CodegenCleaner {
                 }
             } else x
         )
-        println("PHASE 1A DONE")
+//        println("PHASE 1A DONE")
         // Now remove all references to this val
         resList.foreach( res => {
-            lines = lines.map( line => line.replaceAll(res._1 + "\\.", res._2 + ".").replaceAll(res._1 + "$",res._2).replaceAll(res._1 + " ", res._2 + " ").replaceAll(res._1 + "\\(",res._2 + "(").replaceAll(res._1 + "\\+",res._2 + "+").replaceAll(res._1 + "\\)",res._2 + ")"))
+            lines = lines.map( line => line.replaceAll(res._1 + "\\.", res._2 + ".").replaceAll(res._1 + "$",res._2).replaceAll(res._1 + " ", res._2 + " ").replaceAll(res._1 + "\\(",res._2 + "(").replaceAll(res._1 + "\\+",res._2 + "+").replaceAll(res._1 + "\\)",res._2 + ")").replaceAll("= __" + res._1 + "Size", "= __" + res._2 + "Size").replaceAll("^__" + res._1 + "Size", "__" + res._2 + "Size").replaceAll("< __" + res._1 + "Size", "< __" + res._2 + "Size") )
         })
-        println("PHASE 1B DONE")
+
+        // Extract "var x = x" lines
+        resList = new ListBuffer[(String,String)]()
+        lines = lines.map(x =>
+            if (pattern4.matcher(x).find) {
+                val y = x.split("=")
+                val valId = y(0).replaceAll("var ","").trim
+                val lhs = y(1).trim
+                variables.find(z => z._1 == lhs) match {
+                    case Some(w) => {
+                        resList += new Tuple2[String,String](valId,lhs)
+                        ""
+                    }
+                    case None => x
+                }
+            } else x
+        )
+//        println("PHASE 1A DONE")
+        // Now remove all references to this val
+        resList.foreach( res => {
+            lines = lines.map( line => line.replaceAll(res._1 + "\\.", res._2 + ".").replaceAll(res._1 + "$",res._2).replaceAll(res._1 + " ", res._2 + " ").replaceAll(res._1 + "\\(",res._2 + "(").replaceAll(res._1 + "\\+",res._2 + "+").replaceAll(res._1 + "\\)",res._2 + ")").replaceAll("= __" + res._1 + "Size", "= __" + res._2 + "Size").replaceAll("^__" + res._1 + "Size", "__" + res._2 + "Size").replaceAll("< __" + res._1 + "Size", "< __" + res._2 + "Size") )
+        })
+
+
+//        println("PHASE 1B DONE")
         // CASE 2
         resList = new ListBuffer[(String,String)]()
         lines = lines.map( line => {
@@ -60,27 +84,27 @@ object CodegenCleaner {
                 }
             } else line
         })
-        println("PHASE 2A DONE")
+//        println("PHASE 2A DONE")
         // Now change the val to var
         resList.foreach( res => {
             lines = lines.map( line => line.replaceAll("val " + res._2 + " ","var " + res._1 + " "))
         })
-        println("PHASE 2B DONE")
+//        println("PHASE 2B DONE")
         // CASE 3
         for (i <- 1 to lines.length - 1) {
             if (lines(i).matches("x[0-9]*$") && pattern3.matcher(lines(i-1)).find) {
                 if (lines(i-1).startsWith("val " + lines(i))) {
-                    val lhs = lines(i-1).split("=")(1)
+                    val lhs = lines(i-1).split("=").drop(1).mkString("=")
                     lines(i-1) = lhs
                     lines(i) = ""
                 }
             }
         }
-        println("PHASE 3 DONE")
+//        println("PHASE 3 DONE")
 
         // print result
         lines = lines.filter(x => x!= "" && x!="()")
-        println("PHASE 4 DONE")
+//        println("PHASE 4 DONE")
         lines.mkString("\n")
     }
 }
