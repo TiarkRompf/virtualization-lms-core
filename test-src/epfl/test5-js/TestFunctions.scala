@@ -63,7 +63,7 @@ trait JSGenTupleOps extends JSGenBase {
   }
 }
 
-trait FunctionsProg { this: Print with Functions =>
+trait FunctionsProg { this: Print with Functions with IfThenElse with Equal =>
   def test(x: Rep[Any]): Rep[Any] = {
     val f = fun { x : Rep[Any] =>
       print("foo")
@@ -71,6 +71,9 @@ trait FunctionsProg { this: Print with Functions =>
     }
     f(f(x))
   }
+
+  def test2(x: Rep[Double]): Rep[Double => Double] =
+    fun {(y: Rep[Double]) => if(y == x) unit(2 : Double) else y}
 }
 
 trait FunctionsRecursiveProg { this: Arith with Print with Functions =>
@@ -144,18 +147,24 @@ class TestFunctions extends FileDiffSuite {
 
       println("-- begin")
 
-      new FunctionsProg with PrintExp with FunctionsExp { self =>
-        val codegen = new ScalaGenPrint with ScalaGenFunctions { val IR: self.type = self }
+      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp with EqualExp{ self =>
+        val codegen = new ScalaGenPrint with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenEqual{ val IR: self.type = self }
 
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "Test", new PrintWriter(System.out))
+
+        val g = (x: Rep[Double]) => test2(x)
+        codegen.emitSource(g, "Test2", new PrintWriter(System.out))
       }
 
-      new FunctionsProg with PrintExp with FunctionsExp { self =>
-        val codegen = new JSGenPrint with JSGenFunctions { val IR: self.type = self }
+      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp with EqualExp{ self =>
+        val codegen = new JSGenPrint with JSGenFunctions with JSGenIfThenElse with JSGenEqual{ val IR: self.type = self }
 
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "main", new PrintWriter(System.out))
+
+        val g = (x: Rep[Double]) => test2(x)
+        codegen.emitSource(g, "main2", new PrintWriter(System.out))
       }
 
       println("-- end")
@@ -168,15 +177,17 @@ class TestFunctions extends FileDiffSuite {
 
       println("-- begin")
 
-      new FunctionsProg with PrintExp with FunctionsExp { self =>
-        val codegen = new ScalaGenPrint with ScalaGenFunctions { val IR: self.type = self }
+      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp with EqualExp{ self =>
+        val codegen = new ScalaGenPrint with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenEqual{
+          val IR: self.type = self
+        }
 
         val f = (x: Rep[Double]) => doLambda{(y: Rep[Int]) => test(x)}
         codegen.emitSource(f, "Test", new PrintWriter(System.out))
       }
 
-      new FunctionsProg with PrintExp with FunctionsExp { self =>
-        val codegen = new JSGenPrint with JSGenFunctions { val IR: self.type = self }
+      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp  with EqualExp{ self =>
+        val codegen = new JSGenPrint with JSGenFunctions with JSGenIfThenElse  with JSGenEqual{ val IR: self.type = self }
 
         val f = (x: Rep[Double]) => doLambda{(y: Rep[Int]) => test(x)}
         codegen.emitSource(f, "main", new PrintWriter(System.out))
