@@ -90,7 +90,7 @@ trait ScalaGenHashMultiMapOpt extends GenericNestedCodegen with ScalaGenEffect {
         stream.println("val " + quote(sym) + " = " + quote(m) + "(" + emitKeyModulo(m,k) + ")")
     }
     case HashMultiMapUpdate(m,k,v) => {
-        stream.println("val " + quote(sym) + " = {")
+        emitValDef(sym, "{")
         stream.println("\tval __elem = " + quote(m) + "(" + emitKeyModulo(m,k) + ")")
         stream.println("\tif (__elem == null) " + quote(m) + "(" + emitKeyModulo(m,k) + ") = " + quote(v))
         stream.println("\telse {")

@@ -209,7 +209,7 @@ trait ScalaGenDynamicRecord extends ScalaGenBase with GenericNestedCodegen {
                 stream.println("}")
             }
             case DynamicRecordForEach(x, init, block) => 
-                stream.println("val " + quote(sym) + " = {")
+                emitValDef(sym, "{")
                 stream.println("\tvar " + quote(init) + "=" + quote(x))
                 stream.println("\twhile (" + quote(init) + " != null) {")
                 emitBlock(block)

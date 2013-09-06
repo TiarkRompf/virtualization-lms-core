@@ -111,7 +111,8 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
       stream.println("}")
       stream.println("out")
       stream.println("}")
-    case SetForeach(a,x,block) => stream.println("val " + quote(sym) + " = " + quote(a) + ".foreach{")    
+    case SetForeach(a,x,block) => 
+      emitValDef(sym, quote(a) + ".foreach{")    
       stream.println(quote(x) + " => ")
       emitBlock(block)
       stream.println(quote(getBlockResult(block)))

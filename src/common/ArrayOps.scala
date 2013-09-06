@@ -31,6 +31,7 @@ trait ArrayOps extends Variables {
     def sort(implicit pos: SourceContext) = array_sort(a)
     def map[B:Manifest](f: Rep[T] => Rep[B]) = array_map(a,f)
     def toSeq = array_toseq(a)
+    def zip[B: Manifest](a2: Rep[Array[B]]) = array_zip(a,a2)
   }    
 
   def array_obj_new[T:Manifest](n: Rep[Int], specializedType: Rep[String] = unit("")): Rep[Array[T]]
@@ -45,6 +46,7 @@ trait ArrayOps extends Variables {
   def array_sort[T:Manifest](x: Rep[Array[T]])(implicit pos: SourceContext): Rep[Array[T]]
   def array_map[A:Manifest,B:Manifest](a: Rep[Array[A]], f: Rep[A] => Rep[B]): Rep[Array[B]]
   def array_toseq[A:Manifest](a: Rep[Array[A]]): Rep[Seq[A]]
+  def array_zip[A:Manifest, B: Manifest](a: Rep[Array[A]], a2: Rep[Array[B]]): Rep[Array[(A,B)]]
 }
 
 trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
@@ -70,6 +72,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
     val array = NewArray[B](a.length)
   }
   case class ArrayToSeq[A:Manifest](x: Exp[Array[A]]) extends Def[Seq[A]]
+  case class ArrayZip[A:Manifest, B: Manifest](x: Exp[Array[A]], x2: Exp[Array[B]]) extends Def[Array[(A,B)]]
   
   def array_obj_new[T:Manifest](n: Exp[Int], specializedType: Rep[String] = unit("")) = reflectEffect(ArrayNew(n, specializedType))
   def array_obj_fromseq[T:Manifest](xs: Seq[T]) = /*reflectMutable(*/ ArrayFromSeq(xs) /*)*/
@@ -91,6 +94,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
     reflectEffect(ArrayMap(a, x, b), summarizeEffects(b))    
   }
   def array_toseq[A:Manifest](a: Exp[Array[A]]) = ArrayToSeq(a)
+  def array_zip[A:Manifest, B: Manifest](a: Exp[Array[A]], a2: Exp[Array[B]]) = reflectEffect(ArrayZip(a,a2))
   
   //////////////
   // mirroring
@@ -214,7 +218,8 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
     case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
     case ArrayUpdate(x,n,y) => emitValDef(sym, quote(x) + "(" + quote(n) + ") = " + quote(y))
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
-    case ArrayForeach(a,x,block) => stream.println("val " + quote(sym) + " = " + quote(a) + ".foreach{")    
+    case ArrayForeach(a,x,block) => 
+      emitValDef(sym, quote(a) + ".foreach{")    
       stream.println(quote(x) + " => ")
       emitBlock(block)
       stream.println(quote(getBlockResult(block)))
@@ -248,6 +253,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
       // stream.println(quote(getBlockResult(blk)))
       // stream.println("}")  
     case ArrayToSeq(a) => emitValDef(sym, quote(a) + ".toSeq")
+    case ArrayZip(a,a2) => emitValDef(sym, quote(a) + " zip " + quote(a2)) 
     case _ => super.emitNode(sym, rhs)
   }
 }

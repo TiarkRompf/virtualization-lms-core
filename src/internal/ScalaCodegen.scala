@@ -111,8 +111,9 @@ trait ScalaCodegen extends GenericCodegen {
     }
     if (sym.tp != manifest[Unit])
         stream.println("val " + quote(sym) + " = " + rhs + extra)
-    else
+    else {
         stream.println(rhs + extra)
+    }
   }
   
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
