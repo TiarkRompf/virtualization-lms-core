@@ -8,18 +8,18 @@ var x9 = null.asInstanceOf[scala.Function1[Any, Any]]
 x9 = {x10: (Any) => 
 val x11 = println("bar")
 val x12 = x9(x10)
-x12
+x12: Any
 }
 val x1 = {x2: (Any) => 
 val x3 = println("foo")
-x2
+x2: Any
 }
 val x14 = x1(x0)
 val x15 = x1(x14)
 val x16 = x9(x15)
 val x5 = {x6: (Any) => 
 val x7 = println("baz")
-1.0
+1.0: Double
 }
 val x17 = x5(x16)
 x17

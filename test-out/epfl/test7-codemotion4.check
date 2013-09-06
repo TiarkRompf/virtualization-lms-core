@@ -11,7 +11,7 @@ val x3 = println(x2)
 } else {
 ()
 }
-x5
+x5: Unit
 }
 x7
 }
