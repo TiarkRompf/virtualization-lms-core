@@ -63,14 +63,17 @@ trait JSGenTupleOps extends JSGenBase {
   }
 }
 
-trait FunctionsProg { this: Print with Functions =>
+trait FunctionsProg { this: Print with Functions with IfThenElse with Equal =>
   def test(x: Rep[Any]): Rep[Any] = {
     val f = fun { x : Rep[Any] =>
       print("foo")
       x
-    } 
+    }
     f(f(x))
   }
+
+  def test2(x: Rep[Double]): Rep[Double => Double] =
+    fun {(y: Rep[Double]) => if(y == x) unit(2 : Double) else y}
 }
 
 trait FunctionsRecursiveProg { this: Arith with Print with Functions =>
@@ -78,7 +81,7 @@ trait FunctionsRecursiveProg { this: Arith with Print with Functions =>
     val f = fun { x : Rep[Any] =>
       print("foo")
       x
-    } 
+    }
     lazy val g : Rep[Any => Any] = fun { x =>
       print("bar")
       g(x)
@@ -136,26 +139,32 @@ trait SchedFunProg { this: Functions with Arith with Equal with IfThenElse =>
 }
 
 class TestFunctions extends FileDiffSuite {
-  
+
   val prefix = "test-out/epfl/test5-"
-  
+
   def testFunctions = {
     withOutFile(prefix+"functions") {
-    
+
       println("-- begin")
 
-      new FunctionsProg with PrintExp with FunctionsExp { self =>
-        val codegen = new ScalaGenPrint with ScalaGenFunctions { val IR: self.type = self }
-        
+      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp with EqualExp{ self =>
+        val codegen = new ScalaGenPrint with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenEqual{ val IR: self.type = self }
+
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "Test", new PrintWriter(System.out))
+
+        val g = (x: Rep[Double]) => test2(x)
+        codegen.emitSource(g, "Test2", new PrintWriter(System.out))
       }
-    
-      new FunctionsProg with PrintExp with FunctionsExp { self =>
-        val codegen = new JSGenPrint with JSGenFunctions { val IR: self.type = self }
-        
+
+      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp with EqualExp{ self =>
+        val codegen = new JSGenPrint with JSGenFunctions with JSGenIfThenElse with JSGenEqual{ val IR: self.type = self }
+
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "main", new PrintWriter(System.out))
+
+        val g = (x: Rep[Double]) => test2(x)
+        codegen.emitSource(g, "main2", new PrintWriter(System.out))
       }
 
       println("-- end")
@@ -163,21 +172,47 @@ class TestFunctions extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"functions")
   }
 
+  def testFunRetFun = {
+    withOutFile(prefix+"funretfun") {
+
+      println("-- begin")
+
+      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp with EqualExp{ self =>
+        val codegen = new ScalaGenPrint with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenEqual{
+          val IR: self.type = self
+        }
+
+        val f = (x: Rep[Double]) => doLambda{(y: Rep[Int]) => test(x)}
+        codegen.emitSource(f, "Test", new PrintWriter(System.out))
+      }
+
+      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp  with EqualExp{ self =>
+        val codegen = new JSGenPrint with JSGenFunctions with JSGenIfThenElse  with JSGenEqual{ val IR: self.type = self }
+
+        val f = (x: Rep[Double]) => doLambda{(y: Rep[Int]) => test(x)}
+        codegen.emitSource(f, "main", new PrintWriter(System.out))
+      }
+
+      println("-- end")
+    }
+    assertFileEqualsCheck(prefix+"funretfun")
+  }
+
   def testFunctionsRecursive = {
     withOutFile(prefix+"functionsrecursive") {
-    
+
       println("-- begin")
 
       new FunctionsRecursiveProg with ArithExpOpt with PrintExp with FunctionsRecursiveExp { self =>
         val codegen = new ScalaGenArith with ScalaGenPrint with ScalaGenFunctions { val IR: self.type = self }
-        
+
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "Test", new PrintWriter(System.out))
       }
-    
+
       new FunctionsRecursiveProg with ArithExpOpt with PrintExp with FunctionsRecursiveExp { self =>
         val codegen = new JSGenArith with JSGenPrint with JSGenFunctions { val IR: self.type = self }
-        
+
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "main", new PrintWriter(System.out))
       }
