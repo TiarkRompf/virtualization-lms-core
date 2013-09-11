@@ -449,7 +449,7 @@ trait Effects extends Expressions with Blocks with Utils {
       val deps = calculateDependencies(u)
       val zd = Reflect(x,u,deps)
       if (mustIdempotent(u)) {
-        findLocalDefinition(zd) map { _.asInstanceOf[Stm].defines(zd).asInstanceOf[Exp[A]] } getOrElse { // TODO: opt -- use HashMap
+        findLocalDefinition(zd) map { _.asInstanceOf[Stm].defines(zd).get.asInstanceOf[Exp[A]] } getOrElse { // TODO: opt -- use HashMap
 //        findDefinition(zd) map (_.sym) filter (context contains _) getOrElse { // local cse TODO: turn around and look at context first??
           val z = fresh[A]
           if (!x.toString.startsWith("ReadVar")) { // supress output for ReadVar

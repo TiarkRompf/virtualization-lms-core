@@ -23,7 +23,7 @@ trait Expressions extends Utils {
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
-    var sourceInfo = Thread.currentThread.getStackTrace // will go away
+    //var sourceInfo = Thread.currentThread.getStackTrace // will go away
     var sourceContexts: List[SourceContext] = Nil
     override def pos = sourceContexts
     def withPos(pos: List[SourceContext]) = { sourceContexts :::= pos; this }
