@@ -102,7 +102,7 @@ class TestFac extends FileDiffSuite {
         with FunctionsExternalDef2
       import FacProgExp._
 
-      val r = { val x = fresh; fac(x) + fac(2*x) }
+      val r = { val x = fresh[Double]; fac(x) + fac(2*x) }
       println(globalDefs.mkString("\n"))
       println(r)
       val p = new FunctionsGraphViz { val IR: FacProgExp.type = FacProgExp }

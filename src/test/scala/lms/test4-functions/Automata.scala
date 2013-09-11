@@ -203,7 +203,7 @@ trait GAOpsExp extends BaseExp with GAOps { this: ListOps with IfThenElse with F
 
   def gguard(c: Rep[Boolean], s: Boolean = false)(d: Rep[GIO]): Rep[GIO] = if (c) d else gstop()
 
-  def gstop(): Rep[GIO] = list_new(Nil)
+  def gstop(): Rep[GIO] = list_new[gTrans](Nil)
   def gor(a: Rep[GIO], b: Rep[GIO]): Rep[GIO] = list_concat(a,b)
 
 }
