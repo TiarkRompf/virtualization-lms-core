@@ -21,6 +21,7 @@ trait HashMultiMapOps extends Base with Variables {
     def contains(k: Rep[K])(implicit pos: SourceContext) = hashmultimap_contains(m, k)
     def mkString(delimiter: Rep[String]) = hashmultimap_mkString(m, delimiter)
     def getOrElseEmpty(k: Rep[K])(implicit pos: SourceContext) = hashmultimap_getorelseempty(m,k)
+    def remove(k: Rep[K], v: Rep[V])(implicit pos: SourceContext) = hashmultimap_remove(m,k,v)
   }
 
   def hashmultimap_new[K:Manifest,V:Manifest](size: Int = 0, specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) : Rep[HashMap[K,Set[V]]]
@@ -29,6 +30,7 @@ trait HashMultiMapOps extends Base with Variables {
   def hashmultimap_contains[K:Manifest,V:Manifest](m: Rep[HashMap[K,Set[V]]], i: Rep[K])(implicit pos: SourceContext): Rep[Boolean]
   def hashmultimap_mkString[K: Manifest, V: Manifest](m: Rep[HashMap[K,Set[V]]], v: Rep[String])(implicit pos: SourceContext): Rep[String]
   def hashmultimap_getorelseempty[K:Manifest,V:Manifest](m: Rep[HashMap[K,Set[V]]], k: Rep[K])(implicit pos: SourceContext): Rep[Set[V]]
+  def hashmultimap_remove[K:Manifest,V:Manifest](m: Rep[HashMap[K,Set[V]]], k: Rep[K], v: Rep[V])(implicit pos: SourceContext): Rep[Unit]
 }
 
 trait HashMultiMapOpsExp extends HashMultiMapOps with EffectExp {
@@ -42,6 +44,7 @@ trait HashMultiMapOpsExp extends HashMultiMapOps with EffectExp {
   case class HashMultiMapContains[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], i: Exp[K]) extends HashMultiMapDef[K,V,Boolean]
   case class HashMultiMapMkString[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], v:Rep[String]) extends HashMultiMapDef[K,V,String]
   case class HashMultiMapGetOrElseEmpty[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], k: Exp[K]) extends HashMultiMapDef[K,V,Set[V]]
+  case class HashMultiMapRemove[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], k: Exp[K], v: Exp[V]) extends HashMultiMapDef[K,V,Unit]
 
   def hashmultimap_new[K:Manifest,V:Manifest](size: Int = 0, specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) = reflectEffect(HashMultiMapNew[K,V](size, specializedKey, specializedValue))
   def hashmultimap_apply[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], k: Exp[K])(implicit pos: SourceContext) = reflectEffect(HashMultiMapApply[K,V](m,k))
@@ -49,6 +52,7 @@ trait HashMultiMapOpsExp extends HashMultiMapOps with EffectExp {
   def hashmultimap_contains[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], i: Exp[K])(implicit pos: SourceContext) = HashMultiMapContains(m, i)
   def hashmultimap_mkString[K: Manifest, V: Manifest](m: Rep[HashMap[K,Set[V]]], v: Rep[String])(implicit pos: SourceContext) = reflectEffect(HashMultiMapMkString(m, v))
   def hashmultimap_getorelseempty[K:Manifest,V:Manifest](m: Rep[HashMap[K,Set[V]]], k: Rep[K])(implicit pos: SourceContext) = reflectEffect(HashMultiMapGetOrElseEmpty(m,k))
+  def hashmultimap_remove[K:Manifest,V:Manifest](m: Rep[HashMap[K,Set[V]]], k: Rep[K], v: Rep[V])(implicit pos: SourceContext) = reflectEffect(HashMultiMapRemove(m,k,v))
 }
 
 trait ScalaGenHashMultiMap extends GenericNestedCodegen with ScalaGenEffect {
@@ -66,6 +70,7 @@ trait ScalaGenHashMultiMap extends GenericNestedCodegen with ScalaGenEffect {
     case HashMultiMapUpdate(m,k,v)  => emitValDef(sym, quote(m) + ".addBinding(" + quote(k) + "," + quote(v) + ")")
     case HashMultiMapContains(m,i) => emitValDef(sym, quote(m) + ".contains(" + quote(i) + ")")
     case HashMultiMapMkString(m,k) => emitValDef(sym, quote(m) + ".mkString(" + quote(k) + ")")
+    case HashMultiMapRemove(m,k,v) => emitValDef(sym, quote(m) + "(" + quote(k) + ").remove(" + quote(v) +")")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -90,7 +95,7 @@ trait ScalaGenHashMultiMapOpt extends GenericNestedCodegen with ScalaGenEffect {
         stream.println("val " + quote(sym) + " = " + quote(m) + "(" + emitKeyModulo(m,k) + ")")
     }
     case HashMultiMapUpdate(m,k,v) => {
-        emitValDef(sym, "{")
+        stream.println("\nval x" + sym.toString.replace("Sym(","").replace(")","") + " = {")
         stream.println("\tval __elem = " + quote(m) + "(" + emitKeyModulo(m,k) + ")")
         stream.println("\tif (__elem == null) " + quote(m) + "(" + emitKeyModulo(m,k) + ") = " + quote(v))
         stream.println("\telse {")
@@ -108,6 +113,17 @@ trait ScalaGenHashMultiMapOpt extends GenericNestedCodegen with ScalaGenEffect {
         // iterate over the values in a way similar to the normal multimap)
         stream.println("val " + quote(sym) + " = " + quote(m) + "(" + emitKeyModulo(m,k) + ")")
     case HashMultiMapMkString(m,k) => emitValDef(sym, quote(m) + ".mkString(" + emitKeyModulo(m,k) + ")")
+    case HashMultiMapRemove(m,k,v) => {
+        stream.println("\tvar __elem = " + quote(m) + "(" + emitKeyModulo(m,k) + ")")
+        stream.println("\tvar __prevelem = __elem; __prevelem = null;")
+        stream.println("\twhile ((__elem != null) && (__elem.equals(" + quote(v) + ") == false)) {")
+        stream.println("\t\t__prevelem = __elem")
+        stream.println("\t\t__elem = __elem.next")
+        stream.println("}")
+        stream.println("\tif (__elem == null) throw new RuntimeException(\"Element to be removed not found\")")
+        stream.println("\telse if (__prevelem != null) __prevelem.next = __elem.next")
+        stream.println("\telse " + quote(m) + "(" + emitKeyModulo(m,k) + ") = __elem.next") 
+    }
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -32,6 +32,7 @@ trait ArrayOps extends Variables {
     def map[B:Manifest](f: Rep[T] => Rep[B]) = array_map(a,f)
     def toSeq = array_toseq(a)
     def zip[B: Manifest](a2: Rep[Array[B]]) = array_zip(a,a2)
+    def corresponds[B: Manifest](a2: Rep[Array[B]]) = array_corresponds(a,a2)
   }    
 
   def array_obj_new[T:Manifest](n: Rep[Int], specializedType: Rep[String] = unit("")): Rep[Array[T]]
@@ -47,6 +48,8 @@ trait ArrayOps extends Variables {
   def array_map[A:Manifest,B:Manifest](a: Rep[Array[A]], f: Rep[A] => Rep[B]): Rep[Array[B]]
   def array_toseq[A:Manifest](a: Rep[Array[A]]): Rep[Seq[A]]
   def array_zip[A:Manifest, B: Manifest](a: Rep[Array[A]], a2: Rep[Array[B]]): Rep[Array[(A,B)]]
+  // limited support for corresponds (tests equality)
+  def array_corresponds[A: Manifest, B: Manifest](a: Rep[Array[A]], a2: Rep[Array[B]]): Rep[Boolean]
 }
 
 trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
@@ -73,6 +76,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   }
   case class ArrayToSeq[A:Manifest](x: Exp[Array[A]]) extends Def[Seq[A]]
   case class ArrayZip[A:Manifest, B: Manifest](x: Exp[Array[A]], x2: Exp[Array[B]]) extends Def[Array[(A,B)]]
+  case class ArrayCorresponds[A:Manifest, B: Manifest](x: Exp[Array[A]], x2: Exp[Array[B]]) extends Def[Boolean]
   
   def array_obj_new[T:Manifest](n: Exp[Int], specializedType: Rep[String] = unit("")) = reflectEffect(ArrayNew(n, specializedType))
   def array_obj_fromseq[T:Manifest](xs: Seq[T]) = /*reflectMutable(*/ ArrayFromSeq(xs) /*)*/
@@ -95,6 +99,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   }
   def array_toseq[A:Manifest](a: Exp[Array[A]]) = ArrayToSeq(a)
   def array_zip[A:Manifest, B: Manifest](a: Exp[Array[A]], a2: Exp[Array[B]]) = reflectEffect(ArrayZip(a,a2))
+  def array_corresponds[A: Manifest, B: Manifest](a: Rep[Array[A]], a2: Rep[Array[B]]) = reflectEffect(ArrayCorresponds(a,a2))
   
   //////////////
   // mirroring
@@ -254,6 +259,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
       // stream.println("}")  
     case ArrayToSeq(a) => emitValDef(sym, quote(a) + ".toSeq")
     case ArrayZip(a,a2) => emitValDef(sym, quote(a) + " zip " + quote(a2)) 
+    case ArrayCorresponds(a,a2) => emitValDef(sym, quote(a) + ".corresponds(" + quote(a2) + "){_==_}") 
     case _ => super.emitNode(sym, rhs)
   }
 }

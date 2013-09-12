@@ -60,7 +60,7 @@ trait HashMapOpsExp extends HashMapOps with EffectExp {
   case class HashMapClear[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Unit]
   case class HashMapKeySet[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Set[K]]
   case class HashMapKeys[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Iterable[K]]
-  case class HashMapRemoveHead[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,(K,V)]
+  case class HashMapRemoveHead[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], s: Sym[V]) extends HashMapDef[K,V,(K,V)]
   case class HashMapRemove[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], v:Rep[K]) extends HashMapDef[K,V,Unit]
   case class HashMapGetOrElseUpdate[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K], v: Block[V]) extends HashMapDef[K,V,V]
   case class HashMapMkString[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], v:Rep[String]) extends HashMapDef[K,V,String]
@@ -75,7 +75,10 @@ trait HashMapOpsExp extends HashMapOps with EffectExp {
   def hashmap_clear[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]])(implicit pos: SourceContext) = reflectWrite(m)(HashMapClear(m))
   def hashmap_keyset[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext) = HashMapKeySet(m)
   def hashmap_keys[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext) = HashMapKeys(m)
-  def hashmap_removehead[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext) = reflectEffect(HashMapRemoveHead(m))
+  def hashmap_removehead[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext) = {
+    val s = fresh[V]
+    reflectEffect(HashMapRemoveHead(m,s))
+  }
   def hashmap_-=[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]], v: Rep[K])(implicit pos: SourceContext) = reflectEffect(HashMapRemove(m,v))
   def hashmap_getorelseupdate[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K], v: => Exp[V])(implicit pos: SourceContext) = {
     val b = reifyEffects(v)
@@ -145,7 +148,11 @@ trait ScalaGenHashMapOps extends BaseGenHashMapOps with ScalaGenEffect {
     case HashMapClear(m) => emitValDef(sym, quote(m) + ".clear()")
     case HashMapKeySet(m) => emitValDef(sym, quote(m) + ".keySet")
     case HashMapKeys(m) => emitValDef(sym, quote(m) + ".keys")
-    case HashMapRemoveHead(m) => emitValDef(sym, quote(m) + "-= " + quote(m) +".head")
+    case HashMapRemoveHead(m,s) => {
+        emitValDef(s, quote(m) + ".head")
+        stream.println(quote(m) + " -= " + quote(s) + "._1")
+        emitValDef(sym, quote(s))
+    }
     case HashMapRemove(m,v) => emitValDef(sym, quote(m) + "-=" + quote(v))
     case HashMapGetOrElseUpdate(m,k,v)  => {
          stream.print("val " + quote(sym) + " = ")

@@ -48,8 +48,10 @@ object DynamicRecordsMap extends Serializable {
         out.println("override def clone() = {")
         out.println("val __copy  = new " + className + "()")
         out.print( (for ((p1,p2) <- attrs) yield 
-            if (ClassManifest.fromClass(p2) == classManifest[Array[Byte]]) 
-                "Array.copy(this." + p1 + ", 0, new Array[Byte](this." + p1 + ".size), 0, this." + p1 + ".size)\n"
+            if (ClassManifest.fromClass(p2) == classManifest[Array[Byte]]) {
+                "__copy." + p1 + " = new Array[Byte](this." + p1 + ".size)" + "\n" +
+                "Array.copy(this." + p1 + ", 0, __copy." + p1 + ", 0, this." + p1 + ".size)\n"
+            }
             else "__copy." + p1 + " = this." + p1 + "\n" 
         ).mkString )
         out.println("__copy")
@@ -123,14 +125,14 @@ trait DynamicRecord extends Base with Serializable with VariablesExp {
         def get(field: Rep[Any]) = dynamicRecordGet(x, field)
 		def set(field: Rep[Any], value: Block[Any]) = dynamicRecordSet(x, field, value)
 		def set(field: Rep[Any], value: => Rep[Any]) = dynamicRecordSet(x, field, value)
-        def foreach(f: Rep[DynamicRecordExp] => Rep[Unit]) = dynamicRecordForEach(x,f)
+        def foreach(f: Rep[DynamicRecord] => Rep[Unit]) = dynamicRecordForEach(x,f)
     }
 	implicit def varDynamicType2dynamicRecordOps(x: Var[DynamicRecord]) = new DynamicRecordOps(readVar(x))
 	implicit def varDynamicType2dynamicRecord(x: Var[DynamicRecord]) = readVar(x)
 	implicit def dynamicRecord2dynamicRecordOps(x: Rep[DynamicRecord]) = new DynamicRecordOps(x)
 	implicit def dynamicRecord2RepdynamicRecordOps(x: DynamicRecord) = new DynamicRecordOps(unit(x))
 
-    def newDynamicRecord(name: String, reuse: Boolean = false): Rep[DynamicRecordExp]
+    def newDynamicRecord(name: String, reuse: Boolean = false): Rep[DynamicRecord]
 	def dynamicRecordGet(x: Rep[DynamicRecord], field: Rep[Any]): Rep[Any]
 	def dynamicRecordSet(x: Rep[DynamicRecord], field: Rep[Any], value: Block[Any]): Rep[Unit]
 	def dynamicRecordSet(x: Rep[DynamicRecord], field: Rep[Any], value: => Rep[Any]): Rep[Unit] = {
@@ -138,14 +140,15 @@ trait DynamicRecord extends Base with Serializable with VariablesExp {
         // record (e.g. case of projections)
         dynamicRecordSet(x,field, reifyEffects(value))
     }
-    def dynamicRecordForEach(x: Rep[DynamicRecord], f: Rep[DynamicRecordExp] => Rep[Unit]): Rep[Unit]
+    def dynamicRecordForEach(x: Rep[DynamicRecord], f: Rep[DynamicRecord] => Rep[Unit]): Rep[Unit]
+    val NullDynamicRecord = unit(null).asInstanceOf[Rep[DynamicRecord]]
 }
 
 trait DynamicRecordExp extends DynamicRecord with BaseExp with EffectExp {
-    case class NewDynamicRecord(n: String) extends Def[DynamicRecordExp]
+    case class NewDynamicRecord(n: String) extends Def[DynamicRecord]
 	case class DynamicRecordGet(x: Rep[DynamicRecord], field: Rep[Any]) extends Def[Any]
 	case class DynamicRecordSet(x: Rep[DynamicRecord], field: Rep[Any], value: Block[Any]) extends Def[Unit]
-    case class DynamicRecordForEach(l: Rep[DynamicRecord], x: Sym[DynamicRecordExp], block: Block[Unit]) extends Def[Unit]
+    case class DynamicRecordForEach(l: Rep[DynamicRecord], x: Sym[DynamicRecord], block: Block[Unit]) extends Def[Unit]
 
     def newDynamicRecord(name: String, reuse: Boolean = false) = 
         if (reuse) NewDynamicRecord(name) else reflectEffect(NewDynamicRecord(name))
@@ -169,8 +172,8 @@ trait DynamicRecordExp extends DynamicRecord with BaseExp with EffectExp {
         reflectEffect(DynamicRecordSet(x,field,value))
     }
 
-    def dynamicRecordForEach(x: Rep[DynamicRecord], f: Exp[DynamicRecordExp] => Exp[Unit])={
-        val a = fresh[DynamicRecordExp]
+    def dynamicRecordForEach(x: Rep[DynamicRecord], f: Exp[DynamicRecord] => Exp[Unit])={
+        val a = fresh[DynamicRecord]
         val b = reifyEffects(f(a))
         reflectEffect(DynamicRecordForEach(x, a, b), summarizeEffects(b).star)
     }
@@ -209,7 +212,7 @@ trait ScalaGenDynamicRecord extends ScalaGenBase with GenericNestedCodegen {
                 stream.println("}")
             }
             case DynamicRecordForEach(x, init, block) => 
-                emitValDef(sym, "{")
+                stream.println("val x" + sym.toString.replace("Sym(","").replace(")","") + " = {")
                 stream.println("\tvar " + quote(init) + "=" + quote(x))
                 stream.println("\twhile (" + quote(init) + " != null) {")
                 emitBlock(block)
@@ -230,52 +233,52 @@ trait ScalaGenDynamicRecord extends ScalaGenBase with GenericNestedCodegen {
 }
 
 /* HASHMAP */
-trait DynamicRecordHashMap extends Base with Variables {
-  implicit def HashMapToRepHashMapOps[K:Manifest,V:Manifest](m: HashMap[K,V]) = new hashmapOpsCls[K,V](unit(m))
-  implicit def repHashMapToHashMapOps[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]]) = new hashmapOpsCls[K,V](m)
-  implicit def varrepHashMapToHashMapOps[K:Manifest,V:Manifest](m: Var[HashMap[K,V]]) = new hashmapOpsCls[K,V](readVar(m))
+trait DynamicRecordHashMap extends Base with HashMapOps with Variables {
+  implicit def dRecHashMapToRepHashMapOps[K:Manifest,V:Manifest](m: HashMap[K,V]) = new dynamicRecordHashMapOpsCls[K,V](unit(m))
+  implicit def dRecrepHashMapToHashMapOps[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]]) = new dynamicRecordHashMapOpsCls[K,V](m)
+  implicit def dRecvarrepHashMapToHashMapOps[K:Manifest,V:Manifest](m: Var[HashMap[K,V]]) = new dynamicRecordHashMapOpsCls[K,V](readVar(m))
 
-  class hashmapOpsCls[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]]) {
+  class dynamicRecordHashMapOpsCls[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]]) {
     def apply(k: Rep[K])(implicit pos: SourceContext) = hashmap_apply(m, k)
     def size(implicit pos: SourceContext) = hashmap_size(m)
     def removeHead(implicit pos:SourceContext) = hashmap_removehead(m)
-    def getOrElseUpdate(k: Rep[K], v: => Rep[V], h: Rep[DynamicRecord] => Rep[Int], e: (Rep[DynamicRecord],Rep[DynamicRecord])=>Rep[Boolean] )(implicit pos: SourceContext) = hashmap_getorelseupdate[K,V](m,k,v,h,e)
+    def getOrElseUpdate(k: Rep[K], v: => Rep[V], h: Rep[DynamicRecord] => Rep[Int] = null, e: (Rep[DynamicRecord],Rep[DynamicRecord])=>Rep[Boolean]=null)(implicit pos: SourceContext) = hashmap_getorelseupdate[K,V](m,k,v,h,e)
     def mkString(delimiter: Rep[String]) = hashmap_mkString(m, delimiter)
   }
 
-  def hashmap_new[K:Manifest,V:Manifest](specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) : Rep[HashMap[K,V]]
-  def hashmap_apply[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K])(implicit pos: SourceContext): Rep[V]
-  def hashmap_size[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Int]
-  def hashmap_removehead[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[(K,V)]
-  def hashmap_getorelseupdate[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K], v: => Rep[V], h: Rep[DynamicRecord] => Rep[Int], e: (Rep[DynamicRecord],Rep[DynamicRecord])=>Rep[Boolean])(implicit pos: SourceContext): Rep[V]
-  def hashmap_mkString[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]], v: Rep[String])(implicit pos: SourceContext): Rep[String]
+  override def hashmap_new[K:Manifest,V:Manifest](specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) : Rep[HashMap[K,V]]
+  override def hashmap_apply[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K])(implicit pos: SourceContext): Rep[V]
+  override def hashmap_size[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Int]
+  override def hashmap_removehead[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[(K,V)]
+  def hashmap_getorelseupdate[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K], v: => Rep[V], h: Rep[DynamicRecord] => Rep[Int] = null, e: (Rep[DynamicRecord],Rep[DynamicRecord])=>Rep[Boolean] = null)(implicit pos: SourceContext): Rep[V]
+  override def hashmap_mkString[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]], v: Rep[String])(implicit pos: SourceContext): Rep[String]
 }
 
 
-trait DynamicRecordHashMapExp extends DynamicRecordHashMap with EffectExp with DynamicRecordExp {
-  abstract class HashMapDef[K:Manifest,V:Manifest,R:Manifest] extends Def[R] {
+trait DynamicRecordHashMapExp extends DynamicRecordHashMap with EffectExp with HashMapOpsExp with DynamicRecordExp {
+  abstract class DynamicRecordHashMapDef[K:Manifest,V:Manifest,R:Manifest] extends Def[R] {
     val mK = manifest[K]
     val mV = manifest[V]
   }
-  case class HashMapNew[K:Manifest,V:Manifest](specializedKey: String = "", specializedValue: String ="") extends HashMapDef[K,V,HashMap[K,V]] 
-  case class HashMapApply[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K]) extends HashMapDef[K,V,V]
-  case class HashMapSize[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Int]
-  case class HashMapRemoveHead[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,(K,V)]
-  case class HashMapGetOrElseUpdate[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K], v: Block[V], h: Block[Int], e: Block[Boolean], d: Sym[DynamicRecord]) extends HashMapDef[K,V,V]
-  case class HashMapMkString[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], v:Rep[String]) extends HashMapDef[K,V,String]
+  case class DynamicRecordHashMapNew[K:Manifest,V:Manifest](specializedKey: String = "", specializedValue: String ="") extends DynamicRecordHashMapDef[K,V,HashMap[K,V]] 
+  case class DynamicRecordHashMapApply[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K]) extends DynamicRecordHashMapDef[K,V,V]
+  case class DynamicRecordHashMapSize[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends DynamicRecordHashMapDef[K,V,Int]
+  case class DynamicRecordHashMapRemoveHead[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends DynamicRecordHashMapDef[K,V,(K,V)]
+  case class DynamicRecordHashMapGetOrElseUpdate[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K], v: Block[V], h: Block[Int], e: Block[Boolean], d: Sym[DynamicRecord]) extends DynamicRecordHashMapDef[K,V,V]
+  case class DynamicRecordHashMapMkString[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], v:Rep[String]) extends DynamicRecordHashMapDef[K,V,String]
 
-  def hashmap_new[K:Manifest,V:Manifest](specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) = reflectEffect(HashMapNew[K,V](specializedKey, specializedValue))
-  def hashmap_apply[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K])(implicit pos: SourceContext) = HashMapApply(m,k)
-  def hashmap_size[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]])(implicit pos: SourceContext) = reflectEffect(HashMapSize(m))
-  def hashmap_removehead[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext) = reflectEffect(HashMapRemoveHead(m))
-  def hashmap_getorelseupdate[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K], v: => Exp[V], h: Exp[DynamicRecord] => Exp[Int], e: (Exp[DynamicRecord],Exp[DynamicRecord])=>Exp[Boolean])(implicit pos: SourceContext) = {
+  override def hashmap_new[K:Manifest,V:Manifest](specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) = reflectEffect(DynamicRecordHashMapNew[K,V](specializedKey, specializedValue))
+  override def hashmap_apply[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K])(implicit pos: SourceContext) = DynamicRecordHashMapApply(m,k)
+  override def hashmap_size[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]])(implicit pos: SourceContext) = reflectEffect(DynamicRecordHashMapSize(m))
+  override def hashmap_removehead[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext) = reflectEffect(DynamicRecordHashMapRemoveHead(m))
+  def hashmap_getorelseupdate[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K], v: => Exp[V], h: Exp[DynamicRecord] => Exp[Int] = null, e: (Exp[DynamicRecord],Exp[DynamicRecord])=>Exp[Boolean] = null)(implicit pos: SourceContext) = {
     val b = reifyEffects(v)
     val f = reifyEffects(h(k.asInstanceOf[Rep[DynamicRecord]]))
     val ff = fresh[DynamicRecord]
     val g = reifyEffects(e(k.asInstanceOf[Rep[DynamicRecord]],ff))
-    reflectEffect(HashMapGetOrElseUpdate(m,k,b,f,g,ff))
+    reflectEffect(DynamicRecordHashMapGetOrElseUpdate(m,k,b,f,g,ff))
   }
-  def hashmap_mkString[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]], v: Rep[String])(implicit pos: SourceContext) = reflectEffect(HashMapMkString(m, v))
+  override def hashmap_mkString[K: Manifest, V: Manifest](m: Rep[HashMap[K,V]], v: Rep[String])(implicit pos: SourceContext) = reflectEffect(DynamicRecordHashMapMkString(m, v))
   
   /*override def syms(p: Any): List[Sym[Any]] = p match {
     case HashMapGetOrElseUpdate(m, k, v,h,e) => syms(m):::syms(v)
@@ -283,7 +286,7 @@ trait DynamicRecordHashMapExp extends DynamicRecordHashMap with EffectExp with D
   }*/
 
   override def boundSyms(p: Any): List[Sym[Any]] = p match {
-    case HashMapGetOrElseUpdate(m, k, v,h,e,d) => effectSyms(h) ::: effectSyms(v) ::: effectSyms(e)
+    case DynamicRecordHashMapGetOrElseUpdate(m, k, v,h,e,d) => effectSyms(h) ::: effectSyms(v) ::: effectSyms(e)
     case _ => super.boundSyms(p)
   }
 
@@ -298,15 +301,14 @@ trait ScalaGenDynamicRecordHashMap extends ScalaGenBase with GenericNestedCodege
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case m@HashMapNew(spkey, spvalue) => {
+    case m@DynamicRecordHashMapNew(spkey, spvalue) => {
         val key = if (spkey != "") spkey else remap(m.mK)
         val value = if (spvalue != "") spvalue else remap(m.mV)
-        stream.println("import scala.collection.mutable.DefaultEntry")
-        stream.println("var " + quote(sym) + " = new Array[DefaultEntry[" + key + "," + value +"]](16)")
+        stream.println("var " + quote(sym) + " = new Array[scala.collection.mutable.DefaultEntry[" + key + "," + value +"]](16)")
         stream.println("var __" + quote(sym) + "Size = 0")
     }
-    case HashMapSize(m) => emitValDef(sym, "__" + quote(m) + "Size")
-    case HashMapRemoveHead(m) => {
+    case DynamicRecordHashMapSize(m) => emitValDef(sym, "__" + quote(m) + "Size")
+    case DynamicRecordHashMapRemoveHead(m) => {
         stream.println("val " + quote(sym) + "= {")
         stream.println("var __idx = 0")
         stream.println("var __elem = " + quote(m) + "(__idx)")
@@ -319,7 +321,7 @@ trait ScalaGenDynamicRecordHashMap extends ScalaGenBase with GenericNestedCodege
         stream.println("(__elem.key, __elem.value)")
         stream.println("}")
     }
-    case HashMapGetOrElseUpdate(m,k,v,h,e,d)  => {
+    case DynamicRecordHashMapGetOrElseUpdate(m,k,v,h,e,d)  => {
         stream.println("val ones = " + quote(m) + ".length - 1")
         stream.println("var bc = ones")
         stream.println("bc = bc - ((bc >>> 1) & 0x55555555);")
@@ -353,7 +355,7 @@ trait ScalaGenDynamicRecordHashMap extends ScalaGenBase with GenericNestedCodege
         stream.println("}) e = e.next")
         stream.println("val " + quote(sym) + " = {")
         stream.println("if (e eq null) {")
-        stream.println("val entry = new DefaultEntry(" + quote(k) + ".clone, {")
+        stream.println("val entry = new scala.collection.mutable.DefaultEntry(" + quote(k) + ".clone, {")
         emitBlock(v)
         stream.println(quote(getBlockResult(v)))
         stream.println("})")

@@ -254,7 +254,10 @@ trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
-      emitValDef(sym, "{" + quote(x) + ": (" + x.tp + ") => ")
+      if (x.tp != manifest[Unit])
+          emitValDef(sym, "{" + quote(x) + ": (" + x.tp + ") => ")
+      else
+          emitValDef(sym, "{ x" + x.toString.replace("Sym(","").replace(")","") + ": (" + x.tp + ") => ")
       emitBlock(y)
       stream.println(quote(getBlockResult(y))/* + ": " + y.tp*/)
       stream.println("}")
