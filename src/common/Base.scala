@@ -22,7 +22,7 @@ trait Base extends EmbeddedControls {
 
   type Rep[+T]
 
-  protected def unit[T:Manifest](x: T): Rep[T]
+  def unit[T:Manifest](x: T): Rep[T]
 
   // always lift Unit and Null (for now)
   implicit def unitToRepUnit(x: Unit) = unit(x)
@@ -37,7 +37,7 @@ trait Base extends EmbeddedControls {
 trait BaseExp extends Base with Expressions with Blocks with Transforming {
   type Rep[+T] = Exp[T]
 
-  protected def unit[T:Manifest](x: T) = Const(x)
+  def unit[T:Manifest](x: T) = Const(x)
 }
 
 trait BlockExp extends BaseExp
