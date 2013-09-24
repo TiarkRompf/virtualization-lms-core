@@ -132,6 +132,8 @@ trait Expressions extends Utils {
     val saveGlobalInvCache = globalDefsInvCache
     val saveLocalInvCache = localDefsInvCache
     localDefs = Vector.empty
+    localDefsCache = Map.empty
+    localDefsInvCache = Map.empty
     val r = b
     val defs = localDefs
     localDefs = saveLocal
