@@ -1,6 +1,6 @@
 name := "LMS"
 
-version := "0.3-SNAPSHOT"
+version := "0.3.1-SNAPSHOT"
 
 organization := "EPFL"
 
