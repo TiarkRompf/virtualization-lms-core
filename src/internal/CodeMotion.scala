@@ -64,7 +64,7 @@ trait CodeMotion extends Scheduling {
 
     val levelScope = currentScope.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
     
-    if (Config.sanitychecks == 0) // don't check for effect order violations if we want fast compile
+    if (sanitychecks == 0) // don't check for effect order violations if we want fast compile
       return levelScope
 
     // ---- end FIXME ----
