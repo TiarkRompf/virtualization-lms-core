@@ -503,9 +503,10 @@ trait Effects extends Expressions with Blocks with Utils {
       val softWriteDeps = write flatMap depReadState
       val writeDeps = write flatMap depWriteState
       val simpleDeps = if (u.maySimple) depSimpleState else Nil
+      val controlDeps = if (u.control) depControlState else Nil
       val globalDeps = if (u.mayGlobal) depGlobalState else Nil
 
-      (readDeps ++ softWriteDeps ++ writeDeps ++ simpleDeps ++ globalDeps).distinct
+      (readDeps ++ softWriteDeps ++ writeDeps ++ simpleDeps ++ controlDeps ++ globalDeps).distinct
     }
   }
   
@@ -539,6 +540,7 @@ trait Effects extends Expressions with Blocks with Utils {
 
   var depAllocState: Set[Exp[Any]] = _
   var depSimpleState: List[Exp[Any]] = _
+  var depControlState: List[Exp[Any]] = _
   var depGlobalState: List[Exp[Any]] = _
   var depReadState: Map[Sym[Any], List[Exp[Any]]] = _
   var depWriteState: Map[Sym[Any], List[Exp[Any]]] = _
@@ -546,6 +548,7 @@ trait Effects extends Expressions with Blocks with Utils {
   def resetDepState() = {
     depAllocState = Set.empty
     depSimpleState = Nil
+    depControlState = Nil
     depGlobalState = Nil
     depReadState = Map.empty withDefaultValue Nil
     depWriteState = Map.empty withDefaultValue Nil
@@ -558,6 +561,10 @@ trait Effects extends Expressions with Blocks with Utils {
     if (d.summary.maySimple) {
       // depend on depSimple
       depSimpleState = List(e)
+    }
+    if (d.summary.control) {
+      // depend on depControl (why?)
+      depControlState = List(e)
     }
     if (d.summary.mayGlobal) {
       // depend on depGlobal
@@ -601,31 +608,33 @@ trait Effects extends Expressions with Blocks with Utils {
   // no assumptions about the current context remain valid.
   def reifyEffects[A:Manifest](block: => Exp[A], controlScope: Boolean = false): Block[A] = {
     val save = context
-    val saveAlloc  = depAllocState
-    val saveSimple = depSimpleState
-    val saveGlobal = depGlobalState
-    val saveRead   = depReadState
-    val saveWrite  = depWriteState
+    val saveAlloc   = depAllocState
+    val saveSimple  = depSimpleState
+    val saveControl = depControlState
+    val saveGlobal  = depGlobalState
+    val saveRead    = depReadState
+    val saveWrite   = depWriteState
     context = Vector.empty
     resetDepState
     
     // only add control dependencies scopes where controlScope is explicitly true (i.e., the first-level of an IfThenElse)
-    val saveControl = conditionalScope
+    val saveControl1 = conditionalScope
     conditionalScope = controlScope
 
     val (result, defs) = reifySubGraph(block)
     reflectSubGraph(defs)    
 
-    conditionalScope = saveControl
+    conditionalScope = saveControl1
     
     val deps = context.toList
     val summary = summarizeAll(deps)
     context = save
-    depAllocState  = saveAlloc
-    depSimpleState = saveSimple
-    depGlobalState = saveGlobal
-    depReadState   = saveRead
-    depWriteState  = saveWrite
+    depAllocState   = saveAlloc
+    depSimpleState  = saveSimple
+    depControlState = saveControl
+    depGlobalState  = saveGlobal
+    depReadState    = saveRead
+    depWriteState   = saveWrite
     
     if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
   }
@@ -634,23 +643,24 @@ trait Effects extends Expressions with Blocks with Utils {
   // all assumptions about the current context carry over unchanged.
   def reifyEffectsHere[A:Manifest](block: => Exp[A], controlScope: Boolean = false): Block[A] = {
     val save = context
-    val saveAlloc  = depAllocState
-    val saveSimple = depSimpleState
-    val saveGlobal = depGlobalState
-    val saveRead   = depReadState
-    val saveWrite  = depWriteState
+    val saveAlloc   = depAllocState
+    val saveSimple  = depSimpleState
+    val saveControl = depControlState
+    val saveGlobal  = depGlobalState
+    val saveRead    = depReadState
+    val saveWrite   = depWriteState
     if (save eq null) {
       context = Vector.empty
       resetDepState()
     }
     
-    val saveControl = conditionalScope
+    val saveControl1 = conditionalScope
     conditionalScope = controlScope
 
     val (result, defs) = reifySubGraph(block)
     reflectSubGraph(defs)
 
-    conditionalScope = saveControl
+    conditionalScope = saveControl1
 
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
       printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
@@ -659,11 +669,12 @@ trait Effects extends Expressions with Blocks with Utils {
     
     val summary = summarizeAll(deps)
     context = save
-    depAllocState  = saveAlloc
-    depSimpleState = saveSimple
-    depGlobalState = saveGlobal
-    depReadState   = saveRead
-    depWriteState  = saveWrite
+    depAllocState   = saveAlloc
+    depSimpleState  = saveSimple
+    depControlState = saveControl    
+    depGlobalState  = saveGlobal
+    depReadState    = saveRead
+    depWriteState   = saveWrite
     
     if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
   }
