@@ -170,12 +170,14 @@ trait Scheduling {
       y have been tracked up to A, which includes all of B
     */
 
+    val unsafeOpt = IR.unsafeopt > 0
+
     val seen = new mutable.HashSet[Sym[Any]]
     
     def getDepStuff(st: Sym[Any]) = {
       // could also precalculate uses, but computing all combinations eagerly is also expensive
       def uses(s: Sym[Any]): List[Stm] = if (seen(s)) Nil else { 
-        //seen += s
+        if (unsafeOpt) seen += s
         lhsCache.getOrElse(s,Nil) ::: symsCache.getOrElse(s,Nil) filterNot (boundSymsCache.getOrElse(st, Nil) contains _)
       }
       GraphUtil.stronglyConnectedComponents[Stm](
@@ -184,20 +186,22 @@ trait Scheduling {
       ).flatten
     }
     
-    /* 
-    reference impl:*/
-    val res = sts.flatMap(getDepStuff).distinct
-    
-    /*if (sts.contains(Sym(1064))) {
-      println("dep on x1064:")
-      res.foreach { r =>
-        println("   " + r)
-      }
-    }*/
-    res
-
+    if (unsafeOpt) {
     // CAVEAT: TRANSFORMERS !!!  see CloseWorldRestage app in Delite
-    //sts.sortBy(_.id).flatMap(getDepStuff)
+      sts.sortBy(_.id).flatMap(getDepStuff)
+    } else {
+      /* 
+      reference impl:*/
+      val res = sts.flatMap(getDepStuff).distinct
+      
+      /*if (sts.contains(Sym(1064))) {
+        println("dep on x1064:")
+        res.foreach { r =>
+          println("   " + r)
+        }
+      }*/
+      res
+    }
   }
   
   /** end performance hotspot **/
