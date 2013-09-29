@@ -85,11 +85,11 @@ trait ScalaGenArrayBufferOps extends BaseGenArrayBufferOps with ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case a@ArrayBufferNew(xs) => emitValDef(sym, "scala.collection.mutable.ArrayBuffer[" + remap(a.mA) + "](" + (xs map {quote}).mkString(",") + ")")
-    case ArrayBufferMkString(l, sep) => emitValDef(sym, quote(l) + ".mkString(" + quote(sep) + ")")
-    case ArrayBufferAppend(l, e) => emitValDef(sym, quote(l) + " += " + quote(e))
-    case ArrayBufferToArray(x) => emitValDef(sym, quote(x) + ".toArray")
-    case ArrayBufferToSeq(x) => emitValDef(sym, quote(x) + ".toSeq")
+    case a@ArrayBufferNew(xs) => emitValDef(sym, raw"scala.collection.mutable.ArrayBuffer[${remap(a.mA)}](${(xs map {quote}).mkString(",")})")
+    case ArrayBufferMkString(l, sep) => emitValDef(sym, raw"${quote(l)}.mkString(${quote(sep)})")
+    case ArrayBufferAppend(l, e) => emitValDef(sym, raw"${quote(l)} += ${quote(e)}")
+    case ArrayBufferToArray(x) => emitValDef(sym, raw"${quote(x)}.toArray")
+    case ArrayBufferToSeq(x) => emitValDef(sym, raw"${quote(x)}.toSeq")
     case _ => super.emitNode(sym, rhs)
   }
 }

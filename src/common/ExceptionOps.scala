@@ -30,7 +30,7 @@ trait ScalaGenExceptionOps extends ScalaGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case ThrowException(m) => emitValDef(sym, "throw new Exception(" + quote(m) + ")")
+    case ThrowException(m) => emitValDef(sym, raw"throw new Exception(${quote(m)})")
     case _ => super.emitNode(sym, rhs)
   }
 }

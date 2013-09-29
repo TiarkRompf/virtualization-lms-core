@@ -41,8 +41,8 @@ trait ScalaGenCastingOps extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case RepIsInstanceOf(x,mA,mB) => emitValDef(sym, quote(x) + ".isInstanceOf[" + remap(mB) + "]")
-    case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, quote(x) + ".asInstanceOf[" + remap(mB) + "]")
+    case RepIsInstanceOf(x,mA,mB) => emitValDef(sym, raw"${quote(x)}.isInstanceOf[${remap(mB)}]")
+    case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, raw"${quote(x)}.asInstanceOf[${remap(mB)}]")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -54,7 +54,7 @@ trait CLikeGenCastingOps extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         //case RepIsInstanceOf(x,mA,mB) => //TODO: How?
-        case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, "(%s) %s".format(remap(mB),quote(x)))
+        case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, raw"(${remap(mB)}) ${quote(x)}")
         case _ => super.emitNode(sym, rhs)
       }
     }

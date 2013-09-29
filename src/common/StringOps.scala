@@ -97,14 +97,14 @@ trait ScalaGenStringOps extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StringPlus(s1,s2) => emitValDef(sym, "%s+%s".format(quote(s1), quote(s2)))
-    case StringStartsWith(s1,s2) => emitValDef(sym, "%s.startsWith(%s)".format(quote(s1),quote(s2)))
-    case StringTrim(s) => emitValDef(sym, "%s.trim()".format(quote(s)))
-    case StringSplit(s, sep) => emitValDef(sym, "%s.split(%s)".format(quote(s), quote(sep)))
-    case StringValueOf(a) => emitValDef(sym, "java.lang.String.valueOf(%s)".format(quote(a)))
-    case StringToDouble(s) => emitValDef(sym, "%s.toDouble".format(quote(s)))
-    case StringToFloat(s) => emitValDef(sym, "%s.toFloat".format(quote(s)))
-    case StringToInt(s) => emitValDef(sym, "%s.toInt".format(quote(s)))
+    case StringPlus(s1,s2) => emitValDef(sym, raw"${quote(s1)}+${quote(s2)}")
+    case StringStartsWith(s1,s2) => emitValDef(sym, raw"${quote(s1)}.startsWith(${quote(s2)})")
+    case StringTrim(s) => emitValDef(sym, "${quote(s)}.trim()")
+    case StringSplit(s, sep) => emitValDef(sym, raw"${quote(s)}.split(${quote(sep)})")
+    case StringValueOf(a) => emitValDef(sym, raw"java.lang.String.valueOf(${quote(a)})")
+    case StringToDouble(s) => emitValDef(sym, raw"${quote(s)}.toDouble")
+    case StringToFloat(s) => emitValDef(sym, raw"${quote(s)}.toFloat")
+    case StringToInt(s) => emitValDef(sym, raw"${quote(s)}.toInt")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -137,7 +137,7 @@ trait CGenStringOps extends CGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StringPlus(s1,s2) => emitValDef(sym,"strcat(%s,%s);".format(quote(s1),quote(s2)))
+    case StringPlus(s1,s2) => emitValDef(sym,raw"strcat(${quote(s1)},${quote(s2)});")
     case StringTrim(s) => throw new GenerationFailedException("CGenStringOps: StringTrim not implemented yet")
     case StringSplit(s, sep) => throw new GenerationFailedException("CGenStringOps: StringSplit not implemented yet")
     case _ => super.emitNode(sym, rhs)

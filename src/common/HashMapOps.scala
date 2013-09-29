@@ -91,15 +91,15 @@ trait ScalaGenHashMapOps extends BaseGenHashMapOps with ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case m@HashMapNew() => emitValDef(sym, "collection.mutable.HashMap[" + remap(m.mK) + "," + remap(m.mV) + "]()")
-    case HashMapApply(m,k) => emitValDef(sym, quote(m) + "(" + quote(k) + ")")
-    case HashMapUpdate(m,k,v)  => emitValDef(sym, quote(m) + "(" + quote(k) + ") = " + quote(v))
-    case HashMapContains(m,i) => emitValDef(sym, quote(m) + ".contains(" + quote(i) + ")")
-    case HashMapSize(m) => emitValDef(sym, quote(m) + ".size")
-    case HashMapValues(m) => emitValDef(sym, quote(m) + ".values")
-    case HashMapClear(m) => emitValDef(sym, quote(m) + ".clear()")
-    case HashMapKeySet(m) => emitValDef(sym, quote(m) + ".keySet")
-    case HashMapKeys(m) => emitValDef(sym, quote(m) + ".keys")
+    case m@HashMapNew() => emitValDef(sym, raw"collection.mutable.HashMap[${remap(m.mK)},${remap(m.mV)}]()")
+    case HashMapApply(m,k) => emitValDef(sym, raw"${quote(m)}(${quote(k)})")
+    case HashMapUpdate(m,k,v)  => emitValDef(sym, raw"${quote(m)}(${quote(k)}) = ${quote(v)}")
+    case HashMapContains(m,i) => emitValDef(sym, raw"${quote(m)}.contains(${quote(i)})")
+    case HashMapSize(m) => emitValDef(sym, raw"${quote(m)}.size")
+    case HashMapValues(m) => emitValDef(sym, raw"${quote(m)}.values")
+    case HashMapClear(m) => emitValDef(sym, raw"${quote(m)}.clear()")
+    case HashMapKeySet(m) => emitValDef(sym, raw"${quote(m)}.keySet")
+    case HashMapKeys(m) => emitValDef(sym, raw"${quote(m)}.keys")
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -40,7 +40,7 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   def error(s: Exp[String])(implicit pos: SourceContext) = reflectEffect(Error(s))
   def returnL(x: Exp[Any])(implicit pos: SourceContext) = {
     printlog("warning: staged return statements are unlikely to work because the surrounding source method does not exist in the generated code.")
-    printsrc("in " + quotePos(x))
+    printsrc(raw"in ${quotePos(x)}")
     reflectEffect(Return(x))
   }
   
@@ -60,12 +60,12 @@ trait ScalaGenMiscOps extends ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case PrintF(f,x) => emitValDef(sym, "printf(" + (f::x.map(quote)).mkString(",") + ")")
-    case PrintLn(s) => emitValDef(sym, "println(" + quote(s) + ")")
-    case Print(s) => emitValDef(sym, "print(" + quote(s) + ")")
-    case Exit(a) => emitValDef(sym, "exit(" + quote(a) + ")")
-    case Return(x) => emitValDef(sym, "return " + quote(x))
-    case Error(s) => emitValDef(sym, "error(" + quote(s) + ")")
+    case PrintF(f,x) => emitValDef(sym, raw"printf(${(f::x.map(quote)).mkString(",")})")
+    case PrintLn(s) => emitValDef(sym, raw"println(${quote(s)})")
+    case Print(s) => emitValDef(sym, raw"print(${quote(s)})")
+    case Exit(a) => emitValDef(sym, raw"exit(${quote(a)})")
+    case Return(x) => emitValDef(sym, raw"return ${quote(x)}")
+    case Error(s) => emitValDef(sym, raw"error(${quote(s)})")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -76,10 +76,10 @@ trait CGenMiscOps extends CGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case PrintF(f,x) => emitValDef(sym, "printf(" + ((Const(f:String)::x).map(quote)).mkString(",") + ")")
-    case PrintLn(s) => stream.println("printf(\"%s\\n\"," + quote(s) + ");")
-    case Print(s) => stream.println("printf(\"%s\"," + quote(s) + ");")
-    case Exit(a) => stream.println("exit(" + quote(a) + ");")
+    case PrintF(f,x) => emitValDef(sym, raw"printf(${((Const(f:String)::x).map(quote)).mkString(",")})")
+    case PrintLn(s) => stream.println("printf(\"%s\\n\"," + quote(s) + ");") //TODO: string interpolation
+    case Print(s) => stream.println("printf(\"%s\"," + quote(s) + ");") //TODO: string interpolation
+    case Exit(a) => stream.println(raw"exit(${quote(a)});")
     case _ => super.emitNode(sym, rhs)
   }
 }

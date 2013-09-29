@@ -188,7 +188,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
   val ARRAY_LITERAL_MAX_SIZE = 1000
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case a@ArrayNew(n) => emitValDef(sym, "new Array[" + remap(a.m) + "](" + quote(n) + ")")
+    case a@ArrayNew(n) => emitValDef(sym, raw"new Array[${remap(a.m)}](${quote(n)})")
     case e@ArrayFromSeq(xs) => {
       emitData(sym, xs)
       emitValDef(sym,
@@ -208,32 +208,32 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
         }
       )
     }
-    case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
-    case ArrayUpdate(x,n,y) => emitValDef(sym, quote(x) + "(" + quote(n) + ") = " + quote(y))
-    case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
-    case ArrayForeach(a,x,block) => stream.println("val " + quote(sym) + " = " + quote(a) + ".foreach{")
+    case ArrayApply(x,n) => emitValDef(sym, raw"${quote(x)}(${quote(n)})")
+    case ArrayUpdate(x,n,y) => emitValDef(sym, raw"${quote(x)}(${quote(n)}) = ${quote(y)}")
+    case ArrayLength(x) => emitValDef(sym, raw"${quote(x)}.length")
+    case ArrayForeach(a,x,block) => stream.println(raw"val ${quote(sym)} = ${quote(a)}.foreach{")
       stream.println(quote(x) + " => ")
       emitBlock(block)
       stream.println(quote(getBlockResult(block)))
       stream.println("}")
-    case ArrayCopy(src,srcPos,dest,destPos,len) => emitValDef(sym, "System.arraycopy(" + quote(src) + "," + quote(srcPos) + "," + quote(dest) + "," + quote(destPos) + "," + quote(len) + ")")
+    case ArrayCopy(src,srcPos,dest,destPos,len) => emitValDef(sym, raw"System.arraycopy(${quote(src)},${quote(srcPos)},${quote(dest)},${quote(destPos)},${quote(len)})")
     case a@ArraySort(x) =>
-      stream.println("val " + quote(sym) + " = {")
-      stream.println("val d = new Array[" + remap(a.m) + "](" + quote(x) + ".length" + ")")
-      stream.println("System.arraycopy(" + quote(x) + ", 0, d, 0, " + quote(x) + ".length)")
+      stream.println(raw"val ${quote(sym)} = {")
+      stream.println(raw"val d = new Array[${remap(a.m)}](${quote(x)}.length)")
+      stream.println(raw"System.arraycopy(${quote(x)}, 0, d, 0, ${quote(x)}.length)")
       stream.println("scala.util.Sorting.quickSort(d)")
       stream.println("d")
       stream.println("}")
     case n@ArrayMap(a,x,blk) =>
       stream.println("// workaround for refinedManifest problem")
-      stream.println("val " + quote(sym) + " = {")
-      stream.println("val out = " + quote(n.array))
-      stream.println("val in = " + quote(a))
+      stream.println(raw"val ${quote(sym)} = {")
+      stream.println(raw"val out = ${quote(n.array)}")
+      stream.println(raw"val in = ${quote(a)}")
       stream.println("var i = 0")
       stream.println("while (i < in.length) {")
-      stream.println("val " + quote(x) + " = in(i)")
+      stream.println(raw"val ${quote(x)} = in(i)")
       emitBlock(blk)
-      stream.println("out(i) = " + quote(getBlockResult(blk)))
+      stream.println(raw"out(i) = ${quote(getBlockResult(blk))}")
       stream.println("i += 1")
       stream.println("}")
       stream.println("out")
@@ -244,7 +244,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
       // emitBlock(blk)
       // stream.println(quote(getBlockResult(blk)))
       // stream.println("}")
-    case ArrayToSeq(a) => emitValDef(sym, quote(a) + ".toSeq")
+    case ArrayToSeq(a) => emitValDef(sym, raw"${quote(a)}.toSeq")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -255,9 +255,9 @@ trait CLikeGenArrayOps extends BaseGenArrayOps with CLikeGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
-        case ArrayLength(x) => emitValDef(sym, quote(x) + ".length")
-        case ArrayApply(x,n) => emitValDef(sym, quote(x) + ".apply(" + quote(n) + ")")
-        case ArrayUpdate(x,n,y) => stream.println(quote(x) + ".update(" + quote(n) + "," + quote(y) + ");")
+        case ArrayLength(x) => emitValDef(sym, raw"${quote(x)}.length")
+        case ArrayApply(x,n) => emitValDef(sym, raw"${quote(x)}.apply(${quote(n)})")
+        case ArrayUpdate(x,n,y) => stream.println(raw"${quote(x)}.update(${quote(n)},${quote(y)});")
         case _ => super.emitNode(sym, rhs)
       }
     }
