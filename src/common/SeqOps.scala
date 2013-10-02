@@ -62,9 +62,9 @@ trait ScalaGenSeqOps extends BaseGenSeqOps with ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case SeqNew(xs) => emitValDef(sym, raw"Seq(${(xs map {quote}).mkString(",")})")
-    case SeqLength(x) => emitValDef(sym, raw"${quote(x)}.length")
-    case SeqApply(x,n) => emitValDef(sym, raw"${quote(x)}(${quote(n)})")
+    case SeqNew(xs) => emitValDef(sym, gen"Seq(${(xs map {quote}).mkString(",")})")
+    case SeqLength(x) => emitValDef(sym, gen"$x.length")
+    case SeqApply(x,n) => emitValDef(sym, gen"$x($n)")
     case _ => super.emitNode(sym, rhs)
   }
 }

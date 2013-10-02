@@ -170,7 +170,20 @@ trait GenericCodegen extends BlockTraversal {
     stream = null
     super.reset
   }
-  
+
+  // Provides automatic quoting and remapping in the gen string interpolater
+  implicit class CodegenHelper(sc: StringContext) {
+    def quoteOrRemap(arg: Any): String = arg match {
+      case e: Exp[Any] => quote(e)
+      case m: Manifest[Any] => remap(m)
+      case s: String => s
+      case _ => throw new RuntimeException(s"Could not quote or remap $arg")
+    }
+
+    def gen(args: Any*): String = {
+      sc.raw(args.map(quoteOrRemap): _*)
+    }
+  }
 }
 
 

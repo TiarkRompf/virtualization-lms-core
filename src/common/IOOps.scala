@@ -120,18 +120,18 @@ trait ScalaGenIOOps extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case ObjFileApply(dir) => emitValDef(sym, raw"new java.io.File(${quote(dir)})")
-    case FileGetCanonicalFile(f) => emitValDef(sym, raw"${quote(f)}.getCanonicalFile()")
-    case FileGetPath(f) => emitValDef(sym, raw"${quote(f)}.getPath()")
-    case FileListFiles(f) => emitValDef(sym, raw"${quote(f)}.listFiles()")
-    case ObjBrApply(f) => emitValDef(sym, raw"new java.io.BufferedReader(${quote(f)})")
-    case ObjBwApply(f) => emitValDef(sym, raw"new java.io.BufferedWriter(${quote(f)})")
-    case ObjFrApply(s) => emitValDef(sym, raw"new java.io.FileReader(${quote(s)})")
-    case ObjFwApply(s) => emitValDef(sym, raw"new java.io.FileWriter(${quote(s)})")
-    case BwWrite(b,s) => emitValDef(sym, raw"${quote(b)}.write(${quote(s)})")
-    case BwClose(b) => emitValDef(sym, raw"${quote(b)}.close()")
-    case BrReadline(b) => emitValDef(sym, raw"${quote(b)}.readLine()")
-    case BrClose(b) => emitValDef(sym, raw"${quote(b)}.close()")
+    case ObjFileApply(dir) => emitValDef(sym, gen"new java.io.File($dir)")
+    case FileGetCanonicalFile(f) => emitValDef(sym, gen"$f.getCanonicalFile()")
+    case FileGetPath(f) => emitValDef(sym, gen"$f.getPath()")
+    case FileListFiles(f) => emitValDef(sym, gen"$f.listFiles()")
+    case ObjBrApply(f) => emitValDef(sym, gen"new java.io.BufferedReader($f)")
+    case ObjBwApply(f) => emitValDef(sym, gen"new java.io.BufferedWriter($f)")
+    case ObjFrApply(s) => emitValDef(sym, gen"new java.io.FileReader($s)")
+    case ObjFwApply(s) => emitValDef(sym, gen"new java.io.FileWriter($s)")
+    case BwWrite(b,s) => emitValDef(sym, gen"$b.write($s)")
+    case BwClose(b) => emitValDef(sym, gen"$b.close()")
+    case BrReadline(b) => emitValDef(sym, gen"$b.readLine()")
+    case BrClose(b) => emitValDef(sym, gen"$b.close()")
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -60,12 +60,12 @@ trait ScalaGenMiscOps extends ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case PrintF(f,x) => emitValDef(sym, raw"printf(${(f::x.map(quote)).mkString(",")})")
-    case PrintLn(s) => emitValDef(sym, raw"println(${quote(s)})")
-    case Print(s) => emitValDef(sym, raw"print(${quote(s)})")
-    case Exit(a) => emitValDef(sym, raw"exit(${quote(a)})")
-    case Return(x) => emitValDef(sym, raw"return ${quote(x)}")
-    case Error(s) => emitValDef(sym, raw"error(${quote(s)})")
+    case PrintF(f,x) => emitValDef(sym, gen"printf(${(f::x.map(quote)).mkString(",")})")
+    case PrintLn(s) => emitValDef(sym, gen"println($s)")
+    case Print(s) => emitValDef(sym, gen"print($s)")
+    case Exit(a) => emitValDef(sym, gen"exit($a)")
+    case Return(x) => emitValDef(sym, gen"return $x")
+    case Error(s) => emitValDef(sym, gen"error($s)")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -76,10 +76,10 @@ trait CGenMiscOps extends CGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case PrintF(f,x) => emitValDef(sym, raw"printf(${((Const(f:String)::x).map(quote)).mkString(",")})")
+    case PrintF(f,x) => emitValDef(sym, gen"printf(${((Const(f:String)::x).map(quote)).mkString(",")})")
     case PrintLn(s) => stream.println("printf(\"%s\\n\"," + quote(s) + ");") //TODO: string interpolation
     case Print(s) => stream.println("printf(\"%s\"," + quote(s) + ");") //TODO: string interpolation
-    case Exit(a) => stream.println(raw"exit(${quote(a)});")
+    case Exit(a) => stream.println(gen"exit($a);")
     case _ => super.emitNode(sym, rhs)
   }
 }

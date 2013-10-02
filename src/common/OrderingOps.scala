@@ -87,13 +87,13 @@ trait ScalaGenOrderingOps extends ScalaGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case OrderingLT(a,b) => emitValDef(sym, raw"${quote(a)} < ${quote(b)}")
-    case OrderingLTEQ(a,b) => emitValDef(sym, raw"${quote(a)} <= ${quote(b)}")
-    case OrderingGT(a,b) => emitValDef(sym, raw"${quote(a)} > ${quote(b)}")
-    case OrderingGTEQ(a,b) => emitValDef(sym, raw"${quote(a)} >= ${quote(b)}")
-    case OrderingEquiv(a,b) => emitValDef(sym, raw"${quote(a)} equiv ${quote(b)}")
-    case OrderingMax(a,b) => emitValDef(sym, raw"${quote(a)} max ${quote(b)}")
-    case OrderingMin(a,b) => emitValDef(sym, raw"${quote(a)} min ${quote(b)}")
+    case OrderingLT(a,b) => emitValDef(sym, gen"$a < $b")
+    case OrderingLTEQ(a,b) => emitValDef(sym, gen"$a <= $b")
+    case OrderingGT(a,b) => emitValDef(sym, gen"$a > $b")
+    case OrderingGTEQ(a,b) => emitValDef(sym, gen"$a >= $b")
+    case OrderingEquiv(a,b) => emitValDef(sym, gen"$a equiv $b")
+    case OrderingMax(a,b) => emitValDef(sym, gen"$a max $b")
+    case OrderingMin(a,b) => emitValDef(sym, gen"$a min $b")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -106,19 +106,19 @@ trait CLikeGenOrderingOps extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case OrderingLT(a,b) =>
-          emitValDef(sym, raw"${quote(a)} < ${quote(b)}")
+          emitValDef(sym, gen"$a < $b")
         case OrderingLTEQ(a,b) =>
-          emitValDef(sym, raw"${quote(a)} <= ${quote(b)}")
+          emitValDef(sym, gen"$a <= $b")
         case OrderingGT(a,b) =>
-          emitValDef(sym, raw"${quote(a)} > ${quote(b)}")
+          emitValDef(sym, gen"$a > $b")
         case OrderingGTEQ(a,b) =>
-          emitValDef(sym, raw"${quote(a)} >= ${quote(b)}")
+          emitValDef(sym, gen"$a >= $b")
         case OrderingEquiv(a,b) =>
-          emitValDef(sym, raw"${quote(a)} == ${quote(b)}")
+          emitValDef(sym, gen"$a == $b")
         case OrderingMax(a,b) =>
-          emitValDef(sym, raw"MAX(${quote(a)}, ${quote(b)})")
+          emitValDef(sym, gen"MAX($a, $b)")
         case OrderingMin(a,b) =>
-          emitValDef(sym, raw"MIN(${quote(a)}, ${quote(b)})")
+          emitValDef(sym, gen"MIN($a, $b)")
         case _ => super.emitNode(sym, rhs)
       }
     }
