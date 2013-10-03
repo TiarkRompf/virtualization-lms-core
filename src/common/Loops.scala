@@ -16,10 +16,6 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val v: Sym[Int]
     val body: Def[A]
   }
-
-  object Loop {
-    def unapply[A](l: AbstractLoop[A]): Option[(Exp[Int], Sym[Int], Def[A])] = Some((l.size, l.v, l.body))
-  }
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
   
@@ -52,6 +48,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case SimpleLoop(s,v,body: Def[A]) => simpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f))
+    case Reflect(SimpleLoop(s,v,body: Def[A]), u, es) if u == Control() => reflectMirrored(Reflect(SimpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f)), mapOver(f,u), f(es)))(mtype(manifest[A])) 
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 
