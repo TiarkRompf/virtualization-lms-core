@@ -41,7 +41,7 @@ object CodegenCleaner {
 //        println("PHASE 1A DONE")
         // Now remove all references to this val
         resList.foreach( res => {
-            lines = lines.map( line => line.replaceAll(res._1 + "\\.", res._2 + ".").replaceAll(res._1 + "$",res._2).replaceAll(res._1 + " ", res._2 + " ").replaceAll(res._1 + "\\(",res._2 + "(").replaceAll(res._1 + "\\+",res._2 + "+").replaceAll(res._1 + "\\)",res._2 + ")").replaceAll("= __" + res._1 + "Size", "= __" + res._2 + "Size").replaceAll("^__" + res._1 + "Size", "__" + res._2 + "Size").replaceAll("< __" + res._1 + "Size", "< __" + res._2 + "Size") )
+            lines = lines.map( line => line.replaceAll(res._1 + "\\.", res._2 + ".").replaceAll(res._1 + "$",res._2).replaceAll(res._1 + " ", res._2 + " ").replaceAll(res._1 + "\\(",res._2 + "(").replaceAll(res._1 + "\\+",res._2 + "+").replaceAll(res._1 + "\\)",res._2 + ")").replaceAll("= __" + res._1 + "Size", "= __" + res._2 + "Size").replaceAll("^__" + res._1 + "Size", "__" + res._2 + "Size").replaceAll("< __" + res._1 + "Size", "< __" + res._2 + "Size").replaceAll("__" + res._1 + "Indices", "__" + res._2 + "Indices").replaceAll("__" + res._1 + "LastIndex", "__" + res._2 + "LastIndex") )
         })
 
         // Extract "var x = x" lines
@@ -63,7 +63,7 @@ object CodegenCleaner {
 //        println("PHASE 1A DONE")
         // Now remove all references to this val
         resList.foreach( res => {
-            lines = lines.map( line => line.replaceAll(res._1 + "\\.", res._2 + ".").replaceAll(res._1 + "$",res._2).replaceAll(res._1 + " ", res._2 + " ").replaceAll(res._1 + "\\(",res._2 + "(").replaceAll(res._1 + "\\+",res._2 + "+").replaceAll(res._1 + "\\)",res._2 + ")").replaceAll("= __" + res._1 + "Size", "= __" + res._2 + "Size").replaceAll("^__" + res._1 + "Size", "__" + res._2 + "Size").replaceAll("< __" + res._1 + "Size", "< __" + res._2 + "Size") )
+            lines = lines.map( line => line.replaceAll(res._1 + "\\.", res._2 + ".").replaceAll(res._1 + "$",res._2).replaceAll(res._1 + " ", res._2 + " ").replaceAll(res._1 + "\\(",res._2 + "(").replaceAll(res._1 + "\\+",res._2 + "+").replaceAll(res._1 + "\\)",res._2 + ")").replaceAll("= __" + res._1 + "Size", "= __" + res._2 + "Size").replaceAll("^__" + res._1 + "Size", "__" + res._2 + "Size").replaceAll("< __" + res._1 + "Size", "< __" + res._2 + "Size").replaceAll("__" + res._1 + "Indices", "__" + res._2 + "Indices").replaceAll("__" + res._1 + "LastIndex", "__" + res._2 + "LastIndex") )
         })
 
 
@@ -89,6 +89,12 @@ object CodegenCleaner {
         resList.foreach( res => {
             lines = lines.map( line => line.replaceAll("val " + res._2 + " ","var " + res._1 + " "))
         })
+
+resList.foreach( res => {
+            lines = lines.map( line => line.replaceAll(res._1 + "\\.", res._2 + ".").replaceAll(res._1 + "$",res._2).replaceAll(res._1 + " ", res._2 + " ").replaceAll(res._1 + "\\(",res._2 + "(").replaceAll(res._1 + "\\+",res._2 + "+").replaceAll(res._1 + "\\)",res._2 + ")").replaceAll("= __" + res._1 + "Size", "= __" + res._2 + "Size").replaceAll("^__" + res._1 + "Size", "__" + res._2 + "Size").replaceAll("< __" + res._1 + "Size", "< __" + res._2 + "Size").replaceAll("__" + res._1 + "Indices", "__" + res._2 + "Indices").replaceAll("__" + res._1 + "LastIndex", "__" + res._2 + "LastIndex") )
+        })
+
+
 //        println("PHASE 2B DONE")
         // CASE 3
         for (i <- 1 to lines.length - 1) {

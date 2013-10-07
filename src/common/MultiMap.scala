@@ -8,7 +8,7 @@ import scala.reflect.SourceContext
 
 trait HashMultiMapOps extends Base with Variables {
   object HashMultiMap {
-    def apply[K:Manifest,V:Manifest](size: Int = 0, specializedKey: String = null, specializedValue:String = null)(implicit pos: SourceContext) = hashmultimap_new[K,V](size, specializedKey, specializedValue)
+    def apply[K:Manifest,V:Manifest](size: Long = 0, specializedKey: String = null, specializedValue:String = null)(implicit pos: SourceContext) = hashmultimap_new[K,V](size, specializedKey, specializedValue)
   }
 
   implicit def HashMultiMapToRepHashMapOps[K:Manifest,V:Manifest](m: HashMap[K,Set[V]]) = new hashMultiMapOpsCls(unit(m))
@@ -24,7 +24,7 @@ trait HashMultiMapOps extends Base with Variables {
     def remove(k: Rep[K], v: Rep[V])(implicit pos: SourceContext) = hashmultimap_remove(m,k,v)
   }
 
-  def hashmultimap_new[K:Manifest,V:Manifest](size: Int = 0, specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) : Rep[HashMap[K,Set[V]]]
+  def hashmultimap_new[K:Manifest,V:Manifest](size: Long = 0, specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) : Rep[HashMap[K,Set[V]]]
   def hashmultimap_apply[K:Manifest,V:Manifest](m: Rep[HashMap[K,Set[V]]], k: Rep[K])(implicit pos: SourceContext): Rep[Set[V]]
   def hashmultimap_update[K:Manifest,V:Manifest](m: Rep[HashMap[K,Set[V]]], k: Rep[K], v: Rep[V])(implicit pos: SourceContext): Rep[Unit]
   def hashmultimap_contains[K:Manifest,V:Manifest](m: Rep[HashMap[K,Set[V]]], i: Rep[K])(implicit pos: SourceContext): Rep[Boolean]
@@ -38,7 +38,7 @@ trait HashMultiMapOpsExp extends HashMultiMapOps with EffectExp {
     val mK = manifest[K]
     val mV = manifest[V]
   }
-  case class HashMultiMapNew[K:Manifest,V:Manifest](size: Int = 0, specializedKey: String = "", specializedValue: String ="") extends HashMultiMapDef[K,Set[V],HashMap[K,Set[V]]] 
+  case class HashMultiMapNew[K:Manifest,V:Manifest](size: Long = 0, specializedKey: String = "", specializedValue: String ="") extends HashMultiMapDef[K,Set[V],HashMap[K,Set[V]]] 
   case class HashMultiMapApply[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], k: Exp[K]) extends HashMultiMapDef[K,V,Set[V]]
   case class HashMultiMapUpdate[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], k: Exp[K], v: Exp[V]) extends HashMultiMapDef[K,V,Unit]
   case class HashMultiMapContains[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], i: Exp[K]) extends HashMultiMapDef[K,V,Boolean]
@@ -46,7 +46,7 @@ trait HashMultiMapOpsExp extends HashMultiMapOps with EffectExp {
   case class HashMultiMapGetOrElseEmpty[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], k: Exp[K]) extends HashMultiMapDef[K,V,Set[V]]
   case class HashMultiMapRemove[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], k: Exp[K], v: Exp[V]) extends HashMultiMapDef[K,V,Unit]
 
-  def hashmultimap_new[K:Manifest,V:Manifest](size: Int = 0, specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) = reflectEffect(HashMultiMapNew[K,V](size, specializedKey, specializedValue))
+  def hashmultimap_new[K:Manifest,V:Manifest](size: Long = 0, specializedKey: String = "", specializedValue: String = "")(implicit pos: SourceContext) = reflectEffect(HashMultiMapNew[K,V](size, specializedKey, specializedValue))
   def hashmultimap_apply[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], k: Exp[K])(implicit pos: SourceContext) = reflectEffect(HashMultiMapApply[K,V](m,k))
   def hashmultimap_update[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], k: Exp[K], v: Exp[V])(implicit pos: SourceContext) = reflectEffect(HashMultiMapUpdate[K,V](m,k,v))
   def hashmultimap_contains[K:Manifest,V:Manifest](m: Exp[HashMap[K,Set[V]]], i: Exp[K])(implicit pos: SourceContext) = HashMultiMapContains(m, i)

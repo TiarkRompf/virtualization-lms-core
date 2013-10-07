@@ -34,7 +34,7 @@ trait ListBufferExp extends ListBuffer with BaseExp with EffectExp with Effects 
     case class ListmkString[A:Manifest](x: Rep[mutable.ListBuffer[A]], y: Rep[String]) extends Def[String]
     case class ListBufferForeach[A:Manifest, B:Manifest](l: Exp[mutable.ListBuffer[A]], x: Sym[A], block: Block[B]) extends Def[Unit]
 
-	def newListBuffer[A:Manifest](x: Rep[String]) = reflectEffect(NewListBuffer(x))
+	def newListBuffer[A:Manifest](x: Rep[String]) = reflectEffect(NewListBuffer[A](x))
 	def listBufferAdd[A:Manifest](x: Rep[mutable.ListBuffer[A]], v: Rep[Any]): Rep[Unit] = reflectEffect(ListBufferAdd(x,v))
 	def listBufferRemove[A:Manifest](x: Rep[mutable.ListBuffer[A]], v: Rep[Int]): Rep[A] = reflectEffect(ListBufferRemove(x,v))
 	def listBufferSize[A:Manifest](x: Rep[mutable.ListBuffer[A]]) = reflectEffect(ListBufferSize(x))

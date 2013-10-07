@@ -87,16 +87,16 @@ trait ScalaCompile extends Expressions {
         val cmd = Seq("javap","-classpath",ScalaCompile.workingDir,"-c",className) #| Seq("cut","-d:","-f1") #| Seq("sort","-n") #| Seq("tail","-n1")
         val size = cmd.!!.trim.toInt
         if (size > ScalaCompile.maximumHugeMethodLimit) {
-            println("\n\n--------------------------------------------------------------------------------")
-            println("CATASTROPHIC ERROR ENCOUNTERED!!! YOUR CODE IS TOO BIG TO BE COMPILED BY THE JVM")
-            println("AND WILL BE INTERPRETED INSTEAD. THIS WILL CAUSE A DRAMATIC PERFORMANCE DROP.")
-            println("THE DEVELOPERS WORRY ABOUT YOUR MENTAL HEALTH, AND CANNOT ALLOW YOU TO EXPERIENCE")
-            println("THAT. EXITING NOW!")
-            println("")
-            println("Note: You have two alternatives:")
-            println("\t(a) Refactor your code so that the generated code size is smaller.(advised)")
-            println("\t(b) Set JVM Option DontCompileHugeMethods to false and rerun (Not advised).")
-            println("--------------------------------------------------------------------------------")
+            println("\n\n|------------------------------------------------------------------------------------|")
+            println("| CATASTROPHIC ERROR ENCOUNTERED!!! YOUR CODE IS TOO BIG TO BE COMPILED BY THE JVM   |")
+            println("| AND WILL BE INTERPRETED INSTEAD. THIS WILL CAUSE A DRAMATIC PERFORMANCE DROP.      |")
+            println("| THE DEVELOPERS WORRY ABOUT YOUR MENTAL HEALTH, AND CANNOT ALLOW YOU TO EXPERIENCE  |")
+            println("| THAT. EXITING NOW!                                                                 |")
+            println("|                                                                                    |")
+            println("| Note: You have two alternatives:                                                   |")
+            println("| \t(a) Refactor your code so that the generated code size is smaller.(advised)  |")
+            println("| \t(b) Set JVM Option DontCompileHugeMethods to false and rerun (Not advised).  |")
+            println("| -----------------------------------------------------------------------------------|")
             System.exit(0)
         }
         return size;

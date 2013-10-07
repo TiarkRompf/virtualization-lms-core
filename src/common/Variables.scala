@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.reflect.SourceContext
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 import scala.virtualization.lms.util.OverloadHack
 import scala.reflect.SourceContext
 
@@ -216,7 +216,7 @@ trait ScalaGenVariables extends ScalaGenEffect {
   val IR: VariablesExp
   import IR._
 
-  val emittedLazyVars = new ListBuffer[Sym[Variable[Any]]]
+  val emittedLazyVars = new mutable.ListBuffer[Sym[Variable[Any]]]
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
