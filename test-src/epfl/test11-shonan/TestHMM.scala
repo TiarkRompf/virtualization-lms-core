@@ -27,20 +27,20 @@ class TestHMM extends FileDiffSuite {
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp with StaticDataExp
       with IfThenElseExpOpt with PrintExp 
       with CompileScala { self => 
-    //override val verbosity = 1
+    ////override val verbosity = 1
     val codegen = new ScalaGenNumericOps with ScalaGenStaticData with ScalaGenOrderingOps with ScalaGenArrayOps with ScalaGenRangeOps
       with ScalaGenVariables with ScalaGenIfThenElse
       with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
+    codegen.emitSource1(test, "Test", new PrintWriter(System.out))
     run()
   }
 
 
   // test case input data
-  trait Runner extends Compile {
+  trait Runner extends CompileScala {
     def test(x: Rep[Array[Int]]): Rep[Array[Int]]
     def run() {
-      val f = compile(test)
+      val f = compile1(test)
       val v0 = Array(3, 1, 5, -2, 4)
       val v1 = f(v0)
       v1 foreach println

@@ -1,0 +1,93 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class VWAPonInsertBIDS extends ((Double, Long, Long, Double, Double, org.dbtoaster.dbtoasterlib.K3Collection.SimpleVal[Double], org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Double, Double], org.dbtoaster.dbtoasterlib.K3Collection.SimpleVal[Double], org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Double, Double])=>(Unit)) {
+def apply(x0:Double, x1:Long, x2:Long, x3:Double, x4:Double, x5:org.dbtoaster.dbtoasterlib.K3Collection.SimpleVal[Double], x6:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Double, Double], x7:org.dbtoaster.dbtoasterlib.K3Collection.SimpleVal[Double], x8:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Double, Double]): Unit = {
+val x9 = x5 // mutable SimpleVal
+val x10 = x6 // mutable K3PersistentCollection
+val x11 = x7 // mutable SimpleVal
+val x12 = x8 // mutable K3PersistentCollection
+x10.updateValue(x4,((if ((x10.contains(x4))) {)(x10.lookup(x4,0))
+} else {
+0.0
+}
+ + (x4 * x3)))
+x11.update(((x11.get()) + x3))
+x12.updateValue(x4,((if ((x12.contains(x4))) {)(x12.lookup(x4,0))
+} else {
+0.0
+}
+ + x3))
+var x33 = 0.0
+val x31 = (x11.get()) * 0.25
+x10.foreach{
+x35 => 
+var x42 = 0.0
+val x36 = x35._1
+x12.foreach{
+x43 => 
+x42 = ((x42) + ((x43._2) * (if ((x36 < (x43._1))) {)1.0
+} else {
+0.0
+}
+))
+}
+x33 = ((x33) + (((1L * (x35._2)) * 1L) * (if (((x42) < x31)) {)1.0
+} else {
+0.0
+}
+))
+}
+x9.update((0.0 + (x33)))
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class VWAPonDeleteBIDS extends ((Double, Long, Long, Double, Double, org.dbtoaster.dbtoasterlib.K3Collection.SimpleVal[Double], org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Double, Double], org.dbtoaster.dbtoasterlib.K3Collection.SimpleVal[Double], org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Double, Double])=>(Unit)) {
+def apply(x76:Double, x77:Long, x78:Long, x79:Double, x80:Double, x81:org.dbtoaster.dbtoasterlib.K3Collection.SimpleVal[Double], x82:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Double, Double], x83:org.dbtoaster.dbtoasterlib.K3Collection.SimpleVal[Double], x84:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Double, Double]): Unit = {
+val x85 = x81 // mutable SimpleVal
+val x86 = x82 // mutable K3PersistentCollection
+val x87 = x83 // mutable SimpleVal
+val x88 = x84 // mutable K3PersistentCollection
+x86.updateValue(x80,((if ((x86.contains(x80))) {)(x86.lookup(x80,0))
+} else {
+0.0
+}
+ + ((-1L * x80) * x79)))
+val x98 = -1L * x79
+x87.update(((x87.get()) + x98))
+x88.updateValue(x80,((if ((x88.contains(x80))) {)(x88.lookup(x80,0))
+} else {
+0.0
+}
+ + x98))
+var x111 = 0.0
+val x109 = (x87.get()) * 0.25
+x86.foreach{
+x113 => 
+var x120 = 0.0
+val x114 = x113._1
+x88.foreach{
+x121 => 
+x120 = ((x120) + ((x121._2) * (if ((x114 < (x121._1))) {)1.0
+} else {
+0.0
+}
+))
+}
+x111 = ((x111) + (((1L * (x113._2)) * 1L) * (if (((x120) < x109)) {)1.0
+} else {
+0.0
+}
+))
+}
+x85.update((0.0 + (x111)))
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

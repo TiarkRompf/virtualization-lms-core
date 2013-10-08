@@ -24,12 +24,11 @@ x3
 x6
 }
 val x9 = x8.apply(10)
-val x10 = x3.update(10, 10.0)
-val x11 = x6.update(10, 20.0)
+x3.update(10, 10.0)
+x6.update(10, 20.0)
 val x12 = x8.apply(10)
 val x13 = x12-x9
-val x14 = println(x13)
-x14
+println(x13)
 }
 }
 /*****************************************

@@ -4,6 +4,7 @@ package test8
 
 import common._
 import internal.{NestedBlockTraversal}
+import internal.Config
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
 import test7.{ArrayLoops,ArrayLoopsExp,ScalaGenArrayLoops}
@@ -41,12 +42,12 @@ class TestSpeculative extends FileDiffSuite {
       with EqualExpOpt with VariablesExpOpt 
       with IfThenElseExpOpt with WhileExpOptSpeculative with SplitEffectsExpFat with RangeOpsExp with PrintExp 
       with CompileScala { self => 
-    override val verbosity = 1
+    Config.verbosity = 1
     val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenWhileOptSpeculative with ScalaGenSplitEffects
       with ScalaGenRangeOps with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
-    val f = compile(test)
+    codegen.emitSource1(test, "Test", new PrintWriter(System.out))
+    val f = compile1(test)
     f(7)
   }
   

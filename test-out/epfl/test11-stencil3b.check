@@ -62,13 +62,13 @@ var writes: List((Sym(31),Const(())), (Sym(32),Const(())), (Sym(34),Const(())), 
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0 extends ((Array[Double])=>(Array[Double])) {
+class staged6 extends ((Array[Double])=>(Array[Double])) {
 def apply(x0:Array[Double]): Array[Double] = {
 val x1 = x0.length
 val x2 = new Array[Double](x1)
 val x3 = x1 - 2
 val x48 = x3 > 2
-val x102 = if (x48) {
+if (x48) {
 val x49 = x0(2)
 val x50 = x0(3)
 val x51 = x49 * x50
@@ -88,15 +88,15 @@ val x64 = x63 * x53
 val x65 = x62 + x64
 val x66 = x65 * x55
 val x67 = x61 + x66
-val x68 = x2(2) = x67
-var x69: Double = x56
-var x70: Double = x57
-var x71: Double = x59
-var x72: Double = x60
-var x73: Int = 3
-var x74: Int = 4
-var x76 : Int = 3
-val x100 = while (x76 < x3) {
+x2(2) = x67
+var x69 = x56
+var x70 = x57
+var x71 = x59
+var x72 = x60
+var x73 = 3
+var x74 = 4
+var x76 = 3
+while (x76 < x3) {
 val x77 = x69
 val x78 = x70
 val x79 = x71
@@ -111,7 +111,7 @@ val x88 = x87 + x78
 val x89 = x79 * x88
 val x90 = x79 - x89
 val x91 = x90 + x80
-val x92 = x2(x81) = x91
+x2(x81) = x91
 x69 = x85
 x70 = x86
 x71 = x88
@@ -120,7 +120,6 @@ x73 = x82
 x74 = x84
 x76 = x76 + 1
 }
-x100
 } else {
 ()
 }
@@ -131,7 +130,6 @@ x2
   End of Generated Code                  
 *******************************************/
 
-compilation: ok
 0.0
 0.0
 0.8063999999999999

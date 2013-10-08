@@ -343,6 +343,12 @@ trait TupleOps extends Base {
   def tuple22_get21[A21:Manifest](t: Rep[(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,A21,_)])(implicit pos: SourceContext) : Rep[A21]
   def tuple22_get22[A22:Manifest](t: Rep[(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,A22)])(implicit pos: SourceContext) : Rep[A22]
 
+  class ProductOps(x: Rep[Product]) {
+    def apply(i: Rep[Int]) = product_apply(x,i)
+  }
+  implicit def repProductToProductOps(x: Rep[Product]) = new ProductOps(x)
+  def product_apply(x: Rep[Product], i: Rep[Int]): Rep[Any]
+  def listToTuple(y: List[Rep[Any]]): Rep[Product]
 }
 
 trait TupleOpsExp extends TupleOps with EffectExp {
@@ -1966,7 +1972,11 @@ trait TupleOpsExp extends TupleOps with EffectExp {
     case Def(ETuple22(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17,a18,a19,a20,a21,a22)) => a22
     case _ => Tuple22Access22(t)
   }
-
+  
+  case class ProductApply(x: Rep[Product], i: Rep[Int]) extends Def[Any]
+  case class ListToTuple(i: List[Rep[Any]]) extends Def[Product]
+  def product_apply(x: Rep[Product], i: Rep[Int]) = reflectEffect(ProductApply(x,i))
+  def listToTuple(y: List[Rep[Any]]) = reflectEffect(ListToTuple(y))
 
   object Both { def unapply[T](x:T):Some[(T,T)] = Some((x,x)) }
 
@@ -2552,6 +2562,13 @@ trait ScalaGenTupleOps extends ScalaGenBase {
     case Tuple5Access4(t) => emitValDef(sym, quote(t) + "._4")
     case Tuple5Access5(t) => emitValDef(sym, quote(t) + "._5")
 
+    case ProductApply(x,i) => emitValDef(sym, quote(x) + "._" + quote(i))    
+    case ListToTuple(y) => {
+        // Avoid unnecessary tuple construction
+        if (y.size == 1) emitValDef(sym, y.map(n => quote(n)).mkString(","))
+        else emitValDef(sym, "new Tuple" + y.size + "(" + y.map(n => quote(n)).mkString(",") + ")")
+    }   
+ 
     case ETuple6(a1,a2,a3,a4,a5,a6) =>
       emitValDef(sym, "(" + quote(a1, true) + "," + quote(a2, true) + "," + quote(a3, true) + "," + quote(a4, true) + "," + quote(a5, true) + "," + quote(a6, true) + ")")
     case Tuple6Access1(t) => emitValDef(sym, quote(t) + "._1")

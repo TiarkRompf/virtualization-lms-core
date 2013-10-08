@@ -4,20 +4,20 @@
 *******************************************/
 class Test extends ((Double)=>(Double)) {
 def apply(x0:Double): Double = {
-val x1 = println("yoyo")
+println("yoyo")
 val x2 = x0 == x0
 val x6 = x0+4.0
 val x9 = if (x2) {
-val x3 = println("yoyo")
-val x4 = println("xxx")
-val x5 = println("yoyo")
+println("yoyo")
+println("xxx")
+println("yoyo")
 x6
 } else {
 val x8 = x0+6.0
 x8
 }
-val x10 = println("yyy")
-val x11 = println("yoyo")
+println("yyy")
+println("yoyo")
 val x12 = x9+x6
 x12
 }
@@ -25,7 +25,6 @@ x12
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 yoyo
 yoyo
 xxx
@@ -34,21 +33,21 @@ yyy
 yoyo
 22.0
 function main(x0) {
-var x1 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
+document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
 var x2 = x0==x0
 var x6 = x0+4.0
 var x9
 if (x2) {
-var x3 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
-var x4 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("xxx"))
-var x5 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
+document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
+document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("xxx"))
+document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
 x9=x6
 } else {
 var x8 = x0+6.0
 x9=x8
 }
-var x10 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yyy"))
-var x11 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
+document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yyy"))
+document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
 var x12 = x9+x6
 return x12
 }

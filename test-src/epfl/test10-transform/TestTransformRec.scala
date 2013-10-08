@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package epfl
 package test10
 
+import internal.Config
 import common._
 import test1._
 import test2._
@@ -21,7 +22,7 @@ class TestTransformRec extends FileDiffSuite {
   }
 
   trait Impl extends DSL with ArithExpOpt with EqualExp with IfThenElseFatExp with LoopsFatExp with FunctionsExternalDef1 { self =>
-    override val verbosity = 1
+    Config.verbosity = 1
 
     case class DefineFun2[A,B](res: Block[B])(val arg1: Sym[A], val arg2: Sym[Int]) extends Def[A=>B]
 

@@ -34,12 +34,11 @@ x9
 }
 val x12 = x11.apply(5)
 val x13 = x12.apply(50)
-val x14 = x3.update(50, 50.0)
+x3.update(50, 50.0)
 val x15 = x11.apply(5)
 val x16 = x15.apply(50)
 val x17 = x16-x13
-val x18 = println(x17)
-x18
+println(x17)
 }
 }
 /*****************************************

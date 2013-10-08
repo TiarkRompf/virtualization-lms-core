@@ -5,6 +5,7 @@ package test7
 import common._
 import test1._
 
+import internal.Config
 import util.OverloadHack
 import scala.reflect.SourceContext
 
@@ -171,11 +172,11 @@ class TestFusion2 extends FileDiffSuite {
   def testFusion21 = {
     withOutFile(prefix+"fusion21") {
       new FusionProg21 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
-        override val verbosity = 1
+        Config.verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"fusion21")
@@ -184,11 +185,11 @@ class TestFusion2 extends FileDiffSuite {
   def testFusion22 = {
     withOutFile(prefix+"fusion22") {
       new FusionProg22 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
-        override val verbosity = 1
+        Config.verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"fusion22")
@@ -197,11 +198,11 @@ class TestFusion2 extends FileDiffSuite {
   def testFusion23 = {
     withOutFile(prefix+"fusion23") {
       new FusionProg23 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
-        override val verbosity = 1
+        Config.verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"fusion23")
@@ -216,11 +217,11 @@ class TestFusion2 extends FileDiffSuite {
            0
          } else super.infix_-(x,y) //  optimizations to trigger test behavior
 
-         override val verbosity = 1
+         Config.verbosity = 1
          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
            with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
              override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
-         codegen.emitSource(test, "Test", new PrintWriter(System.out))
+         codegen.emitSource1(test, "Test", new PrintWriter(System.out))
          println("// NOTE: generated code is not ideal yet (x2 is never used). see source for discussion.")
        }
      }

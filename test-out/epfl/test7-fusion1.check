@@ -21,7 +21,7 @@ val x12 = x10.apply(x11)
 x12
 }
 val x14 = x13/100
-val x26 = println(x14)
+println(x14)
 val x18 = LoopReduce(100) { x15 => 
 val x16 = x10.apply(x15)
 val x17 = x16*x16
@@ -35,8 +35,7 @@ x21
 val x23 = x22/100
 val x24 = x23*x23
 val x25 = x19-x24
-val x27 = println(x25)
-x27
+println(x25)
 }
 }
 /*****************************************

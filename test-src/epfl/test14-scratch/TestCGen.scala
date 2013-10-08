@@ -34,7 +34,7 @@ class TestCGen extends FileDiffSuite {
         val stream = new PrintWriter(System.out)
         stream.println("/* FILE: " + x.name + ".c */")
         for ((_,v) <- rec) codegen.emitForwardDef(mtype(v.mA)::Nil, v.name, stream)(mtype(v.mB))
-        codegen.emitSource(x.f, x.name, stream)(mtype(x.mA), mtype(x.mB))
+        codegen.emitSource1(x.f, x.name, stream)(mtype(x.mA), mtype(x.mB))
       }
     }
     emitAll()

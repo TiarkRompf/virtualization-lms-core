@@ -354,8 +354,8 @@ class TestGeneratorOps extends FileDiffSuite {
         // scala.Console.println(testc7(1,2))
 
         //test8: fromSeq
-        codegen.emitSource(test8 _ , "test8", printWriter)
-        val testc8 = compile(test8)
+        codegen.emitSource1(test8 _ , "test8", printWriter)
+        val testc8 = compile1(test8)
         scala.Console.println(testc8(1))
 
         //test6b: a flatMap with boolGenerators
@@ -369,8 +369,8 @@ class TestGeneratorOps extends FileDiffSuite {
         scala.Console.println(testc9(1,10))
 
         //test10: stream fusion intro example
-        codegen.emitSource(test10 _ , "test10", printWriter)
-        val testc10 = compile(test10)
+        codegen.emitSource1(test10 _ , "test10", printWriter)
+        val testc10 = compile1(test10)
         scala.Console.println(testc10(10))
 
         //test6: a map o flatten

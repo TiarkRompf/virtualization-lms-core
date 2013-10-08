@@ -3,15 +3,15 @@
 *******************************************/
 class test1 extends ((Int, Int)=>(Int)) {
 def apply(x0:Int, x1:Int): Int = {
-var x3: Int = 0
+var x3 = 0
 val x2 = x0 < x1
-val x10 = if (x2) {
+if (x2) {
 var x5 : Int = x0
-val x8 = while (x5 < x1) {
+while (x5 < x1) {
 x3 = x5
 x5 = x5 + 1
 }
-x8
+
 } else {
 ()
 }
@@ -27,16 +27,16 @@ x11
 *******************************************/
 class test2 extends ((Int, Int)=>(Int)) {
 def apply(x13:Int, x14:Int): Int = {
-var x16: Int = 0
+var x16 = 0
 val x15 = x13 < x14
-val x24 = if (x15) {
+if (x15) {
 var x18 : Int = x13
-val x22 = while (x18 < x14) {
+while (x18 < x14) {
 val x19 = x18 * 2
 x16 = x19
 x18 = x18 + 1
 }
-x22
+
 } else {
 ()
 }
@@ -47,24 +47,23 @@ x25
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 20
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class test3 extends ((Int, Int)=>(Int)) {
 def apply(x41:Int, x42:Int): Int = {
-var x44: Int = 0
+var x44 = 0
 val x43 = x41 < x42
-val x53 = if (x43) {
+if (x43) {
 var x46 : Int = x41
-val x51 = while (x46 < x42) {
+while (x46 < x42) {
 val x47 = x44
 val x48 = x47 + x46
 x44 = x48
 x46 = x46 + 1
 }
-x51
+
 } else {
 ()
 }
@@ -75,21 +74,20 @@ x54
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 55
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class test4 extends ((Int, Int)=>(Int)) {
 def apply(x71:Int, x72:Int): Int = {
-var x74: Int = 0
+var x74 = 0
 val x73 = x71 < x72
-val x87 = if (x73) {
+if (x73) {
 var x76 : Int = x71
-val x85 = while (x76 < x72) {
+while (x76 < x72) {
 val x77 = x76 % 2
 val x78 = x77 != 0
-val x83 = if (x78) {
+if (x78) {
 val x79 = x74
 val x80 = x79 + x76
 x74 = x80
@@ -99,7 +97,7 @@ x74 = x80
 }
 x76 = x76 + 1
 }
-x85
+
 } else {
 ()
 }
@@ -110,33 +108,32 @@ x88
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 25
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class test5 extends ((Int, Int)=>(Int)) {
 def apply(x109:Int, x110:Int): Int = {
-var x112: Int = 0
+var x112 = 0
 val x111 = x109 < x110
-val x121 = if (x111) {
+if (x111) {
 var x114 : Int = x109
-val x119 = while (x114 < x110) {
+while (x114 < x110) {
 val x115 = x112
 val x116 = x115 + x114
 x112 = x116
 x114 = x114 + 1
 }
-x119
+
 } else {
 ()
 }
-val x133 = if (x111) {
+if (x111) {
 var x122 : Int = x109
-val x131 = while (x122 < x110) {
+while (x122 < x110) {
 val x123 = x122 % 2
 val x124 = x123 != 0
-val x129 = if (x124) {
+if (x124) {
 val x125 = x112
 val x126 = x125 + x122
 x112 = x126
@@ -146,7 +143,7 @@ x112 = x126
 }
 x122 = x122 + 1
 }
-x131
+
 } else {
 ()
 }
@@ -157,34 +154,33 @@ x134
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 80
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class test6 extends ((Int, Int)=>(Int)) {
 def apply(x163:Int, x164:Int): Int = {
-var x166: Int = 0
+var x166 = 0
 val x165 = x163 < x164
-val x182 = if (x165) {
+if (x165) {
 var x168 : Int = x163
-val x180 = while (x168 < x164) {
+while (x168 < x164) {
 val x169 = x163 < x168
-val x178 = if (x169) {
+if (x169) {
 var x171 : Int = x163
-val x176 = while (x171 < x168) {
+while (x171 < x168) {
 val x172 = x166
 val x173 = x172 + x171
 x166 = x173
 x171 = x171 + 1
 }
-x176
+
 } else {
 ()
 }
 x168 = x168 + 1
 }
-x180
+
 } else {
 ()
 }
@@ -195,14 +191,13 @@ x183
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 20
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class test8 extends ((Int)=>(Int)) {
 def apply(x207:Int): Int = {
-var x208: Int = 0
+var x208 = 0
 val x209 = x208
 val x210 = x209 + 1
 x208 = x210
@@ -219,22 +214,21 @@ x218
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 6
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class test6b extends ((Int, Int)=>(Int)) {
 def apply(x233:Int, x234:Int): Int = {
-var x236: Int = 0
+var x236 = 0
 val x235 = x233 < x234
 val x252 = if (x235) {
 var x238 : Int = x233
-val x250 = while (x238 < x234) {
+while (x238 < x234) {
 val x239 = x233 < x238
 val x248 = if (x239) {
 var x241 : Int = x233
-val x246 = while (x241 < x238) {
+while (x241 < x238) {
 val x242 = x236
 val x243 = x242 + x241
 x236 = x243
@@ -257,18 +251,17 @@ x253
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 20
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class test9 extends ((Int, Int)=>(Int)) {
 def apply(x277:Int, x278:Int): Int = {
-var x280: Int = 0
+var x280 = 0
 val x279 = x277 < x278
-val x292 = if (x279) {
+if (x279) {
 var x282 : Int = x277
-val x290 = while (x282 < x278) {
+while (x282 < x278) {
 val x286 = x280
 val x283 = x282 * 2
 val x284 = x283 + 1
@@ -277,7 +270,7 @@ val x287 = x286 + x285
 x280 = x287
 x282 = x282 + 1
 }
-x290
+
 } else {
 ()
 }
@@ -288,35 +281,34 @@ x293
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 297
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class test10 extends ((Int)=>(Int)) {
 def apply(x313:Int): Int = {
-var x315: Int = 0
+var x315 = 0
 val x314 = 1 < x313
-val x332 = if (x314) {
+if (x314) {
 var x317 : Int = 1
-val x330 = while (x317 < x313) {
+while (x317 < x313) {
 val x318 = 1 < x317
-val x328 = if (x318) {
+if (x318) {
 var x320 : Int = 1
-val x326 = while (x320 < x317) {
+while (x320 < x317) {
 val x322 = x315
 val x321 = x317 * x320
 val x323 = x322 + x321
 x315 = x323
 x320 = x320 + 1
 }
-x326
+
 } else {
 ()
 }
 x317 = x317 + 1
 }
-x330
+
 } else {
 ()
 }
@@ -327,34 +319,33 @@ x333
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 870
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class test11 extends ((Int, Int)=>(Int)) {
 def apply(x357:Int, x358:Int): Int = {
-var x360: Int = 0
+var x360 = 0
 val x359 = x357 < x358
-val x377 = if (x359) {
+if (x359) {
 var x362 : Int = x357
-val x375 = while (x362 < x358) {
+while (x362 < x358) {
 val x363 = x357 < x362
-val x373 = if (x363) {
+if (x363) {
 var x366 : Int = x357
-val x371 = while (x366 < x362) {
+while (x366 < x362) {
 val x367 = x360
 val x368 = x367 + x366
 x360 = x368
 x366 = x366 + 1
 }
-x371
+
 } else {
 ()
 }
 x362 = x362 + 1
 }
-x375
+
 } else {
 ()
 }
@@ -365,5 +356,4 @@ x378
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 20
