@@ -76,6 +76,10 @@ trait SymMetaDataFixerTransform extends NestedBlockTraversal {
           case s:Sym[_] => if(s.inSameParentBlockAs(sym)) { s.incRefCount(1) } else { s.incRefCount(10) }
           case _ =>
         }
+      } else {
+        syms(x._3).foreach {
+          s: Sym[Any] => if(s.inSameParentBlockAs(sym)) { s.incRefCount(1) } else { s.incRefCount(10) }
+        }
       }
     }
   }
