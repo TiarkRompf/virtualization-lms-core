@@ -3,8 +3,8 @@
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
-var x2: Int = x0
-var x3: Double = 0.0
+var x2 = x0
+var x3 = 0.0
 val x5 = x2
 val x6 = x3
 val x9 = x5+0.0
@@ -14,8 +14,7 @@ x3 = x10
 val x14 = x2
 val x15 = x3
 val x16 = Recorddoubledouble(re = x14, im = x15)
-val x17 = println(x16)
-x17
+println(x16)
 }
 }
 /*****************************************

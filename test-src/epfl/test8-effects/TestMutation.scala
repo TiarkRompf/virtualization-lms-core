@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package epfl
 package test8
 
+import internal.Config
 import common._
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
@@ -124,11 +125,11 @@ class TestMutation extends FileDiffSuite {
   }
   trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with WhileExp with RangeOpsExp with PrintExp { self => 
-    override val verbosity = 2
+    Config.verbosity = 2
     val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhile with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
+    codegen.emitSource1(test, "Test", new PrintWriter(System.out))
   }
   
   def testMutation1 = {

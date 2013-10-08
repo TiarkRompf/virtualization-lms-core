@@ -1,0 +1,95 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test(px26:Array[Int]) extends ((Array[Int])=>(Array[Int])) {
+def apply(x0:Array[Int]): Array[Int] = {
+val x1 = new Array[Int](5)
+val x2 = x1(0)
+val x4 = x0(0)
+val x5 = x2 + x4
+x1(0) = x5
+val x9 = x0(3)
+val x10 = x5 + x9
+x1(0) = x10
+val x13 = x1(1)
+x1(1) = x13
+val x8 = x0(2)
+val x16 = x13 + x8
+x1(1) = x16
+val x18 = x1(2)
+x1(2) = x18
+val x7 = x0(1)
+val x21 = x18 + x7
+x1(2) = x21
+val x25 = x1(3)
+val x26 = px26 // static data: Array(0,0,1,1,1)
+var x24 : Int = 0
+while (x24 < 5) {
+val x27 = x26(x24)
+val x28 = x0(x24)
+val x29 = x27 * x28
+val x30 = x25 + x29
+x1(3) = x30
+x24 = x24 + 1
+}
+val x34 = x1(4)
+x1(4) = x34
+val x37 = x34 + x8
+x1(4) = x37
+val x12 = x0(4)
+val x39 = x37 + x12
+x1(4) = x39
+x1
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged1(px67:Array[Int]) extends ((Array[Int])=>(Array[Int])) {
+def apply(x42:Array[Int]): Array[Int] = {
+val x43 = new Array[Int](5)
+val x44 = x43(0)
+val x46 = x42(0)
+val x47 = x44 + x46
+x43(0) = x47
+val x51 = x42(3)
+val x52 = x47 + x51
+x43(0) = x52
+val x55 = x43(1)
+x43(1) = x55
+val x50 = x42(2)
+val x58 = x55 + x50
+x43(1) = x58
+val x60 = x43(2)
+x43(2) = x60
+val x49 = x42(1)
+val x63 = x60 + x49
+x43(2) = x63
+val x66 = x43(3)
+val x67 = px67 // static data: Array(0,0,1,1,1)
+var x65 : Int = 0
+while (x65 < 5) {
+val x68 = x67(x65)
+val x69 = x42(x65)
+val x70 = x68 * x69
+val x71 = x66 + x70
+x43(3) = x71
+x65 = x65 + 1
+}
+val x75 = x43(4)
+x43(4) = x75
+val x78 = x75 + x50
+x43(4) = x78
+val x54 = x42(4)
+val x80 = x78 + x54
+x43(4) = x80
+x43
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+

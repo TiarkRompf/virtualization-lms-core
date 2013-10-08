@@ -11,11 +11,11 @@ val x10 = LoopArray(100) { x7 =>
 val x8 = 0.0-x7
 x8
 }
-var x13: Array[Double] = x10
+var x13 = x10
 val x11 = LoopArray(100) { x7 => 
 x7
 }
-var x14: Array[Int] = x11
+var x14 = x11
 val x4 = LoopArray(100) { x1 => 
 x1
 }
@@ -38,9 +38,8 @@ x14 = x5
 val x24 = x13
 val x25 = x14
 val x26 = new { val re = x24; val im = x25 }
-val x27 = println(x26)
-val x28 = println(x21)
-x28
+println(x26)
+println(x21)
 }
 }
 /*****************************************

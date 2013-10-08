@@ -5,7 +5,7 @@ class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
 var x46 = null.asInstanceOf[Unit]
 var x50 = null.asInstanceOf[Unit]
-var x2: Double = 0.0
+var x2 = 0.0
 while ({ // List(Sym(46), Sym(50))
 // dummy placeholder for previous iteration: List(Sym(28), Sym(27)) = Sym(4) / List(Sym(2), Sym(46))
 val x29 = x2
@@ -16,20 +16,18 @@ x30
 val x35 = x2
 val x38 = x35+1.0
 x2 = x38
-val x34 = println(7)
-val x36 = println(x35)
-val x40 = println(2)
+println(7)
+println(x35)
+println(2)
 }
-val x51 = println(7)
+println(7)
 val x52 = x2
-val x53 = println(x52)
-x53
+println(x52)
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 7
 0.0
 2

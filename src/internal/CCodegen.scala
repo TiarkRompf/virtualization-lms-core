@@ -112,7 +112,7 @@ trait CCodegen extends CLikeCodegen {
     out.println(remap(manifest[A])+" "+functionName+"("+args.map(a => remap(a)).mkString(", ")+");")
   }
       
-  def emitSource[A:Manifest](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
+  def emitSource[A:Manifest](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter, serializable: Boolean = false) = {
 
     val sA = remap(manifest[A])
 

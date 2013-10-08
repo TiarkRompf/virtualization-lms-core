@@ -28,7 +28,7 @@ class TestTransform extends FileDiffSuite {
   trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with ArrayMutationExp with IfThenElseFatExp with LoopsFatExp with WhileExpOptSpeculative 
     with RangeOpsExp with PrintExp with FatExpressions { self =>
-    override val verbosity = 1
+    //override val verbosity = 1
     val runner = new Runner { val p: self.type = self }
     runner.run()
   }

@@ -71,7 +71,7 @@ trait TupledGeneratorProg extends K3PersistentCollectionOps with NumericOps
 
       val var___lift_ret__16:Rep[Long] = x._2 /* Rep[Long] => Rep[Long] */;
 
-      MST_mASKS2_E1_1.slice((var_B_BROKER_ID), List(unit(0))).map((y:Rep[Tuple2[Tuple2[Long,Double],Double]]) => {
+      MST_mASKS2_E1_1.slice((var_B_BROKER_ID), NewList(unit(0))).map((y:Rep[Tuple2[Tuple2[Long,Double],Double]]) => {
         val v: Rep[Tuple2[Double,Double]] = ({
           (x:Rep[Tuple2[Tuple2[Long,Double], Double]]) => {
             val var_B_BROKER_ID:Rep[Long] = x._1._1 /* Rep[Long] => Rep[Long] */;

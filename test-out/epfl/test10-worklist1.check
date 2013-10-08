@@ -7,7 +7,7 @@ register replacement for Sym(3)
 val x1 = VectorZeros(Const(100))
 val x2 = VectorPlus(Sym(1),Sym(1))
 val x3 = VectorPlus(Sym(1),Sym(2))
-val x4 = println(x3)
+println(x3)
 
 ### next
 install replacement for Sym(1)
@@ -45,7 +45,7 @@ val x17 = x15+x16
 x17
 }
 val x19 = new { val data = x18; val length = 100 }
-val x20 = println(x19)
+println(x19)
 
 ### next
 install replacement for Sym(10)
@@ -70,4 +70,4 @@ val x33 = x31+x32
 x33
 }
 val x35 = new { val data = x34; val length = 100 }
-val x36 = println(x35)
+println(x35)

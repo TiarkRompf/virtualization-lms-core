@@ -3,6 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.reflect.SourceContext
+import scala.collection.mutable
 import scala.virtualization.lms.util.OverloadHack
 import scala.reflect.SourceContext
 
@@ -215,8 +216,36 @@ trait ScalaGenVariables extends ScalaGenEffect {
   val IR: VariablesExp
   import IR._
 
+  val emittedLazyVars = new mutable.ListBuffer[Sym[Variable[Any]]]
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
+//<<<<<<< HEAD
+    case NewVar(init) => {
+        if (sym.tp != manifest[Variable[Nothing]])
+            emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
+    }
+    case ReadVar(null) => {}//emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], "null")
+    case Assign(Variable(a), b) => {
+        val lhsIsNull = a match {
+            case Def(Reflect(NewVar(y: Exp[_]),_,_)) => 
+                if (y.tp == manifest[Nothing]) true
+                else false
+            case _ => false
+        }
+        val obj = a.asInstanceOf[Sym[Variable[Any]]]
+        if (lhsIsNull && !emittedLazyVars.contains(obj)) {
+            emitVarDef(obj, quote(b))
+            emittedLazyVars += obj
+        }
+        else emitAssignment(sym, quote(a), quote(b))
+    }
+    //case Assign(a, b) => emitAssignment(quote(a), quote(b))
+    case VarPlusEquals(Variable(a), b) => stream.println(quote(a) + " += " + quote(b))
+    case VarMinusEquals(Variable(a), b) => stream.println(quote(a) + " -= " + quote(b))
+    case VarTimesEquals(Variable(a), b) => stream.println(quote(a) + " *= " + quote(b))
+    case VarDivideEquals(Variable(a), b) => stream.println(quote(a) + " /= " + quote(b))
+/*=======
     case NewVar(init) => emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
     case Assign(Variable(a), b) => stream.println(quote(a) + " = " + quote(b)) //emitAssignment(sym, quote(a), quote(b))
     //case Assign(a, b) => emitAssignment(sym, quote(a), quote(b))
@@ -224,6 +253,7 @@ trait ScalaGenVariables extends ScalaGenEffect {
     case VarMinusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(b))
     case VarTimesEquals(Variable(a), b) => emitValDef(sym, quote(a) + " *= " + quote(b))
     case VarDivideEquals(Variable(a), b) => emitValDef(sym, quote(a) + " /= " + quote(b))
+>>>>>>> 4a6b4db07f1a5931db6c571aaaa9ee91692bb126*/
     case _ => super.emitNode(sym, rhs)
   }
 }

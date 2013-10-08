@@ -115,24 +115,35 @@ trait GenericCodegen extends BlockTraversal {
   }
     
   def emitBlock(y: Block[Any]): Unit = traverseBlock(y)
+
+  def emitBlockResult[A: Manifest](b: Block[A]) {	
+      if (remap(manifest[A]) != "Unit") stream.println(quote(getBlockResult(b)))
+  }
     
   def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = {
     throw new GenerationFailedException("don't know how to generate code for: " + rhs)
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit
+  
+  def emitSource0[R : Manifest](f: () => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+    val body = reifyBlock(f())
+    emitSource(List(), body, className, stream)
+  }
 
-  def emitSource[T1: Manifest, R : Manifest](f: (Exp[T1]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
+  def emitSource1[T1: Manifest, R : Manifest](f: (Exp[T1]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val body = reifyBlock(f(s1))
     emitSource(List(s1), body, className, stream)
   }
+
   def emitSource2[T1: Manifest, T2: Manifest, R : Manifest](f: (Exp[T1], Exp[T2]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
     val body = reifyBlock(f(s1, s2))
     emitSource(List(s1, s2), body, className, stream)
   }
+
   def emitSource3[T1: Manifest, T2: Manifest, T3: Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
@@ -140,6 +151,7 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3))
     emitSource(List(s1, s2, s3), body, className, stream)
   }
+
   def emitSource4[T1: Manifest, T2: Manifest, T3: Manifest, T4: Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
@@ -148,6 +160,7 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4))
     emitSource(List(s1, s2, s3, s4), body, className, stream)
   }
+  
   def emitSource5[T1: Manifest, T2: Manifest, T3: Manifest, T4: Manifest, T5: Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
@@ -157,6 +170,7 @@ trait GenericCodegen extends BlockTraversal {
     val body = reifyBlock(f(s1, s2, s3, s4, s5))
     emitSource(List(s1, s2, s3, s4, s5), body, className, stream)
   }
+  
   def emitSource6[T1: Manifest, T2: Manifest, T3: Manifest, T4: Manifest, T5: Manifest, T6: Manifest, R : Manifest](f: (Exp[T1], Exp[T2], Exp[T3], Exp[T4], Exp[T5], Exp[T6]) => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
@@ -395,18 +409,25 @@ trait GenericCodegen extends BlockTraversal {
    * @param className Name of the generated identifier
    * @param stream Output stream
    */
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, stream: PrintWriter): List[(Sym[Any], Any)] // return free static data in block
+  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, stream: PrintWriter, serializable: Boolean = false): List[(Sym[Any], Any)] // return free static data in block
 
   def quote(x: Exp[Any]) : String = quote(x, false)
 
-  def quote(x: Exp[Any], forcePrintSymbol: Boolean) : String = x match {
+  def quote(x: Exp[Any], forcePrintSymbol: Boolean = false) : String = x match {
     case Const(s: String) => "\""+s.replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
     case Const(c: Char) => "'"+c+"'"
     case Const(f: Float) => "%1.10f".format(f) + "f"
     case Const(l: Long) => l.toString + "L"
     case Const(null) => "null"
     case Const(z) => z.toString
-    case s@Sym(n) => "x"+n
+    case s@Sym(n) => {
+	if (forcePrintSymbol) "x" + n
+        // Avoid printing symbols that are of type null
+	else if (s.tp.toString == "Unit") ""
+        else "x"+n
+    }
+    case x@_ if x == Const(null) => "null"
+    case null => "null" 
     case _ => throw new RuntimeException("could not quote " + x)
   }
   

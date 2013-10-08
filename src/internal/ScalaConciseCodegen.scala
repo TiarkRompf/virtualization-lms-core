@@ -18,7 +18,7 @@ trait ScalaConciseCodegen extends ScalaNestedCodegen { self =>
   import IR._
 
   override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    val extra = if ((sourceinfo < 2) || sym.pos.isEmpty) "" else {
+    val extra = if ((Config.sourceinfo < 2) || sym.pos.isEmpty) "" else {
       val context = sym.pos(0)
       "      // " + relativePath(context.fileName) + ":" + context.line
     }

@@ -1,0 +1,108 @@
+Map(Sym(14) -> Sym(20), Sym(10) -> Sym(19), Sym(6) -> Sym(8), Sym(7) -> Sym(16), Sym(13) -> Sym(9), Sym(11) -> Sym(5), Sym(12) -> Sym(6), Sym(5) -> Sym(7), Sym(15) -> Sym(21), Sym(8) -> Sym(17), Sym(9) -> Sym(18))
+r0:
+TP(Sym(6),ArrayApply(Sym(0),Sym(5)))
+TP(Sym(7),NumericPlus(Sym(5),Const(1)))
+TP(Sym(8),ArrayApply(Sym(0),Sym(7)))
+TP(Sym(9),NumericTimes(Sym(6),Sym(8)))
+TP(Sym(10),NumericMinus(Sym(6),Sym(9)))
+TP(Sym(11),NumericMinus(Sym(5),Const(1)))
+TP(Sym(12),ArrayApply(Sym(0),Sym(11)))
+TP(Sym(13),NumericTimes(Sym(12),Sym(6)))
+TP(Sym(14),NumericPlus(Sym(10),Sym(13)))
+TP(Sym(15),Reflect(ArrayUpdate(Sym(2),Sym(5),Sym(14)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(2))))
+r1:
+TP(Sym(16),NumericPlus(Sym(5),Const(2)))
+TP(Sym(17),ArrayApply(Sym(0),Sym(16)))
+TP(Sym(18),NumericTimes(Sym(8),Sym(17)))
+TP(Sym(19),NumericMinus(Sym(8),Sym(18)))
+TP(Sym(20),NumericPlus(Sym(19),Sym(9)))
+TP(Sym(21),Reflect(ArrayUpdate(Sym(2),Sym(7),Sym(20)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(2))))
+r2:
+TP(Sym(22),NumericPlus(Sym(5),Const(3)))
+TP(Sym(23),ArrayApply(Sym(0),Sym(22)))
+TP(Sym(24),NumericTimes(Sym(17),Sym(23)))
+TP(Sym(25),NumericMinus(Sym(17),Sym(24)))
+TP(Sym(26),NumericPlus(Sym(25),Sym(18)))
+TP(Sym(27),Reflect(ArrayUpdate(Sym(2),Sym(16),Sym(26)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(2))))
+Map(Sym(14) -> Sym(20), Sym(10) -> Sym(19), Sym(6) -> Sym(8), Sym(7) -> Sym(16), Sym(13) -> Sym(9), Sym(11) -> Sym(5), Sym(12) -> Sym(6), Sym(5) -> Sym(7), Sym(15) -> Sym(21), Sym(8) -> Sym(17), Sym(9) -> Sym(18))
+overlap1:
+(Sym(8),Sym(17))
+(Sym(9),Sym(18))
+(Sym(7),Sym(16))
+overlap2:
+var inits: List(Sym(8), Sym(9), Sym(7)) -> List(Variable(Sym(37)), Variable(Sym(38)), Variable(Sym(39)))
+will become var reads: List(Sym(8), Sym(9), Sym(7))
+will become var writes: List(Sym(17), Sym(18), Sym(16))
+warning: possible missing mtype call - toAtom with Def of type Any ReadVar(Variable(Sym(37)))
+warning: possible missing mtype call - toAtom with Def of type Any ReadVar(Variable(Sym(38)))
+warning: possible missing mtype call - toAtom with Def of type Any ReadVar(Variable(Sym(39)))
+var reads: List((Sym(8),Sym(42)), (Sym(9),Sym(43)), (Sym(7),Sym(44)))
+var writes: List((Sym(17),Const(())), (Sym(18),Const(())), (Sym(16),Const(())))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged1 extends ((Array[Double])=>(Array[Double])) {
+def apply(x0:Array[Double]): Array[Double] = {
+val x1 = x0.length
+val x2 = new Array[Double](x1)
+val x3 = x1 - 1
+val x28 = x3 > 1
+if (x28) {
+val x29 = x0(1)
+val x30 = x0(2)
+val x31 = x29 * x30
+val x32 = x29 - x31
+val x33 = x0(0)
+val x34 = x33 * x29
+val x35 = x32 + x34
+x2(1) = x35
+var x37 = x30
+var x38 = x31
+var x39 = 2
+var x41 : Int = 2
+while (x41 < x3) {
+val x42 = x37
+val x43 = x38
+val x44 = x39
+val x46 = x41 + 1
+val x47 = x0(x46)
+val x48 = x42 * x47
+val x49 = x42 - x48
+val x50 = x49 + x43
+x2(x44) = x50
+x37 = x47
+x38 = x48
+x39 = x46
+x41 = x41 + 1
+}
+
+} else {
+()
+}
+x2
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+8.0
+12.0
+16.0
+20.0
+24.0
+28.0
+32.0
+36.0
+40.0
+44.0
+48.0
+52.0
+56.0
+60.0
+64.0
+68.0
+72.0
+76.0
+80.0
+84.0

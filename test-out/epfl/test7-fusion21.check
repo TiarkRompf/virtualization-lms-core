@@ -27,16 +27,15 @@ for (x3 <- 0 until 50) {
 x4(x3) = 3.0
 x7(x3) = x6
 }
-val x11 = println(x4)
-val x12 = println(x7)
-val x13 = println(x2)
+println(x4)
+println(x7)
+println(x2)
 val x9 = x4.apply(0)
 var x10 = new Array[Double](100)
 for (x8 <- 0 until 100) {
 x10(x8) = x9
 }
-val x14 = println(x10)
-x14
+println(x10)
 }
 }
 /*****************************************

@@ -25,7 +25,7 @@ trait TupledGeneratorFlattenProg extends K3PersistentCollectionOps with NumericO
     val AXFINDER_mBIDS1 = AXFINDER_mBIDS1_orig.mutable;
 
     val AXFINDER_mBIDS3 = AXFINDER_mBIDS3_orig.mutable;
-    (AXFINDER_mBIDS1.slice((var_BIDS_BROKER_ID), List(unit(0))).map((y:Rep[Tuple2[Tuple2[Long,Double],Long]]) => {
+    (AXFINDER_mBIDS1.slice((var_BIDS_BROKER_ID), NewList(unit(0))).map((y:Rep[Tuple2[Tuple2[Long,Double],Long]]) => {
       val v: Rep[Tuple2[Double,Long]] = ({
         (x:Rep[Tuple2[Tuple2[Long,Double], Long]]) => (x._1._2,x._2)
       }

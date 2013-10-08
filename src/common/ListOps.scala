@@ -7,7 +7,7 @@ import scala.reflect.SourceContext
 
 trait ListOps extends Variables {
 
-  object List {
+  object NewList {
     def apply[A:Manifest](xs: Rep[A]*)(implicit pos: SourceContext) = list_new(xs)
   }
 
@@ -29,6 +29,7 @@ trait ListOps extends Variables {
     def isEmpty = list_isEmpty(l)
     def toArray = list_toarray(l)
     def toSeq = list_toseq(l)
+    def contains(e: Rep[A]) = list_contains(l,e)
   }
   
   def list_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext): Rep[List[A]]
@@ -47,6 +48,7 @@ trait ListOps extends Variables {
   def list_head[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[A]
   def list_tail[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[List[A]]
   def list_isEmpty[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[Boolean]
+  def list_contains[A:Manifest](xs: Rep[List[A]], e: Rep[A])(implicit pos: SourceContext): Rep[Boolean]
 }
 
 trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
@@ -66,6 +68,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   case class ListHead[A:Manifest](xs: Rep[List[A]]) extends Def[A]
   case class ListTail[A:Manifest](xs: Rep[List[A]]) extends Def[List[A]]
   case class ListIsEmpty[A:Manifest](xs: Rep[List[A]]) extends Def[Boolean]
+  case class ListContains[A:Manifest](xs: Rep[List[A]], e: Rep[A]) extends Def[Boolean]
   
   def list_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext) = ListNew(xs)
   def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit pos: SourceContext) = ListFromSeq(xs)
@@ -103,6 +106,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   def list_head[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListHead(xs)
   def list_tail[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListTail(xs)
   def list_isEmpty[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListIsEmpty(xs)
+  def list_contains[A:Manifest](xs: Rep[List[A]], e: Rep[A])(implicit pos: SourceContext) = ListContains(xs,e)
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
     (e match {
@@ -218,6 +222,7 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
     case ListPrepend(l,e) => emitValDef(sym, quote(e) + " :: " + quote(l))    
     case ListToArray(l) => emitValDef(sym, quote(l) + ".toArray")
     case ListToSeq(l) => emitValDef(sym, quote(l) + ".toSeq")
+    case ListContains(l, e) => emitValDef(sym, quote(l) + ".contains(" + quote(e) + ")")
     case _ => super.emitNode(sym, rhs)
   }
 }

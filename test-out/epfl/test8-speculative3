@@ -1,0 +1,62 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+var  = null.asInstanceOf[Unit]
+var  = null.asInstanceOf[Unit]
+var x2 = 0.0
+while ({ // List(Sym(46), Sym(50))
+// dummy placeholder for previous iteration: List(Sym(28), Sym(27)) = Sym(4) / List(Sym(2), Sym(46))
+val x29 = x2
+val x30 = x29 < 10.0
+x30
+}) {
+// dummy placeholder for previous iteration: List(Sym(33), Sym(32)) = Sym(3) / List(Sym(2), Sym(46))
+val x35 = x2
+val x38 = x35+1.0
+x2 = x38
+println(7)
+println(x35)
+println(2)
+}
+println(7)
+val x52 = x2
+println(x52)
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+compilation of the following code had errors:
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged5 extends ((Int)=>(Unit)) {
+def apply(x57:Int): Unit = {
+var  = null.asInstanceOf[Unit]
+var  = null.asInstanceOf[Unit]
+var x59 = 0.0
+while ({ // List(Sym(102), Sym(106))
+// dummy placeholder for previous iteration: List(Sym(84), Sym(83)) = Sym(61) / List(Sym(59), Sym(102))
+val x85 = x59
+val x86 = x85 < 10.0
+x86
+}) {
+// dummy placeholder for previous iteration: List(Sym(89), Sym(88)) = Sym(60) / List(Sym(59), Sym(102))
+val x91 = x59
+val x94 = x91+1.0
+x59 = x94
+println(7)
+println(x91)
+println(2)
+}
+println(7)
+val x108 = x59
+println(x108)
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+

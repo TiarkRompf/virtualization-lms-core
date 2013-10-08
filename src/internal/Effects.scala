@@ -391,7 +391,12 @@ trait Effects extends Expressions with Blocks with Utils {
   }
   
   def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
-    if (mustPure(u)) super.toAtom(x) else {
+    if (context == null) {
+        val z = fresh[A]
+        val zd = Reflect(x,u,null)
+        context = Nil
+        createReflectDefinition(z, zd)
+    } else if (mustPure(u)) super.toAtom(x) else {
       checkContext()
       // NOTE: reflecting mutable stuff *during mirroring* doesn't work right now.
       

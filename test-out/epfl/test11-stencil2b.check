@@ -38,13 +38,13 @@ var writes: List((Sym(17),Const(())), (Sym(18),Const(())), (Sym(16),Const(())))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0 extends ((Array[Double])=>(Array[Double])) {
+class staged4 extends ((Array[Double])=>(Array[Double])) {
 def apply(x0:Array[Double]): Array[Double] = {
 val x1 = x0.length
 val x2 = new Array[Double](x1)
 val x3 = x1 - 1
 val x28 = x3 > 1
-val x58 = if (x28) {
+if (x28) {
 val x29 = x0(1)
 val x30 = x0(2)
 val x31 = x29 * x30
@@ -52,12 +52,12 @@ val x32 = x29 - x31
 val x33 = x0(0)
 val x34 = x33 * x29
 val x35 = x32 + x34
-val x36 = x2(1) = x35
-var x37: Double = x30
-var x38: Double = x31
-var x39: Int = 2
-var x41 : Int = 2
-val x56 = while (x41 < x3) {
+x2(1) = x35
+var x37 = x30
+var x38 = x31
+var x39 = 2
+var x41 = 2
+while (x41 < x3) {
 val x42 = x37
 val x43 = x38
 val x44 = x39
@@ -66,7 +66,7 @@ val x47 = x0(x46)
 val x48 = x42 * x47
 val x49 = x42 - x48
 val x50 = x49 + x43
-val x51 = x2(x44) = x50
+x2(x44) = x50
 x37 = x47
 x38 = x48
 x39 = x46
@@ -83,7 +83,6 @@ x2
   End of Generated Code                  
 *******************************************/
 
-compilation: ok
 0.0
 0.8800000000000001
 0.96

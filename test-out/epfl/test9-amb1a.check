@@ -4,87 +4,86 @@
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
 val x1 = 1 == 1
-val x6 = if (x1) {
-val x2 = println("found:")
-val x3 = println(1)
-val x4 = println(1)
-x4
+if (x1) {
+println("found:")
+println(1)
+println(1)
+
 } else {
 ()
 }
 val x7 = 1 == 2
-val x12 = if (x7) {
-val x8 = println("found:")
-val x9 = println(1)
-val x10 = println(2)
-x10
+if (x7) {
+println("found:")
+println(1)
+println(2)
+
 } else {
 ()
 }
 val x13 = 1 == 3
-val x18 = if (x13) {
-val x14 = println("found:")
-val x15 = println(1)
-val x16 = println(3)
-x16
+if (x13) {
+println("found:")
+println(1)
+println(3)
+
 } else {
 ()
 }
 val x19 = 2 == 1
-val x24 = if (x19) {
-val x20 = println("found:")
-val x21 = println(2)
-val x22 = println(1)
-x22
+if (x19) {
+println("found:")
+println(2)
+println(1)
+
 } else {
 ()
 }
 val x25 = 2 == 2
-val x30 = if (x25) {
-val x26 = println("found:")
-val x27 = println(2)
-val x28 = println(2)
-x28
+if (x25) {
+println("found:")
+println(2)
+println(2)
+
 } else {
 ()
 }
 val x31 = 2 == 3
-val x36 = if (x31) {
-val x32 = println("found:")
-val x33 = println(2)
-val x34 = println(3)
-x34
+if (x31) {
+println("found:")
+println(2)
+println(3)
+
 } else {
 ()
 }
 val x37 = x0 == 1
-val x42 = if (x37) {
-val x38 = println("found:")
-val x39 = println(x0)
-val x40 = println(1)
-x40
+if (x37) {
+println("found:")
+println(x0)
+println(1)
+
 } else {
 ()
 }
 val x43 = x0 == 2
-val x48 = if (x43) {
-val x44 = println("found:")
-val x45 = println(x0)
-val x46 = println(2)
-x46
+if (x43) {
+println("found:")
+println(x0)
+println(2)
+
 } else {
 ()
 }
 val x49 = x0 == 3
-val x54 = if (x49) {
-val x50 = println("found:")
-val x51 = println(x0)
-val x52 = println(3)
-x52
+if (x49) {
+println("found:")
+println(x0)
+println(3)
+
 } else {
 ()
 }
-()
 }
 }
 /*****************************************

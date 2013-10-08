@@ -416,7 +416,7 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
     def iter: Rep[S => DfaState] = doLambda { (s: Rep[S]) =>
       val o = st.res(s)
 
-      dfa_trans(List(o)) { c => 
+      dfa_trans(NewList(o)) { c => 
         val s1 = step(c)(protect(s,c::Nil))
         iter(s1)
       }

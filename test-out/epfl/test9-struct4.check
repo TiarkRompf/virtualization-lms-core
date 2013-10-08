@@ -20,8 +20,8 @@ val x2 = 0.0-x1
 x4(x1) = x1
 x5(x1) = x2
 }
-var x13: Array[Int] = x4
-var x14: Array[Double] = x5
+var x13 = x4
+var x14 = x5
 val x16 = x0 > 7
 val x26 = if (x16) {
 var x23 = new Array[Double](100)
@@ -35,8 +35,7 @@ x23
 x5
 }
 val x27 = new { val re = x4; val im = x26 }
-val x28 = println(x27)
-x28
+println(x27)
 }
 }
 /*****************************************

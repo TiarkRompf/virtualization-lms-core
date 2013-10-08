@@ -210,8 +210,8 @@ class TestStable extends FileDiffSuite {
     with RangeOpsExp with PrintExp with FatExpressions with CompileScala
     with NumericOpsExp with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp 
     with StableVarsExp { self =>
-    override val verbosity = 1
-    dumpGeneratedCode = true
+    //override val verbosity = 1
+    ScalaCompile.dumpGeneratedCode = true
     val codegen = new Codegen { val IR: self.type = self }
     val runner = new Runner { val p: self.type = self }
     runner.run()
