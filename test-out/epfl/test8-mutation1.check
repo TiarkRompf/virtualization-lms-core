@@ -22,10 +22,9 @@ x3
 } else {
 x6
 }
-val x9 = x8.update(40, 40.0)
+x8.update(40, 40.0)
 val x10 = x8.apply(50)
-val x11 = println(x10)
-x11
+println(x10)
 }
 }
 /*****************************************

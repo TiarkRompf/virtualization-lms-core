@@ -7,9 +7,9 @@ import scala.reflect.SourceContext
 
 trait ListOps extends Variables {
 
- /* object List {
+  object NewList {
     def apply[A:Manifest](xs: Rep[A]*)(implicit pos: SourceContext) = list_new(xs)
-  } */
+  }
 
   implicit def varToListOps[T:Manifest](x: Var[List[T]]) = new ListOpsCls(readVar(x)) // FIXME: dep on var is not nice
   implicit def repToListOps[T:Manifest](a: Rep[List[T]]) = new ListOpsCls(a)
@@ -17,6 +17,7 @@ trait ListOps extends Variables {
   
   class ListOpsCls[A:Manifest](l: Rep[List[A]]) {
     def map[B:Manifest](f: Rep[A] => Rep[B]) = list_map(l,f)
+    def foreach(f: Rep[A] => Rep[Unit]) = list_foreach(l,f)
     def flatMap[B : Manifest](f: Rep[A] => Rep[List[B]]) = list_flatMap(l,f)
     def filter(f: Rep[A] => Rep[Boolean]) = list_filter(l, f)
     def sortBy[B:Manifest:Ordering](f: Rep[A] => Rep[B]) = list_sortby(l,f)
@@ -34,6 +35,7 @@ trait ListOps extends Variables {
   def list_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext): Rep[List[A]]
   def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit pos: SourceContext): Rep[List[A]]  
   def list_map[A:Manifest,B:Manifest](l: Rep[List[A]], f: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[List[B]]
+  def list_foreach[A:Manifest](l: Rep[List[A]], f: Rep[A] => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
   def list_flatMap[A : Manifest, B : Manifest](xs: Rep[List[A]], f: Rep[A] => Rep[List[B]])(implicit pos: SourceContext): Rep[List[B]]
   def list_filter[A : Manifest](l: Rep[List[A]], f: Rep[A] => Rep[Boolean])(implicit pos: SourceContext): Rep[List[A]]
   def list_sortby[A:Manifest,B:Manifest:Ordering](l: Rep[List[A]], f: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[List[A]]
@@ -53,6 +55,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   case class ListNew[A:Manifest](xs: Seq[Rep[A]]) extends Def[List[A]]
   case class ListFromSeq[A:Manifest](xs: Rep[Seq[A]]) extends Def[List[A]]
   case class ListMap[A:Manifest,B:Manifest](l: Exp[List[A]], x: Sym[A], block: Block[B]) extends Def[List[B]]
+  case class ListForeach[A:Manifest](l: Exp[List[A]], x: Sym[A], block: Block[Unit]) extends Def[Unit]
   case class ListFlatMap[A:Manifest, B:Manifest](l: Exp[List[A]], x: Sym[A], block: Block[List[B]]) extends Def[List[B]]
   case class ListFilter[A : Manifest](l: Exp[List[A]], x: Sym[A], block: Block[Boolean]) extends Def[List[A]]
   case class ListSortBy[A:Manifest,B:Manifest:Ordering](l: Exp[List[A]], x: Sym[A], block: Block[B]) extends Def[List[A]]
@@ -73,6 +76,11 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
     val a = fresh[A]
     val b = reifyEffects(f(a))
     reflectEffect(ListMap(l, a, b), summarizeEffects(b).star)
+  }
+  def list_foreach[A:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[Unit])(implicit pos: SourceContext) = {
+    val a = fresh[A]
+    val b = reifyEffects(f(a))
+    reflectEffect(ListForeach(l, a, b), summarizeEffects(b).star)
   }
   def list_flatMap[A:Manifest, B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]])(implicit pos: SourceContext) = {
     val a = fresh[A]
@@ -109,6 +117,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   
   override def syms(e: Any): List[Sym[Any]] = e match {
     case ListMap(a, x, body) => syms(a):::syms(body)
+    case ListForeach(a, x, body) => syms(a):::syms(body)
     case ListFlatMap(a, _, body) => syms(a) ::: syms(body)
     case ListFilter(a, _, body) => syms(a) ::: syms(body)
     case ListSortBy(a, x, body) => syms(a):::syms(body)
@@ -117,6 +126,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case ListMap(a, x, body) => x :: effectSyms(body)
+    case ListForeach(a, x, body) => x :: effectSyms(body)
     case ListFlatMap(_, x, body) => x :: effectSyms(body)
     case ListFilter(_, x, body) => x :: effectSyms(body)
     case ListSortBy(a, x, body) => x :: effectSyms(body)
@@ -125,6 +135,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case ListMap(a, x, body) => freqNormal(a):::freqHot(body)
+    case ListForeach(a, x, body) => freqNormal(a):::freqHot(body)
     case ListFlatMap(a, _, body) => freqNormal(a) ::: freqHot(body)
     case ListFilter(a, _, body) => freqNormal(a) ::: freqHot(body)
     case ListSortBy(a, x, body) => freqNormal(a):::freqHot(body)
@@ -161,27 +172,53 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
     case ListFromSeq(xs) => emitValDef(sym, "List(" + quote(xs) + ": _*)")
     case ListMkString(xs) => emitValDef(sym, quote(xs) + ".mkString")
     case ListMap(l,x,blk) => 
-      stream.println("val " + quote(sym) + " = " + quote(l) + ".map { "+ quote(x) + " => ")
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.println(quote(l) + ".map { " + quote(x) + " => ")
+        emitBlock(blk)
+        stream.println(quote(getBlockResult(blk)))
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
+    case ListForeach(l,x,blk) => {
+      stream.println(quote(l) + ".foreach { " + quote(x) + " => ")
       emitBlock(blk)
-      stream.println(quote(getBlockResult(blk)))
       stream.println("}")
+    }
     case ListFlatMap(l, x, b) => {
-      stream.println("val " + quote(sym) + " = " + quote(l) + ".flatMap { " + quote(x) + " => ")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.println(quote(l) + ".flatMap { " + quote(x) + " => ")
+        emitBlock(b)
+        stream.println(quote(getBlockResult(b)))
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
     }
     case ListFilter(l, x, b) => {
-      stream.println("val " + quote(sym) + " = " + quote(l) + ".filter { " + quote(x) + " => ")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.println(quote(l) + ".filter { " + quote(x) + " => ")
+        emitBlock(b)
+        stream.println(quote(getBlockResult(b)))
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
     }
-    case ListSortBy(l,x,blk) =>
-      stream.println("val " + quote(sym) + " = " + quote(l) + ".sortBy { "+ quote(x) + " => ")
-      emitBlock(blk)
-      stream.println(quote(getBlockResult(blk)))
-      stream.println("}")
+    case ListSortBy(l,x,blk) => {
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.println(quote(l) + ".sortBy { " + quote(x) + " => ")
+        emitBlock(blk)
+        stream.println(quote(getBlockResult(blk)))
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
+    }
     case ListPrepend(l,e) => emitValDef(sym, quote(e) + " :: " + quote(l))    
     case ListToArray(l) => emitValDef(sym, quote(l) + ".toArray")
     case ListToSeq(l) => emitValDef(sym, quote(l) + ".toSeq")

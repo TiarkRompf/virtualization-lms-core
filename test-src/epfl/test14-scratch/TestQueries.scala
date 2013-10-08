@@ -765,9 +765,9 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
                    for x in [] do N --> []
               for x in (P @ Q) do R --> (for x in P do R) @ (for x in Q do R)
 */
-    case Empty()              => List()
+    case Empty()              => NewList()
     case Yield(a)             => f(a)
-    case IfThen(c,a)          => if (c) for (x <- a; y <- f(x)) yield y else List()
+    case IfThen(c,a)          => if (c) for (x <- a; y <- f(x)) yield y else NewList()
     case For(l2,f2)           => for (x <- l2; y <- f2(x); z <- f(y)) yield z
     case Concat(a,b)          => a.flatMap(f) ++ b.flatMap(f)
     case (Def(Field(Def(Database(db)), tbl, tpe))) => 
@@ -775,7 +775,7 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
       val b = reifyEffects(f(a))
       b match {
 /*                 for x in P do [] --> []           */
-        case Block(Empty())              => List()
+        case Block(Empty())              => NewList()
         case _ =>
           // no rewrites match, go ahead and create IR node
           reflectEffect(DBFor(l, f, db, tbl, a, b), summarizeEffects(b).star)
@@ -798,9 +798,9 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
         if P then (for x in Q do R) --> for x in Q do (if P then R)
 */
     case (Empty(),Empty())       => List()
-    case (IfThen(c,a),Empty())   => if (cond && c) a else List()
+    case (IfThen(c,a),Empty())   => if (cond && c) a else NewList()
     case (For(l,f),Empty())      => for (x <- l if cond; y <- f(x)) yield y
-    case (Concat(a,b),Empty())   => (if (cond) a else List()) ++ (if (cond) b else List())
+    case (Concat(a,b),Empty())   => (if (cond) a else NewList()) ++ (if (cond) b else NewList())
     case _                       => super.ifThenElse(cond,thenp,elsep)
   }).asInstanceOf[Exp[T]]
 
@@ -811,10 +811,10 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
     dbfor[A,B](l,f)
   }
   override def list_map[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[B])(implicit pos: SourceContext) = {
-    list_flatMap[A,B](l, x => List(f(x)))
+    list_flatMap[A,B](l, x => NewList(f(x)))
   }
   override def list_filter[A : Manifest](l: Exp[List[A]], f: Exp[A] => Exp[Boolean])(implicit pos: SourceContext) = {
-    list_flatMap[A,A](l, x => if (f(x)) List(x) else List())
+    list_flatMap[A,A](l, x => if (f(x)) NewList(x) else NewList())
   }
 
 
@@ -897,8 +897,8 @@ class TestQueries extends FileDiffSuite {
   }
   
   trait Impl extends DSL with StagedExp with ScalaCompile { self =>
-    override val verbosity = 1
-    dumpGeneratedCode = true
+    //override val verbosity = 1
+    ScalaCompile.dumpGeneratedCode = true
     val codegen = new Codegen { val IR: self.type = self }
     val runner = new Runner { val p: self.type = self }
     runner.run()

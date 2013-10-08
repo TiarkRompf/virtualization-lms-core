@@ -24,8 +24,9 @@ object ScalaCompile {
   // From what I understand, this is not currently exported from the JVM, but it used internally.
   // (To check, run java -XX:+PrintFlagsFinal -version | grep Huge) and check for the limit.
   val maximumHugeMethodLimit = 8000 
-  val byteCodeSizeCheckEnabled: Boolean = true
-  var cleanerEnabled: Boolean = true 
+  // NOTE: Always disable these two flags when running the test suite
+  val byteCodeSizeCheckEnabled: Boolean = false
+  var cleanerEnabled: Boolean = false 
   val source = new StringWriter()
   var writer = new PrintWriter(source)
   val workingDir = System.getProperty("user.dir") + "/CompiledClasses"
@@ -66,10 +67,11 @@ trait ScalaCompile extends Expressions {
   }
 
   def initCompile = {
-    System.out.println("Initializing compiler...")
+    // System.out.println("Initializing compiler...") // This unfortunately
+    // breaks the test suite as well :-(
     ScalaCompile.source.getBuffer().setLength(0) 
-    ScalaCompile.compileCount = ScalaCompile.compileCount + 1
     val className = "staged" + ScalaCompile.compileCount
+    ScalaCompile.compileCount = ScalaCompile.compileCount + 1
     className
   }
 
@@ -139,36 +141,57 @@ trait ScalaCompile extends Expressions {
     cls
   }
 
-  // Compile0 should never take dynamicClasses as argument (to rep to handle)
-  def compile0[B](f: () => Exp[B],dynamicReturnType: String = null)(implicit mB: Manifest[B]): () =>B = {
+  def compile0[B](f: () => Exp[B])(implicit mB: Manifest[B]): () =>B = {
     val className = initCompile 
-    val staticData = codegen.emitSource0(f, className, ScalaCompile.writer, dynamicReturnType)
+    val staticData = codegen.emitSource0(f, className, ScalaCompile.writer)
     codegen.emitDataStructures(ScalaCompile.writer)
     val cls = compileLoadClass(ScalaCompile.source, className)
     val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
-    val obj: ()=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[()=>B]
-    obj
+    cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[()=>B]
   }
 
-  def compile1[A,B](f: Exp[A] => Exp[B], dynamicClass: String = null, dynamicReturnType: String = null)(implicit mA: Manifest[A], mB: Manifest[B]): A=>B = {
+  def compile1[A,B](f: Exp[A] => Exp[B])(implicit mA: Manifest[A], mB: Manifest[B]): A=>B = {
     val className = initCompile 
-    val staticData = codegen.emitSource1(f, className, ScalaCompile.writer, dynamicClass, dynamicReturnType)
+    val staticData = codegen.emitSource1(f, className, ScalaCompile.writer)
     codegen.emitDataStructures(ScalaCompile.writer)
     val cls = compileLoadClass(ScalaCompile.source, className)
     val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
-    val obj: A=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[A=>B]
-    obj
+    cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[A=>B]
   }
 
-  def compile2[A1,A2,B](f: (Exp[A1],Exp[A2]) => Exp[B], dynamicClass: String = null, dynamicClass2: String = null, dynamicReturnType: String = null)(implicit mA1: Manifest[A1], mA2: Manifest[A2], mB: Manifest[B]): (A1,A2)=>B = {
+  def compile2[A1,A2,B](f: (Exp[A1],Exp[A2]) => Exp[B])(implicit mA1: Manifest[A1], mA2: Manifest[A2], mB: Manifest[B]): (A1,A2)=>B = {
     val className = initCompile 
-    val staticData = codegen.emitSource2(f, className, ScalaCompile.writer, dynamicClass, dynamicClass2, dynamicReturnType)
+    val staticData = codegen.emitSource2(f, className, ScalaCompile.writer)
     codegen.emitDataStructures(ScalaCompile.writer)
     val cls = compileLoadClass(ScalaCompile.source, className)
     val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
-    val obj: (A1,A2)=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[(A1,A2)=>B]
-    obj
+    cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[(A1,A2)=>B]
   }
 
-    
+  def compile3[A1,A2,A3,B](f: (Exp[A1], Exp[A2], Exp[A3]) => Exp[B])(implicit mA1: Manifest[A1], mA2: Manifest[A2], mA3: Manifest[A3], mB: Manifest[B]): (A1,A2,A3)=>B = {
+    val className = initCompile 
+    val staticData = codegen.emitSource3(f, className, ScalaCompile.writer)
+    codegen.emitDataStructures(ScalaCompile.writer)
+    val cls = compileLoadClass(ScalaCompile.source, className)
+    val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
+    cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[(A1,A2,A3)=>B]
+  }
+
+  def compile4[A1,A2,A3,A4,B](f: (Exp[A1], Exp[A2], Exp[A3], Exp[A4]) => Exp[B])(implicit mA1: Manifest[A1], mA2: Manifest[A2], mA3: Manifest[A3], mA4: Manifest[A4], mB: Manifest[B]): (A1,A2,A3,A4)=>B = {
+    val className = initCompile 
+    val staticData = codegen.emitSource4(f, className, ScalaCompile.writer)
+    codegen.emitDataStructures(ScalaCompile.writer)
+    val cls = compileLoadClass(ScalaCompile.source, className)
+    val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
+    cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[(A1,A2,A3,A4)=>B]
+  }
+ 
+  def compile5[A1,A2,A3,A4,A5,B](f: (Exp[A1], Exp[A2], Exp[A3], Exp[A4], Exp[A5]) => Exp[B])(implicit mA1: Manifest[A1], mA2: Manifest[A2], mA3: Manifest[A3], mA4: Manifest[A4], mA5: Manifest[A5], mB: Manifest[B]): (A1,A2,A3,A4,A5)=>B = {
+    val className = initCompile 
+    val staticData = codegen.emitSource5(f, className, ScalaCompile.writer)
+    codegen.emitDataStructures(ScalaCompile.writer)
+    val cls = compileLoadClass(ScalaCompile.source, className)
+    val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
+    cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[(A1,A2,A3,A4,A5)=>B]
+  }
 }

@@ -220,6 +220,7 @@ trait ScalaGenVariables extends ScalaGenEffect {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
+//<<<<<<< HEAD
     case NewVar(init) => {
         if (sym.tp != manifest[Variable[Nothing]])
             emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
@@ -237,13 +238,22 @@ trait ScalaGenVariables extends ScalaGenEffect {
             emitVarDef(obj, quote(b))
             emittedLazyVars += obj
         }
-        else emitAssignment(quote(a), quote(b))
+        else emitAssignment(sym, quote(a), quote(b))
     }
     //case Assign(a, b) => emitAssignment(quote(a), quote(b))
     case VarPlusEquals(Variable(a), b) => stream.println(quote(a) + " += " + quote(b))
     case VarMinusEquals(Variable(a), b) => stream.println(quote(a) + " -= " + quote(b))
     case VarTimesEquals(Variable(a), b) => stream.println(quote(a) + " *= " + quote(b))
     case VarDivideEquals(Variable(a), b) => stream.println(quote(a) + " /= " + quote(b))
+/*=======
+    case NewVar(init) => emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
+    case Assign(Variable(a), b) => stream.println(quote(a) + " = " + quote(b)) //emitAssignment(sym, quote(a), quote(b))
+    //case Assign(a, b) => emitAssignment(sym, quote(a), quote(b))
+    case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(b))
+    case VarMinusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(b))
+    case VarTimesEquals(Variable(a), b) => emitValDef(sym, quote(a) + " *= " + quote(b))
+    case VarDivideEquals(Variable(a), b) => emitValDef(sym, quote(a) + " /= " + quote(b))
+>>>>>>> 4a6b4db07f1a5931db6c571aaaa9ee91692bb126*/
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -259,15 +269,15 @@ trait CLikeGenVariables extends CLikeGenBase {
         case NewVar(init) =>
           emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
         case Assign(Variable(a), b) =>
-          emitAssignment(quote(a), quote(b))
+          emitAssignment(sym, quote(a), quote(b))
         case VarPlusEquals(Variable(a), b) =>
-          emitAssignment(quote(a), quote(a) + " + " + quote(b))
+          emitAssignment(sym, quote(a), quote(a) + " + " + quote(b))
         case VarMinusEquals(Variable(a), b) =>
-          emitAssignment(quote(a), quote(a) + " - " + quote(b))
+          emitAssignment(sym, quote(a), quote(a) + " - " + quote(b))
         case VarTimesEquals(Variable(a), b) =>
-          emitAssignment(quote(a), quote(a) + " * " + quote(b))
+          emitAssignment(sym, quote(a), quote(a) + " * " + quote(b))
         case VarDivideEquals(Variable(a), b) =>
-          emitAssignment(quote(a), quote(a) + " / " + quote(b))
+          emitAssignment(sym, quote(a), quote(a) + " / " + quote(b))
         case _ => super.emitNode(sym, rhs)
       }
     }

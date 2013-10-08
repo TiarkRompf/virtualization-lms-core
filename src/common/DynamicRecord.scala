@@ -208,7 +208,7 @@ trait ScalaGenDynamicRecord extends ScalaGenBase with GenericNestedCodegen {
 		    case DynamicRecordSet(x, field, value) => {
                 stream.println(quote(x) + "." + quote(field).replaceAll("\"","") + " = {")
                 emitBlock(value)
-                stream.println(quote(getBlockResult(value)))
+                emitBlockResult(value)
                 stream.println("}")
             }
             case DynamicRecordForEach(x, init, block) => 
@@ -332,7 +332,7 @@ trait ScalaGenDynamicRecordHashMap extends ScalaGenBase with GenericNestedCodege
         stream.println("bc = bc & 0x3f;")
         stream.println("var hc = {")
         emitBlock(h)
-        stream.println(quote(getBlockResult(h)))
+        emitBlockResult(h)
         stream.println("} * 0x9e3775cd")
         stream.println("hc = ((hc >>> 24)           ) |")
         stream.println("     ((hc >>   8) &   0xFF00) |")
@@ -351,13 +351,13 @@ trait ScalaGenDynamicRecordHashMap extends ScalaGenBase with GenericNestedCodege
         stream = savedStream
         val outStream = newSource.toString.replaceAll(quote(d), "e.key")
         stream.println(outStream)
-        stream.println(quote(getBlockResult(e)))
+        emitBlockResult(e)
         stream.println("}) e = e.next")
         stream.println("val " + quote(sym) + " = {")
         stream.println("if (e eq null) {")
         stream.println("val entry = new scala.collection.mutable.DefaultEntry(" + quote(k) + ".clone, {")
         emitBlock(v)
-        stream.println(quote(getBlockResult(v)))
+        emitBlockResult(v)
         stream.println("})")
         stream.println("entry.next = " + quote(m) + "(h)")
         stream.println(quote(m) + "(h) = entry")

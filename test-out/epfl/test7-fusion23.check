@@ -52,12 +52,11 @@ x30(x1) = x29
 x32(x1) = x31
 x38(x1) = x37
 }
-val x24 = println(x4)
-val x39 = println(x30)
-val x40 = println(x32)
-val x41 = println(x38)
-val x27 = x41
-x27
+println(x4)
+println(x30)
+println(x32)
+println(x38)
+
 }
 }
 /*****************************************

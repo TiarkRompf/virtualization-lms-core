@@ -19,9 +19,8 @@ for (x1 <- 0 until 100) {
 x4(x1) = x1
 }
 val x17 = new { val re = x4; val im = x4 }
-val x18 = println(x17)
-val x15 = x18
-x15
+println(x17)
+
 }
 }
 /*****************************************

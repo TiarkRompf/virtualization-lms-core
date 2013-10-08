@@ -20,9 +20,109 @@ trait Expressions extends Utils {
     def pos: List[SourceContext] = Nil
   }
 
-  case class Const[+T:Manifest](x: T) extends Exp[T]
+  case class Const[+T:Manifest](x: T) extends Exp[T] {
+    /**
+    * equals implementation in Const can not simply rely on default
+    * implementation for a case class, because we should check the 
+    * type of Const for equality test.
+    * Otherwise, we might end-up generating code with wrong typing,
+    * specially upon CSE.
+    *
+    * For example, have a look at test1-arith/TestConstCSE:
+    * 
+    * trait Prog extends ScalaOpsPkg {
+    *   def test1(test_param: Rep[Boolean], acc: Rep[Long]): Rep[Long] = {
+    *     val dblVal = if(test_param) unit(1.0) else unit(0.0)
+    *     val lngVal = if(test_param) unit(1L) else unit(0L)
+    *     auxMethod(acc + lngVal, dblVal)
+    *   }
+    *
+    *   def auxMethod(val1: Rep[Long], val2: Rep[Double]): Rep[Long] = {
+    *     val1 + unit(133L) + rep_asinstanceof[Double, Long](val2,manifest[Double],manifest[Long])
+    *   }
+    * }
+    *
+    * That would generate a code containing a compile error:
+    * 
+    *       class test1 extends ((Boolean, Long)=>(Long)) {
+    *         def apply(x0:Boolean, x1:Long): Long = {
+    *           val x2 = if (x0) {
+    *             1.0
+    *           } else {
+    *             0.0
+    *           }
+    *           val x3 = x1 + x2
+    *           val x4 = x3 + 133L
+    *           val x5 = x2.asInstanceOf[Long]
+    *           val x6 = x4 + x5
+    *           x6
+    *         }
+    *       }
+    *
+    *       <stdin>:15: error: type mismatch;
+    *        found   : Double
+    *        required: Long
+    *       x6
+    *       ^
+    *       one error found
+    *       compilation: had errors
+    *
+    * But, by introducing this new implementation for equals, the
+    * correct code will be generated:
+    *
+    *       class test1 extends ((Boolean, Long)=>(Long)) {
+    *         def apply(x0:Boolean, x1:Long): Long = {
+    *           val x3 = if (x0) {
+    *             1L
+    *           } else {
+    *             0L
+    *           }
+    *           val x4 = x1 + x3
+    *           val x5 = x4 + 133L
+    *           val x2 = if (x0) {
+    *             1.0
+    *           } else {
+    *             0.0
+    *           }
+    *           val x6 = x2.asInstanceOf[Long]
+    *           val x7 = x5 + x6
+    *           x7
+    *         }
+    *       }
+    *
+    *       compilation: ok
+    */
+    override def equals(that: Any) = that match {
+      case c@Const(y) => if(y == x) {
+        val thisTp = tp
+        //val thatTp = c.tp
+        if (Const.isNumeric[T](thisTp) /*&& isNumeric(thatTp)*/)
+          thisTp == c.tp //thatTp
+        else
+          true
+      } else false
+      case _ => false 
+    }
+  }
+
+  object Const {
+    val doubleManifest: Manifest[Double] = manifest[Double]
+    val floatManifest: Manifest[Float] = manifest[Float]
+    val longManifest: Manifest[Long] = manifest[Long]
+    val intManifest: Manifest[Int] = manifest[Int]
+    val shortManifest: Manifest[Short] = manifest[Short]
+    val byteManifest: Manifest[Byte] = manifest[Byte]
+
+    def isNumeric[T:Manifest](m: Manifest[T]) = m == doubleManifest ||
+                                                m == floatManifest ||
+                                                m == longManifest ||
+                                                m == intManifest ||
+                                                m == shortManifest ||
+                                                m == byteManifest
+  }
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
+    val attributes: scala.collection.mutable.Map[Any,Any] = scala.collection.mutable.ListMap.empty
     var sourceInfo = Thread.currentThread.getStackTrace // will go away
     var sourceContexts: List[SourceContext] = Nil
     override def pos = sourceContexts

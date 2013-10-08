@@ -1,0 +1,66 @@
+digraph G {
+"Sym(3)" [
+label="Sym(3) \n Reflect(Equal(Sym(2),Const(0)),Summary(false,false,false,false,false,List(),List(),List(),List()),null)"
+shape=box
+]
+"Sym(2)" -> "Sym(3)"
+"Sym(5)" [
+label="Sym(5) \n Minus(Sym(2),Const(1.0))"
+shape=box
+]
+"Sym(2)" -> "Sym(5)"
+"Sym(6)" [
+label="Sym(6) \n Apply(Sym(1),Sym(5))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(1)" -> "Sym(6)"
+"Sym(5)" -> "Sym(6)"
+"Sym(7)" [
+label="Sym(7) \n Times(Sym(2),Sym(6))"
+shape=box
+]
+"Sym(2)" -> "Sym(7)"
+"Sym(6)" -> "Sym(7)"
+"Sym(8)" [
+label="Sym(8) \n IfThenElse(Sym(3),Block(Const(1.0)),Block(Sym(7)))"
+shape=box
+]
+"Sym(3)" -> "Sym(8)"
+"Sym(7)" -> "Sym(8)"
+"Sym(1)" [
+label="Sym(1) \n DefineFun(Block(Sym(8)))"
+shape=box
+color=green
+style=filled
+]
+"Sym(8)" -> "Sym(1)"
+"Sym(9)" [
+label="Sym(9) \n Apply(Sym(1),Sym(0))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(1)" -> "Sym(9)"
+"Sym(0)" -> "Sym(9)"
+"Sym(10)" [
+label="Sym(10) \n Times(Const(2.0),Sym(0))"
+shape=box
+]
+"Sym(0)" -> "Sym(10)"
+"Sym(11)" [
+label="Sym(11) \n Apply(Sym(1),Sym(10))"
+shape=box
+color=blue
+style=filled
+]
+"Sym(1)" -> "Sym(11)"
+"Sym(10)" -> "Sym(11)"
+"Sym(12)" [
+label="Sym(12) \n Plus(Sym(9),Sym(11))"
+shape=box
+]
+"Sym(9)" -> "Sym(12)"
+"Sym(11)" -> "Sym(12)"
+}

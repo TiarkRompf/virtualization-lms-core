@@ -221,36 +221,47 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
       )
     }
     case ArrayApply(x,n) => emitValDef(sym, "" + quote(x) + "(" + quote(n) + ")")
-    case ArrayUpdate(x,n,y) => emitValDef(sym, quote(x) + "(" + quote(n) + ") = " + quote(y))
+    case ArrayUpdate(x,n,y) => emitAssignment(sym, "" + quote(x) + "(" + quote(n) + ")", quote(y))
     case ArrayLength(x) => emitValDef(sym, "" + quote(x) + ".length")
     case ArrayForeach(a,x,block) => 
       emitValDef(sym, quote(a) + ".foreach{")    
       stream.println(quote(x) + " => ")
       emitBlock(block)
-      stream.println(quote(getBlockResult(block)))
+      emitBlockResult(block)
       stream.println("}")
     case ArrayCopy(src,srcPos,dest,destPos,len) => emitValDef(sym, "System.arraycopy(" + quote(src) + "," + quote(srcPos) + "," + quote(dest) + "," + quote(destPos) + "," + quote(len) + ")")
     case a@ArraySort(x) => 
-      stream.println("val " + quote(sym) + " = {")
-      stream.println("val d = new Array[" + remap(a.m) + "](" + quote(x) + ".length" + ")")
-      stream.println("System.arraycopy(" + quote(x) + ", 0, d, 0, " + quote(x) + ".length)")
-      stream.println("scala.util.Sorting.quickSort(d)")
-      stream.println("d")
-      stream.println("}")
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.println("{")
+        stream.println("val d = new Array[" + remap(a.m) + "](" + quote(x) + ".length" + ")")
+        stream.println("System.arraycopy(" + quote(x) + ", 0, d, 0, " + quote(x) + ".length)")
+        stream.println("scala.util.Sorting.quickSort(d)")
+        stream.println("d")
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
     case n@ArrayMap(a,x,blk) => 
-      stream.println("// workaround for refinedManifest problem")
-      stream.println("val " + quote(sym) + " = {")
-      stream.println("val out = " + quote(n.array))
-      stream.println("val in = " + quote(a))
-      stream.println("var i = 0")
-      stream.println("while (i < in.length) {")
-      stream.println("val " + quote(x) + " = in(i)")
-      emitBlock(blk)
-      stream.println("out(i) = " + quote(getBlockResult(blk)))
-      stream.println("i += 1")      
-      stream.println("}")
-      stream.println("out")
-      stream.println("}")
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+      //stream.println("/* workaround for refinedManifest problem */")
+        stream.println("{")
+        stream.println("val out = " + quote(n.array))
+        stream.println("val in = " + quote(a))
+        stream.println("var i = 0")
+        stream.println("while (i < in.length) {")
+        stream.println("val " + quote(x) + " = in(i)")
+        emitBlock(blk)
+        stream.print("out(i) = ")
+	emitBlockResult(blk)
+        stream.println("i += 1")      
+        stream.println("}")
+        stream.println("out")
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
     
       // stream.println("val " + quote(sym) + " = " + quote(a) + ".map{")
       // stream.println(quote(x) + " => ")

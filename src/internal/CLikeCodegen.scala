@@ -12,7 +12,7 @@ trait CLikeCodegen extends GenericCodegen {
 */
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit
   def emitValDef(sym: Sym[Any], rhs: String): Unit
-  def emitAssignment(lhs:String, rhs: String): Unit
+  def emitAssignment(sym: Sym[Any], lhs:String, rhs: String): Unit
   
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     val List(sym) = syms // TODO

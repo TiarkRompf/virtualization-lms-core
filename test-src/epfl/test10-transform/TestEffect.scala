@@ -181,7 +181,7 @@ class TestEffects extends FileDiffSuite {
       with EqualExpOpt //with VariablesExpOpt 
       with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp 
       with Lib with LibExp { self => 
-    override val verbosity = 2
+    //override val verbosity = 2
     val codegen = new ScalaGenFat with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative with ScalaGenRangeOps 
       with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self 
@@ -218,14 +218,14 @@ class TestEffects extends FileDiffSuite {
             stream.println("// soft deps: "+es.map(quote).mkString(","))
             emitNode(sym,x)
           case Mutate(a,b) =>
-            emitValDef(sym, quote(a) + " // mutated by "+ quote(b))
+            emitValDef(sym, quote(a, true) + " // mutated by "+ quote(b, true))
           case Copy(a) =>
             emitValDef(sym, quote(a) + ".clone")
           case _ =>
             super.emitNode(sym,rhs)
         }
       }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
+    codegen.emitSource1(test, "Test", new PrintWriter(System.out))
   }
   
   def testEffects1 = withOutFileChecked(prefix+"effects1") { // test ordering

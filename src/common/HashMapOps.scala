@@ -158,7 +158,7 @@ trait ScalaGenHashMapOps extends BaseGenHashMapOps with ScalaGenEffect {
          stream.print("val " + quote(sym) + " = ")
          stream.println(quote(m) + ".getOrElseUpdate(" + quote(k) + ", {")
          emitBlock(v)
-         stream.println(quote(getBlockResult(v)))
+         emitBlockResult(v)
          stream.println("})")
     }
     case HashMapMkString(m,k) => emitValDef(sym, quote(m) + ".mkString(" + quote(k) + ")")

@@ -330,13 +330,6 @@ trait GPUCodegen extends CLikeCodegen {
     }
   }
 
-  def isVoidType[A](m: Manifest[A]) : Boolean = {
-    m.toString match {
-      case "Unit" => true
-      case _ => false
-    }
-  }
-
   def isVariableType[A](m: Manifest[A]) : Boolean = {
     if(m.erasure == classOf[Variable[AnyVal]]) true
     else false

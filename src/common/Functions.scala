@@ -254,12 +254,9 @@ trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
-      if (x.tp != manifest[Unit])
-          emitValDef(sym, "{" + quote(x) + ": (" + x.tp + ") => ")
-      else
-          emitValDef(sym, "{ x" + x.toString.replace("Sym(","").replace(")","") + ": (" + x.tp + ") => ")
+      emitValDef(sym, "{" + quote(x, true) + ": (" + x.tp + ") => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y))/* + ": " + y.tp*/)
+      if (y.tp != manifest[Unit]) stream.println(quote(getBlockResult(y)) + ": " + y.tp)
       stream.println("}")
 
     case Apply(fun, arg) =>
@@ -280,9 +277,10 @@ trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTu
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>
-      emitValDef(sym, "{" + xs.map(s=>quote(s)+":"+remap(s.tp)).mkString("(",",",")") + " => ")
+      emitValDef(sym, "{" + xs.map(s=>quote(s, true)+":"+remap(s.tp)).mkString("(",",",")") + " => ")
       emitBlock(y)
-      stream.println(quote(getBlockResult(y)) + ": " + y.tp)
+      var ytp = remap(y.tp).toString;
+      if (ytp != manifest[Unit]) stream.println(quote(getBlockResult(y)) + ": " + ytp )
       stream.println("}")
 
     case Apply(fun, UnboxedTuple(args)) =>

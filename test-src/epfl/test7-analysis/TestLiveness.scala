@@ -131,7 +131,7 @@ class TestLiveness extends FileDiffSuite {
     withOutFile(prefix+"liveness1") {
       new LiveProg with ArithExp with ArraysExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenArrays with ScalaGenPrint with Liveness { val IR: self.type = self }
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"liveness1")
@@ -141,7 +141,7 @@ class TestLiveness extends FileDiffSuite {
     withOutFile(prefix+"liveness2") {
       new LiveProg with ArithExp with ArraysExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenArraysLiveOpt with ScalaGenPrint with Liveness { val IR: self.type = self }
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"liveness2")

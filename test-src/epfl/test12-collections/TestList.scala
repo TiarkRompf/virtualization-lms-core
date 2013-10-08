@@ -11,7 +11,7 @@ class TestList extends FileDiffSuite {
     def test(xs: Rep[List[Int]]): Rep[List[Int]] = {
       for {
         x <- xs
-        y <- List(unit(1), unit(2), unit(3))
+        y <- NewList(unit(1), unit(2), unit(3))
         if y < unit(3)
       } yield x * y
     }
@@ -19,13 +19,13 @@ class TestList extends FileDiffSuite {
 
   trait Concat { this: ListOps =>
     def test(xs: Rep[List[Int]]): Rep[List[Int]] =
-      xs ++ List(unit(1), unit(2), unit(3))
+      xs ++ NewList(unit(1), unit(2), unit(3))
 
     def emptyLeft(xs: Rep[List[Int]]): Rep[List[Int]] =
-      List() ++ xs
+      NewList() ++ xs
 
     def emptyRight(xs: Rep[List[Int]]): Rep[List[Int]] =
-      xs ++ List()
+      xs ++ NewList()
   }
 
   trait MkString { this: ListOps =>
@@ -39,7 +39,7 @@ class TestList extends FileDiffSuite {
     withOutFile(prefix+"map-flatmap-filter") {
       val prog = new MapFlatMapAndFilter with ListOpsExp with NumericOpsExp with OrderingOpsExp
       val codegen = new ScalaGenEffect with ScalaGenListOps with ScalaGenNumericOps with ScalaGenOrderingOps { val IR: prog.type = prog }
-      codegen.emitSource(prog.test, "MapFlatMapAndFilter", new PrintWriter(System.out))
+      codegen.emitSource1(prog.test, "MapFlatMapAndFilter", new PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"map-flatmap-filter")
   }
@@ -48,9 +48,9 @@ class TestList extends FileDiffSuite {
     withOutFile(prefix+"concat") {
       val prog = new Concat with ListOpsExpOpt
       val codegen = new ScalaGenEffect with ScalaGenListOps { val IR: prog.type = prog }
-      codegen.emitSource(prog.test, "Concat", new PrintWriter(System.out))
-      codegen.emitSource(prog.emptyLeft, "ConcatEmptyLeft", new PrintWriter(System.out))
-      codegen.emitSource(prog.emptyRight, "ConcatEmptyRight", new PrintWriter(System.out))
+      codegen.emitSource1(prog.test, "Concat", new PrintWriter(System.out))
+      codegen.emitSource1(prog.emptyLeft, "ConcatEmptyLeft", new PrintWriter(System.out))
+      codegen.emitSource1(prog.emptyRight, "ConcatEmptyRight", new PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"concat")
   }
@@ -59,7 +59,7 @@ class TestList extends FileDiffSuite {
     withOutFile(prefix+"mkstring") {
       val prog = new MkString with ListOpsExp
       val codegen = new ScalaGenEffect with ScalaGenListOps { val IR: prog.type = prog }
-      codegen.emitSource(prog.test, "MkString", new PrintWriter(System.out))
+      codegen.emitSource1(prog.test, "MkString", new PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"mkstring")
   }

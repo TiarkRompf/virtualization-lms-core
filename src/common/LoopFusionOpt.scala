@@ -405,7 +405,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
               val fusedNeg = preNeg flatMap { s1 => postNeg map { s2 => (s1,s2) } }
               WtableNeg = (fusedNeg ++ WtableNeg).distinct
 
-            case None => partitionsOut = b::partitionsOut
+            case _ => partitionsOut = b::partitionsOut
           }
         }
 

@@ -5,7 +5,7 @@
 class Test extends ((Double)=>(Any)) {
 def apply(x0:Double): Any = {
 val x4 = {x1: (Any) => 
-val x2 = println("foo")
+println("foo")
 x1: Any
 }
 val x5 = x4(x0)
@@ -18,7 +18,7 @@ x6
 *******************************************/
 function main(x0) {
 var x4 = function(x1) {
-var x2 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("foo"))
+document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("foo"))
 return x1
 }
 var x5 = x4(x0)

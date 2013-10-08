@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package epfl
 package test9
 
+import internal.Config
 import common._
 import internal.{FatExpressions,GenericFatCodegen}
 
@@ -79,21 +80,21 @@ class TestStruct extends FileDiffSuite {
 
   trait Impl extends DSL with StructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
-    override val verbosity = 1
+    Config.verbosity = 1
     val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
+    codegen.emitSource1(test, "Test", new PrintWriter(System.out))
   }
 
   trait ImplFused extends DSL with StructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
-    override val verbosity = 1
+    Config.verbosity = 1
     val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self;
         override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
+    codegen.emitSource1(test, "Test", new PrintWriter(System.out))
   }
 
   

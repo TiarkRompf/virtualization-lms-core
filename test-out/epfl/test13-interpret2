@@ -1,0 +1,302 @@
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(85),Summary(true,true,false,false,false,List(),List(),List(Sym(1), Sym(7), Sym(12), Sym(21), Sym(26), Sym(31), Sym(36), Sym(41), Sym(50), Sym(55), Sym(60), Sym(65), Sym(70), Sym(79)),List(Sym(1), Sym(7), Sym(12), Sym(21), Sym(26), Sym(31), Sym(36), Sym(41), Sym(50), Sym(55), Sym(60), Sym(65), Sym(70), Sym(79))),List(Sym(5), Sym(6), Sym(10), Sym(11), Sym(15), Sym(16), Sym(19), Sym(20), Sym(24), Sym(25), Sym(29), Sym(30), Sym(34), Sym(35), Sym(39), Sym(40), Sym(44), Sym(45), Sym(48), Sym(49), Sym(53), Sym(54), Sym(58), Sym(59), Sym(63), Sym(64), Sym(68), Sym(69), Sym(73), Sym(74), Sym(77), Sym(78), Sym(82), Sym(83), Sym(85)))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged0(px2:scala.virtualization.lms.common.Compile,px3:Object,px4:Object,px1:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px8:Object,px9:Object,px7:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px13:Object,px14:Object,px12:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px17:Object,px18:Object,px22:Object,px23:Object,px21:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px27:Object,px28:Object,px26:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px32:Object,px33:Object,px31:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px37:Object,px38:Object,px36:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px42:Object,px43:Object,px41:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px46:Object,px47:Object,px51:Object,px52:Object,px50:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px56:Object,px57:Object,px55:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px61:Object,px62:Object,px60:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px66:Object,px67:Object,px65:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px71:Object,px72:Object,px70:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun],px75:Object,px76:Object,px80:Object,px81:Object,px79:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x0:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+val x2 = px2 // static data: IR:scala.virtualization.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
+val x3 = px3 // static data: <function1>
+val x4 = px4 // static data: <function1>
+val x5 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x3.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x4.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x1 = px1 // static data: RCell(dyn - ConstN(0))
+x1.set(x5)
+val x8 = px8 // static data: <function1>
+val x9 = px9 // static data: <function1>
+val x10 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x8.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x9.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x7 = px7 // static data: RCell(dyn - AssignN(x,ConstN(0)))
+x7.set(x10)
+val x13 = px13 // static data: <function1>
+val x14 = px14 // static data: <function1>
+val x15 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x13.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x14.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x12 = px12 // static data: RCell(dyn - LookupN(n))
+x12.set(x15)
+val x17 = px17 // static data: <function1>
+val x18 = px18 // static data: <function1>
+val x19 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x17.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x18.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+x12.set(x19)
+val x22 = px22 // static data: <function1>
+val x23 = px23 // static data: <function1>
+val x24 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x22.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x23.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x21 = px21 // static data: RCell(dyn - ConstN(-1))
+x21.set(x24)
+val x27 = px27 // static data: <function1>
+val x28 = px28 // static data: <function1>
+val x29 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x27.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x28.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x26 = px26 // static data: RCell(dyn - AddN(LookupN(n),ConstN(-1)))
+x26.set(x29)
+val x32 = px32 // static data: <function1>
+val x33 = px33 // static data: <function1>
+val x34 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x32.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x33.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x31 = px31 // static data: RCell(dyn - AssignN(n,AddN(LookupN(n),ConstN(-1))))
+x31.set(x34)
+val x37 = px37 // static data: <function1>
+val x38 = px38 // static data: <function1>
+val x39 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x37.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x38.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x36 = px36 // static data: RCell(dyn - LookupN(x))
+x36.set(x39)
+val x42 = px42 // static data: <function1>
+val x43 = px43 // static data: <function1>
+val x44 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x42.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x43.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x41 = px41 // static data: RCell(dyn - LookupN(a))
+x41.set(x44)
+val x46 = px46 // static data: <function1>
+val x47 = px47 // static data: <function1>
+val x48 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x46.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x47.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+x12.set(x48)
+val x51 = px51 // static data: <function1>
+val x52 = px52 // static data: <function1>
+val x53 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x51.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x52.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x50 = px50 // static data: RCell(dyn - AppN(LookupN(a),LookupN(n)))
+x50.set(x53)
+val x56 = px56 // static data: <function1>
+val x57 = px57 // static data: <function1>
+val x58 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x56.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x57.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x55 = px55 // static data: RCell(dyn - AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))
+x55.set(x58)
+val x61 = px61 // static data: <function1>
+val x62 = px62 // static data: <function1>
+val x63 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x61.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x62.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x60 = px60 // static data: RCell(dyn - AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))))
+x60.set(x63)
+val x66 = px66 // static data: <function1>
+val x67 = px67 // static data: <function1>
+val x68 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x66.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x67.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x65 = px65 // static data: RCell(dyn - SeqN(List(AssignN(n,AddN(LookupN(n),ConstN(-1))), AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))))))
+x65.set(x68)
+val x71 = px71 // static data: <function1>
+val x72 = px72 // static data: <function1>
+val x73 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x71.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x72.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x70 = px70 // static data: RCell(dyn - WhileN(LookupN(n),SeqN(List(AssignN(n,AddN(LookupN(n),ConstN(-1))), AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))))))
+x70.set(x73)
+val x75 = px75 // static data: <function1>
+val x76 = px76 // static data: <function1>
+val x77 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x75.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x76.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+x36.set(x77)
+val x80 = px80 // static data: <function1>
+val x81 = px81 // static data: <function1>
+val x82 = new scala.virtualization.lms.epfl.test13.RFun {
+type Rep[T] = x2.Rep[T]
+type HM = scala.collection.mutable.HashMap[String,Any]
+val fAny = x2.compile(x80.asInstanceOf[Rep[HM]=>Rep[Any]])
+val fInt = x2.compile(x81.asInstanceOf[Rep[HM]=>Rep[Int]])
+def exec(f: HM): Any = fAny(f)
+def execInt(f: HM): Int = fInt(f)
+}
+val x79 = px79 // static data: RCell(dyn - SeqN(List(AssignN(x,ConstN(0)), WhileN(LookupN(n),SeqN(List(AssignN(n,AddN(LookupN(n),ConstN(-1))), AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))))), LookupN(x))))
+x79.set(x82)
+val x84 = x79.value
+val x85 = x84.exec(x0)
+x85
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+warning: possible missing mtype call - toAtom with Def of type Any StaticData(0)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged1(px88:Any) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x87:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+val x88 = px88 // static data: 0
+x88
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+warning: possible missing mtype call - toAtom with Def of type Any StaticData(0)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged2(px88:Any) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x89:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+val x88 = px88 // static data: 0
+val x90 = x88.asInstanceOf[Int]
+x90
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(94),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(93), Sym(94)))
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged3(px1:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x91:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+val x1 = px1 // static data: RCell(dyn - ConstN(0))
+val x92 = x1.value
+val x93 = x92.exec(x91)
+x91("x") = x93
+
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged4(px1:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x96:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+val x1 = px1 // static data: RCell(dyn - ConstN(0))
+val x92 = x1.value
+val x97 = x92.exec(x96)
+x96("x") = x97
+val x99 = .asInstanceOf[Int]
+x99
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+<stdin>:10: error: illegal start of simple expression
+val x99 = .asInstanceOf[Int]
+          ^
+one error found
+compilation of the following code had errors:
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged4(px1:scala.virtualization.lms.epfl.test13.RCell[scala.virtualization.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x96:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+val x1 = px1 // static data: RCell(dyn - ConstN(0))
+val x92 = x1.value
+val x97 = x92.exec(x96)
+x96("x") = x97
+val x99 = .asInstanceOf[Int]
+x99
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+

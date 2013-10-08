@@ -772,7 +772,7 @@ class TestMatcherNew extends FileDiffSuite {
       def protect[A:Manifest](x: Exp[A], in: List[Rep[Any]]): Rep[A] = ResultA(x,in)
       def bare[T:Manifest](x: Exp[Any], f: String => String): Exp[T] = Bare[T](x,f)
       //def printL(in: Rep[Any]): Rep[Unit] = /*reflectEffect*/(Result(List(in))) //FIXME violate ordering
-      override val verbosity = 1
+      //override val verbosity = 1
       object codegen extends ScalaGenArith with ScalaGenEqual with ScalaGenListOps with ScalaGenTupleOps
           with ScalaGenIfThenElseFat with ScalaGenSplitEffects with ScalaGenOrderingOps
           with ScalaGenDFAOps with ScalaGenGAOps
@@ -790,8 +790,8 @@ class TestMatcherNew extends FileDiffSuite {
       }
       
       val f = (x:Rep[Unit]) => test(x)
-      codegen.emitSource(f, "Match", new java.io.PrintWriter(System.out))
-      val fc = compile(f)
+      codegen.emitSource1(f, "Match", new java.io.PrintWriter(System.out))
+      val fc = compile1(f)
       runtest()
   }
 
@@ -931,7 +931,7 @@ class TestMatcherNew extends FileDiffSuite {
       def test(x: Rep[Unit]) = {
         
         def count: Rep[Double => DfaState] = lam { s: Rep[Double] =>
-          dfa_trans(List(s)) { a1 =>
+          dfa_trans(NewList(s)) { a1 =>
             count(protect(s,a1) + 1)
           }
         }
@@ -953,7 +953,7 @@ class TestMatcherNew extends FileDiffSuite {
     def fcount[T:Manifest] = Foreach[T,Double](0, c => s => s + 1)
     def fwhile[T:Manifest](p: Rep[T] => Rep[Boolean]) = Foreach[T,Boolean](unit(true), c => s => if (s && p(c)) unit(true) else unit(false))
     def flast[T:Manifest](s: Rep[T]) = Foreach[T,T](s, c => s => c)
-    def fcollect[T:Manifest] = Foreach[T,List[T]](List(), c => s => list_concat(s,List(c)))
+    def fcollect[T:Manifest] = Foreach[T,List[T]](NewList(), c => s => list_concat(s,NewList(c)))
 
     def switcher[T:Manifest,S1:Manifest,S2:Manifest,O1:Manifest,O2:Manifest](s: Stream[T])(p: Rep[T]=>Rep[Boolean])(a: Stepper2[T,S1,O1], b: Stepper2[O1,S2,O2]) = 
       Stepper2[T,(S1,S2),O2]((a.s,b.s), ss => b.cond(ss._2), c => ss => if (p(c)) (a.s, b.yld(a.res(ss._1))(ss._2)) else (a.yld(c)(ss._1), ss._2), ss => b.res(ss._2))
@@ -965,7 +965,7 @@ class TestMatcherNew extends FileDiffSuite {
 
       def test(x: Rep[Unit]): DIO = {
         
-        val nested = Stream[Char] flatMap { c => plist(List(c,c,c)) } into fcollect
+        val nested = Stream[Char] flatMap { c => plist(NewList(c,c,c)) } into fcollect
 
         val listhandler = Stream[Char] split(_ == 'A', fcount) filter (_ != 0) into fcount
         

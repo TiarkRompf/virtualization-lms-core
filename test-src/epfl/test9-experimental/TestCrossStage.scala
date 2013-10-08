@@ -31,15 +31,15 @@ class TestCrossStage extends FileDiffSuite {
     def funToRep[T:Manifest,U:Manifest](x:T=>U): Rep[T=>U] = staticData(x)
     def abToRep[T:Manifest](x:ArrayBuffer[T]): Rep[ArrayBuffer[T]] = staticData(x)
 
-    override val verbosity = 2
+    //override val verbosity = 2
     val codegen = new ScalaGenStaticData with ScalaGenFunctions with ScalaGenArrayBufferOps with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { 
         val IR: self.type = self 
       }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
+    codegen.emitSource1(test, "Test", new PrintWriter(System.out))
     println("-- running program")
-    val f = compile(test)
+    val f = compile1(test)
     f(21)
   }
 

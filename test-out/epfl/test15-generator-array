@@ -1,0 +1,97 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class testMul extends ((Array[scala.Tuple2[Int, Int]], Int)=>(Unit)) {
+def apply(x0:Array[scala.Tuple2[Int, Int]], x1:Int): Unit = {
+val x2 = x0.length
+val x3 = x2 + 1
+val x4 = x3 * x3
+val x5 = new Array[Recordintintint](x4)
+var x7 : Int = 1
+while (x7 < x3) {
+val x8 = x3 - x7
+var x10 : Int = 0
+while (x10 < x8) {
+var x15 = 0
+var x16 = 0
+var x17 = 10000
+val x11 = x10 + x7
+val x12 = x10 + 1
+val x19 = x12 == x11
+if (x19) {
+val x24 = x15
+val x25 = x16
+val x26 = x17
+val x28 = 0 < x26
+if (x28) {
+val x20 = x0(x10)
+val x21 = x20._1
+x15 = x21
+val x22 = x20._2
+x16 = x22
+x17 = 0
+()
+} else {
+()
+}
+
+} else {
+()
+}
+val x13 = x12 < x11
+val x38 = x10 * x3
+if (x13) {
+var x37 : Int = x12
+while (x37 < x11) {
+val x55 = x15
+val x56 = x16
+val x57 = x17
+val x39 = x38 + x37
+val x40 = x5(x39)
+val x47 = x40.mults
+val x41 = x37 * x3
+val x42 = x41 + x11
+val x43 = x5(x42)
+val x48 = x43.mults
+val x49 = x47 + x48
+val x46 = x43.cols
+val x45 = x40.rows
+val x50 = x40.cols
+val x51 = x45 * x50
+val x52 = x51 * x46
+val x53 = x49 + x52
+val x59 = x53 < x57
+if (x59) {
+x15 = x45
+x16 = x46
+x17 = x53
+()
+} else {
+()
+}
+x37 = x37 + 1
+}
+
+} else {
+()
+}
+val x70 = x15
+val x71 = x16
+val x72 = x17
+val x69 = x38 + x11
+val x73 = Recordintintint(rows = x70, cols = x71, mults = x72)
+x5(x69) = x73
+x10 = x10 + 1
+}
+x7 = x7 + 1
+}
+val x79 = 0 * x3
+val x80 = x79 + x2
+val x81 = x5(x80)
+println(x81)
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+case class Recordintintint(rows: Int, cols: Int, mults: Int)

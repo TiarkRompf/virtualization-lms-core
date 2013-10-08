@@ -13,7 +13,7 @@ trait JSGenFunctions extends JSGenEffect with BaseGenFunctions {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, x, y) =>
-      stream.println("var " + quote(sym) + " = function(" + quote(x) + ") {")
+      stream.println("var " + quote(sym, true) + " = function(" + quote(x) + ") {")
       emitBlock(y)
       stream.println("return " + quote(getBlockResult(y)))
       stream.println("}")
@@ -31,7 +31,7 @@ trait JSGenTupledFunctions extends JSGenFunctions {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>
-      stream.println("var " + quote(sym) + " = function" + xs.map(quote).mkString("(", ",", ")") + " {")
+      stream.println("var " + quote(sym, true) + " = function" + xs.map(quote).mkString("(", ",", ")") + " {")
       emitBlock(y)
       stream.println("return " + quote(getBlockResult(y)))
       stream.println("}")
@@ -148,14 +148,14 @@ class TestFunctions extends FileDiffSuite {
         val codegen = new ScalaGenPrint with ScalaGenFunctions { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)
-        codegen.emitSource(f, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(f, "Test", new PrintWriter(System.out))
       }
     
       new FunctionsProg with PrintExp with FunctionsExp { self =>
         val codegen = new JSGenPrint with JSGenFunctions { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)
-        codegen.emitSource(f, "main", new PrintWriter(System.out))
+        codegen.emitSource1(f, "main", new PrintWriter(System.out))
       }
 
       println("-- end")
@@ -172,14 +172,14 @@ class TestFunctions extends FileDiffSuite {
         val codegen = new ScalaGenArith with ScalaGenPrint with ScalaGenFunctions { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)
-        codegen.emitSource(f, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(f, "Test", new PrintWriter(System.out))
       }
     
       new FunctionsRecursiveProg with ArithExpOpt with PrintExp with FunctionsRecursiveExp { self =>
         val codegen = new JSGenArith with JSGenPrint with JSGenFunctions { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)
-        codegen.emitSource(f, "main", new PrintWriter(System.out))
+        codegen.emitSource1(f, "main", new PrintWriter(System.out))
       }
 
       println("-- end")
@@ -191,7 +191,7 @@ class TestFunctions extends FileDiffSuite {
     withOutFile(prefix+"twoargsfun") {
       new TwoArgsFunProg with TupledFunctionsExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
-        codegen.emitSource(test _, "main", new PrintWriter(System.out))
+        codegen.emitSource1(test _, "main", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"twoargsfun")
@@ -201,7 +201,7 @@ class TestFunctions extends FileDiffSuite {
     withOutFile(prefix+"tuplefun") {
       new TupleFunProg with ArithExp with TupledFunctionsExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
-        codegen.emitSource(test _, "main", new PrintWriter(System.out))
+        codegen.emitSource1(test _, "main", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"tuplefun")
@@ -211,7 +211,7 @@ class TestFunctions extends FileDiffSuite {
     withOutFile(prefix+"noargfun") {
       new NoArgFunProg with TupledFunctionsRecursiveExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
-        codegen.emitSource(test _, "main", new PrintWriter(System.out))
+        codegen.emitSource1(test _, "main", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"noargfun")
@@ -221,7 +221,7 @@ class TestFunctions extends FileDiffSuite {
     withOutFile(prefix+"twoargsrecfun") {
       new TwoArgsRecursiveFunProg with TupledFunctionsRecursiveExp with ArithExpOpt with EqualExp with IfThenElseExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenArith with JSGenEqual with JSGenIfThenElse with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
-        codegen.emitSource(test _, "main", new PrintWriter(System.out))
+        codegen.emitSource1(test _, "main", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"twoargsrecfun")
@@ -232,7 +232,7 @@ class TestFunctions extends FileDiffSuite {
       new SchedFunProg with FunctionsRecursiveExp with ArithExpOpt with EqualExp with IfThenElseExp { self =>
         val codegen = new JSGenFunctions with JSGenArith with JSGenEqual with JSGenIfThenElse { val IR: self.type = self }
         val f = (x: Rep[Double]) => test(x)
-        codegen.emitSource(f, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(f, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"schedfun")
