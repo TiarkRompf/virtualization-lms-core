@@ -21,7 +21,7 @@ trait StructOps extends Base {
   implicit def recordToRecordOps(record: Rep[Record]) = new RecordOps(record)
 
   def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T]
-  def record_select[T : Manifest](record: Rep[Record], field: String): Rep[T]  
+  def record_select[T : Manifest](record: Rep[Record], field: String): Rep[T]
   def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T]
 }
 
@@ -30,13 +30,13 @@ trait StructTags {
   case class ClassTag[T](name: String) extends StructTag[T]
   case class NestClassTag[C[_],T](elem: StructTag[T]) extends StructTag[C[T]]
   case class AnonTag[T](fields: RefinedManifest[T]) extends StructTag[T]
-  case class MapTag[T] extends StructTag[T]  
+  case class MapTag[T] extends StructTag[T]
 }
 
 trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with ObjectOpsExp with StringOpsExp with OverloadHack {
-  
+
   // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
-    
+
   abstract class AbstractStruct[T] extends Def[T] {
     val tag: StructTag[T]
     val elems: Seq[(String, Rep[Any])]
@@ -48,7 +48,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   }
 
   /* override def fresh[T:Manifest] = manifest[T] match {
-    case s if s <:< manifest[Record] => 
+    case s if s <:< manifest[Record] =>
       val m = spawnRefinedManifest
       super.fresh(m)
     case _ => super.fresh
@@ -86,16 +86,31 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]) = {
     val x: Sym[T] = Sym[T](-99) // self symbol -- not defined anywhere, so make it obvious!! (TODO)
     val fieldSyms = fields map {
-      case (index, false, rhs) => (index, rhs(x)) 
+      case (index, false, rhs) => (index, rhs(x))
       case (index, true, rhs) => (index, var_new(rhs(x)).e)
     }
     struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fieldSyms)
   }
-  
+
   def record_select[T : Manifest](record: Rep[Record], fieldName: String) = {
     field(record, fieldName)
   }
-  
+
+  def imm_field(struct: Exp[Any], name: String, f: Exp[Any])(implicit pos: SourceContext): Exp[Any] = {
+    if (f.tp.erasure.getSimpleName == "Variable") {
+      field(struct,name)(mtype(f.tp.typeArguments(0)),pos)
+    }
+    else {
+      object_unsafe_immutable(f)(mtype(f.tp),pos)
+    }
+  }
+
+  // don't let unsafeImmutable hide struct-ness
+  override def object_unsafe_immutable[A:Manifest](lhs: Exp[A])(implicit pos: SourceContext) = lhs match {
+    case Def(Struct(tag,elems)) => struct[A](tag, elems.map(t => (t._1, imm_field(lhs, t._1, t._2))))
+    case Def(d@Reflect(Struct(tag, elems), u, es)) => struct[A](tag, elems.map(t => (t._1, imm_field(lhs, t._1, t._2))))
+    case _ => super.object_unsafe_immutable(lhs)
+  }
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case s:AbstractStruct[_] => s.elems.flatMap(e => syms(e._2)).toList
@@ -241,7 +256,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
         var_assign(Variable(v), field(r,k)(mtype(v.tp),pos))(unwrap(v.tp),pos)
       }
       Const(())
-    case (Variable(Def(Reflect(Field(struct,idx),_,_))), rhs) => 
+    case (Variable(Def(Reflect(Field(struct,idx),_,_))), rhs) =>
       field_update(struct, idx, rhs)
     case _ => super.var_assign(lhs, rhs)
   }
