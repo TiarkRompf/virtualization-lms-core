@@ -16,7 +16,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   // List of kernels and helper functions emitted so far (not to emit the same thing multiple times)
   private val kernelsList = ArrayBuffer[Exp[Any]]()
   protected val helperFuncList = ArrayBuffer[String]()
-
+ 
   // Current tab location for pretty printing
   protected var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
@@ -31,7 +31,8 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   //TODO: Get rid of this variable
   protected var inVars = List[Sym[Any]]()
   protected val boundMap = HashMap[Exp[Int],Exp[Int]]()
-
+  private val ptrSymSet = HashSet[Sym[Any]]()
+ 
   protected def registerTempAlloc(sym:Sym[Any], tp:Manifest[Any], size:Exp[Int]):String = {
     metaData.temps prepend TempAlloc(quote(sym)+"_temp",remap(tp),quote(size))
     quote(sym) + "_temp"
@@ -85,6 +86,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
     inVars = vars
     boundMap.clear
+    ptrSymSet.clear
 
     //helperFuncString.clear
     metaData = new GPUMetaData(vals)
@@ -234,4 +236,21 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     println(msg)
     println("Stack Trace: " + quotePos(sym))
   }
+
+  def clearPtrDef() = ptrSymSet.clear
+  
+  def registerPtrDef(sym: Sym[Any]): Unit = ptrSymSet.add(sym)
+  
+  def emitPtrDef(sym: Sym[Any], rhs: Exp[Any]): Unit = {
+    if(processingHelperFunc && !isPrimitiveType(sym.tp)) {
+      rhs match {
+        case s@Sym(_) => 
+          if(!ptrSymSet.contains(s)) throw new GenerationFailedException("Ptr is not defined for " + quote(s))
+          emitValDef(quote(sym) + "_ptr", sym.tp, quote(rhs) + "_ptr")
+          registerPtrDef(s)
+        case _ => throw new GenerationFailedException("Ptr is not defined for " + quote(rhs))
+      }
+    }
+  }
+
 }
