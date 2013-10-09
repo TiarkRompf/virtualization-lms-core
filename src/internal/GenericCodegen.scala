@@ -174,6 +174,7 @@ trait GenericCodegen extends BlockTraversal {
   // Provides automatic quoting and remapping in the gen string interpolater
   implicit class CodegenHelper(sc: StringContext) {
     def quoteOrRemap(arg: Any): String = arg match {
+      case xs: Seq[Any] => xs.map(quoteOrRemap).mkString(",")
       case e: Exp[Any] => quote(e)
       case m: Manifest[Any] => remap(m)
       case s: String => s
