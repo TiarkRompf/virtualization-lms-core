@@ -181,8 +181,12 @@ trait GenericCodegen extends BlockTraversal {
       case _ => throw new RuntimeException(s"Could not quote or remap $arg")
     }
 
-    def gen(args: Any*): String = {
-      sc.raw(args.map(quoteOrRemap): _*)
+    def src(args: Any*): String = {
+      sc.raw(args.map(quoteOrRemap): _*).stripMargin
+    }
+    
+    def gen(args: Any*): Unit = {
+      stream.println(sc.raw(args.map(quoteOrRemap): _*).stripMargin)
     }
   }
 }

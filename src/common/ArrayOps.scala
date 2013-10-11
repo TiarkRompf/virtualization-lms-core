@@ -188,7 +188,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
   val ARRAY_LITERAL_MAX_SIZE = 1000
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case a@ArrayNew(n) => emitValDef(sym, gen"new Array[${a.m}]($n)")
+    case a@ArrayNew(n) => emitValDef(sym, src"new Array[${a.m}]($n)")
     case e@ArrayFromSeq(xs) => {
       emitData(sym, xs)
       emitValDef(sym,
@@ -208,43 +208,44 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
         }
       )
     }
-    case ArrayApply(x,n) => emitValDef(sym, gen"$x($n)")
-    case ArrayUpdate(x,n,y) => emitValDef(sym, gen"$x($n) = $y")
-    case ArrayLength(x) => emitValDef(sym, gen"$x.length")
-    case ArrayForeach(a,x,block) => stream.println(gen"val $sym = $a.foreach{")
-      stream.println(quote(x) + " => ")
+    case ArrayApply(x,n) => emitValDef(sym, src"$x($n)")
+    case ArrayUpdate(x,n,y) => emitValDef(sym, src"$x($n) = $y")
+    case ArrayLength(x) => emitValDef(sym, src"$x.length")
+    case ArrayForeach(a,x,block) =>
+      gen"""val $sym = $a.foreach{"
+           |$x => """
       emitBlock(block)
-      stream.println(quote(getBlockResult(block)))
-      stream.println("}")
-    case ArrayCopy(src,srcPos,dest,destPos,len) => emitValDef(sym, gen"System.arraycopy($src,$srcPos,$dest,$destPos,$len)")
+      gen"""${getBlockResult(block)}
+           |}"""
+    case ArrayCopy(src,srcPos,dest,destPos,len) => emitValDef(sym, src"System.arraycopy($src,$srcPos,$dest,$destPos,$len)")
     case a@ArraySort(x) =>
-      stream.println(gen"val $sym = {")
-      stream.println(gen"val d = new Array[${a.m}]($x.length)")
-      stream.println(gen"System.arraycopy($x, 0, d, 0, $x.length)")
-      stream.println("scala.util.Sorting.quickSort(d)")
-      stream.println("d")
-      stream.println("}")
+      gen"""val $sym = {
+           |val d = new Array[${a.m}]($x.length)
+           |System.arraycopy($x, 0, d, 0, $x.length)
+           |scala.util.Sorting.quickSort(d)
+           |d
+           |}"""
     case n@ArrayMap(a,x,blk) =>
-      stream.println("// workaround for refinedManifest problem")
-      stream.println(gen"val $sym = {")
-      stream.println(gen"val out = ${n.array}")
-      stream.println(gen"val in = $a")
-      stream.println("var i = 0")
-      stream.println("while (i < in.length) {")
-      stream.println(gen"val $x = in(i)")
+      gen"""// workaround for refinedManifest problem
+           |val $sym = {
+           |val out = ${n.array}
+           |val in = $a
+           |var i = 0
+           |while (i < in.length) {
+           |val $x = in(i)"""
       emitBlock(blk)
-      stream.println(gen"out(i) = ${getBlockResult(blk)}")
-      stream.println("i += 1")
-      stream.println("}")
-      stream.println("out")
-      stream.println("}")
+      gen"""out(i) = ${getBlockResult(blk)}
+           |i += 1
+           |}
+           |out
+           |}"""
 
       // stream.println("val " + quote(sym) + " = " + quote(a) + ".map{")
       // stream.println(quote(x) + " => ")
       // emitBlock(blk)
       // stream.println(quote(getBlockResult(blk)))
       // stream.println("}")
-    case ArrayToSeq(a) => emitValDef(sym, gen"$a.toSeq")
+    case ArrayToSeq(a) => emitValDef(sym, src"$a.toSeq")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -255,9 +256,9 @@ trait CLikeGenArrayOps extends BaseGenArrayOps with CLikeGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
-        case ArrayLength(x) => emitValDef(sym, gen"$x.length")
-        case ArrayApply(x,n) => emitValDef(sym, gen"$x.apply($n)")
-        case ArrayUpdate(x,n,y) => stream.println(gen"$x.update($n,$y);")
+        case ArrayLength(x) => emitValDef(sym, src"$x.length")
+        case ArrayApply(x,n) => emitValDef(sym, src"$x.apply($n)")
+        case ArrayUpdate(x,n,y) => stream.println(src"$x.update($n,$y);")
         case _ => super.emitNode(sym, rhs)
       }
     }

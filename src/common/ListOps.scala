@@ -148,39 +148,39 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case ListNew(xs) => emitValDef(sym, gen"List(${(xs map {quote}).mkString(",")})")
-    case ListConcat(xs,ys) => emitValDef(sym, gen"$xs ::: $ys")
-    case ListCons(x, xs) => emitValDef(sym, gen"$x :: $xs")
-    case ListHead(xs) => emitValDef(sym, gen"$xs.head")
-    case ListTail(xs) => emitValDef(sym, gen"$xs.tail")
-    case ListIsEmpty(xs) => emitValDef(sym, gen"$xs.isEmpty")
-    case ListFromSeq(xs) => emitValDef(sym, gen"List($xs: _*)")
-    case ListMkString(xs) => emitValDef(sym, gen"$xs.mkString")
+    case ListNew(xs) => emitValDef(sym, src"List(${(xs map {quote}).mkString(",")})")
+    case ListConcat(xs,ys) => emitValDef(sym, src"$xs ::: $ys")
+    case ListCons(x, xs) => emitValDef(sym, src"$x :: $xs")
+    case ListHead(xs) => emitValDef(sym, src"$xs.head")
+    case ListTail(xs) => emitValDef(sym, src"$xs.tail")
+    case ListIsEmpty(xs) => emitValDef(sym, src"$xs.isEmpty")
+    case ListFromSeq(xs) => emitValDef(sym, src"List($xs: _*)")
+    case ListMkString(xs) => emitValDef(sym, src"$xs.mkString")
     case ListMap(l,x,blk) => 
-      stream.println(gen"val $sym = $l.map { $x => ")
+      gen"val $sym = $l.map { $x => "
       emitBlock(blk)
-      stream.println(quote(getBlockResult(blk)))
-      stream.println("}")
+      gen"""${getBlockResult(blk)}
+           |}"""
     case ListFlatMap(l, x, b) => {
-      stream.println(gen"val $sym = $l.flatMap { $x => ")
+      gen"val $sym = $l.flatMap { $x => "
       emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
+      gen"""${getBlockResult(b)}
+           |}"""
     }
     case ListFilter(l, x, b) => {
-      stream.println(gen"val $sym = $l.filter { $x => ")
+      gen"val $sym = $l.filter { $x => "
       emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
+      gen"""${getBlockResult(b)}
+           |}"""
     }
     case ListSortBy(l,x,blk) =>
-      stream.println(gen"val $sym = $l.sortBy { $x => ")
+      gen"val $sym = $l.sortBy { $x => "
       emitBlock(blk)
-      stream.println(quote(getBlockResult(blk)))
-      stream.println("}")
-    case ListPrepend(l,e) => emitValDef(sym, gen"$e :: $l")    
-    case ListToArray(l) => emitValDef(sym, gen"$l.toArray")
-    case ListToSeq(l) => emitValDef(sym, gen"$l.toSeq")
+      gen"""${getBlockResult(blk)}
+           |}"""
+    case ListPrepend(l,e) => emitValDef(sym, src"$e :: $l")    
+    case ListToArray(l) => emitValDef(sym, src"$l.toArray")
+    case ListToSeq(l) => emitValDef(sym, src"$l.toSeq")
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -67,25 +67,25 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case SetNew(xs, mA) => emitValDef(sym, gen"collection.mutable.HashSet[$mA](" + (xs map {quote}).mkString(",") + ")")
-    case SetContains(s,i) => emitValDef(sym, gen"$s.contains($i)")
-    case SetAdd(s,i) => emitValDef(sym, gen"$s.add($i)")
-    case SetRemove(s,i) => emitValDef(sym, gen"$s.remove($i)")
-    case SetSize(s) => emitValDef(sym, gen"$s.size")
-    case SetClear(s) => emitValDef(sym, gen"$s.clear()")
-    case SetToSeq(s) => emitValDef(sym, gen"$s.toSeq")
+    case SetNew(xs, mA) => emitValDef(sym, src"collection.mutable.HashSet[$mA](" + (xs map {quote}).mkString(",") + ")")
+    case SetContains(s,i) => emitValDef(sym, src"$s.contains($i)")
+    case SetAdd(s,i) => emitValDef(sym, src"$s.add($i)")
+    case SetRemove(s,i) => emitValDef(sym, src"$s.remove($i)")
+    case SetSize(s) => emitValDef(sym, src"$s.size")
+    case SetClear(s) => emitValDef(sym, src"$s.clear()")
+    case SetToSeq(s) => emitValDef(sym, src"$s.toSeq")
     case n@SetToArray(s) => //emitValDef(sym, quote(s) + ".toArray")
-      stream.println("// workaround for refinedManifest problem")
-      stream.println(gen"val $sym = {")
-      stream.println(gen"val out = $n.array")
-      stream.println(gen"val in = $s.toSeq")
-      stream.println("var i = 0")
-      stream.println("while (i < in.length) {")
-      stream.println("out(i) = in(i)")
-      stream.println("i += 1")      
-      stream.println("}")
-      stream.println("out")
-      stream.println("}")
+      gen"""// workaround for refinedManifest problem
+           |val $sym = {
+           |val out = $n.array
+           |val in = $s.toSeq
+           |var i = 0
+           |while (i < in.length) {
+           |out(i) = in(i)
+           |i += 1
+           |}
+           |out
+           |}"""
     case _ => super.emitNode(sym, rhs)
   }
 }

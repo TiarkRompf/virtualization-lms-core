@@ -47,7 +47,7 @@ trait CLikeGenImplicitOps extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case im@ImplicitConvert(x) =>
-          stream.println(gen"${im.mY} $sym = (${im.mY})$x;")
+          gen"${im.mY} $sym = (${im.mY})$x;"
         case _ => super.emitNode(sym, rhs)
       }
     }

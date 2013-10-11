@@ -91,15 +91,15 @@ trait ScalaGenHashMapOps extends BaseGenHashMapOps with ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case m@HashMapNew() => emitValDef(sym, gen"collection.mutable.HashMap[${m.mK},${m.mV}]()")
-    case HashMapApply(m,k) => emitValDef(sym, gen"$m($k)")
-    case HashMapUpdate(m,k,v)  => emitValDef(sym, gen"$m($k) = $v")
-    case HashMapContains(m,i) => emitValDef(sym, gen"$m.contains($i)")
-    case HashMapSize(m) => emitValDef(sym, gen"$m.size")
-    case HashMapValues(m) => emitValDef(sym, gen"$m.values")
-    case HashMapClear(m) => emitValDef(sym, gen"$m.clear()")
-    case HashMapKeySet(m) => emitValDef(sym, gen"$m.keySet")
-    case HashMapKeys(m) => emitValDef(sym, gen"$m.keys")
+    case m@HashMapNew() => emitValDef(sym, src"collection.mutable.HashMap[${m.mK},${m.mV}]()")
+    case HashMapApply(m,k) => emitValDef(sym, src"$m($k)")
+    case HashMapUpdate(m,k,v)  => emitValDef(sym, src"$m($k) = $v")
+    case HashMapContains(m,i) => emitValDef(sym, src"$m.contains($i)")
+    case HashMapSize(m) => emitValDef(sym, src"$m.size")
+    case HashMapValues(m) => emitValDef(sym, src"$m.values")
+    case HashMapClear(m) => emitValDef(sym, src"$m.clear()")
+    case HashMapKeySet(m) => emitValDef(sym, src"$m.keySet")
+    case HashMapKeys(m) => emitValDef(sym, src"$m.keys")
     case _ => super.emitNode(sym, rhs)
   }
 }

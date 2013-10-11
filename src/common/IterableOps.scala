@@ -72,12 +72,13 @@ trait ScalaGenIterableOps extends BaseGenIterableOps with ScalaGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case IterableForeach(a,x,block) => stream.println(gen"val $sym=$a.foreach{")
-      stream.println(gen"$x => ")
+    case IterableForeach(a,x,block) =>
+      gen"""val $sym=$a.foreach{
+            |$x => """
       emitBlock(block)
-      stream.println(quote(getBlockResult(block)))
-      stream.println("}")
-    case IterableToArray(a) => emitValDef(sym, gen"$a.toArray")
+      gen"""${getBlockResult(block)}
+            |}"""
+    case IterableToArray(a) => emitValDef(sym, src"$a.toArray")
     case _ => super.emitNode(sym, rhs)
   }
 }

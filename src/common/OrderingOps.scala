@@ -87,13 +87,13 @@ trait ScalaGenOrderingOps extends ScalaGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case OrderingLT(a,b) => emitValDef(sym, gen"$a < $b")
-    case OrderingLTEQ(a,b) => emitValDef(sym, gen"$a <= $b")
-    case OrderingGT(a,b) => emitValDef(sym, gen"$a > $b")
-    case OrderingGTEQ(a,b) => emitValDef(sym, gen"$a >= $b")
-    case OrderingEquiv(a,b) => emitValDef(sym, gen"$a equiv $b")
-    case OrderingMax(a,b) => emitValDef(sym, gen"$a max $b")
-    case OrderingMin(a,b) => emitValDef(sym, gen"$a min $b")
+    case OrderingLT(a,b) => emitValDef(sym, src"$a < $b")
+    case OrderingLTEQ(a,b) => emitValDef(sym, src"$a <= $b")
+    case OrderingGT(a,b) => emitValDef(sym, src"$a > $b")
+    case OrderingGTEQ(a,b) => emitValDef(sym, src"$a >= $b")
+    case OrderingEquiv(a,b) => emitValDef(sym, src"$a equiv $b")
+    case OrderingMax(a,b) => emitValDef(sym, src"$a max $b")
+    case OrderingMin(a,b) => emitValDef(sym, src"$a min $b")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -106,19 +106,19 @@ trait CLikeGenOrderingOps extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case OrderingLT(a,b) =>
-          emitValDef(sym, gen"$a < $b")
+          emitValDef(sym, src"$a < $b")
         case OrderingLTEQ(a,b) =>
-          emitValDef(sym, gen"$a <= $b")
+          emitValDef(sym, src"$a <= $b")
         case OrderingGT(a,b) =>
-          emitValDef(sym, gen"$a > $b")
+          emitValDef(sym, src"$a > $b")
         case OrderingGTEQ(a,b) =>
-          emitValDef(sym, gen"$a >= $b")
+          emitValDef(sym, src"$a >= $b")
         case OrderingEquiv(a,b) =>
-          emitValDef(sym, gen"$a == $b")
+          emitValDef(sym, src"$a == $b")
         case OrderingMax(a,b) =>
-          emitValDef(sym, gen"MAX($a, $b)")
+          emitValDef(sym, src"MAX($a, $b)")
         case OrderingMin(a,b) =>
-          emitValDef(sym, gen"MIN($a, $b)")
+          emitValDef(sym, src"MIN($a, $b)")
         case _ => super.emitNode(sym, rhs)
       }
     }

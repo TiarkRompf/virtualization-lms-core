@@ -81,9 +81,9 @@ trait ScalaGenObjectOps extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case ObjectToString(lhs) => emitValDef(sym, gen"($lhs).toString()")
-    case ObjectUnsafeImmutable(x) => emitValDef(sym, gen"$x// unsafe immutable")
-    case ObjectUnsafeMutable(x) => emitValDef(sym, gen"$x// unsafe mutable")
+    case ObjectToString(lhs) => emitValDef(sym, src"($lhs).toString()")
+    case ObjectUnsafeImmutable(x) => emitValDef(sym, src"$x// unsafe immutable")
+    case ObjectUnsafeMutable(x) => emitValDef(sym, src"$x// unsafe mutable")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -93,9 +93,9 @@ trait CLikeGenObjectOps extends CLikeGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case ObjectToString(lhs) => emitValDef(sym, gen"($lhs).toString()")
-    case ObjectUnsafeImmutable(x) => emitValDef(sym, gen"$x; // unsafe immutable")
-    case ObjectUnsafeMutable(x) => emitValDef(sym, gen"$x; // unsafe mutable")
+    case ObjectToString(lhs) => emitValDef(sym, src"($lhs).toString()")
+    case ObjectUnsafeImmutable(x) => emitValDef(sym, src"$x; // unsafe immutable")
+    case ObjectUnsafeMutable(x) => emitValDef(sym, src"$x; // unsafe mutable")
     case _ => super.emitNode(sym, rhs)
   }
 }

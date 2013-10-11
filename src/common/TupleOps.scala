@@ -194,30 +194,30 @@ trait ScalaGenTupleOps extends ScalaGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ETuple2(a,b)  =>
-      emitValDef(sym, gen"($a,$b)")
-    case Tuple2Access1(t) => emitValDef(sym, gen"$t._1")
-    case Tuple2Access2(t) => emitValDef(sym, gen"$t._2")
+      emitValDef(sym, src"($a,$b)")
+    case Tuple2Access1(t) => emitValDef(sym, src"$t._1")
+    case Tuple2Access2(t) => emitValDef(sym, src"$t._2")
 
     case ETuple3(a,b,c)  =>
-      emitValDef(sym, gen"($a,$b,$c)")
-    case Tuple3Access1(t) => emitValDef(sym, gen"$t._1")
-    case Tuple3Access2(t) => emitValDef(sym, gen"$t._2")
-    case Tuple3Access3(t) => emitValDef(sym, gen"$t._3")
+      emitValDef(sym, src"($a,$b,$c)")
+    case Tuple3Access1(t) => emitValDef(sym, src"$t._1")
+    case Tuple3Access2(t) => emitValDef(sym, src"$t._2")
+    case Tuple3Access3(t) => emitValDef(sym, src"$t._3")
 
     case ETuple4(a,b,c,d)  =>
-      emitValDef(sym, gen"($a,$b,$c,$d)")
-    case Tuple4Access1(t) => emitValDef(sym, gen"$t._1")
-    case Tuple4Access2(t) => emitValDef(sym, gen"$t._2")
-    case Tuple4Access3(t) => emitValDef(sym, gen"$t._3")
-    case Tuple4Access4(t) => emitValDef(sym, gen"$t._4")
+      emitValDef(sym, src"($a,$b,$c,$d)")
+    case Tuple4Access1(t) => emitValDef(sym, src"$t._1")
+    case Tuple4Access2(t) => emitValDef(sym, src"$t._2")
+    case Tuple4Access3(t) => emitValDef(sym, src"$t._3")
+    case Tuple4Access4(t) => emitValDef(sym, src"$t._4")
 
     case ETuple5(a,b,c,d,e)  =>
-      emitValDef(sym, gen"($a,$b,$c,$d,$e)")
-    case Tuple5Access1(t) => emitValDef(sym, gen"$t._1")
-    case Tuple5Access2(t) => emitValDef(sym, gen"$t._2")
-    case Tuple5Access3(t) => emitValDef(sym, gen"$t._3")
-    case Tuple5Access4(t) => emitValDef(sym, gen"$t._4")
-    case Tuple5Access5(t) => emitValDef(sym, gen"$t._5")
+      emitValDef(sym, src"($a,$b,$c,$d,$e)")
+    case Tuple5Access1(t) => emitValDef(sym, src"$t._1")
+    case Tuple5Access2(t) => emitValDef(sym, src"$t._2")
+    case Tuple5Access3(t) => emitValDef(sym, src"$t._3")
+    case Tuple5Access4(t) => emitValDef(sym, src"$t._4")
+    case Tuple5Access5(t) => emitValDef(sym, src"$t._5")
 
     case _ => super.emitNode(sym, rhs)
   }
