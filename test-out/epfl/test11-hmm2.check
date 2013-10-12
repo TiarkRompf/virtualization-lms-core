@@ -30,6 +30,7 @@ val x28 = x0(x24)
 val x29 = x27 * x28
 val x30 = x25 + x29
 val x31 = x1(3) = x30
+
 x24 = x24 + 1
 }
 val x34 = x1(4)

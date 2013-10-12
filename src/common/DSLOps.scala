@@ -28,7 +28,8 @@ trait ScalaGenDSLOps extends ScalaGenEffect with BaseGenDSLOps {
     case op: DSLOp[_] =>
       val b = op.representation
       gen"""val $sym = {
-           |$b${getBlockResult(b)}
+           |$b
+           |${getBlockResult(b)}
            |}"""
 
     case _ => super.emitNode(sym, rhs)

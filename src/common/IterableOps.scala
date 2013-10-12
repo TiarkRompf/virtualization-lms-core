@@ -75,7 +75,8 @@ trait ScalaGenIterableOps extends BaseGenIterableOps with ScalaGenBase {
     case IterableForeach(a,x,block) =>
       gen"""val $sym=$a.foreach{
             |$x =>
-            |$block${getBlockResult(block)}
+            |$block
+            |${getBlockResult(block)}
             |}"""
     case IterableToArray(a) => emitValDef(sym, src"$a.toArray")
     case _ => super.emitNode(sym, rhs)

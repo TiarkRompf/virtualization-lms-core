@@ -100,7 +100,8 @@ trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
       //stream.println(quote(getBlockResult(body)))
       gen"""var $i : Int = $start
            |val $sym = while ($i < $end) {
-           |$body$i = $i + 1
+           |$body
+           |$i = $i + 1
            |}"""
     }
 
