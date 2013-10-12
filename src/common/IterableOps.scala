@@ -74,9 +74,8 @@ trait ScalaGenIterableOps extends BaseGenIterableOps with ScalaGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IterableForeach(a,x,block) =>
       gen"""val $sym=$a.foreach{
-            |$x => """
-      emitBlock(block)
-      gen"""${getBlockResult(block)}
+            |$x =>
+            |$block${getBlockResult(block)}
             |}"""
     case IterableToArray(a) => emitValDef(sym, src"$a.toArray")
     case _ => super.emitNode(sym, rhs)

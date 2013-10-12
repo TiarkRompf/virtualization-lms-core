@@ -173,20 +173,39 @@ trait GenericCodegen extends BlockTraversal {
 
   // Provides automatic quoting and remapping in the gen string interpolater
   implicit class CodegenHelper(sc: StringContext) {
+    def printToStream(arg: Any): Unit = {
+      stream.print(quoteOrRemap(arg))
+    }
+
     def quoteOrRemap(arg: Any): String = arg match {
-      case xs: Seq[Any] => xs.map(quoteOrRemap).mkString(",")
-      case e: Exp[Any] => quote(e)
-      case m: Manifest[Any] => remap(m)
+      case xs: Seq[_] => xs.map(quoteOrRemap).mkString(",")
+      case e: Exp[_] => quote(e)
+      case m: Manifest[_] => remap(m)
       case s: String => s
       case _ => throw new RuntimeException(s"Could not quote or remap $arg")
+    }
+
+    // First line of a part of the context may contain
+    // a | and therefore should not be stripped
+    def stripContextPart(part: String): String = {
+      val lines = part.linesWithSeparators
+      if (!lines.hasNext) part
+      else lines.next + (lines.foldLeft("")(_+_).stripMargin)
     }
 
     def src(args: Any*): String = {
       sc.raw(args.map(quoteOrRemap): _*).stripMargin
     }
-    
+
     def gen(args: Any*): Unit = {
-      stream.println(sc.raw(args.map(quoteOrRemap): _*).stripMargin)
+      sc.checkLengths(args)
+      val start :: contextStrings = sc.parts.iterator.toList
+      printToStream(start.stripMargin)
+      for ((arg, contextString) <- args zip contextStrings) {
+        printToStream(arg)
+        printToStream(stripContextPart(contextString))
+      }
+      stream.println()
     }
   }
 }
@@ -207,6 +226,14 @@ trait GenericNestedCodegen extends NestedBlockTraversal with GenericCodegen {
     case Reify(s, u, effects) =>
       // just ignore -- effects are accounted for in emitBlock
     case _ => super.emitNode(sym, rhs)
+  }
+
+  // Allows the gen string interpolator to perform emitBlock when passed a Block
+  implicit class NestedCodegenHelper(sc: StringContext) extends CodegenHelper(sc) {
+    override def printToStream(arg: Any): Unit = arg match {
+      case b: Block[_] => emitBlock(b)
+      case _ => stream.print(quoteOrRemap(arg))
+    }
   }
 
 }

@@ -96,12 +96,11 @@ trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
     */
 
     case RangeForeach(start, end, i, body) => {
-      gen"""var $i : Int = $start
-           |val $sym = while ($i < $end) {"""
-      emitBlock(body)
       // do not need to print unit result
       //stream.println(quote(getBlockResult(body)))
-      gen"""$i = $i + 1
+      gen"""var $i : Int = $start
+           |val $sym = while ($i < $end) {
+           |$body$i = $i + 1
            |}"""
     }
 
@@ -150,9 +149,9 @@ trait OpenCLGenRangeOps extends OpenCLGenEffect with BaseGenRangeOps {
     case Until(start, end) =>
       throw new GenerationFailedException("OpenCLGenRangeOps: Range vector is not supported")
     case RangeForeach(start, end, i, body) =>
-      gen"for(int $i=$start; $i < $end; $i++) {"
-      emitBlock(body)
-      gen"}"
+      gen"""for(int $i=$start; $i < $end; $i++) {
+           |$body
+           |}"""
 
     case _ => super.emitNode(sym, rhs)
   }
@@ -166,9 +165,9 @@ trait CGenRangeOps extends CGenEffect with BaseGenRangeOps {
     case Until(start, end) =>
       throw new GenerationFailedException("CGenRangeOps: Range vector is not supported")
     case RangeForeach(start, end, i, body) =>
-      gen"for(int $i=$start; $i < $end; $i++) {"
-      emitBlock(body)
-      gen"}"
+      gen"""for(int $i=$start; $i < $end; $i++) {
+           |$body
+           |}"""
 
     case _ => super.emitNode(sym, rhs)
   }

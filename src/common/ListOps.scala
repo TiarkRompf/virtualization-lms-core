@@ -157,26 +157,20 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
     case ListFromSeq(xs) => emitValDef(sym, src"List($xs: _*)")
     case ListMkString(xs) => emitValDef(sym, src"$xs.mkString")
     case ListMap(l,x,blk) => 
-      gen"val $sym = $l.map { $x => "
-      emitBlock(blk)
-      gen"""${getBlockResult(blk)}
+      gen"""val $sym = $l.map { $x => 
+           |$blk${getBlockResult(blk)}
            |}"""
-    case ListFlatMap(l, x, b) => {
-      gen"val $sym = $l.flatMap { $x => "
-      emitBlock(b)
-      gen"""${getBlockResult(b)}
+    case ListFlatMap(l, x, b) =>
+      gen"""val $sym = $l.flatMap { $x => 
+           |$b${getBlockResult(b)}
            |}"""
-    }
-    case ListFilter(l, x, b) => {
-      gen"val $sym = $l.filter { $x => "
-      emitBlock(b)
-      gen"""${getBlockResult(b)}
+    case ListFilter(l, x, b) =>
+      gen"""val $sym = $l.filter { $x => 
+           |$b${getBlockResult(b)}
            |}"""
-    }
     case ListSortBy(l,x,blk) =>
-      gen"val $sym = $l.sortBy { $x => "
-      emitBlock(blk)
-      gen"""${getBlockResult(blk)}
+      gen"""val $sym = $l.sortBy { $x => 
+           |$blk${getBlockResult(blk)}
            |}"""
     case ListPrepend(l,e) => emitValDef(sym, src"$e :: $l")    
     case ListToArray(l) => emitValDef(sym, src"$l.toArray")
