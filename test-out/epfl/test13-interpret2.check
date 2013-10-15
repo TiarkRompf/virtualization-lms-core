@@ -1,4 +1,4 @@
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(85),Summary(true,true,false,false,false,List(),List(),List(Sym(1), Sym(7), Sym(12), Sym(21), Sym(26), Sym(31), Sym(36), Sym(41), Sym(50), Sym(55), Sym(60), Sym(65), Sym(70), Sym(79)),List(Sym(1), Sym(7), Sym(12), Sym(21), Sym(26), Sym(31), Sym(36), Sym(41), Sym(50), Sym(55), Sym(60), Sym(65), Sym(70), Sym(79))),List(Sym(5), Sym(6), Sym(10), Sym(11), Sym(15), Sym(16), Sym(19), Sym(20), Sym(24), Sym(25), Sym(29), Sym(30), Sym(34), Sym(35), Sym(39), Sym(40), Sym(44), Sym(45), Sym(48), Sym(49), Sym(53), Sym(54), Sym(58), Sym(59), Sym(63), Sym(64), Sym(68), Sym(69), Sym(73), Sym(74), Sym(77), Sym(78), Sym(82), Sym(83), Sym(85)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(85),Summary(true,true,false,false,false,false,List(),List(),List(Sym(1), Sym(7), Sym(12), Sym(21), Sym(26), Sym(31), Sym(36), Sym(41), Sym(50), Sym(55), Sym(60), Sym(65), Sym(70), Sym(79)),List(Sym(1), Sym(7), Sym(12), Sym(21), Sym(26), Sym(31), Sym(36), Sym(41), Sym(50), Sym(55), Sym(60), Sym(65), Sym(70), Sym(79))),List(Sym(5), Sym(6), Sym(10), Sym(11), Sym(15), Sym(16), Sym(19), Sym(20), Sym(24), Sym(25), Sym(29), Sym(30), Sym(34), Sym(35), Sym(39), Sym(40), Sym(44), Sym(45), Sym(48), Sym(49), Sym(53), Sym(54), Sym(58), Sym(59), Sym(63), Sym(64), Sym(68), Sym(69), Sym(73), Sym(74), Sym(77), Sym(78), Sym(82), Sym(83), Sym(85)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -248,8 +248,8 @@ x90
 
 compilation: ok
 error: write to non-mutable Sym(91) -> None
-at Sym(94)=Reflect(HashMapUpdate(Sym(91),Const(x),Sym(93)),Summary(false,false,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List())
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(94),Summary(true,true,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List(Sym(93), Sym(94)))
+at Sym(94)=Reflect(HashMapUpdate(Sym(91),Const(x),Sym(93)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List())
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(94),Summary(true,true,false,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List(Sym(93), Sym(94)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -268,7 +268,7 @@ x94
 
 compilation: ok
 error: write to non-mutable Sym(96) -> None
-at Sym(98)=Reflect(HashMapUpdate(Sym(96),Const(x),Sym(97)),Summary(false,false,false,false,false,List(),List(),List(Sym(96)),List(Sym(96))),List())
+at Sym(98)=Reflect(HashMapUpdate(Sym(96),Const(x),Sym(97)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(96)),List(Sym(96))),List())
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -380,7 +380,7 @@ x114
 *******************************************/
 
 compilation: ok
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(134),Summary(true,true,false,false,false,List(),List(),List(Sym(26)),List()),List(Sym(117), Sym(119), Sym(134)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(134),Summary(true,true,false,false,false,false,List(),List(),List(Sym(26)),List()),List(Sym(117), Sym(119), Sym(134)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -473,8 +473,8 @@ x154
 
 compilation: ok
 error: write to non-mutable Sym(156) -> None
-at Sym(159)=Reflect(HashMapUpdate(Sym(156),Const(n),Sym(158)),Summary(false,false,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List())
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(159),Summary(true,true,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List(Sym(158), Sym(159)))
+at Sym(159)=Reflect(HashMapUpdate(Sym(156),Const(n),Sym(158)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List())
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(159),Summary(true,true,false,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List(Sym(158), Sym(159)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -493,7 +493,7 @@ x159
 
 compilation: ok
 error: write to non-mutable Sym(161) -> None
-at Sym(163)=Reflect(HashMapUpdate(Sym(161),Const(n),Sym(162)),Summary(false,false,false,false,false,List(),List(),List(Sym(161)),List(Sym(161))),List())
+at Sym(163)=Reflect(HashMapUpdate(Sym(161),Const(n),Sym(162)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(161)),List(Sym(161))),List())
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -605,7 +605,7 @@ x180
 *******************************************/
 
 compilation: ok
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(186),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(183), Sym(184)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(186),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(183), Sym(184)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -649,7 +649,7 @@ x193
 *******************************************/
 
 compilation: ok
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(214),Summary(true,true,false,false,false,List(),List(),List(Sym(55)),List()),List(Sym(197), Sym(199), Sym(214)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(214),Summary(true,true,false,false,false,false,List(),List(),List(Sym(55)),List()),List(Sym(197), Sym(199), Sym(214)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -742,8 +742,8 @@ x234
 
 compilation: ok
 error: write to non-mutable Sym(236) -> None
-at Sym(239)=Reflect(HashMapUpdate(Sym(236),Const(x),Sym(238)),Summary(false,false,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List())
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(239),Summary(true,true,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List(Sym(238), Sym(239)))
+at Sym(239)=Reflect(HashMapUpdate(Sym(236),Const(x),Sym(238)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List())
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(239),Summary(true,true,false,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List(Sym(238), Sym(239)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -762,7 +762,7 @@ x239
 
 compilation: ok
 error: write to non-mutable Sym(241) -> None
-at Sym(243)=Reflect(HashMapUpdate(Sym(241),Const(x),Sym(242)),Summary(false,false,false,false,false,List(),List(),List(Sym(241)),List(Sym(241))),List())
+at Sym(243)=Reflect(HashMapUpdate(Sym(241),Const(x),Sym(242)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(241)),List(Sym(241))),List())
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -781,7 +781,7 @@ x244
 *******************************************/
 
 compilation: ok
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(250),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(248), Sym(250)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(250),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(248), Sym(250)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -821,7 +821,7 @@ x255
 *******************************************/
 
 compilation: ok
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(264),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(264)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(264),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(264)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -900,7 +900,7 @@ x279
 *******************************************/
 
 compilation: ok
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(285),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(282), Sym(284), Sym(285)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(285),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(282), Sym(284), Sym(285)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -947,7 +947,7 @@ x291
 
 compilation: ok
 spec-add-int: AddN(LookupN(n),ConstN(-1))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(296),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(294), Sym(295)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(296),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(294), Sym(295)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -989,7 +989,7 @@ x301
 
 compilation: ok
 spec-add-int: AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(306),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(304), Sym(305)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(306),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(304), Sym(305)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/

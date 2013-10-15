@@ -8,13 +8,13 @@ warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(
 read value RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$ConstN@XXX) sym Sym(12)
 -- Sym(2)
 warning: possible missing mtype call - toAtom with Def of type Any StaticData(-1)
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(29),Summary(true,true,false,false,false,List(),List(),List(Sym(3)),List()),List(Sym(29)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(35),Summary(true,true,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(32), Sym(34), Sym(35)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(37),Summary(true,true,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(37)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(42),Summary(true,true,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(39), Sym(41), Sym(42)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(44),Summary(true,true,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(44)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(49),Summary(true,true,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(46), Sym(48), Sym(49)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(51),Summary(true,true,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(1), Sym(2), Sym(51)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(29),Summary(true,true,false,false,false,false,List(),List(),List(Sym(3)),List()),List(Sym(29)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(35),Summary(true,true,false,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(32), Sym(34), Sym(35)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(37),Summary(true,true,false,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(37)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(42),Summary(true,true,false,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(39), Sym(41), Sym(42)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(44),Summary(true,true,false,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(44)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(49),Summary(true,true,false,false,false,false,List(),List(),List(Sym(31)),List(Sym(31))),List(Sym(46), Sym(48), Sym(49)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(51),Summary(true,true,false,false,false,false,List(),List(),List(Sym(3), Sym(31)),List()),List(Sym(1), Sym(2), Sym(51)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -99,10 +99,10 @@ warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(
 read value RCell(dyn - FUN:scala.virtualization.lms.epfl.test13.TestInterpret$InterpretStagedReopt$ConstN@XXX) sym Sym(12)
 -- Sym(2)
 warning: possible missing mtype call - toAtom with Def of type Any StaticData(-1)
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(23),Summary(true,true,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List(Sym(20), Sym(22), Sym(23)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(25),Summary(true,false,false,false,false,List(),List(),List(Sym(19)),List()),List(Sym(25)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(30),Summary(true,true,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List(Sym(27), Sym(29), Sym(30)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(32),Summary(true,false,false,false,false,List(),List(),List(Sym(19)),List()),List(Sym(32)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(23),Summary(true,true,false,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List(Sym(20), Sym(22), Sym(23)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(25),Summary(true,false,false,false,false,false,List(),List(),List(Sym(19)),List()),List(Sym(25)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(30),Summary(true,true,false,false,false,false,List(),List(),List(Sym(19)),List(Sym(19))),List(Sym(27), Sym(29), Sym(30)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(32),Summary(true,false,false,false,false,false,List(),List(),List(Sym(19)),List()),List(Sym(32)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
