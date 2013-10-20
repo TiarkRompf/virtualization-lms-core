@@ -33,6 +33,9 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   protected val boundMap = HashMap[Exp[Int],Exp[Int]]()
   private val ptrSymSet = HashSet[Sym[Any]]()
  
+  // GPU currently does not use reference types
+  override def remapWithRef[A](m: Manifest[A]): String = remap(m)
+
   protected def registerTempAlloc(sym:Sym[Any], tp:Manifest[Any], size:Exp[Int]):String = {
     metaData.temps prepend TempAlloc(quote(sym)+"_temp",remap(tp),quote(size))
     quote(sym) + "_temp"

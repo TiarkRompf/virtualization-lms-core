@@ -27,18 +27,13 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     }    
   }
 
-  private def deref[A](m: Manifest[A]): String = {
-    if (isPrimitiveType(m)) remap(m) + " "
-    else remap(m) + " * "
-  }
-
   override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     if (!isVoidType(sym.tp))
-      stream.println(deref(sym.tp) + quote(sym) + " = " + rhs + ";")
+      stream.println(remapWithRef(sym.tp) + quote(sym) + " = " + rhs + ";")
   }
 
   override def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
-      stream.println(deref(sym.tp.typeArguments.head) + quote(sym) + " = " + rhs + ";")
+      stream.println(remapWithRef(sym.tp.typeArguments.head) + quote(sym) + " = " + rhs + ";")
   }
   
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
@@ -69,6 +64,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     headerStream.println("#include <jni.h>")
     headerStream.println("#include <assert.h>")
     headerStream.println("#include <math.h>")
+    headerStream.println("#include <iostream>")
     headerStream.println("#include \"" + deviceTarget + "types.h\"")
     headerStream.println(getDataStructureHeaders())
 
