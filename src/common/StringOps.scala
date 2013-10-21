@@ -93,7 +93,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
   def string_toint(s: Exp[String])(implicit pos: SourceContext) = StringToInt(s)
   def string_charAt(s: Exp[String], i: Exp[Int])(implicit pos: SourceContext) = StringCharAt(s,i)
   def string_endsWith(s: Exp[String], e: Exp[String])(implicit pos: SourceContext) = StringEndsWith(s,e)
-  def string_contains(s1: Rep[String], s2: Rep[String])(implicit pos: SourceContext) = StringContains(s1,s2)
+  def string_contains(s1: Exp[String], s2: Exp[String])(implicit pos: SourceContext) = StringContains(s1,s2)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case StringPlus(a,b) => string_plus(f(a),f(b))

@@ -28,6 +28,8 @@ trait Effects extends Expressions with Blocks with Utils {
   
   var context: State = _
 
+  var conditionalScope = false // used to construct Control nodes
+
   // --- class defs
 
   case class Reflect[+A](x:Def[A], summary: Summary, deps: List[Exp[Any]]) extends Def[A]
@@ -41,22 +43,24 @@ trait Effects extends Expressions with Blocks with Utils {
     val mayGlobal: Boolean,
     val mstGlobal: Boolean,
     val resAlloc: Boolean,
+    val control: Boolean,
     val mayRead: List[Sym[Any]],
     val mstRead: List[Sym[Any]],
     val mayWrite: List[Sym[Any]],
     val mstWrite: List[Sym[Any]])
   
-  def Pure() = new Summary(false,false,false,false,false,Nil,Nil,Nil,Nil)
-  def Simple() = new Summary(true,true,false,false,false,Nil,Nil,Nil,Nil)
-  def Global() = new Summary(false,false,true,true,false,Nil,Nil,Nil,Nil)
-  def Alloc() = new Summary(false,false,false,false,true,Nil,Nil,Nil,Nil)
+  def Pure() = new Summary(false,false,false,false,false,false,Nil,Nil,Nil,Nil)
+  def Simple() = new Summary(true,true,false,false,false,false,Nil,Nil,Nil,Nil)  
+  def Global() = new Summary(false,false,true,true,false,false,Nil,Nil,Nil,Nil)
+  def Alloc() = new Summary(false,false,false,false,true,false,Nil,Nil,Nil,Nil)
+  def Control() = new Summary(false,false,false,false,false,true,Nil,Nil,Nil,Nil)
   
-  def Read(v: List[Sym[Any]]) = new Summary(false,false,false,false,false,v.distinct,v.distinct,Nil,Nil)
-  def Write(v: List[Sym[Any]]) = new Summary(false,false,false,false,false,Nil,Nil,v.distinct,v.distinct)
+  def Read(v: List[Sym[Any]]) = new Summary(false,false,false,false,false,false,v.distinct,v.distinct,Nil,Nil)
+  def Write(v: List[Sym[Any]]) = new Summary(false,false,false,false,false,false,Nil,Nil,v.distinct,v.distinct)
 
   def mayRead(u: Summary, a: List[Sym[Any]]): Boolean = u.mayGlobal || a.exists(u.mayRead contains _)
   def mayWrite(u: Summary, a: List[Sym[Any]]): Boolean = u.mayGlobal || a.exists(u.mayWrite contains _)
-  def maySimple(u: Summary): Boolean = u.mayGlobal || u.maySimple
+  def maySimple(u: Summary): Boolean = u.mayGlobal || u.maySimple  
 
   def mustMutable(u: Summary): Boolean = u.resAlloc
   def mustPure(u: Summary): Boolean = u == Pure()
@@ -69,6 +73,7 @@ trait Effects extends Expressions with Blocks with Utils {
     u.maySimple || v.maySimple, u.mstSimple && v.mstSimple,
     u.mayGlobal || v.mayGlobal, u.mstGlobal && v.mstGlobal,
     false, //u.resAlloc && v.resAlloc, <--- if/then/else will not be mutable!
+    u.control || v.control,
     (u.mayRead ++ v.mayRead).distinct, (u.mstRead intersect v.mstRead),
     (u.mayWrite ++ v.mayWrite).distinct, (u.mstWrite intersect v.mstWrite)
   )
@@ -77,20 +82,30 @@ trait Effects extends Expressions with Blocks with Utils {
     u.maySimple || v.maySimple, u.mstSimple || v.mstSimple,
     u.mayGlobal || v.mayGlobal, u.mstGlobal || v.mstGlobal,
     u.resAlloc || v.resAlloc,
+    u.control || v.control,
     (u.mayRead ++ v.mayRead).distinct, (u.mstRead ++ v.mstRead).distinct,
     (u.mayWrite ++ v.mayWrite).distinct, (u.mstWrite ++ v.mstWrite).distinct
   )
   
   def infix_andThen(u: Summary, v: Summary) = new Summary(
     u.maySimple || v.maySimple, u.mstSimple || v.mstSimple,
-    u.mayGlobal || v.mayGlobal, u.mstGlobal || v.mstGlobal,
+    u.mayGlobal || v.mayGlobal, u.mstGlobal || v.mstGlobal,    
     v.resAlloc,
+    u.control || v.control,
     (u.mayRead ++ v.mayRead).distinct, (u.mstRead ++ v.mstRead).distinct,
     (u.mayWrite ++ v.mayWrite).distinct, (u.mstWrite ++ v.mstWrite).distinct
   )
 
   def infix_star(u: Summary) = Pure() orElse u // any number of repetitions, including 0
 
+  def infix_withoutControl(u: Summary) = new Summary(
+    u.maySimple, u.mstSimple,
+    u.mayGlobal, u.mstGlobal,    
+    u.resAlloc,
+    false,
+    u.mayRead, u.mstRead,
+    u.mayWrite, u.mstWrite
+  )
 
   def summarizeEffects(e: Block[Any]) = e match {
     case Block(Def(Reify(_,u,_))) => u
@@ -102,8 +117,29 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // --- reflect helpers
 
+  def controlDep(x: Exp[Any]) = x match {
+    case Def(Reflect(y,u,es)) if u == Control() => true
+    case _ => false
+  }
+
+  // performance hotspot
+  def nonControlSyms[R](es: List[Exp[Any]], ss: Any => List[R]): List[R] = {
+    // es.filterNot(controlDep).flatMap(syms)      
+    val out = new mutable.ListBuffer[R]
+    var it = es.iterator
+    while (it.hasNext) {
+      val e = it.next()
+      if (!controlDep(e)) out ++= ss(e)
+    }
+    out.result
+  }
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case s: Summary => Nil // don't count effect summaries as dependencies!
+
+    // enable DCE of reflect nodes if they are only control dependencies
+    case Reflect(x,u,es) if addControlDeps => syms(x) ::: nonControlSyms(es, syms)
+    case Reify(x,u,es) if addControlDeps => syms(x) ::: nonControlSyms(es, syms)
     case _ => super.syms(e)
   }
 
@@ -114,6 +150,10 @@ trait Effects extends Expressions with Blocks with Utils {
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case s: Summary => Nil // don't count effect summaries as dependencies!
+
+    // enable DCE of reflect nodes if they are only control dependencies
+    case Reflect(x,u,es) if addControlDeps => symsFreq(x) ::: nonControlSyms(es, symsFreq)
+    case Reify(x,u,es) if addControlDeps => symsFreq(x) ::: nonControlSyms(es, symsFreq)
     case _ => super.symsFreq(e)
   }
 
@@ -323,6 +363,7 @@ trait Effects extends Expressions with Blocks with Utils {
         // specifically, if we return the reified version of a mutable bound var, we get a Reflect(Reify(..)) error, e.g. mutable Sum 
         // printlog("ignoring read of Reify(): " + d)
         super.toAtom(d)
+      case _ if conditionalScope && addControlDeps => reflectEffect(d, Control())
       case _ => reflectEffect(d, Pure())
     }
     // reflectEffect(d, Pure())
@@ -468,11 +509,12 @@ trait Effects extends Expressions with Blocks with Utils {
       val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
       val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || write.contains(e) }
       val simpleDeps = if (!u.maySimple) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.maySimple }
+      val controlDeps = if (!u.control) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.control }
       val globalDeps = scope filter { case e@Def(Reflect(_, u, _)) => u.mayGlobal }
 
       // TODO: write-on-read deps should be weak
       // TODO: optimize!!
-      val allDeps = canonic(readDeps ++ softWriteDeps ++ writeDeps ++ canonicLinear(simpleDeps) ++ canonicLinear(globalDeps))
+      val allDeps = canonic(readDeps ++ softWriteDeps ++ writeDeps ++ canonicLinear(simpleDeps) ++ canonicLinear(controlDeps) ++ canonicLinear(globalDeps))
       scope filter (allDeps contains _)
     }
   }
@@ -519,12 +561,18 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // reify the effects of an isolated block.
   // no assumptions about the current context remain valid.
-  def reifyEffects[A:Manifest](block: => Exp[A]): Block[A] = {
+  def reifyEffects[A:Manifest](block: => Exp[A], controlScope: Boolean = false): Block[A] = {
     val save = context
     context = Nil
     
+    // only add control dependencies scopes where controlScope is explicitly true (i.e., the first-level of an IfThenElse)
+    val saveControl = conditionalScope
+    conditionalScope = controlScope
+
     val (result, defs) = reifySubGraph(block)
-    reflectSubGraph(defs)
+    reflectSubGraph(defs)    
+
+    conditionalScope = saveControl
     
     val deps = context
     val summary = summarizeAll(deps)
@@ -535,13 +583,18 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // reify the effects of a block that is executed 'here' (if it is executed at all).
   // all assumptions about the current context carry over unchanged.
-  def reifyEffectsHere[A:Manifest](block: => Exp[A]): Block[A] = {
+  def reifyEffectsHere[A:Manifest](block: => Exp[A], controlScope: Boolean = false): Block[A] = {
     val save = context
     if (save eq null)
       context = Nil
     
+    val saveControl = conditionalScope
+    conditionalScope = controlScope
+
     val (result, defs) = reifySubGraph(block)
     reflectSubGraph(defs)
+
+    conditionalScope = saveControl
 
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
       printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)

@@ -14,8 +14,6 @@ trait Scheduling {
     getSchedule(scope)(result, false)
   }
   
-  // PERFORMANCE: 'intersect' calls appear to be a hotspot
-
   // checks if a and b share at least one element. O(N^2), but with no allocation and possible early exit.
   def containsAny(a: List[Sym[Any]], b: List[Sym[Any]]): Boolean = {
     var aIter = a
@@ -48,19 +46,41 @@ trait Scheduling {
     xx.flatten.reverse
   }
 
-  //FIXME: hotspot
-  def getSchedule(scope: List[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
-    /*val scopeCache = new mutable.HashMap[Sym[Any],Stm]
-    for (stm <- scope; s <- stm.lhs)
-      scopeCache(s) = stm*/
-
-    def deps(st: List[Sym[Any]]): List[Stm] = {//st flatMap (scopeCache.get(_).toList)
-      scope.filter(d => (st intersect d.lhs).nonEmpty)
-      // scope.filter(d => containsAny(st, d.lhs))
-      //st sortBy(_.id) flatMap (scopeCache.get(_).toList)
+  //performance hotspot!
+  //should be O(1) wrt 'scope' (nodes in graph), try to keep this as efficient as possible
+  protected def scheduleDepsWithIndex(syms: List[Sym[Any]], cache: IdentityHashMap[Sym[Any], (Stm,Int)]): List[Stm] = {
+    //syms.map(cache.get(_)).filter(_ ne null).distinct.sortBy(_._2).map(_._1)
+    val sortedSet = new java.util.TreeSet[(Stm,Int)](
+      new java.util.Comparator[(Stm,Int)] { def compare(a:(Stm,Int), b:(Stm,Int)) = Integer.compare(b._2,a._2) }
+    )
+    
+    for (sym <- syms) {
+      val stm = cache.get(sym)
+      if (stm ne null) sortedSet.add(stm)
     }
 
-    val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(syms(result)), t => deps(syms(t.rhs)))
+    var res: List[Stm] = Nil
+    val iter = sortedSet.iterator //return stms in the original order given by 'scope'
+    while (iter.hasNext) {
+      res ::= iter.next._1
+    }
+    res
+  }
+
+  protected def buildScopeIndex(scope: List[Stm]): IdentityHashMap[Sym[Any], (Stm,Int)] = {
+    val cache = new IdentityHashMap[Sym[Any], (Stm,Int)]
+    var idx = 0
+    for (stm <- scope) {
+      for (s <- stm.lhs) cache.put(s, (stm,idx)) //remember the original order of the stms
+      idx += 1
+    }
+    cache
+  }
+
+  def getSchedule(scope: List[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
+    val scopeIndex = buildScopeIndex(scope)
+
+    val xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(syms(result), scopeIndex), t => scheduleDepsWithIndex(syms(t.rhs), scopeIndex))
     if (sort) xx.foreach { x => 
       if (x.length > 1) {
         printerr("warning: recursive schedule for result " + result + ": " + x)
@@ -70,7 +90,6 @@ trait Scheduling {
     xx.flatten.reverse
   }
 
-  //FIXME: hotspot
   def getScheduleM(scope: List[Stm])(result: Any, cold: Boolean, hot: Boolean): List[Stm] = {
     def mysyms(st: Any) = {
       val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
@@ -81,17 +100,9 @@ trait Scheduling {
       else db.withFilter(p=>p._2 > 0.75 && p._2 < 100.0).map(_._1)
     }
 
-    /*val scopeCache = new mutable.HashMap[Sym[Any],Stm]
-    for (stm <- scope; s <- stm.lhs)
-      scopeCache(s) = stm*/
+    val scopeIndex = buildScopeIndex(scope)
 
-    def deps(st: List[Sym[Any]]): List[Stm] = {//st flatMap (scopeCache.get(_).toList)
-      scope.filter(d => (st intersect d.lhs).nonEmpty)
-      // scope.filter(d => containsAny(st, d.lhs))
-      //st flatMap (scopeCache.get(_).toList)
-    }
-
-    GraphUtil.stronglyConnectedComponents[Stm](deps(mysyms(result)), t => deps(mysyms(t.rhs))).flatten.reverse
+    GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(mysyms(result), scopeIndex), t => scheduleDepsWithIndex(mysyms(t.rhs), scopeIndex)).flatten.reverse
   }
     
   

@@ -20,7 +20,7 @@ trait BooleanOps extends Variables {
   def boolean_or(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext): Rep[Boolean]
 }
 
-trait BooleanOpsExp extends BooleanOps with BaseExp {
+trait BooleanOpsExp extends BooleanOps with EffectExp {
   case class BooleanNegate(lhs: Exp[Boolean]) extends Def[Boolean]
   case class BooleanAnd(lhs: Exp[Boolean], rhs: Exp[Boolean]) extends Def[Boolean]
   case class BooleanOr(lhs: Exp[Boolean], rhs: Exp[Boolean]) extends Def[Boolean]
@@ -33,6 +33,10 @@ trait BooleanOpsExp extends BooleanOps with BaseExp {
     case BooleanNegate(x) => boolean_negate(f(x))
     case BooleanAnd(x,y) => boolean_and(f(x),f(y))
     case BooleanOr(x,y) => boolean_or(f(x),f(y))
+
+    case Reflect(BooleanNegate(x), u, es) => reflectMirrored(Reflect(BooleanNegate(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(BooleanAnd(x,y), u, es) => reflectMirrored(Reflect(BooleanAnd(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(BooleanOr(x,y), u, es) => reflectMirrored(Reflect(BooleanOr(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case _ => super.mirror(e, f)
   }).asInstanceOf[Exp[A]] // why??
 }
