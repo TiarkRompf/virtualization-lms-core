@@ -318,7 +318,7 @@ trait CudaGenIfThenElseFat extends CudaGenIfThenElse with CudaGenFat with BaseGe
   import IR._
 
   override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
-    case SimpleFatIfThenElse(c,a,b) => sys.error("TODO: implement fat if CUDA codesrc")
+    case SimpleFatIfThenElse(c,a,b) => sys.error("TODO: implement fat if CUDA codegen")
     case _ => super.emitFatNode(symList, rhs)
   }
 }
@@ -370,7 +370,7 @@ trait OpenCLGenIfThenElseFat extends OpenCLGenIfThenElse with OpenCLGenFat with 
   import IR._
 
   override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
-    case SimpleFatIfThenElse(c,a,b) => sys.error("TODO: implement fat if OpenCL codesrc")
+    case SimpleFatIfThenElse(c,a,b) => sys.error("TODO: implement fat if OpenCL codegen")
     case _ => super.emitFatNode(symList, rhs)
   }
 }
@@ -428,7 +428,7 @@ trait CGenIfThenElseFat extends CGenIfThenElse with CGenFat with BaseGenIfThenEl
   import IR._
 
   override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
-    case SimpleFatIfThenElse(c,a,b) => sys.error("TODO: implement fat if C codesrc")
+    case SimpleFatIfThenElse(c,a,b) => sys.error("TODO: implement fat if C codegen")
     case _ => super.emitFatNode(symList, rhs)
   }
 }
