@@ -51,7 +51,7 @@ trait Scheduling {
   protected def scheduleDepsWithIndex(syms: List[Sym[Any]], cache: IdentityHashMap[Sym[Any], (Stm,Int)]): List[Stm] = {
     //syms.map(cache.get(_)).filter(_ ne null).distinct.sortBy(_._2).map(_._1)
     val sortedSet = new java.util.TreeSet[(Stm,Int)](
-      new java.util.Comparator[(Stm,Int)] { def compare(a:(Stm,Int), b:(Stm,Int)) = Integer.compare(b._2,a._2) }
+      new java.util.Comparator[(Stm,Int)] { def compare(a:(Stm,Int), b:(Stm,Int)) = if (b._2 < a._2) -1 else if (b._2 == a._2) 0 else 1 }
     )
     
     for (sym <- syms) {

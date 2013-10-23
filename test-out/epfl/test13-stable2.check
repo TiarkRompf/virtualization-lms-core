@@ -4,29 +4,28 @@ read value RCell(stable) sym Sym(3)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0(px3:scala.virtualization.lms.epfl.test13.RCell[Int],px5:Int,px9:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[Int, Int]],px11:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
+class staged$0(px3:scala.virtualization.lms.epfl.test13.RCell[Int],px5:Int,px8:scala.virtualization.lms.epfl.test13.RCell[scala.Function1[Int, Int]],px10:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
 def apply(x0:Int): Int = {
 val x3 = px3 // static data: RCell(stable)
 val x4 = x3.value
 val x5 = px5 // static data: 1
 val x6 = x4 == x5
-val x15 = if (x6) {
+val x14 = if (x6) {
 val x1 = x0 + 1
 val x2 = x0 * 2
 val x7 = x1 + x2
-val x8 = 1 * x7
-x8
+x7
 } else {
-val x9 = px9 // static data: RCell(code)
-val x10 = x9.set(null)
+val x8 = px8 // static data: RCell(code)
+val x9 = x8.set(null)
 val x1 = x0 + 1
 val x2 = x0 * 2
-val x11 = px11 // static data: <function1>
-val x12 = x11.apply(List(x4, x1, x2))// compile dynamic: fv = List(Sym(4), Sym(1), Sym(2))
-val x13 = x12.apply(())
-x13
+val x10 = px10 // static data: <function1>
+val x11 = x10.apply(List(x4, x1, x2))// compile dynamic: fv = List(Sym(4), Sym(1), Sym(2))
+val x12 = x11.apply(())
+x12
 }
-x15
+x14
 }
 }
 /*****************************************

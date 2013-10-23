@@ -1,7 +1,7 @@
-promoting to effect: Sym(9)=Reflect(ArrayIndex(Sym(8),Const(10)),Summary(false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(),List()),List(Sym(3), Sym(6)))
+promoting to effect: Sym(9)=Reflect(ArrayIndex(Sym(8),Const(10)),Summary(false,false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(),List()),List(Sym(3), Sym(6)))
 depends on  Sym(3)
 depends on  Sym(6)
-promoting to effect: Sym(12)=Reflect(ArrayIndex(Sym(8),Const(10)),Summary(false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(),List()),List(Sym(3), Sym(6), Sym(10), Sym(11)))
+promoting to effect: Sym(12)=Reflect(ArrayIndex(Sym(8),Const(10)),Summary(false,false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(),List()),List(Sym(3), Sym(6), Sym(10), Sym(11)))
 depends on  Sym(3)
 depends on  Sym(6)
 /*****************************************
