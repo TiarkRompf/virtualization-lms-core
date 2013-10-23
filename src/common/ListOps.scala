@@ -158,23 +158,23 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
     case ListMkString(xs) => emitValDef(sym, src"$xs.mkString")
     case ListMap(l,x,blk) => 
       gen"""val $sym = $l.map { $x => 
+           |${nestedBlock(blk)}
            |$blk
-           |${getBlockResult(blk)}
            |}"""
     case ListFlatMap(l, x, b) =>
       gen"""val $sym = $l.flatMap { $x => 
+           |${nestedBlock(b)}
            |$b
-           |${getBlockResult(b)}
            |}"""
     case ListFilter(l, x, b) =>
       gen"""val $sym = $l.filter { $x => 
+           |${nestedBlock(b)}
            |$b
-           |${getBlockResult(b)}
            |}"""
     case ListSortBy(l,x,blk) =>
       gen"""val $sym = $l.sortBy { $x => 
+           |${nestedBlock(blk)}
            |$blk
-           |${getBlockResult(blk)}
            |}"""
     case ListPrepend(l,e) => emitValDef(sym, src"$e :: $l")    
     case ListToArray(l) => emitValDef(sym, src"$l.toArray")

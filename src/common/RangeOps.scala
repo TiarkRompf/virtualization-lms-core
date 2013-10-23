@@ -100,7 +100,7 @@ trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
       //stream.println(quote(getBlockResult(body)))
       gen"""var $i : Int = $start
            |val $sym = while ($i < $end) {
-           |$body
+           |${nestedBlock(body)}
            |$i = $i + 1
            |}"""
     }
@@ -151,7 +151,7 @@ trait OpenCLGenRangeOps extends OpenCLGenEffect with BaseGenRangeOps {
       throw new GenerationFailedException("OpenCLGenRangeOps: Range vector is not supported")
     case RangeForeach(start, end, i, body) =>
       gen"""for(int $i=$start; $i < $end; $i++) {
-           |$body
+           |${nestedBlock(body)}
            |}"""
 
     case _ => super.emitNode(sym, rhs)
@@ -167,7 +167,7 @@ trait CGenRangeOps extends CGenEffect with BaseGenRangeOps {
       throw new GenerationFailedException("CGenRangeOps: Range vector is not supported")
     case RangeForeach(start, end, i, body) =>
       gen"""for(int $i=$start; $i < $end; $i++) {
-           |$body
+           |${nestedBlock(body)}
            |}"""
 
     case _ => super.emitNode(sym, rhs)

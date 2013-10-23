@@ -228,10 +228,15 @@ trait GenericNestedCodegen extends NestedBlockTraversal with GenericCodegen {
     case _ => super.emitNode(sym, rhs)
   }
 
+  case class NestedBlock(b: Block[Any])
+  def nestedBlock(b: Block[Any]) = NestedBlock(b)
+
   // Allows the gen string interpolator to perform emitBlock when passed a Block
   implicit class NestedCodegenHelper(sc: StringContext) extends CodegenHelper(sc) {
+
     override def printToStream(arg: Any): Unit = arg match {
-      case b: Block[_] => emitBlock(b)
+      case NestedBlock(b) => emitBlock(b)
+      case b: Block[_] => stream.print(quoteOrRemap(getBlockResult(b)))
       case _ => stream.print(quoteOrRemap(arg))
     }
   }

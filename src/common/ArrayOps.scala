@@ -214,8 +214,8 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
     case ArrayForeach(a,x,block) =>
       gen"""val $sym = $a.foreach{"
            |$x => 
+           |${nestedBlock(block)}
            |$block
-           |${getBlockResult(block)}
            |}"""
     case ArrayCopy(src,srcPos,dest,destPos,len) => emitValDef(sym, src"System.arraycopy($src,$srcPos,$dest,$destPos,$len)")
     case a@ArraySort(x) =>
@@ -233,8 +233,8 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
            |var i = 0
            |while (i < in.length) {
            |val $x = in(i)
-           |$blk
-           |out(i) = ${getBlockResult(blk)}
+           |${nestedBlock(blk)}
+           |out(i) = blk
            |i += 1
            |}
            |out
