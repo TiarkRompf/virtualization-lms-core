@@ -97,14 +97,14 @@ trait ScalaGenStringOps extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StringPlus(s1,s2) => emitValDef(sym, "%s+%s".format(quote(s1), quote(s2)))
-    case StringStartsWith(s1,s2) => emitValDef(sym, "%s.startsWith(%s)".format(quote(s1),quote(s2)))
-    case StringTrim(s) => emitValDef(sym, "%s.trim()".format(quote(s)))
-    case StringSplit(s, sep) => emitValDef(sym, "%s.split(%s)".format(quote(s), quote(sep)))
-    case StringValueOf(a) => emitValDef(sym, "java.lang.String.valueOf(%s)".format(quote(a)))
-    case StringToDouble(s) => emitValDef(sym, "%s.toDouble".format(quote(s)))
-    case StringToFloat(s) => emitValDef(sym, "%s.toFloat".format(quote(s)))
-    case StringToInt(s) => emitValDef(sym, "%s.toInt".format(quote(s)))
+    case StringPlus(s1,s2) => emitValDef(sym, src"$s1+$s2")
+    case StringStartsWith(s1,s2) => emitValDef(sym, src"$s1.startsWith($s2)")
+    case StringTrim(s) => emitValDef(sym, src"$s.trim()")
+    case StringSplit(s, sep) => emitValDef(sym, src"$s.split($sep)")
+    case StringValueOf(a) => emitValDef(sym, src"java.lang.String.valueOf($a)")
+    case StringToDouble(s) => emitValDef(sym, src"$s.toDouble")
+    case StringToFloat(s) => emitValDef(sym, src"$s.toFloat")
+    case StringToInt(s) => emitValDef(sym, src"$s.toInt")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -137,7 +137,7 @@ trait CGenStringOps extends CGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StringPlus(s1,s2) => emitValDef(sym,"strcat(%s,%s);".format(quote(s1),quote(s2)))
+    case StringPlus(s1,s2) => emitValDef(sym,src"strcat($s1,$s2);")
     case StringTrim(s) => throw new GenerationFailedException("CGenStringOps: StringTrim not implemented yet")
     case StringSplit(s, sep) => throw new GenerationFailedException("CGenStringOps: StringSplit not implemented yet")
     case _ => super.emitNode(sym, rhs)

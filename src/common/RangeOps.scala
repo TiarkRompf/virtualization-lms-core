@@ -84,7 +84,7 @@ trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Until(start, end) => emitValDef(sym, "" + quote(start) + " until " + quote(end))
+    case Until(start, end) => emitValDef(sym, src"$start until $end")
 
     /*
     case RangeForeach(r, i, body) => {
@@ -96,13 +96,13 @@ trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
     */
 
     case RangeForeach(start, end, i, body) => {
-      stream.println("var " + quote(i) + " : Int = " + quote(start))
-      stream.println("val " + quote(sym) + " = " + "while (" + quote(i) + " < " + quote(end) + ") {")
-      emitBlock(body)
       // do not need to print unit result
       //stream.println(quote(getBlockResult(body)))
-      stream.println(quote(i) + " = " + quote(i) + " + 1")
-      stream.println("}")
+      gen"""var $i : Int = $start
+           |val $sym = while ($i < $end) {
+           |${nestedBlock(body)}
+           |$i = $i + 1
+           |}"""
     }
 
     case _ => super.emitNode(sym, rhs)
@@ -115,8 +115,8 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Until(start, end) =>
-        stream.println(addTab()+"int %s_start = %s;".format(quote(sym), quote(start)))
-        stream.println(addTab()+"int %s_end = %s;".format(quote(sym), quote(end)))
+        gen"""${addTab()}int ${sym}_start = $start;
+             |${addTab()}int ${sym}_end = $end;"""
         // Do nothing: will be handled by RangeForeach
 
     // TODO: What if the range is not continuous integer set?
@@ -132,11 +132,11 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
         paramList = paramList.distinct
         val paramListStr = paramList.map(ele=>remap(ele.tp) + " " + quote(ele)).mkString(", ")
         */
-        stream.println(addTab()+"for(int %s=%s; %s < %s; %s++) {".format(quote(i),quote(start),quote(i),quote(end),quote(i)))
+        gen"${addTab()}for(int $i=$start; $i < $end; $i++) {"
         tabWidth += 1
         emitBlock(body)
         tabWidth -= 1
-        stream.println(addTab() + "}")
+        gen"${addTab()}}"
     }
     case _ => super.emitNode(sym, rhs)
   }
@@ -150,9 +150,9 @@ trait OpenCLGenRangeOps extends OpenCLGenEffect with BaseGenRangeOps {
     case Until(start, end) =>
       throw new GenerationFailedException("OpenCLGenRangeOps: Range vector is not supported")
     case RangeForeach(start, end, i, body) =>
-      stream.println("for(int %s=%s; %s < %s; %s++) {".format(quote(i),quote(start),quote(i),quote(end),quote(i)))
-      emitBlock(body)
-      stream.println("}")
+      gen"""for(int $i=$start; $i < $end; $i++) {
+           |${nestedBlock(body)}
+           |}"""
 
     case _ => super.emitNode(sym, rhs)
   }
@@ -166,9 +166,9 @@ trait CGenRangeOps extends CGenEffect with BaseGenRangeOps {
     case Until(start, end) =>
       throw new GenerationFailedException("CGenRangeOps: Range vector is not supported")
     case RangeForeach(start, end, i, body) =>
-      stream.println("for(int %s=%s; %s < %s; %s++) {".format(quote(i),quote(start),quote(i),quote(end),quote(i)))
-      emitBlock(body)
-      stream.println("}")
+      gen"""for(int $i=$start; $i < $end; $i++) {
+           |${nestedBlock(body)}
+           |}"""
 
     case _ => super.emitNode(sym, rhs)
   }
