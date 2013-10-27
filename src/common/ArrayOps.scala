@@ -234,7 +234,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
            |while (i < in.length) {
            |val $x = in(i)
            |${nestedBlock(blk)}
-           |out(i) = blk
+           |out(i) = $blk
            |i += 1
            |}
            |out
