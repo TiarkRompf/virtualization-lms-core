@@ -251,8 +251,9 @@ trait CCodegen extends CLikeCodegen {
         case "Double" => "double"
         case "Boolean" => "bool"
         case "Unit" => "void"
-        case "Char" => "char" // TCK
-        case s if s.startsWith("Array[") => remap(m.typeArguments(0))+"*" // TCK
+        case "Char" => "char"
+        case "java.lang.String" => "char*"
+        case s if s.startsWith("Array[") => remap(m.typeArguments(0))+"*"
         case _ => throw new GenerationFailedException("CGen: remap(m) : Unknown data type (%s)".format(m.toString))
       }
     }

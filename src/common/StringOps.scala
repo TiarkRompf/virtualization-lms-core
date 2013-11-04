@@ -137,6 +137,8 @@ trait CGenStringOps extends CGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case StringToInt(s) => emitValDef(sym,src"atoi($s);") // also possible: strtol
+    case StringToFloat(s) => emitValDef(sym,src"atof($s);")
     case StringPlus(s1,s2) => emitValDef(sym,src"strcat($s1,$s2);")
     case StringTrim(s) => throw new GenerationFailedException("CGenStringOps: StringTrim not implemented yet")
     case StringSplit(s, sep) => throw new GenerationFailedException("CGenStringOps: StringSplit not implemented yet")

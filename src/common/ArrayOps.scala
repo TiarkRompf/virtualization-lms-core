@@ -257,7 +257,7 @@ trait CLikeGenArrayOps extends BaseGenArrayOps with CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case ArrayLength(x) => emitValDef(sym, src"$x.length")
-        case ArrayApply(x,n) => emitValDef(sym, src"$x.apply($n)")
+        case ArrayApply(x,n) => emitValDef(sym, src"$x[$n]")
         case ArrayUpdate(x,n,y) => stream.println(src"$x.update($n,$y);")
         case _ => super.emitNode(sym, rhs)
       }

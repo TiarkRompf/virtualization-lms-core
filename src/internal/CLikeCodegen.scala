@@ -65,8 +65,10 @@ trait CLikeCodegen extends GenericCodegen {
     case _ => throw new GenerationFailedException("Undefined GPU type")
   }
 
-
-
+  override def quote(x: Exp[Any]) : String = x match {
+    case Const(null) => "NULL"
+    case _ => super.quote(x)
+  }
 }
 
 trait CLikeNestedCodegen extends GenericNestedCodegen with CLikeCodegen {
