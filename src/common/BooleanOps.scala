@@ -60,12 +60,11 @@ trait CLikeGenBooleanOps extends CLikeGenBase {
   val IR: BooleanOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-    rhs match {
-      case BooleanNegate(b) =>
-        emitValDef(sym, src"!$b")
-      case _ => super.emitNode(sym,rhs)
-    }
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case BooleanNegate(b) => emitValDef(sym, src"!$b")
+    case BooleanAnd(lhs,rhs) => emitValDef(sym, src"$lhs && $rhs")
+    case BooleanOr(lhs,rhs) => emitValDef(sym, src"$lhs || $rhs")
+    case _ => super.emitNode(sym,rhs)
   }
 }
 
