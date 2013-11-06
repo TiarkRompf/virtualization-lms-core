@@ -31,6 +31,7 @@ trait ArrayOps extends Variables {
     def sort(implicit pos: SourceContext) = array_sort(a)
     def map[B:Manifest](f: Rep[T] => Rep[B]) = array_map(a,f)
     def toSeq = array_toseq(a)
+    def slice(start:Rep[Int], end:Rep[Int]) = array_slice(a,start,end)
   }
 
   def array_obj_new[T:Manifest](n: Rep[Int]): Rep[Array[T]]
@@ -45,6 +46,7 @@ trait ArrayOps extends Variables {
   def array_sort[T:Manifest](x: Rep[Array[T]])(implicit pos: SourceContext): Rep[Array[T]]
   def array_map[A:Manifest,B:Manifest](a: Rep[Array[A]], f: Rep[A] => Rep[B]): Rep[Array[B]]
   def array_toseq[A:Manifest](a: Rep[Array[A]]): Rep[Seq[A]]
+  def array_slice[A:Manifest](a: Rep[Array[A]], start:Rep[Int], end:Rep[Int]): Rep[Array[A]]
 }
 
 trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
@@ -70,6 +72,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
     val array = NewArray[B](a.length)
   }
   case class ArrayToSeq[A:Manifest](x: Exp[Array[A]]) extends Def[Seq[A]]
+  case class ArraySlice[A:Manifest](a: Exp[Array[A]], s:Exp[Int], e:Exp[Int]) extends Def[Array[A]]
 
   def array_obj_new[T:Manifest](n: Exp[Int]) = reflectMutable(ArrayNew(n))
   def array_obj_fromseq[T:Manifest](xs: Seq[Exp[T]]) = /*reflectMutable(*/ ArrayFromSeq(xs) /*)*/
@@ -91,6 +94,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
     reflectEffect(ArrayMap(a, x, b), summarizeEffects(b))
   }
   def array_toseq[A:Manifest](a: Exp[Array[A]]) = ArrayToSeq(a)
+  def array_slice[A:Manifest](a: Rep[Array[A]], start:Rep[Int], end:Rep[Int]) = ArraySlice(a,start,end)
 
   //////////////
   // mirroring
@@ -246,6 +250,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
       // stream.println(quote(getBlockResult(blk)))
       // stream.println("}")
     case ArrayToSeq(a) => emitValDef(sym, src"$a.toSeq")
+    case ArraySlice(a,s,e) => emitValDef(sym, src"$a.slice($s,$e)")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -259,6 +264,7 @@ trait CLikeGenArrayOps extends BaseGenArrayOps with CLikeGenBase {
         case ArrayLength(x) => emitValDef(sym, src"sizeof($x)/sizeof(*$x)") // WARN: statically allocated elements only
         case ArrayApply(x,n) => emitValDef(sym, src"$x[$n]")
         case ArrayUpdate(x,n,y) => stream.println(src"$x.update($n,$y);")
+        case ArraySlice(x,s,e) => val tp=remap(x.tp.typeArguments(0)); emitValDef(sym, src"({ size_t sz=sizeof("+tp+")*($e-$s); "+tp+"* r = ("+tp+"*)malloc(sz); memcpy(r,(("+tp+"*)$x)+$s,sz); r; })")
         case _ => super.emitNode(sym, rhs)
       }
     }
