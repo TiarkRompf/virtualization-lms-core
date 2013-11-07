@@ -112,11 +112,49 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
     recursive foreach emitForwardDef
     super.traverseStmsInBlock(stms)
   }
-  
+
+  // sstucki: Ideally, `emitForwardDef` would be implemented as
+  // follows:
+  //
+  //   def emitForwardDef(sym: Sym[Any]) {
+  //     emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], "_")
+  //   }
+  //
+  // to generate code of the form
+  //
+  //   var x$0: Int = _
+  //
+  // However, this isn't valid Scala (as of 2013-11-06) if `x$0` is a
+  // local variable (scalac 2.10.3 emits "error: local variables must
+  // be initialized").  As a workaround, we initialized the variables
+  // to a suitable "zero" value.  The special treatment of value types
+  // is to avoid byte code overhead (initializing e.g. an `Int` to
+  // `null` generates a hand-full of byte code ops construct a boxed
+  // `Int` and subsequently unbox the result to initialize the
+  // variable).
   def emitForwardDef(sym: Sym[Any]): Unit = {
-    stream.println("var " + quote(sym) + /*": " + remap(sym.tp) +*/ " = null.asInstanceOf[" + remap(sym.tp) + "]")
+
+    val BooleanC = classOf[Boolean]
+    val ByteC = classOf[Byte]
+    val CharC = classOf[Char]
+    val IntC = classOf[Int]
+    val LongC = classOf[Long]
+    val ShortC = classOf[Short]
+    val DoubleC = classOf[Double]
+    val FloatC = classOf[Float]
+    val UnitC = classOf[Unit]
+
+    def quotedZero[A](tp: Manifest[A]): String = tp.runtimeClass match {
+      case ByteC | CharC | IntC | LongC | ShortC => "0"
+      case DoubleC | FloatC                      => "0.0"
+      case BooleanC                              => "false"
+      case UnitC                                 => "()"
+      case _                                     => "null"
+    }
+
+    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + quotedZero(sym.tp))
   }
-  
+
   // special case for recursive vals
   override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     if (recursive contains sym)

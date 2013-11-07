@@ -4,7 +4,7 @@
 *******************************************/
 class Test extends ((Double)=>(Any)) {
 def apply(x0:Double): Any = {
-var x9 = null.asInstanceOf[scala.Function1[Any, Any]]
+var x9: scala.Function1[Any, Any] = null
 x9 = {x10: (Any) => 
 val x11 = println("bar")
 val x12 = x9(x10)

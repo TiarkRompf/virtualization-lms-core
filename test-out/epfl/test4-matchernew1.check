@@ -3,13 +3,13 @@
 *******************************************/
 class Match extends ((Unit)=>(scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
 def apply(x0:Unit): scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
-var x10 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
-var x1 = null.asInstanceOf[scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
-var x17 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
-var x4 = null.asInstanceOf[scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
-var x13 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
-var x7 = null.asInstanceOf[scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
-var x11 = null.asInstanceOf[scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]
+var x10: scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = null
+var x1: scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]] = null
+var x17: scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = null
+var x4: scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]] = null
+var x13: scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = null
+var x7: scala.Function1[Char, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]] = null
+var x11: scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = null
 x1 = {x2: (Char) => 
 val x3 = x2 == 'A'
 val x18 = if (x3) {

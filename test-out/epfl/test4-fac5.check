@@ -5,7 +5,7 @@
 *******************************************/
 class Fac extends ((Double)=>(Double)) {
 def apply(x0:Double): Double = {
-var x1 = null.asInstanceOf[scala.Function1[Double, Double]]
+var x1: scala.Function1[Double, Double] = null
 x1 = {x2: (Double) => 
 val x3 = x2 == 0
 val x8 = if (x3) {

@@ -31,14 +31,17 @@ val x3 = x0 > 0
 val x9 = LoopArray(100) { x8 => 
 0.0
 }
-// TODO: use vars instead of tuples to return multiple values
-val (x16,x15) = if (x3) {
-(100,x9)
+var x16: Int = 0
+var x15: Array[Double] = null
+if (x3) {
+x16 = 100
+x15 = x9
 } else {
 val x12 = LoopArray(50) { x11 => 
 0.0
 }
-(50,x12)
+x16 = 50
+x15 = x12
 }
 val x17 = new { val data = x15; val length = x16 }
 val x10 = new { val data = x9; val length = 100 }
@@ -61,14 +64,17 @@ val x3 = x0 > 0
 val x27 = LoopArray(100) { x26 => 
 0.0
 }
-// TODO: use vars instead of tuples to return multiple values
-val (x16,x30) = if (x3) {
-(100,x27)
+var x16: Int = 0
+var x30: Array[Double] = null
+if (x3) {
+x16 = 100
+x30 = x27
 } else {
 val x29 = LoopArray(50) { x28 => 
 0.0
 }
-(50,x29)
+x16 = 50
+x30 = x29
 }
 val x37 = LoopArray(x16) { x33 => 
 val x34 = x30.apply(x33)
