@@ -5,11 +5,12 @@ int main(int);
 *******************************************/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 int main(int x0) {
 int x3 = 0;
 const int* x1 = mmap('table.dat') // XX TODO ;
-const int x2 = x1.length;
+const int x2 = sizeof(x1)/sizeof(*x1);
 for (;;) {
 const int x4 = x3;
 const bool x5 = x4 < x2;

@@ -5,11 +5,12 @@ int main(int);
 *******************************************/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 int main(int x0) {
 int x5 = 0;
 const int* x1 = mmap('table_field1.dat') // XX TODO ;
-const int x4 = x1.length;
+const int x4 = sizeof(x1)/sizeof(*x1);
 const int* x2 = mmap('table_field2.dat') // XX TODO ;
 for (;;) {
 const int x6 = x5;
