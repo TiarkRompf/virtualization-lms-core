@@ -31,13 +31,17 @@ object ZeroVal {
 
   def apply[A: Manifest]: A = {
     val z: Any = implicitly[Manifest[A]].runtimeClass match {
-      case ByteC | CharC | IntC | LongC | ShortC => 0
-      case DoubleC | FloatC                      => 0.0
-      case BooleanC                              => false
-      case UnitC                                 => ()
-      case _                                     => null
+      case ByteC    => 0.toByte
+      case CharC    => 0.toChar
+      case IntC     => 0
+      case LongC    => 0L
+      case ShortC   => 0.toShort
+      case DoubleC  => 0.0
+      case FloatC   => (0.0).toFloat
+      case BooleanC => false
+      case UnitC    => ()
+      case _        => null
     }
     z.asInstanceOf[A]
   }
-
 }
