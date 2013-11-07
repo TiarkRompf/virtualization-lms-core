@@ -23,6 +23,7 @@ trait ListOps extends Variables {
     def ::(e: Rep[A]) = list_prepend(l,e)
     def ++ (l2: Rep[List[A]]) = list_concat(l, l2)
     def mkString = list_mkString(l)
+    def mkString(s:Rep[String]) = list_mkString2(l,s)
     def head = list_head(l)
     def tail = list_tail(l)
     def isEmpty = list_isEmpty(l)
@@ -42,6 +43,7 @@ trait ListOps extends Variables {
   def list_concat[A:Manifest](xs: Rep[List[A]], ys: Rep[List[A]])(implicit pos: SourceContext): Rep[List[A]]
   def list_cons[A:Manifest](x: Rep[A], xs: Rep[List[A]])(implicit pos: SourceContext): Rep[List[A]] // FIXME remove?
   def list_mkString[A : Manifest](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[String]
+  def list_mkString2[A : Manifest](xs: Rep[List[A]], sep:Rep[String])(implicit pos: SourceContext): Rep[String]
   def list_head[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[A]
   def list_tail[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[List[A]]
   def list_isEmpty[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[Boolean]
@@ -60,6 +62,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   case class ListConcat[A:Manifest](xs: Rep[List[A]], ys: Rep[List[A]]) extends Def[List[A]]
   case class ListCons[A:Manifest](x: Rep[A], xs: Rep[List[A]]) extends Def[List[A]]
   case class ListMkString[A:Manifest](l: Exp[List[A]]) extends Def[String]
+  case class ListMkString2[A:Manifest](l: Exp[List[A]], s: Exp[String]) extends Def[String]
   case class ListHead[A:Manifest](xs: Rep[List[A]]) extends Def[A]
   case class ListTail[A:Manifest](xs: Rep[List[A]]) extends Def[List[A]]
   case class ListIsEmpty[A:Manifest](xs: Rep[List[A]]) extends Def[Boolean]
@@ -92,6 +95,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   def list_concat[A:Manifest](xs: Rep[List[A]], ys: Rep[List[A]])(implicit pos: SourceContext) = ListConcat(xs,ys)
   def list_cons[A:Manifest](x: Rep[A], xs: Rep[List[A]])(implicit pos: SourceContext) = ListCons(x,xs)
   def list_mkString[A:Manifest](l: Exp[List[A]])(implicit pos: SourceContext) = ListMkString(l)
+  def list_mkString2[A:Manifest](l: Rep[List[A]], sep:Rep[String])(implicit pos: SourceContext) = ListMkString2(l,sep)
   def list_head[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListHead(xs)
   def list_tail[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListTail(xs)
   def list_isEmpty[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListIsEmpty(xs)
@@ -156,6 +160,7 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
     case ListIsEmpty(xs) => emitValDef(sym, src"$xs.isEmpty")
     case ListFromSeq(xs) => emitValDef(sym, src"List($xs: _*)")
     case ListMkString(xs) => emitValDef(sym, src"$xs.mkString")
+    case ListMkString2(xs,s) => emitValDef(sym, src"$xs.mkString($s)")
     case ListMap(l,x,blk) => 
       gen"""val $sym = $l.map { $x => 
            |${nestedBlock(blk)}
