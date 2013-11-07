@@ -48,7 +48,6 @@ trait StringOps extends Variables with OverloadHack {
   def infix_toDouble(s: Rep[String])(implicit pos: SourceContext) = string_todouble(s)
   def infix_toFloat(s: Rep[String])(implicit pos: SourceContext) = string_tofloat(s)
   def infix_toInt(s: Rep[String])(implicit pos: SourceContext) = string_toint(s)
-  def infix_toLong(s: Rep[String])(implicit pos: SourceContext) = string_tolong(s)
   def infix_substring(s: Rep[String], start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = string_substring(s,start,end)
   def infix_length(s: Rep[String])(implicit pos: SourceContext) = string_length(s)
 
@@ -64,7 +63,6 @@ trait StringOps extends Variables with OverloadHack {
   def string_todouble(s: Rep[String])(implicit pos: SourceContext): Rep[Double]
   def string_tofloat(s: Rep[String])(implicit pos: SourceContext): Rep[Float]
   def string_toint(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
-  def string_tolong(s: Rep[String])(implicit pos: SourceContext): Rep[Long]
   def string_substring(s: Rep[String], start:Rep[Int], end:Rep[Int])(implicit pos: SourceContext): Rep[String]
   def string_length(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
 }
@@ -78,7 +76,6 @@ trait StringOpsExp extends StringOps with VariablesExp {
   case class StringToDouble(s: Exp[String]) extends Def[Double]
   case class StringToFloat(s: Exp[String]) extends Def[Float]
   case class StringToInt(s: Exp[String]) extends Def[Int]
-  case class StringToLong(s: Exp[String]) extends Def[Long]
   case class StringSubstring(s: Exp[String], start:Exp[Int], end:Exp[Int]) extends Def[String]
   case class StringLength(s: Exp[String]) extends Def[Int]
 
@@ -90,7 +87,6 @@ trait StringOpsExp extends StringOps with VariablesExp {
   def string_todouble(s: Rep[String])(implicit pos: SourceContext) = StringToDouble(s)
   def string_tofloat(s: Rep[String])(implicit pos: SourceContext) = StringToFloat(s)
   def string_toint(s: Rep[String])(implicit pos: SourceContext) = StringToInt(s)
-  def string_tolong(s: Rep[String])(implicit pos: SourceContext) = StringToLong(s)
   def string_substring(s: Rep[String], start:Rep[Int], end:Rep[Int])(implicit pos: SourceContext) = StringSubstring(s,start,end)
   def string_length(s: Rep[String])(implicit pos: SourceContext) = StringLength(s)
 
@@ -119,7 +115,6 @@ trait ScalaGenStringOps extends ScalaGenBase {
     case StringToDouble(s) => emitValDef(sym, src"$s.toDouble")
     case StringToFloat(s) => emitValDef(sym, src"$s.toFloat")
     case StringToInt(s) => emitValDef(sym, src"$s.toInt")
-    case StringToLong(s) => emitValDef(sym, src"$s.toLong")
     case StringSubstring(s,a,b) => emitValDef(sym, src"$s.substring($a,$b)")
     case StringLength(s) => emitValDef(sym, src"$s.length")
     case _ => super.emitNode(sym, rhs)
@@ -154,10 +149,8 @@ trait CGenStringOps extends CGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StringToInt(s) => emitValDef(sym,src"atoi($s)")
-    case StringToLong(s) => emitValDef(sym,src"atol($s)")
+    case StringToInt(s) => emitValDef(sym,src"atoi($s)") // also possible: strtol
     case StringToFloat(s) => emitValDef(sym,src"atof($s)")
-    case StringToDouble(s) => emitValDef(sym,src"atof($s)")
     case StringSubstring(s,a,b) => emitValDef(sym, src"({ int l=$b-$a; char* r=(char*)malloc(l); memcpy(r,((char*)$s)+$a,l); r[l]=0; r; })")
     case StringLength(s) => emitValDef(sym, src"strlen($s)")
     case StringPlus(s1,s2) => s2.tp.toString match {
