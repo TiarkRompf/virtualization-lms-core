@@ -17,12 +17,14 @@ trait ListOps extends Variables {
   
   class ListOpsCls[A:Manifest](l: Rep[List[A]]) {
     def map[B:Manifest](f: Rep[A] => Rep[B]) = list_map(l,f)
+    def map[B:Manifest](f: Rep[A=>B]) = list_map(l,f)
     def flatMap[B : Manifest](f: Rep[A] => Rep[List[B]]) = list_flatMap(l,f)
     def filter(f: Rep[A] => Rep[Boolean]) = list_filter(l, f)
     def sortBy[B:Manifest:Ordering](f: Rep[A] => Rep[B]) = list_sortby(l,f)
     def ::(e: Rep[A]) = list_prepend(l,e)
     def ++ (l2: Rep[List[A]]) = list_concat(l, l2)
     def mkString = list_mkString(l)
+    def mkString(s:Rep[String]) = list_mkString2(l,s)
     def head = list_head(l)
     def tail = list_tail(l)
     def isEmpty = list_isEmpty(l)
@@ -33,6 +35,7 @@ trait ListOps extends Variables {
   def list_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext): Rep[List[A]]
   def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit pos: SourceContext): Rep[List[A]]  
   def list_map[A:Manifest,B:Manifest](l: Rep[List[A]], f: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[List[B]]
+  def list_map[A:Manifest,B:Manifest](l: Rep[List[A]], f: Rep[A=>B])(implicit pos: SourceContext): Rep[List[B]]
   def list_flatMap[A : Manifest, B : Manifest](xs: Rep[List[A]], f: Rep[A] => Rep[List[B]])(implicit pos: SourceContext): Rep[List[B]]
   def list_filter[A : Manifest](l: Rep[List[A]], f: Rep[A] => Rep[Boolean])(implicit pos: SourceContext): Rep[List[A]]
   def list_sortby[A:Manifest,B:Manifest:Ordering](l: Rep[List[A]], f: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[List[A]]
@@ -42,6 +45,7 @@ trait ListOps extends Variables {
   def list_concat[A:Manifest](xs: Rep[List[A]], ys: Rep[List[A]])(implicit pos: SourceContext): Rep[List[A]]
   def list_cons[A:Manifest](x: Rep[A], xs: Rep[List[A]])(implicit pos: SourceContext): Rep[List[A]] // FIXME remove?
   def list_mkString[A : Manifest](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[String]
+  def list_mkString2[A : Manifest](xs: Rep[List[A]], sep:Rep[String])(implicit pos: SourceContext): Rep[String]
   def list_head[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[A]
   def list_tail[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[List[A]]
   def list_isEmpty[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[Boolean]
@@ -51,6 +55,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   case class ListNew[A:Manifest](xs: Seq[Rep[A]]) extends Def[List[A]]
   case class ListFromSeq[A:Manifest](xs: Rep[Seq[A]]) extends Def[List[A]]
   case class ListMap[A:Manifest,B:Manifest](l: Exp[List[A]], x: Sym[A], block: Block[B]) extends Def[List[B]]
+  case class ListMapF[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A=>B]) extends Def[List[B]]
   case class ListFlatMap[A:Manifest, B:Manifest](l: Exp[List[A]], x: Sym[A], block: Block[List[B]]) extends Def[List[B]]
   case class ListFilter[A : Manifest](l: Exp[List[A]], x: Sym[A], block: Block[Boolean]) extends Def[List[A]]
   case class ListSortBy[A:Manifest,B:Manifest:Ordering](l: Exp[List[A]], x: Sym[A], block: Block[B]) extends Def[List[A]]
@@ -60,6 +65,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   case class ListConcat[A:Manifest](xs: Rep[List[A]], ys: Rep[List[A]]) extends Def[List[A]]
   case class ListCons[A:Manifest](x: Rep[A], xs: Rep[List[A]]) extends Def[List[A]]
   case class ListMkString[A:Manifest](l: Exp[List[A]]) extends Def[String]
+  case class ListMkString2[A:Manifest](l: Exp[List[A]], s: Exp[String]) extends Def[String]
   case class ListHead[A:Manifest](xs: Rep[List[A]]) extends Def[A]
   case class ListTail[A:Manifest](xs: Rep[List[A]]) extends Def[List[A]]
   case class ListIsEmpty[A:Manifest](xs: Rep[List[A]]) extends Def[Boolean]
@@ -71,6 +77,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
     val b = reifyEffects(f(a))
     reflectEffect(ListMap(l, a, b), summarizeEffects(b).star)
   }
+  def list_map[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A=>B])(implicit pos: SourceContext) = ListMapF(l,f)
   def list_flatMap[A:Manifest, B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]])(implicit pos: SourceContext) = {
     val a = fresh[A]
     val b = reifyEffects(f(a))
@@ -92,6 +99,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   def list_concat[A:Manifest](xs: Rep[List[A]], ys: Rep[List[A]])(implicit pos: SourceContext) = ListConcat(xs,ys)
   def list_cons[A:Manifest](x: Rep[A], xs: Rep[List[A]])(implicit pos: SourceContext) = ListCons(x,xs)
   def list_mkString[A:Manifest](l: Exp[List[A]])(implicit pos: SourceContext) = ListMkString(l)
+  def list_mkString2[A:Manifest](l: Rep[List[A]], sep:Rep[String])(implicit pos: SourceContext) = ListMkString2(l,sep)
   def list_head[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListHead(xs)
   def list_tail[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListTail(xs)
   def list_isEmpty[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListIsEmpty(xs)
@@ -156,8 +164,9 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
     case ListIsEmpty(xs) => emitValDef(sym, src"$xs.isEmpty")
     case ListFromSeq(xs) => emitValDef(sym, src"List($xs: _*)")
     case ListMkString(xs) => emitValDef(sym, src"$xs.mkString")
-    case ListMap(l,x,blk) => 
-      gen"""val $sym = $l.map { $x => 
+    case ListMkString2(xs,s) => emitValDef(sym, src"$xs.mkString($s)")
+    case ListMap(l,x,blk) =>
+      gen"""val $sym = $l.map { $x =>
            |${nestedBlock(blk)}
            |$blk
            |}"""
@@ -176,7 +185,8 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
            |${nestedBlock(blk)}
            |$blk
            |}"""
-    case ListPrepend(l,e) => emitValDef(sym, src"$e :: $l")    
+    case ListMapF(l,f) => emitValDef(sym, src"$l.map($f)")
+    case ListPrepend(l,e) => emitValDef(sym, src"$e :: $l")
     case ListToArray(l) => emitValDef(sym, src"$l.toArray")
     case ListToSeq(l) => emitValDef(sym, src"$l.toSeq")
     case _ => super.emitNode(sym, rhs)
