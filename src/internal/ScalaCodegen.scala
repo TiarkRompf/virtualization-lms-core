@@ -127,11 +127,11 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   // However, this isn't valid Scala (as of 2013-11-06) if `x$0` is a
   // local variable (scalac 2.10.3 emits "error: local variables must
   // be initialized").  As a workaround, we initialized the variables
-  // to a suitable "zero" value.  The special treatment of value types
-  // is to avoid byte code overhead (initializing e.g. an `Int` to
-  // `null` generates a hand-full of byte code ops construct a boxed
-  // `Int` and subsequently unbox the result to initialize the
-  // variable).
+  // to a suitable "zero" value.  `ZeroVal[T]` handles value types
+  // specially (rather than just casting `null` to `T`), which reduces
+  // byte code overhead (initializing e.g. an `Int` to `null`
+  // generates a hand-full of byte code ops to construct a boxed `Int`
+  // and subsequently unbox the result to initialize the variable).
   def emitForwardDef(sym: Sym[Any]): Unit = {
 
     import common.ZeroVal

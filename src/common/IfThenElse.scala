@@ -251,9 +251,6 @@ trait ScalaGenIfThenElseFat extends ScalaGenIfThenElse with ScalaGenFat with Bas
 
   override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
     case SimpleFatIfThenElse(c,as,bs) =>
-      //def quoteList[T](xs: List[Exp[T]]) = if (xs.length > 1) xs.map(quote).mkString("(",",",")") else xs.map(quote).mkString(",")
-      //if (symList.length > 1) stream.println("// TODO: use vars instead of tuples to return multiple values")
-
       def emitRetAssignments[T](vars: List[Sym[Any]], retVals: List[Exp[T]]) =
         (vars zip retVals) foreach { case (v, rv) => emitAssignment(quote(v), quote(rv)) }
 
