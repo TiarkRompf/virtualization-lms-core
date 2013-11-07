@@ -134,23 +134,8 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   // variable).
   def emitForwardDef(sym: Sym[Any]): Unit = {
 
-    val BooleanC = classOf[Boolean]
-    val ByteC = classOf[Byte]
-    val CharC = classOf[Char]
-    val IntC = classOf[Int]
-    val LongC = classOf[Long]
-    val ShortC = classOf[Short]
-    val DoubleC = classOf[Double]
-    val FloatC = classOf[Float]
-    val UnitC = classOf[Unit]
-
-    def quotedZero[A](tp: Manifest[A]): String = tp.runtimeClass match {
-      case ByteC | CharC | IntC | LongC | ShortC => "0"
-      case DoubleC | FloatC                      => "0.0"
-      case BooleanC                              => "false"
-      case UnitC                                 => "()"
-      case _                                     => "null"
-    }
+    import common.ZeroVal
+    def quotedZero[A: Manifest]: String = quote(Const(ZeroVal[A]))
 
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + quotedZero(sym.tp))
   }
