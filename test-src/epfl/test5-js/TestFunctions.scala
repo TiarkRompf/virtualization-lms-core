@@ -151,28 +151,20 @@ class TestFunctions extends FileDiffSuite {
         val codegen = new ScalaGenPrint with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenEqual{ val IR: self.type = self }
 
         val f = (x: Rep[Double]) => test(x)
-<<<<<<< HEAD
         codegen.emitSource1(f, "Test", new PrintWriter(System.out))
-=======
-        codegen.emitSource(f, "Test", new PrintWriter(System.out))
 
         val g = (x: Rep[Double]) => test2(x)
-        codegen.emitSource(g, "Test2", new PrintWriter(System.out))
->>>>>>> develop
+        codegen.emitSource1(g, "Test2", new PrintWriter(System.out))
       }
 
       new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp with EqualExp{ self =>
         val codegen = new JSGenPrint with JSGenFunctions with JSGenIfThenElse with JSGenEqual{ val IR: self.type = self }
 
         val f = (x: Rep[Double]) => test(x)
-<<<<<<< HEAD
         codegen.emitSource1(f, "main", new PrintWriter(System.out))
-=======
-        codegen.emitSource(f, "main", new PrintWriter(System.out))
 
         val g = (x: Rep[Double]) => test2(x)
-        codegen.emitSource(g, "main2", new PrintWriter(System.out))
->>>>>>> develop
+        codegen.emitSource1(g, "main2", new PrintWriter(System.out))
       }
 
       println("-- end")
@@ -191,14 +183,14 @@ class TestFunctions extends FileDiffSuite {
         }
 
         val f = (x: Rep[Double]) => doLambda{(y: Rep[Int]) => test(x)}
-        codegen.emitSource(f, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(f, "Test", new PrintWriter(System.out))
       }
 
       new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp  with EqualExp{ self =>
         val codegen = new JSGenPrint with JSGenFunctions with JSGenIfThenElse  with JSGenEqual{ val IR: self.type = self }
 
         val f = (x: Rep[Double]) => doLambda{(y: Rep[Int]) => test(x)}
-        codegen.emitSource(f, "main", new PrintWriter(System.out))
+        codegen.emitSource1(f, "main", new PrintWriter(System.out))
       }
 
       println("-- end")

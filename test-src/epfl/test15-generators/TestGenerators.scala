@@ -171,7 +171,7 @@ trait GeneratorProg extends ExtendedGeneratorOps with OverloadHack
 
   //gen-ing a single elem from a list
   def test7(start: Rep[Int], end: Rep[Int]) = {
-    val a : Rep[Array[Int]] = Array(1,2,3)
+    val a : Rep[Array[Int]] = Array.u(1,2,3)
     val g = new Generator[Int]{
       def apply(f: Rep[Int] => Rep[Unit]) = {
         if(start + unit(1) == end) f(start)

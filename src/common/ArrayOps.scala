@@ -21,7 +21,7 @@ trait ArrayOps extends Variables {
 
   object Array {
     // XXX:TO_MERGE
-    //def apply[T:Manifest](xs: T*) = array_obj_fromseq(xs)
+    def u[T:Manifest](xs: T*) = array_obj_fromseq(xs map (x=>unit[T](x)))
     def apply[T:Manifest](xs: Rep[T]*) = array_obj_fromseq(xs)
   }
 

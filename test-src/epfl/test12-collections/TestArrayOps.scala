@@ -24,8 +24,8 @@ class TestArrayOps extends FileDiffSuite {
       }
 
       val codegen = new ScalaGenArrayOps with ScalaGenMiscOps{ val IR: prog.type = prog }
-      codegen.emitSource(prog.f, "IntArrayCreation", new PrintWriter(System.out))
-      codegen.emitSource(prog.g, "CharArrayCreation", new PrintWriter(System.out))
+      codegen.emitSource1(prog.f, "IntArrayCreation", new PrintWriter(System.out))
+      codegen.emitSource1(prog.g, "CharArrayCreation", new PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"array-seq-creation")
   }
