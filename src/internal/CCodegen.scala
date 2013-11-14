@@ -122,6 +122,7 @@ trait CCodegen extends CLikeCodegen {
                      "*******************************************/\n" +
                      "#include <stdio.h>\n" +
                      "#include <stdlib.h>\n" +
+                     "#include <string.h>\n" +
                      "#include <stdbool.h>"
       )
 
@@ -251,6 +252,9 @@ trait CCodegen extends CLikeCodegen {
         case "Double" => "double"
         case "Boolean" => "bool"
         case "Unit" => "void"
+        case "Char" => "char"
+        case "java.lang.String" => "char*"
+        case s if s.startsWith("Array[") => remap(m.typeArguments(0))+"*"
         case _ => throw new GenerationFailedException("CGen: remap(m) : Unknown data type (%s)".format(m.toString))
       }
     }

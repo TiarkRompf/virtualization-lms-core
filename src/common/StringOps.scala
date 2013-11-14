@@ -55,6 +55,7 @@ trait StringOps extends Variables with OverloadHack {
   def infix_toLong(s: Rep[String])(implicit pos: SourceContext) = string_tolong(s)
   def infix_substring(s: Rep[String], beginIndex: Rep[Int])(implicit pos: SourceContext) = string_substring(s, beginIndex)
   def infix_substring(s: Rep[String], beginIndex: Rep[Int], endIndex: Rep[Int])(implicit pos: SourceContext) = string_substring(s, beginIndex, endIndex)
+  def infix_length(s: Rep[String])(implicit pos: SourceContext) = string_length(s)
 
   object String {
     def valueOf(a: Rep[Any])(implicit pos: SourceContext) = string_valueof(a)
@@ -72,6 +73,7 @@ trait StringOps extends Variables with OverloadHack {
   def string_tolong(s: Rep[String])(implicit pos: SourceContext): Rep[Long]
   def string_substring(s: Rep[String], beginIndex: Rep[Int])(implicit pos: SourceContext): Rep[String]
   def string_substring(s: Rep[String], beginIndex: Rep[Int], endIndex: Rep[Int])(implicit pos: SourceContext): Rep[String]
+  def string_length(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
 }
 
 trait StringOpsExp extends StringOps with VariablesExp {
@@ -87,6 +89,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
   case class StringToLong(s: Exp[String]) extends Def[Long]
   case class StringSubstring(s: Exp[String], beginIndex: Exp[Int]) extends Def[String]
   case class StringSubstringWithEndIndex(s: Exp[String], beginIndex: Exp[Int], endIndex: Exp[Int]) extends Def[String]
+  case class StringLength(s: Exp[String]) extends Def[Int]
 
   def string_new(s: Rep[Any]) = StringNew(s)
   def string_plus(s: Exp[Any], o: Exp[Any])(implicit pos: SourceContext): Rep[String] = StringPlus(s,o)
@@ -100,6 +103,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
   def string_tolong(s: Exp[String])(implicit pos: SourceContext) = StringToLong(s)
   def string_substring(s: Exp[String], beginIndex: Exp[Int])(implicit pos: SourceContext) = StringSubstring(s, beginIndex)
   def string_substring(s: Exp[String], beginIndex: Exp[Int], endIndex: Exp[Int])(implicit pos: SourceContext) = StringSubstringWithEndIndex(s, beginIndex, endIndex)
+  def string_length(s: Rep[String])(implicit pos: SourceContext) = StringLength(s)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case StringPlus(a,b) => string_plus(f(a),f(b))
@@ -111,6 +115,7 @@ trait StringOpsExp extends StringOps with VariablesExp {
     case StringToLong(s) => string_tolong(f(s))
     case StringSubstring(s, beginIndex) => string_substring(f(s), f(beginIndex))
     case StringSubstringWithEndIndex(s, beginIndex, endIndex) => string_substring(f(s), f(beginIndex), f(endIndex))
+    case StringLength(s) => string_length(f(s))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
@@ -121,17 +126,18 @@ trait ScalaGenStringOps extends ScalaGenBase {
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case StringNew(s1) => emitValDef(sym, "new String(" + quote(s1) + ")")
-    case StringPlus(s1,s2) => emitValDef(sym, "%s+%s".format(quote(s1), quote(s2)))
-    case StringStartsWith(s1,s2) => emitValDef(sym, "%s.startsWith(%s)".format(quote(s1),quote(s2)))
-    case StringTrim(s) => emitValDef(sym, "%s.trim()".format(quote(s)))
-    case StringSplit(s, sep) => emitValDef(sym, "%s.split(%s)".format(quote(s), quote(sep)))
-    case StringValueOf(a) => emitValDef(sym, "java.lang.String.valueOf(%s)".format(quote(a)))
-    case StringToDouble(s) => emitValDef(sym, "%s.toDouble".format(quote(s)))
-    case StringToFloat(s) => emitValDef(sym, "%s.toFloat".format(quote(s)))
-    case StringToInt(s) => emitValDef(sym, "%s.toInt".format(quote(s)))
-    case StringToLong(s) => emitValDef(sym, "%s.toLong".format(quote(s)))
-    case StringSubstring(s, beginIndex) => emitValDef(sym, "%s.substring(%s)".format(quote(s),quote(beginIndex)))
-    case StringSubstringWithEndIndex(s, beginIndex, endIndex) => emitValDef(sym, "%s.substring(%s, %s)".format(quote(s),quote(beginIndex),quote(endIndex)))
+    case StringPlus(s1,s2) => emitValDef(sym, src"$s1+$s2")
+    case StringStartsWith(s1,s2) => emitValDef(sym, src"$s1.startsWith($s2)")
+    case StringTrim(s) => emitValDef(sym, src"$s.trim()")
+    case StringSplit(s, sep) => emitValDef(sym, src"$s.split($sep)")
+    case StringValueOf(a) => emitValDef(sym, src"java.lang.String.valueOf($a)")
+    case StringToDouble(s) => emitValDef(sym, src"$s.toDouble")
+    case StringToFloat(s) => emitValDef(sym, src"$s.toFloat")
+    case StringToInt(s) => emitValDef(sym, src"$s.toInt")
+    case StringToLong(s) => emitValDef(sym, src"$s.toLong")
+    case StringSubstring(s,b) => emitValDef(sym, src"$s.substring($b)")
+    case StringSubstringWithEndIndex(s,b,e) => emitValDef(sym, "$s.substring($b,$e)")
+    case StringLength(s) => emitValDef(sym, src"$s.length")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -164,7 +170,19 @@ trait CGenStringOps extends CGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StringPlus(s1,s2) => emitValDef(sym,"strcat(%s,%s);".format(quote(s1),quote(s2)))
+    case StringToInt(s) => emitValDef(sym,src"atoi($s)")
+    case StringToLong(s) => emitValDef(sym,src"atol($s)")
+    case StringToFloat(s) => emitValDef(sym,src"atof($s)")
+    case StringToDouble(s) => emitValDef(sym,src"atof($s)")
+    case StringSubstring(s,b) => emitValDef(sym, src"strdup($s+$b)")
+    case StringSubstringWithEndIndex(s,a,b) => emitValDef(sym, src"({ int l=$b-$a; char* r=(char*)malloc(l); memcpy(r,((char*)$s)+$a,l); r[l]=0; r; })")
+    case StringLength(s) => emitValDef(sym, src"strlen($s)")
+    case StringPlus(s1,s2) => s2.tp.toString match {
+      // Warning: memory leaks. We need a global mechanism like reference counting, possibly release pool(*) wrapping functions.
+      // (*) See https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Classes/NSAutoreleasePool_Class/Reference/Reference.html
+      case "java.lang.String" => emitValDef(sym,src"({ int l1=strlen($s1),l2=strlen($s2); char* r=(char*)malloc(l1+l2+1); memcpy(r,$s1,l1); memcpy(r+l1,$s2,l2); r[l1+l2]=0; r; })")
+      case "Char" => emitValDef(sym,src"({ int l1=strlen($s1); char* r=(char*)malloc(l1+2); memcpy(r,$s1,l1); r[l1]=$s2; r[l1+2]=0; r; })")
+    }
     case StringTrim(s) => throw new GenerationFailedException("CGenStringOps: StringTrim not implemented yet")
     case StringSplit(s, sep) => throw new GenerationFailedException("CGenStringOps: StringSplit not implemented yet")
     case _ => super.emitNode(sym, rhs)

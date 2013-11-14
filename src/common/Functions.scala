@@ -14,7 +14,7 @@ trait Functions extends Base {
   implicit def fun[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
 
   implicit def toLambdaOps[A:Manifest,B:Manifest](fun: Rep[A => B]) = new LambdaOps(fun)
-  
+
   class LambdaOps[A:Manifest,B:Manifest](f: Rep[A => B]) {
     def apply(x: Rep[A])(implicit pos: SourceContext): Rep[B] = doApply(f,x)
   }
@@ -77,7 +77,7 @@ trait FunctionsExp extends Functions with EffectExp {
 
   def doLambdaDef[A:Manifest,B:Manifest](f: Exp[A] => Exp[B]) : Def[A => B] = {
     val x = unboxedFresh[A]
-    val y = reifyEffects(f(x)) // unfold completely at the definition site. 
+    val y = reifyEffects(f(x)) // unfold completely at the definition site.
 
     Lambda(f, x, y)
   }
@@ -102,7 +102,7 @@ trait FunctionsExp extends Functions with EffectExp {
     case e@Lambda(g,x,y) => toAtom(Lambda(f(g),f(x),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
-    
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => syms(y)
     case _ => super.syms(e)
@@ -111,11 +111,11 @@ trait FunctionsExp extends Functions with EffectExp {
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => syms(x) ::: effectSyms(y)
     case _ => super.boundSyms(e)
-  }  
+  }
 
-// TODO: right now were trying to hoist as much as we can out of functions. 
+// TODO: right now were trying to hoist as much as we can out of functions.
 // That might not always be appropriate. A promising strategy would be to have
-// explicit 'hot' and 'cold' functions. 
+// explicit 'hot' and 'cold' functions.
 
 /*
   override def hotSyms(e: Any): List[Sym[Any]] = e match {
@@ -189,12 +189,12 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, UnboxedTuple(xs), y) => xs.flatMap(syms) ::: effectSyms(y)
     case _ => super.boundSyms(e)
-  }  
-  
+  }
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case e@Lambda(g,UnboxedTuple(xs),y) => toAtom(Lambda(f(g),UnboxedTuple(f(xs))(e.mA),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
     case _ => super.mirror(e,f)
-  }).asInstanceOf[Exp[A]]  
+  }).asInstanceOf[Exp[A]]
 }
 
 trait FunctionsRecursiveExp extends FunctionsExp with ClosureCompare {
@@ -211,7 +211,7 @@ trait FunctionsRecursiveExp extends FunctionsExp with ClosureCompare {
         funSym
     }
   }
-  
+
 }
 
 trait TupledFunctionsRecursiveExp extends FunctionsRecursiveExp with TupledFunctionsExp
@@ -251,7 +251,7 @@ trait BaseGenFunctions extends GenericNestedCodegen {
 
 trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
       emitValDef(sym, "{" + quote(x, true) + ": (" + x.tp + ") => ")
@@ -274,7 +274,7 @@ trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTu
     case UnboxedTuple(t) => t.map(quote).mkString("((", ",", "))")
     case _ => super.quote(x)
   }
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>
       emitValDef(sym, "{" + xs.map(s=>quote(s, true)+":"+remap(s.tp)).mkString("(",",",")") + " => ")
@@ -285,25 +285,25 @@ trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTu
 
     case Apply(fun, UnboxedTuple(args)) =>
       emitValDef(sym, quote(fun) + args.map(quote).mkString("(", ",", ")"))
-    
+
     case _ => super.emitNode(sym,rhs)
   }
-  
+
   def unwrapTupleStr(s: String): Array[String] = {
     if (s.startsWith("scala.Tuple")) s.slice(s.indexOf("[")+1,s.length-1).filter(c => c != ' ').split(",")
     else Array(s)
-  } 
-  
-  override def remap[A](m: Manifest[A]): String = m.toString match {    
+  }
+
+  override def remap[A](m: Manifest[A]): String = m.toString match {
     case f if f.startsWith("scala.Function") =>
       val targs = m.typeArguments.dropRight(1)
       val res = remap(m.typeArguments.last)
       val targsUnboxed = targs.flatMap(t => unwrapTupleStr(remap(t)))
       val sep = if (targsUnboxed.length > 0) "," else ""
-      "scala.Function" + (targsUnboxed.length) + "[" + targsUnboxed.mkString(",") + sep + res + "]"      
-      
+      "scala.Function" + (targsUnboxed.length) + "[" + targsUnboxed.mkString(",") + sep + res + "]"
+
     case _ => super.remap(m)
-  }  
+  }
 }
 
 trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
@@ -379,7 +379,7 @@ trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAcces
     case UnboxedTuple(t) => t.map(quote).mkString("((", ",", "))")
     case _ => super.quote(x)
   }*/
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>
       stream.println(remap(y.tp)+" "+quote(sym)+"("+xs.map(s=>remap(s.tp)+" "+quote(s)).mkString(",")+") {")
@@ -389,23 +389,23 @@ trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAcces
         stream.println("return " + quote(z) + ";")
       stream.println("}")
     case Apply(fun, UnboxedTuple(args)) =>
-      emitValDef(sym, quote(fun) + args.map(quote).mkString("(", ",", ")"))    
+      emitValDef(sym, quote(fun) + args.map(quote).mkString("(", ",", ")"))
     case _ => super.emitNode(sym,rhs)
   }
-  
+
   /*def unwrapTupleStr(s: String): Array[String] = {
     if (s.startsWith("scala.Tuple")) s.slice(s.indexOf("[")+1,s.length-1).filter(c => c != ' ').split(",")
     else Array(s)
   }*/
-  
-  /*override def remap[A](m: Manifest[A]): String = m.toString match {    
+
+  /*override def remap[A](m: Manifest[A]): String = m.toString match {
     case f if f.startsWith("scala.Function") =>
       val targs = m.typeArguments.dropRight(1)
       val res = remap(m.typeArguments.last)
       val targsUnboxed = targs.flatMap(t => unwrapTupleStr(remap(t)))
       val sep = if (targsUnboxed.length > 0) "," else ""
-      "scala.Function" + (targsUnboxed.length) + "[" + targsUnboxed.mkString(",") + sep + res + "]"      
-      
+      "scala.Function" + (targsUnboxed.length) + "[" + targsUnboxed.mkString(",") + sep + res + "]"
+
     case _ => super.remap(m)
-  }*/ 
+  }*/
 }

@@ -14,7 +14,12 @@ val x8 = x7.doubleValue()
 val x9 = 2.0 * x8
 val x10 = x9 + 3.0
 val x11 = x6 + x10
+<<<<<<< HEAD
 x1(x3) = x11
+=======
+val x12 = x1(x3) = x11
+
+>>>>>>> develop
 x3 = x3 + 1
 }
 x1

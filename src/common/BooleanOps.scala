@@ -77,13 +77,14 @@ trait ScalaGenBooleanOps extends ScalaGenBase with GenericNestedCodegen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case BooleanNegate(b) => emitValDef(sym, "!" + quote(b))
+    case BooleanNegate(b) => emitValDef(sym, src"!$b")
+    // case BooleanAnd(lhs,rhs) => emitValDef(sym, src"$lhs && $rhs")
     case BooleanAnd(lhs,rhs) => 
         emitValDef(sym, "if (" + quote(lhs) + " == true) {")
         emitBlock(rhs)
         emitBlockResult(rhs)
         stream.println("} else false")
-    case BooleanOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " || " + quote(rhs))
+    case BooleanOr(lhs,rhs) => emitValDef(sym, src"$lhs || $rhs")
     case _ => super.emitNode(sym,rhs)
   }
 }
@@ -92,12 +93,11 @@ trait CLikeGenBooleanOps extends CLikeGenBase {
   val IR: BooleanOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-    rhs match {
-      case BooleanNegate(b) =>
-        emitValDef(sym, "!" + quote(b))
-      case _ => super.emitNode(sym,rhs)
-    }
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case BooleanNegate(b) => emitValDef(sym, src"!$b")
+    case BooleanAnd(lhs,rhs) => emitValDef(sym, src"$lhs && $rhs")
+    case BooleanOr(lhs,rhs) => emitValDef(sym, src"$lhs || $rhs")
+    case _ => super.emitNode(sym,rhs)
   }
 }
 

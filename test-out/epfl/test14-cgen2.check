@@ -5,6 +5,7 @@ int main(int);
 *******************************************/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 int main(int x0) {
 int x1(int x2,int x3) {

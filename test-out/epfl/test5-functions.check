@@ -16,6 +16,26 @@ x6
 /*****************************************
   End of Generated Code                  
 *******************************************/
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test2 extends ((Double)=>(scala.Function1[Double, Double])) {
+def apply(x8:Double): scala.Function1[Double, Double] = {
+val x12 = {x9: (Double) => 
+val x10 = x9 == x8
+val x11 = if (x10) {
+2.0
+} else {
+x9
+}
+x11: Double
+}
+x12
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
 function main(x0) {
 var x4 = function(x1) {
 document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("foo"))
@@ -24,5 +44,18 @@ return x1
 var x5 = x4(x0)
 var x6 = x4(x5)
 return x6
+}
+function main2(x8) {
+var x12 = function(x9) {
+var x10 = x9==x8
+var x11
+if (x10) {
+x11=2.0
+} else {
+x11=x9
+}
+return x11
+}
+return x12
 }
 -- end

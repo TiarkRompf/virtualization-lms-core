@@ -83,8 +83,8 @@ trait ScalaGenEqual extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Equal(a,b) =>  emitValDef(sym, quote(a) + " == " + quote(b))
-    case NotEqual(a,b) =>  emitValDef(sym, quote(a) + " != " + quote(b))
+    case Equal(a,b) =>  emitValDef(sym, src"$a == $b")
+    case NotEqual(a,b) =>  emitValDef(sym, src"$a != $b")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -96,9 +96,9 @@ trait CLikeGenEqual extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case Equal(a,b) =>
-          emitValDef(sym, quote(a) + " == " + quote(b))
+          emitValDef(sym, src"$a == $b")
         case NotEqual(a,b) =>
-          emitValDef(sym, quote(a) + " != " + quote(b))
+          emitValDef(sym, src"$a != $b")
         case _ => super.emitNode(sym, rhs)
       }
     }

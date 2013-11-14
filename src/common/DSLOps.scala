@@ -27,6 +27,7 @@ trait ScalaGenDSLOps extends ScalaGenEffect with BaseGenDSLOps {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case op: DSLOp[_] =>
       val b = op.representation
+      /* XXX:TO_MERGE
       val strWriter = new java.io.StringWriter
       val localStream = new PrintWriter(strWriter);
       withStream(localStream) {
@@ -36,6 +37,11 @@ trait ScalaGenDSLOps extends ScalaGenEffect with BaseGenDSLOps {
         stream.print("}")
       }
       emitValDef(sym, strWriter.toString)
+      */
+      gen"""val $sym = {
+           |${nestedBlock(b)}
+           |$b
+           |}"""
 
     case _ => super.emitNode(sym, rhs)
   }

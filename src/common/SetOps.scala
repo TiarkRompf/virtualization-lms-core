@@ -92,13 +92,13 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case SetNew(xs, mA) => emitValDef(sym, "collection.mutable.HashSet[" + remap(mA) + "](" + (xs map {quote}).mkString(",") + ")")
-    case SetContains(s,i) => emitValDef(sym, quote(s) + ".contains(" + quote(i) + ")")
-    case SetAdd(s,i) => emitValDef(sym, quote(s) + ".add(" + quote(i) + ")")
-    case SetRemove(s,i) => emitValDef(sym, quote(s) + ".remove(" + quote(i) + ")")
-    case SetSize(s) => emitValDef(sym, quote(s) + ".size")
-    case SetClear(s) => emitValDef(sym, quote(s) + ".clear()")
-    case SetToSeq(s) => emitValDef(sym, quote(s) + ".toSeq")
+    case SetNew(xs, mA) => emitValDef(sym, src"collection.mutable.HashSet[$mA](" + (xs map {quote}).mkString(",") + ")")
+    case SetContains(s,i) => emitValDef(sym, src"$s.contains($i)")
+    case SetAdd(s,i) => emitValDef(sym, src"$s.add($i)")
+    case SetRemove(s,i) => emitValDef(sym, src"$s.remove($i)")
+    case SetSize(s) => emitValDef(sym, src"$s.size")
+    case SetClear(s) => emitValDef(sym, src"$s.clear()")
+    case SetToSeq(s) => emitValDef(sym, src"$s.toSeq")
     case n@SetToArray(s) => //emitValDef(sym, quote(s) + ".toArray")
       emitValDef(sym, "{ // workaround for refinedManifest problem" +
       "\nval out = " + quote(n.array) +
@@ -110,6 +110,19 @@ trait ScalaGenSetOps extends BaseGenSetOps with ScalaGenEffect {
       "\n}" +
       "\nout" +
       "\n}")
+      /* XXX:TO_MERGE
+      gen"""// workaround for refinedManifest problem
+           |val $sym = {
+           |val out = $n.array
+           |val in = $s.toSeq
+           |var i = 0
+           |while (i < in.length) {
+           |out(i) = in(i)
+           |i += 1
+           |}
+           |out
+           |}"""
+      */
     case SetForeach(a,x,block) => 
       emitValDef(sym, quote(a) + ".foreach{")    
       stream.println(quote(x) + " => ")
