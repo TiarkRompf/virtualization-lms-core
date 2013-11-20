@@ -206,8 +206,27 @@ trait VariablesExpOpt extends VariablesExp {
     }
   }
   
-  // TODO: could eliminate redundant stores, too
-  // by overriding assign ...
+  // eliminate (some) redundant stores
+  // TODO: strong updates. overwriting a var makes previous stores unnecessary
+
+  override implicit def var_assign[T:Manifest](v: Var[T], e: Exp[T])(implicit pos: SourceContext) : Exp[Unit] = {
+    if (context ne null) {
+      // find the last modification of variable v
+      // if it is an assigment with the same value, we don't need to do anything
+      val vs = v.e.asInstanceOf[Sym[Variable[T]]]
+      //TODO: could use calculateDependencies(Read(v))
+      
+      context.reverse.foreach { 
+        case w @ Def(Reflect(NewVar(rhs: Exp[T]), _, _)) if w == vs => if (rhs == e) return ()
+        case Def(Reflect(Assign(`v`, rhs: Exp[T]), _, _)) => if (rhs == e) return ()
+        case Def(Reflect(_, u, _)) if mayWrite(u, List(vs)) =>  // not a simple assignment
+        case _ => // ...
+      }
+    }
+    super.var_assign(v,e)
+  }
+
+
 
 }
 
