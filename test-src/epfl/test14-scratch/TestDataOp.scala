@@ -74,7 +74,7 @@ class TestDataOp extends FileDiffSuite {
 
       private val pos = var_new(0)
 
-      def open() = () // pos = 0
+      def open() = { pos = 0 }
       def next() = {
         val more = pos < table.size
         if (more) pos += table.incr
