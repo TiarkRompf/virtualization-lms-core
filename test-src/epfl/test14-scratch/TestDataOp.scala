@@ -74,7 +74,7 @@ class TestDataOp extends FileDiffSuite {
 
       private val pos = var_new(0)
 
-      def open() = () // pos = 0
+      def open() = { pos = 0 }
       def next() = {
         val more = pos < table.size
         if (more) pos += table.incr
@@ -123,7 +123,7 @@ class TestDataOp extends FileDiffSuite {
 
   }
 
-  trait Impl extends DSL with ScalaOpsPkgExp with TupledFunctionsRecursiveExp with UncheckedOpsExp { self => 
+  trait Impl extends DSL with ScalaOpsPkgExp with VariablesExpOpt with TupledFunctionsRecursiveExp with UncheckedOpsExp { self => 
     val codegen = new CCodeGenPkg with CGenVariables with CGenTupledFunctions with CGenUncheckedOps { 
       val IR: self.type = self 
       override def remap[A](a: Manifest[A]) = 
