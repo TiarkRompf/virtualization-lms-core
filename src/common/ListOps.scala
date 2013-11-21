@@ -14,7 +14,7 @@ trait ListOps extends Variables {
   implicit def varToListOps[T:Manifest](x: Var[List[T]]) = new ListOpsCls(readVar(x)) // FIXME: dep on var is not nice
   implicit def repToListOps[T:Manifest](a: Rep[List[T]]) = new ListOpsCls(a)
   implicit def listToListOps[T:Manifest](a: List[T]) = new ListOpsCls(unit(a))
-  
+
   class ListOpsCls[A:Manifest](l: Rep[List[A]]) {
     def map[B:Manifest](f: Rep[A] => Rep[B]) = list_map(l,f)
     def foreach(f: Rep[A] => Rep[Unit]) = list_foreach(l,f)
@@ -33,9 +33,9 @@ trait ListOps extends Variables {
     def reverse = list_reverse(l)
     def contains(e: Rep[A]) = list_contains(l,e)
   }
-  
+
   def list_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext): Rep[List[A]]
-  def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit pos: SourceContext): Rep[List[A]]  
+  def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit pos: SourceContext): Rep[List[A]]
   def list_map[A:Manifest,B:Manifest](l: Rep[List[A]], f: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[List[B]]
   def list_foreach[A:Manifest](l: Rep[List[A]], f: Rep[A] => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
   def list_flatMap[A : Manifest, B : Manifest](xs: Rep[List[A]], f: Rep[A] => Rep[List[B]])(implicit pos: SourceContext): Rep[List[B]]
@@ -75,7 +75,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   case class ListIsEmpty[A:Manifest](xs: Rep[List[A]]) extends Def[Boolean]
   case class ListReverse[A:Manifest](xs: Rep[List[A]]) extends Def[List[A]]
   case class ListContains[A:Manifest](xs: Rep[List[A]], e: Rep[A]) extends Def[Boolean]
-  
+
   def list_new[A:Manifest](xs: Seq[Rep[A]])(implicit pos: SourceContext) = ListNew(xs)
   def list_fromseq[A:Manifest](xs: Rep[Seq[A]])(implicit pos: SourceContext) = ListFromSeq(xs)
   def list_map[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[B])(implicit pos: SourceContext) = {
@@ -115,14 +115,14 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   def list_isEmpty[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListIsEmpty(xs)
   def list_reverse[A:Manifest](xs: Rep[List[A]])(implicit pos: SourceContext) = ListReverse(xs)
   def list_contains[A:Manifest](xs: Rep[List[A]], e: Rep[A])(implicit pos: SourceContext) = ListContains(xs,e)
-  
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
     (e match {
       case ListNew(xs) => list_new(f(xs))
       case _ => super.mirror(e,f)
     }).asInstanceOf[Exp[A]] // why??
   }
-  
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case ListMap(a, x, body) => syms(a):::syms(body)
     case ListForeach(a, x, body) => syms(a):::syms(body)
@@ -148,7 +148,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
     case ListFilter(a, _, body) => freqNormal(a) ::: freqHot(body)
     case ListSortBy(a, x, body) => freqNormal(a):::freqHot(body)
     case _ => super.symsFreq(e)
-  }  
+  }
 }
 
 trait ListOpsExpOpt extends ListOpsExp {
@@ -181,24 +181,24 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
     case ListFromSeq(xs) => emitValDef(sym, src"List($xs: _*)")
     case ListMkString(xs) => emitValDef(sym, src"$xs.mkString")
     case ListMkString2(xs,s) => emitValDef(sym, src"$xs.mkString($s)")
-    case ListMap(l,x,blk) => 
+    case ListMap(l,x,blk) =>
 /* XXX:TO_MERGE
-      gen"""val $sym = $l.map { $x => 
+      gen"""val $sym = $l.map { $x =>
            |${nestedBlock(blk)}
            |$blk
            |}"""
     case ListFlatMap(l, x, b) =>
-      gen"""val $sym = $l.flatMap { $x => 
+      gen"""val $sym = $l.flatMap { $x =>
            |${nestedBlock(b)}
            |$b
            |}"""
     case ListFilter(l, x, b) =>
-      gen"""val $sym = $l.filter { $x => 
+      gen"""val $sym = $l.filter { $x =>
            |${nestedBlock(b)}
            |$b
            |}"""
     case ListSortBy(l,x,blk) =>
-      gen"""val $sym = $l.sortBy { $x => 
+      gen"""val $sym = $l.sortBy { $x =>
            |${nestedBlock(blk)}
            |$blk
            |}"""
@@ -250,7 +250,7 @@ trait ScalaGenListOps extends BaseGenListOps with ScalaGenEffect {
       }
       emitValDef(sym, strWriter.toString)
     }
-    case ListPrepend(l,e) => emitValDef(sym, src"$e :: $l")    
+    case ListPrepend(l,e) => emitValDef(sym, src"$e :: $l")
     case ListToArray(l) => emitValDef(sym, src"$l.toArray")
     case ListToSeq(l) => emitValDef(sym, src"$l.toSeq")
     case ListContains(l, e) => emitValDef(sym, src"$l.contains($e)")
@@ -268,7 +268,7 @@ trait CLikeGenListOps extends BaseGenListOps with CLikeGenBase {
         case _ => super.emitNode(sym, rhs)
       }
     }
-*/    
+*/
 }
 
 trait CudaGenListOps extends CudaGenEffect with CLikeGenListOps
