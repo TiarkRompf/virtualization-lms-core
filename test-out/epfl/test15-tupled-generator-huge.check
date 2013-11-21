@@ -18,11 +18,11 @@ x12.updateValue(x4,((if ((x12.contains(x4))) {
 } else {
 0.0
 }) + x3))
-var x33: Double = 0.0
+var x33 = 0.0
 val x31 = (x11.get()) * 0.25
 x10.foreach{
 x35 => 
-var x42: Double = 0.0
+var x42 = 0.0
 val x36 = x35._1
 x12.foreach{
 x43 => 
@@ -39,7 +39,6 @@ x33 = ((x33) + (((1L * (x35._2)) * 1L) * (if (((x42) < x31)) {
 })))
 }
 x9.update((0.0 + (x33)))
-()
 }
 }
 /*****************************************
@@ -66,11 +65,11 @@ x88.updateValue(x80,((if ((x88.contains(x80))) {
 } else {
 0.0
 }) + x98))
-var x111: Double = 0.0
+var x111 = 0.0
 val x109 = (x87.get()) * 0.25
 x86.foreach{
 x113 => 
-var x120: Double = 0.0
+var x120 = 0.0
 val x114 = x113._1
 x88.foreach{
 x121 => 
@@ -87,7 +86,6 @@ x111 = ((x111) + (((1L * (x113._2)) * 1L) * (if (((x120) < x109)) {
 })))
 }
 x85.update((0.0 + (x111)))
-()
 }
 }
 /*****************************************
