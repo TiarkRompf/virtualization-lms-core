@@ -90,7 +90,7 @@ trait CUnparser extends CCodegen  {
       stream.println("}")
     }
     stringWriter.flush()
-    out.write(stringOutput.toString);
+    out.write(Utilities.indent(stringOutput.toString))
     out.flush()
     staticData
   }

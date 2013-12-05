@@ -35,6 +35,8 @@ libraryDependencies += "org.scala-lang" % "scala-actors" % virtScala // for Scal
 
 libraryDependencies += "com.nativelibs4java" % "bridj" % "0.6.1"
 
+libraryDependencies += "com.github.abrarsyed.jastyle" % "jAstyle" % "1.2"
+
 libraryDependencies += scalaTest
 
 

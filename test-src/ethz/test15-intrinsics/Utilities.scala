@@ -20,6 +20,8 @@
 package ethz.test15
 
 import java.io._
+import com.github.abrarsyed.jastyle.ASFormatter
+import com.github.abrarsyed.jastyle.constants.SourceMode
 
 object Utilities {
 
@@ -37,31 +39,14 @@ object Utilities {
   }
 
   def indent (code: String): String = {
-    def indentExec = findExec("indent")
-    if (indentExec != null) {
-      var returnCode: String = ""
-      val runtime = java.lang.Runtime.getRuntime()
-      val indentProcess = runtime.exec(indentExec.getAbsolutePath + " -fc1 -i8 -st -br")
-      val stdOut = new BufferedReader(new InputStreamReader (indentProcess.getInputStream()));
-      val stdIn  = new BufferedWriter(new OutputStreamWriter(indentProcess.getOutputStream()));
-      stdIn.write(code); stdIn.newLine();
-      stdIn.flush(); stdIn.close();
-      var line: String = null
-      do {
-        line = stdOut.readLine()
-        if (line != null )
-          returnCode += (line + System.getProperty("line.separator"))
-      } while(line != null)
-      val exitVal = indentProcess.waitFor();
-      indentProcess.destroy()
-      if (exitVal != 0) {
-        code
-      } else {
-        returnCode
-      }
-    } else {
-      code
-    }
+    val in  = new StringReader(code)
+    val out = new StringWriter()
+    val formatter = new ASFormatter ()
+    formatter.setSourceStyle(SourceMode.C)
+    formatter.setPreprocessorIndent(true)
+    formatter.format(in, out)
+    out.flush()
+    out.toString
   }
 
   def isWin  (): Boolean = System.getProperty("os.name").toLowerCase.contains("win")
