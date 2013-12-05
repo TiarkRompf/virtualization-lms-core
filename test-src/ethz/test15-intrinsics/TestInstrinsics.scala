@@ -88,22 +88,24 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
 
     }
 
-    val wrapped_f: (List[Exp[Any]] => Exp[Unit]) = (in: List[Exp[Any]]) => {
-      val input = in.asInstanceOf[List[Exp[Array[T]]]]
-      FIR(input(0), input(1) , CIR.reflectMutableSym(input(2).asInstanceOf[Sym[Array[T]]]))
-    };
-    val mList = List(manifest[T], manifest[T], manifest[T]).asInstanceOf[List[Manifest[Any]]]
-    CIR.emitSource[Unit](wrapped_f, "fir", new PrintWriter(System.out))(mList, manifest[Unit])
+    val xs = CIR.fresh(manifest[Array[T]])
+    val hs = CIR.fresh(manifest[Array[T]])
+    val ys = CIR.fresh(manifest[Array[T]])
+
+    val args = List(xs, hs, ys)
+    val block = CIR.reifyEffects[Unit](FIR(xs, hs, CIR.reflectMutableSym(ys)))
+
+    CIR.emitBlock((args, block), new PrintWriter(System.out), "fir")
 
     println("===============================================================")
     println()
     println()
 
-
-
     def execute (xInput: Array[T], hInput: Array[T]) : Array[T] = {
 
-      val (fir, firFileName) = CIR.compile[Unit](wrapped_f)(mList, manifest[Unit])
+      CIR.compiler = new ICC ()
+
+      val (fir, firFileName) = CIR.compileBlock[Unit]((args, block))
 
       val xBridJ = Pointer.allocateArray[T](CIR.mapBridJType(manifest[T]), n)
       val hBridJ = Pointer.allocateArray[T](CIR.mapBridJType(manifest[T]), k)
@@ -131,7 +133,6 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
     val h = new Array[T](k)
 
     execute(x, h)
-
   }
 
 
@@ -141,13 +142,13 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
     // withOutFileChecked(prefix+"intrinsics") {
       // One can generate all possibilities of types and given ISA
       generateSimplestFIR[Double](ISA.AVX)
-      // generateSimplestFIR[Float](ISA.AVX)
-      // generateSimplestFIR[Int](ISA.AVX)
+      generateSimplestFIR[Float](ISA.AVX)
+      generateSimplestFIR[Int](ISA.AVX)
       // ISA can also change
-      // generateSimplestFIR[Float](ISA.SSE42)
-      // generateSimplestFIR[Double](ISA.SSSE3)
-      // generateSimplestFIR[Int](ISA.SSE3)
+      generateSimplestFIR[Float](ISA.SSE42)
+      generateSimplestFIR[Double](ISA.SSSE3)
+      generateSimplestFIR[Int](ISA.SSE3)
     }
-  //}
+  // }
 }
 

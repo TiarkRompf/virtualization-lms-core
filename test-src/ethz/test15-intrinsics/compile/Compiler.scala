@@ -88,7 +88,6 @@ abstract class Compiler {
   }
 
   protected def compile(params: List[String]): Boolean = {
-
     val c = compiler.getAbsolutePath
     execute((c :: params).toSeq) match {
       case (0, o, e) => if (debug) (o:::e) map println; true
