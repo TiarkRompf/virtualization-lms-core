@@ -80,7 +80,7 @@ class GCC extends Compiler {
 
   val compilerName = "gcc"
 
-  override val xHost = ""
+  override val xHost = "march=core2" // "march=corei7-avx"
 
   def getCompilerExec () = getOS () match {
     case "Windows" => findExec("gcc.exe")

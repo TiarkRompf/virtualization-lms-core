@@ -34,7 +34,7 @@ trait CCompile extends Blocks {
   val codegen: CUnparser { val IR: CCompile.this.type }
   var compiler: Compiler = null
 
-  val debug = true //val debug = ch.ethz.spirals.conf.Config().spiralsconfig.debug
+  var debug = true //val debug = ch.ethz.spirals.conf.Config().spiralsconfig.debug
   var funcToLib = new HashMap[String, (String,NativeLibrary,DynamicFunction[Nothing])]()
 
   protected def printDebug(s: String) = if (debug) println(s)

@@ -3,51 +3,51 @@
 ===============================================================
 #include <math.h>
 #include <immintrin.h>
-void fir(double x0, double x1, double x2) {
-/* "Generating FIR filter of size: 1024 with tap size: 4" */
-const double x13 = x1[0];
-__m256d x14 =  _mm256_set1_pd(x13);
-const double x15 = x1[1];
-__m256d x16 =  _mm256_set1_pd(x15);
-const double x17 = x1[2];
-__m256d x18 =  _mm256_set1_pd(x17);
-const double x19 = x1[3];
-__m256d x20 =  _mm256_set1_pd(x19);
-for(int i4=0; i4 < 255; i4++) {
-const int i25 = i4 * 4;
-const int i5 = i4 + 0;
-__m256d x6 = _mm256_loadu_pd(x0 + i5);
-__m256d x21 = _mm256_mul_pd(x6, x14);
-const int i7 = i4 + 1;
-__m256d x8 = _mm256_loadu_pd(x0 + i7);
-__m256d x22 = _mm256_mul_pd(x8, x16);
-__m256d x26 = _mm256_add_pd(x21, x22);
-const int i9 = i4 + 2;
-__m256d x10 = _mm256_loadu_pd(x0 + i9);
-__m256d x23 = _mm256_mul_pd(x10, x18);
-const int i11 = i4 + 3;
-__m256d x12 = _mm256_loadu_pd(x0 + i11);
-__m256d x24 = _mm256_mul_pd(x12, x20);
-__m256d x27 = _mm256_add_pd(x23, x24);
-__m256d x28 = _mm256_add_pd(x26, x27);
-_mm256_storeu_pd(x2 + i25, x28);
-}
-for(int i32=0; i32 < 4; i32++) {
-const int i33 = 1020 + i32;
-x2[i33] = 0.0;
-const int i35 = 4 - i32;
-const double x42 = x2[i33];
-for(int i36=0; i36 < i35; i36++) {
-const int i37 = i33 + i36;
-const double x38 = x0[i37];
-const int i39 = 4 - i36;
-const int i40 = i39 - 1;
-const double x41 = x1[i40];
-const double x43 = x38 * x41;
-const double x44 = x42 + x43;
-x2[i33] = x44;
-}
-}
+void fir(double * x0, double * x1, double * x2) {
+    /* "Generating FIR filter of size: 1024 with tap size: 4" */
+    const double x13 = x1[0];
+    __m256d x14 =  _mm256_set1_pd(x13);
+    const double x15 = x1[1];
+    __m256d x16 =  _mm256_set1_pd(x15);
+    const double x17 = x1[2];
+    __m256d x18 =  _mm256_set1_pd(x17);
+    const double x19 = x1[3];
+    __m256d x20 =  _mm256_set1_pd(x19);
+    for (int i4 = 0; i4 < 255; i4++) {
+        const int i25 = i4 * 4;
+        const int i5 = i4 + 0;
+        __m256d x6 = _mm256_loadu_pd(x0 + i5);
+        __m256d x21 = _mm256_mul_pd(x6, x14);
+        const int i7 = i4 + 1;
+        __m256d x8 = _mm256_loadu_pd(x0 + i7);
+        __m256d x22 = _mm256_mul_pd(x8, x16);
+        __m256d x26 = _mm256_add_pd(x21, x22);
+        const int i9 = i4 + 2;
+        __m256d x10 = _mm256_loadu_pd(x0 + i9);
+        __m256d x23 = _mm256_mul_pd(x10, x18);
+        const int i11 = i4 + 3;
+        __m256d x12 = _mm256_loadu_pd(x0 + i11);
+        __m256d x24 = _mm256_mul_pd(x12, x20);
+        __m256d x27 = _mm256_add_pd(x23, x24);
+        __m256d x28 = _mm256_add_pd(x26, x27);
+        _mm256_storeu_pd(x2 + i25, x28);
+    }
+    for (int i32 = 0; i32 < 4; i32++) {
+        const int i33 = 1020 + i32;
+        x2[i33] = 0.0;
+        const int i35 = 4 - i32;
+        for (int i36 = 0; i36 < i35; i36++) {
+            const double x42 = x2[i33];
+            const int i37 = i33 + i36;
+            const double x38 = x0[i37];
+            const int i39 = 4 - i36;
+            const int i40 = i39 - 1;
+            const double x41 = x1[i40];
+            const double x43 = x38 * x41;
+            const double x44 = x42 + x43;
+            x2[i33] = x44;
+        }
+    }
 }
 ===============================================================
 
@@ -57,75 +57,75 @@ x2[i33] = x44;
 ===============================================================
 #include <math.h>
 #include <immintrin.h>
-void fir(float x0, float x1, float x2) {
-/* "Generating FIR filter of size: 2048 with tap size: 8" */
-const float x21 = x1[0];
-__m256 x22 =  _mm256_set1_ps(x21);
-const float x23 = x1[1];
-__m256 x24 =  _mm256_set1_ps(x23);
-const float x25 = x1[2];
-__m256 x26 =  _mm256_set1_ps(x25);
-const float x27 = x1[3];
-__m256 x28 =  _mm256_set1_ps(x27);
-const float x29 = x1[4];
-__m256 x30 =  _mm256_set1_ps(x29);
-const float x31 = x1[5];
-__m256 x32 =  _mm256_set1_ps(x31);
-const float x33 = x1[6];
-__m256 x34 =  _mm256_set1_ps(x33);
-const float x35 = x1[7];
-__m256 x36 =  _mm256_set1_ps(x35);
-for(int i4=0; i4 < 255; i4++) {
-const int i45 = i4 * 8;
-const int i5 = i4 + 0;
-__m256 x6 = _mm256_loadu_ps(x0 + i5);
-__m256 x37 = _mm256_mul_ps(x6, x22);
-const int i7 = i4 + 1;
-__m256 x8 = _mm256_loadu_ps(x0 + i7);
-__m256 x38 = _mm256_mul_ps(x8, x24);
-__m256 x46 = _mm256_add_ps(x37, x38);
-const int i9 = i4 + 2;
-__m256 x10 = _mm256_loadu_ps(x0 + i9);
-__m256 x39 = _mm256_mul_ps(x10, x26);
-const int i11 = i4 + 3;
-__m256 x12 = _mm256_loadu_ps(x0 + i11);
-__m256 x40 = _mm256_mul_ps(x12, x28);
-__m256 x47 = _mm256_add_ps(x39, x40);
-__m256 x48 = _mm256_add_ps(x46, x47);
-const int i13 = i4 + 4;
-__m256 x14 = _mm256_loadu_ps(x0 + i13);
-__m256 x41 = _mm256_mul_ps(x14, x30);
-const int i15 = i4 + 5;
-__m256 x16 = _mm256_loadu_ps(x0 + i15);
-__m256 x42 = _mm256_mul_ps(x16, x32);
-__m256 x49 = _mm256_add_ps(x41, x42);
-const int i17 = i4 + 6;
-__m256 x18 = _mm256_loadu_ps(x0 + i17);
-__m256 x43 = _mm256_mul_ps(x18, x34);
-const int i19 = i4 + 7;
-__m256 x20 = _mm256_loadu_ps(x0 + i19);
-__m256 x44 = _mm256_mul_ps(x20, x36);
-__m256 x50 = _mm256_add_ps(x43, x44);
-__m256 x51 = _mm256_add_ps(x49, x50);
-__m256 x52 = _mm256_add_ps(x48, x51);
-_mm256_storeu_ps(x2 + i45, x52);
-}
-for(int i56=0; i56 < 8; i56++) {
-const int i57 = 2040 + i56;
-x2[i57] = 0.0000000000f;
-const int i59 = 8 - i56;
-const float x66 = x2[i57];
-for(int i60=0; i60 < i59; i60++) {
-const int i61 = i57 + i60;
-const float x62 = x0[i61];
-const int i63 = 8 - i60;
-const int i64 = i63 - 1;
-const float x65 = x1[i64];
-const float x67 = x62 * x65;
-const float x68 = x66 + x67;
-x2[i57] = x68;
-}
-}
+void fir(float * x0, float * x1, float * x2) {
+    /* "Generating FIR filter of size: 2048 with tap size: 8" */
+    const float x21 = x1[0];
+    __m256 x22 =  _mm256_set1_ps(x21);
+    const float x23 = x1[1];
+    __m256 x24 =  _mm256_set1_ps(x23);
+    const float x25 = x1[2];
+    __m256 x26 =  _mm256_set1_ps(x25);
+    const float x27 = x1[3];
+    __m256 x28 =  _mm256_set1_ps(x27);
+    const float x29 = x1[4];
+    __m256 x30 =  _mm256_set1_ps(x29);
+    const float x31 = x1[5];
+    __m256 x32 =  _mm256_set1_ps(x31);
+    const float x33 = x1[6];
+    __m256 x34 =  _mm256_set1_ps(x33);
+    const float x35 = x1[7];
+    __m256 x36 =  _mm256_set1_ps(x35);
+    for (int i4 = 0; i4 < 255; i4++) {
+        const int i45 = i4 * 8;
+        const int i5 = i4 + 0;
+        __m256 x6 = _mm256_loadu_ps(x0 + i5);
+        __m256 x37 = _mm256_mul_ps(x6, x22);
+        const int i7 = i4 + 1;
+        __m256 x8 = _mm256_loadu_ps(x0 + i7);
+        __m256 x38 = _mm256_mul_ps(x8, x24);
+        __m256 x46 = _mm256_add_ps(x37, x38);
+        const int i9 = i4 + 2;
+        __m256 x10 = _mm256_loadu_ps(x0 + i9);
+        __m256 x39 = _mm256_mul_ps(x10, x26);
+        const int i11 = i4 + 3;
+        __m256 x12 = _mm256_loadu_ps(x0 + i11);
+        __m256 x40 = _mm256_mul_ps(x12, x28);
+        __m256 x47 = _mm256_add_ps(x39, x40);
+        __m256 x48 = _mm256_add_ps(x46, x47);
+        const int i13 = i4 + 4;
+        __m256 x14 = _mm256_loadu_ps(x0 + i13);
+        __m256 x41 = _mm256_mul_ps(x14, x30);
+        const int i15 = i4 + 5;
+        __m256 x16 = _mm256_loadu_ps(x0 + i15);
+        __m256 x42 = _mm256_mul_ps(x16, x32);
+        __m256 x49 = _mm256_add_ps(x41, x42);
+        const int i17 = i4 + 6;
+        __m256 x18 = _mm256_loadu_ps(x0 + i17);
+        __m256 x43 = _mm256_mul_ps(x18, x34);
+        const int i19 = i4 + 7;
+        __m256 x20 = _mm256_loadu_ps(x0 + i19);
+        __m256 x44 = _mm256_mul_ps(x20, x36);
+        __m256 x50 = _mm256_add_ps(x43, x44);
+        __m256 x51 = _mm256_add_ps(x49, x50);
+        __m256 x52 = _mm256_add_ps(x48, x51);
+        _mm256_storeu_ps(x2 + i45, x52);
+    }
+    for (int i56 = 0; i56 < 8; i56++) {
+        const int i57 = 2040 + i56;
+        x2[i57] = 0.0000000000f;
+        const int i59 = 8 - i56;
+        for (int i60 = 0; i60 < i59; i60++) {
+            const float x66 = x2[i57];
+            const int i61 = i57 + i60;
+            const float x62 = x0[i61];
+            const int i63 = 8 - i60;
+            const int i64 = i63 - 1;
+            const float x65 = x1[i64];
+            const float x67 = x62 * x65;
+            const float x68 = x66 + x67;
+            x2[i57] = x68;
+        }
+    }
 }
 ===============================================================
 
@@ -135,51 +135,51 @@ x2[i57] = x68;
 ===============================================================
 #include <math.h>
 #include <immintrin.h>
-void fir(int i0, int i1, int i2) {
-/* "Generating FIR filter of size: 1024 with tap size: 4" */
-const int i13 = i1[0];
-__m128i x14 =  _mm_set1_epi32(i13);
-const int i15 = i1[1];
-__m128i x16 =  _mm_set1_epi32(i15);
-const int i17 = i1[2];
-__m128i x18 =  _mm_set1_epi32(i17);
-const int i19 = i1[3];
-__m128i x20 =  _mm_set1_epi32(i19);
-for(int i4=0; i4 < 255; i4++) {
-const int i25 = i4 * 4;
-const int i5 = i4 + 0;
-__m128i x6 = _mm_loadu_si128((__m128i*)(i0 + i5));
-__m128i x21 = _mm_mullo_epi32(x6, x14);
-const int i7 = i4 + 1;
-__m128i x8 = _mm_loadu_si128((__m128i*)(i0 + i7));
-__m128i x22 = _mm_mullo_epi32(x8, x16);
-__m128i x26 = _mm_add_epi32(x21, x22);
-const int i9 = i4 + 2;
-__m128i x10 = _mm_loadu_si128((__m128i*)(i0 + i9));
-__m128i x23 = _mm_mullo_epi32(x10, x18);
-const int i11 = i4 + 3;
-__m128i x12 = _mm_loadu_si128((__m128i*)(i0 + i11));
-__m128i x24 = _mm_mullo_epi32(x12, x20);
-__m128i x27 = _mm_add_epi32(x23, x24);
-__m128i x28 = _mm_add_epi32(x26, x27);
-_mm_store_si128((__m128i*)(i2 + i25), x28);
-}
-for(int i32=0; i32 < 4; i32++) {
-const int i33 = 1020 + i32;
-i2[i33] = 0;
-const int i35 = 4 - i32;
-const int i42 = i2[i33];
-for(int i36=0; i36 < i35; i36++) {
-const int i37 = i33 + i36;
-const int i38 = i0[i37];
-const int i39 = 4 - i36;
-const int i40 = i39 - 1;
-const int i41 = i1[i40];
-const int i43 = i38 * i41;
-const int i44 = i42 + i43;
-i2[i33] = i44;
-}
-}
+void fir(int * x0, int * x1, int * x2) {
+    /* "Generating FIR filter of size: 1024 with tap size: 4" */
+    const int i13 = x1[0];
+    __m128i x14 =  _mm_set1_epi32(i13);
+    const int i15 = x1[1];
+    __m128i x16 =  _mm_set1_epi32(i15);
+    const int i17 = x1[2];
+    __m128i x18 =  _mm_set1_epi32(i17);
+    const int i19 = x1[3];
+    __m128i x20 =  _mm_set1_epi32(i19);
+    for (int i4 = 0; i4 < 255; i4++) {
+        const int i25 = i4 * 4;
+        const int i5 = i4 + 0;
+        __m128i x6 = _mm_loadu_si128((__m128i*)(x0 + i5));
+        __m128i x21 = _mm_mullo_epi32(x6, x14);
+        const int i7 = i4 + 1;
+        __m128i x8 = _mm_loadu_si128((__m128i*)(x0 + i7));
+        __m128i x22 = _mm_mullo_epi32(x8, x16);
+        __m128i x26 = _mm_add_epi32(x21, x22);
+        const int i9 = i4 + 2;
+        __m128i x10 = _mm_loadu_si128((__m128i*)(x0 + i9));
+        __m128i x23 = _mm_mullo_epi32(x10, x18);
+        const int i11 = i4 + 3;
+        __m128i x12 = _mm_loadu_si128((__m128i*)(x0 + i11));
+        __m128i x24 = _mm_mullo_epi32(x12, x20);
+        __m128i x27 = _mm_add_epi32(x23, x24);
+        __m128i x28 = _mm_add_epi32(x26, x27);
+        _mm_store_si128((__m128i*)(x2 + i25), x28);
+    }
+    for (int i32 = 0; i32 < 4; i32++) {
+        const int i33 = 1020 + i32;
+        x2[i33] = 0;
+        const int i35 = 4 - i32;
+        for (int i36 = 0; i36 < i35; i36++) {
+            const int i42 = x2[i33];
+            const int i37 = i33 + i36;
+            const int i38 = x0[i37];
+            const int i39 = 4 - i36;
+            const int i40 = i39 - 1;
+            const int i41 = x1[i40];
+            const int i43 = i38 * i41;
+            const int i44 = i42 + i43;
+            x2[i33] = i44;
+        }
+    }
 }
 ===============================================================
 
@@ -189,51 +189,51 @@ i2[i33] = i44;
 ===============================================================
 #include <math.h>
 #include <nmmintrin.h>
-void fir(float x0, float x1, float x2) {
-/* "Generating FIR filter of size: 1024 with tap size: 4" */
-const float x13 = x1[0];
-__m128 x14 =  _mm_set1_ps(x13);
-const float x15 = x1[1];
-__m128 x16 =  _mm_set1_ps(x15);
-const float x17 = x1[2];
-__m128 x18 =  _mm_set1_ps(x17);
-const float x19 = x1[3];
-__m128 x20 =  _mm_set1_ps(x19);
-for(int i4=0; i4 < 255; i4++) {
-const int i25 = i4 * 4;
-const int i5 = i4 + 0;
-__m128 x6 = _mm_loadu_ps(x0 + i5);
-__m128 x21 = _mm_mul_ps(x6, x14);
-const int i7 = i4 + 1;
-__m128 x8 = _mm_loadu_ps(x0 + i7);
-__m128 x22 = _mm_mul_ps(x8, x16);
-__m128 x26 = _mm_add_ps(x21, x22);
-const int i9 = i4 + 2;
-__m128 x10 = _mm_loadu_ps(x0 + i9);
-__m128 x23 = _mm_mul_ps(x10, x18);
-const int i11 = i4 + 3;
-__m128 x12 = _mm_loadu_ps(x0 + i11);
-__m128 x24 = _mm_mul_ps(x12, x20);
-__m128 x27 = _mm_add_ps(x23, x24);
-__m128 x28 = _mm_add_ps(x26, x27);
-_mm_storeu_ps(x2 + i25, x28);
-}
-for(int i32=0; i32 < 4; i32++) {
-const int i33 = 1020 + i32;
-x2[i33] = 0.0000000000f;
-const int i35 = 4 - i32;
-const float x42 = x2[i33];
-for(int i36=0; i36 < i35; i36++) {
-const int i37 = i33 + i36;
-const float x38 = x0[i37];
-const int i39 = 4 - i36;
-const int i40 = i39 - 1;
-const float x41 = x1[i40];
-const float x43 = x38 * x41;
-const float x44 = x42 + x43;
-x2[i33] = x44;
-}
-}
+void fir(float * x0, float * x1, float * x2) {
+    /* "Generating FIR filter of size: 1024 with tap size: 4" */
+    const float x13 = x1[0];
+    __m128 x14 =  _mm_set1_ps(x13);
+    const float x15 = x1[1];
+    __m128 x16 =  _mm_set1_ps(x15);
+    const float x17 = x1[2];
+    __m128 x18 =  _mm_set1_ps(x17);
+    const float x19 = x1[3];
+    __m128 x20 =  _mm_set1_ps(x19);
+    for (int i4 = 0; i4 < 255; i4++) {
+        const int i25 = i4 * 4;
+        const int i5 = i4 + 0;
+        __m128 x6 = _mm_loadu_ps(x0 + i5);
+        __m128 x21 = _mm_mul_ps(x6, x14);
+        const int i7 = i4 + 1;
+        __m128 x8 = _mm_loadu_ps(x0 + i7);
+        __m128 x22 = _mm_mul_ps(x8, x16);
+        __m128 x26 = _mm_add_ps(x21, x22);
+        const int i9 = i4 + 2;
+        __m128 x10 = _mm_loadu_ps(x0 + i9);
+        __m128 x23 = _mm_mul_ps(x10, x18);
+        const int i11 = i4 + 3;
+        __m128 x12 = _mm_loadu_ps(x0 + i11);
+        __m128 x24 = _mm_mul_ps(x12, x20);
+        __m128 x27 = _mm_add_ps(x23, x24);
+        __m128 x28 = _mm_add_ps(x26, x27);
+        _mm_storeu_ps(x2 + i25, x28);
+    }
+    for (int i32 = 0; i32 < 4; i32++) {
+        const int i33 = 1020 + i32;
+        x2[i33] = 0.0000000000f;
+        const int i35 = 4 - i32;
+        for (int i36 = 0; i36 < i35; i36++) {
+            const float x42 = x2[i33];
+            const int i37 = i33 + i36;
+            const float x38 = x0[i37];
+            const int i39 = 4 - i36;
+            const int i40 = i39 - 1;
+            const float x41 = x1[i40];
+            const float x43 = x38 * x41;
+            const float x44 = x42 + x43;
+            x2[i33] = x44;
+        }
+    }
 }
 ===============================================================
 
@@ -243,39 +243,39 @@ x2[i33] = x44;
 ===============================================================
 #include <math.h>
 #include <tmmintrin.h>
-void fir(double x0, double x1, double x2) {
-/* "Generating FIR filter of size: 512 with tap size: 2" */
-const double x9 = x1[0];
-__m128d x10 =  _mm_set1_pd(x9);
-const double x11 = x1[1];
-__m128d x12 =  _mm_set1_pd(x11);
-for(int i4=0; i4 < 255; i4++) {
-const int i15 = i4 * 2;
-const int i5 = i4 + 0;
-__m128d x6 = _mm_loadu_pd(x0 + i5);
-__m128d x13 = _mm_mul_pd(x6, x10);
-const int i7 = i4 + 1;
-__m128d x8 = _mm_loadu_pd(x0 + i7);
-__m128d x14 = _mm_mul_pd(x8, x12);
-__m128d x16 = _mm_add_pd(x13, x14);
-_mm_storeu_pd(x2 + i15, x16);
-}
-for(int i20=0; i20 < 2; i20++) {
-const int i21 = 510 + i20;
-x2[i21] = 0.0;
-const int i23 = 2 - i20;
-const double x30 = x2[i21];
-for(int i24=0; i24 < i23; i24++) {
-const int i25 = i21 + i24;
-const double x26 = x0[i25];
-const int i27 = 2 - i24;
-const int i28 = i27 - 1;
-const double x29 = x1[i28];
-const double x31 = x26 * x29;
-const double x32 = x30 + x31;
-x2[i21] = x32;
-}
-}
+void fir(double * x0, double * x1, double * x2) {
+    /* "Generating FIR filter of size: 512 with tap size: 2" */
+    const double x9 = x1[0];
+    __m128d x10 =  _mm_set1_pd(x9);
+    const double x11 = x1[1];
+    __m128d x12 =  _mm_set1_pd(x11);
+    for (int i4 = 0; i4 < 255; i4++) {
+        const int i15 = i4 * 2;
+        const int i5 = i4 + 0;
+        __m128d x6 = _mm_loadu_pd(x0 + i5);
+        __m128d x13 = _mm_mul_pd(x6, x10);
+        const int i7 = i4 + 1;
+        __m128d x8 = _mm_loadu_pd(x0 + i7);
+        __m128d x14 = _mm_mul_pd(x8, x12);
+        __m128d x16 = _mm_add_pd(x13, x14);
+        _mm_storeu_pd(x2 + i15, x16);
+    }
+    for (int i20 = 0; i20 < 2; i20++) {
+        const int i21 = 510 + i20;
+        x2[i21] = 0.0;
+        const int i23 = 2 - i20;
+        for (int i24 = 0; i24 < i23; i24++) {
+            const double x30 = x2[i21];
+            const int i25 = i21 + i24;
+            const double x26 = x0[i25];
+            const int i27 = 2 - i24;
+            const int i28 = i27 - 1;
+            const double x29 = x1[i28];
+            const double x31 = x26 * x29;
+            const double x32 = x30 + x31;
+            x2[i21] = x32;
+        }
+    }
 }
 ===============================================================
 
@@ -285,51 +285,51 @@ x2[i21] = x32;
 ===============================================================
 #include <math.h>
 #include <pmmintrin.h>
-void fir(int i0, int i1, int i2) {
-/* "Generating FIR filter of size: 1024 with tap size: 4" */
-const int i13 = i1[0];
-__m128i x14 =  _mm_set1_epi32(i13);
-const int i15 = i1[1];
-__m128i x16 =  _mm_set1_epi32(i15);
-const int i17 = i1[2];
-__m128i x18 =  _mm_set1_epi32(i17);
-const int i19 = i1[3];
-__m128i x20 =  _mm_set1_epi32(i19);
-for(int i4=0; i4 < 255; i4++) {
-const int i25 = i4 * 4;
-const int i5 = i4 + 0;
-__m128i x6 = _mm_loadu_si128((__m128i*)(i0 + i5));
-__m128i x21 = _mm_unpacklo_epi32(_mm_shuffle_epi32(_mm_mul_epu32(x6, x14), _MM_SHUFFLE (0,0,2,0)), _mm_shuffle_epi32(_mm_mul_epu32( _mm_srli_si128(x6,4), _mm_srli_si128(x14,4)), _MM_SHUFFLE (0,0,2,0)));;
-const int i7 = i4 + 1;
-__m128i x8 = _mm_loadu_si128((__m128i*)(i0 + i7));
-__m128i x22 = _mm_unpacklo_epi32(_mm_shuffle_epi32(_mm_mul_epu32(x8, x16), _MM_SHUFFLE (0,0,2,0)), _mm_shuffle_epi32(_mm_mul_epu32( _mm_srli_si128(x8,4), _mm_srli_si128(x16,4)), _MM_SHUFFLE (0,0,2,0)));;
-__m128i x26 = _mm_add_epi32(x21, x22);
-const int i9 = i4 + 2;
-__m128i x10 = _mm_loadu_si128((__m128i*)(i0 + i9));
-__m128i x23 = _mm_unpacklo_epi32(_mm_shuffle_epi32(_mm_mul_epu32(x10, x18), _MM_SHUFFLE (0,0,2,0)), _mm_shuffle_epi32(_mm_mul_epu32( _mm_srli_si128(x10,4), _mm_srli_si128(x18,4)), _MM_SHUFFLE (0,0,2,0)));;
-const int i11 = i4 + 3;
-__m128i x12 = _mm_loadu_si128((__m128i*)(i0 + i11));
-__m128i x24 = _mm_unpacklo_epi32(_mm_shuffle_epi32(_mm_mul_epu32(x12, x20), _MM_SHUFFLE (0,0,2,0)), _mm_shuffle_epi32(_mm_mul_epu32( _mm_srli_si128(x12,4), _mm_srli_si128(x20,4)), _MM_SHUFFLE (0,0,2,0)));;
-__m128i x27 = _mm_add_epi32(x23, x24);
-__m128i x28 = _mm_add_epi32(x26, x27);
-_mm_store_si128((__m128i*)(i2 + i25), x28);
-}
-for(int i32=0; i32 < 4; i32++) {
-const int i33 = 1020 + i32;
-i2[i33] = 0;
-const int i35 = 4 - i32;
-const int i42 = i2[i33];
-for(int i36=0; i36 < i35; i36++) {
-const int i37 = i33 + i36;
-const int i38 = i0[i37];
-const int i39 = 4 - i36;
-const int i40 = i39 - 1;
-const int i41 = i1[i40];
-const int i43 = i38 * i41;
-const int i44 = i42 + i43;
-i2[i33] = i44;
-}
-}
+void fir(int * x0, int * x1, int * x2) {
+    /* "Generating FIR filter of size: 1024 with tap size: 4" */
+    const int i13 = x1[0];
+    __m128i x14 =  _mm_set1_epi32(i13);
+    const int i15 = x1[1];
+    __m128i x16 =  _mm_set1_epi32(i15);
+    const int i17 = x1[2];
+    __m128i x18 =  _mm_set1_epi32(i17);
+    const int i19 = x1[3];
+    __m128i x20 =  _mm_set1_epi32(i19);
+    for (int i4 = 0; i4 < 255; i4++) {
+        const int i25 = i4 * 4;
+        const int i5 = i4 + 0;
+        __m128i x6 = _mm_loadu_si128((__m128i*)(x0 + i5));
+        __m128i x21 = _mm_unpacklo_epi32(_mm_shuffle_epi32(_mm_mul_epu32(x6, x14), _MM_SHUFFLE (0, 0, 2, 0)), _mm_shuffle_epi32(_mm_mul_epu32( _mm_srli_si128(x6, 4), _mm_srli_si128(x14, 4)), _MM_SHUFFLE (0, 0, 2, 0)));;
+        const int i7 = i4 + 1;
+        __m128i x8 = _mm_loadu_si128((__m128i*)(x0 + i7));
+        __m128i x22 = _mm_unpacklo_epi32(_mm_shuffle_epi32(_mm_mul_epu32(x8, x16), _MM_SHUFFLE (0, 0, 2, 0)), _mm_shuffle_epi32(_mm_mul_epu32( _mm_srli_si128(x8, 4), _mm_srli_si128(x16, 4)), _MM_SHUFFLE (0, 0, 2, 0)));;
+        __m128i x26 = _mm_add_epi32(x21, x22);
+        const int i9 = i4 + 2;
+        __m128i x10 = _mm_loadu_si128((__m128i*)(x0 + i9));
+        __m128i x23 = _mm_unpacklo_epi32(_mm_shuffle_epi32(_mm_mul_epu32(x10, x18), _MM_SHUFFLE (0, 0, 2, 0)), _mm_shuffle_epi32(_mm_mul_epu32( _mm_srli_si128(x10, 4), _mm_srli_si128(x18, 4)), _MM_SHUFFLE (0, 0, 2, 0)));;
+        const int i11 = i4 + 3;
+        __m128i x12 = _mm_loadu_si128((__m128i*)(x0 + i11));
+        __m128i x24 = _mm_unpacklo_epi32(_mm_shuffle_epi32(_mm_mul_epu32(x12, x20), _MM_SHUFFLE (0, 0, 2, 0)), _mm_shuffle_epi32(_mm_mul_epu32( _mm_srli_si128(x12, 4), _mm_srli_si128(x20, 4)), _MM_SHUFFLE (0, 0, 2, 0)));;
+        __m128i x27 = _mm_add_epi32(x23, x24);
+        __m128i x28 = _mm_add_epi32(x26, x27);
+        _mm_store_si128((__m128i*)(x2 + i25), x28);
+    }
+    for (int i32 = 0; i32 < 4; i32++) {
+        const int i33 = 1020 + i32;
+        x2[i33] = 0;
+        const int i35 = 4 - i32;
+        for (int i36 = 0; i36 < i35; i36++) {
+            const int i42 = x2[i33];
+            const int i37 = i33 + i36;
+            const int i38 = x0[i37];
+            const int i39 = 4 - i36;
+            const int i40 = i39 - 1;
+            const int i41 = x1[i40];
+            const int i43 = i38 * i41;
+            const int i44 = i42 + i43;
+            x2[i33] = i44;
+        }
+    }
 }
 ===============================================================
 

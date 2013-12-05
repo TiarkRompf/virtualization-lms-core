@@ -44,7 +44,7 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
    * @tparam T Type of the FIR filter (Double, Float, Int)
    */
 
-  def generateSimplestFIR[T:Manifest:Numeric](isa: InstructionSets) {
+  def generateSimplestFIR[T:Manifest:Numeric](isa: InstructionSets, run: Boolean = false) {
 
     val CIR = new CIR_DSL(isa)
     import CIR._
@@ -103,7 +103,9 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
 
     def execute (xInput: Array[T], hInput: Array[T]) : Array[T] = {
 
-      CIR.compiler = new ICC ()
+      CIR.compiler = new GCC() // ICC ()
+      CIR.compiler.debug = false // check file!
+      CIR.debug = false
 
       val (fir, firFileName) = CIR.compileBlock[Unit]((args, block))
 
@@ -129,17 +131,26 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
       yOutput
     }
 
-    val x = new Array[T](n)
-    val h = new Array[T](k)
+    if (run) {
+      val x = new Array[T](n)
+      val h = new Array[T](k)
 
-    execute(x, h)
+      for (i <- 0 until n) x(i) = (i%10).toFloat.asInstanceOf[T] // fix to float for the moment ...
+      for (i <- 0 until k) h(i) = (1.0f/(i+1)).asInstanceOf[T]
+
+      println("x: " + x.mkString(","))
+      println("h: " + h.mkString(","))
+
+      val y = execute(x, h)
+      println("y: " + y.mkString(","))
+    }
   }
 
 
   val prefix = "test-out/epfl/test15-"
 
-  describe("Test"){
-    // withOutFileChecked(prefix+"intrinsics") {
+  describe("Test1"){
+    withOutFileChecked(prefix+"intrinsics") {
       // One can generate all possibilities of types and given ISA
       generateSimplestFIR[Double](ISA.AVX)
       generateSimplestFIR[Float](ISA.AVX)
@@ -149,6 +160,11 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
       generateSimplestFIR[Double](ISA.SSSE3)
       generateSimplestFIR[Int](ISA.SSE3)
     }
-  // }
+  }
+  describe("Test2"){
+    withOutFileChecked(prefix+"intrinsics-run") {
+      generateSimplestFIR[Float](ISA.SSE3, true)
+    }
+  }
 }
 

@@ -45,7 +45,7 @@ abstract class Compiler {
 
   class CCompilerException(msg: String) extends Exception("Compiler error: " + msg)
 
-  val debug = true //ch.ethz.spirals.conf.Config().spiralsconfig.debug
+  var debug = true //ch.ethz.spirals.conf.Config().spiralsconfig.debug
 
   protected lazy val compiler: File = getCompilerExec ()
   lazy val compilerInfo    = if (compiler eq null) List.empty[String] else getCompilerInfo ()

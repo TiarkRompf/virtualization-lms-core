@@ -35,6 +35,7 @@ object Utilities {
         fullyQualifiedExecutable = file;
       }
     })
+    assert(fullyQualifiedExecutable != null, executableName + " not found in path " + systemPath)
     fullyQualifiedExecutable
   }
 
