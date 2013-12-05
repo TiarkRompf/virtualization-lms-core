@@ -35,7 +35,7 @@ trait PrimitiveOpsExpOpt extends PrimitiveOpsExp
 trait NumericOpsExpOpt extends NumericOpsExp
 
 class CIR_DSL (isa: InstructionSets) extends Intrinsics_DSL with PrimitiveOpsExpOpt with NumericOpsExpOpt
-  with LiftNumeric with ArrayOpsExp with ForLoopFatExp with CommentExp { self =>
+  with LiftNumeric with ArrayOpsExp with ForLoopFatExp with CommentExp with CCompileTransformed { self =>
 
   val codegen = isa match {
     case None   => new CIRCodegen               { val IR: self.type = self }
@@ -68,5 +68,14 @@ class CIR_DSL (isa: InstructionSets) extends Intrinsics_DSL with PrimitiveOpsExp
     codegen.emitTransformedSource(f, functionName, out)
   }
 
+  def compileOptimized[B](f: List[Exp[Any]] => Exp[B])(implicit mList: List[Manifest[Any]], mB: Manifest[B]) = {
+    compileTransformed[B](f, Nil)
+  }
+
+  def compileOptimized[A,B](f: Exp[A] => Exp[B])(implicit mA: Manifest[A], mB: Manifest[B]) = {
+    val func: (List[Exp[Any]] => Exp[B]) = (in: List[Exp[Any]]) => f(in(0).asInstanceOf[Exp[A]])
+    implicit val mList = List(mA).asInstanceOf[List[Manifest[Any]]]
+    compileTransformed[B](func, Nil)
+  }
 
 }

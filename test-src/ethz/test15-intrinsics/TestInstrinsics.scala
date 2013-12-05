@@ -28,6 +28,7 @@ import org.scalatest.FunSpec
 import ethz.test15.instrinsics._
 import ethz.test15.instrinsics.ISA._
 import java.io._
+import org.bridj._
 
 import scala.virtualization.lms.epfl.FileDiffSuite
 
@@ -96,7 +97,44 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
     println("===============================================================")
     println()
     println()
+
+
+
+  def execute(x: Array[T], h: Array[T]) : Array[T] = {
+
+    val (n, k) = (x.size, h.size)
+
+    val wrapped_f: (List[Exp[Array[T]]] => Exp[Unit]) = (in: List[Exp[Array[T]]]) => {
+      FIR(in(0), in(1) , CIR.reflectMutableSym(in(2).asInstanceOf[Sym[Array[T]]]))
+    };
+    val mList = List(manifest[T], manifest[T], manifest[T]).asInstanceOf[List[Manifest[Any]]]
+
+    val (fir, firFileName) = CIR.compile[Unit](wrapped_f)(mList, manifest[Unit])
+
+    val xBridJ = Pointer.allocateArray[T](CIR.mapBridJType(ma), n)
+    val hBridJ = Pointer.allocateArray[T](CIR.mapBridJType(ma), k)
+    val yBridJ = Pointer.allocateArray[T](CIR.mapBridJType(ma), n)
+
+    for (i <- 0 until n) xBridJ.set(i, x(i))
+    for (i <- 0 until k) hBridJ.set(i, h(i))
+
+    fir(xBridJ, hBridJ, yBridJ)
+
+    val yOutput = new Array[T](n)
+    for (i <- intWrapper(0) until (exp.size)) {
+      yOutput(i) = yBridJ.as(CIR.mapBridJType(ma)).get(i)
+    }
+
+    Pointer.release(xBridJ)
+    Pointer.release(hBridJ)
+    Pointer.release(yBridJ)
+
+    CIR.unloadProgram(firFileName)
+    yOutput
+  } 
+
   }
+
 
   val prefix = "test-out/epfl/test15-"
 
