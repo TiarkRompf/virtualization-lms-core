@@ -107,28 +107,30 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
       CIR.compiler.debug = false // check file!
       CIR.debug = false
 
-      val (fir, firFileName) = CIR.compileBlock[Unit]((args, block))
+      timed("compile & run") {
+        val (fir, firFileName) = CIR.compileBlock[Unit]((args, block))
 
-      val xBridJ = Pointer.allocateArray[T](CIR.mapBridJType(manifest[T]), n)
-      val hBridJ = Pointer.allocateArray[T](CIR.mapBridJType(manifest[T]), k)
-      val yBridJ = Pointer.allocateArray[T](CIR.mapBridJType(manifest[T]), n)
+        val xBridJ = Pointer.allocateArray[T](CIR.mapBridJType(manifest[T]), n)
+        val hBridJ = Pointer.allocateArray[T](CIR.mapBridJType(manifest[T]), k)
+        val yBridJ = Pointer.allocateArray[T](CIR.mapBridJType(manifest[T]), n)
 
-      for (i <- 0 until n) xBridJ.set(i, xInput(i))
-      for (i <- 0 until k) hBridJ.set(i, hInput(i))
+        for (i <- 0 until n) xBridJ.set(i, xInput(i))
+        for (i <- 0 until k) hBridJ.set(i, hInput(i))
 
-      fir(xBridJ, hBridJ, yBridJ)
+        fir(xBridJ, hBridJ, yBridJ)
 
-      val yOutput = new Array[T](n)
-      for (i <- intWrapper(0) until n) {
-        yOutput(i) = yBridJ.as(CIR.mapBridJType(manifest[T])).get(i)
+        val yOutput = new Array[T](n)
+        for (i <- intWrapper(0) until n) {
+          yOutput(i) = yBridJ.as(CIR.mapBridJType(manifest[T])).get(i)
+        }
+
+        Pointer.release(xBridJ)
+        Pointer.release(hBridJ)
+        Pointer.release(yBridJ)
+
+        CIR.unloadProgram(firFileName)
+        yOutput
       }
-
-      Pointer.release(xBridJ)
-      Pointer.release(hBridJ)
-      Pointer.release(yBridJ)
-
-      CIR.unloadProgram(firFileName)
-      yOutput
     }
 
     if (run) {
@@ -159,11 +161,19 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
     }
   }
 
+  val demo = false
+
+  def timed[A](s:String)(x: => A) = {
+    val t0 = System.currentTimeMillis
+    try x finally if (demo) println(s+": "+(System.currentTimeMillis-t0)+"ms")
+  }
+
 
   val prefix = "test-out/epfl/test15-"
 
   describe("Test1"){
-    withOutFileChecked(prefix+"intrinsics-run") {
+    val withOut = if (demo) withOutFile _ else withOutFileChecked _
+    withOut(prefix+"intrinsics-run") {
       generateSimplestFIR[Float](ISA.SSE3, true)
     }
   }
