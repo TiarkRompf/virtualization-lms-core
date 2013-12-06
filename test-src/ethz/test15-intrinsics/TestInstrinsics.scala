@@ -72,7 +72,7 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
           sum(in.slice(0,m)) vadd sum(in.slice(m,in.length))
         }
 
-        y.vstore(i * k, sum(tV))
+        y.vstore(i, sum(tV))
       }
 
       // remaining scalar computation
@@ -132,17 +132,30 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
     }
 
     if (run) {
-      val x = new Array[T](n)
-      val h = new Array[T](k)
+      //val x = scala.Array.tabulate[Float](n) { i => i % 10}
+      val x = scala.Array.tabulate[Float](n) { i => if (i%10 == 8) 10 else 0 }
+      val h = scala.Array[Float](0.4f,0.3f,0.2f,0.1f)
+      //val h = scala.Array[Float](0.25f,0.25f,0.25f,0.25f)
 
-      for (i <- 0 until n) x(i) = (i%10).toFloat.asInstanceOf[T] // fix to float for the moment ...
-      for (i <- 0 until k) h(i) = (1.0f/(i+1)).asInstanceOf[T]
+      assert(k == h.length)
+
+      def printGraph(xs: Array[Float]) = {
+        println(xs.map(_=>"-").mkString)
+        for (i <- 9 to 0 by -1) {
+          def m(x: Float) = if (x > i) "#" else " "
+          println(xs.map(m).mkString)
+        }
+        println(xs.map(_=>"-").mkString)
+      }
 
       println("x: " + x.mkString(","))
       println("h: " + h.mkString(","))
 
-      val y = execute(x, h)
+      val y = execute(x.asInstanceOf[Array[T]], h.asInstanceOf[Array[T]])
       println("y: " + y.mkString(","))
+      printGraph(x)
+      println()
+      printGraph(y.asInstanceOf[Array[Float]])
     }
   }
 
@@ -150,6 +163,12 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
   val prefix = "test-out/epfl/test15-"
 
   describe("Test1"){
+    withOutFileChecked(prefix+"intrinsics-run") {
+      generateSimplestFIR[Float](ISA.SSE3, true)
+    }
+  }
+
+  describe("Test2"){
     withOutFileChecked(prefix+"intrinsics") {
       // One can generate all possibilities of types and given ISA
       generateSimplestFIR[Double](ISA.AVX)
@@ -161,10 +180,6 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
       generateSimplestFIR[Int](ISA.SSE3)
     }
   }
-  describe("Test2"){
-    withOutFileChecked(prefix+"intrinsics-run") {
-      generateSimplestFIR[Float](ISA.SSE3, true)
-    }
-  }
+
 }
 
