@@ -41,6 +41,17 @@ trait CIRCodegen extends CUnparser with CGenArrayOpsExt with CGenPrimitiveOps wi
   import IR._
 
 
+  def getRank(s: Stm) = s match {
+    case TP(_, VLoad(_,_,_)) => 120
+    case TP(_, VSet1(_,_)) => 130
+    case TP(_, Reflect(VStore(_,_,_),_,_)) => 150
+    case _ => 100
+  }
+
+  override def getStronglySortedSchedule2(scope: List[Stm], level: List[Stm], result: Any): (List[Stm], List[Sym[Any]]) = {
+    (level, Nil) // override -- we don't have recursive dependencies ...
+  }
+
 
   override def getSchedule(scope: List[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
     val scopeCache = new mutable.HashMap[Sym[Any],Stm]
@@ -54,14 +65,30 @@ trait CIRCodegen extends CUnparser with CGenArrayOpsExt with CGenPrimitiveOps wi
     }
 
     val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(syms(result)), t => deps(syms(t.rhs)))
+
     if (sort) xx.foreach { x =>
       if (x.length > 1) {
         printerr("warning: recursive schedule for result " + result + ": " + x)
         (new Exception) printStackTrace
       }
     }
-    xx.flatten.reverse
 
+    var remstms = xx.flatten.reverse.sortBy(getRank)
+    val remsyms = new mutable.HashSet[Sym[Any]]
+    val temp = new mutable.ListBuffer[Stm]
+
+    for (r <- remstms) remsyms ++= r.lhs
+
+    while (remstms.nonEmpty) {
+      val idx = remstms.indexWhere(st => !syms(st.rhs).exists(remsyms contains _))
+      val (h,t) = remstms.splitAt(idx)
+      temp += t.head
+      remsyms --= syms(t.head.lhs)
+      remstms = h ++ t.tail
+    }
+
+    val yy = temp.result
+    yy
   }
 
 }
