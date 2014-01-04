@@ -106,6 +106,38 @@ class TestDataOp extends FileDiffSuite {
       def elem() = f(up.elem())
     }
 
+    case class JoinOp(k1: Record => Rep[Int], k2: Record => Rep[Int])(up1: Operator, up2: Operator) extends Operator {
+      // **** preliminary ****
+      val more1 = var_new(unit(false))
+
+      def open() = { up1.open(); more1 = up1.next(); up2.open() }
+      def next() = {
+        var search = true
+        def cont1 = if (more1) search else unit(false)
+        while (cont1) {
+          var more2 = up2.next()
+          def cont = if (more2) (k1(up1.elem) != k2(up2.elem)) else unit(false)
+          while (cont) {
+            more2 = up2.next()
+          }
+
+          if (!more2) {
+            more1 = up1.next()
+            up2.open()
+          } else {
+            search = false //found
+          }
+        }
+        more1
+      }
+      def elem() = {
+        Record((up1.elem().fields ++ up2.elem.fields): _*)
+      }
+
+    }
+
+
+
     case class PrintOp(up: Operator) extends Operator {
       def open() = {
         up.open()
@@ -198,5 +230,33 @@ class TestDataOp extends FileDiffSuite {
     }
     assertFileEqualsCheck(prefix+"dataop2")
   }
+
+  def testDataOp3 = {
+    withOutFile(prefix+"dataop3") {
+      trait Prog extends DSL {
+        toplevel("main") { x: Rep[Int] =>
+
+          val tableA = RowBasedTable("A",Schema("a1","a2"))
+          val tableB = RowBasedTable("B",Schema("b1","b2"))
+          val tableC = RowBasedTable("C",Schema("c1","c2"))
+
+          val plan = 
+            PrintOp(
+              JoinOp(_ apply "a2", _ apply "b1")(
+                ScanOp(tableA),
+                JoinOp(_ apply "b2", _ apply "c1")(
+                  ScanOp(tableB),
+                  ScanOp(tableC))))
+
+          plan.open()
+
+          0
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"dataop3")
+  }
+
 
 }
