@@ -67,7 +67,7 @@ class TestInstrinsics extends FunSpec with FileDiffSuite {
         val hV = scala.Array.tabulate(k)(j => h(j).vset1(k))
         val tV = (xV, hV).zipped map (_ vmul _)
 
-        def sum(in: Array[Exp[Packed[T]]]): Exp[Packed[T]] = if (in.length == 1) in(0) else {
+        def sum(in: Array[Rep[Packed[T]]]): Rep[Packed[T]] = if (in.length == 1) in(0) else {
           val m = in.length / 2
           sum(in.slice(0,m)) vadd sum(in.slice(m,in.length))
         }
