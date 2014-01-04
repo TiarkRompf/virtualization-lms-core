@@ -19,43 +19,37 @@ x3 = x3 + 3;
 } else {
 }
 bool x9 = x5;
-const int x10 = x3;
-const bool x11 = x10 < x2;
-if (x11) {
-x3 = x3 + 3;
-} else {
-}
 for (;;) {
-const bool x15 = x9;
-bool x26;
-if (x15) {
-const int x16 = x3;
-const int x19 = x16 + 1;
-const int x20 = x1[x19];
-const bool x23 = x20 > 0;
-const bool x24 = !x23;
-x26 = x24;
+const bool x10 = x9;
+bool x21;
+if (x10) {
+const int x11 = x3;
+const int x14 = x11 + 1;
+const int x15 = x1[x14];
+const bool x18 = x15 > 0;
+const bool x19 = !x18;
+x21 = x19;
 } else {
-x26 = false;
+x21 = false;
 }
-if (!x26) break;
-const int x28 = x3;
-const bool x29 = x28 < x2;
-if (x29) {
+if (!x21) break;
+const int x23 = x3;
+const bool x24 = x23 < x2;
+if (x24) {
 x3 = x3 + 3;
 } else {
 }
-x9 = x29;
+x9 = x24;
 }
-const bool x36 = x9;
-if (!x36) break;
-const int x38 = x3;
-const int x41 = x38 + 1;
-const int x42 = x1[x41];
-const int x39 = x38 + 0;
-const int x40 = x1[x39];
-const int x45 = 2 * x40;
-printf("foo: %d, bar: %d\n",x42,x45); // x46
+const bool x31 = x9;
+if (!x31) break;
+const int x33 = x3;
+const int x36 = x33 + 1;
+const int x37 = x1[x36];
+const int x34 = x33 + 0;
+const int x35 = x1[x34];
+const int x40 = 2 * x35;
+printf("foo: %d, bar: %d\n",x37,x40); // x41
 }
 return 0;
 }
