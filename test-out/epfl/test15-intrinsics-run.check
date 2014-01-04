@@ -6,25 +6,25 @@
 void fir(float * x0, float * x1, float * x2) {
     /* "Generating FIR filter of size: 1024 with tap size: 4" */
     const float x13 = x1[0];
-    __m128 x14 =  _mm_set1_ps(x13);
     const float x15 = x1[1];
-    __m128 x16 =  _mm_set1_ps(x15);
     const float x17 = x1[2];
-    __m128 x18 =  _mm_set1_ps(x17);
     const float x19 = x1[3];
+    __m128 x14 =  _mm_set1_ps(x13);
+    __m128 x16 =  _mm_set1_ps(x15);
+    __m128 x18 =  _mm_set1_ps(x17);
     __m128 x20 =  _mm_set1_ps(x19);
     for (int i4 = 0; i4 < 255; i4++) {
         const int i5 = i4 + 0;
+        const int i7 = i4 + 1;
+        const int i9 = i4 + 2;
+        const int i11 = i4 + 3;
         __m128 x6 = _mm_loadu_ps(x0 + i5);
         __m128 x21 = _mm_mul_ps(x6, x14);
-        const int i7 = i4 + 1;
         __m128 x8 = _mm_loadu_ps(x0 + i7);
         __m128 x22 = _mm_mul_ps(x8, x16);
         __m128 x25 = _mm_add_ps(x21, x22);
-        const int i9 = i4 + 2;
         __m128 x10 = _mm_loadu_ps(x0 + i9);
         __m128 x23 = _mm_mul_ps(x10, x18);
-        const int i11 = i4 + 3;
         __m128 x12 = _mm_loadu_ps(x0 + i11);
         __m128 x24 = _mm_mul_ps(x12, x20);
         __m128 x26 = _mm_add_ps(x23, x24);
@@ -32,9 +32,9 @@ void fir(float * x0, float * x1, float * x2) {
         _mm_storeu_ps(x2 + i4, x27);
     }
     for (int i31 = 0; i31 < 4; i31++) {
+        const int i34 = 4 - i31;
         const int i32 = 1020 + i31;
         x2[i32] = 0.0000000000f;
-        const int i34 = 4 - i31;
         for (int i35 = 0; i35 < i34; i35++) {
             const float x41 = x2[i32];
             const int i36 = i32 + i35;
