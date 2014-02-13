@@ -1,0 +1,118 @@
+-- full graph
+TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(4),ArrayLength(Sym(3)))
+TP(Sym(6),ArrayIndex(Sym(3),Sym(5)))
+TP(Sym(7),OrderingGT(Sym(6),Const(50)))
+TP(Sym(8),NumericTimes(Sym(6),Const(2)))
+TP(Sym(9),SimpleLoop(Sym(4),Sym(5),ArrayIfElem(Sym(7),Block(Sym(8)))))
+TP(Sym(11),ArrayIndex(Sym(3),Sym(10)))
+TP(Sym(12),OrderingLT(Sym(11),Const(20)))
+TP(Sym(13),NumericTimes(Sym(11),Const(3)))
+TP(Sym(14),SimpleLoop(Sym(4),Sym(10),ArrayIfElem(Sym(12),Block(Sym(13)))))
+TP(Sym(15),ArrayLength(Sym(9)))
+TP(Sym(16),Reflect(Print(Sym(15)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(17),ArrayLength(Sym(14)))
+TP(Sym(18),Reflect(Print(Sym(17)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(16))))
+TP(Sym(19),Reify(Sym(18),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(16), Sym(18))))
+
+-- before transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.length
+var x9 = new ArrayBuilder[Int]
+for (x5 <- 0 until x4) {
+val x6 = x3.apply(x5)
+val x7 = x6 > 50
+val x8 = x6 * 2
+if (x7) x9 += x8
+}
+val x15 = x9.length
+val x16 = println(x15)
+var x14 = new ArrayBuilder[Int]
+for (x10 <- 0 until x4) {
+val x11 = x3.apply(x10)
+val x12 = x11 < 20
+val x13 = x11 * 3
+if (x12) x14 += x13
+}
+val x17 = x14.length
+val x18 = println(x17)
+
+-- transforming
+
+(FT)  starting loop fusion of producer:
+      TP(Sym(22),SimpleLoop(Const(100),Sym(20),ArrayElem(Block(Sym(21)))))
+(FT)  into consumer:
+      TP(Sym(27),SimpleLoop(Sym(23),Sym(24),ArrayIfElem(Sym(7),Block(Sym(26)))))
+(FT)  original consumer:
+      TP(Sym(9),SimpleLoop(Sym(4),Sym(5),ArrayIfElem(Sym(7),Block(Sym(8)))))
+(FT)  original producerStms:
+      TP(Sym(21),NumericPlus(Sym(20),Const(1)))
+
+(FT)  reindexed producerStms (prodIndex: Sym(20) -> consumerIndex: Sym(24)):
+      TP(Sym(29),NumericPlus(Sym(24),Const(1)))
+
+(FT)  original consuming:
+      TP(Sym(26),NumericTimes(Sym(25),Const(2)))
+      TP(Sym(27),SimpleLoop(Sym(23),Sym(24),ArrayIfElem(Sym(7),Block(Sym(26)))))
+      TP(Sym(28),OrderingGT(Sym(25),Const(50)))
+      TP(Sym(25),ArrayIndex(Sym(22),Sym(24)))
+
+(FT)  fused consuming (SimpleIndex: List(Sym(25)) -> collectSym: Sym(29)):
+      TP(Sym(30),NumericTimes(Sym(29),Const(2)))
+      TP(Sym(31),SimpleLoop(Sym(23),Sym(24),ArrayIfElem(Sym(28),Block(Sym(30)))))
+      TP(Sym(32),OrderingGT(Sym(29),Const(50)))
+      TP(Sym(25),ArrayIndex(Sym(22),Sym(24)))
+
+(FT)  fusion successful! Fused consumer loop: TP(Sym(33),SimpleLoop(Const(100),Sym(24),ArrayIfElem(Sym(32),Block(Sym(30)))))
+
+(FT)  starting loop fusion of producer:
+      TP(Sym(22),SimpleLoop(Const(100),Sym(20),ArrayElem(Block(Sym(21)))))
+(FT)  into consumer:
+      TP(Sym(39),SimpleLoop(Sym(23),Sym(36),ArrayIfElem(Sym(12),Block(Sym(38)))))
+(FT)  original consumer:
+      TP(Sym(14),SimpleLoop(Sym(4),Sym(10),ArrayIfElem(Sym(12),Block(Sym(13)))))
+(FT)  original producerStms:
+      TP(Sym(21),NumericPlus(Sym(20),Const(1)))
+
+(FT)  reindexed producerStms (prodIndex: Sym(20) -> consumerIndex: Sym(36)):
+      TP(Sym(41),NumericPlus(Sym(36),Const(1)))
+
+(FT)  original consuming:
+      TP(Sym(38),NumericTimes(Sym(37),Const(3)))
+      TP(Sym(39),SimpleLoop(Sym(23),Sym(36),ArrayIfElem(Sym(12),Block(Sym(38)))))
+      TP(Sym(40),OrderingLT(Sym(37),Const(20)))
+      TP(Sym(37),ArrayIndex(Sym(22),Sym(36)))
+
+(FT)  fused consuming (SimpleIndex: List(Sym(37)) -> collectSym: Sym(41)):
+      TP(Sym(42),NumericTimes(Sym(41),Const(3)))
+      TP(Sym(43),SimpleLoop(Sym(23),Sym(36),ArrayIfElem(Sym(40),Block(Sym(42)))))
+      TP(Sym(44),OrderingLT(Sym(41),Const(20)))
+      TP(Sym(37),ArrayIndex(Sym(22),Sym(36)))
+
+(FT)  fusion successful! Fused consumer loop: TP(Sym(45),SimpleLoop(Const(100),Sym(36),ArrayIfElem(Sym(44),Block(Sym(42)))))
+
+-- after transformation
+var x33 = new ArrayBuilder[Int]
+for (x24 <- 0 until 100) {
+val x29 = x24 + 1
+val x30 = x29 * 2
+val x32 = x29 > 50
+if (x32) x33 += x30
+}
+val x34 = x33.length
+val x35 = println(x34)
+var x45 = new ArrayBuilder[Int]
+for (x36 <- 0 until 100) {
+val x41 = x36 + 1
+val x42 = x41 * 3
+val x44 = x41 < 20
+if (x44) x45 += x42
+}
+val x46 = x45.length
+val x47 = println(x46)
+-- done

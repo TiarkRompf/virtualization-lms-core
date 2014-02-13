@@ -1,0 +1,53 @@
+-- full graph
+TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),NumericTimes(Sym(2),Sym(1)))
+TP(Sym(4),NumericTimes(Sym(1),Sym(3)))
+TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(4)))))
+TP(Sym(6),ArrayLength(Sym(5)))
+TP(Sym(8),NumericPlus(Sym(7),Const(1)))
+TP(Sym(9),ArrayIndex(Sym(5),Sym(8)))
+TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(9)))))
+TP(Sym(11),ArrayLength(Sym(10)))
+TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+
+-- before transformation
+var x5 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x3 = x2 * x1
+val x4 = x1 * x3
+x5(x1) = x4
+}
+val x6 = x5.length
+var x10 = new Array[Int](x6)
+for (x7 <- 0 until x6) {
+val x8 = x7 + 1
+val x9 = x5.apply(x8)
+x10(x7) = x9
+}
+val x11 = x10.length
+val x12 = println(x11)
+
+-- transforming
+(FT)  no consumer: TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(9)))))
+(FT)  because of stms: List(TP(Sym(9),ArrayIndex(Sym(5),Sym(8))))
+
+-- after transformation
+var x18 = new Array[Int](100)
+for (x14 <- 0 until 100) {
+val x15 = x14 + 1
+val x16 = x15 * x14
+val x17 = x14 * x16
+x18(x14) = x17
+}
+val x19 = x18.length
+var x23 = new Array[Int](x19)
+for (x20 <- 0 until x19) {
+val x21 = x20 + 1
+val x22 = x18.apply(x21)
+x23(x20) = x22
+}
+val x24 = x23.length
+val x25 = println(x24)
+-- done

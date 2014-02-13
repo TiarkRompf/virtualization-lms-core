@@ -1,0 +1,119 @@
+-- full graph
+TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(4),ArrayLength(Sym(3)))
+TP(Sym(6),ArrayIndex(Sym(3),Sym(5)))
+TP(Sym(7),NumericTimes(Sym(6),Const(4)))
+TP(Sym(8),NumericTimes(Sym(7),Const(2)))
+TP(Sym(9),SimpleLoop(Sym(4),Sym(5),ArrayElem(Block(Sym(8)))))
+TP(Sym(10),ArrayLength(Sym(9)))
+TP(Sym(12),ArrayIndex(Sym(9),Sym(11)))
+TP(Sym(13),OrderingGT(Sym(12),Const(20)))
+TP(Sym(14),NumericTimes(Sym(12),Const(3)))
+TP(Sym(15),SimpleLoop(Sym(10),Sym(11),ArrayIfElem(Sym(13),Block(Sym(14)))))
+TP(Sym(16),ArrayLength(Sym(15)))
+TP(Sym(17),Reflect(Print(Sym(16)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(18),Reify(Sym(17),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(17))))
+
+-- before transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.length
+var x9 = new Array[Int](x4)
+for (x5 <- 0 until x4) {
+val x6 = x3.apply(x5)
+val x7 = x6 * 4
+val x8 = x7 * 2
+x9(x5) = x8
+}
+val x10 = x9.length
+var x15 = new ArrayBuilder[Int]
+for (x11 <- 0 until x10) {
+val x12 = x9.apply(x11)
+val x13 = x12 > 20
+val x14 = x12 * 3
+if (x13) x15 += x14
+}
+val x16 = x15.length
+val x17 = println(x16)
+
+-- transforming
+
+(FT)  starting loop fusion of producer:
+      TP(Sym(21),SimpleLoop(Const(100),Sym(19),ArrayElem(Block(Sym(20)))))
+(FT)  into consumer:
+      TP(Sym(28),SimpleLoop(Sym(22),Sym(24),ArrayElem(Block(Sym(27)))))
+(FT)  original consumer:
+      TP(Sym(9),SimpleLoop(Sym(4),Sym(5),ArrayElem(Block(Sym(8)))))
+(FT)  original producerStms:
+      TP(Sym(20),NumericPlus(Sym(19),Const(1)))
+
+(FT)  reindexed producerStms (prodIndex: Sym(19) -> consumerIndex: Sym(24)):
+      TP(Sym(29),NumericPlus(Sym(24),Const(1)))
+
+(FT)  original consuming:
+      TP(Sym(26),NumericTimes(Sym(25),Const(4)))
+      TP(Sym(27),NumericTimes(Sym(26),Const(2)))
+      TP(Sym(28),SimpleLoop(Sym(22),Sym(24),ArrayElem(Block(Sym(27)))))
+      TP(Sym(25),ArrayIndex(Sym(21),Sym(24)))
+
+(FT)  fused consuming (SimpleIndex: List(Sym(25)) -> collectSym: Sym(29)):
+      TP(Sym(30),NumericTimes(Sym(29),Const(4)))
+      TP(Sym(31),NumericTimes(Sym(30),Const(2)))
+      TP(Sym(32),SimpleLoop(Sym(22),Sym(24),ArrayElem(Block(Sym(31)))))
+      TP(Sym(25),ArrayIndex(Sym(21),Sym(24)))
+
+(FT)  fusion successful! Fused consumer loop: TP(Sym(33),SimpleLoop(Const(100),Sym(24),ArrayElem(Block(Sym(31)))))
+
+(FT)  starting loop fusion of producer:
+      TP(Sym(33),SimpleLoop(Const(100),Sym(24),ArrayElem(Block(Sym(31)))))
+(FT)  into consumer:
+      TP(Sym(38),SimpleLoop(Sym(34),Sym(35),ArrayIfElem(Sym(13),Block(Sym(37)))))
+(FT)  original consumer:
+      TP(Sym(15),SimpleLoop(Sym(10),Sym(11),ArrayIfElem(Sym(13),Block(Sym(14)))))
+(FT)  original producerStms:
+      TP(Sym(25),ArrayIndex(Sym(21),Sym(24)))
+      TP(Sym(26),NumericTimes(Sym(25),Const(4)))
+      TP(Sym(27),NumericTimes(Sym(26),Const(2)))
+      TP(Sym(29),NumericPlus(Sym(24),Const(1)))
+      TP(Sym(30),NumericTimes(Sym(29),Const(4)))
+      TP(Sym(31),NumericTimes(Sym(30),Const(2)))
+
+(FT)  reindexed producerStms (prodIndex: Sym(24) -> consumerIndex: Sym(35)):
+      TP(Sym(40),ArrayIndex(Sym(21),Sym(35)))
+      TP(Sym(41),NumericTimes(Sym(40),Const(4)))
+      TP(Sym(42),NumericTimes(Sym(41),Const(2)))
+      TP(Sym(43),NumericPlus(Sym(35),Const(1)))
+      TP(Sym(44),NumericTimes(Sym(43),Const(4)))
+      TP(Sym(45),NumericTimes(Sym(44),Const(2)))
+
+(FT)  original consuming:
+      TP(Sym(37),NumericTimes(Sym(36),Const(3)))
+      TP(Sym(38),SimpleLoop(Sym(34),Sym(35),ArrayIfElem(Sym(13),Block(Sym(37)))))
+      TP(Sym(39),OrderingGT(Sym(36),Const(20)))
+      TP(Sym(36),ArrayIndex(Sym(33),Sym(35)))
+
+(FT)  fused consuming (SimpleIndex: List(Sym(36)) -> collectSym: Sym(45)):
+      TP(Sym(46),NumericTimes(Sym(45),Const(3)))
+      TP(Sym(47),SimpleLoop(Sym(34),Sym(35),ArrayIfElem(Sym(39),Block(Sym(46)))))
+      TP(Sym(48),OrderingGT(Sym(45),Const(20)))
+      TP(Sym(36),ArrayIndex(Sym(33),Sym(35)))
+
+(FT)  fusion successful! Fused consumer loop: TP(Sym(49),SimpleLoop(Const(100),Sym(35),ArrayIfElem(Sym(48),Block(Sym(46)))))
+
+-- after transformation
+var x49 = new ArrayBuilder[Int]
+for (x35 <- 0 until 100) {
+val x43 = x35 + 1
+val x44 = x43 * 4
+val x45 = x44 * 2
+val x46 = x45 * 3
+val x48 = x45 > 20
+if (x48) x49 += x46
+}
+val x50 = x49.length
+val x51 = println(x50)
+-- done

@@ -1,0 +1,102 @@
+multiloopsoa - focusexactscopefat
+current scope = innerScope // whole program of unscheduled stm
+toplevelscope = getExactScope(currentScope)
+
+use unapplysimpleindex
+
+only check FatLoops because they're pure (TTP)
+scheduler will schedule statements to satisfy dependencies
+
+Step 1: Vertical Transformer
+----------------------------
+ForwardTransformer override transformStm to find y = loop2(j <- 0 until x.length) { body2(x(j)) }
+check whether x only used in SimpleIndex(x, j), otherwise can't fuse
+find the producer: collect  x = loop1(i <- 0 until n) (f(i))
+transform consumer into y' = loop3(j <- 0 until n) { body2(f(i -> j))}
+replace all occurrences of y with y' using a SubstTransformer
+
+(scheduler runs after every transformer and dce's loop2, maybe gets rid of loop1, but otherwise:)
+
+Step 2: Horizontal Transformer
+------------------------------
+first traverse and collect all loops on current toplevel scope
+compute which are to be combined, insert first into second, reuse same syms
+SubstTransformer to replace first loop with combined fat one, replace second loop with nothing
+recurse
+
+
+
+What about conflicts? which statements are returned by collect?
+Are effectful loops fattened?
+
+
+trait Expressions { // Expressions.scala
+  abstract class Stm
+
+  case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
+
+  def findDefinition[T](s: Sym[T]): Option[Stm] =
+    globalDefs.find(x => x.defines(s).nonEmpty)
+}
+
+trait FatExpressions extends Expressions { // FatExpressions.scala
+  abstract class FatDef
+
+  case class TTP(val lhs: List[Sym[Any]], val mhs: List[Def[Any]], val rhs: FatDef) extends Stm
+}
+
+trait BaseFatExp extends BaseExp with FatExpressions with FatTransforming // Base.scala
+
+// Loops.scala
+trait Loops extends Base {}
+
+trait LoopsExp extends Loops with BaseExp with EffectExp {
+  abstract class AbstractLoop[A] extends Def[A] {
+    val size: Exp[Int]
+    val v: Sym[Int]
+    val body: Def[A]
+  }
+
+  case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
+}
+
+trait LoopsFatExp extends LoopsExp with BaseFatExp {
+  abstract class AbstractFatLoop extends FatDef {
+    val size: Exp[Int]
+    val v: Sym[Int]
+    val body: List[Def[Any]]
+  }
+  
+  case class SimpleFatLoop(val size: Exp[Int], val v: Sym[Int], val body: List[Def[Any]]) extends AbstractFatLoop
+}
+
+trait BaseLoopsTraversalFat extends FatBlockTraversal {
+  val IR: LoopsFatExp
+  import IR._
+
+  override def fatten(e: Stm): Stm = e match {
+    case TP(sym, op: AbstractLoop[_]) =>
+      TTP(List(sym), List(op), SimpleFatLoop(op.size, op.v, List(op.body)))
+    case TP(sym, p @ Reflect(op: AbstractLoop[_], u, es)) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on...
+      printdbg("-- fatten effectful loop " + e)
+      TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)))
+    case _ => super.fatten(e)
+  } 
+}
+
+
+
+Questions: what does TP and TTP mean?
+?? How to mirror TTP?
+mirrorFatDef vs. mirrorDef, why is mirroring loop bodies different from rest?
+TTP can't be mirrored or stored in symbol table because they're invisible now, so can't run anything after
+
+
+
+
+
+
+
+
+
+
