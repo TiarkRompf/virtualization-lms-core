@@ -33,41 +33,41 @@ if (x10) x12 += x11
 val x13 = x12.length
 val x14 = println(x13)
 
--- transforming
+-- vertical transformation
 
-(FT)  starting loop fusion of producer:
+(VFT)  starting loop fusion of producer:
       TP(Sym(20),SimpleLoop(Const(100),Sym(16),ArrayElem(Block(Sym(19)))))
-(FT)  into consumer:
+(VFT)  into consumer:
       TP(Sym(25),SimpleLoop(Sym(21),Sym(22),ArrayIfElem(Sym(10),Block(Sym(24)))))
-(FT)  original consumer:
+(VFT)  original consumer:
       TP(Sym(12),SimpleLoop(Sym(6),Sym(7),ArrayIfElem(Sym(10),Block(Sym(11)))))
-(FT)  original producerStms:
+(VFT)  original producerStms:
       TP(Sym(17),NumericPlus(Sym(16),Const(1)))
       TP(Sym(18),NumericTimes(Sym(17),Sym(16)))
       TP(Sym(19),NumericTimes(Sym(16),Sym(18)))
 
-(FT)  reindexed producerStms (prodIndex: Sym(16) -> consumerIndex: Sym(22)):
+(VFT)  reindexed producerStms (prodIndex: Sym(16) -> consumerIndex: Sym(22)):
       TP(Sym(28),NumericPlus(Sym(22),Const(1)))
       TP(Sym(29),NumericTimes(Sym(28),Sym(22)))
       TP(Sym(30),NumericTimes(Sym(22),Sym(29)))
 
-(FT)  original consuming:
+(VFT)  original consuming:
       TP(Sym(24),NumericPlus(Sym(23),Const(2)))
       TP(Sym(25),SimpleLoop(Sym(21),Sym(22),ArrayIfElem(Sym(10),Block(Sym(24)))))
       TP(Sym(26),OrderingGT(Sym(23),Const(50)))
       TP(Sym(27),BooleanNegate(Sym(26)))
       TP(Sym(23),ArrayIndex(Sym(20),Sym(22)))
 
-(FT)  fused consuming (SimpleIndex: List(Sym(23)) -> collectSym: Sym(30)):
+(VFT)  fused consuming (SimpleIndex: List(Sym(23)) -> collectSym: Sym(30)):
       TP(Sym(31),NumericPlus(Sym(30),Const(2)))
       TP(Sym(32),SimpleLoop(Sym(21),Sym(22),ArrayIfElem(Sym(27),Block(Sym(31)))))
       TP(Sym(33),OrderingGT(Sym(30),Const(50)))
       TP(Sym(34),BooleanNegate(Sym(33)))
       TP(Sym(23),ArrayIndex(Sym(20),Sym(22)))
 
-(FT)  fusion successful! Fused consumer loop: TP(Sym(35),SimpleLoop(Const(100),Sym(22),ArrayIfElem(Sym(34),Block(Sym(31)))))
+(VFT)  fusion successful! Fused consumer loop: TP(Sym(35),SimpleLoop(Const(100),Sym(22),ArrayIfElem(Sym(34),Block(Sym(31)))))
 
--- after transformation
+-- after vertical transformation
 var x35 = new ArrayBuilder[Int]
 for (x22 <- 0 until 100) {
 val x28 = x22 + 1
@@ -80,4 +80,21 @@ if (x34) x35 += x31
 }
 val x36 = x35.length
 val x37 = println(x36)
+
+-- horizontal transformation
+(HFT)  Recording loop: (Const(100),(Sym(35),Sym(22),None))
+
+-- after horizontal transformation
+var x35 = new ArrayBuilder[Int]
+for (x22 <- 0 until 100) {
+val x28 = x22 + 1
+val x29 = x28 * x22
+val x30 = x22 * x29
+val x31 = x30 + 2
+val x33 = x30 > 50
+val x34 = !x33
+if (x34) x35 += x31
+}
+val x36 = x35.length
+val x39 = println(x36)
 -- done

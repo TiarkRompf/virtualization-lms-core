@@ -75,7 +75,7 @@ trait MyFusionProg extends NumericOps with ArrayLoops with Print {
 
 trait Impl extends MyFusionProg with NumericOpsExp with ArrayLoopsFatExp with PrintExp
     with IfThenElseFatExp with OrderingOpsExp with BooleanOpsExp with ArrayLoopFusionExtractors { self =>
-  override val verbosity = 1
+  override val verbosity = 1 // print log statements
   val runner = new Runner { val p: self.type = self }
   runner.run()
 }
@@ -100,30 +100,45 @@ trait Runner {
       codegen.emitBlock(y)
     }
     
-    println("\n-- transforming")
-
-    val trans = new MyFusionTransformer {
+    val verticalTransf = new VerticalFusionTransformer {
       val IR: p.type = p
     }
+    val horTransf = new HorizontalFusionTransformer {
+      val IR: p.type = p
+    }
+
     try {
-      val z = trans.transformBlock(y)
-      println("\n-- after transformation")
+      println("\n-- vertical transformation")
+
+      val v = verticalTransf.transformBlock(y)
+      println("\n-- after vertical transformation")
       codegen.withStream(new PrintWriter(System.out)) {
-        codegen.emitBlock(z)
+        codegen.emitBlock(v)
       }
+
+      println("\n-- horizontal transformation")
+      val h = horTransf.transformBlock(v)
+      println("\n-- after horizontal transformation")
+      codegen.withStream(new PrintWriter(System.out)) {
+        codegen.emitBlock(h)
+      }
+
+      println("-- done")
     } catch {
       case ex =>
       println("error: " + ex)
     }
-    println("-- done")      
   }
 }
 
-trait MyFusionTransformer extends ForwardTransformer /*with BaseLoopsTraversalFat*/ { 
+trait VerticalFusionTransformer extends ForwardTransformer /*with BaseLoopsTraversalFat*/ { 
   val IR: Impl with ArrayLoopFusionExtractors
   import IR.{__newVar => _, _}
 
-  // Don't want to record substitutions only inside of scope because
+// TODO: what if constant length optimization is done by DSL author?
+// TODO: propagate constant lengths and replace arraylength statements
+
+  // Want to record substitutions outside of scope because
   // we use producer statements later.
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
     // withSubstScope { 
@@ -148,17 +163,17 @@ trait MyFusionTransformer extends ForwardTransformer /*with BaseLoopsTraversalFa
               val notConsuming = loopArrayStms diff consuming
               
               if (loopArrayStms.isEmpty)
-                println("(FT)  no consumer: " + stm + "\n(FT)  because body doesn't contain array.")
+                printlog("(VFT)  no consumer: " + stm + "\n(VFT)  because body doesn't contain array.")
               else if (!notConsuming.isEmpty)
-                println("(FT)  no consumer: " + stm + "\n(FT)  because of stms: " + notConsuming)
+                printlog("(VFT)  no consumer: " + stm + "\n(VFT)  because of stms: " + notConsuming)
               else
                 return fuseConsumerStm(stm, indexSym)
             case _ => 
           }
-          case p => println("(FT)  not fusing consumer: " + stm + "\n(FT)  because producer is not SimpleCollect: " + p)
-            println("(FT)  not fusing consumer: " + stm + "\n(FT)  because producer is not simpleLoop: " + p)
+          case p => printlog("(VFT)  not fusing consumer: " + stm + "\n(VFT)  because producer is not SimpleCollect: " + p)
+            printlog("(VFT)  not fusing consumer: " + stm + "\n(VFT)  because producer is not simpleLoop: " + p)
         }
-        case _ => println("(FT)  found loop, but it's not simpleDomain: " + stm)
+        case _ => printlog("(VFT)  found loop, but it's not simpleDomain: " + stm)
       }
       case _ =>
     }
@@ -166,8 +181,8 @@ trait MyFusionTransformer extends ForwardTransformer /*with BaseLoopsTraversalFa
     val superTransformedStm = superTransformedSym match {
       case newSym@Sym(_) => findDefinition(newSym).get
     }
-//    println("(FT)  ignored: " + stm)
-//    println("(FT)  super.transformed: " + superTransformedStm + "\n")
+    printdbg("(VFT)  ignored: " + stm)
+    printdbg("(VFT)  super.transformed: " + superTransformedStm + "\n")
     superTransformedSym
   }
 
@@ -183,21 +198,14 @@ trait MyFusionTransformer extends ForwardTransformer /*with BaseLoopsTraversalFa
 
     superTransformedStm match {
       case cons@TP(sym, SimpleLoop(shapeSym@Sym(_), indexSym, _)) => findDefinition(shapeSym) match {
-        case None => error("FT unknown shapeSym")
+        case None => error("FT unknown shapeSym: " + shapeSym)
         case Some(TP(`shapeSym`, SimpleDomain(arraySym@Sym(_)))) => findDefinition(arraySym) match {
-          case None => error("FT unknown arraySym")
+          case None => error("FT unknown arraySym: " + arraySym)
           case Some(prod@TP(`arraySym`, SimpleLoop(prodShape, prodIndexSym, SimpleCollect(collected)))) =>
           
-            println("\n(FT)  starting loop fusion of producer:\n      " + prod)
-            println("(FT)  into consumer:\n      " + cons)
-            println("(FT)  original consumer:\n      " + stm)
-
-           // println("\n---dep(old =" + oldConsIndexSym + "): " + getDependentStuff(oldConsIndexSym).mkString("\n      ", "\n      ", "\n"))
-           // println("---mapped: " + getDependentStuff(oldConsIndexSym).map({ case stm @ TP(sym, _) => 
-           //        subst.getOrElse(sym, super.transformStm(stm)) match {
-           //          case newSym@Sym(_) => 
-           //            findDefinition(newSym).get
-           //        }}).mkString("\n      ", "\n      ", "\n"))
+            printlog("\n(VFT)  starting loop fusion of producer:\n      " + prod)
+            printlog("(VFT)  into consumer:\n      " + cons)
+            printlog("(VFT)  original consumer:\n      " + stm)
 
             val consuming = getDependentStuff(oldConsIndexSym)
                 .map(substOrTransform(_))
@@ -213,8 +221,8 @@ trait MyFusionTransformer extends ForwardTransformer /*with BaseLoopsTraversalFa
             val indexT = new SubstTransformer
             indexT.subst += (prodIndexSym -> indexSym)
             val reindexedProducerStms = producerStms map { mirrorAddGet(_, indexT) }
-            println("(FT)  original producerStms:\n" + producerStms.mkString("      ", "\n      ", "\n"))
-            println("(FT)  reindexed producerStms (prodIndex: " + prodIndexSym + " -> consumerIndex: " + indexSym + "):\n" + reindexedProducerStms.mkString("      ", "\n      ", "\n"))
+            printlog("(VFT)  original producerStms:\n" + producerStms.mkString("      ", "\n      ", "\n"))
+            printlog("(VFT)  reindexed producerStms (prodIndex: " + prodIndexSym + " -> consumerIndex: " + indexSym + "):\n" + reindexedProducerStms.mkString("      ", "\n      ", "\n"))
             
             // Remap consuming statements to use the inlined result of the producer instead
             // of the SimpleIndex
@@ -224,12 +232,12 @@ trait MyFusionTransformer extends ForwardTransformer /*with BaseLoopsTraversalFa
             consumingSyms foreach { s => collectT.subst += (s -> collectSym) }
             val allConsuming = getFatDependentStuff(initialDefs)(consumingSyms)
             val fusedConsuming = allConsuming map { mirrorAddGet(_, collectT) }
-            println("(FT)  original consuming:\n" + allConsuming.mkString("      ", "\n      ", "\n"))
-            println("(FT)  fused consuming (SimpleIndex: " + consumingSyms + " -> collectSym: " + collectSym + "):\n" + fusedConsuming.mkString("      ", "\n      ", "\n"))
+            printlog("(VFT)  original consuming:\n" + allConsuming.mkString("      ", "\n      ", "\n"))
+            printlog("(VFT)  fused consuming (SimpleIndex: " + consumingSyms + " -> collectSym: " + collectSym + "):\n" + fusedConsuming.mkString("      ", "\n      ", "\n"))
 
             collectT.subst += (shapeSym -> prodShape)
             val fusedLoop = mirrorAddGet(superTransformedStm, collectT)
-            println("(FT)  fusion successful! Fused consumer loop: " + fusedLoop)
+            printlog("(VFT)  fusion successful! Fused consumer loop: " + fusedLoop)
             return fusedLoop match { case TP(sym, _) => sym }
         }
       }
@@ -257,6 +265,76 @@ trait MyFusionTransformer extends ForwardTransformer /*with BaseLoopsTraversalFa
   }
 }
 
+trait HorizontalFusionTransformer extends ForwardTransformer /*with BaseLoopsTraversalFat*/ { 
+  val IR: Impl with ArrayLoopFusionExtractors
+  import IR.{__newVar => _, _}
+
+  // Why can't I initialize the SubstTransformer here?
+  var substTransformer: Option[SubstTransformer] = None
+  // map from shape to (loop symbol, index symbol, dependent loop symbols)
+  // Dependent loop symbols are only set when this loop is first retrieved, not
+  // when storing each loop, because most probably won't be horizontally fused.
+  // Dependent loops cannot be fused.
+  val seenLoops = new scala.collection.mutable.HashMap[Exp[Any], (Sym[Any], Sym[Int], Option[List[Sym[Any]]])]
+
+  override def transformBlock[A:Manifest](block: Block[A]): Block[A] = {
+    substTransformer = Some(new SubstTransformer)
+    printdbg("(HFT)  transformBlock resets substitution of HorizontalFusionTransformer")
+    super.transformBlock(block)
+  }
+
+  override def transformStm(stm: Stm): Exp[Any] = stm match {
+    case TP(loopSym, SimpleLoop(shape, indexSym, _)) =>
+      seenLoops.get(shape) match {
+        case Some((otherLoopSym, newIndex, d)) => 
+          val deps = d.getOrElse({ 
+            val ds = getFatDependentStuff(initialDefs)(List(otherLoopSym))
+                .collect({ case TP(sym, SimpleLoop(_, _, _)) => sym })
+            printlog("(HFT)  Updating loop: " + (shape -> (otherLoopSym, newIndex, Some(ds))))
+            seenLoops += (shape -> (otherLoopSym, newIndex, Some(ds)))
+            ds
+          })
+
+          if (deps.contains(loopSym)) { 
+            printlog("(HFT)  Loop " + loopSym + " not fused with " + otherLoopSym + " because it depends on it")
+            default(stm)
+          } else {
+            printlog("(HFT)  Loop " + loopSym + " fused with " + otherLoopSym + ", common index: " + newIndex)
+            transformLoop(stm, indexSym, newIndex)          
+          }
+        case None => 
+          seenLoops += (shape -> (loopSym, indexSym, None))
+          printlog("(HFT)  Recording loop: " + (shape -> (loopSym, indexSym, None)))
+          default(stm)
+      }
+    case _ => default(stm)
+  }
+
+  def transformLoop(stm: Stm, indexSym: Sym[Int], newIndex: Sym[Int]): Exp[Any] = {
+    substTransformer.get.subst += (indexSym -> newIndex)
+    val reindexedStms = getDependentStuff(indexSym) map(mirrorAddGet(_))
+    printdbg("(HFT)  reindexed loop statements: " + reindexedStms)
+    val mirr = mirrorAddGet(stm)
+    printdbg("(HFT)  reindexed loop: " + mirr)
+    mirr match { case TP(sym, _) => sym }
+  }
+
+  def default(stm: Stm, transf: SubstTransformer = substTransformer.get): Sym[Any] = {
+      val mirr = mirrorAddGet(stm)
+      printdbg("(HFT)  simply mirrored statement: " + mirr)
+      mirr match { case TP(sym, _) => sym }
+  }
+
+  /** Mirrors the given statement with the given transformer, adds the new symbol
+      to its substitution and returns the definition. */
+  def mirrorAddGet(stm: Stm, transf: SubstTransformer = substTransformer.get): Stm = stm match {
+    case TP(s, d) => mirror(d, transf)(mtype(s.tp), mpos(s.pos)) match {
+      case newSym@Sym(_) => 
+        transf.subst += (s -> newSym)
+        findDefinition(newSym).get
+    }
+  }
+}
 
 
 class TestFusion3 extends FileDiffSuite {
@@ -329,6 +407,7 @@ class TestFusion3 extends FileDiffSuite {
           val y = x * i
           i * y
         }
+        // TODO could horizontally fuse once length constant replacement is done
         val arr2 = array(range.length) { i => range.at(i) + range.length }
         print(arr2.length)
       }
@@ -351,13 +430,8 @@ class TestFusion3 extends FileDiffSuite {
     }
     new Prog with Impl
   }
-}
 
-class TestFusion4 extends FileDiffSuite {
-
-  val prefix = "test-out/epfl/test7-wip2-"
-
-  def testFusionTransform1 = withOutFileChecked(prefix+"fusion1") {
+  def testFusionTransform6 = withOutFileChecked(prefix+"fusion6") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {        
         // range is producer, arr1 is consumer and arr2 is also consumer of range
@@ -377,10 +451,9 @@ class TestFusion4 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform2 = withOutFileChecked(prefix+"fusion2") {
+  def testFusionTransform7 = withOutFileChecked(prefix+"fusion7") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {        
-        // range is producer, arr1 is consumer of range and arr2 is consumer of arr1
         val range = array(100) { i => 
           i + 1
         }
@@ -396,71 +469,23 @@ class TestFusion4 extends FileDiffSuite {
     new Prog with Impl
   }
 
+  def testFusionTransform8 = withOutFileChecked(prefix+"fusion8") {
+    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+      def test(x: Rep[Int]) = {        
+        val range = array(100) { i => 
+          i + 1
+        }
+        val arr1 = array(range.length) { i =>
+          val x = range.at(i) * 4
+          x * 2 }
+        val arr2 = array(100) { i => 
+          i + range.length
+        }
+        print(range.length)
+        print(arr1.length)
+        print(arr2.length)
+      }
+    }
+    new Prog with Impl
+  }
 }
-
-
-
-
-  // def testFusion1 = {
-  //   withOutFile(prefix+"fusion1") {
-  //     new MyFusionProg with ArithExp with MyLoopsExp with PrintExp { self =>
-  //       val codegen = new ScalaGenMyLoops with ScalaGenArith with ScalaGenPrint { val IR: self.type = self }
-  //       codegen.emitSource(test, "Test", new PrintWriter(System.out))
-
-  //     }
-  //   }
-
-  //   println("hello world")
-  //   new TestOutput().apply()
-  //   println("goodbye world")
-
-
-
-  //   assertFileEqualsCheck(prefix+"fusion1")
-  // }
-
-
-// trait MyLoops extends Loops with OverloadHack {
-//   def loop(shape: Rep[Int])(f: Rep[Int] => Rep[Unit]): Rep[Unit]
-// }
-
-// trait MyLoopsExp extends LoopsExp {
-//   case class LoopBody(y: Block[Unit]) extends Def[Unit]
-
-//   def loop(shape: Rep[Int])(f: Rep[Int] => Rep[Unit]): Rep[Unit] = {
-//     val x = fresh[Int]
-//     val y = reifyEffects(f(x))
-//     simpleLoop(shape, x, LoopBody(y))
-//   }
-
-//   // override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
-//   //   case LoopBody(b) => e
-//   //   case _ => super.mirrorDef(e,f)
-//   // }
-
-//   // override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
-//   //   case Reflect(LoopBody(b), a, c) => e
-//   //   case LoopBody(b) => e
-//   //   case _ => super.mirror(e,f)
-//   // }
-
-//   override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
-//    case LoopBody(b) => e
-//    case _ => super.mirrorFatDef(e,f)
-//   }
-
-// }
-
-// trait ScalaGenMyLoops extends ScalaGenLoops {
-//   val IR: MyLoopsExp
-//   import IR._
-
-//   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-//     case SimpleLoop(s,x,LoopBody(y)) =>  
-//       stream.println("val " + quote(sym) + " = for ("+quote(x)+" <- 0 until " + quote(s) + ") {")
-//       emitBlock(y)
-//       stream.println(quote(getBlockResult(y)))
-//       stream.println("}")
-//     case _ => super.emitNode(sym, rhs)
-//   }
-// }

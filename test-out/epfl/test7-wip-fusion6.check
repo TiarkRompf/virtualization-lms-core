@@ -42,61 +42,61 @@ if (x12) x14 += x13
 val x17 = x14.length
 val x18 = println(x17)
 
--- transforming
+-- vertical transformation
 
-(FT)  starting loop fusion of producer:
+(VFT)  starting loop fusion of producer:
       TP(Sym(22),SimpleLoop(Const(100),Sym(20),ArrayElem(Block(Sym(21)))))
-(FT)  into consumer:
+(VFT)  into consumer:
       TP(Sym(27),SimpleLoop(Sym(23),Sym(24),ArrayIfElem(Sym(7),Block(Sym(26)))))
-(FT)  original consumer:
+(VFT)  original consumer:
       TP(Sym(9),SimpleLoop(Sym(4),Sym(5),ArrayIfElem(Sym(7),Block(Sym(8)))))
-(FT)  original producerStms:
+(VFT)  original producerStms:
       TP(Sym(21),NumericPlus(Sym(20),Const(1)))
 
-(FT)  reindexed producerStms (prodIndex: Sym(20) -> consumerIndex: Sym(24)):
+(VFT)  reindexed producerStms (prodIndex: Sym(20) -> consumerIndex: Sym(24)):
       TP(Sym(29),NumericPlus(Sym(24),Const(1)))
 
-(FT)  original consuming:
+(VFT)  original consuming:
       TP(Sym(26),NumericTimes(Sym(25),Const(2)))
       TP(Sym(27),SimpleLoop(Sym(23),Sym(24),ArrayIfElem(Sym(7),Block(Sym(26)))))
       TP(Sym(28),OrderingGT(Sym(25),Const(50)))
       TP(Sym(25),ArrayIndex(Sym(22),Sym(24)))
 
-(FT)  fused consuming (SimpleIndex: List(Sym(25)) -> collectSym: Sym(29)):
+(VFT)  fused consuming (SimpleIndex: List(Sym(25)) -> collectSym: Sym(29)):
       TP(Sym(30),NumericTimes(Sym(29),Const(2)))
       TP(Sym(31),SimpleLoop(Sym(23),Sym(24),ArrayIfElem(Sym(28),Block(Sym(30)))))
       TP(Sym(32),OrderingGT(Sym(29),Const(50)))
       TP(Sym(25),ArrayIndex(Sym(22),Sym(24)))
 
-(FT)  fusion successful! Fused consumer loop: TP(Sym(33),SimpleLoop(Const(100),Sym(24),ArrayIfElem(Sym(32),Block(Sym(30)))))
+(VFT)  fusion successful! Fused consumer loop: TP(Sym(33),SimpleLoop(Const(100),Sym(24),ArrayIfElem(Sym(32),Block(Sym(30)))))
 
-(FT)  starting loop fusion of producer:
+(VFT)  starting loop fusion of producer:
       TP(Sym(22),SimpleLoop(Const(100),Sym(20),ArrayElem(Block(Sym(21)))))
-(FT)  into consumer:
+(VFT)  into consumer:
       TP(Sym(39),SimpleLoop(Sym(23),Sym(36),ArrayIfElem(Sym(12),Block(Sym(38)))))
-(FT)  original consumer:
+(VFT)  original consumer:
       TP(Sym(14),SimpleLoop(Sym(4),Sym(10),ArrayIfElem(Sym(12),Block(Sym(13)))))
-(FT)  original producerStms:
+(VFT)  original producerStms:
       TP(Sym(21),NumericPlus(Sym(20),Const(1)))
 
-(FT)  reindexed producerStms (prodIndex: Sym(20) -> consumerIndex: Sym(36)):
+(VFT)  reindexed producerStms (prodIndex: Sym(20) -> consumerIndex: Sym(36)):
       TP(Sym(41),NumericPlus(Sym(36),Const(1)))
 
-(FT)  original consuming:
+(VFT)  original consuming:
       TP(Sym(38),NumericTimes(Sym(37),Const(3)))
       TP(Sym(39),SimpleLoop(Sym(23),Sym(36),ArrayIfElem(Sym(12),Block(Sym(38)))))
       TP(Sym(40),OrderingLT(Sym(37),Const(20)))
       TP(Sym(37),ArrayIndex(Sym(22),Sym(36)))
 
-(FT)  fused consuming (SimpleIndex: List(Sym(37)) -> collectSym: Sym(41)):
+(VFT)  fused consuming (SimpleIndex: List(Sym(37)) -> collectSym: Sym(41)):
       TP(Sym(42),NumericTimes(Sym(41),Const(3)))
       TP(Sym(43),SimpleLoop(Sym(23),Sym(36),ArrayIfElem(Sym(40),Block(Sym(42)))))
       TP(Sym(44),OrderingLT(Sym(41),Const(20)))
       TP(Sym(37),ArrayIndex(Sym(22),Sym(36)))
 
-(FT)  fusion successful! Fused consumer loop: TP(Sym(45),SimpleLoop(Const(100),Sym(36),ArrayIfElem(Sym(44),Block(Sym(42)))))
+(VFT)  fusion successful! Fused consumer loop: TP(Sym(45),SimpleLoop(Const(100),Sym(36),ArrayIfElem(Sym(44),Block(Sym(42)))))
 
--- after transformation
+-- after vertical transformation
 var x33 = new ArrayBuilder[Int]
 for (x24 <- 0 until 100) {
 val x29 = x24 + 1
@@ -115,4 +115,29 @@ if (x44) x45 += x42
 }
 val x46 = x45.length
 val x47 = println(x46)
+
+-- horizontal transformation
+(HFT)  Recording loop: (Const(100),(Sym(33),Sym(24),None))
+(HFT)  Updating loop: (Const(100),(Sym(33),Sym(24),Some(List(Sym(33)))))
+(HFT)  Loop Sym(45) fused with Sym(33), common index: Sym(24)
+
+-- after horizontal transformation
+var x33 = new ArrayBuilder[Int]
+for (x24 <- 0 until 100) {
+val x29 = x24 + 1
+val x30 = x29 * 2
+val x32 = x29 > 50
+if (x32) x33 += x30
+}
+val x34 = x33.length
+val x49 = println(x34)
+var x52 = new ArrayBuilder[Int]
+for (x24 <- 0 until 100) {
+val x29 = x24 + 1
+val x50 = x29 * 3
+val x51 = x29 < 20
+if (x51) x52 += x50
+}
+val x53 = x52.length
+val x54 = println(x53)
 -- done

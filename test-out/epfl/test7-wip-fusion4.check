@@ -29,37 +29,37 @@ x10(x7) = x9
 val x11 = x10.length
 val x12 = println(x11)
 
--- transforming
+-- vertical transformation
 
-(FT)  starting loop fusion of producer:
+(VFT)  starting loop fusion of producer:
       TP(Sym(18),SimpleLoop(Const(100),Sym(14),ArrayElem(Block(Sym(17)))))
-(FT)  into consumer:
+(VFT)  into consumer:
       TP(Sym(24),SimpleLoop(Sym(19),Sym(21),ArrayElem(Block(Sym(23)))))
-(FT)  original consumer:
+(VFT)  original consumer:
       TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(9)))))
-(FT)  original producerStms:
+(VFT)  original producerStms:
       TP(Sym(15),NumericPlus(Sym(14),Const(1)))
       TP(Sym(16),NumericTimes(Sym(15),Sym(14)))
       TP(Sym(17),NumericTimes(Sym(14),Sym(16)))
 
-(FT)  reindexed producerStms (prodIndex: Sym(14) -> consumerIndex: Sym(21)):
+(VFT)  reindexed producerStms (prodIndex: Sym(14) -> consumerIndex: Sym(21)):
       TP(Sym(25),NumericPlus(Sym(21),Const(1)))
       TP(Sym(26),NumericTimes(Sym(25),Sym(21)))
       TP(Sym(27),NumericTimes(Sym(21),Sym(26)))
 
-(FT)  original consuming:
+(VFT)  original consuming:
       TP(Sym(23),NumericPlus(Sym(22),Sym(19)))
       TP(Sym(24),SimpleLoop(Sym(19),Sym(21),ArrayElem(Block(Sym(23)))))
       TP(Sym(22),ArrayIndex(Sym(18),Sym(21)))
 
-(FT)  fused consuming (SimpleIndex: List(Sym(22)) -> collectSym: Sym(27)):
+(VFT)  fused consuming (SimpleIndex: List(Sym(22)) -> collectSym: Sym(27)):
       TP(Sym(28),NumericPlus(Sym(27),Sym(19)))
       TP(Sym(29),SimpleLoop(Sym(19),Sym(21),ArrayElem(Block(Sym(28)))))
       TP(Sym(22),ArrayIndex(Sym(18),Sym(21)))
 
-(FT)  fusion successful! Fused consumer loop: TP(Sym(30),SimpleLoop(Const(100),Sym(21),ArrayElem(Block(Sym(28)))))
+(VFT)  fusion successful! Fused consumer loop: TP(Sym(30),SimpleLoop(Const(100),Sym(21),ArrayElem(Block(Sym(28)))))
 
--- after transformation
+-- after vertical transformation
 var x18 = new Array[Int](100)
 for (x14 <- 0 until 100) {
 val x15 = x14 + 1
@@ -78,4 +78,29 @@ x30(x21) = x28
 }
 val x31 = x30.length
 val x32 = println(x31)
+
+-- horizontal transformation
+(HFT)  Recording loop: (Const(100),(Sym(18),Sym(14),None))
+(HFT)  Updating loop: (Const(100),(Sym(18),Sym(14),Some(List(Sym(30), Sym(29), Sym(24), Sym(18)))))
+(HFT)  Loop Sym(30) not fused with Sym(18) because it depends on it
+
+-- after horizontal transformation
+var x18 = new Array[Int](100)
+for (x14 <- 0 until 100) {
+val x15 = x14 + 1
+val x16 = x15 * x14
+val x17 = x14 * x16
+x18(x14) = x17
+}
+val x19 = x18.length
+var x30 = new Array[Int](100)
+for (x21 <- 0 until 100) {
+val x25 = x21 + 1
+val x26 = x25 * x21
+val x27 = x21 * x26
+val x28 = x27 + x19
+x30(x21) = x28
+}
+val x31 = x30.length
+val x34 = println(x31)
 -- done
