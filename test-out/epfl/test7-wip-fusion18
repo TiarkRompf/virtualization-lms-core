@@ -1,0 +1,89 @@
+-- full graph
+TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Sym(0),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(4),ArrayLength(Sym(3)))
+TP(Sym(5),Reflect(Print(Sym(4)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(7),ArrayIndex(Sym(3),Sym(6)))
+TP(Sym(8),Reflect(Print(Sym(7)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(9),Reify(Const(1),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(8))))
+TP(Sym(10),SimpleLoop(Sym(4),Sym(6),ArrayElem(Block(Sym(9)))))
+TP(Sym(11),Reflect(SimpleLoop(Sym(4),Sym(6),ArrayElem(Block(Sym(9)))),Summary(true,false,false,false,false,List(),List(),List(),List()),List(Sym(5))))
+TP(Sym(12),ArrayIndex(Sym(11),Const(1)))
+TP(Sym(13),Reflect(Print(Sym(12)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(5), Sym(11))))
+TP(Sym(14),Reify(Sym(13),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(5), Sym(11), Sym(13))))
+
+-- before transformation
+var x3 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.length
+val x5 = println(x4)
+val x11 = LoopArray(x4) { x6 => 
+val x7 = x3.apply(x6)
+val x8 = println(x7)
+1
+}
+val x12 = x11.apply(1)
+val x13 = println(x12)
+
+-- vertical transformation
+nonflat: List(List((Sym(3),Some(TP(Sym(3),SimpleLoop(Sym(0),Sym(1),ArrayElem(Block(Sym(2)))))))), List((Sym(2),Some(TP(Sym(2),NumericPlus(Sym(1),Const(1)))))), List((Sym(1),None)), List((Sym(0),None)))
++++deps of Sym(3): List()
+(VFT)  Loop Sym(3) is consumer of 
+
+
+C
+
+-- after vertical transformation
+var x3 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.length
+val x20 = LoopArray(x4) { x15 => 
+val x16 = x3.apply(x15)
+val x17 = println(x16)
+1
+}
+val x5 = println(x4)
+val x21 = LoopArray(x4) { x15 => 
+val x16 = x3.apply(x15)
+val x17 = println(x16)
+1
+}
+val x22 = x21.apply(1)
+val x23 = println(x22)
+
+-- horizontal transformation
+(HFT)  Recording new loop (prev. Sym(3)): (Sym(0),(Sym(3),Sym(1),None))
+error: don't know how to mirror SimpleLoop(Sym(4),Sym(15),ArrayElem(Block(Sym(18))))
+
+-- after horizontal transformation
+var x3 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.length
+val x5 = println(x4)
+val x21 = LoopArray(x4) { x15 => 
+val x16 = x3.apply(x15)
+val x17 = println(x16)
+1
+}
+val x22 = x21.apply(1)
+val x23 = println(x22)
+val x31 = LoopArray(x4) { x26 => 
+val x27 = x3.apply(x26)
+val x28 = println(x27)
+1
+}
+val x32 = LoopArray(x4) { x26 => 
+val x27 = x3.apply(x26)
+val x28 = println(x27)
+1
+}
+-- done

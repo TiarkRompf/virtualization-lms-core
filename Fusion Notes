@@ -91,10 +91,10 @@ Questions: what does TP and TTP mean?
 mirrorFatDef vs. mirrorDef, why is mirroring loop bodies different from rest?
 TTP can't be mirrored or stored in symbol table because they're invisible now, so can't run anything after
 
+What if nested inner loop shouldn't be fused with toplevel producer?
 
 
-
-
+start: 1.20
 
 
 

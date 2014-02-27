@@ -1,0 +1,58 @@
+-- full graph
+TP(Sym(1),NumericPlus(Sym(0),Const(1)))
+TP(Sym(3),Reflect(Print(Sym(2)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(4),Reify(Sym(2),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(3))))
+TP(Sym(5),SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(4)))))
+TP(Sym(6),Reflect(SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(4)))),Summary(true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(7),Reflect(Print(Sym(1)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(6))))
+TP(Sym(8),ArrayIndex(Sym(6),Const(0)))
+TP(Sym(9),Reflect(Print(Sym(8)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(6), Sym(7))))
+TP(Sym(10),Reify(Sym(9),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(6), Sym(7), Sym(9))))
+
+-- before transformation
+val x6 = LoopArray(100) { x2 => 
+val x3 = println(x2)
+x2
+}
+val x1 = x0 + 1
+val x7 = println(x1)
+val x8 = x6.apply(0)
+val x9 = println(x8)
+
+-- vertical transformation
+
+-- after vertical transformation
+val x15 = LoopArray(100) { x11 => 
+val x12 = println(x11)
+x11
+}
+val x16 = LoopArray(100) { x11 => 
+val x12 = println(x11)
+x11
+}
+val x1 = x0 + 1
+val x17 = println(x1)
+val x18 = x16.apply(0)
+val x19 = println(x18)
+
+-- horizontal transformation
+error: don't know how to mirror SimpleLoop(Const(100),Sym(11),ArrayElem(Block(Sym(13))))
+
+-- after horizontal transformation
+val x16 = LoopArray(100) { x11 => 
+val x12 = println(x11)
+x11
+}
+val x1 = x0 + 1
+val x17 = println(x1)
+val x18 = x16.apply(0)
+val x19 = println(x18)
+val x26 = LoopArray(100) { x22 => 
+val x23 = println(x22)
+x22
+}
+val x27 = LoopArray(100) { x22 => 
+val x23 = println(x22)
+x22
+}
+-- done

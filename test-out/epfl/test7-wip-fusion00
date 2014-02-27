@@ -1,0 +1,86 @@
+-- full graph
+TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(4),ArrayLength(Sym(3)))
+TP(Sym(6),ArrayIndex(Sym(3),Sym(5)))
+TP(Sym(7),NumericPlus(Sym(6),Const(1)))
+TP(Sym(8),SimpleLoop(Sym(4),Sym(5),ArrayElem(Block(Sym(7)))))
+TP(Sym(9),ArrayIndex(Sym(3),Const(0)))
+TP(Sym(10),Reflect(Print(Sym(9)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(11),ArrayIndex(Sym(8),Const(0)))
+TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(10))))
+TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(10), Sym(12))))
+
+-- before transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x9 = x3.apply(0)
+val x10 = println(x9)
+val x4 = x3.length
+var x8 = new Array[Int](x4)
+for (x5 <- 0 until x4) {
+val x6 = x3.apply(x5)
+val x7 = x6 + 1
+x8(x5) = x7
+}
+val x11 = x8.apply(0)
+val x12 = println(x11)
+
+-- vertical transformation
+nonflat: List(List((Sym(3),Some(TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))))), List((Sym(2),Some(TP(Sym(2),NumericPlus(Sym(1),Const(1)))))), List((Sym(1),None)))
++++deps of Sym(3): List()
+(VFT)  Loop Sym(3) is consumer of 
+
+
+nonflat: List(List((Sym(8),Some(TP(Sym(8),SimpleLoop(Sym(4),Sym(5),ArrayElem(Block(Sym(7)))))))), List((Sym(7),Some(TP(Sym(7),NumericPlus(Sym(6),Const(1)))))), List((Sym(6),Some(TP(Sym(6),ArrayIndex(Sym(3),Sym(5)))))), List((Sym(5),None)), List((Sym(4),Some(TP(Sym(4),ArrayLength(Sym(3)))))), List((Sym(3),Some(TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))))))
++++deps of Sym(8): List(Sym(3))
+(VFT)  Loop Sym(8) is consumer of 
+(Sym(3),1)
+
++++recording horizontal requirement: Sym(8) -> Sym(3)
+fuse with TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+index: subst += (Sym(5) -> Sym(1)) 
+prodRes: simpleIndexReplacements += (Sym(6) -> Sym(2)) 
+B
+
+-- after vertical transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x9 = x3.apply(0)
+val x10 = println(x9)
+var x15 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x14 = x2 + 1
+x15(x1) = x14
+}
+val x16 = x15.apply(0)
+val x17 = println(x16)
+
+-- horizontal transformation
+(HFT)  Recording new loop (prev. Sym(3)): (Const(100),(Sym(3),Sym(1),None))
+(HFT)  Loop Sym(15) fused with Sym(3), common index: Sym(1)
+
+-- after horizontal transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x9 = x3.apply(0)
+val x10 = println(x9)
+var x15 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x14 = x2 + 1
+x15(x1) = x14
+}
+val x16 = x15.apply(0)
+val x17 = println(x16)
+-- done

@@ -1,0 +1,81 @@
+-- full graph
+TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Sym(0),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(4),ArrayIndex(Sym(3),Const(0)))
+TP(Sym(5),ArrayLength(Sym(3)))
+TP(Sym(7),ArrayIndex(Sym(3),Sym(6)))
+TP(Sym(8),NumericPlus(Sym(7),Sym(4)))
+TP(Sym(9),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(8)))))
+TP(Sym(10),ArrayIndex(Sym(9),Const(1)))
+TP(Sym(11),Reflect(Print(Sym(10)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(12),Reify(Sym(11),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(11))))
+
+-- before transformation
+var x3 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x5 = x3.length
+val x4 = x3.apply(0)
+var x9 = new Array[Int](x5)
+for (x6 <- 0 until x5) {
+val x7 = x3.apply(x6)
+val x8 = x7 + x4
+x9(x6) = x8
+}
+val x10 = x9.apply(1)
+val x11 = println(x10)
+
+-- vertical transformation
+nonflat: List(List((Sym(3),Some(TP(Sym(3),SimpleLoop(Sym(0),Sym(1),ArrayElem(Block(Sym(2)))))))), List((Sym(2),Some(TP(Sym(2),NumericPlus(Sym(1),Const(1)))))), List((Sym(1),None)), List((Sym(0),None)))
++++deps of Sym(3): List()
+(VFT)  Loop Sym(3) is consumer of 
+
+
+C
+nonflat: List(List((Sym(9),Some(TP(Sym(9),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(8)))))))), List((Sym(8),Some(TP(Sym(8),NumericPlus(Sym(7),Sym(4)))))), List((Sym(4),Some(TP(Sym(4),ArrayIndex(Sym(3),Const(0)))))), List((Sym(7),Some(TP(Sym(7),ArrayIndex(Sym(3),Sym(6)))))), List((Sym(6),None)), List((Sym(5),Some(TP(Sym(5),ArrayLength(Sym(3)))))), List((Sym(3),Some(TP(Sym(3),SimpleLoop(Sym(0),Sym(1),ArrayElem(Block(Sym(2)))))))))
++++deps of Sym(9): List(Sym(3))
+(VFT)  Loop Sym(9) is consumer of 
+
+
+C
+
+-- after vertical transformation
+var x3 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x5 = x3.length
+val x4 = x3.apply(0)
+var x9 = new Array[Int](x5)
+for (x6 <- 0 until x5) {
+val x7 = x3.apply(x6)
+val x8 = x7 + x4
+x9(x6) = x8
+}
+val x10 = x9.apply(1)
+val x11 = println(x10)
+
+-- horizontal transformation
+(HFT)  Recording new loop (prev. Sym(3)): (Sym(0),(Sym(3),Sym(1),None))
+(HFT)  Recording new loop (prev. Sym(9)): (Sym(5),(Sym(9),Sym(6),None))
+
+-- after horizontal transformation
+var x3 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x5 = x3.length
+val x4 = x3.apply(0)
+var x9 = new Array[Int](x5)
+for (x6 <- 0 until x5) {
+val x7 = x3.apply(x6)
+val x8 = x7 + x4
+x9(x6) = x8
+}
+val x10 = x9.apply(1)
+val x11 = println(x10)
+-- done

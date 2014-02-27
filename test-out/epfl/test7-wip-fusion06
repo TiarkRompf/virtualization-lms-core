@@ -1,0 +1,110 @@
+-- full graph
+TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(4),ArrayLength(Sym(3)))
+TP(Sym(6),ArrayIndex(Sym(3),Sym(5)))
+TP(Sym(7),OrderingGT(Sym(6),Const(50)))
+TP(Sym(8),NumericTimes(Sym(6),Const(2)))
+TP(Sym(9),SimpleLoop(Sym(4),Sym(5),ArrayIfElem(Sym(7),Block(Sym(8)))))
+TP(Sym(11),ArrayIndex(Sym(3),Sym(10)))
+TP(Sym(12),OrderingLT(Sym(11),Const(20)))
+TP(Sym(13),NumericTimes(Sym(11),Const(3)))
+TP(Sym(14),SimpleLoop(Sym(4),Sym(10),ArrayIfElem(Sym(12),Block(Sym(13)))))
+TP(Sym(15),ArrayLength(Sym(9)))
+TP(Sym(16),Reflect(Print(Sym(15)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(17),ArrayLength(Sym(14)))
+TP(Sym(18),Reflect(Print(Sym(17)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(16))))
+TP(Sym(19),Reify(Sym(18),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(16), Sym(18))))
+
+-- before transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.length
+var x9 = new ArrayBuilder[Int]
+for (x5 <- 0 until x4) {
+val x6 = x3.apply(x5)
+val x7 = x6 > 50
+val x8 = x6 * 2
+if (x7) x9 += x8
+}
+val x15 = x9.length
+val x16 = println(x15)
+var x14 = new ArrayBuilder[Int]
+for (x10 <- 0 until x4) {
+val x11 = x3.apply(x10)
+val x12 = x11 < 20
+val x13 = x11 * 3
+if (x12) x14 += x13
+}
+val x17 = x14.length
+val x18 = println(x17)
+
+-- vertical transformation
+nonflat: List(List((Sym(3),Some(TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))))), List((Sym(2),Some(TP(Sym(2),NumericPlus(Sym(1),Const(1)))))), List((Sym(1),None)))
++++deps of Sym(3): List()
+(VFT)  Loop Sym(3) is consumer of 
+
+
+nonflat: List(List((Sym(9),Some(TP(Sym(9),SimpleLoop(Sym(4),Sym(5),ArrayIfElem(Sym(7),Block(Sym(8)))))))), List((Sym(8),Some(TP(Sym(8),NumericTimes(Sym(6),Const(2)))))), List((Sym(7),Some(TP(Sym(7),OrderingGT(Sym(6),Const(50)))))), List((Sym(6),Some(TP(Sym(6),ArrayIndex(Sym(3),Sym(5)))))), List((Sym(5),None)), List((Sym(4),Some(TP(Sym(4),ArrayLength(Sym(3)))))), List((Sym(3),Some(TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))))))
++++deps of Sym(9): List(Sym(3))
+nonflat: List(List((Sym(14),Some(TP(Sym(14),SimpleLoop(Sym(4),Sym(10),ArrayIfElem(Sym(12),Block(Sym(13)))))))), List((Sym(13),Some(TP(Sym(13),NumericTimes(Sym(11),Const(3)))))), List((Sym(12),Some(TP(Sym(12),OrderingLT(Sym(11),Const(20)))))), List((Sym(11),Some(TP(Sym(11),ArrayIndex(Sym(3),Sym(10)))))), List((Sym(10),None)), List((Sym(4),Some(TP(Sym(4),ArrayLength(Sym(3)))))), List((Sym(3),Some(TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))))))
++++deps of Sym(14): List(Sym(3))
+
+-- after vertical transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+var x20 = new ArrayBuilder[Int]
+for (x5 <- 0 until 100) {
+val x6 = x3.apply(x5)
+val x7 = x6 > 50
+val x8 = x6 * 2
+if (x7) x20 += x8
+}
+val x21 = x20.length
+val x22 = println(x21)
+var x23 = new ArrayBuilder[Int]
+for (x10 <- 0 until 100) {
+val x11 = x3.apply(x10)
+val x12 = x11 < 20
+val x13 = x11 * 3
+if (x12) x23 += x13
+}
+val x24 = x23.length
+val x25 = println(x24)
+
+-- horizontal transformation
+(HFT)  Recording new loop (prev. Sym(3)): (Const(100),(Sym(3),Sym(1),None))
+(HFT)  Loop Sym(20) not fused with Sym(3) because it depends on it
+(HFT)  Loop Sym(23) not fused with Sym(3) because it depends on it
+
+-- after horizontal transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+var x20 = new ArrayBuilder[Int]
+for (x5 <- 0 until 100) {
+val x6 = x3.apply(x5)
+val x7 = x6 > 50
+val x8 = x6 * 2
+if (x7) x20 += x8
+}
+val x21 = x20.length
+val x22 = println(x21)
+var x23 = new ArrayBuilder[Int]
+for (x10 <- 0 until 100) {
+val x11 = x3.apply(x10)
+val x12 = x11 < 20
+val x13 = x11 * 3
+if (x12) x23 += x13
+}
+val x24 = x23.length
+val x25 = println(x24)
+-- done
