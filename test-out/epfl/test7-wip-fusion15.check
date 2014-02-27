@@ -1,0 +1,77 @@
+-- full graph
+TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(5),NumericPlus(Sym(4),Const(2)))
+TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5)))))
+TP(Sym(8),ArrayIndex(Sym(3),Sym(7)))
+TP(Sym(9),ArrayIndex(Sym(6),Sym(7)))
+TP(Sym(10),NumericPlus(Sym(8),Sym(9)))
+TP(Sym(11),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(10)))))
+TP(Sym(12),ArrayIndex(Sym(11),Const(0)))
+TP(Sym(13),Reflect(Print(Sym(12)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(14),Reify(Sym(13),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(13))))
+
+-- before transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+var x6 = new Array[Int](100)
+for (x4 <- 0 until 100) {
+val x5 = x4 + 2
+x6(x4) = x5
+}
+var x11 = new Array[Int](100)
+for (x7 <- 0 until 100) {
+val x8 = x3.apply(x7)
+val x9 = x6.apply(x7)
+val x10 = x8 + x9
+x11(x7) = x10
+}
+val x12 = x11.apply(0)
+val x13 = println(x12)
+
+-- vertical transformation
+(VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+(VFT) No producers found for TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5)))))
+(VFT) Fusing consumer TP(Sym(11),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(10))))) with reconstructed producer: Sym(3)
+(VFT) TODO could then fuse with reconstructed producers: List(Sym(6))
+(VFT) SimpleCollect+Any fusion: remap index to Sym(1), SimpleIndex to Sym(2).
+
+-- after vertical transformation
+var x6 = new Array[Int](100)
+for (x4 <- 0 until 100) {
+val x5 = x4 + 2
+x6(x4) = x5
+}
+var x17 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x15 = x6.apply(x1)
+val x16 = x2 + x15
+x17(x1) = x16
+}
+val x18 = x17.apply(0)
+val x19 = println(x18)
+
+-- horizontal transformation
+(HFT)  Recording new loop (prev. Sym(6)): (Const(100),(Sym(6),Sym(4),None))
+(HFT)  Loop Sym(17) not fused with Sym(6) because it depends on it
+
+-- after horizontal transformation
+var x6 = new Array[Int](100)
+for (x4 <- 0 until 100) {
+val x5 = x4 + 2
+x6(x4) = x5
+}
+var x17 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x15 = x6.apply(x1)
+val x16 = x2 + x15
+x17(x1) = x16
+}
+val x18 = x17.apply(0)
+val x19 = println(x18)
+-- done

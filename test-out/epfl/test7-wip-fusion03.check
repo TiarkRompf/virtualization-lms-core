@@ -30,46 +30,29 @@ val x11 = x10.length
 val x12 = println(x11)
 
 -- vertical transformation
-(VFT)  no consumer: TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayIfElem(Sym(8),Block(Sym(9)))))
-(VFT)  because body doesn't contain array.
+(VFT) No producers found for TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(4)))))
+(VFT) No producers found for TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayIfElem(Sym(8),Block(Sym(9)))))
 
 -- after vertical transformation
-var x18 = new Array[Int](100)
-for (x14 <- 0 until 100) {
-val x15 = x14 + 1
-val x16 = x15 * x14
-val x17 = x14 * x16
-x18(x14) = x17
-}
-val x19 = x18.length
-var x20 = new ArrayBuilder[Boolean]
-for (x7 <- 0 until x19) {
+var x14 = new ArrayBuilder[Boolean]
+for (x7 <- 0 until 100) {
 val x8 = x7 > 50
 val x9 = x7 > 60
-if (x8) x20 += x9
+if (x8) x14 += x9
 }
-val x21 = x20.length
-val x22 = println(x21)
+val x15 = x14.length
+val x16 = println(x15)
 
 -- horizontal transformation
-(HFT)  Recording loop: (Const(100),(Sym(18),Sym(14),None))
-(HFT)  Recording loop: (Sym(19),(Sym(20),Sym(7),None))
+(HFT)  Recording new loop (prev. Sym(14)): (Const(100),(Sym(14),Sym(7),None))
 
 -- after horizontal transformation
-var x18 = new Array[Int](100)
-for (x14 <- 0 until 100) {
-val x15 = x14 + 1
-val x16 = x15 * x14
-val x17 = x14 * x16
-x18(x14) = x17
-}
-val x19 = x18.length
-var x20 = new ArrayBuilder[Boolean]
-for (x7 <- 0 until x19) {
+var x14 = new ArrayBuilder[Boolean]
+for (x7 <- 0 until 100) {
 val x8 = x7 > 50
 val x9 = x7 > 60
-if (x8) x20 += x9
+if (x8) x14 += x9
 }
-val x21 = x20.length
-val x24 = println(x21)
+val x15 = x14.length
+val x16 = println(x15)
 -- done

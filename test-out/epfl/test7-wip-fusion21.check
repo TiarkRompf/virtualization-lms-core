@@ -1,0 +1,119 @@
+-- full graph
+TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(5),ArrayIndex(Sym(3),Sym(4)))
+TP(Sym(6),NumericPlus(Sym(5),Const(2)))
+TP(Sym(7),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(6)))))
+TP(Sym(9),ArrayIndex(Sym(3),Sym(8)))
+TP(Sym(10),NumericPlus(Sym(9),Const(3)))
+TP(Sym(11),SimpleLoop(Const(100),Sym(8),ArrayElem(Block(Sym(10)))))
+TP(Sym(12),ArrayLength(Sym(3)))
+TP(Sym(14),ArrayIndex(Sym(3),Sym(13)))
+TP(Sym(15),NumericPlus(Sym(14),Const(4)))
+TP(Sym(16),SimpleLoop(Sym(12),Sym(13),ArrayElem(Block(Sym(15)))))
+TP(Sym(17),ArrayIndex(Sym(7),Const(0)))
+TP(Sym(18),Reflect(Print(Sym(17)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(19),ArrayIndex(Sym(11),Const(0)))
+TP(Sym(20),Reflect(Print(Sym(19)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(18))))
+TP(Sym(21),ArrayIndex(Sym(16),Const(0)))
+TP(Sym(22),Reflect(Print(Sym(21)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(18), Sym(20))))
+TP(Sym(23),Reify(Sym(22),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(18), Sym(20), Sym(22))))
+
+-- before transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+var x7 = new Array[Int](100)
+for (x4 <- 0 until 100) {
+val x5 = x3.apply(x4)
+val x6 = x5 + 2
+x7(x4) = x6
+}
+val x17 = x7.apply(0)
+val x18 = println(x17)
+var x11 = new Array[Int](100)
+for (x8 <- 0 until 100) {
+val x9 = x3.apply(x8)
+val x10 = x9 + 3
+x11(x8) = x10
+}
+val x19 = x11.apply(0)
+val x20 = println(x19)
+val x12 = x3.length
+var x16 = new Array[Int](x12)
+for (x13 <- 0 until x12) {
+val x14 = x3.apply(x13)
+val x15 = x14 + 4
+x16(x13) = x15
+}
+val x21 = x16.apply(0)
+val x22 = println(x21)
+
+-- vertical transformation
+(VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+(VFT) Fusing consumer TP(Sym(7),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(6))))) with reconstructed producer: Sym(3)
+(VFT) SimpleCollect+Any fusion: remap index to Sym(1), SimpleIndex to Sym(2).
+(VFT) Fusing consumer TP(Sym(11),SimpleLoop(Const(100),Sym(8),ArrayElem(Block(Sym(10))))) with reconstructed producer: Sym(3)
+(VFT) SimpleCollect+Any fusion: remap index to Sym(1), SimpleIndex to Sym(2).
+(VFT) Fusing consumer TP(Sym(16),SimpleLoop(Sym(12),Sym(13),ArrayElem(Block(Sym(15))))) with real producer: Sym(3)
+(VFT) SimpleCollect+Any fusion: remap index to Sym(1), SimpleIndex to Sym(2).
+
+-- after vertical transformation
+var x25 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x24 = x2 + 2
+x25(x1) = x24
+}
+val x26 = x25.apply(0)
+val x27 = println(x26)
+var x29 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x28 = x2 + 3
+x29(x1) = x28
+}
+val x30 = x29.apply(0)
+val x31 = println(x30)
+var x33 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x32 = x2 + 4
+x33(x1) = x32
+}
+val x34 = x33.apply(0)
+val x35 = println(x34)
+
+-- horizontal transformation
+(HFT)  Recording new loop (prev. Sym(25)): (Const(100),(Sym(25),Sym(1),None))
+(HFT)  Loop Sym(29) fused with Sym(25), common index: Sym(1)
+(HFT)  Loop Sym(33) fused with Sym(25), common index: Sym(1)
+
+-- after horizontal transformation
+var x25 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x24 = x2 + 2
+x25(x1) = x24
+}
+val x26 = x25.apply(0)
+val x27 = println(x26)
+var x29 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x28 = x2 + 3
+x29(x1) = x28
+}
+val x30 = x29.apply(0)
+val x31 = println(x30)
+var x33 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x32 = x2 + 4
+x33(x1) = x32
+}
+val x34 = x33.apply(0)
+val x35 = println(x34)
+-- done

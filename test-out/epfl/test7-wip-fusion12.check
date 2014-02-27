@@ -8,7 +8,7 @@ TP(Sym(9),NumericTimes(Sym(1),Sym(8)))
 TP(Sym(10),ArrayIndex(Sym(7),Const(0)))
 TP(Sym(11),NumericTimes(Sym(9),Sym(10)))
 TP(Sym(12),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(11)))))
-TP(Sym(13),ArrayLength(Sym(12)))
+TP(Sym(13),ArrayIndex(Sym(12),Const(0)))
 TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
 TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(14))))
 
@@ -31,55 +31,60 @@ val x10 = x7.apply(0)
 val x11 = x9 * x10
 x12(x1) = x11
 }
-val x13 = x12.length
+val x13 = x12.apply(0)
 val x14 = println(x13)
 
 -- vertical transformation
+(VFT) No producers found for TP(Sym(12),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(11)))))
+(VFT) No producers found for TP(Sym(4),SimpleLoop(Const(80),Sym(2),ArrayElem(Block(Sym(3)))))
+(VFT) No producers found for TP(Sym(7),SimpleLoop(Const(80),Sym(5),ArrayElem(Block(Sym(6)))))
 
 -- after vertical transformation
-var x27 = new Array[Int](100)
-for (x16 <- 0 until 100) {
-var x19 = new Array[Int](80)
-for (x17 <- 0 until 80) {
-val x18 = x17 + x16
-x19(x17) = x18
+var x12 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+var x4 = new Array[Int](80)
+for (x2 <- 0 until 80) {
+val x3 = x2 + x1
+x4(x2) = x3
 }
-val x20 = x19.apply(0)
-val x21 = x16 * x20
-var x24 = new Array[Int](80)
-for (x22 <- 0 until 80) {
-val x23 = x22 * x16
-x24(x22) = x23
+val x8 = x4.apply(0)
+val x9 = x1 * x8
+var x7 = new Array[Int](80)
+for (x5 <- 0 until 80) {
+val x6 = x5 * x1
+x7(x5) = x6
 }
-val x25 = x24.apply(0)
-val x26 = x21 * x25
-x27(x16) = x26
+val x10 = x7.apply(0)
+val x11 = x9 * x10
+x12(x1) = x11
 }
-val x28 = x27.length
-val x29 = println(x28)
+val x13 = x12.apply(0)
+val x14 = println(x13)
 
 -- horizontal transformation
-(HFT)  Recording loop: (Const(100),(Sym(27),Sym(16),None))
+(HFT)  Recording new loop (prev. Sym(4)): (Const(80),(Sym(4),Sym(2),None))
+(HFT)  Loop Sym(7) fused with Sym(4), common index: Sym(2)
+(HFT)  Recording new loop (prev. Sym(12)): (Const(100),(Sym(20),Sym(1),None))
 
 -- after horizontal transformation
-var x27 = new Array[Int](100)
-for (x16 <- 0 until 100) {
-var x19 = new Array[Int](80)
-for (x17 <- 0 until 80) {
-val x18 = x17 + x16
-x19(x17) = x18
+var x20 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+var x4 = new Array[Int](80)
+for (x2 <- 0 until 80) {
+val x3 = x2 + x1
+x4(x2) = x3
 }
-val x20 = x19.apply(0)
-val x21 = x16 * x20
-var x24 = new Array[Int](80)
-for (x22 <- 0 until 80) {
-val x23 = x22 * x16
-x24(x22) = x23
+val x8 = x4.apply(0)
+val x9 = x1 * x8
+var x17 = new Array[Int](80)
+for (x2 <- 0 until 80) {
+val x16 = x2 * x1
+x17(x2) = x16
 }
-val x25 = x24.apply(0)
-val x26 = x21 * x25
-x27(x16) = x26
+val x18 = x17.apply(0)
+val x19 = x9 * x18
+x20(x1) = x19
 }
-val x28 = x27.length
-val x31 = println(x28)
+val x21 = x20.apply(0)
+val x22 = println(x21)
 -- done

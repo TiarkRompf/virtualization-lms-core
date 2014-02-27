@@ -1,0 +1,79 @@
+-- full graph
+TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(5),NumericPlus(Sym(4),Const(2)))
+TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5)))))
+TP(Sym(7),ArrayLength(Sym(6)))
+TP(Sym(9),ArrayIndex(Sym(3),Sym(8)))
+TP(Sym(10),ArrayIndex(Sym(6),Sym(8)))
+TP(Sym(11),NumericPlus(Sym(9),Sym(10)))
+TP(Sym(12),SimpleLoop(Sym(7),Sym(8),ArrayElem(Block(Sym(11)))))
+TP(Sym(13),ArrayIndex(Sym(12),Const(0)))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+
+-- before transformation
+var x6 = new Array[Int](100)
+for (x4 <- 0 until 100) {
+val x5 = x4 + 2
+x6(x4) = x5
+}
+val x7 = x6.length
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+var x12 = new Array[Int](x7)
+for (x8 <- 0 until x7) {
+val x9 = x3.apply(x8)
+val x10 = x6.apply(x8)
+val x11 = x9 + x10
+x12(x8) = x11
+}
+val x13 = x12.apply(0)
+val x14 = println(x13)
+
+-- vertical transformation
+(VFT) No producers found for TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5)))))
+(VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+(VFT) Fusing consumer TP(Sym(12),SimpleLoop(Sym(7),Sym(8),ArrayElem(Block(Sym(11))))) with real producer: Sym(6)
+(VFT) TODO could then fuse with reconstructed producers: List(Sym(3))
+(VFT) SimpleCollect+Any fusion: remap index to Sym(4), SimpleIndex to Sym(5).
+
+-- after vertical transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+var x18 = new Array[Int](100)
+for (x4 <- 0 until 100) {
+val x5 = x4 + 2
+val x16 = x3.apply(x4)
+val x17 = x16 + x5
+x18(x4) = x17
+}
+val x19 = x18.apply(0)
+val x20 = println(x19)
+
+-- horizontal transformation
+(HFT)  Recording new loop (prev. Sym(3)): (Const(100),(Sym(3),Sym(1),None))
+(HFT)  Loop Sym(18) not fused with Sym(3) because it depends on it
+
+-- after horizontal transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+var x18 = new Array[Int](100)
+for (x4 <- 0 until 100) {
+val x5 = x4 + 2
+val x16 = x3.apply(x4)
+val x17 = x16 + x5
+x18(x4) = x17
+}
+val x19 = x18.apply(0)
+val x20 = println(x19)
+-- done

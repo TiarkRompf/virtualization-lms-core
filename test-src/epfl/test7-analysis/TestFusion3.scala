@@ -91,11 +91,19 @@ trait ArrayLoopFusionExtractors extends ArrayLoopsExp with LoopFusionExtractors 
   }  
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case SimpleLoop(s, i, ArrayElem(y)) => 
-      simpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], ArrayElem(reifyEffects(f.reflectBlock(y))))
+    case SimpleLoop(s, i, body) => 
+      simpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], mirrorFatDef(body, f))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
+  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+    case ArrayElem(y) => ArrayElem(reifyEffects(f.reflectBlock(y)))
+    case ReduceElem(y) => ReduceElem(reifyEffects(f.reflectBlock(y)))
+    // TODO argh... why you no blocks?
+    case ArrayIfElem(c,y) => ArrayIfElem(f.reflectBlock(Block(c)),reifyEffects(f.reflectBlock(y)))
+    case FlattenElem(y) => FlattenElem(reifyEffects(f.reflectBlock(y)))
+    case _ => super.mirrorFatDef(e,f)
+  }).asInstanceOf[Def[A]]
 }
 
 trait MyFusionProg extends NumericOps with ArrayLoops with Print {
@@ -104,7 +112,7 @@ trait MyFusionProg extends NumericOps with ArrayLoops with Print {
 
 trait Impl extends MyFusionProg with NumericOpsExp with ArrayLoopsFatExp with PrintExp
     with IfThenElseFatExp with OrderingOpsExp with BooleanOpsExp with ArrayLoopFusionExtractors { self =>
-  override val verbosity = 1 // 1: only printlog, 2: also printdbg
+  override val verbosity = 2 // 1: only printlog, 2: also printdbg
   val runner = new Runner { val p: self.type = self }
   runner.run()
 }
@@ -207,55 +215,6 @@ trait FusionTransformer extends PreservingForwardTransformer {
 
     loopStmSyms.map(_._2.get)
   }
-
-
-  // Including transitive dependencies and deps caused by horizontal
-  // fusion requirement
-  // val loopDependencies = new HashMap[Sym[Any], List[Sym[Any]]]()
-  // val horizontalDependencies = new HashMap[Sym[Any], List[Sym[Any]]]()
-
-  /*
-    Any loop X has the following relationships:
-    + not related with loop A
-     -+ shape is same FixedDomain(A) -> horizontal possible
-    + dependent
-     -+ other than SimpleIndex(B, i) and/or shape is SimpleDomain(B) -> no fusion
-     -+ only through SimpleIndex(C, i) -> maybe vertical
-    + horizontally dependent set
-    - 
-  */
-
-  // def computeDependencies(loop: Sym[Any]): List[Sym[Any]] = {
-  //   val loopDepsList = loopDependencies.getOrElseUpdate(loop, {
-  //     val start = List((loop, findDefinition(loop)))
-  //     val deps = GraphUtil.stronglyConnectedComponents(start, { symDef: Pair[Sym[Any],Option[Stm]] => 
-  //       symDef match {
-  //         case (sym, _) if loopDependencies.contains(sym) => List() // don't look any further
-  //         case (_, Some(d)) => 
-  //           val next = syms(d.rhs)
-  //           next.map(s => (s, findDefinition(s)))
-  //         case (_, None) => Nil
-  //       }})
-  //     println("nonflat: " + deps)
-  //     val flatDeps = deps.flatten.tail
-
-  //     val loopDeps = new HashSet[Sym[Any]]()
-  //     flatDeps.collect({ case (_, Some(TP(loopSym, _: AbstractLoop[_]))) => 
-  //       loopDependencies.getOrElse(loopSym, Nil).foreach(loopDeps.add)
-  //       loopDeps.add(loopSym)
-  //     })
-  //     loopDeps.toList
-  //   })
-  //   println("+++deps of " + loop + ": " + loopDepsList)
-  //   loopDepsList
-  // }
-
-  // def recordHorizontalFusionRequirement(prodSym: Sym[Any], consSym: Sym[Any]) = {
-  //   println("+++recording horizontal requirement: " + consSym + " -> " + prodSym)
-  //   horizontalDependencies.put(consSym, prodSym :: horizontalDependencies.getOrElse(consSym, Nil))
-
-  // }
-
 }
 
 // Code investigations: levelScope not exposed, has TTPs! Where do they get fattened/unfattened?
@@ -277,21 +236,6 @@ trait VerticalFusionTransformer extends FusionTransformer /*with BaseLoopsTraver
   import IR.{__newVar => _, _}
   import scala.collection.mutable.{HashMap, HashSet}
 
-// TODO: what if constant length optimization is done by DSL author?
-// TODO: propagate constant lengths and replace arraylength statements
-
-// A
-// B consumes A -> fuse
-// C consumes A -> ?
-
-// A
-// B consumes A -> fuse
-// C consumes B -> fuse with?
-
-// fusion of:
-// unfused prod vs. fused prod - dep or indep
-// regular consumer vs. deoptimized consumer - single or multiple
-
   // List of the loops on the same level&scope
   val seenLoops = HashSet[Sym[Any]]()
 
@@ -303,76 +247,168 @@ trait VerticalFusionTransformer extends FusionTransformer /*with BaseLoopsTraver
     seenLoops = save
     res
   }
-  // Map from fixed lengths to loops (TP(sym, SimpleLoop(...)))
-  // TODO fixed length: also check not mutable: ! isWritableSym
-  val fixedLengthsToLoops = new HashMap[Exp[Int], List[Stm]]
-  val loopsTofixedLengths = new HashMap[Sym[Any], Exp[Int]]
+
+  // loops with fixed lengths (SimpleCollect with constant or immutable expression shape)
+  val loopsToFixedLengths = new HashMap[Sym[Any], Exp[Int]]
+
+  def recordFixedLengths(sym: Sym[Any], loop: AbstractLoop[_]) = {
+    val shape = loop.size
+    val replacement: Option[Exp[Int]] = loop match {
+      case FixedDomain(Const(len)) => Some(Const(len))
+      case FixedDomain(domainSym: Sym[Int]) => subst.get(domainSym) match {
+        case Some(Const(len: Int))                       => Some(Const(len))
+        case Some(sSym: Sym[Int]) if (!isWritableSym(sSym)) => Some(sSym)
+        case _ if (!isWritableSym(domainSym))            => Some(domainSym)
+        case _                                           => None
+      }
+      case _ => None
+    }
+    replacement.map( rep => loopsToFixedLengths += (sym -> rep) )
+    if (replacement.isDefined && shape != replacement.get)
+      subst += (shape -> replacement.get)
+  }
 
   // Indexing statements replacement
   // (can't register before because of duplicate substitution error).
-  val simpleIndexReplacements = new HashMap[Sym[Any], Exp[Any]]
+  val simpleIndexReplacements = new HashMap[(Sym[Any], Sym[Any]), Exp[Any]]
+
+  object FusedSyms {
+    private val fusedSyms = new HashMap[Sym[Any], Int]
+    private var fusedSymsSets: List[HashSet[Sym[Any]]] = Nil
+
+    private def getSet(i: Int): HashSet[Sym[Any]] = {
+      fusedSymsSets(fusedSymsSets.length - 1 - i)
+    }
+    
+    def record(pSym: Sym[Any], cSym: Sym[Any]) = {
+      val index = fusedSyms.get(pSym) match {
+        case Some(pIndex) => pIndex
+        case None => 
+          val s = fusedSymsSets.length
+          fusedSymsSets = HashSet(pSym) :: fusedSymsSets
+          fusedSyms.put(pSym, s)
+          s
+      }
+      getSet(index).add(cSym)
+      fusedSyms.put(cSym, index)
+    }
+
+    def getOldAndNew(pSym: Sym[Any]): Set[Sym[Any]] = {
+      val fused = fusedSyms.get(pSym).map(getSet(_)).getOrElse(HashSet(pSym))
+      fused.foreach({f => subst.get(f) match {
+        case Some(s@Sym(_)) => fused.add(s)
+        case _ =>
+      }})
+      fused.toSet
+    }
+  }
+
 
   override def transformStm(stm: Stm): Exp[Any] = { 
-    stm match {
-      case TP(sym, SimpleIndex(_, _)) if (simpleIndexReplacements.contains(sym)) => simpleIndexReplacements(sym)
+    // println("--transforming: " + stm)
+    val transformedSym = stm match {
+      case TP(_, SimpleIndex(pSym@Sym(_), cIndex@Sym(_))) => (subst.get(pSym) match {
+          case Some(newPSym@Sym(_)) => simpleIndexReplacements.get((newPSym, cIndex))
+          case None => None
+        }).orElse(simpleIndexReplacements.get((pSym, cIndex))) 
+          .getOrElse(super.transformStm(stm))
 
-      // TODO other Collects?
-      case TP(sym, loop@SimpleLoop(shape, indexSym, SimpleCollect(resSym@Sym(_)))) =>
-        seenLoops += sym
-        val loopStms = getLoopStms(indexSym, resSym)
-
-        // Could fuse with each of these
-        val loopIndexingArraySyms = loopStms.collect({
-          case TP(_, SimpleIndex(arraySym@Sym(_), `indexSym`)) if ( // might be consumer of arraySym
-              seenLoops.contains(arraySym) // else producer not on same level
-              && consumerGoesOverRangeOfProducer(sym, shape, arraySym) > 0 // else not same range
-              && indepExceptIndex(resSym, indexSym, arraySym) // else other parts of array used
-          ) => (arraySym, consumerGoesOverRangeOfProducer(sym, shape, arraySym))
-        }).sortWith((a, b) => a._2 < b._2)
-
-          printlog("(VFT)  Loop " + sym + " is consumer of " + loopIndexingArraySyms.mkString("\n", "\n", "\n"))
-
-          /* test */
-          loopIndexingArraySyms.foreach(s => findDefinition(s._1).get match {
-            case t@TP(prodSym, SimpleLoop(_, prodIndex, SimpleCollect(prodResSym))) => 
-              recordHorizontalFusionRequirement(prodSym, sym)
-              println("fuse with " + t)
-              println("index: subst += (" + indexSym + " -> " + prodIndex + ") ")
-              subst += (indexSym -> prodIndex)
-              loopStms.collect { case TP(indexingSym, SimpleIndex(prodSym@Sym(_), `indexSym`)) => 
-                println("prodRes: simpleIndexReplacements += (" + indexingSym + " -> " + prodResSym + ") ")
-                simpleIndexReplacements += (indexingSym -> prodResSym) 
-              }
-          })
-          /* /test */
-
-          // TODO do fusion!
-
+      case TP(sym, loop: AbstractLoop[_]) => // Check if we can do loop fusion
+        val (prod, reconstrProds) = findProducers(sym, loop.size, loop.v, loop.body)
         
+        def printProd(p: (Sym[Any], Sym[Any])): String = p._2 + (if (p._1 == p._2) "" else " (was " + p._1 + ")")
 
-        // Record fixed lengths
-        loop match {
-          case FixedDomain(Const(len)) =>
-            if (shape != Const(len))
-              subst += (shape -> Const(len))
-            loopsTofixedLengths += (sym -> Const(len))
-          case FixedDomain(domainSym@Sym(_)) if subst.contains(domainSym) => println("B")
-          case FixedDomain(domainSym@Sym(_)) => println("C")
-          case _ => // TODO else?
-        }
-        subst.get(shape) match {
-          case Some(Const(len: Int)) =>
-            loopsTofixedLengths += (sym -> Const(len))
-          case _ =>
+        if (prod.isDefined) {
+          printlog("(VFT) Fusing consumer " + stm + " with real producer: " + printProd(prod.get))
+          if (!reconstrProds.isEmpty)
+            printdbg("(VFT) TODO could then fuse with reconstructed producers: " + reconstrProds.map(printProd(_)))
+        } else if (!reconstrProds.isEmpty) {
+          printlog("(VFT) Fusing consumer " + stm + " with reconstructed producer: " + printProd(reconstrProds(0)))
+          if (!reconstrProds.tail.isEmpty)
+            printdbg("(VFT) TODO could then fuse with reconstructed producers: " + reconstrProds.tail.map(printProd(_)))
+        } else {
+          printdbg("(VFT) No producers found for " + stm)
         }
 
-        super.transformStm(stm)
+
+
+        val resultLoop = prod.orElse(reconstrProds.headOption)
+          .flatMap({t => findDefinition(t._2)})
+          .map({ case TP(s, l: AbstractLoop[_]) => 
+            (s, l.size, l.v, l.body, sym, loop.size, loop.v, loop.body) 
+          }).flatMap({
+            case (pSym, pSize, pIndex, SimpleCollect(pRes), cSym, cSize, cIndex, cBody) =>
+              subst += (cIndex -> pIndex)
+              simpleIndexReplacements += ((pSym, cIndex) -> pRes)
+              FusedSyms.record(pSym, cSym)
+              printdbg("(VFT) SimpleCollect+Any fusion: remap index to " + pIndex + ", SimpleIndex to " + pRes + ".")
+              None
+
+            // TODO other types
+            //case (pSym, pSize, pIndex, SimpleCollectIf(pRes, pConds), cSym, cSize, cIndex, SimpleCollect(cRes)) =>
+
+            // FUSE YOU!
+
+            // case (pSym, pSize, pIndex, pBody, cSym, cSize, cIndex, cBody) =>
+            // case (pSym, pSize, pIndex, pBody, cSym, cSize, cIndex, cBody) =>
+            case _ => 
+              printdbg("not implemented yet")
+              None
+
+          })          
+
+        // bookkeeping
+        seenLoops += sym
+        recordFixedLengths(sym, loop)
+
+        resultLoop.getOrElse(super.transformStm(stm))
 
       case TP(lenSym, SimpleDomain(sym@Sym(_))) =>
-        loopsTofixedLengths.getOrElse(sym, super.transformStm(stm))
+        loopsToFixedLengths.getOrElse(sym, super.transformStm(stm))
 
       case _ =>
         super.transformStm(stm)
+    }
+    // println("--transformed " + stm + " to " + transformedSym)
+    transformedSym
+  }
+
+  def findProducers[A](cSym: Sym[A], cShape: Exp[Int], cIndex: Sym[Int], cBody: Def[A]): (Option[(Sym[Any], Sym[Any])], List[(Sym[Any], Sym[Any])]) = {
+    val cIndexStms = getDependentStuff(cIndex)
+    
+    val prodSyms = cIndexStms.collect({
+      case TP(_, SimpleIndex(pSym@Sym(_), `cIndex`)) => pSym 
+    }).filter({ pSym => 
+      val sameScope = seenLoops.contains(pSym)
+      if (!sameScope)
+        printdbg("(VFT) " + cSym + " not fused with " + pSym + " because not in same level/scope.")
+      sameScope
+    }).map({ pSym => (pSym, subst.get(pSym) match {
+        case Some(newPSym@Sym(_)) => newPSym
+        case _ => pSym
+      })
+    }).map({ case (pSym, newPSym) => (pSym, newPSym, consumerGoesOverRangeOfProducer(cShape, pSym))
+    }).filter({ case (pSym, newPSym, range) =>
+      if (range < 0) {
+        printdbg("(VFT) " + cSym + " not fused with " + pSym + " because not same range (" + range + ").")
+      }
+      range > 0
+    }).filter({ case (pSym, newPSym, range) =>
+      val (msg, indep) = isIndepConsumer(cSym, cIndex, cBody, pSym, newPSym)
+      if (indep < 0) {
+        printdbg("(VFT) " + cSym + " not fused with " + pSym + " because not indep (" + msg + ").")
+      }
+      indep > 0
+    }).sortWith((a, b) => a._3 < b._3)
+    
+    // TODO EFFECTS!!!
+
+    if (prodSyms.isEmpty) {
+      (None, Nil)
+    } else if (prodSyms(0)._3 == 1) {
+      (Some((prodSyms(0)._1, prodSyms(0)._2)), prodSyms.tail.map(t => (t._1, t._2)))
+    } else {
+      (None, prodSyms.map(t => (t._1, t._2)))
     }
   }
 
@@ -380,300 +416,99 @@ trait VerticalFusionTransformer extends FusionTransformer /*with BaseLoopsTraver
    *  returns > 0  if same range,
    *  returns < 0 otherwise.
    */
-  def consumerGoesOverRangeOfProducer(consSym: Sym[Any], shape: Exp[Int], prodSym: Sym[Any]): Int = {
-    // range/shape can be: const or symbol
-    // symbol can be array.len or expression with substitution to const recorded
-    // producer can have fixed length recorded
-
-    // TODO same symbol ok? (val l = x+4)
-
-    val rangeSame = shape match {
+  def consumerGoesOverRangeOfProducer(cShape: Exp[Int], pSym: Sym[Any]): Int = {
+    // pSym is old producer, since domain of consumer hasn't been transformed yet,
+    // and fixed lengths are recorded for old producer too.
+    cShape match {
       case shapeSym@Sym(_) => findDefinition(shapeSym) match {
-        case Some(TP(_, SimpleDomain(`prodSym`))) => 1
-        case _ => subst.get(shapeSym) match {
-          case Some(Const(l: Int)) => loopsTofixedLengths.get(prodSym) match {
-            case Some(Const(`l`)) => 2
+        case Some(TP(_, SimpleDomain(`pSym`))) => 1            // real producer
+        case _ => loopsToFixedLengths.get(pSym) match { 
+          case Some(`shapeSym`) => 4                              // reconstr. same immutable expression
+          case Some(Const(l: Int)) => subst.get(shapeSym) match {
+            case Some(Const(`l`)) => 2                            // reconstr. same subst. constant
             case _ => -1
           }
           case _ => -2
         }
       }
-      case Const(l: Int) => loopsTofixedLengths.get(prodSym) match {
-        case Some(Const(`l`)) => 3
+      case Const(l: Int) => loopsToFixedLengths.get(pSym) match {
+        case Some(Const(`l`)) => 3                                // reconstr. same constant
         case _ => -3
       }
       case _ => -4
     }
-    printdbg("consumerGoesOverRangeOfProducer(consSym: " + consSym +", shape: " + shape 
-      + ", prodSym: " + prodSym + "): " + (rangeSame > 0) + " (" + rangeSame + ")")
-    rangeSame
   }
 
-  def indepExceptIndex(resSym: Sym[Any], indexSym: Sym[Any], arraySym: Sym[Any]): Boolean = {
-    !GraphUtil.stronglyConnectedComponents(List(resSym), { sym: Sym[Any] => 
-      findDefinition(sym) match {
-        case Some(TP(_, SimpleIndex(`arraySym`, `indexSym`))) => List() // OK, don't add dep on arraySym
-        case Some(d) => syms(d.rhs)
-        case None => List()
-      }
-    }).flatten.contains(arraySym)
-  } 
+  /* Returns > 0 if consumer can be fused with producer, < 0 otherwise. */
+  def isIndepConsumer[A](cSym: Sym[A], cIndex: Sym[Int], cBody: Def[A], 
+      pSym: Sym[Any], newPSym: Sym[Any]): (String, Int) = {
+    // Note: no need to check that shape doesn't use any dependencies because it can
+    // only have the value of the size of the producer (either SimpleDomain, same constant
+    // or same immutable expression).
+
+    val prod = findDefinition(newPSym) match {
+      case Some(TP(`newPSym`, prod: AbstractLoop[_])) => prod
+      case d => 
+        return ("unknown producer loop " + newPSym + ": " + d, -2)
+    }
+
+    // SimpleCollect producers result in 1-1 mapping of producer and consumer indices,
+    // so consumer can use the index. But when fusing with other collects the consumer
+    // cannot depend on index except in SimpleIndex(prod, index).
+    val noIndexUse = prod.body match {
+      case SimpleCollect(_) => false
+      case SimpleCollectIf(_, _) | MultiCollect(_, _) => true
+      case b => 
+        return ("unknown producer loop type of " + prod + ": " + b, -3)
+    }
+
+    val prodFusedSyms = FusedSyms.getOldAndNew(pSym)
+
+    // find the consumer body
+    val cBlocks = cBody match {
+      case SimpleCollect(resSym@Sym(_)) => List(resSym)
+      case SimpleCollectIf(resSym@Sym(_), conds: List[Sym[_]]) => resSym :: conds
+      case MultiCollect(resSym@Sym(_), _) => List(resSym)
+      case Reduce(resSym@Sym(_), _, _) => List(resSym)
+      case _ => 
+        return ("unknown consumer loop type: " + cBody, -1)
+    }
+    
+    // traverse the statements needed for the loop and check there are no deps
+    // Exception to stop traversal as soon as dep found
+    case class DependencyException(message: String, value: Int) extends Exception(message)
+    try {
+      // TODO don't want to do full traversal every time, could cache deps of seen loops?
+      // But then would have to do full traversal, not stop early?
+      GraphUtil.stronglyConnectedComponents(cBlocks, { sym: Sym[Any] => 
+        findDefinition(sym) match {
+          case Some(TP(_, SimpleIndex(`pSym`, `cIndex`))) => List() // OK, don't add dep on pSym or index
+          case Some(d) => 
+            val next = syms(d.rhs).flatMap(n => subst.get(n) match { // use the new expressions
+              case Some(nn@Sym(_)) => List(nn)
+              case Some(Const(_)) => List()
+              case _ => List(n)
+            })
+            if (noIndexUse && next.contains(cIndex)) {
+              throw DependencyException("consumer uses index", -4)
+            }
+            val taboo = next.collectFirst({ case x if prodFusedSyms.contains(x) => x })
+            if (taboo.isDefined) {
+              throw DependencyException("consumer depends on " + taboo.get, -5)
+            }
+            next
+          case None => List()
+        }
+      })
+
+      ("", 1)
+    } catch {
+      case DependencyException(msg, retValue) => (msg, retValue)
+    }
+  }
+
 
 }
-/*
-      case TP(sym, SimpleLoop(shapeSym@Sym(_), indexSym, _)) => findDefinition(shapeSym) match {
-        // TODO make resistant to constant replacement of length
-        case Some(TP(`shapeSym`, SimpleDomain(arraySym@Sym(_)))) => findDefinition(arraySym) match {
-          
-          case Some(prod@TP(`arraySym`, SimpleLoop(prodShape, prodIndexSym, prodBody))) => prodBody match {
-  
-            case SimpleCollect(collected) => // TODO handle other types of collects
-              
-              val loopArrayStms = getDependentStuff(indexSym).filter(syms(_) contains arraySym)
-              val consuming = loopArrayStms.collect { case stm @ TP(_, SimpleIndex(`arraySym`, `indexSym`)) => stm }
-              assert(consuming.length < 2, "CSE should have eliminated duplicates")
-              val notConsuming = loopArrayStms diff consuming
-              
-              if (loopArrayStms.isEmpty)
-                printlog("(VFT)  no consumer: " + stm + "\n(VFT)  because body doesn't contain array.")
-              else if (!notConsuming.isEmpty)
-                printlog("(VFT)  no consumer: " + stm + "\n(VFT)  because of stms: " + notConsuming)
-              else
-                return fuseConsumerStm(stm, indexSym)
-            case _ => 
-          }
-          case p => printlog("(VFT)  not fusing consumer: " + stm + "\n(VFT)  because producer is not SimpleCollect: " + p)
-            printlog("(VFT)  not fusing consumer: " + stm + "\n(VFT)  because producer is not simpleLoop: " + p)
-        }
-        case _ => printlog("(VFT)  found loop, but it's not simpleDomain: " + stm)
-      }
-      case _ =>
-    }
-    val superTransformedSym = super.transformStm(stm)
-    val superTransformedStm = superTransformedSym match {
-      case newSym@Sym(_) => findDefinition(newSym).get
-    }
-    printdbg("(VFT)  ignored: " + stm)
-    printdbg("(VFT)  super.transformed: " + superTransformedStm + "\n")
-    superTransformedSym
-  }
-
-  def fuseConsumerStm(stm: Stm, oldConsIndexSym: Sym[Int]): Exp[Any] = {
-    // First transform to remap to new symbols from previous transformations
-    val newIndexSym = fresh[Int]
-    subst += (oldConsIndexSym -> newIndexSym)
-
-    val superTransformedSym = super.transformStm(stm)
-    val superTransformedStm = superTransformedSym match {
-      case newSym@Sym(_) => findDefinition(newSym).get
-    }
-
-    superTransformedStm match {
-      case cons@TP(sym, SimpleLoop(shapeSym@Sym(_), indexSym, _)) => findDefinition(shapeSym) match {
-        case None => error("FT unknown shapeSym: " + shapeSym)
-        case Some(TP(`shapeSym`, SimpleDomain(arraySym@Sym(_)))) => findDefinition(arraySym) match {
-          case None => error("FT unknown arraySym: " + arraySym)
-          case Some(prod@TP(`arraySym`, SimpleLoop(prodShape, prodIndexSym, SimpleCollect(collected)))) =>
-          
-            printlog("\n(VFT)  starting loop fusion of producer:\n      " + prod)
-            printlog("(VFT)  into consumer:\n      " + cons)
-            printlog("(VFT)  original consumer:\n      " + stm)
-
-            val consuming = getDependentStuff(oldConsIndexSym)
-                .map(substOrTransform(_))
-                .filter(syms(_) contains arraySym)
-                .collect { case stm @ TP(_, SimpleIndex(`arraySym`, `indexSym`)) => stm }
-            assert(consuming.length == 1, "CSE should have eliminated duplicates and loop should consume array")
-            val consumingSyms = consuming(0).lhs
-            
-            val producerStms = getFatDependentStuff(initialDefs)(List(prodIndexSym)) // transitive closure
-
-            // Duplicate statements in producer loop body, but remapping index to consumerIndex
-            // They will therefore be scheduled into the fused loop
-            val indexT = new SubstTransformer
-            indexT.subst += (prodIndexSym -> indexSym)
-            val reindexedProducerStms = producerStms map { mirrorAddGet(_, indexT) }
-            printlog("(VFT)  original producerStms:\n" + producerStms.mkString("      ", "\n      ", "\n"))
-            printlog("(VFT)  reindexed producerStms (prodIndex: " + prodIndexSym + " -> consumerIndex: " + indexSym + "):\n" + reindexedProducerStms.mkString("      ", "\n      ", "\n"))
-            
-            // Remap consuming statements to use the inlined result of the producer instead
-            // of the SimpleIndex
-            val collectSym = indexT.subst(collected)
-            val collectT = new SubstTransformer
-            collectT.subst ++= subst
-            consumingSyms foreach { s => collectT.subst += (s -> collectSym) }
-            val allConsuming = getFatDependentStuff(initialDefs)(consumingSyms)
-            val fusedConsuming = allConsuming map { mirrorAddGet(_, collectT) }
-            printlog("(VFT)  original consuming:\n" + allConsuming.mkString("      ", "\n      ", "\n"))
-            printlog("(VFT)  fused consuming (SimpleIndex: " + consumingSyms + " -> collectSym: " + collectSym + "):\n" + fusedConsuming.mkString("      ", "\n      ", "\n"))
-
-            collectT.subst += (shapeSym -> prodShape)
-            val fusedLoop = mirrorAddGet(superTransformedStm, collectT)
-            printlog("(VFT)  fusion successful! Fused consumer loop: " + fusedLoop)
-            return fusedLoop match { case TP(sym, _) => sym }
-        }
-      }
-    }
-  }
-
-  /** Mirrors the given statement with the given transformer, adds the new symbol
-      to its substitution and returns the definition. */
-  def mirrorAddGet(stm: Stm, transf: SubstTransformer): Stm = stm match {
-    case TP(s, d) => mirror(d, transf)(mtype(s.tp), mpos(s.pos)) match {
-      case newSym@Sym(_) => 
-        transf.subst += (s -> newSym)
-        findDefinition(newSym).get
-    }
-  }
-
-  /** Check whether stm already has a transformation, else transforms it and
-      records the substitution. */
-  def substOrTransform(stm: Stm): Stm = stm match {
-    case TP(sym, _) => subst.getOrElse(sym, super.transformStm(stm)) match {
-      case newSym@Sym(_) =>
-        subst += (sym -> newSym)
-        findDefinition(newSym).get
-    }
-  }
-}
-*/
-
-
-
-/*trait VerticalFusionTransformer extends ForwardTransformer /*with BaseLoopsTraversalFat*/ { 
-  val IR: Impl with ArrayLoopFusionExtractors
-  import IR.{__newVar => _, _}
-
-// TODO: what if constant length optimization is done by DSL author?
-// TODO: propagate constant lengths and replace arraylength statements
-
-  // Want to record substitutions outside of scope because
-  // we use producer statements later.
-  override def reflectBlock[A](block: Block[A]): Exp[A] = {
-    // withSubstScope { 
-      traverseBlock(block)
-      apply(getBlockResult(block))
-    // }
-  }
-
-  override def transformStm(stm: Stm): Exp[Any] = { 
-    stm match {
-      case TP(sym, SimpleLoop(shapeSym@Sym(_), indexSym, _)) => findDefinition(shapeSym) match {
-        // TODO make resistant to constant replacement of length
-        case Some(TP(`shapeSym`, SimpleDomain(arraySym@Sym(_)))) => findDefinition(arraySym) match {
-          
-          case Some(prod@TP(`arraySym`, SimpleLoop(prodShape, prodIndexSym, prodBody))) => prodBody match {
-  
-            case SimpleCollect(collected) => // TODO handle other types of collects
-              
-              val loopArrayStms = getDependentStuff(indexSym).filter(syms(_) contains arraySym)
-              val consuming = loopArrayStms.collect { case stm @ TP(_, SimpleIndex(`arraySym`, `indexSym`)) => stm }
-              assert(consuming.length < 2, "CSE should have eliminated duplicates")
-              val notConsuming = loopArrayStms diff consuming
-              
-              if (loopArrayStms.isEmpty)
-                printlog("(VFT)  no consumer: " + stm + "\n(VFT)  because body doesn't contain array.")
-              else if (!notConsuming.isEmpty)
-                printlog("(VFT)  no consumer: " + stm + "\n(VFT)  because of stms: " + notConsuming)
-              else
-                return fuseConsumerStm(stm, indexSym)
-            case _ => 
-          }
-          case p => printlog("(VFT)  not fusing consumer: " + stm + "\n(VFT)  because producer is not SimpleCollect: " + p)
-            printlog("(VFT)  not fusing consumer: " + stm + "\n(VFT)  because producer is not simpleLoop: " + p)
-        }
-        case _ => printlog("(VFT)  found loop, but it's not simpleDomain: " + stm)
-      }
-      case _ =>
-    }
-    val superTransformedSym = super.transformStm(stm)
-    val superTransformedStm = superTransformedSym match {
-      case newSym@Sym(_) => findDefinition(newSym).get
-    }
-    printdbg("(VFT)  ignored: " + stm)
-    printdbg("(VFT)  super.transformed: " + superTransformedStm + "\n")
-    superTransformedSym
-  }
-
-  def fuseConsumerStm(stm: Stm, oldConsIndexSym: Sym[Int]): Exp[Any] = {
-    // First transform to remap to new symbols from previous transformations
-    val newIndexSym = fresh[Int]
-    subst += (oldConsIndexSym -> newIndexSym)
-
-    val superTransformedSym = super.transformStm(stm)
-    val superTransformedStm = superTransformedSym match {
-      case newSym@Sym(_) => findDefinition(newSym).get
-    }
-
-    superTransformedStm match {
-      case cons@TP(sym, SimpleLoop(shapeSym@Sym(_), indexSym, _)) => findDefinition(shapeSym) match {
-        case None => error("FT unknown shapeSym: " + shapeSym)
-        case Some(TP(`shapeSym`, SimpleDomain(arraySym@Sym(_)))) => findDefinition(arraySym) match {
-          case None => error("FT unknown arraySym: " + arraySym)
-          case Some(prod@TP(`arraySym`, SimpleLoop(prodShape, prodIndexSym, SimpleCollect(collected)))) =>
-          
-            printlog("\n(VFT)  starting loop fusion of producer:\n      " + prod)
-            printlog("(VFT)  into consumer:\n      " + cons)
-            printlog("(VFT)  original consumer:\n      " + stm)
-
-            val consuming = getDependentStuff(oldConsIndexSym)
-                .map(substOrTransform(_))
-                .filter(syms(_) contains arraySym)
-                .collect { case stm @ TP(_, SimpleIndex(`arraySym`, `indexSym`)) => stm }
-            assert(consuming.length == 1, "CSE should have eliminated duplicates and loop should consume array")
-            val consumingSyms = consuming(0).lhs
-            
-            val producerStms = getFatDependentStuff(initialDefs)(List(prodIndexSym)) // transitive closure
-
-            // Duplicate statements in producer loop body, but remapping index to consumerIndex
-            // They will therefore be scheduled into the fused loop
-            val indexT = new SubstTransformer
-            indexT.subst += (prodIndexSym -> indexSym)
-            val reindexedProducerStms = producerStms map { mirrorAddGet(_, indexT) }
-            printlog("(VFT)  original producerStms:\n" + producerStms.mkString("      ", "\n      ", "\n"))
-            printlog("(VFT)  reindexed producerStms (prodIndex: " + prodIndexSym + " -> consumerIndex: " + indexSym + "):\n" + reindexedProducerStms.mkString("      ", "\n      ", "\n"))
-            
-            // Remap consuming statements to use the inlined result of the producer instead
-            // of the SimpleIndex
-            val collectSym = indexT.subst(collected)
-            val collectT = new SubstTransformer
-            collectT.subst ++= subst
-            consumingSyms foreach { s => collectT.subst += (s -> collectSym) }
-            val allConsuming = getFatDependentStuff(initialDefs)(consumingSyms)
-            val fusedConsuming = allConsuming map { mirrorAddGet(_, collectT) }
-            printlog("(VFT)  original consuming:\n" + allConsuming.mkString("      ", "\n      ", "\n"))
-            printlog("(VFT)  fused consuming (SimpleIndex: " + consumingSyms + " -> collectSym: " + collectSym + "):\n" + fusedConsuming.mkString("      ", "\n      ", "\n"))
-
-            collectT.subst += (shapeSym -> prodShape)
-            val fusedLoop = mirrorAddGet(superTransformedStm, collectT)
-            printlog("(VFT)  fusion successful! Fused consumer loop: " + fusedLoop)
-            return fusedLoop match { case TP(sym, _) => sym }
-        }
-      }
-    }
-  }
-
-  /** Mirrors the given statement with the given transformer, adds the new symbol
-      to its substitution and returns the definition. */
-  def mirrorAddGet(stm: Stm, transf: SubstTransformer): Stm = stm match {
-    case TP(s, d) => mirror(d, transf)(mtype(s.tp), mpos(s.pos)) match {
-      case newSym@Sym(_) => 
-        transf.subst += (s -> newSym)
-        findDefinition(newSym).get
-    }
-  }
-
-  /** Check whether stm already has a transformation, else transforms it and
-      records the substitution. */
-  def substOrTransform(stm: Stm): Stm = stm match {
-    case TP(sym, _) => subst.getOrElse(sym, super.transformStm(stm)) match {
-      case newSym@Sym(_) =>
-        subst += (sym -> newSym)
-        findDefinition(newSym).get
-    }
-  }
-}
-*/
 
 trait HorizontalFusionTransformer extends FusionTransformer /*with BaseLoopsTraversalFat*/ { 
   val IR: Impl with ArrayLoopFusionExtractors
@@ -788,7 +623,7 @@ class TestFusion3 extends FileDiffSuite {
           val y = !x
           (y, range.at(i) + 2) }
         print(odds.length)
-        print(range.length)
+        print(range.at(0))
       }
     }
     new Prog with Impl
@@ -797,7 +632,7 @@ class TestFusion3 extends FileDiffSuite {
   def testFusionTransform03 = withOutFileChecked(prefix+"fusion03") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {        
-        // not consumer, TODO replace shape so range is dce'd
+        // not consumer, shape replaced so range is dce'd
         val range = array(100) { i => 
           val x = i + 1
           val y = x * i
@@ -813,15 +648,14 @@ class TestFusion3 extends FileDiffSuite {
   def testFusionTransform04 = withOutFileChecked(prefix+"fusion04") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {        
-        // constant moved out, so is consumer
+        // length moved out and replaced with constant, so is consumer
         val range = array(100) { i => 
           val x = i + 1
           val y = x * i
           i * y
         }
-        // TODO could horizontally fuse once length constant replacement is done
         val arr2 = array(range.length) { i => range.at(i) + range.length }
-        print(arr2.length)
+        print(arr2.at(0))
       }
     }
     new Prog with Impl
@@ -847,6 +681,7 @@ class TestFusion3 extends FileDiffSuite {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {        
         // range is producer, arr1 is consumer and arr2 is also consumer of range
+        // multiple indep consumers fused
         val range = array(100) { i => 
           i + 1
         }
@@ -865,7 +700,8 @@ class TestFusion3 extends FileDiffSuite {
 
   def testFusionTransform07 = withOutFileChecked(prefix+"fusion07") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
-      def test(x: Rep[Int]) = {        
+      def test(x: Rep[Int]) = {
+        // successive consumers fused     
         val range = array(100) { i => 
           i + 1
         }
@@ -884,18 +720,14 @@ class TestFusion3 extends FileDiffSuite {
   def testFusionTransform08 = withOutFileChecked(prefix+"fusion08") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {        
-        val range = array(100) { i => 
-          i + 1
-        }
-        val arr1 = array(range.length) { i =>
-          val x = range.at(i) * 4
-          x * 2 }
-        val arr2 = array(100) { i => 
-          i + range.length
-        }
-        print(range.length)
-        print(arr1.length)
-        print(arr2.length)
+        // SimpleCollect + Any fusion
+        val range = array(100) { i => i + 1 }
+        val range2 = array(range.length) { i => range.at(i) + 2 }
+        val range3 = arrayIf(range.length) { i => (i > 10, range.at(i) + 3) }
+        val range4 = flatten(range.length) { i => array(10) { ii => ii + range.at(i) } }
+        print(range2.at(0))
+        print(range3.at(0))
+        print(range4.at(0))
       }
     }
     new Prog with Impl
@@ -903,9 +735,21 @@ class TestFusion3 extends FileDiffSuite {
 
   def testFusionTransform09 = withOutFileChecked(prefix+"fusion09") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+      def test(x: Rep[Int]) = {
+        // SimpleCollect + MultiCollect: inner loop not fused
+        val range = array(100) { i => i + 1 }
+        val range4 = flatten(range.length) { i => array(range.length) { ii => ii + range.at(i) } }
+        print(range4.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform10 = withOutFileChecked(prefix+"fusion10") {
+    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {     
-        // range, arrI & arrJ will be fused. TODO think about fusion in nested loops... what if
-        // range was expensive to compute? @nofuse?
+        // nested array arrI not fused with range
+        // arrI & arrJ fused
         val range = array(100) { i => 
           i + 1
         }
@@ -920,32 +764,7 @@ class TestFusion3 extends FileDiffSuite {
 
           x * arrJ.at(0)
         }
-        print(arr1.length)
-      }
-    }
-    new Prog with Impl
-  }
-
-  def testFusionTransform10 = withOutFileChecked(prefix+"fusion10") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
-      def test(x: Rep[Int]) = {     
-        // TODO think more about resetting substitution in transformBlock, seems to work fine here
-        val range = array(100) { i => 
-          i + 1
-        }
-        val arr1 = array(90) { i =>
-          val arrI = array(80) { ii =>
-            ii + i
-          }
-          arrI.at(0)
-        }
-        val arr2 = array(100) { i =>
-          i + 2
-        }
-
-        print(range.length)
-        print(arr1.length)
-        print(arr2.length)
+        print(arr1.at(0))
       }
     }
     new Prog with Impl
@@ -953,7 +772,8 @@ class TestFusion3 extends FileDiffSuite {
 
   def testFusionTransform11 = withOutFileChecked(prefix+"fusion11") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
-      def test(x: Rep[Int]) = {     
+      def test(x: Rep[Int]) = {
+        // no horizontal fusion across levels
         val arr1 = array(90) { i =>
           val arrI = array(100) { ii =>
             ii + i
@@ -963,8 +783,8 @@ class TestFusion3 extends FileDiffSuite {
         val arr2 = array(100) { i =>
           i + 2
         }
-        print(arr1.length)
-        print(arr2.length)
+        print(arr1.at(0))
+        print(arr2.at(0))
       }
     }
     new Prog with Impl
@@ -972,7 +792,8 @@ class TestFusion3 extends FileDiffSuite {
 
   def testFusionTransform12 = withOutFileChecked(prefix+"fusion12") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
-      def test(x: Rep[Int]) = {     
+      def test(x: Rep[Int]) = {    
+        // horizontal fusion in nested loop (not vertical since not consumer)
         val arr1 = array(100) { i =>
           val arrI = array(80) { ii =>
             ii + i
@@ -982,7 +803,7 @@ class TestFusion3 extends FileDiffSuite {
           }
           i * arrI.at(0) * arrJ.at(0)
         }
-        print(arr1.length)
+        print(arr1.at(0))
       }
     }
     new Prog with Impl
@@ -991,59 +812,61 @@ class TestFusion3 extends FileDiffSuite {
   def testFusionTransform13 = withOutFileChecked(prefix+"fusion13") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {        
-        // not consumer
+        // reconstructed consumers fused
+        // constant
         val range = array(100) { i => i + 1 }
-        val arr1 = array(100) { i => i + 2 }
-        print(range.length)
-        print(arr1.length)
+        val range2 = array(100) { i => range.at(i) + 2 }
+        print(range2.at(0))
+        // immutable sym
+        val l = x + 5
+        val range3 = array(l) { i => i + 3 }
+        val range4 = array(l) { i => range3.at(i) + 4 }
+        print(range4.at(0))
+        // TODO test other cases (subst)?
       }
     }
     new Prog with Impl
   }
 
-  def testFusionTransform14 =  withOutFileChecked(prefix+"fusion14") {
+  def testFusionTransform14 = withOutFileChecked(prefix+"fusion14") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
-      def test(x: Rep[Int]) = {        
-        val range = array(100) { i => i + 1 }
-        print(range.length)
-        val range3 = array(range.length) { i => i + 1 }
-        print(range3.length)
-        val l = x + 4
-        val range2 = array(l) { i => i + 1 }
-        print(range2.length)
-      }
-    }
-    new Prog with Impl
-  }
-
-  def testFusionTransform15 =  withOutFileChecked(prefix+"fusion15") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
-      def test(x: Rep[Int]) = {        
+      def test(x: Rep[Int]) = {
+        // multiple producers (zip): currently fuse with real only
+        // TODO
         val range = array(100) { i => i + 1 }
         val range2 = array(100) { i => i + 2 }
-//        val range3 = array(100) { i => range.at(i) + range2.at(i) }
-//        print(range3.length)
-//        val range4 = array(range.length) { i => range.at(i) + range2.at(i) + range2.at(i+1) }
-//        print(range4.length)
-        // multiple producers:
-        val range5 = array(range2.length) { i => range.at(i) + range2.at(i) }
-        print(range5.at(0))
+        val range3 = array(range2.length) { i => range.at(i) + range2.at(i) }
+        print(range3.at(0))
       }
     }
     new Prog with Impl
   }
 
-  def testFusionTransform16 =  withOutFileChecked(prefix+"fusion16") {
+  def testFusionTransform15 = withOutFileChecked(prefix+"fusion15") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {        
-        // TODO how to set verbosity to 2 only for this test?
+        // multiple producers (zip): currently fuse with first reconstr. only
+        // TODO
+        val range = array(100) { i => i + 1 }
+        val range2 = array(100) { i => i + 2 }
+        val range3 = array(100) { i => range.at(i) + range2.at(i) }
+        print(range3.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform16 = withOutFileChecked(prefix+"fusion16") {
+    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+      def test(x: Rep[Int]) = {        
         // Test all branches of consumerGoesOverRangeOfProducer
         val range = array(x) { i => i + 1 }
         val range2 = array(range.length) { i => range.at(i) } //  1
         print(range2.length)
         val k = x + 2
         val range3 = array(k) { i => range.at(i) }            // -2
-        print(range3.length)
+        val range4 = array(k) { i => range3.at(i) }           // 4
+        print(range4.length)
         
         val rb = array(100) { i => i + 1 }
         val rb2 = array(rb.length) { i => rb.at(i) }          //  1
@@ -1059,21 +882,32 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform17 =  withOutFileChecked(prefix+"fusion17") {
+  def testFusionTransform17 = withOutFileChecked(prefix+"fusion17") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {        
         val range = array(x) { i => i + 1 }
         val v = range.at(0)
-        val range2 = array(range.length) { i => range.at(i) + v } // not consumer because of v
-        print(range2.at(1))
+        // not consumer because of v (depends on producer)
+        val range2 = arrayIf(range.length) { i => (range.at(i) > 0, range.at(i) + v) }
+        print(range2.at(0))
+        // not consumer because of v (depends on producer)
+        val range3 = arrayIf(range.length) { i => (range.at(i) + v > 0, i) }
+        print(range3.at(0))
+        // not consumer because range3 uses index
+        val range4 = array(range2.length) { i => range2.at(i) + i }
+        print(range4.at(0))
       }
     }
     new Prog with Impl
   }
 
-  def testFusionTransform18 =  withOutFileChecked(prefix+"fusion18") {
+// TODO fix effects
+
+/*
+  def testFusionTransform18 = withOutFileChecked(prefix+"fusion18") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
-      def test(x: Rep[Int]) = {        
+      def test(x: Rep[Int]) = {    
+        // TODO effects    
         val range = array(x) { i => i + 1 }
         print(range.length)
         val range2 = array(range.length) { i => print(range.at(i)); 1 } 
@@ -1084,7 +918,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform19 =  withOutFileChecked(prefix+"fusion19") {
+  def testFusionTransform19 = withOutFileChecked(prefix+"fusion19") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {        
         val range = array(100) { i => i + 1 }
@@ -1097,7 +931,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform20 =  withOutFileChecked(prefix+"fusion20") {
+  def testFusionTransform20 = withOutFileChecked(prefix+"fusion20") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {
         // TODO AAAAHHHH effects of loops aren't tracked properly! range and print(y) get swapped!      
@@ -1109,27 +943,34 @@ class TestFusion3 extends FileDiffSuite {
     }
     new Prog with Impl
   }
+*/
 
-  def testFusionTransform21 =  withOutFileChecked(prefix+"fusion21") {
+  def testFusionTransform21 = withOutFileChecked(prefix+"fusion21") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {
+        // multiple consumers all fused
         val range = array(100) { i => i + 1 }
-        val range2 = array(100) { i => range.at(i) }
-        val range3 = array(range.length) { i => range.at(i) }
+        val range2 = array(100) { i => range.at(i) + 2 }
+        val range3 = array(100) { i => range.at(i) + 3 }
+        val range4 = array(range.length) { i => range.at(i) + 4 }
         print(range2.at(0))
         print(range3.at(0))
+        print(range4.at(0))
       }
     }
     new Prog with Impl
   }
 
-  def testFusionTransform22 =  withOutFileChecked(prefix+"fusion22") {
+  def testFusionTransform22 = withOutFileChecked(prefix+"fusion22") {
     trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
       def test(x: Rep[Int]) = {
+        // multiple consumers not fused:
+        // range4 depends on range3, but range already fused with range3,
+        // so range4 not fused with range
         val range = array(100) { i => i + 1 }
-        val range2 = array(100) { i => range.at(i) }
-        val range3 = array(100) { i => range2.at(i) }
-        val range4 = array(100) { i => range.at(i) }
+        val range2 = array(100) { i => range.at(i) }  // fuse
+        val range3 = array(100) { i => range2.at(i) } // fuse
+        val range4 = array(100) { i => range.at(i) + range3.at(0) } // don't fuse
 
         print(range.at(0))
         print(range2.at(0))

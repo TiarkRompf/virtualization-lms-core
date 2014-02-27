@@ -1,0 +1,97 @@
+-- full graph
+TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(5),ArrayIndex(Sym(3),Sym(4)))
+TP(Sym(6),NumericPlus(Sym(5),Const(2)))
+TP(Sym(7),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(6)))))
+TP(Sym(8),ArrayIndex(Sym(7),Const(0)))
+TP(Sym(9),Reflect(Print(Sym(8)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(10),NumericPlus(Sym(0),Const(5)))
+TP(Sym(12),NumericPlus(Sym(11),Const(3)))
+TP(Sym(13),SimpleLoop(Sym(10),Sym(11),ArrayElem(Block(Sym(12)))))
+TP(Sym(15),ArrayIndex(Sym(13),Sym(14)))
+TP(Sym(16),NumericPlus(Sym(15),Const(4)))
+TP(Sym(17),SimpleLoop(Sym(10),Sym(14),ArrayElem(Block(Sym(16)))))
+TP(Sym(18),ArrayIndex(Sym(17),Const(0)))
+TP(Sym(19),Reflect(Print(Sym(18)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(9))))
+TP(Sym(20),Reify(Sym(19),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(9), Sym(19))))
+
+-- before transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+var x7 = new Array[Int](100)
+for (x4 <- 0 until 100) {
+val x5 = x3.apply(x4)
+val x6 = x5 + 2
+x7(x4) = x6
+}
+val x8 = x7.apply(0)
+val x9 = println(x8)
+val x10 = x0 + 5
+var x13 = new Array[Int](x10)
+for (x11 <- 0 until x10) {
+val x12 = x11 + 3
+x13(x11) = x12
+}
+var x17 = new Array[Int](x10)
+for (x14 <- 0 until x10) {
+val x15 = x13.apply(x14)
+val x16 = x15 + 4
+x17(x14) = x16
+}
+val x18 = x17.apply(0)
+val x19 = println(x18)
+
+-- vertical transformation
+(VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+(VFT) Fusing consumer TP(Sym(7),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(6))))) with reconstructed producer: Sym(3)
+(VFT) SimpleCollect+Any fusion: remap index to Sym(1), SimpleIndex to Sym(2).
+(VFT) No producers found for TP(Sym(13),SimpleLoop(Sym(10),Sym(11),ArrayElem(Block(Sym(12)))))
+(VFT) Fusing consumer TP(Sym(17),SimpleLoop(Sym(10),Sym(14),ArrayElem(Block(Sym(16))))) with reconstructed producer: Sym(13)
+(VFT) SimpleCollect+Any fusion: remap index to Sym(11), SimpleIndex to Sym(12).
+
+-- after vertical transformation
+var x22 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x21 = x2 + 2
+x22(x1) = x21
+}
+val x23 = x22.apply(0)
+val x24 = println(x23)
+val x10 = x0 + 5
+var x26 = new Array[Int](x10)
+for (x11 <- 0 until x10) {
+val x12 = x11 + 3
+val x25 = x12 + 4
+x26(x11) = x25
+}
+val x27 = x26.apply(0)
+val x28 = println(x27)
+
+-- horizontal transformation
+(HFT)  Recording new loop (prev. Sym(22)): (Const(100),(Sym(22),Sym(1),None))
+(HFT)  Recording new loop (prev. Sym(26)): (Sym(10),(Sym(26),Sym(11),None))
+
+-- after horizontal transformation
+var x22 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x21 = x2 + 2
+x22(x1) = x21
+}
+val x23 = x22.apply(0)
+val x24 = println(x23)
+val x10 = x0 + 5
+var x26 = new Array[Int](x10)
+for (x11 <- 0 until x10) {
+val x12 = x11 + 3
+val x25 = x12 + 4
+x26(x11) = x25
+}
+val x27 = x26.apply(0)
+val x28 = println(x27)
+-- done

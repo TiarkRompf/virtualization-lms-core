@@ -30,21 +30,9 @@ val x11 = x8.apply(0)
 val x12 = println(x11)
 
 -- vertical transformation
-nonflat: List(List((Sym(3),Some(TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))))), List((Sym(2),Some(TP(Sym(2),NumericPlus(Sym(1),Const(1)))))), List((Sym(1),None)))
-+++deps of Sym(3): List()
-(VFT)  Loop Sym(3) is consumer of 
-
-
-nonflat: List(List((Sym(8),Some(TP(Sym(8),SimpleLoop(Sym(4),Sym(5),ArrayElem(Block(Sym(7)))))))), List((Sym(7),Some(TP(Sym(7),NumericPlus(Sym(6),Const(1)))))), List((Sym(6),Some(TP(Sym(6),ArrayIndex(Sym(3),Sym(5)))))), List((Sym(5),None)), List((Sym(4),Some(TP(Sym(4),ArrayLength(Sym(3)))))), List((Sym(3),Some(TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))))))
-+++deps of Sym(8): List(Sym(3))
-(VFT)  Loop Sym(8) is consumer of 
-(Sym(3),1)
-
-+++recording horizontal requirement: Sym(8) -> Sym(3)
-fuse with TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
-index: subst += (Sym(5) -> Sym(1)) 
-prodRes: simpleIndexReplacements += (Sym(6) -> Sym(2)) 
-B
+(VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+(VFT) Fusing consumer TP(Sym(8),SimpleLoop(Sym(4),Sym(5),ArrayElem(Block(Sym(7))))) with real producer: Sym(3)
+(VFT) SimpleCollect+Any fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 
 -- after vertical transformation
 var x3 = new Array[Int](100)
