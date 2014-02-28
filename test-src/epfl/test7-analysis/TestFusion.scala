@@ -138,7 +138,7 @@ trait FusionProg2 extends Arith with ArrayLoops with Print with OrderingOps {
 
 class TestFusion extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test7-"
+  val prefix = home + "test-out/epfl/test7-"
   
   def testFusion1 = {
     withOutFile(prefix+"fusion1") {

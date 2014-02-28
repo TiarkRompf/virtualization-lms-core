@@ -221,7 +221,7 @@ trait ScalaGenPrint extends ScalaGenEffect {
 
 class TestAnalysis extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test7-"
+  val prefix = home + "test-out/epfl/test7-"
   
 
   

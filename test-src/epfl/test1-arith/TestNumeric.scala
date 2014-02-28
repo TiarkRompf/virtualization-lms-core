@@ -10,7 +10,7 @@ import scala.reflect.SourceContext
 
 class TestNumeric extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test1-"
+  val prefix = home + "test-out/epfl/test1-"
   
 
   // this seems to be a bug in Scala-Virtualized related to reified __new

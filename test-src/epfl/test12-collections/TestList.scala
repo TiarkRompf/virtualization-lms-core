@@ -27,7 +27,7 @@ class TestList extends FileDiffSuite {
       xs.mkString
   }
 
-  val prefix = "test-out/epfl/test12-"
+  val prefix = home + "test-out/epfl/test12-"
 
   def testMapFlatMapAndFilter() {
     withOutFile(prefix+"map-flatmap-filter") {

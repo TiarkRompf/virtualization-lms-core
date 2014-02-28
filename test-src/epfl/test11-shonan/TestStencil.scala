@@ -223,7 +223,7 @@ class TestStencil extends FileDiffSuite {
 
   // test cases below
 
-  val prefix = "test-out/epfl/test11-"
+  val prefix = home + "test-out/epfl/test11-"
 
   def testStencil0 = withOutFileChecked(prefix+"stencil0") {
     trait Prog extends DSL {

@@ -50,7 +50,7 @@ class TestHMM extends FileDiffSuite {
 
   // staged program implementations
 
-  val prefix = "test-out/epfl/test11-"
+  val prefix = home + "test-out/epfl/test11-"
   
   def testHmm1 = {
     withOutFileChecked(prefix+"hmm1") {

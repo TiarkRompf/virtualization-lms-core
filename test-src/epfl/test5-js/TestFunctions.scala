@@ -158,7 +158,7 @@ trait SchedFunProg { this: Functions with Arith with Equal with IfThenElse =>
 
 class TestFunctions extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test5-"
+  val prefix = home + "test-out/epfl/test5-"
   
   def testFunctions = {
     withOutFile(prefix+"functions") {

@@ -24,7 +24,7 @@ abstract class RFun {
 
 class TestInterpret extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test13-"
+  val prefix = home + "test-out/epfl/test13-"
   
   trait InterpretPlain {
 

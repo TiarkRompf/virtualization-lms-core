@@ -198,7 +198,7 @@ trait StringsProg extends Vectors {
 
 class TestVectors extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test6-"
+  val prefix = home + "test-out/epfl/test6-"
   
   def testVectors = {
     withOutFile(prefix+"vectors") {

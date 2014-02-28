@@ -64,7 +64,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 class TestLambdalift extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test7-"
+  val prefix = home + "test-out/epfl/test7-"
   
   def testLambdalift1 = {
     // test lambda lifting

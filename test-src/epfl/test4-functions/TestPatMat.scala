@@ -63,7 +63,7 @@ trait Impl extends Intf {
 
 class TestPatMat extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test4-"
+  val prefix = home + "test-out/epfl/test4-"
   
   def testPatMat1 = {
     withOutFile(prefix+"patmat1") {

@@ -27,7 +27,7 @@ trait ParsersProg extends Parsers { this: Matching with Extractors =>
 
 class TestParsers extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test3-"
+  val prefix = home + "test-out/epfl/test3-"
   
   def testParse1 = {
     withOutFile(prefix+"parse1") {

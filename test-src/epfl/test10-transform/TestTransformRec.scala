@@ -13,7 +13,7 @@ import scala.reflect.SourceContext
 
 class TestTransformRec extends FileDiffSuite {
 
-  val prefix = "test-out/epfl/test10-"
+  val prefix = home + "test-out/epfl/test10-"
 
   trait DSL extends Arith with Functions with Equal with IfThenElse {
     def testFun: Rep[Double => Double]

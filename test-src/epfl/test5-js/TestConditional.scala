@@ -94,7 +94,7 @@ trait ConditionalProg { this: Arith with Equal with Print with IfThenElse =>
 
 class TestConditional extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test5-"
+  val prefix = home + "test-out/epfl/test5-"
   
   def testConditional = {
     withOutFile(prefix+"conditional") {

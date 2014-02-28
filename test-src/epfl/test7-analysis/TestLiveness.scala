@@ -125,7 +125,7 @@ trait LiveProg extends Arith with Arrays with Print {
 
 class TestLiveness extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test7-"
+  val prefix = home + "test-out/epfl/test7-"
   
   def testLiveness1 = {
     withOutFile(prefix+"liveness1") {
