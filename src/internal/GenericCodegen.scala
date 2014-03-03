@@ -4,7 +4,6 @@ package internal
 import util.GraphUtil
 import java.io.{File, PrintWriter}
 import scala.reflect.RefinedManifest
-import scala.collection.mutable.{Map => MMap}
 
 trait GenericCodegen extends BlockTraversal {
   val IR: Expressions
@@ -21,10 +20,8 @@ trait GenericCodegen extends BlockTraversal {
   def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {}
   def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {}
   
-  var analysisResults: MMap[String,Any] = null.asInstanceOf[MMap[String,Any]]
-  
   // Initializer
-  def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = { analysisResults = _analysisResults }
+  def initializeGenerator(buildDir:String, args: Array[String]): Unit = { }
   def finalizeGenerator(): Unit = {}
   def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
 
