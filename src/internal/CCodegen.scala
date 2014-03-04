@@ -2,8 +2,8 @@ package scala.virtualization.lms
 package internal
 
 import java.io.{FileWriter, PrintWriter, File}
-import collection.mutable.{ArrayBuffer, Map => MMap}
 import collection.immutable.List._
+import collection.mutable.ArrayBuffer
 
 trait CCodegen extends CLikeCodegen with CppHostTransfer {
   val IR: Expressions
@@ -42,7 +42,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     kernelOutputs = syms
   }
 
-  override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
+  override def initializeGenerator(buildDir:String, args: Array[String]): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
 
@@ -68,7 +68,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     headerStream.println("#include \"" + deviceTarget + "types.h\"")
     headerStream.println(getDataStructureHeaders())
 
-    super.initializeGenerator(buildDir, args, _analysisResults)
+    super.initializeGenerator(buildDir, args)
   }
 
   def emitForwardDef[A:Manifest](args: List[Manifest[_]], functionName: String, out: PrintWriter) = {

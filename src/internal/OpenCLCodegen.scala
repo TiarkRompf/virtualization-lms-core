@@ -4,7 +4,6 @@ package internal
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
 import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
-import collection.mutable.{Map => MMap}
 import collection.immutable.List._
 
 trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTransfer {
@@ -16,7 +15,7 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
   override def kernelFileExt = "cl"
   override def toString = "opencl"
 
-  override def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = {
+  override def initializeGenerator(buildDir:String, args: Array[String]): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
     helperFuncStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.cpp"))
@@ -36,7 +35,7 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
     headerStream.println("#include \"" + deviceTarget + "types.h\"")
     headerStream.println(getDataStructureHeaders())
     
-    super.initializeGenerator(buildDir, args, _analysisResults)
+    super.initializeGenerator(buildDir, args)
   }
 
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
