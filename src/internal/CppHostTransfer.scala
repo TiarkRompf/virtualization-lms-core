@@ -6,9 +6,20 @@ trait CppHostTransfer extends AbstractHostTransfer {
   val IR: Expressions
   import IR._
 
+  // NOTE: strings are in general treated as primitive types to avoid the memory management,
+  //       but for transfer functions strings must be treated separately from primitive types
+
   def emitSend(tp: Manifest[Any], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
-      if (isPrimitiveType(tp)) {
+      if (remap(tp) == "string") {
+        val out = new StringBuilder
+        val signature = "jobject sendCPPtoJVM_%s(JNIEnv *env, %s sym)".format(mangledName(remapHost(tp)),remap(tp))
+        out.append(signature + " {\n")
+        out.append("return env->NewStringUTF(sym.c_str());\n")
+        out.append("}\n")
+        (signature+";\n", out.toString)
+      }
+      else if (isPrimitiveType(tp)) {
         val out = new StringBuilder
         val signature = "%s sendCPPtoJVM_%s(JNIEnv *env, %s sym)".format(JNIType(tp),mangledName(remapHost(tp)),remap(tp))
         out.append(signature + " {\n")
@@ -22,14 +33,6 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append(signature + " {\n")
         out.append("\tassert(false);\n")
         out.append("\treturn NULL;\n")
-        out.append("}\n")
-        (signature+";\n", out.toString)
-      }
-      else if (remap(tp) == "string") {
-        val out = new StringBuilder
-        val signature = "jobject sendCPPtoJVM_%s(JNIEnv *env, %s *sym)".format(mangledName(remapHost(tp)),remap(tp))
-        out.append(signature + " {\n")
-        out.append("return env->NewStringUTF(sym);\n")
         out.append("}\n")
         (signature+";\n", out.toString)
       }
@@ -47,7 +50,21 @@ trait CppHostTransfer extends AbstractHostTransfer {
 
   def emitRecv(tp: Manifest[Any], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
-      if (isPrimitiveType(tp)) {
+      if (remap(tp) == "string") {
+        val out = new StringBuilder
+        val signature = "%s recvCPPfromJVM_%s(JNIEnv *env, jobject obj)".format(remapHost(tp),mangledName(remapHost(tp)))
+        out.append(signature + " {\n")
+        out.append("\tconst char *str = env->GetStringUTFChars((jstring)obj,NULL);\n")
+        //TODO: check if this copy is necessary
+        out.append("\tchar *str2 = (char *)malloc((1+strlen(str))*sizeof(char));\n")
+        out.append("\tstrcpy(str2,str);\n")
+        out.append("\tstring sym(str2);\n")
+        out.append("\tenv->ReleaseStringUTFChars((jstring)obj,str);")
+        out.append("\treturn sym;\n")
+        out.append("}\n")
+        (signature+";\n", out.toString)        
+      }
+      else if (isPrimitiveType(tp)) {
         val out = new StringBuilder
         val signature = "%s recvCPPfromJVM_%s(JNIEnv *env, %s sym)".format(remap(tp),mangledName(remapHost(tp)),JNIType(tp))
         out.append(signature + " {\n")
@@ -64,19 +81,6 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
-      else if (remap(tp) == "string") {
-        val out = new StringBuilder
-        val signature = "%s *recvCPPfromJVM_%s(JNIEnv *env, jobject obj)".format(remapHost(tp),mangledName(remapHost(tp)))
-        out.append(signature + " {\n")
-        out.append("const char *str = env->GetStringUTFChars((jstring)obj,NULL);\n")
-        out.append("char *sym = (char *)malloc((1+strlen(str))*sizeof(char));\n")
-        out.append("memset(sym,0,(1+strlen(str))*sizeof(char));\n")
-        out.append("strcpy(sym,str);\n")
-        out.append("env->ReleaseStringUTFChars((jstring)obj,str);")
-        out.append("\treturn sym;\n")
-        out.append("}\n")
-        (signature+";\n", out.toString)        
-      }
       else {
         throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
       }
@@ -91,7 +95,16 @@ trait CppHostTransfer extends AbstractHostTransfer {
 
   def emitSendView(tp: Manifest[Any], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
-      if (isPrimitiveType(tp)) {
+      if (remap(tp) == "string") {
+        val out = new StringBuilder
+        val signature = "jobject sendViewCPPtoJVM_%s(JNIEnv *env, %s sym)".format(mangledName(remapHost(tp)),remapHost(tp))
+        out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
+        out.append("\treturn NULL;\n")
+        out.append("}\n")
+        (signature+";\n", out.toString)        
+      }
+      else if (isPrimitiveType(tp)) {
         val out = new StringBuilder
         val signature = "%s sendViewCPPtoJVM_%s(JNIEnv *env, %s sym)".format(JNIType(tp),mangledName(remapHost(tp)),remap(tp))
         out.append(signature + " {\n")
@@ -109,15 +122,6 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
-      else if (remap(tp) == "string") {
-        val out = new StringBuilder
-        val signature = "jobject sendViewCPPtoJVM_%s(JNIEnv *env, %s *sym)".format(mangledName(remapHost(tp)),remapHost(tp))
-        out.append(signature + " {\n")
-        out.append("\tassert(false);\n")
-        out.append("\treturn NULL;\n")
-        out.append("}\n")
-        (signature+";\n", out.toString)        
-      }
       else {
         throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
       }
@@ -132,7 +136,16 @@ trait CppHostTransfer extends AbstractHostTransfer {
 
   def emitRecvView(tp: Manifest[Any], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
-      if (isPrimitiveType(tp)) {
+      if (remap(tp) == "string") {
+        val out = new StringBuilder
+        val signature = "%s recvViewCPPfromJVM_%s(JNIEnv *env, jobject *obj)".format(remapHost(tp),mangledName(remapHost(tp)))
+        out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
+        out.append("\treturn NULL;\n")
+        out.append("}\n")
+        (signature+";\n", out.toString)        
+      }
+      else if (isPrimitiveType(tp)) {
         val out = new StringBuilder
         val signature = "%s recvViewCPPfromJVM_%s(JNIEnv *env, %s sym)".format(remap(tp),mangledName(remapHost(tp)),JNIType(tp))
         out.append(signature + " {\n")
@@ -149,15 +162,6 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("\treturn NULL;\n")
         out.append("}\n")
         (signature+";\n", out.toString)
-      }
-      else if (remap(tp) == "string") {
-        val out = new StringBuilder
-        val signature = "%s *recvViewCPPfromJVM_%s(JNIEnv *env, jobject *obj)".format(remapHost(tp),mangledName(remapHost(tp)))
-        out.append(signature + " {\n")
-        out.append("\tassert(false);\n")
-        out.append("\treturn NULL;\n")
-        out.append("}\n")
-        (signature+";\n", out.toString)        
       }
       else {
         throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)
@@ -191,7 +195,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
       }
       else if (remap(tp) == "string") {
         val out = new StringBuilder
-        val signature = "void sendUpdateCPPtoJVM_%s(JNIEnv *env, jobject obj, %s *sym)".format(mangledName(remapHost(tp)),remapHost(tp))
+        val signature = "void sendUpdateCPPtoJVM_%s(JNIEnv *env, jobject obj, %s sym)".format(mangledName(remapHost(tp)),remapHost(tp))
         out.append(signature + " {\n")
         out.append("\tassert(false);\n")
         out.append("}\n")
@@ -211,7 +215,15 @@ trait CppHostTransfer extends AbstractHostTransfer {
 
   def emitRecvUpdate(tp: Manifest[Any], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
-      if(isPrimitiveType(tp)) {
+      if (remap(tp) == "string") {
+        val out = new StringBuilder
+        val signature = "void recvUpdateCPPfromJVM_%s(JNIEnv *env, %s sym)".format(mangledName(remapHost(tp)),remap(tp))
+        out.append(signature + " {\n")
+        out.append("\tassert(false);\n")
+        out.append("}\n")
+        (signature+";\n", out.toString)        
+      }
+      else if(isPrimitiveType(tp)) {
         val out = new StringBuilder
         val signature = "void recvUpdateCPPfromJVM_%s(JNIEnv *env, %s sym)".format(mangledName(remapHost(tp)),remap(tp))
         out.append(signature + " {\n")
@@ -226,14 +238,6 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("\tassert(false);\n")
         out.append("}\n")
         (signature+";\n", out.toString)
-      }
-      else if (remap(tp) == "string") {
-        val out = new StringBuilder
-        val signature = "void recvUpdateCPPfromJVM_%s(JNIEnv *env, %s sym)".format(mangledName(remapHost(tp)),remap(tp))
-        out.append(signature + " {\n")
-        out.append("\tassert(false);\n")
-        out.append("}\n")
-        (signature+";\n", out.toString)        
       }
       else {
         throw new GenerationFailedException("CppHostTransfer: Unknown type " + tp.toString)

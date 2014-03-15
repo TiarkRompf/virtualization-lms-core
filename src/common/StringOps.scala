@@ -146,17 +146,17 @@ trait CGenStringOps extends CGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    //case StringPlus(s1,s2) => emitValDef(sym,"strcat(%s,%s)".format(quote(s1),quote(s2)))
-    case StringStartsWith(s1,s2) => emitValDef(sym, "(strlen(%s)>=strlen(%s)) && strncmp(%s,%s,strlen(%s))".format(quote(s1),quote(s2),quote(s1),quote(s2),quote(s2)))
-    //case StringTrim(s) => 
-    //case StringSplit(s, sep) => 
-    case StringEndsWith(s, e) => emitValDef(sym, "(strlen(%s)>=strlen(%s)) && strncmp(%s+strlen(%s)-strlen(%s),%s,strlen(%s))".format(quote(s),quote(e),quote(s),quote(e),quote(s),quote(e),quote(e)))    
-    case StringCharAt(s,i) => emitValDef(sym, "%s[%s]".format(quote(s), quote(i)))
+    case StringPlus(s1,s2) if remap(s1.tp) == "string" && remap(s2.tp) == "string" => emitValDef(sym,"string_plus(%s,%s)".format(quote(s1),quote(s2)))
+    case StringStartsWith(s1,s2) => emitValDef(sym, "string_startsWith(%s,%s)".format(quote(s1),quote(s2)))
+    case StringTrim(s) => emitValDef(sym, "string_trim(%s)".format(quote(s)))
+    case StringSplit(s, sep, Const(0)) => emitValDef(sym, "string_split(%s,%s)".format(quote(s),quote(sep)))
+    //case StringEndsWith(s, e) => emitValDef(sym, "(strlen(%s)>=strlen(%s)) && strncmp(%s+strlen(%s)-strlen(%s),%s,strlen(%s))".format(quote(s),quote(e),quote(s),quote(e),quote(s),quote(e),quote(e)))    
+    case StringCharAt(s,i) => emitValDef(sym, "string_charAt(%s,%s)".format(quote(s), quote(i)))
     //case StringValueOf(a) => 
-    case StringToDouble(s) => emitValDef(sym, "strtod(%s,NULL)".format(quote(s)))
-    case StringToFloat(s) => emitValDef(sym, "strtodf(%s,NULL)".format(quote(s)))
-    case StringToInt(s) => emitValDef(sym, "atoi(%s)".format(quote(s)))
-    case StringContains(s1,s2) => emitValDef(sym, "(strstr(%s,%s)!=NULL)".format(quote(s1),quote(s2)))
+    case StringToDouble(s) => emitValDef(sym, "string_toDouble(%s)".format(quote(s)))
+    case StringToFloat(s) => emitValDef(sym, "string_toFloat(%s)".format(quote(s)))
+    case StringToInt(s) => emitValDef(sym, "string_toInt(%s)".format(quote(s)))
+    //case StringContains(s1,s2) => emitValDef(sym, "(strstr(%s,%s)!=NULL)".format(quote(s1),quote(s2)))
     case _ => super.emitNode(sym, rhs)
   }
 }

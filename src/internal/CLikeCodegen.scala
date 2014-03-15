@@ -11,13 +11,13 @@ trait CLikeCodegen extends GenericCodegen {
   def mangledName(name: String) = name.replaceAll("\\s","").map(c => if(!c.isDigit && !c.isLetter) '_' else c) 
 
   // List of datastructure types that requires transfer functions to be generated for this target
-  protected val dsTypesList = HashSet[Manifest[Any]]()
+  val dsTypesList = HashSet[Manifest[Any]]()
 
   // Streams for helper functions and its header
-  protected var helperFuncStream: PrintWriter = _
-  protected var headerStream: PrintWriter = _
-  protected var actRecordStream: PrintWriter = _
-  protected var typesStream: PrintWriter = _
+  var helperFuncStream: PrintWriter = _
+  var headerStream: PrintWriter = _
+  var actRecordStream: PrintWriter = _
+  var typesStream: PrintWriter = _
 
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = emitValDef(sym, rhs)
 
@@ -27,10 +27,7 @@ trait CLikeCodegen extends GenericCodegen {
     if(remap(tpe) != "void") stream.println(remap(tpe) + " " + sym + " = " + rhs + ";")
   }
 
-  def remapWithRef[A](m: Manifest[A]): String = {
-    if (isPrimitiveType(m)) remap(m) + " "
-    else remap(m) + " * "
-  }
+  def remapWithRef[A](m: Manifest[A]): String = remap(m) + addRef(m)
 
   override def remap[A](m: Manifest[A]) : String = {
     if (m.erasure == classOf[Variable[AnyVal]])
@@ -56,11 +53,12 @@ trait CLikeCodegen extends GenericCodegen {
     }
   }
 
+  def addRef(): String = /*if (cppUseSharedPtr) " " else*/ " *"
   def addRef[A](m: Manifest[A]): String = addRef(remap(m))
 
   def addRef(tpe: String): String = {
-    if (!isPrimitiveType(tpe) && !isVoidType(tpe)) " *"
-    else " " 
+    if (!isPrimitiveType(tpe) && !isVoidType(tpe)) addRef()
+    else " "
   }
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
@@ -74,7 +72,7 @@ trait CLikeCodegen extends GenericCodegen {
       else
         out.append(resultType)
       if (!external) {
-        if(resultIsVar) out.append(" *")
+        if(resultIsVar) out.append(addRef())
         else out.append(addRef(resultType))
       }
       out.append(" kernel_" + syms.map(quote).mkString("") + "(")
@@ -83,7 +81,7 @@ trait CLikeCodegen extends GenericCodegen {
         out.append(", ")
       }
       if (vars.length > 0){
-        out.append(vars.map(v => hostTarget + "Ref< " + remap(v.tp) + addRef(v.tp) + " > *" + quote(v)).mkString(","))
+        out.append(vars.map(v => hostTarget + "Ref< " + remap(v.tp) + addRef(v.tp) + " > " + addRef() + quote(v)).mkString(","))
       }
       out.append(")")
       out.toString

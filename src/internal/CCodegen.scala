@@ -27,6 +27,21 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     }    
   }
 
+  // we treat string as a primitive type to prevent memory management on strings
+  // strings are always stack allocated and freed automatically at the scope exit
+  override def isPrimitiveType(tpe: String) : Boolean = {
+    tpe match {
+      case "string" => true
+      case _ => super.isPrimitiveType(tpe)
+    }
+  }
+  
+  override def quote(x: Exp[Any]) = x match {
+    case Const(s: String) => "string(" + super.quote(x) + ")"
+    case _ => super.quote(x)
+  }
+
+  override def isPrimitiveType[A](m: Manifest[A]) : Boolean = isPrimitiveType(remap(m))
   override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     if (!isVoidType(sym.tp))
       stream.println(remapWithRef(sym.tp) + quote(sym) + " = " + rhs + ";")
@@ -53,7 +68,6 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
     /* type aliases */
     typesStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "types.h"))
-    typesStream.println("#define string char")
 
     /* header file for kernels and helper functions */
     headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
@@ -94,7 +108,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
       //stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" 
       //extends (("+args.map(a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
 
-      stream.println(sA+" "+functionName+"("+args.map(a => remap(a.tp)+" "+quote(a)).mkString(", ")+") {")
+      stream.println(sA+" "+functionName+"("+args.map(a => remapWithRef(a.tp)+" "+quote(a)).mkString(", ")+") {")
 
       emitBlock(body)
 
@@ -112,7 +126,9 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
   override def emitTransferFunctions() {
 
-    for (tp <- dsTypesList) {
+    //TODO: temporarily disable transfer functions for variables
+    //for (tp <- dsTypesList) {
+    for (tp <- dsTypesList if (tp.erasure != classOf[Variable[AnyVal]])) {
       try {
         // Emit input copy helper functions for object type inputs
         //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
