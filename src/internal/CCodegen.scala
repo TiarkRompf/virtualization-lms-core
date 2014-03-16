@@ -128,7 +128,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
     //TODO: temporarily disable transfer functions for variables
     //for (tp <- dsTypesList) {
-    for (tp <- dsTypesList if (tp.erasure != classOf[Variable[AnyVal]])) {
+    for (tp <- dsTypesList.filter(t => dsTypesList.map(remap(_)) contains remap(t)) if (tp.erasure != classOf[Variable[AnyVal]])) {
       try {
         // Emit input copy helper functions for object type inputs
         //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
