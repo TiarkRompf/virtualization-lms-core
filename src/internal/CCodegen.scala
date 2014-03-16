@@ -187,12 +187,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   def kernelName = "kernel_" + kernelOutputs.map(quote).mkString("")
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
-
-    //TODO: fix this
-    if(external) throw new GenerationFailedException("CGen: Cannot have external libraries\n")
-
     super.emitKernelHeader(syms, vals, vars, resultType, resultIsVar, external)
-
   }
 
   override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
