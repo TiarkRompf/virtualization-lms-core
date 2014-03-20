@@ -1,0 +1,226 @@
+/* FILE: main.c */
+int main(int);
+/*****************************************
+  Emitting C Generated Code                  
+*******************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+int main(int x0) {
+int x7 = 0;
+int x8 = 0;
+int x9 = 0;
+bool x10 = false;
+bool x11 = false;
+const int* x1 = mmap('A.dat') // XX TODO ;
+const int x2 = sizeof(x1)/sizeof(*x1);
+const bool x12 = 0 < x2;
+if (x12) {
+x7 = x7 + 2;
+} else {
+}
+x11 = x12;
+const int* x3 = mmap('B.dat') // XX TODO ;
+const int x4 = sizeof(x3)/sizeof(*x3);
+const bool x17 = 0 < x4;
+if (x17) {
+x8 = x8 + 2;
+} else {
+}
+x10 = x17;
+const int* x5 = mmap('C.dat') // XX TODO ;
+const int x6 = sizeof(x5)/sizeof(*x5);
+for (;;) {
+bool x22 = true;
+for (;;) {
+const bool x23 = x11;
+bool x26;
+if (x23) {
+const bool x24 = x22;
+x26 = x24;
+} else {
+x26 = false;
+}
+if (!x26) break;
+bool x28 = true;
+for (;;) {
+const bool x29 = x10;
+bool x32;
+if (x29) {
+const bool x30 = x28;
+x32 = x30;
+} else {
+x32 = false;
+}
+if (!x32) break;
+const int x34 = x9;
+const bool x35 = x34 < x6;
+if (x35) {
+x9 = x9 + 2;
+} else {
+}
+bool x39 = x35;
+for (;;) {
+const bool x40 = x39;
+bool x53;
+if (x40) {
+const int x41 = x8;
+const int x46 = x9;
+const int x44 = x41 + 1;
+const int x45 = x3[x44];
+const int x47 = x46 + 0;
+const int x48 = x5[x47];
+const bool x51 = x45 != x48;
+x53 = x51;
+} else {
+x53 = false;
+}
+if (!x53) break;
+const int x55 = x9;
+const bool x56 = x55 < x6;
+if (x56) {
+x9 = x9 + 2;
+} else {
+}
+x39 = x56;
+}
+const bool x63 = x39;
+const bool x64 = !x63;
+if (x64) {
+const int x65 = x8;
+const bool x66 = x65 < x4;
+if (x66) {
+x8 = x8 + 2;
+} else {
+}
+x10 = x66;
+x9 = 0;
+} else {
+x28 = false;
+}
+}
+const bool x78 = x10;
+bool x79 = x78;
+for (;;) {
+const bool x80 = x79;
+bool x98;
+if (x80) {
+const int x81 = x7;
+const int x86 = x8;
+const int x91 = x9;
+const int x84 = x81 + 1;
+const int x85 = x1[x84];
+const int x87 = x86 + 0;
+const int x88 = x3[x87];
+const bool x96 = x85 != x88;
+x98 = x96;
+} else {
+x98 = false;
+}
+if (!x98) break;
+bool x100 = true;
+for (;;) {
+const bool x101 = x10;
+bool x104;
+if (x101) {
+const bool x102 = x100;
+x104 = x102;
+} else {
+x104 = false;
+}
+if (!x104) break;
+const int x106 = x9;
+const bool x107 = x106 < x6;
+if (x107) {
+x9 = x9 + 2;
+} else {
+}
+bool x111 = x107;
+for (;;) {
+const bool x112 = x111;
+bool x125;
+if (x112) {
+const int x113 = x8;
+const int x118 = x9;
+const int x116 = x113 + 1;
+const int x117 = x3[x116];
+const int x119 = x118 + 0;
+const int x120 = x5[x119];
+const bool x123 = x117 != x120;
+x125 = x123;
+} else {
+x125 = false;
+}
+if (!x125) break;
+const int x127 = x9;
+const bool x128 = x127 < x6;
+if (x128) {
+x9 = x9 + 2;
+} else {
+}
+x111 = x128;
+}
+const bool x135 = x111;
+const bool x136 = !x135;
+if (x136) {
+const int x137 = x8;
+const bool x138 = x137 < x4;
+if (x138) {
+x8 = x8 + 2;
+} else {
+}
+x10 = x138;
+x9 = 0;
+} else {
+x100 = false;
+}
+}
+const bool x150 = x10;
+x79 = x150;
+}
+const bool x154 = x79;
+const bool x155 = !x154;
+if (x155) {
+const int x156 = x7;
+const bool x157 = x156 < x2;
+if (x157) {
+x7 = x7 + 2;
+} else {
+}
+x11 = x157;
+x8 = 0;
+if (x17) {
+x8 = x8 + 2;
+} else {
+}
+x10 = x17;
+x9 = 0;
+} else {
+x22 = false;
+}
+}
+const bool x174 = x11;
+if (!x174) break;
+const int x176 = x7;
+const int x181 = x8;
+const int x186 = x9;
+const int x177 = x176 + 0;
+const int x178 = x1[x177];
+const int x179 = x176 + 1;
+const int x180 = x1[x179];
+const int x182 = x181 + 0;
+const int x183 = x3[x182];
+const int x184 = x181 + 1;
+const int x185 = x3[x184];
+const int x187 = x186 + 0;
+const int x188 = x5[x187];
+const int x189 = x186 + 1;
+const int x190 = x5[x189];
+printf("a1: %d, a2: %d, b1: %d, b2: %d, c1: %d, c2: %d\n",x178,x180,x183,x185,x188,x190); // x191
+}
+return 0;
+}
+/*****************************************
+  End of C Generated Code                  
+*******************************************/
