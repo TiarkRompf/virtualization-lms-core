@@ -33,7 +33,8 @@ val x12 = println(x11)
 -- vertical transformation
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
 (VFT) Fusing consumer TP(Sym(10),SimpleLoop(Sym(4),Sym(5),FlattenElem(Block(Sym(9))))) with real producer: Sym(3)
-(VFT) SimpleCollect+Any fusion: remap index to Sym(1), SimpleIndex to Sym(2).
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
 (VFT) No producers found for TP(Sym(9),SimpleLoop(Sym(4),Sym(6),ArrayElem(Block(Sym(8)))))
 
 -- after vertical transformation

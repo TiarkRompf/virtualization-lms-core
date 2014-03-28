@@ -55,7 +55,8 @@ val x21 = println(x20)
 (VFT) Sym(11) not fused with Sym(3) because not in same level/scope.
 (VFT) No producers found for TP(Sym(11),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(10)))))
 (VFT) Fusing consumer TP(Sym(16),SimpleLoop(Sym(12),Sym(13),ArrayElem(Block(Sym(15))))) with real producer: Sym(23) (was Sym(11))
-(VFT) SimpleCollect+Any fusion: remap index to Sym(7), SimpleIndex to Sym(10).
+(VFT) General fusion: remap index to Sym(7), SimpleIndex to Sym(10).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
 
 -- after vertical transformation
 var x3 = new Array[Int](100)

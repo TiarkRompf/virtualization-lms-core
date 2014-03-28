@@ -17,8 +17,8 @@ trait LoopFusionExtractors extends internal.Expressions { // copied from LoopFus
   def unapplyFixedDomain(e: Def[Any]): Option[Exp[Int]] = None
   def unapplySimpleCollect(e: Def[Any]): Option[Exp[Any]] = None
   def unapplySimpleCollectIf(e: Def[Any]): Option[(Exp[Any],List[Exp[Boolean]])] = None
-  def unapplyMultiCollect(e: Def[Any]): Option[(Exp[Any], Option[Exp[Any]])] = None
-  def unapplyReduce(e: Def[Any]): Option[(Exp[Any], Option[Exp[Any]], Option[Boolean])] = None
+  def unapplyMultiCollect[T](a: Def[T]): Option[(Exp[T], Option[() => Exp[T]])] = None
+  def unapplyReduce[T](e: Def[T]): Option[(Exp[T], Option[Exp[T]], Option[Boolean])] = None
 
   object SimpleIndex {
     def unapply(a: Def[Any]): Option[(Exp[Any], Exp[Int])] = unapplySimpleIndex(a)
@@ -42,16 +42,67 @@ trait LoopFusionExtractors extends internal.Expressions { // copied from LoopFus
 
   // first exp is array result, second exp is empty array expression
   object MultiCollect {
-    def unapply(a: Def[Any]): Option[(Exp[Any], Option[Exp[Any]])] = unapplyMultiCollect(a)
+    def unapply[T](a: Def[T]): Option[(Exp[T], Option[() => Exp[T]])] = unapplyMultiCollect(a)
   }
 
   // first exp is reduce block, second is neutral element, third is associativity
   object Reduce {
-    def unapply(a: Def[Any]): Option[(Exp[Any], Option[Exp[Any]], Option[Boolean])] = unapplyReduce(a)
+    def unapply[T](a: Def[T]): Option[(Exp[T], Option[Exp[T]], Option[Boolean])] = unapplyReduce(a)
+  }
+
+  object ResultBlock {
+    def unapply(a: Def[Any]): Option[Exp[Any]] = a match {
+      case SimpleCollect(res) => Some(res)
+      case SimpleCollectIf(res, _) => Some(res)
+      case MultiCollect(res, _) => Some(res)
+      case Reduce(res, _, _) => Some(res)
+      case _ => None
+    }
+  }
+
+  object AllBlocks {
+    def unapply(a: Def[Any]): Option[List[Exp[Any]]] = a match {
+      case SimpleCollect(res) => Some(List(res))
+      case SimpleCollectIf(res, conds) => Some(res :: conds)
+      case MultiCollect(res, _) => Some(List(res))
+      case Reduce(res, _, _) => Some(List(res))
+      case _ => None
+    }
   }
 }
 
-trait ArrayLoopFusionExtractors extends ArrayLoopsExp with LoopFusionExtractors {
+trait ArrayLoopsExpFixes extends ArrayLoopsExp {
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case SimpleLoop(s, i, body) => 
+      simpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], mirrorFatDef(body, f))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]]
+
+  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+    case ArrayElem(y) => ArrayElem(reifyEffects(f.reflectBlock(y)))
+    case ReduceElem(y) => ReduceElem(reifyEffects(f.reflectBlock(y)))
+    // TODO argh... why you no blocks?
+    case ArrayIfElem(c,y) => ArrayIfElem(f.reflectBlock(Block(c)),reifyEffects(f.reflectBlock(y)))
+    case FlattenElem(y) => FlattenElem(reifyEffects(f.reflectBlock(y)))
+    case _ => super.mirrorFatDef(e,f)
+  }).asInstanceOf[Def[A]]
+
+  case class EmptyArray[T]() extends Def[Array[T]]
+  def emptyArray[T:Manifest](): Rep[Array[T]] = EmptyArray[T]()
+}
+
+trait ScalaGenArrayLoopsFatFixes extends ScalaGenArrayLoopsFat {
+  val IR: ArrayLoopsFatExp with ArrayLoopsExpFixes
+  import IR._
+  
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case e@EmptyArray() => 
+      stream.println("var " + quote(sym) + " = new " + sym.tp + "(0)")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait ArrayLoopFusionExtractors extends ArrayLoopsExpFixes with LoopFusionExtractors {
 
   override def unapplySimpleIndex(e: Def[Any]) = e match {
     case ArrayIndex(a, i) => Some((a,i))
@@ -79,46 +130,37 @@ trait ArrayLoopFusionExtractors extends ArrayLoopsExp with LoopFusionExtractors 
     case _ => super.unapplySimpleCollectIf(e)
   }
 
-  override def unapplyMultiCollect(e: Def[Any]) = e match {
-    case FlattenElem(Block(a)) => Some((a, None)) // need empty array
+  override def unapplyReduce[T](e: Def[T]) = e match {
+    case ReduceElem(Block(a: Exp[Double])) => // ReduceElem is sum of doubles...
+      Some((a.asInstanceOf[Exp[T]], Some(unit(0.0).asInstanceOf[Exp[T]]), Some(true)))
+    // what about ReduceIfElem?
+    case _ => super.unapplyReduce(e)
+  }
+
+  override def unapplyMultiCollect[T](e: Def[T]) = e match {
+    case FlattenElem(Block(a: Exp[T])) => Some((a.asInstanceOf[Exp[T]], Some((() => {
+        emptyArray()(mtype(a.tp.typeArguments(0)))
+      }).asInstanceOf[() => Exp[T]])))
     case _ => super.unapplyMultiCollect(e)
   }
 
-  override def unapplyReduce(e: Def[Any]) = e match {
-    case ReduceElem(Block(a)) => Some((a, Some(unit(0)), Some(true)))
-    // what about ReduceIfElem?
-    case _ => super.unapplyReduce(e)
-  }  
-
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case SimpleLoop(s, i, body) => 
-      simpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], mirrorFatDef(body, f))
-    case _ => super.mirror(e,f)
-  }).asInstanceOf[Exp[A]]
-
-  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
-    case ArrayElem(y) => ArrayElem(reifyEffects(f.reflectBlock(y)))
-    case ReduceElem(y) => ReduceElem(reifyEffects(f.reflectBlock(y)))
-    // TODO argh... why you no blocks?
-    case ArrayIfElem(c,y) => ArrayIfElem(f.reflectBlock(Block(c)),reifyEffects(f.reflectBlock(y)))
-    case FlattenElem(y) => FlattenElem(reifyEffects(f.reflectBlock(y)))
-    case _ => super.mirrorFatDef(e,f)
-  }).asInstanceOf[Def[A]]
 }
 
-trait MyFusionProg extends NumericOps with ArrayLoops with Print {
+trait MyFusionProg extends NumericOps with PrimitiveOps with LiftNumeric with OrderingOps 
+    with BooleanOps with ArrayLoops with Print {
   def test(x: Rep[Int]): Rep[Unit]
 }
 
-trait Impl extends MyFusionProg with NumericOpsExp with ArrayLoopsFatExp with PrintExp
+trait Impl extends MyFusionProg with NumericOpsExp with PrimitiveOpsExp with ArrayLoopsFatExp with PrintExp
     with IfThenElseFatExp with OrderingOpsExp with BooleanOpsExp with ArrayLoopFusionExtractors { self =>
   override val verbosity = 2 // 1: only printlog, 2: also printdbg
   val runner = new Runner { val p: self.type = self }
   runner.run()
 }
 
-trait Codegen extends ScalaGenNumericOps with ScalaGenPrint with ScalaGenOrderingOps 
-  with ScalaGenBooleanOps with ScalaGenArrayLoopsFat { val IR: Impl }
+trait Codegen extends ScalaGenNumericOps with ScalaGenPrimitiveOps
+  with ScalaGenPrint with ScalaGenOrderingOps with ScalaGenIfThenElse
+  with ScalaGenBooleanOps with ScalaGenArrayLoopsFatFixes { val IR: Impl }
 
 trait Runner /*extends internal.ScalaCompile*/ {
   val p: Impl
@@ -243,7 +285,12 @@ trait VerticalFusionTransformer extends FusionTransformer /*with BaseLoopsTraver
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
     val save = seenLoops
     seenLoops = HashSet[Sym[Any]]()
-    val res = super.reflectBlock(block)
+    val newBlock = block match {  
+      // also check whether toplevel block result symbol
+      // needs substitution, so we can change full blocks
+      case Block(sym) => Block(apply(sym))
+    }
+    val res = super.reflectBlock(newBlock)
     seenLoops = save
     res
   }
@@ -303,6 +350,11 @@ trait VerticalFusionTransformer extends FusionTransformer /*with BaseLoopsTraver
     }
   }
 
+  var onceSubst = scala.collection.immutable.Map.empty[Exp[Any], Exp[Any]]
+  override def apply[A](x: Exp[A]): Exp[A] = onceSubst.get(x) match { 
+    case Some(y) if y != x => onceSubst -= x; apply(y.asInstanceOf[Exp[A]])
+    case _ => super.apply(x)
+  }
 
   override def transformStm(stm: Stm): Exp[Any] = { 
     // println("--transforming: " + stm)
@@ -313,7 +365,7 @@ trait VerticalFusionTransformer extends FusionTransformer /*with BaseLoopsTraver
         }).orElse(simpleIndexReplacements.get((pSym, cIndex))) 
           .getOrElse(super.transformStm(stm))
 
-      case TP(sym, loop: AbstractLoop[_]) => // Check if we can do loop fusion
+      case TP(sym, loop: AbstractLoop[Any]) => // Check if we can do loop fusion
         val (prod, reconstrProds) = findProducers(sym, loop.size, loop.v, loop.body)
         
         def printProd(p: (Sym[Any], Sym[Any])): String = p._2 + (if (p._1 == p._2) "" else " (was " + p._1 + ")")
@@ -330,29 +382,55 @@ trait VerticalFusionTransformer extends FusionTransformer /*with BaseLoopsTraver
           printdbg("(VFT) No producers found for " + stm)
         }
 
-
-
         val resultLoop = prod.orElse(reconstrProds.headOption)
           .flatMap({t => findDefinition(t._2)})
-          .map({ case TP(s, l: AbstractLoop[_]) => 
-            (s, l.size, l.v, l.body, sym, loop.size, loop.v, loop.body) 
-          }).flatMap({
-            case (pSym, pSize, pIndex, SimpleCollect(pRes), cSym, cSize, cIndex, cBody) =>
+          .map({ case TP(s, p: AbstractLoop[_]) => 
+            (s, p, p.size, p.v, p.body, sym, loop.size, loop.v, loop.body) 
+          }).map({ // applies to all fusion types
+            case t@(pSym,_,_, pIndex,ResultBlock(pRes),cSym,_,cIndex,_) =>
+              printdbg("(VFT) General fusion: remap index to " + pIndex + ", SimpleIndex to " + pRes + ".")
               subst += (cIndex -> pIndex)
               simpleIndexReplacements += ((pSym, cIndex) -> pRes)
               FusedSyms.record(pSym, cSym)
-              printdbg("(VFT) SimpleCollect+Any fusion: remap index to " + pIndex + ", SimpleIndex to " + pRes + ".")
+              t
+          }).flatMap({ // None to use super.transform, or create fused consumer yourself
+            case (_,_,_,_,SimpleCollect(_),_,_,_,_) =>
+              printdbg("(VFT) SimpleCollect+Any fusion: nothing more to do.")
               None
 
-            // TODO other types
-            //case (pSym, pSize, pIndex, SimpleCollectIf(pRes, pConds), cSym, cSize, cIndex, SimpleCollect(cRes)) =>
+            case (_,pLoop,_,_,SimpleCollectIf(pRes, _),_,_,_,SimpleCollect(cRes)) =>
+              printdbg("(VFT) SimpleCollectIf+SimpleCollect fusion: use producer loop with consumer body.")
+              onceSubst += (pRes -> cRes) // only subst. consumer body once, not record forever
+              Some(self_mirror(sym, pLoop))
 
-            // FUSE YOU!
+            case (_,_,pSize,_,SimpleCollectIf(_,pConds),_,cSize,_,SimpleCollectIf(_,cConds)) =>
+              printdbg("(VFT) SimpleCollectIf+SimpleCollectIf fusion: add producer conditions to consumer loop.")
+              // If the condition also contains SimpleIndex, need to reflect full block first
+              val transformedCCond = transformExpAsBlock(cConds.head)
+              // substitute first consumer condition with AND(it, producer conditions)
+              val fusedCond = pConds.foldLeft(transformedCCond)(boolean_and(_, _))
+              subst += (cConds.head -> fusedCond)
+              onceSubst += (cSize -> pSize)              
+              None
 
-            // case (pSym, pSize, pIndex, pBody, cSym, cSize, cIndex, cBody) =>
-            // case (pSym, pSize, pIndex, pBody, cSym, cSize, cIndex, cBody) =>
+            case (_,_,pSize,_,SimpleCollectIf(_,pConds),_,cSize,_,MultiCollect(cRes, Some(emptyArray))) =>
+              printdbg("(VFT) SimpleCollectIf+MultiCollect fusion: add if-then-else with empty list to consumer.")
+              onceSubst += (cRes -> getIfThenElse(pConds, cRes, emptyArray()))
+              onceSubst += (cSize -> pSize)              
+              None
+
+
+            case (pSym, pLoop, pSize, pIndex, SimpleCollectIf(_,pConds), 
+                cSym, cSize, cIndex, Reduce(cRes, Some(neutral), _)) =>
+              printdbg("(VFT) SimpleCollectIf+Reduce fusion: add if-then-else with neutral element to consumer.")
+              onceSubst += (cRes -> getIfThenElse(pConds, cRes, neutral))
+              onceSubst += (cSize -> pSize)              
+              None
+
+            // case (pSym, pLoop, pSize, pIndex, pBody, cSym, cSize, cIndex, cBody) =>
+            // case (pSym, pLoop, pSize, pIndex, pBody, cSym, cSize, cIndex, cBody) =>
             case _ => 
-              printdbg("not implemented yet")
+              printdbg("TODO not implemented yet")
               None
 
           })          
@@ -370,8 +448,26 @@ trait VerticalFusionTransformer extends FusionTransformer /*with BaseLoopsTraver
         super.transformStm(stm)
     }
     // println("--transformed " + stm + " to " + transformedSym)
+    // println("----" + transformedSym + " = " + findDefinition(transformedSym.asInstanceOf[Sym[Any]]))
     transformedSym
   }
+
+  // transformation helpers
+
+  def transformExpAsBlock[T](e: Exp[T]): Exp[T] = e match {
+    case c: Const[T] => c
+    case s: Sym[T] => reflectBlock(Block(s))
+    case _ => e
+  }
+  
+  def getIfThenElse[T:Manifest](pConds: List[Exp[Boolean]], cRes: Exp[T], elseExp: Exp[T]): Exp[T] = {
+    val tCRes = transformExpAsBlock(cRes) // first transform the body
+    val c = pConds.reduce(boolean_and(_, _))
+    val ite = __ifThenElse(c, tCRes, elseExp)(mtype(tCRes.tp), mpos(tCRes.pos))              
+    reflectBlock(Block(ite))
+  }
+
+  // finding producer helpers
 
   def findProducers[A](cSym: Sym[A], cShape: Exp[Int], cIndex: Sym[Int], cBody: Def[A]): (Option[(Sym[Any], Sym[Any])], List[(Sym[Any], Sym[Any])]) = {
     val cIndexStms = getDependentStuff(cIndex)
@@ -465,13 +561,9 @@ trait VerticalFusionTransformer extends FusionTransformer /*with BaseLoopsTraver
     val prodFusedSyms = FusedSyms.getOldAndNew(pSym)
 
     // find the consumer body
-    val cBlocks = cBody match {
-      case SimpleCollect(resSym@Sym(_)) => List(resSym)
-      case SimpleCollectIf(resSym@Sym(_), conds: List[Sym[_]]) => resSym :: conds
-      case MultiCollect(resSym@Sym(_), _) => List(resSym)
-      case Reduce(resSym@Sym(_), _, _) => List(resSym)
-      case _ => 
-        return ("unknown consumer loop type: " + cBody, -1)
+    val cBlocks = AllBlocks.unapply(cBody) match {
+      case Some(l) => l.collect({ case s@Sym(_) => s })
+      case None => return ("unknown consumer loop type: " + cBody, -1)
     }
     
     // traverse the statements needed for the loop and check there are no deps
@@ -575,7 +667,7 @@ class TestFusion3 extends FileDiffSuite {
   val prefix = "test-out/epfl/test7-wip-"
 
   def testFusionTransform00 = withOutFileChecked(prefix+"fusion00") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // range is producer, odds is consumer, range fused into odds
         // and range not dce'd
@@ -589,7 +681,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform01 = withOutFileChecked(prefix+"fusion01") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // range is producer, odds is consumer, range fused into odds
         // and range dce'd
@@ -609,7 +701,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform02 = withOutFileChecked(prefix+"fusion02") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // range is producer, odds is consumer, range fused into odds
         // but range kept around, TODO horizontal fusion
@@ -630,7 +722,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform03 = withOutFileChecked(prefix+"fusion03") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // not consumer, shape replaced so range is dce'd
         val range = array(100) { i => 
@@ -646,7 +738,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform04 = withOutFileChecked(prefix+"fusion04") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // length moved out and replaced with constant, so is consumer
         val range = array(100) { i => 
@@ -662,7 +754,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform05 = withOutFileChecked(prefix+"fusion05") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // not consumer
         val range = array(100) { i => 
@@ -678,7 +770,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform06 = withOutFileChecked(prefix+"fusion06") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // range is producer, arr1 is consumer and arr2 is also consumer of range
         // multiple indep consumers fused
@@ -689,8 +781,7 @@ class TestFusion3 extends FileDiffSuite {
           val x = range.at(i) > 50
           (x, range.at(i) * 2) }
         val arr2 = arrayIf(range.length) { i =>
-          val x = range.at(i) < 20
-          (x, range.at(i) * 3) }
+          (range.at(i) < 20, range.at(i) * 3) }
         print(arr1.length)
         print(arr2.length)
       }
@@ -699,7 +790,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform07 = withOutFileChecked(prefix+"fusion07") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // successive consumers fused     
         val range = array(100) { i => 
@@ -717,24 +808,19 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform08 = withOutFileChecked(prefix+"fusion08") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
-      def test(x: Rep[Int]) = {        
-        // SimpleCollect + Any fusion
-        val range = array(100) { i => i + 1 }
-        val range2 = array(range.length) { i => range.at(i) + 2 }
-        val range3 = arrayIf(range.length) { i => (i > 10, range.at(i) + 3) }
-        val range4 = flatten(range.length) { i => array(10) { ii => ii + range.at(i) } }
-        print(range2.at(0))
-        print(range3.at(0))
-        print(range4.at(0))
-      }
-    }
-    new Prog with Impl
-  }
+  // def testFusionTransform08 = withOutFileChecked(prefix+"fusion08") {
+  //   trait Prog extends MyFusionProg with Impl {
+  //     def test(x: Rep[Int]) = {        
+
+  //       // EMPTY TEST
+
+  //     }
+  //   }
+  //   new Prog with Impl
+  // }
 
   def testFusionTransform09 = withOutFileChecked(prefix+"fusion09") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // SimpleCollect + MultiCollect: inner loop not fused
         val range = array(100) { i => i + 1 }
@@ -746,7 +832,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform10 = withOutFileChecked(prefix+"fusion10") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {     
         // nested array arrI not fused with range
         // arrI & arrJ fused
@@ -771,7 +857,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform11 = withOutFileChecked(prefix+"fusion11") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // no horizontal fusion across levels
         val arr1 = array(90) { i =>
@@ -791,7 +877,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform12 = withOutFileChecked(prefix+"fusion12") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {    
         // horizontal fusion in nested loop (not vertical since not consumer)
         val arr1 = array(100) { i =>
@@ -810,7 +896,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform13 = withOutFileChecked(prefix+"fusion13") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // reconstructed consumers fused
         // constant
@@ -829,7 +915,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform14 = withOutFileChecked(prefix+"fusion14") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // multiple producers (zip): currently fuse with real only
         // TODO
@@ -843,7 +929,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform15 = withOutFileChecked(prefix+"fusion15") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // multiple producers (zip): currently fuse with first reconstr. only
         // TODO
@@ -857,7 +943,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform16 = withOutFileChecked(prefix+"fusion16") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // Test all branches of consumerGoesOverRangeOfProducer
         val range = array(x) { i => i + 1 }
@@ -883,7 +969,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform17 = withOutFileChecked(prefix+"fusion17") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         val range = array(x) { i => i + 1 }
         val v = range.at(0)
@@ -905,7 +991,7 @@ class TestFusion3 extends FileDiffSuite {
 
 /*
   def testFusionTransform18 = withOutFileChecked(prefix+"fusion18") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {    
         // TODO effects    
         val range = array(x) { i => i + 1 }
@@ -919,7 +1005,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform19 = withOutFileChecked(prefix+"fusion19") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         val range = array(100) { i => i + 1 }
         print(range.at(0))
@@ -932,7 +1018,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform20 = withOutFileChecked(prefix+"fusion20") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // TODO AAAAHHHH effects of loops aren't tracked properly! range and print(y) get swapped!      
         val y = x + 1
@@ -946,7 +1032,7 @@ class TestFusion3 extends FileDiffSuite {
 */
 
   def testFusionTransform21 = withOutFileChecked(prefix+"fusion21") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // multiple consumers all fused
         val range = array(100) { i => i + 1 }
@@ -962,7 +1048,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   def testFusionTransform22 = withOutFileChecked(prefix+"fusion22") {
-    trait Prog extends MyFusionProg with LiftNumeric with OrderingOps with BooleanOps with Impl {
+    trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // multiple consumers not fused:
         // range4 depends on range3, but range already fused with range3,
@@ -980,5 +1066,53 @@ class TestFusion3 extends FileDiffSuite {
     }
     new Prog with Impl
   }
+
+  def testFusionTransform23 = withOutFileChecked(prefix+"fusion23") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {        
+        // SimpleCollect + Any fusion
+        val range = array(100) { i => i + 1 }
+        val range2 = array(range.length) { i => range.at(i) + 2 }
+        val range3 = arrayIf(range.length) { i => (i > 10, range.at(i) + 3) }
+        val range4 = flatten(range.length) { i => array(10) { ii => ii + range.at(i) } }
+        val range5 = sum(range.length) { i => unit(2.0) + int_double_value(range.at(i)) }
+        print(range2.at(0))
+        print(range3.at(0))
+        print(range4.at(0))
+        print(range5)
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform24 = withOutFileChecked(prefix+"fusion24") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {        
+        // SimpleCollectIf + Any fusion
+        val range = arrayIf(100) { i => (i > 10, i + 1) }
+        val range2 = array(range.length) { i => range.at(i) + 2 }
+        val range3 = arrayIf(range.length) { i => (range.at(i) > 20, range.at(i) + 3) }
+        val range4 = flatten(range.length) { i => array(range.at(i)) { ii => ii + range.at(i) } }
+        val range5 = sum(range.length) { i => unit(2.0) + int_double_value(range.at(i)) }
+        print(range2.at(0))
+        print(range3.at(0))
+        print(range4.at(0))
+        print(range5)
+      }
+    }
+    new Prog with Impl
+  }
+
+  // def testFusionTransform25 = withOutFileChecked(prefix+"fusion25") {
+  //   trait Prog extends MyFusionProg with Impl {
+  //     def test(x: Rep[Int]) = {        
+  //       // SimpleCollectIf + Any fusion
+  //       val range = arrayIf(100) { i => (i > 10, i + 1) }
+  //       val range5 = sum(range.length) { i => unit(2.0) + int_double_value(range.at(i)) }
+  //       print(range5)
+  //     }
+  //   }
+  //   new Prog with Impl
+  // }
 }
 

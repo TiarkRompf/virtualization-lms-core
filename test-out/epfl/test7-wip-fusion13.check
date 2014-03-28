@@ -48,10 +48,12 @@ val x19 = println(x18)
 -- vertical transformation
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
 (VFT) Fusing consumer TP(Sym(7),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(6))))) with reconstructed producer: Sym(3)
-(VFT) SimpleCollect+Any fusion: remap index to Sym(1), SimpleIndex to Sym(2).
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
 (VFT) No producers found for TP(Sym(13),SimpleLoop(Sym(10),Sym(11),ArrayElem(Block(Sym(12)))))
 (VFT) Fusing consumer TP(Sym(17),SimpleLoop(Sym(10),Sym(14),ArrayElem(Block(Sym(16))))) with reconstructed producer: Sym(13)
-(VFT) SimpleCollect+Any fusion: remap index to Sym(11), SimpleIndex to Sym(12).
+(VFT) General fusion: remap index to Sym(11), SimpleIndex to Sym(12).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
 
 -- after vertical transformation
 var x22 = new Array[Int](100)

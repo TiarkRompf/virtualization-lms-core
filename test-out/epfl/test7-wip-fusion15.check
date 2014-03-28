@@ -37,7 +37,8 @@ val x13 = println(x12)
 (VFT) No producers found for TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5)))))
 (VFT) Fusing consumer TP(Sym(11),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(10))))) with reconstructed producer: Sym(3)
 (VFT) TODO could then fuse with reconstructed producers: List(Sym(6))
-(VFT) SimpleCollect+Any fusion: remap index to Sym(1), SimpleIndex to Sym(2).
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
 
 -- after vertical transformation
 var x6 = new Array[Int](100)
