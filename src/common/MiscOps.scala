@@ -77,9 +77,9 @@ trait CGenMiscOps extends CGenEffect {
 
   private def format(s: Exp[Any]): String = {
     remap(s.tp) match {
-      case "CHAR" => "%c"
-      case "bool" | "char" | "short" | "int" => "%d"
-      case "long" => "%ld"
+      case "uint16_t" => "%c"
+      case "bool" | "int8_t" | "int16_t" | "int32_t" => "%d"
+      case "int64_t" => "%ld"
       case "float" | "double" => "%f"
       case "string" => "%s" 
       case _ => throw new GenerationFailedException("CGenMiscOps: cannot print type " + remap(s.tp))

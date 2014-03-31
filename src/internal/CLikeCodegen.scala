@@ -11,13 +11,13 @@ trait CLikeCodegen extends GenericCodegen {
   def mangledName(name: String) = name.replaceAll("\\s","").map(c => if(!c.isDigit && !c.isLetter) '_' else c) 
 
   // List of datastructure types that requires transfer functions to be generated for this target
-  protected val dsTypesList = HashSet[Manifest[Any]]()
+  val dsTypesList = HashSet[(Manifest[Any],String)]()
 
   // Streams for helper functions and its header
-  protected var helperFuncStream: PrintWriter = _
-  protected var headerStream: PrintWriter = _
-  protected var actRecordStream: PrintWriter = _
-  protected var typesStream: PrintWriter = _
+  var helperFuncStream: PrintWriter = _
+  var headerStream: PrintWriter = _
+  var actRecordStream: PrintWriter = _
+  var typesStream: PrintWriter = _
 
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = emitValDef(sym, rhs)
 
@@ -27,10 +27,8 @@ trait CLikeCodegen extends GenericCodegen {
     if(remap(tpe) != "void") stream.println(remap(tpe) + " " + sym + " = " + rhs + ";")
   }
 
-  def remapWithRef[A](m: Manifest[A]): String = {
-    if (isPrimitiveType(m)) remap(m) + " "
-    else remap(m) + " * "
-  }
+  def remapWithRef[A](m: Manifest[A]): String = remap(m) + addRef(m)
+  def remapWithRef(tpe: String): String = tpe + addRef(tpe)
 
   override def remap[A](m: Manifest[A]) : String = {
     if (m.erasure == classOf[Variable[AnyVal]])
@@ -42,11 +40,11 @@ trait CLikeCodegen extends GenericCodegen {
       m.toString match {
         case "scala.collection.immutable.List[Float]" => "List"
         case "Boolean" => "bool"
-        case "Byte" => "char"
-        case "Char" => "CHAR"
-        case "Short" => "short"
-        case "Int" => "int"
-        case "Long" => "long"
+        case "Byte" => "int8_t"
+        case "Char" => "uint16_t"
+        case "Short" => "int16_t"
+        case "Int" => "int32_t"
+        case "Long" => "int64_t"
         case "Float" => "float"
         case "Double" => "double"
         case "Unit" => "void"
@@ -56,11 +54,12 @@ trait CLikeCodegen extends GenericCodegen {
     }
   }
 
+  def addRef(): String = /*if (cppUseSharedPtr) " " else*/ " *"
   def addRef[A](m: Manifest[A]): String = addRef(remap(m))
 
   def addRef(tpe: String): String = {
-    if (!isPrimitiveType(tpe) && !isVoidType(tpe)) " *"
-    else " " 
+    if (!isPrimitiveType(tpe) && !isVoidType(tpe)) addRef()
+    else " "
   }
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
@@ -70,20 +69,16 @@ trait CLikeCodegen extends GenericCodegen {
     def kernelSignature: String = {
       val out = new StringBuilder
       if(resultIsVar)
-        out.append(hostTarget + "Ref< " + resultType + addRef(resultType) + " > ")
+        out.append(hostTarget + "Ref< " + resultType + addRef(resultType) + " > " + addRef())
       else
-        out.append(resultType)
-      if (!external) {
-        if(resultIsVar) out.append(" *")
-        else out.append(addRef(resultType))
-      }
+        out.append(resultType + addRef(resultType))
       out.append(" kernel_" + syms.map(quote).mkString("") + "(")
       out.append(vals.map(p=>remap(p.tp) + addRef(p.tp) + quote(p)).mkString(", "))
       if (vals.length > 0 && vars.length > 0){
         out.append(", ")
       }
       if (vars.length > 0){
-        out.append(vars.map(v => hostTarget + "Ref< " + remap(v.tp) + addRef(v.tp) + " > *" + quote(v)).mkString(","))
+        out.append(vars.map(v => hostTarget + "Ref< " + remap(v.tp) + addRef(v.tp) + " > " + addRef() + quote(v)).mkString(","))
       }
       out.append(")")
       out.toString
@@ -103,13 +98,21 @@ trait CLikeCodegen extends GenericCodegen {
 
     if(!resultType.startsWith("DeliteOpMultiLoop"))
       stream.println("}")
-
+/*
+    for(s <- syms++vals++vars) {
+      if(dsTypesList.contains(s.tp)) println("contains :" + remap(s.tp))
+      else println("not contains: " + remap(s.tp))
+    }
+    println(syms.map(quote).mkString("") + "adding dsTypesList:" + (syms++vals++vars).map(_.tp).mkString(","))
     dsTypesList ++= (syms++vals++vars).map(_.tp)
+    println("dsTyps-lms:" + dsTypesList.map(remap(_)).mkString(",")) //toString)
+  */
+    dsTypesList ++= (syms++vals++vars).map(s => (s.tp,remap(s.tp)))
   }
 
   def isPrimitiveType(tpe: String) : Boolean = {
     tpe match {
-      case "bool" | "char" | "CHAR" | "short" | "int" | "long" | "float" | "double" => true
+      case "bool" | "int8_t" | "uint16_t" | "int16_t" | "int32_t" | "int64_t" | "float" | "double" => true
       case _ => false
     }
   }
