@@ -160,7 +160,7 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
           case ReduceIfElem(c,y) =>
             stream.println("var " + quote(l) + " = 0")
           case FlattenElem(y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).tp + "]")
+            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).tp.typeArguments(0) + "]")
         }
       }
       val ii = x // was: x(i)
