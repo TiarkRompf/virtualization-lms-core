@@ -60,12 +60,16 @@ val x25 = x24.apply(0)
 val x26 = println(x25)
 
 -- vertical transformation
+
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Sym(0),Sym(1),ArrayElem(Block(Sym(2)))))
 (VFT) Sym(10) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
+
 (VFT) No producers found for TP(Sym(10),SimpleLoop(Sym(5),Sym(6),ArrayIfElem(Sym(8),Block(Sym(9)))))
 (VFT) Sym(17) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
+
 (VFT) No producers found for TP(Sym(17),SimpleLoop(Sym(5),Sym(13),ArrayIfElem(Sym(16),Block(Sym(13)))))
 (VFT) Sym(24) not fused with Sym(10) because not indep (consumer uses index).
+
 (VFT) No producers found for TP(Sym(24),SimpleLoop(Sym(20),Sym(21),ArrayElem(Block(Sym(23)))))
 
 -- after vertical transformation

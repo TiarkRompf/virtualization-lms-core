@@ -50,14 +50,18 @@ val x20 = x14.apply(0)
 val x21 = println(x20)
 
 -- vertical transformation
+
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+
 (VFT) Fusing consumer TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5))))) with reconstructed producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) Fusing consumer TP(Sym(9),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8))))) with reconstructed producer: Sym(3) (was Sym(6))
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 (VFT) Sym(14) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
+
 (VFT) No producers found for TP(Sym(14),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(13)))))
 
 -- after vertical transformation

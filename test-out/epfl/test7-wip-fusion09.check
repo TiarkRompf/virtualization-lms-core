@@ -17,7 +17,7 @@ val x2 = x1 + 1
 x3(x1) = x2
 }
 val x4 = x3.length
-var x10 = new ArrayBuilder[Array[Int]]
+var x10 = new ArrayBuilder[Int]
 for (x5 <- 0 until x4) {
 val x7 = x3.apply(x5)
 var x9 = new Array[Int](x4)
@@ -31,14 +31,17 @@ val x11 = x10.apply(0)
 val x12 = println(x11)
 
 -- vertical transformation
+
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+
 (VFT) Fusing consumer TP(Sym(10),SimpleLoop(Sym(4),Sym(5),FlattenElem(Block(Sym(9))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) No producers found for TP(Sym(9),SimpleLoop(Sym(4),Sym(6),ArrayElem(Block(Sym(8)))))
 
 -- after vertical transformation
-var x16 = new ArrayBuilder[Array[Int]]
+var x16 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
 var x15 = new Array[Int](100)
@@ -56,7 +59,7 @@ val x18 = println(x17)
 (HFT)  Recording new loop (prev. Sym(16)): (Const(100),(Sym(16),Sym(1),None))
 
 -- after horizontal transformation
-var x16 = new ArrayBuilder[Array[Int]]
+var x16 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
 var x15 = new Array[Int](100)

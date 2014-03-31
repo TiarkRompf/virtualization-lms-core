@@ -50,7 +50,7 @@ if (x10) x13 += x12
 }
 val x27 = x13.apply(0)
 val x28 = println(x27)
-var x19 = new ArrayBuilder[Array[Int]]
+var x19 = new ArrayBuilder[Int]
 for (x14 <- 0 until x4) {
 val x16 = x3.apply(x14)
 var x18 = new Array[Int](10)
@@ -72,17 +72,23 @@ x24 += x23
 val x31 = println(x24)
 
 -- vertical transformation
+
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+
 (VFT) Fusing consumer TP(Sym(8),SimpleLoop(Sym(4),Sym(5),ArrayElem(Block(Sym(7))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) Fusing consumer TP(Sym(13),SimpleLoop(Sym(4),Sym(9),ArrayIfElem(Sym(10),Block(Sym(12))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) Fusing consumer TP(Sym(19),SimpleLoop(Sym(4),Sym(14),FlattenElem(Block(Sym(18))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) No producers found for TP(Sym(18),SimpleLoop(Const(10),Sym(15),ArrayElem(Block(Sym(17)))))
+
 (VFT) Fusing consumer TP(Sym(24),SimpleLoop(Sym(4),Sym(20),ReduceElem(Block(Sym(23))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
@@ -98,14 +104,14 @@ val x35 = x34.apply(0)
 val x36 = println(x35)
 var x39 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
-val x37 = x1 > 10
 val x2 = x1 + 1
-val x38 = x2 + 3
-if (x37) x39 += x38
+val x37 = x2 + 3
+val x38 = x1 > 10
+if (x38) x39 += x37
 }
 val x40 = x39.apply(0)
 val x41 = println(x40)
-var x44 = new ArrayBuilder[Array[Int]]
+var x44 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
 var x43 = new Array[Int](10)
@@ -144,14 +150,14 @@ val x35 = x34.apply(0)
 val x36 = println(x35)
 var x39 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
-val x37 = x1 > 10
 val x2 = x1 + 1
-val x38 = x2 + 3
-if (x37) x39 += x38
+val x37 = x2 + 3
+val x38 = x1 > 10
+if (x38) x39 += x37
 }
 val x40 = x39.apply(0)
 val x41 = println(x40)
-var x44 = new ArrayBuilder[Array[Int]]
+var x44 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
 var x43 = new Array[Int](10)

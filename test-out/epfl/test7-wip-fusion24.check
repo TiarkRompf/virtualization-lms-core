@@ -52,7 +52,7 @@ if (x12) x14 += x13
 }
 val x28 = x14.apply(0)
 val x29 = println(x28)
-var x20 = new ArrayBuilder[Array[Int]]
+var x20 = new ArrayBuilder[Int]
 for (x15 <- 0 until x5) {
 val x16 = x4.apply(x15)
 var x19 = new Array[Int](x16)
@@ -74,17 +74,23 @@ x25 += x24
 val x32 = println(x25)
 
 -- vertical transformation
+
 (VFT) No producers found for TP(Sym(4),SimpleLoop(Const(100),Sym(1),ArrayIfElem(Sym(2),Block(Sym(3)))))
+
 (VFT) Fusing consumer TP(Sym(9),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(8))))) with real producer: Sym(4)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(3).
 (VFT) SimpleCollectIf+SimpleCollect fusion: use producer loop with consumer body.
+
 (VFT) Fusing consumer TP(Sym(14),SimpleLoop(Sym(5),Sym(10),ArrayIfElem(Sym(12),Block(Sym(13))))) with real producer: Sym(4)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(3).
 (VFT) SimpleCollectIf+SimpleCollectIf fusion: add producer conditions to consumer loop.
+
 (VFT) Fusing consumer TP(Sym(20),SimpleLoop(Sym(5),Sym(15),FlattenElem(Block(Sym(19))))) with real producer: Sym(4)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(3).
-(VFT) SimpleCollectIf+MultiCollect fusion: add if-then-else with empty list to consumer.
+(VFT) SimpleCollectIf+MultiCollect fusion: add if-then-else with empty array to consumer.
+
 (VFT) No producers found for TP(Sym(19),SimpleLoop(Sym(16),Sym(17),ArrayElem(Block(Sym(18)))))
+
 (VFT) Fusing consumer TP(Sym(25),SimpleLoop(Sym(5),Sym(21),ReduceElem(Block(Sym(24))))) with real producer: Sym(4)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(3).
 (VFT) SimpleCollectIf+Reduce fusion: add if-then-else with neutral element to consumer.
@@ -111,7 +117,7 @@ if (x39) x41 += x40
 val x42 = x41.apply(0)
 val x43 = println(x42)
 var x44 = new Array[Int](0)
-var x48 = new ArrayBuilder[Array[Int]]
+var x48 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 > 10
 val x47 = if (x2) {
@@ -173,7 +179,7 @@ if (x39) x41 += x40
 val x42 = x41.apply(0)
 val x43 = println(x42)
 var x44 = new Array[Int](0)
-var x48 = new ArrayBuilder[Array[Int]]
+var x48 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 > 10
 val x47 = if (x2) {

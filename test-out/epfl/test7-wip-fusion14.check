@@ -35,8 +35,11 @@ val x13 = x12.apply(0)
 val x14 = println(x13)
 
 -- vertical transformation
+
 (VFT) No producers found for TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5)))))
+
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+
 (VFT) Fusing consumer TP(Sym(12),SimpleLoop(Sym(7),Sym(8),ArrayElem(Block(Sym(11))))) with real producer: Sym(6)
 (VFT) TODO could then fuse with reconstructed producers: List(Sym(3))
 (VFT) General fusion: remap index to Sym(4), SimpleIndex to Sym(5).

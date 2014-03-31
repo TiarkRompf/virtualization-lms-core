@@ -1,0 +1,231 @@
+-- full graph
+TP(Sym(3),NumericPlus(Sym(1),Sym(2)))
+TP(Sym(4),SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(3)))))
+TP(Sym(5),SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(4)))))
+TP(Sym(6),ArrayLength(Sym(5)))
+TP(Sym(8),ArrayIndex(Sym(5),Sym(7)))
+TP(Sym(9),NumericPlus(Sym(8),Const(2)))
+TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(9)))))
+TP(Sym(12),ArrayIndex(Sym(5),Sym(11)))
+TP(Sym(13),OrderingGT(Sym(12),Const(20)))
+TP(Sym(14),NumericPlus(Sym(12),Const(3)))
+TP(Sym(15),SimpleLoop(Sym(6),Sym(11),ArrayIfElem(Sym(13),Block(Sym(14)))))
+TP(Sym(17),ArrayIndex(Sym(5),Sym(16)))
+TP(Sym(19),NumericPlus(Sym(17),Sym(18)))
+TP(Sym(20),SimpleLoop(Sym(17),Sym(18),ArrayElem(Block(Sym(19)))))
+TP(Sym(21),SimpleLoop(Sym(6),Sym(16),FlattenElem(Block(Sym(20)))))
+TP(Sym(23),ArrayIndex(Sym(5),Sym(22)))
+TP(Sym(24),IntDoubleValue(Sym(23)))
+TP(Sym(25),NumericPlus(Const(2.0),Sym(24)))
+TP(Sym(26),SimpleLoop(Sym(6),Sym(22),ReduceElem(Block(Sym(25)))))
+TP(Sym(27),ArrayIndex(Sym(10),Const(0)))
+TP(Sym(28),Reflect(Print(Sym(27)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(29),ArrayIndex(Sym(15),Const(0)))
+TP(Sym(30),Reflect(Print(Sym(29)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(28))))
+TP(Sym(31),ArrayIndex(Sym(21),Const(0)))
+TP(Sym(32),Reflect(Print(Sym(31)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(28), Sym(30))))
+TP(Sym(33),Reflect(Print(Sym(26)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(28), Sym(30), Sym(32))))
+TP(Sym(34),Reify(Sym(33),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(28), Sym(30), Sym(32), Sym(33))))
+
+-- before transformation
+var x5 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+var x4 = new Array[Int](10)
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+x4(x2) = x3
+}
+x5 ++= x4
+}
+val x6 = x5.length
+var x10 = new Array[Int](x6)
+for (x7 <- 0 until x6) {
+val x8 = x5.apply(x7)
+val x9 = x8 + 2
+x10(x7) = x9
+}
+val x27 = x10.apply(0)
+val x28 = println(x27)
+var x15 = new ArrayBuilder[Int]
+for (x11 <- 0 until x6) {
+val x12 = x5.apply(x11)
+val x13 = x12 > 20
+val x14 = x12 + 3
+if (x13) x15 += x14
+}
+val x29 = x15.apply(0)
+val x30 = println(x29)
+var x21 = new ArrayBuilder[Int]
+for (x16 <- 0 until x6) {
+val x17 = x5.apply(x16)
+var x20 = new Array[Int](x17)
+for (x18 <- 0 until x17) {
+val x19 = x17 + x18
+x20(x18) = x19
+}
+x21 ++= x20
+}
+val x31 = x21.apply(0)
+val x32 = println(x31)
+var x26 = 0
+for (x22 <- 0 until x6) {
+val x23 = x5.apply(x22)
+val x24 = x23.doubleValue()
+val x25 = 2.0 + x24
+x26 += x25
+}
+val x33 = println(x26)
+
+-- vertical transformation
+
+(VFT) No producers found for TP(Sym(5),SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(4)))))
+
+(VFT) No producers found for TP(Sym(4),SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(3)))))
+
+(VFT) Fusing consumer TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(9))))) with real producer: Sym(5)
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(4).
+(VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
+(VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(3).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
+
+(VFT) Fusing consumer TP(Sym(15),SimpleLoop(Sym(6),Sym(11),ArrayIfElem(Sym(13),Block(Sym(14))))) with real producer: Sym(5)
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(4).
+(VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
+(VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(3).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
+
+(VFT) Fusing consumer TP(Sym(21),SimpleLoop(Sym(6),Sym(16),FlattenElem(Block(Sym(20))))) with real producer: Sym(5)
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(4).
+(VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
+(VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(3).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
+
+(VFT) No producers found for TP(Sym(20),SimpleLoop(Sym(17),Sym(18),ArrayElem(Block(Sym(19)))))
+
+(VFT) Fusing consumer TP(Sym(26),SimpleLoop(Sym(6),Sym(22),ReduceElem(Block(Sym(25))))) with real producer: Sym(5)
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(4).
+(VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
+(VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(3).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
+
+-- after vertical transformation
+var x37 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+var x36 = new Array[Int](10)
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x35 = x3 + 2
+x36(x2) = x35
+}
+x37 ++= x36
+}
+val x38 = x37.apply(0)
+val x39 = println(x38)
+var x43 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+var x42 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x40 = x3 + 3
+val x41 = x3 > 20
+if (x41) x42 += x40
+}
+x43 ++= x42
+}
+val x44 = x43.apply(0)
+val x45 = println(x44)
+var x49 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+var x48 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+var x47 = new Array[Int](x3)
+for (x18 <- 0 until x3) {
+val x46 = x3 + x18
+x47(x18) = x46
+}
+x48 ++= x47
+}
+x49 ++= x48
+}
+val x50 = x49.apply(0)
+val x51 = println(x50)
+var x55 = 0
+for (x1 <- 0 until 30) {
+var x54 = 0
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x52 = x3.doubleValue()
+val x53 = 2.0 + x52
+x54 += x53
+}
+x55 += x54
+}
+val x56 = println(x55)
+
+-- horizontal transformation
+(HFT)  Recording new loop (prev. Sym(36)): (Const(10),(Sym(36),Sym(2),None))
+(HFT)  Recording new loop (prev. Sym(37)): (Const(30),(Sym(37),Sym(1),None))
+(HFT)  Loop Sym(43) fused with Sym(37), common index: Sym(1)
+(HFT)  Recording new loop (prev. Sym(42)): (Const(10),(Sym(42),Sym(2),None))
+(HFT)  Loop Sym(49) fused with Sym(37), common index: Sym(1)
+(HFT)  Recording new loop (prev. Sym(47)): (Sym(3),(Sym(47),Sym(18),None))
+(HFT)  Recording new loop (prev. Sym(48)): (Const(10),(Sym(48),Sym(2),None))
+(HFT)  Loop Sym(55) fused with Sym(37), common index: Sym(1)
+(HFT)  Recording new loop (prev. Sym(54)): (Const(10),(Sym(54),Sym(2),None))
+
+-- after horizontal transformation
+var x37 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+var x36 = new Array[Int](10)
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x35 = x3 + 2
+x36(x2) = x35
+}
+x37 ++= x36
+}
+val x38 = x37.apply(0)
+val x39 = println(x38)
+var x43 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+var x42 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x40 = x3 + 3
+val x41 = x3 > 20
+if (x41) x42 += x40
+}
+x43 ++= x42
+}
+val x44 = x43.apply(0)
+val x45 = println(x44)
+var x49 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+var x48 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+var x47 = new Array[Int](x3)
+for (x18 <- 0 until x3) {
+val x46 = x3 + x18
+x47(x18) = x46
+}
+x48 ++= x47
+}
+x49 ++= x48
+}
+val x50 = x49.apply(0)
+val x51 = println(x50)
+var x55 = 0
+for (x1 <- 0 until 30) {
+var x54 = 0
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x52 = x3.doubleValue()
+val x53 = 2.0 + x52
+x54 += x53
+}
+x55 += x54
+}
+val x56 = println(x55)
+-- done

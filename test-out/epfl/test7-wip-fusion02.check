@@ -38,7 +38,9 @@ val x15 = x5.apply(0)
 val x16 = println(x15)
 
 -- vertical transformation
+
 (VFT) No producers found for TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(4)))))
+
 (VFT) Fusing consumer TP(Sym(12),SimpleLoop(Sym(6),Sym(7),ArrayIfElem(Sym(10),Block(Sym(11))))) with real producer: Sym(5)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(4).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
@@ -49,10 +51,10 @@ for (x1 <- 0 until 100) {
 val x2 = x1 + 1
 val x3 = x2 * x1
 val x4 = x1 * x3
-val x18 = x4 > 50
-val x19 = !x18
-val x20 = x4 + 2
-if (x19) x21 += x20
+val x18 = x4 + 2
+val x19 = x4 > 50
+val x20 = !x19
+if (x20) x21 += x18
 }
 val x22 = x21.length
 val x23 = println(x22)
@@ -84,10 +86,10 @@ for (x1 <- 0 until 100) {
 val x2 = x1 + 1
 val x3 = x2 * x1
 val x4 = x1 * x3
-val x18 = x4 > 50
-val x19 = !x18
-val x20 = x4 + 2
-if (x19) x21 += x20
+val x18 = x4 + 2
+val x19 = x4 > 50
+val x20 = !x19
+if (x20) x21 += x18
 }
 val x22 = x21.length
 val x23 = println(x22)

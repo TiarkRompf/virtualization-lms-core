@@ -43,10 +43,13 @@ val x17 = x14.length
 val x18 = println(x17)
 
 -- vertical transformation
+
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+
 (VFT) Fusing consumer TP(Sym(9),SimpleLoop(Sym(4),Sym(5),ArrayIfElem(Sym(7),Block(Sym(8))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) Fusing consumer TP(Sym(14),SimpleLoop(Sym(4),Sym(10),ArrayIfElem(Sym(12),Block(Sym(13))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
@@ -55,18 +58,18 @@ val x18 = println(x17)
 var x22 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
-val x20 = x2 > 50
-val x21 = x2 * 2
-if (x20) x22 += x21
+val x20 = x2 * 2
+val x21 = x2 > 50
+if (x21) x22 += x20
 }
 val x23 = x22.length
 val x24 = println(x23)
 var x27 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
-val x25 = x2 < 20
-val x26 = x2 * 3
-if (x25) x27 += x26
+val x25 = x2 * 3
+val x26 = x2 < 20
+if (x26) x27 += x25
 }
 val x28 = x27.length
 val x29 = println(x28)
@@ -79,18 +82,18 @@ val x29 = println(x28)
 var x22 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
-val x20 = x2 > 50
-val x21 = x2 * 2
-if (x20) x22 += x21
+val x20 = x2 * 2
+val x21 = x2 > 50
+if (x21) x22 += x20
 }
 val x23 = x22.length
 val x24 = println(x23)
 var x27 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
-val x25 = x2 < 20
-val x26 = x2 * 3
-if (x25) x27 += x26
+val x25 = x2 * 3
+val x26 = x2 < 20
+if (x26) x27 += x25
 }
 val x28 = x27.length
 val x29 = println(x28)
