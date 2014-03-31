@@ -117,7 +117,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     // should probably be refactored...
     tabWidth -= 1
 
-    dsTypesList ++= (syms++vals++vars).map(_.tp)
+    dsTypesList ++= (syms++vals++vars).map(s => (s.tp,remap(s.tp)))
 
     // Print helper functions to file stream
     helperFuncStream.flush
@@ -127,7 +127,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   }
 
   override def emitTransferFunctions() {    
-    for (tp <- dsTypesList) {
+    for (tp <- dsTypesList.map(_._1)) {
       // Emit input copy helper functions for object type inputs
       //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
       try {

@@ -113,9 +113,9 @@ trait CGenEqual extends CGenBase with CLikeGenEqual {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case Equal(a,b) if(remap(a.tp) == "string" && remap(b.tp) == "string") =>
-        emitValDef(sym, "strcmp(" + quote(a) + "," + quote(b) + ") == 0")
+        emitValDef(sym, quote(a) + ".compare(" + quote(b) + ") == 0")
       case NotEqual(a,b) if(remap(a.tp) == "string" && remap(b.tp) == "string") =>
-        emitValDef(sym, "strcmp(" + quote(a) + "," + quote(b) + ") == 0")
+        emitValDef(sym, quote(a) + ".compare(" + quote(b) + ") != 0")
       case _ => super.emitNode(sym, rhs)
     }
   }

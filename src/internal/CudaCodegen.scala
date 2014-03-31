@@ -24,8 +24,6 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
     helperFuncStream.print("#include \"" + deviceTarget + "helperFuncs.h\"\n")    
     
     typesStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "types.h"))
-    typesStream.println("#define CHAR short")
-    typesStream.println("#define jCHAR jshort")
     typesStream.flush
     
     //TODO: Put all the DELITE APIs declarations somewhere

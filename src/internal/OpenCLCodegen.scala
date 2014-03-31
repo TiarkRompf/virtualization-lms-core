@@ -22,8 +22,6 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
     helperFuncStream.println("#include \"" + deviceTarget + "helperFuncs.h\"")
 
     typesStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "types.h"))
-    typesStream.println("#define CHAR short")
-    typesStream.println("#define jCHAR jshort")
     
     //TODO: Put all the DELITE APIs declarations somewhere
     headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))

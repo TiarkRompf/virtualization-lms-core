@@ -11,7 +11,7 @@ trait CLikeCodegen extends GenericCodegen {
   def mangledName(name: String) = name.replaceAll("\\s","").map(c => if(!c.isDigit && !c.isLetter) '_' else c) 
 
   // List of datastructure types that requires transfer functions to be generated for this target
-  val dsTypesList = HashSet[Manifest[Any]]()
+  val dsTypesList = HashSet[(Manifest[Any],String)]()
 
   // Streams for helper functions and its header
   var helperFuncStream: PrintWriter = _
@@ -28,6 +28,7 @@ trait CLikeCodegen extends GenericCodegen {
   }
 
   def remapWithRef[A](m: Manifest[A]): String = remap(m) + addRef(m)
+  def remapWithRef(tpe: String): String = tpe + addRef(tpe)
 
   override def remap[A](m: Manifest[A]) : String = {
     if (m.erasure == classOf[Variable[AnyVal]])
@@ -39,11 +40,11 @@ trait CLikeCodegen extends GenericCodegen {
       m.toString match {
         case "scala.collection.immutable.List[Float]" => "List"
         case "Boolean" => "bool"
-        case "Byte" => "char"
-        case "Char" => "CHAR"
-        case "Short" => "short"
-        case "Int" => "int"
-        case "Long" => "long"
+        case "Byte" => "int8_t"
+        case "Char" => "uint16_t"
+        case "Short" => "int16_t"
+        case "Int" => "int32_t"
+        case "Long" => "int64_t"
         case "Float" => "float"
         case "Double" => "double"
         case "Unit" => "void"
@@ -97,13 +98,21 @@ trait CLikeCodegen extends GenericCodegen {
 
     if(!resultType.startsWith("DeliteOpMultiLoop"))
       stream.println("}")
-
+/*
+    for(s <- syms++vals++vars) {
+      if(dsTypesList.contains(s.tp)) println("contains :" + remap(s.tp))
+      else println("not contains: " + remap(s.tp))
+    }
+    println(syms.map(quote).mkString("") + "adding dsTypesList:" + (syms++vals++vars).map(_.tp).mkString(","))
     dsTypesList ++= (syms++vals++vars).map(_.tp)
+    println("dsTyps-lms:" + dsTypesList.map(remap(_)).mkString(",")) //toString)
+  */
+    dsTypesList ++= (syms++vals++vars).map(s => (s.tp,remap(s.tp)))
   }
 
   def isPrimitiveType(tpe: String) : Boolean = {
     tpe match {
-      case "bool" | "char" | "CHAR" | "short" | "int" | "long" | "float" | "double" => true
+      case "bool" | "int8_t" | "uint16_t" | "int16_t" | "int32_t" | "int64_t" | "float" | "double" => true
       case _ => false
     }
   }

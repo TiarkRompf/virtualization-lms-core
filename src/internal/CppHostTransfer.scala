@@ -254,11 +254,11 @@ trait CppHostTransfer extends AbstractHostTransfer {
   def JNIType[A](m: Manifest[A]) : String = {
     remap(m) match {
       case "bool" => "jboolean"
-      case "char" => "jbyte"
-      case "CHAR" => "jchar"
-      case "short" => "jshort"
-      case "int" => "jint"
-      case "long" => "jlong"
+      case "int8_t" => "jbyte"
+      case "uint16_t" => "jchar"
+      case "int16_t" => "jshort"
+      case "int32_t" => "jint"
+      case "int64_t" => "jlong"
       case "float" => "jfloat"
       case "double" => "jdouble"
       case _ => "jobject"//all other types are objects
@@ -268,11 +268,11 @@ trait CppHostTransfer extends AbstractHostTransfer {
   def remapToJNI[A](m: Manifest[A]) : String = {
     remap(m) match {
       case "bool" => "Boolean"
-      case "char" => "Byte"
-      case "CHAR" => "Char"
-      case "short" => "Short"
-      case "int" => "Int"
-      case "long" => "Long"
+      case "int8_t" => "Byte"
+      case "uint16_t" => "Char"
+      case "int16_t" => "Short"
+      case "int32_t" => "Int"
+      case "int64_t" => "Long"
       case "float" => "Float"
       case "double" => "Double"
       case _ => "Object"
