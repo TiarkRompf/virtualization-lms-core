@@ -106,8 +106,8 @@ val x43 = println(x42)
 (VFT) Fusing consumer TP(Sym(7),SimpleLoop(Sym(4),Sym(5),ArrayElem(Block(Sym(6))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
-(VFT) Sym(13) not fused with Sym(3) because not same range (-2).
 
+(VFT) Sym(13) not fused with Sym(3) because not same range (-2).
 (VFT) No producers found for TP(Sym(13),SimpleLoop(Sym(10),Sym(11),ArrayElem(Block(Sym(12)))))
 
 (VFT) Fusing consumer TP(Sym(16),SimpleLoop(Sym(10),Sym(14),ArrayElem(Block(Sym(15))))) with reconstructed producer: Sym(13)
@@ -123,11 +123,11 @@ val x43 = println(x42)
 (VFT) Fusing consumer TP(Sym(28),SimpleLoop(Sym(22),Sym(26),ArrayElem(Block(Sym(27))))) with reconstructed producer: Sym(21) (was Sym(25))
 (VFT) General fusion: remap index to Sym(19), SimpleIndex to Sym(20).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) Sym(31) not fused with Sym(21) because not same range (-3).
-
 (VFT) No producers found for TP(Sym(31),SimpleLoop(Const(90),Sym(29),ArrayElem(Block(Sym(30)))))
-(VFT) Sym(34) not fused with Sym(31) because not same range (-1).
 
+(VFT) Sym(34) not fused with Sym(31) because not same range (-1).
 (VFT) No producers found for TP(Sym(34),SimpleLoop(Sym(22),Sym(32),ArrayElem(Block(Sym(33)))))
 
 (VFT) Fusing consumer TP(Sym(37),SimpleLoop(Const(100),Sym(35),ArrayElem(Block(Sym(36))))) with reconstructed producer: Sym(21)
@@ -160,9 +160,12 @@ val x51 = println(x50)
 val x52 = println(x47)
 
 -- horizontal transformation
-(HFT)  Recording new loop (prev. Sym(21)): (Const(100),(Sym(21),Sym(19),None))
-(HFT)  Recording new loop (prev. Sym(31)): (Const(90),(Sym(31),Sym(29),None))
-(HFT)  Loop Sym(49) not fused with Sym(21) because it depends on it
+(HFT) Recording Sym(21), no fusion
+(HFT) Recording Sym(31), no fusion
+(HFT) The candidate Sym(49) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(19), loopSyms = List(Sym(21))) because the candidate set depends on Sym(21)
+(HFT) Recording Sym(49), no fusion
+
+(HFT) all horizontally fused: 
 
 -- after horizontal transformation
 val x45 = println(x0)

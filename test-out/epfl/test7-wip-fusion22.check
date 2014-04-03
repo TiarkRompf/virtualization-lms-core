@@ -60,8 +60,8 @@ val x21 = println(x20)
 (VFT) Fusing consumer TP(Sym(9),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8))))) with reconstructed producer: Sym(3) (was Sym(6))
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
-(VFT) Sym(14) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
 
+(VFT) Sym(14) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
 (VFT) No producers found for TP(Sym(14),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(13)))))
 
 -- after vertical transformation
@@ -84,8 +84,11 @@ val x27 = x26.apply(0)
 val x28 = println(x27)
 
 -- horizontal transformation
-(HFT)  Recording new loop (prev. Sym(3)): (Const(100),(Sym(3),Sym(1),None))
-(HFT)  Loop Sym(26) not fused with Sym(3) because it depends on it
+(HFT) Recording Sym(3), no fusion
+(HFT) The candidate Sym(26) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(3))) because the candidate set depends on Sym(3)
+(HFT) Recording Sym(26), no fusion
+
+(HFT) all horizontally fused: 
 
 -- after horizontal transformation
 var x3 = new Array[Int](100)

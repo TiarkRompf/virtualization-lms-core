@@ -60,8 +60,11 @@ val x18 = x17.apply(0)
 val x19 = println(x18)
 
 -- horizontal transformation
-(HFT)  Recording new loop (prev. Sym(6)): (Const(100),(Sym(6),Sym(4),None))
-(HFT)  Loop Sym(17) not fused with Sym(6) because it depends on it
+(HFT) Recording Sym(6), no fusion
+(HFT) The candidate Sym(17) and its set (List(Sym(3), Sym(17))) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(4), loopSyms = List(Sym(6))) because the candidate set depends on Sym(6)
+(HFT) Recording Sym(17), no fusion
+
+(HFT) all horizontally fused: 
 
 -- after horizontal transformation
 var x6 = new Array[Int](100)

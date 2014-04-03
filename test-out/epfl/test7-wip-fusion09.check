@@ -55,8 +55,10 @@ val x17 = x16.apply(0)
 val x18 = println(x17)
 
 -- horizontal transformation
-(HFT)  Recording new loop (prev. Sym(15)): (Const(100),(Sym(15),Sym(6),None))
-(HFT)  Recording new loop (prev. Sym(16)): (Const(100),(Sym(16),Sym(1),None))
+(HFT) Recording Sym(16), no fusion
+(HFT) Recording Sym(15), no fusion
+
+(HFT) all horizontally fused: 
 
 -- after horizontal transformation
 var x16 = new ArrayBuilder[Int]

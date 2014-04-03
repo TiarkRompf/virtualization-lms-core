@@ -182,15 +182,24 @@ x60 += x59
 val x61 = println(x60)
 
 -- horizontal transformation
-(HFT)  Recording new loop (prev. Sym(37)): (Const(10),(Sym(37),Sym(2),None))
-(HFT)  Recording new loop (prev. Sym(38)): (Const(30),(Sym(38),Sym(1),None))
-(HFT)  Loop Sym(44) fused with Sym(37), common index: Sym(2)
-(HFT)  Loop Sym(45) fused with Sym(38), common index: Sym(1)
-(HFT)  Loop Sym(52) fused with Sym(37), common index: Sym(2)
-(HFT)  Recording new loop (prev. Sym(50)): (Sym(4),(Sym(50),Sym(19),None))
-(HFT)  Loop Sym(53) fused with Sym(38), common index: Sym(1)
-(HFT)  Loop Sym(59) fused with Sym(37), common index: Sym(2)
-(HFT)  Loop Sym(60) fused with Sym(38), common index: Sym(1)
+(HFT) Recording Sym(37), no fusion
+(HFT) Recording Sym(38), no fusion
+(HFT) Fusing Sym(44) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(37)))
+(HFT) - already using same index Sym(2)
+(HFT) Fusing Sym(45) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38)))
+(HFT) - already using same index Sym(1)
+(HFT) Fusing Sym(52) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(37), Sym(44)))
+(HFT) - already using same index Sym(2)
+(HFT) Recording Sym(50), no fusion
+(HFT) Fusing Sym(53) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38)))
+(HFT) - already using same index Sym(1)
+(HFT) Fusing Sym(59) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(37), Sym(44), Sym(52)))
+(HFT) - already using same index Sym(2)
+(HFT) Fusing Sym(60) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38)))
+(HFT) - already using same index Sym(1)
+
+(HFT) all horizontally fused: List(Sym(60), Sym(53), Sym(45), Sym(38))
+List(Sym(59), Sym(52), Sym(44), Sym(37))
 
 -- after horizontal transformation
 var x37 = new ArrayBuilder[Int]

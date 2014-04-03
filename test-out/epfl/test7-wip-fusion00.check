@@ -55,8 +55,11 @@ val x16 = x15.apply(0)
 val x17 = println(x16)
 
 -- horizontal transformation
-(HFT)  Recording new loop (prev. Sym(3)): (Const(100),(Sym(3),Sym(1),None))
-(HFT)  Loop Sym(15) fused with Sym(3), common index: Sym(1)
+(HFT) Recording Sym(3), no fusion
+(HFT) Fusing Sym(15) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(3), Sym(15)))
+(HFT) - already using same index Sym(1)
+
+(HFT) all horizontally fused: List(Sym(15), Sym(3))
 
 -- after horizontal transformation
 var x3 = new Array[Int](100)

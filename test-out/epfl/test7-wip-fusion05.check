@@ -40,6 +40,8 @@ val x15 = println(100)
 
 -- horizontal transformation
 
+(HFT) all horizontally fused: 
+
 -- after horizontal transformation
 val x15 = println(100)
 -- done

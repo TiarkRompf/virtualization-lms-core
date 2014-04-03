@@ -62,9 +62,11 @@ val x12 = x9.apply(0)
 val x13 = println(x12)
 
 -- horizontal transformation
-(HFT)  Recording new loop (prev. Sym(4)): (Const(100),(Sym(4),Sym(2),None))
-(HFT)  Recording new loop (prev. Sym(6)): (Const(90),(Sym(6),Sym(1),None))
-(HFT)  Recording new loop (prev. Sym(9)): (Const(100),(Sym(9),Sym(7),None))
+(HFT) Recording Sym(6), no fusion
+(HFT) Recording Sym(4), no fusion
+(HFT) Recording Sym(9), no fusion
+
+(HFT) all horizontally fused: 
 
 -- after horizontal transformation
 var x6 = new Array[Int](90)

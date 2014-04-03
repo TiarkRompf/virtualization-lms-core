@@ -201,19 +201,24 @@ x62 += x61
 val x63 = println(x62)
 
 -- horizontal transformation
-(HFT)  Recording new loop (prev. Sym(39)): (Const(5),(Sym(39),Sym(3),None))
-(HFT)  Recording new loop (prev. Sym(40)): (Const(10),(Sym(40),Sym(2),None))
-(HFT)  Recording new loop (prev. Sym(41)): (Const(30),(Sym(41),Sym(1),None))
-(HFT)  Loop Sym(48) fused with Sym(41), common index: Sym(1)
-(HFT)  Recording new loop (prev. Sym(46)): (Const(5),(Sym(46),Sym(3),None))
-(HFT)  Recording new loop (prev. Sym(47)): (Const(10),(Sym(47),Sym(2),None))
-(HFT)  Loop Sym(55) fused with Sym(41), common index: Sym(1)
-(HFT)  Recording new loop (prev. Sym(52)): (Sym(5),(Sym(52),Sym(21),None))
-(HFT)  Recording new loop (prev. Sym(53)): (Const(5),(Sym(53),Sym(3),None))
-(HFT)  Recording new loop (prev. Sym(54)): (Const(10),(Sym(54),Sym(2),None))
-(HFT)  Loop Sym(62) fused with Sym(41), common index: Sym(1)
-(HFT)  Recording new loop (prev. Sym(60)): (Const(5),(Sym(60),Sym(3),None))
-(HFT)  Recording new loop (prev. Sym(61)): (Const(10),(Sym(61),Sym(2),None))
+(HFT) Recording Sym(41), no fusion
+(HFT) Recording Sym(40), no fusion
+(HFT) Recording Sym(39), no fusion
+(HFT) Fusing Sym(48) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(55), Sym(48), Sym(62), Sym(41), Sym(8)))
+(HFT) - already using same index Sym(1)
+(HFT) Recording Sym(47), no fusion
+(HFT) Recording Sym(46), no fusion
+(HFT) Fusing Sym(55) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(55), Sym(48), Sym(62), Sym(41), Sym(8)))
+(HFT) - already using same index Sym(1)
+(HFT) Recording Sym(54), no fusion
+(HFT) Recording Sym(53), no fusion
+(HFT) Recording Sym(52), no fusion
+(HFT) Fusing Sym(62) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(55), Sym(48), Sym(62), Sym(41), Sym(8)))
+(HFT) - already using same index Sym(1)
+(HFT) Recording Sym(61), no fusion
+(HFT) Recording Sym(60), no fusion
+
+(HFT) all horizontally fused: List(Sym(62), Sym(55), Sym(48), Sym(41))
 
 -- after horizontal transformation
 var x41 = new ArrayBuilder[Int]

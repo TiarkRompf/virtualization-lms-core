@@ -164,15 +164,20 @@ x55 += x54
 val x56 = println(x55)
 
 -- horizontal transformation
-(HFT)  Recording new loop (prev. Sym(36)): (Const(10),(Sym(36),Sym(2),None))
-(HFT)  Recording new loop (prev. Sym(37)): (Const(30),(Sym(37),Sym(1),None))
-(HFT)  Loop Sym(43) fused with Sym(37), common index: Sym(1)
-(HFT)  Recording new loop (prev. Sym(42)): (Const(10),(Sym(42),Sym(2),None))
-(HFT)  Loop Sym(49) fused with Sym(37), common index: Sym(1)
-(HFT)  Recording new loop (prev. Sym(47)): (Sym(3),(Sym(47),Sym(18),None))
-(HFT)  Recording new loop (prev. Sym(48)): (Const(10),(Sym(48),Sym(2),None))
-(HFT)  Loop Sym(55) fused with Sym(37), common index: Sym(1)
-(HFT)  Recording new loop (prev. Sym(54)): (Const(10),(Sym(54),Sym(2),None))
+(HFT) Recording Sym(37), no fusion
+(HFT) Recording Sym(36), no fusion
+(HFT) Fusing Sym(43) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(43), Sym(37), Sym(55), Sym(5), Sym(49)))
+(HFT) - already using same index Sym(1)
+(HFT) Recording Sym(42), no fusion
+(HFT) Fusing Sym(49) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(43), Sym(37), Sym(55), Sym(5), Sym(49)))
+(HFT) - already using same index Sym(1)
+(HFT) Recording Sym(48), no fusion
+(HFT) Recording Sym(47), no fusion
+(HFT) Fusing Sym(55) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(43), Sym(37), Sym(55), Sym(5), Sym(49)))
+(HFT) - already using same index Sym(1)
+(HFT) Recording Sym(54), no fusion
+
+(HFT) all horizontally fused: List(Sym(55), Sym(49), Sym(43), Sym(37))
 
 -- after horizontal transformation
 var x37 = new ArrayBuilder[Int]

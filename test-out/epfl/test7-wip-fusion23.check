@@ -133,11 +133,16 @@ x49 += x48
 val x50 = println(x49)
 
 -- horizontal transformation
-(HFT)  Recording new loop (prev. Sym(34)): (Const(100),(Sym(34),Sym(1),None))
-(HFT)  Loop Sym(39) fused with Sym(34), common index: Sym(1)
-(HFT)  Loop Sym(44) fused with Sym(34), common index: Sym(1)
-(HFT)  Recording new loop (prev. Sym(43)): (Const(10),(Sym(43),Sym(15),None))
-(HFT)  Loop Sym(49) fused with Sym(34), common index: Sym(1)
+(HFT) Recording Sym(34), no fusion
+(HFT) Fusing Sym(39) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(44), Sym(3), Sym(34), Sym(39), Sym(49)))
+(HFT) - already using same index Sym(1)
+(HFT) Fusing Sym(44) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(44), Sym(3), Sym(34), Sym(39), Sym(49)))
+(HFT) - already using same index Sym(1)
+(HFT) Recording Sym(43), no fusion
+(HFT) Fusing Sym(49) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(44), Sym(3), Sym(34), Sym(39), Sym(49)))
+(HFT) - already using same index Sym(1)
+
+(HFT) all horizontally fused: List(Sym(49), Sym(44), Sym(39), Sym(34))
 
 -- after horizontal transformation
 var x34 = new Array[Int](100)
