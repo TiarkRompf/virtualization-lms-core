@@ -127,7 +127,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   }
 
   override def emitTransferFunctions() {    
-    for (tp <- dsTypesList.map(_._1)) {
+    for ((tp,name) <- dsTypesList) {
       // Emit input copy helper functions for object type inputs
       //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
       try {
