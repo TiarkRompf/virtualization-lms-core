@@ -42,6 +42,8 @@ val x14 = println(x13)
 
 (VFT) No producers found for TP(Sym(7),SimpleLoop(Const(80),Sym(5),ArrayElem(Block(Sym(6)))))
 
+(VFT) all vertically fused: 
+
 -- after vertical transformation
 var x12 = new Array[Int](100)
 for (x1 <- 0 until 100) {
@@ -72,7 +74,7 @@ val x14 = println(x13)
 (HFT) - new loop symbol: Sym(7) -> Sym(17)
 (HFT) - new loop symbol: Sym(12) -> Sym(20)
 
-(HFT) all horizontally fused: List(Sym(17), Sym(4))
+(HFT) all horizontally fused: List(Sym(4), Sym(17))
 
 -- after horizontal transformation
 var x20 = new Array[Int](100)
@@ -89,6 +91,30 @@ for (x2 <- 0 until 80) {
 val x16 = x2 * x1
 x17(x2) = x16
 }
+val x18 = x17.apply(0)
+val x19 = x9 * x18
+x20(x1) = x19
+}
+val x21 = x20.apply(0)
+val x22 = println(x21)
+
+-- fusion
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(4)),List(SimpleLoop(Const(80),Sym(2),ArrayElem(Block(Sym(3))))),SimpleFatLoop(Const(80),Sym(2),List(ArrayElem(Block(Sym(3))))))
+TTP(List(Sym(17)),List(SimpleLoop(Const(80),Sym(2),ArrayElem(Block(Sym(16))))),SimpleFatLoop(Const(80),Sym(2),List(ArrayElem(Block(Sym(16))))))
+
+var x20 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+var x4 = new Array[Int](80)
+var x17 = new Array[Int](80)
+for (x2 <- 0 until 80) {
+val x3 = x2 + x1
+val x16 = x2 * x1
+x4(x2) = x3
+x17(x2) = x16
+}
+val x8 = x4.apply(0)
+val x9 = x1 * x8
 val x18 = x17.apply(0)
 val x19 = x9 * x18
 x20(x1) = x19

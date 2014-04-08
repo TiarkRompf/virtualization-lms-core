@@ -64,6 +64,8 @@ val x21 = println(x20)
 (VFT) Sym(14) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
 (VFT) No producers found for TP(Sym(14),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(13)))))
 
+(VFT) all vertically fused: List(Sym(3))
+
 -- after vertical transformation
 var x3 = new Array[Int](100)
 for (x1 <- 0 until 100) {
@@ -91,6 +93,25 @@ val x28 = println(x27)
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x15 = x3.apply(0)
+val x16 = println(x15)
+val x23 = println(x15)
+val x24 = println(x15)
+var x26 = new Array[Int](100)
+for (x10 <- 0 until 100) {
+val x11 = x3.apply(x10)
+val x25 = x11 + x15
+x26(x10) = x25
+}
+val x27 = x26.apply(0)
+val x28 = println(x27)
+
+-- fusion
 var x3 = new Array[Int](100)
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1

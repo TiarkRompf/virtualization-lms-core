@@ -52,6 +52,8 @@ val x18 = println(x17)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 
+(VFT) all vertically fused: List(Sym(3), Sym(21))
+
 -- after vertical transformation
 var x3 = new Array[Int](100)
 for (x1 <- 0 until 100) {
@@ -84,7 +86,7 @@ val x23 = println(x22)
 (HFT) Fusing Sym(21) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(3), Sym(21)))
 (HFT) - already using same index Sym(1)
 
-(HFT) all horizontally fused: List(Sym(21), Sym(3))
+(HFT) all horizontally fused: List(Sym(3), Sym(21))
 
 -- after horizontal transformation
 var x3 = new Array[Int](100)
@@ -108,6 +110,32 @@ val x2 = x1 + 1
 val x20 = x2 > 50
 if (x20) x21 += x15
 }
+val x22 = x21.length
+val x23 = println(x22)
+
+-- fusion
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(3)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(2))))))
+TTP(List(Sym(21)),List(SimpleLoop(Const(100),Sym(1),ArrayIfElem(Sym(20),Block(Sym(15))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayIfElem(Sym(20),Block(Sym(15))))))
+
+var x8 = new Array[Int](100)
+for (x6 <- 0 until 100) {
+val x7 = x6 + 2
+x8(x6) = x7
+}
+val x9 = x8.apply(0)
+val x15 = x9 + 1
+var x3 = new Array[Int](100)
+var x21 = new ArrayBuilder[Int]
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x20 = x2 > 50
+x3(x1) = x2
+if (x20) x21 += x15
+}
+val x4 = x3.apply(0)
+val x5 = println(x4)
+val x10 = println(x9)
 val x22 = x21.length
 val x23 = println(x22)
 -- done

@@ -110,6 +110,8 @@ val x34 = println(x27)
 (VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(3).
 (VFT) SimpleCollectIf+Reduce fusion: add if-then-else with neutral element to consumer.
 
+(VFT) all vertically fused: List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38))
+
 -- after vertical transformation
 var x38 = new ArrayBuilder[Int]
 for (x1 <- 0 until 30) {
@@ -195,7 +197,7 @@ val x61 = println(x60)
 (HFT) - already using same index Sym(1)
 (HFT) Recording Sym(59), no fusion
 
-(HFT) all horizontally fused: List(Sym(60), Sym(53), Sym(45), Sym(38))
+(HFT) all horizontally fused: List(Sym(38), Sym(45), Sym(53), Sym(60))
 
 -- after horizontal transformation
 var x38 = new ArrayBuilder[Int]
@@ -266,5 +268,76 @@ x59 += x58
 }
 x60 += x59
 }
+val x61 = println(x60)
+
+-- fusion
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(38)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(37))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(37))))))
+TTP(List(Sym(45)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(44))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(44))))))
+TTP(List(Sym(53)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(52))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(52))))))
+TTP(List(Sym(60)),List(SimpleLoop(Const(30),Sym(1),ReduceElem(Block(Sym(59))))),SimpleFatLoop(Const(30),Sym(1),List(ReduceElem(Block(Sym(59))))))
+
+var x48 = new Array[Int](0)
+var x38 = new ArrayBuilder[Int]
+var x45 = new ArrayBuilder[Int]
+var x53 = new ArrayBuilder[Int]
+var x60 = 0
+for (x1 <- 0 until 30) {
+var x37 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x4 = x3 > 5
+val x36 = x3 + 2
+if (x4) x37 += x36
+}
+var x44 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x4 = x3 > 5
+val x41 = x3 > 20
+val x42 = x41 && x4
+val x43 = x3 + 3
+if (x42) x44 += x43
+}
+var x52 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x4 = x3 > 5
+val x51 = if (x4) {
+var x50 = new Array[Int](x3)
+for (x19 <- 0 until x3) {
+val x49 = x3 + x19
+x50(x19) = x49
+}
+x50
+} else {
+x48
+}
+x52 ++= x51
+}
+var x59 = 0
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x4 = x3 > 5
+val x58 = if (x4) {
+val x56 = x3.doubleValue()
+val x57 = 2.0 + x56
+x57
+} else {
+0.0
+}
+x59 += x58
+}
+x38 ++= x37
+x45 ++= x44
+x53 ++= x52
+x60 += x59
+}
+val x39 = x38.apply(0)
+val x40 = println(x39)
+val x46 = x45.apply(0)
+val x47 = println(x46)
+val x54 = x53.apply(0)
+val x55 = println(x54)
 val x61 = println(x60)
 -- done

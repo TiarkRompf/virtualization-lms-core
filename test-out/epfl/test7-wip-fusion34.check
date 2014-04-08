@@ -1,0 +1,177 @@
+-- full graph
+TP(Sym(3),OrderingGT(Sym(2),Const(5)))
+TP(Sym(4),NumericPlus(Sym(2),Const(1)))
+TP(Sym(5),SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(3),Block(Sym(4)))))
+TP(Sym(6),SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(5)))))
+TP(Sym(7),ArrayLength(Sym(6)))
+TP(Sym(9),ArrayIndex(Sym(6),Sym(8)))
+TP(Sym(10),NumericPlus(Sym(9),Const(2)))
+TP(Sym(11),SimpleLoop(Sym(7),Sym(8),ArrayElem(Block(Sym(10)))))
+TP(Sym(12),ArrayLength(Sym(11)))
+TP(Sym(14),ArrayIndex(Sym(11),Sym(13)))
+TP(Sym(15),OrderingGT(Sym(14),Const(20)))
+TP(Sym(16),NumericPlus(Sym(14),Const(3)))
+TP(Sym(17),SimpleLoop(Sym(12),Sym(13),ArrayIfElem(Sym(15),Block(Sym(16)))))
+TP(Sym(18),ArrayIndex(Sym(11),Const(0)))
+TP(Sym(19),Reflect(Print(Sym(18)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(20),ArrayIndex(Sym(17),Const(0)))
+TP(Sym(21),Reflect(Print(Sym(20)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(19))))
+TP(Sym(22),Reify(Sym(21),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(19), Sym(21))))
+
+-- before transformation
+var x5 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x2 > 5
+val x4 = x2 + 1
+if (x3) x5 += x4
+}
+var x6 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+x6 ++= x5
+}
+val x7 = x6.length
+var x11 = new Array[Int](x7)
+for (x8 <- 0 until x7) {
+val x9 = x6.apply(x8)
+val x10 = x9 + 2
+x11(x8) = x10
+}
+val x18 = x11.apply(0)
+val x19 = println(x18)
+val x12 = x11.length
+var x17 = new ArrayBuilder[Int]
+for (x13 <- 0 until x12) {
+val x14 = x11.apply(x13)
+val x15 = x14 > 20
+val x16 = x14 + 3
+if (x15) x17 += x16
+}
+val x20 = x17.apply(0)
+val x21 = println(x20)
+
+-- vertical transformation
+
+(VFT) No producers found for TP(Sym(5),SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(3),Block(Sym(4)))))
+
+(VFT) No producers found for TP(Sym(6),SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(5)))))
+
+(VFT) Fusing consumer TP(Sym(11),SimpleLoop(Sym(7),Sym(8),ArrayElem(Block(Sym(10))))) with real producer: Sym(6)
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(5).
+(VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
+(VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(4).
+(VFT) SimpleCollectIf+SimpleCollect fusion: use producer loop with consumer body.
+
+(VFT) Fusing consumer TP(Sym(17),SimpleLoop(Sym(12),Sym(13),ArrayIfElem(Sym(15),Block(Sym(16))))) with real producer: Sym(25) (was Sym(11))
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(24).
+(VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
+(VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(23).
+(VFT) SimpleCollectIf+SimpleCollectIf fusion: add producer conditions to consumer loop.
+
+(VFT) all vertically fused: List(Sym(32), Sym(25))
+List(Sym(6), Sym(25))
+
+-- after vertical transformation
+var x24 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x2 > 5
+val x4 = x2 + 1
+val x23 = x4 + 2
+if (x3) x24 += x23
+}
+var x25 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+x25 ++= x24
+}
+val x26 = x25.apply(0)
+val x27 = println(x26)
+var x31 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x2 > 5
+val x4 = x2 + 1
+val x23 = x4 + 2
+val x28 = x23 > 20
+val x29 = x28 && x3
+val x30 = x23 + 3
+if (x29) x31 += x30
+}
+var x32 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+x32 ++= x31
+}
+val x33 = x32.apply(0)
+val x34 = println(x33)
+
+-- horizontal transformation
+(HFT) Recording Sym(24), no fusion
+(HFT) Recording Sym(25), no fusion
+(HFT) Fusing Sym(31) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(24)))
+(HFT) - already using same index Sym(2)
+(HFT) Fusing Sym(32) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(32), Sym(25)))
+(HFT) - already using same index Sym(1)
+
+(HFT) all horizontally fused: List(Sym(25), Sym(32))
+List(Sym(24), Sym(31))
+
+-- after horizontal transformation
+var x24 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x2 > 5
+val x4 = x2 + 1
+val x23 = x4 + 2
+if (x3) x24 += x23
+}
+var x25 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+x25 ++= x24
+}
+val x26 = x25.apply(0)
+val x27 = println(x26)
+var x31 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x2 > 5
+val x4 = x2 + 1
+val x23 = x4 + 2
+val x28 = x23 > 20
+val x29 = x28 && x3
+val x30 = x23 + 3
+if (x29) x31 += x30
+}
+var x32 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+x32 ++= x31
+}
+val x33 = x32.apply(0)
+val x34 = println(x33)
+
+-- fusion
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(25)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(24))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(24))))))
+TTP(List(Sym(32)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(31))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(31))))))
+
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(24)),List(SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(3),Block(Sym(23))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayIfElem(Sym(3),Block(Sym(23))))))
+TTP(List(Sym(31)),List(SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(29),Block(Sym(30))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayIfElem(Sym(29),Block(Sym(30))))))
+
+var x24 = new ArrayBuilder[Int]
+var x31 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x2 > 5
+val x4 = x2 + 1
+val x23 = x4 + 2
+val x28 = x23 > 20
+val x29 = x28 && x3
+val x30 = x23 + 3
+if (x3) x24 += x23
+if (x29) x31 += x30
+}
+var x25 = new ArrayBuilder[Int]
+var x32 = new ArrayBuilder[Int]
+for (x1 <- 0 until 30) {
+x25 ++= x24
+x32 ++= x31
+}
+val x26 = x25.apply(0)
+val x27 = println(x26)
+val x33 = x32.apply(0)
+val x34 = println(x33)
+-- done

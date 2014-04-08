@@ -108,6 +108,8 @@ val x33 = println(x26)
 (VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(3).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 
+(VFT) all vertically fused: List(Sym(43), Sym(37), Sym(55), Sym(5), Sym(49))
+
 -- after vertical transformation
 var x37 = new ArrayBuilder[Int]
 for (x1 <- 0 until 30) {
@@ -177,7 +179,7 @@ val x56 = println(x55)
 (HFT) - already using same index Sym(1)
 (HFT) Recording Sym(54), no fusion
 
-(HFT) all horizontally fused: List(Sym(55), Sym(49), Sym(43), Sym(37))
+(HFT) all horizontally fused: List(Sym(37), Sym(43), Sym(49), Sym(55))
 
 -- after horizontal transformation
 var x37 = new ArrayBuilder[Int]
@@ -232,5 +234,60 @@ x54 += x53
 }
 x55 += x54
 }
+val x56 = println(x55)
+
+-- fusion
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(37)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(36))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(36))))))
+TTP(List(Sym(43)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(42))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(42))))))
+TTP(List(Sym(49)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(48))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(48))))))
+TTP(List(Sym(55)),List(SimpleLoop(Const(30),Sym(1),ReduceElem(Block(Sym(54))))),SimpleFatLoop(Const(30),Sym(1),List(ReduceElem(Block(Sym(54))))))
+
+var x37 = new ArrayBuilder[Int]
+var x43 = new ArrayBuilder[Int]
+var x49 = new ArrayBuilder[Int]
+var x55 = 0
+for (x1 <- 0 until 30) {
+var x36 = new Array[Int](10)
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x35 = x3 + 2
+x36(x2) = x35
+}
+var x42 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x40 = x3 + 3
+val x41 = x3 > 20
+if (x41) x42 += x40
+}
+var x48 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+var x47 = new Array[Int](x3)
+for (x18 <- 0 until x3) {
+val x46 = x3 + x18
+x47(x18) = x46
+}
+x48 ++= x47
+}
+var x54 = 0
+for (x2 <- 0 until 10) {
+val x3 = x1 + x2
+val x52 = x3.doubleValue()
+val x53 = 2.0 + x52
+x54 += x53
+}
+x37 ++= x36
+x43 ++= x42
+x49 ++= x48
+x55 += x54
+}
+val x38 = x37.apply(0)
+val x39 = println(x38)
+val x44 = x43.apply(0)
+val x45 = println(x44)
+val x50 = x49.apply(0)
+val x51 = println(x50)
 val x56 = println(x55)
 -- done

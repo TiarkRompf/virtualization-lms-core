@@ -95,6 +95,8 @@ val x32 = println(x25)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(3).
 (VFT) SimpleCollectIf+Reduce fusion: add if-then-else with neutral element to consumer.
 
+(VFT) all vertically fused: List(Sym(35), Sym(4), Sym(48), Sym(54), Sym(41))
+
 -- after vertical transformation
 var x35 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
@@ -160,7 +162,7 @@ val x55 = println(x54)
 (HFT) Fusing Sym(54) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(35), Sym(4), Sym(48), Sym(54), Sym(41)))
 (HFT) - already using same index Sym(1)
 
-(HFT) all horizontally fused: List(Sym(54), Sym(48), Sym(41), Sym(35))
+(HFT) all horizontally fused: List(Sym(35), Sym(41), Sym(48), Sym(54))
 
 -- after horizontal transformation
 var x35 = new ArrayBuilder[Int]
@@ -215,5 +217,54 @@ x52
 }
 x54 += x53
 }
+val x55 = println(x54)
+
+-- fusion
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(35)),List(SimpleLoop(Const(100),Sym(1),ArrayIfElem(Sym(2),Block(Sym(34))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayIfElem(Sym(2),Block(Sym(34))))))
+TTP(List(Sym(41)),List(SimpleLoop(Const(100),Sym(1),ArrayIfElem(Sym(39),Block(Sym(40))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayIfElem(Sym(39),Block(Sym(40))))))
+TTP(List(Sym(48)),List(SimpleLoop(Const(100),Sym(1),FlattenElem(Block(Sym(47))))),SimpleFatLoop(Const(100),Sym(1),List(FlattenElem(Block(Sym(47))))))
+TTP(List(Sym(54)),List(SimpleLoop(Const(100),Sym(1),ReduceElem(Block(Sym(53))))),SimpleFatLoop(Const(100),Sym(1),List(ReduceElem(Block(Sym(53))))))
+
+var x44 = new Array[Int](0)
+var x35 = new ArrayBuilder[Int]
+var x41 = new ArrayBuilder[Int]
+var x48 = new ArrayBuilder[Int]
+var x54 = 0
+for (x1 <- 0 until 100) {
+val x2 = x1 > 10
+val x3 = x1 + 1
+val x34 = x3 + 2
+val x38 = x3 > 20
+val x39 = x38 && x2
+val x40 = x3 + 3
+val x47 = if (x2) {
+var x46 = new Array[Int](x3)
+for (x17 <- 0 until x3) {
+val x45 = x17 + x3
+x46(x17) = x45
+}
+x46
+} else {
+x44
+}
+val x53 = if (x2) {
+val x51 = x3.doubleValue()
+val x52 = 2.0 + x51
+x52
+} else {
+0.0
+}
+if (x2) x35 += x34
+if (x39) x41 += x40
+x48 ++= x47
+x54 += x53
+}
+val x36 = x35.apply(0)
+val x37 = println(x36)
+val x42 = x41.apply(0)
+val x43 = println(x42)
+val x49 = x48.apply(0)
+val x50 = println(x49)
 val x55 = println(x54)
 -- done

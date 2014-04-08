@@ -93,6 +93,8 @@ val x31 = println(x24)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 
+(VFT) all vertically fused: List(Sym(44), Sym(3), Sym(34), Sym(39), Sym(49))
+
 -- after vertical transformation
 var x34 = new Array[Int](100)
 for (x1 <- 0 until 100) {
@@ -142,7 +144,7 @@ val x50 = println(x49)
 (HFT) Fusing Sym(49) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(44), Sym(3), Sym(34), Sym(39), Sym(49)))
 (HFT) - already using same index Sym(1)
 
-(HFT) all horizontally fused: List(Sym(49), Sym(44), Sym(39), Sym(34))
+(HFT) all horizontally fused: List(Sym(34), Sym(39), Sym(44), Sym(49))
 
 -- after horizontal transformation
 var x34 = new Array[Int](100)
@@ -181,5 +183,41 @@ val x47 = x2.doubleValue()
 val x48 = 2.0 + x47
 x49 += x48
 }
+val x50 = println(x49)
+
+-- fusion
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(34)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(33))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(33))))))
+TTP(List(Sym(39)),List(SimpleLoop(Const(100),Sym(1),ArrayIfElem(Sym(38),Block(Sym(37))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayIfElem(Sym(38),Block(Sym(37))))))
+TTP(List(Sym(44)),List(SimpleLoop(Const(100),Sym(1),FlattenElem(Block(Sym(43))))),SimpleFatLoop(Const(100),Sym(1),List(FlattenElem(Block(Sym(43))))))
+TTP(List(Sym(49)),List(SimpleLoop(Const(100),Sym(1),ReduceElem(Block(Sym(48))))),SimpleFatLoop(Const(100),Sym(1),List(ReduceElem(Block(Sym(48))))))
+
+var x34 = new Array[Int](100)
+var x39 = new ArrayBuilder[Int]
+var x44 = new ArrayBuilder[Int]
+var x49 = 0
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x33 = x2 + 2
+val x37 = x2 + 3
+val x38 = x1 > 10
+var x43 = new Array[Int](10)
+for (x15 <- 0 until 10) {
+val x42 = x15 + x2
+x43(x15) = x42
+}
+val x47 = x2.doubleValue()
+val x48 = 2.0 + x47
+x34(x1) = x33
+if (x38) x39 += x37
+x44 ++= x43
+x49 += x48
+}
+val x35 = x34.apply(0)
+val x36 = println(x35)
+val x40 = x39.apply(0)
+val x41 = println(x40)
+val x45 = x44.apply(0)
+val x46 = println(x45)
 val x50 = println(x49)
 -- done

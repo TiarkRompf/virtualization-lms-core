@@ -40,6 +40,8 @@ val x13 = println(x12)
 
 (VFT) No producers found for TP(Sym(9),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8)))))
 
+(VFT) all vertically fused: 
+
 -- after vertical transformation
 var x6 = new Array[Int](90)
 for (x1 <- 0 until 90) {
@@ -69,6 +71,27 @@ val x13 = println(x12)
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
+var x6 = new Array[Int](90)
+for (x1 <- 0 until 90) {
+var x4 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x3 = x2 + x1
+x4(x2) = x3
+}
+val x5 = x4.apply(0)
+x6(x1) = x5
+}
+val x10 = x6.apply(0)
+val x11 = println(x10)
+var x9 = new Array[Int](100)
+for (x7 <- 0 until 100) {
+val x8 = x7 + 2
+x9(x7) = x8
+}
+val x12 = x9.apply(0)
+val x13 = println(x12)
+
+-- fusion
 var x6 = new Array[Int](90)
 for (x1 <- 0 until 90) {
 var x4 = new Array[Int](100)

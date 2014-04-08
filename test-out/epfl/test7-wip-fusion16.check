@@ -134,6 +134,10 @@ val x43 = println(x42)
 (VFT) General fusion: remap index to Sym(19), SimpleIndex to Sym(20).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 
+(VFT) all vertically fused: List(Sym(21))
+List(Sym(13))
+List(Sym(3))
+
 -- after vertical transformation
 val x45 = println(x0)
 val x10 = x0 + 2
@@ -168,6 +172,31 @@ val x52 = println(x47)
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
+val x45 = println(x0)
+val x10 = x0 + 2
+val x46 = println(x10)
+var x21 = new Array[Int](100)
+for (x19 <- 0 until 100) {
+val x20 = x19 + 1
+x21(x19) = x20
+}
+val x47 = x21.apply(1)
+val x48 = println(x47)
+var x31 = new Array[Int](90)
+for (x29 <- 0 until 90) {
+val x30 = x21.apply(x29)
+x31(x29) = x30
+}
+var x49 = new Array[Int](100)
+for (x32 <- 0 until 100) {
+val x33 = x31.apply(x32)
+x49(x32) = x33
+}
+val x50 = x49.apply(1)
+val x51 = println(x50)
+val x52 = println(x47)
+
+-- fusion
 val x45 = println(x0)
 val x10 = x0 + 2
 val x46 = println(x10)

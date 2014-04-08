@@ -35,6 +35,8 @@ val x12 = println(x11)
 
 (VFT) No producers found for TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(9)))))
 
+(VFT) all vertically fused: 
+
 -- after vertical transformation
 val x15 = println(100)
 
@@ -43,5 +45,8 @@ val x15 = println(100)
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
+val x15 = println(100)
+
+-- fusion
 val x15 = println(100)
 -- done

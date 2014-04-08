@@ -35,6 +35,8 @@ val x12 = println(x11)
 
 (VFT) No producers found for TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayIfElem(Sym(8),Block(Sym(9)))))
 
+(VFT) all vertically fused: 
+
 -- after vertical transformation
 var x14 = new ArrayBuilder[Boolean]
 for (x7 <- 0 until 100) {
@@ -51,6 +53,16 @@ val x16 = println(x15)
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
+var x14 = new ArrayBuilder[Boolean]
+for (x7 <- 0 until 100) {
+val x8 = x7 > 50
+val x9 = x7 > 60
+if (x8) x14 += x9
+}
+val x15 = x14.length
+val x16 = println(x15)
+
+-- fusion
 var x14 = new ArrayBuilder[Boolean]
 for (x7 <- 0 until 100) {
 val x8 = x7 > 50

@@ -45,6 +45,8 @@ val x14 = println(x13)
 (VFT) General fusion: remap index to Sym(4), SimpleIndex to Sym(5).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 
+(VFT) all vertically fused: List(Sym(6), Sym(18))
+
 -- after vertical transformation
 var x3 = new Array[Int](100)
 for (x1 <- 0 until 100) {
@@ -69,6 +71,22 @@ val x20 = println(x19)
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+var x18 = new Array[Int](100)
+for (x4 <- 0 until 100) {
+val x5 = x4 + 2
+val x16 = x3.apply(x4)
+val x17 = x16 + x5
+x18(x4) = x17
+}
+val x19 = x18.apply(0)
+val x20 = println(x19)
+
+-- fusion
 var x3 = new Array[Int](100)
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1

@@ -125,6 +125,8 @@ val x36 = println(x29)
 (VFT) General fusion: remap index to Sym(3), SimpleIndex to Sym(5).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 
+(VFT) all vertically fused: List(Sym(55), Sym(48), Sym(62), Sym(41), Sym(8))
+
 -- after vertical transformation
 var x41 = new ArrayBuilder[Int]
 for (x1 <- 0 until 30) {
@@ -218,7 +220,7 @@ val x63 = println(x62)
 (HFT) Recording Sym(61), no fusion
 (HFT) Recording Sym(60), no fusion
 
-(HFT) all horizontally fused: List(Sym(62), Sym(55), Sym(48), Sym(41))
+(HFT) all horizontally fused: List(Sym(41), Sym(48), Sym(55), Sym(62))
 
 -- after horizontal transformation
 var x41 = new ArrayBuilder[Int]
@@ -293,5 +295,80 @@ x61 += x60
 }
 x62 += x61
 }
+val x63 = println(x62)
+
+-- fusion
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(41)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(40))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(40))))))
+TTP(List(Sym(48)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(47))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(47))))))
+TTP(List(Sym(55)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(54))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(54))))))
+TTP(List(Sym(62)),List(SimpleLoop(Const(30),Sym(1),ReduceElem(Block(Sym(61))))),SimpleFatLoop(Const(30),Sym(1),List(ReduceElem(Block(Sym(61))))))
+
+var x41 = new ArrayBuilder[Int]
+var x48 = new ArrayBuilder[Int]
+var x55 = new ArrayBuilder[Int]
+var x62 = 0
+for (x1 <- 0 until 30) {
+var x40 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x4 = x1 + x2
+var x39 = new Array[Int](5)
+for (x3 <- 0 until 5) {
+val x5 = x4 + x3
+val x38 = x5 + 2
+x39(x3) = x38
+}
+x40 ++= x39
+}
+var x47 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x4 = x1 + x2
+var x46 = new ArrayBuilder[Int]
+for (x3 <- 0 until 5) {
+val x5 = x4 + x3
+val x44 = x5 + 3
+val x45 = x5 > 20
+if (x45) x46 += x44
+}
+x47 ++= x46
+}
+var x54 = new ArrayBuilder[Int]
+for (x2 <- 0 until 10) {
+val x4 = x1 + x2
+var x53 = new ArrayBuilder[Int]
+for (x3 <- 0 until 5) {
+val x5 = x4 + x3
+var x52 = new Array[Int](x5)
+for (x21 <- 0 until x5) {
+val x51 = x5 + x21
+x52(x21) = x51
+}
+x53 ++= x52
+}
+x54 ++= x53
+}
+var x61 = 0
+for (x2 <- 0 until 10) {
+val x4 = x1 + x2
+var x60 = 0
+for (x3 <- 0 until 5) {
+val x5 = x4 + x3
+val x58 = x5.doubleValue()
+val x59 = 2.0 + x58
+x60 += x59
+}
+x61 += x60
+}
+x41 ++= x40
+x48 ++= x47
+x55 ++= x54
+x62 += x61
+}
+val x42 = x41.apply(0)
+val x43 = println(x42)
+val x49 = x48.apply(0)
+val x50 = println(x49)
+val x56 = x55.apply(0)
+val x57 = println(x56)
 val x63 = println(x62)
 -- done
