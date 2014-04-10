@@ -111,6 +111,7 @@ val x34 = println(x27)
 (VFT) SimpleCollectIf+Reduce fusion: add if-then-else with neutral element to consumer.
 
 (VFT) all vertically fused: List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38))
+List(Sym(44), Sym(37), Sym(52), Sym(59), Sym(5))
 
 -- after vertical transformation
 var x37 = new ArrayBuilder[Int]
@@ -186,16 +187,16 @@ val x61 = println(x60)
 -- horizontal transformation
 (HFT) Recording Sym(37), no fusion
 (HFT) Recording Sym(38), no fusion
-(HFT) Fusing Sym(44) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(37)))
+(HFT) Fusing Sym(44) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(44), Sym(37), Sym(52), Sym(59), Sym(5)))
 (HFT) - already using same index Sym(2)
 (HFT) Fusing Sym(45) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38)))
 (HFT) - already using same index Sym(1)
-(HFT) Fusing Sym(52) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(37), Sym(44)))
+(HFT) Fusing Sym(52) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(44), Sym(37), Sym(52), Sym(59), Sym(5)))
 (HFT) - already using same index Sym(2)
 (HFT) Recording Sym(50), no fusion
 (HFT) Fusing Sym(53) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38)))
 (HFT) - already using same index Sym(1)
-(HFT) Fusing Sym(59) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(37), Sym(44), Sym(52)))
+(HFT) Fusing Sym(59) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(44), Sym(37), Sym(52), Sym(59), Sym(5)))
 (HFT) - already using same index Sym(2)
 (HFT) Fusing Sym(60) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38)))
 (HFT) - already using same index Sym(1)

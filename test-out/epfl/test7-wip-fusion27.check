@@ -111,6 +111,7 @@ val x34 = println(x27)
 (VFT) SimpleCollectIf+Reduce fusion: add if-then-else with neutral element to consumer.
 
 (VFT) all vertically fused: List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38))
+List(Sym(44), Sym(37), Sym(52), Sym(59), Sym(5))
 
 -- after vertical transformation
 var x38 = new ArrayBuilder[Int]
@@ -188,16 +189,20 @@ val x61 = println(x60)
 (HFT) Recording Sym(37), no fusion
 (HFT) Fusing Sym(45) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38)))
 (HFT) - already using same index Sym(1)
-(HFT) Recording Sym(44), no fusion
+(HFT) Fusing Sym(44) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(44), Sym(37), Sym(52), Sym(59), Sym(5)))
+(HFT) - already using same index Sym(2)
 (HFT) Fusing Sym(53) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38)))
 (HFT) - already using same index Sym(1)
-(HFT) Recording Sym(52), no fusion
+(HFT) Fusing Sym(52) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(44), Sym(37), Sym(52), Sym(59), Sym(5)))
+(HFT) - already using same index Sym(2)
 (HFT) Recording Sym(50), no fusion
 (HFT) Fusing Sym(60) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(60), Sym(53), Sym(45), Sym(6), Sym(38)))
 (HFT) - already using same index Sym(1)
-(HFT) Recording Sym(59), no fusion
+(HFT) Fusing Sym(59) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(44), Sym(37), Sym(52), Sym(59), Sym(5)))
+(HFT) - already using same index Sym(2)
 
-(HFT) all horizontally fused: List(Sym(38), Sym(45), Sym(53), Sym(60))
+(HFT) all horizontally fused: List(Sym(37), Sym(44), Sym(52), Sym(59))
+List(Sym(38), Sym(45), Sym(53), Sym(60))
 
 -- after horizontal transformation
 var x38 = new ArrayBuilder[Int]
@@ -277,6 +282,12 @@ TTP(List(Sym(45)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(44)))))
 TTP(List(Sym(53)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(52))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(52))))))
 TTP(List(Sym(60)),List(SimpleLoop(Const(30),Sym(1),ReduceElem(Block(Sym(59))))),SimpleFatLoop(Const(30),Sym(1),List(ReduceElem(Block(Sym(59))))))
 
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(37)),List(SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(4),Block(Sym(36))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayIfElem(Sym(4),Block(Sym(36))))))
+TTP(List(Sym(44)),List(SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(42),Block(Sym(43))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayIfElem(Sym(42),Block(Sym(43))))))
+TTP(List(Sym(52)),List(SimpleLoop(Const(10),Sym(2),FlattenElem(Block(Sym(51))))),SimpleFatLoop(Const(10),Sym(2),List(FlattenElem(Block(Sym(51))))))
+TTP(List(Sym(59)),List(SimpleLoop(Const(10),Sym(2),ReduceElem(Block(Sym(58))))),SimpleFatLoop(Const(10),Sym(2),List(ReduceElem(Block(Sym(58))))))
+
 var x48 = new Array[Int](0)
 var x38 = new ArrayBuilder[Int]
 var x45 = new ArrayBuilder[Int]
@@ -284,25 +295,16 @@ var x53 = new ArrayBuilder[Int]
 var x60 = 0
 for (x1 <- 0 until 30) {
 var x37 = new ArrayBuilder[Int]
+var x44 = new ArrayBuilder[Int]
+var x52 = new ArrayBuilder[Int]
+var x59 = 0
 for (x2 <- 0 until 10) {
 val x3 = x1 + x2
 val x4 = x3 > 5
 val x36 = x3 + 2
-if (x4) x37 += x36
-}
-var x44 = new ArrayBuilder[Int]
-for (x2 <- 0 until 10) {
-val x3 = x1 + x2
-val x4 = x3 > 5
 val x41 = x3 > 20
 val x42 = x41 && x4
 val x43 = x3 + 3
-if (x42) x44 += x43
-}
-var x52 = new ArrayBuilder[Int]
-for (x2 <- 0 until 10) {
-val x3 = x1 + x2
-val x4 = x3 > 5
 val x51 = if (x4) {
 var x50 = new Array[Int](x3)
 for (x19 <- 0 until x3) {
@@ -313,12 +315,6 @@ x50
 } else {
 x48
 }
-x52 ++= x51
-}
-var x59 = 0
-for (x2 <- 0 until 10) {
-val x3 = x1 + x2
-val x4 = x3 > 5
 val x58 = if (x4) {
 val x56 = x3.doubleValue()
 val x57 = 2.0 + x56
@@ -326,6 +322,9 @@ x57
 } else {
 0.0
 }
+if (x4) x37 += x36
+if (x42) x44 += x43
+x52 ++= x51
 x59 += x58
 }
 x38 ++= x37

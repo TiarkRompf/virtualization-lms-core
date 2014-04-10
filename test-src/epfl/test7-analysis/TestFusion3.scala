@@ -200,17 +200,20 @@ trait Runner /*extends internal.ScalaCompile*/ {
 
       val v = verticalTransf.transformBlock(y)
       // TODO how to transmit state more cleanly?
-      println("\n(VFT) all vertically fused: " + verticalTransf.FusedSyms.getFusedSyms()._2.mkString("\n"))
-      horTransf.setVerticallyFusedSyms(verticalTransf.FusedSyms.getFusedSyms())
+      val vFused = verticalTransf.FusedSyms.getFusedSyms
+      println("\n(VFT) all vertically fused: " + vFused._2.mkString("\n"))
+
       println("\n-- after vertical transformation")
       codegen.withStream(new PrintWriter(System.out)) {
         codegen.emitBlock(v)
       }
 
       println("\n-- horizontal transformation")
+      horTransf.setVerticallyFusedSyms(vFused)
       val h = horTransf.transformBlock(v)
 
-      println("\n(HFT) all horizontally fused: " + horTransf.HorizontallyFusedSyms)
+      val hFused = horTransf.AllFusionScopes.get
+      println("\n(HFT) all horizontally fused: " + hFused.mkString("\n"))
 
 
       println("\n-- after horizontal transformation")
@@ -220,7 +223,7 @@ trait Runner /*extends internal.ScalaCompile*/ {
 
       println("\n-- fusion")
 
-      fusionCodegen.setFusedSyms(horTransf.HorizontallyFusedSyms.get())
+      fusionCodegen.setFusedSyms(hFused)
       fusionCodegen.withStream(new PrintWriter(System.out)) {
         fusionCodegen.emitBlock(h)
       }
@@ -361,7 +364,7 @@ trait VerticalFusionTransformer extends FusionTransformer {
       fused.toSet
     }
 
-    def getFusedSyms(): (HashMap[Sym[Any], Int], List[List[Sym[Any]]]) = {
+    def getFusedSyms: (HashMap[Sym[Any], Int], List[List[Sym[Any]]]) = {
       val fusedSyms2 = fusedSyms.map({ case (k,v) => 
         (getSubstSym(k, fusedSubstMap),v) })
       val fusedSymsSets2 = fusedSymsSets.map(set => 
@@ -498,11 +501,10 @@ trait VerticalFusionTransformer extends FusionTransformer {
             simpleIndexReplacements += (outerMultiSI -> innerRes)
             val innerFused = fuse(innerS, innerL, innerL.size, innerL.v, innerL.body,
               cSym, cLoop, cSize, cIndex, cBody, Some(outerMultiSI))
-            // TODO record?
-            // (innerS, innerFused) match {
-            //   case (prod@Sym(_), cons@Sym(_)) => FusedSyms.record(prod, cons, cons)
-            //   case _ =>
-            // }
+            (innerS, innerFused) match {
+              case (prod@Sym(_), cons@Sym(_)) => FusedSyms.record(prod, cons, cons)
+              case _ =>
+            }
             innerFused
           case _ => return fusionError("MultiCollect+Any fusion failed, inner loop not recognized.",
               cSym, cLoop, pSym, cIndex)
@@ -523,15 +525,8 @@ trait VerticalFusionTransformer extends FusionTransformer {
           cSym, cLoop, pSym, cIndex)
     }
 
-    // TODO record?
-    // (pBody, outerMulti) match {
-    //   case (_, None) =>
-    //   case (MultiCollect(_, _), _) =>
-    //   case (_, Some((outerPSym, outerCIndex))) => FusedSyms.record()
-    // }
-
     def superRep() = { onceSubst += (cSize -> pSize); super.transformStm(TP(cSym, cLoop)) }
-    res.getOrElse(superRep)
+    res.getOrElse(superRep())
   }
 
   def fusionError(msg: String, cSym: Sym[Any], cLoop: Def[Any], pSym: Sym[Any], cIndex: Sym[Int]): Exp[Any] = {
@@ -692,9 +687,10 @@ trait HorizontalFusionTransformer extends FusionTransformer {
   import IR.{__newVar => _, _}
   import scala.collection.mutable.{HashMap, HashSet}
 
+  /** Sets of vertically fused loops must be horizontally fused
+    * if they have survived DCE, otherwise we're duplicating work. */
   def setVerticallyFusedSyms(t: (HashMap[Sym[Any], Int], List[List[Sym[Any]]])) = 
     VerticallyFusedSyms.setFusedSyms(t._1, t._2)
-
   object VerticallyFusedSyms {
     private var fusedSyms: HashMap[Sym[Any], Int] = HashMap[Sym[Any], Int]()
     private var fusedSymsSets: List[List[Sym[Any]]] = Nil
@@ -706,132 +702,168 @@ trait HorizontalFusionTransformer extends FusionTransformer {
     def getSet(sym: Sym[Any]): Option[List[Sym[Any]]] = {
       fusedSyms.get(sym)
         .map({ index => fusedSymsSets(fusedSymsSets.length - 1 - index) })
-        // TODO is there a way of knowing what has survived DCE?
-        // globalDefs still contains everything, so findDef finds it
-        // .map({ set => set.filter({ sym => 
-        //   println("Def of " + sym + ": " + findDefinition(sym))
-        //   findDefinition(sym).isDefined }) })
         .flatMap({ set => if (set.size == 1) None else Some(set) })
     }
   }
 
-  case class FusedSet(shape: Exp[Int], index: Sym[Int], syms: List[Sym[Any]], setIndex: Int) {
+  /** A set of horizontally fused loops.
+    * @param shape common shape @param index common index
+    * @param syms loop symbols that need to be a part of the set (also loops
+    * that haven't been processed yet, but are vertically fused with one of the
+    * loops in the set)
+    * @param setIndex index of this fusedSet in the FusionScope instance owning it
+    * @param innerScope the FusionScope instance used for fusing all inner scopes of the
+    * loops in the set. Need to use same instance for each so that we can fuse
+    * across (they're different scopes in this schedule, but will be in the
+    * same scope of the fat fused loop)
+    */
+  case class FusedSet(shape: Exp[Int], index: Sym[Int], syms: List[Sym[Any]], setIndex: Int, innerScope: FusionScope) {
     def addSyms(newSyms: List[Sym[Any]]) = {
-      FusedSet(shape, index, syms ++ newSyms, setIndex)
+      FusedSet(shape, index, syms ++ newSyms, setIndex, innerScope)
     }
     override def toString = "FusedSet(shape = " + shape + ", indexSym = " + index + ", loopSyms = " + syms + ")"
   }
 
-  class Fused {
-    private val setOfSym = new HashMap[Sym[Any], Int]
-    private val setsOfShape = new HashMap[Exp[Int], List[Int]]
+  /** Fusion sets for a particular fusion scope (can be a combination of several inner
+    * scopes if the outer loops have been fused). */
+  class FusionScope {
+    AllFusionScopes.add(this)
+    // All syms here are original syms
     private var sets: List[FusedSet] = Nil
-    private var realSets: List[List[Sym[Any]]] = Nil
+    // Since we want to prepend new sets but still have stable indices, index from back
     private def get(setIndex: Int) = sets(sets.length - 1 - setIndex)
 
-    def contains(sym: Sym[Any]): Boolean = setOfSym.contains(sym)
-    def apply(sym: Sym[Any]): FusedSet = get(setOfSym(sym))
-    def get(sym: Sym[Any]): Option[FusedSet] = setOfSym.get(sym).map(get(_))
-    def getByShape(shape: Exp[Int]): List[FusedSet] = setsOfShape.get(shape).getOrElse(Nil).map(get(_))
+    // Lookup mandatory fusion set by symbol (sym is vertically fused with a loop in the set)
+    private val sym2set = new HashMap[Sym[Any], Int]
+    // Lookup fusion set candidates by shape, need to check independence
+    private val shape2sets = new HashMap[Exp[Int], List[Int]]
+
+    // realSets(i) contains the symbols from sets(i) that were actually fused (not DCE'd)
+    // this are new (transformed) syms
+    private var realSets: List[List[Sym[Any]]] = Nil
+
+    def contains(sym: Sym[Any]): Boolean = sym2set.contains(sym)
+    def apply(sym: Sym[Any]): FusedSet = get(sym2set(sym))
+    def get(sym: Sym[Any]): Option[FusedSet] = sym2set.get(sym).map(get(_))
+    def getByShape(shape: Exp[Int]): List[FusedSet] = shape2sets.get(shape).getOrElse(Nil).map(get(_))
     
+    // Start a new fusion set
     def recordNew(sym: Sym[Any], shape: Exp[Int], index: Sym[Int], syms: List[Sym[Any]]) = {
       val setIndex = sets.length
-      val set = FusedSet(shape, index, syms, setIndex)
+      val set = FusedSet(shape, index, syms, setIndex, new FusionScope)
       sets = set :: sets
-      val indexList = setIndex :: setsOfShape.get(set.shape).getOrElse(Nil)
-      setsOfShape.put(set.shape, indexList)
-      set.syms.foreach({ otherSym => setOfSym.put(otherSym, setIndex) match {
+      realSets ::= Nil
+      val indexList = setIndex :: shape2sets.get(set.shape).getOrElse(Nil)
+      shape2sets.put(set.shape, indexList)
+      set.syms.foreach({ otherSym => sym2set.put(otherSym, setIndex) match {
         case Some(old) => error("FusedSet already had a set for symbol " + otherSym + ": " + old + " = " 
           + get(old) + " instead of new " + set)
         case None =>
       }})
+      set.innerScope
     }
 
-    def recordAdd(sym: Sym[Any], fusedSet: FusedSet, addedSyms: List[Sym[Any]]) = {
+    // Add the syms to the existing fusion set
+    def recordAdd(fusedSet: FusedSet, addedSyms: List[Sym[Any]]) = {
       val setIndex = fusedSet.setIndex
-      addedSyms.foreach(setOfSym.put(_, setIndex))
+      addedSyms.foreach(sym2set.put(_, setIndex))
       sets = sets.updated(sets.length - 1 - setIndex, fusedSet.addSyms(addedSyms))
+      get(setIndex).innerScope
     }
 
+    // Record actual fusion resulting in the newSym transformed loop
     def recordReal(sym: Sym[Any], newSym: Exp[Any]): Unit = {
-      val setIndex: Int = setOfSym(sym)
-      val substSym: Sym[Any] = newSym match {
-        case s@Sym(_) => s
-        case _ => sym
-      }
-      val listIndex: Int = realSets.length - 1 - setIndex
-      if (listIndex < 0) {
-        val l: List[Sym[Any]] = List(substSym)
-        realSets ::= l
-      } else {
-        val l: List[Sym[Any]] = substSym :: realSets(listIndex)
-        realSets = realSets.updated(listIndex, l)
-      }
+      val setIndex = sym2set(sym)
+      val substSym = newSym match { case s@Sym(_) => s case _ => sym }
+      val listIndex = realSets.length - 1 - setIndex
+      realSets = realSets.updated(listIndex, substSym :: realSets(listIndex))
     }
+    def getReal = realSets.filter(_.length > 1).map(_.reverse)
 
-    override def toString() = {
-      "Fused(" + sets.mkString("\n") + ")"
+    override def toString() = "FusionScope(" + sets.mkString("\n") + ")"
+  }
+
+  /** Records all fusion scopes and loads correct scope for
+    * reflecting inner blocks. */
+  object AllFusionScopes {
+    private var allFusionScope: List[FusionScope] = Nil
+    def add(f: FusionScope) = allFusionScope ::= f
+    def get: List[List[Sym[Any]]] = allFusionScope.flatMap(_.getReal)
+
+    // Record inner scope that should be used before mirroring blocks
+    private val blockToFused = new HashMap[Block[Any], FusionScope]()
+    def set(blocks: List[Block[Any]], fused: FusionScope) = blocks.foreach { block =>
+      blockToFused += (block -> fused)
     }
-
-    def recordHorizontallyFused() = {
-      HorizontallyFusedSyms.addSets(realSets.filter(_.length > 1).map(_.map(getSubstSym(_)).reverse))
+    def get(block: Block[Any]) = blockToFused.get(block).getOrElse(new FusionScope)
+    // Remove entries after use to keep map small
+    def remove(blocks: List[Block[Any]]) = blocks foreach { block =>
+      blockToFused.remove(block)
     }
   }
 
-  var fused = new Fused
+  var current = new FusionScope
 
-  // Record all fusion sets, not only those of current scope.
-  object HorizontallyFusedSyms {
-    private var fusedSymsSets: List[List[Sym[Any]]] = Nil
-    def addSets(sets: List[List[Sym[Any]]]) = {
-      fusedSymsSets ++= sets 
-    }
-    override def toString() = fusedSymsSets.mkString("\n")
-    def get() = fusedSymsSets
-  }
-
+  // Set correct current fusion scope
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
-    val oldFused = fused
-    fused = new Fused
+    val old = current
+    current = AllFusionScopes.get(block)
     val res = super.reflectBlock(block)
-    fused.recordHorizontallyFused()
-    fused = oldFused
+    current = old
     res
   }
 
+  /* The transformer: fusion sets preference is:
+   * 1. check if loop contained in existing (because it was vertically fused with existing)
+   * 2. check if there's an existing set with correct shape and no dependencies
+   * 3. start a new fusion set
+   */
   override def transformStm(stm: Stm): Exp[Any] = {
     val transfStm = stm match {
       case TP(sym, loop: AbstractLoop[_]) => 
-        fused.get(sym) match {
-          case Some(horizontal) => // already part of a horizontal set
+        // fuse with existing set if one found, otherwise start new set
+        // fusion just means remapping the loop index to the index used by the set
+        // calculate innerScope to be used for transforming the loop body
+        val innerScope = current.get(sym) match {
+          case Some(horizontal) => // case 1. loop contained in existing
             printlog("(HFT) Fusing " + sym + " with containing fusion set " + horizontal)
             assert(loop.size == horizontal.shape, "Error: HFT with different shapes")
             fuse(sym, loop.v, horizontal.index)
+            horizontal.innerScope
 
           case None => 
             val setToFuse = VerticallyFusedSyms.getSet(sym).getOrElse(List(sym))
-//            println("=== sym: " + sym + "setToFuse: " + setToFuse)
-            val existing = fused.getByShape(loop.size)
+            val existing = current.getByShape(loop.size)
               .filter({ candidate => checkIndep(sym, candidate, setToFuse) })
               .headOption
             existing match {
-              case Some(fusedSet) =>
+              case Some(fusedSet) => // case 2. compatible existing set
                 printlog("(HFT) Fusing " + sym + " with fusion set " + fusedSet)
                 assert(loop.size == fusedSet.shape, "Error: HFT with different shapes 2")
                 fuse(sym, loop.v, fusedSet.index)
-                fused.recordAdd(sym, fusedSet, setToFuse)
+                current.recordAdd(fusedSet, setToFuse)
 
-              case None =>
+              case None => // case 3. start a new fusion set
                 printdbg("(HFT) Recording " + sym + ", no fusion")
-                fused.recordNew(sym, loop.size, loop.v, setToFuse)
+                current.recordNew(sym, loop.size, loop.v, setToFuse)
             }
         }
+        
+        // Do the actual transformation with the correct innerScopes
+        // for reflecting the loop body
+        AllFusionScopes.set(blocks(loop), innerScope)
         val superTransformedStm = super.transformStm(stm)
-        subst -= loop.v // TODO Probably ok to have unfused loops of same index?
+        AllFusionScopes.remove(blocks(loop))
+
+        // book keeping
+        current.recordReal(sym, superTransformedStm)
+        // don't want to change other indices, TODO reset to old (see fuse)
+        subst -= loop.v
+
         if (superTransformedStm != sym) {
           printdbg("(HFT) - new loop symbol: " + sym + " -> " + superTransformedStm)
         }
-        fused.recordReal(sym, superTransformedStm)
+
         Some(superTransformedStm)
 
       case _ => None
@@ -840,28 +872,35 @@ trait HorizontalFusionTransformer extends FusionTransformer {
     transfStm.getOrElse(super.transformStm(stm))
   }
 
+  /** Adds a substitution from the old to the new index. */
   def fuse(sym: Sym[Any], oldIndex: Sym[Int], newIndex: Sym[Int]) = {
     if (oldIndex == newIndex) {
       printdbg("(HFT) - already using same index " + oldIndex)   
     } else {
       printdbg("(HFT) - remapping index: " + oldIndex + " -> " + newIndex)
-      // TODO oops what if multiple loops use this index? Ok?
       subst.get(oldIndex) match {
         case Some(`newIndex`) => // already present in subst
-        case Some(existingNew) => error("(HFT) Error: existing remap to " + existingNew + " encountered when fusing " + sym + " by remapping oldIndex " + oldIndex + " to newIndex " + newIndex)
+        
+        // TODO once we implement multiple potential producers mapped to same index
+        // we should return the existing index so it can be reset after we've
+        // transformed this loop
+        case Some(existingNew) => error("(HFT) Error: existing remap to " + existingNew + 
+            " encountered when fusing " + sym + " by remapping oldIndex " + oldIndex + 
+            " to newIndex " + newIndex)
         case None => // new substitution
       }
       subst += (oldIndex -> newIndex)
     }
   }
 
-  
-  // TODO also respect order of effects between loops
+  /** Returns true if the existing set and the setToFuse (containing sym)
+    * are mutually independent and thus safe to fuse. */
   def checkIndep(sym: Sym[Any], existing: FusedSet, setToFuse: List[Sym[Any]]): Boolean = {
+    // TODO also check effects and respect order of effects between loops
     val existingSet = existing.syms
 
     // traverse the statements needed for the loop and check there are no deps
-    // Exception to stop traversal as soon as dep found
+    // throws exception to stop traversal as soon as dep found
     case class DependencyException(dependsOn: Either[Sym[Any],Sym[Any]]) extends Exception
     try {
       // check both ways - each has to be indep of other
@@ -877,6 +916,7 @@ trait HorizontalFusionTransformer extends FusionTransformer {
           case None => List()
         }
       })
+      // this is necessary, see fusion30 test for example
       GraphUtil.stronglyConnectedComponents(existingSet, { sym: Sym[Any] => 
         findDefinition(sym) match {
           case Some(d) => 
@@ -907,9 +947,8 @@ trait HorizontalFusionTransformer extends FusionTransformer {
 //               LoopFusionOpt
 // =========================================
 
-// TODO need enable/disable option?
-/** Do the actual loop fusion by combining loops into one fused 
-  *
+// TODO generally need enable/disable option?
+/** Do the actual loop fusion by combining loops ... TODO
   */
 trait LoopFusionTransformOpt extends internal.FatBlockTraversal with internal.FatScheduling
     with internal.CodeMotion with SimplifyTransform {
@@ -919,7 +958,10 @@ trait LoopFusionTransformOpt extends internal.FatBlockTraversal with internal.Fa
   var remainingFusedSyms: List[List[Sym[Any]]] = Nil
   def setFusedSyms(syms: List[List[Sym[Any]]]) = remainingFusedSyms = syms
 
+
   // Copy-Paste from LoopFusionOpt.scala
+  // TODO what does this do? Do we need it? can we do everything in one pass or
+  // do we really need the recursion?
   override def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A = {
     val result0 = resultB.map(getBlockResultFull) flatMap { case Combine(xs) => xs case x => List(x) }
     val (scope,result) = fuseTopLevelLoops(innerScope)(result0)
@@ -949,6 +991,7 @@ trait LoopFusionTransformOpt extends internal.FatBlockTraversal with internal.Fa
 
     super.focusExactScopeFat(result0.map(Block(_)))(body)
   }
+  // End Copy-Paste
 
   def lines(l: List[Any]) = l.mkString("\n", "\n", "\n")
   def lines[A,B](l: scala.collection.immutable.Map[A,B]) = l.mkString("\n", "\n", "\n")
@@ -987,21 +1030,8 @@ trait LoopFusionTransformOpt extends internal.FatBlockTraversal with internal.Fa
             case Some(ttp) => ttp
             case None => error("(FTO) ERROR: Fusion failed, loop statement not found for " + sym)
           })
-          val (shape, index) = TTPsToFuse(0) match {
-            case TTP(_, _, SimpleFatLoop(shape,index,_)) => (shape, index)
-          }
           printlog("(FTO) Fusing these loops into one fat TTP: " + lines(TTPsToFuse))
-          
-          // extract info to create fused TTP
-          val (lmhs, rhs) = TTPsToFuse.map({ 
-            case TTP(lhs, mhs, SimpleFatLoop(shape2,index2,rhs)) => 
-              assert(shape == shape2, "(FTO) ERROR: trying to fuse loops of different shapes: " + shape + " != " + shape2)
-              assert(index == index2, "(FTO) ERROR: trying to fuse loops of different indices: " + index + " != " + index2)
-              ((lhs, mhs), rhs)
-            case s => error("(FTO) ERROR: Fusion failed, unrecognized loop statement: " + s)
-          }).unzip
-          val (lhs, mhs) = lmhs.unzip
-          TTP(lhs.flatten, mhs.flatten, SimpleFatLoop(shape, index, rhs.flatten))
+          fuseTTPs(TTPsToFuse)
         })
 
         // replace TTPs with their fused loop and reschedule to get correct order
@@ -1016,6 +1046,24 @@ trait LoopFusionTransformOpt extends internal.FatBlockTraversal with internal.Fa
     
     (currentScope, result)
   }
+
+  def fuseTTPs(TTPsToFuse: List[Stm]): Stm = {
+    val (shape, index) = TTPsToFuse(0) match {
+      case TTP(_, _, SimpleFatLoop(shape,index,_)) => (shape, index)
+    }
+    
+    // extract info to create fused TTP
+    val (lmhs, rhs) = TTPsToFuse.map({ 
+      case TTP(lhs, mhs, SimpleFatLoop(shape2,index2,rhs)) => 
+        assert(shape == shape2, "(FTO) ERROR: trying to fuse loops of different shapes: " + shape + " != " + shape2)
+        assert(index == index2, "(FTO) ERROR: trying to fuse loops of different indices: " + index + " != " + index2)
+        ((lhs, mhs), rhs)
+      case s => error("(FTO) ERROR: Fusion failed, unrecognized loop statement: " + s)
+    }).unzip
+    val (lhs, mhs) = lmhs.unzip
+    TTP(lhs.flatten, mhs.flatten, SimpleFatLoop(shape, index, rhs.flatten))
+  }
+
 }
 
 // =========================================
@@ -1616,8 +1664,8 @@ class TestFusion3 extends FileDiffSuite {
   def testFusionTransform32 = withOutFileChecked(prefix+"fusion32") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
-        // bug when pBody is index, onceSubst was eaten by index
-        // transformation. Fuse vert. & hor.
+        // regression test for bug when pBody is index, 
+        // onceSubst was eaten by index transformation. Fuse vert. & hor.
         // TODO are there other cases when onceSubst expression is used too early?
         val range = arrayIf(x) { i => (i + 10 > 0, i) }
         print(range.at(0))
@@ -1631,24 +1679,7 @@ class TestFusion3 extends FileDiffSuite {
   def testFusionTransform33 = withOutFileChecked(prefix+"fusion33") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
-        // TODO want to fuse inner arrays too
-        val range = flatten(30) { i => arrayIf(10) { ii => (ii > 5, ii+i) } } 
-        val range2 = array(range.length) { i => range.at(i) + 2 } // SC
-        // val range3 = arrayIf(range2.length) { i => (range2.at(i) > 20, range2.at(i) + 3) } // SCIf
-
-        print(range.at(0))
-        print(range2.at(0))
-        // print(range3.at(0))
-      }
-    }
-    new Prog with Impl
-  }
-
-  def testFusionTransform34 = withOutFileChecked(prefix+"fusion34") {
-    trait Prog extends MyFusionProg with Impl {
-      def test(x: Rep[Int]) = {
         // Constant array, successive works, but would like to yield directly to output
-        // TODO want to fuse inner arrays too
         val range = flatten(30) { i => arrayIf(10) { ii => (ii > 5, ii+1) } } 
         val range2 = array(range.length) { i => range.at(i) + 2 } // SC
         val range3 = arrayIf(range2.length) { i => (range2.at(i) > 20, range2.at(i) + 3) } // SCIf
@@ -1659,8 +1690,86 @@ class TestFusion3 extends FileDiffSuite {
     }
     new Prog with Impl
   }
+
+  def testFusionTransform34 = withOutFileChecked(prefix+"fusion34") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {        
+        // fuse two MC and then successive SC consumer, vert. & hor.
+        val range = flatten(30) { i => array(10) { ii => i+ii } } 
+        val range2 = flatten(range.length) { i => array(range.at(i)) { ii => range.at(i) + ii } } // MC
+        val range3 = array(range2.length) { i => range2.at(i) + 4 }
+        print(range.at(0))
+        print(range2.at(0))
+        print(range3.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform35 = withOutFileChecked(prefix+"fusion35") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {        
+        // Fusion happens correctly inside of MC, even when loop is
+        // both consumer and producer.
+        // Successively fuse all three loops, with existing and generated inner ones.
+        val range = flatten(30) { i => array(10) { ii => i+ii } } 
+        val range2 = flatten(range.length) { i => 
+          val inner = array(range.at(i)) { ii => range.at(i) + ii } 
+          array(inner.length) { ii => inner.at(ii) + 3 } 
+        }
+        val range3 = array(range2.length) { i => range2.at(i) + 4 }
+        print(range.at(0))
+        print(range2.at(0))
+        print(range3.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform36 = withOutFileChecked(prefix+"fusion36") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {        
+        // No vert., fuse outer horizontally and then fuse inner horizontally
+        val range = flatten(30) { i => array(10) { ii => i+ii } } 
+        val range2 = flatten(30) { i => array(10) { ii => i+ii+2 } } 
+        val range3 = flatten(30) { i => array(10) { ii => i+ii+3 } } 
+
+        print(range.at(0))
+        print(range2.at(0))
+        print(range3.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform37 = withOutFileChecked(prefix+"fusion37") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {        
+        // No vert., fuse outer horizontally and then fuse inner horizontally
+        val range = array(30) { i => 
+          val inner1 = array(10) { ii => i+ii }
+          inner1.at(0)
+        } 
+        val range2 = array(30) { i => 
+          val inner2 = array(10) { ii => i+ii+2 }
+          inner2.at(0)
+        }
+        val range3 = array(30) { i => 
+          val inner3 = array(10) { ii => i+ii+3 }
+          inner3.at(0)
+        } 
+
+        print(range.at(0))
+        print(range2.at(0))
+        print(range3.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
   // TODO Tiark's test for changing scope/multiple passes
   // Could something going away give us more fusion opportunities?
+
 
 }
 

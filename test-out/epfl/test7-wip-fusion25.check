@@ -109,6 +109,7 @@ val x33 = println(x26)
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 
 (VFT) all vertically fused: List(Sym(43), Sym(37), Sym(55), Sym(5), Sym(49))
+List(Sym(42), Sym(4), Sym(48), Sym(54), Sym(36))
 
 -- after vertical transformation
 var x37 = new ArrayBuilder[Int]
@@ -170,16 +171,20 @@ val x56 = println(x55)
 (HFT) Recording Sym(36), no fusion
 (HFT) Fusing Sym(43) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(43), Sym(37), Sym(55), Sym(5), Sym(49)))
 (HFT) - already using same index Sym(1)
-(HFT) Recording Sym(42), no fusion
+(HFT) Fusing Sym(42) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(42), Sym(4), Sym(48), Sym(54), Sym(36)))
+(HFT) - already using same index Sym(2)
 (HFT) Fusing Sym(49) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(43), Sym(37), Sym(55), Sym(5), Sym(49)))
 (HFT) - already using same index Sym(1)
-(HFT) Recording Sym(48), no fusion
+(HFT) Fusing Sym(48) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(42), Sym(4), Sym(48), Sym(54), Sym(36)))
+(HFT) - already using same index Sym(2)
 (HFT) Recording Sym(47), no fusion
 (HFT) Fusing Sym(55) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(43), Sym(37), Sym(55), Sym(5), Sym(49)))
 (HFT) - already using same index Sym(1)
-(HFT) Recording Sym(54), no fusion
+(HFT) Fusing Sym(54) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(42), Sym(4), Sym(48), Sym(54), Sym(36)))
+(HFT) - already using same index Sym(2)
 
-(HFT) all horizontally fused: List(Sym(37), Sym(43), Sym(49), Sym(55))
+(HFT) all horizontally fused: List(Sym(36), Sym(42), Sym(48), Sym(54))
+List(Sym(37), Sym(43), Sym(49), Sym(55))
 
 -- after horizontal transformation
 var x37 = new ArrayBuilder[Int]
@@ -243,39 +248,36 @@ TTP(List(Sym(43)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(42)))))
 TTP(List(Sym(49)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(48))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(48))))))
 TTP(List(Sym(55)),List(SimpleLoop(Const(30),Sym(1),ReduceElem(Block(Sym(54))))),SimpleFatLoop(Const(30),Sym(1),List(ReduceElem(Block(Sym(54))))))
 
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(36)),List(SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(35))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayElem(Block(Sym(35))))))
+TTP(List(Sym(42)),List(SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(41),Block(Sym(40))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayIfElem(Sym(41),Block(Sym(40))))))
+TTP(List(Sym(48)),List(SimpleLoop(Const(10),Sym(2),FlattenElem(Block(Sym(47))))),SimpleFatLoop(Const(10),Sym(2),List(FlattenElem(Block(Sym(47))))))
+TTP(List(Sym(54)),List(SimpleLoop(Const(10),Sym(2),ReduceElem(Block(Sym(53))))),SimpleFatLoop(Const(10),Sym(2),List(ReduceElem(Block(Sym(53))))))
+
 var x37 = new ArrayBuilder[Int]
 var x43 = new ArrayBuilder[Int]
 var x49 = new ArrayBuilder[Int]
 var x55 = 0
 for (x1 <- 0 until 30) {
 var x36 = new Array[Int](10)
+var x42 = new ArrayBuilder[Int]
+var x48 = new ArrayBuilder[Int]
+var x54 = 0
 for (x2 <- 0 until 10) {
 val x3 = x1 + x2
 val x35 = x3 + 2
-x36(x2) = x35
-}
-var x42 = new ArrayBuilder[Int]
-for (x2 <- 0 until 10) {
-val x3 = x1 + x2
 val x40 = x3 + 3
 val x41 = x3 > 20
-if (x41) x42 += x40
-}
-var x48 = new ArrayBuilder[Int]
-for (x2 <- 0 until 10) {
-val x3 = x1 + x2
 var x47 = new Array[Int](x3)
 for (x18 <- 0 until x3) {
 val x46 = x3 + x18
 x47(x18) = x46
 }
-x48 ++= x47
-}
-var x54 = 0
-for (x2 <- 0 until 10) {
-val x3 = x1 + x2
 val x52 = x3.doubleValue()
 val x53 = 2.0 + x52
+x36(x2) = x35
+if (x41) x42 += x40
+x48 ++= x47
 x54 += x53
 }
 x37 ++= x36
