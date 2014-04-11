@@ -141,9 +141,9 @@ trait CLikeGenOrderingOps extends CLikeGenBase {
         case OrderingEquiv(a,b) =>
           emitValDef(sym, quote(a) + " == " + quote(b))
         case OrderingMax(a,b) =>
-          emitValDef(sym, "MAX(" + quote(a) + ", " + quote(b) + ")")
+          emitValDef(sym, quote(a) + ">" + quote(b) + "?" + quote(a) + ":" + quote(b))
         case OrderingMin(a,b) =>
-          emitValDef(sym, "MIN(" + quote(a) + ", " + quote(b) + ")")
+          emitValDef(sym, quote(a) + "<" + quote(b) + "?" + quote(a) + ":" + quote(b))
         case _ => super.emitNode(sym, rhs)
       }
     }
