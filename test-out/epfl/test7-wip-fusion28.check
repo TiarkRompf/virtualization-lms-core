@@ -309,10 +309,10 @@ val x63 = println(x62)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(41)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(40))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(40))))))
-TTP(List(Sym(48)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(47))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(47))))))
-TTP(List(Sym(55)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(54))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(54))))))
-TTP(List(Sym(62)),List(SimpleLoop(Const(30),Sym(1),ReduceElem(Block(Sym(61))))),SimpleFatLoop(Const(30),Sym(1),List(ReduceElem(Block(Sym(61))))))
+TTP(List(Sym(39)),List(SimpleLoop(Const(5),Sym(3),ArrayElem(Block(Sym(38))))),SimpleFatLoop(Const(5),Sym(3),List(ArrayElem(Block(Sym(38))))))
+TTP(List(Sym(46)),List(SimpleLoop(Const(5),Sym(3),ArrayIfElem(Sym(45),Block(Sym(44))))),SimpleFatLoop(Const(5),Sym(3),List(ArrayIfElem(Sym(45),Block(Sym(44))))))
+TTP(List(Sym(53)),List(SimpleLoop(Const(5),Sym(3),FlattenElem(Block(Sym(52))))),SimpleFatLoop(Const(5),Sym(3),List(FlattenElem(Block(Sym(52))))))
+TTP(List(Sym(60)),List(SimpleLoop(Const(5),Sym(3),ReduceElem(Block(Sym(59))))),SimpleFatLoop(Const(5),Sym(3),List(ReduceElem(Block(Sym(59))))))
 
 (FTO) Fusing these loops into one fat TTP: 
 TTP(List(Sym(40)),List(SimpleLoop(Const(10),Sym(2),FlattenElem(Block(Sym(39))))),SimpleFatLoop(Const(10),Sym(2),List(FlattenElem(Block(Sym(39))))))
@@ -321,10 +321,10 @@ TTP(List(Sym(54)),List(SimpleLoop(Const(10),Sym(2),FlattenElem(Block(Sym(53)))))
 TTP(List(Sym(61)),List(SimpleLoop(Const(10),Sym(2),ReduceElem(Block(Sym(60))))),SimpleFatLoop(Const(10),Sym(2),List(ReduceElem(Block(Sym(60))))))
 
 (FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(39)),List(SimpleLoop(Const(5),Sym(3),ArrayElem(Block(Sym(38))))),SimpleFatLoop(Const(5),Sym(3),List(ArrayElem(Block(Sym(38))))))
-TTP(List(Sym(46)),List(SimpleLoop(Const(5),Sym(3),ArrayIfElem(Sym(45),Block(Sym(44))))),SimpleFatLoop(Const(5),Sym(3),List(ArrayIfElem(Sym(45),Block(Sym(44))))))
-TTP(List(Sym(53)),List(SimpleLoop(Const(5),Sym(3),FlattenElem(Block(Sym(52))))),SimpleFatLoop(Const(5),Sym(3),List(FlattenElem(Block(Sym(52))))))
-TTP(List(Sym(60)),List(SimpleLoop(Const(5),Sym(3),ReduceElem(Block(Sym(59))))),SimpleFatLoop(Const(5),Sym(3),List(ReduceElem(Block(Sym(59))))))
+TTP(List(Sym(41)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(40))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(40))))))
+TTP(List(Sym(48)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(47))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(47))))))
+TTP(List(Sym(55)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(54))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(54))))))
+TTP(List(Sym(62)),List(SimpleLoop(Const(30),Sym(1),ReduceElem(Block(Sym(61))))),SimpleFatLoop(Const(30),Sym(1),List(ReduceElem(Block(Sym(61))))))
 
 var x41 = new ArrayBuilder[Int]
 var x48 = new ArrayBuilder[Int]

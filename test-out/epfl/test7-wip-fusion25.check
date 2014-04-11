@@ -243,16 +243,16 @@ val x56 = println(x55)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(37)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(36))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(36))))))
-TTP(List(Sym(43)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(42))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(42))))))
-TTP(List(Sym(49)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(48))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(48))))))
-TTP(List(Sym(55)),List(SimpleLoop(Const(30),Sym(1),ReduceElem(Block(Sym(54))))),SimpleFatLoop(Const(30),Sym(1),List(ReduceElem(Block(Sym(54))))))
-
-(FTO) Fusing these loops into one fat TTP: 
 TTP(List(Sym(36)),List(SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(35))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayElem(Block(Sym(35))))))
 TTP(List(Sym(42)),List(SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(41),Block(Sym(40))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayIfElem(Sym(41),Block(Sym(40))))))
 TTP(List(Sym(48)),List(SimpleLoop(Const(10),Sym(2),FlattenElem(Block(Sym(47))))),SimpleFatLoop(Const(10),Sym(2),List(FlattenElem(Block(Sym(47))))))
 TTP(List(Sym(54)),List(SimpleLoop(Const(10),Sym(2),ReduceElem(Block(Sym(53))))),SimpleFatLoop(Const(10),Sym(2),List(ReduceElem(Block(Sym(53))))))
+
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(37)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(36))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(36))))))
+TTP(List(Sym(43)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(42))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(42))))))
+TTP(List(Sym(49)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(48))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(48))))))
+TTP(List(Sym(55)),List(SimpleLoop(Const(30),Sym(1),ReduceElem(Block(Sym(54))))),SimpleFatLoop(Const(30),Sym(1),List(ReduceElem(Block(Sym(54))))))
 
 var x37 = new ArrayBuilder[Int]
 var x43 = new ArrayBuilder[Int]

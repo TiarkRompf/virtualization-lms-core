@@ -178,14 +178,14 @@ val x39 = println(x38)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(6)),List(SimpleLoop(Const(30),Sym(1),ArrayElem(Block(Sym(5))))),SimpleFatLoop(Const(30),Sym(1),List(ArrayElem(Block(Sym(5))))))
-TTP(List(Sym(31)),List(SimpleLoop(Const(30),Sym(1),ArrayElem(Block(Sym(30))))),SimpleFatLoop(Const(30),Sym(1),List(ArrayElem(Block(Sym(30))))))
-TTP(List(Sym(37)),List(SimpleLoop(Const(30),Sym(1),ArrayElem(Block(Sym(36))))),SimpleFatLoop(Const(30),Sym(1),List(ArrayElem(Block(Sym(36))))))
-
-(FTO) Fusing these loops into one fat TTP: 
 TTP(List(Sym(4)),List(SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(3))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayElem(Block(Sym(3))))))
 TTP(List(Sym(29)),List(SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(28))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayElem(Block(Sym(28))))))
 TTP(List(Sym(35)),List(SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(34))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayElem(Block(Sym(34))))))
+
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(6)),List(SimpleLoop(Const(30),Sym(1),ArrayElem(Block(Sym(5))))),SimpleFatLoop(Const(30),Sym(1),List(ArrayElem(Block(Sym(5))))))
+TTP(List(Sym(31)),List(SimpleLoop(Const(30),Sym(1),ArrayElem(Block(Sym(30))))),SimpleFatLoop(Const(30),Sym(1),List(ArrayElem(Block(Sym(30))))))
+TTP(List(Sym(37)),List(SimpleLoop(Const(30),Sym(1),ArrayElem(Block(Sym(36))))),SimpleFatLoop(Const(30),Sym(1),List(ArrayElem(Block(Sym(36))))))
 
 var x6 = new Array[Int](30)
 var x31 = new Array[Int](30)

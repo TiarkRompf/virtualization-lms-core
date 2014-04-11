@@ -277,16 +277,16 @@ val x61 = println(x60)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(38)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(37))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(37))))))
-TTP(List(Sym(45)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(44))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(44))))))
-TTP(List(Sym(53)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(52))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(52))))))
-TTP(List(Sym(60)),List(SimpleLoop(Const(30),Sym(1),ReduceElem(Block(Sym(59))))),SimpleFatLoop(Const(30),Sym(1),List(ReduceElem(Block(Sym(59))))))
-
-(FTO) Fusing these loops into one fat TTP: 
 TTP(List(Sym(37)),List(SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(4),Block(Sym(36))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayIfElem(Sym(4),Block(Sym(36))))))
 TTP(List(Sym(44)),List(SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(42),Block(Sym(43))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayIfElem(Sym(42),Block(Sym(43))))))
 TTP(List(Sym(52)),List(SimpleLoop(Const(10),Sym(2),FlattenElem(Block(Sym(51))))),SimpleFatLoop(Const(10),Sym(2),List(FlattenElem(Block(Sym(51))))))
 TTP(List(Sym(59)),List(SimpleLoop(Const(10),Sym(2),ReduceElem(Block(Sym(58))))),SimpleFatLoop(Const(10),Sym(2),List(ReduceElem(Block(Sym(58))))))
+
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(38)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(37))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(37))))))
+TTP(List(Sym(45)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(44))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(44))))))
+TTP(List(Sym(53)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(52))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(52))))))
+TTP(List(Sym(60)),List(SimpleLoop(Const(30),Sym(1),ReduceElem(Block(Sym(59))))),SimpleFatLoop(Const(30),Sym(1),List(ReduceElem(Block(Sym(59))))))
 
 var x48 = new Array[Int](0)
 var x38 = new ArrayBuilder[Int]

@@ -273,20 +273,12 @@ trait FusionTransformer extends PreservingForwardTransformer {
   }
 }
 
-// Code investigations: levelScope not exposed, has TTPs! Where do they get fattened/unfattened?
-  // def traverseBlock[A](block: Block[A]): Unit = {
-  //   focusBlock(block) {
-  //     focusExactScope(block) { levelScope =>
-  //       levelScope foreach traverseStm
-  //     }
-  //   }
-  // }
-// availableDefs: unscheduled/floating defs
-// initialDefs: all defs, also includes newly mirrored ones
-// innerScope: not sure, availableDefs for outermost block, empty for inner loop
+// =========================================
+//        VerticalFusionTransformer
+// =========================================
 
 
-
+// TODO comments
 trait VerticalFusionTransformer extends FusionTransformer { 
   val IR: Impl with ArrayLoopFusionExtractors
   import IR.{__newVar => _, _}
@@ -682,6 +674,11 @@ trait VerticalFusionTransformer extends FusionTransformer {
   }
 }
 
+// =========================================
+//        HorizontalFusionTransformer
+// =========================================
+
+
 trait HorizontalFusionTransformer extends FusionTransformer { 
   val IR: Impl with ArrayLoopFusionExtractors
   import IR.{__newVar => _, _}
@@ -948,103 +945,56 @@ trait HorizontalFusionTransformer extends FusionTransformer {
 // =========================================
 
 // TODO generally need enable/disable option?
-/** Do the actual loop fusion by combining loops ... TODO
+// TODO stuff in FatScheduling should go away
+
+/** Do the actual loop fusion by combining loops into one fat TTP-statement
+  * per fusion set. This does not change any symbols or introduce any new nodes,
+  * it only combines existing nodes into fat nodes.
   */
-trait LoopFusionTransformOpt extends internal.FatBlockTraversal with internal.FatScheduling
-    with internal.CodeMotion with SimplifyTransform {
+trait LoopFusionTransformOpt extends internal.FatBlockTraversal {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
 
-  var remainingFusedSyms: List[List[Sym[Any]]] = Nil
-  def setFusedSyms(syms: List[List[Sym[Any]]]) = remainingFusedSyms = syms
+  var fusedSyms: List[List[Sym[Any]]] = Nil
+  def setFusedSyms(syms: List[List[Sym[Any]]]) = fusedSyms = syms
 
-
-  // Copy-Paste from LoopFusionOpt.scala
-  // TODO what does this do? Do we need it? can we do everything in one pass or
-  // do we really need the recursion?
   override def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A = {
-    val result0 = resultB.map(getBlockResultFull) flatMap { case Combine(xs) => xs case x => List(x) }
-    val (scope,result) = fuseTopLevelLoops(innerScope)(result0)
-    innerScope = scope
-
-    // we don't currently propagate a modified result to the parent
-
-    // the caller of traverseBlock will quite likely call getBlockResult afterwards,
-    // and if we change the result here, the caller will emit a reference to a sym
-    // that doesn't exist (because it was replaced)
-
-    if (result0 != result) {
-      printlog("super.focusExactScopeFat with result changed from " + result0 + " to " + result)
-
-      (result0 zip result) foreach {
-        case (r0 @ Def(Reify(x, _, _)),Def(Reify(y, u, es))) => 
-          if (!x.isInstanceOf[Sym[Any]])
-            printlog("non-sym block result: " + x + " to " + y)
-          else if (x != y)
-            innerScope = innerScope :+ TP(x.asInstanceOf[Sym[Any]], Forward(y))
-          innerScope = innerScope :+ TP(r0.asInstanceOf[Sym[Any]], Reify(x,u,es))
-          // should rewire result so that x->y assignment is inserted
-        case (r0,r) => 
-          if (r0 != r) innerScope = innerScope :+ TP(r0.asInstanceOf[Sym[Any]], Forward(r))
-      }
+    if (!fusedSyms.isEmpty) {
+      val fusedScope = fuseAllLoops(innerScope)
+      innerScope = getSchedule(fusedScope)(resultB)
     }
-
-    super.focusExactScopeFat(result0.map(Block(_)))(body)
+    super.focusExactScopeFat(resultB)(body)
   }
-  // End Copy-Paste
 
   def lines(l: List[Any]) = l.mkString("\n", "\n", "\n")
   def lines[A,B](l: scala.collection.immutable.Map[A,B]) = l.mkString("\n", "\n", "\n")
-  /*
-    apply fusion to loops at the top level of scope 'currentScope', which has outputs 'result'.
-    uses 'getExactScope' provided by CodeMotion to find top level statements.
-    returns updated scope and results.
-  */
-  def fuseTopLevelLoops(currentScope0: List[Stm])(result: List[Exp[Any]]): (List[Stm], List[Exp[Any]]) = {
-    var currentScope: List[Stm] = currentScope0
 
-    if (!remainingFusedSyms.isEmpty) { // check there's still fusion needed
-
-      // find loops at current top level
-      val loops = getExactScope(currentScope)(result).collect { 
-        case e @ TTP(List(sym), _, SimpleFatLoop(_,_,_)) => (sym, e)
-      }
-      val loopsMap = loops.toMap
-      val loopSyms = loops.unzip._1
-
-      // find fusion sets at current top level
-      var fusedSyms = remainingFusedSyms.partition({ set => 
-        set.exists { s: Sym[Any] => loopSyms.contains(s) }
-      }) match { case (thisScope, remaining) => 
-        remainingFusedSyms = remaining
-        thisScope
-      }
-
-      if (!fusedSyms.isEmpty) { // check there's still fusion needed
-        
-        // fuse TTPs of each set into one fat TTP per set
-        val fusedTTPs = fusedSyms.map({ set: List[Sym[Any]] =>
-          
-          // the TTPs corresponding to this set
-          val TTPsToFuse = set.map(sym => loopsMap.get(sym) match {
-            case Some(ttp) => ttp
-            case None => error("(FTO) ERROR: Fusion failed, loop statement not found for " + sym)
-          })
-          printlog("(FTO) Fusing these loops into one fat TTP: " + lines(TTPsToFuse))
-          fuseTTPs(TTPsToFuse)
-        })
-
-        // replace TTPs with their fused loop and reschedule to get correct order
-        val fusedSymsFlat = fusedSyms.flatten
-        currentScope = fusedTTPs ::: currentScope.filter({ 
-          case t@TTP(List(sym), _, _) if fusedSymsFlat.contains(sym) => false
-          case _ => true
-        })
-        currentScope = getSchedule(currentScope)(result)
-      }
-    }
+  def fuseAllLoops(currentScope: List[Stm]): List[Stm] = {
     
-    (currentScope, result)
+    // build map to lookup loops to be fused
+    val fusedSymsFlat = fusedSyms.flatten
+    val (loops, restOfScope) = currentScope.partition { 
+      case e @ TTP(List(sym), _, SimpleFatLoop(_,_,_)) if (fusedSymsFlat.contains(sym)) => true
+      case _ => false
+    }
+    val loopsMap = loops.map({ 
+      case e @ TTP(List(sym), _, _) => (sym, e)
+      case _ => error("(FTO) impossible error")
+    }).toMap
+
+    // fuse TTPs of each set into one fat TTP per set
+    val fusedTTPs = fusedSyms.map({ set: List[Sym[Any]] =>
+      val TTPsToFuse = set.map(sym => loopsMap.get(sym) match {
+        case Some(ttp) => ttp
+        case _ => error("(FTO) ERROR: Fusion failed, loop statement not found for " + sym)
+      })
+      printlog("(FTO) Fusing these loops into one fat TTP: " + lines(TTPsToFuse))
+      fuseTTPs(TTPsToFuse)
+    })
+
+    // replace TTP sets with their fused loop
+    fusedSyms = Nil
+    fusedTTPs ::: restOfScope
   }
 
   def fuseTTPs(TTPsToFuse: List[Stm]): Stm = {
@@ -1061,6 +1011,7 @@ trait LoopFusionTransformOpt extends internal.FatBlockTraversal with internal.Fa
       case s => error("(FTO) ERROR: Fusion failed, unrecognized loop statement: " + s)
     }).unzip
     val (lhs, mhs) = lmhs.unzip
+    // The mhs lists the original statements including their effects
     TTP(lhs.flatten, mhs.flatten, SimpleFatLoop(shape, index, rhs.flatten))
   }
 

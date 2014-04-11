@@ -194,9 +194,8 @@ val x37 = println(x36)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(5)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(4))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(4))))))
-TTP(List(Sym(28)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(27))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(27))))))
-TTP(List(Sym(35)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(34))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(34))))))
+TTP(List(Sym(26)),List(SimpleLoop(Sym(3),Sym(9),ArrayElem(Block(Sym(25))))),SimpleFatLoop(Sym(3),Sym(9),List(ArrayElem(Block(Sym(25))))))
+TTP(List(Sym(33)),List(SimpleLoop(Sym(3),Sym(9),ArrayElem(Block(Sym(32))))),SimpleFatLoop(Sym(3),Sym(9),List(ArrayElem(Block(Sym(32))))))
 
 (FTO) Fusing these loops into one fat TTP: 
 TTP(List(Sym(4)),List(SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(3))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayElem(Block(Sym(3))))))
@@ -204,8 +203,9 @@ TTP(List(Sym(27)),List(SimpleLoop(Const(10),Sym(2),FlattenElem(Block(Sym(26)))))
 TTP(List(Sym(34)),List(SimpleLoop(Const(10),Sym(2),FlattenElem(Block(Sym(33))))),SimpleFatLoop(Const(10),Sym(2),List(FlattenElem(Block(Sym(33))))))
 
 (FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(26)),List(SimpleLoop(Sym(3),Sym(9),ArrayElem(Block(Sym(25))))),SimpleFatLoop(Sym(3),Sym(9),List(ArrayElem(Block(Sym(25))))))
-TTP(List(Sym(33)),List(SimpleLoop(Sym(3),Sym(9),ArrayElem(Block(Sym(32))))),SimpleFatLoop(Sym(3),Sym(9),List(ArrayElem(Block(Sym(32))))))
+TTP(List(Sym(5)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(4))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(4))))))
+TTP(List(Sym(28)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(27))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(27))))))
+TTP(List(Sym(35)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(34))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(34))))))
 
 var x5 = new ArrayBuilder[Int]
 var x28 = new ArrayBuilder[Int]
