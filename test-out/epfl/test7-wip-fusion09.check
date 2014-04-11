@@ -1,14 +1,14 @@
 -- full graph
-TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
 TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
 TP(Sym(4),ArrayLength(Sym(3)))
 TP(Sym(7),ArrayIndex(Sym(3),Sym(5)))
-TP(Sym(8),NumericPlus(Sym(6),Sym(7)))
+TP(Sym(8),IntPlus(Sym(6),Sym(7)))
 TP(Sym(9),SimpleLoop(Sym(4),Sym(6),ArrayElem(Block(Sym(8)))))
 TP(Sym(10),SimpleLoop(Sym(4),Sym(5),FlattenElem(Block(Sym(9)))))
 TP(Sym(11),ArrayIndex(Sym(10),Const(0)))
-TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
-TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
 
 -- before transformation
 var x3 = new Array[Int](100)
@@ -39,6 +39,7 @@ val x12 = println(x11)
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 
 (VFT) No producers found for TP(Sym(9),SimpleLoop(Sym(4),Sym(6),ArrayElem(Block(Sym(8)))))
+(VFT) Finished fusion of prod: Sym(3) and cons: Sym(10), the resulting fused loop is Sym(16)
 
 (VFT) all vertically fused: List(Sym(3), Sym(16))
 

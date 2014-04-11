@@ -1,20 +1,20 @@
 -- full graph
-TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
 TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
 TP(Sym(4),ArrayLength(Sym(3)))
 TP(Sym(6),ArrayIndex(Sym(3),Sym(5)))
 TP(Sym(7),OrderingGT(Sym(6),Const(50)))
-TP(Sym(8),NumericTimes(Sym(6),Const(2)))
+TP(Sym(8),IntTimes(Sym(6),Const(2)))
 TP(Sym(9),SimpleLoop(Sym(4),Sym(5),ArrayIfElem(Sym(7),Block(Sym(8)))))
 TP(Sym(11),ArrayIndex(Sym(3),Sym(10)))
 TP(Sym(12),OrderingLT(Sym(11),Const(20)))
-TP(Sym(13),NumericTimes(Sym(11),Const(3)))
+TP(Sym(13),IntTimes(Sym(11),Const(3)))
 TP(Sym(14),SimpleLoop(Sym(4),Sym(10),ArrayIfElem(Sym(12),Block(Sym(13)))))
 TP(Sym(15),ArrayLength(Sym(9)))
-TP(Sym(16),Reflect(Print(Sym(15)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(16),Reflect(Print(Sym(15)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
 TP(Sym(17),ArrayLength(Sym(14)))
-TP(Sym(18),Reflect(Print(Sym(17)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(16))))
-TP(Sym(19),Reify(Sym(18),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(16), Sym(18))))
+TP(Sym(18),Reflect(Print(Sym(17)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(16))))
+TP(Sym(19),Reify(Sym(18),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(16), Sym(18))))
 
 -- before transformation
 var x3 = new Array[Int](100)
@@ -49,10 +49,12 @@ val x18 = println(x17)
 (VFT) Fusing consumer TP(Sym(9),SimpleLoop(Sym(4),Sym(5),ArrayIfElem(Sym(7),Block(Sym(8))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+(VFT) Finished fusion of prod: Sym(3) and cons: Sym(9), the resulting fused loop is Sym(22)
 
 (VFT) Fusing consumer TP(Sym(14),SimpleLoop(Sym(4),Sym(10),ArrayIfElem(Sym(12),Block(Sym(13))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+(VFT) Finished fusion of prod: Sym(3) and cons: Sym(14), the resulting fused loop is Sym(27)
 
 (VFT) all vertically fused: List(Sym(3), Sym(22), Sym(27))
 

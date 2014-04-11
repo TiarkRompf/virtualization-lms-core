@@ -1,15 +1,15 @@
 -- full graph
-TP(Sym(2),NumericPlus(Sym(1),Const(1)))
-TP(Sym(3),NumericTimes(Sym(2),Sym(1)))
-TP(Sym(4),NumericTimes(Sym(1),Sym(3)))
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),IntTimes(Sym(2),Sym(1)))
+TP(Sym(4),IntTimes(Sym(1),Sym(3)))
 TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(4)))))
 TP(Sym(6),ArrayLength(Sym(5)))
 TP(Sym(8),ArrayIndex(Sym(5),Sym(7)))
-TP(Sym(9),NumericPlus(Sym(8),Sym(6)))
+TP(Sym(9),IntPlus(Sym(8),Sym(6)))
 TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(9)))))
 TP(Sym(11),ArrayIndex(Sym(10),Const(0)))
-TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
-TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
 
 -- before transformation
 var x5 = new Array[Int](100)
@@ -36,6 +36,7 @@ val x12 = println(x11)
 (VFT) Fusing consumer TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(9))))) with real producer: Sym(5)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(4).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+(VFT) Finished fusion of prod: Sym(5) and cons: Sym(10), the resulting fused loop is Sym(15)
 
 (VFT) all vertically fused: List(Sym(15), Sym(5))
 

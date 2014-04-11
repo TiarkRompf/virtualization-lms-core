@@ -1,22 +1,22 @@
 -- full graph
 TP(Sym(3),OrderingGT(Sym(2),Const(5)))
-TP(Sym(4),NumericPlus(Sym(2),Const(1)))
+TP(Sym(4),IntPlus(Sym(2),Const(1)))
 TP(Sym(5),SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(3),Block(Sym(4)))))
 TP(Sym(6),SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(5)))))
 TP(Sym(7),ArrayLength(Sym(6)))
 TP(Sym(9),ArrayIndex(Sym(6),Sym(8)))
-TP(Sym(10),NumericPlus(Sym(9),Const(2)))
+TP(Sym(10),IntPlus(Sym(9),Const(2)))
 TP(Sym(11),SimpleLoop(Sym(7),Sym(8),ArrayElem(Block(Sym(10)))))
 TP(Sym(12),ArrayLength(Sym(11)))
 TP(Sym(14),ArrayIndex(Sym(11),Sym(13)))
 TP(Sym(15),OrderingGT(Sym(14),Const(20)))
-TP(Sym(16),NumericPlus(Sym(14),Const(3)))
+TP(Sym(16),IntPlus(Sym(14),Const(3)))
 TP(Sym(17),SimpleLoop(Sym(12),Sym(13),ArrayIfElem(Sym(15),Block(Sym(16)))))
 TP(Sym(18),ArrayIndex(Sym(11),Const(0)))
-TP(Sym(19),Reflect(Print(Sym(18)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(19),Reflect(Print(Sym(18)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
 TP(Sym(20),ArrayIndex(Sym(17),Const(0)))
-TP(Sym(21),Reflect(Print(Sym(20)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(19))))
-TP(Sym(22),Reify(Sym(21),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(19), Sym(21))))
+TP(Sym(21),Reflect(Print(Sym(20)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(19))))
+TP(Sym(22),Reify(Sym(21),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(19), Sym(21))))
 
 -- before transformation
 var x5 = new ArrayBuilder[Int]
@@ -60,15 +60,18 @@ val x21 = println(x20)
 (VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
 (VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(4).
 (VFT) SimpleCollectIf+SimpleCollect fusion: use producer loop with consumer body.
+(VFT) Finished fusion of prod: Sym(5) and cons: Sym(11), the resulting fused loop is Sym(24)
+(VFT) Finished fusion of prod: Sym(6) and cons: Sym(11), the resulting fused loop is Sym(25)
 
 (VFT) Fusing consumer TP(Sym(17),SimpleLoop(Sym(12),Sym(13),ArrayIfElem(Sym(15),Block(Sym(16))))) with real producer: Sym(25) (was Sym(11))
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(24).
 (VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
 (VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(23).
 (VFT) SimpleCollectIf+SimpleCollectIf fusion: add producer conditions to consumer loop.
+(VFT) Finished fusion of prod: Sym(24) and cons: Sym(17), the resulting fused loop is Sym(31)
+(VFT) Finished fusion of prod: Sym(25) and cons: Sym(17), the resulting fused loop is Sym(32)
 
-(VFT) all vertically fused: List(Sym(32), Sym(25))
-List(Sym(6), Sym(25))
+(VFT) all vertically fused: List(Sym(32), Sym(6), Sym(25))
 List(Sym(31), Sym(5), Sym(24))
 
 -- after vertical transformation
@@ -107,7 +110,7 @@ val x34 = println(x33)
 (HFT) Recording Sym(25), no fusion
 (HFT) Fusing Sym(31) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(31), Sym(5), Sym(24)))
 (HFT) - already using same index Sym(2)
-(HFT) Fusing Sym(32) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(32), Sym(25)))
+(HFT) Fusing Sym(32) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(32), Sym(6), Sym(25)))
 (HFT) - already using same index Sym(1)
 
 (HFT) all horizontally fused: List(Sym(25), Sym(32))

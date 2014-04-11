@@ -1,16 +1,16 @@
 -- full graph
-TP(Sym(3),NumericPlus(Sym(2),Sym(1)))
+TP(Sym(3),IntPlus(Sym(2),Sym(1)))
 TP(Sym(4),SimpleLoop(Const(80),Sym(2),ArrayElem(Block(Sym(3)))))
-TP(Sym(6),NumericTimes(Sym(5),Sym(1)))
+TP(Sym(6),IntTimes(Sym(5),Sym(1)))
 TP(Sym(7),SimpleLoop(Const(80),Sym(5),ArrayElem(Block(Sym(6)))))
 TP(Sym(8),ArrayIndex(Sym(4),Const(0)))
-TP(Sym(9),NumericTimes(Sym(1),Sym(8)))
+TP(Sym(9),IntTimes(Sym(1),Sym(8)))
 TP(Sym(10),ArrayIndex(Sym(7),Const(0)))
-TP(Sym(11),NumericTimes(Sym(9),Sym(10)))
+TP(Sym(11),IntTimes(Sym(9),Sym(10)))
 TP(Sym(12),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(11)))))
 TP(Sym(13),ArrayIndex(Sym(12),Const(0)))
-TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
-TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
 
 -- before transformation
 var x12 = new Array[Int](100)

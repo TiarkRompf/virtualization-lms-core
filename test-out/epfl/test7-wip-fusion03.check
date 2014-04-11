@@ -1,15 +1,15 @@
 -- full graph
-TP(Sym(2),NumericPlus(Sym(1),Const(1)))
-TP(Sym(3),NumericTimes(Sym(2),Sym(1)))
-TP(Sym(4),NumericTimes(Sym(1),Sym(3)))
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),IntTimes(Sym(2),Sym(1)))
+TP(Sym(4),IntTimes(Sym(1),Sym(3)))
 TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(4)))))
 TP(Sym(6),ArrayLength(Sym(5)))
 TP(Sym(8),OrderingGT(Sym(7),Const(50)))
 TP(Sym(9),OrderingGT(Sym(7),Const(60)))
 TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayIfElem(Sym(8),Block(Sym(9)))))
 TP(Sym(11),ArrayLength(Sym(10)))
-TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
-TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
 
 -- before transformation
 var x5 = new Array[Int](100)

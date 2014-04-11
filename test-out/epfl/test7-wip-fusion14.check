@@ -1,16 +1,16 @@
 -- full graph
-TP(Sym(2),NumericPlus(Sym(1),Const(1)))
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
 TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
-TP(Sym(5),NumericPlus(Sym(4),Const(2)))
+TP(Sym(5),IntPlus(Sym(4),Const(2)))
 TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5)))))
 TP(Sym(7),ArrayLength(Sym(6)))
 TP(Sym(9),ArrayIndex(Sym(3),Sym(8)))
 TP(Sym(10),ArrayIndex(Sym(6),Sym(8)))
-TP(Sym(11),NumericPlus(Sym(9),Sym(10)))
+TP(Sym(11),IntPlus(Sym(9),Sym(10)))
 TP(Sym(12),SimpleLoop(Sym(7),Sym(8),ArrayElem(Block(Sym(11)))))
 TP(Sym(13),ArrayIndex(Sym(12),Const(0)))
-TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
-TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
 
 -- before transformation
 var x6 = new Array[Int](100)
@@ -44,6 +44,7 @@ val x14 = println(x13)
 (VFT) TODO could then fuse with reconstructed producers: List(Sym(3))
 (VFT) General fusion: remap index to Sym(4), SimpleIndex to Sym(5).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+(VFT) Finished fusion of prod: Sym(6) and cons: Sym(12), the resulting fused loop is Sym(18)
 
 (VFT) all vertically fused: List(Sym(6), Sym(18))
 

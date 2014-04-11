@@ -1,31 +1,31 @@
 -- full graph
 TP(Sym(2),OrderingGT(Sym(1),Const(10)))
-TP(Sym(3),NumericPlus(Sym(1),Const(1)))
+TP(Sym(3),IntPlus(Sym(1),Const(1)))
 TP(Sym(4),SimpleLoop(Const(100),Sym(1),ArrayIfElem(Sym(2),Block(Sym(3)))))
 TP(Sym(5),ArrayLength(Sym(4)))
 TP(Sym(7),ArrayIndex(Sym(4),Sym(6)))
-TP(Sym(8),NumericPlus(Sym(7),Const(2)))
+TP(Sym(8),IntPlus(Sym(7),Const(2)))
 TP(Sym(9),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(8)))))
 TP(Sym(11),ArrayIndex(Sym(4),Sym(10)))
 TP(Sym(12),OrderingGT(Sym(11),Const(20)))
-TP(Sym(13),NumericPlus(Sym(11),Const(3)))
+TP(Sym(13),IntPlus(Sym(11),Const(3)))
 TP(Sym(14),SimpleLoop(Sym(5),Sym(10),ArrayIfElem(Sym(12),Block(Sym(13)))))
 TP(Sym(16),ArrayIndex(Sym(4),Sym(15)))
-TP(Sym(18),NumericPlus(Sym(17),Sym(16)))
+TP(Sym(18),IntPlus(Sym(17),Sym(16)))
 TP(Sym(19),SimpleLoop(Sym(16),Sym(17),ArrayElem(Block(Sym(18)))))
 TP(Sym(20),SimpleLoop(Sym(5),Sym(15),FlattenElem(Block(Sym(19)))))
 TP(Sym(22),ArrayIndex(Sym(4),Sym(21)))
 TP(Sym(23),IntDoubleValue(Sym(22)))
-TP(Sym(24),NumericPlus(Const(2.0),Sym(23)))
+TP(Sym(24),DoublePlus(Const(2.0),Sym(23)))
 TP(Sym(25),SimpleLoop(Sym(5),Sym(21),ReduceElem(Block(Sym(24)))))
 TP(Sym(26),ArrayIndex(Sym(9),Const(0)))
-TP(Sym(27),Reflect(Print(Sym(26)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(27),Reflect(Print(Sym(26)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
 TP(Sym(28),ArrayIndex(Sym(14),Const(0)))
-TP(Sym(29),Reflect(Print(Sym(28)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(27))))
+TP(Sym(29),Reflect(Print(Sym(28)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(27))))
 TP(Sym(30),ArrayIndex(Sym(20),Const(0)))
-TP(Sym(31),Reflect(Print(Sym(30)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(27), Sym(29))))
-TP(Sym(32),Reflect(Print(Sym(25)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(27), Sym(29), Sym(31))))
-TP(Sym(33),Reify(Sym(32),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(27), Sym(29), Sym(31), Sym(32))))
+TP(Sym(31),Reflect(Print(Sym(30)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(29))))
+TP(Sym(32),Reflect(Print(Sym(25)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(31))))
+TP(Sym(33),Reify(Sym(32),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(27), Sym(29), Sym(31), Sym(32))))
 
 -- before transformation
 var x4 = new ArrayBuilder[Int]
@@ -80,20 +80,24 @@ val x32 = println(x25)
 (VFT) Fusing consumer TP(Sym(9),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(8))))) with real producer: Sym(4)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(3).
 (VFT) SimpleCollectIf+SimpleCollect fusion: use producer loop with consumer body.
+(VFT) Finished fusion of prod: Sym(4) and cons: Sym(9), the resulting fused loop is Sym(35)
 
 (VFT) Fusing consumer TP(Sym(14),SimpleLoop(Sym(5),Sym(10),ArrayIfElem(Sym(12),Block(Sym(13))))) with real producer: Sym(4)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(3).
 (VFT) SimpleCollectIf+SimpleCollectIf fusion: add producer conditions to consumer loop.
+(VFT) Finished fusion of prod: Sym(4) and cons: Sym(14), the resulting fused loop is Sym(41)
 
 (VFT) Fusing consumer TP(Sym(20),SimpleLoop(Sym(5),Sym(15),FlattenElem(Block(Sym(19))))) with real producer: Sym(4)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(3).
 (VFT) SimpleCollectIf+MultiCollect fusion: add if-then-else with empty array to consumer.
 
 (VFT) No producers found for TP(Sym(19),SimpleLoop(Sym(16),Sym(17),ArrayElem(Block(Sym(18)))))
+(VFT) Finished fusion of prod: Sym(4) and cons: Sym(20), the resulting fused loop is Sym(48)
 
 (VFT) Fusing consumer TP(Sym(25),SimpleLoop(Sym(5),Sym(21),ReduceElem(Block(Sym(24))))) with real producer: Sym(4)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(3).
 (VFT) SimpleCollectIf+Reduce fusion: add if-then-else with neutral element to consumer.
+(VFT) Finished fusion of prod: Sym(4) and cons: Sym(25), the resulting fused loop is Sym(54)
 
 (VFT) all vertically fused: List(Sym(35), Sym(4), Sym(48), Sym(54), Sym(41))
 

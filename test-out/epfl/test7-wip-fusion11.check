@@ -1,15 +1,15 @@
 -- full graph
-TP(Sym(3),NumericPlus(Sym(2),Sym(1)))
+TP(Sym(3),IntPlus(Sym(2),Sym(1)))
 TP(Sym(4),SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(3)))))
 TP(Sym(5),ArrayIndex(Sym(4),Const(0)))
 TP(Sym(6),SimpleLoop(Const(90),Sym(1),ArrayElem(Block(Sym(5)))))
-TP(Sym(8),NumericPlus(Sym(7),Const(2)))
+TP(Sym(8),IntPlus(Sym(7),Const(2)))
 TP(Sym(9),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8)))))
 TP(Sym(10),ArrayIndex(Sym(6),Const(0)))
-TP(Sym(11),Reflect(Print(Sym(10)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(11),Reflect(Print(Sym(10)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
 TP(Sym(12),ArrayIndex(Sym(9),Const(0)))
-TP(Sym(13),Reflect(Print(Sym(12)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(11))))
-TP(Sym(14),Reify(Sym(13),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(11), Sym(13))))
+TP(Sym(13),Reflect(Print(Sym(12)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11))))
+TP(Sym(14),Reify(Sym(13),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11), Sym(13))))
 
 -- before transformation
 var x6 = new Array[Int](90)

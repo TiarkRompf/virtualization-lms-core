@@ -92,6 +92,27 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   }
 }
 
+/**
+ * Skip statements that don't have symbols which need substitution, unless they contain
+ * blocks (need to recurse into blocks).
+ */
+trait PreservingForwardTransformer extends ForwardTransformer {
+  import IR._
+  override def transformStm(stm: Stm): Exp[Any] = stm match {
+    case TP(sym,rhs) => 
+      // Implement optimization suggested in ForwardTransformer:
+      // optimization from MirrorRetainBlockTransformer in TestMiscTransform
+      // we want to skip those statements that don't have symbols that need substitution
+      // however we need to recurse into any blocks
+      if (!syms(rhs).exists(subst contains _) && blocks(rhs).isEmpty) {
+        if (!globalDefs.contains(stm)) 
+          reflectSubGraph(List(stm))
+        sym
+      } else {
+        self_mirror(sym, rhs)
+      }
+  }
+}
 
 trait RecursiveTransformer extends ForwardTransformer { self =>
   import IR._
