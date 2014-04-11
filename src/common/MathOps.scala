@@ -233,9 +233,9 @@ trait CLikeGenMathOps extends BaseGenMathOps with CLikeGenEffect {
     case MathPow(x,y) => emitValDef(sym, "pow(" + quote(x) + "," + quote(y) + ")")
     case MathAbs(x) => emitValDef(sym, "abs(" + quote(x) + ")")
     case MathMax(x,y) if(remap(sym.tp)=="float" || remap(sym.tp)=="double") => emitValDef(sym, "fmax(" + quote(x) + ", " + quote(y) + ")")
-    case MathMax(x,y) if(remap(sym.tp))=="int" => emitValDef(sym, "(" + quote(x) + ">" + quote(y) + ") ? " + quote(x) + " : " + quote(y))
+    case MathMax(x,y) => emitValDef(sym, "(" + quote(x) + ">" + quote(y) + ") ? " + quote(x) + " : " + quote(y))
     case MathMin(x,y) if(remap(sym.tp)=="float" || remap(sym.tp)=="double")  => emitValDef(sym, "fmin(" + quote(x) + ", " + quote(y) + ")")
-    case MathMin(x,y) if(remap(sym.tp))=="int" => emitValDef(sym, "(" + quote(x) + "<" + quote(y) + ") ? " + quote(x) + " : " + quote(y))
+    case MathMin(x,y) => emitValDef(sym, "(" + quote(x) + "<" + quote(y) + ") ? " + quote(x) + " : " + quote(y))
     case _ => super.emitNode(sym, rhs)
   }
 }
