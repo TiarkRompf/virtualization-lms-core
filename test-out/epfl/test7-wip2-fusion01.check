@@ -1,0 +1,92 @@
+-- full graph
+TP(Sym(2),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))))
+TP(Sym(3),ArrayLength(Sym(2)))
+TP(Sym(5),ArrayIndex(Sym(2),Sym(4)))
+TP(Sym(6),OrderingGT(Sym(5),Const(50)))
+TP(Sym(7),SimpleLoop(Sym(3),Sym(4),ArrayIfElem(Sym(6),Block(Sym(5)))))
+TP(Sym(8),ArrayLength(Sym(7)))
+TP(Sym(10),ArrayIndex(Sym(7),Sym(9)))
+TP(Sym(11),SimpleLoop(Sym(8),Sym(9),ReduceElem(Block(Sym(10)))))
+TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+
+-- before transformation
+var x2 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+x2(x1) = x1
+}
+val x3 = x2.length
+var x7 = new ArrayBuilder[Int]
+for (x4 <- 0 until x3) {
+val x5 = x2.apply(x4)
+val x6 = x5 > 50
+if (x6) x7 += x5
+}
+val x8 = x7.length
+var x11 = 0
+for (x9 <- 0 until x8) {
+val x10 = x7.apply(x9)
+x11 += x10
+}
+val x12 = println(x11)
+
+-- vertical transformation
+
+(VFT) No producers found for TP(Sym(2),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))))
+
+(VFT) Fusing consumer TP(Sym(7),SimpleLoop(Sym(3),Sym(4),ArrayIfElem(Sym(6),Block(Sym(5))))) with real producer: Sym(2)
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(1).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
+(VFT) Finished fusion of prod: Sym(2) and cons: Sym(7), the resulting fused loop is Sym(15)
+
+(VFT) Fusing consumer TP(Sym(11),SimpleLoop(Sym(8),Sym(9),ReduceElem(Block(Sym(10))))) with real producer: Sym(15) (was Sym(7))
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(1).
+(VFT) SimpleCollectIf+Reduce fusion: add if-then-else with neutral element to consumer.
+(VFT) Finished fusion of prod: Sym(15) and cons: Sym(11), the resulting fused loop is Sym(18)
+
+(VFT) all vertically fused: List(Sym(2), Sym(15), Sym(18))
+
+-- after vertical transformation
+var x18 = 0
+for (x1 <- 0 until 100) {
+val x14 = x1 > 50
+val x17 = if (x14) {
+x1
+} else {
+0.0
+}
+x18 += x17
+}
+val x19 = println(x18)
+
+-- horizontal transformation
+(HFT) Recording Sym(18), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+var x18 = 0
+for (x1 <- 0 until 100) {
+val x14 = x1 > 50
+val x17 = if (x14) {
+x1
+} else {
+0.0
+}
+x18 += x17
+}
+val x19 = println(x18)
+
+-- fusion
+var x18 = 0
+for (x1 <- 0 until 100) {
+val x14 = x1 > 50
+val x17 = if (x14) {
+x1
+} else {
+0.0
+}
+x18 += x17
+}
+val x19 = println(x18)
+-- done

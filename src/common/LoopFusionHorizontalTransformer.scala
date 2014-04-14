@@ -68,6 +68,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
     def apply(sym: Sym[Any]): FusedSet = get(sym2set(sym))
     def get(sym: Sym[Any]): Option[FusedSet] = sym2set.get(sym).map(get(_))
     def getByShape(shape: Exp[Int]): List[FusedSet] = shape2sets.get(shape).getOrElse(Nil).map(get(_))
+    def getAllFused(syms: List[Sym[Any]]): List[Sym[Any]] = (syms ++ syms.flatMap(get(_).map(_.syms).getOrElse(Nil)))
     
     // Start a new fusion set
     def recordNew(sym: Sym[Any], shape: Exp[Int], index: Sym[Int], syms: List[Sym[Any]]) = {
@@ -221,7 +222,8 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
     // TODO also check effects and respect order of effects between loops
     val existingSet = existing.syms
 
-    // traverse the statements needed for the loop and check there are no deps
+    // traverse the statements (+fusion sets) needed for the loop
+    // and check there are no deps
     // throws exception to stop traversal as soon as dep found
     case class DependencyException(dependsOn: Either[Sym[Any],Sym[Any]]) extends Exception
     try {
@@ -229,7 +231,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
       GraphUtil.stronglyConnectedComponents(setToFuse, { sym: Sym[Any] => 
         findDefinition(sym) match {
           case Some(d) => 
-            val next = syms(d.rhs)
+            val next = current.getAllFused(syms(d.rhs))
             val taboo = next.collectFirst({ case x if existingSet.contains(x) => x })
             if (taboo.isDefined) {
               throw DependencyException(Left(taboo.get))
@@ -242,7 +244,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
       GraphUtil.stronglyConnectedComponents(existingSet, { sym: Sym[Any] => 
         findDefinition(sym) match {
           case Some(d) => 
-            val next = syms(d.rhs)
+            val next = current.getAllFused(syms(d.rhs))
             val taboo = next.collectFirst({ case x if setToFuse.contains(x) => x })
             if (taboo.isDefined) {
               throw DependencyException(Right(taboo.get))
