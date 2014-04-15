@@ -67,7 +67,7 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
       if (f.hasContext)
         __ifThenElse(f(c),f.reflectBlock(a),f.reflectBlock(b))
       else
-        reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+        reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case IfThenElse(c,a,b) => 
       if (f.hasContext)
         __ifThenElse(f(c),f.reflectBlock(a),f.reflectBlock(b))
