@@ -60,7 +60,9 @@ val x21 = println(x20)
 (VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
 (VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(4).
 (VFT) SimpleCollectIf+SimpleCollect fusion: use producer loop with consumer body.
+
 (VFT) Finished fusion of prod: Sym(5) and cons: Sym(11), the resulting fused loop is Sym(24)
+
 (VFT) Finished fusion of prod: Sym(6) and cons: Sym(11), the resulting fused loop is Sym(25)
 
 (VFT) Fusing consumer TP(Sym(17),SimpleLoop(Sym(12),Sym(13),ArrayIfElem(Sym(15),Block(Sym(16))))) with real producer: Sym(25) (was Sym(11))
@@ -68,11 +70,13 @@ val x21 = println(x20)
 (VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
 (VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(23).
 (VFT) SimpleCollectIf+SimpleCollectIf fusion: add producer conditions to consumer loop.
+
 (VFT) Finished fusion of prod: Sym(24) and cons: Sym(17), the resulting fused loop is Sym(31)
+
 (VFT) Finished fusion of prod: Sym(25) and cons: Sym(17), the resulting fused loop is Sym(32)
 
-(VFT) all vertically fused: List(Sym(32), Sym(6), Sym(25))
-List(Sym(31), Sym(5), Sym(24))
+(VFT) all vertically fused: List(Sym(31), Sym(5), Sym(24))
+List(Sym(32), Sym(6), Sym(25))
 
 -- after vertical transformation
 var x24 = new ArrayBuilder[Int]

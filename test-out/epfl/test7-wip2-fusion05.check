@@ -1,0 +1,31 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Unit)=>(Unit)) {
+def apply(x0:Unit): Unit = {
+var x4 = new Array[Double](200)
+var x2 = new Array[Double](200)
+for (x3 <- 0 until 200) {
+x4(x3) = 2.0
+x2(x3) = 1.0
+}
+val x17 = println(x4)
+val x7 = x2.apply(0)
+var x23 = new Array[Array[Double]](100)
+for (x5 <- 0 until 100) {
+var x26 = new Array[Double](x5)
+for (x6 <- 0 until x5) {
+x26(x6) = 0.0
+}
+val x22 = x26
+x23(x5) = x22
+}
+val x24 = println(x23)
+val x18 = x24
+x18
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+// NOTE: generated code is not ideal yet (x2 is never used). see source for discussion.

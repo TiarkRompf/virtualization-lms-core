@@ -36,16 +36,16 @@ val x14 = println(x13)
 
 -- vertical transformation
 
+  
+  (VFT) No producers found for TP(Sym(4),SimpleLoop(Const(80),Sym(2),ArrayElem(Block(Sym(3)))))
+  
+  (VFT) No producers found for TP(Sym(7),SimpleLoop(Const(80),Sym(5),ArrayElem(Block(Sym(6))))), remapping to Sym(17) because of fixed shape
 (VFT) No producers found for TP(Sym(12),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(11)))))
-
-(VFT) No producers found for TP(Sym(4),SimpleLoop(Const(80),Sym(2),ArrayElem(Block(Sym(3)))))
-
-(VFT) No producers found for TP(Sym(7),SimpleLoop(Const(80),Sym(5),ArrayElem(Block(Sym(6)))))
 
 (VFT) all vertically fused: 
 
 -- after vertical transformation
-var x12 = new Array[Int](100)
+var x20 = new Array[Int](100)
 for (x1 <- 0 until 100) {
 var x4 = new Array[Int](80)
 for (x2 <- 0 until 80) {
@@ -54,25 +54,23 @@ x4(x2) = x3
 }
 val x8 = x4.apply(0)
 val x9 = x1 * x8
-var x7 = new Array[Int](80)
-for (x5 <- 0 until 80) {
-val x6 = x5 * x1
-x7(x5) = x6
+var x17 = new Array[Int](80)
+for (x2 <- 0 until 80) {
+val x16 = x2 * x1
+x17(x2) = x16
 }
-val x10 = x7.apply(0)
-val x11 = x9 * x10
-x12(x1) = x11
+val x18 = x17.apply(0)
+val x19 = x9 * x18
+x20(x1) = x19
 }
-val x13 = x12.apply(0)
-val x14 = println(x13)
+val x21 = x20.apply(0)
+val x22 = println(x21)
 
 -- horizontal transformation
-(HFT) Recording Sym(12), no fusion
-(HFT) Recording Sym(4), no fusion
-(HFT) Fusing Sym(7) with fusion set FusedSet(shape = Const(80), indexSym = Sym(2), loopSyms = List(Sym(4)))
-(HFT) - remapping index: Sym(5) -> Sym(2)
-(HFT) - new loop symbol: Sym(7) -> Sym(17)
-(HFT) - new loop symbol: Sym(12) -> Sym(20)
+(HFT) Recording Sym(20), no fusion
+  (HFT) Recording Sym(4), no fusion
+  (HFT) Fusing Sym(17) with fusion set FusedSet(shape = Const(80), indexSym = Sym(2), loopSyms = List(Sym(4)))
+  (HFT) - already using same index Sym(2)
 
 (HFT) all horizontally fused: List(Sym(4), Sym(17))
 

@@ -64,7 +64,7 @@ trait RunnerArith {
       val v = verticalTransf.transformBlock(y)
       // TODO how to transmit state more cleanly?
       val vFused = verticalTransf.FusedSyms.getFusedSyms
-      println("\n(VFT) all vertically fused: " + vFused._2.mkString("\n"))
+      println("\n(VFT) all vertically fused: " + vFused.values.toList.distinct.mkString("\n"))
 
       println("\n-- after vertical transformation")
       codegen.withStream(new PrintWriter(System.out)) {
@@ -111,7 +111,6 @@ class TestFusion4 extends FileDiffSuite {
     trait Prog extends MyFusionProgArith with ImplArith {
       implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
       def test(x: Rep[Int]) = {
-        // TODO need multiple producers
         val constant = array(100) { i => 1 }
         val linear = array(100) { i => 2*i }
         val affine = array(100) { i => constant.at(i) + linear.at(i) }
@@ -147,7 +146,7 @@ class TestFusion4 extends FileDiffSuite {
     }
     new Prog with ImplArith
   }
-
+  
   def testFusionTransform02 = withOutFileChecked(prefix+"fusion02") {
     trait Prog extends MyFusionProgArith with ImplArith {
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
@@ -175,7 +174,11 @@ class TestFusion4 extends FileDiffSuite {
     trait Prog extends MyFusionProgArith with ImplArith {
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
       def test(x: Rep[Int]) = {
-        // TODO need multiple producers
+        // TODO body of ds becomes independent of index as result of fusing:
+        // as.at(i) -> ax, bs.at(i) -> bx, cs.at(i) -> cx
+        // so body is now on top-level and so x is consumer of ax and bx,
+        // could do another fusion pass (conceptually) as part of
+        // outer scope
 
         // test some nested loops - the inner ones should be moved to the top level and be fused there
 
@@ -188,12 +191,15 @@ class TestFusion4 extends FileDiffSuite {
         // cause a loop to be moved to the top level, in which case the top level would
         // need to apply fusion all over again.
       
+      //val ax = array(50) { j => 1.0 }
         val as = array(100) { i => 
           array(50) { j => 1.0 }
         }
+      //val bx = array(50) { j => 2.0 }
         val bs = array(100) { i => 
           array(50) { j => 2.0 }
         }
+      //val cx = array(50) { j => 4.0 }
         val cs = array(100) { i => 
           sum(50) { j => 4.0 }
         }
@@ -216,9 +222,12 @@ class TestFusion4 extends FileDiffSuite {
     trait Prog extends MyFusionProgArith with ImplArith {
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
       def test(x: Rep[Int]) = {
-      // TODO need multiple producers
+      // TODO now inner loops stay inside, but ds fused with as,bs and cs so
+      // as.at(i) -> ax, bs.at(i) -> bx, cs.at(i) -> cx
+      // and so scopes unified and x could be fused with ax/bx
+      // but currently no successive replacements
 
-      // test some nested loops - this times they are tryly nested (inner ones depend on loop var)
+      // test some nested loops - this time they are truly nested (inner ones depend on loop var)
       
         val as = array(100) { i => 
           array(i) { j => 1.0 }
@@ -245,9 +254,16 @@ class TestFusion4 extends FileDiffSuite {
 
   def testFusionTransform05 = withOutFileChecked(prefix+"fusion05") {
     trait Prog extends MyFusionProgArith with ImplArith {
+      override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = if (x == y) {
+        println("*** removing self subtraction " + x + " - " + y)
+        0
+      } else super.infix_-(x,y) //  optimizations to trigger test behavior
+
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
       def test(x: Rep[Int]) = {    
-        // TODO need multiple producers
+        // TODO same as previous test, but with some extra DCE, I think
+        // we should be better than the original loop fusion, e.g.
+        // as goes away
 
         // test some nested loops
       
@@ -256,17 +272,14 @@ class TestFusion4 extends FileDiffSuite {
         
         // currently this is not handled because fusion goes from outermost inwards
       
-        val as = array(200) { i => 
-          1.0
-        }
-        val bs = array(200) { i => 
-          2.0
-        }
+        val as = array(200) { i => 1.0 }
+        val bs = array(200) { i => 2.0 }
         val cs = array(100) { i => 
           array(i) { j => as.foo }
         }
         val ds = array(100) { i => 
-          array(i) { j => cs.at(i).at(j) - as.foo }
+          val dx = cs.at(i)
+          array(i) { j => dx.at(j) - as.foo }
           // this will become as.foo - as.foo = 0  -->  i.e. as becomes dead but is already fused with bs, which is used...
         }
 

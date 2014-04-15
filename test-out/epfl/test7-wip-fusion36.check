@@ -57,17 +57,17 @@ val x23 = println(x22)
 
 -- vertical transformation
 
+  
+  (VFT) No producers found for TP(Sym(4),SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(3)))))
 (VFT) No producers found for TP(Sym(5),SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(4)))))
 
-(VFT) No producers found for TP(Sym(4),SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(3)))))
-
+  
+  (VFT) No producers found for TP(Sym(10),SimpleLoop(Const(10),Sym(7),ArrayElem(Block(Sym(9)))))
 (VFT) No producers found for TP(Sym(11),SimpleLoop(Const(30),Sym(6),FlattenElem(Block(Sym(10)))))
 
-(VFT) No producers found for TP(Sym(10),SimpleLoop(Const(10),Sym(7),ArrayElem(Block(Sym(9)))))
-
+  
+  (VFT) No producers found for TP(Sym(16),SimpleLoop(Const(10),Sym(13),ArrayElem(Block(Sym(15)))))
 (VFT) No producers found for TP(Sym(17),SimpleLoop(Const(30),Sym(12),FlattenElem(Block(Sym(16)))))
-
-(VFT) No producers found for TP(Sym(16),SimpleLoop(Const(10),Sym(13),ArrayElem(Block(Sym(15)))))
 
 (VFT) all vertically fused: 
 
@@ -110,18 +110,18 @@ val x23 = println(x22)
 
 -- horizontal transformation
 (HFT) Recording Sym(5), no fusion
-(HFT) Recording Sym(4), no fusion
+  (HFT) Recording Sym(4), no fusion
 (HFT) Fusing Sym(11) with fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(5)))
 (HFT) - remapping index: Sym(6) -> Sym(1)
-(HFT) Fusing Sym(10) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(4)))
-(HFT) - remapping index: Sym(7) -> Sym(2)
-(HFT) - new loop symbol: Sym(10) -> Sym(26)
+  (HFT) Fusing Sym(10) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(4)))
+  (HFT) - remapping index: Sym(7) -> Sym(2)
+  (HFT) - new loop symbol: Sym(10) -> Sym(26)
 (HFT) - new loop symbol: Sym(11) -> Sym(27)
 (HFT) Fusing Sym(17) with fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(5), Sym(11)))
 (HFT) - remapping index: Sym(12) -> Sym(1)
-(HFT) Fusing Sym(16) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(4), Sym(10)))
-(HFT) - remapping index: Sym(13) -> Sym(2)
-(HFT) - new loop symbol: Sym(16) -> Sym(31)
+  (HFT) Fusing Sym(16) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(4), Sym(10)))
+  (HFT) - remapping index: Sym(13) -> Sym(2)
+  (HFT) - new loop symbol: Sym(16) -> Sym(31)
 (HFT) - new loop symbol: Sym(17) -> Sym(32)
 
 (HFT) all horizontally fused: List(Sym(4), Sym(26), Sym(31))

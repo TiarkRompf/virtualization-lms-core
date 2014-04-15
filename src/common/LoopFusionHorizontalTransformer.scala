@@ -11,22 +11,8 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
 
   /** Sets of vertically fused loops must be horizontally fused
     * if they have survived DCE, otherwise we're duplicating work. */
-  def setVerticallyFusedSyms(t: (HashMap[Sym[Any], Int], List[List[Sym[Any]]])) = 
-    VerticallyFusedSyms.setFusedSyms(t._1, t._2)
-  object VerticallyFusedSyms {
-    private var fusedSyms: HashMap[Sym[Any], Int] = HashMap[Sym[Any], Int]()
-    private var fusedSymsSets: List[List[Sym[Any]]] = Nil
-
-    def setFusedSyms(fuSyms: HashMap[Sym[Any], Int], fuSymsSets: List[List[Sym[Any]]]) = {
-      fusedSyms = fuSyms
-      fusedSymsSets = fuSymsSets
-    }
-    def getSet(sym: Sym[Any]): Option[List[Sym[Any]]] = {
-      fusedSyms.get(sym)
-        .map({ index => fusedSymsSets(fusedSymsSets.length - 1 - index) })
-        .flatMap({ set => if (set.size == 1) None else Some(set) })
-    }
-  }
+  private var verticallyFusedSyms = HashMap[Sym[Any], List[Sym[Any]]]()
+  def setVerticallyFusedSyms(map: HashMap[Sym[Any], List[Sym[Any]]]) = { verticallyFusedSyms = map }
 
   /** A set of horizontally fused loops.
     * @param shape common shape @param index common index
@@ -61,7 +47,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
     private val shape2sets = new HashMap[Exp[Int], List[Int]]
 
     // realSets(i) contains the symbols from sets(i) that were actually fused (not DCE'd)
-    // this are new (transformed) syms
+    // these are new (transformed) syms
     private var realSets: List[List[Sym[Any]]] = Nil
 
     def contains(sym: Sym[Any]): Boolean = sym2set.contains(sym)
@@ -101,7 +87,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
       val listIndex = realSets.length - 1 - setIndex
       realSets = realSets.updated(listIndex, substSym :: realSets(listIndex))
     }
-    def getReal = realSets.filter(_.length > 1).map(_.reverse)
+    def getReal = realSets.filter(_.length > 1).map(_.reverse.distinct)
 
     override def toString() = "FusionScope(" + sets.mkString("\n") + ")"
   }
@@ -125,13 +111,22 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
     }
   }
 
+  // --- per scope datastructures ----
   var current = new FusionScope
+
+  // indented printing to show scopes
+  var indent: Int = -2
+  def printdbg(x: => Any) { if (verbosity >= 2) System.err.println(" " * indent + x) }
+  def printlog(x: => Any) { if (verbosity >= 1) System.err.println(" " * indent + x) }
+
 
   // Set correct current fusion scope
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
     val old = current
     current = AllFusionScopes.get(block)
+    indent += 2
     val res = super.reflectBlock(block)
+    indent -= 2
     current = old
     res
   }
@@ -155,7 +150,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
             horizontal.innerScope
 
           case None => 
-            val setToFuse = VerticallyFusedSyms.getSet(sym).getOrElse(List(sym))
+            val setToFuse = verticallyFusedSyms.get(sym).getOrElse(List(sym))
             val existing = current.getByShape(loop.size)
               .filter({ candidate => checkIndep(sym, candidate, setToFuse) })
               .headOption
@@ -180,6 +175,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
 
         // book keeping
         current.recordReal(sym, superTransformedStm)
+
         // don't want to change other indices, TODO reset to old (see fuse)
         subst -= loop.v
 

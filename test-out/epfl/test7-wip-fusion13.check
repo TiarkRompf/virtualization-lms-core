@@ -52,6 +52,7 @@ val x19 = println(x18)
 (VFT) Fusing consumer TP(Sym(7),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(6))))) with reconstructed producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) Finished fusion of prod: Sym(3) and cons: Sym(7), the resulting fused loop is Sym(22)
 
 (VFT) No producers found for TP(Sym(13),SimpleLoop(Sym(10),Sym(11),ArrayElem(Block(Sym(12)))))
@@ -59,6 +60,7 @@ val x19 = println(x18)
 (VFT) Fusing consumer TP(Sym(17),SimpleLoop(Sym(10),Sym(14),ArrayElem(Block(Sym(16))))) with reconstructed producer: Sym(13)
 (VFT) General fusion: remap index to Sym(11), SimpleIndex to Sym(12).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) Finished fusion of prod: Sym(13) and cons: Sym(17), the resulting fused loop is Sym(26)
 
 (VFT) all vertically fused: List(Sym(26), Sym(13))

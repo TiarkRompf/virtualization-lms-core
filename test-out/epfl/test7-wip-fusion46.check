@@ -1,0 +1,128 @@
+-- full graph
+TP(Sym(3),SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1)))))
+TP(Sym(4),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))))
+TP(Sym(6),ArrayIndex(Sym(4),Sym(5)))
+TP(Sym(7),ArrayIndex(Sym(6),Sym(5)))
+TP(Sym(8),SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(7)))))
+TP(Sym(9),ArrayIndex(Sym(4),Const(0)))
+TP(Sym(10),Reflect(Print(Sym(9)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(11),ArrayIndex(Sym(8),Const(0)))
+TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10))))
+TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10), Sym(12))))
+
+-- before transformation
+var x4 = new Array[Array[Int]](100)
+for (x1 <- 0 until 100) {
+var x3 = new Array[Int](x1)
+for (x2 <- 0 until x1) {
+x3(x2) = 1
+}
+x4(x1) = x3
+}
+val x9 = x4.apply(0)
+val x10 = println(x9)
+var x8 = new Array[Int](100)
+for (x5 <- 0 until 100) {
+val x6 = x4.apply(x5)
+val x7 = x6.apply(x5)
+x8(x5) = x7
+}
+val x11 = x8.apply(0)
+val x12 = println(x11)
+
+-- vertical transformation
+
+  
+  (VFT) No producers found for TP(Sym(3),SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1)))))
+(VFT) No producers found for TP(Sym(4),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))))
+
+(VFT) Sym(8) not fused with Sym(6) because not in same level/scope.
+(VFT) Fusing consumer TP(Sym(8),SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(7))))) with reconstructed producer: Sym(4)
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(3).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
+
+(VFT) Finished fusion of prod: Sym(4) and cons: Sym(8), the resulting fused loop is Sym(15)
+
+(VFT) all vertically fused: List(Sym(4), Sym(15))
+
+-- after vertical transformation
+var x4 = new Array[Array[Int]](100)
+for (x1 <- 0 until 100) {
+var x3 = new Array[Int](x1)
+for (x2 <- 0 until x1) {
+x3(x2) = 1
+}
+x4(x1) = x3
+}
+val x9 = x4.apply(0)
+val x10 = println(x9)
+var x15 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+var x3 = new Array[Int](x1)
+for (x2 <- 0 until x1) {
+x3(x2) = 1
+}
+val x14 = x3.apply(x1)
+x15(x1) = x14
+}
+val x16 = x15.apply(0)
+val x17 = println(x16)
+
+-- horizontal transformation
+(HFT) Recording Sym(4), no fusion
+  (HFT) Recording Sym(3), no fusion
+(HFT) Fusing Sym(15) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(4), Sym(15)))
+(HFT) - already using same index Sym(1)
+  (HFT) Fusing Sym(3) with containing fusion set FusedSet(shape = Sym(1), indexSym = Sym(2), loopSyms = List(Sym(3)))
+  (HFT) - already using same index Sym(2)
+
+(HFT) all horizontally fused: List(Sym(3))
+List(Sym(4), Sym(15))
+
+-- after horizontal transformation
+var x4 = new Array[Array[Int]](100)
+for (x1 <- 0 until 100) {
+var x3 = new Array[Int](x1)
+for (x2 <- 0 until x1) {
+x3(x2) = 1
+}
+x4(x1) = x3
+}
+val x9 = x4.apply(0)
+val x10 = println(x9)
+var x15 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+var x3 = new Array[Int](x1)
+for (x2 <- 0 until x1) {
+x3(x2) = 1
+}
+val x14 = x3.apply(x1)
+x15(x1) = x14
+}
+val x16 = x15.apply(0)
+val x17 = println(x16)
+
+-- fusion
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(3)),List(SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1))))),SimpleFatLoop(Sym(1),Sym(2),List(ArrayElem(Block(Const(1))))))
+
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(4)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(3))))))
+TTP(List(Sym(15)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(14))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(14))))))
+
+var x4 = new Array[Array[Int]](100)
+var x15 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+var x3 = new Array[Int](x1)
+for (x2 <- 0 until x1) {
+x3(x2) = 1
+}
+val x14 = x3.apply(x1)
+x4(x1) = x3
+x15(x1) = x14
+}
+val x9 = x4.apply(0)
+val x10 = println(x9)
+val x16 = x15.apply(0)
+val x17 = println(x16)
+-- done

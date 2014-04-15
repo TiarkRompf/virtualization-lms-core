@@ -36,68 +36,52 @@ val x13 = println(x12)
 
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
 
-(VFT) No producers found for TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5)))))
+(VFT) No producers found for TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5))))), remapping to Sym(16) because of fixed shape
 
-(VFT) Fusing consumer TP(Sym(11),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(10))))) with reconstructed producer: Sym(3)
-(VFT) TODO could then fuse with reconstructed producers: List(Sym(6))
+(VFT) Fusing consumer TP(Sym(11),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(10))))) with reconstructed producer: Sym(3) and then with: List(Sym(16) (was Sym(6)))
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
-(VFT) SimpleCollect+Any fusion: nothing more to do.
-(VFT) Finished fusion of prod: Sym(3) and cons: Sym(11), the resulting fused loop is Sym(17)
+(VFT) SimpleCollect+Any fusion: nothing more to do for first producer, fuse with other producers: List(Sym(16))
+(VFT) Multiple fusion: remap SimpleIndex(Sym(16)) to Sym(15).
 
-(VFT) all vertically fused: List(Sym(3), Sym(17))
+(VFT) Finished fusion of prods: List(Sym(3), Sym(16)) and cons: Sym(11), the resulting fused loop is Sym(18)
+
+(VFT) all vertically fused: List(Sym(3), Sym(16), Sym(18))
 
 -- after vertical transformation
-var x6 = new Array[Int](100)
-for (x4 <- 0 until 100) {
-val x5 = x4 + 2
-x6(x4) = x5
-}
-var x17 = new Array[Int](100)
+var x18 = new Array[Int](100)
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
-val x15 = x6.apply(x1)
-val x16 = x2 + x15
-x17(x1) = x16
+val x15 = x1 + 2
+val x17 = x2 + x15
+x18(x1) = x17
 }
-val x18 = x17.apply(0)
-val x19 = println(x18)
+val x19 = x18.apply(0)
+val x20 = println(x19)
 
 -- horizontal transformation
-(HFT) Recording Sym(6), no fusion
-(HFT) The candidate Sym(17) and its set (List(Sym(3), Sym(17))) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(4), loopSyms = List(Sym(6))) because the candidate set depends on Sym(6)
-(HFT) Recording Sym(17), no fusion
+(HFT) Recording Sym(18), no fusion
 
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
-var x6 = new Array[Int](100)
-for (x4 <- 0 until 100) {
-val x5 = x4 + 2
-x6(x4) = x5
-}
-var x17 = new Array[Int](100)
+var x18 = new Array[Int](100)
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
-val x15 = x6.apply(x1)
-val x16 = x2 + x15
-x17(x1) = x16
+val x15 = x1 + 2
+val x17 = x2 + x15
+x18(x1) = x17
 }
-val x18 = x17.apply(0)
-val x19 = println(x18)
+val x19 = x18.apply(0)
+val x20 = println(x19)
 
 -- fusion
-var x6 = new Array[Int](100)
-for (x4 <- 0 until 100) {
-val x5 = x4 + 2
-x6(x4) = x5
-}
-var x17 = new Array[Int](100)
+var x18 = new Array[Int](100)
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
-val x15 = x6.apply(x1)
-val x16 = x2 + x15
-x17(x1) = x16
+val x15 = x1 + 2
+val x17 = x2 + x15
+x18(x1) = x17
 }
-val x18 = x17.apply(0)
-val x19 = println(x18)
+val x19 = x18.apply(0)
+val x20 = println(x19)
 -- done

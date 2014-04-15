@@ -142,7 +142,7 @@ trait Runner /*extends internal.ScalaCompile*/ {
       val v = verticalTransf.transformBlock(y)
       // TODO how to transmit state more cleanly?
       val vFused = verticalTransf.FusedSyms.getFusedSyms
-      println("\n(VFT) all vertically fused: " + vFused._2.mkString("\n"))
+      println("\n(VFT) all vertically fused: " + vFused.values.toList.distinct.mkString("\n"))
 
       println("\n-- after vertical transformation")
       codegen.withStream(new PrintWriter(System.out)) {
@@ -453,8 +453,7 @@ class TestFusion3 extends FileDiffSuite {
   def testFusionTransform14 = withOutFileChecked(prefix+"fusion14") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
-        // multiple producers (zip): currently fuse with real only
-        // TODO
+        // multiple producers (zip): fuse with real and then 1st reconstructed
         val range = array(100) { i => i + 1 }
         val range2 = array(100) { i => i + 2 }
         val range3 = array(range2.length) { i => range.at(i) + range2.at(i) }
@@ -467,8 +466,7 @@ class TestFusion3 extends FileDiffSuite {
   def testFusionTransform15 = withOutFileChecked(prefix+"fusion15") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
-        // multiple producers (zip): currently fuse with first reconstr. only
-        // TODO
+        // multiple producers (zip): fuse with first reconstr. and then others
         val range = array(100) { i => i + 1 }
         val range2 = array(100) { i => i + 2 }
         val range3 = array(100) { i => range.at(i) + range2.at(i) }
@@ -822,7 +820,6 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  // TODO
   def testFusionTransform35 = withOutFileChecked(prefix+"fusion35") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
@@ -884,9 +881,194 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  // TODO Tiark's test for changing scope/multiple passes
-  // Could something going away give us more fusion opportunities?
+  def testFusionTransform38 = withOutFileChecked(prefix+"fusion38") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {        
+        // indirect dependency
+        // vert. fuse a&b, want to fuse c with range, but c depends on
+        // a which is fused with b which depends on range, so can't!
+        // hor. only a&b as well
 
+        val range = array(30) { i => i }
+        val a = array(20) { i => i * 2 }
+        val b = array(a.length) { i => a.at(i) + range.at(0) }
+        val c = array(range.length) { i => range.at(i) + a.at(0) }
+
+        print(b.at(0))
+        print(c.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform39 = withOutFileChecked(prefix+"fusion39") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // vert. fuse range4 with multiple producers range and range2
+        // horizontally fuse range3 and range4'
+        // range5 no fusion because producer is IF
+        val range = array(100) { i => i + 1 }
+        val range2 = array(100) { i => i + 2 }
+        val range3 = arrayIf(100) { i => (i > 10, i + 3) }
+        val range4 = array(range2.length) { i => range.at(i) + range2.at(i) }
+        val range5 = array(100) { i => range3.at(i) }
+        print(range3.at(0))
+        print(range4.at(0))
+        print(range5.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform40 = withOutFileChecked(prefix+"fusion40") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // multiple producers (zip): no problem fusing others of same shape
+        // vert. fuse range4 with multiple range and range2
+        // vert. fuse range5 with range3 -> same expression, CSE'd
+        // hor. fuse range4 & range3/5
+        val range = array(100) { i => i + 1 }
+        val range2 = array(100) { i => i + 2 }
+        val range3 = array(100) { i => i + 3 }
+        val range4 = array(range2.length) { i => range.at(i) + range2.at(i) }
+        val range5 = array(100) { i => range3.at(i) }
+        print(range3.at(0))
+        print(range4.at(0))
+        print(range5.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform41 = withOutFileChecked(prefix+"fusion41") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // multiple producers (zip): combination of existing fusion sets works
+        val range = array(100) { i => i + 1 }
+        val range2 = array(range.length) { i => range.at(i) + 2 }
+
+        val range3 = array(100) { i => i + 3 }
+        val range4 = array(range3.length) { i => range3.at(i) + 4 }
+
+        val range5 = array(100) { i => range2.at(i) + range4.at(i) }
+        print(range.at(0))
+        print(range2.at(0))
+        print(range3.at(0))
+        print(range4.at(0))
+        print(range5.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform42 = withOutFileChecked(prefix+"fusion42") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // multiple producers (zip): combination of existing fusion sets works.
+        // and indirect dependencies through fusion sets prevent fusion of
+        // rangeConflict (all others fused)
+        val range = array(100) { i => i + 1 }
+        val range2 = array(range.length) { i => range.at(i) + 2 }
+
+        val range3 = array(100) { i => i + 3 }
+        val range4 = array(range3.length) { i => range3.at(i) + 4 }
+
+        val range5 = array(100) { i => range2.at(i) + range4.at(i) }
+        val rangeConflict = array(range3.length) {i => range3.at(i) + range.at(0)}
+        print(range.at(0))
+        print(range2.at(0))
+        print(range3.at(0))
+        print(range4.at(0))
+        print(range5.at(0))
+        print(rangeConflict.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform43 = withOutFileChecked(prefix+"fusion43") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // vert. fuse prod2 with range, cons with prod1&prod2
+        // conflict not fused with range because range fused with prod1, but dep. on prod1
+        // hor. fuse prod1, range, prod2, cons; don't fuse conflict 
+        val prod1 = array(100) { i => i + 1 }
+        val range = array(100) { i => i + 2 }
+        val prod2 = array(range.length) { i => range.at(i) + 3 }
+        val cons = array(100) { i => prod1.at(i) + prod2.at(i) }
+        val conflict = array(range.length) { i => range.at(i) + 4 + prod1.at(0) }
+        print(cons.at(0))
+        print(conflict.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform44 = withOutFileChecked(prefix+"fusion44") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // vert. fuse prod2 with range, conflict with range
+        // cons can only be fused with prod2 then, because prod2's fusion set depends on
+        // prod1 through conflict.
+        // hor. fuse cons and conflict, they both depend on prod1. prod2&range dce'd.
+        val prod1 = array(100) { i => i + 1 }
+        val range = array(100) { i => i + 2 }
+        val prod2 = array(range.length) { i => range.at(i) + 3 }
+        val conflict = array(range.length) { i => range.at(i) + 4 + prod1.at(0) }
+        print(conflict.at(0))
+        val cons = array(100) { i => prod1.at(i) + prod2.at(i) }
+        print(cons.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform45 = withOutFileChecked(prefix+"fusion45") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // fuse with remapped on lower level
+        val range = array(100) { i =>
+          val inner1 = array(100) { j => j + 1 + i }
+          val inner2 = array(100) { j => j + 2 + i }
+          val innerC = array(inner2.length) { j => inner2.at(j) + 3 }
+          inner1.at(0) +  inner2.at(0) + innerC.at(0)
+        }
+        print(range.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform46 = withOutFileChecked(prefix+"fusion46") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // range's inner is fused into range2, was emitted twice from
+        // horizontal (because there are two copies in separate scopes)
+        // but TTP only needs one copy since it fused the scopes
+        val range = array(100) { i => array(i) { j => 1 } }
+        val range2 = array(100) { i => range.at(i).at(i) }
+        print(range.at(0))
+        print(range2.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  // // TODO
+  // def testFusionTransform47 = withOutFileChecked(prefix+"fusion47") {
+  //   trait Prog extends MyFusionProg with Impl {
+  //     def test(x: Rep[Int]) = {
+  //       // TODO successive arrayIndex
+  //       val range = array(100) { i => array(i) { j => 1 } }
+  //       val range2 = array(100) { i => 
+  //         array(i) { j => range.at(i).at(j) }
+  //       }
+  //       print(range.at(0))
+  //       print(range2.at(0))
+  //     }
+  //   }
+  //   new Prog with Impl
+  // }
 
 }
 

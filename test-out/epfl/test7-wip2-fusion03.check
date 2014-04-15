@@ -1,0 +1,38 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Unit)=>(Unit)) {
+def apply(x0:Unit): Unit = {
+val x37 = 1.0+2.0
+var x3 = new Array[Double](50)
+var x7 = new Array[Double](50)
+var x11 = 0
+var x38 = 0
+for (x2 <- 0 until 50) {
+x3(x2) = 1.0
+x7(x2) = 2.0
+x11 += 4.0
+x38 += x37
+}
+val x39 = x38+x11
+var x4 = new Array[Array[Double]](100)
+var x8 = new Array[Array[Double]](100)
+var x12 = new Array[Double](100)
+var x40 = new Array[Double](100)
+for (x1 <- 0 until 100) {
+x4(x1) = x3
+x8(x1) = x7
+x12(x1) = x11
+x40(x1) = x39
+}
+val x24 = println(x4)
+val x25 = println(x8)
+val x26 = println(x12)
+val x41 = println(x40)
+val x27 = x41
+x27
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

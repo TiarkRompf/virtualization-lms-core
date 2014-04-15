@@ -72,6 +72,7 @@ val x26 = println(x25)
 (VFT) Fusing consumer TP(Sym(24),SimpleLoop(Sym(20),Sym(21),ArrayElem(Block(Sym(23))))) with real producer: Sym(31) (was Sym(17))
 (VFT) General fusion: remap index to Sym(13), SimpleIndex to Sym(13).
 (VFT) SimpleCollectIf+SimpleCollect fusion: use producer loop with consumer body.
+
 (VFT) Finished fusion of prod: Sym(31) and cons: Sym(24), the resulting fused loop is Sym(36)
 
 (VFT) all vertically fused: List(Sym(31), Sym(36))

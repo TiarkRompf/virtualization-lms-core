@@ -56,15 +56,17 @@ val x21 = println(x20)
 (VFT) Fusing consumer TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5))))) with reconstructed producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) Finished fusion of prod: Sym(3) and cons: Sym(6), the resulting fused loop is Sym(3)
 
 (VFT) Fusing consumer TP(Sym(9),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8))))) with reconstructed producer: Sym(3) (was Sym(6))
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) Finished fusion of prod: Sym(3) and cons: Sym(9), the resulting fused loop is Sym(3)
 
 (VFT) Sym(14) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
-(VFT) No producers found for TP(Sym(14),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(13)))))
+(VFT) No producers found for TP(Sym(14),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(13))))), remapping to Sym(27) because of fixed shape
 
 (VFT) all vertically fused: List(Sym(3))
 
@@ -78,19 +80,19 @@ val x15 = x3.apply(0)
 val x16 = println(x15)
 val x23 = println(x15)
 val x24 = println(x15)
-var x26 = new Array[Int](100)
-for (x10 <- 0 until 100) {
-val x11 = x3.apply(x10)
-val x25 = x11 + x15
-x26(x10) = x25
+var x27 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x25 = x3.apply(x1)
+val x26 = x25 + x15
+x27(x1) = x26
 }
-val x27 = x26.apply(0)
-val x28 = println(x27)
+val x28 = x27.apply(0)
+val x29 = println(x28)
 
 -- horizontal transformation
 (HFT) Recording Sym(3), no fusion
-(HFT) The candidate Sym(26) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(3))) because the candidate set depends on Sym(3)
-(HFT) Recording Sym(26), no fusion
+(HFT) The candidate Sym(27) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(3))) because the candidate set depends on Sym(3)
+(HFT) Recording Sym(27), no fusion
 
 (HFT) all horizontally fused: 
 
@@ -104,14 +106,14 @@ val x15 = x3.apply(0)
 val x16 = println(x15)
 val x23 = println(x15)
 val x24 = println(x15)
-var x26 = new Array[Int](100)
-for (x10 <- 0 until 100) {
-val x11 = x3.apply(x10)
-val x25 = x11 + x15
-x26(x10) = x25
+var x27 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x25 = x3.apply(x1)
+val x26 = x25 + x15
+x27(x1) = x26
 }
-val x27 = x26.apply(0)
-val x28 = println(x27)
+val x28 = x27.apply(0)
+val x29 = println(x28)
 
 -- fusion
 var x3 = new Array[Int](100)
@@ -123,12 +125,12 @@ val x15 = x3.apply(0)
 val x16 = println(x15)
 val x23 = println(x15)
 val x24 = println(x15)
-var x26 = new Array[Int](100)
-for (x10 <- 0 until 100) {
-val x11 = x3.apply(x10)
-val x25 = x11 + x15
-x26(x10) = x25
+var x27 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x25 = x3.apply(x1)
+val x26 = x25 + x15
+x27(x1) = x26
 }
-val x27 = x26.apply(0)
-val x28 = println(x27)
+val x28 = x27.apply(0)
+val x29 = println(x28)
 -- done

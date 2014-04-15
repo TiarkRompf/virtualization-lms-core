@@ -1,0 +1,148 @@
+-- full graph
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(5),IntPlus(Sym(4),Const(2)))
+TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5)))))
+TP(Sym(8),IntPlus(Sym(7),Const(3)))
+TP(Sym(9),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8)))))
+TP(Sym(10),ArrayLength(Sym(6)))
+TP(Sym(12),ArrayIndex(Sym(3),Sym(11)))
+TP(Sym(13),ArrayIndex(Sym(6),Sym(11)))
+TP(Sym(14),IntPlus(Sym(12),Sym(13)))
+TP(Sym(15),SimpleLoop(Sym(10),Sym(11),ArrayElem(Block(Sym(14)))))
+TP(Sym(17),ArrayIndex(Sym(9),Sym(16)))
+TP(Sym(18),SimpleLoop(Const(100),Sym(16),ArrayElem(Block(Sym(17)))))
+TP(Sym(19),ArrayIndex(Sym(9),Const(0)))
+TP(Sym(20),Reflect(Print(Sym(19)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(21),ArrayIndex(Sym(15),Const(0)))
+TP(Sym(22),Reflect(Print(Sym(21)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(20))))
+TP(Sym(23),ArrayIndex(Sym(18),Const(0)))
+TP(Sym(24),Reflect(Print(Sym(23)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(22))))
+TP(Sym(25),Reify(Sym(24),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(20), Sym(22), Sym(24))))
+
+-- before transformation
+var x9 = new Array[Int](100)
+for (x7 <- 0 until 100) {
+val x8 = x7 + 3
+x9(x7) = x8
+}
+val x19 = x9.apply(0)
+val x20 = println(x19)
+var x6 = new Array[Int](100)
+for (x4 <- 0 until 100) {
+val x5 = x4 + 2
+x6(x4) = x5
+}
+val x10 = x6.length
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+var x15 = new Array[Int](x10)
+for (x11 <- 0 until x10) {
+val x12 = x3.apply(x11)
+val x13 = x6.apply(x11)
+val x14 = x12 + x13
+x15(x11) = x14
+}
+val x21 = x15.apply(0)
+val x22 = println(x21)
+var x18 = new Array[Int](100)
+for (x16 <- 0 until 100) {
+val x17 = x9.apply(x16)
+x18(x16) = x17
+}
+val x23 = x18.apply(0)
+val x24 = println(x23)
+
+-- vertical transformation
+
+(VFT) No producers found for TP(Sym(9),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8)))))
+
+(VFT) No producers found for TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5))))), remapping to Sym(27) because of fixed shape
+
+(VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2))))), remapping to Sym(29) because of fixed shape
+
+(VFT) Fusing consumer TP(Sym(15),SimpleLoop(Sym(10),Sym(11),ArrayElem(Block(Sym(14))))) with real producer: Sym(27) (was Sym(6)) and then with reconstructed producers: List(Sym(29) (was Sym(3)))
+(VFT) General fusion: remap index to Sym(7), SimpleIndex to Sym(26).
+(VFT) SimpleCollect+Any fusion: nothing more to do for first producer, fuse with other producers: List(Sym(29))
+(VFT) Multiple fusion: remap SimpleIndex(Sym(29)) to Sym(28).
+
+(VFT) Finished fusion of prods: List(Sym(27), Sym(29)) and cons: Sym(15), the resulting fused loop is Sym(31)
+
+(VFT) Fusing consumer TP(Sym(18),SimpleLoop(Const(100),Sym(16),ArrayElem(Block(Sym(17))))) with reconstructed producer: Sym(9)
+(VFT) General fusion: remap index to Sym(7), SimpleIndex to Sym(8).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
+
+(VFT) Finished fusion of prod: Sym(9) and cons: Sym(18), the resulting fused loop is Sym(9)
+
+(VFT) all vertically fused: List(Sym(29), Sym(31), Sym(27))
+List(Sym(9))
+
+-- after vertical transformation
+var x9 = new Array[Int](100)
+for (x7 <- 0 until 100) {
+val x8 = x7 + 3
+x9(x7) = x8
+}
+val x19 = x9.apply(0)
+val x20 = println(x19)
+var x31 = new Array[Int](100)
+for (x7 <- 0 until 100) {
+val x26 = x7 + 2
+val x28 = x7 + 1
+val x30 = x28 + x26
+x31(x7) = x30
+}
+val x32 = x31.apply(0)
+val x33 = println(x32)
+val x34 = println(x19)
+
+-- horizontal transformation
+(HFT) Recording Sym(9), no fusion
+(HFT) Fusing Sym(31) with fusion set FusedSet(shape = Const(100), indexSym = Sym(7), loopSyms = List(Sym(9)))
+(HFT) - already using same index Sym(7)
+
+(HFT) all horizontally fused: List(Sym(9), Sym(31))
+
+-- after horizontal transformation
+var x9 = new Array[Int](100)
+for (x7 <- 0 until 100) {
+val x8 = x7 + 3
+x9(x7) = x8
+}
+val x19 = x9.apply(0)
+val x20 = println(x19)
+var x31 = new Array[Int](100)
+for (x7 <- 0 until 100) {
+val x26 = x7 + 2
+val x28 = x7 + 1
+val x30 = x28 + x26
+x31(x7) = x30
+}
+val x32 = x31.apply(0)
+val x33 = println(x32)
+val x34 = println(x19)
+
+-- fusion
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(9)),List(SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8))))),SimpleFatLoop(Const(100),Sym(7),List(ArrayElem(Block(Sym(8))))))
+TTP(List(Sym(31)),List(SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(30))))),SimpleFatLoop(Const(100),Sym(7),List(ArrayElem(Block(Sym(30))))))
+
+var x9 = new Array[Int](100)
+var x31 = new Array[Int](100)
+for (x7 <- 0 until 100) {
+val x8 = x7 + 3
+val x26 = x7 + 2
+val x28 = x7 + 1
+val x30 = x28 + x26
+x9(x7) = x8
+x31(x7) = x30
+}
+val x19 = x9.apply(0)
+val x20 = println(x19)
+val x32 = x31.apply(0)
+val x33 = println(x32)
+val x34 = println(x19)
+-- done

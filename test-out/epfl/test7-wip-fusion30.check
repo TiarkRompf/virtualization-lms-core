@@ -46,14 +46,15 @@ val x18 = println(x17)
 
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
 
-(VFT) No producers found for TP(Sym(8),SimpleLoop(Const(100),Sym(6),ArrayElem(Block(Sym(7)))))
+(VFT) No producers found for TP(Sym(8),SimpleLoop(Const(100),Sym(6),ArrayElem(Block(Sym(7))))), remapping to Sym(21) because of fixed shape
 
 (VFT) Fusing consumer TP(Sym(16),SimpleLoop(Sym(11),Sym(12),ArrayIfElem(Sym(14),Block(Sym(15))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
-(VFT) Finished fusion of prod: Sym(3) and cons: Sym(16), the resulting fused loop is Sym(21)
 
-(VFT) all vertically fused: List(Sym(3), Sym(21))
+(VFT) Finished fusion of prod: Sym(3) and cons: Sym(16), the resulting fused loop is Sym(26)
+
+(VFT) all vertically fused: List(Sym(3), Sym(26))
 
 -- after vertical transformation
 var x3 = new Array[Int](100)
@@ -63,31 +64,31 @@ x3(x1) = x2
 }
 val x4 = x3.apply(0)
 val x5 = println(x4)
-var x8 = new Array[Int](100)
-for (x6 <- 0 until 100) {
-val x7 = x6 + 2
-x8(x6) = x7
+var x21 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x20 = x1 + 2
+x21(x1) = x20
 }
-val x9 = x8.apply(0)
-val x10 = println(x9)
-val x15 = x9 + 1
-var x21 = new ArrayBuilder[Int]
+val x22 = x21.apply(0)
+val x23 = println(x22)
+val x24 = x22 + 1
+var x26 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
-val x20 = x2 > 50
-if (x20) x21 += x15
+val x25 = x2 > 50
+if (x25) x26 += x24
 }
-val x22 = x21.length
-val x23 = println(x22)
+val x27 = x26.length
+val x28 = println(x27)
 
 -- horizontal transformation
 (HFT) Recording Sym(3), no fusion
-(HFT) The candidate Sym(8) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(3), Sym(21))) because the existing set depends on Sym(8)
-(HFT) Recording Sym(8), no fusion
-(HFT) Fusing Sym(21) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(3), Sym(21)))
+(HFT) The candidate Sym(21) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(3), Sym(26))) because the existing set depends on Sym(21)
+(HFT) Recording Sym(21), no fusion
+(HFT) Fusing Sym(26) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(3), Sym(26)))
 (HFT) - already using same index Sym(1)
 
-(HFT) all horizontally fused: List(Sym(3), Sym(21))
+(HFT) all horizontally fused: List(Sym(3), Sym(26))
 
 -- after horizontal transformation
 var x3 = new Array[Int](100)
@@ -97,46 +98,46 @@ x3(x1) = x2
 }
 val x4 = x3.apply(0)
 val x5 = println(x4)
-var x8 = new Array[Int](100)
-for (x6 <- 0 until 100) {
-val x7 = x6 + 2
-x8(x6) = x7
+var x21 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x20 = x1 + 2
+x21(x1) = x20
 }
-val x9 = x8.apply(0)
-val x10 = println(x9)
-val x15 = x9 + 1
-var x21 = new ArrayBuilder[Int]
+val x22 = x21.apply(0)
+val x23 = println(x22)
+val x24 = x22 + 1
+var x26 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
-val x20 = x2 > 50
-if (x20) x21 += x15
+val x25 = x2 > 50
+if (x25) x26 += x24
 }
-val x22 = x21.length
-val x23 = println(x22)
+val x27 = x26.length
+val x28 = println(x27)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
 TTP(List(Sym(3)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(2))))))
-TTP(List(Sym(21)),List(SimpleLoop(Const(100),Sym(1),ArrayIfElem(Sym(20),Block(Sym(15))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayIfElem(Sym(20),Block(Sym(15))))))
+TTP(List(Sym(26)),List(SimpleLoop(Const(100),Sym(1),ArrayIfElem(Sym(25),Block(Sym(24))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayIfElem(Sym(25),Block(Sym(24))))))
 
-var x8 = new Array[Int](100)
-for (x6 <- 0 until 100) {
-val x7 = x6 + 2
-x8(x6) = x7
+var x21 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x20 = x1 + 2
+x21(x1) = x20
 }
-val x9 = x8.apply(0)
-val x15 = x9 + 1
+val x22 = x21.apply(0)
+val x24 = x22 + 1
 var x3 = new Array[Int](100)
-var x21 = new ArrayBuilder[Int]
+var x26 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
-val x20 = x2 > 50
+val x25 = x2 > 50
 x3(x1) = x2
-if (x20) x21 += x15
+if (x25) x26 += x24
 }
 val x4 = x3.apply(0)
 val x5 = println(x4)
-val x10 = println(x9)
-val x22 = x21.length
 val x23 = println(x22)
+val x27 = x26.length
+val x28 = println(x27)
 -- done

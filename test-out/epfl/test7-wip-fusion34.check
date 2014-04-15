@@ -56,18 +56,20 @@ val x23 = println(x22)
 
 -- vertical transformation
 
+  
+  (VFT) No producers found for TP(Sym(4),SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(3)))))
 (VFT) No producers found for TP(Sym(5),SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(4)))))
-
-(VFT) No producers found for TP(Sym(4),SimpleLoop(Const(10),Sym(2),ArrayElem(Block(Sym(3)))))
 
 (VFT) Fusing consumer TP(Sym(12),SimpleLoop(Sym(6),Sym(7),FlattenElem(Block(Sym(11))))) with real producer: Sym(5)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(4).
 (VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
 (VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(3).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+  
+  (VFT) No producers found for TP(Sym(11),SimpleLoop(Sym(8),Sym(9),ArrayElem(Block(Sym(10)))))
 
-(VFT) No producers found for TP(Sym(11),SimpleLoop(Sym(8),Sym(9),ArrayElem(Block(Sym(10)))))
 (VFT) Finished fusion of prod: Sym(4) and cons: Sym(12), the resulting fused loop is Sym(27)
+
 (VFT) Finished fusion of prod: Sym(5) and cons: Sym(12), the resulting fused loop is Sym(28)
 
 (VFT) Fusing consumer TP(Sym(17),SimpleLoop(Sym(13),Sym(14),ArrayElem(Block(Sym(16))))) with real producer: Sym(28) (was Sym(12))
@@ -77,13 +79,16 @@ val x23 = println(x22)
 (VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
 (VFT) General fusion: remap index to Sym(9), SimpleIndex to Sym(25).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
+
 (VFT) Finished fusion of prod: Sym(26) and cons: Sym(17), the resulting fused loop is Sym(33)
+
 (VFT) Finished fusion of prod: Sym(27) and cons: Sym(17), the resulting fused loop is Sym(34)
+
 (VFT) Finished fusion of prod: Sym(28) and cons: Sym(17), the resulting fused loop is Sym(35)
 
-(VFT) all vertically fused: List(Sym(26), Sym(33))
+(VFT) all vertically fused: List(Sym(4), Sym(34), Sym(27))
 List(Sym(28), Sym(35), Sym(5))
-List(Sym(4), Sym(34), Sym(27))
+List(Sym(26), Sym(33))
 
 -- after vertical transformation
 var x5 = new ArrayBuilder[Int]
@@ -133,18 +138,18 @@ val x37 = println(x36)
 
 -- horizontal transformation
 (HFT) Recording Sym(5), no fusion
-(HFT) Recording Sym(4), no fusion
+  (HFT) Recording Sym(4), no fusion
 (HFT) Fusing Sym(28) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(28), Sym(35), Sym(5)))
 (HFT) - already using same index Sym(1)
-(HFT) Fusing Sym(27) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(4), Sym(34), Sym(27)))
-(HFT) - already using same index Sym(2)
-(HFT) Recording Sym(26), no fusion
+  (HFT) Fusing Sym(27) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(4), Sym(34), Sym(27)))
+  (HFT) - already using same index Sym(2)
+    (HFT) Recording Sym(26), no fusion
 (HFT) Fusing Sym(35) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(28), Sym(35), Sym(5)))
 (HFT) - already using same index Sym(1)
-(HFT) Fusing Sym(34) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(4), Sym(34), Sym(27)))
-(HFT) - already using same index Sym(2)
-(HFT) Fusing Sym(33) with containing fusion set FusedSet(shape = Sym(3), indexSym = Sym(9), loopSyms = List(Sym(26), Sym(33)))
-(HFT) - already using same index Sym(9)
+  (HFT) Fusing Sym(34) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(4), Sym(34), Sym(27)))
+  (HFT) - already using same index Sym(2)
+    (HFT) Fusing Sym(33) with containing fusion set FusedSet(shape = Sym(3), indexSym = Sym(9), loopSyms = List(Sym(26), Sym(33)))
+    (HFT) - already using same index Sym(9)
 
 (HFT) all horizontally fused: List(Sym(26), Sym(33))
 List(Sym(4), Sym(27), Sym(34))
