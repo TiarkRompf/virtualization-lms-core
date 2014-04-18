@@ -20,7 +20,7 @@ trait ExceptionOpsExp extends ExceptionOps with EffectExp {
   def throw_exception(m: Exp[String]) = reflectEffect(ThrowException(m), Global())    
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case Reflect(ThrowException(s), u, es) => reflectMirrored(Reflect(ThrowException(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))     
+    case Reflect(ThrowException(s), u, es) => reflectMirrored(Reflect(ThrowException(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)     
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]  
 }

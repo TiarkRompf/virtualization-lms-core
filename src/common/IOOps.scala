@@ -102,14 +102,14 @@ trait IOOpsExp extends IOOps with DSLOpsExp {
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     e match {
-      case Reflect(ObjFrApply(s), u, es) => reflectMirrored(Reflect(ObjFrApply(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(ObjBrApply(x), u, es) => reflectMirrored(Reflect(ObjBrApply(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(ObjFwApply(s), u, es) => reflectMirrored(Reflect(ObjFwApply(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(ObjBwApply(x), u, es) => reflectMirrored(Reflect(ObjBwApply(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(BrReadline(b), u, es) => reflectMirrored(Reflect(BrReadline(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(BwWrite(b,s), u, es) => reflectMirrored(Reflect(BwWrite(f(b),f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(BrClose(b), u, es) => reflectMirrored(Reflect(BrClose(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-      case Reflect(BwClose(b), u, es) => reflectMirrored(Reflect(BwClose(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      case Reflect(ObjFrApply(s), u, es) => reflectMirrored(Reflect(ObjFrApply(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(ObjBrApply(x), u, es) => reflectMirrored(Reflect(ObjBrApply(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(ObjFwApply(s), u, es) => reflectMirrored(Reflect(ObjFwApply(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(ObjBwApply(x), u, es) => reflectMirrored(Reflect(ObjBwApply(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(BrReadline(b), u, es) => reflectMirrored(Reflect(BrReadline(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(BwWrite(b,s), u, es) => reflectMirrored(Reflect(BwWrite(f(b),f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(BrClose(b), u, es) => reflectMirrored(Reflect(BrClose(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(BwClose(b), u, es) => reflectMirrored(Reflect(BwClose(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case _ => super.mirror(e,f)
     }
   }).asInstanceOf[Exp[A]]  
