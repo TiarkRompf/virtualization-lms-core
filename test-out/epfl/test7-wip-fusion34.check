@@ -66,7 +66,7 @@ val x23 = println(x22)
 (VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(3).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
   
-  (VFT) No producers found for TP(Sym(11),SimpleLoop(Sym(8),Sym(9),ArrayElem(Block(Sym(10)))))
+  (VFT) No producers found for TP(Sym(11),SimpleLoop(Sym(8),Sym(9),ArrayElem(Block(Sym(10))))), changed to Sym(26) because of existing substitutions
 
 (VFT) Finished fusion of prod: Sym(4) and cons: Sym(12), the resulting fused loop is Sym(27)
 

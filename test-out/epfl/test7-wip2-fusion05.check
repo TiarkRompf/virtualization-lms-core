@@ -1,31 +1,129 @@
-/*****************************************
-  Emitting Generated Code                  
-*******************************************/
-class Test extends ((Unit)=>(Unit)) {
-def apply(x0:Unit): Unit = {
+-- full graph
+TP(Sym(2),SimpleLoop(Const(200),Sym(1),ArrayElem(Block(Const(1.0)))))
+TP(Sym(4),SimpleLoop(Const(200),Sym(3),ArrayElem(Block(Const(2.0)))))
+TP(Sym(7),ArrayIndex(Sym(2),Const(0)))
+TP(Sym(8),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(7)))))
+TP(Sym(9),SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(8)))))
+TP(Sym(11),ArrayIndex(Sym(9),Sym(10)))
+TP(Sym(13),ArrayIndex(Sym(11),Sym(12)))
+TP(Sym(14),Minus(Sym(13),Sym(7)))
+TP(Sym(15),SimpleLoop(Sym(10),Sym(12),ArrayElem(Block(Sym(14)))))
+TP(Sym(16),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(15)))))
+TP(Sym(17),Reflect(Print(Sym(4)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(18),Reflect(Print(Sym(16)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(17))))
+TP(Sym(19),Reify(Sym(18),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(17), Sym(18))))
+
+-- before transformation
 var x4 = new Array[Double](200)
-var x2 = new Array[Double](200)
 for (x3 <- 0 until 200) {
 x4(x3) = 2.0
-x2(x3) = 1.0
 }
 val x17 = println(x4)
+var x2 = new Array[Double](200)
+for (x1 <- 0 until 200) {
+x2(x1) = 1.0
+}
 val x7 = x2.apply(0)
-var x23 = new Array[Array[Double]](100)
+var x9 = new Array[Array[Double]](100)
 for (x5 <- 0 until 100) {
-var x26 = new Array[Double](x5)
+var x8 = new Array[Double](x5)
 for (x6 <- 0 until x5) {
-x26(x6) = 0.0
+x8(x6) = x7
 }
-val x22 = x26
-x23(x5) = x22
+x9(x5) = x8
 }
-val x24 = println(x23)
-val x18 = x24
-x18
+var x16 = new Array[Array[Double]](100)
+for (x10 <- 0 until 100) {
+val x11 = x9.apply(x10)
+var x15 = new Array[Double](x10)
+for (x12 <- 0 until x10) {
+val x13 = x11.apply(x12)
+val x14 = x13-x7
+x15(x12) = x14
 }
+x16(x10) = x15
 }
-/*****************************************
-  End of Generated Code                  
-*******************************************/
-// NOTE: generated code is not ideal yet (x2 is never used). see source for discussion.
+val x18 = println(x16)
+
+-- vertical transformation
+
+(VFT) No producers found for TP(Sym(4),SimpleLoop(Const(200),Sym(3),ArrayElem(Block(Const(2.0)))))
+
+(VFT) No producers found for TP(Sym(2),SimpleLoop(Const(200),Sym(1),ArrayElem(Block(Const(1.0))))), remapping to Sym(20) because of fixed shape
+
+  
+  (VFT) No producers found for TP(Sym(8),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(7))))), changed to Sym(22) because of existing substitutions
+(VFT) No producers found for TP(Sym(9),SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(8))))), changed to Sym(23) because of existing substitutions
+
+(VFT) Fusing consumer TP(Sym(16),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(15))))) with reconstructed producer: Sym(23) (was Sym(9))
+(VFT) General fusion: remap index to Sym(5), SimpleIndex to Sym(22).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
+  
+  (VFT) Successive simpleIndex fusion of outer: SimpleIndex(Sym(11), Sym(12)) where inner has already been fused: TP(Sym(11),ArrayIndex(Sym(9),Sym(10))) -> Sym(22)
+  (VFT) Fusing consumer TP(Sym(15),SimpleLoop(Sym(10),Sym(12),ArrayElem(Block(Sym(14))))) with reconstructed producer: Sym(22)
+  (VFT) General fusion: remap index to Sym(6), SimpleIndex to Sym(21).
+  (VFT) SimpleCollect+Any fusion: nothing more to do.
+*** removing self subtraction Sym(21) - Sym(21)
+  
+  (VFT) Finished fusion of prod: Sym(22) and cons: Sym(15), the resulting fused loop is Sym(24)
+
+(VFT) Finished fusion of prod: Sym(23) and cons: Sym(16), the resulting fused loop is Sym(25)
+
+(VFT) all vertically fused: List(Sym(22), Sym(24))
+List(Sym(25), Sym(23))
+
+-- after vertical transformation
+var x4 = new Array[Double](200)
+for (x3 <- 0 until 200) {
+x4(x3) = 2.0
+}
+val x17 = println(x4)
+var x25 = new Array[Array[Double]](100)
+for (x5 <- 0 until 100) {
+var x24 = new Array[Double](x5)
+for (x6 <- 0 until x5) {
+x24(x6) = 0.0
+}
+x25(x5) = x24
+}
+val x26 = println(x25)
+
+-- horizontal transformation
+(HFT) Recording Sym(4), no fusion
+(HFT) Recording Sym(25), no fusion
+  (HFT) Recording Sym(24), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+var x4 = new Array[Double](200)
+for (x3 <- 0 until 200) {
+x4(x3) = 2.0
+}
+val x17 = println(x4)
+var x25 = new Array[Array[Double]](100)
+for (x5 <- 0 until 100) {
+var x24 = new Array[Double](x5)
+for (x6 <- 0 until x5) {
+x24(x6) = 0.0
+}
+x25(x5) = x24
+}
+val x26 = println(x25)
+
+-- fusion
+var x4 = new Array[Double](200)
+for (x3 <- 0 until 200) {
+x4(x3) = 2.0
+}
+val x17 = println(x4)
+var x25 = new Array[Array[Double]](100)
+for (x5 <- 0 until 100) {
+var x24 = new Array[Double](x5)
+for (x6 <- 0 until x5) {
+x24(x6) = 0.0
+}
+x25(x5) = x24
+}
+val x26 = println(x25)
+-- done

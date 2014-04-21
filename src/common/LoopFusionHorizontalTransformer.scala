@@ -203,6 +203,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
         // TODO once we implement multiple potential producers mapped to same index
         // we should return the existing index so it can be reset after we've
         // transformed this loop
+        // TODO should unique-ify indices
         case Some(existingNew) => sys.error("(HFT) Error: existing remap to " + existingNew + 
             " encountered when fusing " + sym + " by remapping oldIndex " + oldIndex + 
             " to newIndex " + newIndex)

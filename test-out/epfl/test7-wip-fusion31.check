@@ -62,12 +62,13 @@ val x26 = println(x25)
 -- vertical transformation
 
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Sym(0),Sym(1),ArrayElem(Block(Sym(2)))))
+(VFT) Replaced TP(Sym(5),ArrayLength(Sym(3))) with fixed length: Sym(0)
 
 (VFT) Sym(10) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
-(VFT) No producers found for TP(Sym(10),SimpleLoop(Sym(5),Sym(6),ArrayIfElem(Sym(8),Block(Sym(9)))))
+(VFT) No producers found for TP(Sym(10),SimpleLoop(Sym(5),Sym(6),ArrayIfElem(Sym(8),Block(Sym(9))))), changed to Sym(28) because of existing substitutions
 
 (VFT) Sym(17) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
-(VFT) No producers found for TP(Sym(17),SimpleLoop(Sym(5),Sym(13),ArrayIfElem(Sym(16),Block(Sym(13)))))
+(VFT) No producers found for TP(Sym(17),SimpleLoop(Sym(5),Sym(13),ArrayIfElem(Sym(16),Block(Sym(13))))), changed to Sym(31) because of existing substitutions
 
 (VFT) Fusing consumer TP(Sym(24),SimpleLoop(Sym(20),Sym(21),ArrayElem(Block(Sym(23))))) with real producer: Sym(31) (was Sym(17))
 (VFT) General fusion: remap index to Sym(13), SimpleIndex to Sym(13).

@@ -63,6 +63,7 @@ val x25 = println(x24)
 (VFT) No producers found for TP(Sym(10),SimpleLoop(Const(100),Sym(7),ArrayIfElem(Sym(8),Block(Sym(9)))))
 
 (VFT) No producers found for TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5)))))
+(VFT) Replaced TP(Sym(11),ArrayLength(Sym(6))) with fixed length: Const(100)
 
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2))))), remapping to Sym(28) because of fixed shape
 
@@ -73,7 +74,7 @@ val x25 = println(x24)
 
 (VFT) Finished fusion of prods: List(Sym(6), Sym(28)) and cons: Sym(16), the resulting fused loop is Sym(30)
 
-(VFT) Sym(19) not fused with Sym(10) because not same range (-5).
+(VFT) Sym(19) not fused with Sym(10) because not same range (cConsts: List(Const(100)), pConsts: List(), cShapeSyms: List(), pShapeSyms: List()).
 (VFT) No producers found for TP(Sym(19),SimpleLoop(Const(100),Sym(17),ArrayElem(Block(Sym(18))))), remapping to Sym(34) because of fixed shape
 
 (VFT) all vertically fused: List(Sym(28), Sym(30), Sym(6))

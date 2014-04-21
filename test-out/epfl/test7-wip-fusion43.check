@@ -65,6 +65,7 @@ val x26 = println(x25)
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
 
 (VFT) No producers found for TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5))))), remapping to Sym(29) because of fixed shape
+(VFT) Replaced TP(Sym(7),ArrayLength(Sym(6))) with fixed length: Const(100)
 
 (VFT) Fusing consumer TP(Sym(11),SimpleLoop(Sym(7),Sym(8),ArrayElem(Block(Sym(10))))) with real producer: Sym(29) (was Sym(6))
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(28).

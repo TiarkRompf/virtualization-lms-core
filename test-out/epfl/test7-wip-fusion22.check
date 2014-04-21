@@ -68,7 +68,7 @@ val x21 = println(x20)
 (VFT) Sym(14) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
 (VFT) No producers found for TP(Sym(14),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(13))))), remapping to Sym(27) because of fixed shape
 
-(VFT) all vertically fused: List(Sym(3))
+(VFT) all vertically fused: 
 
 -- after vertical transformation
 var x3 = new Array[Int](100)

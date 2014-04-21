@@ -77,6 +77,7 @@ val x28 = println(x26)
 (VFT) Multiple fusion: remap SimpleIndex(Sym(31)) to Sym(30).
 
 (VFT) Finished fusion of prods: List(Sym(2), Sym(31)) and cons: Sym(10), the resulting fused loop is Sym(33)
+(VFT) Replaced TP(Sym(11),ArrayLength(Sym(10))) with fixed length: Const(100)
 
 (VFT) Fusing consumer TP(Sym(14),SimpleLoop(Sym(11),Sym(12),ReduceElem(Block(Sym(13))))) with real producer: Sym(33) (was Sym(10))
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(32).

@@ -102,14 +102,16 @@ val x43 = println(x42)
 -- vertical transformation
 
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Sym(0),Sym(1),ArrayElem(Block(Sym(2)))))
+(VFT) Replaced TP(Sym(4),ArrayLength(Sym(3))) with fixed length: Sym(0)
 
 (VFT) Fusing consumer TP(Sym(7),SimpleLoop(Sym(4),Sym(5),ArrayElem(Block(Sym(6))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 
 (VFT) Finished fusion of prod: Sym(3) and cons: Sym(7), the resulting fused loop is Sym(3)
+(VFT) Replaced TP(Sym(8),ArrayLength(Sym(7))) with fixed length: Sym(0)
 
-(VFT) Sym(13) not fused with Sym(3) because not same range (-2).
+(VFT) Sym(13) not fused with Sym(3) because not same range (cConsts: List(), pConsts: List(), cShapeSyms: List(Sym(10)), pShapeSyms: List(Sym(0))).
 (VFT) No producers found for TP(Sym(13),SimpleLoop(Sym(10),Sym(11),ArrayElem(Block(Sym(12)))))
 
 (VFT) Fusing consumer TP(Sym(16),SimpleLoop(Sym(10),Sym(14),ArrayElem(Block(Sym(15))))) with reconstructed producer: Sym(13)
@@ -117,8 +119,10 @@ val x43 = println(x42)
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 
 (VFT) Finished fusion of prod: Sym(13) and cons: Sym(16), the resulting fused loop is Sym(13)
+(VFT) Replaced TP(Sym(17),ArrayLength(Sym(16))) with fixed length: Sym(10)
 
 (VFT) No producers found for TP(Sym(21),SimpleLoop(Const(100),Sym(19),ArrayElem(Block(Sym(20)))))
+(VFT) Replaced TP(Sym(22),ArrayLength(Sym(21))) with fixed length: Const(100)
 
 (VFT) Fusing consumer TP(Sym(25),SimpleLoop(Sym(22),Sym(23),ArrayElem(Block(Sym(24))))) with real producer: Sym(21)
 (VFT) General fusion: remap index to Sym(19), SimpleIndex to Sym(20).
@@ -126,16 +130,16 @@ val x43 = println(x42)
 
 (VFT) Finished fusion of prod: Sym(21) and cons: Sym(25), the resulting fused loop is Sym(21)
 
-(VFT) Fusing consumer TP(Sym(28),SimpleLoop(Sym(22),Sym(26),ArrayElem(Block(Sym(27))))) with reconstructed producer: Sym(21) (was Sym(25))
+(VFT) Fusing consumer TP(Sym(28),SimpleLoop(Sym(22),Sym(26),ArrayElem(Block(Sym(27))))) with real producer: Sym(21) (was Sym(25))
 (VFT) General fusion: remap index to Sym(19), SimpleIndex to Sym(20).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
 
 (VFT) Finished fusion of prod: Sym(21) and cons: Sym(28), the resulting fused loop is Sym(21)
 
-(VFT) Sym(31) not fused with Sym(21) because not same range (-3).
+(VFT) Sym(31) not fused with Sym(21) because not same range (cConsts: List(Const(90)), pConsts: List(Const(100)), cShapeSyms: List(), pShapeSyms: List()).
 (VFT) No producers found for TP(Sym(31),SimpleLoop(Const(90),Sym(29),ArrayElem(Block(Sym(30)))))
 
-(VFT) Sym(34) not fused with Sym(31) because not same range (-1).
+(VFT) Sym(34) not fused with Sym(31) because not same range (cConsts: List(Const(100)), pConsts: List(Const(90)), cShapeSyms: List(Sym(22)), pShapeSyms: List()).
 (VFT) No producers found for TP(Sym(34),SimpleLoop(Sym(22),Sym(32),ArrayElem(Block(Sym(33))))), remapping to Sym(50) because of fixed shape
 
 (VFT) Fusing consumer TP(Sym(37),SimpleLoop(Const(100),Sym(35),ArrayElem(Block(Sym(36))))) with reconstructed producer: Sym(21)
@@ -144,9 +148,7 @@ val x43 = println(x42)
 
 (VFT) Finished fusion of prod: Sym(21) and cons: Sym(37), the resulting fused loop is Sym(21)
 
-(VFT) all vertically fused: List(Sym(21))
-List(Sym(13))
-List(Sym(3))
+(VFT) all vertically fused: 
 
 -- after vertical transformation
 val x45 = println(x0)

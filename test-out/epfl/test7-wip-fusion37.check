@@ -68,11 +68,11 @@ val x26 = println(x25)
 (VFT) No producers found for TP(Sym(6),SimpleLoop(Const(30),Sym(1),ArrayElem(Block(Sym(5)))))
 
   
-  (VFT) No producers found for TP(Sym(11),SimpleLoop(Const(10),Sym(8),ArrayElem(Block(Sym(10)))))
+  (VFT) No producers found for TP(Sym(11),SimpleLoop(Const(10),Sym(8),ArrayElem(Block(Sym(10))))), changed to Sym(30) because of existing substitutions
 (VFT) No producers found for TP(Sym(13),SimpleLoop(Const(30),Sym(7),ArrayElem(Block(Sym(12))))), remapping to Sym(32) because of fixed shape
 
   
-  (VFT) No producers found for TP(Sym(18),SimpleLoop(Const(10),Sym(15),ArrayElem(Block(Sym(17)))))
+  (VFT) No producers found for TP(Sym(18),SimpleLoop(Const(10),Sym(15),ArrayElem(Block(Sym(17))))), changed to Sym(37) because of existing substitutions
 (VFT) No producers found for TP(Sym(20),SimpleLoop(Const(30),Sym(14),ArrayElem(Block(Sym(19))))), remapping to Sym(39) because of fixed shape
 
 (VFT) all vertically fused: 

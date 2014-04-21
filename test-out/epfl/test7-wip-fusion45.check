@@ -57,13 +57,14 @@ val x22 = println(x21)
   (VFT) No producers found for TP(Sym(5),SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(4)))))
   
   (VFT) No producers found for TP(Sym(9),SimpleLoop(Const(100),Sym(6),ArrayElem(Block(Sym(8))))), remapping to Sym(26) because of fixed shape
+  (VFT) Replaced TP(Sym(10),ArrayLength(Sym(9))) with fixed length: Const(100)
   
   (VFT) Fusing consumer TP(Sym(14),SimpleLoop(Sym(10),Sym(11),ArrayElem(Block(Sym(13))))) with real producer: Sym(26) (was Sym(9))
   (VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(25).
   (VFT) SimpleCollect+Any fusion: nothing more to do.
   
   (VFT) Finished fusion of prod: Sym(26) and cons: Sym(14), the resulting fused loop is Sym(30)
-(VFT) No producers found for TP(Sym(20),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(19)))))
+(VFT) No producers found for TP(Sym(20),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(19))))), changed to Sym(33) because of existing substitutions
 
 (VFT) all vertically fused: List(Sym(30), Sym(26))
 

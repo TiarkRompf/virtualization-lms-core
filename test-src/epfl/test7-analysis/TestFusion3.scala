@@ -481,19 +481,19 @@ class TestFusion3 extends FileDiffSuite {
       def test(x: Rep[Int]) = {        
         // Test all branches of consumerGoesOverRangeOfProducer
         val range = array(x) { i => i + 1 }
-        val range2 = array(range.length) { i => range.at(i) } //  1
+        val range2 = array(range.length) { i => range.at(i) } 
         print(range2.length)
         val k = x + 2
-        val range3 = array(k) { i => range.at(i) }            // -2
-        val range4 = array(k) { i => range3.at(i) }           // 4
+        val range3 = array(k) { i => range.at(i) }            
+        val range4 = array(k) { i => range3.at(i) }             
         print(range4.length)
         
         val rb = array(100) { i => i + 1 }
-        val rb2 = array(rb.length) { i => rb.at(i) }          //  1
-        val rb3 = array(rb.length) { i => rb2.at(i) }         //  2
-        val rb4 = array(90) { i => rb.at(i) }                 // -3
-        val rb5 = array(rb.length) { i => rb4.at(i) }         // -1
-        val rb6 = array(100) { i => rb.at(i) }                //  3
+        val rb2 = array(rb.length) { i => rb.at(i) }          
+        val rb3 = array(rb.length) { i => rb2.at(i) }         
+        val rb4 = array(90) { i => rb.at(i) }                 
+        val rb5 = array(rb.length) { i => rb4.at(i) }         
+        val rb6 = array(100) { i => rb.at(i) }                
         print(rb3.at(1))
         print(rb5.at(1))
         print(rb6.at(1))
@@ -1045,6 +1045,7 @@ class TestFusion3 extends FileDiffSuite {
         // range's inner is fused into range2, was emitted twice from
         // horizontal (because there are two copies in separate scopes)
         // but TTP only needs one copy since it fused the scopes
+        // TODO successive index substitution
         val range = array(100) { i => array(i) { j => 1 } }
         val range2 = array(100) { i => range.at(i).at(i) }
         print(range.at(0))
@@ -1054,21 +1055,75 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  // // TODO
-  // def testFusionTransform47 = withOutFileChecked(prefix+"fusion47") {
-  //   trait Prog extends MyFusionProg with Impl {
-  //     def test(x: Rep[Int]) = {
-  //       // TODO successive arrayIndex
-  //       val range = array(100) { i => array(i) { j => 1 } }
-  //       val range2 = array(100) { i => 
-  //         array(i) { j => range.at(i).at(j) }
-  //       }
-  //       print(range.at(0))
-  //       print(range2.at(0))
-  //     }
-  //   }
-  //   new Prog with Impl
-  // }
+  def testFusionTransform47 = withOutFileChecked(prefix+"fusion47") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // successive arrayIndex
+        // range.at(i) is substituted to inner of range and inner of range
+        // is fused with inner of range2, so that range2 is cse'd
+        // since it is identical to range
+        val range = array(100) { i => array(i) { j => 1 } }
+        val range2 = array(100) { i => 
+          array(i) { j => range.at(i).at(j) }
+        }
+        print(range.at(0))
+        print(range2.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform48 = withOutFileChecked(prefix+"fusion48") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // vert. fuse range2 & range3, range & range4, but cannot fuse range4 with range2
+        val range = array(100) { i => i + 1 }
+        val range2 = array(100) { i => i + 2 }
+        val range3 = array(range2.length) { i => range2.at(i) + 3 }
+        val range4 = array(range.length) { i => range.at(i) + range2.at(i) + range2.at(0) }
+
+        print(range3.at(0))
+        print(range4.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+/*
+  def testFusionTransform49 = withOutFileChecked(prefix+"fusion49") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // TODO
+        // Once range has been fused with range3, the inner array
+        // becomes independent of the loop index i and could be moved
+        // to the top level and there fused with range2...
+        val range = array(100) { i => 1 }
+        val range2 = array(100) { i => i + 2 }
+        val range3 = array(range.length) { i => 
+          array(100) { j => range2.at(j) + range.at(i) } 
+        }
+
+        print(range3.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform50 = withOutFileChecked(prefix+"fusion50") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // TODO
+        // range's inner is fused into range2 and then successively fused
+        val range = array(100) { i => array(i) { j => 1 } }
+        val range2 = array(100) { i => range.at(i).at(i) }
+        print(range.at(0))
+        print(range2.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+*/
+
+  // TODO MC inserts SI on inner loop, problem with successive detection?
 
 }
 

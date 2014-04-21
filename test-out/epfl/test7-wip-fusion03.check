@@ -32,8 +32,9 @@ val x12 = println(x11)
 -- vertical transformation
 
 (VFT) No producers found for TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(4)))))
+(VFT) Replaced TP(Sym(6),ArrayLength(Sym(5))) with fixed length: Const(100)
 
-(VFT) No producers found for TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayIfElem(Sym(8),Block(Sym(9)))))
+(VFT) No producers found for TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayIfElem(Sym(8),Block(Sym(9))))), changed to Sym(14) because of existing substitutions
 
 (VFT) all vertically fused: 
 

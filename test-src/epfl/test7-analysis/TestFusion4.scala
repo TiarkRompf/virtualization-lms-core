@@ -174,37 +174,26 @@ class TestFusion4 extends FileDiffSuite {
     trait Prog extends MyFusionProgArith with ImplArith {
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
       def test(x: Rep[Int]) = {
-        // TODO body of ds becomes independent of index as result of fusing:
+        // ds is fused with as, bs&cs,
         // as.at(i) -> ax, bs.at(i) -> bx, cs.at(i) -> cx
-        // so body is now on top-level and so x is consumer of ax and bx,
-        // could do another fusion pass (conceptually) as part of
-        // outer scope
-
-        // test some nested loops - the inner ones should be moved to the top level and be fused there
-
-        // previously this did not work completely:
-        // if an inner loop can be hoisted as a result of fusing two outer loops
-        // it would not be considered for outer-level fusion (Wloops is not recalculated)
-        // between iterations.
-        
-        // the question is how far this can be taken: fusion at the innermost level could
-        // cause a loop to be moved to the top level, in which case the top level would
-        // need to apply fusion all over again.
+        // x is now consumer of ax and bx which are in same (fused) scope,
+        // so fuse again
+        // note that ax, bx and cx are indep of i, so hoisted, but fusion happens
+        // on lower level despite them being on higher level because in the
+        // original code they are on the lower level too, they're in scope because
+        // outer loops are fused.
       
-      //val ax = array(50) { j => 1.0 }
         val as = array(100) { i => 
-          array(50) { j => 1.0 }
+          array(50) { j => 1.0 } // ax
         }
-      //val bx = array(50) { j => 2.0 }
         val bs = array(100) { i => 
-          array(50) { j => 2.0 }
+          array(50) { j => 2.0 } // bx
         }
-      //val cx = array(50) { j => 4.0 }
         val cs = array(100) { i => 
-          sum(50) { j => 4.0 }
+          sum(50) { j => 4.0 } // cx
         }
         val ds = array(100) { i => 
-          val x = sum(50) { j => as.at(i).at(j) + bs.at(i).at(j) } // this one depends on i, cannot move up
+          val x = sum(50) { j => as.at(i).at(j) + bs.at(i).at(j) }
           val y = cs.at(i)
           x + y
         }
@@ -222,12 +211,12 @@ class TestFusion4 extends FileDiffSuite {
     trait Prog extends MyFusionProgArith with ImplArith {
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
       def test(x: Rep[Int]) = {
-      // TODO now inner loops stay inside, but ds fused with as,bs and cs so
-      // as.at(i) -> ax, bs.at(i) -> bx, cs.at(i) -> cx
-      // and so scopes unified and x could be fused with ax/bx
-      // but currently no successive replacements
-
-      // test some nested loops - this time they are truly nested (inner ones depend on loop var)
+        // Same as last test, but now inner loops not hoisted because they
+        // depend on the outer index variable.
+        // ds is fused with as, bs&cs,
+        // as.at(i) -> ax, bs.at(i) -> bx, cs.at(i) -> cx
+        // x is now consumer of ax and bx which are in same (fused) scope,
+        // so fuse again
       
         val as = array(100) { i => 
           array(i) { j => 1.0 }
@@ -261,17 +250,9 @@ class TestFusion4 extends FileDiffSuite {
 
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
       def test(x: Rep[Int]) = {    
-        // TODO same as previous test, but with some extra DCE, I think
-        // we should be better than the original loop fusion, e.g.
-        // as goes away
+        // Successive fusion with some extra DCE, better than the original
+        // loop fusion because as actually goes away once it becomes dead
 
-        // test some nested loops
-      
-        // there is a question related to DCE: we might have fused two loops early, 
-        // and by some later fusion one of them becomes dead.
-        
-        // currently this is not handled because fusion goes from outermost inwards
-      
         val as = array(200) { i => 1.0 }
         val bs = array(200) { i => 2.0 }
         val cs = array(100) { i => 
@@ -283,9 +264,7 @@ class TestFusion4 extends FileDiffSuite {
           // this will become as.foo - as.foo = 0  -->  i.e. as becomes dead but is already fused with bs, which is used...
         }
 
-        //print(as)
         print(bs)
-        //print(cs)
         print(ds)
       }
     }

@@ -73,6 +73,7 @@ val x31 = println(x30)
 -- vertical transformation
 
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+(VFT) Replaced TP(Sym(4),ArrayLength(Sym(3))) with fixed length: Const(100)
 
 (VFT) Fusing consumer TP(Sym(8),SimpleLoop(Sym(4),Sym(5),ArrayElem(Block(Sym(7))))) with real producer: Sym(3)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
@@ -81,6 +82,7 @@ val x31 = println(x30)
 (VFT) Finished fusion of prod: Sym(3) and cons: Sym(8), the resulting fused loop is Sym(34)
 
 (VFT) No producers found for TP(Sym(11),SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Sym(10))))), remapping to Sym(38) because of fixed shape
+(VFT) Replaced TP(Sym(12),ArrayLength(Sym(11))) with fixed length: Const(100)
 
 (VFT) Fusing consumer TP(Sym(16),SimpleLoop(Sym(12),Sym(13),ArrayElem(Block(Sym(15))))) with real producer: Sym(38) (was Sym(11))
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(37).

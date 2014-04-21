@@ -61,6 +61,7 @@ val x24 = println(x23)
 (VFT) No producers found for TP(Sym(9),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8)))))
 
 (VFT) No producers found for TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5))))), remapping to Sym(27) because of fixed shape
+(VFT) Replaced TP(Sym(10),ArrayLength(Sym(6))) with fixed length: Const(100)
 
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2))))), remapping to Sym(29) because of fixed shape
 
@@ -78,7 +79,6 @@ val x24 = println(x23)
 (VFT) Finished fusion of prod: Sym(9) and cons: Sym(18), the resulting fused loop is Sym(9)
 
 (VFT) all vertically fused: List(Sym(29), Sym(31), Sym(27))
-List(Sym(9))
 
 -- after vertical transformation
 var x9 = new Array[Int](100)

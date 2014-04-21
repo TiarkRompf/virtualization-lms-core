@@ -37,6 +37,7 @@ val x14 = println(x13)
 -- vertical transformation
 
 (VFT) No producers found for TP(Sym(6),SimpleLoop(Const(100),Sym(4),ArrayElem(Block(Sym(5)))))
+(VFT) Replaced TP(Sym(7),ArrayLength(Sym(6))) with fixed length: Const(100)
 
 (VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2))))), remapping to Sym(17) because of fixed shape
 

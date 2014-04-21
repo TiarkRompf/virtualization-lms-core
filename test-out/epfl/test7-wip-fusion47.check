@@ -1,0 +1,103 @@
+-- full graph
+TP(Sym(3),SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1)))))
+TP(Sym(4),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))))
+TP(Sym(7),ArrayIndex(Sym(4),Sym(5)))
+TP(Sym(8),ArrayIndex(Sym(7),Sym(6)))
+TP(Sym(9),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(8)))))
+TP(Sym(10),SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(9)))))
+TP(Sym(11),ArrayIndex(Sym(4),Const(0)))
+TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(13),ArrayIndex(Sym(10),Const(0)))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12), Sym(14))))
+
+-- before transformation
+var x4 = new Array[Array[Int]](100)
+for (x1 <- 0 until 100) {
+var x3 = new Array[Int](x1)
+for (x2 <- 0 until x1) {
+x3(x2) = 1
+}
+x4(x1) = x3
+}
+val x11 = x4.apply(0)
+val x12 = println(x11)
+var x10 = new Array[Array[Int]](100)
+for (x5 <- 0 until 100) {
+val x7 = x4.apply(x5)
+var x9 = new Array[Int](x5)
+for (x6 <- 0 until x5) {
+val x8 = x7.apply(x6)
+x9(x6) = x8
+}
+x10(x5) = x9
+}
+val x13 = x10.apply(0)
+val x14 = println(x13)
+
+-- vertical transformation
+
+  
+  (VFT) No producers found for TP(Sym(3),SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1)))))
+(VFT) No producers found for TP(Sym(4),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))))
+
+(VFT) Fusing consumer TP(Sym(10),SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(9))))) with reconstructed producer: Sym(4)
+(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(3).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
+  
+  (VFT) Successive simpleIndex fusion of outer: SimpleIndex(Sym(7), Sym(6)) where inner has already been fused: TP(Sym(7),ArrayIndex(Sym(4),Sym(5))) -> Sym(3)
+  (VFT) Fusing consumer TP(Sym(9),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(8))))) with reconstructed producer: Sym(3)
+  (VFT) General fusion: remap index to Sym(2), SimpleIndex to Const(1).
+  (VFT) SimpleCollect+Any fusion: nothing more to do.
+  
+  (VFT) Finished fusion of prod: Sym(3) and cons: Sym(9), the resulting fused loop is Sym(3)
+
+(VFT) Finished fusion of prod: Sym(4) and cons: Sym(10), the resulting fused loop is Sym(4)
+
+(VFT) all vertically fused: 
+
+-- after vertical transformation
+var x4 = new Array[Array[Int]](100)
+for (x1 <- 0 until 100) {
+var x3 = new Array[Int](x1)
+for (x2 <- 0 until x1) {
+x3(x2) = 1
+}
+x4(x1) = x3
+}
+val x11 = x4.apply(0)
+val x12 = println(x11)
+val x16 = println(x11)
+
+-- horizontal transformation
+(HFT) Recording Sym(4), no fusion
+  (HFT) Recording Sym(3), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+var x4 = new Array[Array[Int]](100)
+for (x1 <- 0 until 100) {
+var x3 = new Array[Int](x1)
+for (x2 <- 0 until x1) {
+x3(x2) = 1
+}
+x4(x1) = x3
+}
+val x11 = x4.apply(0)
+val x12 = println(x11)
+val x16 = println(x11)
+
+-- fusion
+var x4 = new Array[Array[Int]](100)
+for (x1 <- 0 until 100) {
+var x3 = new Array[Int](x1)
+for (x2 <- 0 until x1) {
+x3(x2) = 1
+}
+x4(x1) = x3
+}
+val x11 = x4.apply(0)
+val x12 = println(x11)
+val x16 = println(x11)
+-- done

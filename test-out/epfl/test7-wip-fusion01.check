@@ -36,6 +36,7 @@ val x14 = println(x13)
 -- vertical transformation
 
 (VFT) No producers found for TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(4)))))
+(VFT) Replaced TP(Sym(6),ArrayLength(Sym(5))) with fixed length: Const(100)
 
 (VFT) Fusing consumer TP(Sym(12),SimpleLoop(Sym(6),Sym(7),ArrayIfElem(Sym(10),Block(Sym(11))))) with real producer: Sym(5)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(4).

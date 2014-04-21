@@ -110,7 +110,7 @@ val x34 = println(x27)
 (VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(3).
 (VFT) SimpleCollectIf+MultiCollect fusion: add if-then-else with empty array to consumer.
   
-  (VFT) No producers found for TP(Sym(21),SimpleLoop(Sym(18),Sym(19),ArrayElem(Block(Sym(20)))))
+  (VFT) No producers found for TP(Sym(21),SimpleLoop(Sym(18),Sym(19),ArrayElem(Block(Sym(20))))), changed to Sym(50) because of existing substitutions
 
 (VFT) Finished fusion of prod: Sym(5) and cons: Sym(22), the resulting fused loop is Sym(52)
 
