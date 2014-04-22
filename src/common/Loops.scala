@@ -48,7 +48,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case SimpleLoop(s,v,body: Def[A]) => simpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f))
-    case Reflect(SimpleLoop(s,v,body: Def[A]), u, es) if u == Control() => reflectMirrored(Reflect(SimpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f)), mapOver(f,u), f(es)))(mtype(manifest[A])) 
+    case Reflect(SimpleLoop(s,v,body: Def[A]), u, es) if u == Control() => reflectMirrored(Reflect(SimpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos) 
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 
