@@ -26,3 +26,8 @@ more seamless.
 2. Run `sbt test` to run the test suite.
 
 3. Run `sbt publish-local` to install LMS-Core for use in other projects.
+
+
+### License:
+
+Copyright 2010-2014, EPFL. Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
