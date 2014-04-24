@@ -102,6 +102,13 @@ trait ScalaCodegen extends GenericCodegen with Config {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
   
+  override def emitVarDecl(sym: Sym[Any]): Unit = {
+    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = _")
+  }
+
+  override def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
+    stream.println(quote(sym) + " = " + rhs)
+  }
 }
 
 trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {

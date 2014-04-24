@@ -50,7 +50,15 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   override def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
       stream.println(remapWithRef(sym.tp.typeArguments.head) + quote(sym) + " = " + rhs + ";")
   }
-  
+
+  override def emitVarDecl(sym: Sym[Any]): Unit = {
+    stream.println(remapWithRef(sym.tp) + " " + quote(sym) + ";")
+  }
+
+  override def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
+    stream.println(quote(sym) + " = " + rhs + ";")
+  }
+
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
     kernelInputVals = vals
     kernelInputVars = vars
