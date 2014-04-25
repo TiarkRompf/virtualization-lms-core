@@ -30,4 +30,4 @@ more seamless.
 
 ### License:
 
-Copyright 2010-2014, EPFL. Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+Copyright 2010-2014, EPFL. Licensed under the revised BSD License.
