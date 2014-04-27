@@ -114,8 +114,12 @@ trait CGenEqual extends CGenBase with CLikeGenEqual {
     rhs match {
       case Equal(a,b) if(remap(a.tp) == "string" && remap(b.tp) == "string") =>
         emitValDef(sym, quote(a) + ".compare(" + quote(b) + ") == 0")
+      case Equal(a,b) if (!isPrimitiveType(a.tp) && !isPrimitiveType(b.tp) && (remap(a.tp) == remap(b.tp))) =>
+        emitValDef(sym, quote(a) + "->equals(" + quote(b) + ")")
       case NotEqual(a,b) if(remap(a.tp) == "string" && remap(b.tp) == "string") =>
         emitValDef(sym, quote(a) + ".compare(" + quote(b) + ") != 0")
+      case NotEqual(a,b) if (!isPrimitiveType(a.tp) && !isPrimitiveType(b.tp) && (remap(a.tp) == remap(b.tp))) =>
+        emitValDef(sym, "!" + quote(a) + "->equals(" + quote(b) + ")")
       case _ => super.emitNode(sym, rhs)
     }
   }

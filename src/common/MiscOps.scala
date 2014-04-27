@@ -86,10 +86,17 @@ trait CGenMiscOps extends CGenEffect {
     }
   }
 
+  private def quoteRawString(s: Exp[Any]): String = {
+    remap(s.tp) match {
+      case "string" => quote(s) + ".c_str()"
+      case _ => quote(s)
+    }
+  }
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case PrintF(f,x) => stream.println("printf(" + ((Const(f:String)::x).map(quote)).mkString(",") + ");")
-    case PrintLn(s) => stream.println("printf(\"" + format(s) + "\\n\"," + quote(s) + ");")
-    case Print(s) => stream.println("printf(\"" + format(s) + "\"," + quote(s) + ");")
+    case PrintF(f,x) => stream.println("printf(" + ((Const(f:String)::x).map(quoteRawString)).mkString(",") + ");")
+    case PrintLn(s) => stream.println("printf(\"" + format(s) + "\\n\"," + quoteRawString(s) + ");")
+    case Print(s) => stream.println("printf(\"" + format(s) + "\"," + quoteRawString(s) + ");")
     case Exit(a) => stream.println("exit(" + quote(a) + ");")
     case Return(x) => stream.println("return " + quote(x) + ";")
     case Error(s) => stream.println("error(-1,0,\"%s\"," + quote(s) + ");")
