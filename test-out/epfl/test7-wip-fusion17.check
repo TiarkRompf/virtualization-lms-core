@@ -65,13 +65,13 @@ val x26 = println(x25)
 (VFT) Replaced TP(Sym(5),ArrayLength(Sym(3))) with fixed length: Sym(0)
 
 (VFT) Sym(10) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
-(VFT) No producers found for TP(Sym(10),SimpleLoop(Sym(5),Sym(6),ArrayIfElem(Sym(8),Block(Sym(9))))), changed to Sym(28) because of existing substitutions
+(VFT) No producers found for TP(Sym(10),SimpleLoop(Sym(5),Sym(6),ArrayIfElem(Sym(8),Block(Sym(9))))), changed to Sym(28) because of existing substitutions or to reflect effects
 
 (VFT) Sym(17) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
-(VFT) No producers found for TP(Sym(17),SimpleLoop(Sym(5),Sym(13),ArrayIfElem(Sym(16),Block(Sym(13))))), changed to Sym(31) because of existing substitutions
+(VFT) No producers found for TP(Sym(17),SimpleLoop(Sym(5),Sym(13),ArrayIfElem(Sym(16),Block(Sym(13))))), changed to Sym(31) because of existing substitutions or to reflect effects
 
 (VFT) Sym(24) not fused with Sym(10) because not indep (consumer uses index).
-(VFT) No producers found for TP(Sym(24),SimpleLoop(Sym(20),Sym(21),ArrayElem(Block(Sym(23))))), changed to Sym(37) because of existing substitutions
+(VFT) No producers found for TP(Sym(24),SimpleLoop(Sym(20),Sym(21),ArrayElem(Block(Sym(23))))), changed to Sym(37) because of existing substitutions or to reflect effects
 
 (VFT) all vertically fused: 
 
@@ -117,10 +117,10 @@ val x39 = println(x38)
 (HFT) The candidate Sym(31) cannot be fused with the existing FusedSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(3))) because the candidate set depends on Sym(3)
 (HFT) Fusing Sym(31) with fusion set FusedSet(shape = Sym(0), indexSym = Sym(6), loopSyms = List(Sym(28)))
 (HFT) - remapping index: Sym(13) -> Sym(6)
-(HFT) - new loop symbol: Sym(31) -> Sym(42)
+(HFT) - new loop symbol: Sym(31) -> Sym(43)
 (HFT) Recording Sym(37), no fusion
 
-(HFT) all horizontally fused: List(Sym(28), Sym(42))
+(HFT) all horizontally fused: List(Sym(28), Sym(43))
 
 -- after horizontal transformation
 var x3 = new Array[Int](x0)
@@ -137,16 +137,16 @@ val x9 = x7 + x4
 if (x8) x28 += x9
 }
 val x29 = x28.apply(0)
-val x30 = println(x29)
-var x42 = new ArrayBuilder[Int]
+val x41 = println(x29)
+var x43 = new ArrayBuilder[Int]
 for (x6 <- 0 until x0) {
 val x7 = x3.apply(x6)
 val x9 = x7 + x4
-val x41 = x9 > 0
-if (x41) x42 += x6
+val x42 = x9 > 0
+if (x42) x43 += x6
 }
-val x43 = x42.apply(0)
-val x44 = println(x43)
+val x44 = x43.apply(0)
+val x45 = println(x44)
 val x34 = x28.length
 var x37 = new Array[Int](x34)
 for (x21 <- 0 until x34) {
@@ -155,12 +155,12 @@ val x36 = x35 + x21
 x37(x21) = x36
 }
 val x38 = x37.apply(0)
-val x45 = println(x38)
+val x46 = println(x38)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
 TTP(List(Sym(28)),List(SimpleLoop(Sym(0),Sym(6),ArrayIfElem(Sym(8),Block(Sym(9))))),SimpleFatLoop(Sym(0),Sym(6),List(ArrayIfElem(Sym(8),Block(Sym(9))))))
-TTP(List(Sym(42)),List(SimpleLoop(Sym(0),Sym(6),ArrayIfElem(Sym(41),Block(Sym(6))))),SimpleFatLoop(Sym(0),Sym(6),List(ArrayIfElem(Sym(41),Block(Sym(6))))))
+TTP(List(Sym(43)),List(SimpleLoop(Sym(0),Sym(6),ArrayIfElem(Sym(42),Block(Sym(6))))),SimpleFatLoop(Sym(0),Sym(6),List(ArrayIfElem(Sym(42),Block(Sym(6))))))
 
 var x3 = new Array[Int](x0)
 for (x1 <- 0 until x0) {
@@ -169,19 +169,19 @@ x3(x1) = x2
 }
 val x4 = x3.apply(0)
 var x28 = new ArrayBuilder[Int]
-var x42 = new ArrayBuilder[Int]
+var x43 = new ArrayBuilder[Int]
 for (x6 <- 0 until x0) {
 val x7 = x3.apply(x6)
 val x8 = x7 > 0
 val x9 = x7 + x4
-val x41 = x9 > 0
+val x42 = x9 > 0
 if (x8) x28 += x9
-if (x41) x42 += x6
+if (x42) x43 += x6
 }
 val x29 = x28.apply(0)
-val x30 = println(x29)
-val x43 = x42.apply(0)
-val x44 = println(x43)
+val x41 = println(x29)
+val x44 = x43.apply(0)
+val x45 = println(x44)
 val x34 = x28.length
 var x37 = new Array[Int](x34)
 for (x21 <- 0 until x34) {
@@ -190,5 +190,5 @@ val x36 = x35 + x21
 x37(x21) = x36
 }
 val x38 = x37.apply(0)
-val x45 = println(x38)
+val x46 = println(x38)
 -- done

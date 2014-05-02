@@ -49,27 +49,27 @@ val x18 = println(x16)
 
 (VFT) No producers found for TP(Sym(4),SimpleLoop(Const(200),Sym(3),ArrayElem(Block(Const(2.0)))))
 
-(VFT) No producers found for TP(Sym(2),SimpleLoop(Const(200),Sym(1),ArrayElem(Block(Const(1.0))))), remapping to Sym(20) because of fixed shape
+(VFT) No producers found for TP(Sym(2),SimpleLoop(Const(200),Sym(1),ArrayElem(Block(Const(1.0))))), remapping to Sym(21) because of fixed shape
 
   
-  (VFT) No producers found for TP(Sym(8),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(7))))), changed to Sym(22) because of existing substitutions
-(VFT) No producers found for TP(Sym(9),SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(8))))), changed to Sym(23) because of existing substitutions
+  (VFT) No producers found for TP(Sym(8),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(7))))), changed to Sym(23) because of existing substitutions or to reflect effects
+(VFT) No producers found for TP(Sym(9),SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(8))))), changed to Sym(24) because of existing substitutions or to reflect effects
 
-(VFT) Fusing consumer TP(Sym(16),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(15))))) with reconstructed producer: Sym(23) (was Sym(9))
-(VFT) General fusion: remap index to Sym(5), SimpleIndex to Sym(22).
+(VFT) Fusing consumer TP(Sym(16),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(15))))) with reconstructed producer: Sym(24) (was Sym(9))
+(VFT) General fusion: remap index to Sym(5), SimpleIndex to Sym(23).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
   
-  (VFT) Successive simpleIndex fusion of outer: SimpleIndex(Sym(11), Sym(12)) where inner has already been fused: TP(Sym(11),ArrayIndex(Sym(9),Sym(10))) -> Sym(22)
-  (VFT) Fusing consumer TP(Sym(15),SimpleLoop(Sym(10),Sym(12),ArrayElem(Block(Sym(14))))) with reconstructed producer: Sym(22)
-  (VFT) General fusion: remap index to Sym(6), SimpleIndex to Sym(21).
+  (VFT) Successive simpleIndex fusion of outer: SimpleIndex(Sym(11), Sym(12)) where inner has already been fused: TP(Sym(11),ArrayIndex(Sym(9),Sym(10))) -> Sym(23)
+  (VFT) Fusing consumer TP(Sym(15),SimpleLoop(Sym(10),Sym(12),ArrayElem(Block(Sym(14))))) with reconstructed producer: Sym(23)
+  (VFT) General fusion: remap index to Sym(6), SimpleIndex to Sym(22).
   (VFT) SimpleCollect+Any fusion: nothing more to do.
-*** removing self subtraction Sym(21) - Sym(21)
+*** removing self subtraction Sym(22) - Sym(22)
   
-  (VFT) Finished fusion of prod: Sym(22) and cons: Sym(15), the resulting fused loop is Sym(24)
+  (VFT) Finished fusion of prod: Sym(23) and cons: Sym(15), the resulting fused loop is Sym(25)
 
-(VFT) Finished fusion of prod: Sym(23) and cons: Sym(16), the resulting fused loop is Sym(25)
+(VFT) Finished fusion of prod: Sym(24) and cons: Sym(16), the resulting fused loop is Sym(26)
 
-(VFT) all vertically fused: List(Sym(22), Sym(24))
+(VFT) all vertically fused: List(Sym(26), Sym(24))
 List(Sym(25), Sym(23))
 
 -- after vertical transformation
@@ -77,21 +77,21 @@ var x4 = new Array[Double](200)
 for (x3 <- 0 until 200) {
 x4(x3) = 2.0
 }
-val x17 = println(x4)
-var x25 = new Array[Array[Double]](100)
+val x20 = println(x4)
+var x26 = new Array[Array[Double]](100)
 for (x5 <- 0 until 100) {
-var x24 = new Array[Double](x5)
+var x25 = new Array[Double](x5)
 for (x6 <- 0 until x5) {
-x24(x6) = 0.0
+x25(x6) = 0.0
 }
-x25(x5) = x24
+x26(x5) = x25
 }
-val x26 = println(x25)
+val x27 = println(x26)
 
 -- horizontal transformation
 (HFT) Recording Sym(4), no fusion
-(HFT) Recording Sym(25), no fusion
-  (HFT) Recording Sym(24), no fusion
+(HFT) Recording Sym(26), no fusion
+  (HFT) Recording Sym(25), no fusion
 
 (HFT) all horizontally fused: 
 
@@ -100,30 +100,30 @@ var x4 = new Array[Double](200)
 for (x3 <- 0 until 200) {
 x4(x3) = 2.0
 }
-val x17 = println(x4)
-var x25 = new Array[Array[Double]](100)
+val x29 = println(x4)
+var x26 = new Array[Array[Double]](100)
 for (x5 <- 0 until 100) {
-var x24 = new Array[Double](x5)
+var x25 = new Array[Double](x5)
 for (x6 <- 0 until x5) {
-x24(x6) = 0.0
+x25(x6) = 0.0
 }
-x25(x5) = x24
+x26(x5) = x25
 }
-val x26 = println(x25)
+val x30 = println(x26)
 
 -- fusion
 var x4 = new Array[Double](200)
 for (x3 <- 0 until 200) {
 x4(x3) = 2.0
 }
-val x17 = println(x4)
-var x25 = new Array[Array[Double]](100)
+val x29 = println(x4)
+var x26 = new Array[Array[Double]](100)
 for (x5 <- 0 until 100) {
-var x24 = new Array[Double](x5)
+var x25 = new Array[Double](x5)
 for (x6 <- 0 until x5) {
-x24(x6) = 0.0
+x25(x6) = 0.0
 }
-x25(x5) = x24
+x26(x5) = x25
 }
-val x26 = println(x25)
+val x30 = println(x26)
 -- done

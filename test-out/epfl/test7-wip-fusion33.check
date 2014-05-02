@@ -134,7 +134,7 @@ for (x1 <- 0 until 30) {
 x25 ++= x24
 }
 val x26 = x25.apply(0)
-val x27 = println(x26)
+val x36 = println(x26)
 var x31 = new ArrayBuilder[Int]
 for (x2 <- 0 until 10) {
 val x3 = x2 > 5
@@ -150,7 +150,7 @@ for (x1 <- 0 until 30) {
 x32 ++= x31
 }
 val x33 = x32.apply(0)
-val x34 = println(x33)
+val x37 = println(x33)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
@@ -180,7 +180,7 @@ x25 ++= x24
 x32 ++= x31
 }
 val x26 = x25.apply(0)
-val x27 = println(x26)
+val x36 = println(x26)
 val x33 = x32.apply(0)
-val x34 = println(x33)
+val x37 = println(x33)
 -- done

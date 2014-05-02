@@ -11,7 +11,7 @@ import scala.reflect.SourceContext
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
-trait MyFusionProgArith extends Arith with ArrayLoops with Print with OrderingOps {
+trait MyFusionProgArith extends Arith with ArrayLoopsFixes with Print with OrderingOps {
 //with PrimitiveOps with LiftNumeric with BooleanOps {
   def test(x: Rep[Int]): Rep[Unit]
 }
@@ -64,7 +64,7 @@ trait RunnerArith {
       val v = verticalTransf.transformBlock(y)
       // TODO how to transmit state more cleanly?
       val vFused = verticalTransf.FusedSyms.getFusedSyms
-      println("\n(VFT) all vertically fused: " + vFused.values.toList.distinct.mkString("\n"))
+      println("\n(VFT) all vertically fused: " + vFused.values.toList.distinct.map(_._1).mkString("\n"))
 
       println("\n-- after vertical transformation")
       codegen.withStream(new PrintWriter(System.out)) {

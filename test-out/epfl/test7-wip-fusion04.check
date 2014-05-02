@@ -69,7 +69,7 @@ val x14 = x4 + 100
 x15(x1) = x14
 }
 val x16 = x15.apply(0)
-val x17 = println(x16)
+val x19 = println(x16)
 
 -- fusion
 var x15 = new Array[Int](100)
@@ -81,5 +81,5 @@ val x14 = x4 + 100
 x15(x1) = x14
 }
 val x16 = x15.apply(0)
-val x17 = println(x16)
+val x19 = println(x16)
 -- done

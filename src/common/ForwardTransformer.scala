@@ -98,19 +98,21 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
  */
 trait PreservingForwardTransformer extends ForwardTransformer {
   import IR._
+
+  // Implement optimization suggested in ForwardTransformer:
+  // optimization from MirrorRetainBlockTransformer in TestMiscTransform
+  // we want to skip those statements that don't have symbols that need substitution
+  // however we need to recurse into any blocks
+  // Also need to mirror all effects because otherwise they won't be reified
   override def transformStm(stm: Stm): Exp[Any] = stm match {
-    case TP(sym,rhs) => 
-      // Implement optimization suggested in ForwardTransformer:
-      // optimization from MirrorRetainBlockTransformer in TestMiscTransform
-      // we want to skip those statements that don't have symbols that need substitution
-      // however we need to recurse into any blocks
-      if (!syms(rhs).exists(subst contains _) && blocks(rhs).isEmpty) {
-        if (!globalDefs.contains(stm)) 
-          reflectSubGraph(List(stm))
-        sym
-      } else {
-        self_mirror(sym, rhs)
-      }
+    case TP(sym, rhs@Reflect(_, _, _)) =>
+      self_mirror(sym, rhs)
+    case TP(sym, rhs) if (syms(rhs).exists(subst contains _) || !blocks(rhs).isEmpty) =>
+      self_mirror(sym, rhs)
+    case TP(sym, _) => // no mirroring, preserve statements
+      if (!globalDefs.contains(stm)) 
+        reflectSubGraph(List(stm))
+      sym
   }
 }
 

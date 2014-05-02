@@ -1,0 +1,143 @@
+-- full graph
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Sym(0),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(4),ArrayIndex(Sym(3),Const(0)))
+TP(Sym(5),Reflect(Print(Sym(4)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(6),ArrayLength(Sym(3)))
+TP(Sym(8),ArrayIndex(Sym(3),Sym(7)))
+TP(Sym(9),Reflect(Print(Sym(8)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(5))))
+TP(Sym(10),IntPlus(Sym(7),Const(42)))
+TP(Sym(11),Reify(Sym(10),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(9))))
+TP(Sym(12),Reflect(SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(11)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(5))))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+TP(Sym(15),Reify(Sym(13),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+TP(Sym(16),Reflect(SimpleLoop(Const(10),Sym(13),ArrayElem(Block(Sym(15)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+TP(Sym(17),ArrayIndex(Sym(12),Const(1)))
+TP(Sym(18),Reflect(Print(Sym(17)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(16))))
+TP(Sym(19),ArrayIndex(Sym(16),Const(1)))
+TP(Sym(20),Reflect(Print(Sym(19)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(18))))
+TP(Sym(21),Reify(Sym(20),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(5), Sym(12), Sym(16), Sym(18), Sym(20))))
+
+-- before transformation
+var x3 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.apply(0)
+val x5 = println(x4)
+val x6 = x3.length
+var x12 = new Array[Int](x6)
+for (x7 <- 0 until x6) {
+val x8 = x3.apply(x7)
+val x9 = println(x8)
+val x10 = x7 + 42
+x12(x7) = x10
+}
+var x16 = new Array[Int](10)
+for (x13 <- 0 until 10) {
+val x14 = println(x13)
+x16(x13) = x13
+}
+val x17 = x12.apply(1)
+val x18 = println(x17)
+val x19 = x16.apply(1)
+val x20 = println(x19)
+
+-- vertical transformation
+
+(VFT) No producers found for TP(Sym(3),SimpleLoop(Sym(0),Sym(1),ArrayElem(Block(Sym(2)))))
+(VFT) Replaced TP(Sym(6),ArrayLength(Sym(3))) with fixed length: Sym(0)
+
+(VFT) Sym(12) not fused with Sym(3) because not indep (consumer depends on Sym(3)).
+(VFT) No producers found for TP(Sym(12),Reflect(SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(11)))), ...)), remapping to Sym(27) because of fixed shape
+
+(VFT) No producers found for TP(Sym(16),Reflect(SimpleLoop(Const(10),Sym(13),ArrayElem(Block(Sym(15)))), ...)), changed to Sym(30) because of existing substitutions or to reflect effects
+
+(VFT) all vertically fused: 
+
+-- after vertical transformation
+var x3 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.apply(0)
+val x22 = println(x4)
+var x27 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x23 = x3.apply(x1)
+val x24 = println(x23)
+val x25 = x1 + 42
+x27(x1) = x25
+}
+var x30 = new Array[Int](10)
+for (x13 <- 0 until 10) {
+val x28 = println(x13)
+x30(x13) = x13
+}
+val x31 = x27.apply(1)
+val x32 = println(x31)
+val x33 = x30.apply(1)
+val x34 = println(x33)
+
+-- horizontal transformation
+(HFT) Recording Sym(3), no fusion
+(HFT) The candidate Sym(27) cannot be fused with the existing FusedSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(3))) because the candidate set depends on Sym(3)
+(HFT) Recording Sym(27), no fusion
+(HFT) - new loop symbol: Sym(27) -> Sym(39)
+(HFT) Recording Sym(30), no fusion
+(HFT) - new loop symbol: Sym(30) -> Sym(42)
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+var x3 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.apply(0)
+val x36 = println(x4)
+var x39 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x25 = x1 + 42
+val x23 = x3.apply(x1)
+val x37 = println(x23)
+x39(x1) = x25
+}
+var x42 = new Array[Int](10)
+for (x13 <- 0 until 10) {
+val x40 = println(x13)
+x42(x13) = x13
+}
+val x43 = x39.apply(1)
+val x44 = println(x43)
+val x45 = x42.apply(1)
+val x46 = println(x45)
+
+-- fusion
+var x3 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.apply(0)
+val x36 = println(x4)
+var x39 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x25 = x1 + 42
+val x23 = x3.apply(x1)
+val x37 = println(x23)
+x39(x1) = x25
+}
+var x42 = new Array[Int](10)
+for (x13 <- 0 until 10) {
+val x40 = println(x13)
+x42(x13) = x13
+}
+val x43 = x39.apply(1)
+val x44 = println(x43)
+val x45 = x42.apply(1)
+val x46 = println(x45)
+-- done

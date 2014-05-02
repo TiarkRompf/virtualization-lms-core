@@ -66,8 +66,8 @@ x3(x2) = 1
 x4(x1) = x3
 }
 val x11 = x4.apply(0)
-val x12 = println(x11)
 val x16 = println(x11)
+val x17 = println(x11)
 
 -- horizontal transformation
 (HFT) Recording Sym(4), no fusion
@@ -85,8 +85,8 @@ x3(x2) = 1
 x4(x1) = x3
 }
 val x11 = x4.apply(0)
-val x12 = println(x11)
-val x16 = println(x11)
+val x19 = println(x11)
+val x20 = println(x11)
 
 -- fusion
 var x4 = new Array[Array[Int]](100)
@@ -98,6 +98,6 @@ x3(x2) = 1
 x4(x1) = x3
 }
 val x11 = x4.apply(0)
-val x12 = println(x11)
-val x16 = println(x11)
+val x19 = println(x11)
+val x20 = println(x11)
 -- done

@@ -40,7 +40,7 @@ val x14 = println(x13)
   (VFT) No producers found for TP(Sym(4),SimpleLoop(Const(80),Sym(2),ArrayElem(Block(Sym(3)))))
   
   (VFT) No producers found for TP(Sym(7),SimpleLoop(Const(80),Sym(5),ArrayElem(Block(Sym(6))))), remapping to Sym(17) because of fixed shape
-(VFT) No producers found for TP(Sym(12),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(11))))), changed to Sym(20) because of existing substitutions
+(VFT) No producers found for TP(Sym(12),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(11))))), changed to Sym(20) because of existing substitutions or to reflect effects
 
 (VFT) all vertically fused: 
 
@@ -94,7 +94,7 @@ val x19 = x9 * x18
 x20(x1) = x19
 }
 val x21 = x20.apply(0)
-val x22 = println(x21)
+val x24 = println(x21)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
@@ -118,5 +118,5 @@ val x19 = x9 * x18
 x20(x1) = x19
 }
 val x21 = x20.apply(0)
-val x22 = println(x21)
+val x24 = println(x21)
 -- done

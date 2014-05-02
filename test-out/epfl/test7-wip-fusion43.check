@@ -138,7 +138,7 @@ val x32 = x2 + x30
 x33(x1) = x32
 }
 val x34 = x33.apply(0)
-val x35 = println(x34)
+val x43 = println(x34)
 var x3 = new Array[Int](100)
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
@@ -158,7 +158,7 @@ val x38 = x37 + x20
 x39(x1) = x38
 }
 val x40 = x39.apply(0)
-val x41 = println(x40)
+val x44 = println(x40)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
@@ -179,7 +179,7 @@ x3(x1) = x2
 x29(x1) = x28
 }
 val x34 = x33.apply(0)
-val x35 = println(x34)
+val x43 = println(x34)
 val x20 = x3.apply(0)
 var x39 = new Array[Int](100)
 for (x1 <- 0 until 100) {
@@ -189,5 +189,5 @@ val x38 = x37 + x20
 x39(x1) = x38
 }
 val x40 = x39.apply(0)
-val x41 = println(x40)
+val x44 = println(x40)
 -- done

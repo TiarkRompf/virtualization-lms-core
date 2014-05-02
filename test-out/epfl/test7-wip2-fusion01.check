@@ -78,7 +78,7 @@ x1
 }
 x18 += x17
 }
-val x19 = println(x18)
+val x21 = println(x18)
 
 -- fusion
 var x18 = 0
@@ -91,5 +91,5 @@ x1
 }
 x18 += x17
 }
-val x19 = println(x18)
+val x21 = println(x18)
 -- done

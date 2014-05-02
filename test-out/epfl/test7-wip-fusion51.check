@@ -1,0 +1,75 @@
+-- full graph
+TP(Sym(1),Reflect(Print(Const(1)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(3),IntPlus(Sym(2),Const(2)))
+TP(Sym(4),SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(3)))))
+TP(Sym(6),ArrayIndex(Sym(4),Sym(5)))
+TP(Sym(7),IntPlus(Sym(6),Const(3)))
+TP(Sym(8),Reflect(Print(Sym(7)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(1))))
+TP(Sym(9),Reify(Sym(8),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(8))))
+TP(Sym(10),ArrayLength(Sym(4)))
+TP(Sym(11),Reflect(SimpleLoop(Sym(10),Sym(5),ForeachElem(Block(Sym(9)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(1))))
+TP(Sym(12),Reflect(Print(Const(4)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11))))
+TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(1), Sym(11), Sym(12))))
+
+-- before transformation
+val x1 = println(1)
+var x4 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x3 = x2 + 2
+x4(x2) = x3
+}
+val x10 = x4.length
+for (x5 <- 0 until x10) {
+val x6 = x4.apply(x5)
+val x7 = x6 + 3
+val x8 = println(x7)
+}
+val x12 = println(4)
+
+-- vertical transformation
+
+(VFT) No producers found for TP(Sym(4),SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(3)))))
+(VFT) Replaced TP(Sym(10),ArrayLength(Sym(4))) with fixed length: Const(100)
+
+(VFT) Fusing consumer TP(Sym(11),Reflect(SimpleLoop(Sym(10),Sym(5),ForeachElem(Block(Sym(9)))), ...)) with real producer: Sym(4)
+(VFT) Combined effect of fused loop is: (Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(1)))
+(VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(3).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
+
+(VFT) Finished fusion of prod: Sym(4) and cons: Sym(11), the resulting fused loop is Sym(18)
+
+(VFT) all vertically fused: List(Sym(4), Sym(18))
+
+-- after vertical transformation
+val x14 = println(1)
+for (x2 <- 0 until 100) {
+val x3 = x2 + 2
+val x15 = x3 + 3
+val x16 = println(x15)
+}
+val x19 = println(4)
+
+-- horizontal transformation
+(HFT) Recording Sym(18), no fusion
+(HFT) - new loop symbol: Sym(18) -> Sym(24)
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x21 = println(1)
+for (x2 <- 0 until 100) {
+val x3 = x2 + 2
+val x15 = x3 + 3
+val x22 = println(x15)
+}
+val x25 = println(4)
+
+-- fusion
+val x21 = println(1)
+for (x2 <- 0 until 100) {
+val x3 = x2 + 2
+val x15 = x3 + 3
+val x22 = println(x15)
+}
+val x25 = println(4)
+-- done

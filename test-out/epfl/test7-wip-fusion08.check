@@ -89,7 +89,7 @@ val x23 = x20 > 20
 if (x23) x24 += x22
 }
 val x25 = x24.length
-val x26 = println(x25)
+val x28 = println(x25)
 
 -- fusion
 var x24 = new ArrayBuilder[Int]
@@ -102,5 +102,5 @@ val x23 = x20 > 20
 if (x23) x24 += x22
 }
 val x25 = x24.length
-val x26 = println(x25)
+val x28 = println(x25)
 -- done

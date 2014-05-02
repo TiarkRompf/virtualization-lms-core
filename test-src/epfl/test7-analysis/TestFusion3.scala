@@ -11,108 +11,30 @@ import scala.reflect.SourceContext
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
-trait ArrayLoopsExpFixes extends ArrayLoopsExp {
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case SimpleLoop(s, i, body) => 
-      // First process body, otherwise shape or index could take onceSubst
-      val newBody = mirrorFatDef(body, f)
-      simpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], newBody)
-    case _ => super.mirror(e,f)
-  }).asInstanceOf[Exp[A]]
-
-  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
-    case ArrayElem(y) => ArrayElem(reifyEffects(f.reflectBlock(y)))
-    case ReduceElem(y) => ReduceElem(reifyEffects(f.reflectBlock(y)))
-    case ArrayIfElem(c,y) =>
-      // Cheating, need to process body first, otherwise condition takes
-      // onceSubst of body if it's a common subexpression
-      val body = reifyEffects(f.reflectBlock(y))
-      ArrayIfElem(f.reflectBlock(Block(c)),body)
-    case FlattenElem(y) => FlattenElem(reifyEffects(f.reflectBlock(y)))
-    case _ => super.mirrorFatDef(e,f)
-  }).asInstanceOf[Def[A]]
-
-  case class EmptyArray[T]() extends Def[Array[T]]
-  def emptyArray[T:Manifest](): Rep[Array[T]] = EmptyArray[T]()
-}
-
-trait ScalaGenArrayLoopsFatFixes extends ScalaGenArrayLoopsFat {
-  val IR: ArrayLoopsFatExp with ArrayLoopsExpFixes
-  import IR._
-  
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case e@EmptyArray() => 
-      stream.println("var " + quote(sym) + " = new " + sym.tp + "(0)")
-    case _ => super.emitNode(sym, rhs)
-  }
-}
-
-trait ArrayLoopFusionExtractors extends ArrayLoopsExpFixes with LoopFusionExtractors {
-
-  override def unapplySimpleIndex(e: Def[Any]) = e match {
-    case ArrayIndex(a, i) => Some((a,i))
-    case _ => super.unapplySimpleIndex(e)
-  }
-
-  override def unapplySimpleDomain(e: Def[Any]): Option[Exp[Any]] = e match {
-    case ArrayLength(a) => Some(a)
-    case _ => super.unapplySimpleDomain(e)
-  }
-
-
-  override def unapplyFixedDomain(e: Def[Any]): Option[Exp[Int]] = e match {
-    case SimpleLoop(s, _, ArrayElem(_)) => Some(s)
-    case _ => super.unapplyFixedDomain(e)
-  }
-
-  override def unapplySimpleCollect(e: Def[Any]) = e match {
-    case ArrayElem(Block(a)) => Some(a) //TODO: block??
-    case _ => super.unapplySimpleCollect(e)
-  }
-
-  override def unapplySimpleCollectIf(e: Def[Any]) = e match {
-    case ArrayIfElem(c,Block(a)) => Some((a,List(c))) //TODO: block?
-    case _ => super.unapplySimpleCollectIf(e)
-  }
-
-  override def unapplyReduce[T](e: Def[T]) = e match {
-    case ReduceElem(Block(a: Exp[Double])) => // ReduceElem is sum of doubles...
-      Some((a.asInstanceOf[Exp[T]], Some(unit(0.0).asInstanceOf[Exp[T]]), Some(true)))
-    // what about ReduceIfElem?
-    case _ => super.unapplyReduce(e)
-  }
-
-  override def unapplyMultiCollect[T](e: Def[T]) = e match {
-    case FlattenElem(Block(a: Exp[T])) => Some((a.asInstanceOf[Exp[T]], Some((() => {
-        emptyArray()(mtype(a.tp.typeArguments(0)))
-      }).asInstanceOf[() => Exp[T]])))
-    case _ => super.unapplyMultiCollect(e)
-  }
-
-}
-
 trait MyFusionProg extends NumericOps with PrimitiveOps with LiftNumeric with OrderingOps 
-    with BooleanOps with ArrayLoops with Print {
+    with BooleanOps with ArrayLoopsFixes with Print with PrintX with While with Variables with LiftVariables {
   def test(x: Rep[Int]): Rep[Unit]
 }
 
 trait Impl extends MyFusionProg with NumericOpsExp with PrimitiveOpsExp with ArrayLoopsFatExp with PrintExp
-    with IfThenElseFatExp with OrderingOpsExp with BooleanOpsExp with ArrayLoopFusionExtractors 
-    with LoopFusionCore2 { self =>
+    with IfThenElseFatExp with OrderingOpsExp with BooleanOpsExp with ArrayLoopFusionExtractors
+    with ArrayLoopsExpFixes with LoopFusionCore2 with WhileExp with VariablesExp with PrintXExp { self =>
   override val verbosity = 2 // 1: only printlog, 2: also printdbg
   val runner = new Runner { val p: self.type = self }
   runner.run()
 }
 
 trait Codegen extends ScalaGenNumericOps with ScalaGenPrimitiveOps
-  with ScalaGenPrint with ScalaGenOrderingOps with ScalaGenIfThenElse
-  with ScalaGenBooleanOps with ScalaGenArrayLoopsFatFixes { val IR: Impl }
+  with ScalaGenPrint with ScalaGenPrintX with ScalaGenOrderingOps with ScalaGenIfThenElse
+  with ScalaGenBooleanOps with ScalaGenArrayLoopsFatFixes
+  with ScalaGenWhile with ScalaGenVariables { val IR: Impl }
 
 trait FusionCodegen extends Codegen with LoopFusionSchedulingOpt { val IR: Impl }
 
 
 trait Runner /*extends internal.ScalaCompile*/ {
   val p: Impl
+
   def run() = {
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
@@ -123,6 +45,7 @@ trait Runner /*extends internal.ScalaCompile*/ {
     val graph = p.globalDefs
     println("-- full graph")
     graph foreach println
+
 
     println("\n-- before transformation")
     codegen.withStream(new PrintWriter(System.out)) {
@@ -136,18 +59,24 @@ trait Runner /*extends internal.ScalaCompile*/ {
       val IR: p.type = p
     }
 
+    val printgraph = false
     try {
       println("\n-- vertical transformation")
 
       val v = verticalTransf.transformBlock(y)
       // TODO how to transmit state more cleanly?
       val vFused = verticalTransf.FusedSyms.getFusedSyms
-      println("\n(VFT) all vertically fused: " + vFused.values.toList.distinct.mkString("\n"))
+      println("\n(VFT) all vertically fused: " + vFused.values.toList.distinct.map(_._1).mkString("\n"))
 
       println("\n-- after vertical transformation")
+      if (printgraph) {
+        println("-- full graph")
+        p.globalDefs foreach println
+      }
       codegen.withStream(new PrintWriter(System.out)) {
         codegen.emitBlock(v)
       }
+
 
       println("\n-- horizontal transformation")
       horTransf.setVerticallyFusedSyms(vFused)
@@ -158,6 +87,10 @@ trait Runner /*extends internal.ScalaCompile*/ {
 
 
       println("\n-- after horizontal transformation")
+      if (printgraph) {
+        println("-- full graph")
+        p.globalDefs foreach println      
+      }
       codegen.withStream(new PrintWriter(System.out)) {
         codegen.emitBlock(h)
       }
@@ -180,6 +113,33 @@ trait Runner /*extends internal.ScalaCompile*/ {
   }
 }
 
+trait PrintX extends Base {
+  def printX[T:Manifest](s: Rep[T]): Rep[T]
+}
+
+trait PrintXExp extends Print with EffectExp {
+  case class PrintX[T:Manifest](s: Rep[T]) extends Def[T]
+  def printX[T:Manifest](s: Rep[T]) = reflectEffect(PrintX(s))
+  override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+    case PrintX(s) => PrintX(f(s))
+    case _ => super.mirrorDef(e,f)
+  }).asInstanceOf[Def[A]] // why??
+  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case Reflect(PrintX(s), u, es) => reflectMirrored(Reflect(PrintX(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]] // why??
+}
+
+trait ScalaGenPrintX extends ScalaGenEffect {
+  val IR: PrintXExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case PrintX(s) =>  emitValDef(fresh[Unit], "println(" + quote(s) + ")")
+      emitValDef(sym, quote(s))
+    case _ => super.emitNode(sym, rhs)
+  }
+}
 
 
 // =========================================
@@ -521,18 +481,18 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-// TODO fix effects
-
-/*
   def testFusionTransform18 = withOutFileChecked(prefix+"fusion18") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {    
-        // TODO effects    
+        // no  vertical (or hor.) fusion of range2 and range because
+        // range2's effects happen-after the print depending on range
+        // range3 not fused and cannot be moved because of effects
         val range = array(x) { i => i + 1 }
-        print(range.length)
-        val range2 = array(range.length) { i => print(range.at(i)); 1 } 
-        // no  vertical (or hor.) fusion because of ordering of effects
+        print(range.at(0))
+        val range2 = array(range.length) { i => print(range.at(i)); i + 42 } 
+        val range3 = array(10) { i => print(i); i }
         print(range2.at(1))
+        print(range3.at(1))
       }
     }
     new Prog with Impl
@@ -540,11 +500,11 @@ class TestFusion3 extends FileDiffSuite {
 
   def testFusionTransform19 = withOutFileChecked(prefix+"fusion19") {
     trait Prog extends MyFusionProg with Impl {
-      def test(x: Rep[Int]) = {        
+      def test(x: Rep[Int]) = {   
+        // no hor. fusion because of effect dependencies     
         val range = array(100) { i => i + 1 }
         print(range.at(0))
         val range2 = array(100) { i => print(i); 1 } 
-        // no  hor fusion because of ordering of effects
         print(range2.at(1))
       }
     }
@@ -554,16 +514,17 @@ class TestFusion3 extends FileDiffSuite {
   def testFusionTransform20 = withOutFileChecked(prefix+"fusion20") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
-        // TODO AAAAHHHH effects of loops aren't tracked properly! range and print(y) get swapped!      
+        // don't reorder loops, no fusion
         val y = x + 1
         val range = array(100) { i => print(i); i }
+        val range2 = array(200) { i => print(range.at(0)); i }
+        print(range2.at(0))
         print(y)
         print(range.at(0))
       }
     }
     new Prog with Impl
   }
-*/
 
   def testFusionTransform21 = withOutFileChecked(prefix+"fusion21") {
     trait Prog extends MyFusionProg with Impl {
@@ -1089,6 +1050,8 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 /*
+  // TODO MC inserts SI on inner loop, problem with successive detection?
+
   def testFusionTransform49 = withOutFileChecked(prefix+"fusion49") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
@@ -1123,7 +1086,167 @@ class TestFusion3 extends FileDiffSuite {
   }
 */
 
-  // TODO MC inserts SI on inner loop, problem with successive detection?
+  def testFusionTransform51 = withOutFileChecked(prefix+"fusion51") {
+    trait Prog extends MyFusionProg with Impl {
+      // Fuse effectful foreach, removes intermediate array allocation
+      def test(x: Rep[Int]) = {
+        print(1)
+        val range = array(100) {i => i + 2 }
+        range.foreach({ x: Rep[Int] => print(x + 3) })
+        print(4)
+      }
+    }
+    new Prog with Impl
+  }
 
+  def testFusionTransform52 = withOutFileChecked(prefix+"fusion52") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // Fuse effectful producer and pure consumer
+        print(1)
+        val range = array(100) { i => print(i); i + 2 }
+        print(3)
+        val range2 = array(range.length) { i => range.at(i) + 1 } 
+        print(range2.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform53 = withOutFileChecked(prefix+"fusion53") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // fuse pure producer and effectful consumer
+        print(1)
+        val range = array(100) { i => i + 2 }
+        print(3)
+        val range2 = array(range.length) { i => print(range.at(i)); 4 } 
+        print(range.at(0))
+        print(range2.at(5))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform54 = withOutFileChecked(prefix+"fusion54") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // both effectful, but non-overlapping, still no fusion
+        var y = unit(0)
+        val range = array(100) { i => print(i); i + 2 }
+        val range2 = array(range.length) { i => y += range.at(i); i + 4 } 
+        print(range2.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform55 = withOutFileChecked(prefix+"fusion55") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // both effectful, but non-overlapping, still no hor. fusion
+        var y = unit(0)
+        val range = array(100) { i => print(i); i + 2 }
+        val range2 = array(100) { i => y += i; i + 4 } 
+        print(range2.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform56 = withOutFileChecked(prefix+"fusion56") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // range and range3 vertically fused, effectful
+        // so cannot hor. fuse range and range2
+        // Note: after TTP fusion, the fused loop is scheduled before
+        // range2. This is not a bug in loop fusion, rather the scheduler
+        // by design doesn't maintain order between simple and read/write
+        // effects (despite order in reify nodes).
+        val range = array(100) { i => i + 1 }
+        var y = unit(0)
+        val range2 = array(100) { i => y += i; i + 2 }
+        val range3 = array(range.length) { i => print(range.at(i)); i + 3} 
+        print(range.at(0))
+        print(range2.at(0))
+        print(range3.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform57 = withOutFileChecked(prefix+"fusion57") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // multiple consumers, only range & range2 fused because of
+        // effects
+        val range = array(100) { i => i + 1 }
+        val range2 = array(100) { i => print(i); range.at(i) + 2 }
+        val range3 = array(100) { i => print(i); range.at(i) + 3 }
+        val range4 = array(range.length) { i => print(i); range.at(i) + 4 }
+        print(range2.at(0))
+        print(range3.at(0))
+        print(range4.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform58 = withOutFileChecked(prefix+"fusion58") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // multiple producers (zip): fuse range&range2 (effectful),
+        // fuse range3&range4 (effectful), so range5 only fused with
+        // first fused loop, even though non-overlapping effects.
+        // (Easy with overlapping effects because range4 will depend
+        // on range2 and so will only fuse with range4).
+        var y = 0
+        val range = array(100) { i => y += i; i + 1 }
+        val range3 = array(100) { i => print(3); i + 3 }
+
+        val range2 = array(range.length) { i => range.at(i) + 2 }
+        val range4 = array(range3.length) { i => range3.at(i) + 4 }
+
+        val range5 = array(100) { i => range2.at(i) + range4.at(i) }
+        print(range2.at(0))
+        print(range4.at(0))
+        print(range5.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform59 = withOutFileChecked(prefix+"fusion59") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // fuse range&range2 (effectful), range3 not fused because fusion set
+        // is effectful
+        val range = array(100) { i => print(1); i + 1 }
+        val range2 = array(range.length) { i => range.at(i) + 2 }
+        val range3 = array(range2.length) { i => print(range2.at(i)); i + 3 }
+        print(range2.at(0))
+        print(range3.at(0))
+      }
+    }
+    new Prog with Impl
+  }  
+
+  def testFusionTransform60 = withOutFileChecked(prefix+"fusion60") {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // TODO ordering of effects violated: printX has both effect and 
+        // returns value, so some effects pulled over into consumer
+        val range = array(100) { i => printX(i) }
+        val range2 = array(range.length) { i => range.at(i) + 1 }
+        print(range.at(0))
+        print(range2.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+
+  // TODO think about:
+  // Vertical fusion of effectful prod causes fused to have same Reflect around,
+  // so could change order, and then horizontal fusion would fuse in wrong order?
 }
 

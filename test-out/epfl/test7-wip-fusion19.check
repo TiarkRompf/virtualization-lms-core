@@ -1,0 +1,92 @@
+-- full graph
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+TP(Sym(4),ArrayIndex(Sym(3),Const(0)))
+TP(Sym(5),Reflect(Print(Sym(4)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(7),Reflect(Print(Sym(6)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(5))))
+TP(Sym(8),Reify(Const(1),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(7))))
+TP(Sym(9),Reflect(SimpleLoop(Const(100),Sym(6),ArrayElem(Block(Sym(8)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(5))))
+TP(Sym(10),ArrayIndex(Sym(9),Const(1)))
+TP(Sym(11),Reflect(Print(Sym(10)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(9))))
+TP(Sym(12),Reify(Sym(11),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(5), Sym(9), Sym(11))))
+
+-- before transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.apply(0)
+val x5 = println(x4)
+var x9 = new Array[Int](100)
+for (x6 <- 0 until 100) {
+val x7 = println(x6)
+x9(x6) = 1
+}
+val x10 = x9.apply(1)
+val x11 = println(x10)
+
+-- vertical transformation
+
+(VFT) No producers found for TP(Sym(3),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))
+
+(VFT) No producers found for TP(Sym(9),Reflect(SimpleLoop(Const(100),Sym(6),ArrayElem(Block(Sym(8)))), ...)), remapping to Sym(16) because of fixed shape
+
+(VFT) all vertically fused: 
+
+-- after vertical transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.apply(0)
+val x13 = println(x4)
+var x16 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x14 = println(x1)
+x16(x1) = 1
+}
+val x17 = x16.apply(1)
+val x18 = println(x17)
+
+-- horizontal transformation
+(HFT) Recording Sym(3), no fusion
+(HFT) The candidate Sym(16) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(3))) because the candidate set depends on Sym(3)
+(HFT) Recording Sym(16), no fusion
+(HFT) - new loop symbol: Sym(16) -> Sym(23)
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.apply(0)
+val x20 = println(x4)
+var x23 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x21 = println(x1)
+x23(x1) = 1
+}
+val x24 = x23.apply(1)
+val x25 = println(x24)
+
+-- fusion
+var x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x3(x1) = x2
+}
+val x4 = x3.apply(0)
+val x20 = println(x4)
+var x23 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x21 = println(x1)
+x23(x1) = 1
+}
+val x24 = x23.apply(1)
+val x25 = println(x24)
+-- done

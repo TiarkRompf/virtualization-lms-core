@@ -77,7 +77,7 @@ val x18 = !x17
 if (x18) x19 += x16
 }
 val x20 = x19.length
-val x21 = println(x20)
+val x23 = println(x20)
 
 -- fusion
 var x19 = new ArrayBuilder[Int]
@@ -91,5 +91,5 @@ val x18 = !x17
 if (x18) x19 += x16
 }
 val x20 = x19.length
-val x21 = println(x20)
+val x23 = println(x20)
 -- done

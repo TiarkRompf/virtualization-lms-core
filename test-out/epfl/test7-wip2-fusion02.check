@@ -41,9 +41,9 @@ val x14 = println(x10)
 
 (VFT) No producers found for TP(Sym(2),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Const(9.0)))))
 
-(VFT) No producers found for TP(Sym(7),SimpleLoop(Const(50),Sym(5),ArrayElem(Block(Sym(6))))), remapping to Sym(16) because of fixed shape
+(VFT) No producers found for TP(Sym(7),SimpleLoop(Const(50),Sym(5),ArrayElem(Block(Sym(6))))), remapping to Sym(17) because of fixed shape
 
-(VFT) No producers found for TP(Sym(10),SimpleLoop(Const(100),Sym(8),ArrayElem(Block(Sym(9))))), remapping to Sym(19) because of fixed shape
+(VFT) No producers found for TP(Sym(10),SimpleLoop(Const(100),Sym(8),ArrayElem(Block(Sym(9))))), remapping to Sym(20) because of fixed shape
 
 (VFT) all vertically fused: 
 
@@ -52,63 +52,63 @@ var x4 = new Array[Double](50)
 for (x3 <- 0 until 50) {
 x4(x3) = 3.0
 }
-val x11 = println(x4)
+val x16 = println(x4)
 var x2 = new Array[Double](100)
 for (x1 <- 0 until 100) {
 x2(x1) = 9.0
 }
 val x6 = x2.apply(0)
-var x16 = new Array[Double](50)
+var x17 = new Array[Double](50)
 for (x3 <- 0 until 50) {
-x16(x3) = x6
+x17(x3) = x6
 }
-val x17 = println(x16)
-val x18 = println(x2)
+val x18 = println(x17)
+val x19 = println(x2)
 val x9 = x4.apply(0)
-var x19 = new Array[Double](100)
+var x20 = new Array[Double](100)
 for (x1 <- 0 until 100) {
-x19(x1) = x9
+x20(x1) = x9
 }
-val x20 = println(x19)
+val x21 = println(x20)
 
 -- horizontal transformation
 (HFT) Recording Sym(4), no fusion
 (HFT) Recording Sym(2), no fusion
-(HFT) Fusing Sym(16) with fusion set FusedSet(shape = Const(50), indexSym = Sym(3), loopSyms = List(Sym(4)))
+(HFT) Fusing Sym(17) with fusion set FusedSet(shape = Const(50), indexSym = Sym(3), loopSyms = List(Sym(4)))
 (HFT) - already using same index Sym(3)
-(HFT) The candidate Sym(19) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(2))) because the candidate set depends on Sym(2)
-(HFT) Recording Sym(19), no fusion
+(HFT) The candidate Sym(20) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(2))) because the candidate set depends on Sym(2)
+(HFT) Recording Sym(20), no fusion
 
-(HFT) all horizontally fused: List(Sym(4), Sym(16))
+(HFT) all horizontally fused: List(Sym(4), Sym(17))
 
 -- after horizontal transformation
-var x2 = new Array[Double](100)
-for (x1 <- 0 until 100) {
-x2(x1) = 9.0
-}
 var x4 = new Array[Double](50)
 for (x3 <- 0 until 50) {
 x4(x3) = 3.0
 }
-val x11 = println(x4)
-val x6 = x2.apply(0)
-var x16 = new Array[Double](50)
-for (x3 <- 0 until 50) {
-x16(x3) = x6
-}
-val x17 = println(x16)
-val x18 = println(x2)
-val x9 = x4.apply(0)
-var x19 = new Array[Double](100)
+val x23 = println(x4)
+var x2 = new Array[Double](100)
 for (x1 <- 0 until 100) {
-x19(x1) = x9
+x2(x1) = 9.0
 }
-val x20 = println(x19)
+val x6 = x2.apply(0)
+var x17 = new Array[Double](50)
+for (x3 <- 0 until 50) {
+x17(x3) = x6
+}
+val x24 = println(x17)
+val x25 = println(x2)
+val x9 = x4.apply(0)
+var x20 = new Array[Double](100)
+for (x1 <- 0 until 100) {
+x20(x1) = x9
+}
+val x26 = println(x20)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
 TTP(List(Sym(4)),List(SimpleLoop(Const(50),Sym(3),ArrayElem(Block(Const(3.0))))),SimpleFatLoop(Const(50),Sym(3),List(ArrayElem(Block(Const(3.0))))))
-TTP(List(Sym(16)),List(SimpleLoop(Const(50),Sym(3),ArrayElem(Block(Sym(6))))),SimpleFatLoop(Const(50),Sym(3),List(ArrayElem(Block(Sym(6))))))
+TTP(List(Sym(17)),List(SimpleLoop(Const(50),Sym(3),ArrayElem(Block(Sym(6))))),SimpleFatLoop(Const(50),Sym(3),List(ArrayElem(Block(Sym(6))))))
 
 var x2 = new Array[Double](100)
 for (x1 <- 0 until 100) {
@@ -116,18 +116,18 @@ x2(x1) = 9.0
 }
 val x6 = x2.apply(0)
 var x4 = new Array[Double](50)
-var x16 = new Array[Double](50)
+var x17 = new Array[Double](50)
 for (x3 <- 0 until 50) {
 x4(x3) = 3.0
-x16(x3) = x6
+x17(x3) = x6
 }
-val x11 = println(x4)
-val x17 = println(x16)
-val x18 = println(x2)
+val x23 = println(x4)
+val x24 = println(x17)
+val x25 = println(x2)
 val x9 = x4.apply(0)
-var x19 = new Array[Double](100)
+var x20 = new Array[Double](100)
 for (x1 <- 0 until 100) {
-x19(x1) = x9
+x20(x1) = x9
 }
-val x20 = println(x19)
+val x26 = println(x20)
 -- done

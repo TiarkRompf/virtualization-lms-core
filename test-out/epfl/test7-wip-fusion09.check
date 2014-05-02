@@ -39,7 +39,7 @@ val x12 = println(x11)
 (VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(2).
 (VFT) SimpleCollect+Any fusion: nothing more to do.
   
-  (VFT) No producers found for TP(Sym(9),SimpleLoop(Sym(4),Sym(6),ArrayElem(Block(Sym(8))))), changed to Sym(15) because of existing substitutions
+  (VFT) No producers found for TP(Sym(9),SimpleLoop(Sym(4),Sym(6),ArrayElem(Block(Sym(8))))), changed to Sym(15) because of existing substitutions or to reflect effects
 
 (VFT) Finished fusion of prod: Sym(3) and cons: Sym(10), the resulting fused loop is Sym(16)
 
@@ -77,7 +77,7 @@ x15(x6) = x14
 x16 ++= x15
 }
 val x17 = x16.apply(0)
-val x18 = println(x17)
+val x20 = println(x17)
 
 -- fusion
 var x16 = new ArrayBuilder[Int]
@@ -91,5 +91,5 @@ x15(x6) = x14
 x16 ++= x15
 }
 val x17 = x16.apply(0)
-val x18 = println(x17)
+val x20 = println(x17)
 -- done

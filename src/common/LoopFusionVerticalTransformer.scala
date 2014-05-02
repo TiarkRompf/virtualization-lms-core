@@ -4,10 +4,25 @@ package common
 import util.GraphUtil
 import scala.collection.mutable.{HashMap, HashSet}
 
+
 // TODO documentation
 trait LoopFusionVerticalTransformer extends PreservingForwardTransformer { 
   val IR: LoopFusionCore2
   import IR.{__newVar => _, _}
+
+  type OldNewSyms = (Sym[Any], Sym[Any])
+  type LoopEffects = Option[(Summary, List[Exp[Any]])]
+  object LoopOrReflectedLoop {
+    def unapply(a: Def[Any]): Option[(AbstractLoop[_], LoopEffects)] = a match {
+      case Reflect(loop: AbstractLoop[_], summ, deps) => Some((loop, Some((summ, deps))))
+      case loop: AbstractLoop[_] => Some((loop, None))
+      case _ => None
+    }
+  }
+  def stmShort(stm: Stm) = stm match {
+    case TP(s@Sym(_), Reflect(loop: AbstractLoop[_], _, _)) => "TP(" + s + ",Reflect(" + loop + ", ...))"
+    case _ => stm.toString
+  }
 
   // --- per scope datastructures ----
   
@@ -69,7 +84,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       }
       case _ => None
     }
-    replacement.map( rep => loopsToFixedLengths += (sym -> rep) )
+    replacement.map({ rep => loopsToFixedLengths += (sym -> rep) })
     if (replacement.isDefined && shape != replacement.get)
       subst += (shape -> replacement.get)
     replacement
@@ -80,64 +95,78 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
   val simpleIndexReplacements = new HashMap[(Sym[Any], Sym[Any]), Exp[Any]]
 
   object FusedSyms {
-    private val fusedSyms = new HashMap[Sym[Any], HashSet[Sym[Any]]]
+
+    class FSet(private var effects: LoopEffects, set: HashSet[Sym[Any]]) {
+      def add(s: Sym[Any]) = set.add(s)
+      def addEffect(e: LoopEffects): Unit = {
+        // TODO asserts?
+        assert(!(effects.isDefined && e.isDefined && effects != e), "(VFT) ERROR: Can't fuse effects!")
+        e match {
+          case Some(_) => this.effects = e
+          case None =>
+        }
+      }
+      def foreach(f: Sym[Any] => Unit) = set.foreach(f)
+      def getSet = set.toSet
+      def getSubstList(map: Map[Exp[Any], Exp[Any]]) = {
+        set.map({ sym => getSubstSym(sym, map) }).toList
+      }
+      def getEffects = effects
+      override def toString = "FSet(set = " + set + ", effects: " + effects + ")"
+    }
+
+    private val fusedSyms = new HashMap[Sym[Any], FSet]
     private val fusedSubst = new HashMap[Exp[Any], Exp[Any]]
     
     def recordRemapped(oldSym: Sym[Any], newSym: Sym[Any]) = {
-      fusedSubst.put(oldSym, newSym)  
+      fusedSubst.put(oldSym, newSym)
+      fusedSyms.get(oldSym).map({ set =>
+        fusedSyms.put(newSym, set)
+        set.add(newSym)
+      })  
     }
-    def recordFused(pSym: Sym[Any], cSym: Sym[Any], newCSym: Exp[Any], otherProds: List[(Sym[Any], Sym[Any])]) = {
+    def recordFused(pSym: Sym[Any], cSym: Sym[Any], newCSym: Sym[Any], otherProds: List[OldNewSyms],
+        combinedEffect: LoopEffects) = {
       val set = fusedSyms.get(pSym) match {
-        case Some(set) => set
-        case None => 
-          val set = HashSet(pSym)
-          fusedSyms.put(pSym, set)
-          set
+        case Some(fset) => fset.addEffect(combinedEffect); fset
+        case None =>
+          val fset = new FSet(combinedEffect, HashSet(pSym))
+          fusedSyms.put(pSym, fset)
+          fset
       }
       set.add(cSym)
+      set.add(newCSym)
       fusedSyms.put(cSym, set)
+      fusedSyms.put(newCSym, set)
       fusedSubst.put(cSym, newCSym)
       newCSym match {
         case s@Sym(_) => fusedSyms.put(s, set)
         case _ =>
       }
-      otherProds.foreach { prod => 
-        (fusedSyms.get(prod._2) match {
-          case Some(`set`) => Set() // nothing to do, already in same set
-          case Some(pSet) => pSet
-          case None => Set(prod._1, prod._2)
-        }).foreach({ pSym =>
+      otherProds.foreach({ prod => 
+        ((fusedSyms.get(prod._2) match {
+          case Some(`set`) => Set()
+          case Some(pSet) => pSet.getSet
+          case None => Set()
+        }) ++ Set(prod._1, prod._2)).foreach({ pSym =>
           set.add(pSym)
           fusedSyms.put(pSym, set)
         })
-      }
-    }
-
-    def getOldAndNew(pSym: Sym[Any]): Set[Sym[Any]] = {
-      val fused = fusedSyms.get(pSym).getOrElse(HashSet(pSym))
-      fused.foreach(s => fused.add(getSubstSym(s)))
-      fused.toSet
-    }
-
-    def getNew(syms: List[Sym[Any]]): List[Sym[Any]] = {
-      syms.flatMap(sym => fusedSyms.get(sym).getOrElse(List(sym)))
-        .flatMap(n => subst.get(n) match { // use the new expressions
-          case Some(nn@Sym(_)) => List(nn)
-          case Some(Const(_)) => List()
-          case _ => List(n)
-        })
-    }
-
-    def getFusedSyms(): HashMap[Sym[Any], List[Sym[Any]]] = {
-      val fusedSubstMap = fusedSubst.toMap
-      val newMap = new HashMap[Sym[Any], List[Sym[Any]]]()
-      val setSet: Set[HashSet[Sym[Any]]] = fusedSyms.values.toSet
-
-      setSet.map({ symSet => 
-        symSet.map({ sym => getSubstSym(sym, fusedSubstMap) }).toList
-      }).filter( _.length > 1 ).foreach({ symList =>
-        symList.foreach({ sym => newMap.put(sym, symList) })
       })
+    }
+
+    def getSet(pSym: Sym[Any]): Option[FSet] = fusedSyms.get(pSym)
+
+    def getFusedSyms(): HashMap[Sym[Any], (List[Sym[Any]], Boolean)] = {
+      val fusedSubstMap = fusedSubst.toMap
+      val newMap = new HashMap[Sym[Any], (List[Sym[Any]], Boolean)]()
+      val setSet: Set[FSet] = fusedSyms.values.toSet
+
+      setSet.map({ fset => 
+          (fset.getSubstList(fusedSubstMap), fset.getEffects.isDefined)
+        }).filter( _._1.length > 1 ).foreach({ symList =>
+          symList._1.foreach({ sym => newMap.put(sym, symList) })
+        })
       newMap
     }
   }
@@ -149,78 +178,30 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
   }
 
   override def transformStm(stm: Stm): Exp[Any] = { 
-    // println("--transforming: " + stm)
+    // println("--transforming: " + stmShort(stm))
     val transformedSym = stm match {
 
       case TP(_, SimpleIndex(pSym@Sym(_), cIndex@Sym(_))) => 
         (subst.get(pSym) match {
           case Some(newPSym@Sym(_)) => simpleIndexReplacements.get((newPSym, cIndex))
           case _ => None
-        }).orElse(simpleIndexReplacements.get((pSym, cIndex))) 
-          .getOrElse(super.transformStm(stm))
+        }).orElse(simpleIndexReplacements.get((pSym, cIndex)))
+        .map({ case s@Sym(_) => findDefinition(s) match {
+            case Some(TP(s, Reify(innerSym, _, _))) => 
+              // Don't duplicate effects from producer, since effectful
+              // producer won't be DCE'd, so it will be horizontally
+              // fused in.
+              innerSym
+            case _ => s
+          }
+          case c => c
+        }).getOrElse(super.transformStm(stm))
 
-      case TP(sym, loop: AbstractLoop[_]) => // Check if we can do loop fusion
-        printlog("")
-        val (prod, reconstrProds) = findProducers(sym, loop.size, loop.v, loop.body)
-        
-        def printProd(p: (Sym[Any], Sym[Any])): String = p._2 + (if (p._1 == p._2) "" else " (was " + p._1 + ")")
+      case TP(sym, Reflect(loop: AbstractLoop[_], sum, deps)) =>
+        transformLoop(stm, sym, loop, Some((sum, deps)))
 
-        if (prod.isDefined) {
-          printlog("(VFT) Fusing consumer " + stm + " with real producer: " + printProd(prod.get) +
-            (if (!reconstrProds.isEmpty)
-              " and then with reconstructed producers: " + reconstrProds.map(printProd(_))
-            else ""))
-            
-        } else if (!reconstrProds.isEmpty) {
-          printlog("(VFT) Fusing consumer " + stm + " with reconstructed producer: " + printProd(reconstrProds(0)) +
-            (if (!reconstrProds.tail.isEmpty)
-              " and then with: " + reconstrProds.tail.map(printProd(_))
-            else ""))
-        }
-        val allProds = prod.map(List(_)).getOrElse(List()) ++ reconstrProds
-
-        val resultLoop = allProds.headOption
-          .flatMap({t => findDefinition(t._2)})
-          .map({ case TP(s, p: AbstractLoop[_]) => 
-            val otherProds = allProds.tail
-            val f = fuse(s, p, p.size, p.v, p.body, sym, loop, loop.size, loop.v, loop.body, otherProds)
-            FusedSyms.recordFused(s, sym, f, otherProds)
-            f
-          })     
-
-        seenLoops += sym
-
-        resultLoop match {
-          case Some(newLoop@Sym(_)) =>  // fused
-            recordFixedLengths(sym, loop)
-            newLoop
-          case _ => // not fused
-            val remapped = remapIndexIfFixedShape(recordFixedLengths(sym, loop), loop.v)
-            val superTransformed = super.transformStm(stm)
-            val origSym = stm.lhs()(0)
-            // loop can be transformed because of subst from outer loop
-            val changed = (superTransformed != origSym)
-            if (changed) {
-              superTransformed match {
-                case s@Sym(_) => findDefinition(s) match {
-                  case Some(TP(newSym@Sym(_), loop: AbstractLoop[_])) => 
-                    seenLoops += newSym
-                    recordFixedLengths(newSym, loop)
-                    FusedSyms.recordRemapped(sym, newSym)
-                  case _ => sys.error("ERROR VFT matching error")
-                }
-                case _ => sys.error("ERROR VFT matching error")
-              }
-            }
-            if (remapped) {
-              printdbg("(VFT) No producers found for " + stm + ", remapping to " + superTransformed + " because of fixed shape")
-            } else if (changed) {
-              printdbg("(VFT) No producers found for " + stm + ", changed to " + superTransformed + " because of existing substitutions")
-            } else {
-              printdbg("(VFT) No producers found for " + stm)
-            }
-            superTransformed
-        }
+      case TP(sym, loop: AbstractLoop[_]) => 
+        transformLoop(stm, sym, loop, None)
 
       case tp@TP(_, SimpleDomain(sym@Sym(_))) =>
         loopsToFixedLengths.get(sym) match {
@@ -232,7 +213,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
 
       case _ =>
         val superTransformed = super.transformStm(stm)
-//        println("+++ passed through: " + stm + " -> " + superTransformed)
+//        println("+++ passed through: " + stmShort(stm) + " -> " + superTransformed)
         superTransformed
     }
     // if (transformedSym == stm.lhs()(0)) {
@@ -240,19 +221,94 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     // } else {
     //   transformedSym match {
     //     case s@Sym(_) => 
-    //       println("--transformed " + stm + " to ")
+    //       println("--transformed " + stmShort(stm) + " to ")
     //       println("----" + s + " = " + findDefinition(s))
     //     case c =>
-    //       println("--transformed " + stm + " to " + c)
+    //       println("--transformed " + stmShort(stm) + " to " + c)
     //   }
     // }
     transformedSym
   }
 
-  def fuse[P: Manifest, C: Manifest](
+  def transformLoop[A:Manifest, B](stm: Stm, sym: Sym[A], loop: AbstractLoop[B], 
+      effects: LoopEffects): Exp[Any] = {
+    
+    printlog("")
+    val (prod, reconstrProds, combinedEffect) = 
+      findProducers(sym, loop.size, loop.v, loop.body, effects)
+    
+    def printProd(p: OldNewSyms): String = p._2 + (if (p._1 == p._2) "" else " (was " + p._1 + ")")
+
+    val msg = if (prod.isDefined) {
+      "(VFT) Fusing consumer " + stmShort(stm) + " with real producer: " + printProd(prod.get) +
+        (if (reconstrProds.isEmpty) ""
+        else " and then with reconstructed producers: " + reconstrProds.map(printProd(_)))
+
+    } else if (!reconstrProds.isEmpty) {
+      "(VFT) Fusing consumer " + stmShort(stm) + " with reconstructed producer: " + printProd(reconstrProds(0)) +
+        (if (reconstrProds.tail.isEmpty) ""
+        else " and then with: " + reconstrProds.tail.map(printProd(_)))
+    } else ""
+    if (msg.length > 0) {
+      printlog(msg)
+      if (combinedEffect.isDefined)
+        printlog("(VFT) Combined effect of fused loop is: " + combinedEffect.get)
+    }
+
+    val allProds = prod.map(List(_)).getOrElse(List()) ++ reconstrProds
+
+    val resultLoop = allProds.headOption
+      .flatMap({t => findDefinition(t._2)})
+      .map({ case TP(s, LoopOrReflectedLoop(p, _)) =>
+        val otherProds = allProds.tail
+        val f = fuseProdAndCons(s, p, p.size, p.v, p.body, sym, loop, loop.size, loop.v, loop.body, otherProds, stm, combinedEffect)
+        f match { 
+          case fSym@Sym(_) => FusedSyms.recordFused(s, sym, fSym, otherProds, combinedEffect) 
+          case _ => sys.error("(VFT) ERROR non-sym") }
+        f
+      })     
+
+    seenLoops += sym
+
+    resultLoop match {
+      case Some(newLoop@Sym(_)) =>  // fused
+        recordFixedLengths(sym, loop)
+
+        newLoop
+      case _ => // not fused
+        val remapped = remapIndexIfFixedShape(recordFixedLengths(sym, loop), loop.v)
+        val superTransformed = super.transformStm(stm)
+        val origSym = stm.lhs()(0)
+        // loop can be transformed because of subst from outer loop
+        val changed = (superTransformed != origSym)
+        if (changed) {
+          superTransformed match {
+            case s@Sym(_) => findDefinition(s) match {
+              case Some(TP(newSym@Sym(_), LoopOrReflectedLoop(loop, _))) => 
+                seenLoops += newSym
+                recordFixedLengths(newSym, loop)
+                FusedSyms.recordRemapped(sym, newSym)
+              case _ => sys.error("ERROR VFT matching error")
+            }
+            case _ => sys.error("ERROR VFT matching error")
+          }
+        }
+        if (remapped) {
+          printdbg("(VFT) No producers found for " + stmShort(stm) + ", remapping to " + superTransformed + " because of fixed shape")
+        } else if (changed) {
+          printdbg("(VFT) No producers found for " + stmShort(stm) + ", changed to " + superTransformed + " because of existing substitutions or to reflect effects")
+        } else {
+          printdbg("(VFT) No producers found for " + stmShort(stm))
+        }
+        superTransformed
+    }
+  }
+
+  def fuseProdAndCons[P: Manifest, C: Manifest](
       pSym: Sym[P], pLoop: Def[P], pSize: Exp[Int], pIndex: Sym[Int], pBody: Def[P], 
       cSym: Sym[C], cLoop: Def[C], cSize: Exp[Int], cIndex: Sym[Int], cBody: Def[C],
-      otherProds: List[(Sym[Any], Sym[Any])],
+      otherProds: List[OldNewSyms],
+      stm: Stm, effects: LoopEffects,
       outerMulti: Option[(Sym[Any], Sym[Int])] = None): Exp[Any] = {
     assert(otherProds.isEmpty || SimpleCollect.unapply(pBody).isDefined, 
         "(VFT) Error: cannot have multiple producers unless they're SimpleCollects")
@@ -263,7 +319,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
         subst += (cIndex -> pIndex)
         simpleIndexReplacements += ((pSym, cIndex) -> pRes)
       case _ => return fusionError("General fusion failed, no ResultBlock extractor for producer.", 
-        cSym, cLoop, pSym, cIndex)
+        cSym, cLoop, pSym, cIndex, stm)
     }
     val res = pBody match { // return None to use super.transform, or create fused consumer yourself
       case SimpleCollect(_) => 
@@ -277,14 +333,14 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
           // pA wouldn't be a producer, because the consumer depends on setA through more
           // than just the SimpleIndex(pA, index).
           otherProds.map({t => findDefinition(t._2).get})
-            .foreach({ case TP(otherPSym, otherP: AbstractLoop[_]) => otherP.body match {
+            .foreach({ case TP(otherPSym, LoopOrReflectedLoop(otherP, _)) => otherP.body match {
               case ResultBlock(otherPRes) =>
                 printdbg("(VFT) Multiple fusion: remap SimpleIndex(" + otherPSym + ") to " + otherPRes + ".")
                 simpleIndexReplacements += ((otherPSym, cIndex) -> otherPRes)
               case _ => 
                 otherProds.foreach(t => simpleIndexReplacements -= ((t._2, cIndex)))
-                return fusionError("Multiple producer fusion failed, no ResultBlock extractor for producer.", 
-                  cSym, cLoop, pSym, cIndex)
+                return fusionError("Multiple producer fusion failed, no ResultBlock extractor for producer " + otherPSym, 
+                  cSym, cLoop, pSym, cIndex, stm)
             }})     
         }
         None
@@ -294,7 +350,8 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
           case SimpleCollect(cRes) =>
             printdbg("(VFT) SimpleCollectIf+SimpleCollect fusion: use producer loop with consumer body.")
             onceSubst += (pRes -> cRes)
-            Some(self_mirror(cSym, pLoop))
+            Some(self_mirror(cSym, wrapInReflect(pLoop, effects)))
+
           case SimpleCollectIf(_,cConds) =>
             printdbg("(VFT) SimpleCollectIf+SimpleCollectIf fusion: add producer conditions to consumer loop.")
             // If the condition also contains SimpleIndex, need to reflect full block first
@@ -320,16 +377,16 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
         cBody match {
           case Reduce(_, _, Some(false)) | Reduce(_, _, None) => 
             return fusionError("MultiCollect+Reduce fusion failed, reduce not associative.",
-              cSym, cLoop, pSym, cIndex)
+              cSym, cLoop, pSym, cIndex, stm)
           case _ =>
         }
 
         val innerFused = findDefinition(pRes) match {
-          case Some(TP(innerS@Sym(_), innerL: AbstractLoop[_])) => 
+          case Some(TP(innerS@Sym(_), LoopOrReflectedLoop(innerL, _))) => 
             val innerRes = innerL.body match {
               case ResultBlock(r) => r
               case _ => return fusionError("MultiCollect+Any fusion failed, no ResultBlock extractor for inner.",
-                cSym, cLoop, pSym, cIndex)
+                cSym, cLoop, pSym, cIndex, stm)
             }
             val outerMultiSI = outerMulti.getOrElse((pSym, cIndex))
             simpleIndexReplacements += (outerMultiSI -> innerRes)
@@ -340,15 +397,17 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
             // - cannot consume multiple producers on its new scope inside the MC because
             //   the loops in that scope weren't visible to the consumer before
 
-            val innerFused = fuse(innerS, innerL, innerL.size, innerL.v, innerL.body,
-              cSym, cLoop, cSize, cIndex, cBody, Nil, Some(outerMultiSI))
+  // TODO what about effects in MC? stm and None here not correct????
+
+            val innerFused = fuseProdAndCons(innerS, innerL, innerL.size, innerL.v, innerL.body,
+              cSym, cLoop, cSize, cIndex, cBody, Nil, stm, None, Some(outerMultiSI))
             (innerS, innerFused) match {
-              case (prod@Sym(_), cons@Sym(_)) => FusedSyms.recordFused(prod, cons, cons, Nil)
+              case (prod@Sym(_), cons@Sym(_)) => FusedSyms.recordFused(prod, cons, cons, Nil, None)
               case _ =>
             }
             innerFused
           case _ => return fusionError("MultiCollect+Any fusion failed, inner loop not recognized.",
-              cSym, cLoop, pSym, cIndex)
+              cSym, cLoop, pSym, cIndex, stm)
         }
 
         cBody match {
@@ -358,19 +417,19 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
             None
           case _ =>
             onceSubst += (pRes -> innerFused) 
-            Some(self_mirror(cSym, pLoop))
+            Some(self_mirror(cSym, wrapInReflect(pLoop, effects)))
         }        
 
       case _ => 
         return fusionError("Fusion failed, unknown producer type: " + pBody,
-          cSym, cLoop, pSym, cIndex)
+          cSym, cLoop, pSym, cIndex, stm)
     }
 
     (res match {
       case Some(s) => s
       case None => 
         onceSubst += (cSize -> pSize)
-        super.transformStm(TP(cSym, cLoop))
+        super.transformStm(TP(cSym, wrapInReflect(cLoop, effects)))
     }) match {
       case newSym@Sym(_) =>
         printlog(""); printlog("(VFT) Finished fusion of " + 
@@ -382,11 +441,22 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
   }
 
   // TODO can we really continue? should propagate error to avoid registration of non-fused?
-  def fusionError(msg: String, cSym: Sym[Any], cLoop: Def[Any], pSym: Sym[Any], cIndex: Sym[Int]): Exp[Any] = {
+  def fusionError(msg: String, cSym: Sym[Any], cLoop: Def[Any], pSym: Sym[Any], cIndex: Sym[Int], stm: Stm): Exp[Any] = {
     printlog("(VFT) Error: " + msg)
     subst -= cIndex
     simpleIndexReplacements -= ((pSym, cIndex))
-    super.transformStm(TP(cSym, cLoop))
+    super.transformStm(stm)
+  }
+
+  // TODO drop effects if not original?
+  def wrapInReflect(loop: Def[Any], effects: LoopEffects): Def[Any] = effects match {
+    case None => loop
+    case Some((summ, deps)) => loop match {
+      case Reflect(_, otherSumm, otherDeps) => 
+        assert(summ == otherSumm && deps == otherDeps, "(VFT) Error wrong effects")
+        loop
+      case _ => Reflect(loop, summ, deps)
+    }
   }
 
   // transformation helpers
@@ -404,24 +474,33 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     reflectBlock(Block(ite))
   }
 
+  def getSubstSym(sym: Sym[Any]): Sym[Any] = subst.get(sym) match {
+    case Some(s@Sym(_)) => s
+    case _ => sym
+  }
   def getSubstSym(sym: Sym[Any],
-      subst2: scala.collection.immutable.Map[Exp[Any], Exp[Any]] = subst): Sym[Any] = subst2.get(sym) match {
+      subst2: Map[Exp[Any], Exp[Any]] = subst): Sym[Any] = subst2.get(sym) match {
     case Some(s@Sym(_)) => s
     case _ => sym
   }
 
   // finding producer helpers
-  // return pSym, pSubstSym
-  def findProducers[A](cSym: Sym[A], cShape: Exp[Int], cIndex: Sym[Int], cBody: Def[A]): (Option[(Sym[Any], Sym[Any])], List[(Sym[Any], Sym[Any])]) = {
+
+  /** Returns the real producer (if any), the list of reconstructed producers (if any)
+   *  and the resulting effects of the fused loop (currently only fuse loops if at most
+   *  one is effectful).
+   */
+  def findProducers[A](cSym: Sym[A], cShape: Exp[Int], cIndex: Sym[Int], cBody: Def[A],
+      cEffects: LoopEffects): (Option[OldNewSyms], List[OldNewSyms], LoopEffects) = {
     val cIndexStms = getFatDependentStuff(initialDefs)(List(cIndex))
     
-    val prodSyms = cIndexStms.collect({
+    val allProds = cIndexStms.collect({
       case TP(_, SimpleIndex(pSym@Sym(_), `cIndex`)) => pSym 
     }).map({ pSym => 
       // Scope can change as a result of fusion
-      // A) if fusion removes dep on index -> move to outer scope TODO
+      // A) if fusion removes dep on index -> move to outer scope TODO testFusionTransform49
       // B) if outer loops fused inner loops are now in same scope
-      // +) can fuse successive inner loops
+      // +) can fuse successive inner loops TODO testFusionTransform50
       val sameScope = seenLoops.contains(pSym)
       def notSameScope() = {
         printdbg("(VFT) " + cSym + " not fused with " + pSym + " because not in same level/scope.")
@@ -454,23 +533,50 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       range._1 > 0
     }).map({ case (pSym, newPSym, range) =>
       (pSym, newPSym, range._1)
-    }).filter({ case (pSym, newPSym, range) =>
-      val (msg, indep) = isIndepConsumer(cSym, cIndex, cBody, pSym, newPSym)
+    }).map({ case (pSym, newPSym, range) =>
+      val (msg, indep, pEffect) = isIndepConsumer(cSym, cIndex, cBody, cEffects, pSym, newPSym)
+      (pSym, newPSym, range, pEffect, msg, indep)
+    }).filter({ case (pSym, newPSym, range, pEffect, msg, indep) =>
       if (indep < 0) {
         printdbg("(VFT) " + cSym + " not fused with " + pSym + " because not indep (" + msg + ").")
       }
       indep > 0
-    }).sortWith((a, b) => a._3 < b._3)
+    }).sortWith({ 
+      (a, b) => a._3 < b._3
+    })
 
-    // TODO EFFECTS!!!
+    def isPure(effect: LoopEffects): Boolean = !effect.isDefined || mustPure(effect.get._1)
+    
+    val (prodSyms, combinedEffect) = if (cEffects.isDefined) {
+      (allProds, cEffects)
+    } else {
+      val impureIndex = allProds.indexWhere({ case (_,_,_,pEffect,_,_) => pEffect.isDefined })
+      if (impureIndex == -1) {
+        (allProds, None) 
+      } else {
+        val impureProd = allProds(impureIndex)
+        val pureTail = allProds.drop(impureIndex + 1).filter({ 
+          case (pSym, newPSym, range, pEffect, msg, indep) => 
+            val pure = !pEffect.isDefined
+            if (!pure) {
+              printdbg("(VFT) " + cSym + " not fused with " + pSym + " because " + pSym + " is effectful and "
+               + cSym + " is already being fused with other effectful producer " + impureProd._1)
+            }
+            pure
+        })
+        (allProds.take(impureIndex + 1) ++ pureTail, impureProd._4)
+      }
+    }
 
-    if (prodSyms.isEmpty) {
+
+    val t2 = if (prodSyms.isEmpty) {
       (None, Nil)
     } else if (prodSyms(0)._3 == 1) {
       (Some((prodSyms(0)._1, prodSyms(0)._2)), prodSyms.tail.map(t => (t._1, t._2)))
     } else {
       (None, prodSyms.map(t => (t._1, t._2)))
     }
+    (t2._1, t2._2, combinedEffect)
   }
 
   /** cShape and pSym are originals, this function will check their substitutions too.
@@ -516,17 +622,23 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
         ", cShapeSyms: " + cShapeSyms + ", pShapeSyms: " + pShapeSyms)
   }
 
-  /* Returns > 0 if consumer can be fused with producer, < 0 otherwise. */
-  def isIndepConsumer[A](cSym: Sym[A], cIndex: Sym[Int], cBody: Def[A], 
-      pSym: Sym[Any], newPSym: Sym[Any]): (String, Int) = {
+  /** Returns > 0 if consumer can be fused with producer, < 0 and an error message otherwise.
+   *  In the first case the effects of the producer are also returned.
+   */
+  def isIndepConsumer[A](cSym: Sym[A], cIndex: Sym[Int], cBody: Def[A], cEffects: LoopEffects,
+      pSym: Sym[Any], newPSym: Sym[Any]): (String, Int, LoopEffects) = {
     // Note: no need to check that shape doesn't use any dependencies because it can
     // only have the value of the size of the producer (either SimpleDomain, same constant
     // or same immutable expression).
 
-    val prod = findDefinition(newPSym) match {
-      case Some(TP(`newPSym`, prod: AbstractLoop[_])) => prod
+    val (prod, pEffects) = findDefinition(newPSym) match {
+      case Some(TP(`newPSym`, LoopOrReflectedLoop(prod, pEffects))) => (prod, pEffects)
       case d => 
-        return ("unknown producer loop " + newPSym + ": " + d, -2)
+        return ("unknown producer loop " + newPSym + ": " + d, -2, None)
+    }
+
+    if (pEffects.isDefined && cEffects.isDefined) {
+      return ("effectful consumer cannot be fused with effectful producer", -6, None)
     }
 
     // SimpleCollect producers result in 1-1 mapping of producer and consumer indices,
@@ -536,11 +648,29 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       case SimpleCollect(_) => false
       case SimpleCollectIf(_, _) | MultiCollect(_, _) => true
       case b => 
-        return ("unknown producer loop type of " + prod + ": " + b, -3)
+        return ("unknown producer loop type of " + prod + ": " + b, -3, None)
     }
 
-    val prodFusedSyms = FusedSyms.getOldAndNew(pSym)
-    val consFusedSyms = syms(cBody)
+    val (prodFusedSyms, prodEffects) = FusedSyms.getSet(pSym) match {
+      case Some(fset) => 
+        if (pEffects.isDefined)
+          assert(pEffects == fset.getEffects, "(VTO) Error wrong set effects")
+        (fset.getSet, fset.getEffects)
+      case None => (Set(pSym, getSubstSym(pSym)), pEffects)
+    }
+
+    if (prodEffects.isDefined && cEffects.isDefined) {
+      return ("effectful consumer cannot be fused with producer that has been fused with another effectful loop", -7, None)
+    }
+
+    // No need to check prodEffects (from set), because previous fusion already checked
+    // only need to check pEffects of current producer
+    val prodEffOk = prodEffectsOk(prod, pEffects, pSym, newPSym)
+    if (prodEffOk._2 < 0)
+      return (prodEffOk._1, prodEffOk._2, None)
+
+
+    val consFusedSyms = syms(cBody) ++ cEffects.map(_._2.collect({ case s@Sym(_) => s })).getOrElse(List[Sym[Any]]())
     def substEqu(other: Exp[Any], pSym: Sym[Any]) = ((other == pSym) || (subst.get(other) match {
       case Some(`pSym`) => true
       case _ => false
@@ -551,12 +681,20 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     try {
       // TODO don't want to do full traversal every time, could cache deps of seen loops?
       // But then would have to do full traversal, not stop early?
+      // TODO only do one traversal per consumer (check all producers)?
       GraphUtil.stronglyConnectedComponents(consFusedSyms, { sym: Sym[Any] => 
         findDefinition(sym) match {
           case Some(TP(_, SimpleIndex(other, `cIndex`))) if substEqu(other, pSym) => 
             List() // SimpleIndex will be substituted, so don't count dependency on index or producer 
           case Some(d) => 
-            val next = FusedSyms.getNew(syms(d.rhs))
+            val next = syms(d.rhs).flatMap({ sym => 
+                FusedSyms.getSet(sym).map(_.getSet).getOrElse(Set(sym))
+              }).flatMap(n => subst.get(n) match { // use the new expressions
+                case Some(nn@Sym(_)) => List(nn)
+                case Some(Const(_)) => List()
+                case _ => List(n)
+              })
+
             if (noIndexUse && next.contains(cIndex)) {
               throw DependencyException("consumer uses index", -4)
             }
@@ -569,10 +707,54 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
         }
       })
 
+      ("", 1, prodEffects)
+    } catch {
+      case DependencyException(msg, retValue) => (msg, retValue, None)
+    }
+  }
+
+  /** Returns > 0 if consumer can be fused with producer, < 0 and an error message otherwise.
+   */
+  def prodEffectsOk(prod: AbstractLoop[_], pEffects: LoopEffects, pSym: Sym[Any], newPSym: Sym[Any]): (String, Int) = {
+    if (!pEffects.isDefined) {
+      return ("", 1)
+    }
+
+    val pIndexStms = getFatDependentStuff(initialDefs)(List(prod.v))
+    val resSym = prod.body match {
+      case ResultBlock(reifySym@Sym(_)) => findDefinition(reifySym) match {
+        case Some(TP(_, Reify(resSym@Sym(_), _, _))) => resSym
+        case _ => return ("", 1) 
+        // if prod is cons that has been fused with effectful prod,
+        // then it has effects (wrapped in reflect) but no reify
+        // don't need to check it since its effects all come from a
+        // producer that has been checked
+      }
+      case _ => return ("error: producer result block not found", -10)
+    }
+
+    // TODO dedup?
+    case class DependencyException(message: String, value: Int) extends Exception(message)
+    try {
+      GraphUtil.stronglyConnectedComponents(List(resSym), { sym: Sym[Any] => 
+        findDefinition(sym) match {
+          case Some(tp@TP(_, Reflect(_, _, _))) => 
+            throw DependencyException("effectful producers can only be fused if " +
+                "the effects are separate from the value of the loop body, but the " + 
+                "loop block result depends on " + tp, -12)
+          case Some(d) => 
+            syms(d.rhs).intersect(pIndexStms).flatMap(n => subst.get(n) match { // use the new expressions
+              case Some(nn@Sym(_)) => List(nn)
+              case Some(Const(_)) => List()
+              case _ => List(n)
+            })
+          case None => List()
+        }
+      })
+
       ("", 1)
     } catch {
       case DependencyException(msg, retValue) => (msg, retValue)
     }
   }
-
 }

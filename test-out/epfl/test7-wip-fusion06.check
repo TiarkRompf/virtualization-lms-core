@@ -97,7 +97,7 @@ val x21 = x2 > 50
 if (x21) x22 += x20
 }
 val x23 = x22.length
-val x24 = println(x23)
+val x31 = println(x23)
 var x27 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
@@ -106,7 +106,7 @@ val x26 = x2 < 20
 if (x26) x27 += x25
 }
 val x28 = x27.length
-val x29 = println(x28)
+val x32 = println(x28)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
@@ -125,7 +125,7 @@ if (x21) x22 += x20
 if (x26) x27 += x25
 }
 val x23 = x22.length
-val x24 = println(x23)
+val x31 = println(x23)
 val x28 = x27.length
-val x29 = println(x28)
+val x32 = println(x28)
 -- done

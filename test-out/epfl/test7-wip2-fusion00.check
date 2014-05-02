@@ -135,7 +135,7 @@ val x32 = 1.0+x30
 x34 += x32
 }
 val x35 = x34/100
-val x36 = println(x35)
+val x44 = println(x35)
 var x38 = 0
 for (x1 <- 0 until 100) {
 val x30 = 2.0*x1
@@ -146,7 +146,7 @@ x38 += x37
 val x39 = x38/100
 val x40 = x35*x35
 val x41 = x39-x40
-val x42 = println(x41)
+val x45 = println(x41)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
@@ -163,9 +163,9 @@ x34 += x32
 x38 += x37
 }
 val x35 = x34/100
-val x36 = println(x35)
+val x44 = println(x35)
 val x39 = x38/100
 val x40 = x35*x35
 val x41 = x39-x40
-val x42 = println(x41)
+val x45 = println(x41)
 -- done

@@ -20,6 +20,8 @@ trait LoopFusionSchedulingOpt extends internal.FatBlockTraversal {
     if (!fusedSyms.isEmpty) {
       val fusedScope = fuseAllLoops(innerScope)
       innerScope = getSchedule(fusedScope)(resultB)
+      // println("=== (FTO) after fusion, rescheduled")
+      // innerScope foreach println
     }
     super.focusExactScopeFat(resultB)(body)
   }
@@ -63,8 +65,8 @@ trait LoopFusionSchedulingOpt extends internal.FatBlockTraversal {
     // extract info to create fused TTP
     val (lmhs, rhs) = TTPsToFuse.map({ 
       case TTP(lhs, mhs, SimpleFatLoop(shape2,index2,rhs)) => 
-        assert(shape == shape2, "(FTO) ERROR: trying to fuse loops of different shapes: " + shape + " != " + shape2)
-        assert(index == index2, "(FTO) ERROR: trying to fuse loops of different indices: " + index + " != " + index2)
+        assert(shape == shape2, "(FTO) ERROR: trying to fuse loops " + lhs + " of different shapes: " + shape + " != " + shape2)
+        assert(index == index2, "(FTO) ERROR: trying to fuse loops " + lhs + "of different indices: " + index + " != " + index2)
         ((lhs, mhs), rhs)
       case s => sys.error("(FTO) ERROR: Fusion failed, unrecognized loop statement: " + s)
     }).unzip

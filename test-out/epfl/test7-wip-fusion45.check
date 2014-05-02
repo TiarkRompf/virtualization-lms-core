@@ -64,7 +64,7 @@ val x22 = println(x21)
   (VFT) SimpleCollect+Any fusion: nothing more to do.
   
   (VFT) Finished fusion of prod: Sym(26) and cons: Sym(14), the resulting fused loop is Sym(30)
-(VFT) No producers found for TP(Sym(20),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(19))))), changed to Sym(33) because of existing substitutions
+(VFT) No producers found for TP(Sym(20),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(19))))), changed to Sym(33) because of existing substitutions or to reflect effects
 
 (VFT) all vertically fused: List(Sym(30), Sym(26))
 
@@ -140,7 +140,7 @@ val x32 = x28 + x31
 x33(x1) = x32
 }
 val x34 = x33.apply(0)
-val x35 = println(x34)
+val x37 = println(x34)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
@@ -171,5 +171,5 @@ val x32 = x28 + x31
 x33(x1) = x32
 }
 val x34 = x33.apply(0)
-val x35 = println(x34)
+val x37 = println(x34)
 -- done

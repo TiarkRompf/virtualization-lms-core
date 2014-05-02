@@ -81,14 +81,6 @@ val x24 = println(x15)
 (HFT) all horizontally fused: List(Sym(21), Sym(5))
 
 -- after horizontal transformation
-var x5 = new Array[Int](100)
-for (x1 <- 0 until 100) {
-val x2 = x1 + 1
-val x3 = x2 * x1
-val x4 = x1 * x3
-x5(x1) = x4
-}
-val x15 = x5.apply(0)
 var x21 = new ArrayBuilder[Int]
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
@@ -100,8 +92,16 @@ val x20 = !x19
 if (x20) x21 += x18
 }
 val x22 = x21.length
-val x23 = println(x22)
-val x24 = println(x15)
+val x26 = println(x22)
+var x5 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x3 = x2 * x1
+val x4 = x1 * x3
+x5(x1) = x4
+}
+val x15 = x5.apply(0)
+val x27 = println(x15)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
@@ -120,8 +120,8 @@ val x20 = !x19
 if (x20) x21 += x18
 x5(x1) = x4
 }
-val x15 = x5.apply(0)
 val x22 = x21.length
-val x23 = println(x22)
-val x24 = println(x15)
+val x26 = println(x22)
+val x15 = x5.apply(0)
+val x27 = println(x15)
 -- done

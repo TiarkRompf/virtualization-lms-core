@@ -110,7 +110,7 @@ val x34 = println(x27)
 (VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(3).
 (VFT) SimpleCollectIf+MultiCollect fusion: add if-then-else with empty array to consumer.
   
-  (VFT) No producers found for TP(Sym(21),SimpleLoop(Sym(18),Sym(19),ArrayElem(Block(Sym(20))))), changed to Sym(50) because of existing substitutions
+  (VFT) No producers found for TP(Sym(21),SimpleLoop(Sym(18),Sym(19),ArrayElem(Block(Sym(20))))), changed to Sym(50) because of existing substitutions or to reflect effects
 
 (VFT) Finished fusion of prod: Sym(5) and cons: Sym(22), the resulting fused loop is Sym(52)
 
@@ -233,7 +233,7 @@ if (x4) x37 += x36
 x38 ++= x37
 }
 val x39 = x38.apply(0)
-val x40 = println(x39)
+val x63 = println(x39)
 var x45 = new ArrayBuilder[Int]
 for (x1 <- 0 until 30) {
 var x44 = new ArrayBuilder[Int]
@@ -248,7 +248,7 @@ if (x42) x44 += x43
 x45 ++= x44
 }
 val x46 = x45.apply(0)
-val x47 = println(x46)
+val x64 = println(x46)
 var x48 = new Array[Int](0)
 var x53 = new ArrayBuilder[Int]
 for (x1 <- 0 until 30) {
@@ -271,7 +271,7 @@ x52 ++= x51
 x53 ++= x52
 }
 val x54 = x53.apply(0)
-val x55 = println(x54)
+val x65 = println(x54)
 var x60 = 0
 for (x1 <- 0 until 30) {
 var x59 = 0
@@ -289,7 +289,7 @@ x59 += x58
 }
 x60 += x59
 }
-val x61 = println(x60)
+val x66 = println(x60)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
@@ -349,10 +349,10 @@ x53 ++= x52
 x60 += x59
 }
 val x39 = x38.apply(0)
-val x40 = println(x39)
+val x63 = println(x39)
 val x46 = x45.apply(0)
-val x47 = println(x46)
+val x64 = println(x46)
 val x54 = x53.apply(0)
-val x55 = println(x54)
-val x61 = println(x60)
+val x65 = println(x54)
+val x66 = println(x60)
 -- done

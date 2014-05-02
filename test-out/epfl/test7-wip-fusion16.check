@@ -184,16 +184,16 @@ val x53 = println(x47)
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
+val x55 = println(x0)
+val x10 = x0 + 2
+val x56 = println(x10)
 var x21 = new Array[Int](100)
 for (x19 <- 0 until 100) {
 val x20 = x19 + 1
 x21(x19) = x20
 }
 val x47 = x21.apply(1)
-val x10 = x0 + 2
-val x45 = println(x0)
-val x46 = println(x10)
-val x48 = println(x47)
+val x57 = println(x47)
 var x31 = new Array[Int](90)
 for (x29 <- 0 until 90) {
 val x30 = x21.apply(x29)
@@ -205,20 +205,20 @@ val x49 = x31.apply(x19)
 x50(x19) = x49
 }
 val x51 = x50.apply(1)
-val x52 = println(x51)
-val x53 = println(x47)
+val x58 = println(x51)
+val x59 = println(x47)
 
 -- fusion
+val x55 = println(x0)
+val x10 = x0 + 2
+val x56 = println(x10)
 var x21 = new Array[Int](100)
 for (x19 <- 0 until 100) {
 val x20 = x19 + 1
 x21(x19) = x20
 }
 val x47 = x21.apply(1)
-val x10 = x0 + 2
-val x45 = println(x0)
-val x46 = println(x10)
-val x48 = println(x47)
+val x57 = println(x47)
 var x31 = new Array[Int](90)
 for (x29 <- 0 until 90) {
 val x30 = x21.apply(x29)
@@ -230,6 +230,6 @@ val x49 = x31.apply(x19)
 x50(x19) = x49
 }
 val x51 = x50.apply(1)
-val x52 = println(x51)
-val x53 = println(x47)
+val x58 = println(x51)
+val x59 = println(x47)
 -- done

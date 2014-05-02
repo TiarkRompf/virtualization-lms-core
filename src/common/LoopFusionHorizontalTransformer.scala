@@ -9,10 +9,21 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
   val IR: LoopFusionCore2
   import IR.{__newVar => _, _}
 
-  /** Sets of vertically fused loops must be horizontally fused
-    * if they have survived DCE, otherwise we're duplicating work. */
-  private var verticallyFusedSyms = HashMap[Sym[Any], List[Sym[Any]]]()
-  def setVerticallyFusedSyms(map: HashMap[Sym[Any], List[Sym[Any]]]) = { verticallyFusedSyms = map }
+  /** Sets of vertically fused loops (with effect flag: true if effectful)
+    * must be horizontally fused if they have survived DCE, otherwise we're
+    * duplicating work. */
+  private var verticallyFusedSyms = HashMap[Sym[Any], (List[Sym[Any]], Boolean)]()
+  def setVerticallyFusedSyms(map: HashMap[Sym[Any], (List[Sym[Any]], Boolean)]) = { verticallyFusedSyms = map }
+
+  // TODO dedup
+  type LoopEffects = Option[(Summary, List[Exp[Any]])]
+  object LoopOrReflectedLoop {
+    def unapply(a: Def[Any]): Option[(AbstractLoop[_], LoopEffects)] = a match {
+      case Reflect(loop: AbstractLoop[_], summ, deps) => Some((loop, Some((summ, deps))))
+      case loop: AbstractLoop[_] => Some((loop, None))
+      case _ => None
+    }
+  }
 
   /** A set of horizontally fused loops.
     * @param shape common shape @param index common index
@@ -24,10 +35,14 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
     * loops in the set. Need to use same instance for each so that we can fuse
     * across (they're different scopes in this schedule, but will be in the
     * same scope of the fat fused loop)
+    * @param hasEffects true if the set contains an effectful loop (at most one), it then
+    * cannot be fused with any other effectful loops/sets.
     */
-  case class FusedSet(shape: Exp[Int], index: Sym[Int], syms: List[Sym[Any]], setIndex: Int, innerScope: FusionScope) {
-    def addSyms(newSyms: List[Sym[Any]]) = {
-      FusedSet(shape, index, syms ++ newSyms, setIndex, innerScope)
+  case class FusedSet(shape: Exp[Int], index: Sym[Int], syms: List[Sym[Any]], setIndex: Int,
+      innerScope: FusionScope, hasEffects: Boolean) {
+    def addSyms(newSyms: List[Sym[Any]], effectful: Boolean) = {
+      assert(!(effectful && hasEffects), "(FTO) ERROR: cannot fuse two effectful sets")
+      FusedSet(shape, index, syms ++ newSyms, setIndex, innerScope, hasEffects || effectful)
     }
     override def toString = "FusedSet(shape = " + shape + ", indexSym = " + index + ", loopSyms = " + syms + ")"
   }
@@ -57,9 +72,9 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
     def getAllFused(syms: List[Sym[Any]]): List[Sym[Any]] = (syms ++ syms.flatMap(get(_).map(_.syms).getOrElse(Nil)))
     
     // Start a new fusion set
-    def recordNew(sym: Sym[Any], shape: Exp[Int], index: Sym[Int], syms: List[Sym[Any]]) = {
+    def recordNew(sym: Sym[Any], shape: Exp[Int], index: Sym[Int], syms: List[Sym[Any]], effectful: Boolean) = {
       val setIndex = sets.length
-      val set = FusedSet(shape, index, syms, setIndex, new FusionScope)
+      val set = FusedSet(shape, index, syms, setIndex, new FusionScope, effectful)
       sets = set :: sets
       realSets ::= Nil
       val indexList = setIndex :: shape2sets.get(set.shape).getOrElse(Nil)
@@ -73,10 +88,10 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
     }
 
     // Add the syms to the existing fusion set
-    def recordAdd(fusedSet: FusedSet, addedSyms: List[Sym[Any]]) = {
+    def recordAdd(fusedSet: FusedSet, addedSyms: List[Sym[Any]], effectful: Boolean) = {
       val setIndex = fusedSet.setIndex
       addedSyms.foreach(sym2set.put(_, setIndex))
-      sets = sets.updated(sets.length - 1 - setIndex, fusedSet.addSyms(addedSyms))
+      sets = sets.updated(sets.length - 1 - setIndex, fusedSet.addSyms(addedSyms, effectful))
       get(setIndex).innerScope
     }
 
@@ -138,7 +153,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
    */
   override def transformStm(stm: Stm): Exp[Any] = {
     val transfStm = stm match {
-      case TP(sym, loop: AbstractLoop[_]) => 
+      case TP(sym, LoopOrReflectedLoop(loop, effects)) => 
         // fuse with existing set if one found, otherwise start new set
         // fusion just means remapping the loop index to the index used by the set
         // calculate innerScope to be used for transforming the loop body
@@ -150,20 +165,22 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
             horizontal.innerScope
 
           case None => 
-            val setToFuse = verticallyFusedSyms.get(sym).getOrElse(List(sym))
+            val (setToFuse, setToFuseEffectful) = 
+              verticallyFusedSyms.get(sym).getOrElse((List(sym), effects.isDefined))
             val existing = current.getByShape(loop.size)
               .filter({ candidate => checkIndep(sym, candidate, setToFuse) })
+              .filter({ candidate => checkEffects(sym, candidate, setToFuse, setToFuseEffectful) })
               .headOption
             existing match {
               case Some(fusedSet) => // case 2. compatible existing set
                 printlog("(HFT) Fusing " + sym + " with fusion set " + fusedSet)
                 assert(loop.size == fusedSet.shape, "Error: HFT with different shapes 2")
                 fuse(sym, loop.v, fusedSet.index)
-                current.recordAdd(fusedSet, setToFuse)
+                current.recordAdd(fusedSet, setToFuse, setToFuseEffectful)
 
               case None => // case 3. start a new fusion set
                 printdbg("(HFT) Recording " + sym + ", no fusion")
-                current.recordNew(sym, loop.size, loop.v, setToFuse)
+                current.recordNew(sym, loop.size, loop.v, setToFuse, setToFuseEffectful)
             }
         }
         
@@ -216,7 +233,6 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
   /** Returns true if the existing set and the setToFuse (containing sym)
     * are mutually independent and thus safe to fuse. */
   def checkIndep(sym: Sym[Any], existing: FusedSet, setToFuse: List[Sym[Any]]): Boolean = {
-    // TODO also check effects and respect order of effects between loops
     val existingSet = existing.syms
 
     // traverse the statements (+fusion sets) needed for the loop
@@ -261,5 +277,16 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
         }))
         false
     }
+  }
+
+  def checkEffects(sym: Sym[Any], existing: FusedSet, setToFuse: List[Sym[Any]],
+      setToFuseEffectful: Boolean): Boolean = {
+    // TODO what about order of effects between loops?
+    val effectsOk = !(setToFuseEffectful && existing.hasEffects) 
+    if (!effectsOk) {
+      val setS = if (setToFuse.length > 1) " and its set (" + setToFuse + ")" else ""
+      printdbg("(HFT) The candidate " + sym + setS + " cannot be fused with the existing " + existing + " because both are effectful.")
+    }
+    effectsOk
   }
 }

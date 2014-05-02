@@ -47,8 +47,8 @@ val x16 = println(100)
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
-val x16 = println(100)
+val x18 = println(100)
 
 -- fusion
-val x16 = println(100)
+val x18 = println(100)
 -- done

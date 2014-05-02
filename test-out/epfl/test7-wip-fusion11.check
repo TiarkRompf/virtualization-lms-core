@@ -54,14 +54,14 @@ val x5 = x4.apply(0)
 x6(x1) = x5
 }
 val x10 = x6.apply(0)
-val x11 = println(x10)
+val x15 = println(x10)
 var x9 = new Array[Int](100)
 for (x7 <- 0 until 100) {
 val x8 = x7 + 2
 x9(x7) = x8
 }
 val x12 = x9.apply(0)
-val x13 = println(x12)
+val x16 = println(x12)
 
 -- horizontal transformation
 (HFT) Recording Sym(6), no fusion
@@ -82,14 +82,14 @@ val x5 = x4.apply(0)
 x6(x1) = x5
 }
 val x10 = x6.apply(0)
-val x11 = println(x10)
+val x18 = println(x10)
 var x9 = new Array[Int](100)
 for (x7 <- 0 until 100) {
 val x8 = x7 + 2
 x9(x7) = x8
 }
 val x12 = x9.apply(0)
-val x13 = println(x12)
+val x19 = println(x12)
 
 -- fusion
 var x6 = new Array[Int](90)
@@ -103,12 +103,12 @@ val x5 = x4.apply(0)
 x6(x1) = x5
 }
 val x10 = x6.apply(0)
-val x11 = println(x10)
+val x18 = println(x10)
 var x9 = new Array[Int](100)
 for (x7 <- 0 until 100) {
 val x8 = x7 + 2
 x9(x7) = x8
 }
 val x12 = x9.apply(0)
-val x13 = println(x12)
+val x19 = println(x12)
 -- done

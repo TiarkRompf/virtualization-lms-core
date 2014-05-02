@@ -56,7 +56,7 @@ val x21 = println(x20)
 
   
   (VFT) Sym(11) not fused with Sym(3) because not in same level/scope.
-  (VFT) No producers found for TP(Sym(11),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(10))))), changed to Sym(25) because of existing substitutions
+  (VFT) No producers found for TP(Sym(11),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(10))))), changed to Sym(25) because of existing substitutions or to reflect effects
   (VFT) Replaced TP(Sym(12),ArrayLength(Sym(11))) with fixed length: Const(100)
   
   (VFT) Fusing consumer TP(Sym(16),SimpleLoop(Sym(12),Sym(13),ArrayElem(Block(Sym(15))))) with real producer: Sym(25) (was Sym(11))
@@ -122,7 +122,7 @@ val x29 = x23 * x28
 x30(x1) = x29
 }
 val x31 = x30.apply(0)
-val x32 = println(x31)
+val x34 = println(x31)
 
 -- fusion
 var x3 = new Array[Int](100)
@@ -146,5 +146,5 @@ val x29 = x23 * x28
 x30(x1) = x29
 }
 val x31 = x30.apply(0)
-val x32 = println(x31)
+val x34 = println(x31)
 -- done

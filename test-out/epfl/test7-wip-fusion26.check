@@ -64,7 +64,7 @@ val x13 = x2 + 2
 if (x3) x14 += x13
 }
 val x15 = x14.apply(0)
-val x16 = println(x15)
+val x18 = println(x15)
 
 -- fusion
 var x14 = new ArrayBuilder[Int]
@@ -75,5 +75,5 @@ val x13 = x2 + 2
 if (x3) x14 += x13
 }
 val x15 = x14.apply(0)
-val x16 = println(x15)
+val x18 = println(x15)
 -- done

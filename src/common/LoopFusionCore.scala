@@ -16,6 +16,7 @@ trait LoopFusionExtractors extends internal.Expressions { // copied from LoopFus
   def unapplySimpleCollectIf(e: Def[Any]): Option[(Exp[Any],List[Exp[Boolean]])] = None
   def unapplyMultiCollect[T](a: Def[T]): Option[(Exp[T], Option[() => Exp[T]])] = None
   def unapplyReduce[T](e: Def[T]): Option[(Exp[T], Option[Exp[T]], Option[Boolean])] = None
+  // def unapplyForeach(e: Def[Any]): Option[Exp[Unit]] = None
 
   object SimpleIndex {
     def unapply(a: Def[Any]): Option[(Exp[Any], Exp[Int])] = unapplySimpleIndex(a)
@@ -46,6 +47,10 @@ trait LoopFusionExtractors extends internal.Expressions { // copied from LoopFus
   object Reduce {
     def unapply[T](a: Def[T]): Option[(Exp[T], Option[Exp[T]], Option[Boolean])] = unapplyReduce(a)
   }
+
+  // object Foreach {
+  //   def unapply(a: Def[Any]): Option[Exp[Unit]] = unapplyForeach(a)
+  // }
 
   object ResultBlock {
     def unapply(a: Def[Any]): Option[Exp[Any]] = a match {
