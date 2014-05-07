@@ -34,8 +34,7 @@ trait AckProg { this: Arith with Functions with Equal with IfThenElse =>
   ack_1(n) =  if n=0 then ack_0(1) else  ack_0(ack_1(n-1))
   ack_0(n) =  n+1
   
-  this actually "just works", modulo duplicating the definitions of ack_n in the then/else branches
-  due to code motion (TODO: can this be resolved by suitably overriding symsFreq?)
+  this actually "just works"
   
   */
 
