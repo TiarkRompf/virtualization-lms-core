@@ -618,14 +618,11 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
   val IR: PrimitiveOpsExp
   import IR._
 
-  //TODO: stdlib.h needs to be included in the common header file
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case ObjDoubleParseDouble(s) => emitValDef(sym, "strtod(" + quote(s) + ",NULL)")
-      case ObjDoublePositiveInfinity() => emitValDef(sym, "std::numeric_limits<double>::infinity()")
-      case ObjDoubleNegativeInfinity() => emitValDef(sym, "-std::numeric_limits<double>::infinity()")
-      case ObjDoubleMinValue() => emitValDef(sym, "std::numeric_limits<double>::min()")
-      case ObjDoubleMaxValue() => emitValDef(sym, "std::numeric_limits<double>::max()")
+      case ObjDoubleMinValue() => emitValDef(sym, "DBL_MIN")
+      case ObjDoubleMaxValue() => emitValDef(sym, "DBL_MAX")
       case DoubleFloatValue(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       case DoublePlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
       case DoubleMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
@@ -641,8 +638,8 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       case FloatTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
       case FloatDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))      
       case ObjIntegerParseInt(s) => emitValDef(sym, "atoi(" + quote(s) + ".c_str())")
-      case ObjIntMaxValue() => emitValDef(sym, "std::numeric_limits<int>::max()")
-      case ObjIntMinValue() => emitValDef(sym, "std::numeric_limits<int>::min()")    
+      case ObjIntMaxValue() => emitValDef(sym, "INT_MAX")
+      case ObjIntMinValue() => emitValDef(sym, "INT_MIN")    
       case IntPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
       case IntMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
       case IntTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
@@ -672,7 +669,31 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
   }
 }
 
-trait CudaGenPrimitiveOps extends CudaGenBase with CLikeGenPrimitiveOps
+trait CudaGenPrimitiveOps extends CudaGenBase with CLikeGenPrimitiveOps {
+  val IR: PrimitiveOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
+    rhs match {
+      case ObjDoublePositiveInfinity() => emitValDef(sym, "__longlong_as_double(0x7ff0000000000000ULL)")
+      case ObjDoubleNegativeInfinity() => emitValDef(sym, "__longlong_as_double(0xfff0000000000000ULL)")
+      case _ => super.emitNode(sym, rhs)
+    }
+  }
+}
+
 trait OpenCLGenPrimitiveOps extends OpenCLGenBase with CLikeGenPrimitiveOps
-trait CGenPrimitiveOps extends CGenBase with CLikeGenPrimitiveOps
+
+trait CGenPrimitiveOps extends CGenBase with CLikeGenPrimitiveOps {
+  val IR: PrimitiveOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
+    rhs match {
+      case ObjDoublePositiveInfinity() => emitValDef(sym, "INFINITY")
+      case ObjDoubleNegativeInfinity() => emitValDef(sym, "-INFINITY")
+      case _ => super.emitNode(sym, rhs)
+    }
+  }
+}
 
