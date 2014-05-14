@@ -3,8 +3,8 @@
 *******************************************/
 class Ack extends ((Double)=>(Double)) {
 def apply(x0:Double): Double = {
-var x4 = null.asInstanceOf[scala.Function1[Double, Double]]
-var x1 = null.asInstanceOf[scala.Function1[Double, Double]]
+var x4: scala.Function1[Double, Double] = null
+var x1: scala.Function1[Double, Double] = null
 val x7 = {x8: (Double) => 
 val x9 = x8+1.0
 x9

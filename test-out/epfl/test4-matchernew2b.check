@@ -3,10 +3,10 @@
 *******************************************/
 class Match extends ((Unit)=>(scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
 def apply(x0:Unit): scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
-var x23 = null.asInstanceOf[scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]]
-var x22 = null.asInstanceOf[scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]]
-var x20 = null.asInstanceOf[scala.Function1[Char, scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]]]
-var x24 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]], scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+var x23: scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]] = null
+var x22: scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]] = null
+var x20: scala.Function1[Char, scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]] = null
+var x24: scala.Function1[scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]], scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]] = null
 x20 = {x21: (Char) => 
 x23
 }

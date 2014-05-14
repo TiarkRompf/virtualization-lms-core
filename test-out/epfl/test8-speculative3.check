@@ -3,8 +3,8 @@
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
-var x46 = null.asInstanceOf[Unit]
-var x50 = null.asInstanceOf[Unit]
+var x46: Unit = ()
+var x50: Unit = ()
 var x2: Double = 0.0
 while ({ // List(Sym(46), Sym(50))
 // dummy placeholder for previous iteration: List(Sym(28), Sym(27)) = Sym(4) / List(Sym(2), Sym(46))

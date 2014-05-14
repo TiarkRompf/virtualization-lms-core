@@ -3,7 +3,7 @@
 *******************************************/
 class Match extends ((Unit)=>(scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
 def apply(x0:Unit): scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
-var x1 = null.asInstanceOf[scala.Function1[Double, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+var x1: scala.Function1[Double, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]] = null
 x1 = {x2: (Double) => 
 val x3 = List(x2)
 val x4 = {x5: (Char) => 

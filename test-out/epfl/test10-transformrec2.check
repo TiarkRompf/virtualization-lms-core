@@ -1,5 +1,5 @@
 -- before transformation
-var x1 = null.asInstanceOf[scala.Function1[Double, Double]]
+var x1: scala.Function1[Double, Double] = null
 x1 = {x2: (Double) => 
 val x3 = x2 == 0
 val x7 = if (x3) {
@@ -14,7 +14,7 @@ x7
 }
 val x8 = x1(x0)
 -- after null transformation
-var x9 = null.asInstanceOf[scala.Function1[Double, Double]]
+var x9: scala.Function1[Double, Double] = null
 x9 = {x2: (Double) => 
 val x3 = x2 == 0
 val x12 = if (x3) {
@@ -29,7 +29,7 @@ x12
 }
 val x14 = x9(x0)
 -- after transformation
-var x15 = null.asInstanceOf[scala.Function1[Double, Double]]
+var x15: scala.Function1[Double, Double] = null
 x15 = /*2*/{x2: (Double) => 
 val x3 = x2 == 0
 val x18 = if (x3) {

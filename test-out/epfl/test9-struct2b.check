@@ -20,15 +20,21 @@ x11(x7) = x7
 var x13: Array[Double] = x10
 var x14: Array[Int] = x11
 val x16 = x0 > 7
-// TODO: use vars instead of tuples to return multiple values
-val (x26,x38,x39) = if (x16) {
+var x26: Unit = ()
+var x38: Array[Int] = null
+var x39: Array[Double] = null
+if (x16) {
 val x17 = println("foobar true")
-((),x11,x10)
+x26 = ()
+x38 = x11
+x39 = x10
 } else {
 val x20 = x13
 val x21 = x14
 val x19 = println("foobar false")
-((),x20,x21)
+x26 = ()
+x38 = x20
+x39 = x21
 }
 val x40 = new { val re = x38; val im = x39 }
 x13 = x11
