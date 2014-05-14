@@ -5,106 +5,24 @@ import util.GraphUtil
 import scala.collection.mutable.{HashMap, HashSet}
 
 
-// TODO documentation
+        // TODO asserts?
+
+
 trait LoopFusionVerticalTransformer extends PreservingForwardTransformer { 
   val IR: LoopFusionCore2
   import IR.{__newVar => _, _}
 
-  type OldNewSyms = (Sym[Any], Sym[Any])
-  type LoopEffects = Option[(Summary, List[Exp[Any]])]
-  object LoopOrReflectedLoop {
-    def unapply(a: Def[Any]): Option[(AbstractLoop[_], LoopEffects)] = a match {
-      case Reflect(loop: AbstractLoop[_], summ, deps) => Some((loop, Some((summ, deps))))
-      case loop: AbstractLoop[_] => Some((loop, None))
-      case _ => None
-    }
-  }
-  def stmShort(stm: Stm) = stm match {
-    case TP(s@Sym(_), Reflect(loop: AbstractLoop[_], _, _)) => "TP(" + s + ",Reflect(" + loop + ", ...))"
-    case _ => stm.toString
-  }
-
-  // --- per scope datastructures ----
-  
-  // indented printing to show scopes
-  var indent = -2
-  def printdbg(x: => Any) { if (verbosity >= 2) System.err.println(" " * indent + x) }
-  def printlog(x: => Any) { if (verbosity >= 1) System.err.println(" " * indent + x) }
-
-  // List of the loops on the same level&scope
-  var seenLoops = HashSet[Sym[Any]]()
-  
-  // All unfused loops with fixed shape have same index so they
-  // can be fused as multiple producers with one consumer
-  var fixedShapeToIndex = new HashMap[Exp[Int], Sym[Int]]
-  def remapIndexIfFixedShape(shape: Option[Exp[Int]], oldIndex: Sym[Int]): Boolean = shape match {
-    case Some(shape) => 
-      fixedShapeToIndex.get(shape) match {
-        case Some(`oldIndex`) | None => fixedShapeToIndex += (shape -> oldIndex); false
-        case Some(newIndex) => subst += (oldIndex -> newIndex); true
-      }
-    case None => false
-  }
-
-
-  // Each scope has a fresh map, don't want to fuse loops from different levels or scopes
-  override def reflectBlock[A](block: Block[A]): Exp[A] = {
-    val saveSeenLoops = seenLoops
-    seenLoops = HashSet[Sym[Any]]()
-    val saveFixedShapeToIndex = fixedShapeToIndex
-    fixedShapeToIndex = new HashMap[Exp[Int], Sym[Int]]
-    indent += 2
-    val newBlock = block match {  
-      // also check whether toplevel block result symbol
-      // needs substitution, so we can change full blocks
-      case Block(sym) => Block(apply(sym))
-    }
-    val res = super.reflectBlock(newBlock)
-    indent -= 2
-    seenLoops = saveSeenLoops
-    fixedShapeToIndex = saveFixedShapeToIndex
-    res
-  }
-
   // ---- global datastructures ----
 
-  // loops with fixed lengths (SimpleCollect with constant or immutable expression shape)
-  val loopsToFixedLengths = new HashMap[Sym[Any], Exp[Int]]
-
-  // TODO think about this - input vs. output length, result of fusion etc.
-  def recordFixedLengths(sym: Sym[Any], loop: AbstractLoop[_]): Option[Exp[Int]] = {
-    val shape = loop.size
-    val replacement: Option[Exp[Int]] = loop match {
-      case FixedDomain(Const(len)) => Some(Const(len))
-      case FixedDomain(domainSym: Sym[Int @unchecked]) => subst.get(domainSym) match {
-        case Some(Const(len: Int))                          => Some(Const(len))
-        case Some(sSym: Sym[Int @unchecked]) if (!isWritableSym(sSym)) => Some(sSym)
-        case _ if (!isWritableSym(domainSym))               => Some(domainSym)
-        case _                                              => None
-      }
-      case _ => None
-    }
-    replacement.map({ rep => loopsToFixedLengths += (sym -> rep) })
-    if (replacement.isDefined && shape != replacement.get)
-      subst += (shape -> replacement.get)
-    replacement
-  }
-
-  // Indexing statements replacement
-  // (can't register before because of duplicate substitution error).
-  val simpleIndexReplacements = new HashMap[(Sym[Any], Sym[Any]), Exp[Any]]
-
+  /** Records all fusion decisions. */
   object FusedSyms {
 
+    /** A set of fused loops, at most one effectful. */
     class FSet(private var effects: LoopEffects, set: HashSet[Sym[Any]]) {
       def add(s: Sym[Any]) = set.add(s)
       def addEffect(e: LoopEffects): Unit = {
-        // TODO asserts?
         assert(!(effects.isDefined && e.isDefined && effects != e), "(VFT) ERROR: Can't fuse effects!")
-        e match {
-          case Some(_) => this.effects = e
-          case None =>
-        }
+        e match { case Some(_) => this.effects = e case _ => }
       }
       def foreach(f: Sym[Any] => Unit) = set.foreach(f)
       def getSet = set.toSet
@@ -112,18 +30,20 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
         set.map({ sym => getSubstSym(sym, map) }).toList
       }
       def getEffects = effects
-      override def toString = "FSet(set = " + set + ", effects: " + effects + ")"
+      override def toString = "FSet(set = " + set + ", effects = " + effects + ")"
     }
 
     private val fusedSyms = new HashMap[Sym[Any], FSet]
     private val fusedSubst = new HashMap[Exp[Any], Exp[Any]]
     
-    def recordRemapped(oldSym: Sym[Any], newSym: Sym[Any]) = {
-      fusedSubst.put(oldSym, newSym)
-      fusedSyms.get(oldSym).map({ set =>
-        fusedSyms.put(newSym, set)
-        set.add(newSym)
-      })  
+    def recordRemapped(oldSym: Sym[Any], newExp: Exp[Any]) = newExp match { 
+      case newSym@Sym(_) => 
+        fusedSubst.put(oldSym, newSym)
+        fusedSyms.get(oldSym).map({ set =>
+          fusedSyms.put(newSym, set)
+          set.add(newSym)
+        })  
+      case _ =>
     }
     def recordFused(pSym: Sym[Any], cSym: Sym[Any], newCSym: Sym[Any], otherProds: List[OldNewSyms],
         combinedEffect: LoopEffects) = {
@@ -134,15 +54,10 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
           fusedSyms.put(pSym, fset)
           fset
       }
-      set.add(cSym)
-      set.add(newCSym)
-      fusedSyms.put(cSym, set)
-      fusedSyms.put(newCSym, set)
+      set.add(cSym); set.add(newCSym)
+      fusedSyms.put(cSym, set); fusedSyms.put(newCSym, set)
       fusedSubst.put(cSym, newCSym)
-      newCSym match {
-        case s@Sym(_) => fusedSyms.put(s, set)
-        case _ =>
-      }
+      newCSym match { case s@Sym(_) => fusedSyms.put(s, set) case _ => }
       otherProds.foreach({ prod => 
         ((fusedSyms.get(prod._2) match {
           case Some(`set`) => Set()
@@ -171,50 +86,137 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     }
   }
 
+  // extension to the ForwardTransformer: only substitute the given expression once
   var onceSubst = scala.collection.immutable.Map.empty[Exp[Any], Exp[Any]]
   override def apply[A](x: Exp[A]): Exp[A] = onceSubst.get(x) match { 
     case Some(y) if y != x => onceSubst -= x; apply(y.asInstanceOf[Exp[A]])
     case _ => super.apply(x)
   }
 
+  // loops with fixed lengths, collection.length will be replaced with the expression
+  val loopsToFixedOutLengths = new HashMap[Sym[Any], Exp[Int]]
+  def recordFixedOutLengths(sym: Sym[Any], loop: AbstractLoop[_]): Option[Exp[Int]] = {
+    val replacement: Option[Exp[Int]] = loop match {
+      case FixedDomain(Const(len)) => Some(Const(len))
+      case FixedDomain(domainSym: Sym[Int @unchecked]) => subst.get(domainSym) match {
+        case Some(Const(len: Int))                          => Some(Const(len))
+        case Some(sSym: Sym[Int @unchecked]) if (!isWritableSym(sSym)) => Some(sSym)
+        case _ if (!isWritableSym(domainSym))               => Some(domainSym)
+        case _                                              => None
+      }
+      case _ => None
+    }
+    replacement.foreach({ rep => loopsToFixedOutLengths += (sym -> rep) })
+    replacement
+  }
+
+  // Indexing statements replacement: consumer.at(index) -> exp
+  // (can't register before because of duplicate substitution error).
+  val simpleIndexReplacements = new HashMap[(Sym[Any], Sym[Any]), Exp[Any]]
+  def addSimpleIndexReplacement(cSym: Sym[Any], indexSym: Sym[Any], exp: Exp[Any]) =
+    simpleIndexReplacements += ((cSym, indexSym) -> getBlockResult(Block(exp)))
+  def removeSimpleIndexReplacement(cSym: Sym[Any], indexSym: Sym[Any]) =
+    simpleIndexReplacements -= ((cSym, indexSym))
+  def getSimpleIndexReplacements(cSym: Sym[Any], indexSym: Sym[Any]) =
+    simpleIndexReplacements.get((cSym, indexSym))
+
+
+  // --- extractors/helpers ---
+
+  type OldNewSyms = (Sym[Any], Sym[Any])
+  type LoopEffects = Option[(Summary, List[Exp[Any]])]
+  object LoopOrReflectedLoop {
+    def unapply(a: Def[Any]): Option[(AbstractLoop[_], LoopEffects)] = a match {
+      case Reflect(loop: AbstractLoop[_], summ, deps) => Some((loop, Some((summ, deps))))
+      case loop: AbstractLoop[_] => Some((loop, None))
+      case _ => None
+    }
+  }
+  def stmShort(stm: Stm) = stm match {
+    case TP(s@Sym(_), Reflect(loop: AbstractLoop[_], _, _)) => "TP(" + s + ",Reflect(" + loop + ", ...))"
+    case _ => stm.toString
+  }
+  def getSubstSym(sym: Sym[Any]): Sym[Any] = subst.get(sym) match {
+    case Some(s@Sym(_)) => s
+    case _ => sym
+  }
+  def getSubstSym(sym: Sym[Any],
+      subst2: Map[Exp[Any], Exp[Any]] = subst): Sym[Any] = subst2.get(sym) match {
+    case Some(s@Sym(_)) => s
+    case _ => sym
+  }
+  def findDefinitionExp(exp: Exp[Any]): Option[Stm] = exp match {
+    case s@Sym(_) => findDefinition(s)
+    case _ => None
+  }
+
+
+  // --- per scope datastructures ----
+  
+  // indented printing to show scopes
+  var indent = -2
+  def printdbg(x: => Any) { if (verbosity >= 2) System.err.println(" " * indent + x) }
+  def printlog(x: => Any) { if (verbosity >= 1) System.err.println(" " * indent + x) }
+
+  // List of the loops on the same level&scope
+  var seenLoops = HashSet[Sym[Any]]()
+  
+  // All unfused loops with fixed length of the output collection in same exact scope
+  // have same index so they can be fused as multiple producers with one consumer
+  // Lazily created HashMap if really needed in current scope
+  var fixedLengthIndex: Option[HashMap[Exp[Int], Sym[Int]]] = None
+  def remapIndexIfFixedLength(shape: Option[Exp[Int]], oldIndex: Sym[Int]): Boolean = shape match {
+    case Some(shape) => 
+      if (!fixedLengthIndex.isDefined)
+        fixedLengthIndex = Some(new HashMap[Exp[Int], Sym[Int]])
+      fixedLengthIndex.get.get(shape) match {
+        case Some(`oldIndex`) | None => fixedLengthIndex.get += (shape -> oldIndex); false
+        case Some(newIndex) => subst += (oldIndex -> newIndex); true
+      }
+    case None => false
+  }
+
+  // --- transformation ---
+
+  override def reflectBlock[A](block: Block[A]): Exp[A] = {
+    // save per scope datastructures
+    val saveSeenLoops = seenLoops
+    seenLoops = HashSet[Sym[Any]]()
+    val saveFixedLengthIndex = fixedLengthIndex
+    fixedLengthIndex = None
+    indent += 2
+
+    // also check whether toplevel block result symbol
+    // needs substitution, so we can change full blocks
+    val newBlock = Block.unapply(block).map({sym => Block(apply(sym))}).getOrElse(block)
+    val res = super.reflectBlock(newBlock)
+
+    // restore per scope datastructures
+    indent -= 2
+    seenLoops = saveSeenLoops
+    fixedLengthIndex = saveFixedLengthIndex
+    res
+  }
+
+
   override def transformStm(stm: Stm): Exp[Any] = { 
     // println("--transforming: " + stmShort(stm))
     val transformedSym = stm match {
+      case TP(_, SimpleIndex(pSym@Sym(_), cIndex@Sym(_))) => subst.get(pSym)
+        .flatMap({ case newPSym@Sym(_) => getSimpleIndexReplacements(newPSym, cIndex) })
+        .orElse(getSimpleIndexReplacements(pSym, cIndex))
+        .getOrElse(super.transformStm(stm))
 
-      case TP(_, SimpleIndex(pSym@Sym(_), cIndex@Sym(_))) => 
-        (subst.get(pSym) match {
-          case Some(newPSym@Sym(_)) => simpleIndexReplacements.get((newPSym, cIndex))
-          case _ => None
-        }).orElse(simpleIndexReplacements.get((pSym, cIndex)))
-        .map({ case s@Sym(_) => findDefinition(s) match {
-            case Some(TP(s, Reify(innerSym, _, _))) => 
-              // Don't duplicate effects from producer, since effectful
-              // producer won't be DCE'd, so it will be horizontally
-              // fused in.
-              innerSym
-            case _ => s
-          }
-          case c => c
-        }).getOrElse(super.transformStm(stm))
-
-      case TP(sym, Reflect(loop: AbstractLoop[_], sum, deps)) =>
-        transformLoop(stm, sym, loop, Some((sum, deps)))
-
-      case TP(sym, loop: AbstractLoop[_]) => 
-        transformLoop(stm, sym, loop, None)
+      case TP(sym, LoopOrReflectedLoop(loop, effects)) =>
+        transformLoop(stm, sym, loop, effects)
 
       case tp@TP(_, SimpleDomain(sym@Sym(_))) =>
-        loopsToFixedLengths.get(sym) match {
-          case Some(fixedSym) => 
-            printdbg("(VFT) Replaced " + tp + " with fixed length: " + fixedSym)
-            fixedSym
-          case _ => super.transformStm(stm)
-        }
+        loopsToFixedOutLengths.get(sym).map({ fixedSym => 
+          printdbg("(VFT) Replaced " + tp + " with fixed length: " + fixedSym)
+          fixedSym
+        }).getOrElse(super.transformStm(stm))
 
-      case _ =>
-        val superTransformed = super.transformStm(stm)
-//        println("+++ passed through: " + stmShort(stm) + " -> " + superTransformed)
-        superTransformed
+      case _ => super.transformStm(stm)
     }
     // if (transformedSym == stm.lhs()(0)) {
     //   println("--identical " + transformedSym)
@@ -230,6 +232,328 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     transformedSym
   }
 
+  sealed abstract class FusionInfo(cons: Sym[Any], notFused: List[(Sym[Any], String)]) {
+    def printLogBefore: Unit
+    def printLogAfter(result: FusionOutcome): Unit
+    def getProds: List[Sym[Any]]
+    def setNotFused(list: List[(Sym[Any], String)])
+  }
+  object FusionInfo1to1 {
+    def unapply(o: Any): Option[(Sym[Any], Sym[Any], List[(Sym[Any], String)])] = o match {
+      case x: FusionInfo1to1 => Some((x.prod, x.cons, x.notFused))
+      case _ => None
+    } 
+  }
+  sealed abstract class FusionInfo1to1(val prod: Sym[Any], val cons: Sym[Any], var notFused: List[(Sym[Any], String)])
+      extends FusionInfo(cons, notFused) {
+    override def printLogBefore = {
+      notFused.foreach({ case (prod, reason) => printlog("(VFT) Not fused prod " + prod + " with cons " + cons + " because " + reason) })
+      printlog("(VFT) Fusing prod " + prod + " with cons " + cons + ". Type: " + this)
+    }
+    override def printLogAfter(result: FusionOutcome) = (result: @unchecked) match {
+      case FusionResult(fusedSym) => printlog("(VFT) Fused prod " + prod + " with cons " + cons + ", fused sym: " + fusedSym)
+    }
+    override def getProds = List(prod)
+    override def setNotFused(list: List[(Sym[Any], String)]) = notFused = list
+  }
+  object FusionInfoManyto1 {
+    def unapply(o: Any): Option[(Sym[Any], List[Sym[Any]], Sym[Any], List[(Sym[Any], String)])] = o match {
+      case x: FusionInfoManyto1 => Some((x.prod, x.otherProds, x.cons, x.notFused))
+      case _ => None
+    } 
+  }
+  sealed abstract class FusionInfoManyto1(val prod: Sym[Any], val otherProds: List[Sym[Any]], val cons: Sym[Any],
+      val notFused: List[(Sym[Any], String)]) extends FusionInfo(cons, notFused) {
+    override def printLogBefore = {
+      notFused.foreach({ case (prod, reason) => printlog("(VFT) Not fused prod " + prod + " with cons " + cons + " because " + reason) })
+      printlog("(VFT) Fusing prod " + prod + " with cons " + cons + " and other prods: " + otherProds + ". Type: " + this)
+    }
+    override def printLogAfter(result: FusionOutcome) = (result: @unchecked) match {
+      case FusionResult(fusedSym) => printlog("(VFT) Fused prod " + prod + " and other prods " + otherProds + " with cons " + cons + ", fused sym: " + fusedSym)
+    }
+    override def getProds = prod :: otherProds
+    override def setNotFused(list: List[(Sym[Any], String)]) = sys.error("FusionInfoManyto1.notFused is not mutable")
+  }
+
+  case class NoFusionInfo(cons: Sym[Any], cLoop: AbstractLoop[_], notFused: List[(Sym[Any], String)])
+      extends FusionInfo(cons, notFused) {
+    override def printLogBefore = {
+      notFused.foreach({ case (prod, reason) => printlog("(VFT) Not fused prod " + prod + " with cons " + cons + " because " + reason) })
+      printlog("(VFT) No producers found for cons " + cons)
+    }
+    override def printLogAfter(result: FusionOutcome) = (result: @unchecked) match {
+      case NoFusionRemapped(remappedSym, remapReason) =>
+        if (remappedSym != cons)
+          printlog("(VFT) Cons " + cons + " not fused but mirrored to " + remappedSym
+            + " because " + remapReason)
+    }
+    override def getProds = Nil
+    override def setNotFused(list: List[(Sym[Any], String)]) = sys.error("NoFusionInfo.notFused is not mutable")
+  }
+
+  // case class Empty_McBmcBr(prod: Sym[Any], cons: Sym[Any]) extends FusionInfo1to1(prod, cons)
+  // case class Empty_For(prod: Sym[Any], cons: Sym[Any]) extends FusionInfo1to1(prod, cons)
+  // case class Single_McFor(prod: Sym[Any], cons: Sym[Any], 
+  //   singleVal: Sym[Any], cBlock: Block[Any], cIndex: Sym[Int]) extends FusionInfo1to1(prod, cons)
+  // case class Single_Bmc(prod: Sym[Any], cons: Sym[Any], 
+  //   singleVal: Sym[Any], cBlock: Block[Any], cIndex: Sym[Int]) extends FusionInfo1to1(prod, cons)
+  // case class Mc_Mc(prod: Sym[Any], cons: Sym[Any]) extends FusionInfo1to1(prod, cons)
+  // case class Mc_For(prod: Sym[Any], cons: Sym[Any]) extends FusionInfo1to1(prod, cons)
+  // case class Mcsingle_BmcBr(prod: Sym[Any], cons: Sym[Any]) extends FusionInfo1to1(prod, cons)
+  // TODO case class inheritance needs override val? seriously?
+  case class Mcsingle_Multi(pElem: Exp[Any], pIndex: Sym[Int], cIndex: Sym[Int], 
+      override val prod: Sym[Any], oldPSym: Sym[Any], override val cons: Sym[Any])
+    extends FusionInfo1to1(prod, cons, Nil)
+  case class ManyMcsingle_Multi(pElem: Exp[Any], pIndex: Sym[Int], cIndex: Sym[Int], 
+      override val prod: Sym[Any], oldPSym: Sym[Any], override val cons: Sym[Any],
+      val oProds: List[(Exp[Any], Sym[Any])], override val notFused: List[(Sym[Any], String)])
+    extends FusionInfoManyto1(prod, oProds.unzip._2, cons, notFused)
+
+  sealed abstract class FusionOutcome(val transformed: Exp[Any])
+  case class FusionResult(fusedSym: Exp[Any]) extends FusionOutcome(fusedSym)
+  case class NoFusionRemapped(remappedSym: Exp[Any], remapReason: String) extends FusionOutcome(remappedSym)
+
+  def transformLoop[A:Manifest, B](stm: Stm, sym: Sym[A], loop: AbstractLoop[B], 
+      effects: LoopEffects): Exp[Any] = {
+
+    printlog("")
+    seenLoops += sym
+    val fusionInfo = findProducers(sym, loop, loop.size, loop.v, loop.body, effects)
+    fusionInfo.printLogBefore
+
+    val fusionOutcome = doFusion(fusionInfo, stm)
+    fusionInfo.printLogAfter(fusionOutcome)
+    findDefinitionExp(fusionOutcome.transformed) match {
+      case Some(TP(newSym, LoopOrReflectedLoop((loop, _)))) => 
+        if (newSym != sym) {
+          seenLoops += newSym
+          recordFixedOutLengths(sym, loop)
+        }
+      case _ =>
+    }
+    fusionOutcome.transformed
+  }
+
+  /** RealProd: shape of consumer loop is prod.length
+   *  ReconstrProd: length of producer output collection equals shape of consumer loop
+   *  PartialProd: cannot conclude any of the above, consumer might only
+   *    iterate over part of the producer collection
+   */
+  object ProdType extends Enumeration {
+    type ProdType = Value
+    val RealProd, ReconstrProd, PartialProd = Value
+  }
+  import ProdType._
+  def intVal(prodType: ProdType) = prodType match {
+    case RealProd => 1 case ReconstrProd => 2 case PartialProd => 3
+  }
+  def toString(prodType: ProdType) = prodType match {
+    case RealProd => "real" case ReconstrProd => "reconstructed" case PartialProd => "partial"
+  }
+
+  def findProducers[A](cSym: Sym[A], cLoop: AbstractLoop[_], cShape: Exp[Int], cIndex: Sym[Int], cBody: Def[A],
+      cEffects: LoopEffects): FusionInfo = {
+    // TODO check range, effects, other, multiple prods, deps, index use
+    val cIndexStms = getFatDependentStuff(initialDefs)(List(cIndex))
+
+    
+    var listOfNotFused: List[(Sym[Any], String)] = Nil // TODO how to return this?
+    
+    val producers = cIndexStms.collect({
+      case TP(_, SimpleIndex(pSym@Sym(_), `cIndex`)) => pSym 
+    }).filter({ pSym => 
+      if (!seenLoops.contains(pSym)) {
+        listOfNotFused ::= (pSym, "not in same exact scope"); false
+      } else true
+    }).map({ case pSym => 
+      val (prodType, msg) = consumerGoesOverRangeOfProducer(cShape, pSym)
+      prodType match {
+        case PartialProd => 
+          listOfNotFused ::= (pSym, "consumer loop might not iterate over full range of producer collection")
+          // TODO could have callback, but now not shape of prod, only for SingleCollects?
+          // fusePartialConsumers(pSym, findDefinition(pSym), cSym, findDefinition(cSym))
+        case _ =>
+      }
+      (pSym, prodType)
+    }).filter({ case (_, PartialProd) => false case _ => true
+    }).sortWith({ (a, b) => intVal(a._2) < intVal(b._2)
+    }).map({ case (pSym, prodType) => (pSym, getSubstSym(pSym), prodType)
+    }).filter({ case (pSym, newPSym, _) =>
+      val indexIsTaboo = newPSym match {
+        case Def(LoopOrReflectedLoop(pLoop, _)) => pLoop.body match {
+          case MultiCollect(Def(SingletonColl(_))) => false
+          case _ => true
+        }
+        case _ => true
+      }
+      notIndep(cSym, cIndex, indexIsTaboo, cBody, cEffects, pSym, newPSym) match {
+        case None => true
+        case Some((sym, msg)) => listOfNotFused ::= (sym, msg); false
+      }
+    }).map({ case (oldPSym, newPSym, prodType) => (oldPSym, newPSym) match {
+      case (_, Def(LoopOrReflectedLoop(pLoop, effects))) => pLoop.body match {
+        case MultiCollect(Def(SingletonColl(pElem))) => 
+          val pIndex = pLoop.v
+          cBody match {
+            case MultiCollect(_) => 
+              (Mcsingle_Multi(pElem, pLoop.v, cIndex, newPSym, oldPSym, cSym), prodType)
+      
+            case _ => sys.error("TODO findProducers cons: " + cSym)
+          }
+        case _ => sys.error("TODO findProducers prod body: " + pLoop.body)
+      }
+      case _ => sys.error("TODO findProducers prod: " + newPSym)
+    }})
+
+    def addNotFused(notFused: List[(FusionInfo, ProdType)], fusedProd: Sym[Any], 
+        fusedPType: ProdType, fInfo: Option[FusionInfo] = None) = {
+      notFused.flatMap({ case (fi, _) => fi.getProds }).foreach({ notFusedProd =>
+        val msg = "the consumer is already being fused with the " + toString(fusedPType) + 
+          " producer " + fusedProd + ". Can only fuse multiple producers if all are " + 
+          "MultiCollect(Singleton) and have the same fixed shape " +
+          "(and thus have been mirrored to use the same index symbol)"
+        listOfNotFused ::= ((notFusedProd, msg))
+      })
+      fInfo.foreach(_.setNotFused(listOfNotFused))
+    }
+
+    producers match {
+      case Nil => NoFusionInfo(cSym, cLoop, listOfNotFused)
+      case prod :: Nil => prod._1.notFused = listOfNotFused; prod._1
+      case (mcsm@Mcsingle_Multi(pElem,pIndex,cIndex,newPSym, oldPSym, cSym), firstPType) :: list => 
+        val canFuseRight = list.map({
+          case (Mcsingle_Multi(opElem,`pIndex`,_,_,ooldPSym,_), _) => Right((opElem, ooldPSym))
+          case other => Left(other)
+        })
+        addNotFused(canFuseRight.collect({ case Left(notFused) => notFused }), oldPSym, firstPType)
+        val otherProds = canFuseRight.collect({ case Right(toFuse) => toFuse })
+        ManyMcsingle_Multi(pElem, pIndex, cIndex, newPSym, oldPSym, cSym, otherProds, listOfNotFused)
+      case (first, firstPType) :: list => 
+        val fusedProd: Sym[Any] = first.getProds.head
+        addNotFused(list, fusedProd, firstPType, Some(first))
+        first
+    }
+  }
+
+  /** cShape and pSym are originals, this function will check their substitutions too.
+   *  Returns the ProdType and debugging output. */
+  def consumerGoesOverRangeOfProducer(cShape: Exp[Int], pSym: Sym[Any]): (ProdType, String) = {
+    var cShapeSyms: List[Sym[Any]] = Nil
+    var cConsts: List[Const[Any]] = Nil
+
+    (cShape :: (subst.get(cShape).map(List(_)).getOrElse(Nil))).foreach({
+      case sym@Sym(_) => cShapeSyms ::= sym
+      case c@Const(l: Int) => cConsts ::= c
+    })
+    val pSyms = subst.get(pSym) match {
+      case Some(sym@Sym(_)) => sym :: List(pSym)
+      case _ => List(pSym) // don't know what to do with array constants
+    }
+
+    cShapeSyms.collect({ 
+      case Def(SimpleDomain(sym)) if pSyms.contains(sym) => 
+        return (RealProd, "real producer") // real producer
+    })
+
+    val (pShapeSyms, pConsts) = pSyms.map(loopsToFixedOutLengths.get(_))
+      .filter(_.isDefined).map(_.get)
+      .partition({ case Sym(_) => true case _ => false })
+
+    cConsts.intersect(pConsts).foreach({ c => return (ReconstrProd, "same constant: " + c) })
+    cShapeSyms.intersect(pShapeSyms).foreach({ s => return (ReconstrProd, "same symbol: " + s) })
+
+    return (PartialProd, "cConsts: " + cConsts + ", pConsts: " + pConsts + 
+        ", cShapeSyms: " + cShapeSyms + ", pShapeSyms: " + pShapeSyms)
+  }
+
+  def doFusion(fusionInfo: FusionInfo, stm: Stm): FusionOutcome = {
+    val fusionOutcome = fusionInfo match {
+      case NoFusionInfo(sym, loop, _) => 
+        if (remapIndexIfFixedLength(recordFixedOutLengths(sym, loop), loop.v))
+          NoFusionRemapped(super.transformStm(stm), "of fixed shape")
+        else
+          NoFusionRemapped(super.transformStm(stm), "of previous substitutions or effects")
+      
+      case Mcsingle_Multi(pElem, pIndex, cIndex, pSym, oldPSym, cSym) =>
+        subst += (cIndex -> pIndex) // otherProds have same pIndex
+        addSimpleIndexReplacement(oldPSym, cIndex, pElem)
+        FusionResult(super.transformStm(stm))
+
+      case ManyMcsingle_Multi(pElem, pIndex, cIndex, _, oldPSym, _, otherProds, _) =>
+        subst += (cIndex -> pIndex) // otherProds have same pIndex
+        addSimpleIndexReplacement(oldPSym, cIndex, pElem)
+        otherProds.foreach({ case (opElem, ooldPSym) => 
+          addSimpleIndexReplacement(ooldPSym, cIndex, opElem) })
+        FusionResult(super.transformStm(stm))
+      
+      case _ => sys.error("TODO doFusion")
+    }
+    (fusionInfo, fusionOutcome) match {
+      case (NoFusionInfo(cons, _, _), NoFusionRemapped(newSym, _)) =>
+        FusedSyms.recordRemapped(cons, newSym)
+      case (FusionInfo1to1(prod, cons, _), FusionResult(fusedSym@Sym(_))) => 
+        FusedSyms.recordFused(prod, cons, fusedSym, Nil, None)
+      case (FusionInfoManyto1(prod, otherProds, cons, _), FusionResult(fusedSym@Sym(_))) => 
+        FusedSyms.recordFused(prod, cons, fusedSym, 
+          otherProds.map({ old => (old, getSubstSym(old)) }), None)
+      case err => sys.error("doFusion unknown case: " + err)
+    }
+    fusionOutcome
+  }
+
+  def notIndep[A](cSym: Sym[A], cIndex: Sym[Int], indexIsTaboo: Boolean, cBody: Def[A],
+      cEffects: LoopEffects, pSym: Sym[Any], newPSym: Sym[Any]): Option[(Sym[Any], String)] = {
+    // Note: no need to check that shape doesn't use any dependencies because it can
+    // only have the value of the size of the producer (either SimpleDomain, same constant
+    // or same immutable expression). TODO partial
+
+    val prodLoop = findDefinition(newPSym) match {
+      case Some(TP(`newPSym`, LoopOrReflectedLoop(loop, pEffects))) => loop
+      case d => return Some((pSym, "no loop definition found: " + d))
+    }
+    val prodFusedSyms = FusedSyms.getSet(pSym).map(_.getSet)
+      .getOrElse(Set(pSym, getSubstSym(pSym)))
+    val consFusedSyms = syms(cBody) ++ cEffects.map(_._2.collect({ case s@Sym(_) => s }))
+      .getOrElse(List[Sym[Any]]())
+
+    def substEqu(other: Exp[Any], pSym: Sym[Any]) = 
+      ((other == pSym) || (subst.get(other)).map(_ == pSym).getOrElse(false))
+
+    // traverse the statements needed for the loop and check there are no deps
+    // Exception to stop traversal as soon as dep found
+    case class DepException(message: String) extends Exception(message)
+    try {
+      // TODO don't want to do full traversal every time, could cache deps of seen loops?
+      // But then would have to do full traversal, not stop early?
+      GraphUtil.stronglyConnectedComponents(consFusedSyms, { sym: Sym[Any] => 
+        findDefinition(sym) match {
+          case Some(TP(_, SimpleIndex(other, `cIndex`))) if substEqu(other, pSym) => 
+            List() // SimpleIndex will be substituted, so don't count dependency on index or producer 
+          case Some(d) => 
+            val next = syms(d.rhs).flatMap({ sym => 
+                FusedSyms.getSet(sym).map(_.getSet).getOrElse(Set(sym))
+              }).flatMap(n => subst.get(n) match { // use the new expressions
+                case Some(nn@Sym(_)) => List(nn)
+                case Some(Const(_)) => List()
+                case _ => List(n)
+              })
+
+            next.collectFirst({ 
+              case x if prodFusedSyms.contains(x) => throw DepException("consumer depends on producer through " + x)
+              case `cIndex` if indexIsTaboo => throw DepException("consumer uses index")
+            })
+            next
+          case None => List()
+        }
+      })
+
+      None
+    } catch {
+      case DepException(msg) => Some((pSym, msg))
+    }
+  }
+
+/*  
   def transformLoop[A:Manifest, B](stm: Stm, sym: Sym[A], loop: AbstractLoop[B], 
       effects: LoopEffects): Exp[Any] = {
     
@@ -272,11 +596,11 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
 
     resultLoop match {
       case Some(newLoop@Sym(_)) =>  // fused
-        recordFixedLengths(sym, loop)
+        recordFixedOutLengths(sym, loop)
 
         newLoop
       case _ => // not fused
-        val remapped = remapIndexIfFixedShape(recordFixedLengths(sym, loop), loop.v)
+        val remapped = remapIndexIfFixedLength(recordFixedOutLengths(sym, loop), loop.v)
         val superTransformed = super.transformStm(stm)
         val origSym = stm.lhs()(0)
         // loop can be transformed because of subst from outer loop
@@ -286,7 +610,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
             case s@Sym(_) => findDefinition(s) match {
               case Some(TP(newSym@Sym(_), LoopOrReflectedLoop(loop, _))) => 
                 seenLoops += newSym
-                recordFixedLengths(newSym, loop)
+                recordFixedOutLengths(newSym, loop)
                 FusedSyms.recordRemapped(sym, newSym)
               case _ => sys.error("ERROR VFT matching error")
             }
@@ -317,7 +641,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       case ResultBlock(pRes) =>
         printdbg("(VFT) General fusion: remap index to " + pIndex + ", SimpleIndex to " + pRes + ".")
         subst += (cIndex -> pIndex)
-        simpleIndexReplacements += ((pSym, cIndex) -> pRes)
+        addSimpleIndexReplacement(pSym, cIndex, pRes)
       case _ => return fusionError("General fusion failed, no ResultBlock extractor for producer.", 
         cSym, cLoop, pSym, cIndex, stm)
     }
@@ -336,9 +660,9 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
             .foreach({ case TP(otherPSym, LoopOrReflectedLoop(otherP, _)) => otherP.body match {
               case ResultBlock(otherPRes) =>
                 printdbg("(VFT) Multiple fusion: remap SimpleIndex(" + otherPSym + ") to " + otherPRes + ".")
-                simpleIndexReplacements += ((otherPSym, cIndex) -> otherPRes)
+                addSimpleIndexReplacements(otherPSym, cIndex, otherPRes)
               case _ => 
-                otherProds.foreach(t => simpleIndexReplacements -= ((t._2, cIndex)))
+                otherProds.foreach(t => removeSimpleIndexReplacements(t._2, cIndex))
                 return fusionError("Multiple producer fusion failed, no ResultBlock extractor for producer " + otherPSym, 
                   cSym, cLoop, pSym, cIndex, stm)
             }})     
@@ -389,7 +713,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
                 cSym, cLoop, pSym, cIndex, stm)
             }
             val outerMultiSI = outerMulti.getOrElse((pSym, cIndex))
-            simpleIndexReplacements += (outerMultiSI -> innerRes)
+            addSimpleIndexReplacements(outerMultiSI._1, outerMultiSI._2, innerRes)
 
             // Note: we cannot have multiple producer fusion here because the consumer
             // - cannot consume multiple producers on its original scope because the
@@ -444,7 +768,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
   def fusionError(msg: String, cSym: Sym[Any], cLoop: Def[Any], pSym: Sym[Any], cIndex: Sym[Int], stm: Stm): Exp[Any] = {
     printlog("(VFT) Error: " + msg)
     subst -= cIndex
-    simpleIndexReplacements -= ((pSym, cIndex))
+    removeSimpleIndexReplacements(pSym, cIndex)
     super.transformStm(stm)
   }
 
@@ -474,16 +798,6 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     reflectBlock(Block(ite))
   }
 
-  def getSubstSym(sym: Sym[Any]): Sym[Any] = subst.get(sym) match {
-    case Some(s@Sym(_)) => s
-    case _ => sym
-  }
-  def getSubstSym(sym: Sym[Any],
-      subst2: Map[Exp[Any], Exp[Any]] = subst): Sym[Any] = subst2.get(sym) match {
-    case Some(s@Sym(_)) => s
-    case _ => sym
-  }
-
   // finding producer helpers
 
   /** Returns the real producer (if any), the list of reconstructed producers (if any)
@@ -511,7 +825,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       } else {
         findDefinition(pSym).flatMap({
           case tp@TP(_, SimpleIndex(otherPSym@Sym(_), otherIndex@Sym(_))) if (otherIndex != cIndex) => 
-            simpleIndexReplacements.get((getSubstSym(otherPSym), otherIndex)) match {
+            getSimpleIndexReplacements(getSubstSym(otherPSym), otherIndex) match {
               case Some(fusedSym@Sym(_)) => 
                 printdbg("(VFT) Successive simpleIndex fusion of outer: SimpleIndex(" + pSym + ", " + cIndex + 
                   ") where inner has already been fused: " + tp + " -> " + fusedSym)
@@ -611,7 +925,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       }) 
     })
 
-    val (pShapeSyms, pConsts) = pSyms.map(loopsToFixedLengths.get(_))
+    val (pShapeSyms, pConsts) = pSyms.map(loopsToFixedOutLengths.get(_))
       .filter(_.isDefined).map(_.get)
       .partition({ case Sym(_) => true case _ => false })
 
@@ -756,5 +1070,5 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     } catch {
       case DependencyException(msg, retValue) => (msg, retValue)
     }
-  }
+  } */
 }

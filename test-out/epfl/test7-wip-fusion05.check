@@ -2,53 +2,56 @@
 TP(Sym(2),IntPlus(Sym(1),Const(1)))
 TP(Sym(3),IntTimes(Sym(2),Sym(1)))
 TP(Sym(4),IntTimes(Sym(1),Sym(3)))
-TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(4)))))
-TP(Sym(6),ArrayLength(Sym(5)))
-TP(Sym(8),IntPlus(Sym(7),Const(1)))
-TP(Sym(9),ArrayIndex(Sym(5),Sym(8)))
-TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(9)))))
-TP(Sym(11),ArrayLength(Sym(10)))
-TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
-TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+TP(Sym(5),Singleton(Block(Sym(4))))
+TP(Sym(6),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(5)))))
+TP(Sym(7),ArrayLength(Sym(6)))
+TP(Sym(9),IntPlus(Sym(8),Const(1)))
+TP(Sym(10),ArrayIndex(Sym(6),Sym(9)))
+TP(Sym(11),Singleton(Block(Sym(10))))
+TP(Sym(12),SimpleLoop(Sym(7),Sym(8),MultiArrayElem(Block(Sym(11)))))
+TP(Sym(13),ArrayLength(Sym(12)))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
 
 -- before transformation
-var x5 = new Array[Int](100)
+val x6 = new Array[Int](100)
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
 val x3 = x2 * x1
 val x4 = x1 * x3
-x5(x1) = x4
+x6(x1) = x4
 }
-val x6 = x5.length
-var x10 = new Array[Int](x6)
-for (x7 <- 0 until x6) {
-val x8 = x7 + 1
-val x9 = x5.apply(x8)
-x10(x7) = x9
+val x7 = x6.length
+val x12 = new Array[Int](x7)
+for (x8 <- 0 until x7) {
+val x9 = x8 + 1
+val x10 = x6.apply(x9)
+x12(x8) = x10
 }
-val x11 = x10.length
-val x12 = println(x11)
+val x13 = x12.length
+val x14 = println(x13)
 
 -- vertical transformation
 
-(VFT) No producers found for TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(4)))))
-(VFT) Replaced TP(Sym(6),ArrayLength(Sym(5))) with fixed length: Const(100)
+(VFT) No producers found for cons Sym(6)
+(VFT) Replaced TP(Sym(7),ArrayLength(Sym(6))) with fixed length: Const(100)
 
-(VFT) No producers found for TP(Sym(10),SimpleLoop(Sym(6),Sym(7),ArrayElem(Block(Sym(9))))), remapping to Sym(15) because of fixed shape
-(VFT) Replaced TP(Sym(11),ArrayLength(Sym(10))) with fixed length: Const(100)
+(VFT) No producers found for cons Sym(12)
+(VFT) Cons Sym(12) not fused but mirrored to Sym(18) because of fixed shape
+(VFT) Replaced TP(Sym(13),ArrayLength(Sym(12))) with fixed length: Const(100)
 
 (VFT) all vertically fused: 
 
 -- after vertical transformation
-val x16 = println(100)
+val x19 = println(100)
 
 -- horizontal transformation
 
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
-val x18 = println(100)
+val x21 = println(100)
 
 -- fusion
-val x18 = println(100)
+val x21 = println(100)
 -- done

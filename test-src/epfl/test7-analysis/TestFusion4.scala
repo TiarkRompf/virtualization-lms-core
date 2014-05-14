@@ -11,12 +11,12 @@ import scala.reflect.SourceContext
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
-trait MyFusionProgArith extends Arith with ArrayLoopsFixes with Print with OrderingOps {
+trait MyFusionProgArith extends Arith with ArrayLoopsMC with Print with OrderingOps {
 //with PrimitiveOps with LiftNumeric with BooleanOps {
   def test(x: Rep[Int]): Rep[Unit]
 }
 
-trait ImplArith extends MyFusionProgArith with ArithExp  with ArrayLoopsFatExp with ArrayLoopFusionExtractors
+trait ImplArith extends MyFusionProgArith with ArithExp  with ArrayLoopsMCFatExp with ArrayLoopsMCFusionExtractors
     with IfThenElseFatExp with PrintExp with OrderingOpsExp
 //    with NumericOpsExp with PrimitiveOpsExp with BooleanOpsExp
     with LoopFusionCore2 { self =>
@@ -28,7 +28,7 @@ trait ImplArith extends MyFusionProgArith with ArithExp  with ArrayLoopsFatExp w
 trait CodegenArith extends ScalaGenArith with ScalaGenPrint
   with ScalaGenOrderingOps with ScalaGenIfThenElse
 // with ScalaGenNumericOps with ScalaGenPrimitiveOps
-  with ScalaGenBooleanOps with ScalaGenArrayLoopsFatFixes { val IR: ImplArith }
+  with ScalaGenBooleanOps with ScalaGenArrayLoopsMCFat { val IR: ImplArith }
 
 trait FusionCodegenArith extends CodegenArith with LoopFusionSchedulingOpt { val IR: ImplArith }
 
@@ -135,7 +135,7 @@ class TestFusion4 extends FileDiffSuite {
       implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
       def test(x: Rep[Int]) = {
         def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) = 
-          arrayIf(x.length) { i => (p(x.at(i)), x.at(i)) }
+          arrayIf(x.length)({ i => p(x.at(i)) }, { i => x.at(i) })
         
         val range = array(100) { i => i }
         val odds = filter(range) { z => z > 50 }

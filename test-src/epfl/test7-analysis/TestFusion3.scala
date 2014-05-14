@@ -12,13 +12,13 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 trait MyFusionProg extends NumericOps with PrimitiveOps with LiftNumeric with OrderingOps 
-    with BooleanOps with ArrayLoopsFixes with Print with PrintX with While with Variables with LiftVariables {
+    with BooleanOps with ArrayLoopsMC with Print with PrintX with While with Variables with LiftVariables {
   def test(x: Rep[Int]): Rep[Unit]
 }
 
-trait Impl extends MyFusionProg with NumericOpsExp with PrimitiveOpsExp with ArrayLoopsFatExp with PrintExp
-    with IfThenElseFatExp with OrderingOpsExp with BooleanOpsExp with ArrayLoopFusionExtractors
-    with ArrayLoopsExpFixes with LoopFusionCore2 with WhileExp with VariablesExp with PrintXExp { self =>
+trait Impl extends MyFusionProg with NumericOpsExp with PrimitiveOpsExp with ArrayLoopsMCFatExp with PrintExp
+    with IfThenElseFatExp with OrderingOpsExp with BooleanOpsExp with ArrayLoopsMCFusionExtractors
+    with ArrayLoopsMCExp with LoopFusionCore2 with WhileExp with VariablesExp with PrintXExp { self =>
   override val verbosity = 2 // 1: only printlog, 2: also printdbg
   val runner = new Runner { val p: self.type = self }
   runner.run()
@@ -26,7 +26,7 @@ trait Impl extends MyFusionProg with NumericOpsExp with PrimitiveOpsExp with Arr
 
 trait Codegen extends ScalaGenNumericOps with ScalaGenPrimitiveOps
   with ScalaGenPrint with ScalaGenPrintX with ScalaGenOrderingOps with ScalaGenIfThenElse
-  with ScalaGenBooleanOps with ScalaGenArrayLoopsFatFixes
+  with ScalaGenBooleanOps with ScalaGenArrayLoopsMCFat
   with ScalaGenWhile with ScalaGenVariables { val IR: Impl }
 
 trait FusionCodegen extends Codegen with LoopFusionSchedulingOpt { val IR: Impl }
@@ -167,7 +167,7 @@ class TestFusion3 extends FileDiffSuite {
 
   def testFusionTransform01 = withOutFileChecked(prefix+"fusion01") {
     trait Prog extends MyFusionProg with Impl {
-      def test(x: Rep[Int]) = {        
+      def test(x: Rep[Int]) = {  
         // range is producer, odds is consumer, range fused into odds
         // and range dce'd
         val range = array(100) { i => 
@@ -175,10 +175,9 @@ class TestFusion3 extends FileDiffSuite {
           val y = x * i
           i * y
         }
-        val odds = arrayIf(range.length) { i =>
-          val x = range.at(i) > 50
-          val y = !x
-          (y, range.at(i) + 2) }
+        val odds = arrayIf(range.length)(
+          { i => val x = range.at(i) > 50; !x },
+          { i => range.at(i) + 2 })
         print(odds.length)
       }
     }
@@ -188,19 +187,17 @@ class TestFusion3 extends FileDiffSuite {
   def testFusionTransform02 = withOutFileChecked(prefix+"fusion02") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
-        // range is producer, odds is consumer, range fused into odds
-        // but range kept around, hor.
+        // odds not consumer because not full length of range
+        // no dce, no vert., no hor.
         val range = array(100) { i => 
           val x = i + 1
           val y = x * i
           i * y
         }
-        val odds = arrayIf(range.length) { i =>
-          val x = range.at(i) > 50
-          val y = !x
-          (y, range.at(i) + 2) }
+        val odds = arrayIf(10)(
+          { i => val x = range.at(i) > 50; !x },
+          { i => range.at(i) + 2 })
         print(odds.length)
-        print(range.at(0))
       }
     }
     new Prog with Impl
@@ -215,7 +212,7 @@ class TestFusion3 extends FileDiffSuite {
           val y = x * i
           i * y
         }
-        val more = arrayIf(range.length) { i => (i > 50, i > 60) }
+        val more = arrayIf(range.length)({ i => i > 50}, { i => i > 60 })
         print(more.length)
       }
     }
@@ -262,11 +259,12 @@ class TestFusion3 extends FileDiffSuite {
         val range = array(100) { i => 
           i + 1
         }
-        val arr1 = arrayIf(range.length) { i =>
-          val x = range.at(i) > 50
-          (x, range.at(i) * 2) }
-        val arr2 = arrayIf(range.length) { i =>
-          (range.at(i) < 20, range.at(i) * 3) }
+        val arr1 = arrayIf(range.length)(
+          { i => range.at(i) > 50 },
+          { i => range.at(i) * 2 })
+        val arr2 = arrayIf(range.length)(
+          { i => range.at(i) < 20 }, 
+          { i => range.at(i) * 3 })
         print(arr1.length)
         print(arr2.length)
       }
@@ -282,18 +280,18 @@ class TestFusion3 extends FileDiffSuite {
         val range = array(100) { i => 
           i + 1
         }
-        val arr1 = arrayIf(range.length) { i =>
-          val x = range.at(i) > 50
-          (x, range.at(i) * 2) }
-        val arr2 = arrayIf(range.length) { i =>
-          (range.at(i) < 20, range.at(i) * 3) }
+        val arr1 = arrayIf(range.length)(
+          { i => range.at(i) > 50 },
+          { i => range.at(i) * 2 })
+        val arr2 = arrayIf(range.length)(
+          { i => range.at(i) < 20 }, { i => range.at(i) * 3 })
         print(range.at(0))
         print(arr1.length)
         print(arr2.length)
       }
     }
     new Prog with Impl
-  }
+  }  
 
   def testFusionTransform08 = withOutFileChecked(prefix+"fusion08") {
     trait Prog extends MyFusionProg with Impl {
@@ -305,9 +303,8 @@ class TestFusion3 extends FileDiffSuite {
         val arr1 = array(range.length) { i =>
           val x = range.at(i) * 4
           x * 2 }
-        val arr2 = arrayIf(arr1.length) { i =>
-          val x = arr1.at(i) > 20
-          (x, arr1.at(i) * 3) }
+        val arr2 = arrayIf(arr1.length)(
+          { i => arr1.at(i) > 20}, { i => arr1.at(i) * 3 })
         print(arr2.length)
       }
     }
@@ -468,10 +465,12 @@ class TestFusion3 extends FileDiffSuite {
         val range = array(x) { i => i + 1 }
         val v = range.at(0)
         // not consumer because of v (depends on producer), no hor.
-        val range2 = arrayIf(range.length) { i => (range.at(i) > 0, range.at(i) + v) }
+        val range2 = arrayIf(range.length)(
+          { i => range.at(i) > 0}, { i => range.at(i) + v })
         print(range2.at(0))
         // not consumer because of v (depends on producer), hor. with range2
-        val range3 = arrayIf(range.length) { i => (range.at(i) + v > 0, i) }
+        val range3 = arrayIf(range.length)(
+          { i => range.at(i) + v > 0 }, { i => i })
         print(range3.at(0))
         // not consumer because range3 uses index, no hor.
         val range4 = array(range2.length) { i => range2.at(i) + i }
@@ -489,7 +488,7 @@ class TestFusion3 extends FileDiffSuite {
         // range3 not fused and cannot be moved because of effects
         val range = array(x) { i => i + 1 }
         print(range.at(0))
-        val range2 = array(range.length) { i => print(range.at(i)); i + 42 } 
+        val range2 = array(range.length) { i => print(range.at(i)); i + 45 } 
         val range3 = array(10) { i => print(i); i }
         print(range2.at(1))
         print(range3.at(1))
@@ -563,6 +562,9 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
+// TODO tests below
+
+
   // Test Vertical Fusion: loop type combinations
 
   def testFusionTransform23 = withOutFileChecked(prefix+"fusion23") {
@@ -573,7 +575,8 @@ class TestFusion3 extends FileDiffSuite {
         // range dce'd, fuse remaining hor. except for inner
         val range = array(100) { i => i + 1 }
         val range2 = array(range.length) { i => range.at(i) + 2 }
-        val range3 = arrayIf(range.length) { i => (i > 10, range.at(i) + 3) }
+        val range3 = arrayIf(range.length)(
+          { i => i > 10 }, { i => range.at(i) + 3 })
         val range4 = flatten(range.length) { i => array(10) { ii => ii + range.at(i) } }
         val range5 = sum(range.length) { i => unit(2.0) + int_double_value(range.at(i)) }
         print(range2.at(0))
@@ -591,9 +594,10 @@ class TestFusion3 extends FileDiffSuite {
         // SimpleCollectIf + Any fusion
         // Fuse all vertically with range
         // range dce'd, fuse remaining hor. except for inner
-        val range = arrayIf(100) { i => (i > 10, i + 1) }
+        val range = arrayIf(100)({ i => i > 10 }, {i => i + 1 })
         val range2 = array(range.length) { i => range.at(i) + 2 }
-        val range3 = arrayIf(range.length) { i => (range.at(i) > 20, range.at(i) + 3) }
+        val range3 = arrayIf(range.length)(
+          { i => range.at(i) > 20 }, { i => range.at(i) + 3 })
         val range4 = flatten(range.length) { i => array(range.at(i)) { ii => ii + range.at(i) } }
         val range5 = sum(range.length) { i => unit(2.0) + int_double_value(range.at(i)) }
         print(range2.at(0))
@@ -613,7 +617,8 @@ class TestFusion3 extends FileDiffSuite {
         // range dce'd, fuse remaining hor. except for inner
         val range = flatten(30) { i => array(10) { ii => i+ii } } 
         val range2 = array(range.length) { i => range.at(i) + 2 } // SC
-        val range3 = arrayIf(range.length) { i => (range.at(i) > 20, range.at(i) + 3) } // SCIf
+        val range3 = arrayIf(range.length)(
+          { i => range.at(i) > 20 }, { i => range.at(i) + 3 }) // SCIf
         val range4 = flatten(range.length) { i => array(range.at(i)) { ii => range.at(i) + ii } } // MC
         val range5 = sum(range.length) { i => unit(2.0) + int_double_value(range.at(i)) } // R
         print(range2.at(0))
@@ -630,7 +635,9 @@ class TestFusion3 extends FileDiffSuite {
       def test(x: Rep[Int]) = {        
         // SCIf + SC with common subexpression between condition&body
         // range dce'd, no hor.
-        val range = arrayIf(10) { ii => (1+ii > 5, 1+ii) }
+        val range = arrayIf(10)(
+          { ii => 1+ii > 5 },
+          { ii => 1+ii })
         val range2 = array(range.length) { i => range.at(i) + 2 }
         print(range2.at(0))
       }
@@ -643,9 +650,13 @@ class TestFusion3 extends FileDiffSuite {
       def test(x: Rep[Int]) = {        
         // MultiCollect(SCIf) + Any fusion
         // range dce'd, fuse remaining hor. except for inner
-        val range = flatten(30) { i => arrayIf(10) { ii => (i+ii > 5, i+ii) } } 
+        val range = flatten(30) { i => arrayIf(10)(
+          { ii => i+ii > 5 },
+          { ii => i+ii }) } 
         val range2 = array(range.length) { i => range.at(i) + 2 } // SC
-        val range3 = arrayIf(range.length) { i => (range.at(i) > 20, range.at(i) + 3) } // SCIf
+        val range3 = arrayIf(range.length)(
+          { i => range.at(i) > 20 },
+          { i => range.at(i) + 3 }) // SCIf
         val range4 = flatten(range.length) { i => array(range.at(i)) { ii => range.at(i) + ii } } // MC
         val range5 = sum(range.length) { i => unit(2.0) + int_double_value(range.at(i)) } // R
         print(range2.at(0))
@@ -664,7 +675,9 @@ class TestFusion3 extends FileDiffSuite {
         // range dce'd, fuse remaining hor. except for inner
         val range = flatten(30) { i => flatten(10) { ii => array(5) {iii => i+ii+iii} } } 
         val range2 = array(range.length) { i => range.at(i) + 2 } // SC
-        val range3 = arrayIf(range.length) { i => (range.at(i) > 20, range.at(i) + 3) } // SCIf
+        val range3 = arrayIf(range.length)(
+          { i => range.at(i) > 20 },
+          { i => range.at(i) + 3 }) // SCIf
         val range4 = flatten(range.length) { i => array(range.at(i)) { ii => range.at(i) + ii } } // MC
         val range5 = sum(range.length) { i => unit(2.0) + int_double_value(range.at(i)) } // R
         print(range2.at(0))
@@ -681,9 +694,13 @@ class TestFusion3 extends FileDiffSuite {
       def test(x: Rep[Int]) = {        
         // MultiCollect(constant array SCIf) + Any fusion
         // range dce'd, hor. fuse MC-inner with other inner, hor. fuse outer
-        val range = flatten(30) { i => arrayIf(10) { ii => (ii > 5, ii+1) } } 
+        val range = flatten(30) { i => arrayIf(10)(
+          { ii => ii > 5 },
+          { ii => ii+1 }) } 
         val range2 = array(range.length) { i => range.at(i) + 2 } // SC
-        val range3 = arrayIf(range.length) { i => (range.at(i) > 20, range.at(i) + 3) } // SCIf
+        val range3 = arrayIf(range.length)(
+          { i => range.at(i) > 20 },
+          { i => range.at(i) + 3 }) // SCIf
         val range4 = flatten(range.length) { i => array(range.at(i)) { ii => range.at(i) + ii } } // MC
         val range5 = sum(range.length) { i => unit(2.0) + int_double_value(range.at(i)) } // R
         print(range2.at(0))
@@ -708,7 +725,9 @@ class TestFusion3 extends FileDiffSuite {
         print(range.at(0))
         val rangeH = array(100) { i => i + 2 }
         print(rangeH.at(0))
-        val odds = arrayIf(range.length) { i => (range.at(i) > 50, rangeH.at(0) + 1) }
+        val odds = arrayIf(range.length)(
+          { i => range.at(i) > 50 },
+          { i => rangeH.at(0) + 1 })
         print(odds.length)
       }
     }
@@ -721,11 +740,15 @@ class TestFusion3 extends FileDiffSuite {
         val range = array(x) { i => i + 1 }
         val v = range.at(0)
         // not consumer because of v (depends on producer), no hor.
-        val range2 = arrayIf(range.length) { i => (range.at(i) > 0, range.at(i) + v) }
+        val range2 = arrayIf(range.length)(
+          { i => range.at(i) > 0 },
+          { i => range.at(i) + v })
         print(range2.at(0))
         // not consumer because of v (depends on producer), hor. with range2
         // new in subst
-        val range3 = arrayIf(range.length) { i => (range.at(i) + v > 0, i) }
+        val range3 = arrayIf(range.length)(
+          { i => range.at(i) + v > 0 },
+          { i => i })
         print(range3.at(0))
         // consumer of range3, hor. with range2&3
         // subst already has it
@@ -742,7 +765,9 @@ class TestFusion3 extends FileDiffSuite {
         // regression test for bug when pBody is index, 
         // onceSubst was eaten by index transformation. Fuse vert. & hor.
         // TODO are there other cases when onceSubst expression is used too early?
-        val range = arrayIf(x) { i => (i + 10 > 0, i) }
+        val range = arrayIf(x)(
+          { i => i + 10 > 0 },
+          { i => i })
         print(range.at(0))
         val range2 = array(range.length) { i => range.at(i) + 2 }
         print(range2.at(0))
@@ -755,9 +780,13 @@ class TestFusion3 extends FileDiffSuite {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // Constant array, successive works, but would like to yield directly to output
-        val range = flatten(30) { i => arrayIf(10) { ii => (ii > 5, ii+1) } } 
+        val range = flatten(30) { i => arrayIf(10)(
+          { ii => ii > 5 },
+          { ii => ii+1 }) } 
         val range2 = array(range.length) { i => range.at(i) + 2 } // SC
-        val range3 = arrayIf(range2.length) { i => (range2.at(i) > 20, range2.at(i) + 3) } // SCIf
+        val range3 = arrayIf(range2.length)(
+          { i => range2.at(i) > 20 },
+          { i => range2.at(i) + 3 }) // SCIf
 
         print(range2.at(0))
         print(range3.at(0))
@@ -870,7 +899,9 @@ class TestFusion3 extends FileDiffSuite {
         // range5 no fusion because producer is IF
         val range = array(100) { i => i + 1 }
         val range2 = array(100) { i => i + 2 }
-        val range3 = arrayIf(100) { i => (i > 10, i + 3) }
+        val range3 = arrayIf(100)(
+          { i => i > 10 },
+          { i => i + 3 })
         val range4 = array(range2.length) { i => range.at(i) + range2.at(i) }
         val range5 = array(100) { i => range3.at(i) }
         print(range3.at(0))
@@ -1244,6 +1275,18 @@ class TestFusion3 extends FileDiffSuite {
     }
     new Prog with Impl
   }
+
+  def testFusionTransform61 = withOutFileChecked(prefix+"fusion61") {
+    trait Prog extends MyFusionProg with Impl {
+      // Fuse MC with effectful foreach, removes intermediate array allocation
+      def test(x: Rep[Int]) = {
+        val range = flatten(100) {i => array(i) {j => j} }
+        range.foreach({ x: Rep[Int] => print(x + 3) })
+      }
+    }
+    new Prog with Impl
+  }
+
 
   // TODO think about:
   // Vertical fusion of effectful prod causes fused to have same Reflect around,

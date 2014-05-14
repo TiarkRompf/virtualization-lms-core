@@ -1,114 +1,117 @@
 -- full graph
 TP(Sym(3),IntPlus(Sym(2),Sym(1)))
-TP(Sym(4),SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(3)))))
-TP(Sym(5),ArrayIndex(Sym(4),Const(0)))
-TP(Sym(6),SimpleLoop(Const(90),Sym(1),ArrayElem(Block(Sym(5)))))
-TP(Sym(8),IntPlus(Sym(7),Const(2)))
-TP(Sym(9),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8)))))
-TP(Sym(10),ArrayIndex(Sym(6),Const(0)))
-TP(Sym(11),Reflect(Print(Sym(10)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
-TP(Sym(12),ArrayIndex(Sym(9),Const(0)))
-TP(Sym(13),Reflect(Print(Sym(12)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11))))
-TP(Sym(14),Reify(Sym(13),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11), Sym(13))))
+TP(Sym(4),Singleton(Block(Sym(3))))
+TP(Sym(5),SimpleLoop(Const(100),Sym(2),MultiArrayElem(Block(Sym(4)))))
+TP(Sym(6),ArrayIndex(Sym(5),Const(0)))
+TP(Sym(7),Singleton(Block(Sym(6))))
+TP(Sym(8),SimpleLoop(Const(90),Sym(1),MultiArrayElem(Block(Sym(7)))))
+TP(Sym(10),IntPlus(Sym(9),Const(2)))
+TP(Sym(11),Singleton(Block(Sym(10))))
+TP(Sym(12),SimpleLoop(Const(100),Sym(9),MultiArrayElem(Block(Sym(11)))))
+TP(Sym(13),ArrayIndex(Sym(8),Const(0)))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(15),ArrayIndex(Sym(12),Const(0)))
+TP(Sym(16),Reflect(Print(Sym(15)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+TP(Sym(17),Reify(Sym(16),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14), Sym(16))))
 
 -- before transformation
-var x6 = new Array[Int](90)
+val x8 = new Array[Int](90)
 for (x1 <- 0 until 90) {
-var x4 = new Array[Int](100)
+val x5 = new Array[Int](100)
 for (x2 <- 0 until 100) {
 val x3 = x2 + x1
-x4(x2) = x3
+x5(x2) = x3
 }
-val x5 = x4.apply(0)
-x6(x1) = x5
+val x6 = x5.apply(0)
+x8(x1) = x6
 }
-val x10 = x6.apply(0)
-val x11 = println(x10)
-var x9 = new Array[Int](100)
-for (x7 <- 0 until 100) {
-val x8 = x7 + 2
-x9(x7) = x8
+val x13 = x8.apply(0)
+val x14 = println(x13)
+val x12 = new Array[Int](100)
+for (x9 <- 0 until 100) {
+val x10 = x9 + 2
+x12(x9) = x10
 }
-val x12 = x9.apply(0)
-val x13 = println(x12)
+val x15 = x12.apply(0)
+val x16 = println(x15)
 
 -- vertical transformation
 
+(VFT) No producers found for cons Sym(8)
   
-  (VFT) No producers found for TP(Sym(4),SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(3)))))
-(VFT) No producers found for TP(Sym(6),SimpleLoop(Const(90),Sym(1),ArrayElem(Block(Sym(5)))))
+  (VFT) No producers found for cons Sym(5)
 
-(VFT) No producers found for TP(Sym(9),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8)))))
+(VFT) No producers found for cons Sym(12)
 
 (VFT) all vertically fused: 
 
 -- after vertical transformation
-var x6 = new Array[Int](90)
+val x8 = new Array[Int](90)
 for (x1 <- 0 until 90) {
-var x4 = new Array[Int](100)
+val x5 = new Array[Int](100)
 for (x2 <- 0 until 100) {
 val x3 = x2 + x1
-x4(x2) = x3
+x5(x2) = x3
 }
-val x5 = x4.apply(0)
-x6(x1) = x5
+val x6 = x5.apply(0)
+x8(x1) = x6
 }
-val x10 = x6.apply(0)
-val x15 = println(x10)
-var x9 = new Array[Int](100)
-for (x7 <- 0 until 100) {
-val x8 = x7 + 2
-x9(x7) = x8
+val x13 = x8.apply(0)
+val x18 = println(x13)
+val x12 = new Array[Int](100)
+for (x9 <- 0 until 100) {
+val x10 = x9 + 2
+x12(x9) = x10
 }
-val x12 = x9.apply(0)
-val x16 = println(x12)
+val x15 = x12.apply(0)
+val x19 = println(x15)
 
 -- horizontal transformation
-(HFT) Recording Sym(6), no fusion
-  (HFT) Recording Sym(4), no fusion
-(HFT) Recording Sym(9), no fusion
+(HFT) Recording Sym(8), no fusion
+  (HFT) Recording Sym(5), no fusion
+(HFT) Recording Sym(12), no fusion
 
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
-var x6 = new Array[Int](90)
+val x8 = new Array[Int](90)
 for (x1 <- 0 until 90) {
-var x4 = new Array[Int](100)
+val x5 = new Array[Int](100)
 for (x2 <- 0 until 100) {
 val x3 = x2 + x1
-x4(x2) = x3
+x5(x2) = x3
 }
-val x5 = x4.apply(0)
-x6(x1) = x5
+val x6 = x5.apply(0)
+x8(x1) = x6
 }
-val x10 = x6.apply(0)
-val x18 = println(x10)
-var x9 = new Array[Int](100)
-for (x7 <- 0 until 100) {
-val x8 = x7 + 2
-x9(x7) = x8
+val x13 = x8.apply(0)
+val x21 = println(x13)
+val x12 = new Array[Int](100)
+for (x9 <- 0 until 100) {
+val x10 = x9 + 2
+x12(x9) = x10
 }
-val x12 = x9.apply(0)
-val x19 = println(x12)
+val x15 = x12.apply(0)
+val x22 = println(x15)
 
 -- fusion
-var x6 = new Array[Int](90)
+val x8 = new Array[Int](90)
 for (x1 <- 0 until 90) {
-var x4 = new Array[Int](100)
+val x5 = new Array[Int](100)
 for (x2 <- 0 until 100) {
 val x3 = x2 + x1
-x4(x2) = x3
+x5(x2) = x3
 }
-val x5 = x4.apply(0)
-x6(x1) = x5
+val x6 = x5.apply(0)
+x8(x1) = x6
 }
-val x10 = x6.apply(0)
-val x18 = println(x10)
-var x9 = new Array[Int](100)
-for (x7 <- 0 until 100) {
-val x8 = x7 + 2
-x9(x7) = x8
+val x13 = x8.apply(0)
+val x21 = println(x13)
+val x12 = new Array[Int](100)
+for (x9 <- 0 until 100) {
+val x10 = x9 + 2
+x12(x9) = x10
 }
-val x12 = x9.apply(0)
-val x19 = println(x12)
+val x15 = x12.apply(0)
+val x22 = println(x15)
 -- done
