@@ -11,7 +11,7 @@ trait CLikeCodegen extends GenericCodegen {
   def mangledName(name: String) = name.replaceAll("\\s","").map(c => if(!c.isDigit && !c.isLetter) '_' else c) 
 
   // List of datastructure types that requires transfer functions to be generated for this target
-  val dsTypesList = HashSet[(Manifest[Any],String)]()
+  val dsTypesList = HashSet[(Manifest[_],String)]()
 
   // Streams for helper functions and its header
   var helperFuncStream: PrintWriter = _
@@ -62,12 +62,27 @@ trait CLikeCodegen extends GenericCodegen {
     }
   }
 
-  def addRef(): String = /*if (cppUseSharedPtr) " " else*/ " *"
+  def addRef(): String = if (cppMemMgr=="refcnt") " " else " *"
   def addRef[A](m: Manifest[A]): String = addRef(remap(m))
-
   def addRef(tpe: String): String = {
     if (!isPrimitiveType(tpe) && !isVoidType(tpe)) addRef()
     else " "
+  }
+  
+  // move to CCodegen?
+  def unwrapSharedPtr(tpe: String): String = {
+    assert(cppMemMgr == "refcnt")
+    if(tpe.contains("std::shared_ptr")) 
+      tpe.replaceAll("std::shared_ptr<","").replaceAll(">","") 
+    else 
+      tpe
+  }
+  def wrapSharedPtr(tpe: String): String = {
+    assert(cppMemMgr == "refcnt")
+    if(!isPrimitiveType(tpe) && !isVoidType(tpe)) 
+      "std::shared_ptr<" + tpe + ">" 
+    else 
+      tpe
   }
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
@@ -76,17 +91,26 @@ trait CLikeCodegen extends GenericCodegen {
     
     def kernelSignature: String = {
       val out = new StringBuilder
-      if(resultIsVar)
-        out.append(hostTarget + "Ref< " + resultType + addRef(resultType) + " > " + addRef())
-      else
+      if(resultIsVar) {
+        if (cppMemMgr == "refcnt")
+          out.append(wrapSharedPtr(hostTarget + "Ref" + unwrapSharedPtr(resultType)))
+        else
+          out.append(hostTarget + "Ref" + resultType + addRef())
+      }
+      else {
         out.append(resultType + addRef(resultType))
+      }
+
       out.append(" kernel_" + syms.map(quote).mkString("") + "(")
-      out.append(vals.map(p=>remap(p.tp) + addRef(p.tp) + quote(p)).mkString(", "))
-      if (vals.length > 0 && vars.length > 0){
+      out.append(vals.map(p => remap(p.tp) + " " + addRef(p.tp) + quote(p)).mkString(", "))
+      if (vals.length > 0 && vars.length > 0) {
         out.append(", ")
       }
-      if (vars.length > 0){
-        out.append(vars.map(v => hostTarget + "Ref< " + remap(v.tp) + addRef(v.tp) + " > " + addRef() + quote(v)).mkString(","))
+      if (vars.length > 0) {
+        if (cppMemMgr == "refcnt")
+          out.append(vars.map(v => wrapSharedPtr(hostTarget + "Ref" + unwrapSharedPtr(remap(v.tp))) + " " + quote(v)).mkString(","))
+        else
+          out.append(vars.map(v => hostTarget + "Ref" + remap(v.tp) + addRef() + " " + quote(v)).mkString(","))
       }
       out.append(")")
       out.toString
