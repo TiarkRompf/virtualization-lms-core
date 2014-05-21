@@ -9,7 +9,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
   // NOTE: strings are in general treated as primitive types to avoid the memory management,
   //       but for transfer functions strings must be treated separately from primitive types
 
-  def emitSend(tp: Manifest[Any], peer: Targets.Value): (String,String) = {
+  def emitSend(tp: Manifest[_], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
       if (remap(tp) == "string") {
         val out = new StringBuilder
@@ -48,7 +48,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def emitRecv(tp: Manifest[Any], peer: Targets.Value): (String,String) = {
+  def emitRecv(tp: Manifest[_], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
       if (remap(tp) == "string") {
         val out = new StringBuilder
@@ -93,7 +93,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def emitSendView(tp: Manifest[Any], peer: Targets.Value): (String,String) = {
+  def emitSendView(tp: Manifest[_], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
       if (remap(tp) == "string") {
         val out = new StringBuilder
@@ -134,7 +134,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def emitRecvView(tp: Manifest[Any], peer: Targets.Value): (String,String) = {
+  def emitRecvView(tp: Manifest[_], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
       if (remap(tp) == "string") {
         val out = new StringBuilder
@@ -175,7 +175,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def emitSendUpdate(tp: Manifest[Any], peer: Targets.Value): (String,String) = {
+  def emitSendUpdate(tp: Manifest[_], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
       if(isPrimitiveType(tp)) {
         val out = new StringBuilder
@@ -213,7 +213,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
     }
   }
 
-  def emitRecvUpdate(tp: Manifest[Any], peer: Targets.Value): (String,String) = {
+  def emitRecvUpdate(tp: Manifest[_], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
       if (remap(tp) == "string") {
         val out = new StringBuilder
