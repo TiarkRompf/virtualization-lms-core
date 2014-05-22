@@ -106,7 +106,7 @@ trait RunnerArith {
 class TestFusion4 extends FileDiffSuite {
 
   val prefix = "test-out/epfl/test7-wip2-"
-
+/*
   def testFusionTransform00 = withOutFileChecked(prefix+"fusion00") {
     trait Prog extends MyFusionProgArith with ImplArith {
       implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
@@ -270,4 +270,5 @@ class TestFusion4 extends FileDiffSuite {
     }
     new Prog with ImplArith
   }
+  */
 }

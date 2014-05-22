@@ -36,7 +36,7 @@ val x14 = println(x13)
 (VFT) No producers found for cons Sym(6)
 (VFT) Replaced TP(Sym(7),ArrayLength(Sym(6))) with fixed length: Const(100)
 
-(VFT) Fusing prod Sym(6) with cons Sym(12). Type: Mcsingle_Multi(Sym(4),Sym(1),Sym(8),Sym(6),Sym(6),Sym(12))
+(VFT) Fusing prod Sym(6) with cons Sym(12). Type: Mc_McForlike(Sym(8),Sym(1),Sym(7),Const(100),Single_MC(Sym(8),(Sym(6),Sym(8)),Sym(4),Sym(11),Sym(5),Sym(12)),Sym(11),Sym(6),Sym(12))
 (VFT) Fused prod Sym(6) with cons Sym(12), fused sym: Sym(18)
 
 (VFT) all vertically fused: List(Sym(6), Sym(18))

@@ -16,10 +16,18 @@ trait LoopFusionExtractors extends internal.Expressions { // copied from LoopFus
   }
 
   def unapplyEmptyColl(a: Def[Any]): Boolean = false
+  def unapplyEmptyCollNewEmpty[T:Manifest](a: (Def[Any], Exp[T], Option[Sym[Int]])): Option[Exp[T]] = None
+
   def unapplySingletonColl(a: Def[Any]): Option[Exp[Any]] = None
   def unapplyMultiCollect[T](a: Def[T]): Option[Exp[T]] = None
 
-  def unapplyForlike[T](e: Def[T]): Option[Exp[T]] = None
+  // exp is valueFunc block of reduce and bodies of for and foreach
+  // boolean is true if type is Unit (for and foreach), false otherwise (reduce usually)
+  def unapplyForlike[T](e: Def[T]): Option[(Exp[T], Boolean)] = None
+
+  def ignoreIndex(e: Def[Any]): Boolean = false
+
+
   
   object SimpleIndex {
     def unapply(a: Def[Any]): Option[(Exp[Any], Exp[Int])] = unapplySimpleIndex(a)
@@ -36,6 +44,9 @@ trait LoopFusionExtractors extends internal.Expressions { // copied from LoopFus
   object EmptyColl {
     def unapply(a: Def[Any]): Boolean = unapplyEmptyColl(a) 
   }
+  object EmptyCollNewEmpty {
+    def unapply[T:Manifest](a: (Def[Any], Exp[T], Option[Sym[Int]])): Option[Exp[T]] = unapplyEmptyCollNewEmpty(a) 
+  }
 
   object SingletonColl {
     def unapply(a: Def[Any]): Option[Exp[Any]] = unapplySingletonColl(a) 
@@ -45,8 +56,8 @@ trait LoopFusionExtractors extends internal.Expressions { // copied from LoopFus
     def unapply[T](a: Def[T]): Option[Exp[T]] = unapplyMultiCollect(a)
   }
 
-  object Forlike {
-    def unapply[T](a: Def[T]): Option[Exp[T]] = unapplyForlike(a)
+  object ForLike {
+    def unapply[T](a: Def[T]): Option[(Exp[T], Boolean)] = unapplyForlike(a)
   }
 
   // object ResultBlock {

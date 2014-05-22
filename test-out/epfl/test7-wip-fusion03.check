@@ -8,12 +8,12 @@ TP(Sym(7),ArrayLength(Sym(6)))
 TP(Sym(9),OrderingGT(Sym(8),Const(50)))
 TP(Sym(10),OrderingGT(Sym(8),Const(60)))
 TP(Sym(11),Singleton(Block(Sym(10))))
-TP(Sym(12),EmptyArrayInLoop(Sym(8)))
-TP(Sym(13),IfThenElse(Sym(9),Block(Sym(11)),Block(Sym(12))))
-TP(Sym(14),SimpleLoop(Sym(7),Sym(8),MultiArrayElem(Block(Sym(13)))))
-TP(Sym(15),ArrayLength(Sym(14)))
-TP(Sym(16),Reflect(Print(Sym(15)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
-TP(Sym(17),Reify(Sym(16),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(16))))
+TP(Sym(13),EmptyArrayInLoop(Sym(8),Sym(12)))
+TP(Sym(14),IfThenElse(Sym(9),Block(Sym(11)),Block(Sym(13))))
+TP(Sym(15),SimpleLoop(Sym(7),Sym(8),MultiArrayElem(Block(Sym(14)))))
+TP(Sym(16),ArrayLength(Sym(15)))
+TP(Sym(17),Reflect(Print(Sym(16)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(18),Reify(Sym(17),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(17))))
 
 -- before transformation
 val x6 = new Array[Int](100)
@@ -24,65 +24,69 @@ val x4 = x1 * x3
 x6(x1) = x4
 }
 val x7 = x6.length
-var x14 = new ArrayBuilder[Boolean]
+val x15_builder = new scala.collection.mutable.ArrayBuilder.ofBoolean
 for (x8 <- 0 until x7) {
 val x9 = x8 > 50
 if (x9) {
 val x10 = x8 > 60
-x14 += x10
+x15_builder += x10
 }
 }
-val x15 = x14.length
-val x16 = println(x15)
+val x15 = x15_builder.result()
+val x16 = x15.length
+val x17 = println(x16)
 
 -- vertical transformation
 
 (VFT) No producers found for cons Sym(6)
 (VFT) Replaced TP(Sym(7),ArrayLength(Sym(6))) with fixed length: Const(100)
 
-(VFT) No producers found for cons Sym(14)
-(VFT) Cons Sym(14) not fused but mirrored to Sym(18) because of previous substitutions or effects
+(VFT) No producers found for cons Sym(15)
+(VFT) Cons Sym(15) not fused but mirrored to Sym(19) because of previous substitutions or effects
 
 (VFT) all vertically fused: 
 
 -- after vertical transformation
-var x18 = new ArrayBuilder[Boolean]
+val x19_builder = new scala.collection.mutable.ArrayBuilder.ofBoolean
 for (x8 <- 0 until 100) {
 val x9 = x8 > 50
 if (x9) {
 val x10 = x8 > 60
-x18 += x10
+x19_builder += x10
 }
 }
-val x19 = x18.length
-val x20 = println(x19)
+val x19 = x19_builder.result()
+val x20 = x19.length
+val x21 = println(x20)
 
 -- horizontal transformation
-(HFT) Recording Sym(18), no fusion
+(HFT) Recording Sym(19), no fusion
 
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
-var x18 = new ArrayBuilder[Boolean]
+val x19_builder = new scala.collection.mutable.ArrayBuilder.ofBoolean
 for (x8 <- 0 until 100) {
 val x9 = x8 > 50
 if (x9) {
 val x10 = x8 > 60
-x18 += x10
+x19_builder += x10
 }
 }
-val x19 = x18.length
-val x22 = println(x19)
+val x19 = x19_builder.result()
+val x20 = x19.length
+val x23 = println(x20)
 
 -- fusion
-var x18 = new ArrayBuilder[Boolean]
+val x19_builder = new scala.collection.mutable.ArrayBuilder.ofBoolean
 for (x8 <- 0 until 100) {
 val x9 = x8 > 50
 if (x9) {
 val x10 = x8 > 60
-x18 += x10
+x19_builder += x10
 }
 }
-val x19 = x18.length
-val x22 = println(x19)
+val x19 = x19_builder.result()
+val x20 = x19.length
+val x23 = println(x20)
 -- done

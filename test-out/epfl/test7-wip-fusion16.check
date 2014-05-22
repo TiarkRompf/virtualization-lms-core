@@ -114,24 +114,24 @@ val x53 = println(x52)
 (VFT) No producers found for cons Sym(4)
 (VFT) Replaced TP(Sym(5),ArrayLength(Sym(4))) with fixed length: Sym(0)
 
-(VFT) Fusing prod Sym(4) with cons Sym(9). Type: Mcsingle_Multi(Sym(2),Sym(1),Sym(6),Sym(4),Sym(4),Sym(9))
+(VFT) Fusing prod Sym(4) with cons Sym(9). Type: Mc_McForlike(Sym(6),Sym(1),Sym(5),Sym(0),Single_MC(Sym(6),(Sym(4),Sym(6)),Sym(2),Sym(8),Sym(3),Sym(9)),Sym(8),Sym(4),Sym(9))
 (VFT) Fused prod Sym(4) with cons Sym(9), fused sym: Sym(4)
 (VFT) Replaced TP(Sym(10),ArrayLength(Sym(9))) with fixed length: Sym(0)
 
 (VFT) Not fused prod Sym(4) with cons Sym(16) because consumer loop might not iterate over full range of producer collection
 (VFT) No producers found for cons Sym(16)
 
-(VFT) Fusing prod Sym(16) with cons Sym(20). Type: Mcsingle_Multi(Sym(14),Sym(13),Sym(17),Sym(16),Sym(16),Sym(20))
+(VFT) Fusing prod Sym(16) with cons Sym(20). Type: Mc_McForlike(Sym(17),Sym(13),Sym(12),Sym(12),Single_MC(Sym(17),(Sym(16),Sym(17)),Sym(14),Sym(19),Sym(15),Sym(20)),Sym(19),Sym(16),Sym(20))
 (VFT) Fused prod Sym(16) with cons Sym(20), fused sym: Sym(16)
 (VFT) Replaced TP(Sym(21),ArrayLength(Sym(20))) with fixed length: Sym(12)
 
 (VFT) No producers found for cons Sym(26)
 (VFT) Replaced TP(Sym(27),ArrayLength(Sym(26))) with fixed length: Const(100)
 
-(VFT) Fusing prod Sym(26) with cons Sym(31). Type: Mcsingle_Multi(Sym(24),Sym(23),Sym(28),Sym(26),Sym(26),Sym(31))
+(VFT) Fusing prod Sym(26) with cons Sym(31). Type: Mc_McForlike(Sym(28),Sym(23),Sym(27),Const(100),Single_MC(Sym(28),(Sym(26),Sym(28)),Sym(24),Sym(30),Sym(25),Sym(31)),Sym(30),Sym(26),Sym(31))
 (VFT) Fused prod Sym(26) with cons Sym(31), fused sym: Sym(26)
 
-(VFT) Fusing prod Sym(26) with cons Sym(35). Type: Mcsingle_Multi(Sym(24),Sym(23),Sym(32),Sym(26),Sym(31),Sym(35))
+(VFT) Fusing prod Sym(26) with cons Sym(35). Type: Mc_McForlike(Sym(32),Sym(23),Sym(27),Const(100),Single_MC(Sym(32),(Sym(31),Sym(32)),Sym(24),Sym(34),Sym(25),Sym(35)),Sym(34),Sym(26),Sym(35))
 (VFT) Fused prod Sym(26) with cons Sym(35), fused sym: Sym(26)
 
 (VFT) Not fused prod Sym(26) with cons Sym(39) because consumer loop might not iterate over full range of producer collection
@@ -141,7 +141,7 @@ val x53 = println(x52)
 (VFT) No producers found for cons Sym(43)
 (VFT) Cons Sym(43) not fused but mirrored to Sym(61) because of fixed shape
 
-(VFT) Fusing prod Sym(26) with cons Sym(47). Type: Mcsingle_Multi(Sym(24),Sym(23),Sym(44),Sym(26),Sym(26),Sym(47))
+(VFT) Fusing prod Sym(26) with cons Sym(47). Type: Mc_McForlike(Sym(44),Sym(23),Const(100),Const(100),Single_MC(Sym(44),(Sym(26),Sym(44)),Sym(24),Sym(46),Sym(25),Sym(47)),Sym(46),Sym(26),Sym(47))
 (VFT) Fused prod Sym(26) with cons Sym(47), fused sym: Sym(26)
 
 (VFT) all vertically fused: 
