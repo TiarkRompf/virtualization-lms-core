@@ -2,18 +2,11 @@ package scala.virtualization.lms
 package common
 
 
-trait LoopFusionCore2 extends LoopFusionExtractors with BaseFatExp with LoopsFatExp with IfThenElseExp with BooleanOpsExp
-
-// TODO doc
-trait LoopFusionExtractors extends internal.Expressions { // copied from LoopFusionOpt: LoopFusionCore trait
+trait LoopFusionExtractors extends internal.Expressions with LoopsExp {
 
   def unapplySimpleIndex(e: Def[Any]): Option[(Exp[Any], Exp[Int])] = None
   def unapplySimpleDomain(e: Def[Any]): Option[Exp[Any]] = None
-  def unapplyFixedDomain(e: Def[Any]): Option[Exp[Int]] = e match {
-    case EmptyColl() => Some(Const(0))
-    case SingletonColl(_) => Some(Const(1))
-    case _ => None
-  }
+  def unapplyFixedDomain(e: Def[Any]): Option[Exp[Int]] = None
 
   def unapplyEmptyColl(a: Def[Any]): Boolean = false
   def unapplyEmptyCollNewEmpty[T:Manifest](a: (Def[Any], Exp[T], Option[Sym[Int]])): Option[Exp[T]] = None
@@ -25,10 +18,12 @@ trait LoopFusionExtractors extends internal.Expressions { // copied from LoopFus
   // boolean is true if type is Unit (for and foreach), false otherwise (reduce usually)
   def unapplyForlike[T](e: Def[T]): Option[(Exp[T], Boolean)] = None
 
-  def ignoreIndex(e: Def[Any]): Boolean = false
+  def ignoreIndex(e: Def[Any], index: Sym[Int]): Boolean = false
+
+}
 
 
-  
+trait LoopFusionCore2 extends LoopFusionExtractors with BaseFatExp with LoopsFatExp with IfThenElseExp with BooleanOpsExp {
   object SimpleIndex {
     def unapply(a: Def[Any]): Option[(Exp[Any], Exp[Int])] = unapplySimpleIndex(a)
   }
@@ -60,23 +55,24 @@ trait LoopFusionExtractors extends internal.Expressions { // copied from LoopFus
     def unapply[T](a: Def[T]): Option[(Exp[T], Boolean)] = unapplyForlike(a)
   }
 
-  // object ResultBlock {
-  //   def unapply(a: Def[Any]): Option[Exp[Any]] = a match {
-  //     case SimpleCollect(res) => Some(res)
-  //     case SimpleCollectIf(res, _) => Some(res)
-  //     case MultiCollect(res, _) => Some(res)
-  //     case Reduce(res, _, _) => Some(res)
-  //     case _ => None
-  //   }
-  // }
+  object ProducerResultBlock {
+    def unapply(a: Def[Any]): Option[Exp[Any]] = a match {
+      case SingletonColl(res) => Some(res)
+      case MultiCollect(res) => Some(res)
+      case _ => None
+    }
+  }
 
-  // object AllBlocks {
-  //   def unapply(a: Def[Any]): Option[List[Exp[Any]]] = a match {
-  //     case SimpleCollect(res) => Some(List(res))
-  //     case SimpleCollectIf(res, conds) => Some(res :: conds)
-  //     case MultiCollect(res, _) => Some(List(res))
-  //     case Reduce(res, _, _) => Some(List(res))
-  //     case _ => None
-  //   }
-  // }
+  override def unapplyFixedDomain(e: Def[Any]): Option[Exp[Int]] = e match {
+    case EmptyColl() => Some(Const(0))
+    case SingletonColl(_) => Some(Const(1))
+    case EatReflect(loop: AbstractLoop[_]) => loop.body match {
+      case MultiCollect(Def(EatReflect(SingletonColl(_)))) => Some(loop.size)
+      case MultiCollect(Def(Reify(Def(EatReflect(SingletonColl(_))),_,_))) => Some(loop.size)
+      case _ => super.unapplyFixedDomain(e)
+    }
+    case _ => super.unapplyFixedDomain(e)
+  }
+
+
 }

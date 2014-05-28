@@ -1,6 +1,6 @@
 -- full graph
 TP(Sym(2),IntPlus(Sym(1),Const(1)))
-TP(Sym(3),Singleton(Block(Sym(2))))
+TP(Sym(3),SingletonInLoop(Block(Sym(2)),Sym(1)))
 TP(Sym(4),SimpleLoop(Sym(0),Sym(1),MultiArrayElem(Block(Sym(3)))))
 TP(Sym(5),ArrayIndex(Sym(4),Const(0)))
 TP(Sym(6),Reflect(Print(Sym(5)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
@@ -9,7 +9,7 @@ TP(Sym(9),ArrayIndex(Sym(4),Sym(8)))
 TP(Sym(10),Reflect(Print(Sym(9)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
 TP(Sym(11),IntPlus(Sym(8),Const(45)))
 TP(Sym(12),Reify(Sym(11),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10))))
-TP(Sym(13),Reflect(Singleton(Block(Sym(12))),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
+TP(Sym(13),Reflect(SingletonInLoop(Block(Sym(12)),Sym(8)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
 TP(Sym(14),Reify(Sym(13),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(13))))
 TP(Sym(15),Reflect(SimpleLoop(Sym(7),Sym(8),MultiArrayElem(Block(Sym(14)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
 TP(Sym(17),Reflect(Print(Sym(16)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(15))))
@@ -56,10 +56,10 @@ val x25 = println(x24)
 
 (VFT) Not fused prod Sym(4) with cons Sym(15) because consumer depends on producer through Sym(4)
 (VFT) No producers found for cons Sym(15)
-(VFT) Cons Sym(15) not fused but mirrored to Sym(32) because of previous substitutions or effects
+(VFT) Cons Sym(15) not fused but mirrored to Sym(34) because of fixed shape
 
 (VFT) No producers found for cons Sym(21)
-(VFT) Cons Sym(21) not fused but mirrored to Sym(37) because of previous substitutions or effects
+(VFT) Cons Sym(21) not fused but mirrored to Sym(39) because of previous substitutions or effects
 
 (VFT) all vertically fused: 
 
@@ -71,30 +71,30 @@ x4(x1) = x2
 }
 val x5 = x4.apply(0)
 val x27 = println(x5)
-val x32 = new Array[Int](x0)
-for (x8 <- 0 until x0) {
-val x11 = x8 + 45
-val x9 = x4.apply(x8)
-val x28 = println(x9)
-x32(x8) = x11
+val x34 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x29 = x1 + 45
+val x28 = x4.apply(x1)
+val x30 = println(x28)
+x34(x1) = x29
 }
-val x37 = new Array[Int](10)
+val x39 = new Array[Int](10)
 for (x16 <- 0 until 10) {
-val x33 = println(x16)
-x37(x16) = x16
+val x35 = println(x16)
+x39(x16) = x16
 }
-val x38 = x32.apply(1)
-val x39 = println(x38)
-val x40 = x37.apply(1)
+val x40 = x34.apply(1)
 val x41 = println(x40)
+val x42 = x39.apply(1)
+val x43 = println(x42)
 
 -- horizontal transformation
 (HFT) Recording Sym(4), no fusion
-(HFT) The candidate Sym(32) cannot be fused with the existing FusedSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(4))) because the candidate set depends on Sym(4)
-(HFT) Recording Sym(32), no fusion
-(HFT) - new loop symbol: Sym(32) -> Sym(48)
-(HFT) Recording Sym(37), no fusion
-(HFT) - new loop symbol: Sym(37) -> Sym(53)
+(HFT) The candidate Sym(34) cannot be fused with the existing FusedSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(4))) because the candidate set depends on Sym(4)
+(HFT) Recording Sym(34), no fusion
+(HFT) - new loop symbol: Sym(34) -> Sym(50)
+(HFT) Recording Sym(39), no fusion
+(HFT) - new loop symbol: Sym(39) -> Sym(55)
 
 (HFT) all horizontally fused: 
 
@@ -105,23 +105,23 @@ val x2 = x1 + 1
 x4(x1) = x2
 }
 val x5 = x4.apply(0)
-val x43 = println(x5)
-val x48 = new Array[Int](x0)
-for (x8 <- 0 until x0) {
-val x11 = x8 + 45
-val x9 = x4.apply(x8)
-val x44 = println(x9)
-x48(x8) = x11
+val x45 = println(x5)
+val x50 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x29 = x1 + 45
+val x28 = x4.apply(x1)
+val x46 = println(x28)
+x50(x1) = x29
 }
-val x53 = new Array[Int](10)
+val x55 = new Array[Int](10)
 for (x16 <- 0 until 10) {
-val x49 = println(x16)
-x53(x16) = x16
+val x51 = println(x16)
+x55(x16) = x16
 }
-val x54 = x48.apply(1)
-val x55 = println(x54)
-val x56 = x53.apply(1)
+val x56 = x50.apply(1)
 val x57 = println(x56)
+val x58 = x55.apply(1)
+val x59 = println(x58)
 
 -- fusion
 val x4 = new Array[Int](x0)
@@ -130,21 +130,21 @@ val x2 = x1 + 1
 x4(x1) = x2
 }
 val x5 = x4.apply(0)
-val x43 = println(x5)
-val x48 = new Array[Int](x0)
-for (x8 <- 0 until x0) {
-val x11 = x8 + 45
-val x9 = x4.apply(x8)
-val x44 = println(x9)
-x48(x8) = x11
+val x45 = println(x5)
+val x50 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x29 = x1 + 45
+val x28 = x4.apply(x1)
+val x46 = println(x28)
+x50(x1) = x29
 }
-val x53 = new Array[Int](10)
+val x55 = new Array[Int](10)
 for (x16 <- 0 until 10) {
-val x49 = println(x16)
-x53(x16) = x16
+val x51 = println(x16)
+x55(x16) = x16
 }
-val x54 = x48.apply(1)
-val x55 = println(x54)
-val x56 = x53.apply(1)
+val x56 = x50.apply(1)
 val x57 = println(x56)
+val x58 = x55.apply(1)
+val x59 = println(x58)
 -- done

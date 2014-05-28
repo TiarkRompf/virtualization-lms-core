@@ -1,12 +1,12 @@
 -- full graph
 TP(Sym(2),IntPlus(Sym(1),Const(1)))
-TP(Sym(3),Singleton(Block(Sym(2))))
+TP(Sym(3),SingletonInLoop(Block(Sym(2)),Sym(1)))
 TP(Sym(4),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(3)))))
 TP(Sym(5),ArrayIndex(Sym(4),Const(0)))
 TP(Sym(6),Reflect(Print(Sym(5)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
 TP(Sym(8),Reflect(Print(Sym(7)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
 TP(Sym(9),Reify(Const(1),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(8))))
-TP(Sym(10),Reflect(Singleton(Block(Sym(9))),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
+TP(Sym(10),Reflect(SingletonInLoop(Block(Sym(9)),Sym(7)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
 TP(Sym(11),Reify(Sym(10),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10))))
 TP(Sym(12),Reflect(SimpleLoop(Const(100),Sym(7),MultiArrayElem(Block(Sym(11)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
 TP(Sym(13),ArrayIndex(Sym(12),Const(1)))
@@ -34,7 +34,7 @@ val x14 = println(x13)
 (VFT) No producers found for cons Sym(4)
 
 (VFT) No producers found for cons Sym(12)
-(VFT) Cons Sym(12) not fused but mirrored to Sym(21) because of previous substitutions or effects
+(VFT) Cons Sym(12) not fused but mirrored to Sym(21) because of fixed shape
 
 (VFT) all vertically fused: 
 
@@ -47,9 +47,9 @@ x4(x1) = x2
 val x5 = x4.apply(0)
 val x16 = println(x5)
 val x21 = new Array[Int](100)
-for (x7 <- 0 until 100) {
-val x17 = println(x7)
-x21(x7) = 1
+for (x1 <- 0 until 100) {
+val x17 = println(x1)
+x21(x1) = 1
 }
 val x22 = x21.apply(1)
 val x23 = println(x22)
@@ -71,9 +71,9 @@ x4(x1) = x2
 val x5 = x4.apply(0)
 val x25 = println(x5)
 val x30 = new Array[Int](100)
-for (x7 <- 0 until 100) {
-val x26 = println(x7)
-x30(x7) = 1
+for (x1 <- 0 until 100) {
+val x26 = println(x1)
+x30(x1) = 1
 }
 val x31 = x30.apply(1)
 val x32 = println(x31)
@@ -87,9 +87,9 @@ x4(x1) = x2
 val x5 = x4.apply(0)
 val x25 = println(x5)
 val x30 = new Array[Int](100)
-for (x7 <- 0 until 100) {
-val x26 = println(x7)
-x30(x7) = 1
+for (x1 <- 0 until 100) {
+val x26 = println(x1)
+x30(x1) = 1
 }
 val x31 = x30.apply(1)
 val x32 = println(x31)

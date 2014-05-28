@@ -1,14 +1,14 @@
 -- full graph
 TP(Sym(2),IntPlus(Const(1),Sym(1)))
 TP(Sym(3),OrderingGT(Sym(2),Const(5)))
-TP(Sym(4),Singleton(Block(Sym(2))))
+TP(Sym(4),SingletonInLoop(Block(Sym(2)),Sym(1)))
 TP(Sym(6),EmptyArrayInLoop(Sym(1),Sym(5)))
 TP(Sym(7),IfThenElse(Sym(3),Block(Sym(4)),Block(Sym(6))))
 TP(Sym(8),SimpleLoop(Const(10),Sym(1),MultiArrayElem(Block(Sym(7)))))
 TP(Sym(9),ArrayLength(Sym(8)))
 TP(Sym(11),ArrayIndex(Sym(8),Sym(10)))
 TP(Sym(12),IntPlus(Sym(11),Const(2)))
-TP(Sym(13),Singleton(Block(Sym(12))))
+TP(Sym(13),SingletonInLoop(Block(Sym(12)),Sym(10)))
 TP(Sym(14),SimpleLoop(Sym(9),Sym(10),MultiArrayElem(Block(Sym(13)))))
 TP(Sym(15),ArrayIndex(Sym(14),Const(0)))
 TP(Sym(16),Reflect(Print(Sym(15)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
@@ -38,10 +38,11 @@ val x16 = println(x15)
 
 (VFT) No producers found for cons Sym(8)
 
-(VFT) Fusing prod Sym(8) with cons Sym(14). Type: Mc_McForlike(Sym(10),Sym(1),Sym(9),Const(10),IfThenSingleElseEmpty_Any(Sym(3),Single_MC(Sym(10),(Sym(8),Sym(10)),Sym(2),Sym(13),Sym(4),Sym(14)),Empty_MCSingle(Sym(19),Sym(6),Sym(14)),Sym(14),Sym(7),Sym(14)),Sym(13),Sym(8),Sym(14))
+(VFT) Fusing prod Sym(8) with cons Sym(14). Type: Mc_McForlike(Sym(10),Sym(1),Sym(9),Const(10),IfThenSingleElseEmpty_Any(Sym(3),Single_MC(Sym(10),(Sym(8),Sym(10)),Sym(2),Sym(13),Sym(4),Sym(14)),Empty_MCSingle(Sym(19),Sym(6),Sym(14)),Sym(14),Sym(7),Sym(14)),Sym(13),Sym(7),Sym(8),Sym(14))
 (VFT) Fused prod Sym(8) with cons Sym(14), fused sym: Sym(23)
 
 (VFT) all vertically fused: List(Sym(23), Sym(8))
+List(Sym(7), Sym(22))
 
 -- after vertical transformation
 val x23_builder = new scala.collection.mutable.ArrayBuilder.ofInt

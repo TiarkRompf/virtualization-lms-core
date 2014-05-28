@@ -1,0 +1,73 @@
+-- full graph
+TP(Sym(3),Singleton(Block(Sym(2))))
+TP(Sym(4),SimpleLoop(Sym(1),Sym(2),MultiArrayElem(Block(Sym(3)))))
+TP(Sym(5),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(4)))))
+TP(Sym(7),ArrayIndex(Sym(5),Sym(6)))
+TP(Sym(8),IntPlus(Sym(7),Const(3)))
+TP(Sym(9),Reflect(Print(Sym(8)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(10),Reify(Sym(9),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(9))))
+TP(Sym(11),ArrayLength(Sym(5)))
+TP(Sym(12),Reflect(SimpleLoop(Sym(11),Sym(6),ForeachElem(Block(Sym(10)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(13),Reify(Sym(12),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+
+-- before transformation
+val x5_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 100) {
+val x4 = new Array[Int](x1)
+for (x2 <- 0 until x1) {
+x4(x2) = x2
+}
+x5_builder ++= x4
+}
+val x5 = x5_builder.result()
+val x11 = x5.length
+for (x6 <- 0 until x11) {
+val x7 = x5.apply(x6)
+val x8 = x7 + 3
+val x9 = println(x8)
+}
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(5)
+  
+  (VFT) No producers found for cons Sym(4)
+
+(VFT) Fusing prod Sym(5) with cons Sym(12). Type: Mc_McForlike(Sym(6),Sym(1),Sym(11),Const(100),Mc_McForlike(Sym(6),Sym(2),Sym(11),Sym(1),Single_MC(Sym(6),(Sym(5),Sym(6)),Sym(2),Sym(10),Sym(3),Sym(12)),Sym(10),Sym(3),Sym(4),Sym(12)),Sym(10),Sym(4),Sym(5),Sym(12))
+(VFT) Fused prod Sym(5) with cons Sym(12), fused sym: Sym(19)
+
+(VFT) all vertically fused: List(Sym(17), Sym(4))
+List(Sym(5), Sym(19))
+
+-- after vertical transformation
+for (x1 <- 0 until 100) {
+for (x2 <- 0 until x1) {
+val x14 = x2 + 3
+val x15 = println(x14)
+}
+}
+
+-- horizontal transformation
+(HFT) Recording Sym(19), no fusion
+  (HFT) Recording Sym(17), no fusion
+  (HFT) - new loop symbol: Sym(17) -> Sym(23)
+(HFT) - new loop symbol: Sym(19) -> Sym(25)
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+for (x1 <- 0 until 100) {
+for (x2 <- 0 until x1) {
+val x14 = x2 + 3
+val x21 = println(x14)
+}
+}
+
+-- fusion
+for (x1 <- 0 until 100) {
+for (x2 <- 0 until x1) {
+val x14 = x2 + 3
+val x21 = println(x14)
+}
+}
+-- done

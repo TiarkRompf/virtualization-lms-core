@@ -35,6 +35,13 @@ trait Effects extends Expressions with Blocks with Utils {
   case class Reflect[+A](x:Def[A], summary: Summary, deps: List[Exp[Any]]) extends Def[A]
   case class Reify[A](x: Exp[A], summary: Summary, effects: List[Exp[Any]]) extends Def[A]
 
+  object EatReflect {
+    def unapply(d: Any): Option[Any] = d match {
+      case Reflect(inner, _, _) => Some(inner)
+      case _ => Some(d)
+    }
+  }
+  
   // --- summary
 
   case class Summary(

@@ -1,33 +1,33 @@
 -- full graph
 TP(Sym(3),IntPlus(Sym(1),Sym(2)))
-TP(Sym(4),Singleton(Block(Sym(3))))
+TP(Sym(4),SingletonInLoop(Block(Sym(3)),Sym(2)))
 TP(Sym(5),SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(4)))))
 TP(Sym(6),SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(5)))))
 TP(Sym(7),ArrayLength(Sym(6)))
 TP(Sym(9),ArrayIndex(Sym(6),Sym(8)))
 TP(Sym(10),IntPlus(Sym(9),Const(2)))
-TP(Sym(11),Singleton(Block(Sym(10))))
+TP(Sym(11),SingletonInLoop(Block(Sym(10)),Sym(8)))
 TP(Sym(12),SimpleLoop(Sym(7),Sym(8),MultiArrayElem(Block(Sym(11)))))
 TP(Sym(14),ArrayIndex(Sym(6),Sym(13)))
 TP(Sym(15),OrderingGT(Sym(14),Const(20)))
 TP(Sym(16),IntPlus(Sym(14),Const(3)))
-TP(Sym(17),Singleton(Block(Sym(16))))
+TP(Sym(17),SingletonInLoop(Block(Sym(16)),Sym(13)))
 TP(Sym(19),EmptyArrayInLoop(Sym(13),Sym(18)))
 TP(Sym(20),IfThenElse(Sym(15),Block(Sym(17)),Block(Sym(19))))
 TP(Sym(21),SimpleLoop(Sym(7),Sym(13),MultiArrayElem(Block(Sym(20)))))
 TP(Sym(23),ArrayIndex(Sym(6),Sym(22)))
 TP(Sym(25),IntPlus(Sym(23),Sym(24)))
-TP(Sym(26),Singleton(Block(Sym(25))))
+TP(Sym(26),SingletonInLoop(Block(Sym(25)),Sym(24)))
 TP(Sym(27),SimpleLoop(Sym(23),Sym(24),MultiArrayElem(Block(Sym(26)))))
 TP(Sym(28),SimpleLoop(Sym(7),Sym(22),MultiArrayElem(Block(Sym(27)))))
 TP(Sym(30),ArrayIndex(Sym(6),Sym(29)))
 TP(Sym(31),IntPlus(Const(2),Sym(30)))
-TP(Sym(32),Singleton(Block(Sym(31))))
+TP(Sym(32),SingletonInLoop(Block(Sym(31)),Sym(29)))
 TP(Sym(35),NumericPlus(Sym(34),Sym(33)))
 TP(Sym(36),SimpleLoop(Sym(7),Sym(29),MultiReduceElem(Block(Sym(32)),Block(Sym(35)),Const(0),Sym(33),Sym(34))))
 TP(Sym(39),ArrayIndex(Sym(6),Sym(37)))
 TP(Sym(40),IntPlus(Sym(39),Sym(38)))
-TP(Sym(41),Singleton(Block(Sym(40))))
+TP(Sym(41),SingletonInLoop(Block(Sym(40)),Sym(38)))
 TP(Sym(42),SimpleLoop(Const(2),Sym(38),MultiArrayElem(Block(Sym(41)))))
 TP(Sym(45),IntPlus(Sym(44),Sym(43)))
 TP(Sym(46),SimpleLoop(Sym(7),Sym(37),MultiReduceElem(Block(Sym(42)),Block(Sym(45)),Const(0),Sym(43),Sym(44))))
@@ -119,28 +119,29 @@ val x54 = println(x46)
   
   (VFT) No producers found for cons Sym(5)
 
-(VFT) Fusing prod Sym(6) with cons Sym(12). Type: Mc_McForlike(Sym(8),Sym(1),Sym(7),Const(30),Mc_McForlike(Sym(8),Sym(2),Sym(7),Const(10),Single_MC(Sym(8),(Sym(6),Sym(8)),Sym(3),Sym(11),Sym(4),Sym(12)),Sym(11),Sym(5),Sym(12)),Sym(11),Sym(6),Sym(12))
+(VFT) Fusing prod Sym(6) with cons Sym(12). Type: Mc_McForlike(Sym(8),Sym(1),Sym(7),Const(30),Mc_McForlike(Sym(8),Sym(2),Sym(7),Const(10),Single_MC(Sym(8),(Sym(6),Sym(8)),Sym(3),Sym(11),Sym(4),Sym(12)),Sym(11),Sym(4),Sym(5),Sym(12)),Sym(11),Sym(5),Sym(6),Sym(12))
 (VFT) Fused prod Sym(6) with cons Sym(12), fused sym: Sym(60)
 
-(VFT) Fusing prod Sym(6) with cons Sym(21). Type: Mc_McForlike(Sym(13),Sym(1),Sym(7),Const(30),Mc_McForlike(Sym(13),Sym(2),Sym(7),Const(10),Single_MC(Sym(13),(Sym(6),Sym(13)),Sym(3),Sym(20),Sym(4),Sym(21)),Sym(20),Sym(5),Sym(21)),Sym(20),Sym(6),Sym(21))
+(VFT) Fusing prod Sym(6) with cons Sym(21). Type: Mc_McForlike(Sym(13),Sym(1),Sym(7),Const(30),Mc_McForlike(Sym(13),Sym(2),Sym(7),Const(10),Single_MC(Sym(13),(Sym(6),Sym(13)),Sym(3),Sym(20),Sym(4),Sym(21)),Sym(20),Sym(4),Sym(5),Sym(21)),Sym(20),Sym(5),Sym(6),Sym(21))
 (VFT) Fused prod Sym(6) with cons Sym(21), fused sym: Sym(69)
 
-(VFT) Fusing prod Sym(6) with cons Sym(28). Type: Mc_McForlike(Sym(22),Sym(1),Sym(7),Const(30),Mc_McForlike(Sym(22),Sym(2),Sym(7),Const(10),Single_MC(Sym(22),(Sym(6),Sym(22)),Sym(3),Sym(27),Sym(4),Sym(28)),Sym(27),Sym(5),Sym(28)),Sym(27),Sym(6),Sym(28))
+(VFT) Fusing prod Sym(6) with cons Sym(28). Type: Mc_McForlike(Sym(22),Sym(1),Sym(7),Const(30),Mc_McForlike(Sym(22),Sym(2),Sym(7),Const(10),Single_MC(Sym(22),(Sym(6),Sym(22)),Sym(3),Sym(27),Sym(4),Sym(28)),Sym(27),Sym(4),Sym(5),Sym(28)),Sym(27),Sym(5),Sym(6),Sym(28))
   
   (VFT) No producers found for cons Sym(27)
   (VFT) Cons Sym(27) not fused but mirrored to Sym(74) because of previous substitutions or effects
 (VFT) Fused prod Sym(6) with cons Sym(28), fused sym: Sym(76)
 
-(VFT) Fusing prod Sym(6) with cons Sym(36). Type: Mc_McForlike(Sym(29),Sym(1),Sym(7),Const(30),InnerMC_Red(Sym(29),Sym(2),Single_MC(Sym(29),(Sym(6),Sym(29)),Sym(3),Sym(32),Sym(4),Sym(36)),Sym(32),Sym(4),SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(4)))),Sym(5),Sym(36)),Sym(32),Sym(6),Sym(36))
+(VFT) Fusing prod Sym(6) with cons Sym(36). Type: Mc_McForlike(Sym(29),Sym(1),Sym(7),Const(30),InnerMC_Red(Sym(29),Sym(2),Single_MC(Sym(29),(Sym(6),Sym(29)),Sym(3),Sym(32),Sym(4),Sym(36)),Sym(32),Sym(4),SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(4)))),Sym(5),Sym(36)),Sym(32),Sym(5),Sym(6),Sym(36))
 (VFT) Fused prod Sym(6) with cons Sym(36), fused sym: Sym(82)
 
-(VFT) Fusing prod Sym(6) with cons Sym(46). Type: Mc_McForlike(Sym(37),Sym(1),Sym(7),Const(30),InnerMC_Red(Sym(37),Sym(2),Single_MC(Sym(37),(Sym(6),Sym(37)),Sym(3),Sym(42),Sym(4),Sym(46)),Sym(42),Sym(4),SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(4)))),Sym(5),Sym(46)),Sym(42),Sym(6),Sym(46))
+(VFT) Fusing prod Sym(6) with cons Sym(46). Type: Mc_McForlike(Sym(37),Sym(1),Sym(7),Const(30),InnerMC_Red(Sym(37),Sym(2),Single_MC(Sym(37),(Sym(6),Sym(37)),Sym(3),Sym(42),Sym(4),Sym(46)),Sym(42),Sym(4),SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(4)))),Sym(5),Sym(46)),Sym(42),Sym(5),Sym(6),Sym(46))
   
   (VFT) No producers found for cons Sym(42)
   (VFT) Cons Sym(42) not fused but mirrored to Sym(86) because of previous substitutions or effects
 (VFT) Fused prod Sym(6) with cons Sym(46), fused sym: Sym(88)
 
-(VFT) all vertically fused: List(Sym(82), Sym(60), Sym(88), Sym(69), Sym(76), Sym(6))
+(VFT) all vertically fused: List(Sym(75), Sym(59), Sym(87), Sym(5), Sym(68), Sym(81))
+List(Sym(82), Sym(60), Sym(88), Sym(69), Sym(76), Sym(6))
 
 -- after vertical transformation
 val x60_builder = new scala.collection.mutable.ArrayBuilder.ofInt
@@ -234,20 +235,20 @@ val x89 = println(x88)
   (HFT) Recording Sym(59), no fusion
 (HFT) Fusing Sym(69) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(82), Sym(60), Sym(88), Sym(69), Sym(76), Sym(6)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(68) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(59)))
+  (HFT) Fusing Sym(68) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(75), Sym(59), Sym(87), Sym(5), Sym(68), Sym(81)))
   (HFT) - already using same index Sym(2)
 (HFT) Fusing Sym(76) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(82), Sym(60), Sym(88), Sym(69), Sym(76), Sym(6)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(75) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(59), Sym(68)))
+  (HFT) Fusing Sym(75) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(75), Sym(59), Sym(87), Sym(5), Sym(68), Sym(81)))
   (HFT) - already using same index Sym(2)
     (HFT) Recording Sym(74), no fusion
 (HFT) Fusing Sym(82) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(82), Sym(60), Sym(88), Sym(69), Sym(76), Sym(6)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(81) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(59), Sym(68), Sym(75)))
+  (HFT) Fusing Sym(81) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(75), Sym(59), Sym(87), Sym(5), Sym(68), Sym(81)))
   (HFT) - already using same index Sym(2)
 (HFT) Fusing Sym(88) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(82), Sym(60), Sym(88), Sym(69), Sym(76), Sym(6)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(87) with fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(59), Sym(68), Sym(75), Sym(81)))
+  (HFT) Fusing Sym(87) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(75), Sym(59), Sym(87), Sym(5), Sym(68), Sym(81)))
   (HFT) - already using same index Sym(2)
     (HFT) Recording Sym(86), no fusion
 

@@ -1,186 +1,242 @@
 -- full graph
 TP(Sym(3),OrderingGT(Sym(2),Const(5)))
 TP(Sym(4),IntPlus(Sym(2),Const(1)))
-TP(Sym(5),SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(3),Block(Sym(4)))))
-TP(Sym(6),SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(5)))))
-TP(Sym(7),ArrayLength(Sym(6)))
-TP(Sym(9),ArrayIndex(Sym(6),Sym(8)))
-TP(Sym(10),IntPlus(Sym(9),Const(2)))
-TP(Sym(11),SimpleLoop(Sym(7),Sym(8),ArrayElem(Block(Sym(10)))))
-TP(Sym(12),ArrayLength(Sym(11)))
-TP(Sym(14),ArrayIndex(Sym(11),Sym(13)))
-TP(Sym(15),OrderingGT(Sym(14),Const(20)))
-TP(Sym(16),IntPlus(Sym(14),Const(3)))
-TP(Sym(17),SimpleLoop(Sym(12),Sym(13),ArrayIfElem(Sym(15),Block(Sym(16)))))
-TP(Sym(18),ArrayIndex(Sym(11),Const(0)))
-TP(Sym(19),Reflect(Print(Sym(18)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
-TP(Sym(20),ArrayIndex(Sym(17),Const(0)))
-TP(Sym(21),Reflect(Print(Sym(20)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(19))))
-TP(Sym(22),Reify(Sym(21),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(19), Sym(21))))
+TP(Sym(5),SingletonInLoop(Block(Sym(4)),Sym(2)))
+TP(Sym(7),EmptyArrayInLoop(Sym(2),Sym(6)))
+TP(Sym(8),IfThenElse(Sym(3),Block(Sym(5)),Block(Sym(7))))
+TP(Sym(9),SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(8)))))
+TP(Sym(10),SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(9)))))
+TP(Sym(11),ArrayLength(Sym(10)))
+TP(Sym(13),ArrayIndex(Sym(10),Sym(12)))
+TP(Sym(14),IntPlus(Sym(13),Const(2)))
+TP(Sym(15),SingletonInLoop(Block(Sym(14)),Sym(12)))
+TP(Sym(16),SimpleLoop(Sym(11),Sym(12),MultiArrayElem(Block(Sym(15)))))
+TP(Sym(17),ArrayLength(Sym(16)))
+TP(Sym(19),ArrayIndex(Sym(16),Sym(18)))
+TP(Sym(20),OrderingGT(Sym(19),Const(20)))
+TP(Sym(21),IntPlus(Sym(19),Const(3)))
+TP(Sym(22),SingletonInLoop(Block(Sym(21)),Sym(18)))
+TP(Sym(24),EmptyArrayInLoop(Sym(18),Sym(23)))
+TP(Sym(25),IfThenElse(Sym(20),Block(Sym(22)),Block(Sym(24))))
+TP(Sym(26),SimpleLoop(Sym(17),Sym(18),MultiArrayElem(Block(Sym(25)))))
+TP(Sym(27),ArrayIndex(Sym(16),Const(0)))
+TP(Sym(28),Reflect(Print(Sym(27)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(29),ArrayIndex(Sym(26),Const(0)))
+TP(Sym(30),Reflect(Print(Sym(29)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(28))))
+TP(Sym(31),Reify(Sym(30),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(28), Sym(30))))
 
 -- before transformation
-var x5 = new ArrayBuilder[Int]
+val x9_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x2 <- 0 until 10) {
 val x3 = x2 > 5
+if (x3) {
 val x4 = x2 + 1
-if (x3) x5 += x4
+x9_builder += x4
 }
-var x6 = new ArrayBuilder[Int]
+}
+val x9 = x9_builder.result()
+val x10_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x1 <- 0 until 30) {
-x6 ++= x5
+x10_builder ++= x9
 }
-val x7 = x6.length
-var x11 = new Array[Int](x7)
-for (x8 <- 0 until x7) {
-val x9 = x6.apply(x8)
-val x10 = x9 + 2
-x11(x8) = x10
+val x10 = x10_builder.result()
+val x11 = x10.length
+val x16 = new Array[Int](x11)
+for (x12 <- 0 until x11) {
+val x13 = x10.apply(x12)
+val x14 = x13 + 2
+x16(x12) = x14
 }
-val x18 = x11.apply(0)
-val x19 = println(x18)
-val x12 = x11.length
-var x17 = new ArrayBuilder[Int]
-for (x13 <- 0 until x12) {
-val x14 = x11.apply(x13)
-val x15 = x14 > 20
-val x16 = x14 + 3
-if (x15) x17 += x16
+val x27 = x16.apply(0)
+val x28 = println(x27)
+val x17 = x16.length
+val x26_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x18 <- 0 until x17) {
+val x19 = x16.apply(x18)
+val x20 = x19 > 20
+if (x20) {
+val x21 = x19 + 3
+x26_builder += x21
 }
-val x20 = x17.apply(0)
-val x21 = println(x20)
+}
+val x26 = x26_builder.result()
+val x29 = x26.apply(0)
+val x30 = println(x29)
 
 -- vertical transformation
 
-(VFT) No producers found for TP(Sym(5),SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(3),Block(Sym(4)))))
+(VFT) No producers found for cons Sym(9)
 
-(VFT) No producers found for TP(Sym(6),SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(5)))))
+(VFT) No producers found for cons Sym(10)
 
-(VFT) Fusing consumer TP(Sym(11),SimpleLoop(Sym(7),Sym(8),ArrayElem(Block(Sym(10))))) with real producer: Sym(6)
-(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(5).
-(VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
-(VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(4).
-(VFT) SimpleCollectIf+SimpleCollect fusion: use producer loop with consumer body.
+(VFT) Fusing prod Sym(10) with cons Sym(16). Type: Mc_McForlike(Sym(12),Sym(1),Sym(11),Const(30),Mc_McForlike(Sym(12),Sym(2),Sym(11),Const(10),IfThenSingleElseEmpty_Any(Sym(3),Single_MC(Sym(12),(Sym(10),Sym(12)),Sym(4),Sym(15),Sym(5),Sym(16)),Empty_MCSingle(Sym(33),Sym(7),Sym(16)),Sym(16),Sym(8),Sym(16)),Sym(15),Sym(8),Sym(9),Sym(16)),Sym(15),Sym(9),Sym(10),Sym(16))
+(VFT) Fused prod Sym(10) with cons Sym(16), fused sym: Sym(38)
 
-(VFT) Finished fusion of prod: Sym(5) and cons: Sym(11), the resulting fused loop is Sym(24)
+(VFT) Fusing prod Sym(38) with cons Sym(26). Type: Mc_McForlike(Sym(18),Sym(1),Sym(17),Const(30),Mc_McForlike(Sym(18),Sym(2),Sym(17),Const(10),IfThenSingleElseEmpty_Any(Sym(3),Single_MC(Sym(18),(Sym(16),Sym(18)),Sym(34),Sym(25),Sym(35),Sym(26)),Empty_MCSingle(Sym(43),Sym(33),Sym(26)),Sym(26),Sym(36),Sym(26)),Sym(25),Sym(36),Sym(37),Sym(26)),Sym(25),Sym(37),Sym(38),Sym(26))
+(VFT) Fused prod Sym(38) with cons Sym(26), fused sym: Sym(51)
 
-(VFT) Finished fusion of prod: Sym(6) and cons: Sym(11), the resulting fused loop is Sym(25)
-(VFT) Replaced TP(Sym(12),ArrayLength(Sym(11))) with fixed length: Sym(7)
-
-(VFT) Fusing consumer TP(Sym(17),SimpleLoop(Sym(12),Sym(13),ArrayIfElem(Sym(15),Block(Sym(16))))) with real producer: Sym(25) (was Sym(11))
-(VFT) General fusion: remap index to Sym(1), SimpleIndex to Sym(24).
-(VFT) MultiCollect+Any fusion: fuse consumer with inner array of producer.
-(VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(23).
-(VFT) SimpleCollectIf+SimpleCollectIf fusion: add producer conditions to consumer loop.
-
-(VFT) Finished fusion of prod: Sym(24) and cons: Sym(17), the resulting fused loop is Sym(31)
-
-(VFT) Finished fusion of prod: Sym(25) and cons: Sym(17), the resulting fused loop is Sym(32)
-
-(VFT) all vertically fused: List(Sym(31), Sym(5), Sym(24))
-List(Sym(32), Sym(6), Sym(25))
+(VFT) all vertically fused: List(Sym(36), Sym(49), Sym(8))
+List(Sym(50), Sym(37), Sym(9))
+List(Sym(10), Sym(51), Sym(38))
 
 -- after vertical transformation
-var x24 = new ArrayBuilder[Int]
+val x37_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x2 <- 0 until 10) {
 val x3 = x2 > 5
+if (x3) {
 val x4 = x2 + 1
-val x23 = x4 + 2
-if (x3) x24 += x23
+val x34 = x4 + 2
+x37_builder += x34
 }
-var x25 = new ArrayBuilder[Int]
+}
+val x37 = x37_builder.result()
+val x38_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x1 <- 0 until 30) {
-x25 ++= x24
+x38_builder ++= x37
 }
-val x26 = x25.apply(0)
-val x27 = println(x26)
-var x31 = new ArrayBuilder[Int]
+val x38 = x38_builder.result()
+val x39 = x38.apply(0)
+val x40 = println(x39)
+val x50_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x2 <- 0 until 10) {
 val x3 = x2 > 5
+val x49 = if (x3) {
 val x4 = x2 + 1
-val x23 = x4 + 2
-val x28 = x23 > 20
-val x29 = x28 && x3
-val x30 = x23 + 3
-if (x29) x31 += x30
+val x34 = x4 + 2
+val x44 = x34 > 20
+val x48 = if (x44) {
+val x45 = x34 + 3
+val x46 = Array(x45)
+x46
+} else {
+val x47: Array[Int] = Array.empty
+x47
 }
-var x32 = new ArrayBuilder[Int]
+x48
+} else {
+val x43: Array[Int] = Array.empty
+x43
+}
+x50_builder ++= x49
+}
+val x50 = x50_builder.result()
+val x51_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x1 <- 0 until 30) {
-x32 ++= x31
+x51_builder ++= x50
 }
-val x33 = x32.apply(0)
-val x34 = println(x33)
+val x51 = x51_builder.result()
+val x52 = x51.apply(0)
+val x53 = println(x52)
 
 -- horizontal transformation
-(HFT) Recording Sym(24), no fusion
-(HFT) Recording Sym(25), no fusion
-(HFT) Fusing Sym(31) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(31), Sym(5), Sym(24)))
+(HFT) Recording Sym(37), no fusion
+(HFT) Recording Sym(38), no fusion
+(HFT) Fusing Sym(50) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(50), Sym(37), Sym(9)))
 (HFT) - already using same index Sym(2)
-(HFT) Fusing Sym(32) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(32), Sym(6), Sym(25)))
+(HFT) Fusing Sym(51) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(10), Sym(51), Sym(38)))
 (HFT) - already using same index Sym(1)
 
-(HFT) all horizontally fused: List(Sym(25), Sym(32))
-List(Sym(24), Sym(31))
+(HFT) all horizontally fused: List(Sym(38), Sym(51))
+List(Sym(37), Sym(50))
 
 -- after horizontal transformation
-var x24 = new ArrayBuilder[Int]
+val x37_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x2 <- 0 until 10) {
 val x3 = x2 > 5
+if (x3) {
 val x4 = x2 + 1
-val x23 = x4 + 2
-if (x3) x24 += x23
+val x34 = x4 + 2
+x37_builder += x34
 }
-var x25 = new ArrayBuilder[Int]
+}
+val x37 = x37_builder.result()
+val x38_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x1 <- 0 until 30) {
-x25 ++= x24
+x38_builder ++= x37
 }
-val x26 = x25.apply(0)
-val x36 = println(x26)
-var x31 = new ArrayBuilder[Int]
+val x38 = x38_builder.result()
+val x39 = x38.apply(0)
+val x55 = println(x39)
+val x50_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x2 <- 0 until 10) {
 val x3 = x2 > 5
+val x49 = if (x3) {
 val x4 = x2 + 1
-val x23 = x4 + 2
-val x28 = x23 > 20
-val x29 = x28 && x3
-val x30 = x23 + 3
-if (x29) x31 += x30
+val x34 = x4 + 2
+val x44 = x34 > 20
+val x48 = if (x44) {
+val x45 = x34 + 3
+val x46 = Array(x45)
+x46
+} else {
+val x47: Array[Int] = Array.empty
+x47
 }
-var x32 = new ArrayBuilder[Int]
+x48
+} else {
+val x43: Array[Int] = Array.empty
+x43
+}
+x50_builder ++= x49
+}
+val x50 = x50_builder.result()
+val x51_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x1 <- 0 until 30) {
-x32 ++= x31
+x51_builder ++= x50
 }
-val x33 = x32.apply(0)
-val x37 = println(x33)
+val x51 = x51_builder.result()
+val x52 = x51.apply(0)
+val x56 = println(x52)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(25)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(24))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(24))))))
-TTP(List(Sym(32)),List(SimpleLoop(Const(30),Sym(1),FlattenElem(Block(Sym(31))))),SimpleFatLoop(Const(30),Sym(1),List(FlattenElem(Block(Sym(31))))))
+TTP(List(Sym(38)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(37))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(37))))))
+TTP(List(Sym(51)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(50))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(50))))))
 
 (FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(24)),List(SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(3),Block(Sym(23))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayIfElem(Sym(3),Block(Sym(23))))))
-TTP(List(Sym(31)),List(SimpleLoop(Const(10),Sym(2),ArrayIfElem(Sym(29),Block(Sym(30))))),SimpleFatLoop(Const(10),Sym(2),List(ArrayIfElem(Sym(29),Block(Sym(30))))))
+TTP(List(Sym(37)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(36))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(36))))))
+TTP(List(Sym(50)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(49))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(49))))))
 
-var x24 = new ArrayBuilder[Int]
-var x31 = new ArrayBuilder[Int]
+val x37_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+val x50_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x2 <- 0 until 10) {
 val x3 = x2 > 5
+if (x3) {
 val x4 = x2 + 1
-val x23 = x4 + 2
-val x28 = x23 > 20
-val x29 = x28 && x3
-val x30 = x23 + 3
-if (x3) x24 += x23
-if (x29) x31 += x30
+val x34 = x4 + 2
+x37_builder += x34
 }
-var x25 = new ArrayBuilder[Int]
-var x32 = new ArrayBuilder[Int]
+val x49 = if (x3) {
+val x4 = x2 + 1
+val x34 = x4 + 2
+val x44 = x34 > 20
+val x48 = if (x44) {
+val x45 = x34 + 3
+val x46 = Array(x45)
+x46
+} else {
+val x47: Array[Int] = Array.empty
+x47
+}
+x48
+} else {
+val x43: Array[Int] = Array.empty
+x43
+}
+x50_builder ++= x49
+}
+val x37 = x37_builder.result()
+val x50 = x50_builder.result()
+val x38_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+val x51_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x1 <- 0 until 30) {
-x25 ++= x24
-x32 ++= x31
+x38_builder ++= x37
+x51_builder ++= x50
 }
-val x26 = x25.apply(0)
-val x36 = println(x26)
-val x33 = x32.apply(0)
-val x37 = println(x33)
+val x38 = x38_builder.result()
+val x51 = x51_builder.result()
+val x39 = x38.apply(0)
+val x55 = println(x39)
+val x52 = x51.apply(0)
+val x56 = println(x52)
 -- done

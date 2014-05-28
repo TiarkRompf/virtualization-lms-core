@@ -48,7 +48,15 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
   case class EmptyArray[T](dummy: Sym[T]) extends Def[Array[T]] 
 
   // block so that elem can be effectful computation
+  object SuperSingleton {
+    def unapply(e: Any) = e match {
+      case Singleton(elem) => Some(elem)
+      case SingletonInLoop(elem, _) => Some(elem)
+      case _ => None
+    }
+  }
   case class Singleton[T](elem: Block[T]) extends Def[Array[T]]
+  case class SingletonInLoop[T](elem: Block[T], index: Exp[Int]) extends Def[Array[T]]
 
   case class MultiArrayElem[T](y: Block[Array[T]]) extends Def[Array[T]]
 
@@ -68,17 +76,30 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
     val elemEff = summarizeEffects(reifiedElem)
     reflectEffect(Singleton(reifiedElem), elemEff)
   }
+  def singletonInLoop[T:Manifest](elem: => Rep[T], index: Exp[Int]): Rep[Array[T]] = {
+    val reifiedElem = reifyEffectsHere(elem)
+    val elemEff = summarizeEffects(reifiedElem)
+    val alreadyHasIndex = reifiedElem match {
+      case Block(`index`) => true
+      case Block(Def(Reify(`index`, _, _))) => true
+      case _ => false
+    }
+    if (alreadyHasIndex)
+      reflectEffect(Singleton(reifiedElem), elemEff)
+    else
+      reflectEffect(SingletonInLoop(reifiedElem, index), elemEff)
+  }
 
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
-    val m = reifyEffectsHere(singleton(f(x)))
+    val m = reifyEffectsHere(singletonInLoop(f(x), x))
     val mEff = summarizeEffects(m)
     reflectEffect(SimpleLoop(shape, x, MultiArrayElem(m)), mEff.star) 
   }
 
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Int]): Rep[Int] = {
     val x = fresh[Int]
-    val y = reifyEffectsHere(singleton(f(x)))
+    val y = reifyEffectsHere(singletonInLoop(f(x), x))
     val yEff = summarizeEffects(y)
     val accSym = fresh[Int]
     val valSym = fresh[Int]
@@ -104,7 +125,7 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
   def arrayIf[T:Manifest](shape: Rep[Int])(cond: Rep[Int] => Rep[Boolean], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
 
-    val ifthenelse = reifyEffectsHere(__ifThenElse(cond(x), singleton(f(x)), EmptyArrayInLoop[T](x, fresh[T])))
+    val ifthenelse = reifyEffectsHere(__ifThenElse(cond(x), singletonInLoop(f(x), x), EmptyArrayInLoop[T](x, fresh[T])))
     val eff = summarizeEffects(ifthenelse)
     reflectEffect(SimpleLoop(shape, x, MultiArrayElem(ifthenelse)), eff.star) 
     // var condExp: Exp[Boolean] = null
@@ -150,7 +171,7 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case MultiArrayElem(y) => effectSyms(y)
     case MultiReduceElem(y, z, _, acc, vsym) => acc :: vsym :: effectSyms(y) ::: effectSyms(z)
-    case Singleton(y) => effectSyms(y)
+    case SuperSingleton(y) => effectSyms(y)
     case _ => super.boundSyms(e)
   }
 
@@ -169,7 +190,10 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
     case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
     case ArrayLength(a) => infix_length(f(a))(mtype(manifest[A]))
     case Singleton(block) => toAtom(Singleton(f(block)))(mtype(manifest[A]), mpos(e.pos))
+    case SingletonInLoop(block, index) => toAtom(SingletonInLoop(f(block), f(index)))(mtype(manifest[A]), mpos(e.pos))
 //    case Singleton(block) => Singleton(reifyEffectsHere(f.reflectBlock(block))))
+    case Reflect(SingletonInLoop(block, index), u, es) =>
+      reflectMirrored(Reflect(SingletonInLoop(reifyEffectsHere(f.reflectBlock(block))(mtype(manifest[A].typeArguments(0))), f(index)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case Reflect(Singleton(block), u, es) =>
       reflectMirrored(Reflect(Singleton(reifyEffectsHere(f.reflectBlock(block))(mtype(manifest[A].typeArguments(0)))), mapOver(f,u), f(es)))(mtype(manifest[A]))
     // case Reflect(Singleton(e), u, es) => 
@@ -204,7 +228,7 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
   val replaceIfThenElseSingletonEmptyWithAppend = scala.collection.mutable.HashMap[Sym[Any], Sym[Any]]()
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case EatReflect(IfThenElse(cond, Block(si@Def(Singleton(thenp))), Block(em@Def(SuperEmptyArray())))) =>
+    case EatReflect(IfThenElse(cond, Block(si@Def(SuperSingleton(thenp))), Block(em@Def(SuperEmptyArray())))) =>
       replaceIfThenElseSingletonEmptyWithAppend.get(sym) match {
         case Some(arraySym) => 
           stream.println("if (" + quote(cond) + ") {")
@@ -215,7 +239,7 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
       } 
     case SuperEmptyArray() => 
       stream.println("val " + quote(sym) + ": " + sym.tp + " = Array.empty")
-    case s@Singleton(elem) =>
+    case s@SuperSingleton(elem) =>
       emitBlock(elem)
       stream.println("val " + quote(sym) + " = Array(" + quote(getBlockResult(elem)) + ")")
     case ArrayIndex(a,i) =>  
@@ -227,12 +251,6 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
     case _ => super.emitNode(sym, rhs)
   }
 
-  object EatReflect {
-    def unapply(d: Any): Option[Any] = d match {
-      case Reflect(inner, _, _) => Some(inner)
-      case _ => Some(d)
-    }
-  }
   def arrBuilderType[T](tp: Manifest[T]) = 
     if (tp.typeArguments.isEmpty) {
       "ERROR: cannot build array of type " + tp
@@ -250,11 +268,11 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
         val l = t._1
         t._2 match {
           case MultiArrayElem(y) => getBlockResult(y) match {
-            case Def(EatReflect(Singleton(e))) => 
+            case Def(EatReflect(SuperSingleton(e))) => 
               // TODO what about effects before e etc?
               stream.println("val " + quote(l) + " = new Array[" + getBlockResult(e).tp + "]("+quote(s)+")")
               getBlockResult(e) :: effectSyms(e) // ::: getEffects(y) adds singleton node, but could need other effects?
-            case ite@Def(EatReflect(IfThenElse(cond, Block(Def(Singleton(thenp))), Block(Def(SuperEmptyArray()))))) =>
+            case ite@Def(EatReflect(IfThenElse(cond, Block(Def(SuperSingleton(thenp))), Block(Def(SuperEmptyArray()))))) =>
               stream.println("val " + quote(l) + "_builder = new " + arrBuilderType(getBlockResult(y).tp))
               replaceIfThenElseSingletonEmptyWithAppend.put(ite.asInstanceOf[Sym[Any]], l)
               syms(t._2)
@@ -265,10 +283,10 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
           case MultiReduceElem(vFblock@Block(valFunc), redFunc, zero, accSym, valSym) => 
             stream.println("var " + quote(accSym) + " = " + quote(zero))
             getBlockResult(vFblock) match {
-              case Def(EatReflect(Singleton(si))) => getBlockResult(si) :: effectSyms(si)
+              case Def(EatReflect(SuperSingleton(si))) => getBlockResult(si) :: effectSyms(si)
               case _ => List(valFunc)
             }
-          case ForeachElem(_) => Nil
+          case ForeachElem(_) => syms(t._2)
         }
       })
         
@@ -280,16 +298,16 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
         val l = t._1
         t._2 match {
           case MultiArrayElem(y) => getBlockResult(y) match {
-            case Def(EatReflect(Singleton(e))) => 
+            case Def(EatReflect(SuperSingleton(e))) => 
               stream.println(quote(l) + "("+quote(x)+") = " + quote(getBlockResult(e)))
-            case ite@Def(EatReflect(IfThenElse(cond, Block(Def(Singleton(thenp))), Block(Def(SuperEmptyArray()))))) =>
+            case ite@Def(EatReflect(IfThenElse(cond, Block(Def(SuperSingleton(thenp))), Block(Def(SuperEmptyArray()))))) =>
               replaceIfThenElseSingletonEmptyWithAppend.remove(ite.asInstanceOf[Sym[Any]])
             case _ => 
               stream.println(quote(l) + "_builder ++= " + quote(getBlockResult(y)))
           }
           case MultiReduceElem(valFunc, redFunc, zero, accSym, valSym) =>
             getBlockResult(valFunc) match {
-              case Def(EatReflect(Singleton(si))) =>
+              case Def(EatReflect(SuperSingleton(si))) =>
                 stream.println("val " + quote(valSym) + " = " + quote(getBlockResult(si)))
                 emitBlock(redFunc)
                 stream.println(quote(accSym) + " = " + quote(getBlockResult(redFunc)))
@@ -312,8 +330,8 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
         val l = t._1
         t._2 match {
           case MultiArrayElem(y) => getBlockResult(y) match {
-            case Def(EatReflect(Singleton(e))) => 
-            case ite@Def(EatReflect(IfThenElse(cond, Block(Def(Singleton(thenp))), Block(Def(SuperEmptyArray()))))) =>
+            case Def(EatReflect(SuperSingleton(e))) => 
+            case ite@Def(EatReflect(IfThenElse(cond, Block(Def(SuperSingleton(thenp))), Block(Def(SuperEmptyArray()))))) =>
               stream.println("val " + quote(l) + " = " + quote(l) + "_builder.result()")
             case _ => 
               stream.println("val " + quote(l) + " = " + quote(l) + "_builder.result()")
@@ -341,13 +359,6 @@ trait ArrayLoopsMCFusionExtractors extends ArrayLoopsMCFatExp with LoopFusionExt
     case _ => super.unapplySimpleDomain(e)
   }
 
-  override def unapplyFixedDomain(e: Def[Any]): Option[Exp[Int]] = e match {
-    case SimpleLoop(s, _, MultiArrayElem(Block(Def(SingletonColl(_))))) => Some(s)
-    // TODO is this input or output size? in math, domain is input, range is output
-//    case SimpleLoop(s, _, ForeachElem(_)) => Some(s)
-    case _ => super.unapplyFixedDomain(e)
-  }
-
   override def unapplyEmptyColl(a: Def[Any]): Boolean = a match {
     case SuperEmptyArray() => true
     case _ => super.unapplyEmptyColl(a)
@@ -360,7 +371,7 @@ trait ArrayLoopsMCFusionExtractors extends ArrayLoopsMCFatExp with LoopFusionExt
     case _ => super.unapplyEmptyCollNewEmpty[T](a)
   }
   override def unapplySingletonColl(a: Def[Any]): Option[Exp[Any]] = a match {
-    case Singleton(Block(e)) => Some(e)
+    case SuperSingleton(Block(e)) => Some(e)
     case _ => super.unapplySingletonColl(a)
   }
 
@@ -381,9 +392,11 @@ trait ArrayLoopsMCFusionExtractors extends ArrayLoopsMCFatExp with LoopFusionExt
     case _ => super.unapplyForlike(e)
   }
 
-  override def ignoreIndex(e: Def[Any]): Boolean = e match {
-    case SuperEmptyArray() => true
-    case _ => super.ignoreIndex(e)
+  override def ignoreIndex(e: Def[Any], index: Sym[Int]): Boolean = e match {
+    case Reflect(SingletonInLoop(_, `index`), _, deps) => !deps.contains(index)
+    case SingletonInLoop(_, `index`) => true
+    case EmptyArrayInLoop(`index`,_) => true
+    case _ => super.ignoreIndex(e, index)
   }
 
 
