@@ -1306,7 +1306,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 */
 
-  def testFusionTransform61 = withOutFileChecked(prefix+"fusion61") {
+  def testFusionTransform61 = withOutFileChecked(prefix+"fusion61"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       // Fuse MC with effectful foreach, removes intermediate array allocation
       def test(x: Rep[Int]) = {
@@ -1317,9 +1317,88 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-// TODO write test to show that need to check because could have been consumer:
-    // No need to check prodEffects (from set), because previous fusion already checked
-    // only need to check pEffects of current producer
+  def testFusionTransform62 = withOutFileChecked(prefix+"fusion62"+suffix) {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // fuse pure producer and effectful consumer
+        print(1)
+        val range = flatten(5) { i => arrayIf(10)({j => j > 5}, {j => j + i + 1 }) }
+        val range2 = flatten(range.length) { i => array(2) { j => print(range.at(i) + 2); 4 + j } } 
+        print(range.at(0))
+        print(range2.at(5))
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform63 = withOutFileChecked(prefix+"fusion63"+suffix) {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // fuse empty and foreach -> Unit left
+        val range = flatten(10) { i => emptyArray[Int]() }
+        range.foreach({ i: Rep[Int] => print(i) })
+        print(1)
+        // fuse if-then xx-else empty with foreach
+        val range2 = arrayIf(6)({ i => i > 2 }, { i => i + 3 })
+        range2.foreach({ i: Rep[Int] => print(i + 4) })
+        print(5)
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform64 = withOutFileChecked(prefix+"fusion64"+suffix) {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // fuse MC(if-then empty else any) with foreach
+        val range = flatten(10) { i => if (i > 5) emptyArray[Int]() else array(3) { j => i + j } }
+        range.foreach({ i: Rep[Int] => print(i) })
+        print(1)
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform65 = withOutFileChecked(prefix+"fusion65"+suffix) {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // fuse MC(if-then any else empty) with foreach
+        val range = flatten(8) { i => if (i > 4) array(4) { j => i + j + 1 } else emptyArray[Int]() }
+        range.foreach({ i: Rep[Int] => print(i) })
+        print(2)
+      }
+    }
+    new Prog with Impl
+  }
+
+  def testFusionTransform66 = withOutFileChecked(prefix+"fusion66"+suffix) {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // don't fuse if-then-else because no branch empty
+        val range = flatten(6) { i => if (i > 2) array(5) { j => i + j + 1 } else singleton(i + 2) }
+        range.foreach({ i: Rep[Int] => print(i) })
+        print(3)
+      }
+    }
+    new Prog with Impl
+  }
+
+  // def testFusionTransform67 = withOutFileChecked(prefix+"fusion67"+suffix) {
+  //   trait Prog extends MyFusionProg with Impl {
+  //     def test(x: Rep[Int]) = {
+  //       // don't fuse empty with reduce -> but here inner of MC fused with MC of
+  //       // reduce, and then wrapped in reduce
+  //       // needs fat ifs
+  //       // TODO test once empty fused
+  //       val range = flatten(6) { i => if (i > 3) emptyArray[Int]() else singleton(i + 2) }
+  //       val x = reduce[Int](range.length)({ i => singleton(range.at(i) + 1) },
+  //         { (a, b) => a + b }, 0)
+  //       print(range.at(0))
+  //       print(x)
+  //     }
+  //   }
+  //   new Prog with Impl
+  // }
 
 // TODO need tests for ManyMcsingle_For
 // TODO need to fuse & fatten ifs

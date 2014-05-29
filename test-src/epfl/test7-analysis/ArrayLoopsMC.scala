@@ -339,7 +339,9 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
           case MultiReduceElem(valFunc, redFunc, zero, accSym, valSym) =>
             stream.println("val " + quote(l) + " = " + quote(accSym)) // better way to return result?
 
-          case ForeachElem(_) =>          
+          // result of foreach is Unit, need to emit val because might be
+          // quoted in if-then-else or elsewhere as block result
+          case ForeachElem(_) => stream.println("val " + quote(l) + " = ()")         
         }
       })
 

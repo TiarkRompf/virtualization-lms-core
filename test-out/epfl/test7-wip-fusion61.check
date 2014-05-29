@@ -26,6 +26,7 @@ val x7 = x5.apply(x6)
 val x8 = x7 + 3
 val x9 = println(x8)
 }
+val x12 = ()
 
 -- vertical transformation
 
@@ -45,7 +46,9 @@ for (x2 <- 0 until x1) {
 val x14 = x2 + 3
 val x15 = println(x14)
 }
+val x17 = ()
 }
+val x19 = ()
 
 -- horizontal transformation
 (HFT) Recording Sym(19), no fusion
@@ -61,7 +64,9 @@ for (x2 <- 0 until x1) {
 val x14 = x2 + 3
 val x21 = println(x14)
 }
+val x23 = ()
 }
+val x25 = ()
 
 -- fusion
 for (x1 <- 0 until 100) {
@@ -69,5 +74,7 @@ for (x2 <- 0 until x1) {
 val x14 = x2 + 3
 val x21 = println(x14)
 }
+val x23 = ()
 }
+val x25 = ()
 -- done

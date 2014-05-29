@@ -31,6 +31,7 @@ val x9 = x2 = x8
 val x10 = x8 + 3
 val x11 = println(x10)
 }
+val x14 = ()
 val x15 = println(4)
 val x16 = x2
 val x17 = println(x16)
@@ -54,6 +55,7 @@ val x21 = x20 = x4
 val x22 = x4 + 3
 val x23 = println(x22)
 }
+val x25 = ()
 val x26 = println(4)
 val x27 = x20
 val x28 = println(x27)
@@ -73,6 +75,7 @@ val x32 = x31 = x4
 val x22 = x4 + 3
 val x33 = println(x22)
 }
+val x35 = ()
 val x36 = println(4)
 val x37 = x31
 val x38 = println(x37)
@@ -86,6 +89,7 @@ val x32 = x31 = x4
 val x22 = x4 + 3
 val x33 = println(x22)
 }
+val x35 = ()
 val x36 = println(4)
 val x37 = x31
 val x38 = println(x37)

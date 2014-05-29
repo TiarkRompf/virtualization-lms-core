@@ -305,6 +305,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       case _ => None
     } 
   }
+
   sealed abstract class FusionInfo1to1(val pSym: Sym[Any], val cSym: Sym[Any], var notFused: List[(Sym[Any], String)])
       extends FusionInfo(cSym, notFused) {
     override def printLogBefore = {
@@ -323,6 +324,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       case _ => None
     } 
   }
+
   sealed abstract class FusionInfoManyto1(val pSym: Sym[Any], val otherProds: List[Sym[Any]], val cSym: Sym[Any],
       val notFused: List[(Sym[Any], String)]) extends FusionInfo(cSym, notFused) {
     override def printLogBefore = {
@@ -366,7 +368,9 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       override val pSym: Sym[Any], override val cSym: Sym[Any]) extends FusionInfo1to1(pSym, cSym, Nil)
   case class Empty_MCSingle(empty: Exp[Any],
     override val pSym: Sym[Any], override val cSym: Sym[Any]) extends FusionInfo1to1(pSym, cSym, Nil)
-  case class IfThenSingleElseEmpty_Any(cond: Exp[Boolean], ifFusionInfo: FusionInfo, 
+  case class Empty_Foreach(override val pSym: Sym[Any], override val cSym: Sym[Any]) 
+    extends FusionInfo1to1(pSym, cSym, Nil)
+  case class IfThenElseOneEmpty_Any(cond: Exp[Boolean], ifFusionInfo: FusionInfo, 
       elseFusionInfo: FusionInfo, typeSym: Sym[Any],
     override val pSym: Sym[Any], override val cSym: Sym[Any]) extends FusionInfo1to1(pSym, cSym, Nil)
 
@@ -408,7 +412,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
 
 
   def findProducers[A:Manifest](cSym: Sym[A], cLoop: AbstractLoop[_], cShape: Exp[Int], cIndex: Sym[Int], cBody: Def[A], cEffects: LoopEffects): FusionInfo = {
-    // TODO check range, effects, other, multiple prods, deps, index use
+    // TODO other, multiple prods, deps, index use
     val cIndexStms = getFatDependentStuff(initialDefs)(List(cIndex))
 
     var listOfNotFused: List[(Sym[Any], String)] = Nil
@@ -489,6 +493,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
             innerFusionInfo match {
               case NoFusionInfo(_,_,_) => // TODO here use remapReduceToMC
                 listOfNotFused ::= (oldPSym, "multicollect producer's inner collection cannot be fused with consumer"); Nil
+              case Empty_Foreach(_,_) => List((Empty_Foreach(newPSym, cSym), prodType))
               case _ => 
                 if (!remapReduceToMC.isDefined)
                   List((Mc_McForlike(cIndex, pLoop.v, cShape, pLoop.size, 
@@ -497,42 +502,49 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
                   List((InnerMC_Red(cIndex, pLoop.v, innerFusionInfo, cInner, pInner, pLoop, newPSym, cSym), prodType))
             }
 
-          // SL(ps, pi, MC(pinner)) + singleton(f(prod.at(outerIndex)))
-          // -> SL(ps, pi, MC(f(pinner)))
-          case Left(SingletonColl(cInner)) if outerSISyms.isDefined =>
-            List((Mc_Single(outerSISyms.get, pInner, cInner, pLoop, newPSym, cSym), prodType))              
-
-          case _ => sys.error("TODO findProducers 2 cons: " + cSym)
+          case _ => listOfNotFused ::= (oldPSym, "don't know how to fuse MultiCollect producer with consumer of type " + cDef); Nil
         }
-          
-        case _ => sys.error("TODO findProducers prod body: " + pLoop.body)
+
+        case _ => listOfNotFused ::= (oldPSym, "unknown elem in loop producer (have you overriden the LoopFusionExtractors?): " + pLoop.body); Nil
       }
 
-      // ---- fused only as inner functions, or callback ----
-
+      // TODO change: fused only as inner functions, or callback
       // Generally cannot fuse IfThenElse producers because they can't be vertically fused, so
       // would result in code duplication. Therefore not added to seenLoops, so not recognized
       // as producers in findProducers. But here it's inner loop of MC being fused.
-      
-      case (_, Def(IfThenElse(cond, Block(si@Def(SingletonColl(siElem))), Block(em@Def(EmptyColl()))))) =>
-        (si, em) match {
-          case (siSym@Sym(_), emSym@Sym(_)) => 
-            val siFusionInfo = combineProducers(cSym, cDef, cEffects,
-              List((oldPSym, siSym, RealProd)), Nil, outerIndex, outerSISyms, remapReduceToMC)
-            val emFusionInfo = combineProducers(cSym, cDef, cEffects,
-              List((oldPSym, emSym, RealProd)), Nil, outerIndex, outerSISyms, remapReduceToMC)
 
-            (siFusionInfo, emFusionInfo) match {
-              case (NoFusionInfo(_,_,_), _) => listOfNotFused ::= (oldPSym, "singleton in then-branch of if-then-else producer cannot be fused with consumer"); Nil
-              case (_, NoFusionInfo(_,_,_)) => listOfNotFused ::= (oldPSym, "empty collection in else-branch of if-then-else producer cannot be fused with consumer"); Nil
-              case (sifi: FusionInfo, emfi: FusionInfo) => 
-                List((IfThenSingleElseEmpty_Any(cond, siFusionInfo, emFusionInfo, 
-                  remapReduceToMC.getOrElse(cSym), newPSym, cSym), prodType))
+      case (_, Def(IfThenElse(cond, Block(ifSym@Sym(_)), Block(elseSym@Sym(_))))) =>
+        // TODO think about constants? but array type... fuse if result is empty/unit?
+        ((ifSym, elseSym) match {
+          case (Def(EmptyColl()), _) => Some((true, ifSym, elseSym))
+          case (_, Def(EmptyColl())) => Some((false, elseSym, ifSym))
+          case _ => None
+        }) match {
+          case Some((emptyFirst, empty, other)) => 
+            combineProducers(cSym, cDef, cEffects, List((oldPSym, empty, RealProd)),
+                Nil, outerIndex, outerSISyms, remapReduceToMC) match {
+              
+              case NoFusionInfo(_,_,_) => listOfNotFused ::= (oldPSym, "if-then-else not fused because empty branch cannot be fused with consumer (don't want to duplicate consumer code)"); Nil
+              
+              case emptyFusionInfo =>
+                val otherFusionInfo = combineProducers(cSym, cDef, cEffects,
+                    List((oldPSym, other, RealProd)), Nil, outerIndex, outerSISyms, remapReduceToMC) match {
+                  case NoFusionInfo(_,_,_) => sys.error("TODO ifthenelse not fused")
+                  case oFusionInfo => oFusionInfo
+                }
+
+                if (emptyFirst)
+                  List((IfThenElseOneEmpty_Any(cond, emptyFusionInfo, otherFusionInfo, 
+                    remapReduceToMC.getOrElse(cSym), newPSym, cSym), prodType))
+                else 
+                  List((IfThenElseOneEmpty_Any(cond, otherFusionInfo, emptyFusionInfo,
+                    remapReduceToMC.getOrElse(cSym), newPSym, cSym), prodType))
             }
-          case _ => listOfNotFused ::= (oldPSym, "if-then-else producer with collection constants"); Nil
+          case None => listOfNotFused ::= (oldPSym, "if-then-else producer only fused if one branch is empty collection"); Nil
         }
 
       case (_, Def(empty@EmptyColl())) => (cDef, remapReduceToMC.isDefined) match {
+        // empty + MC -> empty of consumer type
         case (MatchLoop(MultiCollect(_),_,_),_) | (MatchLoop(ForLike(_,false),_,_), true) =>
           val (cInner, cShape, cIndex) = cDef match {
             case MatchLoop(MultiCollect(cInner), cShape, cIndex) => (cInner, cShape, cIndex)
@@ -542,11 +554,15 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
             case EmptyCollNewEmpty(newEmpty) => List((Empty_MCSingle(newEmpty, newPSym, cSym), prodType))
             case _ => sys.error("no empty")
           }
-        case (Left(single@SingletonColl(cInner)),_) if outerIndex.isDefined =>
-          (empty, cSym, outerIndex) match {
-            case EmptyCollNewEmpty(newEmpty) => List((Empty_MCSingle(newEmpty, newPSym, cSym), prodType))
-            case _ => sys.error("no empty")
-          }
+
+        // empty + For/foreach -> Unit
+        case (MatchLoop(ForLike(_,true),_,_), _) => List((Empty_Foreach(newPSym, cSym), prodType))
+
+        // empty + reduce: don't fuse, maintain dsl specific error
+        // TODO test once empty fused
+        case (MatchLoop(ForLike(_,false),_,_), false) => 
+          listOfNotFused ::= (oldPSym, "empty producer not fused with reduce because need to maintain implementation-specific error"); Nil
+
         case _ => sys.error("TODO findProducers 5 cons: " + cSym)
       }
 
@@ -582,41 +598,6 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       fInfo.foreach(_.setNotFused(listOfNotFused))
     }
 
-    /* // TODO eliminate multiple effects
-    def isPure(effect: LoopEffects): Boolean = !effect.isDefined || mustPure(effect.get._1)
-    
-    val (prodSyms, combinedEffect) = if (cEffects.isDefined) {
-      (allProds, cEffects)
-    } else {
-      val impureIndex = allProds.indexWhere({ case (_,_,_,pEffect,_,_) => pEffect.isDefined })
-      if (impureIndex == -1) {
-        (allProds, None) 
-      } else {
-        val impureProd = allProds(impureIndex)
-        val pureTail = allProds.drop(impureIndex + 1).filter({ 
-          case (pSym, newPSym, range, pEffect, msg, indep) => 
-            val pure = !pEffect.isDefined
-            if (!pure) {
-              printdbg("(VFT) " + cSym + " not fused with " + pSym + " because " + pSym + " is effectful and "
-               + cSym + " is already being fused with other effectful producer " + impureProd._1)
-            }
-            pure
-        })
-        (allProds.take(impureIndex + 1) ++ pureTail, impureProd._4)
-      }
-    }
-
-
-    val t2 = if (prodSyms.isEmpty) {
-      (None, Nil)
-    } else if (prodSyms(0)._3 == 1) {
-      (Some((prodSyms(0)._1, prodSyms(0)._2)), prodSyms.tail.map(t => (t._1, t._2)))
-    } else {
-      (None, prodSyms.map(t => (t._1, t._2)))
-    }
-    (t2._1, t2._2, combinedEffect)
-*/
-
     val result = producers match {
       case Nil => NoFusionInfo(cSym, cDef, listOfNotFused)
       case prod :: Nil => prod._1.notFused = listOfNotFused; prod._1
@@ -627,8 +608,12 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
           case other => Left(other)
         })
         addNotFused(canFuseRight.collect({ case Left(notFused) => notFused }), siSyms._1, firstPType)
+        // when effectful producers are fused, check at most one is effectful here
         val otherProds = canFuseRight.collect({ case Right(toFuse) => toFuse })
-        ManyMcsingle_MultiFor(cIndex, pIndex, siSyms, pInner, otherProds, newPSym, cSym, listOfNotFused)
+        if (!otherProds.isEmpty)
+          ManyMcsingle_MultiFor(cIndex, pIndex, siSyms, pInner, otherProds, newPSym, cSym, listOfNotFused)
+        else
+          mcsm
       case (first, firstPType) :: list => 
         val fusedProd: Sym[Any] = first.getProds.head
         addNotFused(list, fusedProd, firstPType, Some(first))
@@ -664,11 +649,13 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
         overrideRecordFusion = Some(Right(false))
         FusionResult(reflectBlock(Block(cInner)))
 
-      case Empty_MCSingle(empty, _, _) => 
-        FusionResult(empty)
+      case Empty_MCSingle(empty, _, _) => FusionResult(empty)
 
-      case IfThenSingleElseEmpty_Any(cond, thenFusionInfo, elseFusionInfo, typeSym, pSym, cSym) =>
+      case Empty_Foreach(_,_) => FusionResult(Const(()))
+
+      case IfThenElseOneEmpty_Any(cond, thenFusionInfo, elseFusionInfo, typeSym, pSym, cSym) =>
         val newCond = reflectBlock(Block(cond))
+        // __ifThenElse does reify
         FusionResult(__ifThenElse(newCond, doFusion(thenFusionInfo, cStm, Right(false)).transformed, 
           doFusion(elseFusionInfo, cStm, Right(false)).transformed)(mtype(typeSym.tp), mpos(cSym.pos)))
 
@@ -682,8 +669,8 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
 
       case InnerMC_Red(cIndex, pIndex, innerFusionInfo, cInner, pInner, pLoop, _, _) =>
         subst += (cIndex -> pIndex)
-        val innerFused = doFusion(innerFusionInfo, cStm, Left(pInner)).transformed
-        onceSubst += (pInner -> innerFused)
+        val innerFused = reifyEffects(doFusion(innerFusionInfo, cStm, Left(pInner)).transformed)(mtype(cInner.tp))
+        onceSubst += (pInner -> getBlockResultFull(innerFused))
         FusionResult(self_mirror(cInner, pLoop))
 
       case Mc_Single(siSyms, pInner, cInner, pLoop, _, cSym) =>
@@ -714,12 +701,15 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
           FusedSyms.recordFused(prod, cons, fusedSym, 
             otherProds.map({ old => (old, getSubstSym(old)) }), getFusedEffects(fusedSym))
         
-        case err => sys.error("doFusion unknown case: " + err)
+        case (_, FusionResult(Const(_))) => 
+          // Do nothing, constants not relevant for further vert. fusion decisions or horizontal
+
+        case err => sys.error("doFusion unknown right case: " + err)
       }
       case Left(innerPSym@Sym(_)) => fusionOutcome match {
         case FusionResult(fusedSym@Sym(_)) => 
           FusedSyms.recordFused(innerPSym, fusedSym, fusedSym, Nil, None)
-        case _ =>
+        case err => sys.error("doFusion unknown left case: " + err)
       }
       case _ =>
     }
@@ -826,6 +816,10 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
    *  not be deduplicated by the scheduler).
    *  If fusion is ok, Right(combined effect) is returned, otherwise Left(debug message).
    */
+    // wrong: No need to check prodEffects (from set), because previous fusion already checked
+    // only need to check pEffects of current producer
+    // -> write test to show that need to check because could have been consumer
+
     // cEffects match {
     //   case Some(_) => prodEffects match {          
     //     case Some(_) =>
