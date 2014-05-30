@@ -618,30 +618,28 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
   val IR: PrimitiveOpsExp
   import IR._
 
-  //TODO: stdlib.h needs to be included in the common header file
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case ObjDoubleParseDouble(s) => emitValDef(sym, "strtod(" + quote(s) + ",NULL)")
-      case ObjDoublePositiveInfinity() => emitValDef(sym, "DBL_MAX")
-      case ObjDoubleNegativeInfinity() => emitValDef(sym, "-DBL_MAX")
-      case ObjDoubleMinValue() => emitValDef(sym, "scala.Double.MinValue")
-      case ObjDoubleMaxValue() => emitValDef(sym, "scala.Double.MaxValue")
+      case ObjDoubleMinValue() => emitValDef(sym, "DBL_MIN")
+      case ObjDoubleMaxValue() => emitValDef(sym, "DBL_MAX")
       case DoubleFloatValue(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       case DoublePlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
       case DoubleMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
       case DoubleTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
       case DoubleDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))      
-      case DoubleToInt(lhs) => emitValDef(sym, "(int)" + quote(lhs))
+      case DoubleToInt(lhs) => emitValDef(sym, "(int32_t)" + quote(lhs))
       case DoubleToFloat(lhs) => emitValDef(sym, "(float)" + quote(lhs))    
-      case FloatToInt(lhs) => emitValDef(sym, "(int)" + quote(lhs))
+      case ObjFloatParseFloat(s) => emitValDef(sym, "strtof(" + quote(s) + ".c_str(),NULL)")
+      case FloatToInt(lhs) => emitValDef(sym, "(int32_t)" + quote(lhs))
       case FloatToDouble(lhs) => emitValDef(sym, "(double)" + quote(lhs))        
       case FloatPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
       case FloatMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
       case FloatTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
       case FloatDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))      
-      case ObjIntegerParseInt(s) => emitValDef(sym, "atoi(" + quote(s) + ")")
+      case ObjIntegerParseInt(s) => emitValDef(sym, "atoi(" + quote(s) + ".c_str())")
       case ObjIntMaxValue() => emitValDef(sym, "INT_MAX")
-      case ObjIntMinValue() => emitValDef(sym, "INT_MAX")    
+      case ObjIntMinValue() => emitValDef(sym, "INT_MIN")    
       case IntPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
       case IntMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
       case IntTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
@@ -653,24 +651,49 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       case IntBinaryXor(lhs,rhs) => emitValDef(sym, quote(lhs) + " ^ " + quote(rhs))
       case IntShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
       case IntShiftRightArith(lhs, rhs) => emitValDef(sym, quote(lhs) + " >> " + quote(rhs))
-      case IntShiftRightLogical(lhs, rhs) => emitValDef(sym, "(unsigned int)" + quote(lhs) + " >> " + quote(rhs))
+      case IntShiftRightLogical(lhs, rhs) => emitValDef(sym, "(uint32_t)" + quote(lhs) + " >> " + quote(rhs))
       case IntDoubleValue(lhs) => emitValDef(sym, "(double)"+quote(lhs))
       case IntFloatValue(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       case IntBitwiseNot(lhs) => emitValDef(sym, "~" + quote(lhs))
-      case IntToLong(lhs) => emitValDef(sym, "(long)"+quote(lhs))
+      case IntToLong(lhs) => emitValDef(sym, "(int64_t)"+quote(lhs))
       case IntToFloat(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       case IntToDouble(lhs) => emitValDef(sym, "(double)"+quote(lhs))
+      case ObjLongParseLong(s) => emitValDef(sym, "strtod(" + quote(s) + ".c_str(),NULL)")
       case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
       case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))    
       case LongShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
-      case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, "(unsigned long)" + quote(lhs) + " >> " + quote(rhs))    
-      case LongToInt(lhs) => emitValDef(sym, "(int)"+quote(lhs))
+      case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, "(uint64_t)" + quote(lhs) + " >> " + quote(rhs))    
+      case LongToInt(lhs) => emitValDef(sym, "(int32_t)"+quote(lhs))
       case _ => super.emitNode(sym, rhs)
     }
   }
 }
 
-trait CudaGenPrimitiveOps extends CudaGenBase with CLikeGenPrimitiveOps
+trait CudaGenPrimitiveOps extends CudaGenBase with CLikeGenPrimitiveOps {
+  val IR: PrimitiveOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
+    rhs match {
+      case ObjDoublePositiveInfinity() => emitValDef(sym, "__longlong_as_double(0x7ff0000000000000ULL)")
+      case ObjDoubleNegativeInfinity() => emitValDef(sym, "__longlong_as_double(0xfff0000000000000ULL)")
+      case _ => super.emitNode(sym, rhs)
+    }
+  }
+}
+
 trait OpenCLGenPrimitiveOps extends OpenCLGenBase with CLikeGenPrimitiveOps
-trait CGenPrimitiveOps extends CGenBase with CLikeGenPrimitiveOps
+
+trait CGenPrimitiveOps extends CGenBase with CLikeGenPrimitiveOps {
+  val IR: PrimitiveOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
+    rhs match {
+      case ObjDoublePositiveInfinity() => emitValDef(sym, "INFINITY")
+      case ObjDoubleNegativeInfinity() => emitValDef(sym, "-INFINITY")
+      case _ => super.emitNode(sym, rhs)
+    }
+  }
+}
 

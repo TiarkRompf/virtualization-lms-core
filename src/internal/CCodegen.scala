@@ -87,6 +87,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     headerStream.println("#include <assert.h>")
     headerStream.println("#include <math.h>")
     headerStream.println("#include <iostream>")
+    headerStream.println("#include <limits>")
     headerStream.println("#include \"" + deviceTarget + "types.h\"")
     headerStream.println(getDataStructureHeaders())
 
