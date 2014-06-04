@@ -1157,7 +1157,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-/* TODO
+/* // TODO MC has Reflect(Singleton)  
   def testFusionTransform52 = withOutFileChecked(prefix+"fusion52") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
@@ -1170,8 +1170,7 @@ class TestFusion3 extends FileDiffSuite {
       }
     }
     new Prog with Impl
-  }
-  */
+  }*/
 
   def testFusionTransform53 = withOutFileChecked(prefix+"fusion53"+suffix) {
     trait Prog extends MyFusionProg with Impl {
@@ -1305,7 +1304,6 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 */
-
   def testFusionTransform61 = withOutFileChecked(prefix+"fusion61"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       // Fuse MC with effectful foreach, removes intermediate array allocation

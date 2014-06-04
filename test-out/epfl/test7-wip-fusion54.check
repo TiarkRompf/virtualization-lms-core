@@ -43,7 +43,7 @@ val x19 = println(x18)
 (VFT) Cons Sym(8) not fused but mirrored to Sym(26) because of previous substitutions or effects
 (VFT) Replaced TP(Sym(9),ArrayLength(Sym(8))) with fixed length: Const(100)
 
-(VFT) Not fused prod Sym(8) with cons Sym(17) because of effects: no fusion with effectful producers
+(VFT) Not fused prod Sym(8) with cons Sym(17) because of effects: effectful consumer cannot be fused with effectful producer
 (VFT) No producers found for cons Sym(17)
 (VFT) Cons Sym(17) not fused but mirrored to Sym(33) because of fixed shape
 

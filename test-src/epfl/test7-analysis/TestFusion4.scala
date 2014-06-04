@@ -27,7 +27,7 @@ trait ImplArith extends MyFusionProgArith with ArithExp  with ArrayLoopsMCFatExp
 
 trait CodegenArith extends ScalaGenArith with ScalaGenPrint
   with ScalaGenOrderingOps with ScalaGenIfThenElse
-// with ScalaGenNumericOps with ScalaGenPrimitiveOps
+  with ScalaGenNumericOps with ScalaGenPrimitiveOps
   with ScalaGenBooleanOps with ScalaGenArrayLoopsMCFat { val IR: ImplArith }
 
 trait FusionCodegenArith extends CodegenArith with LoopFusionSchedulingOpt { val IR: ImplArith }
@@ -106,7 +106,7 @@ trait RunnerArith {
 class TestFusion4 extends FileDiffSuite {
 
   val prefix = "test-out/epfl/test7-wip2-"
-/*
+
   def testFusionTransform00 = withOutFileChecked(prefix+"fusion00") {
     trait Prog extends MyFusionProgArith with ImplArith {
       implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
@@ -116,8 +116,8 @@ class TestFusion4 extends FileDiffSuite {
         val affine = array(100) { i => constant.at(i) + linear.at(i) }
 
         def square(x: Rep[Double]) = x*x
-        def mean(x: Rep[Array[Double]]) = sum(x.length) { i => x.at(i) } / x.length
-        def variance(x: Rep[Array[Double]]) = sum(x.length) { i => square(x.at(i)) } / x.length - square(mean(x))
+        def mean(x: Rep[Array[Double]]) = sumD(x.length) { i => x.at(i) } / x.length
+        def variance(x: Rep[Array[Double]]) = sumD(x.length) { i => square(x.at(i)) } / x.length - square(mean(x))
 
         val data = affine  
         val m = mean(data)
@@ -139,7 +139,7 @@ class TestFusion4 extends FileDiffSuite {
         
         val range = array(100) { i => i }
         val odds = filter(range) { z => z > 50 }
-        val res = sum(odds.length) { i => odds.at(i) }
+        val res = sumD(odds.length) { i => odds.at(i) }
             
         print(res)
       }
@@ -190,10 +190,10 @@ class TestFusion4 extends FileDiffSuite {
           array(50) { j => 2.0 } // bx
         }
         val cs = array(100) { i => 
-          sum(50) { j => 4.0 } // cx
+          sumD(50) { j => 4.0 } // cx
         }
         val ds = array(100) { i => 
-          val x = sum(50) { j => as.at(i).at(j) + bs.at(i).at(j) }
+          val x = sumD(50) { j => as.at(i).at(j) + bs.at(i).at(j) }
           val y = cs.at(i)
           x + y
         }
@@ -225,10 +225,10 @@ class TestFusion4 extends FileDiffSuite {
           array(i) { j => 2.0 }
         }
         val cs = array(100) { i => 
-          sum(i) { j => 4.0 }
+          sumD(i) { j => 4.0 }
         }
         val ds = array(100) { i => 
-          val x = sum(i) { j => as.at(i).at(j) + bs.at(i).at(j) }
+          val x = sumD(i) { j => as.at(i).at(j) + bs.at(i).at(j) }
           val y = cs.at(i)
           x + y
         }
@@ -243,10 +243,10 @@ class TestFusion4 extends FileDiffSuite {
 
   def testFusionTransform05 = withOutFileChecked(prefix+"fusion05") {
     trait Prog extends MyFusionProgArith with ImplArith {
-      override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = if (x == y) {
-        println("*** removing self subtraction " + x + " - " + y)
-        0
-      } else super.infix_-(x,y) //  optimizations to trigger test behavior
+      // override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = if (x == y) {
+      //   println("*** removing self subtraction " + x + " - " + y)
+      //   0
+      // } else super.infix_-(x,y) //  optimizations to trigger test behavior
 
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
       def test(x: Rep[Int]) = {    
@@ -270,5 +270,4 @@ class TestFusion4 extends FileDiffSuite {
     }
     new Prog with ImplArith
   }
-  */
 }

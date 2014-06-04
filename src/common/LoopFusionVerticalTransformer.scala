@@ -18,19 +18,16 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
   object FusedSyms {
 
     /** A set of fused loops, at most one effectful. */
-    class FSet(private var effects: LoopEffects, set: HashSet[Sym[Any]]) {
+    class FSet(private var effectful: Boolean, set: HashSet[Sym[Any]]) {
       def add(s: Sym[Any]) = set.add(s)
-      def addEffect(e: LoopEffects): Unit = {
-        assert(!(effects.isDefined && e.isDefined && effects != e), "(VFT) ERROR: Can't fuse effects!")
-        e match { case Some(_) => this.effects = e case _ => }
-      }
+      def addEffect(): Unit = { effectful = true }
       def foreach(f: Sym[Any] => Unit) = set.foreach(f)
       def getSet = set.toSet
       def getSubstList(map: Map[Exp[Any], Exp[Any]]) = {
         set.map({ sym => getSubstSym(sym, map) }).toList
       }
-      def getEffects = effects
-      override def toString = "FSet(set = " + set + ", effects = " + effects + ")"
+      def getEffects = effectful
+      override def toString = "FSet(set = " + set + ", effectful = " + effectful + ")"
     }
 
     private val fusedSyms = new HashMap[Sym[Any], FSet]
@@ -46,11 +43,11 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       case _ =>
     }
     def recordFused(pSym: Sym[Any], cSym: Sym[Any], newCSym: Sym[Any], otherProds: List[OldNewSyms],
-        combinedEffect: LoopEffects) = {
+        effectful: Boolean) = {
       val set = fusedSyms.get(pSym) match {
-        case Some(fset) => fset.addEffect(combinedEffect); fset
+        case Some(fset) => if (effectful) fset.addEffect(); fset
         case None =>
-          val fset = new FSet(combinedEffect, HashSet(pSym))
+          val fset = new FSet(effectful, HashSet(pSym))
           fusedSyms.put(pSym, fset)
           fset
       }
@@ -78,7 +75,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       val setSet: Set[FSet] = fusedSyms.values.toSet
 
       setSet.map({ fset => 
-          (fset.getSubstList(fusedSubstMap), fset.getEffects.isDefined)
+          (fset.getSubstList(fusedSubstMap), fset.getEffects)
         }).filter( _._1.length > 1 ).foreach({ symList =>
           symList._1.foreach({ sym => newMap.put(sym, symList) })
         })
@@ -133,6 +130,12 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       case _ => None
     }
   }
+  object MatchLoop {
+    def unapply(a: Any): Option[(Def[Any], Exp[Int], Sym[Int])] = a match {
+      case Right(cLoop: AbstractLoop[_]) => Some((cLoop.body, cLoop.size, cLoop.v))
+      case _ => None
+    }
+  }
   def stmShort(stm: Stm) = stm match {
     case TP(s@Sym(_), Reflect(loop: AbstractLoop[_], _, _)) => "TP(" + s + ",Reflect(" + loop + ", ...))"
     case _ => stm.toString
@@ -150,7 +153,12 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     case s@Sym(_) => findDefinition(s)
     case _ => None
   }
-
+  def getNewSyms(syms: List[Sym[Any]]) = syms.flatMap(n => subst.get(n) match { 
+    // use the new expressions
+    case Some(nn@Sym(_)) => List(nn)
+    case Some(Const(_)) => List()
+    case _ => List(n)
+  })
 
   // --- per scope datastructures ----
   
@@ -187,7 +195,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     fixedLengthIndex = None
     indent += 2
 
-    // also check whether toplevel block result symbol
+    // check whether toplevel block result symbol
     // needs substitution, so we can change full blocks
     val blockRes = getBlockResultFull(block)
     val res = apply(blockRes) match {
@@ -221,7 +229,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
           fixedSym
         }).getOrElse(super.transformStm(stm))
 
-        // TODO remove
+        // TODO remove?
       case TP(sym, IfThenElse(_,_,_)) => seenLoops += sym
         super.transformStm(stm)
       case TP(sym, SingletonColl(_)) => seenLoops += sym
@@ -253,10 +261,10 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
 
     printlog("")
     seenLoops += sym
-    val fusionInfo = findProducers(sym, loop, loop.size, loop.v, loop.body, effects)
+    val (fusionInfo, effectful) = findProducers(sym, loop, loop.size, loop.v, loop.body, effects)
     fusionInfo.printLogBefore
 
-    val fusionOutcome = doFusion(fusionInfo, stm, Right(true))
+    val fusionOutcome = doFusion(fusionInfo, stm, Right(true), effectful)
     fusionInfo.printLogAfter(fusionOutcome)
     findDefinitionExp(fusionOutcome.transformed) match {
       case Some(TP(newSym, LoopOrReflectedLoop((loop, _)))) => 
@@ -274,24 +282,14 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
    *  PartialProd: cannot conclude any of the above, consumer might only
    *    iterate over part of the producer collection
    */
-  object ProdType extends Enumeration {
-    type ProdType = Value
-    val RealProd, ReconstrProd, PartialProd = Value
-  }
-  import ProdType._
-  def intVal(prodType: ProdType) = prodType match {
-    case RealProd => 1 case ReconstrProd => 2 case PartialProd => 3
-  }
-  def toString(prodType: ProdType) = prodType match {
-    case RealProd => "real" case ReconstrProd => "reconstructed" case PartialProd => "partial"
-  }
+  sealed abstract class ProdType { val intVal: Int; val shortName: String }
+  case class RealProd extends ProdType { val intVal = 1; val shortName = "real" }
+  case class ReconstrProd extends ProdType { val intVal = 2; val shortName = "reconstructed" }
+  case class PartialProd extends ProdType { val intVal = 3; val shortName = "partial" }
 
-  object MatchLoop {
-    def unapply(a: Any): Option[(Def[Any], Exp[Int], Sym[Int])] = a match {
-      case Right(cLoop: AbstractLoop[_]) => Some((cLoop.body, cLoop.size, cLoop.v))
-      case _ => None
-    }
-  }
+  
+
+  // -------- fusion information ----------
 
   sealed abstract class FusionInfo(cSym: Sym[Any], notFused: List[(Sym[Any], String)]) {
     def printLogBefore: Unit
@@ -299,13 +297,13 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     def getProds: List[Sym[Any]]
     def setNotFused(list: List[(Sym[Any], String)])
   }
+
   object FusionInfo1to1 {
     def unapply(o: Any): Option[(Sym[Any], Sym[Any], List[(Sym[Any], String)])] = o match {
       case x: FusionInfo1to1 => Some((x.pSym, x.cSym, x.notFused))
       case _ => None
     } 
   }
-
   sealed abstract class FusionInfo1to1(val pSym: Sym[Any], val cSym: Sym[Any], var notFused: List[(Sym[Any], String)])
       extends FusionInfo(cSym, notFused) {
     override def printLogBefore = {
@@ -318,13 +316,13 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     override def getProds = List(pSym)
     override def setNotFused(list: List[(Sym[Any], String)]) = notFused = list
   }
+
   object FusionInfoManyto1 {
     def unapply(o: Any): Option[(Sym[Any], List[Sym[Any]], Sym[Any], List[(Sym[Any], String)])] = o match {
       case x: FusionInfoManyto1 => Some((x.pSym, x.otherProds, x.cSym, x.notFused))
       case _ => None
     } 
   }
-
   sealed abstract class FusionInfoManyto1(val pSym: Sym[Any], val otherProds: List[Sym[Any]], val cSym: Sym[Any],
       val notFused: List[(Sym[Any], String)]) extends FusionInfo(cSym, notFused) {
     override def printLogBefore = {
@@ -354,22 +352,16 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     override def setNotFused(list: List[(Sym[Any], String)]) = sys.error("NoFusionInfo.notFused is not mutable")
   }
 
-  // case class Empty_McSingleBmcBr(pSym: Sym[Any], cSym: Sym[Any]) extends FusionInfo1to1(pSym, cons)
-  // case class Empty_For(pSym: Sym[Any], cons: Sym[Any]) extends FusionInfo1to1(pSym, cons)
-  // case class Single_McFor(pSym: Sym[Any], cons: Sym[Any], 
-  //   singleVal: Sym[Any], cBlock: Block[Any], cIndex: Sym[Int]) extends FusionInfo1to1(pSym, cons)
-  // case class Single_Bmc(pSym: Sym[Any], cons: Sym[Any], 
-  //   singleVal: Sym[Any], cBlock: Block[Any], cIndex: Sym[Int]) extends FusionInfo1to1(pSym, cons)
-  // case class Mcsingle_BmcBr(pSym: Sym[Any], cons: Sym[Any]) extends FusionInfo1to1(pSym, cons)
-
   case class Single_MC(cIndex: Sym[Int], siSyms: SISyms, pInner: Exp[Any], cInner: Exp[Any],
       override val pSym: Sym[Any], override val cSym: Sym[Any]) extends FusionInfo1to1(pSym, cSym, Nil)
   case class Single_Single(siSyms: SISyms, pInner: Exp[Any], 
       override val pSym: Sym[Any], override val cSym: Sym[Any]) extends FusionInfo1to1(pSym, cSym, Nil)
+  
   case class Empty_MCSingle(empty: Exp[Any],
     override val pSym: Sym[Any], override val cSym: Sym[Any]) extends FusionInfo1to1(pSym, cSym, Nil)
   case class Empty_Foreach(override val pSym: Sym[Any], override val cSym: Sym[Any]) 
     extends FusionInfo1to1(pSym, cSym, Nil)
+
   case class IfThenElseOneEmpty_Any(cond: Exp[Boolean], ifFusionInfo: FusionInfo, 
       elseFusionInfo: FusionInfo, typeSym: Sym[Any],
     override val pSym: Sym[Any], override val cSym: Sym[Any]) extends FusionInfo1to1(pSym, cSym, Nil)
@@ -396,7 +388,6 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       case _ => None
     } 
   }
-
   case class ManyMcsingle_MultiFor(cIndex: Sym[Int], pIndex: Sym[Int],
       val siSyms: SISyms, pInner: Exp[Any], val oProds: List[(SISyms, Exp[Any])], 
       override val pSym: Sym[Any], override val cSym: Sym[Any],
@@ -410,8 +401,8 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
   case class FusionResult(fusedSym: Exp[Any]) extends FusionOutcome(fusedSym)
   case class NoFusionRemapped(remappedSym: Exp[Any], remapReason: String) extends FusionOutcome(remappedSym)
 
-
-  def findProducers[A:Manifest](cSym: Sym[A], cLoop: AbstractLoop[_], cShape: Exp[Int], cIndex: Sym[Int], cBody: Def[A], cEffects: LoopEffects): FusionInfo = {
+  def findProducers[A:Manifest](cSym: Sym[A], cLoop: AbstractLoop[_], cShape: Exp[Int], 
+      cIndex: Sym[Int], cBody: Def[A], cEffects: LoopEffects): (FusionInfo, Boolean) = {
     // TODO other, multiple prods, deps, index use
     val cIndexStms = getFatDependentStuff(initialDefs)(List(cIndex))
 
@@ -426,7 +417,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     }).map({ case pSym => 
       val (prodType, msg) = consumerGoesOverRangeOfProducer(cShape, pSym)
       prodType match {
-        case PartialProd => 
+        case PartialProd() => 
           listOfNotFused ::= (pSym, "consumer loop might not iterate over full range of producer collection")
           // TODO could have callback, but now not shape of prod, only for SingleCollects?
           // problem when shape of consumer replaced with shape of producer
@@ -434,8 +425,8 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
         case _ =>
       }
       (pSym, prodType)
-    }).filter({ case (_, PartialProd) => false case _ => true
-    }).sortWith({ (a, b) => intVal(a._2) < intVal(b._2)
+    }).filter({ case (_, PartialProd()) => false case _ => true
+    }).sortWith({ (a, b) => a._2.intVal < b._2.intVal
     }).map({ case (pSym, prodType) => (pSym, getSubstSym(pSym), prodType)
     }).filter({ case (pSym, newPSym, _) =>
       val indexIsTaboo = newPSym match {
@@ -447,177 +438,209 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       }
       notIndep(cSym, cIndex, indexIsTaboo, cBody, cEffects, pSym, newPSym) match {
         case None => true
-        case Some((sym, msg)) => listOfNotFused ::= (sym, msg); false
+        case Some(msg) => listOfNotFused ::= (pSym, msg); false
       }
-    }).filter({ case (pSym, newPSym, _) => 
-      getCombinedEffect(cEffects, pSym, newPSym) match {
+    }).map({ case (pSym, newPSym, prodType) => (pSym, newPSym, prodType, effectsOk(cEffects, pSym, newPSym))
+    }).filter({ case (pSym, _, _, effectful) => effectful match {
         case Left(msg) => listOfNotFused ::= (pSym, "of effects: " + msg); false
-        case _ => true // value of combinedEffect ignored since currently only cEffects returned
+        case _ => true
       }
+    }).map({ case (pSym, newPSym, prodType, effectful) =>
+      (pSym, newPSym, prodType, effectful.right.get)
     })
 
     combineProducers(cSym, Right(cLoop), cEffects, producers, listOfNotFused, None, None, None)
   }
 
-  // TODO invariants: cshape doesn't survive fusion, cIndex on outermost level becomes pindex?
-  // TODO do something with effects, what about recursive calls?
   def combineProducers[A:Manifest](cSym: Sym[A], cDef: Either[Def[A], AbstractLoop[_]], 
-      cEffects: LoopEffects, prodCandidates: List[(Sym[Any], Sym[Any], ProdType)],
+      cEffects: LoopEffects, prodCandidates: List[(Sym[Any], Sym[Any], ProdType, Boolean)],
       notFused: List[(Sym[Any], String)], outerIndex: Option[Sym[Int]],
-      outerSISyms: Option[SISyms], remapReduceToMC: Option[Sym[Any]]): FusionInfo = {
-
+      outerSISyms: Option[SISyms], remapReduceToMC: Option[Sym[Any]]): (FusionInfo, Boolean) = {
+    // TODO invariants: cshape doesn't survive fusion, cIndex on outermost level becomes pindex?
+    // TODO do something with effects, what about recursive calls?
     var listOfNotFused: List[(Sym[Any], String)] = notFused
 
-    val producers: List[(FusionInfo1to1, ProdType)] = prodCandidates.flatMap({ case (oldPSym, newPSym, prodType) => (oldPSym, newPSym) match {
-      case (_, Def(LoopOrReflectedLoop(pLoop, effects))) => pLoop.body match {
-        
-        case MultiCollect(pInner@Sym(_)) => cDef match {
-          // SL(ps, pi, MC(pinner(pi))) + SL(prod.len, ci, MC(cinner(prod.at(ci))))
-          // -> SL(ps, pi, MC(pinner(pi) + SL(pinner.len, ci, MC(cinner(pinner.at(ci))))))
+    val producers: List[(FusionInfo1to1, ProdType, Boolean)] = prodCandidates.flatMap({ case (oldPSym, newPSym, prodType, effectful) => 
+      val fusionInfo: Option[FusionInfo1to1] = (oldPSym, newPSym) match {
+        case (_, Def(LoopOrReflectedLoop(pLoop, _))) => pLoop.body match {
+          
+          case MultiCollect(pInner@Sym(_)) => cDef match {
+            // SL(ps, pi, MC(pinner(pi))) + SL(prod.len, ci, MC(cinner(prod.at(ci))))
+            // -> SL(ps, pi, MC(pinner(pi) + SL(pinner.len, ci, MC(cinner(pinner.at(ci))))))
 
-          // SL(ps, pi, MC(pinner(pi))) + SL(prod.len, ci, Foreach(cInner(prod.at(ci))))
-          // -> SL(ps, pi, Foreach(pinner + SL(pinner.len, ci, Foreach(cInner(pinner.at(ci))))
+            // SL(ps, pi, MC(pinner(pi))) + SL(prod.len, ci, Foreach(cInner(prod.at(ci))))
+            // -> SL(ps, pi, Foreach(pinner + SL(pinner.len, ci, Foreach(cInner(pinner.at(ci))))
 
-          // SL(ps, pi, MC(pinner(pi))) + SL(prod.len, ci, Reduce(cInner(prod.at(ci))))
-          // -> SL(ps, pi, Reduce(pinner(pi) + SL(pinner.len, ci, MC(cInner(pinner.at(ci))))))
-          case MatchLoop(MultiCollect(Sym(_)), _, _) | MatchLoop(ForLike(Sym(_),_), _, _) =>
-            val (cInner, cShape, cIndex, nextTreatReduceAsMc) = cDef match {
-              case MatchLoop(MultiCollect(cInner@Sym(_)),  cShape, cIndex) => (cInner, cShape, cIndex, false)
-              case MatchLoop(ForLike(cInner@Sym(_),true),  cShape, cIndex) => (cInner, cShape, cIndex, false)
-              case MatchLoop(ForLike(cInner@Sym(_),false), cShape, cIndex) => (cInner, cShape, cIndex, true)
-            }
-            val nextRemapReduceToMC = if (nextTreatReduceAsMc) Some(cInner) else None
+            // SL(ps, pi, MC(pinner(pi))) + SL(prod.len, ci, Reduce(cInner(prod.at(ci))))
+            // -> SL(ps, pi, Reduce(pinner(pi) + SL(pinner.len, ci, MC(cInner(pinner.at(ci))))))
+            case MatchLoop(MultiCollect(Sym(_)), _, _) | MatchLoop(ForLike(Sym(_),_), _, _) =>
+              val (cInner, cShape, cIndex, nextTreatReduceAsMc) = cDef match {
+                case MatchLoop(MultiCollect(cInner@Sym(_)),  cShape, cIndex) => (cInner, cShape, cIndex, false)
+                case MatchLoop(ForLike(cInner@Sym(_),true),  cShape, cIndex) => (cInner, cShape, cIndex, false)
+                case MatchLoop(ForLike(cInner@Sym(_),false), cShape, cIndex) => (cInner, cShape, cIndex, true)
+              }
+              val nextRemapReduceToMC = if (nextTreatReduceAsMc) Some(cInner) else None
 
-            val innerFusionInfo = combineProducers(cSym, cDef, cEffects, 
-              List((oldPSym, pInner, RealProd)), Nil, Some(pLoop.v), Some(oldPSym, cIndex), nextRemapReduceToMC)
-            innerFusionInfo match {
-              case NoFusionInfo(_,_,_) => // TODO here use remapReduceToMC
-                listOfNotFused ::= (oldPSym, "multicollect producer's inner collection cannot be fused with consumer"); Nil
-              case Empty_Foreach(_,_) => List((Empty_Foreach(newPSym, cSym), prodType))
-              case _ => 
-                if (!remapReduceToMC.isDefined)
-                  List((Mc_McForlike(cIndex, pLoop.v, cShape, pLoop.size, 
-                    innerFusionInfo, cInner, pInner, newPSym, cSym), prodType))
-                else
-                  List((InnerMC_Red(cIndex, pLoop.v, innerFusionInfo, cInner, pInner, pLoop, newPSym, cSym), prodType))
-            }
+              val innerFusionInfo = combineProducers(cSym, cDef, cEffects, 
+                List((oldPSym, pInner, RealProd(), false)), Nil, Some(pLoop.v), Some(oldPSym, cIndex), nextRemapReduceToMC)._1
+              innerFusionInfo match {
+                case NoFusionInfo(_,_,_) => // TODO here use remapReduceToMC
+                  listOfNotFused ::= (oldPSym, "multicollect producer's inner collection cannot be fused with consumer"); None
+                case Empty_Foreach(_,_) => Some(Empty_Foreach(newPSym, cSym))
+                case _ => 
+                  if (!remapReduceToMC.isDefined)
+                    Some(Mc_McForlike(cIndex, pLoop.v, cShape, pLoop.size, 
+                      innerFusionInfo, cInner, pInner, newPSym, cSym))
+                  else
+                    Some(InnerMC_Red(cIndex, pLoop.v, innerFusionInfo, cInner, pInner, pLoop, newPSym, cSym))
+              }
 
-          case _ => listOfNotFused ::= (oldPSym, "don't know how to fuse MultiCollect producer with consumer of type " + cDef); Nil
+            case _ => listOfNotFused ::= (oldPSym, "don't know how to fuse MultiCollect producer with consumer of type " + cDef); None
+          }
+
+          case _ => listOfNotFused ::= (oldPSym, "unknown elem in loop producer (have you overriden the LoopFusionExtractors?): " + pLoop.body); None
         }
 
-        case _ => listOfNotFused ::= (oldPSym, "unknown elem in loop producer (have you overriden the LoopFusionExtractors?): " + pLoop.body); Nil
-      }
+        // TODO change: fused only as inner functions, or callback
+        // Generally cannot fuse IfThenElse producers because they can't be vertically fused, so
+        // would result in code duplication. Therefore not added to seenLoops, so not recognized
+        // as producers in findProducers. But here it's inner loop of MC being fused.
 
-      // TODO change: fused only as inner functions, or callback
-      // Generally cannot fuse IfThenElse producers because they can't be vertically fused, so
-      // would result in code duplication. Therefore not added to seenLoops, so not recognized
-      // as producers in findProducers. But here it's inner loop of MC being fused.
+        case (_, Def(IfThenElse(cond, Block(ifSym@Sym(_)), Block(elseSym@Sym(_))))) =>
+          // TODO think about constants? but array type... fuse if result is empty/unit?
+          ((ifSym, elseSym) match {
+            case (Def(EmptyColl()), _) => Some((true, ifSym, elseSym))
+            case (_, Def(EmptyColl())) => Some((false, elseSym, ifSym))
+            case _ => None
+          }) match {
+            case Some((emptyFirst, empty, other)) => 
+              combineProducers(cSym, cDef, cEffects, List((oldPSym, empty, RealProd(), false)),
+                  Nil, outerIndex, outerSISyms, remapReduceToMC)._1 match {
+                
+                case NoFusionInfo(_,_,_) => listOfNotFused ::= (oldPSym, "if-then-else not fused because empty branch cannot be fused with consumer (don't want to duplicate consumer code)"); None
+                
+                case emptyFusionInfo =>
+                  val otherFusionInfo = combineProducers(cSym, cDef, cEffects,
+                      List((oldPSym, other, RealProd(), false)), Nil, outerIndex, outerSISyms, remapReduceToMC)._1 match {
+                    case NoFusionInfo(_,_,_) => sys.error("TODO ifthenelse not fused")
+                    case oFusionInfo => oFusionInfo
+                  }
 
-      case (_, Def(IfThenElse(cond, Block(ifSym@Sym(_)), Block(elseSym@Sym(_))))) =>
-        // TODO think about constants? but array type... fuse if result is empty/unit?
-        ((ifSym, elseSym) match {
-          case (Def(EmptyColl()), _) => Some((true, ifSym, elseSym))
-          case (_, Def(EmptyColl())) => Some((false, elseSym, ifSym))
-          case _ => None
-        }) match {
-          case Some((emptyFirst, empty, other)) => 
-            combineProducers(cSym, cDef, cEffects, List((oldPSym, empty, RealProd)),
-                Nil, outerIndex, outerSISyms, remapReduceToMC) match {
-              
-              case NoFusionInfo(_,_,_) => listOfNotFused ::= (oldPSym, "if-then-else not fused because empty branch cannot be fused with consumer (don't want to duplicate consumer code)"); Nil
-              
-              case emptyFusionInfo =>
-                val otherFusionInfo = combineProducers(cSym, cDef, cEffects,
-                    List((oldPSym, other, RealProd)), Nil, outerIndex, outerSISyms, remapReduceToMC) match {
-                  case NoFusionInfo(_,_,_) => sys.error("TODO ifthenelse not fused")
-                  case oFusionInfo => oFusionInfo
-                }
+                  if (emptyFirst)
+                    Some(IfThenElseOneEmpty_Any(cond, emptyFusionInfo, otherFusionInfo, 
+                      remapReduceToMC.getOrElse(cSym), newPSym, cSym))
+                  else 
+                    Some(IfThenElseOneEmpty_Any(cond, otherFusionInfo, emptyFusionInfo,
+                      remapReduceToMC.getOrElse(cSym), newPSym, cSym))
+              }
+            case None => listOfNotFused ::= (oldPSym, "if-then-else producer only fused if one branch is empty collection"); None
+          }
 
-                if (emptyFirst)
-                  List((IfThenElseOneEmpty_Any(cond, emptyFusionInfo, otherFusionInfo, 
-                    remapReduceToMC.getOrElse(cSym), newPSym, cSym), prodType))
-                else 
-                  List((IfThenElseOneEmpty_Any(cond, otherFusionInfo, emptyFusionInfo,
-                    remapReduceToMC.getOrElse(cSym), newPSym, cSym), prodType))
+        case (_, Def(empty@EmptyColl())) => (cDef, remapReduceToMC.isDefined) match {
+          // empty + MC -> empty of consumer type
+          case (MatchLoop(MultiCollect(_),_,_),_) | (MatchLoop(ForLike(_,false),_,_), true) =>
+            val (cInner, cShape, cIndex) = cDef match {
+              case MatchLoop(MultiCollect(cInner), cShape, cIndex) => (cInner, cShape, cIndex)
+              case MatchLoop(ForLike(cInner, _),   cShape, cIndex) => (cInner, cShape, cIndex)
             }
-          case None => listOfNotFused ::= (oldPSym, "if-then-else producer only fused if one branch is empty collection"); Nil
+            (empty, cInner, outerIndex) match {
+              case EmptyCollNewEmpty(newEmpty) => Some(Empty_MCSingle(newEmpty, newPSym, cSym))
+              case _ => sys.error("TODO no empty")
+            }
+
+          // empty + For/foreach -> Unit
+          case (MatchLoop(ForLike(_,true),_,_), _) => Some(Empty_Foreach(newPSym, cSym))
+
+          // empty + reduce: don't fuse, maintain dsl specific error
+          case (MatchLoop(ForLike(_,false),_,_), false) => 
+            listOfNotFused ::= (oldPSym, "empty producer not fused with reduce because need to maintain implementation-specific error"); None
+
+          case _ => sys.error("TODO findProducers 5 cons: " + cSym)
         }
 
-      case (_, Def(empty@EmptyColl())) => (cDef, remapReduceToMC.isDefined) match {
-        // empty + MC -> empty of consumer type
-        case (MatchLoop(MultiCollect(_),_,_),_) | (MatchLoop(ForLike(_,false),_,_), true) =>
-          val (cInner, cShape, cIndex) = cDef match {
-            case MatchLoop(MultiCollect(cInner), cShape, cIndex) => (cInner, cShape, cIndex)
-            case MatchLoop(ForLike(cInner, _),   cShape, cIndex) => (cInner, cShape, cIndex)
-          }
-          (empty, cInner, outerIndex) match {
-            case EmptyCollNewEmpty(newEmpty) => List((Empty_MCSingle(newEmpty, newPSym, cSym), prodType))
-            case _ => sys.error("no empty")
-          }
+        case (_, Def(SingletonColl(pInner))) => (cDef, remapReduceToMC.isDefined) match {
 
-        // empty + For/foreach -> Unit
-        case (MatchLoop(ForLike(_,true),_,_), _) => List((Empty_Foreach(newPSym, cSym), prodType))
+          case (MatchLoop(MultiCollect(_),_,_),_) | (MatchLoop(ForLike(_,false),_,_), true) |
+              (MatchLoop(ForLike(_,true),_,_), _) =>
+            val (cInner, cShape, cIndex) = cDef match {
+              case MatchLoop(MultiCollect(cInner), cShape, cIndex) => (cInner, cShape, cIndex)
+              case MatchLoop(ForLike(cInner, _),   cShape, cIndex) => (cInner, cShape, cIndex)
+            }
+            val siSyms = outerSISyms.getOrElse((oldPSym, cIndex))
+            Some(Single_MC(cIndex, siSyms, pInner, cInner, newPSym, cSym))
 
-        // empty + reduce: don't fuse, maintain dsl specific error
-        // TODO test once empty fused
-        case (MatchLoop(ForLike(_,false),_,_), false) => 
-          listOfNotFused ::= (oldPSym, "empty producer not fused with reduce because need to maintain implementation-specific error"); Nil
+          case (Left(SingletonColl(cInner)),_) if outerSISyms.isDefined => 
+            Some(Single_Single(outerSISyms.get, pInner, newPSym, cSym))              
 
-        case _ => sys.error("TODO findProducers 5 cons: " + cSym)
+          case _ => sys.error("TODO findProducers 3 cons: " + cSym + ", cDef: " + cDef)
+        }
+
+        case _ => sys.error("TODO findProducers prod: " + newPSym)
       }
+      fusionInfo.map({ fi => List((fi, prodType, effectful)) }).getOrElse(Nil)
+    })
 
-      case (_, Def(SingletonColl(pInner))) => (cDef, remapReduceToMC.isDefined) match {
-
-        case (MatchLoop(MultiCollect(_),_,_),_) | (MatchLoop(ForLike(_,false),_,_), true) |
-            (MatchLoop(ForLike(_,true),_,_), _) =>
-          val (cInner, cShape, cIndex) = cDef match {
-            case MatchLoop(MultiCollect(cInner), cShape, cIndex) => (cInner, cShape, cIndex)
-            case MatchLoop(ForLike(cInner, _),   cShape, cIndex) => (cInner, cShape, cIndex)
-          }
-          val siSyms = outerSISyms.getOrElse((oldPSym, cIndex))
-          List((Single_MC(cIndex, siSyms, pInner, cInner, newPSym, cSym), prodType))
-
-        case (Left(SingletonColl(cInner)),_) if outerSISyms.isDefined => 
-          List((Single_Single(outerSISyms.get, pInner, newPSym, cSym), prodType))              
-
-        case _ => sys.error("TODO findProducers 3 cons: " + cSym + ", cDef: " + cDef)
-      }
-
-      case _ => sys.error("TODO findProducers prod: " + newPSym)
-    }})
-
-    def addNotFused(notFused: List[(FusionInfo, ProdType)], fusedProd: Sym[Any], 
-        fusedPType: ProdType, fInfo: Option[FusionInfo] = None) = {
-      notFused.flatMap({ case (fi, _) => fi.getProds }).foreach({ notFusedProd =>
-        val msg = "the consumer is already being fused with the " + toString(fusedPType) + 
+    /** Helper function to log not-chosen producers when multiple producers are available. */
+    def addNotFused(notFused: List[FusionInfo], fusedProd: Sym[Any], 
+        fusedPType: ProdType, details: String, fInfo: Option[FusionInfo] = None) = {
+      notFused.flatMap(_.getProds).foreach({ notFusedProd =>
+        val msg = "the consumer is already being fused with the " + fusedPType.shortName + 
           " producer " + fusedProd + ". Can only fuse multiple producers if all are " + 
           "MultiCollect(Singleton) and have the same fixed shape " +
-          "(and thus have been mirrored to use the same index symbol)"
+          "and thus have been mirrored to use the same index symbol. " + details
         listOfNotFused ::= ((notFusedProd, msg))
       })
       fInfo.foreach(_.setNotFused(listOfNotFused))
     }
 
-    val result = producers match {
-      case Nil => NoFusionInfo(cSym, cDef, listOfNotFused)
-      case prod :: Nil => prod._1.notFused = listOfNotFused; prod._1
+    /** Helper function to create ManyMcsingle_MultiFor and log non-chosen multiple producers. */
+    def combineMultipleProducers(mcsm: FusionInfo, firstPType: ProdType, eff: Boolean, list: List[(FusionInfo1to1, ProdType, Boolean)]) = {
+      mcsm match {
+        case Mcsingle_Multi(cIndex,pIndex,siSyms,pInner,newPSym,cSym) => 
+          val canFuseRight = list.map({
+            case (fi@Mcsingle_Multi(_,`pIndex`,osiSyms,opInner,_,_), _, otherEff) => Right((fi, (osiSyms, opInner, otherEff)))
+            case other => Left(other)
+          })
+          addNotFused(canFuseRight.collect({ case Left(notFused) => notFused._1 }), siSyms._1, firstPType,
+            "(Current producer isn't MC(singleton) with correct index)")
+          val otherProdsEffectful = canFuseRight.collect({ case Right(toFuse) => toFuse })
 
-      case (mcsm@Mcsingle_Multi(cIndex,pIndex,siSyms,pInner,newPSym,cSym), firstPType) :: list => 
-        val canFuseRight = list.map({
-          case (Mcsingle_Multi(_,`pIndex`,osiSyms,opInner,_,_), _) => Right((osiSyms, opInner))
-          case other => Left(other)
-        })
-        addNotFused(canFuseRight.collect({ case Left(notFused) => notFused }), siSyms._1, firstPType)
-        // when effectful producers are fused, check at most one is effectful here
-        val otherProds = canFuseRight.collect({ case Right(toFuse) => toFuse })
-        if (!otherProds.isEmpty)
-          ManyMcsingle_MultiFor(cIndex, pIndex, siSyms, pInner, otherProds, newPSym, cSym, listOfNotFused)
-        else
-          mcsm
-      case (first, firstPType) :: list => 
+          val (otherProds, combinedEffect) = if (eff) {
+            (otherProdsEffectful, true)
+          } else {
+            
+            val impureIndex = otherProdsEffectful.indexWhere({ case (_,(_,_,testEff)) =>  testEff })
+            if (impureIndex == -1) {
+              (otherProdsEffectful, false) 
+            } else {
+              val impureProd = otherProdsEffectful(impureIndex)._2
+              val (pureTail, impureTail) = otherProdsEffectful.drop(impureIndex + 1).partition(_._2._3)
+              addNotFused(impureTail.map(_._1), siSyms._1, firstPType,
+                "(Current producer is effectful, but consumer already fused with effectful prod " + impureProd._1._1 + ")")
+              (otherProdsEffectful.take(impureIndex + 1) ++ pureTail, true)
+            }
+          }
+          val otherProds2 = otherProds.map(_._2).map({ t => (t._1, t._2) })
+          if (!otherProds.isEmpty)
+            (ManyMcsingle_MultiFor(cIndex, pIndex, siSyms, pInner, otherProds2, newPSym, cSym, listOfNotFused), combinedEffect)
+          else
+            (mcsm, eff)
+      }
+    }
+
+    val result: (FusionInfo, Boolean) = producers match {
+      case Nil => (NoFusionInfo(cSym, cDef, listOfNotFused), false)
+      
+      case prod :: Nil => prod._1.notFused = listOfNotFused; (prod._1, prod._3)
+
+      case (mcsm@Mcsingle_Multi(cIndex,pIndex,siSyms,pInner,newPSym,cSym), firstPType, eff) :: list => 
+        combineMultipleProducers(mcsm, firstPType, eff, list)
+
+      case (first, firstPType, firstEff) :: list => 
         val fusedProd: Sym[Any] = first.getProds.head
-        addNotFused(list, fusedProd, firstPType, Some(first))
-        first
+        addNotFused(list.map(_._1), fusedProd, firstPType, "(First fused producer " + fusedProd + 
+          " is not a MC(Singleton)).", Some(first))
+        (first, firstEff)
     }
     // println("===combineProducers(cSym=" + cSym + ", cDef=" + cDef + ", prodCandidates=" + prodCandidates + 
     //   ", notFused=" + notFused + ", outerIndex=" + outerIndex + "/n    -> " + result)
@@ -625,7 +648,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
 
   }
 
-  def doFusion(fusionInfo: FusionInfo, cStm: Stm, recordFusion: Either[Exp[Any],Boolean]): FusionOutcome = {
+  def doFusion(fusionInfo: FusionInfo, cStm: Stm, recordFusion: Either[Exp[Any],Boolean], effectful: Boolean): FusionOutcome = {
     var overrideRecordFusion: Option[Either[Exp[Any],Boolean]] = None
     val fusionOutcome = fusionInfo match {
       case NoFusionInfo(sym, Right(loop), _) if (remapIndexIfFixedLength(recordFixedOutLengths(sym, loop), loop.v)) =>
@@ -656,12 +679,12 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       case IfThenElseOneEmpty_Any(cond, thenFusionInfo, elseFusionInfo, typeSym, pSym, cSym) =>
         val newCond = reflectBlock(Block(cond))
         // __ifThenElse does reify
-        FusionResult(__ifThenElse(newCond, doFusion(thenFusionInfo, cStm, Right(false)).transformed, 
-          doFusion(elseFusionInfo, cStm, Right(false)).transformed)(mtype(typeSym.tp), mpos(cSym.pos)))
+        FusionResult(__ifThenElse(newCond, doFusion(thenFusionInfo, cStm, Right(false), false).transformed, 
+          doFusion(elseFusionInfo, cStm, Right(false), false).transformed)(mtype(typeSym.tp), mpos(cSym.pos)))
 
       case Mc_McForlike(cIndex, pIndex, cShape, pShape, innerFusionInfo, cInner, pInner, _, _) =>
         subst += (cIndex -> pIndex)
-        val innerFused = reifyEffects(doFusion(innerFusionInfo, cStm, Left(pInner)).transformed)(mtype(cInner.tp))
+        val innerFused = reifyEffects(doFusion(innerFusionInfo, cStm, Left(pInner), false).transformed)(mtype(cInner.tp))
         onceSubst += (cShape -> pShape)
         onceSubst += (cInner -> getBlockResultFull(innerFused))
         subst += (cIndex -> pIndex)
@@ -669,7 +692,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
 
       case InnerMC_Red(cIndex, pIndex, innerFusionInfo, cInner, pInner, pLoop, _, _) =>
         subst += (cIndex -> pIndex)
-        val innerFused = reifyEffects(doFusion(innerFusionInfo, cStm, Left(pInner)).transformed)(mtype(cInner.tp))
+        val innerFused = reifyEffects(doFusion(innerFusionInfo, cStm, Left(pInner), false).transformed)(mtype(cInner.tp))
         onceSubst += (pInner -> getBlockResultFull(innerFused))
         FusionResult(self_mirror(cInner, pLoop))
 
@@ -684,10 +707,6 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
 
       case _ => sys.error("TODO doFusion")
     }
-    def getFusedEffects(fusedSym: Sym[Any]) = fusedSym match {
-      case Def(Reflect(_, summ, deps)) => Some((summ, deps))
-      case _ => None
-    }
     // println("=== done fusion: " + fusionInfo + "\n     -> " + fusionOutcome)
     overrideRecordFusion.getOrElse(recordFusion) match {
       case Right(true) => (fusionInfo, fusionOutcome) match {
@@ -695,11 +714,11 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
           FusedSyms.recordRemapped(cons, newSym)
 
         case (FusionInfo1to1(prod, cons, _), FusionResult(fusedSym@Sym(_))) => 
-          FusedSyms.recordFused(prod, cons, fusedSym, Nil, getFusedEffects(fusedSym))
+          FusedSyms.recordFused(prod, cons, fusedSym, Nil, effectful)
         
         case (FusionInfoManyto1(prod, otherProds, cons, _), FusionResult(fusedSym@Sym(_))) => 
           FusedSyms.recordFused(prod, cons, fusedSym, 
-            otherProds.map({ old => (old, getSubstSym(old)) }), getFusedEffects(fusedSym))
+            otherProds.map({ old => (old, getSubstSym(old)) }), effectful)
         
         case (_, FusionResult(Const(_))) => 
           // Do nothing, constants not relevant for further vert. fusion decisions or horizontal
@@ -708,7 +727,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
       }
       case Left(innerPSym@Sym(_)) => fusionOutcome match {
         case FusionResult(fusedSym@Sym(_)) => 
-          FusedSyms.recordFused(innerPSym, fusedSym, fusedSym, Nil, None)
+          FusedSyms.recordFused(innerPSym, fusedSym, fusedSym, Nil, effectful)
         case err => sys.error("doFusion unknown left case: " + err)
       }
       case _ =>
@@ -733,33 +752,27 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
 
     cShapeSyms.collect({ 
       case Def(SimpleDomain(sym)) if pSyms.contains(sym) => 
-        return (RealProd, "real producer") // real producer
+        return (RealProd(), "real producer") // real producer
     })
 
     val (pShapeSyms, pConsts) = pSyms.map(loopsToFixedOutLengths.get(_))
       .filter(_.isDefined).map(_.get)
       .partition({ case Sym(_) => true case _ => false })
 
-    cConsts.intersect(pConsts).foreach({ c => return (ReconstrProd, "same constant: " + c) })
-    cShapeSyms.intersect(pShapeSyms).foreach({ s => return (ReconstrProd, "same symbol: " + s) })
+    cConsts.intersect(pConsts).foreach({ c => return (ReconstrProd(), "same constant: " + c) })
+    cShapeSyms.intersect(pShapeSyms).foreach({ s => return (ReconstrProd(), "same symbol: " + s) })
 
-    return (PartialProd, "cConsts: " + cConsts + ", pConsts: " + pConsts + 
+    return (PartialProd(), "cConsts: " + cConsts + ", pConsts: " + pConsts + 
         ", cShapeSyms: " + cShapeSyms + ", pShapeSyms: " + pShapeSyms)
   }
 
-  def getNewSyms(syms: List[Sym[Any]]) = syms.flatMap(n => subst.get(n) match { // use the new expressions
-    case Some(nn@Sym(_)) => List(nn)
-    case Some(Const(_)) => List()
-    case _ => List(n)
-  })
-
   def notIndep[A](cSym: Sym[A], cIndex: Sym[Int], indexIsTaboo: Boolean, cBody: Def[A],
-      cEffects: LoopEffects, pSym: Sym[Any], newPSym: Sym[Any]): Option[(Sym[Any], String)] = {
+      cEffects: LoopEffects, pSym: Sym[Any], newPSym: Sym[Any]): Option[String] = {
 
     val prodFusedSyms = FusedSyms.getSet(pSym).map(_.getSet)
       .getOrElse(Set(pSym, getSubstSym(pSym)))
-    val consFusedSyms = syms(cBody) ++ cEffects.map(_._2.collect({ case s@Sym(_) => s }))
-      .getOrElse(List[Sym[Any]]())
+    val consFusedSyms = syms(cBody) ++ 
+      cEffects.map(_._2.collect({ case s@Sym(_) => s })).getOrElse(List[Sym[Any]]())
 
     def substEqu(other: Exp[Any], pSym: Sym[Any]) = 
       ((other == pSym) || (subst.get(other)).map(_ == pSym).getOrElse(false))
@@ -777,10 +790,10 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
           }))
 
           next.collectFirst({ 
-            case x if prodFusedSyms.contains(x) => return Some((pSym, "consumer depends on producer through " + x))
-            case `cIndex` if (indexIsTaboo && !ignoreIndex(d, cIndex)) => return Some((pSym, "consumer uses index in " + d + ". " + 
+            case x if prodFusedSyms.contains(x) => return Some("consumer depends on producer through " + x)
+            case `cIndex` if (indexIsTaboo && !ignoreIndex(d, cIndex)) => return Some("consumer uses index in " + d + ". " + 
               "Override ignoreIndex if the index value doesn't matter (e.g. the index is just used " +
-              "to keep a node inside the loop)"))
+              "to keep a node inside the loop)")
           })
           next
         case _ => List()
@@ -789,71 +802,45 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     None
   }
 
-  def getCombinedEffect(cEffects: LoopEffects, pSym: Sym[Any], newPSym: Sym[Any]): Either[String, LoopEffects] = {
+  /** Producer and consumer can be fused only if at most one is effectful. If the producer is
+   *  effectful, additionally the effects need to be separate from the result value so that the result
+   *  computation can be fused into the consumer without duplicating the effects (which would
+   *  not be deduplicated by cse).
+   *  If fusion is ok, Right(effectful) is returned, else Left(error message).
+   */
+  def effectsOk(cEffects: LoopEffects, pSym: Sym[Any], newPSym: Sym[Any]): Either[String, Boolean] = {
 
     val (prod, pEffects) = newPSym match {
       case Def(LoopOrReflectedLoop(prod, pEffects)) => (prod, pEffects)
       case _ => return Left("no loop definition found for producer " + newPSym)
     }
 
-    val (prodFusedSyms, prodEffects) = FusedSyms.getSet(pSym) match {
-      case Some(fset) => (fset.getSet, fset.getEffects)
-      case None => (Set(pSym, newPSym), pEffects)
-    }
-
-    prodEffects match {          
-      case Some(_) =>
-        if (pEffects.isDefined)
-          Left("no fusion with effectful producers")
+    (cEffects.isDefined, pEffects.isDefined) match {
+      case (false, false) => Right(false)
+      case (true, true) => Left("effectful consumer cannot be fused with effectful producer")
+      case (true, false) => 
+        if (FusedSyms.getSet(pSym).map(_.getEffects).getOrElse(false))
+          Left("effectful consumer cannot be fused with producer that has " +
+            "been fused with another effectful loop")
         else
-          Left("no fusion with producer that has been fused with another effectful loop")
-      case None => Right(cEffects)
+          Right(true)
+      case (false, true) =>
+        // check pEffects are separate from producer value
+        val pIndexStms = getFatDependentStuff(initialDefs)(List(prod.v))
+        val resSym = ProducerResultBlock.unapply(prod.body) match {
+          case Some(Def(Reify(resSym@Sym(_), _, _))) => resSym
+          case _ => sys.error("TODO what if no result block? " + prod.body)
+        }
+
+        GraphUtil.stronglyConnectedComponents(List(resSym), { sym: Sym[Any] => sym match {
+          case Def(Reflect(_, _, _)) => return Left("effectful producers can only be fused if " +
+            "the effects are separate from the value of the loop body, but the loop block result depends on " +
+            findDefinition(sym).get)
+          case Def(d) => getNewSyms(syms(d).intersect(pIndexStms))
+          case _ => List()
+        }})
+        Right(true)
     }
-
-  /** Producer and consumer can be fused only if at most one is effectful. If the producer is
-   *  effectful, additionally the effects need to be separate from the result value so that the result
-   *  computation can be fused into the consumer without duplicating the effects (which would
-   *  not be deduplicated by the scheduler).
-   *  If fusion is ok, Right(combined effect) is returned, otherwise Left(debug message).
-   */
-    // wrong: No need to check prodEffects (from set), because previous fusion already checked
-    // only need to check pEffects of current producer
-    // -> write test to show that need to check because could have been consumer
-
-    // cEffects match {
-    //   case Some(_) => prodEffects match {          
-    //     case Some(_) =>
-    //       if (pEffects.isDefined)
-    //         Left("effectful consumer cannot be fused with effectful producer")
-    //       else
-    //         Left("effectful consumer cannot be fused with producer that has been fused with another effectful loop")
-    //     case None => Right(cEffects)
-    //   }
-    //   case None => prodEffects match {
-    //     case None => Right(None)
-    //     case Some(_) =>
-    //       // check prodEffects are separate from producer value
-    //       val pIndexStms = getFatDependentStuff(initialDefs)(List(prod.v))
-          
-    //       val resSym = ProducerResultBlock.unapply(prod.body) match {
-    //           case Some(Def(Reify(resSym@Sym(_), _, _))) => resSym
-    //           case None => sys.error("TODO what if no result block? " + prod.body)
-    //           case _ => return Right(None)
-    //           // if prod is cons that has been fused with effectful prod, then it has effects
-    //           // (wrapped in reflect) but no reify. Don't need to check it since its effects all
-    //           // come from a producer that has been checked
-    //       }
-
-    //       GraphUtil.stronglyConnectedComponents(List(resSym), { sym: Sym[Any] => sym match {
-    //         case Def(Reflect(_, _, _)) => return Left("effectful producers can only be fused if " +
-    //           "the effects are separate from the value of the loop body, but the loop block result depends on " +
-    //           findDefinition(sym).get)
-    //         case Def(d) => getNewSyms(syms(d).intersect(pIndexStms))
-    //         case _ => List()
-    //       }})
-    //       Right(prodEffects)  
-    //   }
-    // }
   }
 
 // ==============================

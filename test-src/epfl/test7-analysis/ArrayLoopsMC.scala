@@ -18,11 +18,11 @@ trait ArrayLoopsMC extends Loops with OverloadHack {
   def emptyArray[T:Manifest](): Rep[Array[T]]
   def singleton[T:Manifest](elem: => Rep[T]): Rep[Array[T]]
   def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]]
-  def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Int]): Rep[Int] // TODO: make reduce operation configurable!
+  def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Int]): Rep[Int]
+  def sumD(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double]
   def reduce[T:Manifest](shape: Rep[Int])(valFunc: Rep[Int] => Rep[Array[T]], 
     redFunc: (Rep[T], Rep[T]) => Rep[T], zero: Rep[T]): Rep[T]
   def arrayIf[T:Manifest](shape: Rep[Int])(cond: Rep[Int] => Rep[Boolean], f: Rep[Int] => Rep[T]): Rep[Array[T]]
-  // def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Int])): Rep[Int] // TODO: make reduce operation configurable!
   def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
 
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T]
@@ -34,7 +34,6 @@ trait ArrayLoopsMC extends Loops with OverloadHack {
 trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with NumericOpsExp with PrimitiveOpsExp {
 
   // Keep generated arrays from being lifted out of loop when used in MultiCollect(IfThenElse(cond, thenp, empty))
-  // TODO whether same problem with singleton that is indep of index
   object SuperEmptyArray {
     def unapply(e: Any) = e match {
       case EmptyArrayInLoop(_, _) => true
@@ -107,6 +106,16 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
     val rEff = summarizeEffects(reduceFun)
     reflectEffect(SimpleLoop(shape, x, MultiReduceElem[Int](y, reduceFun, unit(0), accSym, valSym)), (yEff.star andThen (rEff.star)).star)
   }
+  def sumD(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] = {
+    val x = fresh[Int]
+    val y = reifyEffectsHere(singletonInLoop(f(x), x))
+    val yEff = summarizeEffects(y)
+    val accSym = fresh[Double]
+    val valSym = fresh[Double]
+    val reduceFun = reifyEffectsHere(infix_+(valSym, accSym))
+    val rEff = summarizeEffects(reduceFun)
+    reflectEffect(SimpleLoop(shape, x, MultiReduceElem[Double](y, reduceFun, unit(0.0), accSym, valSym)), (yEff.star andThen (rEff.star)).star)
+  }
 
   def reduce[T:Manifest](shape: Rep[Int])(valFunc: Rep[Int] => Rep[Array[T]], 
     redFunc: (Rep[T], Rep[T]) => Rep[T], zero: Rep[T]): Rep[T] = {
@@ -118,7 +127,6 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
     val reduceFun = reifyEffectsHere(redFunc(valSym, accSym))
     val rEff = summarizeEffects(reduceFun)
     reflectEffect(SimpleLoop(shape, x, MultiReduceElem[T](y, reduceFun, zero, accSym, valSym)), (yEff.star andThen (rEff.star)).star)
-
   }
 
   // TODO test effects are routed correctly
