@@ -98,7 +98,6 @@ trait Runner /*extends internal.ScalaCompile*/ {
 
       println("\n-- fusion")
 
-      fusionCodegen.setFusedSyms(hFused)
       fusionCodegen.withStream(new PrintWriter(System.out)) {
         fusionCodegen.emitBlock(h)
       }
@@ -1304,6 +1303,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 */
+
   def testFusionTransform61 = withOutFileChecked(prefix+"fusion61"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       // Fuse MC with effectful foreach, removes intermediate array allocation

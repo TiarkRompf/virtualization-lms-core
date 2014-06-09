@@ -63,7 +63,9 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
 
     // realSets(i) contains the symbols from sets(i) that were actually fused (not DCE'd)
     // these are new (transformed) syms
-    private var realSets: List[List[Sym[Any]]] = Nil
+    // It also contains one loop of the set so that each loop added to the set can be
+    // updated as fused with this one.
+    private var realSets: List[(List[Sym[Any]], Option[CanBeFused])] = Nil
 
     def contains(sym: Sym[Any]): Boolean = sym2set.contains(sym)
     def apply(sym: Sym[Any]): FusedSet = get(sym2set(sym))
@@ -76,7 +78,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
       val setIndex = sets.length
       val set = FusedSet(shape, index, syms, setIndex, new FusionScope, effectful)
       sets = set :: sets
-      realSets ::= Nil
+      realSets ::= (Nil, None)
       val indexList = setIndex :: shape2sets.get(set.shape).getOrElse(Nil)
       shape2sets.put(set.shape, indexList)
       set.syms.foreach({ otherSym => sym2set.put(otherSym, setIndex) match {
@@ -100,9 +102,19 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
       val setIndex = sym2set(sym)
       val substSym = newSym match { case s@Sym(_) => s case _ => sym }
       val listIndex = realSets.length - 1 - setIndex
-      realSets = realSets.updated(listIndex, substSym :: realSets(listIndex))
+      val (oldSet, oldCanBeFused) = realSets(listIndex)
+
+      val newCanBeFused = substSym match {
+        case Def(EatReflect(c: CanBeFused)) => oldCanBeFused match {
+          case Some(existing) => c.registerFusion(existing); oldCanBeFused
+          case None => Some(c)
+        }
+        case _ => sys.error("Horizontal fusion with something that isn't a CanBeFused: " + substSym +
+          " = " + findDefinition(substSym))
+      }
+      realSets = realSets.updated(listIndex, (substSym :: oldSet, newCanBeFused))
     }
-    def getReal = realSets.filter(_.length > 1).map(_.reverse.distinct)
+    def getReal = realSets.unzip._1.filter(_.length > 1).map(_.reverse.distinct)
 
     override def toString() = "FusionScope(" + sets.mkString("\n") + ")"
   }

@@ -28,7 +28,7 @@ trait IfThenElsePureExp extends IfThenElse with BaseExp {
 
 trait IfThenElseExp extends IfThenElse with EffectExp {
 
-  abstract class AbstractIfThenElse[T] extends Def[T] {
+  abstract class AbstractIfThenElse[T] extends Def[T] with CanBeFused {
     val cond: Exp[Boolean]
     val thenp: Block[T]
     val elsep: Block[T]
@@ -56,23 +56,39 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     ////reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
     reflectEffectInternal(IfThenElse(cond,thenp,elsep), ae orElse be)
   }
+  def __ifThenElseCopy[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T], oldDef: Def[Any])(implicit pos: SourceContext): Exp[T] = {
+    val a = reifyEffectsHere(thenp)
+    val b = reifyEffectsHere(elsep)
+
+    val ae = summarizeEffects(a)
+    val be = summarizeEffects(b)
+    
+    // TODO: make a decision whether we should call reflect or reflectInternal.
+    // the former will look for any read mutable effects in addition to the passed
+    // summary whereas reflectInternal will take ae orElse be literally.
+    // the case where this comes up is if (c) a else b, with a or b mutable.
+    // (see TestMutation, for now sticking to old behavior)
+    
+    ////reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
+    reflectEffectInternal(IfThenElse(cond,a,b).copyMirroredCanBeFused(oldDef), ae orElse be)
+  }
   
   override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
-    case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b))
+    case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b)).copyMirroredCanBeFused(e)
     case _ => super.mirrorDef(e,f)
   }
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
     case Reflect(IfThenElse(c,a,b), u, es) => 
       if (f.hasContext)
-        __ifThenElse(f(c),f.reflectBlock(a),f.reflectBlock(b))
+        __ifThenElseCopy(f(c),f.reflectBlock(a),f.reflectBlock(b), e)
       else
-        reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+        reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)).copyMirroredCanBeFused(e), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case IfThenElse(c,a,b) => 
       if (f.hasContext)
-        __ifThenElse(f(c),f.reflectBlock(a),f.reflectBlock(b))
+        __ifThenElseCopy(f(c),f.reflectBlock(a),f.reflectBlock(b), e)
       else
-        IfThenElse(f(c),f(a),f(b)) // FIXME: should apply pattern rewrites (ie call smart constructor)
+        IfThenElse(f(c),f(a),f(b)).copyMirroredCanBeFused(e) // FIXME: should apply pattern rewrites (ie call smart constructor)
     case _ => super.mirror(e,f)
   }
 
@@ -128,7 +144,7 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
 
 trait IfThenElseFatExp extends IfThenElseExp with BaseFatExp {
 
-  abstract class AbstractFatIfThenElse extends FatDef {
+  abstract class AbstractFatIfThenElse extends FatDef with CanBeFused {
     val cond: Exp[Boolean]
     val thenp: List[Block[Any]]
     val elsep: List[Block[Any]]
@@ -198,6 +214,15 @@ trait IfThenElseExpOpt extends IfThenElseExp { this: BooleanOpsExp with EqualExp
     case _ =>
       super.__ifThenElse(cond, thenp, elsep)
   }
+
+  override def __ifThenElseCopy[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T], oldDef: Def[Any])(implicit pos: SourceContext) = cond match {
+    case Const(true) => thenp
+    case Const(false) => elsep
+    case Def(BooleanNegate(a)) => __ifThenElseCopy(a, elsep, thenp, oldDef)
+    case Def(NotEqual(a,b)) => __ifThenElseCopy(equals(a,b), elsep, thenp, oldDef)
+    case _ =>
+      super.__ifThenElseCopy(cond, thenp, elsep, oldDef)
+  }
 }
 
 trait BaseGenIfThenElse extends GenericNestedCodegen {
@@ -212,11 +237,11 @@ trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen {
 
   override def fatten(e: Stm): Stm = e match {
     case TP(sym, o: AbstractIfThenElse[_]) => 
-      TTP(List(sym), List(o), SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)))
+      TTP(List(sym), List(o), SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)).copyMirroredCanBeFused(o))
     case TP(sym, p @ Reflect(o: AbstractIfThenElse[_], u, es)) => //if !u.maySimple && !u.mayGlobal =>  // contrary, fusing will not change observable order
       // assume body will reflect, too...
       printdbg("-- fatten effectful if/then/else " + e)
-      val e2 = SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep))
+      val e2 = SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)).copyMirroredCanBeFused(o) 
       e2.extradeps = es //HACK
       TTP(List(sym), List(p), e2)
     case _ => super.fatten(e)

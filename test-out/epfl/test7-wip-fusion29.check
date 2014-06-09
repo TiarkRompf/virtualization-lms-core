@@ -420,18 +420,18 @@ val x116 = println(x107)
 
 -- fusion
 (FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(67)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(66))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(66))))))
-TTP(List(Sym(79)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(78))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(78))))))
-TTP(List(Sym(89)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(88))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(88))))))
-TTP(List(Sym(98)),List(SimpleLoop(Const(30),Sym(1),MultiReduceElem(Block(Sym(97)),Block(Sym(39)),Const(0),Sym(37),Sym(38)))),SimpleFatLoop(Const(30),Sym(1),List(MultiReduceElem(Block(Sym(97)),Block(Sym(39)),Const(0),Sym(37),Sym(38)))))
-TTP(List(Sym(107)),List(SimpleLoop(Const(30),Sym(1),MultiReduceElem(Block(Sym(106)),Block(Sym(49)),Const(0),Sym(47),Sym(48)))),SimpleFatLoop(Const(30),Sym(1),List(MultiReduceElem(Block(Sym(106)),Block(Sym(49)),Const(0),Sym(47),Sym(48)))))
-
-(FTO) Fusing these loops into one fat TTP: 
 TTP(List(Sym(66)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(65))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(65))))))
 TTP(List(Sym(78)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(77))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(77))))))
 TTP(List(Sym(88)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(87))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(87))))))
 TTP(List(Sym(97)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(96))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(96))))))
 TTP(List(Sym(106)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(105))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(105))))))
+
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(67)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(66))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(66))))))
+TTP(List(Sym(79)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(78))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(78))))))
+TTP(List(Sym(89)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(88))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(88))))))
+TTP(List(Sym(98)),List(SimpleLoop(Const(30),Sym(1),MultiReduceElem(Block(Sym(97)),Block(Sym(39)),Const(0),Sym(37),Sym(38)))),SimpleFatLoop(Const(30),Sym(1),List(MultiReduceElem(Block(Sym(97)),Block(Sym(39)),Const(0),Sym(37),Sym(38)))))
+TTP(List(Sym(107)),List(SimpleLoop(Const(30),Sym(1),MultiReduceElem(Block(Sym(106)),Block(Sym(49)),Const(0),Sym(47),Sym(48)))),SimpleFatLoop(Const(30),Sym(1),List(MultiReduceElem(Block(Sym(106)),Block(Sym(49)),Const(0),Sym(47),Sym(48)))))
 
 val x66_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 val x78_builder = new scala.collection.mutable.ArrayBuilder.ofInt

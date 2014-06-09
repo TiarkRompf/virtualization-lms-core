@@ -13,15 +13,13 @@ trait LoopFusionSchedulingOpt extends internal.FatBlockTraversal {
   val IR: LoopFusionCore2
   import IR._  
 
-  var fusedSyms: List[List[Sym[Any]]] = Nil
-  def setFusedSyms(syms: List[List[Sym[Any]]]) = fusedSyms = syms
-
+  // Assuming that the first focusExactScopeFat call contains the full scope
+  // of the entire program. Want to avoid rescanning inner scopes.
+  var needsFusion = true
   override def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A = {
-    if (!fusedSyms.isEmpty) {
+    if (needsFusion) {
       val fusedScope = fuseAllLoops(innerScope)
       innerScope = getSchedule(fusedScope)(resultB)
-      // println("=== (FTO) after fusion, rescheduled")
-      // innerScope foreach println
     }
     super.focusExactScopeFat(resultB)(body)
   }
@@ -32,28 +30,27 @@ trait LoopFusionSchedulingOpt extends internal.FatBlockTraversal {
   def fuseAllLoops(currentScope: List[Stm]): List[Stm] = {
     
     // build map to lookup loops to be fused
-    val fusedSymsFlat = fusedSyms.flatten
     val (loops, restOfScope) = currentScope.partition { 
-      case e @ TTP(List(sym), _, SimpleFatLoop(_,_,_)) if (fusedSymsFlat.contains(sym)) => true
+      case TTP(_, _, c: CanBeFused) if c.getFusedSetID.isDefined => true
       case _ => false
     }
-    val loopsMap = loops.map({ 
-      case e @ TTP(List(sym), _, _) => (sym, e)
+    val fusedSetsMap = new scala.collection.mutable.HashMap[Int, List[TTP]]()
+    loops.foreach({ 
+      case e @ TTP(_, _, c: CanBeFused) => 
+        val id = c.getFusedSetID.get
+        fusedSetsMap.update(id, e :: fusedSetsMap.getOrElse(id, Nil))
       case _ => sys.error("(FTO) impossible error")
-    }).toMap
+    })
 
     // fuse TTPs of each set into one fat TTP per set
-    val fusedTTPs = fusedSyms.map({ set: List[Sym[Any]] =>
-      val TTPsToFuse = set.map(sym => loopsMap.get(sym) match {
-        case Some(ttp) => ttp
-        case _ => sys.error("(FTO) ERROR: Fusion failed, loop statement not found for " + sym)
-      })
-      printlog("(FTO) Fusing these loops into one fat TTP: " + lines(TTPsToFuse))
-      fuseTTPs(TTPsToFuse)
+    val fusedTTPs = fusedSetsMap.toList.reverse.map({ case (_, ttpsToFuse) =>
+      val reverseTTPs = ttpsToFuse.reverse
+      printlog("(FTO) Fusing these loops into one fat TTP: " + lines(reverseTTPs))
+      fuseTTPs(reverseTTPs)
     })
 
     // replace TTP sets with their fused loop
-    fusedSyms = Nil
+    needsFusion = false
     fusedTTPs ::: restOfScope
   }
 
@@ -66,7 +63,7 @@ trait LoopFusionSchedulingOpt extends internal.FatBlockTraversal {
     val (lmhs, rhs) = TTPsToFuse.map({ 
       case TTP(lhs, mhs, SimpleFatLoop(shape2,index2,rhs)) => 
         assert(shape == shape2, "(FTO) ERROR: trying to fuse loops " + lhs + " of different shapes: " + shape + " != " + shape2)
-        assert(index == index2, "(FTO) ERROR: trying to fuse loops " + lhs + "of different indices: " + index + " != " + index2)
+        assert(index == index2, "(FTO) ERROR: trying to fuse loops " + lhs + " of different indices: " + index + " != " + index2)
         ((lhs, mhs), rhs)
       case s => sys.error("(FTO) ERROR: Fusion failed, unrecognized loop statement: " + s)
     }).unzip

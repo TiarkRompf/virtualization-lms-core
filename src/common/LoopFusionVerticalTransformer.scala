@@ -12,7 +12,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
   val IR: LoopFusionCore2
   import IR.{__newVar => _, _}
 
-  // ---- global datastructures ----
+  // ----- global datastructures -----
 
   /** Records all fusion decisions. */
   object FusedSyms {
@@ -119,48 +119,7 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     simpleIndexReplacements.get((cSym, indexSym))
 
 
-  // --- extractors/helpers ---
-
-  type OldNewSyms = (Sym[Any], Sym[Any])
-  type LoopEffects = Option[(Summary, List[Exp[Any]])]
-  object LoopOrReflectedLoop {
-    def unapply(a: Def[Any]): Option[(AbstractLoop[_], LoopEffects)] = a match {
-      case Reflect(loop: AbstractLoop[_], summ, deps) => Some((loop, Some((summ, deps))))
-      case loop: AbstractLoop[_] => Some((loop, None))
-      case _ => None
-    }
-  }
-  object MatchLoop {
-    def unapply(a: Any): Option[(Def[Any], Exp[Int], Sym[Int])] = a match {
-      case Right(cLoop: AbstractLoop[_]) => Some((cLoop.body, cLoop.size, cLoop.v))
-      case _ => None
-    }
-  }
-  def stmShort(stm: Stm) = stm match {
-    case TP(s@Sym(_), Reflect(loop: AbstractLoop[_], _, _)) => "TP(" + s + ",Reflect(" + loop + ", ...))"
-    case _ => stm.toString
-  }
-  def getSubstSym(sym: Sym[Any]): Sym[Any] = subst.get(sym) match {
-    case Some(s@Sym(_)) => s
-    case _ => sym
-  }
-  def getSubstSym(sym: Sym[Any],
-      subst2: Map[Exp[Any], Exp[Any]] = subst): Sym[Any] = subst2.get(sym) match {
-    case Some(s@Sym(_)) => s
-    case _ => sym
-  }
-  def findDefinitionExp(exp: Exp[Any]): Option[Stm] = exp match {
-    case s@Sym(_) => findDefinition(s)
-    case _ => None
-  }
-  def getNewSyms(syms: List[Sym[Any]]) = syms.flatMap(n => subst.get(n) match { 
-    // use the new expressions
-    case Some(nn@Sym(_)) => List(nn)
-    case Some(Const(_)) => List()
-    case _ => List(n)
-  })
-
-  // --- per scope datastructures ----
+  // ----- per scope datastructures -----
   
   // indented printing to show scopes
   var indent = -2
@@ -185,97 +144,8 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     case None => false
   }
 
-  // --- transformation ---
 
-  override def reflectBlock[A](block: Block[A]): Exp[A] = {
-    // save per scope datastructures
-    val saveSeenLoops = seenLoops
-    seenLoops = HashSet[Sym[Any]]()
-    val saveFixedLengthIndex = fixedLengthIndex
-    fixedLengthIndex = None
-    indent += 2
-
-    // check whether toplevel block result symbol
-    // needs substitution, so we can change full blocks
-    val blockRes = getBlockResultFull(block)
-    val res = apply(blockRes) match {
-      case `blockRes` => super.reflectBlock(block)
-      case newBlock => newBlock
-    }
-
-    // restore per scope datastructures
-    indent -= 2
-    seenLoops = saveSeenLoops
-    fixedLengthIndex = saveFixedLengthIndex
-    res
-  }
-
-  val printAllTransformations = false
-  override def transformStm(stm: Stm): Exp[Any] = { 
-    if (printAllTransformations) println("--transforming: " + stmShort(stm))
-    
-    val transformedSym = stm match {
-      case TP(_, SimpleIndex(pSym@Sym(_), cIndex@Sym(_))) => subst.get(pSym)
-        .flatMap({ case newPSym@Sym(_) => getSimpleIndexReplacements(newPSym, cIndex) })
-        .orElse(getSimpleIndexReplacements(pSym, cIndex))
-        .getOrElse(super.transformStm(stm))
-
-      case TP(sym, LoopOrReflectedLoop(loop, effects)) =>
-        transformLoop(stm, sym, loop, effects)
-
-      case tp@TP(_, SimpleDomain(sym@Sym(_))) =>
-        loopsToFixedOutLengths.get(sym).map({ fixedSym => 
-          printdbg("(VFT) Replaced " + tp + " with fixed length: " + fixedSym)
-          fixedSym
-        }).getOrElse(super.transformStm(stm))
-
-        // TODO remove?
-      case TP(sym, IfThenElse(_,_,_)) => seenLoops += sym
-        super.transformStm(stm)
-      case TP(sym, SingletonColl(_)) => seenLoops += sym
-        super.transformStm(stm)
-      case TP(sym, EmptyColl()) => seenLoops += sym
-        super.transformStm(stm)
-
-      case _ => super.transformStm(stm)
-    }
-
-    if (printAllTransformations) {
-      if (transformedSym == stm.lhs()(0)) {
-        println("--identical " + transformedSym)
-      } else {
-        transformedSym match {
-          case s@Sym(_) => 
-            println("--transformed " + stmShort(stm) + " to ")
-            println("----" + s + " = " + findDefinition(s))
-          case c =>
-            println("--transformed " + stmShort(stm) + " to " + c)
-        }
-      }
-    }
-    transformedSym
-  }
-
-  def transformLoop[A:Manifest, B](stm: Stm, sym: Sym[A], loop: AbstractLoop[B], 
-      effects: LoopEffects): Exp[Any] = {
-
-    printlog("")
-    seenLoops += sym
-    val (fusionInfo, effectful) = findProducers(sym, loop, loop.size, loop.v, loop.body, effects)
-    fusionInfo.printLogBefore
-
-    val fusionOutcome = doFusion(fusionInfo, stm, Right(true), effectful)
-    fusionInfo.printLogAfter(fusionOutcome)
-    findDefinitionExp(fusionOutcome.transformed) match {
-      case Some(TP(newSym, LoopOrReflectedLoop((loop, _)))) => 
-        if (newSym != sym) {
-          seenLoops += newSym
-          recordFixedOutLengths(sym, loop)
-        }
-      case _ =>
-    }
-    fusionOutcome.transformed
-  }
+  // ----- fusion information classes -----
 
   /** RealProd: shape of consumer loop is prod.length
    *  ReconstrProd: length of producer output collection equals shape of consumer loop
@@ -288,9 +158,6 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
   case class PartialProd extends ProdType { val intVal = 3; val shortName = "partial" }
 
   
-
-  // -------- fusion information ----------
-
   sealed abstract class FusionInfo(cSym: Sym[Any], notFused: List[(Sym[Any], String)]) {
     def printLogBefore: Unit
     def printLogAfter(result: FusionOutcome): Unit
@@ -395,11 +262,107 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     extends FusionInfoManyto1(pSym, oProds.unzip._1.unzip._1, cSym, notFused)
 
 
-  // ----- fusion results -----
+  // ----- fusion result classes -----
 
   sealed abstract class FusionOutcome(val transformed: Exp[Any])
   case class FusionResult(fusedSym: Exp[Any]) extends FusionOutcome(fusedSym)
   case class NoFusionRemapped(remappedSym: Exp[Any], remapReason: String) extends FusionOutcome(remappedSym)
+
+
+  // ----- transformer methods -----
+
+  override def reflectBlock[A](block: Block[A]): Exp[A] = {
+    // save per scope datastructures
+    val saveSeenLoops = seenLoops
+    seenLoops = HashSet[Sym[Any]]()
+    val saveFixedLengthIndex = fixedLengthIndex
+    fixedLengthIndex = None
+    indent += 2
+
+    // check whether toplevel block result symbol
+    // needs substitution, so we can change full blocks
+    val blockRes = getBlockResultFull(block)
+    val res = apply(blockRes) match {
+      case `blockRes` => super.reflectBlock(block)
+      case newBlock => newBlock
+    }
+
+    // restore per scope datastructures
+    indent -= 2
+    seenLoops = saveSeenLoops
+    fixedLengthIndex = saveFixedLengthIndex
+    res
+  }
+
+  val printAllTransformations = false
+  override def transformStm(stm: Stm): Exp[Any] = { 
+    if (printAllTransformations) println("--transforming: " + stmShort(stm))
+    
+    val transformedSym = stm match {
+      case TP(_, SimpleIndex(pSym@Sym(_), cIndex@Sym(_))) => subst.get(pSym)
+        .flatMap({ case newPSym@Sym(_) => getSimpleIndexReplacements(newPSym, cIndex) })
+        .orElse(getSimpleIndexReplacements(pSym, cIndex))
+        .getOrElse(super.transformStm(stm))
+
+      case TP(sym, LoopOrReflectedLoop(loop, effects)) =>
+        transformLoop(stm, sym, loop, effects)
+
+      case tp@TP(_, SimpleDomain(sym@Sym(_))) =>
+        loopsToFixedOutLengths.get(sym).map({ fixedSym => 
+          printdbg("(VFT) Replaced " + tp + " with fixed length: " + fixedSym)
+          fixedSym
+        }).getOrElse(super.transformStm(stm))
+
+        // TODO remove?
+      case TP(sym, IfThenElse(_,_,_)) => seenLoops += sym
+        super.transformStm(stm)
+      case TP(sym, SingletonColl(_)) => seenLoops += sym
+        super.transformStm(stm)
+      case TP(sym, EmptyColl()) => seenLoops += sym
+        super.transformStm(stm)
+
+      case _ => super.transformStm(stm)
+    }
+
+    if (printAllTransformations) {
+      if (transformedSym == stm.lhs()(0)) {
+        println("--identical " + transformedSym)
+      } else {
+        transformedSym match {
+          case s@Sym(_) => 
+            println("--transformed " + stmShort(stm) + " to ")
+            println("----" + s + " = " + findDefinition(s))
+          case c =>
+            println("--transformed " + stmShort(stm) + " to " + c)
+        }
+      }
+    }
+    transformedSym
+  }
+
+  def transformLoop[A:Manifest, B](stm: Stm, sym: Sym[A], loop: AbstractLoop[B], 
+      effects: LoopEffects): Exp[Any] = {
+
+    printlog("")
+    seenLoops += sym
+    val (fusionInfo, effectful) = findProducers(sym, loop, loop.size, loop.v, loop.body, effects)
+    fusionInfo.printLogBefore
+
+    val fusionOutcome = doFusion(fusionInfo, stm, Right(true), effectful)
+    fusionInfo.printLogAfter(fusionOutcome)
+    findDefinitionExp(fusionOutcome.transformed) match {
+      case Some(TP(newSym, LoopOrReflectedLoop((loop, _)))) => 
+        if (newSym != sym) {
+          seenLoops += newSym
+          recordFixedOutLengths(sym, loop)
+        }
+      case _ =>
+    }
+    fusionOutcome.transformed
+  }
+
+
+  // ----- fusion functions -----
 
   def findProducers[A:Manifest](cSym: Sym[A], cLoop: AbstractLoop[_], cShape: Exp[Int], 
       cIndex: Sym[Int], cBody: Def[A], cEffects: LoopEffects): (FusionInfo, Boolean) = {
@@ -645,7 +608,6 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     // println("===combineProducers(cSym=" + cSym + ", cDef=" + cDef + ", prodCandidates=" + prodCandidates + 
     //   ", notFused=" + notFused + ", outerIndex=" + outerIndex + "/n    -> " + result)
     result
-
   }
 
   def doFusion(fusionInfo: FusionInfo, cStm: Stm, recordFusion: Either[Exp[Any],Boolean], effectful: Boolean): FusionOutcome = {
@@ -734,6 +696,9 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     }
     fusionOutcome
   }
+
+
+  // ----- fusion checks -----
 
   /** cShape and pSym are originals, this function will check their substitutions too.
    *  Returns the ProdType and debugging output. */
@@ -842,6 +807,48 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
         Right(true)
     }
   }
+
+
+  // ----- extractors/helpers -----
+
+  type OldNewSyms = (Sym[Any], Sym[Any])
+  type LoopEffects = Option[(Summary, List[Exp[Any]])]
+  object LoopOrReflectedLoop {
+    def unapply(a: Def[Any]): Option[(AbstractLoop[_], LoopEffects)] = a match {
+      case Reflect(loop: AbstractLoop[_], summ, deps) => Some((loop, Some((summ, deps))))
+      case loop: AbstractLoop[_] => Some((loop, None))
+      case _ => None
+    }
+  }
+  object MatchLoop {
+    def unapply(a: Any): Option[(Def[Any], Exp[Int], Sym[Int])] = a match {
+      case Right(cLoop: AbstractLoop[_]) => Some((cLoop.body, cLoop.size, cLoop.v))
+      case _ => None
+    }
+  }
+  def stmShort(stm: Stm) = stm match {
+    case TP(s@Sym(_), Reflect(loop: AbstractLoop[_], _, _)) => "TP(" + s + ",Reflect(" + loop + ", ...))"
+    case _ => stm.toString
+  }
+  def getSubstSym(sym: Sym[Any]): Sym[Any] = subst.get(sym) match {
+    case Some(s@Sym(_)) => s
+    case _ => sym
+  }
+  def getSubstSym(sym: Sym[Any],
+      subst2: Map[Exp[Any], Exp[Any]] = subst): Sym[Any] = subst2.get(sym) match {
+    case Some(s@Sym(_)) => s
+    case _ => sym
+  }
+  def findDefinitionExp(exp: Exp[Any]): Option[Stm] = exp match {
+    case s@Sym(_) => findDefinition(s)
+    case _ => None
+  }
+  def getNewSyms(syms: List[Sym[Any]]) = syms.flatMap(n => subst.get(n) match { 
+    // use the new expressions
+    case Some(nn@Sym(_)) => List(nn)
+    case Some(Const(_)) => List()
+    case _ => List(n)
+  })
 
 // ==============================
 // ========= ARCHIVE ============

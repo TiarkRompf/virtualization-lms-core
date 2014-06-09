@@ -86,7 +86,6 @@ trait RunnerArith {
 
       println("\n-- fusion")
 
-      fusionCodegenArith.setFusedSyms(hFused)
       fusionCodegenArith.withStream(new PrintWriter(System.out)) {
         fusionCodegenArith.emitBlock(h)
       }
