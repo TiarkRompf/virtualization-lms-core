@@ -88,6 +88,21 @@ trait ScalaGenObjectOps extends ScalaGenBase {
   }
 }
 
+trait GPUGenObjectOps extends GPUGenBase {
+  val IR: ObjectOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case ObjectUnsafeImmutable(x) => 
+      emitValDef(sym, quote(x) + "; // unsafe immutable")
+      emitPtrDef(sym, x)
+    case ObjectUnsafeMutable(x) => 
+      emitValDef(sym, quote(x) + "; // unsafe mutable")
+      emitPtrDef(sym, x)
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
 trait CLikeGenObjectOps extends CLikeGenBase {
   val IR: ObjectOpsExp
   import IR._
