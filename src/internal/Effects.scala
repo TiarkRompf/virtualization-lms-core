@@ -376,13 +376,13 @@ trait Effects extends Expressions with Blocks with Utils {
     // reflectEffect(d, Pure())
   }
 
-  def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
+  def reflectMirrored[A:Manifest](zd: Reflect[A])(implicit pos: SourceContext): Exp[A] = {
     checkContext()
     // warn if type is Any. TODO: make optional, sometimes Exp[Any] is fine
     if (manifest[A] == manifest[Any]) printlog("warning: possible missing mtype call - reflectMirrored with Def of type Any: " + zd)
     context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
       //case z::_ => z.asInstanceOf[Exp[A]]  -- unsafe: we don't have a tight context, so we might pick one from a flattened subcontext
-      case _ => createReflectDefinition(fresh[A], zd)
+      case _ => createReflectDefinition(fresh[A].withPos(List(pos)), zd)
     }
   }
 
@@ -450,7 +450,7 @@ trait Effects extends Expressions with Blocks with Utils {
       if (mustIdempotent(u)) {
         context find { case Def(d) => d == zd } map { _.asInstanceOf[Exp[A]] } getOrElse {
 //        findDefinition(zd) map (_.sym) filter (context contains _) getOrElse { // local cse TODO: turn around and look at context first??
-          val z = fresh[A]
+          val z = fresh[A](List(pos))
           if (!x.toString.startsWith("ReadVar")) { // supress output for ReadVar
             printlog("promoting to effect: " + z + "=" + zd)
             for (w <- u.mayRead)

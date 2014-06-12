@@ -125,7 +125,7 @@ trait PrintXExp extends Print with EffectExp {
     case _ => super.mirrorDef(e,f)
   }).asInstanceOf[Def[A]] // why??
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case Reflect(PrintX(s), u, es) => reflectMirrored(Reflect(PrintX(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(PrintX(s), u, es) => reflectMirrored(Reflect(PrintX(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 }

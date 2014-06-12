@@ -189,7 +189,7 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
       val newBody = mirrorFatDef(body, f)
       reflectMirrored(
         Reflect(SimpleLoop(f(s), f(i).asInstanceOf[Sym[Int]], newBody), 
-        mapOver(f,u), f(es)))(mtype(manifest[A]))
+        mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       
     case SimpleLoop(s, i, body) => 
       // First process body, otherwise shape or index could take onceSubst
@@ -201,9 +201,9 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
     case SingletonInLoop(block, index) => toAtom(SingletonInLoop(f(block), f(index)))(mtype(manifest[A]), mpos(e.pos))
 //    case Singleton(block) => Singleton(reifyEffectsHere(f.reflectBlock(block))))
     case Reflect(SingletonInLoop(block, index), u, es) =>
-      reflectMirrored(Reflect(SingletonInLoop(reifyEffectsHere(f.reflectBlock(block))(mtype(manifest[A].typeArguments(0))), f(index)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      reflectMirrored(Reflect(SingletonInLoop(reifyEffectsHere(f.reflectBlock(block))(mtype(manifest[A].typeArguments(0))), f(index)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case Reflect(Singleton(block), u, es) =>
-      reflectMirrored(Reflect(Singleton(reifyEffectsHere(f.reflectBlock(block))(mtype(manifest[A].typeArguments(0)))), mapOver(f,u), f(es)))(mtype(manifest[A]))
+      reflectMirrored(Reflect(Singleton(reifyEffectsHere(f.reflectBlock(block))(mtype(manifest[A].typeArguments(0)))), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     // case Reflect(Singleton(e), u, es) => 
     //   reflectMirrored(Reflect(Singleton(f(e)), mapOver(f,u), f(es)))(mtype(manifest[A]))
     case EmptyArray(dummy) => toAtom(e)(mtype(manifest[A]), mpos(e.pos))

@@ -42,6 +42,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   }
 
   override def isPrimitiveType[A](m: Manifest[A]) : Boolean = isPrimitiveType(remap(m))
+
   override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     if (!isVoidType(sym.tp))
       stream.println(remapWithRef(sym.tp) + quote(sym) + " = " + rhs + ";")
@@ -50,7 +51,15 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   override def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
       stream.println(remapWithRef(sym.tp.typeArguments.head) + quote(sym) + " = " + rhs + ";")
   }
-  
+
+  override def emitVarDecl(sym: Sym[Any]): Unit = {
+    stream.println(remapWithRef(sym.tp) + " " + quote(sym) + ";")
+  }
+
+  override def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
+    stream.println(quote(sym) + " = " + rhs + ";")
+  }
+
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
     kernelInputVals = vals
     kernelInputVars = vars
@@ -74,11 +83,14 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     headerStream.println("#include <stdio.h>")
     headerStream.println("#include <string.h>")
     headerStream.println("#include <stdlib.h>")
+    headerStream.println("#include <memory>")
     headerStream.println("#include <float.h>")
     headerStream.println("#include <jni.h>")
     headerStream.println("#include <assert.h>")
     headerStream.println("#include <math.h>")
     headerStream.println("#include <iostream>")
+    headerStream.println("#include <limits>")
+    headerStream.println("#include <algorithm>")
     headerStream.println("#include \"" + deviceTarget + "types.h\"")
     headerStream.println(getDataStructureHeaders())
 
@@ -126,10 +138,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
   override def emitTransferFunctions() {
 
-    //TODO: temporarily disable transfer functions for variables
-    //for (tp <- dsTypesList) {
-    for (tp <- dsTypesList.map(_._1).filter(t => dsTypesList.map(_._2) contains remap(t)) if (tp.erasure != classOf[Variable[AnyVal]])) {
-      
+    for ((tp,name) <- dsTypesList) {
       try {
         // Emit input copy helper functions for object type inputs
         //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
