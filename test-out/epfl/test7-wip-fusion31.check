@@ -139,14 +139,19 @@ val x52 = println(x51)
 
 -- horizontal transformation
 (HFT) Recording Sym(4), no fusion
-(HFT) The candidate Sym(38) cannot be fused with the existing FusedSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(4))) because the candidate set depends on Sym(4)
+(HFT) The candidate Sym(38) cannot be fused with the existing FusedLoopSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(4))) because the candidate set depends on Sym(4)
 (HFT) Recording Sym(38), no fusion
-(HFT) The candidate Sym(41) and its set (List(Sym(50), Sym(41))) cannot be fused with the existing FusedSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(4))) because the candidate set depends on Sym(4)
-(HFT) Fusing Sym(41) with fusion set FusedSet(shape = Sym(0), indexSym = Sym(7), loopSyms = List(Sym(38)))
+  (HFT) Recording if-sym Sym(14), no fusion
+(HFT) The candidate Sym(41) and its set (List(Sym(50), Sym(41))) cannot be fused with the existing FusedLoopSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(4))) because the candidate set depends on Sym(4)
+(HFT) Fusing Sym(41) with fusion set FusedLoopSet(shape = Sym(0), indexSym = Sym(7), loopSyms = List(Sym(38)))
 (HFT) - remapping index: Sym(18) -> Sym(7)
+  (HFT) Recording if-sym Sym(25), no fusion
+  (HFT) - new if symbol: Sym(25) -> Sym(58)
 (HFT) - new loop symbol: Sym(41) -> Sym(59)
-(HFT) Fusing Sym(50) with containing fusion set FusedSet(shape = Sym(0), indexSym = Sym(7), loopSyms = List(Sym(38), Sym(50), Sym(41)))
+(HFT) Fusing Sym(50) with containing fusion set FusedLoopSet(shape = Sym(0), indexSym = Sym(7), loopSyms = List(Sym(38), Sym(50), Sym(41)))
 (HFT) - remapping index: Sym(18) -> Sym(7)
+  (HFT) Fusing Sym(49) with fusion set FusedIfSet(cond = Sym(21), ifSyms = List(Sym(25)))
+  (HFT) - new if symbol: Sym(49) -> Sym(65)
 (HFT) - new loop symbol: Sym(50) -> Sym(66)
 
 (HFT) all horizontally fused: List(Sym(38), Sym(59), Sym(66))
@@ -202,6 +207,10 @@ TTP(List(Sym(38)),List(SimpleLoop(Sym(0),Sym(7),MultiArrayElem(Block(Sym(14)))))
 TTP(List(Sym(59)),List(SimpleLoop(Sym(0),Sym(7),MultiArrayElem(Block(Sym(58))))),SimpleFatLoop(Sym(0),Sym(7),List(MultiArrayElem(Block(Sym(58))))))
 TTP(List(Sym(66)),List(SimpleLoop(Sym(0),Sym(7),MultiArrayElem(Block(Sym(65))))),SimpleFatLoop(Sym(0),Sym(7),List(MultiArrayElem(Block(Sym(65))))))
 
+(FTO) Fusing these ifs into one fat TTP: 
+TTP(List(Sym(58)),List(IfThenElse(Sym(55),Block(Sym(56)),Block(Sym(57)))),SimpleFatIfThenElse(Sym(55),List(Block(Sym(56))),List(Block(Sym(57)))))
+TTP(List(Sym(65)),List(IfThenElse(Sym(55),Block(Sym(63)),Block(Sym(64)))),SimpleFatIfThenElse(Sym(55),List(Block(Sym(63))),List(Block(Sym(64)))))
+
 val x4 = new Array[Int](x0)
 for (x1 <- 0 until x0) {
 val x2 = x1 + 1
@@ -213,18 +222,16 @@ val x59_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 val x66_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x7 <- 0 until x0) {
 val x8 = x4.apply(x7)
-val x9 = x8 > 0
 val x10 = x8 + x5
-if (x9) {
-x38_builder += x10
-}
 val x55 = x10 > 0
 if (x55) {
 x59_builder += x7
-}
-if (x55) {
 val x62 = x7 + 2
 x66_builder += x62
+}
+val x9 = x8 > 0
+if (x9) {
+x38_builder += x10
 }
 }
 val x38 = x38_builder.result()

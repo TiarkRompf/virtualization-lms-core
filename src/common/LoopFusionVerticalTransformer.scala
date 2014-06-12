@@ -9,7 +9,7 @@ import scala.collection.mutable.{HashMap, HashSet}
 
 
 trait LoopFusionVerticalTransformer extends PreservingForwardTransformer { 
-  val IR: LoopFusionCore2
+  val IR: LoopFusionCore
   import IR.{__newVar => _, _}
 
   // ----- global datastructures -----

@@ -69,7 +69,7 @@ val x29 = println(x28)
 -- horizontal transformation
 (HFT) Recording Sym(26), no fusion
 (HFT) - new loop symbol: Sym(26) -> Sym(37)
-(HFT) Fusing Sym(5) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(2), loopSyms = List(Sym(26), Sym(5)))
+(HFT) Fusing Sym(5) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(2), loopSyms = List(Sym(26), Sym(5)))
 (HFT) - already using same index Sym(2)
 
 (HFT) all horizontally fused: List(Sym(37), Sym(5))

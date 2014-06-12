@@ -19,7 +19,7 @@ trait MyFusionProgArith extends Arith with ArrayLoopsMC with Print with Ordering
 trait ImplArith extends MyFusionProgArith with ArithExp  with ArrayLoopsMCFatExp with ArrayLoopsMCFusionExtractors
     with IfThenElseFatExp with PrintExp with OrderingOpsExp
 //    with NumericOpsExp with PrimitiveOpsExp with BooleanOpsExp
-    with LoopFusionCore2 { self =>
+    with LoopFusionCore { self =>
   override val verbosity = 2 // 1: only printlog, 2: also printdbg
   val runner = new RunnerArith { val p: self.type = self }
   runner.run()
@@ -30,7 +30,7 @@ trait CodegenArith extends ScalaGenArith with ScalaGenPrint
   with ScalaGenNumericOps with ScalaGenPrimitiveOps
   with ScalaGenBooleanOps with ScalaGenArrayLoopsMCFat { val IR: ImplArith }
 
-trait FusionCodegenArith extends CodegenArith with LoopFusionSchedulingOpt { val IR: ImplArith }
+trait FusionCodegenArith extends CodegenArith with CombineTTPScheduling { val IR: ImplArith }
 
 
 trait RunnerArith {

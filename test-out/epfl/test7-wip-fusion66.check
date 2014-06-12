@@ -86,6 +86,7 @@ val x23 = println(3)
 
 -- horizontal transformation
 (HFT) Recording Sym(11), no fusion
+  (HFT) Recording if-sym Sym(10), no fusion
     (HFT) Recording Sym(7), no fusion
 (HFT) Recording Sym(22), no fusion
 (HFT) - new loop symbol: Sym(22) -> Sym(27)

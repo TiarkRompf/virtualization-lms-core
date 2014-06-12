@@ -56,7 +56,7 @@ val x23 = println(x22)
 
 -- horizontal transformation
 (HFT) Recording Sym(4), no fusion
-(HFT) The candidate Sym(21) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(4))) because the candidate set depends on Sym(4)
+(HFT) The candidate Sym(21) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(4))) because the candidate set depends on Sym(4)
 (HFT) Recording Sym(21), no fusion
 (HFT) - new loop symbol: Sym(21) -> Sym(30)
 

@@ -166,15 +166,15 @@ val x71 = println(x70)
 
 -- horizontal transformation
 (HFT) Recording Sym(4), no fusion
-(HFT) Fusing Sym(48) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(63), Sym(58), Sym(4), Sym(53), Sym(48)))
+(HFT) Fusing Sym(48) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(63), Sym(58), Sym(4), Sym(53), Sym(48)))
 (HFT) - already using same index Sym(1)
-(HFT) Fusing Sym(53) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(63), Sym(58), Sym(4), Sym(53), Sym(48)))
+(HFT) Fusing Sym(53) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(63), Sym(58), Sym(4), Sym(53), Sym(48)))
 (HFT) - already using same index Sym(1)
-(HFT) Fusing Sym(58) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(63), Sym(58), Sym(4), Sym(53), Sym(48)))
+(HFT) Fusing Sym(58) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(63), Sym(58), Sym(4), Sym(53), Sym(48)))
 (HFT) - already using same index Sym(1)
-(HFT) Fusing Sym(63) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(63), Sym(58), Sym(4), Sym(53), Sym(48)))
+(HFT) Fusing Sym(63) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(63), Sym(58), Sym(4), Sym(53), Sym(48)))
 (HFT) - already using same index Sym(1)
-(HFT) The candidate Sym(69) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(63), Sym(58), Sym(4), Sym(53), Sym(48))) because the candidate set depends on Sym(53)
+(HFT) The candidate Sym(69) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(63), Sym(58), Sym(4), Sym(53), Sym(48))) because the candidate set depends on Sym(53)
 (HFT) Recording Sym(69), no fusion
 
 (HFT) all horizontally fused: List(Sym(4), Sym(48), Sym(53), Sym(58), Sym(63))

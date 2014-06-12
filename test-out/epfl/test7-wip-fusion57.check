@@ -122,13 +122,13 @@ val x61 = println(x60)
 -- horizontal transformation
 (HFT) Recording Sym(42), no fusion
 (HFT) - new loop symbol: Sym(42) -> Sym(67)
-(HFT) Fusing Sym(4) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4)))
+(HFT) Fusing Sym(4) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4)))
 (HFT) - already using same index Sym(1)
-(HFT) The candidate Sym(49) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4))) because the candidate set depends on Sym(42)
+(HFT) The candidate Sym(49) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4))) because the candidate set depends on Sym(42)
 (HFT) Recording Sym(49), no fusion
 (HFT) - new loop symbol: Sym(49) -> Sym(72)
-(HFT) The candidate Sym(55) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(49))) because the candidate set depends on Sym(49)
-(HFT) The candidate Sym(55) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4))) because the candidate set depends on Sym(4)
+(HFT) The candidate Sym(55) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(49))) because the candidate set depends on Sym(49)
+(HFT) The candidate Sym(55) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4))) because the candidate set depends on Sym(4)
 (HFT) Recording Sym(55), no fusion
 (HFT) - new loop symbol: Sym(55) -> Sym(77)
 

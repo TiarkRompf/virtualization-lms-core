@@ -132,16 +132,16 @@ val x43 = println(x42)
 -- horizontal transformation
 (HFT) Recording Sym(6), no fusion
   (HFT) Recording Sym(5), no fusion
-(HFT) Fusing Sym(33) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(33), Sym(6), Sym(41)))
+(HFT) Fusing Sym(33) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(33), Sym(6), Sym(41)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(32) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(32), Sym(5), Sym(40)))
+  (HFT) Fusing Sym(32) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(32), Sym(5), Sym(40)))
   (HFT) - already using same index Sym(2)
     (HFT) Recording Sym(31), no fusion
-(HFT) Fusing Sym(41) with containing fusion set FusedSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(33), Sym(6), Sym(41)))
+(HFT) Fusing Sym(41) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(33), Sym(6), Sym(41)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(40) with containing fusion set FusedSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(32), Sym(5), Sym(40)))
+  (HFT) Fusing Sym(40) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(32), Sym(5), Sym(40)))
   (HFT) - already using same index Sym(2)
-    (HFT) Fusing Sym(39) with containing fusion set FusedSet(shape = Sym(3), indexSym = Sym(10), loopSyms = List(Sym(31), Sym(39)))
+    (HFT) Fusing Sym(39) with containing fusion set FusedLoopSet(shape = Sym(3), indexSym = Sym(10), loopSyms = List(Sym(31), Sym(39)))
     (HFT) - already using same index Sym(10)
 
 (HFT) all horizontally fused: List(Sym(31), Sym(39))

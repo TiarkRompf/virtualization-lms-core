@@ -170,12 +170,13 @@ import internal.Scheduling
 */
 
 
-
-trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
+@deprecated("The old loop fusion is deprecated, please use the transformers and CombineTTPScheduling.")
+trait LoopFusionOpt extends internal.FatBlockTraversal with OldLoopFusionCore {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
 
-  
+  // Legacy mode for old loop fusion.
+  override def shouldFattenEffectfulLoops() = false
 
   override def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A = {
     val result0 = resultB.map(getBlockResultFull) flatMap { case Combine(xs) => xs case x => List(x) }
@@ -212,7 +213,7 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
 
 
 
-trait LoopFusionCore extends internal.FatScheduling with CodeMotion with SimplifyTransform {
+trait OldLoopFusionCore extends internal.FatScheduling with CodeMotion with SimplifyTransform {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
   

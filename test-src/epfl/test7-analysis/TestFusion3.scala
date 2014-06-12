@@ -18,18 +18,18 @@ trait MyFusionProg extends NumericOps with PrimitiveOps with LiftNumeric with Or
 
 trait Impl extends MyFusionProg with NumericOpsExp with PrimitiveOpsExp with ArrayLoopsMCFatExp with PrintExp
     with IfThenElseFatExp with OrderingOpsExp with BooleanOpsExp with ArrayLoopsMCFusionExtractors
-    with ArrayLoopsMCExp with LoopFusionCore2 with WhileExp with VariablesExp with PrintXExp { self =>
+    with ArrayLoopsMCExp with LoopFusionCore with WhileExp with VariablesExp with PrintXExp { self =>
   override val verbosity = 2 // 1: only printlog, 2: also printdbg
   val runner = new Runner { val p: self.type = self }
   runner.run()
 }
 
 trait Codegen extends ScalaGenNumericOps with ScalaGenPrimitiveOps
-  with ScalaGenPrint with ScalaGenPrintX with ScalaGenOrderingOps with ScalaGenIfThenElse
+  with ScalaGenPrint with ScalaGenPrintX with ScalaGenOrderingOps with ScalaGenIfThenElseFat
   with ScalaGenBooleanOps with ScalaGenArrayLoopsMCFat
   with ScalaGenWhile with ScalaGenVariables { val IR: Impl }
 
-trait FusionCodegen extends Codegen with LoopFusionSchedulingOpt { val IR: Impl }
+trait FusionCodegen extends Codegen with CombineTTPScheduling { val IR: Impl }
 
 
 trait Runner /*extends internal.ScalaCompile*/ {
@@ -709,6 +709,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
+  // TODO no array out of bounds exception
   def testFusionTransform29 = withOutFileChecked(prefix+"fusion29"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
@@ -799,6 +800,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
+  // TODO no array out of bounds exception
   def testFusionTransform33 = withOutFileChecked(prefix+"fusion33"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {

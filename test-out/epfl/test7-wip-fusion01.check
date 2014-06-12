@@ -69,6 +69,7 @@ val x29 = println(x28)
 
 -- horizontal transformation
 (HFT) Recording Sym(27), no fusion
+  (HFT) Recording if-sym Sym(26), no fusion
 
 (HFT) all horizontally fused: 
 

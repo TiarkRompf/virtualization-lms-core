@@ -97,10 +97,10 @@ val x49 = println(x48)
 -- horizontal transformation
 (HFT) Recording Sym(34), no fusion
 (HFT) - new loop symbol: Sym(34) -> Sym(56)
-(HFT) The candidate Sym(43) and its set (List(Sym(43), Sym(37))) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(6), loopSyms = List(Sym(34))) because both are effectful.
+(HFT) The candidate Sym(43) and its set (List(Sym(43), Sym(37))) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(6), loopSyms = List(Sym(34))) because both are effectful.
 (HFT) Recording Sym(43), no fusion
 (HFT) - new loop symbol: Sym(43) -> Sym(61)
-(HFT) Fusing Sym(37) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(6), loopSyms = List(Sym(43), Sym(37)))
+(HFT) Fusing Sym(37) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(6), loopSyms = List(Sym(43), Sym(37)))
 (HFT) - already using same index Sym(6)
 
 (HFT) all horizontally fused: List(Sym(61), Sym(37))

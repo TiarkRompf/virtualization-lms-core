@@ -226,7 +226,7 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
 
 }
 
-trait ArrayLoopsMCFatExp extends ArrayLoopsMCExp with LoopsFatExp
+trait ArrayLoopsMCFatExp extends ArrayLoopsMCExp with LoopsFatExp with IfThenElseFatExp
 
 
 trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
@@ -236,15 +236,6 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
   val replaceIfThenElseSingletonEmptyWithAppend = scala.collection.mutable.HashMap[Sym[Any], Sym[Any]]()
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case EatReflect(IfThenElse(cond, Block(si@Def(SuperSingleton(thenp))), Block(em@Def(SuperEmptyArray())))) =>
-      replaceIfThenElseSingletonEmptyWithAppend.get(sym) match {
-        case Some(arraySym) => 
-          stream.println("if (" + quote(cond) + ") {")
-          emitBlock(thenp)
-          stream.println(quote(arraySym) + "_builder += " + quote(getBlockResult(thenp)))
-          stream.println("}")
-        case None => super.emitNode(sym, rhs)
-      } 
     case SuperEmptyArray() => 
       stream.println("val " + quote(sym) + ": " + sym.tp + " = Array.empty")
     case s@SuperSingleton(elem) =>
@@ -269,6 +260,27 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
 
 
   override def emitFatNode(sym: List[Sym[Any]], rhs: FatDef) = rhs match {
+    case EatReflect(SimpleFatIfThenElse(cond, thenList, elseList)) =>
+      val singleEmpty = sym.zip(thenList zip elseList).map({
+        case (iteSym, (Block(Def(SuperSingleton(thenp))), Block(Def(SuperEmptyArray())))) =>
+          replaceIfThenElseSingletonEmptyWithAppend.get(iteSym) match {
+            case Some(arraySym) => Some((arraySym, thenp, iteSym))
+            case _ => None
+          }
+        case _ => None
+      })
+      if (singleEmpty.forall(_.isDefined)) {
+        stream.println("if (" + quote(cond) + ") {")
+        singleEmpty.foreach({ case Some((arraySym, thenp, iteSym)) =>
+          emitBlock(thenp)
+          stream.println(quote(arraySym) + "_builder += " + quote(getBlockResult(thenp)))
+          replaceIfThenElseSingletonEmptyWithAppend.remove(iteSym)
+        })
+        stream.println("}")
+      } else {
+        super.emitFatNode(sym, rhs)
+      }
+
     case SimpleFatLoop(s,x,rhs2) => 
       val symRhs: List[(Sym[Any], Def[Any])] = sym zip rhs2
 
@@ -309,7 +321,10 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
             case Def(EatReflect(SuperSingleton(e))) => 
               stream.println(quote(l) + "("+quote(x)+") = " + quote(getBlockResult(e)))
             case ite@Def(EatReflect(IfThenElse(cond, Block(Def(SuperSingleton(thenp))), Block(Def(SuperEmptyArray()))))) =>
-              replaceIfThenElseSingletonEmptyWithAppend.remove(ite.asInstanceOf[Sym[Any]])
+              if (replaceIfThenElseSingletonEmptyWithAppend.contains(ite.asInstanceOf[Sym[Any]])) {
+                // if-then-else wasn't replaced, probably because part of fat TTP
+                stream.println(quote(l) + "_builder ++= " + quote(getBlockResult(y)))
+              } 
             case _ => 
               stream.println(quote(l) + "_builder ++= " + quote(getBlockResult(y)))
           }
@@ -339,10 +354,7 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
         t._2 match {
           case MultiArrayElem(y) => getBlockResult(y) match {
             case Def(EatReflect(SuperSingleton(e))) => 
-            case ite@Def(EatReflect(IfThenElse(cond, Block(Def(SuperSingleton(thenp))), Block(Def(SuperEmptyArray()))))) =>
-              stream.println("val " + quote(l) + " = " + quote(l) + "_builder.result()")
-            case _ => 
-              stream.println("val " + quote(l) + " = " + quote(l) + "_builder.result()")
+            case _ => stream.println("val " + quote(l) + " = " + quote(l) + "_builder.result()")
           }
           case MultiReduceElem(valFunc, redFunc, zero, accSym, valSym) =>
             stream.println("val " + quote(l) + " = " + quote(accSym)) // better way to return result?

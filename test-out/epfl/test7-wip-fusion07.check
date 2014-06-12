@@ -107,10 +107,12 @@ val x47 = println(x46)
 
 -- horizontal transformation
 (HFT) Recording Sym(4), no fusion
-(HFT) Fusing Sym(37) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(37), Sym(4), Sym(45)))
+(HFT) Fusing Sym(37) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(37), Sym(4), Sym(45)))
 (HFT) - already using same index Sym(1)
-(HFT) Fusing Sym(45) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(37), Sym(4), Sym(45)))
+  (HFT) Recording if-sym Sym(36), no fusion
+(HFT) Fusing Sym(45) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(37), Sym(4), Sym(45)))
 (HFT) - already using same index Sym(1)
+  (HFT) Recording if-sym Sym(44), no fusion
 
 (HFT) all horizontally fused: List(Sym(4), Sym(37), Sym(45))
 

@@ -240,11 +240,37 @@ trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen {
       TTP(List(sym), List(o), SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)).copyMirroredCanBeFused(o))
     case TP(sym, p @ Reflect(o: AbstractIfThenElse[_], u, es)) => //if !u.maySimple && !u.mayGlobal =>  // contrary, fusing will not change observable order
       // assume body will reflect, too...
-      printdbg("-- fatten effectful if/then/else " + e)
+      if (!shouldFattenEffectfulLoops()) // Old loop fusion legacy mode
+        printdbg("-- fatten effectful if/then/else " + e)
       val e2 = SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)).copyMirroredCanBeFused(o) 
       e2.extradeps = es //HACK
       TTP(List(sym), List(p), e2)
     case _ => super.fatten(e)
+  }
+
+  override def combineFat(list: List[TTP]): TTP = list(0) match {
+    case TTP(_, _, firstIte: AbstractFatIfThenElse) => 
+      val cond = firstIte.cond
+      val (lmhs, rhs) = list.map({ 
+        case TTP(lhs, mhs, ite: AbstractFatIfThenElse) => 
+          if (cond != ite.cond) {
+            printlog("FAILED: combineFat of two ifs with different conditions: " + firstIte + " and " + ite)
+            return super.combineFat(list)
+          } else if (!firstIte.isFusedWith(ite)) {
+            printlog("FAILED: combineFat of two ifs that haven't been fused (call CanBeFused.registerFusion first): " + firstIte + " and " + ite)
+            return super.combineFat(list)
+          }
+          ((lhs, mhs), (ite.thenp, ite.elsep))
+        case s => 
+          printlog("FAILED: combineFat of an if with something else: " + firstIte + " and " + s)
+          return super.combineFat(list)
+      }).unzip
+      val (lhs, mhs) = lmhs.unzip
+      val (thenps, elseps) = rhs.unzip
+      // The mhs lists the original statements including their effects
+      TTP(lhs.flatten, mhs.flatten, SimpleFatIfThenElse(cond, thenps.flatten, elseps.flatten)) 
+    case _ =>
+      super.combineFat(list)
   }
 }
 

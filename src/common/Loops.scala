@@ -141,11 +141,50 @@ trait BaseLoopsTraversalFat extends FatBlockTraversal {
     case TP(sym, op: AbstractLoop[_]) =>
       TTP(List(sym), List(op), SimpleFatLoop(op.size, op.v, List(op.body)).copyMirroredCanBeFused(op))
     case TP(sym, p @ Reflect(op: AbstractLoop[_], u, es)) =>
-      // Fattening effectful loop, middle will preserve effect information
-      TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)).copyMirroredCanBeFused(op))
+      if (shouldFattenEffectfulLoops()) {
+        // Fattening effectful loop, middle will preserve effect information
+        TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)).copyMirroredCanBeFused(op))
+      } else { // old loop fusion legacy mode
+        if (!u.maySimple && !u.mayGlobal) {
+          // assume body will reflect, too. bring it on...
+          printdbg("-- fatten effectful loop " + e)
+          TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)).copyMirroredCanBeFused(op))
+        } else { 
+          super.fatten(e)
+        }
+      }
     case _ => super.fatten(e)
   }
-  
+
+  override def combineFat(list: List[TTP]): TTP = list(0) match {
+    case TTP(_, _, firstLoop: AbstractFatLoop) =>
+      val shape = firstLoop.size
+      val index = firstLoop.v
+      val (lmhs, rhs) = list.map({ 
+        case TTP(lhs, mhs, loop: AbstractFatLoop) => 
+          if (shape != loop.size) {
+            printlog("FAILED: combineFat of two loops with different sizes: " + firstLoop + " and " + loop)
+            return super.combineFat(list)
+          } else if (index != loop.v) {
+            printlog("FAILED: combineFat of two loops with different indices: " + firstLoop + " and " + loop)
+            return super.combineFat(list)
+          } else if (!firstLoop.isFusedWith(loop)) {
+            printlog("FAILED: combineFat of two loops that haven't been fused (call CanBeFused.registerFusion first): " + firstLoop + " and " + loop)
+            return super.combineFat(list)
+          }
+          ((lhs, mhs), loop.body)
+        case s => 
+          printlog("FAILED: combineFat of a loop with something else: " + firstLoop + " and " + s)
+          return super.combineFat(list)
+      }).unzip
+      val (lhs, mhs) = lmhs.unzip
+      // The mhs lists the original statements including their effects
+      TTP(lhs.flatten, mhs.flatten, SimpleFatLoop(shape, index, rhs.flatten).copyMirroredCanBeFused(firstLoop))
+
+    case _ =>
+      super.combineFat(list)
+  }
+
 }
 
 trait BaseGenLoops extends GenericNestedCodegen {

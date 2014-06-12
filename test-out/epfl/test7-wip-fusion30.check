@@ -93,10 +93,11 @@ val x39 = println(x38)
 
 -- horizontal transformation
 (HFT) Recording Sym(4), no fusion
-(HFT) The candidate Sym(29) cannot be fused with the existing FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(37), Sym(4))) because the existing set depends on Sym(29)
+(HFT) The candidate Sym(29) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(37), Sym(4))) because the existing set depends on Sym(29)
 (HFT) Recording Sym(29), no fusion
-(HFT) Fusing Sym(37) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(37), Sym(4)))
+(HFT) Fusing Sym(37) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(37), Sym(4)))
 (HFT) - already using same index Sym(1)
+  (HFT) Recording if-sym Sym(36), no fusion
 
 (HFT) all horizontally fused: List(Sym(4), Sym(37))
 
