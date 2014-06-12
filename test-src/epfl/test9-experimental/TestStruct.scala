@@ -35,7 +35,6 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   
   case class ArraySoaTag[T](base: StructTag[T], len: Exp[Int]) extends StructTag[T]
   
-  //override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A]): Exp[A] = body match {
   override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A])(implicit pos: SourceContext): Exp[A] = body match {
     case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) => 
       struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.arrayManifest, pos))))
