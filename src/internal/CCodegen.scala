@@ -82,6 +82,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
     headerStream.println("#include <stdio.h>")
     headerStream.println("#include <string.h>")
+    headerStream.println("#include <stdint.h>")
     headerStream.println("#include <stdlib.h>")
     headerStream.println("#include <memory>")
     headerStream.println("#include <float.h>")

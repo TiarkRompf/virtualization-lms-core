@@ -62,7 +62,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   
   case class TempAlloc(sym: String, tp: String, size:String)
 
-  final class GPUMetaData(val kernelInputs: List[Sym[Any]]) {
+  final class GPUMetaData(val kernelInputs: List[Sym[Any]], val auxMeta: ListBuffer[(String,Any)]) {
     //val inputs: ListMap[Sym[Any],TransferFunc] = ListMap()
     val outputs: ListMap[Sym[Any],LoopElem] = ListMap()
     val temps: ListBuffer[TempAlloc] = ListBuffer()
@@ -74,7 +74,8 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
       //if (kernelFileExt == "cu") {
       //  out.append("\"gpuInputs\":["+kernelInputs.filter(in => !isPrimitiveType(in.tp)).map(in=>"{\""+quote(in)+"\":[\""+remap(in.tp)+"\"]}").mkString(",")+"],")
         out.append("\"gpuOutputs\":{"+outputs.map(o => "\""+quote(o._1)+"\":"+o._2.toString).mkString(",")+"},")
-        out.append("\"gpuTemps\":["+temps.map(t=>"{\""+t.sym+"\":[\""+t.tp+"\",\""+t.size+"\"]}").mkString(",")+"]")
+        out.append("\"gpuTemps\":["+temps.map(t=>"{\""+t.sym+"\":[\""+t.tp+"\",\""+t.size+"\"]}").mkString(",")+"],")
+        out.append("\"aux\":{"+auxMeta.map(m => "\"" + m._1 + "\":" + m._2.toString).mkString(",")+"}")
       //}
       //else { //opencl
       //  out.append("\"gpuInputs\":["+getKernelInputs.filter(in=>isObjectType(in.Type)).map(in=>"{\""+quote(in)+"\":[\""+remap(in.Type)+"\",{"+unpackObject(in).map(f => "\"%s\":\"%s\"".format(f._1,remap(f._2)).replaceAll("__global ","")).mkString(",")+"}]}").mkString(",")+"],")
@@ -92,7 +93,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     ptrSymSet.clear
 
     //helperFuncString.clear
-    metaData = new GPUMetaData(vals)
+    metaData = new GPUMetaData(vals, new ListBuffer[(String,Any)]())
     tabWidth = 1
     isGPUable = false
     processingHelperFunc = false
