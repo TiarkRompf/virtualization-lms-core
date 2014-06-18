@@ -271,6 +271,16 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
 
   // ----- transformer methods -----
 
+  // FixPointTransformer methods, TODO run vertical fusion as fixpoint, for now only run once
+  def getInfoString = "LoopFusionVerticalTransformer only runs once, TODO fixpoint"
+  var hasRunOnce = false
+  def isDone = hasRunOnce
+  def runOnce[A:Manifest](s: Block[A]): Block[A] = {
+    val newBlock = transformBlock(s)
+    hasRunOnce = true
+    newBlock
+  }
+
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
     // save per scope datastructures
     val saveSeenLoops = seenLoops

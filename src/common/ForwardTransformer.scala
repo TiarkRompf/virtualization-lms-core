@@ -92,30 +92,6 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   }
 }
 
-/**
- * Skip statements that don't have symbols which need substitution, unless they contain
- * blocks (need to recurse into blocks).
- */
-trait PreservingForwardTransformer extends ForwardTransformer {
-  import IR._
-
-  // Implement optimization suggested in ForwardTransformer:
-  // optimization from MirrorRetainBlockTransformer in TestMiscTransform
-  // we want to skip those statements that don't have symbols that need substitution
-  // however we need to recurse into any blocks
-  // Also need to mirror all effects because otherwise they won't be reified
-  override def transformStm(stm: Stm): Exp[Any] = stm match {
-    case TP(sym, rhs@Reflect(_, _, _)) =>
-      self_mirror(sym, rhs)
-    case TP(sym, rhs) if (syms(rhs).exists(subst contains _) || !blocks(rhs).isEmpty) =>
-      self_mirror(sym, rhs)
-    case TP(sym, _) => // no mirroring, preserve statements
-      if (!globalDefs.contains(stm)) 
-        reflectSubGraph(List(stm))
-      sym
-  }
-}
-
 trait RecursiveTransformer extends ForwardTransformer { self =>
   import IR._
 
@@ -155,8 +131,46 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
   }
 }
 
+/** 
+ * Delite transformers are run in a fixpoint fashion, but with a limited number of iterations.
+ * At the beginning of each iteration, the info string is printed to the log.
+ */
+trait FixPointTransformer extends ForwardTransformer {
+  // TODO create subclass that manages per-scope datastructures according to CanBeFused
+  def getInfoString: String
+  def isDone: Boolean
+  def runOnce[A:Manifest](s: Block[A]): Block[A]
+  def run[A:Manifest](s: Block[A]): Block[A] = {
+    if (isDone) s else run(runOnce(s))
+  }
+}
 
-trait WorklistTransformer extends ForwardTransformer { // need backward version, too?
+/**
+ * Skip statements that don't have symbols which need substitution, unless they contain
+ * blocks (need to recurse into blocks).
+ */
+trait PreservingForwardTransformer extends FixPointTransformer {
+  import IR._
+
+  // Implement optimization suggested in ForwardTransformer:
+  // optimization from MirrorRetainBlockTransformer in TestMiscTransform
+  // we want to skip those statements that don't have symbols that need substitution
+  // however we need to recurse into any blocks
+  // Also need to mirror all effects because otherwise they won't be reified
+  override def transformStm(stm: Stm): Exp[Any] = {
+    stm match {
+    case TP(sym, rhs@Reflect(_, _, _)) =>
+      self_mirror(sym, rhs)
+    case TP(sym, rhs) if ((syms(rhs) ++ boundSyms(rhs)).exists(subst contains _) || !blocks(rhs).isEmpty) =>
+      self_mirror(sym, rhs)
+    case TP(sym, rhs) => // no mirroring, preserve statements
+      if (!globalDefs.contains(stm)) 
+        reflectSubGraph(List(stm))
+      sym
+  }}
+}
+
+trait WorklistTransformer extends FixPointTransformer { // need backward version, too?
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
   var curSubst: Map[Sym[Any],() => Exp[Any]] = Map.empty
@@ -169,15 +183,12 @@ trait WorklistTransformer extends ForwardTransformer { // need backward version,
       nextSubst = nextSubst + (x.asInstanceOf[Sym[A]] -> (() => y))
     }
   }
-  def isDone = nextSubst.isEmpty
-  def runOnce[A:Manifest](s: Block[A]): Block[A] = {
+  override def isDone = nextSubst.isEmpty
+  override def runOnce[A:Manifest](s: Block[A]): Block[A] = {
     subst = Map.empty
     curSubst = nextSubst
     nextSubst = Map.empty
     transformBlock(s)
-  }
-  def run[A:Manifest](s: Block[A]): Block[A] = {
-    if (isDone) s else run(runOnce(s))
   }
   override def transformStm(stm: Stm): Exp[Any] = stm match {
     case TP(sym, rhs) => 
@@ -191,5 +202,6 @@ trait WorklistTransformer extends ForwardTransformer { // need backward version,
           super.transformStm(stm)
       }
   }
+  override def getInfoString = nextSubst.toString
 
 }

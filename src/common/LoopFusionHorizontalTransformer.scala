@@ -206,6 +206,15 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
   def printdbg(x: => Any) { if (verbosity >= 2) System.err.println(" " * indent + x) }
   def printlog(x: => Any) { if (verbosity >= 1) System.err.println(" " * indent + x) }
 
+  // FixPointTransformer methods, horizontal fusion should only run once
+  def getInfoString = "LoopFusionHorizontalTransformer only runs once"
+  var hasRunOnce = false
+  def isDone = hasRunOnce
+  def runOnce[A:Manifest](s: Block[A]): Block[A] = {
+    val newBlock = transformBlock(s)
+    hasRunOnce = true
+    newBlock
+  }
 
   // Set correct current fusion scope
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
@@ -230,12 +239,12 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
         // fuse with existing set if one found, otherwise start new set
         // fusion just means remapping the loop index to the index used by the set
         // calculate innerScope to be used for transforming the loop body
-        val innerScope = current.getLoopSet(sym) match {
+        val (innerScope, checkIndex) = current.getLoopSet(sym) match {
           case Some(horizontal) => // case 1. loop contained in existing
             printlog("(HFT) Fusing " + sym + " with containing fusion set " + horizontal)
             assert(loop.size == horizontal.shape, "Error: HFT with different shapes")
-            fuse(sym, loop.v, horizontal.index)
-            horizontal.innerScope
+            val checkIndex = fuse(sym, loop.v, horizontal.index)
+            (horizontal.innerScope, checkIndex)
 
           case None => 
             val (setToFuse, setToFuseEffectful) = 
@@ -248,12 +257,12 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
               case Some(fusedLoopSet) => // case 2. compatible existing set
                 printlog("(HFT) Fusing " + sym + " with fusion set " + fusedLoopSet)
                 assert(loop.size == fusedLoopSet.shape, "Error: HFT with different shapes 2")
-                fuse(sym, loop.v, fusedLoopSet.index)
-                current.recordAddLoop(fusedLoopSet, setToFuse, setToFuseEffectful)
+                val checkIndex = fuse(sym, loop.v, fusedLoopSet.index)
+                (current.recordAddLoop(fusedLoopSet, setToFuse, setToFuseEffectful), checkIndex)
 
               case None => // case 3. start a new fusion set
                 printdbg("(HFT) Recording " + sym + ", no fusion")
-                current.recordNewLoop(sym, loop.size, loop.v, setToFuse, setToFuseEffectful)
+                (current.recordNewLoop(sym, loop.size, loop.v, setToFuse, setToFuseEffectful), None)
             }
         }
         
@@ -263,8 +272,24 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
         val superTransformedStm = super.transformStm(stm)
         AllFusionScopes.remove(blocks(loop))
 
-        // book keeping
-        current.recordRealLoop(sym, superTransformedStm)
+        // TODO make log warnings?
+        checkIndex.foreach({ index =>
+          if (superTransformedStm == sym)
+            sys.error("(HFT) ERROR: loop index remapping was not successful, aborting fusion of " + stm + ", mirroring returned the same loop: " + superTransformedStm)
+          else {
+            superTransformedStm match {
+              case Def(LoopOrReflectedLoop(loop, _)) => 
+                if (loop.v != index) {
+                  sys.error("(HFT) ERROR: loop index remapping to " + index + " was not successful, aborting fusion of " + stm + ", mirroring returned: " + loop)
+                } else {
+                  // book keeping
+                  current.recordRealLoop(sym, superTransformedStm)
+                }
+              case _ => sys.error("(HFT) ERROR: loop index remapping was not successful, aborting fusion of " + stm +
+                ", mirroring returned something that isn't a loop: " + superTransformedStm + " = " + findDefinition(superTransformedStm.asInstanceOf[Sym[Any]]))
+            }
+          }
+        })
 
         // don't want to change other indices, TODO reset to old (see fuse)
         subst -= loop.v
@@ -317,7 +342,8 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
   /** Adds a substitution from the old to the new index. */
   def fuse(sym: Sym[Any], oldIndex: Sym[Int], newIndex: Sym[Int]) = {
     if (oldIndex == newIndex) {
-      printdbg("(HFT) - already using same index " + oldIndex)   
+      printdbg("(HFT) - already using same index " + oldIndex)
+      None
     } else {
       printdbg("(HFT) - remapping index: " + oldIndex + " -> " + newIndex)
       subst.get(oldIndex) match {
@@ -333,6 +359,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
         case None => // new substitution
       }
       subst += (oldIndex -> newIndex)
+      Some(newIndex)
     }
   }
 

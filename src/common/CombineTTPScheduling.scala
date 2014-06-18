@@ -10,7 +10,7 @@ package common
   * use to prevent duplication of code and computations.
   */
 trait CombineTTPScheduling extends internal.FatBlockTraversal {
-  val IR: LoopFusionCore
+  val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
 
   // Assuming that the first focusExactScopeFat call contains the full scope
