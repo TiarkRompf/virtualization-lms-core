@@ -55,7 +55,7 @@ trait CLikeGenCastingOps extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         //case RepIsInstanceOf(x,mA,mB) => //TODO: How?
-        case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, "(%s) %s".format(remap(mB),quote(x)))
+        case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, "(%s) %s".format(remapWithRef(mB),quote(x)))
         case _ => super.emitNode(sym, rhs)
       }
     }
