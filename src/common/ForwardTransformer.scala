@@ -161,13 +161,32 @@ trait PreservingForwardTransformer extends FixPointTransformer {
     stm match {
     case TP(sym, rhs@Reflect(_, _, _)) =>
       self_mirror(sym, rhs)
-    case TP(sym, rhs) if ((syms(rhs) ++ boundSyms(rhs)).exists(subst contains _) || !blocks(rhs).isEmpty) =>
+    case TP(sym, rhs) if (needsSubst(rhs) || needsRecursion(rhs)) =>
       self_mirror(sym, rhs)
     case TP(sym, rhs) => // no mirroring, preserve statements
       if (!globalDefs.contains(stm)) 
         reflectSubGraph(List(stm))
       sym
   }}
+
+  def needsSubst(e: Any) = (syms(e) ++ boundSyms(e)).exists(subst contains _)
+  def needsRecursion(e: Any) = !blocks(e).isEmpty || hasFuncs(e)
+  def hasFuncs(e: Any): Boolean = e match {
+    case _: Function0[_] | _: Function1[_,_] | _: Function2[_,_,_] | _: Function3[_,_,_,_] |
+         _: Function4[_,_,_,_,_] | _: Function5[_,_,_,_,_,_] | _: Function6[_,_,_,_,_,_,_] |
+         _: Function7[_,_,_,_,_,_,_,_] | _: Function8[_,_,_,_,_,_,_,_,_] | _: Function9[_,_,_,_,_,_,_,_,_,_] |
+         _: Function10[_,_,_,_,_,_,_,_,_,_,_] | _: Function11[_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function12[_,_,_,_,_,_,_,_,_,_,_,_,_] | _: Function13[_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function14[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | _: Function15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | _: Function17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] => true
+    case p: Product => p.productIterator.exists(hasFuncs(_))
+    case _ => false
+  }
 }
 
 trait WorklistTransformer extends FixPointTransformer { // need backward version, too?
