@@ -76,7 +76,7 @@ val x28 = println(x27)
 -- horizontal transformation
 (HFT) Recording Sym(8), no fusion
   (HFT) Recording if-sym Sym(7), no fusion
-(HFT) Fusing Sym(26) with containing fusion set FusedLoopSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(26), Sym(8)))
+(HFT) Fusing Sym(26) with containing fusion set FusedLoopSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(26), Sym(8), Sym(16)))
 (HFT) - already using same index Sym(1)
   (HFT) Fusing Sym(25) with fusion set FusedIfSet(cond = Sym(3), ifSyms = List(Sym(7)))
 
@@ -108,13 +108,13 @@ val x27 = x26.apply(0)
 val x31 = println(x27)
 
 -- fusion
-(FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(8)),List(SimpleLoop(Sym(0),Sym(1),MultiArrayElem(Block(Sym(7))))),SimpleFatLoop(Sym(0),Sym(1),List(MultiArrayElem(Block(Sym(7))))))
-TTP(List(Sym(26)),List(SimpleLoop(Sym(0),Sym(1),MultiArrayElem(Block(Sym(25))))),SimpleFatLoop(Sym(0),Sym(1),List(MultiArrayElem(Block(Sym(25))))))
-
-(FTO) Fusing these ifs into one fat TTP: 
+(CTS) Fusing these ifs into one fat TTP: 
 TTP(List(Sym(7)),List(IfThenElse(Sym(3),Block(Sym(4)),Block(Sym(6)))),SimpleFatIfThenElse(Sym(3),List(Block(Sym(4))),List(Block(Sym(6)))))
 TTP(List(Sym(25)),List(IfThenElse(Sym(3),Block(Sym(24)),Block(Sym(22)))),SimpleFatIfThenElse(Sym(3),List(Block(Sym(24))),List(Block(Sym(22)))))
+
+(CTS) Fusing these loops into one fat TTP: 
+TTP(List(Sym(8)),List(SimpleLoop(Sym(0),Sym(1),MultiArrayElem(Block(Sym(7))))),SimpleFatLoop(Sym(0),Sym(1),List(MultiArrayElem(Block(Sym(7))))))
+TTP(List(Sym(26)),List(SimpleLoop(Sym(0),Sym(1),MultiArrayElem(Block(Sym(25))))),SimpleFatLoop(Sym(0),Sym(1),List(MultiArrayElem(Block(Sym(25))))))
 
 val x8_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 val x26_builder = new scala.collection.mutable.ArrayBuilder.ofInt

@@ -104,9 +104,9 @@ val x43 = println(x42)
 
 -- horizontal transformation
 (HFT) Recording Sym(31), no fusion
-(HFT) Fusing Sym(8) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(5), loopSyms = List(Sym(31), Sym(8)))
+(HFT) Fusing Sym(8) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(5), loopSyms = List(Sym(31), Sym(8), Sym(14)))
 (HFT) - already using same index Sym(5)
-(HFT) The candidate Sym(41) and its set (List(Sym(36), Sym(41))) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(5), loopSyms = List(Sym(31), Sym(8))) because the candidate set depends on Sym(8)
+(HFT) The candidate Sym(41) and its set (List(Sym(41), Sym(36), Sym(23))) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(5), loopSyms = List(Sym(31), Sym(8), Sym(14))) because the candidate set depends on Sym(8)
 (HFT) Recording Sym(41), no fusion
 
 (HFT) all horizontally fused: List(Sym(31), Sym(8))
@@ -138,7 +138,7 @@ val x42 = x41.apply(0)
 val x46 = println(x42)
 
 -- fusion
-(FTO) Fusing these loops into one fat TTP: 
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(31)),List(SimpleLoop(Const(100),Sym(5),MultiArrayElem(Block(Sym(30))))),SimpleFatLoop(Const(100),Sym(5),List(MultiArrayElem(Block(Sym(30))))))
 TTP(List(Sym(8)),List(SimpleLoop(Const(100),Sym(5),MultiArrayElem(Block(Sym(7))))),SimpleFatLoop(Const(100),Sym(5),List(MultiArrayElem(Block(Sym(7))))))
 

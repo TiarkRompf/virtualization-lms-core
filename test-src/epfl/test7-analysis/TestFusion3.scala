@@ -65,7 +65,6 @@ trait Runner /*extends internal.ScalaCompile*/ {
       println("\n-- vertical transformation")
 
       val v = verticalTransf.transformBlock(y)
-      // TODO how to transmit state more cleanly?
       val vFused = verticalTransf.FusedSyms.getFusedSyms
       println("\n(VFT) all vertically fused: " + vFused.values.toList.distinct.map(_._1).mkString("\n"))
 
@@ -80,7 +79,6 @@ trait Runner /*extends internal.ScalaCompile*/ {
 
 
       println("\n-- horizontal transformation")
-      horTransf.setVerticallyFusedSyms(vFused)
       val h = horTransf.transformBlock(v)
 
       val hFused = horTransf.AllFusionScopes.get

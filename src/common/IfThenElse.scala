@@ -70,11 +70,11 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
     // (see TestMutation, for now sticking to old behavior)
     
     ////reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
-    reflectEffectInternal(IfThenElse(cond,a,b).copyMirroredCanBeFused(oldDef), ae orElse be)
+    reflectEffectInternal(IfThenElse(cond,a,b).copyCanBeFused(oldDef), ae orElse be)
   }
   
   override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
-    case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b)).copyMirroredCanBeFused(e)
+    case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b)).copyCanBeFused(e)
     case _ => super.mirrorDef(e,f)
   }
   
@@ -83,12 +83,12 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
       if (f.hasContext)
         __ifThenElseCopy(f(c),f.reflectBlock(a),f.reflectBlock(b), e)
       else
-        reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)).copyMirroredCanBeFused(e), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+        reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)).copyCanBeFused(e), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case IfThenElse(c,a,b) => 
       if (f.hasContext)
         __ifThenElseCopy(f(c),f.reflectBlock(a),f.reflectBlock(b), e)
       else
-        IfThenElse(f(c),f(a),f(b)).copyMirroredCanBeFused(e) // FIXME: should apply pattern rewrites (ie call smart constructor)
+        IfThenElse(f(c),f(a),f(b)).copyCanBeFused(e) // FIXME: should apply pattern rewrites (ie call smart constructor)
     case _ => super.mirror(e,f)
   }
 
@@ -237,12 +237,12 @@ trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen {
 
   override def fatten(e: Stm): Stm = e match {
     case TP(sym, o: AbstractIfThenElse[_]) => 
-      TTP(List(sym), List(o), SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)).copyMirroredCanBeFused(o))
+      TTP(List(sym), List(o), SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)).copyCanBeFused(o))
     case TP(sym, p @ Reflect(o: AbstractIfThenElse[_], u, es)) => //if !u.maySimple && !u.mayGlobal =>  // contrary, fusing will not change observable order
       // assume body will reflect, too...
       if (!shouldFattenEffectfulLoops()) // Old loop fusion legacy mode
         printdbg("-- fatten effectful if/then/else " + e)
-      val e2 = SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)).copyMirroredCanBeFused(o) 
+      val e2 = SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)).copyCanBeFused(o) 
       e2.extradeps = es //HACK
       TTP(List(sym), List(p), e2)
     case _ => super.fatten(e)

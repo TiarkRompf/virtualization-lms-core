@@ -132,14 +132,14 @@ val x43 = println(x42)
 -- horizontal transformation
 (HFT) Recording Sym(6), no fusion
   (HFT) Recording Sym(5), no fusion
-(HFT) Fusing Sym(33) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(33), Sym(6), Sym(41)))
+(HFT) Fusing Sym(33) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(41), Sym(20), Sym(33), Sym(6), Sym(14)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(32) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(32), Sym(5), Sym(40)))
+  (HFT) Fusing Sym(32) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(40), Sym(5), Sym(32)))
   (HFT) - already using same index Sym(2)
     (HFT) Recording Sym(31), no fusion
-(HFT) Fusing Sym(41) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(33), Sym(6), Sym(41)))
+(HFT) Fusing Sym(41) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(41), Sym(20), Sym(33), Sym(6), Sym(14)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(40) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(32), Sym(5), Sym(40)))
+  (HFT) Fusing Sym(40) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(40), Sym(5), Sym(32)))
   (HFT) - already using same index Sym(2)
     (HFT) Fusing Sym(39) with containing fusion set FusedLoopSet(shape = Sym(3), indexSym = Sym(10), loopSyms = List(Sym(31), Sym(39)))
     (HFT) - already using same index Sym(10)
@@ -200,19 +200,19 @@ val x42 = x41.apply(0)
 val x47 = println(x42)
 
 -- fusion
-(FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(31)),List(SimpleLoop(Sym(3),Sym(10),MultiArrayElem(Block(Sym(30))))),SimpleFatLoop(Sym(3),Sym(10),List(MultiArrayElem(Block(Sym(30))))))
-TTP(List(Sym(39)),List(SimpleLoop(Sym(3),Sym(10),MultiArrayElem(Block(Sym(38))))),SimpleFatLoop(Sym(3),Sym(10),List(MultiArrayElem(Block(Sym(38))))))
-
-(FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(5)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(4))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(4))))))
-TTP(List(Sym(32)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(31))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(31))))))
-TTP(List(Sym(40)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(39))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(39))))))
-
-(FTO) Fusing these loops into one fat TTP: 
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(6)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(5))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(5))))))
 TTP(List(Sym(33)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(32))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(32))))))
 TTP(List(Sym(41)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(40))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(40))))))
+
+(CTS) Fusing these loops into one fat TTP: 
+TTP(List(Sym(31)),List(SimpleLoop(Sym(3),Sym(10),MultiArrayElem(Block(Sym(30))))),SimpleFatLoop(Sym(3),Sym(10),List(MultiArrayElem(Block(Sym(30))))))
+TTP(List(Sym(39)),List(SimpleLoop(Sym(3),Sym(10),MultiArrayElem(Block(Sym(38))))),SimpleFatLoop(Sym(3),Sym(10),List(MultiArrayElem(Block(Sym(38))))))
+
+(CTS) Fusing these loops into one fat TTP: 
+TTP(List(Sym(5)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(4))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(4))))))
+TTP(List(Sym(32)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(31))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(31))))))
+TTP(List(Sym(40)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(39))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(39))))))
 
 val x6_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 val x33_builder = new scala.collection.mutable.ArrayBuilder.ofInt

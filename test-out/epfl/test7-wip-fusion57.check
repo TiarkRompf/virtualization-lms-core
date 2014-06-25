@@ -122,13 +122,13 @@ val x61 = println(x60)
 -- horizontal transformation
 (HFT) Recording Sym(42), no fusion
 (HFT) - new loop symbol: Sym(42) -> Sym(67)
-(HFT) Fusing Sym(4) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4)))
+(HFT) Fusing Sym(4) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4), Sym(12)))
 (HFT) - already using same index Sym(1)
-(HFT) The candidate Sym(49) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4))) because the candidate set depends on Sym(42)
+(HFT) The candidate Sym(49) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4), Sym(12))) because the candidate set depends on Sym(42)
 (HFT) Recording Sym(49), no fusion
 (HFT) - new loop symbol: Sym(49) -> Sym(72)
 (HFT) The candidate Sym(55) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(49))) because the candidate set depends on Sym(49)
-(HFT) The candidate Sym(55) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4))) because the candidate set depends on Sym(4)
+(HFT) The candidate Sym(55) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4), Sym(12))) because the candidate set depends on Sym(4)
 (HFT) Recording Sym(55), no fusion
 (HFT) - new loop symbol: Sym(55) -> Sym(77)
 
@@ -169,7 +169,7 @@ val x82 = x77.apply(0)
 val x83 = println(x82)
 
 -- fusion
-(FTO) Fusing these loops into one fat TTP: 
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(67)),List(Reflect(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(66)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List())),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(66))))))
 TTP(List(Sym(4)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(3))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(3))))))
 

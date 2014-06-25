@@ -177,15 +177,15 @@ val x43 = x42.apply(0)
 val x44 = println(x43)
 
 -- fusion
-(FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(5)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(4))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(4))))))
-TTP(List(Sym(35)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(34))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(34))))))
-TTP(List(Sym(41)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(40))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(40))))))
-
-(FTO) Fusing these loops into one fat TTP: 
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(6)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(5))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(5))))))
 TTP(List(Sym(36)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(35))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(35))))))
 TTP(List(Sym(42)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(41))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(41))))))
+
+(CTS) Fusing these loops into one fat TTP: 
+TTP(List(Sym(5)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(4))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(4))))))
+TTP(List(Sym(35)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(34))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(34))))))
+TTP(List(Sym(41)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(40))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(40))))))
 
 val x6_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 val x36_builder = new scala.collection.mutable.ArrayBuilder.ofInt

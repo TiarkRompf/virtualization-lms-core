@@ -108,7 +108,7 @@ val x42 = println(x41)
   (HFT) Recording Sym(6), no fusion
   (HFT) Fusing Sym(31) with fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(2), loopSyms = List(Sym(6)))
   (HFT) - already using same index Sym(2)
-  (HFT) Fusing Sym(36) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(2), loopSyms = List(Sym(6), Sym(31), Sym(36)))
+  (HFT) Fusing Sym(36) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(2), loopSyms = List(Sym(6), Sym(36), Sym(31), Sym(17)))
   (HFT) - already using same index Sym(2)
 
 (HFT) all horizontally fused: List(Sym(6), Sym(31), Sym(36))
@@ -146,7 +146,7 @@ val x41 = x40.apply(0)
 val x44 = println(x41)
 
 -- fusion
-(FTO) Fusing these loops into one fat TTP: 
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(6)),List(SimpleLoop(Const(100),Sym(2),MultiArrayElem(Block(Sym(5))))),SimpleFatLoop(Const(100),Sym(2),List(MultiArrayElem(Block(Sym(5))))))
 TTP(List(Sym(31)),List(SimpleLoop(Const(100),Sym(2),MultiArrayElem(Block(Sym(30))))),SimpleFatLoop(Const(100),Sym(2),List(MultiArrayElem(Block(Sym(30))))))
 TTP(List(Sym(36)),List(SimpleLoop(Const(100),Sym(2),MultiArrayElem(Block(Sym(35))))),SimpleFatLoop(Const(100),Sym(2),List(MultiArrayElem(Block(Sym(35))))))

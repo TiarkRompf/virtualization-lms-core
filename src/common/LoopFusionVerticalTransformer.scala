@@ -65,6 +65,24 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
           fusedSyms.put(pSym, set)
         })
       })
+      // Update CanBeFused information for next transformers
+      pSym match {
+        case Def(EatReflect(pCBF: CanBeFused)) => cSym match {
+          case Def(EatReflect(cCBF: CanBeFused)) => 
+            pCBF.registerFusion(cCBF)
+            def addToProd(s: Sym[Any]) = s match {
+              case Def(EatReflect(c: CanBeFused)) => pCBF.registerFusion(c)
+              case _ => printdbg("(VFT) warning: cannot register as fused because " + s + " isn't a CanBeFused: " + s + " = " + findDefinition(s))
+            }
+            val (oldOther, newOther) = otherProds.unzip
+            oldOther.foreach(addToProd)
+            newOther.foreach(addToProd)
+            addToProd(newCSym)
+                        
+          case _ => sys.error("(VFT) Error when recording vertical fusion: consumer isn't CanBeFused: " + cSym + " = " + findDefinition(cSym))
+        }
+        case _ => sys.error("(VFT) Error when recording vertical fusion: producer isn't CanBeFused: " + pSym + " = " + findDefinition(pSym))
+      }
     }
 
     def getSet(pSym: Sym[Any]): Option[FSet] = fusedSyms.get(pSym)

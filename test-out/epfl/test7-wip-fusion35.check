@@ -150,16 +150,16 @@ val x52 = println(x51)
 -- horizontal transformation
 (HFT) Recording Sym(6), no fusion
   (HFT) Recording Sym(5), no fusion
-(HFT) Fusing Sym(42) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(50), Sym(6)))
+(HFT) Fusing Sym(42) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(50), Sym(26), Sym(42), Sym(6), Sym(20)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(41) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(5), Sym(41), Sym(49)))
+  (HFT) Fusing Sym(41) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(49), Sym(5), Sym(41)))
   (HFT) - already using same index Sym(2)
     (HFT) Recording Sym(40), no fusion
-(HFT) Fusing Sym(50) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(50), Sym(6)))
+(HFT) Fusing Sym(50) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(50), Sym(26), Sym(42), Sym(6), Sym(20)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(49) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(5), Sym(41), Sym(49)))
+  (HFT) Fusing Sym(49) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(49), Sym(5), Sym(41)))
   (HFT) - already using same index Sym(2)
-    (HFT) Fusing Sym(48) with containing fusion set FusedLoopSet(shape = Sym(3), indexSym = Sym(10), loopSyms = List(Sym(37), Sym(48), Sym(40)))
+    (HFT) Fusing Sym(48) with containing fusion set FusedLoopSet(shape = Sym(3), indexSym = Sym(10), loopSyms = List(Sym(48), Sym(40), Sym(37), Sym(19)))
     (HFT) - already using same index Sym(10)
 
 (HFT) all horizontally fused: List(Sym(40), Sym(48))
@@ -220,19 +220,19 @@ val x51 = x50.apply(0)
 val x56 = println(x51)
 
 -- fusion
-(FTO) Fusing these loops into one fat TTP: 
-TTP(List(Sym(40)),List(SimpleLoop(Sym(3),Sym(10),MultiArrayElem(Block(Sym(39))))),SimpleFatLoop(Sym(3),Sym(10),List(MultiArrayElem(Block(Sym(39))))))
-TTP(List(Sym(48)),List(SimpleLoop(Sym(3),Sym(10),MultiArrayElem(Block(Sym(47))))),SimpleFatLoop(Sym(3),Sym(10),List(MultiArrayElem(Block(Sym(47))))))
-
-(FTO) Fusing these loops into one fat TTP: 
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(5)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(4))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(4))))))
 TTP(List(Sym(41)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(40))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(40))))))
 TTP(List(Sym(49)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(48))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(48))))))
 
-(FTO) Fusing these loops into one fat TTP: 
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(6)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(5))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(5))))))
 TTP(List(Sym(42)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(41))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(41))))))
 TTP(List(Sym(50)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(49))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(49))))))
+
+(CTS) Fusing these loops into one fat TTP: 
+TTP(List(Sym(40)),List(SimpleLoop(Sym(3),Sym(10),MultiArrayElem(Block(Sym(39))))),SimpleFatLoop(Sym(3),Sym(10),List(MultiArrayElem(Block(Sym(39))))))
+TTP(List(Sym(48)),List(SimpleLoop(Sym(3),Sym(10),MultiArrayElem(Block(Sym(47))))),SimpleFatLoop(Sym(3),Sym(10),List(MultiArrayElem(Block(Sym(47))))))
 
 val x6_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 val x42_builder = new scala.collection.mutable.ArrayBuilder.ofInt

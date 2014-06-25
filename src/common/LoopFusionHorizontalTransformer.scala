@@ -9,12 +9,6 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
   val IR: LoopFusionCore
   import IR.{__newVar => _, _}
 
-  /** Sets of vertically fused loops (with effect flag: true if effectful)
-    * must be horizontally fused if they have survived DCE, otherwise we're
-    * duplicating work. */
-  private var verticallyFusedSyms = HashMap[Sym[Any], (List[Sym[Any]], Boolean)]()
-  def setVerticallyFusedSyms(map: HashMap[Sym[Any], (List[Sym[Any]], Boolean)]) = { verticallyFusedSyms = map }
-
   // TODO dedup
   type EffectTuple = Option[(Summary, List[Exp[Any]])]
   object LoopOrReflectedLoop {
@@ -102,7 +96,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
     def getAllFusedIfs(syms: List[Sym[Any]]): List[Sym[Any]] = (syms ++ syms.flatMap(getIfSet(_).map(_.syms).getOrElse(Nil)))
     
     // Start a new fusion set
-    def recordNewLoop(sym: Sym[Any], shape: Exp[Int], index: Sym[Int], syms: List[Sym[Any]], effectful: Boolean) = {
+    def recordNewLoop(shape: Exp[Int], index: Sym[Int], syms: List[Sym[Any]], effectful: Boolean) = {
       val setIndex = loopSets.length
       val set = FusedLoopSet(shape, index, syms, setIndex, new FusionScope, effectful)
       loopSets = set :: loopSets
@@ -231,7 +225,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
    * 1. check if loop contained in existing (because it was vertically fused with existing)
    * 2. check if there's an existing set with correct shape and no dependencies
    * 3. start a new fusion set
-   * If-fusion sets: only 2) and then 3)
+   * If-fusion sets: only 2) and then 3) <- TODO all CanBeFused might be fused before this transf.
    */
   override def transformStm(stm: Stm): Exp[Any] = {
     val transfStm = stm match {
@@ -247,8 +241,26 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
             (horizontal.innerScope, checkIndex)
 
           case None => 
-            val (setToFuse, setToFuseEffectful) = 
-              verticallyFusedSyms.get(sym).getOrElse((List(sym), effects.isDefined))
+            // check whether previous transformers have already fused loop with other loops
+            // and then try to merge that fusion set with an existing one
+            var setToFuseEffectful = effects.isDefined
+            val setToFuse = loop.getFusedSet match {
+              case None => List(sym)
+              case Some(fusedDefs) =>
+                // ignore fat defs, they're added by fattening, but are already
+                // present in their slim forms
+                val defs = fusedDefs.filter({ case d: Def[_] => true case _ => false })
+                defs.map({ d => 
+                  globalDefs.collect({ 
+                      case TP(fusedSym, `d`) => fusedSym
+                      case TP(fusedSym, Reflect(`d`, _, _)) => setToFuseEffectful = true; fusedSym
+                  }) match {
+                    case Nil => sys.error("(HFT) No statements/symbols found for definition. Def: " + d)
+                    case fusedSym :: Nil => fusedSym
+                    case list => sys.error("(HFT) Multiple statements/symbols found for definition. Def: " + d + ", syms: " + list)
+                  }
+                })
+            }
             val existing = current.getByShape(loop.size)
               .filter({ candidate => checkIndep(sym, candidate, setToFuse) })
               .filter({ candidate => checkEffects(sym, candidate, setToFuse, setToFuseEffectful) })
@@ -262,7 +274,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
 
               case None => // case 3. start a new fusion set
                 printdbg("(HFT) Recording " + sym + ", no fusion")
-                (current.recordNewLoop(sym, loop.size, loop.v, setToFuse, setToFuseEffectful), None)
+                (current.recordNewLoop(loop.size, loop.v, setToFuse, setToFuseEffectful), None)
             }
         }
         
@@ -273,23 +285,25 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
         AllFusionScopes.remove(blocks(loop))
 
         // TODO make log warnings?
-        checkIndex.foreach({ index =>
-          if (superTransformedStm == sym)
-            sys.error("(HFT) ERROR: loop index remapping was not successful, aborting fusion of " + stm + ", mirroring returned the same loop: " + superTransformedStm)
-          else {
-            superTransformedStm match {
-              case Def(LoopOrReflectedLoop(loop, _)) => 
-                if (loop.v != index) {
-                  sys.error("(HFT) ERROR: loop index remapping to " + index + " was not successful, aborting fusion of " + stm + ", mirroring returned: " + loop)
-                } else {
-                  // book keeping
-                  current.recordRealLoop(sym, superTransformedStm)
-                }
-              case _ => sys.error("(HFT) ERROR: loop index remapping was not successful, aborting fusion of " + stm +
-                ", mirroring returned something that isn't a loop: " + superTransformedStm + " = " + findDefinition(superTransformedStm.asInstanceOf[Sym[Any]]))
+        checkIndex match {
+          case Some(index) =>
+            if (superTransformedStm == sym)
+              sys.error("(HFT) ERROR: loop index remapping was not successful, aborting fusion of " + stm + ", mirroring returned the same loop: " + superTransformedStm)
+            else {
+              superTransformedStm match {
+                case Def(LoopOrReflectedLoop(loop, _)) =>
+                  if (loop.v != index) {
+                    sys.error("(HFT) ERROR: loop index remapping to " + index + " was not successful, aborting fusion of " + stm + ", mirroring returned: " + loop)
+                  } else {
+                    // book keeping
+                    current.recordRealLoop(sym, superTransformedStm)
+                  }
+                case _ => sys.error("(HFT) ERROR: loop index remapping was not successful, aborting fusion of " + stm +
+                  ", mirroring returned something that isn't a loop: " + superTransformedStm + " = " + findDefinition(superTransformedStm.asInstanceOf[Sym[Any]]))
+              }
             }
-          }
-        })
+          case None => current.recordRealLoop(sym, superTransformedStm)
+        }
 
         // don't want to change other indices, TODO reset to old (see fuse)
         subst -= loop.v

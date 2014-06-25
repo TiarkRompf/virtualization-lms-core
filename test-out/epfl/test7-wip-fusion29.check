@@ -276,28 +276,28 @@ val x108 = println(x107)
 (HFT) Recording Sym(66), no fusion
   (HFT) Recording if-sym Sym(65), no fusion
 (HFT) Recording Sym(67), no fusion
-(HFT) Fusing Sym(78) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(88), Sym(106), Sym(66), Sym(97), Sym(78), Sym(9)))
+(HFT) Fusing Sym(78) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(106), Sym(97), Sym(88), Sym(78), Sym(9), Sym(66)))
 (HFT) - already using same index Sym(2)
   (HFT) Fusing Sym(77) with fusion set FusedIfSet(cond = Sym(3), ifSyms = List(Sym(65)))
     (HFT) Recording if-sym Sym(76), no fusion
-(HFT) Fusing Sym(79) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(10), Sym(98), Sym(89), Sym(67), Sym(107), Sym(79)))
+(HFT) Fusing Sym(79) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(107), Sym(50), Sym(98), Sym(40), Sym(89), Sym(32), Sym(79), Sym(25), Sym(67), Sym(10), Sym(16)))
 (HFT) - already using same index Sym(1)
-(HFT) Fusing Sym(88) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(88), Sym(106), Sym(66), Sym(97), Sym(78), Sym(9)))
+(HFT) Fusing Sym(88) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(106), Sym(97), Sym(88), Sym(78), Sym(9), Sym(66)))
 (HFT) - already using same index Sym(2)
   (HFT) Fusing Sym(87) with fusion set FusedIfSet(cond = Sym(3), ifSyms = List(Sym(65), Sym(77)))
     (HFT) Recording Sym(86), no fusion
-(HFT) Fusing Sym(89) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(10), Sym(98), Sym(89), Sym(67), Sym(107), Sym(79)))
+(HFT) Fusing Sym(89) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(107), Sym(50), Sym(98), Sym(40), Sym(89), Sym(32), Sym(79), Sym(25), Sym(67), Sym(10), Sym(16)))
 (HFT) - already using same index Sym(1)
-(HFT) Fusing Sym(97) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(88), Sym(106), Sym(66), Sym(97), Sym(78), Sym(9)))
+(HFT) Fusing Sym(97) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(106), Sym(97), Sym(88), Sym(78), Sym(9), Sym(66)))
 (HFT) - already using same index Sym(2)
   (HFT) Fusing Sym(96) with fusion set FusedIfSet(cond = Sym(3), ifSyms = List(Sym(65), Sym(77), Sym(87)))
-(HFT) Fusing Sym(98) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(10), Sym(98), Sym(89), Sym(67), Sym(107), Sym(79)))
+(HFT) Fusing Sym(98) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(107), Sym(50), Sym(98), Sym(40), Sym(89), Sym(32), Sym(79), Sym(25), Sym(67), Sym(10), Sym(16)))
 (HFT) - already using same index Sym(1)
-(HFT) Fusing Sym(106) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(88), Sym(106), Sym(66), Sym(97), Sym(78), Sym(9)))
+(HFT) Fusing Sym(106) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(106), Sym(97), Sym(88), Sym(78), Sym(9), Sym(66)))
 (HFT) - already using same index Sym(2)
   (HFT) Fusing Sym(105) with fusion set FusedIfSet(cond = Sym(3), ifSyms = List(Sym(65), Sym(77), Sym(87), Sym(96)))
     (HFT) Recording Sym(104), no fusion
-(HFT) Fusing Sym(107) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(10), Sym(98), Sym(89), Sym(67), Sym(107), Sym(79)))
+(HFT) Fusing Sym(107) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(107), Sym(50), Sym(98), Sym(40), Sym(89), Sym(32), Sym(79), Sym(25), Sym(67), Sym(10), Sym(16)))
 (HFT) - already using same index Sym(1)
 
 (HFT) all horizontally fused: List(Sym(67), Sym(79), Sym(89), Sym(98), Sym(107))
@@ -425,21 +425,21 @@ val x107 = x47
 val x116 = println(x107)
 
 -- fusion
-(FTO) Fusing these loops into one fat TTP: 
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(66)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(65))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(65))))))
 TTP(List(Sym(78)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(77))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(77))))))
 TTP(List(Sym(88)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(87))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(87))))))
 TTP(List(Sym(97)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(96))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(96))))))
 TTP(List(Sym(106)),List(SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(105))))),SimpleFatLoop(Const(10),Sym(2),List(MultiArrayElem(Block(Sym(105))))))
 
-(FTO) Fusing these loops into one fat TTP: 
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(67)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(66))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(66))))))
 TTP(List(Sym(79)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(78))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(78))))))
 TTP(List(Sym(89)),List(SimpleLoop(Const(30),Sym(1),MultiArrayElem(Block(Sym(88))))),SimpleFatLoop(Const(30),Sym(1),List(MultiArrayElem(Block(Sym(88))))))
 TTP(List(Sym(98)),List(SimpleLoop(Const(30),Sym(1),MultiReduceElem(Block(Sym(97)),Block(Sym(39)),Const(0),Sym(37),Sym(38)))),SimpleFatLoop(Const(30),Sym(1),List(MultiReduceElem(Block(Sym(97)),Block(Sym(39)),Const(0),Sym(37),Sym(38)))))
 TTP(List(Sym(107)),List(SimpleLoop(Const(30),Sym(1),MultiReduceElem(Block(Sym(106)),Block(Sym(49)),Const(0),Sym(47),Sym(48)))),SimpleFatLoop(Const(30),Sym(1),List(MultiReduceElem(Block(Sym(106)),Block(Sym(49)),Const(0),Sym(47),Sym(48)))))
 
-(FTO) Fusing these ifs into one fat TTP: 
+(CTS) Fusing these ifs into one fat TTP: 
 TTP(List(Sym(65)),List(IfThenElse(Sym(3),Block(Sym(64)),Block(Sym(62)))),SimpleFatIfThenElse(Sym(3),List(Block(Sym(64))),List(Block(Sym(62)))))
 TTP(List(Sym(77)),List(IfThenElse(Sym(3),Block(Sym(76)),Block(Sym(71)))),SimpleFatIfThenElse(Sym(3),List(Block(Sym(76))),List(Block(Sym(71)))))
 TTP(List(Sym(87)),List(IfThenElse(Sym(3),Block(Sym(86)),Block(Sym(83)))),SimpleFatIfThenElse(Sym(3),List(Block(Sym(86))),List(Block(Sym(83)))))

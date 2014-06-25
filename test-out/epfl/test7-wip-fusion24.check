@@ -246,18 +246,18 @@ val x101 = println(x100)
 -- horizontal transformation
 (HFT) Recording Sym(64), no fusion
   (HFT) Recording if-sym Sym(63), no fusion
-(HFT) Fusing Sym(75) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(64), Sym(75), Sym(84), Sym(100), Sym(92), Sym(8)))
+(HFT) Fusing Sym(75) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(100), Sym(48), Sym(92), Sym(38), Sym(84), Sym(30), Sym(75), Sym(23), Sym(64), Sym(8), Sym(14)))
 (HFT) - already using same index Sym(1)
   (HFT) Fusing Sym(74) with fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(63)))
     (HFT) Recording if-sym Sym(73), no fusion
-(HFT) Fusing Sym(84) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(64), Sym(75), Sym(84), Sym(100), Sym(92), Sym(8)))
+(HFT) Fusing Sym(84) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(100), Sym(48), Sym(92), Sym(38), Sym(84), Sym(30), Sym(75), Sym(23), Sym(64), Sym(8), Sym(14)))
 (HFT) - already using same index Sym(1)
   (HFT) Fusing Sym(83) with fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(63), Sym(74)))
     (HFT) Recording Sym(82), no fusion
-(HFT) Fusing Sym(92) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(64), Sym(75), Sym(84), Sym(100), Sym(92), Sym(8)))
+(HFT) Fusing Sym(92) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(100), Sym(48), Sym(92), Sym(38), Sym(84), Sym(30), Sym(75), Sym(23), Sym(64), Sym(8), Sym(14)))
 (HFT) - already using same index Sym(1)
   (HFT) Fusing Sym(91) with fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(63), Sym(74), Sym(83)))
-(HFT) Fusing Sym(100) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(64), Sym(75), Sym(84), Sym(100), Sym(92), Sym(8)))
+(HFT) Fusing Sym(100) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(100), Sym(48), Sym(92), Sym(38), Sym(84), Sym(30), Sym(75), Sym(23), Sym(64), Sym(8), Sym(14)))
 (HFT) - already using same index Sym(1)
   (HFT) Fusing Sym(99) with fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(63), Sym(74), Sym(83), Sym(91)))
     (HFT) Recording Sym(98), no fusion
@@ -366,19 +366,19 @@ val x100 = x45
 val x109 = println(x100)
 
 -- fusion
-(FTO) Fusing these ifs into one fat TTP: 
-TTP(List(Sym(63)),List(IfThenElse(Sym(2),Block(Sym(62)),Block(Sym(60)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(62))),List(Block(Sym(60)))))
-TTP(List(Sym(74)),List(IfThenElse(Sym(2),Block(Sym(73)),Block(Sym(68)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(73))),List(Block(Sym(68)))))
-TTP(List(Sym(83)),List(IfThenElse(Sym(2),Block(Sym(82)),Block(Sym(79)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(82))),List(Block(Sym(79)))))
-TTP(List(Sym(91)),List(IfThenElse(Sym(2),Block(Sym(90)),Block(Sym(88)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(90))),List(Block(Sym(88)))))
-TTP(List(Sym(99)),List(IfThenElse(Sym(2),Block(Sym(98)),Block(Sym(95)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(98))),List(Block(Sym(95)))))
-
-(FTO) Fusing these loops into one fat TTP: 
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(64)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(63))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(63))))))
 TTP(List(Sym(75)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(74))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(74))))))
 TTP(List(Sym(84)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(83))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(83))))))
 TTP(List(Sym(92)),List(SimpleLoop(Const(100),Sym(1),MultiReduceElem(Block(Sym(91)),Block(Sym(37)),Const(0),Sym(35),Sym(36)))),SimpleFatLoop(Const(100),Sym(1),List(MultiReduceElem(Block(Sym(91)),Block(Sym(37)),Const(0),Sym(35),Sym(36)))))
 TTP(List(Sym(100)),List(SimpleLoop(Const(100),Sym(1),MultiReduceElem(Block(Sym(99)),Block(Sym(47)),Const(0),Sym(45),Sym(46)))),SimpleFatLoop(Const(100),Sym(1),List(MultiReduceElem(Block(Sym(99)),Block(Sym(47)),Const(0),Sym(45),Sym(46)))))
+
+(CTS) Fusing these ifs into one fat TTP: 
+TTP(List(Sym(63)),List(IfThenElse(Sym(2),Block(Sym(62)),Block(Sym(60)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(62))),List(Block(Sym(60)))))
+TTP(List(Sym(74)),List(IfThenElse(Sym(2),Block(Sym(73)),Block(Sym(68)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(73))),List(Block(Sym(68)))))
+TTP(List(Sym(83)),List(IfThenElse(Sym(2),Block(Sym(82)),Block(Sym(79)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(82))),List(Block(Sym(79)))))
+TTP(List(Sym(91)),List(IfThenElse(Sym(2),Block(Sym(90)),Block(Sym(88)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(90))),List(Block(Sym(88)))))
+TTP(List(Sym(99)),List(IfThenElse(Sym(2),Block(Sym(98)),Block(Sym(95)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(98))),List(Block(Sym(95)))))
 
 val x64_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 val x75_builder = new scala.collection.mutable.ArrayBuilder.ofInt

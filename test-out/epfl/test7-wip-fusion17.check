@@ -190,7 +190,7 @@ val x49 = x48.apply(0)
 val x60 = println(x49)
 
 -- fusion
-(FTO) Fusing these loops into one fat TTP: 
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(38)),List(SimpleLoop(Sym(0),Sym(7),MultiArrayElem(Block(Sym(14))))),SimpleFatLoop(Sym(0),Sym(7),List(MultiArrayElem(Block(Sym(14))))))
 TTP(List(Sym(57)),List(SimpleLoop(Sym(0),Sym(7),MultiArrayElem(Block(Sym(56))))),SimpleFatLoop(Sym(0),Sym(7),List(MultiArrayElem(Block(Sym(56))))))
 

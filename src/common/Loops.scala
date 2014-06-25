@@ -20,7 +20,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
   
   def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A])(implicit pos: SourceContext): Exp[A] = SimpleLoop(size, v, body)
-  def simpleLoopCopy[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A], oldDef: Def[A])(implicit pos: SourceContext): Exp[A] = SimpleLoop(size, v, body).copyMirroredCanBeFused(oldDef)
+  def simpleLoopCopy[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A], oldDef: Def[A])(implicit pos: SourceContext): Exp[A] = SimpleLoop(size, v, body).copyCanBeFused(oldDef)
 
 
   override def syms(e: Any): List[Sym[Any]] = e match {
@@ -49,7 +49,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case SimpleLoop(s,v,body: Def[A]) => simpleLoopCopy(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f), e)
-    case Reflect(SimpleLoop(s,v,body: Def[A]), u, es) if u == Control() => reflectMirrored(Reflect(SimpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f)).copyMirroredCanBeFused(e), mapOver(f,u), f(es)))(mtype(manifest[A]), pos) 
+    case Reflect(SimpleLoop(s,v,body: Def[A]), u, es) if u == Control() => reflectMirrored(Reflect(SimpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f)).copyCanBeFused(e), mapOver(f,u), f(es)))(mtype(manifest[A]), pos) 
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 
@@ -139,16 +139,16 @@ trait BaseLoopsTraversalFat extends FatBlockTraversal {
 
   override def fatten(e: Stm): Stm = e match {
     case TP(sym, op: AbstractLoop[_]) =>
-      TTP(List(sym), List(op), SimpleFatLoop(op.size, op.v, List(op.body)).copyMirroredCanBeFused(op))
+      TTP(List(sym), List(op), SimpleFatLoop(op.size, op.v, List(op.body)).copyCanBeFused(op))
     case TP(sym, p @ Reflect(op: AbstractLoop[_], u, es)) =>
       if (shouldFattenEffectfulLoops()) {
         // Fattening effectful loop, middle will preserve effect information
-        TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)).copyMirroredCanBeFused(op))
+        TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)).copyCanBeFused(op))
       } else { // old loop fusion legacy mode
         if (!u.maySimple && !u.mayGlobal) {
           // assume body will reflect, too. bring it on...
           printdbg("-- fatten effectful loop " + e)
-          TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)).copyMirroredCanBeFused(op))
+          TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)).copyCanBeFused(op))
         } else { 
           super.fatten(e)
         }
@@ -179,7 +179,7 @@ trait BaseLoopsTraversalFat extends FatBlockTraversal {
       }).unzip
       val (lhs, mhs) = lmhs.unzip
       // The mhs lists the original statements including their effects
-      TTP(lhs.flatten, mhs.flatten, SimpleFatLoop(shape, index, rhs.flatten).copyMirroredCanBeFused(firstLoop))
+      TTP(lhs.flatten, mhs.flatten, SimpleFatLoop(shape, index, rhs.flatten).copyCanBeFused(firstLoop))
 
     case _ =>
       super.combineFat(list)
