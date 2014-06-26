@@ -248,18 +248,18 @@ val x101 = println(x100)
   (HFT) Recording if-sym Sym(63), no fusion
 (HFT) Fusing Sym(75) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(100), Sym(48), Sym(92), Sym(38), Sym(84), Sym(30), Sym(75), Sym(23), Sym(64), Sym(8), Sym(14)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(74) with fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(63)))
+  (HFT) Fusing Sym(74) with containing fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(99), Sym(91), Sym(83), Sym(74), Sym(7), Sym(63)))
     (HFT) Recording if-sym Sym(73), no fusion
 (HFT) Fusing Sym(84) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(100), Sym(48), Sym(92), Sym(38), Sym(84), Sym(30), Sym(75), Sym(23), Sym(64), Sym(8), Sym(14)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(83) with fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(63), Sym(74)))
+  (HFT) Fusing Sym(83) with containing fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(99), Sym(91), Sym(83), Sym(74), Sym(7), Sym(63)))
     (HFT) Recording Sym(82), no fusion
 (HFT) Fusing Sym(92) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(100), Sym(48), Sym(92), Sym(38), Sym(84), Sym(30), Sym(75), Sym(23), Sym(64), Sym(8), Sym(14)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(91) with fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(63), Sym(74), Sym(83)))
+  (HFT) Fusing Sym(91) with containing fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(99), Sym(91), Sym(83), Sym(74), Sym(7), Sym(63)))
 (HFT) Fusing Sym(100) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(100), Sym(48), Sym(92), Sym(38), Sym(84), Sym(30), Sym(75), Sym(23), Sym(64), Sym(8), Sym(14)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(99) with fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(63), Sym(74), Sym(83), Sym(91)))
+  (HFT) Fusing Sym(99) with containing fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(99), Sym(91), Sym(83), Sym(74), Sym(7), Sym(63)))
     (HFT) Recording Sym(98), no fusion
 
 (HFT) all horizontally fused: List(Sym(64), Sym(75), Sym(84), Sym(92), Sym(100))

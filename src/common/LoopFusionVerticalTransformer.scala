@@ -8,7 +8,7 @@ import scala.collection.mutable.{HashMap, HashSet}
         // TODO asserts?
 
 
-trait LoopFusionVerticalTransformer extends PreservingForwardTransformer { 
+trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer { 
   val IR: LoopFusionCore
   import IR.{__newVar => _, _}
 
@@ -327,6 +327,18 @@ trait LoopFusionVerticalTransformer extends PreservingForwardTransformer {
     if (printAllTransformations) println("--transforming: " + stmShort(stm))
     
     val transformedSym = stm match {
+      case TP(sym, EatReflect(cbf: CanBeFused)) if cbf.getFusedSetID.isDefined =>
+        // We don't need to keep track of combined scopes (bodies of two fused loops
+        // will become one body of the fat TTP) because it's not possible that a
+        // producer is in one scope and the consumer in the parallel one, since the
+        // name of the producer is out of scope for the consumer.
+        // TODO is it safe to fuse if already fused?
+        // - as producer: means that combined will be fused with producer set, ok?
+        // - as consumer: would remove loop from fused set since combined will
+        //   have different shape... What takes precedence?
+        printdbg("(VFT) Not considering " + stm + " because it's already fused, CanBeFused.setID=" + cbf.getFusedSetID.get)
+        super.transformStm(stm)
+      
       case TP(_, SimpleIndex(pSym@Sym(_), cIndex@Sym(_))) => subst.get(pSym)
         .flatMap({ case newPSym@Sym(_) => getSimpleIndexReplacements(newPSym, cIndex) })
         .orElse(getSimpleIndexReplacements(pSym, cIndex))

@@ -78,7 +78,7 @@ val x28 = println(x27)
   (HFT) Recording if-sym Sym(7), no fusion
 (HFT) Fusing Sym(26) with containing fusion set FusedLoopSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(26), Sym(8), Sym(16)))
 (HFT) - already using same index Sym(1)
-  (HFT) Fusing Sym(25) with fusion set FusedIfSet(cond = Sym(3), ifSyms = List(Sym(7)))
+  (HFT) Fusing Sym(25) with containing fusion set FusedIfSet(cond = Sym(3), ifSyms = List(Sym(7), Sym(25)))
 
 (HFT) all horizontally fused: List(Sym(8), Sym(26))
 

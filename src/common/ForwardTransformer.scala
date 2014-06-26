@@ -135,8 +135,7 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
  * Delite transformers are run in a fixpoint fashion, but with a limited number of iterations.
  * At the beginning of each iteration, the info string is printed to the log.
  */
-trait FixPointTransformer extends ForwardTransformer {
-  // TODO create subclass that manages per-scope datastructures according to CanBeFused
+trait FixpointTransformer extends ForwardTransformer {
   def getInfoString: String
   def isDone: Boolean
   def runOnce[A:Manifest](s: Block[A]): Block[A]
@@ -149,7 +148,7 @@ trait FixPointTransformer extends ForwardTransformer {
  * Skip statements that don't have symbols which need substitution, unless they contain
  * blocks (need to recurse into blocks).
  */
-trait PreservingForwardTransformer extends FixPointTransformer {
+trait PreservingFixpointTransformer extends FixpointTransformer {
   import IR._
 
   // Implement optimization suggested in ForwardTransformer:
@@ -189,7 +188,7 @@ trait PreservingForwardTransformer extends FixPointTransformer {
   }
 }
 
-trait WorklistTransformer extends FixPointTransformer { // need backward version, too?
+trait WorklistTransformer extends FixpointTransformer { // need backward version, too?
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
   var curSubst: Map[Sym[Any],() => Exp[Any]] = Map.empty
@@ -222,5 +221,4 @@ trait WorklistTransformer extends FixPointTransformer { // need backward version
       }
   }
   override def getInfoString = nextSubst.toString
-
 }

@@ -150,7 +150,7 @@ val x52 = println(x51)
 (HFT) - new loop symbol: Sym(41) -> Sym(59)
 (HFT) Fusing Sym(50) with containing fusion set FusedLoopSet(shape = Sym(0), indexSym = Sym(7), loopSyms = List(Sym(38), Sym(50), Sym(41), Sym(34)))
 (HFT) - remapping index: Sym(18) -> Sym(7)
-  (HFT) Fusing Sym(49) with fusion set FusedIfSet(cond = Sym(21), ifSyms = List(Sym(25)))
+  (HFT) Fusing Sym(49) with containing fusion set FusedIfSet(cond = Sym(21), ifSyms = List(Sym(25), Sym(49)))
   (HFT) - new if symbol: Sym(49) -> Sym(65)
 (HFT) - new loop symbol: Sym(50) -> Sym(66)
 

@@ -86,6 +86,9 @@ trait CanBeFused {
         registerMerge(id1, id2)
     }
   }
+  // This should be called during mirroring, so that the fusion information
+  // survives. Usually the old node will be DCE'd, but if both nodes
+  // survive this has the side effect that they get fused.
   def copyCanBeFused(old: Any): this.type = old match {
     case c: CanBeFused =>
       fusedSetID = c.fusedSetID

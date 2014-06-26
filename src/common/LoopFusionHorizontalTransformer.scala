@@ -5,7 +5,7 @@ import util.GraphUtil
 import scala.collection.mutable.{HashMap, HashSet}
 
 // TODO document interface
-trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer { 
+trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer { 
   val IR: LoopFusionCore
   import IR.{__newVar => _, _}
 
@@ -24,6 +24,27 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
       case ite: AbstractIfThenElse[_] => Some((ite, None))
       case _ => None
     }
+  }
+  def getFusedSyms(c: CanBeFused, effectful: Boolean): Option[(List[Sym[Any]], Boolean)] = {
+    var setToFuseEffectful = effectful
+    val setToFuse = c.getFusedSet match {
+      case None => None
+      case Some(fusedDefs) =>
+        // ignore fat defs, they're added by fattening, but are already
+        // present in their slim forms
+        val defs = fusedDefs.filter({ case d: Def[_] => true case _ => false })
+        Some(defs.map({ d => 
+          globalDefs.collect({ 
+              case TP(fusedSym, `d`) => fusedSym
+              case TP(fusedSym, Reflect(`d`, _, _)) => setToFuseEffectful = true; fusedSym
+          }) match {
+            case Nil => sys.error("(HFT) No statements/symbols found for definition. Def: " + d)
+            case fusedSym :: Nil => fusedSym
+            case list => sys.error("(HFT) Multiple statements/symbols found for definition. Def: " + d + ", syms: " + list)
+          }
+        }))
+    }
+    setToFuse.map((_, setToFuseEffectful))
   }
 
   abstract class FusedSet {
@@ -110,14 +131,18 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
       }})
       set.innerScope
     }
-    def recordNewIf(sym: Sym[Any], cond: Exp[Boolean], effectful: Boolean) = {
+    def recordNewIf(cond: Exp[Boolean], syms: List[Sym[Any]], effectful: Boolean) = {
       val setIndex = ifSets.length
-      val set = FusedIfSet(cond, List(sym), setIndex, new FusionScope, new FusionScope, effectful)
+      val set = FusedIfSet(cond, syms, setIndex, new FusionScope, new FusionScope, effectful)
       ifSets = set :: ifSets
       realIfSets ::= (Nil, None)
       val indexList = setIndex :: cond2ifSets.get(cond).getOrElse(Nil)
       cond2ifSets.put(cond, indexList)
-      sym2ifSet.put(sym, setIndex)
+      set.syms.foreach({ otherSym => sym2ifSet.put(otherSym, setIndex) match {
+        case Some(old) => sys.error("FusedIfSet already had a set for symbol " + otherSym + ": " + old + " = " 
+          + getIfSet(old) + " instead of new " + set)
+        case None =>
+      }})
       (set.thenInnerScope, set.elseInnerScope)
     }
 
@@ -221,65 +246,58 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
     res
   }
 
-  /* The transformer: loop fusion sets preference is:
-   * 1. check if loop contained in existing (because it was vertically fused with existing)
-   * 2. check if there's an existing set with correct shape and no dependencies
-   * 3. start a new fusion set
-   * If-fusion sets: only 2) and then 3) <- TODO all CanBeFused might be fused before this transf.
+  /* The transformer: First find HFT set for the current type of CanBeFused (loop or if)
+   * 1. If CanBeFused already registered in a HFT set, use that set.
+   * 2. Get CanBeFused set (maybe singleton if no previous transformers fused it)
+   *  a) try to fuse set with existing HFT set
+   *    - same cond for ifs, same shape for loops
+   *    - mutually independent
+   *  b) start new HFT set
+   * 3. Fusion:
+   *  a) register fusion in CanBeFused for future transformers and CombineTTPScheduling
+   *  b) for loops, if necessary remap loop index variable so all loops have same index
+         for ifs, no substitutions, so symbols preserved unless effectful
+   *  c) use combined inner scopes to process bodies of fused loops and if/else branches
+   *     of fused ifs
    */
   override def transformStm(stm: Stm): Exp[Any] = {
     val transfStm = stm match {
+
+      // Fusion for loops remaps loop index and uses one combined scope for all bodies
       case TP(sym, LoopOrReflectedLoop(loop, effects)) => 
-        // fuse with existing set if one found, otherwise start new set
-        // fusion just means remapping the loop index to the index used by the set
-        // calculate innerScope to be used for transforming the loop body
         val (innerScope, checkIndex) = current.getLoopSet(sym) match {
-          case Some(horizontal) => // case 1. loop contained in existing
+
+          // 1. CanBeFused already registered in existing horizontal transformer set
+          case Some(horizontal) => 
             printlog("(HFT) Fusing " + sym + " with containing fusion set " + horizontal)
             assert(loop.size == horizontal.shape, "Error: HFT with different shapes")
             val checkIndex = fuse(sym, loop.v, horizontal.index)
             (horizontal.innerScope, checkIndex)
 
+          // 2. Get CanBeFused set (maybe singleton if no previous transformers fused it)
           case None => 
-            // check whether previous transformers have already fused loop with other loops
-            // and then try to merge that fusion set with an existing one
-            var setToFuseEffectful = effects.isDefined
-            val setToFuse = loop.getFusedSet match {
-              case None => List(sym)
-              case Some(fusedDefs) =>
-                // ignore fat defs, they're added by fattening, but are already
-                // present in their slim forms
-                val defs = fusedDefs.filter({ case d: Def[_] => true case _ => false })
-                defs.map({ d => 
-                  globalDefs.collect({ 
-                      case TP(fusedSym, `d`) => fusedSym
-                      case TP(fusedSym, Reflect(`d`, _, _)) => setToFuseEffectful = true; fusedSym
-                  }) match {
-                    case Nil => sys.error("(HFT) No statements/symbols found for definition. Def: " + d)
-                    case fusedSym :: Nil => fusedSym
-                    case list => sys.error("(HFT) Multiple statements/symbols found for definition. Def: " + d + ", syms: " + list)
-                  }
-                })
-            }
+            val (setToFuse, setToFuseEffectful) = 
+                getFusedSyms(loop, effects.isDefined).getOrElse((List(sym), effects.isDefined))
             val existing = current.getByShape(loop.size)
               .filter({ candidate => checkIndep(sym, candidate, setToFuse) })
               .filter({ candidate => checkEffects(sym, candidate, setToFuse, setToFuseEffectful) })
               .headOption
             existing match {
-              case Some(fusedLoopSet) => // case 2. compatible existing set
+              // 2.a) fuse set with existing HFT set
+              case Some(fusedLoopSet) =>
                 printlog("(HFT) Fusing " + sym + " with fusion set " + fusedLoopSet)
                 assert(loop.size == fusedLoopSet.shape, "Error: HFT with different shapes 2")
                 val checkIndex = fuse(sym, loop.v, fusedLoopSet.index)
                 (current.recordAddLoop(fusedLoopSet, setToFuse, setToFuseEffectful), checkIndex)
 
-              case None => // case 3. start a new fusion set
+              // 2.b) start new HFT set
+              case None =>
                 printdbg("(HFT) Recording " + sym + ", no fusion")
                 (current.recordNewLoop(loop.size, loop.v, setToFuse, setToFuseEffectful), None)
             }
         }
         
-        // Do the actual transformation with the correct innerScopes
-        // for reflecting the loop body
+        // 3. Fusion: set correct inner scope for reflecting body
         AllFusionScopes.set(blocks(loop), innerScope)
         val superTransformedStm = super.transformStm(stm)
         AllFusionScopes.remove(blocks(loop))
@@ -307,35 +325,45 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
 
         // don't want to change other indices, TODO reset to old (see fuse)
         subst -= loop.v
-
-        if (superTransformedStm != sym) {
+        if (superTransformedStm != sym)
           printdbg("(HFT) - new loop symbol: " + sym + " -> " + superTransformedStm)
-        }
-
         Some(superTransformedStm)
 
+      // Fusion for ifs doesn't remap anything, but combines the inner scopes per branch
       case TP(sym, IfOrReflectedIf(ifthenelse, effects)) => 
-        // fuse with existing set if one found, otherwise start new set
-        // if-fusion doesn't remap anything, but combines the inner scopes per branch
-          
-        val setToFuse = List(sym)
-        val setToFuseEffectful = effects.isDefined
-        val existing = current.getByCond(ifthenelse.cond)
-          .filter({ candidate => checkIndep(sym, candidate, setToFuse) })
-          .filter({ candidate => checkEffects(sym, candidate, setToFuse, setToFuseEffectful) })
-          .headOption
-        val (thenInnerScope, elseInnerScope) = existing match {
-          case Some(fusedIfSet) => // case 2. compatible existing set
-            printlog("(HFT) Fusing " + sym + " with fusion set " + fusedIfSet)
-            current.recordAddIf(fusedIfSet, sym, setToFuseEffectful)
 
-          case None => // case 3. start a new fusion set
-            printdbg("(HFT) Recording if-sym " + sym + ", no fusion")
-            current.recordNewIf(sym, ifthenelse.cond, setToFuseEffectful)
+        val (thenInnerScope, elseInnerScope) = current.getIfSet(sym) match {
+            
+          // 1. CanBeFused already registered in existing horizontal transformer set
+          case Some(horizontal) =>
+            assert(ifthenelse.cond == horizontal.cond, "Error: HFT found ifs with different conds")
+            printlog("(HFT) Fusing " + sym + " with containing fusion set " + horizontal)
+            (horizontal.thenInnerScope, horizontal.elseInnerScope)
+
+          // 2. Get CanBeFused set (maybe singleton if no previous transformers fused it)
+          case None => 
+            val (setToFuse, setToFuseEffectful) =  
+                getFusedSyms(ifthenelse, effects.isDefined).getOrElse((List(sym), effects.isDefined))
+
+            val existing = current.getByCond(ifthenelse.cond)
+              .filter({ candidate => checkIndep(sym, candidate, setToFuse) })
+              .filter({ candidate => checkEffects(sym, candidate, setToFuse, setToFuseEffectful) })
+              .headOption
+            
+            existing match {
+              // 2.a) fuse set with existing HFT set
+              case Some(fusedIfSet) =>
+                printlog("(HFT) Fusing " + sym + " with fusion set " + fusedIfSet)
+                current.recordAddIf(fusedIfSet, sym, setToFuseEffectful)
+
+              // 2.b) start new HFT set
+              case None =>
+                printdbg("(HFT) Recording if-sym " + sym + ", no fusion")
+                current.recordNewIf(ifthenelse.cond, setToFuse, setToFuseEffectful)
+            }
         }
-        
-        // Do the actual transformation with the correct innerScopes
-        // for reflecting the loop body
+
+        // 3. Fusion: set correct inner scopes for reflecting each branch
         AllFusionScopes.set(List(ifthenelse.thenp), thenInnerScope)
         AllFusionScopes.set(List(ifthenelse.elsep), elseInnerScope)
         val superTransformedStm = super.transformStm(stm)
@@ -392,10 +420,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
         findDefinition(sym) match {
           case Some(d) => 
             val next = current.getAllFusedLoops(syms(d.rhs))
-            val taboo = next.collectFirst({ case x if existingSet.contains(x) => x })
-            if (taboo.isDefined) {
-              throw DependencyException(Left(taboo.get))
-            }
+            next.find(existingSet.contains(_)).map({ t => throw DependencyException(Left(t)) })
             next
           case None => List()
         }
@@ -405,10 +430,7 @@ trait LoopFusionHorizontalTransformer extends PreservingForwardTransformer {
         findDefinition(sym) match {
           case Some(d) => 
             val next = current.getAllFusedLoops(syms(d.rhs))
-            val taboo = next.collectFirst({ case x if setToFuse.contains(x) => x })
-            if (taboo.isDefined) {
-              throw DependencyException(Right(taboo.get))
-            }
+            next.find(setToFuse.contains(_)).map({ t => throw DependencyException(Right(t)) })
             next
           case None => List()
         }

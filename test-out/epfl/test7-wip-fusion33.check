@@ -134,7 +134,7 @@ val x53 = println(x52)
 (HFT) Recording Sym(38), no fusion
 (HFT) Fusing Sym(50) with containing fusion set FusedLoopSet(shape = Const(10), indexSym = Sym(2), loopSyms = List(Sym(50), Sym(9), Sym(37)))
 (HFT) - already using same index Sym(2)
-  (HFT) Fusing Sym(49) with fusion set FusedIfSet(cond = Sym(3), ifSyms = List(Sym(36)))
+  (HFT) Fusing Sym(49) with containing fusion set FusedIfSet(cond = Sym(3), ifSyms = List(Sym(49), Sym(8), Sym(36)))
     (HFT) Recording if-sym Sym(48), no fusion
 (HFT) Fusing Sym(51) with containing fusion set FusedLoopSet(shape = Const(30), indexSym = Sym(1), loopSyms = List(Sym(51), Sym(26), Sym(38), Sym(10), Sym(16)))
 (HFT) - already using same index Sym(1)
