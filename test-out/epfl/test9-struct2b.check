@@ -17,17 +17,17 @@ val x8 = 0.0-x7
 x10(x7) = x8
 x11(x7) = x7
 }
-var x13: Array[Double] = x10
-var x14: Array[Int] = x11
+var x13 = x10
+var x14 = x11
 val x16 = x0 > 7
 // TODO: use vars instead of tuples to return multiple values
 val (x26,x38,x39) = if (x16) {
-val x17 = println("foobar true")
+println("foobar true")
 ((),x11,x10)
 } else {
 val x20 = x13
 val x21 = x14
-val x19 = println("foobar false")
+println("foobar false")
 ((),x20,x21)
 }
 val x40 = new { val re = x38; val im = x39 }
@@ -36,10 +36,9 @@ val x43 = x13
 x14 = x10
 val x44 = x14
 val x45 = new { val re = x43; val im = x44 }
-val x46 = println(x45)
-val x47 = println(x40)
-val x36 = x47
-x36
+println(x45)
+println(x40)
+
 }
 }
 /*****************************************

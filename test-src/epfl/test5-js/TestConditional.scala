@@ -36,7 +36,7 @@ trait ScalaGenPrint extends ScalaGenEffect {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Print(s) =>  emitValDef(sym, "println(" + quote(s) + ")")
+    case Print(s) =>  stream.println("println(" + quote(s) + ")")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -47,7 +47,7 @@ trait JSGenPrint extends JSGenEffect {
   
   // TODO: should have a function for this
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Print(s) =>  emitValDef(sym, "document.body.appendChild(document.createElement(\"div\"))"+
+    case Print(s) =>  stream.println("document.body.appendChild(document.createElement(\"div\"))"+
         ".appendChild(document.createTextNode("+quote(s)+"))")
     case _ => super.emitNode(sym, rhs)
   }
@@ -107,8 +107,8 @@ class TestConditional extends FileDiffSuite {
         with ScalaGenEqual with ScalaGenPrint { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)
-        codegen.emitSource(f, "Test", new PrintWriter(System.out))
-        val g = compile(f)
+        codegen.emitSource1(f, "Test", new PrintWriter(System.out))
+        val g = compile1(f)
         println(g(7))
       }
     
@@ -118,7 +118,7 @@ class TestConditional extends FileDiffSuite {
         with JSGenEqual with JSGenPrint { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)
-        codegen.emitSource(f, "main", new PrintWriter(System.out))
+        codegen.emitSource1(f, "main", new PrintWriter(System.out))
         codegen.emitHTMLPage(() => f(7), new PrintWriter(new FileOutputStream(prefix+"conditional.html")))
       }
 

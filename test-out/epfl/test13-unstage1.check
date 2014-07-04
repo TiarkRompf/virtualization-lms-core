@@ -1,7 +1,7 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$0(px4:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
+class staged14(px4:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Unit, Int]]) extends ((Int)=>(Int)) {
 def apply(x0:Int): Int = {
 val x1 = x0 + 1
 val x2 = x0 * 2
@@ -16,11 +16,10 @@ x6
   End of Generated Code                  
 *******************************************/
 
-compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$1(px1:Int,px2:Int) extends ((Unit)=>(Int)) {
+class staged15(px1:Int,px2:Int) extends ((Unit)=>(Int)) {
 def apply(x4:Unit): Int = {
 val x1 = px1 // static data: 10
 val x2 = px2 // static data: 18
@@ -33,12 +32,11 @@ x6
   End of Generated Code                  
 *******************************************/
 
-compilation: ok
 784
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$2(px1:Int,px2:Int) extends ((Unit)=>(Int)) {
+class staged16(px1:Int,px2:Int) extends ((Unit)=>(Int)) {
 def apply(x4:Unit): Int = {
 val x1 = px1 // static data: 4
 val x2 = px2 // static data: 6
@@ -51,12 +49,11 @@ x6
   End of Generated Code                  
 *******************************************/
 
-compilation: ok
 100
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged$3(px1:Int,px2:Int) extends ((Unit)=>(Int)) {
+class staged17(px1:Int,px2:Int) extends ((Unit)=>(Int)) {
 def apply(x4:Unit): Int = {
 val x1 = px1 // static data: 2
 val x2 = px2 // static data: 2
@@ -69,5 +66,4 @@ x6
   End of Generated Code                  
 *******************************************/
 
-compilation: ok
 16

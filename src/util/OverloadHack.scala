@@ -3,32 +3,32 @@ package util
 
 // hack to appease erasure
 
-trait OverloadHack {
-  class Overloaded1
-  class Overloaded2
-  class Overloaded3
-  class Overloaded4
-  class Overloaded5
-  class Overloaded6
-  class Overloaded7
-  class Overloaded8
-  class Overloaded9
-  class Overloaded10
-  class Overloaded11
-  class Overloaded12
-  class Overloaded13
-  class Overloaded14
-  class Overloaded15
-  class Overloaded16
-  class Overloaded17
-  class Overloaded18
-  class Overloaded19
-  class Overloaded20
-  class Overloaded21
-  class Overloaded22
-  class Overloaded23  
-  class Overloaded24
-
+trait OverloadHack extends Serializable {
+  class Overloaded1 extends Serializable
+  class Overloaded2 extends Serializable
+  class Overloaded3 extends Serializable
+  class Overloaded4 extends Serializable
+  class Overloaded5 extends Serializable
+  class Overloaded6 extends Serializable
+  class Overloaded7 extends Serializable
+  class Overloaded8 extends Serializable
+  class Overloaded9 extends Serializable
+  class Overloaded10 extends Serializable
+  class Overloaded11 extends Serializable
+  class Overloaded12 extends Serializable
+  class Overloaded13 extends Serializable
+  class Overloaded14 extends Serializable
+  class Overloaded15 extends Serializable
+  class Overloaded16 extends Serializable
+  class Overloaded17 extends Serializable
+  class Overloaded18 extends Serializable
+  class Overloaded19 extends Serializable
+  class Overloaded20 extends Serializable
+  class Overloaded21 extends Serializable
+  class Overloaded22 extends Serializable
+  class Overloaded23 extends Serializable 
+  class Overloaded24 extends Serializable
+  
   implicit val overloaded1 = new Overloaded1
   implicit val overloaded2 = new Overloaded2
   implicit val overloaded3 = new Overloaded3

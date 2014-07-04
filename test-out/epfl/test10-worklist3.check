@@ -13,7 +13,7 @@ val x2 = VectorZeros(Const(50))
 x2
 }
 val x5 = VectorPlus(Sym(4),Sym(1))
-val x6 = println(x5)
+println(x5)
 
 ### next
 install replacement for Sym(1)
@@ -49,7 +49,7 @@ val x21 = x19+x20
 x21
 }
 val x23 = new { val data = x22; val length = x16 }
-val x24 = println(x23)
+println(x23)
 
 ### next
 install replacement for Sym(19)
@@ -77,4 +77,4 @@ val x36 = x34+x35
 x36
 }
 val x38 = new { val data = x37; val length = x16 }
-val x39 = println(x38)
+println(x38)

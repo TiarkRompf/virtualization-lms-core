@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package epfl
 package test11
 
+import internal.{Config,ScalaCompile}
 import common._
 import test1._
 import test7._
@@ -28,14 +29,14 @@ class TestStencil extends FileDiffSuite {
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp with StaticDataExp
       with IfThenElseExpOpt with PrintExp with PrimitiveOpsExp
       with CompileScala { self => 
-    //override val verbosity = 1
+    Config.verbosity = 1
     def infix_toDouble(x: Rep[Int]): Rep[Double] = int_double_value(x)
     
     val codegen = new ScalaGenNumericOps with ScalaGenStaticData with ScalaGenOrderingOps 
       with ScalaGenArrayOps with ScalaGenRangeOps with ScalaGenBooleanOps
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenPrimitiveOps
       with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self }
-    dumpGeneratedCode = true
+    ScalaCompile.dumpGeneratedCode = true
     run()
   }
   trait Runner extends Compile {

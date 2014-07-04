@@ -18,8 +18,12 @@ trait StringOps extends Variables with OverloadHack {
   
   def infix_+(s1: String, s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(unit(s1), s2)
   def infix_+[T:Manifest](s1: String, s2: Var[T])(implicit o: Overloaded2, pos: SourceContext) = string_plus(unit(s1), readVar(s2))
-  def infix_+(s1: Rep[String], s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(s1, s2)
-  def infix_+[T:Manifest](s1: Rep[String], s2: Var[T])(implicit o: Overloaded2, pos: SourceContext) = string_plus(s1, readVar(s2))
+  def infix_+[T:Manifest](s1: Rep[String], s2: Rep[T])(implicit o: Overloaded1, pos: SourceContext): Rep[String] = {
+    if (manifest[T] == classManifest[Array[Byte]])
+        string_plus(s1, string_new(s2))
+    else string_plus(s1, s2)
+  }
+  def infix_+[T:Manifest](s1: Rep[String], s2: Var[T])(implicit o: Overloaded2, pos: SourceContext): Rep[String] = string_plus(s1, readVar(s2))
   def infix_+(s1: Rep[String], s2: Rep[String])(implicit o: Overloaded3, pos: SourceContext) = string_plus(s1, s2)
   def infix_+(s1: Rep[String], s2: Var[String])(implicit o: Overloaded4, pos: SourceContext) = string_plus(s1, readVar(s2))
   def infix_+(s1: Rep[Any], s2: Rep[String])(implicit o: Overloaded5, pos: SourceContext) = string_plus(s1, s2)
@@ -49,13 +53,15 @@ trait StringOps extends Variables with OverloadHack {
   def infix_toFloat(s: Rep[String])(implicit pos: SourceContext) = string_tofloat(s)
   def infix_toInt(s: Rep[String])(implicit pos: SourceContext) = string_toint(s)
   def infix_toLong(s: Rep[String])(implicit pos: SourceContext) = string_tolong(s)
-  def infix_substring(s: Rep[String], start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = string_substring(s,start,end)
+  def infix_substring(s: Rep[String], beginIndex: Rep[Int])(implicit pos: SourceContext) = string_substring(s, beginIndex)
+  def infix_substring(s: Rep[String], beginIndex: Rep[Int], endIndex: Rep[Int])(implicit pos: SourceContext) = string_substring(s, beginIndex, endIndex)
   def infix_length(s: Rep[String])(implicit pos: SourceContext) = string_length(s)
 
   object String {
     def valueOf(a: Rep[Any])(implicit pos: SourceContext) = string_valueof(a)
   }
 
+  def string_new(s: Rep[Any]): Rep[String]
   def string_plus(s: Rep[Any], o: Rep[Any])(implicit pos: SourceContext): Rep[String]
   def string_startswith(s1: Rep[String], s2: Rep[String])(implicit pos: SourceContext): Rep[Boolean]
   def string_trim(s: Rep[String])(implicit pos: SourceContext): Rep[String]
@@ -65,11 +71,13 @@ trait StringOps extends Variables with OverloadHack {
   def string_tofloat(s: Rep[String])(implicit pos: SourceContext): Rep[Float]
   def string_toint(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
   def string_tolong(s: Rep[String])(implicit pos: SourceContext): Rep[Long]
-  def string_substring(s: Rep[String], start:Rep[Int], end:Rep[Int])(implicit pos: SourceContext): Rep[String]
+  def string_substring(s: Rep[String], beginIndex: Rep[Int])(implicit pos: SourceContext): Rep[String]
+  def string_substring(s: Rep[String], beginIndex: Rep[Int], endIndex: Rep[Int])(implicit pos: SourceContext): Rep[String]
   def string_length(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
 }
 
 trait StringOpsExp extends StringOps with VariablesExp {
+  case class StringNew(s: Rep[Any]) extends Def[String]
   case class StringPlus(s: Exp[Any], o: Exp[Any]) extends Def[String]
   case class StringStartsWith(s1: Exp[String], s2: Exp[String]) extends Def[Boolean]
   case class StringTrim(s: Exp[String]) extends Def[String]
@@ -79,19 +87,22 @@ trait StringOpsExp extends StringOps with VariablesExp {
   case class StringToFloat(s: Exp[String]) extends Def[Float]
   case class StringToInt(s: Exp[String]) extends Def[Int]
   case class StringToLong(s: Exp[String]) extends Def[Long]
-  case class StringSubstring(s: Exp[String], start:Exp[Int], end:Exp[Int]) extends Def[String]
+  case class StringSubstring(s: Exp[String], beginIndex: Exp[Int]) extends Def[String]
+  case class StringSubstringWithEndIndex(s: Exp[String], beginIndex: Exp[Int], endIndex: Exp[Int]) extends Def[String]
   case class StringLength(s: Exp[String]) extends Def[Int]
 
+  def string_new(s: Rep[Any]) = StringNew(s)
   def string_plus(s: Exp[Any], o: Exp[Any])(implicit pos: SourceContext): Rep[String] = StringPlus(s,o)
   def string_startswith(s1: Exp[String], s2: Exp[String])(implicit pos: SourceContext) = StringStartsWith(s1,s2)
   def string_trim(s: Exp[String])(implicit pos: SourceContext) : Rep[String] = StringTrim(s)
   def string_split(s: Exp[String], separators: Exp[String])(implicit pos: SourceContext) : Rep[Array[String]] = StringSplit(s, separators)
   def string_valueof(a: Exp[Any])(implicit pos: SourceContext) = StringValueOf(a)
-  def string_todouble(s: Rep[String])(implicit pos: SourceContext) = StringToDouble(s)
-  def string_tofloat(s: Rep[String])(implicit pos: SourceContext) = StringToFloat(s)
-  def string_toint(s: Rep[String])(implicit pos: SourceContext) = StringToInt(s)
-  def string_tolong(s: Rep[String])(implicit pos: SourceContext) = StringToLong(s)
-  def string_substring(s: Rep[String], start:Rep[Int], end:Rep[Int])(implicit pos: SourceContext) = StringSubstring(s,start,end)
+  def string_todouble(s: Exp[String])(implicit pos: SourceContext) = StringToDouble(s)
+  def string_tofloat(s: Exp[String])(implicit pos: SourceContext) = StringToFloat(s)
+  def string_toint(s: Exp[String])(implicit pos: SourceContext) = StringToInt(s)
+  def string_tolong(s: Exp[String])(implicit pos: SourceContext) = StringToLong(s)
+  def string_substring(s: Exp[String], beginIndex: Exp[Int])(implicit pos: SourceContext) = StringSubstring(s, beginIndex)
+  def string_substring(s: Exp[String], beginIndex: Exp[Int], endIndex: Exp[Int])(implicit pos: SourceContext) = StringSubstringWithEndIndex(s, beginIndex, endIndex)
   def string_length(s: Rep[String])(implicit pos: SourceContext) = StringLength(s)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
@@ -100,7 +111,10 @@ trait StringOpsExp extends StringOps with VariablesExp {
     case StringSplit(s,sep) => string_split(f(s),f(sep))
     case StringToDouble(s) => string_todouble(f(s))
     case StringToFloat(s) => string_tofloat(f(s))
-    case StringSubstring(s,a,b) => string_substring(f(s),f(a),f(b))
+    case StringToInt(s) => string_toint(f(s))
+    case StringToLong(s) => string_tolong(f(s))
+    case StringSubstring(s, beginIndex) => string_substring(f(s), f(beginIndex))
+    case StringSubstringWithEndIndex(s, beginIndex, endIndex) => string_substring(f(s), f(beginIndex), f(endIndex))
     case StringLength(s) => string_length(f(s))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
@@ -111,6 +125,7 @@ trait ScalaGenStringOps extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case StringNew(s1) => emitValDef(sym, "new String(" + quote(s1) + ")")
     case StringPlus(s1,s2) => emitValDef(sym, src"$s1+$s2")
     case StringStartsWith(s1,s2) => emitValDef(sym, src"$s1.startsWith($s2)")
     case StringTrim(s) => emitValDef(sym, src"$s.trim()")
@@ -120,7 +135,8 @@ trait ScalaGenStringOps extends ScalaGenBase {
     case StringToFloat(s) => emitValDef(sym, src"$s.toFloat")
     case StringToInt(s) => emitValDef(sym, src"$s.toInt")
     case StringToLong(s) => emitValDef(sym, src"$s.toLong")
-    case StringSubstring(s,a,b) => emitValDef(sym, src"$s.substring($a,$b)")
+    case StringSubstring(s,b) => emitValDef(sym, src"$s.substring($b)")
+    case StringSubstringWithEndIndex(s,b,e) => emitValDef(sym, "$s.substring($b,$e)")
     case StringLength(s) => emitValDef(sym, src"$s.length")
     case _ => super.emitNode(sym, rhs)
   }
@@ -158,7 +174,8 @@ trait CGenStringOps extends CGenBase {
     case StringToLong(s) => emitValDef(sym,src"atol($s)")
     case StringToFloat(s) => emitValDef(sym,src"atof($s)")
     case StringToDouble(s) => emitValDef(sym,src"atof($s)")
-    case StringSubstring(s,a,b) => emitValDef(sym, src"({ int l=$b-$a; char* r=(char*)malloc(l); memcpy(r,((char*)$s)+$a,l); r[l]=0; r; })")
+    case StringSubstring(s,b) => emitValDef(sym, src"strdup($s+$b)")
+    case StringSubstringWithEndIndex(s,a,b) => emitValDef(sym, src"({ int l=$b-$a; char* r=(char*)malloc(l); memcpy(r,((char*)$s)+$a,l); r[l]=0; r; })")
     case StringLength(s) => emitValDef(sym, src"strlen($s)")
     case StringPlus(s1,s2) => s2.tp.toString match {
       // Warning: memory leaks. We need a global mechanism like reference counting, possibly release pool(*) wrapping functions.

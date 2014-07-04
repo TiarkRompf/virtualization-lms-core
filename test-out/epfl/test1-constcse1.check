@@ -1,0 +1,26 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class test1 extends ((Boolean, Long)=>(Long)) {
+def apply(x0:Boolean, x1:Long): Long = {
+val x3 = if (x0) {
+1L
+} else {
+0L
+}
+val x4 = x1 + x3
+val x5 = x4 + 133L
+val x2 = if (x0) {
+1.0
+} else {
+0.0
+}
+val x6 = x2.asInstanceOf[Long]
+val x7 = x5 + x6
+x7
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+147

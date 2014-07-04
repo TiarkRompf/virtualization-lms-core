@@ -124,7 +124,7 @@ class TestLambdalift extends FileDiffSuite {
           }
         }
         val codegenInner: ScalaGenBla { val IR: self.type; type Block[+T] = self.Block[T] } = codegen2
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
         classes.foreach(println)
       }
     }

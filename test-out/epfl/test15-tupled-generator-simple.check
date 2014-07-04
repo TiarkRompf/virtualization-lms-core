@@ -1,0 +1,36 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class test1 extends ((org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Double, Double], org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Double])=>(Unit)) {
+def apply(x0:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[Double, Double], x1:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Double]): Unit = {
+var x2 = 0.0
+x0.foreach{
+x3 => 
+x2 = ((x2) + ((x3._2) * (if ((12.2 < (x3._1))) {
+1.0
+} else {
+0.0
+})))
+}
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class test2 extends ((Long, org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Double])=>(Double)) {
+def apply(x17:Long, x18:org.dbtoaster.dbtoasterlib.K3Collection.K3PersistentCollection[scala.Tuple2[Long, Double], Double]): Double = {
+var x22 = 0.0
+val x30 = 200L * 75.32
+(x18.slice(x17,(List(0)))).foreach{
+x23 => 
+x22 = ((x22) + x30)
+}
+(x22)
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

@@ -166,7 +166,7 @@ trait CudaCodegen extends GPUCodegen {
     stream.println(addTab()+ remap(sym.tp) + " " + quote(sym) + " = " + rhs + ";")
   }
 
-  def emitAssignment(lhs:String, rhs: String): Unit = {
+  def emitAssignment(sym: Sym[Any], lhs:String, rhs: String): Unit = {
     stream.println(addTab() + " " + lhs + " = " + rhs + ";")
   }
 

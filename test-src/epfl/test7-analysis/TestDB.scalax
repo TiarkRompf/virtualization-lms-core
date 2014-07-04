@@ -95,7 +95,7 @@ class TestDB extends FileDiffSuite {
     withOutFile(prefix+"db1") {
       new DBProg with DBExp with ArithExp with LoopsExp with PrintExp { self =>
         //val codegen = new ScalaGenArith with ScalaGenPrint  { val IR: self.type = self }
-        //codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        //codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"db1")
@@ -105,7 +105,7 @@ class TestDB extends FileDiffSuite {
     withOutFile(prefix+"db2") {
       new DBProg with DBExp with ArithExp with LoopsExp with PrintExp { self =>
         //val codegen = new ScalaGenArith with ScalaGenPrint  { val IR: self.type = self }
-        //codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        //codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"db2")

@@ -164,7 +164,7 @@ class TestCPS extends FileDiffSuite {
       new CpsProg1 with ArithExp with EqualExp with IfThenElseExp with PrintExp with ScalaCompile { self =>
         val codegen = new ScalaGenArith with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         //override def compile
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"cps1")
@@ -175,7 +175,7 @@ class TestCPS extends FileDiffSuite {
       new CpsProg2 with ArithExp with EqualExp with IfThenElseExp with PrintExp with ScalaCompile { self =>
         val codegen = new ScalaGenArith with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         //override def compile
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"cps2")
@@ -186,7 +186,7 @@ class TestCPS extends FileDiffSuite {
       new AmbProg1 with ArithExp with EqualExp with IfThenElseExp with PrintExp with ScalaCompile { self =>
         val codegen = new ScalaGenArith with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         //override def compile
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"amb1a")
@@ -197,7 +197,7 @@ class TestCPS extends FileDiffSuite {
       new AmbProg1 with ArithExp with EqualExpOpt with IfThenElseExpOpt with BooleanOpsExp with PrintExp with ScalaCompile { self =>
         val codegen = new ScalaGenArith with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         //override def compile
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"amb1b")
@@ -208,7 +208,7 @@ class TestCPS extends FileDiffSuite {
       new AmbProg2 with ArithExp with EqualExp with IfThenElseExp with PrintExp with ScalaCompile { self =>
         val codegen = new ScalaGenArith with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         //override def compile
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"amb2a")
@@ -219,7 +219,7 @@ class TestCPS extends FileDiffSuite {
       new AmbProg2 with ArithExp with EqualExpOpt with IfThenElseExpOpt with BooleanOpsExp with PrintExp with ScalaCompile { self =>
         val codegen = new ScalaGenArith with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         //override def compile
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
       }
     }
     assertFileEqualsCheck(prefix+"amb2b")

@@ -96,13 +96,20 @@ trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
     */
 
     case RangeForeach(start, end, i, body) => {
+      stream.println("var " + quote(i) + " : Int = " + quote(start))
+      emitValDef(sym, "while (" + quote(i) + " < " + quote(end) + ") {")
+      emitBlock(body)
       // do not need to print unit result
       //stream.println(quote(getBlockResult(body)))
+      stream.println(quote(i) + " = " + quote(i) + " + 1")
+      stream.println("}")
+      /* XXX:TO_MERGE
       gen"""var $i : Int = $start
            |val $sym = while ($i < $end) {
            |${nestedBlock(body)}
            |$i = $i + 1
            |}"""
+      */
     }
 
     case _ => super.emitNode(sym, rhs)

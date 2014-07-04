@@ -2,6 +2,7 @@ package scala.virtualization.lms
 package epfl
 package test13
 
+import internal.Config
 import common._
 import internal._
 import test1._
@@ -525,8 +526,8 @@ class TestInterpret extends FileDiffSuite {
     with RangeOpsExp with PrintExp with FatExpressions with CompileScala
     with NumericOpsExp with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp 
     with InterpretStagedExp { self =>
-    override val verbosity = 1
-    dumpGeneratedCode = true
+    Config.verbosity = 1
+    ScalaCompile.dumpGeneratedCode = true
     val codegen = new Codegen { val IR: self.type = self }
     val runner = new Runner { val p: self.type = self }
     runner.run()

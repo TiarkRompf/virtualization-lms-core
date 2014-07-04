@@ -1,0 +1,89 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test(px20:Array[Int]) extends ((Array[Int])=>(Array[Int])) {
+def apply(x0:Array[Int]): Array[Int] = {
+val x1 = new Array[Int](5)
+val x2 = x1(0)
+val x3 = x0(0)
+val x4 = x2 + x3
+x1(0) = x4
+val x6 = x0(3)
+val x7 = x4 + x6
+x1(0) = x7
+val x9 = x1(1)
+val x10 = x0(2)
+val x11 = x9 + x10
+x1(1) = x11
+val x13 = x1(2)
+val x14 = x0(1)
+val x15 = x13 + x14
+x1(2) = x15
+val x19 = x1(3)
+val x20 = px20 // static data: Array(0,0,1,1,1)
+var x18 : Int = 0
+while (x18 < 5) {
+val x21 = x20(x18)
+val x22 = x0(x18)
+val x23 = x21 * x22
+val x24 = x19 + x23
+x1(3) = x24
+x18 = x18 + 1
+}
+val x28 = x1(4)
+val x29 = x28 + x10
+x1(4) = x29
+val x31 = x0(4)
+val x32 = x29 + x31
+x1(4) = x32
+x1
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class staged1(px54:Array[Int]) extends ((Array[Int])=>(Array[Int])) {
+def apply(x35:Array[Int]): Array[Int] = {
+val x36 = new Array[Int](5)
+val x37 = x36(0)
+val x38 = x35(0)
+val x39 = x37 + x38
+x36(0) = x39
+val x41 = x35(3)
+val x42 = x39 + x41
+x36(0) = x42
+val x44 = x36(1)
+val x45 = x35(2)
+val x46 = x44 + x45
+x36(1) = x46
+val x48 = x36(2)
+val x49 = x35(1)
+val x50 = x48 + x49
+x36(2) = x50
+val x53 = x36(3)
+val x54 = px54 // static data: Array(0,0,1,1,1)
+var x52 : Int = 0
+while (x52 < 5) {
+val x55 = x54(x52)
+val x56 = x35(x52)
+val x57 = x55 * x56
+val x58 = x53 + x57
+x36(3) = x58
+x52 = x52 + 1
+}
+val x62 = x36(4)
+val x63 = x62 + x45
+x36(4) = x63
+val x65 = x35(4)
+val x66 = x63 + x65
+x36(4) = x66
+x36
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+

@@ -61,7 +61,7 @@ class TestAck extends FileDiffSuite {
       //p.emitDepGraph(r, prefix+"ack1-dot")
       val p = new ScalaGenArith with ScalaGenEqual with 
         ScalaGenIfThenElse with ScalaGenFunctionsExternal { val IR: AckProgExp.type = AckProgExp }
-      p.emitSource(f, "Ack", new java.io.PrintWriter(System.out))
+      p.emitSource1(f, "Ack", new java.io.PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"ack1")
     //assertFileEqualsCheck(prefix+"ack1-dot")

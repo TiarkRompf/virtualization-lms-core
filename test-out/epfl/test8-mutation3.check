@@ -10,21 +10,20 @@ def apply(x0:Int): Unit = {
 val x2 = LoopArray(100) { x1 => 
 0.0
 }
-var x3: Array[Double] = x2
+var x3 = x2
 val x5 = LoopArray(100) { x4 => 
 0.0
 }
 val x6 = x5.clone // mutable
 val x7 = x6.length
 var x9 : Int = 0
-val x15 = while (x9 < x7) {
+while (x9 < x7) {
 val x10 = x3
-val x12 = x6.update(x9, 8.0)
+x6.update(x9, 8.0)
 x3 = x6
 
 x9 = x9 + 1
 }
-x15
 }
 }
 /*****************************************

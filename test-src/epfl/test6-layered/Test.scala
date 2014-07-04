@@ -208,16 +208,16 @@ class TestVectors extends FileDiffSuite {
       new VectorsProg with VectorsExp with VectorsImplExternal
       with CompileScala { self =>
         val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
-        val g = compile(test)
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
+        val g = compile1(test)
         println(g().mkString(","))
       }
     
       new StringsProg with VectorsExp with VectorsImplExternal
       with CompileScala { self =>
         val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
-        codegen.emitSource(test, "Test", new PrintWriter(System.out))
-        val g = compile(test)
+        codegen.emitSource1(test, "Test", new PrintWriter(System.out))
+        val g = compile1(test)
         println(g(0))
       }
   /*

@@ -235,13 +235,18 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
  
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IfThenElse(c,a,b) =>
-      stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
-      emitBlock(a)
-      stream.println(quote(getBlockResult(a)))
-      stream.println("} else {")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        stream.println("if (" + quote(c) + ") {")
+        emitBlock(a)
+        stream.println(quote(getBlockResult(a)))
+        stream.println("} else {")
+        emitBlock(b)
+        stream.println(quote(getBlockResult(b)))
+        stream.print("}")
+      }
+      emitValDef(sym, strWriter.toString)
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -250,16 +255,23 @@ trait ScalaGenIfThenElseFat extends ScalaGenIfThenElse with ScalaGenFat with Bas
   import IR._
 
   override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
-    case SimpleFatIfThenElse(c,as,bs) => 
-      def quoteList[T](xs: List[Exp[T]]) = if (xs.length > 1) xs.map(quote).mkString("(",",",")") else xs.map(quote).mkString(",")
-      if (symList.length > 1) stream.println("// TODO: use vars instead of tuples to return multiple values")
-      stream.println("val " + quoteList(symList) + " = if (" + quote(c) + ") {")
+    case SimpleFatIfThenElse(c,as,bs) =>
+      def emitRetAssignments[T](vars: List[Sym[Any]], retVals: List[Exp[T]]) =
+        (vars zip retVals) foreach { case (v, rv) => emitAssignment(v, quote(v), quote(rv)) }
+
+      if (symList.length > 1) {
+        symList foreach emitForwardDef
+        stream.println("if (" + quote(c) + ") {")
+      } else stream.println("val " + symList.map(quote).mkString + " = if (" + quote(c) + ") {")
       emitFatBlock(as)
-      stream.println(quoteList(as.map(getBlockResult)))
+      if (symList.length > 1) emitRetAssignments(symList, as.map(getBlockResult))
+      else stream.println(as.map(a => quote(getBlockResult(a))).mkString)
       stream.println("} else {")
       emitFatBlock(bs)
-      stream.println(quoteList(bs.map(getBlockResult)))
+      if (symList.length > 1) emitRetAssignments(symList, bs.map(getBlockResult))
+      else stream.println(bs.map(b => quote(getBlockResult(b))).mkString)
       stream.println("}")
+
     case _ => super.emitFatNode(symList, rhs)
   }
 
@@ -382,14 +394,14 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
     rhs match {
       case IfThenElse(c,a,b) =>
         //TODO: using if-else does not work 
-        remap(sym.tp) match {
-          case "void" =>
+        isVoidType(sym.tp) match {
+          case true =>
             stream.println("if (" + quote(c) + ") {")
             emitBlock(a)
             stream.println("} else {")
             emitBlock(b)
             stream.println("}")
-          case _ =>
+          case false =>
             stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
             stream.println("if (" + quote(c) + ") {")
             emitBlock(a)

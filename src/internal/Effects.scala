@@ -60,6 +60,7 @@ trait Effects extends Expressions with Blocks with Utils {
 
   def mustMutable(u: Summary): Boolean = u.resAlloc
   def mustPure(u: Summary): Boolean = u == Pure()
+  def mustOnlyAlloc(u: Summary): Boolean = u == Alloc() // only has a resource allocation
   def mustOnlyRead(u: Summary): Boolean = u == Pure().copy(mayRead=u.mayRead, mstRead=u.mstRead) // only reads allowed
   def mustIdempotent(u: Summary): Boolean = mustOnlyRead(u) // currently only reads are treated as idempotent
 
@@ -390,7 +391,12 @@ trait Effects extends Expressions with Blocks with Utils {
   }
   
   def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
-    if (mustPure(u)) super.toAtom(x) else {
+    if (context == null) {
+        val z = fresh[A]
+        val zd = Reflect(x,u,null)
+        context = Nil
+        createReflectDefinition(z, zd)
+    } else if (mustPure(u)) super.toAtom(x) else {
       checkContext()
       // NOTE: reflecting mutable stuff *during mirroring* doesn't work right now.
       
