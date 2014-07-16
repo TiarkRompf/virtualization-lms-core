@@ -1,0 +1,34 @@
+-- begin
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Double)=>(scala.Function1[Int, Any])) {
+def apply(x0:Double): scala.Function1[Int, Any] = {
+val x5 = {x2: (Any) => 
+val x3 = println("foo")
+x2: Any
+}
+val x9 = {x1: (Int) => 
+val x6 = x5(x0)
+val x7 = x5(x6)
+x7: Any
+}
+x9
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+function main(x0) {
+var x5 = function(x2) {
+var x3 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("foo"))
+return x2
+}
+var x9 = function(x1) {
+var x6 = x5(x0)
+var x7 = x5(x6)
+return x7
+}
+return x9
+}
+-- end

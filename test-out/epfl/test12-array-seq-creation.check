@@ -1,0 +1,28 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class IntArrayCreation extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+val x1 = Array(1,2,3)
+val x2 = x1(0)
+val x3 = println(x2)
+x3
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class CharArrayCreation extends ((Int)=>(Unit)) {
+def apply(x5:Int): Unit = {
+val x6 = Array('a','b','c')
+val x7 = x6(0)
+val x8 = println(x7)
+x8
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

@@ -13,6 +13,7 @@ trait StructOps extends Base {
   /**
    * Allows to write things like “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
    */
+
   def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
 
   class RecordOps(record: Rep[Record]) {
@@ -344,6 +345,7 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
 
     case _ => super.ifThenElse(cond,a,b)
   }
+
 }
 
 trait BaseGenFatStruct extends GenericFatCodegen {

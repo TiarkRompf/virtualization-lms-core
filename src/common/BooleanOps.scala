@@ -41,14 +41,21 @@ trait BooleanOpsExp extends BooleanOps with EffectExp {
   }).asInstanceOf[Exp[A]] // why??
 }
 
+trait BooleanOpsExpOpt extends BooleanOpsExp {
+  override def boolean_negate(lhs: Exp[Boolean])(implicit pos: SourceContext) = lhs match {
+    case Def(BooleanNegate(x)) => x
+    case _ => super.boolean_negate(lhs)
+  }
+}
+
 trait ScalaGenBooleanOps extends ScalaGenBase {
   val IR: BooleanOpsExp
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case BooleanNegate(b) => emitValDef(sym, "!" + quote(b))
-    case BooleanAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " && " + quote(rhs))
-    case BooleanOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " || " + quote(rhs))
+    case BooleanNegate(b) => emitValDef(sym, src"!$b")
+    case BooleanAnd(lhs,rhs) => emitValDef(sym, src"$lhs && $rhs")
+    case BooleanOr(lhs,rhs) => emitValDef(sym, src"$lhs || $rhs")
     case _ => super.emitNode(sym,rhs)
   }
 }
@@ -57,13 +64,11 @@ trait CLikeGenBooleanOps extends CLikeGenBase {
   val IR: BooleanOpsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-    rhs match {
-      case BooleanNegate(b) => emitValDef(sym, "!" + quote(b))
-      case BooleanAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " && " + quote(rhs))
-      case BooleanOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " || " + quote(rhs))
-      case _ => super.emitNode(sym,rhs)
-    }
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case BooleanNegate(b) => emitValDef(sym, src"!$b")
+    case BooleanAnd(lhs,rhs) => emitValDef(sym, src"$lhs && $rhs")
+    case BooleanOr(lhs,rhs) => emitValDef(sym, src"$lhs || $rhs")
+    case _ => super.emitNode(sym,rhs)
   }
 }
 

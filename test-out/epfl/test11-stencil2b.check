@@ -1,29 +1,29 @@
 Map(Sym(14) -> Sym(20), Sym(10) -> Sym(19), Sym(6) -> Sym(8), Sym(7) -> Sym(16), Sym(13) -> Sym(9), Sym(11) -> Sym(5), Sym(12) -> Sym(6), Sym(5) -> Sym(7), Sym(15) -> Sym(21), Sym(8) -> Sym(17), Sym(9) -> Sym(18))
 r0:
 TP(Sym(6),ArrayApply(Sym(0),Sym(5)))
-TP(Sym(7),NumericPlus(Sym(5),Const(1)))
+TP(Sym(7),IntPlus(Sym(5),Const(1)))
 TP(Sym(8),ArrayApply(Sym(0),Sym(7)))
-TP(Sym(9),NumericTimes(Sym(6),Sym(8)))
-TP(Sym(10),NumericMinus(Sym(6),Sym(9)))
-TP(Sym(11),NumericMinus(Sym(5),Const(1)))
+TP(Sym(9),DoubleTimes(Sym(6),Sym(8)))
+TP(Sym(10),DoubleMinus(Sym(6),Sym(9)))
+TP(Sym(11),IntMinus(Sym(5),Const(1)))
 TP(Sym(12),ArrayApply(Sym(0),Sym(11)))
-TP(Sym(13),NumericTimes(Sym(12),Sym(6)))
-TP(Sym(14),NumericPlus(Sym(10),Sym(13)))
-TP(Sym(15),Reflect(ArrayUpdate(Sym(2),Sym(5),Sym(14)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
+TP(Sym(13),DoubleTimes(Sym(12),Sym(6)))
+TP(Sym(14),DoublePlus(Sym(10),Sym(13)))
+TP(Sym(15),Reflect(ArrayUpdate(Sym(2),Sym(5),Sym(14)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
 r1:
-TP(Sym(16),NumericPlus(Sym(5),Const(2)))
+TP(Sym(16),IntPlus(Sym(5),Const(2)))
 TP(Sym(17),ArrayApply(Sym(0),Sym(16)))
-TP(Sym(18),NumericTimes(Sym(8),Sym(17)))
-TP(Sym(19),NumericMinus(Sym(8),Sym(18)))
-TP(Sym(20),NumericPlus(Sym(19),Sym(9)))
-TP(Sym(21),Reflect(ArrayUpdate(Sym(2),Sym(7),Sym(20)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
+TP(Sym(18),DoubleTimes(Sym(8),Sym(17)))
+TP(Sym(19),DoubleMinus(Sym(8),Sym(18)))
+TP(Sym(20),DoublePlus(Sym(19),Sym(9)))
+TP(Sym(21),Reflect(ArrayUpdate(Sym(2),Sym(7),Sym(20)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
 r2:
-TP(Sym(22),NumericPlus(Sym(5),Const(3)))
+TP(Sym(22),IntPlus(Sym(5),Const(3)))
 TP(Sym(23),ArrayApply(Sym(0),Sym(22)))
-TP(Sym(24),NumericTimes(Sym(17),Sym(23)))
-TP(Sym(25),NumericMinus(Sym(17),Sym(24)))
-TP(Sym(26),NumericPlus(Sym(25),Sym(18)))
-TP(Sym(27),Reflect(ArrayUpdate(Sym(2),Sym(16),Sym(26)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
+TP(Sym(24),DoubleTimes(Sym(17),Sym(23)))
+TP(Sym(25),DoubleMinus(Sym(17),Sym(24)))
+TP(Sym(26),DoublePlus(Sym(25),Sym(18)))
+TP(Sym(27),Reflect(ArrayUpdate(Sym(2),Sym(16),Sym(26)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
 Map(Sym(14) -> Sym(20), Sym(10) -> Sym(19), Sym(6) -> Sym(8), Sym(7) -> Sym(16), Sym(13) -> Sym(9), Sym(11) -> Sym(5), Sym(12) -> Sym(6), Sym(5) -> Sym(7), Sym(15) -> Sym(21), Sym(8) -> Sym(17), Sym(9) -> Sym(18))
 overlap1:
 (Sym(8),Sym(17))
@@ -67,10 +67,10 @@ val x48 = x42 * x47
 val x49 = x42 - x48
 val x50 = x49 + x43
 val x51 = x2(x44) = x50
-val x52 = x37 = x47
-val x53 = x38 = x48
-val x54 = x39 = x46
-()
+x37 = x47
+x38 = x48
+x39 = x46
+
 x41 = x41 + 1
 }
 x56
