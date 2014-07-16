@@ -1,4 +1,4 @@
-[https://api.travis-ci.org/TiarkRompf/virtualization-lms-core.png](https://travis-ci.org/TiarkRompf/virtualization-lms-core)
+[![Build Status](https://api.travis-ci.org/TiarkRompf/virtualization-lms-core.png)](https://travis-ci.org/TiarkRompf/virtualization-lms-core)
 
 Lightweight Modular Staging (LMS) is a runtime code generation approach. 
 This framework, LMS-Core, provides a library of core components for building 
