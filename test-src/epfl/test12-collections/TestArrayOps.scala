@@ -7,7 +7,7 @@ import java.io.PrintWriter
 
 class TestArrayOps extends FileDiffSuite {
 
-  val prefix = "test-out/epfl/test12-"
+  val prefix = home + "test-out/epfl/test12-"
 
   def testIntArrayCreation() {
     withOutFile(prefix+"array-seq-creation") {

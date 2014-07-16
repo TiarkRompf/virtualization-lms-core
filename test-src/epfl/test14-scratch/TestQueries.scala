@@ -890,7 +890,7 @@ trait Util {
 // test cases
 class TestQueries extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test14-"
+  val prefix = home + "test-out/epfl/test14-"
   
   trait DSL extends Staged with Compile {
     def test(): Unit
