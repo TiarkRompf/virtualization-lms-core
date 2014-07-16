@@ -64,7 +64,7 @@ trait TupledFunctions extends Functions with TupleOps {
 
 trait FunctionsExp extends Functions with EffectExp {
   case class Lambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B], x: Exp[A], y: Block[B]) extends Def[A => B] { val mA = manifest[A]; val mB = manifest[B] }
-  case class Apply[A:Manifest,B:Manifest](f: Exp[A => B], arg: Exp[A]) extends Def[B]
+  case class Apply[A:Manifest,B:Manifest](f: Exp[A => B], arg: Exp[A]) extends Def[B] { val mA = manifest[A]; val mB = manifest[B] }
 
   // unboxedFresh and unbox are hooks that can be overridden to
   // implement multiple-arity functions with tuples. These two methods
@@ -100,6 +100,8 @@ trait FunctionsExp extends Functions with EffectExp {
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case e@Lambda(g,x,y) => toAtom(Lambda(f(g),f(x),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Apply(g,arg) => doApply(f(g), f(arg))(e.mA,mtype(e.mB),implicitly[SourceContext])
+    case Reflect(e@Apply(g,arg), u, es) => reflectMirrored(Reflect(Apply(f(g),f(arg))(e.mA,mtype(e.mB)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 
@@ -221,24 +223,11 @@ trait GenericGenUnboxedTupleAccess extends GenericNestedCodegen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Tuple2Access1(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(0)))
-    case Tuple2Access2(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(1)))
-
-    case Tuple3Access1(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(0)))
-    case Tuple3Access2(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(1)))
-    case Tuple3Access3(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(2)))
-
-    case Tuple4Access1(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(0)))
-    case Tuple4Access2(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(1)))
-    case Tuple4Access3(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(2)))
-    case Tuple4Access4(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(3)))
-
-    case Tuple5Access1(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(0)))
-    case Tuple5Access2(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(1)))
-    case Tuple5Access3(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(2)))
-    case Tuple5Access4(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(3)))
-    case Tuple5Access5(UnboxedTuple(vars)) => emitValDef(sym, quote(vars(4)))
-
+    case FieldApply(UnboxedTuple(vars), "_1") => emitValDef(sym, quote(vars(0)))
+    case FieldApply(UnboxedTuple(vars), "_2") => emitValDef(sym, quote(vars(1)))
+    case FieldApply(UnboxedTuple(vars), "_3") => emitValDef(sym, quote(vars(2)))
+    case FieldApply(UnboxedTuple(vars), "_4") => emitValDef(sym, quote(vars(3)))
+    case FieldApply(UnboxedTuple(vars), "_5") => emitValDef(sym, quote(vars(4)))
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -287,17 +276,18 @@ trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTu
 
     case _ => super.emitNode(sym,rhs)
   }
-
-  def unwrapTupleStr(s: String): Array[String] = {
+  
+  def unwrapTupleStr[A](m: Manifest[A]): Array[String] = {
+    val s = m.toString
     if (s.startsWith("scala.Tuple")) s.slice(s.indexOf("[")+1,s.length-1).filter(c => c != ' ').split(",")
-    else Array(s)
-  }
-
-  override def remap[A](m: Manifest[A]): String = m.toString match {
+    else Array(remap(m))
+  } 
+  
+  override def remap[A](m: Manifest[A]): String = m.toString match {    
     case f if f.startsWith("scala.Function") =>
       val targs = m.typeArguments.dropRight(1)
       val res = remap(m.typeArguments.last)
-      val targsUnboxed = targs.flatMap(t => unwrapTupleStr(remap(t)))
+      val targsUnboxed = targs.flatMap(t => unwrapTupleStr(t))
       val sep = if (targsUnboxed.length > 0) "," else ""
       "scala.Function" + (targsUnboxed.length) + "[" + targsUnboxed.mkString(",") + sep + res + "]"
 
@@ -312,10 +302,11 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case e@Lambda(fun, x, y) =>
+        throw new GenerationFailedException("CudaGenFunctions: Lambda is not supported yet")
         // The version for inlined device function
-        stream.println(addTab() + "%s %s = %s;".format(remap(x.tp), quote(x), quote(sym)+"_1"))
-        emitBlock(y)
-        stream.println(addTab() + "%s %s = %s;".format(remap(y.tp), quote(sym), quote(getBlockResult(y))))
+        //stream.println(addTab() + "%s %s = %s;".format(remap(x.tp), quote(x), quote(sym)+"_1"))
+        //emitBlock(y)
+        //stream.println(addTab() + "%s %s = %s;".format(remap(y.tp), quote(sym), quote(getBlockResult(y))))
 
         // The version for separate device function
         /*
@@ -327,7 +318,6 @@ trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
         stream.println("return %s;".format(quote(getBlockResult(y))))
         stream.println("}")
         */
-
       case Apply(fun, arg) =>
         emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 
@@ -356,6 +346,9 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
+  // Nested functions are not allowed in standard C.
+  // TODO: Either emit the function other place or use C++11 (or only gcc)
+  /*
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
       stream.println(remap(y.tp)+" "+quote(sym)+"("+remap(x.tp)+" "+quote(x)+") {")
@@ -368,16 +361,18 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
       emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
     case _ => super.emitNode(sym, rhs)
   }
+  */
 }
 
 trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAccess {
   val IR: TupledFunctionsExp
   import IR._
-
+  
   /*override def quote(x: Exp[Any]) : String = x match {
     case UnboxedTuple(t) => t.map(quote).mkString("((", ",", "))")
     case _ => super.quote(x)
   }*/
+
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>

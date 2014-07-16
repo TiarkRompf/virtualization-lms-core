@@ -325,11 +325,11 @@ trait Shallow extends Util {
 
 
 // a staged implementation
-trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Structs {
+trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with StructOps {
   
   def database[T:Manifest](s: String): Rep[T]
-  trait Record extends Struct
-  implicit def recordToRecordOps2(record: Rep[Record]) = new RecordOps(record.asInstanceOf[Rep[super.Record]])
+  //trait Record extends Struct
+  implicit def recordToRecordOps2(record: Rep[Record]) = new RecordOps(record.asInstanceOf[Rep[Record]])
 
   trait Inner {
 
@@ -770,7 +770,7 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
     case IfThen(c,a)          => if (c) for (x <- a; y <- f(x)) yield y else List()
     case For(l2,f2)           => for (x <- l2; y <- f2(x); z <- f(y)) yield z
     case Concat(a,b)          => a.flatMap(f) ++ b.flatMap(f)
-    case (Def(Field(Def(Database(db)), tbl, tpe))) => 
+    case (Def(FieldApply(Def(Database(db)), tbl))) =>     
       val a = fresh[A]
       val b = reifyEffects(f(a))
       b match {

@@ -42,7 +42,7 @@ trait ArithStr extends Arith with BaseStr {
 
 class TestPower extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test2-"
+  val prefix = home + "test-out/epfl/test2-"
 
   def testPower = {
     withOutFile(prefix+"power") {

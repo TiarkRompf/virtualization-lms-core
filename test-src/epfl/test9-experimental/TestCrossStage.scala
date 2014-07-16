@@ -15,7 +15,7 @@ import collection.mutable.ArrayBuffer
 
 class TestCrossStage extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test9-"
+  val prefix = home + "test-out/epfl/test9-"
   
   trait DSL extends Functions with ArrayBufferOps with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with RangeOps with Print {
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]

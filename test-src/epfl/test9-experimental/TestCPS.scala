@@ -157,7 +157,7 @@ trait AmbProg2 extends AmbProg1 {
 
 class TestCPS extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test9-"
+  val prefix = home + "test-out/epfl/test9-"
   
   def testCps1 = {
     withOutFile(prefix+"cps1") {

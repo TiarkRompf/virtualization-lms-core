@@ -79,27 +79,9 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
   
   // strong order for levelScope (as obtained by code motion), taking care of recursive dependencies.
   def getStronglySortedSchedule2(scope: List[Stm], level: List[Stm], result: Any): (List[Stm], List[Sym[Any]]) = {
-    import util.GraphUtil
-    import scala.collection.{mutable,immutable}
-
-    val scopeCache = new mutable.HashMap[Sym[Any],Stm]
-    for (stm <- scope; s <- stm.lhs)
-      scopeCache(s) = stm
-
-    //TR: wip!
-
-    def deps(st: List[Sym[Any]]): List[Stm] = //st flatMap (scopeCache.get(_).toList)
-      {
-        val l1 = st sortBy(_.id) flatMap (scopeCache.get(_).toList) distinct; // need distinc??
-        /*val l2 = scope.filter(d => (st intersect d.lhs).nonEmpty) sortBy(_.lhs.intersec(st).map(_.id).min)
-        if (l1 != l2) {
-          println("l1: " + l1)
-          println("l2: " + l2)
-        }*/
-        l1
-      }
+    val scopeIndex = buildScopeIndex(scope)
     
-    val fixed = new mutable.HashMap[Any,List[Sym[Any]]]
+    val fixed = new collection.mutable.HashMap[Any,List[Sym[Any]]]
     def allSyms(r: Any) = fixed.getOrElse(r, syms(r) ++ softSyms(r))
 
 
@@ -107,7 +89,7 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
 
     var recursive: List[Sym[Any]] = Nil
 
-    var xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result)), t => deps(allSyms(t.rhs)))    
+    var xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(allSyms(result), scopeIndex), t => scheduleDepsWithIndex(allSyms(t.rhs), scopeIndex))  
     xx.foreach { xs => 
       if (xs.length > 1 && (xs intersect level).nonEmpty) {
         printdbg("warning: recursive schedule for result " + result + ": " + xs)
@@ -139,7 +121,7 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
         }
       }
     }
-    xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result) ++ allSyms(recursive)), t => deps(allSyms(t.rhs)))
+    xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(allSyms(result) ++ allSyms(recursive), scopeIndex), t => scheduleDepsWithIndex(allSyms(t.rhs), scopeIndex))
     xx.foreach { xs => 
       if (xs.length > 1 && (xs intersect level).nonEmpty) {
         // see test5-schedfun. since we're only returning level scope (not inner)

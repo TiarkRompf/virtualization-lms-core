@@ -63,12 +63,12 @@ trait EqualExpBridge extends BaseExp  {
 
 trait EqualExp extends Equal with EqualExpBridge with VariablesExp
 
-trait EqualExpBridgeOpt extends EqualExp {
+trait EqualExpBridgeOpt extends EqualExpBridge {
   override def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = if (a == b) Const(true) else (a,b) match {
     case (Const(a),Const(b)) => Const(a == b)
     case _ => super.equals(a,b)
   }
-  
+
   override def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = if (a == b) Const(false) else (a,b) match {
     case (Const(a),Const(b)) => Const(a != b)
     case _ => super.notequals(a,b)
@@ -79,9 +79,9 @@ trait EqualExpOpt extends EqualExp with EqualExpBridgeOpt
 
 
 trait ScalaGenEqual extends ScalaGenBase {
-  val IR: EqualExp
+  val IR: EqualExpBridge
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Equal(a,b) =>  emitValDef(sym, src"$a == $b")
     case NotEqual(a,b) =>  emitValDef(sym, src"$a != $b")
@@ -90,7 +90,7 @@ trait ScalaGenEqual extends ScalaGenBase {
 }
 
 trait CLikeGenEqual extends CLikeGenBase {
-  val IR: EqualExp
+  val IR: EqualExpBridge
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
@@ -106,4 +106,22 @@ trait CLikeGenEqual extends CLikeGenBase {
 
 trait CudaGenEqual extends CudaGenBase with CLikeGenEqual
 trait OpenCLGenEqual extends OpenCLGenBase with CLikeGenEqual
-trait CGenEqual extends CGenBase with CLikeGenEqual
+
+trait CGenEqual extends CGenBase with CLikeGenEqual {
+  val IR: EqualExpBridge
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
+    rhs match {
+      case Equal(a,b) if(remap(a.tp) == "string" && remap(b.tp) == "string") =>
+        emitValDef(sym, quote(a) + ".compare(" + quote(b) + ") == 0")
+      case Equal(a,b) if (!isPrimitiveType(a.tp) && !isPrimitiveType(b.tp) && (remap(a.tp) == remap(b.tp))) =>
+        emitValDef(sym, quote(a) + "->equals(" + quote(b) + ")")
+      case NotEqual(a,b) if(remap(a.tp) == "string" && remap(b.tp) == "string") =>
+        emitValDef(sym, quote(a) + ".compare(" + quote(b) + ") != 0")
+      case NotEqual(a,b) if (!isPrimitiveType(a.tp) && !isPrimitiveType(b.tp) && (remap(a.tp) == remap(b.tp))) =>
+        emitValDef(sym, "!" + quote(a) + "->equals(" + quote(b) + ")")
+      case _ => super.emitNode(sym, rhs)
+    }
+  }
+}

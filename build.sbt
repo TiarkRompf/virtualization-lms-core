@@ -4,14 +4,7 @@ version := "0.3-SNAPSHOT"
 
 organization := "EPFL"
 
-//resolvers += Resolver.sonatypeRepo("snapshots") // for ScalaTest
-
-
-//scalaHome := Some(file(Path.userHome + "/scala/build/pack"))
-
 scalaOrganization := "org.scala-lang.virtualized"
-
-//scalaBinaryVersion := virtScala
 
 scalaVersion := virtScala
 
@@ -26,12 +19,9 @@ scalacOptions += "-Yvirtualize"
 //scalacOptions in Compile ++= Seq(/*Unchecked, */Deprecation)
 
 
-// needed for scala.tools, which is apparently not included in sbt's built in version
 libraryDependencies += "org.scala-lang.virtualized" % "scala-library" % virtScala
 
 libraryDependencies += "org.scala-lang.virtualized" % "scala-compiler" % virtScala
-
-libraryDependencies += "org.scala-lang" % "scala-actors" % virtScala // for ScalaTest
 
 libraryDependencies += scalaTest
 

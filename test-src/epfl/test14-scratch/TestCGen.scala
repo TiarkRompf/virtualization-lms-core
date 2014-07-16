@@ -13,7 +13,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 class TestCGen extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test14-"
+  val prefix = home + "test-out/epfl/test14-"
   
   trait DSL extends ScalaOpsPkg with TupledFunctions with UncheckedOps with LiftPrimitives with LiftString with LiftVariables {
     // keep track of top level functions

@@ -89,7 +89,7 @@ trait DBProg extends Arith with Loops with Print with DB with OverloadHack {
 
 class TestDB extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test7-"
+  val prefix = home + "test-out/epfl/test7-"
   
   def testDB1 = {
     withOutFile(prefix+"db1") {

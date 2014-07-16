@@ -3,8 +3,8 @@
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
-val x3 = 7 > x0
 var x1: Int = 7
+val x3 = 7 > x0
 // TODO: use vars instead of tuples to return multiple values
 val (x15,x11) = if (x3) {
 x1 = 5

@@ -54,7 +54,7 @@ trait MatcherProg { this: Matching with ListMatch =>
 
 class TestMatcher extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test4-"
+  val prefix = home + "test-out/epfl/test4-"
   
   def testMatcher1 = {
     withOutFile(prefix+"matcher1") {

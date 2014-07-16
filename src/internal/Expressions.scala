@@ -23,7 +23,6 @@ trait Expressions extends Utils {
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
-    var sourceInfo = Thread.currentThread.getStackTrace // will go away
     var sourceContexts: List[SourceContext] = Nil
     override def pos = sourceContexts
     def withPos(pos: List[SourceContext]) = { sourceContexts :::= pos; this }
@@ -32,7 +31,7 @@ trait Expressions extends Utils {
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
   var nVars = 0
-  def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) println("nVars="+nVars);  nVars -1 }
+  def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) printlog("nVars="+nVars);  nVars -1 }
 
   def fresh[T:Manifest](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
 

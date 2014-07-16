@@ -45,12 +45,12 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   }
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case Reflect(Error(x), u, es) => reflectMirrored(Reflect(Error(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(PrintLn(x), u, es) => reflectMirrored(Reflect(PrintLn(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(PrintF(fm,x), u, es) => reflectMirrored(Reflect(PrintF(fm,f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(Exit(x), u, es) => reflectMirrored(Reflect(Exit(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(Return(x), u, es) => reflectMirrored(Reflect(Return(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(Error(x), u, es) => reflectMirrored(Reflect(Error(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(PrintLn(x), u, es) => reflectMirrored(Reflect(PrintLn(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(PrintF(fm,x), u, es) => reflectMirrored(Reflect(PrintF(fm,f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(Exit(x), u, es) => reflectMirrored(Reflect(Exit(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(Return(x), u, es) => reflectMirrored(Reflect(Return(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
@@ -75,11 +75,31 @@ trait CGenMiscOps extends CGenEffect {
   val IR: MiscOpsExp
   import IR._
 
+  private def format(s: Exp[Any]): String = {
+    remap(s.tp) match {
+      case "uint16_t" => "%c"
+      case "bool" | "int8_t" | "int16_t" | "int32_t" => "%d"
+      case "int64_t" => "%ld"
+      case "float" | "double" => "%f"
+      case "string" => "%s" 
+      case _ => throw new GenerationFailedException("CGenMiscOps: cannot print type " + remap(s.tp))
+    }
+  }
+
+  private def quoteRawString(s: Exp[Any]): String = {
+    remap(s.tp) match {
+      case "string" => quote(s) + ".c_str()"
+      case _ => quote(s)
+    }
+  }
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case PrintF(f,xs) => emitValDef(sym, src"printf(${Const(f:String)::xs})")
-    case PrintLn(s) => gen"""printf("%s\n",$s);"""
-    case Print(s) => gen"""printf("%s",$s);"""
-    case Exit(a) => gen"exit($a);"
+    case PrintF(f,x) => stream.println("printf(" + ((Const(f:String)::x).map(quoteRawString)).mkString(",") + ");")
+    case PrintLn(s) => stream.println("printf(\"" + format(s) + "\\n\"," + quoteRawString(s) + ");")
+    case Print(s) => stream.println("printf(\"" + format(s) + "\"," + quoteRawString(s) + ");")
+    case Exit(a) => stream.println("exit(" + quote(a) + ");")
+    case Return(x) => stream.println("return " + quote(x) + ";")
+    case Error(s) => stream.println("error(-1,0,\"%s\"," + quote(s) + ");")
     case _ => super.emitNode(sym, rhs)
   }
 }

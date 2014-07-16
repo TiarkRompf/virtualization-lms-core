@@ -10,14 +10,14 @@ import scala.reflect.SourceContext
 
 class TestNumeric extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test1-"
+  val prefix = home + "test-out/epfl/test1-"
   
 
   // this seems to be a bug in Scala-Virtualized related to reified __new
 
   def testBugNumeric1 = {
     withOutFile(prefix+"numeric1") {
-      trait Prog extends Base with NumericOps with Structs with LiftNumeric {
+      trait Prog extends Base with NumericOps with PrimitiveOps with StructOps with LiftNumeric {
         def test(x: Rep[Int]) = {
           
           val a = unit(2.0)
@@ -84,7 +84,7 @@ class TestNumeric extends FileDiffSuite {
 
   def testBugNumeric3 = {
     withOutFile(prefix+"numeric3") {
-      trait Prog extends Base with NumericOps with LiftNumeric with StringOps {
+      trait Prog extends Base with NumericOps with PrimitiveOps with LiftNumeric with StringOps {
 
         def test = {
           val numRows = unit(7)

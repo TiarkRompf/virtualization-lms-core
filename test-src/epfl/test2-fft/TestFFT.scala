@@ -111,7 +111,7 @@ trait ScalaGenFlat extends ScalaGenBase {
 
 class TestFFT extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test2-"
+  val prefix = home + "test-out/epfl/test2-"
   
   def testFFT1 = {
     withOutFile(prefix+"fft1") {

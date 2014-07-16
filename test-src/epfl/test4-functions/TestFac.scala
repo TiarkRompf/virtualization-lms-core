@@ -38,7 +38,7 @@ trait FacProg2 { this: Arith with Functions with Equal with IfThenElse =>
 
 class TestFac extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test4-"
+  val prefix = home + "test-out/epfl/test4-"
 
   def testFac1 = {
     withOutFile(prefix+"fac1") {

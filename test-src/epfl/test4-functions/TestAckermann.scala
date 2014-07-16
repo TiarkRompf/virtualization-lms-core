@@ -44,7 +44,7 @@ trait AckProg { this: Arith with Functions with Equal with IfThenElse =>
 
 class TestAck extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test4-"
+  val prefix = home + "test-out/epfl/test4-"
 
   def testAck1 = {
     withOutFile(prefix+"ack1") {

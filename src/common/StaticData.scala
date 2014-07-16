@@ -13,13 +13,24 @@ trait StaticDataExp extends EffectExp {
   case class StaticData[T](x: T) extends Def[T]
   def staticData[T:Manifest](x: T): Exp[T] = StaticData(x)
 
+  // StaticData doesn't play well with control dependencies.. looks like we somehow lose updates
+  override implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext) = d match {
+    case StaticData(x) if addControlDeps =>
+      val save = conditionalScope
+      conditionalScope = false
+      val z = super.toAtom(d)
+      conditionalScope = save
+      z      
+    case _ => super.toAtom(d)
+  }
+
   override def isWritableSym[A](w: Sym[A]): Boolean = findDefinition(w) match {
     case Some(TP(_, StaticData(_))) => true
     case _ => super.isWritableSym(w)
   }
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case StaticData(x) => staticData(x)(mtype(manifest[A]))
+    case StaticData(x) => staticData(x)(mtype(manifest[A]))        
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]   
 }

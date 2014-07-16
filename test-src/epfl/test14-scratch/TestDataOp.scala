@@ -155,7 +155,7 @@ class TestDataOp extends FileDiffSuite {
 
   }
 
-  trait Impl extends DSL with ScalaOpsPkgExp with VariablesExpOpt with TupledFunctionsRecursiveExp with UncheckedOpsExp { self => 
+  trait Impl extends DSL with ScalaOpsPkgExp with VariablesExpOpt with PrimitiveOpsExpOpt with TupledFunctionsRecursiveExp with UncheckedOpsExp { self => 
     val codegen = new CCodeGenPkg with CGenVariables with CGenTupledFunctions with CGenUncheckedOps { 
       val IR: self.type = self 
       override def remap[A](a: Manifest[A]) = 

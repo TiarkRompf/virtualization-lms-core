@@ -9,6 +9,8 @@ trait ScalaCodegen extends GenericCodegen with Config {
   val IR: Expressions
   import IR._
 
+  override def deviceTarget: Targets.Value = Targets.Scala
+
   override def kernelFileExt = "scala"
 
   override def toString = "scala"
@@ -49,10 +51,12 @@ trait ScalaCodegen extends GenericCodegen with Config {
     staticData
   }
 
+  override def emitFileHeader() {
+    // empty by default. override to emit package or import declarations.
+  }
+
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
-    
-    stream.println("package generated." + this.toString)
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
     stream.print(vals.map(p => quote(p) + ":" + remap(p.tp)).mkString(","))
@@ -98,8 +102,12 @@ trait ScalaCodegen extends GenericCodegen with Config {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
   
-  def emitAssignment(lhs: String, rhs: String): Unit = {
-    stream.println(lhs + " = " + rhs)
+  override def emitVarDecl(sym: Sym[Any]): Unit = {
+    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = null.asInstanceOf[" + remap(sym.tp) + "];")
+  }
+
+  override def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
+    stream.println(quote(sym) + " = " + rhs)
   }
 }
 

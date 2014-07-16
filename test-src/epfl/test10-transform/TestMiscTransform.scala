@@ -256,7 +256,7 @@ trait FWXTransform extends BaseFatExp with EffectExp with IfThenElseFatExp with 
 
 class TestMisc extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test10-"
+  val prefix = home + "test-out/epfl/test10-"
   
   trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
     with IfThenElse with While with RangeOps with Print {

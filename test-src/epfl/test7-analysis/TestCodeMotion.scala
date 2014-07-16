@@ -166,7 +166,7 @@ trait NestCondProg8 extends Arith with OrderingOps with Functions with IfThenEls
 
 class TestCodemotion extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test7-"
+  val prefix = home + "test-out/epfl/test7-"
   
   def testCodemotion1 = {
     // test loop hoisting (should use loops but lambdas will do for now)

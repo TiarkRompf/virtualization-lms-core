@@ -1,5 +1,5 @@
 /* FILE: main.c */
-int main(int);
+int32_t main(int32_t);
 /*****************************************
   Emitting C Generated Code                  
 *******************************************/
@@ -7,24 +7,24 @@ int main(int);
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-int main(int x0) {
-int x5 = 0;
-const int* x1 = mmap('table_field1.dat') // XX TODO ;
-const int x4 = sizeof(x1)/sizeof(*x1);
-const int* x2 = mmap('table_field2.dat') // XX TODO ;
+int32_t main(int32_t  x0) {
+int32_t x5 = 0;
+int* *x1 = mmap('table_field1.dat') // XX TODO ;
+int32_t x4 = x1->length;
+int* *x2 = mmap('table_field2.dat') // XX TODO ;
 for (;;) {
-const int x6 = x5;
-const bool x7 = x6 < x4;
+int32_t x6 = x5;
+bool x7 = x6 < x4;
 if (x7) {
-x5 = x5 + 1;
+x5 += 1;
 } else {
 }
 if (!x7) break;
-const int x12 = x5;
-const int x14 = x2[x12];
-const int x13 = x1[x12];
-const int x16 = 2 * x13;
-printf("foo: %d, bar: %d\n",x14,x16); // x17
+int32_t x12 = x5;
+int32_t x14 = x2[x12];
+int32_t x13 = x1[x12];
+int32_t x16 = 2 * x13;
+printf(string("foo: %d, bar: %d\n").c_str(),x14,x16);
 }
 return 0;
 }

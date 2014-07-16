@@ -1,5 +1,5 @@
 /* FILE: main.c */
-int main(int);
+int32_t main(int32_t);
 /*****************************************
   Emitting C Generated Code                  
 *******************************************/
@@ -7,49 +7,48 @@ int main(int);
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-int main(int x0) {
-int x3 = 0;
-const int* x1 = mmap('table.dat') // XX TODO ;
-const int x2 = sizeof(x1)/sizeof(*x1);
+int32_t main(int32_t  x0) {
+int32_t x3 = 0;
+int* *x1 = mmap('table.dat') // XX TODO ;
+int32_t x2 = x1->length;
 for (;;) {
-const int x4 = x3;
-const bool x5 = x4 < x2;
+int32_t x4 = x3;
+bool x5 = x4 < x2;
 if (x5) {
-x3 = x3 + 3;
+x3 += 3;
 } else {
 }
 bool x9 = x5;
 for (;;) {
-const bool x10 = x9;
-bool x21;
+bool x10 = x9;
+bool x20;
 if (x10) {
-const int x11 = x3;
-const int x14 = x11 + 1;
-const int x15 = x1[x14];
-const bool x18 = x15 > 0;
-const bool x19 = !x18;
-x21 = x19;
+int32_t x11 = x3;
+int32_t x13 = x11 + 1;
+int32_t x14 = x1[x13];
+bool x17 = x14 > 0;
+bool x18 = !x17;
+x20 = x18;
 } else {
-x21 = false;
+x20 = false;
 }
-if (!x21) break;
-const int x23 = x3;
-const bool x24 = x23 < x2;
-if (x24) {
-x3 = x3 + 3;
+if (!x20) break;
+int32_t x22 = x3;
+bool x23 = x22 < x2;
+if (x23) {
+x3 += 3;
 } else {
 }
-x9 = x24;
+x9 = x23;
 }
-const bool x31 = x9;
-if (!x31) break;
-const int x33 = x3;
-const int x36 = x33 + 1;
-const int x37 = x1[x36];
-const int x34 = x33 + 0;
-const int x35 = x1[x34];
-const int x40 = 2 * x35;
-printf("foo: %d, bar: %d\n",x37,x40); // x41
+bool x30 = x9;
+if (!x30) break;
+int32_t x32 = x3;
+int32_t x34 = x32 + 1;
+int32_t x35 = x1[x34];
+int32_t x33 = x1[x32];
+int32_t x38 = 2 * x33;
+printf(string("foo: %d, bar: %d\n").c_str(),x35,x38);
 }
 return 0;
 }

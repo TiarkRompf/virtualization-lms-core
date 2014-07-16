@@ -1,5 +1,5 @@
 /* FILE: main.c */
-int main(int);
+int32_t main(int32_t);
 /*****************************************
   Emitting C Generated Code                  
 *******************************************/
@@ -7,24 +7,24 @@ int main(int);
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-int main(int x0) {
-int x1(int x2,int x3) {
-const int x4 = x2;
-const bool x6 = x4 == 0;
-int x12;
+int32_t main(int32_t  x0) {
+int32_t x1(int32_t x2,int32_t x3) {
+int32_t x4 = x2;
+bool x6 = x4 == 0;
+int32_t x12;
 if (x6) {
 x12 = 1;
 } else {
-const int x5 = x3;
-const int x7 = x4 - 1;
-const int x9 = x1(x7,x5);
-const int x10 = x4 * x9;
+int32_t x5 = x3;
+int32_t x7 = x4 - 1;
+int32_t x9 = x1(x7,x5);
+int32_t x10 = x4 * x9;
 x12 = x10;
 }
 return x12;
 }
-const int x15 = x1(4,0);
-printf("Hello, world! %d\n",x15); // x16
+int32_t x15 = x1(4,0);
+printf(string("Hello, world! %d\n").c_str(),x15);
 return 0;
 }
 /*****************************************

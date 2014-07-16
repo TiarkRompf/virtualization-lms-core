@@ -67,7 +67,7 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
       if (f.hasContext)
         __ifThenElse(f(c),f.reflectBlock(a),f.reflectBlock(b))
       else
-        reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+        reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case IfThenElse(c,a,b) => 
       if (f.hasContext)
         __ifThenElse(f(c),f.reflectBlock(a),f.reflectBlock(b))
@@ -199,12 +199,6 @@ trait IfThenElseExpOpt extends IfThenElseExp { this: BooleanOpsExp with EqualExp
       super.__ifThenElse(cond, thenp, elsep)
   }
 }
-
-
-
-
-
-
 
 trait BaseGenIfThenElse extends GenericNestedCodegen {
   val IR: IfThenElseExp
@@ -390,7 +384,10 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
             emitBlock(b)
             stream.println("}")
           case _ =>
-            stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
+            if (isPrimitiveType(sym.tp))
+              stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
+            else
+              stream.println("%s *%s;".format(remap(sym.tp),quote(sym)))
             stream.println("if (" + quote(c) + ") {")
             emitBlock(a)
             stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(a))))

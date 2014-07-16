@@ -730,7 +730,7 @@ trait MatcherNewProg extends DFAOps with GAOps with NFAtoDFA with GAtoDA with Ut
 
 class TestMatcherNew extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test4-"
+  val prefix = home + "test-out/epfl/test4-"
   
   trait DSL extends MatcherNewProg with Arith with Functions with Equal with IfThenElse {
     def bare[T:Manifest](x: Rep[Any], f: String => String): Rep[T]
@@ -791,6 +791,7 @@ class TestMatcherNew extends FileDiffSuite {
       
       val f = (x:Rep[Unit]) => test(x)
       codegen.emitSource(f, "Match", new java.io.PrintWriter(System.out))
+      codegen.emitDataStructures(new java.io.PrintWriter(System.out))
       val fc = compile(f)
       runtest()
   }

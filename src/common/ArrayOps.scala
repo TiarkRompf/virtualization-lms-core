@@ -104,12 +104,12 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
     case ArrayLength(x) => array_length(f(x))
     case e@ArraySort(x) => array_sort(f(x))(e.m,pos)
     case e@ArrayCopy(a,ap,d,dp,l) => toAtom(ArrayCopy(f(a),f(ap),f(d),f(dp),f(l))(e.m))(mtype(manifest[A]),pos)
-    case Reflect(e@ArrayNew(n), u, es) => reflectMirrored(Reflect(ArrayNew(f(n))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(e@ArrayLength(x), u, es) => reflectMirrored(Reflect(ArrayLength(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r))(mtype(manifest[A])), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(e@ArraySort(x), u, es) => reflectMirrored(Reflect(ArraySort(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(ArrayUpdate(l,i,r), u, es) => reflectMirrored(Reflect(ArrayUpdate(f(l),f(i),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(e@ArrayCopy(a,ap,d,dp,l), u, es) => reflectMirrored(Reflect(ArrayCopy(f(a),f(ap),f(d),f(dp),f(l))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(e@ArrayNew(n), u, es) => reflectMirrored(Reflect(ArrayNew(f(n))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
+    case Reflect(e@ArrayLength(x), u, es) => reflectMirrored(Reflect(ArrayLength(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
+    case Reflect(ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r))(mtype(manifest[A])), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@ArraySort(x), u, es) => reflectMirrored(Reflect(ArraySort(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(ArrayUpdate(l,i,r), u, es) => reflectMirrored(Reflect(ArrayUpdate(f(l),f(i),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)   
+    case Reflect(e@ArrayCopy(a,ap,d,dp,l), u, es) => reflectMirrored(Reflect(ArrayCopy(f(a),f(ap),f(d),f(dp),f(l))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)     
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 
@@ -272,5 +272,17 @@ trait CLikeGenArrayOps extends BaseGenArrayOps with CLikeGenBase {
 
 trait CudaGenArrayOps extends CudaGenBase with CLikeGenArrayOps
 trait OpenCLGenArrayOps extends OpenCLGenBase with CLikeGenArrayOps
-trait CGenArrayOps extends CGenBase with CLikeGenArrayOps
+trait CGenArrayOps extends CGenBase with BaseGenArrayOps {
+  val IR: ArrayOpsExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
+      rhs match {
+        case ArrayLength(x) => emitValDef(sym, quote(x) + "->length")
+        case ArrayApply(x,n) => emitValDef(sym, quote(x) + "->apply(" + quote(n) + ")")
+        case ArrayUpdate(x,n,y) => stream.println(quote(x) + "->update(" + quote(n) + "," + quote(y) + ");")
+        case _ => super.emitNode(sym, rhs)
+      }
+    }
+}
 

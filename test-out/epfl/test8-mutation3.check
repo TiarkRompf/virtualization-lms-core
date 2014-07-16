@@ -1,7 +1,7 @@
-promoting to effect: Sym(7)=Reflect(ArrayLength(Sym(6)),Summary(false,false,false,false,false,List(Sym(6)),List(Sym(6)),List(),List()),List(Sym(6)))
+promoting to effect: Sym(7)=Reflect(ArrayLength(Sym(6)),Summary(false,false,false,false,false,false,List(Sym(6)),List(Sym(6)),List(),List()),List(Sym(6)))
 depends on  Sym(6)
 error: illegal sharing of mutable objects Sym(6)
-at Sym(13)=Reflect(Assign(Variable(Sym(3)),Sym(6)),Summary(false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(Sym(3)),List(Sym(3))),List(Sym(10), Sym(12)))
+at Sym(13)=Reflect(Assign(Variable(Sym(3)),Sym(6)),Summary(false,false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(Sym(3)),List(Sym(3))),List(Sym(10), Sym(12)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/

@@ -23,9 +23,9 @@ val x605 = x603 && x604
 val x611 = x439 && x605
 val x613 = x113 && x611
 val x614 = if (x613) {
-val x608 = x598.name
-val x607 = new Schema.Record { val name = x608 }
-val x609 = List(x607)
+val x607 = x598.name
+val x608 = new Schema.Record { val name = x607 }
+val x609 = List(x608)
 x609
 } else {
 val x19 = List()

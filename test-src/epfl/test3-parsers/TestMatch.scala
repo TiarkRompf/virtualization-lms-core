@@ -45,7 +45,7 @@ trait MatchProg { this: Matching with Extractors =>
 
 class TestMatch extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test3-"
+  val prefix = home + "test-out/epfl/test3-"
   
   /*
       println {
