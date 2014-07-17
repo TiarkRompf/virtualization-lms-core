@@ -54,7 +54,9 @@ trait StringOps extends Variables with OverloadHack {
   def infix_toInt(s: Rep[String])(implicit pos: SourceContext) = string_toint(s)
   def infix_toLong(s: Rep[String])(implicit pos: SourceContext) = string_tolong(s)
   def infix_substring(s: Rep[String], start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = string_substring(s,start,end)
-  def infix_length(s: Rep[String])(implicit pos: SourceContext) = string_length(s)
+
+  // FIXME: enabling this causes trouble with DeliteOpSuite. investigate!!
+  //def infix_length(s: Rep[String])(implicit pos: SourceContext) = string_length(s)
 
   object String {
     def valueOf(a: Rep[Any])(implicit pos: SourceContext) = string_valueof(a)
