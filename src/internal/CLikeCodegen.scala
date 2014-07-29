@@ -41,12 +41,8 @@ trait CLikeCodegen extends GenericCodegen {
   override def remap[A](m: Manifest[A]) : String = {
     if (m.erasure == classOf[Variable[AnyVal]])
       remap(m.typeArguments.head)
-    else if (m.erasure == classOf[List[Any]]) { // Use case: Delite Foreach sync list 
-      deviceTarget.toString + "List< " + remap(m.typeArguments.head) + " >"
-    }
     else {
       m.toString match {
-        case "scala.collection.immutable.List[Float]" => "List"
         case "Boolean" => "bool"
         case "Byte" => "int8_t"
         case "Char" => "uint16_t"

@@ -44,6 +44,7 @@ trait EqualExpBridge extends BaseExp  {
   case class Equal[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
   case class NotEqual[A:Manifest,B:Manifest](a: Exp[A], b: Exp[B]) extends Def[Boolean]
 
+  def equals_fwd[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = equals(a,b)
   def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = Equal(a,b)
   def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = NotEqual(a,b)
 

@@ -31,9 +31,12 @@ trait ReadVarImplicitExp extends EffectExp {
 trait LowPriorityVariableImplicits extends ImplicitOps {
   this: Variables =>
 
+  implicit def varIntToRepLong(x: Var[Int])(implicit pos: SourceContext): Rep[Long] = implicit_convert[Int,Long](readVar(x))
   implicit def varIntToRepDouble(x: Var[Int])(implicit pos: SourceContext): Rep[Double] = implicit_convert[Int,Double](readVar(x))
   implicit def varIntToRepFloat(x: Var[Int])(implicit pos: SourceContext): Rep[Float] = implicit_convert[Int,Float](readVar(x))
   implicit def varFloatToRepDouble(x: Var[Float])(implicit pos: SourceContext): Rep[Double] = implicit_convert[Float,Double](readVar(x))
+  implicit def varLongToRepDouble(x: Var[Long])(implicit pos: SourceContext): Rep[Double] = implicit_convert[Long,Double](readVar(x))
+  implicit def varLongToRepFloat(x: Var[Long])(implicit pos: SourceContext): Rep[Float] = implicit_convert[Long,Float](readVar(x))
 }
 
 trait VariableImplicits extends LowPriorityVariableImplicits {
@@ -42,6 +45,8 @@ trait VariableImplicits extends LowPriorityVariableImplicits {
   // we always want to prioritize a direct conversion if any Rep will do
   implicit def varIntToRepInt(v: Var[Int])(implicit pos: SourceContext): Rep[Int] = readVar(v)
   implicit def varFloatToRepFloat(v: Var[Float])(implicit pos: SourceContext): Rep[Float] = readVar(v)
+  implicit def varLongToRepLong(v: Var[Long])(implicit pos: SourceContext): Rep[Long] = readVar(v)
+  implicit def varDoubleToRepDouble(v: Var[Double])(implicit pos: SourceContext): Rep[Double] = readVar(v)
 }
 
 trait Variables extends Base with OverloadHack with VariableImplicits with ReadVarImplicit {

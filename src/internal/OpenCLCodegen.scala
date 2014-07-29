@@ -29,7 +29,6 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
     headerStream.println("#include <limits>")
     headerStream.println("#include <float.h>")
     headerStream.println("#include <jni.h>")
-    headerStream.println("#include \"DeliteOpenCL.h\"")
     headerStream.println("#include \"" + deviceTarget + "types.h\"")
     headerStream.println(getDataStructureHeaders())
     

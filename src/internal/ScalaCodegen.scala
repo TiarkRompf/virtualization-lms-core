@@ -15,12 +15,6 @@ trait ScalaCodegen extends GenericCodegen with Config {
 
   override def toString = "scala"
 
-  override def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
-      e.printStackTrace()
-      kstream.close()
-      outFile.delete
-  }
-
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
 
     val sA = remap(manifest[A])
