@@ -805,7 +805,7 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
-      case ObjDoubleParseDouble(s) => emitValDef(sym, "strtod(" + quote(s) + ",NULL)")
+      case ObjDoubleParseDouble(s) => emitValDef(sym, "strtod(" + quote(s) + ".c_str(),NULL)")
       case ObjDoubleMinValue() => emitValDef(sym, "DBL_MIN")
       case ObjDoubleMaxValue() => emitValDef(sym, "DBL_MAX")
       case DoubleFloatValue(lhs) => emitValDef(sym, "(float)"+quote(lhs))

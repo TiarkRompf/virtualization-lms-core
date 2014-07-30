@@ -181,6 +181,12 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
           helperFuncStream.println(sendViewSource)
           helperFuncList.append(sendViewHeader)
         }
+        val (mkManifestHeader, mkManifestSource) = emitMakeManifest(tp)
+        if (!helperFuncList.contains(mkManifestHeader)) {
+          headerStream.println(mkManifestHeader)
+          helperFuncStream.println(mkManifestSource)
+          helperFuncList.append(mkManifestHeader)
+        }
       }
       catch {
         case e: GenerationFailedException => 
