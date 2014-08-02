@@ -149,7 +149,7 @@ trait CGenStringOps extends CGenBase {
     case StringPlus(s1,s2) if remap(s1.tp) == "string" && remap(s2.tp) == "string" => emitValDef(sym,"string_plus(%s,%s)".format(quote(s1),quote(s2)))
     case StringStartsWith(s1,s2) => emitValDef(sym, "string_startsWith(%s,%s)".format(quote(s1),quote(s2)))
     case StringTrim(s) => emitValDef(sym, "string_trim(%s)".format(quote(s)))
-    case StringSplit(s, sep, lim) => emitValDef(sym, "string_split(%s,%s,%s)".format(quote(s),quote(sep),quote(lim)))
+    case StringSplit(s, sep, lim) => emitValDef(sym, "string_split(%s,%s,%s,%s)".format(resourceInfoSym,quote(s),quote(sep),quote(lim)))
     //case StringEndsWith(s, e) => emitValDef(sym, "(strlen(%s)>=strlen(%s)) && strncmp(%s+strlen(%s)-strlen(%s),%s,strlen(%s))".format(quote(s),quote(e),quote(s),quote(e),quote(s),quote(e),quote(e)))    
     case StringCharAt(s,i) => emitValDef(sym, "string_charAt(%s,%s)".format(quote(s), quote(i)))
     //case StringValueOf(a) => 
