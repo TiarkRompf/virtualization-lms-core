@@ -1,6 +1,6 @@
 language: scala
 scala:
-   - 2.10.2
+   - 2.11.1
 
 before_install:
     - git clone -b scala-virtualized --single-branch git://github.com:scala-lms/summer-of-lms-2014.git scala-virtualized
