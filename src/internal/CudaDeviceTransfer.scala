@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms.internal
 
 /* Defines Cuda specific device transfer functions */
@@ -133,4 +132,3 @@ trait CudaDeviceTransfer extends AbstractDeviceTransfer {
   }
 
 }
-*/

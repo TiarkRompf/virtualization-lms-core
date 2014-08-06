@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -92,4 +91,4 @@ trait ScalaCompile extends Expressions {
     val obj: A=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[A=>B]
     obj
   }
-}*/
+}

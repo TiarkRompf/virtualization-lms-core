@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -7,7 +6,7 @@ import java.io.{File, PrintWriter}
 
 
 trait CodeMotion extends Scheduling {
-  val IR: Expressions with Effects /-* effects just for sanity check *-/
+  val IR: Expressions with Effects /* effects just for sanity check */
   import IR._
 
   def getExactScope[A](currentScope: List[Stm])(result: List[Exp[Any]]): List[Stm] = {
@@ -45,7 +44,7 @@ trait CodeMotion extends Scheduling {
     // then/else branches were being unsafely hoisted out of a conditional 
     //val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
 
-    //-* 
+    //* 
     //TODO: uncomment after resolving the issue above
     
     val loopsNotInIfs = e2 filterNot (e3 contains _)    // (shallow|hot)* hot (shallow|hot)*   <---- a hot ref on all paths!
@@ -57,7 +56,7 @@ trait CodeMotion extends Scheduling {
     val shouldOutside = e1 filter (z => (e2 contains z) || (h3 contains z))
     
     //val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
-    //-*-/
+    //*/
 
     val levelScope = e1.filter(z => (shouldOutside contains z) && !(g1 contains z)) // shallow (but with the ordering of deep!!) and minus bound
     
@@ -66,7 +65,7 @@ trait CodeMotion extends Scheduling {
     // sym->sym->hot->sym->cold->sym  hot --> hoist **** iff the cold is actually inside the loop ****
     // sym->sym->cold->sym->hot->sym  cold here, hot later --> push down, then hoist
 
-/-*
+/*
 
     loop { i =>                z = *if (x) bla
       if (i > 0)               loop { i =>
@@ -80,7 +79,7 @@ trait CodeMotion extends Scheduling {
           *bla                     if (i > 0)
     }                                z
                                }
-*-/
+*/
 
     
     // TODO: recursion!!!  identify recursive up-pointers
@@ -104,7 +103,7 @@ trait CodeMotion extends Scheduling {
         val acteffects = levelScope.flatMap(_.lhs) filter (observable contains _)
         if (observable.toSet != acteffects.toSet) {
           val actual = levelScope.filter(_.lhs exists (observable contains _))
-          val expected = observable.map(d=>/-*fatten*-/(findDefinition(d.asInstanceOf[Sym[Any]]).get)) 
+          val expected = observable.map(d=>/*fatten*/(findDefinition(d.asInstanceOf[Sym[Any]]).get)) 
           val missing = expected filterNot (actual contains _)
           val printfn = if (missing.isEmpty) printlog _ else printerr _
           printfn("error: violated ordering of effects")
@@ -137,7 +136,7 @@ trait CodeMotion extends Scheduling {
         }
       case _ =>
     }
-/-*
+/*
     // sanity check to make sure all effects are accounted for
     result match {
       case Def(Reify(x, u, effects)) =>
@@ -145,9 +144,9 @@ trait CodeMotion extends Scheduling {
         assert(effects == actual.map(_.sym), "violated ordering of effects: expected \n    "+effects+"\nbut got\n    " + actual)
       case _ =>
     }
-*-/
+*/
 
 
     levelScope
   }
-}*/
+}

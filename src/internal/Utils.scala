@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -13,4 +12,4 @@ trait Utils extends Config {
   def printsrc(x: =>Any) { if (sourceinfo >= 1) System.err.println(x) }
   
   var hadErrors = false
-}*/
+}

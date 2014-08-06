@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -32,4 +31,5 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatBlockTraversal {
     emitBlock(Block(Combine(rhs.map(getBlockResultFull)))) // TODO: find another way
   }
 
-}*/
+}
+

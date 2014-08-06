@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package util
 
@@ -207,4 +206,4 @@ trait OverloadHack {
   implicit val overloaded99 = new Overloaded99
   implicit val overloaded100 = new Overloaded100  
   
-}*/
+}

@@ -1,10 +1,9 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
 import util.OverloadHack
 import scala.collection.{immutable,mutable}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait AbstractTransformer {
   val IR: Expressions with Blocks with OverloadHack
@@ -101,4 +100,3 @@ trait FatTransforming extends Transforming with FatExpressions {
   //def mirror[A:Manifest](e: FatDef, f: Transformer): Exp[A] = sys.error("don't know how to mirror " + e)  
   
 }
-*/

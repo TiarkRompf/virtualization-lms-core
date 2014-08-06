@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -10,4 +9,3 @@ trait Config {
   // memory management type for C++ target (refcnt or gc)
   val cppMemMgr = System.getProperty("lms.cpp.memmgr","malloc")
 }
-*/

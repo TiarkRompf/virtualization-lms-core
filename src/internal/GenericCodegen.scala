@@ -1,10 +1,9 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
 import util.GraphUtil
 import java.io.{File, PrintWriter}
-import scala.reflect.RefinedManifest
+//import scala.reflect.RefinedManifest TODO(trans)
 
 trait GenericCodegen extends BlockTraversal {
   val IR: Expressions
@@ -63,7 +62,8 @@ trait GenericCodegen extends BlockTraversal {
   def remap[A](s: String, method: String, t: Manifest[A]) : String = remap(s, method, t.toString)
   def remap(s: String, method: String, t: String) : String = s + method + "[" + remap(t) + "]"    
   def remap[A](m: Manifest[A]): String = m match {
-    case rm: RefinedManifest[A] =>  "AnyRef{" + rm.fields.foldLeft(""){(acc, f) => {val (n,mnf) = f; acc + "val " + n + ": " + remap(mnf) + ";"}} + "}"
+    // TODO(trans)
+    //case rm: RefinedManifest[A] =>  "AnyRef{" + rm.fields.foldLeft(""){(acc, f) => {val (n,mnf) = f; acc + "val " + n + ": " + remap(mnf) + ";"}} + "}"
     case _ if m.erasure == classOf[Variable[Any]] =>
         remap(m.typeArguments.head)
     case _ =>
@@ -266,4 +266,3 @@ trait GenericNestedCodegen extends NestedBlockTraversal with GenericCodegen {
   }
 
 }
-*/

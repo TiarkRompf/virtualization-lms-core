@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package util
 
@@ -40,4 +39,4 @@ trait ClosureCompare extends Externalizable {
   }
 
 
-}*/
+}

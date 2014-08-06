@@ -1,8 +1,7 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 import util.GraphUtil
 import scala.collection.mutable
 import scala.annotation.unchecked.uncheckedVariance
@@ -48,7 +47,14 @@ trait Effects extends Expressions with Blocks with Utils {
     val mayRead: List[Sym[Any]],
     val mstRead: List[Sym[Any]],
     val mayWrite: List[Sym[Any]],
-    val mstWrite: List[Sym[Any]])
+    val mstWrite: List[Sym[Any]]) {
+
+    def orElse(v: Summary) = infix_orElse(this, v)
+    def andAlso(v: Summary) = infix_andAlso(this, v)
+    def andThen(v: Summary) = infix_andThen(this, v)
+    def star = infix_star(this)
+    def withoutControl = infix_withoutControl(this)
+  }
   
   def Pure() = new Summary(false,false,false,false,false,false,Nil,Nil,Nil,Nil)
   def Simple() = new Summary(true,true,false,false,false,false,Nil,Nil,Nil,Nil)  
@@ -620,4 +626,3 @@ trait Effects extends Expressions with Blocks with Utils {
   }
 
 }
-*/

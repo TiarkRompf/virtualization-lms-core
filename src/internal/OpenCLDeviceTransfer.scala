@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms.internal
 
 /* Defines OpenCL specific device transfer functions */
@@ -94,4 +93,3 @@ trait OpenCLDeviceTransfer extends AbstractDeviceTransfer {
     }
   }
 }
-*/

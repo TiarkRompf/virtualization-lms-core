@@ -1,8 +1,7 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.mutable.ListBuffer
 import java.lang.{StackTraceElement,Thread}
@@ -93,12 +92,18 @@ trait Expressions extends Utils {
     override final lazy val hashCode = scala.runtime.ScalaRunTime._hashCode(this.asInstanceOf[Product])
   }
 
-  abstract class Stm // statement (links syms and definitions)
+  // statement (links syms and definitions)
+  abstract class Stm {
+    def lhs: List[Sym[Any]] = infix_lhs(this)
+    def rhs: Any = infix_rhs(this)
+    def defines[A](sym: Sym[A]): Option[Def[A]] = infix_defines(this, sym)
+    def defines[A](rhs: Def[A]): Option[Sym[A]] = infix_defines(this, rhs)
+  }
   
   def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {
     case TP(sym, rhs) => sym::Nil
   }
-  
+
   def infix_rhs(stm: Stm): Any = stm match { // clients use syms(e.rhs), boundSyms(e.rhs) etc.
     case TP(sym, rhs) => rhs
   }
@@ -113,7 +118,7 @@ trait Expressions extends Utils {
     case _ => None
   }
   
-  case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
+  case class TP[+T](sym: Sym[T], _rhs: Def[T]) extends Stm
 
   // graph construction state
   
@@ -285,4 +290,3 @@ trait Expressions extends Utils {
   }
 
 }
-*/

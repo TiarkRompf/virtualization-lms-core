@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms.internal
 
 trait AbstractHostTransfer {
@@ -61,4 +60,3 @@ object Targets extends Enumeration {
 
   implicit def targettostring(target: Targets.Value): String = target.toString
 }
-*/

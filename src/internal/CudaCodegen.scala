@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -78,4 +77,3 @@ trait CudaFatCodegen extends CLikeFatCodegen with CudaCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
 }
-*/
