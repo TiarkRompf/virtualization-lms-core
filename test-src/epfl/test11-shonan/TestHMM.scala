@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test11
@@ -147,3 +148,4 @@ class TestHMM extends FileDiffSuite {
 
  
 }
+*/

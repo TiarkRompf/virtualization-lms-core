@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -619,3 +620,4 @@ trait Effects extends Expressions with Blocks with Utils {
   }
 
 }
+*/

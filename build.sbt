@@ -1,30 +1,22 @@
-name := "LMS"
+name := "macro-LMS"
 
 version := "0.3-SNAPSHOT"
 
 organization := "EPFL"
 
-scalaOrganization := "org.scala-lang.virtualized"
-
-scalaVersion := virtScala
+scalaVersion := "2.10.4"
 
 scalaSource in Compile <<= baseDirectory(_ / "src")
 
 scalaSource in Test <<= baseDirectory(_ / "test-src")
 
-scalacOptions += "-Yvirtualize"
+libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-library" % _ % "compile")
 
-//scalacOptions += "-Yvirtpatmat"
+libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "compile")
 
-//scalacOptions in Compile ++= Seq(/*Unchecked, */Deprecation)
-
-
-libraryDependencies += "org.scala-lang.virtualized" % "scala-library" % virtScala
-
-libraryDependencies += "org.scala-lang.virtualized" % "scala-compiler" % virtScala
-
-libraryDependencies += scalaTest
-
+libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "2.2.0" % "test"
+)
 
 // tests are not thread safe
 parallelExecution in Test := false
@@ -32,10 +24,11 @@ parallelExecution in Test := false
 // disable publishing of main docs
 publishArtifact in (Compile, packageDoc) := false
 
-
 // continuations
 autoCompilerPlugins := true
 
-addCompilerPlugin("org.scala-lang.virtualized.plugins" % "continuations" % virtScala)
+libraryDependencies <<= (scalaVersion, libraryDependencies) { (ver, deps) =>
+    deps :+ compilerPlugin("org.scala-lang.plugins" % "continuations" % ver)
+}
 
 scalacOptions += "-P:continuations:enable"

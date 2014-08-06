@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test4
@@ -208,3 +209,4 @@ trait ScalaGenFunctionsExternal extends ScalaGenEffect {
     case _ => super.emitNode(sym, rhs)
   }
 }
+*/

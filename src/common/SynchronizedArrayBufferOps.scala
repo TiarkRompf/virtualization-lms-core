@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -56,3 +57,4 @@ trait CudaGenSynchronizedArrayBufferOps extends CudaGenEffect with CLikeGenSynch
 trait OpenCLGenSynchronizedArrayBufferOps extends OpenCLGenEffect with CLikeGenSynchronizedArrayBufferOps
 trait CGenSynchronizedArrayBufferOps extends CGenEffect with CLikeGenSynchronizedArrayBufferOps
 
+*/

@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -27,4 +28,4 @@ trait FatScheduling extends Scheduling {
   // -------------------
 
     
-}
+}*/

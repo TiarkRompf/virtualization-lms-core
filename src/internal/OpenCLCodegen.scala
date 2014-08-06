@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -74,3 +75,4 @@ trait OpenCLFatCodegen extends CLikeFatCodegen with OpenCLCodegen {
   val IR: Expressions with Effects with FatExpressions
 	import IR._
 }
+*/

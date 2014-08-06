@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -283,3 +284,4 @@ trait ScalaGenPreviousIterationDummy extends ScalaGenFat {
   }
 
 }
+*/

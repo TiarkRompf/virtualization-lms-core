@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test10
@@ -288,3 +289,4 @@ class TestEffects extends FileDiffSuite {
     new Prog with Impl
   }
 }
+*/

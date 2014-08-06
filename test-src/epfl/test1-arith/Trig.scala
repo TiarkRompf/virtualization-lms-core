@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test1
@@ -35,4 +36,4 @@ trait TrigExpOpt extends TrigExp {
     case _ => super.cos(x)
   }
 
-}
+}*/

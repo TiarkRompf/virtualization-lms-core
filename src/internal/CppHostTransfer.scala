@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms.internal
 
 trait CppHostTransfer extends AbstractHostTransfer {
@@ -299,3 +300,4 @@ trait CppHostTransfer extends AbstractHostTransfer {
   }
 
 }
+*/

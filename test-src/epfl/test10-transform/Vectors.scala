@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test10
@@ -111,4 +112,4 @@ trait ScalaGenVector extends ScalaGenBase {
     else
       super.emitNode(sym,rhs)
   }
-}
+}*/

@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test3
@@ -127,4 +128,5 @@ trait ControlOpt extends Control {
   }
   
 }
+*/
 */

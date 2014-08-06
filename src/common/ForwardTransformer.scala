@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -170,3 +171,4 @@ trait WorklistTransformer extends ForwardTransformer { // need backward version,
   }
 
 }
+*/

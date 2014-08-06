@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test7
@@ -226,3 +227,4 @@ class TestFusion2 extends FileDiffSuite {
      assertFileEqualsCheck(prefix+"fusion24")
    } 
 }
+*/

@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test5
@@ -128,3 +129,4 @@ class TestConditional extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"conditional.html")
   }
 }
+*/

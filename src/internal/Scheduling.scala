@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -214,3 +215,4 @@ trait Scheduling {
   /** end performance hotspot **/
 
 }
+*/

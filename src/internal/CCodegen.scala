@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -219,3 +220,4 @@ trait CFatCodegen extends CLikeFatCodegen with CCodegen {
   import IR._
 
 }
+*/

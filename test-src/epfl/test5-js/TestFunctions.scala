@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test5
@@ -295,3 +296,4 @@ class TestFunctions extends FileDiffSuite {
   }
 
 }
+*/

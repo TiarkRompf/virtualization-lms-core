@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -83,3 +84,4 @@ trait ScalaGenTupleOps extends ScalaGenBase with TupleGenBase with ScalaGenStruc
 trait CGenTupleOps extends CGenBase with TupleGenBase with CGenStruct
 trait CudaGenTupleOps extends CudaGenBase with TupleGenBase with CudaGenStruct
 trait OpenCLGenTupleOps extends OpenCLGenBase with TupleGenBase with OpenCLGenStruct
+*/

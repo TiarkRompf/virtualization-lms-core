@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -154,3 +155,4 @@ trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
 
 
 }
+*/

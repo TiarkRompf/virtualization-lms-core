@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -61,3 +62,4 @@ trait CudaGenExceptionOps extends CudaGenBase with CLikeGenExceptionOps {
 }
 //OpenCL does not support printf within a kernel
 //trait OpenCLGenExceptionOps extends OpenCLGenBase with CLikeGenExceptionOps
+*/

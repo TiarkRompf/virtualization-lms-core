@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test14
@@ -10,10 +11,10 @@ import util.OverloadHack
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import scala.reflect.SourceContext
 
-/*
+/-*
 Staged SQL-like queries, inspired by "the essence of LINQ":
 http://homepages.inf.ed.ac.uk/slindley/papers/essence-of-linq-draft-december2012.pdf
-*/
+*-/
 
 
 // a non-staged, pure library implementation
@@ -221,7 +222,7 @@ trait Shallow extends Util {
 
   // 4 From XPath to SQl
 
-  /*
+  /-*
   +----+--------+------+-----+------+
   | id | parent | name | pre | post |
   +----+--------+------+-----+------+
@@ -233,7 +234,7 @@ trait Shallow extends Util {
   |  5 |    4   |   e  |  7  |   8  |
   |  6 |    4   |   f  |  9  |  10  |
   +----+--------+------+-----+------+
-  */
+  *-/
 
   case class Node(
     val id: Int,
@@ -305,15 +306,15 @@ trait Shallow extends Util {
   } yield s.id
 
 
-  //  /*/*
+  //  /-*-/-*
   val xp0 = PSeq(PAxis(Child), PAxis(Child))
-  //  //*/parent::*
+  //  //-*-/parent::*
   val xp1 = PSeq(PAxis(Descendant), parent)
   // Q: this produces 0,1,2,4 but the paper says 1,2,4 (?)
 
-  //  //*[following-sibling::d]
+  //  //-*[following-sibling::d]
   val xp2 = PSeq(PAxis(Descendant), Filter(PSeq(PAxis(FollowingSibling),NameTest("d"))))
-  //  //f[ancestor::*/preceding::b]()
+  //  //f[ancestor::*-/preceding::b]()
   val xp3 = PSeq(PSeq(PAxis(Descendant), NameTest("f")), Filter(PSeq(ancestor,PSeq(preceding, NameTest("b")))))
 
   val xr0 = xpath(xp0)
@@ -352,7 +353,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
 
   //val db = staticData//database[PeopleDB]("PeopleDB")
   val db = database[PeopleDB]("db")
-  /*PeopleDB(
+  /-*PeopleDB(
     people = List(
       Person("Alex", 60),
       Person("Bert", 55),
@@ -362,7 +363,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
       Person("Fred", 60)),
     couples = List(
       Couple("Alex", "Bert"),
-      Couple("Cora", "Drew")))*/
+      Couple("Cora", "Drew")))*-/
 
   // 2.1 Comprehensions and queries / 2.2 Query via quotation
 
@@ -456,7 +457,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
 
   val org = database[Org]("org")
 
-  /*val org = new Record {
+  /-*val org = new Record {
     val departments = List(
       new Record { val dpt = "Product"},
       new Record { val dpt = "Quality"},
@@ -481,7 +482,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
       new Record { val emp = "Edna"; val tsk = "call"},
       new Record { val emp = "Edna"; val tsk = "design"},
       new Record { val emp = "Fred"; val tsk = "call"})
-  }*/
+  }*-/
 
   def exists(xs: Rep[List[Record]]) = !xs.isEmpty // helper method
 
@@ -555,7 +556,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
 
   // 4 From XPath to SQl
 
-  /*
+  /-*
   +----+--------+------+-----+------+
   | id | parent | name | pre | post |
   +----+--------+------+-----+------+
@@ -567,7 +568,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   |  5 |    4   |   e  |  7  |   8  |
   |  6 |    4   |   f  |  9  |  10  |
   +----+--------+------+-----+------+
-  */
+  *-/
 
   type Node = Record {
     val id: Int
@@ -579,14 +580,14 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
 
   val db_xml = database[Record { val nodes: List[Node]}]("xml").nodes
 
-  /*val db_xml = List(
+  /-*val db_xml = List(
     Node(0, -1, "#doc", 0, 13),
     Node(1,  0, "a",    1, 12),
     Node(2,  1, "b",    2,  5),
     Node(3,  2, "c",    3,  4),
     Node(4,  1, "d",    6, 11),
     Node(5,  4, "e",    7,  8),
-    Node(6,  4, "f",    9, 10))*/
+    Node(6,  4, "f",    9, 10))*-/
 
 
   abstract class Axis
@@ -641,15 +642,15 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   } yield s.id
 
 
-  //  /*/*
+  //  /-*-/-*
   val xp0 = PSeq(PAxis(Child), PAxis(Child))
-  //  //*/parent::*
+  //  //-*-/parent::*
   val xp1 = PSeq(PAxis(Descendant), parent)
   // Q: this produces 0,1,2,4 but the paper says 1,2,4 (?)
 
-  //  //*[following-sibling::d]
+  //  //-*[following-sibling::d]
   val xp2 = PSeq(PAxis(Descendant), Filter(PSeq(PAxis(FollowingSibling),NameTest("d"))))
-  //  //f[ancestor::*/preceding::b]()
+  //  //f[ancestor::*-/preceding::b]()
   val xp3 = PSeq(PSeq(PAxis(Descendant), NameTest("f")), Filter(PSeq(ancestor,PSeq(preceding, NameTest("b")))))
 
   val xr0 = xpath(xp0)
@@ -722,7 +723,7 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
   }
 
 
-/*
+/-*
   normalized syntax:
 
       (SQLquery)      S ::= [] | X | X1@X2
@@ -751,20 +752,20 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
                          if P then [] --> []
               if P then (if Q then R) --> if (P && Q) then R
           if P then (for x in Q do R) --> for x in Q do (if P then R)
-*/
+*-/
 
 
 
   // implement smart constructor for DBFor nodes; perform normalization.
   // note that we map IR nodes to staged code, not directly to other IR nodes.
   def dbfor[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]])(implicit pos: SourceContext): Exp[List[B]] = l match {
-/*
+/-*
              for x in (yield Q)do R --> R[x:=Q]
     for y in (for x in P do Q) do R --> for x in P do (for y in Q do R)
         for x in (if P then Q) do R --> if P then (for x in Q do R)
                    for x in [] do N --> []
               for x in (P @ Q) do R --> (for x in P do R) @ (for x in Q do R)
-*/
+*-/
     case Empty()              => List()
     case Yield(a)             => f(a)
     case IfThen(c,a)          => if (c) for (x <- a; y <- f(x)) yield y else List()
@@ -774,7 +775,7 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
       val a = fresh[A]
       val b = reifyEffects(f(a))
       b match {
-/*                 for x in P do [] --> []           */
+/-*                 for x in P do [] --> []           *-/
         case Block(Empty())              => List()
         case _ =>
           // no rewrites match, go ahead and create IR node
@@ -791,12 +792,12 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
 
   // override `if (c) a else b` smart constructor to add rewrites
   override def ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: Block[T], elsep: Block[T])(implicit pos: SourceContext) = ((thenp.res,elsep.res) match {
-/*
+/-*
                   if P then (Q @ R) --> (if P then Q) @ (if P then R)
                        if P then [] --> []
             if P then (if Q then R) --> if (P && Q) then R
         if P then (for x in Q do R) --> for x in Q do (if P then R)
-*/
+*-/
     case (Empty(),Empty())       => List()
     case (IfThen(c,a),Empty())   => if (cond && c) a else List()
     case (For(l,f),Empty())      => for (x <- l if cond; y <- f(x)) yield y
@@ -1053,3 +1054,4 @@ class TestQueries extends FileDiffSuite {
   }
 
 }
+*/

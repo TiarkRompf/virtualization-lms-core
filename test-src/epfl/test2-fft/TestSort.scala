@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test2
@@ -68,4 +69,5 @@ object TestTestSort {
 }
 
 
+*/
 */

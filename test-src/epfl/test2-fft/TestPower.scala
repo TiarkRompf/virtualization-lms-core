@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test2
@@ -151,3 +152,4 @@ class TestPower extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"power3-dot")
   }
 }
+*/

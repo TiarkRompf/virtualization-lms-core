@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -149,4 +150,4 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
     }
   }
 
-}
+}*/

@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -51,3 +52,4 @@ trait CudaGenDSLOps extends CudaGenEffect with CLikeGenDSLOps
 trait OpenCLGenDSLOps extends OpenCLGenEffect with CLikeGenDSLOps
 trait CGenDSLOps extends CGenEffect with CLikeGenDSLOps
 
+*/

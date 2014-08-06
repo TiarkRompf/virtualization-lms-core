@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -449,3 +450,4 @@ trait OpenCLGenStruct extends OpenCLGenBase with BaseGenStruct
 trait CudaGenFatStruct extends CudaGenStruct with BaseGenFatStruct
 trait OpenCLGenFatStruct extends OpenCLGenStruct with BaseGenFatStruct
 trait CGenFatStruct extends CGenStruct with BaseGenFatStruct
+*/

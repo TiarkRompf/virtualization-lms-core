@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -12,3 +13,4 @@ trait Compile extends Base {
 trait CompileScala extends Compile with BaseExp with ScalaCompile {
   
 }
+*/

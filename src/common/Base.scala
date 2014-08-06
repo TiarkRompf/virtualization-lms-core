@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -114,3 +115,4 @@ trait OpenCLGenFat extends OpenCLFatCodegen with OpenCLGenBase
 trait CGenBase extends CCodegen
 trait CGenEffect extends CNestedCodegen with CGenBase
 trait CGenFat extends CFatCodegen with CGenBase
+*/

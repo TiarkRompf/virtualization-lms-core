@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test4
@@ -48,4 +49,4 @@ trait FooB {
       case c: Const[A] => c
   }
 
-}
+}*/

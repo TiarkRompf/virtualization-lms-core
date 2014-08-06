@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -284,3 +285,4 @@ trait Expressions extends Utils {
   }
 
 }
+*/

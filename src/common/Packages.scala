@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -69,4 +70,4 @@ trait OpenCLCodeGenPkg extends OpenCLGenImplicitOps with OpenCLGenNumericOps wit
     with OpenCLGenVariables with OpenCLGenWhile with OpenCLGenTupleOps with OpenCLGenListOps
     with OpenCLGenSeqOps with OpenCLGenDSLOps with OpenCLGenMathOps with OpenCLGenCastingOps with OpenCLGenSetOps 
     with OpenCLGenObjectOps with OpenCLGenArrayBufferOps
-    { val IR: ScalaOpsPkgExp  }
+    { val IR: ScalaOpsPkgExp  }*/

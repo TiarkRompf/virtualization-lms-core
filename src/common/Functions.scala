@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -403,3 +404,4 @@ trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAcces
     case _ => super.remap(m)
   }*/
 }
+*/

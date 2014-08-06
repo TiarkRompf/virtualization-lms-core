@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -49,3 +50,4 @@ trait CLikeGenFractionalOps extends CLikeGenBase {
 trait CudaGenFractionalOps extends CudaGenBase with CLikeGenFractionalOps
 trait OpenCLGenFractionalOps extends OpenCLGenBase with CLikeGenFractionalOps
 trait CGenFractionalOps extends CGenBase with CLikeGenFractionalOps
+*/

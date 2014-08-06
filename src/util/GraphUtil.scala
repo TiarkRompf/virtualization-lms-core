@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package util
 
@@ -77,3 +78,4 @@ object GraphUtil {
   }
   
 }
+*/

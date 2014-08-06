@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 
@@ -48,3 +49,4 @@ trait FileDiffSuite extends Suite {
     assertFileEqualsCheck(name)
   }
 }
+*/

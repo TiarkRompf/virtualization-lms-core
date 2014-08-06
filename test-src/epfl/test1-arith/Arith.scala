@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test1
@@ -105,3 +106,4 @@ trait ScalaGenArith extends ScalaGenBase {
     case _ => super.emitNode(sym, rhs)
   }
 }
+*/

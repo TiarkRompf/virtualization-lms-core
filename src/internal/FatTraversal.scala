@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -19,4 +20,4 @@ trait FatBlockTraversal extends NestedBlockTraversal with FatScheduling {
   }
 
 
-}
+}*/

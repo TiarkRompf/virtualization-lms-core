@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -430,3 +431,4 @@ trait CGenIfThenElseFat extends CGenIfThenElse with CGenFat with BaseGenIfThenEl
   }
 }
 
+*/

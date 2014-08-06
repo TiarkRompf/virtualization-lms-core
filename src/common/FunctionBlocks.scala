@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -67,3 +68,4 @@ trait FunctionBlocksExp extends BaseExp with Blocks with Effects with OverloadHa
    def copyBlock2[T1:Manifest,T2:Manifest,R:Manifest](b: Block2[T1,T2,R], t: Transformer) = Block2(t(b.blockArg1).asInstanceOf[Sym[T1]], t(b.blockArg2).asInstanceOf[Sym[T2]], t(b.blockRes))  
 }
   
+*/

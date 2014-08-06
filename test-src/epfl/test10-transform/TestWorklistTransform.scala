@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test10
@@ -214,3 +215,4 @@ class TestForward1 extends FileDiffSuite {
   }
 
 }
+*/

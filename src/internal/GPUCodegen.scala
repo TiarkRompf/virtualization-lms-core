@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -258,3 +259,4 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   }
 
 }
+*/

@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -125,3 +126,4 @@ trait CGenEqual extends CGenBase with CLikeGenEqual {
     }
   }
 }
+*/

@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -242,3 +243,4 @@ trait SimplifyTransform extends internal.FatScheduling {
     (scope2, results2)
   }
 }
+*/

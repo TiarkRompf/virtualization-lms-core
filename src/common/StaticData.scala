@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -84,3 +85,4 @@ trait CGenStaticData extends CGenEffect with BaseGenStaticData {
     case _ => super.emitNode(sym, rhs)
   }
 }
+*/

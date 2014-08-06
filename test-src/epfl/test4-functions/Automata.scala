@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test4
@@ -460,4 +461,4 @@ where docase
   IE_cont Nothing k -> k stream
   i -> (i,stream) 
 docase (i, s) = (i >>= f, s)
-*/
+*/*/

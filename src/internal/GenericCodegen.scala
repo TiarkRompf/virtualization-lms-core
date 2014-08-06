@@ -1,3 +1,4 @@
+/*TODO DISABLED
 package scala.virtualization.lms
 package internal
 
@@ -265,3 +266,4 @@ trait GenericNestedCodegen extends NestedBlockTraversal with GenericCodegen {
   }
 
 }
+*/
