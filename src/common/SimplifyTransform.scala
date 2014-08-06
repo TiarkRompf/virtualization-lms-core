@@ -2,7 +2,7 @@
 package scala.virtualization.lms
 package common
 
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 
 trait SimplifyTransform extends internal.FatScheduling {

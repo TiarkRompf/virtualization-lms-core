@@ -1,9 +1,8 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait LiftBoolean {
   this: Base =>
@@ -76,4 +75,3 @@ trait CLikeGenBooleanOps extends CLikeGenBase {
 trait CudaGenBooleanOps extends CudaGenBase with CLikeGenBooleanOps
 trait OpenCLGenBooleanOps extends OpenCLGenBase with CLikeGenBooleanOps
 trait CGenBooleanOps extends CGenBase with CLikeGenBooleanOps
-*/

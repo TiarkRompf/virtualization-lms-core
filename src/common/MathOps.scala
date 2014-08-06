@@ -4,7 +4,7 @@ package common
 
 import java.io.PrintWriter
 import internal.{GenericNestedCodegen}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait MathOps extends Base {
 

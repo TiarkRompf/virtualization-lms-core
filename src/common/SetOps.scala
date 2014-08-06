@@ -5,7 +5,7 @@ package common
 import java.io.PrintWriter
 import scala.virtualization.lms.internal._
 import scala.collection.mutable.Set
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait SetOps extends Base {
   object Set {

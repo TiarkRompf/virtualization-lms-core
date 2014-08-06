@@ -4,7 +4,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal._
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait MiscOps extends Base {
   /**

@@ -5,7 +5,7 @@ package common
 import java.io.PrintWriter
 
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait RangeOps extends Base {
   // workaround for infix not working with manifests

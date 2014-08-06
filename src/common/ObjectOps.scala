@@ -1,11 +1,10 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 import scala.virtualization.lms.internal.{GenerationFailedException}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait ObjectOps extends Variables with OverloadHack {
   def infix_toString(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
@@ -119,4 +118,3 @@ trait CLikeGenObjectOps extends CLikeGenBase {
 trait CudaGenObjectOps extends CudaGenBase with CLikeGenObjectOps
 trait OpenCLGenObjectOps extends OpenCLGenBase with CLikeGenObjectOps
 trait CGenObjectOps extends CGenBase with CLikeGenObjectOps 
-*/

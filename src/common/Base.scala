@@ -1,9 +1,9 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
 import internal._
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.EmbeddedControls
 
 /**
  * This trait automatically lifts any concrete instance to a representation.
@@ -115,4 +115,3 @@ trait OpenCLGenFat extends OpenCLFatCodegen with OpenCLGenBase
 trait CGenBase extends CCodegen
 trait CGenEffect extends CNestedCodegen with CGenBase
 trait CGenFat extends CFatCodegen with CGenBase
-*/

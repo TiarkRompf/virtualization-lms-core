@@ -1,11 +1,10 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
 import scala.virtualization.lms.internal.{GenerationFailedException}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait LiftString {
   this: Base =>
@@ -195,4 +194,3 @@ trait CGenStringOps extends CGenBase {
     case _ => super.emitNode(sym, rhs)
   }
 }
-*/

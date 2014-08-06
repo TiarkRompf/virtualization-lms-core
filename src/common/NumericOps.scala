@@ -3,7 +3,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait LiftNumeric {
   this: Base =>

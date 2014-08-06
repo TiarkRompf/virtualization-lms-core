@@ -3,11 +3,11 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 import scala.collection.mutable.ArrayBuffer
 import scala.virtualization.lms.internal.GenericNestedCodegen
 import collection.mutable.ArrayBuffer
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait ArrayBufferOps extends Base {
 

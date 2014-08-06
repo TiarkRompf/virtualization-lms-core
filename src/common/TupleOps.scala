@@ -1,10 +1,9 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
 import scala.virtualization.lms.internal.GenericCodegen
 import java.io.PrintWriter
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait TupleOps extends Base {
   implicit def make_tuple2[A:Manifest,B:Manifest](t: (Rep[A], Rep[B]))(implicit pos: SourceContext) : Rep[(A,B)]
@@ -84,4 +83,3 @@ trait ScalaGenTupleOps extends ScalaGenBase with TupleGenBase with ScalaGenStruc
 trait CGenTupleOps extends CGenBase with TupleGenBase with CGenStruct
 trait CudaGenTupleOps extends CudaGenBase with TupleGenBase with CudaGenStruct
 trait OpenCLGenTupleOps extends OpenCLGenBase with TupleGenBase with OpenCLGenStruct
-*/

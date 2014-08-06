@@ -4,7 +4,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait OrderingOps extends Base with Variables with OverloadHack {
   // workaround for infix not working with implicits in PrimitiveOps

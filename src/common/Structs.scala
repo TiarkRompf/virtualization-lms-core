@@ -1,8 +1,10 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
-import reflect.{SourceContext, RefinedManifest}
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.Struct
+import org.scala_lang.virtualized.RefinedManifest
+
 import util.OverloadHack
 import java.io.PrintWriter
 import internal.{GenericNestedCodegen, GenericFatCodegen}
@@ -32,7 +34,7 @@ trait StructTags {
   case class ClassTag[T](name: String) extends StructTag[T]
   case class NestClassTag[C[_],T](elem: StructTag[T]) extends StructTag[C[T]]
   case class AnonTag[T](fields: RefinedManifest[T]) extends StructTag[T]
-  case class MapTag[T] extends StructTag[T]
+  case class MapTag[T]() extends StructTag[T]
 }
 
 trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with ObjectOpsExp with StringOpsExp with OverloadHack {
@@ -369,7 +371,8 @@ trait BaseGenFatStruct extends GenericFatCodegen {
       val us = phis collect { case TP(_, Phi(c,a,u,b,v)) => u } // assert c,a,b match
       val vs = phis collect { case TP(_, Phi(c,a,u,b,v)) => v }
       val c  = phis collect { case TP(_, Phi(c,a,u,b,v)) => c } reduceLeft { (c1,c2) => assert(c1 == c2); c1 }
-      TTP(ss, phis map (_.rhs), SimpleFatIfThenElse(c,us,vs))
+      // NOTE(trans): asInstanceOf[Def[Any]] was not necessary before -- field instead of generic infix got picked up?
+      TTP(ss, phis map (_.rhs.asInstanceOf[Def[Any]]), SimpleFatIfThenElse(c,us,vs))
     }
     def fatif(s:Sym[Unit],o:Def[Unit],c:Exp[Boolean],a:Block[Unit],b:Block[Unit]) = fatphi(s) match {
       case Some(TTP(ss, oo, SimpleFatIfThenElse(c2,us,vs))) =>
@@ -450,4 +453,3 @@ trait OpenCLGenStruct extends OpenCLGenBase with BaseGenStruct
 trait CudaGenFatStruct extends CudaGenStruct with BaseGenFatStruct
 trait OpenCLGenFatStruct extends OpenCLGenStruct with BaseGenFatStruct
 trait CGenFatStruct extends CGenStruct with BaseGenFatStruct
-*/

@@ -1,11 +1,10 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 import scala.virtualization.lms.util.OverloadHack
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait LiftVariables extends Base {
   this: Variables =>
@@ -282,4 +281,3 @@ trait CLikeGenVariables extends CLikeGenBase {
 trait CudaGenVariables extends CudaGenEffect with CLikeGenVariables
 trait OpenCLGenVariables extends OpenCLGenEffect with CLikeGenVariables
 trait CGenVariables extends CGenEffect with CLikeGenVariables
-*/

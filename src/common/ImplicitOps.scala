@@ -1,9 +1,8 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait ImplicitOps extends Base {
   /**
@@ -57,4 +56,3 @@ trait CLikeGenImplicitOps extends CLikeGenBase {
 trait CudaGenImplicitOps extends CudaGenBase with CLikeGenImplicitOps
 trait OpenCLGenImplicitOps extends OpenCLGenBase with CLikeGenImplicitOps
 trait CGenImplicitOps extends CGenBase with CLikeGenImplicitOps
-*/

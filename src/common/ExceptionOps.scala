@@ -4,7 +4,7 @@ package common
 
 import java.io.PrintWriter
 import internal._
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait ExceptionOps extends Variables {
   // TODO: support virtualization of try-catch-finally blocks

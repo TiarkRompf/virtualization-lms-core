@@ -6,7 +6,7 @@ import java.io.PrintWriter
 import scala.virtualization.lms.internal._
 import scala.collection.mutable.Set
 import java.util.HashMap
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait HashMapOps extends Base {
   object HashMap {

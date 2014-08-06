@@ -1,10 +1,9 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait LiftEquals extends Base {
   this: Equal =>
@@ -126,4 +125,3 @@ trait CGenEqual extends CGenBase with CLikeGenEqual {
     }
   }
 }
-*/
