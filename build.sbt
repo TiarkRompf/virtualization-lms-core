@@ -37,3 +37,14 @@ publishArtifact in (Compile, packageDoc) := false
 // }
 
 // scalacOptions += "-P:continuations:enable"
+
+val paradiseVersion = "2.0.1"
+
+libraryDependencies ++= (
+  if (scalaVersion.value.startsWith("2.10")) List("org.scalamacros" %% "quasiquotes" % paradiseVersion)
+  else Nil
+)
+
+libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _ % "compile")
+
+addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full)
