@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -130,4 +129,3 @@ trait CudaGenWhile extends CudaGenEffect with CLikeGenWhile
 trait OpenCLGenWhile extends OpenCLGenEffect with CLikeGenWhile
 
 trait CGenWhile extends CGenEffect with CLikeGenWhile
-*/

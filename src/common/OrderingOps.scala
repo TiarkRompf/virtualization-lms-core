@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -155,5 +154,3 @@ trait CLikeGenOrderingOps extends CLikeGenBase {
 trait CudaGenOrderingOps extends CudaGenBase with CLikeGenOrderingOps
 trait OpenCLGenOrderingOps extends OpenCLGenBase with CLikeGenOrderingOps
 trait CGenOrderingOps extends CGenBase with CLikeGenOrderingOps
-
-*/
