@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test2
@@ -15,5 +14,3 @@ trait DisableDCE extends GraphTraversal {
   override def buildScheduleForResult(start: Any, sort: Boolean = true): List[Stm] =
     globalDefs
 }
-
-*/

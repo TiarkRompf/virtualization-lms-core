@@ -6,7 +6,7 @@ package test1
 import common._
 import internal._
 
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 
 class TestNumeric extends FileDiffSuite {

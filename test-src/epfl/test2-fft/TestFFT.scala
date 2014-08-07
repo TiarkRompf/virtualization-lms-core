@@ -1,11 +1,10 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test2
 
 import common._
 import test1._
-import reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 import java.io.PrintWriter
 
@@ -175,4 +174,3 @@ class TestFFT extends FileDiffSuite {
   }
   
 }
-*/

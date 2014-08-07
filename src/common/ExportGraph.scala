@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -10,4 +9,5 @@ trait ExportGraph extends GraphVizExport {
   def exportGraph(file: String, landscape: Boolean = false)(x: Exp[Any]) =
     emitDepGraph(x, file, landscape)
   
-}*/
+}
+

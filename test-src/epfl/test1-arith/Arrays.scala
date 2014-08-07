@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test1
@@ -39,4 +38,4 @@ trait ScalaGenArrays extends ScalaGenBase {
     case MakeArray(x) =>  emitValDef(sym, "Array(" + x.map(quote).mkString(",") + ")")
     case _ => super.emitNode(sym, rhs)
   }
-}*/
+}

@@ -1,11 +1,10 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test1
 
 import common._
 
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 import java.io.PrintWriter
 
 trait LiftArith {
@@ -23,7 +22,7 @@ trait Arith extends Base with LiftArith {
   implicit def intToArithOps(i: Int) = new arithOps(unit(i))
   implicit def intToRepDbl(i: Int) : Rep[Double] = unit(i)
 
-  class arithOps(x: Rep[Double]){
+  implicit class arithOps(x: Rep[Double]){
     def +(y: Rep[Double]) = infix_+(x,y)
     def -(y: Rep[Double]) = infix_-(x,y)
     def *(y: Rep[Double]) = infix_*(x,y)
@@ -106,4 +105,3 @@ trait ScalaGenArith extends ScalaGenBase {
     case _ => super.emitNode(sym, rhs)
   }
 }
-*/
