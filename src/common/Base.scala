@@ -40,17 +40,8 @@ trait BaseExp extends Base with Expressions with Blocks with Transforming {
   protected def unit[T:Manifest](x: T) = Const(x)
 }
 
-trait BlockExp extends BaseExp
+trait BlockExp extends BaseExp with Blocks
 
-/*
-trait BlockExp extends BaseExp with Blocks {
-  
-  implicit object CanTransformBlock extends CanTransform[Block] {
-    def transform[A](x: Block[A], t: Transformer): Block[A] = Block(t(x.res))
-  }
-  
-}
-*/
 
 trait EffectExp extends BaseExp with Effects {
 
@@ -66,17 +57,8 @@ trait EffectExp extends BaseExp with Effects {
   }
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
-/*
-    case Reflect(x, u, es) =>
-      reifyEffects {
-        context = f(es)
-        mirror(x)
-      }
-    
-*/    
-//    case Reflect(Print(x), u, es) => Reflect(Print(f(x)), es map (e => f(e)))
     case Reflect(x, u, es) => reflectMirrored(mirrorDef(e,f).asInstanceOf[Reflect[A]])
-    case Reify(x, u, es) => Reify(f(x), mapOver(f,u), f(es)) //TODO: u
+    case Reify(x, u, es) => Reify(f(x), mapOver(f,u), f(es))
     case _ => super.mirror(e,f)
   }
     
@@ -85,7 +67,7 @@ trait EffectExp extends BaseExp with Effects {
 trait BaseFatExp extends BaseExp with FatExpressions with FatTransforming
 
 
-// The traits below provide an interface to codegen so that client do
+// The traits below provide an interface to codegen so that clients do
 // not need to depend on internal._
 
 trait ScalaGenBase extends ScalaCodegen
