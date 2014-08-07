@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test3
@@ -73,4 +72,4 @@ trait Parsers { this: Matching with Extractors =>
     elems.map(acceptElem).reduceLeft(seq)
   }
   
-}*/
+}

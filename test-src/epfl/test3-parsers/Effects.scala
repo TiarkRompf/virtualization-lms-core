@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test3
@@ -94,6 +93,7 @@ trait Control extends Effects with BaseExp {
   }
 }
 
+// TODO(cleanup)
 /*
 trait ControlOpt extends Control {
   
@@ -128,5 +128,4 @@ trait ControlOpt extends Control {
   }
   
 }
-*/
 */

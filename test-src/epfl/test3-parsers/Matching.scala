@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test3
@@ -166,6 +165,8 @@ trait MatchingExtractorsExpOpt extends MatchingExtractorsExp {
     case _ => super.test(x, y)
   }
 
+// TODO(cleanup)
+
 /*  
   override def andAlso[A](x: Rep[A], effects: List[Rep[Any]]): Rep[A] = effects match {
     case Nil => x
@@ -193,7 +194,4 @@ trait MatchingExtractorsExpOpt2 extends MatchingExtractorsExpOpt {
   }
 
 }
-*/
-
-
 */

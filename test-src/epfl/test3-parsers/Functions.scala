@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test3
@@ -7,7 +6,7 @@ import common._
 import test1._
 import test2._
 
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 
 
@@ -37,6 +36,3 @@ trait FunctionsExpUnfoldAll extends FunctionsExp {
   }
 
 }
-
-
-*/
