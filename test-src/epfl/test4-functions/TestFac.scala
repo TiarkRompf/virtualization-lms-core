@@ -9,6 +9,7 @@ import test1._
 import test2._
 import test3._
 
+import org.scala_lang.virtualized.virtualize
 
 trait FacProg { this: Arith with Matching with Extractors =>
 
@@ -27,7 +28,6 @@ trait FacProg2 { this: Arith with Functions with Equal with IfThenElse =>
   }
   implicit def lam[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
   //implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
-
 
   def fac: Rep[Double=>Double] = lam { n =>
     if (n == 0) 1.0 else n * fac(n - 1.0)
@@ -148,5 +148,4 @@ class TestFac extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"fac6")
   }
 }
-
 */

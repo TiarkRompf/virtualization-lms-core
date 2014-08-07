@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test4
@@ -8,7 +7,7 @@ import common.ScalaGenEffect // don't import FunctionsExp
 import test2._
 import test3._
 import util.ClosureCompare
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 import scala.collection.{immutable, mutable}
 
@@ -209,4 +208,3 @@ trait ScalaGenFunctionsExternal extends ScalaGenEffect {
     case _ => super.emitNode(sym, rhs)
   }
 }
-*/
