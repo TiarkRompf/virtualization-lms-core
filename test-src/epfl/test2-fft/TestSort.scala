@@ -2,6 +2,8 @@ package scala.virtualization.lms
 package epfl
 package test2
 
+//TODO(cleanup)
+
 /*
 import common._
 import test1._
