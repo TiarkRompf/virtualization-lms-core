@@ -118,7 +118,7 @@ trait Expressions extends Utils {
     case _ => None
   }
   
-  case class TP[+T](sym: Sym[T], _rhs: Def[T]) extends Stm
+  case class TP[+T](sym: Sym[T], override val rhs: Def[T]) extends Stm
 
   // graph construction state
   

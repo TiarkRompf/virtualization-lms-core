@@ -7,7 +7,7 @@ trait FatExpressions extends Expressions {
 
   //case class ThinDef(rhs: Def[Any]) extends FatDef
 
-  case class TTP(val _lhs: List[Sym[Any]], val mhs: List[Def[Any]], val _rhs: FatDef) extends Stm
+  case class TTP(override val lhs: List[Sym[Any]], val mhs: List[Def[Any]], override val rhs: FatDef) extends Stm
 
   override def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {
     case TTP(lhs, mhs, rhs) => lhs
