@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test4
@@ -7,6 +6,8 @@ import common._
 import test1._
 import test2._
 import test3._
+
+import org.scala_lang.virtualized.virtualize
 
 /*
 TODO:
@@ -32,6 +33,24 @@ case class NAutomaton[@specialized(Boolean,Char,Int) I, @specialized(Boolean,Cha
 // type Automaton = O x (I => Automaton)
 // type Automaton = S x O x (I => (S => O x S))
 
+
+@virtualize
+trait Util extends Base with Arith with Functions {
+  
+  class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
+    def apply(x:Rep[A]): Rep[B] = doApply(f, x)
+  }
+  implicit def lam[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
+  //implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
+
+  implicit def toDouble(f: Rep[Int]): Rep[Double] = f.asInstanceOf[Rep[Double]]
+  
+  def collectall(in: List[Rep[Any]]): Rep[Unit]
+  def protect[A:Manifest](x: Rep[A], in: List[Rep[Any]]): Rep[A]
+}
+
+
+@virtualize
 trait DFAOps extends Base {
 
   type DfaState = Automaton[Char,List[Any]]
@@ -44,6 +63,7 @@ trait DFAOps extends Base {
 }
 
 
+@virtualize
 trait DFAOpsExp extends BaseExp with DFAOps { this: Functions => 
 
   case class DFAFlagged(e: Rep[Any], link: DIO) extends Def[DfaState]
@@ -66,7 +86,7 @@ trait ScalaGenDFAOps extends ScalaGenBase {
   }
 }
 
-
+@virtualize
 trait NFAtoDFA extends DFAOps { this: Arith with Functions with Equal with IfThenElse =>
 
 /*
@@ -156,6 +176,7 @@ def convertNFAtoDFA(in: NIO): DIO = {
 
 
 
+@virtualize
 trait GAOps extends Base {
 
   type gTrans = NAutomaton[Char, List[Any]]
@@ -175,7 +196,7 @@ trait GAOps extends Base {
 
 }
 
-
+@virtualize
 trait GAtoDA extends DFAOps with GAOps { this: Functions =>
   
   def convertGAtoDA(in: Rep[GIO]): Rep[DfaState] = {
@@ -192,6 +213,7 @@ trait GAtoDA extends DFAOps with GAOps { this: Functions =>
 }
 
 
+@virtualize
 trait GAOpsExp extends BaseExp with GAOps { this: ListOps with IfThenElse with Functions =>
 
   case class GTrans(e: Rep[List[Any]], f: Rep[Char => GIO]) extends Def[GIO]
@@ -224,6 +246,7 @@ trait ScalaGenGAOps extends ScalaGenBase {
 
 
 
+@virtualize
 trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with TupleOps with /*While with Variables with*/ Functions =>
   
   // Producers: produce values by executing state transitions
@@ -428,7 +451,6 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
 }
 
 
-
 /*
 trait Stream
 case class EOF(err: Option[String]) extends Stream
@@ -461,4 +483,4 @@ where docase
   IE_cont Nothing k -> k stream
   i -> (i,stream) 
 docase (i, s) = (i >>= f, s)
-*/*/
+*/
