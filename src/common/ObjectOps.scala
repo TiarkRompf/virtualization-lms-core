@@ -7,6 +7,15 @@ import scala.virtualization.lms.internal.{GenerationFailedException}
 import org.scala_lang.virtualized.SourceContext
 
 trait ObjectOps extends Variables with OverloadHack {
+  implicit class ObjectOpsInfix(lhs: Rep[Any]) {
+    //def toString = infix_toString(lhs) -- through @virtualize
+    def ToString = infix_ToString(lhs)
+  }
+  implicit class ObjectOpsInfixGeneric[A:Manifest](lhs: Rep[A]) {
+    def unsafeImmutable = infix_unsafeImmutable(lhs)
+    def unsafeMutable = infix_unsafeMutable(lhs)
+  }
+
   def infix_toString(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
   def infix_ToString(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
   def infix_unsafeImmutable[A:Manifest](lhs: Rep[A])(implicit pos: SourceContext) = object_unsafe_immutable(lhs)
