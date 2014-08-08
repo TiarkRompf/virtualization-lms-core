@@ -133,7 +133,11 @@ trait Scheduling {
     val symsCache = new IdentityHashMap[Sym[Any], List[Stm]]()
     val boundSymsCache = new IdentityHashMap[Sym[Any], List[Stm]]()
     //val boundSymsCache = new IdentityHashMap[Sym[Any], Set[Stm]]()
-    
+
+    implicit class IdentityHashMapOps[K, V](map: IdentityHashMap[K, V]) {
+      def getOrElse(s: K, f: => V) = infix_getOrElse(map, s, f)
+    }
+
     def infix_getOrElse[K,V](map: IdentityHashMap[K, V], s: K, f: => V) = {
       var res = map.get(s) //map(s)
       if (res == null) res = f
