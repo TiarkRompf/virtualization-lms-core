@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test6
@@ -11,6 +10,7 @@ import util.OverloadHack
 import java.io.PrintWriter
 import java.io.FileOutputStream
 
+import org.scala_lang.virtualized.virtualize
 
 trait Utils extends Base with OverloadHack {
   
@@ -178,6 +178,7 @@ trait VectorImplInternal extends VectorImpl {
 */
 
 
+@virtualize
 trait VectorsProg extends Vectors {
   
   def test(x: Rep[Unit]): Rep[Vector] = {
@@ -186,6 +187,7 @@ trait VectorsProg extends Vectors {
   
 }
 
+@virtualize
 trait StringsProg extends Vectors {
   
   def test(x: Rep[Any]) = {
@@ -238,4 +240,3 @@ class TestVectors extends FileDiffSuite {
     
   }
 }
-*/
