@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -753,4 +752,3 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
   }*/
 
 }
-*/
