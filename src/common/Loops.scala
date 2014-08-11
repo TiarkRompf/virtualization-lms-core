@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -188,4 +187,3 @@ trait CudaGenLoopsFat extends CudaGenLoops with CudaGenFat with GPUGenLoopsFat
 
 trait OpenCLGenLoops extends OpenCLGenBase with GPUGenLoops
 trait OpenCLGenLoopsFat extends OpenCLGenLoops with OpenCLGenFat with GPUGenLoopsFat
-*/

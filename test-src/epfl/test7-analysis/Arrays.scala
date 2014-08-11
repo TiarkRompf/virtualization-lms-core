@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test7
@@ -10,7 +9,7 @@ import internal.AbstractSubstTransformer
 
 
 import util.OverloadHack
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
@@ -230,5 +229,3 @@ trait ScalaGenArrays extends ScalaGenEffect {
     case _ => super.emitNode(sym, rhs)
   }
 }
-
-*/
