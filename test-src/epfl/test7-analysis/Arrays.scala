@@ -21,7 +21,7 @@ trait ArrayLoops extends Loops with OverloadHack {
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] // TODO: make reduce operation configurable!
   def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
 
-  implicit class InfixRepArray[T:Manifest](a: Rep[Array[T]]) {
+  implicit class ArrayLoopsInfixRepArray[T:Manifest](a: Rep[Array[T]]) {
     def at(i: Rep[Int]): Rep[T] = infix_at(a, i)
     def length: Rep[Int] = infix_length(a)
   }
@@ -205,6 +205,10 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
 
 trait Arrays extends Base with OverloadHack {
   def zeroes(n: Rep[Int]): Rep[Array[Int]]
+  implicit class ArraysInfixRepArrayInt(a: Rep[Array[Int]]) {
+    def update(x: Rep[Int], v: Rep[Int]): Rep[Array[Int]] = infix_update(a, x, v)
+    def +(b: Rep[Array[Int]]): Rep[Array[Int]] = infix_+(a, b)
+  }
   def infix_update(a: Rep[Array[Int]], x: Rep[Int], v: Rep[Int]): Rep[Array[Int]]
   def infix_+(a: Rep[Array[Int]], b: Rep[Array[Int]])(implicit o: Overloaded1): Rep[Array[Int]]
 }

@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test7
@@ -149,4 +148,3 @@ class TestLiveness extends FileDiffSuite {
   }
  
 }
-*/
