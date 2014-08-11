@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test7
@@ -10,7 +9,7 @@ import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
-
+import org.scala_lang.virtualized.virtualize
 
 trait NestLambdaProg1 extends Arith with Functions with Print { // also used by TestLambdaLift
   
@@ -27,6 +26,7 @@ trait NestLambdaProg1 extends Arith with Functions with Print { // also used by 
   
 }
 
+@virtualize
 trait NestCondProg2 extends Arith with Functions with IfThenElse with Print {
   
   /* Previously this program exhibited behavior that is likely undesired in many
@@ -55,6 +55,7 @@ trait NestCondProg2 extends Arith with Functions with IfThenElse with Print {
 }
 
 
+@virtualize
 trait NestCondProg3 extends Arith with Functions with IfThenElse with Print {
   
   def test(x: Rep[Unit]) = {
@@ -75,6 +76,7 @@ trait NestCondProg3 extends Arith with Functions with IfThenElse with Print {
   
 }
 
+@virtualize
 trait NestCondProg4 extends Arith with Functions with IfThenElse with Print {
   
   def test(x: Rep[Unit]) = {
@@ -92,6 +94,7 @@ trait NestCondProg4 extends Arith with Functions with IfThenElse with Print {
 }
 
 
+@virtualize
 trait NestCondProg5 extends Arith with Functions with IfThenElse with Print {
   
   def test(x: Rep[Unit]) = {
@@ -106,7 +109,7 @@ trait NestCondProg5 extends Arith with Functions with IfThenElse with Print {
   
 }
 
-
+@virtualize
 trait NestCondProg6 extends Arith with Functions with IfThenElse with Print {
   
   // FIXME: this one doesn't work yet!!!
@@ -124,7 +127,7 @@ trait NestCondProg6 extends Arith with Functions with IfThenElse with Print {
   
 }
 
-
+@virtualize
 trait NestCondProg7 extends Arith with OrderingOps with Functions with IfThenElse with Print {
 
   def test(x: Rep[Unit]) = {    
@@ -145,6 +148,7 @@ trait NestCondProg7 extends Arith with OrderingOps with Functions with IfThenEls
 /*
 seems to be another incarnation of test6
 
+@virtualize
 trait NestCondProg8 extends Arith with OrderingOps with Functions with IfThenElse with Print {
   
   // FIXME
@@ -251,4 +255,3 @@ class TestCodemotion extends FileDiffSuite {
 
 
 }
-*/
