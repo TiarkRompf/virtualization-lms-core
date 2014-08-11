@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test8
@@ -12,8 +11,9 @@ import test7.{ArrayLoops,ArrayLoopsExp,ScalaGenArrayLoops}
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
+import org.scala_lang.virtualized.virtualize
 
 trait OrderingOpsExpOpt extends OrderingOpsExp {
   override def ordering_lt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs,rhs) match {
@@ -34,7 +34,9 @@ class TestSpeculative extends FileDiffSuite {
   trait DSL extends ArrayMutation with Arith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
     def mzeros(l: Rep[Int]) = zeros(l).mutable
-    def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+    implicit class repIntToDouble(x: Rep[Int]) {
+      def toDouble: Rep[Double] = x.asInstanceOf[Rep[Double]]
+    }
 
     def test(x: Rep[Int]): Rep[Unit]
   }
@@ -54,7 +56,7 @@ class TestSpeculative extends FileDiffSuite {
   def testSpeculative1 = {
     withOutFile(prefix+"speculative1") {
      // test simple copy propagation through variable
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var x = 7
           
@@ -73,7 +75,7 @@ class TestSpeculative extends FileDiffSuite {
   def testSpeculative1b = {
     withOutFile(prefix+"speculative1b") {
      // test simple copy propagation through variable
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var x = 7
           
@@ -93,7 +95,7 @@ class TestSpeculative extends FileDiffSuite {
   def testSpeculative1c = {
     withOutFile(prefix+"speculative1c") {
      // test simple copy propagation through variable
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(y: Rep[Int]) = {
           var x = 7
           
@@ -113,7 +115,7 @@ class TestSpeculative extends FileDiffSuite {
   def testSpeculative1d = {
     withOutFile(prefix+"speculative1d") {
      // test simple copy propagation through variable
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(y: Rep[Int]) = {
           var x = 7
           var z = 9 // should remove z because it is never read
@@ -136,7 +138,7 @@ class TestSpeculative extends FileDiffSuite {
   def testSpeculative3 = {
     withOutFile(prefix+"speculative3") {
      // test simple copy propagation through variable
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var x = 7
           var c = 0.0
@@ -159,7 +161,7 @@ class TestSpeculative extends FileDiffSuite {
   def testSpeculative3b = {
     withOutFile(prefix+"speculative3b") {
      // test simple copy propagation through variable
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var x = 7
           var y = 4.0 // should remove
@@ -184,7 +186,7 @@ class TestSpeculative extends FileDiffSuite {
   def testSpeculative4 = {
     withOutFile(prefix+"speculative4") {
      // test simple copy propagation through variable
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var c = 0.0
           while (c > 10) {
@@ -201,7 +203,7 @@ class TestSpeculative extends FileDiffSuite {
   def testSpeculative5 = {
     withOutFile(prefix+"speculative5") {
      // test simple copy propagation through variable
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var x = 7
           var c = 0.0
@@ -222,4 +224,3 @@ class TestSpeculative extends FileDiffSuite {
   }
 
 }
-*/
