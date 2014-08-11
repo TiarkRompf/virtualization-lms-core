@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test7
@@ -7,14 +6,19 @@ import common._
 import test1._
 
 import util.OverloadHack
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
+trait InfixFoo extends Base {
+  implicit class InfixFoo(x: Rep[Array[Double]]) {
+    def foo: Rep[Double] = infix_foo(x)
+  }
+  def infix_foo(x: Rep[Array[Double]]): Rep[Double]
+}
 
-
-trait FusionProg21 extends Arith with ArrayLoops with Print with OrderingOps {
+trait FusionProg21 extends InfixFoo with Arith with ArrayLoops with Print with OrderingOps {
   
   def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
   
@@ -41,7 +45,7 @@ trait FusionProg21 extends Arith with ArrayLoops with Print with OrderingOps {
 }
 
 
-trait FusionProg22 extends Arith with ArrayLoops with Print with OrderingOps {
+trait FusionProg22 extends InfixFoo with Arith with ArrayLoops with Print with OrderingOps {
   
   def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
   
@@ -86,7 +90,7 @@ trait FusionProg22 extends Arith with ArrayLoops with Print with OrderingOps {
 }
 
 
-trait FusionProg23 extends Arith with ArrayLoops with Print with OrderingOps {
+trait FusionProg23 extends InfixFoo with Arith with ArrayLoops with Print with OrderingOps {
   
   def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
   
@@ -122,7 +126,7 @@ trait FusionProg23 extends Arith with ArrayLoops with Print with OrderingOps {
 }
 
 
-trait FusionProg24 extends Arith with ArrayLoops with Print with OrderingOps {
+trait FusionProg24 extends InfixFoo with Arith with ArrayLoops with Print with OrderingOps {
   
   def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
   
@@ -227,4 +231,3 @@ class TestFusion2 extends FileDiffSuite {
      assertFileEqualsCheck(prefix+"fusion24")
    } 
 }
-*/
