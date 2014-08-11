@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test5
@@ -8,6 +7,8 @@ import test1._
 
 import java.io.PrintWriter
 import java.io.FileOutputStream
+
+import org.scala_lang.virtualized.virtualize
 
 trait JSGenEqual extends JSGenBase {
   val IR: EqualExp
@@ -68,6 +69,7 @@ trait Dom extends Base {
 
 
 
+@virtualize
 trait ConditionalProg { this: Arith with Equal with Print with IfThenElse =>
   
   def test(x: Rep[Double]): Rep[Double] = {
@@ -129,4 +131,3 @@ class TestConditional extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"conditional.html")
   }
 }
-*/

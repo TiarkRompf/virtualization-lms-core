@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test5
@@ -82,4 +81,3 @@ trait JSGenArith extends JSGenBase { // TODO: define a generic one
     case _ => super.emitNode(sym, rhs)
   }
 } 
-*/

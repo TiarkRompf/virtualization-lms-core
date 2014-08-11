@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test5
@@ -8,6 +7,8 @@ import test1._
 
 import java.io.PrintWriter
 import java.io.FileOutputStream
+
+import org.scala_lang.virtualized.virtualize
 
 trait JSGenFunctions extends JSGenEffect with BaseGenFunctions {
   import IR._
@@ -85,6 +86,7 @@ trait JSGenTupleOps extends JSGenBase with JSGenStruct {
 */
 }
 
+@virtualize
 trait FunctionsProg { this: Print with Functions with IfThenElse with Equal =>
   def test(x: Rep[Any]): Rep[Any] = {
     val f = fun { x : Rep[Any] =>
@@ -137,6 +139,7 @@ trait NoArgFunProg { this: TupledFunctions =>
   }
 }
 
+@virtualize
 trait TwoArgsRecursiveFunProg { this: TupledFunctions with Arith with Equal with IfThenElse =>
   def test(x: Rep[Double]): Rep[Double] = {
     lazy val iter : Rep[((Double,Double)) => Double] = fun { (n, acc) =>
@@ -146,6 +149,7 @@ trait TwoArgsRecursiveFunProg { this: TupledFunctions with Arith with Equal with
   }
 }
 
+@virtualize
 trait SchedFunProg { this: Functions with Arith with Equal with IfThenElse =>
   def foo: Rep[Double => Double] = fun { a =>
     def iter : Rep[Double => Double] = fun { b =>
@@ -296,4 +300,3 @@ class TestFunctions extends FileDiffSuite {
   }
 
 }
-*/
