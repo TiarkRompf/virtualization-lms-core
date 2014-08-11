@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test8
@@ -12,20 +11,41 @@ import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
+import org.scala_lang.virtualized.virtualize
 
 /*
   if there's a crash here during compilation, it's likely due to #4363 (need latest scala-virtualized for fix)
 */
 
 trait ArrayMutation extends ArrayLoops {
+
+  implicit def repArrayMutationOps[T:Manifest](a: Rep[Array[T]]) = new clsArrayMutationOps(a)
+  class clsArrayMutationOps[T:Manifest](a: Rep[Array[T]]) {
+    def update(i: Rep[Int], x: Rep[T]): Rep[Unit] = infix_update(a, i, x)
+    def mutable: Rep[Array[T]] = infix_mutable(a)
+    def copy: Rep[Array[T]] = infix_copy(a)
+  }
   
   def infix_update[T:Manifest](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]): Rep[Unit]
-
   def infix_mutable[T:Manifest](a: Rep[Array[T]]): Rep[Array[T]]
-  def infix_clone[T:Manifest](a: Rep[Array[T]]): Rep[Array[T]]
+
+  // NOTE(trans): renamed clone to copy to avoid clash with built-in clone.
+  // TODO(trans): The new scala-virtualized virtualizes clone, but we get error messages like:
+  //[error] Note that Rep is unbounded, which means AnyRef is not a known parent.
+  //[error] Such types can participate in value classes, but instances
+  //[error] cannot appear in singleton types or in reference comparisons.
+  //[error]             a = b.clone
+  def infix_copy[T:Manifest](a: Rep[Array[T]]): Rep[Array[T]]
   
 }
 
+// NOTE(trans): infix chained nicely with implicits, where implicits
+//   don't chain with each other.
+// TODO(trans): can we get back the nice chaining behavior?
+trait LiftArrayReads extends ReadVarImplicit { this: Variables with ArrayLoops with ArrayMutation =>
+  implicit def liftReadsArrayLoops(v: Var[Array[Double]]) = repArrayOps(readVar(v))
+  implicit def liftReadsArrayMutation(v: Var[Array[Double]]) = repArrayMutationOps(readVar(v))
+}
 
 trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
   
@@ -36,7 +56,7 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
   def infix_update[T:Manifest](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]) = reflectWrite(a)(ArrayUpdate(a,i,x))
 
   def infix_mutable[T:Manifest](a: Rep[Array[T]]) = reflectMutable(ArrayMutable(a))
-  def infix_clone[T:Manifest](a: Rep[Array[T]]) = ArrayClone(a)
+  def infix_copy[T:Manifest](a: Rep[Array[T]]) = ArrayClone(a)
   
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case SimpleLoop(s,i, ArrayElem(y)) => Nil
@@ -119,7 +139,9 @@ class TestMutation extends FileDiffSuite {
   trait DSL extends ArrayMutation with Arith with OrderingOps with Variables with IfThenElse with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
     def mzeros(l: Rep[Int]) = zeros(l).mutable
-    def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+    implicit class repIntToDouble(x: Rep[Int]) {
+      def toDouble: Rep[Double] = x.asInstanceOf[Rep[Double]]
+    }
 
     def test(x: Rep[Int]): Rep[Unit]
   }
@@ -135,7 +157,7 @@ class TestMutation extends FileDiffSuite {
   def testMutation1 = {
     withOutFile(prefix+"mutation1") {
      // a write operation must unambigously identify the object being mutated
-      trait Prog extends DSL {
+     @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           val vector1 = mzeros(100)
           val vector2 = mzeros(100)
@@ -154,7 +176,7 @@ class TestMutation extends FileDiffSuite {
   def testMutation1b = {
     withOutFile(prefix+"mutation1b") {
      // a write operation must unambigously identify the object being mutated
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           val vector1 = mzeros(100)
           val vector2 = mzeros(100)
@@ -174,7 +196,7 @@ class TestMutation extends FileDiffSuite {
   def testMutation2 = {
     withOutFile(prefix+"mutation2") {
       // an operation that might read from mutable data v will be serialized with all writes to v
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           val vector1 = mzeros(100)
           val vector2 = mzeros(100)
@@ -199,7 +221,7 @@ class TestMutation extends FileDiffSuite {
   def testMutation3 = {
     withOutFile(prefix+"mutation3") {
       // vars may not reference mutable objects
-      trait Prog extends DSL with LiftVariables {
+      @virtualize trait Prog extends DSL with LiftVariables with LiftArrayReads {
         def test(x: Rep[Int]) = {
           var a = zeros(100)
           val b = mzeros(100)
@@ -219,7 +241,7 @@ class TestMutation extends FileDiffSuite {
   def testMutation3b = {
     withOutFile(prefix+"mutation3b") {
       // vars may not reference mutable objects
-      trait Prog extends DSL with LiftVariables {
+      @virtualize trait Prog extends DSL with LiftVariables with LiftArrayReads {
         def test(x: Rep[Int]) = {
           var a = zeros(100)
           val b = mzeros(100)
@@ -227,7 +249,7 @@ class TestMutation extends FileDiffSuite {
             val x1 = a.at(i)
             b.update(i,8)
             val x2 = a.at(i) // must be cse'd
-            a = b.clone // ok: making a copy
+            a = b.copy // ok: making a copy
           }
         }
       }      
@@ -239,7 +261,7 @@ class TestMutation extends FileDiffSuite {
   def testMutation4 = {
     withOutFile(prefix+"mutation4") {
       // mutable objects cannot be nested
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           val a = mzeros(100)
           val b = array(10) { i => a } // nested array
@@ -256,12 +278,12 @@ class TestMutation extends FileDiffSuite {
   def testMutation4b = {
     withOutFile(prefix+"mutation4b") {
       // mutable objects cannot be nested
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           val a = mzeros(100)
           val b = array(10) { i => a } // nested array
-          val b1 = b.clone
-          val b2 = b1.mutable // error: internal arrays are *still* mutable, despite shallow clone
+          val b1 = b.copy
+          val b2 = b1.mutable // error: internal arrays are *still* mutable, despite shallow copy
           val x1 = b2.at(5).at(50)
           print(x1)
         }
@@ -274,10 +296,10 @@ class TestMutation extends FileDiffSuite {
   def testMutation4c = {
     withOutFile(prefix+"mutation4c") {
       // mutable objects cannot be nested
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           val a = mzeros(100)
-          val b = array(10) { i => a.clone } // nested array
+          val b = array(10) { i => a.copy } // nested array
           val b1 = b.mutable // ok: internal arrays are immutable
           val x1 = b1.at(5).at(50)
           print(x1)
@@ -292,7 +314,7 @@ class TestMutation extends FileDiffSuite {
   def testMutation5 = {
     withOutFile(prefix+"mutation5") {
       // mutable objects cannot be nested
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           val a = zeros(100)
           val b = array(10) { i => a } // nested array
@@ -316,7 +338,7 @@ class TestMutation extends FileDiffSuite {
   def testMutation6 = {
     withOutFile(prefix+"mutation6") {
       // mutate nested object (within an immutable one)
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           val a = mzeros(100)
           val b = array(10) { i => a } // nested array
@@ -341,7 +363,7 @@ class TestMutation extends FileDiffSuite {
   def testMutation7 = {
     withOutFile(prefix+"mutation7") {
       // local variables of primitive type
-      trait Prog extends DSL with LiftVariables {
+      @virtualize trait Prog extends DSL with LiftVariables with LiftArrayReads {
         def test(x0: Rep[Int]) = {
           val x = x0.toDouble // avoid codegen for implicit convert
           var c = 0.0
@@ -360,4 +382,3 @@ class TestMutation extends FileDiffSuite {
   }
 
 }
-*/

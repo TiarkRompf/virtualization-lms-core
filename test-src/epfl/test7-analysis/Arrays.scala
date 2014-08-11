@@ -21,7 +21,8 @@ trait ArrayLoops extends Loops with OverloadHack {
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] // TODO: make reduce operation configurable!
   def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
 
-  implicit class ArrayLoopsInfixRepArray[T:Manifest](a: Rep[Array[T]]) {
+  implicit def repArrayOps[T:Manifest](a: Rep[Array[T]]) = new clsRepArrayOps(a)
+  class clsRepArrayOps[T:Manifest](a: Rep[Array[T]]) {
     def at(i: Rep[Int]): Rep[T] = infix_at(a, i)
     def length: Rep[Int] = infix_length(a)
   }

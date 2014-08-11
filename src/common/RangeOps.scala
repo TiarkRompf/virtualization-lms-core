@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -12,12 +11,19 @@ trait RangeOps extends Base {
   implicit def repRangeToRangeOps(r: Rep[Range]) = new rangeOpsCls(r)
   class rangeOpsCls(r: Rep[Range]){
     def foreach(f: Rep[Int] => Rep[Unit])(implicit pos: SourceContext) = range_foreach(r, f)
+    def start(implicit pos: SourceContext) = range_start(r)
+    def step(implicit pos: SourceContext) = range_step(r)
+    def end(implicit pos: SourceContext) = range_end(r)
+  }
+  implicit def intToRangeOps(i: Int) = new RangeOpsInfixRepInt(unit(i))
+  implicit class RangeOpsInfixRepInt(start: Rep[Int]) {
+    def until(end: Rep[Int])(implicit pos: SourceContext) = range_until(start,end)
   }
 
-  def infix_until(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = range_until(start,end)
-  def infix_start(r: Rep[Range])(implicit pos: SourceContext) = range_start(r)
-  def infix_step(r: Rep[Range])(implicit pos: SourceContext) = range_step(r)
-  def infix_end(r: Rep[Range])(implicit pos: SourceContext) = range_end(r)
+  //def infix_until(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = range_until(start,end)
+  //def infix_start(r: Rep[Range])(implicit pos: SourceContext) = range_start(r)
+  //def infix_step(r: Rep[Range])(implicit pos: SourceContext) = range_step(r)
+  //def infix_end(r: Rep[Range])(implicit pos: SourceContext) = range_end(r)
   //def infix_foreach(r: Rep[Range], f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
 
   def range_until(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext): Rep[Range]
@@ -180,4 +186,3 @@ trait CGenRangeOps extends CGenEffect with BaseGenRangeOps {
     case _ => super.emitNode(sym, rhs)
   }
 }
-*/
