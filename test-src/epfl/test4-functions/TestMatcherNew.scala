@@ -469,7 +469,6 @@ trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with 
 
 
   def advanceIf(c: Rep[Boolean])(f: Rep[Char] => IO): IO = {
-    System.out.println(threads)
     threads = threads :+ (c,f)
   }
 
@@ -818,7 +817,6 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
   // compare with dk.brics.automaton, input size 10^7
   // civet 573 ms, dk.brics.automaton 816 ms
 
-/*TODO(trans)
   def testMatcherNew1 = withOutFileChecked(prefix+"matchernew1") {
     trait Prog extends DSL {
       def test(x: Rep[Unit]) = {
@@ -860,7 +858,6 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
     }
     new Prog with Impl
   }
-*/
 
   def testMatcherNew2 = withOutFileChecked(prefix+"matchernew2") {
     trait Prog extends DSL {

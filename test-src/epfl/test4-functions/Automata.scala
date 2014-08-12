@@ -123,7 +123,7 @@ def convertNFAtoDFA(in: NIO): DIO = {
   
 
   type CharSet = Option[Char]
-  
+  /*
   def infix_contains(s: CharSet, c: Rep[Char]): Rep[Boolean] = s match {
     case Some(c1) => c == c1
     case None => unit(true)
@@ -140,13 +140,16 @@ def convertNFAtoDFA(in: NIO): DIO = {
     case (Some(c1), Some(c2)) => None
     case _ => None
   }
-
+  */
   
   
   def exploreNFA[A:Manifest](xs: NIO, cin: Rep[Char])(flag: Rep[Any] => Rep[A] => Rep[A])(k: NIO => Rep[A]): Rep[A] = xs match {
     case Nil => k(Nil)
     case NTrans(cset@Some(c), e, s)::rest =>
-      if (cset contains cin) {
+      // NOTE(trans): previously we used cset.contains(cin), but that no longer works
+      // because Option already has a method contains that uses plain Scala equality,
+      // not Rep equality.
+      if (cin == c) {
         val xs1 = rest collect { case NTrans(Some(`c`) | None,e,s) => NTrans(None,e,s) }
         val maybeFlag = e map flag getOrElse ((x:Rep[A])=>x)
         maybeFlag(exploreNFA(xs1, cin)(flag)(acc => k(acc ++ s())))
