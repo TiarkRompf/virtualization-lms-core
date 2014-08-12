@@ -4,7 +4,7 @@ version := "0.3-SNAPSHOT"
 
 organization := "EPFL"
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.2"
 
 scalaSource in Compile <<= baseDirectory(_ / "src")
 
@@ -28,15 +28,20 @@ parallelExecution in Test := false
 // disable publishing of main docs
 publishArtifact in (Compile, packageDoc) := false
 
-// TODO: how to enable for 2.11?
 // continuations
-// autoCompilerPlugins := true
+val contVersion = "1.0.2"
 
-// libraryDependencies <<= (scalaVersion, libraryDependencies) { (ver, deps) =>
-//     deps :+ compilerPlugin("org.scala-lang.plugins" % "continuations" % ver)
-// }
+autoCompilerPlugins := true
 
-// scalacOptions += "-P:continuations:enable"
+libraryDependencies ++= Seq(
+  "org.scala-lang.plugins" %% "scala-continuations-library" % contVersion % "compile"
+)
+
+libraryDependencies <<= (scalaVersion, libraryDependencies) { (ver, deps) =>
+     deps :+ compilerPlugin("org.scala-lang.plugins" % "scala-continuations-plugin" % contVersion cross CrossVersion.full)
+}
+
+scalacOptions += "-P:continuations:enable"
 
 val paradiseVersion = "2.0.1"
 
