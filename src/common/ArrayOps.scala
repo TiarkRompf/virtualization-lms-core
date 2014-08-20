@@ -216,7 +216,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
     case ArrayUpdate(x,n,y) => emitValDef(sym, src"$x($n) = $y")
     case ArrayLength(x) => emitValDef(sym, src"$x.length")
     case ArrayForeach(a,x,block) =>
-      gen"""val $sym = $a.foreach{"
+      gen"""val $sym = $a.foreach{
            |$x => 
            |${nestedBlock(block)}
            |$block
