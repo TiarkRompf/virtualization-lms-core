@@ -18,11 +18,21 @@ trait Arith extends Base with LiftArith {
   //types that are allowed to be lifted more explicitly
   //implicit def unit(x: Double): Rep[Double]
 
+  implicit def int2Double(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+
   // aks: this is a workaround for the infix methods not intercepting after Manifests were added everywhere
-  implicit def intToArithOps(i: Int) = new arithOps(unit(i))
+  implicit def intToDoubleArithOps(i: Int) = new doubleArithOps(unit(i))
+  implicit def doubleToArithOps(i: Double) = new doubleArithOps(unit(i))
   implicit def intToRepDbl(i: Int) : Rep[Double] = unit(i)
 
-  implicit class arithOps(x: Rep[Double]){
+  // NOTE: the results of int operations are still doubles. 
+  // a realistic implementation (such as the one in core)
+  // needs specialized arithmetic for each primitive type.
+  implicit class intArithOps(x: Rep[Int]) {
+    def toDouble = x.asInstanceOf[Rep[Double]]
+  }
+
+  implicit class doubleArithOps(x: Rep[Double]) {
     def +(y: Rep[Double]) = infix_+(x,y)
     def -(y: Rep[Double]) = infix_-(x,y)
     def *(y: Rep[Double]) = infix_*(x,y)

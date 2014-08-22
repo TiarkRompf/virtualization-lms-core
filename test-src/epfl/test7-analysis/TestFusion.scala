@@ -52,13 +52,11 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
 @virtualize // for +
 trait FusionProg extends Arith with ArrayLoops with Print {
   
-  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
-  
   def test(x: Rep[Unit]) = {
     
     val constant = array(100) { i => 1 }
 
-    val linear = array(100) { i => unit(2.0)*i } //TODO(trans): previously 2 instead of unit(2.0) worked
+    val linear = array(100) { i => 2*i.toDouble } //NOTE(trans): previously, we could just use 2*i
 
     val affine = array(100) { i => constant.at(i) + linear.at(i) }
     
@@ -78,8 +76,6 @@ trait FusionProg extends Arith with ArrayLoops with Print {
 }
 
 trait FusionProg2 extends Arith with ArrayLoops with Print with OrderingOps {
-  
-  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
   
   def test(x: Rep[Unit]) = {
     
