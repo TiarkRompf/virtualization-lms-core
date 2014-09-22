@@ -15,6 +15,9 @@ trait ScalaCodegen extends GenericCodegen with Config {
 
   override def toString = "scala"
 
+  override def resourceInfoType = "generated.scala.ResourceInfo"
+  override def resourceInfoSym = "resourceInfo"
+
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
 
     val sA = remap(manifest[A])
@@ -53,11 +56,15 @@ trait ScalaCodegen extends GenericCodegen with Config {
     val kernelName = syms.map(quote).mkString("")
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
+    if (resourceInfoType != "") {
+      stream.print(resourceInfoSym + ":" + resourceInfoType)
+      if ((vals ++ vars).length > 0) stream.print(",")
+    }
     stream.print(vals.map(p => quote(p) + ":" + remap(p.tp)).mkString(","))
 
     // variable name mangling
     if (vals.length > 0 && vars.length > 0){
-      stream.print(", ")
+      stream.print(",")
     }
     // TODO: remap Ref instead of explicitly adding generated.scala
     if (vars.length > 0){
