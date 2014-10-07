@@ -22,7 +22,7 @@ class TestList extends FileDiffSuite {
       xs ++ List(unit(1), unit(2), unit(3))
 
     def emptyLeft(xs: Rep[List[Int]]): Rep[List[Int]] =
-      List() ++ xs
+      List[Int]() ++ xs // VIRT 2.11: need type annotation
 
     def emptyRight(xs: Rep[List[Int]]): Rep[List[Int]] =
       xs ++ List()
