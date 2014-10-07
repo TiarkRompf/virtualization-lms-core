@@ -75,7 +75,7 @@ trait CGenMiscOps extends CGenEffect {
   val IR: MiscOpsExp
   import IR._
 
-  private def format(s: Exp[Any]): String = {
+  def format(s: Exp[Any]): String = {
     remap(s.tp) match {
       case "uint16_t" => "%c"
       case "bool" | "int8_t" | "int16_t" | "int32_t" => "%d"
@@ -86,7 +86,7 @@ trait CGenMiscOps extends CGenEffect {
     }
   }
 
-  private def quoteRawString(s: Exp[Any]): String = {
+  def quoteRawString(s: Exp[Any]): String = {
     remap(s.tp) match {
       case "string" => quote(s) + ".c_str()"
       case _ => quote(s)
