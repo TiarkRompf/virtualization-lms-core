@@ -12,8 +12,10 @@ trait LiftBoolean {
 
 trait BooleanOps extends Variables {
   def infix_unary_!(x: Rep[Boolean])(implicit pos: SourceContext) = boolean_negate(x)
-  def infix_&&(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext) = boolean_and(lhs,rhs)
-  def infix_||(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext) = boolean_or(lhs,rhs)
+  def infix_&&(lhs: Rep[Boolean], rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_and(lhs,rhs)
+  def infix_||(lhs: Rep[Boolean], rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_or(lhs,rhs)
+
+  // TODO: short-circuit by default
 
   def boolean_negate(lhs: Rep[Boolean])(implicit pos: SourceContext): Rep[Boolean]
   def boolean_and(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext): Rep[Boolean]
