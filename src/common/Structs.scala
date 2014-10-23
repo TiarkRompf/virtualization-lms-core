@@ -33,7 +33,7 @@ trait StructTags {
   case class MapTag[T] extends StructTag[T]
 }
 
-trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with ObjectOpsExp with StringOpsExp with OverloadHack {
+trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with OverloadHack {
 
   // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
 
@@ -94,22 +94,6 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
 
   def record_select[T : Manifest](record: Rep[Record], fieldName: String) = {
     field(record, fieldName)
-  }
-
-  def imm_field(struct: Exp[Any], name: String, f: Exp[Any])(implicit pos: SourceContext): Exp[Any] = {
-    if (f.tp.erasure.getSimpleName == "Variable") {
-      field(struct,name)(mtype(f.tp.typeArguments(0)),pos)
-    }
-    else {
-      object_unsafe_immutable(f)(mtype(f.tp),pos)
-    }
-  }
-
-  // don't let unsafeImmutable hide struct-ness
-  override def object_unsafe_immutable[A:Manifest](lhs: Exp[A])(implicit pos: SourceContext) = lhs match {
-    case Def(Struct(tag,elems)) => struct[A](tag, elems.map(t => (t._1, imm_field(lhs, t._1, t._2))))
-    case Def(d@Reflect(Struct(tag, elems), u, es)) => struct[A](tag, elems.map(t => (t._1, imm_field(lhs, t._1, t._2))))
-    case _ => super.object_unsafe_immutable(lhs)
   }
 
   override def syms(e: Any): List[Sym[Any]] = e match {
@@ -181,14 +165,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   }
 
   def classTag[T:Manifest] = ClassTag[T](structName(manifest[T]))
-
-  override def object_tostring(x: Exp[Any])(implicit pos: SourceContext): Exp[String] = x match {
-    case Def(s@Struct(tag, elems)) => //tag(elem1, elem2, ...)
-      val e = elems.map(e=>string_plus(unit(e._1 + " = "), object_tostring(e._2))).reduceLeft((l,r)=>string_plus(string_plus(l,unit(", ")),r))
-      string_plus(unit(structName(s.tp)+"("),string_plus(e,unit(")")))
-    case _ => super.object_tostring(x)
-  }
-
+  
   def registerStruct[T](name: String, elems: Seq[(String, Rep[Any])]) {
     encounteredStructs += name -> elems.map(e => (e._1, e._2.tp))
   }
@@ -225,7 +202,6 @@ trait StructExpOpt extends StructExp {
     case Some(x) => throw new RuntimeException("ERROR: " + index + " is not a variable field of type " + struct.tp)
     case None => super.var_field(struct, index)
   } */
-
 }
 
 trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseExp {
