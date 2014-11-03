@@ -20,6 +20,9 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   var kernelInputVars: List[Sym[Any]] = Nil
   var kernelOutputs: List[Sym[Any]] = Nil
 
+  override def resourceInfoType = "resourceInfo_t"
+  override def resourceInfoSym = "resourceInfo"
+
   override def remap[A](m: Manifest[A]) : String = {
     m.toString match {
       case "java.lang.String" => "string"
@@ -82,6 +85,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
     headerStream.println("#include <stdio.h>")
     headerStream.println("#include <string.h>")
+    headerStream.println("#include <stdint.h>")
     headerStream.println("#include <stdlib.h>")
     headerStream.println("#include <memory>")
     headerStream.println("#include <float.h>")
@@ -179,6 +183,12 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
           headerStream.println(sendViewHeader)
           helperFuncStream.println(sendViewSource)
           helperFuncList.append(sendViewHeader)
+        }
+        val (mkManifestHeader, mkManifestSource) = emitMakeManifest(tp)
+        if (!helperFuncList.contains(mkManifestHeader)) {
+          headerStream.println(mkManifestHeader)
+          helperFuncStream.println(mkManifestSource)
+          helperFuncList.append(mkManifestHeader)
         }
       }
       catch {

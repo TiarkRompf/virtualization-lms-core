@@ -85,6 +85,9 @@ trait CLikeCodegen extends GenericCodegen {
       tpe
   }
 
+  def resourceInfoType = ""
+  def resourceInfoSym = ""
+
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
 
     stream.append("#include \"" + deviceTarget + "helperFuncs.h\"\n")
@@ -102,6 +105,10 @@ trait CLikeCodegen extends GenericCodegen {
       }
 
       out.append(" kernel_" + syms.map(quote).mkString("") + "(")
+      if (resourceInfoType != "") {
+        out.append(resourceInfoType + " &" + resourceInfoSym)
+        if ((vals ++ vars).length > 0) out.append(",")
+      }
       out.append(vals.map(p => remap(p.tp) + " " + addRef(p.tp) + quote(p)).mkString(", "))
       if (vals.length > 0 && vars.length > 0) {
         out.append(", ")

@@ -12,6 +12,7 @@ trait AbstractHostTransfer {
   def emitRecvView(tp: Manifest[_], peer: Targets.Value): (String,String)
   def emitSendUpdate(tp: Manifest[_], peer: Targets.Value): (String,String)
   def emitRecvUpdate(tp: Manifest[_], peer: Targets.Value): (String,String)
+  def emitMakeManifest(tp: Manifest[_]): (String,String)
 }
 
 trait AbstractDeviceTransfer {

@@ -33,6 +33,7 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
     headerStream.println("#include <float.h>")
     headerStream.println("#include <assert.h>")
     headerStream.println("#include <jni.h>")
+    headerStream.println("#include <stdint.h>")
     headerStream.println("#include \"" + deviceTarget + "types.h\"")
     headerStream.println(getDataStructureHeaders())
     headerStream.println("#include \"" + deviceTarget + "actRecords.h\"")
