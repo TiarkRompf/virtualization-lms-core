@@ -9,7 +9,7 @@ package common
   * This pass must be run if the LoopFusionTransformers are in
   * use to prevent duplication of code and computations.
   */
-trait CombineTTPScheduling extends internal.FatBlockTraversal {
+trait CombineTTPScheduling extends BaseLoopsTraversalFat with BaseIfThenElseTraversalFat {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
 

@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.reflect.SourceContext
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
+import scala.virtualization.lms.internal.{FatBlockTraversal, GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit pos: SourceContext): Rep[T]
@@ -231,7 +231,7 @@ trait BaseGenIfThenElse extends GenericNestedCodegen {
 
 }
 
-trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen {
+trait BaseIfThenElseTraversalFat extends FatBlockTraversal {
   val IR: IfThenElseFatExp
   import IR._
 
@@ -274,6 +274,7 @@ trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen {
   }
 }
 
+trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen with BaseIfThenElseTraversalFat
 
 trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
   import IR._
