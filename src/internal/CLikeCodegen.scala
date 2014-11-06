@@ -88,7 +88,7 @@ trait CLikeCodegen extends GenericCodegen {
   def resourceInfoType = ""
   def resourceInfoSym = ""
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
 
     stream.append("#include \"" + deviceTarget + "helperFuncs.h\"\n")
     
@@ -96,9 +96,9 @@ trait CLikeCodegen extends GenericCodegen {
       val out = new StringBuilder
       if(resultIsVar) {
         if (cppMemMgr == "refcnt")
-          out.append(wrapSharedPtr(hostTarget + "Ref" + unwrapSharedPtr(resultType)))
+          out.append(wrapSharedPtr(deviceTarget + "Ref" + unwrapSharedPtr(resultType)))
         else
-          out.append(hostTarget + "Ref" + resultType + addRef())
+          out.append(deviceTarget + "Ref" + resultType + addRef())
       }
       else {
         out.append(resultType + addRef(resultType))
@@ -115,28 +115,26 @@ trait CLikeCodegen extends GenericCodegen {
       }
       if (vars.length > 0) {
         if (cppMemMgr == "refcnt")
-          out.append(vars.map(v => wrapSharedPtr(hostTarget + "Ref" + unwrapSharedPtr(remap(v.tp))) + " " + quote(v)).mkString(","))
+          out.append(vars.map(v => wrapSharedPtr(deviceTarget + "Ref" + unwrapSharedPtr(remap(v.tp))) + " " + quote(v)).mkString(","))
         else
-          out.append(vars.map(v => hostTarget + "Ref" + remap(v.tp) + addRef() + " " + quote(v)).mkString(","))
+          out.append(vars.map(v => deviceTarget + "Ref" + remap(v.tp) + addRef() + " " + quote(v)).mkString(","))
       }
       out.append(")")
       out.toString
     }
 
     //TODO: Remove the dependency to Multiloop to Delite
-    if (!resultType.startsWith("DeliteOpMultiLoop")) {
+    if (!isMultiLoop) {
       stream.println(kernelSignature + " {")
       headerStream.println(kernelSignature + ";")
     }
   }
 
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
-    //TODO: Remove the dependency to Multiloop to Delite
-    if(resultType != "void" && !resultType.startsWith("DeliteOpMultiLoop"))
-      stream.println("return " + quote(syms(0)) + ";")
-
-    if(!resultType.startsWith("DeliteOpMultiLoop"))
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
+    if (!isMultiLoop) {
+      if (resultType != "void") stream.println("return " + quote(syms(0)) + ";")
       stream.println("}")
+    }
 /*
     for(s <- syms++vals++vars) {
       if(dsTypesList.contains(s.tp)) println("contains :" + remap(s.tp))
