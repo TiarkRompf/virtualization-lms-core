@@ -112,22 +112,22 @@ val x52 = println(x44)
 (VFT) No producers found for cons Sym(4)
 (VFT) Replaced TP(Sym(5),ArrayLength(Sym(4))) with fixed length: Const(100)
 
-(VFT) Fusing prod Sym(4) with cons Sym(10). Type: Mc_McForlike(Sym(6),Sym(1),Sym(5),Const(100),Single_MC(Sym(6),(Sym(4),Sym(6)),Sym(2),Sym(9),Sym(3),Sym(10)),Sym(9),Sym(3),Sym(4),Sym(10))
+(VFT) Fusing prod Sym(4) with cons Sym(10). Type: Mc_McForRed(Sym(6),Sym(1),Sym(5),Const(100),Single_McFor(Sym(6),(Sym(4),Sym(6)),Sym(2),Sym(9),Sym(3),Sym(10)),Sym(9),Sym(3),Sym(4),Sym(10))
 (VFT) Fused prod Sym(4) with cons Sym(10), fused sym: Sym(57)
 
-(VFT) Fusing prod Sym(4) with cons Sym(19). Type: Mc_McForlike(Sym(11),Sym(1),Sym(5),Const(100),Single_MC(Sym(11),(Sym(4),Sym(11)),Sym(2),Sym(18),Sym(3),Sym(19)),Sym(18),Sym(3),Sym(4),Sym(19))
+(VFT) Fusing prod Sym(4) with cons Sym(19). Type: Mc_McForRed(Sym(11),Sym(1),Sym(5),Const(100),Single_McFor(Sym(11),(Sym(4),Sym(11)),Sym(2),Sym(18),Sym(3),Sym(19)),Sym(18),Sym(3),Sym(4),Sym(19))
 (VFT) Fused prod Sym(4) with cons Sym(19), fused sym: Sym(65)
 
-(VFT) Fusing prod Sym(4) with cons Sym(26). Type: Mc_McForlike(Sym(20),Sym(1),Sym(5),Const(100),Single_MC(Sym(20),(Sym(4),Sym(20)),Sym(2),Sym(25),Sym(3),Sym(26)),Sym(25),Sym(3),Sym(4),Sym(26))
+(VFT) Fusing prod Sym(4) with cons Sym(26). Type: Mc_McForRed(Sym(20),Sym(1),Sym(5),Const(100),Single_McFor(Sym(20),(Sym(4),Sym(20)),Sym(2),Sym(25),Sym(3),Sym(26)),Sym(25),Sym(3),Sym(4),Sym(26))
   
   (VFT) No producers found for cons Sym(25)
   (VFT) Cons Sym(25) not fused but mirrored to Sym(70) because of previous substitutions or effects
 (VFT) Fused prod Sym(4) with cons Sym(26), fused sym: Sym(71)
 
-(VFT) Fusing prod Sym(4) with cons Sym(34). Type: Mc_McForlike(Sym(27),Sym(1),Sym(5),Const(100),Single_MC(Sym(27),(Sym(4),Sym(27)),Sym(2),Sym(30),Sym(3),Sym(34)),Sym(30),Sym(3),Sym(4),Sym(34))
+(VFT) Fusing prod Sym(4) with cons Sym(34). Type: Mc_McForRed(Sym(27),Sym(1),Sym(5),Const(100),Single_McFor(Sym(27),(Sym(4),Sym(27)),Sym(2),Sym(30),Sym(3),Sym(34)),Sym(30),Sym(3),Sym(4),Sym(34))
 (VFT) Fused prod Sym(4) with cons Sym(34), fused sym: Sym(76)
 
-(VFT) Fusing prod Sym(4) with cons Sym(44). Type: Mc_McForlike(Sym(35),Sym(1),Sym(5),Const(100),Single_MC(Sym(35),(Sym(4),Sym(35)),Sym(2),Sym(40),Sym(3),Sym(44)),Sym(40),Sym(3),Sym(4),Sym(44))
+(VFT) Fusing prod Sym(4) with cons Sym(44). Type: Mc_McForRed(Sym(35),Sym(1),Sym(5),Const(100),Single_McFor(Sym(35),(Sym(4),Sym(35)),Sym(2),Sym(40),Sym(3),Sym(44)),Sym(40),Sym(3),Sym(4),Sym(44))
   
   (VFT) No producers found for cons Sym(40)
   (VFT) Cons Sym(40) not fused but mirrored to Sym(80) because of previous substitutions or effects

@@ -86,7 +86,7 @@ val x36 = println(x35)
 (VFT) No producers found for cons Sym(26)
 (VFT) Cons Sym(26) not fused but mirrored to Sym(41) because of previous substitutions or effects
 
-(VFT) Fusing prod Sym(41) with cons Sym(34). Type: Mc_McForlike(Sym(30),Sym(18),Sym(29),Sym(0),IfThenElseOneEmpty_Any(Sym(21),Single_MC(Sym(30),(Sym(26),Sym(30)),Sym(18),Sym(33),Sym(22),Sym(34)),Empty_MCSingle(Sym(46),Sym(24),Sym(34)),Sym(34),Sym(25),Sym(34)),Sym(33),Sym(25),Sym(41),Sym(34))
+(VFT) Fusing prod Sym(41) with cons Sym(34). Type: Mc_McForRed(Sym(30),Sym(18),Sym(29),Sym(0),IfThenElseOneEmpty_Any(Sym(21),Single_McFor(Sym(30),(Sym(26),Sym(30)),Sym(18),Sym(33),Sym(22),Sym(34)),Empty_Mc(Sym(46),Sym(24),Sym(34)),Sym(34),Sym(25),Sym(34)),Sym(33),Sym(25),Sym(41),Sym(34))
 (VFT) Fused prod Sym(41) with cons Sym(34), fused sym: Sym(50)
 
 (VFT) all vertically fused: List(Sym(25), Sym(49))

@@ -60,7 +60,7 @@ val x25 = println(x24)
 
 (VFT) No producers found for cons Sym(3)
 
-(VFT) Fusing prod Sym(7) with cons Sym(14). Type: Mc_McForlike(Sym(9),Sym(4),Sym(8),Const(20),Single_MC(Sym(9),(Sym(7),Sym(9)),Sym(5),Sym(13),Sym(6),Sym(14)),Sym(13),Sym(6),Sym(7),Sym(14))
+(VFT) Fusing prod Sym(7) with cons Sym(14). Type: Mc_McForRed(Sym(9),Sym(4),Sym(8),Const(20),Single_McFor(Sym(9),(Sym(7),Sym(9)),Sym(5),Sym(13),Sym(6),Sym(14)),Sym(13),Sym(6),Sym(7),Sym(14))
 (VFT) Fused prod Sym(7) with cons Sym(14), fused sym: Sym(29)
 (VFT) Replaced TP(Sym(15),ArrayLength(Sym(3))) with fixed length: Const(30)
 

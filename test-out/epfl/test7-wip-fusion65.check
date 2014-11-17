@@ -48,7 +48,7 @@ val x18 = println(2)
     
     (VFT) No producers found for cons Sym(7)
 
-(VFT) Fusing prod Sym(11) with cons Sym(17). Type: Mc_McForlike(Sym(12),Sym(1),Sym(16),Const(8),IfThenElseOneEmpty_Any(Sym(2),Mc_McForlike(Sym(12),Sym(3),Sym(16),Const(4),Single_MC(Sym(12),(Sym(11),Sym(12)),Sym(5),Sym(15),Sym(6),Sym(17)),Sym(15),Sym(6),Sym(7),Sym(17)),Empty_Foreach(Sym(9),Sym(17)),Sym(17),Sym(10),Sym(17)),Sym(15),Sym(10),Sym(11),Sym(17))
+(VFT) Fusing prod Sym(11) with cons Sym(17). Type: Mc_McForRed(Sym(12),Sym(1),Sym(16),Const(8),IfThenElseOneEmpty_Any(Sym(2),Mc_McForRed(Sym(12),Sym(3),Sym(16),Const(4),Single_McFor(Sym(12),(Sym(11),Sym(12)),Sym(5),Sym(15),Sym(6),Sym(17)),Sym(15),Sym(6),Sym(7),Sym(17)),Empty_For(Sym(9),Sym(17)),Sym(17),Sym(10),Sym(17)),Sym(15),Sym(10),Sym(11),Sym(17))
 (VFT) Fused prod Sym(11) with cons Sym(17), fused sym: Sym(26)
 
 (VFT) all vertically fused: List(Sym(10), Sym(24))

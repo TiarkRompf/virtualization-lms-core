@@ -40,7 +40,7 @@ val x15 = println(x14)
   (VFT) No producers found for cons Sym(4)
 
 (VFT) Not fused prod Sym(8) with cons Sym(11) because not in same exact scope
-(VFT) Fusing prod Sym(6) with cons Sym(11). Type: Mc_McForlike(Sym(7),Sym(1),Const(100),Const(100),Single_MC(Sym(7),(Sym(6),Sym(7)),Sym(4),Sym(10),Sym(5),Sym(11)),Sym(10),Sym(5),Sym(6),Sym(11))
+(VFT) Fusing prod Sym(6) with cons Sym(11). Type: Mc_McForRed(Sym(7),Sym(1),Const(100),Const(100),Single_McFor(Sym(7),(Sym(6),Sym(7)),Sym(4),Sym(10),Sym(5),Sym(11)),Sym(10),Sym(5),Sym(6),Sym(11))
 (VFT) Fused prod Sym(6) with cons Sym(11), fused sym: Sym(20)
 
 (VFT) all vertically fused: List(Sym(20), Sym(6))

@@ -69,10 +69,10 @@ val x30 = println(x29)
 
 (VFT) No producers found for cons Sym(10)
 
-(VFT) Fusing prod Sym(10) with cons Sym(16). Type: Mc_McForlike(Sym(12),Sym(1),Sym(11),Const(30),Mc_McForlike(Sym(12),Sym(2),Sym(11),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_MC(Sym(12),(Sym(10),Sym(12)),Sym(4),Sym(15),Sym(5),Sym(16)),Empty_MCSingle(Sym(33),Sym(7),Sym(16)),Sym(16),Sym(8),Sym(16)),Sym(15),Sym(8),Sym(9),Sym(16)),Sym(15),Sym(9),Sym(10),Sym(16))
+(VFT) Fusing prod Sym(10) with cons Sym(16). Type: Mc_McForRed(Sym(12),Sym(1),Sym(11),Const(30),Mc_McForRed(Sym(12),Sym(2),Sym(11),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_McFor(Sym(12),(Sym(10),Sym(12)),Sym(4),Sym(15),Sym(5),Sym(16)),Empty_Mc(Sym(33),Sym(7),Sym(16)),Sym(16),Sym(8),Sym(16)),Sym(15),Sym(8),Sym(9),Sym(16)),Sym(15),Sym(9),Sym(10),Sym(16))
 (VFT) Fused prod Sym(10) with cons Sym(16), fused sym: Sym(38)
 
-(VFT) Fusing prod Sym(38) with cons Sym(26). Type: Mc_McForlike(Sym(18),Sym(1),Sym(17),Const(30),Mc_McForlike(Sym(18),Sym(2),Sym(17),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_MC(Sym(18),(Sym(16),Sym(18)),Sym(34),Sym(25),Sym(35),Sym(26)),Empty_MCSingle(Sym(43),Sym(33),Sym(26)),Sym(26),Sym(36),Sym(26)),Sym(25),Sym(36),Sym(37),Sym(26)),Sym(25),Sym(37),Sym(38),Sym(26))
+(VFT) Fusing prod Sym(38) with cons Sym(26). Type: Mc_McForRed(Sym(18),Sym(1),Sym(17),Const(30),Mc_McForRed(Sym(18),Sym(2),Sym(17),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_McFor(Sym(18),(Sym(16),Sym(18)),Sym(34),Sym(25),Sym(35),Sym(26)),Empty_Mc(Sym(43),Sym(33),Sym(26)),Sym(26),Sym(36),Sym(26)),Sym(25),Sym(36),Sym(37),Sym(26)),Sym(25),Sym(37),Sym(38),Sym(26))
 (VFT) Fused prod Sym(38) with cons Sym(26), fused sym: Sym(51)
 
 (VFT) all vertically fused: List(Sym(36), Sym(49), Sym(8))

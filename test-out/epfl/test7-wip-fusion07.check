@@ -64,10 +64,10 @@ val x29 = println(x28)
 (VFT) No producers found for cons Sym(4)
 (VFT) Replaced TP(Sym(5),ArrayLength(Sym(4))) with fixed length: Const(100)
 
-(VFT) Fusing prod Sym(4) with cons Sym(14). Type: Mc_McForlike(Sym(6),Sym(1),Sym(5),Const(100),Single_MC(Sym(6),(Sym(4),Sym(6)),Sym(2),Sym(13),Sym(3),Sym(14)),Sym(13),Sym(3),Sym(4),Sym(14))
+(VFT) Fusing prod Sym(4) with cons Sym(14). Type: Mc_McForRed(Sym(6),Sym(1),Sym(5),Const(100),Single_McFor(Sym(6),(Sym(4),Sym(6)),Sym(2),Sym(13),Sym(3),Sym(14)),Sym(13),Sym(3),Sym(4),Sym(14))
 (VFT) Fused prod Sym(4) with cons Sym(14), fused sym: Sym(37)
 
-(VFT) Fusing prod Sym(4) with cons Sym(23). Type: Mc_McForlike(Sym(15),Sym(1),Sym(5),Const(100),Single_MC(Sym(15),(Sym(4),Sym(15)),Sym(2),Sym(22),Sym(3),Sym(23)),Sym(22),Sym(3),Sym(4),Sym(23))
+(VFT) Fusing prod Sym(4) with cons Sym(23). Type: Mc_McForRed(Sym(15),Sym(1),Sym(5),Const(100),Single_McFor(Sym(15),(Sym(4),Sym(15)),Sym(2),Sym(22),Sym(3),Sym(23)),Sym(22),Sym(3),Sym(4),Sym(23))
 (VFT) Fused prod Sym(4) with cons Sym(23), fused sym: Sym(45)
 
 (VFT) all vertically fused: List(Sym(37), Sym(4), Sym(45))

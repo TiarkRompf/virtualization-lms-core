@@ -65,7 +65,7 @@ val x26 = println(x25)
   (VFT) Cons Sym(11) not fused but mirrored to Sym(31) because of fixed shape
   (VFT) Replaced TP(Sym(12),ArrayLength(Sym(11))) with fixed length: Const(100)
   
-  (VFT) Fusing prod Sym(31) with cons Sym(17). Type: Mc_McForlike(Sym(13),Sym(2),Sym(12),Const(100),Single_MC(Sym(13),(Sym(11),Sym(13)),Sym(29),Sym(16),Sym(30),Sym(17)),Sym(16),Sym(30),Sym(31),Sym(17))
+  (VFT) Fusing prod Sym(31) with cons Sym(17). Type: Mc_McForRed(Sym(13),Sym(2),Sym(12),Const(100),Single_McFor(Sym(13),(Sym(11),Sym(13)),Sym(29),Sym(16),Sym(30),Sym(17)),Sym(16),Sym(30),Sym(31),Sym(17))
   (VFT) Fused prod Sym(31) with cons Sym(17), fused sym: Sym(36)
 (VFT) Cons Sym(24) not fused but mirrored to Sym(40) because of previous substitutions or effects
 

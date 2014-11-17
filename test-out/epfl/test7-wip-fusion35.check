@@ -77,17 +77,17 @@ val x32 = println(x31)
   
   (VFT) No producers found for cons Sym(5)
 
-(VFT) Fusing prod Sym(6) with cons Sym(20). Type: Mc_McForlike(Sym(8),Sym(1),Sym(7),Const(30),Mc_McForlike(Sym(8),Sym(2),Sym(7),Const(10),Single_MC(Sym(8),(Sym(6),Sym(8)),Sym(3),Sym(19),Sym(4),Sym(20)),Sym(19),Sym(4),Sym(5),Sym(20)),Sym(19),Sym(5),Sym(6),Sym(20))
+(VFT) Fusing prod Sym(6) with cons Sym(20). Type: Mc_McForRed(Sym(8),Sym(1),Sym(7),Const(30),Mc_McForRed(Sym(8),Sym(2),Sym(7),Const(10),Single_McFor(Sym(8),(Sym(6),Sym(8)),Sym(3),Sym(19),Sym(4),Sym(20)),Sym(19),Sym(4),Sym(5),Sym(20)),Sym(19),Sym(5),Sym(6),Sym(20))
   
   (VFT) No producers found for cons Sym(13)
   (VFT) Cons Sym(13) not fused but mirrored to Sym(37) because of previous substitutions or effects
   (VFT) Replaced TP(Sym(14),ArrayLength(Sym(13))) with fixed length: Sym(3)
   
-  (VFT) Fusing prod Sym(37) with cons Sym(19). Type: Mc_McForlike(Sym(15),Sym(10),Sym(14),Sym(3),Single_MC(Sym(15),(Sym(13),Sym(15)),Sym(35),Sym(18),Sym(36),Sym(19)),Sym(18),Sym(36),Sym(37),Sym(19))
+  (VFT) Fusing prod Sym(37) with cons Sym(19). Type: Mc_McForRed(Sym(15),Sym(10),Sym(14),Sym(3),Single_McFor(Sym(15),(Sym(13),Sym(15)),Sym(35),Sym(18),Sym(36),Sym(19)),Sym(18),Sym(36),Sym(37),Sym(19))
   (VFT) Fused prod Sym(37) with cons Sym(19), fused sym: Sym(40)
 (VFT) Fused prod Sym(6) with cons Sym(20), fused sym: Sym(42)
 
-(VFT) Fusing prod Sym(42) with cons Sym(26). Type: Mc_McForlike(Sym(22),Sym(1),Sym(21),Const(30),Mc_McForlike(Sym(22),Sym(2),Sym(21),Const(10),Mc_McForlike(Sym(22),Sym(10),Sym(21),Sym(3),Single_MC(Sym(22),(Sym(20),Sym(22)),Sym(38),Sym(25),Sym(39),Sym(26)),Sym(25),Sym(39),Sym(40),Sym(26)),Sym(25),Sym(40),Sym(41),Sym(26)),Sym(25),Sym(41),Sym(42),Sym(26))
+(VFT) Fusing prod Sym(42) with cons Sym(26). Type: Mc_McForRed(Sym(22),Sym(1),Sym(21),Const(30),Mc_McForRed(Sym(22),Sym(2),Sym(21),Const(10),Mc_McForRed(Sym(22),Sym(10),Sym(21),Sym(3),Single_McFor(Sym(22),(Sym(20),Sym(22)),Sym(38),Sym(25),Sym(39),Sym(26)),Sym(25),Sym(39),Sym(40),Sym(26)),Sym(25),Sym(40),Sym(41),Sym(26)),Sym(25),Sym(41),Sym(42),Sym(26))
 (VFT) Fused prod Sym(42) with cons Sym(26), fused sym: Sym(50)
 
 (VFT) all vertically fused: List(Sym(5), Sym(41), Sym(49))

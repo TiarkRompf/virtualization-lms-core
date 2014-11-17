@@ -38,7 +38,7 @@ val x16 = println(x15)
 
 (VFT) No producers found for cons Sym(8)
 
-(VFT) Fusing prod Sym(8) with cons Sym(14). Type: Mc_McForlike(Sym(10),Sym(1),Sym(9),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_MC(Sym(10),(Sym(8),Sym(10)),Sym(2),Sym(13),Sym(4),Sym(14)),Empty_MCSingle(Sym(19),Sym(6),Sym(14)),Sym(14),Sym(7),Sym(14)),Sym(13),Sym(7),Sym(8),Sym(14))
+(VFT) Fusing prod Sym(8) with cons Sym(14). Type: Mc_McForRed(Sym(10),Sym(1),Sym(9),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_McFor(Sym(10),(Sym(8),Sym(10)),Sym(2),Sym(13),Sym(4),Sym(14)),Empty_Mc(Sym(19),Sym(6),Sym(14)),Sym(14),Sym(7),Sym(14)),Sym(13),Sym(7),Sym(8),Sym(14))
 (VFT) Fused prod Sym(8) with cons Sym(14), fused sym: Sym(23)
 
 (VFT) all vertically fused: List(Sym(23), Sym(8))

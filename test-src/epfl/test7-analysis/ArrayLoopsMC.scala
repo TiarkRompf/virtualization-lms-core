@@ -24,6 +24,7 @@ trait ArrayLoopsMC extends Loops with OverloadHack {
     redFunc: (Rep[T], Rep[T]) => Rep[T], zero: Rep[T]): Rep[T]
   def arrayIf[T:Manifest](shape: Rep[Int])(cond: Rep[Int] => Rep[Boolean], f: Rep[Int] => Rep[T]): Rep[Array[T]]
   def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
+  def foreach2[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Unit]): Rep[Unit]
 
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T]
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int]
@@ -175,6 +176,13 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
     reflectEffect(SimpleLoop(infix_length(a), x, ForeachElem(y)), yEff.star)
   }
 
+  def foreach2[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Unit]): Rep[Unit] = {
+    val x = fresh[Int]
+    val y = reifyEffectsHere(f(x))
+    val yEff = summarizeEffects(y)
+    reflectEffect(SimpleLoop(shape, x, ForeachElem(y)), yEff.star)
+  }
+
   // boundSyms won't be moved out of block
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case MultiArrayElem(y) => effectSyms(y)
@@ -271,10 +279,12 @@ trait ScalaGenArrayLoopsMCFat extends ScalaGenLoopsFat {
       })
       if (singleEmpty.forall(_.isDefined)) {
         stream.println("if (" + quote(cond) + ") {")
-        singleEmpty.foreach({ case Some((arraySym, thenp, iteSym)) =>
-          emitBlock(thenp)
-          stream.println(quote(arraySym) + "_builder += " + quote(getBlockResult(thenp)))
-          replaceIfThenElseSingletonEmptyWithAppend.remove(iteSym)
+        singleEmpty.foreach({
+          case Some((arraySym, thenp, iteSym)) =>
+            emitBlock(thenp)
+            stream.println(quote(arraySym) + "_builder += " + quote(getBlockResult(thenp)))
+            replaceIfThenElseSingletonEmptyWithAppend.remove(iteSym)
+          case None => assert(false)
         })
         stream.println("}")
       } else {

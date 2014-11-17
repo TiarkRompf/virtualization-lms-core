@@ -1381,6 +1381,18 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
+  def testFusionTransform67 = withOutFileChecked(prefix+"fusion67"+suffix) {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // ManyMcsingle_For
+        val range1 = array(10) { i => i + 1 }
+        val range2 = array(10) { i => i + 2 }
+        foreach2(10) { i => print(range1.at(i) + range2.at(i)) }
+      }
+    }
+    new Prog with Impl
+  }
+  
   // def testFusionTransform67 = withOutFileChecked(prefix+"fusion67"+suffix) {
   //   trait Prog extends MyFusionProg with Impl {
   //     def test(x: Rep[Int]) = {
@@ -1398,7 +1410,6 @@ class TestFusion3 extends FileDiffSuite {
   //   new Prog with Impl
   // }
 
-// TODO need tests for ManyMcsingle_For
 // TODO need to fuse & fatten ifs
 
 

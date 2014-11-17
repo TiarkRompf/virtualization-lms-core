@@ -73,10 +73,10 @@ val x31 = println(x30)
 (VFT) Cons Sym(8) not fused but mirrored to Sym(35) because of fixed shape
 (VFT) Replaced TP(Sym(9),ArrayLength(Sym(8))) with fixed length: Const(100)
 
-(VFT) Fusing prod Sym(35) with cons Sym(14). Type: Mc_McForlike(Sym(10),Sym(1),Sym(9),Const(100),Single_MC(Sym(10),(Sym(8),Sym(10)),Sym(33),Sym(13),Sym(34),Sym(14)),Sym(13),Sym(34),Sym(35),Sym(14))
+(VFT) Fusing prod Sym(35) with cons Sym(14). Type: Mc_McForRed(Sym(10),Sym(1),Sym(9),Const(100),Single_McFor(Sym(10),(Sym(8),Sym(10)),Sym(33),Sym(13),Sym(34),Sym(14)),Sym(13),Sym(34),Sym(35),Sym(14))
 (VFT) Fused prod Sym(35) with cons Sym(14), fused sym: Sym(38)
 
-(VFT) Fusing prod Sym(4) with cons Sym(20) and other prods: List(Sym(14)). Type: ManyMcsingle_MultiFor(Sym(15),Sym(1),(Sym(4),Sym(15)),Sym(2),List(((Sym(14),Sym(15)),Sym(36))),Sym(4),Sym(20),List())
+(VFT) Fusing prod Sym(4) with cons Sym(20) and other prods: List(Sym(14)). Type: ManyMcsingle_McFor(Sym(15),Sym(1),(Sym(4),Sym(15)),Sym(2),List(((Sym(14),Sym(15)),Sym(36))),Sym(4),Sym(20),List())
 (VFT) Fused prod Sym(4) and other prods List(Sym(14)) with cons Sym(20), fused sym: Sym(41)
 
 (VFT) Not fused prod Sym(8) with cons Sym(27) because consumer depends on producer through Sym(35)

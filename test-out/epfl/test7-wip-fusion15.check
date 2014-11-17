@@ -42,7 +42,7 @@ val x16 = println(x15)
 (VFT) No producers found for cons Sym(8)
 (VFT) Cons Sym(8) not fused but mirrored to Sym(20) because of fixed shape
 
-(VFT) Fusing prod Sym(4) with cons Sym(14) and other prods: List(Sym(8)). Type: ManyMcsingle_MultiFor(Sym(9),Sym(1),(Sym(4),Sym(9)),Sym(2),List(((Sym(8),Sym(9)),Sym(18))),Sym(4),Sym(14),List())
+(VFT) Fusing prod Sym(4) with cons Sym(14) and other prods: List(Sym(8)). Type: ManyMcsingle_McFor(Sym(9),Sym(1),(Sym(4),Sym(9)),Sym(2),List(((Sym(8),Sym(9)),Sym(18))),Sym(4),Sym(14),List())
 (VFT) Fused prod Sym(4) and other prods List(Sym(8)) with cons Sym(14), fused sym: Sym(23)
 
 (VFT) all vertically fused: List(Sym(20), Sym(4), Sym(23))

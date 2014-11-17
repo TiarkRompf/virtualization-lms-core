@@ -80,17 +80,17 @@ val x36 = println(x35)
 (VFT) No producers found for cons Sym(4)
 (VFT) Replaced TP(Sym(5),ArrayLength(Sym(4))) with fixed length: Const(100)
 
-(VFT) Fusing prod Sym(4) with cons Sym(10). Type: Mc_McForlike(Sym(6),Sym(1),Sym(5),Const(100),Single_MC(Sym(6),(Sym(4),Sym(6)),Sym(2),Sym(9),Sym(3),Sym(10)),Sym(9),Sym(3),Sym(4),Sym(10))
+(VFT) Fusing prod Sym(4) with cons Sym(10). Type: Mc_McForRed(Sym(6),Sym(1),Sym(5),Const(100),Single_McFor(Sym(6),(Sym(4),Sym(6)),Sym(2),Sym(9),Sym(3),Sym(10)),Sym(9),Sym(3),Sym(4),Sym(10))
 (VFT) Fused prod Sym(4) with cons Sym(10), fused sym: Sym(41)
 
 (VFT) No producers found for cons Sym(14)
 (VFT) Cons Sym(14) not fused but mirrored to Sym(46) because of fixed shape
 (VFT) Replaced TP(Sym(15),ArrayLength(Sym(14))) with fixed length: Const(100)
 
-(VFT) Fusing prod Sym(46) with cons Sym(20). Type: Mc_McForlike(Sym(16),Sym(1),Sym(15),Const(100),Single_MC(Sym(16),(Sym(14),Sym(16)),Sym(44),Sym(19),Sym(45),Sym(20)),Sym(19),Sym(45),Sym(46),Sym(20))
+(VFT) Fusing prod Sym(46) with cons Sym(20). Type: Mc_McForRed(Sym(16),Sym(1),Sym(15),Const(100),Single_McFor(Sym(16),(Sym(14),Sym(16)),Sym(44),Sym(19),Sym(45),Sym(20)),Sym(19),Sym(45),Sym(46),Sym(20))
 (VFT) Fused prod Sym(46) with cons Sym(20), fused sym: Sym(51)
 
-(VFT) Fusing prod Sym(41) with cons Sym(26) and other prods: List(Sym(20)). Type: ManyMcsingle_MultiFor(Sym(21),Sym(1),(Sym(10),Sym(21)),Sym(39),List(((Sym(20),Sym(21)),Sym(49))),Sym(41),Sym(26),List())
+(VFT) Fusing prod Sym(41) with cons Sym(26) and other prods: List(Sym(20)). Type: ManyMcsingle_McFor(Sym(21),Sym(1),(Sym(10),Sym(21)),Sym(39),List(((Sym(20),Sym(21)),Sym(49))),Sym(41),Sym(26),List())
 (VFT) Fused prod Sym(41) and other prods List(Sym(20)) with cons Sym(26), fused sym: Sym(56)
 
 (VFT) all vertically fused: List(Sym(51), Sym(4), Sym(46), Sym(56), Sym(41))

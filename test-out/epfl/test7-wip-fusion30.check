@@ -58,7 +58,7 @@ val x24 = println(x23)
 (VFT) Cons Sym(10) not fused but mirrored to Sym(29) because of fixed shape
 (VFT) Replaced TP(Sym(13),ArrayLength(Sym(4))) with fixed length: Const(100)
 
-(VFT) Fusing prod Sym(4) with cons Sym(22). Type: Mc_McForlike(Sym(14),Sym(1),Sym(13),Const(100),Single_MC(Sym(14),(Sym(4),Sym(14)),Sym(2),Sym(21),Sym(3),Sym(22)),Sym(21),Sym(3),Sym(4),Sym(22))
+(VFT) Fusing prod Sym(4) with cons Sym(22). Type: Mc_McForRed(Sym(14),Sym(1),Sym(13),Const(100),Single_McFor(Sym(14),(Sym(4),Sym(14)),Sym(2),Sym(21),Sym(3),Sym(22)),Sym(21),Sym(3),Sym(4),Sym(22))
 (VFT) Fused prod Sym(4) with cons Sym(22), fused sym: Sym(37)
 
 (VFT) all vertically fused: List(Sym(37), Sym(4))

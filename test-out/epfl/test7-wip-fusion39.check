@@ -78,7 +78,7 @@ val x33 = println(x32)
 (VFT) No producers found for cons Sym(4)
 (VFT) Cons Sym(4) not fused but mirrored to Sym(38) because of fixed shape
 
-(VFT) Fusing prod Sym(8) with cons Sym(23) and other prods: List(Sym(4)). Type: ManyMcsingle_MultiFor(Sym(18),Sym(5),(Sym(8),Sym(18)),Sym(6),List(((Sym(4),Sym(18)),Sym(36))),Sym(8),Sym(23),List())
+(VFT) Fusing prod Sym(8) with cons Sym(23) and other prods: List(Sym(4)). Type: ManyMcsingle_McFor(Sym(18),Sym(5),(Sym(8),Sym(18)),Sym(6),List(((Sym(4),Sym(18)),Sym(36))),Sym(8),Sym(23),List())
 (VFT) Fused prod Sym(8) and other prods List(Sym(4)) with cons Sym(23), fused sym: Sym(41)
 
 (VFT) Not fused prod Sym(16) with cons Sym(27) because consumer loop might not iterate over full range of producer collection

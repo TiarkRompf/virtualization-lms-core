@@ -126,22 +126,22 @@ val x58 = println(x50)
 
 (VFT) No producers found for cons Sym(10)
 
-(VFT) Fusing prod Sym(10) with cons Sym(16). Type: Mc_McForlike(Sym(12),Sym(1),Sym(11),Const(30),Mc_McForlike(Sym(12),Sym(2),Sym(11),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_MC(Sym(12),(Sym(10),Sym(12)),Sym(4),Sym(15),Sym(5),Sym(16)),Empty_MCSingle(Sym(62),Sym(7),Sym(16)),Sym(16),Sym(8),Sym(16)),Sym(15),Sym(8),Sym(9),Sym(16)),Sym(15),Sym(9),Sym(10),Sym(16))
+(VFT) Fusing prod Sym(10) with cons Sym(16). Type: Mc_McForRed(Sym(12),Sym(1),Sym(11),Const(30),Mc_McForRed(Sym(12),Sym(2),Sym(11),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_McFor(Sym(12),(Sym(10),Sym(12)),Sym(4),Sym(15),Sym(5),Sym(16)),Empty_Mc(Sym(62),Sym(7),Sym(16)),Sym(16),Sym(8),Sym(16)),Sym(15),Sym(8),Sym(9),Sym(16)),Sym(15),Sym(9),Sym(10),Sym(16))
 (VFT) Fused prod Sym(10) with cons Sym(16), fused sym: Sym(67)
 
-(VFT) Fusing prod Sym(10) with cons Sym(25). Type: Mc_McForlike(Sym(17),Sym(1),Sym(11),Const(30),Mc_McForlike(Sym(17),Sym(2),Sym(11),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_MC(Sym(17),(Sym(10),Sym(17)),Sym(4),Sym(24),Sym(5),Sym(25)),Empty_MCSingle(Sym(71),Sym(7),Sym(25)),Sym(25),Sym(8),Sym(25)),Sym(24),Sym(8),Sym(9),Sym(25)),Sym(24),Sym(9),Sym(10),Sym(25))
+(VFT) Fusing prod Sym(10) with cons Sym(25). Type: Mc_McForRed(Sym(17),Sym(1),Sym(11),Const(30),Mc_McForRed(Sym(17),Sym(2),Sym(11),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_McFor(Sym(17),(Sym(10),Sym(17)),Sym(4),Sym(24),Sym(5),Sym(25)),Empty_Mc(Sym(71),Sym(7),Sym(25)),Sym(25),Sym(8),Sym(25)),Sym(24),Sym(8),Sym(9),Sym(25)),Sym(24),Sym(9),Sym(10),Sym(25))
 (VFT) Fused prod Sym(10) with cons Sym(25), fused sym: Sym(79)
 
-(VFT) Fusing prod Sym(10) with cons Sym(32). Type: Mc_McForlike(Sym(26),Sym(1),Sym(11),Const(30),Mc_McForlike(Sym(26),Sym(2),Sym(11),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_MC(Sym(26),(Sym(10),Sym(26)),Sym(4),Sym(31),Sym(5),Sym(32)),Empty_MCSingle(Sym(83),Sym(7),Sym(32)),Sym(32),Sym(8),Sym(32)),Sym(31),Sym(8),Sym(9),Sym(32)),Sym(31),Sym(9),Sym(10),Sym(32))
+(VFT) Fusing prod Sym(10) with cons Sym(32). Type: Mc_McForRed(Sym(26),Sym(1),Sym(11),Const(30),Mc_McForRed(Sym(26),Sym(2),Sym(11),Const(10),IfThenElseOneEmpty_Any(Sym(3),Single_McFor(Sym(26),(Sym(10),Sym(26)),Sym(4),Sym(31),Sym(5),Sym(32)),Empty_Mc(Sym(83),Sym(7),Sym(32)),Sym(32),Sym(8),Sym(32)),Sym(31),Sym(8),Sym(9),Sym(32)),Sym(31),Sym(9),Sym(10),Sym(32))
   
   (VFT) No producers found for cons Sym(31)
   (VFT) Cons Sym(31) not fused but mirrored to Sym(86) because of previous substitutions or effects
 (VFT) Fused prod Sym(10) with cons Sym(32), fused sym: Sym(89)
 
-(VFT) Fusing prod Sym(10) with cons Sym(40). Type: Mc_McForlike(Sym(33),Sym(1),Sym(11),Const(30),InnerMC_Red(Sym(33),Sym(2),IfThenElseOneEmpty_Any(Sym(3),Single_MC(Sym(33),(Sym(10),Sym(33)),Sym(4),Sym(36),Sym(5),Sym(40)),Empty_MCSingle(Sym(93),Sym(7),Sym(40)),Sym(36),Sym(8),Sym(40)),Sym(36),Sym(8),SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(8)))),Sym(9),Sym(40)),Sym(36),Sym(9),Sym(10),Sym(40))
+(VFT) Fusing prod Sym(10) with cons Sym(40). Type: Mc_McForRed(Sym(33),Sym(1),Sym(11),Const(30),InnerMc_Red(Sym(33),Sym(2),IfThenElseOneEmpty_Any(Sym(3),Single_McFor(Sym(33),(Sym(10),Sym(33)),Sym(4),Sym(36),Sym(5),Sym(40)),Empty_Mc(Sym(93),Sym(7),Sym(40)),Sym(36),Sym(8),Sym(40)),Sym(36),Sym(8),SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(8)))),Sym(9),Sym(40)),Sym(36),Sym(9),Sym(10),Sym(40))
 (VFT) Fused prod Sym(10) with cons Sym(40), fused sym: Sym(98)
 
-(VFT) Fusing prod Sym(10) with cons Sym(50). Type: Mc_McForlike(Sym(41),Sym(1),Sym(11),Const(30),InnerMC_Red(Sym(41),Sym(2),IfThenElseOneEmpty_Any(Sym(3),Single_MC(Sym(41),(Sym(10),Sym(41)),Sym(4),Sym(46),Sym(5),Sym(50)),Empty_MCSingle(Sym(101),Sym(7),Sym(50)),Sym(46),Sym(8),Sym(50)),Sym(46),Sym(8),SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(8)))),Sym(9),Sym(50)),Sym(46),Sym(9),Sym(10),Sym(50))
+(VFT) Fusing prod Sym(10) with cons Sym(50). Type: Mc_McForRed(Sym(41),Sym(1),Sym(11),Const(30),InnerMc_Red(Sym(41),Sym(2),IfThenElseOneEmpty_Any(Sym(3),Single_McFor(Sym(41),(Sym(10),Sym(41)),Sym(4),Sym(46),Sym(5),Sym(50)),Empty_Mc(Sym(101),Sym(7),Sym(50)),Sym(46),Sym(8),Sym(50)),Sym(46),Sym(8),SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(8)))),Sym(9),Sym(50)),Sym(46),Sym(9),Sym(10),Sym(50))
   
   (VFT) No producers found for cons Sym(46)
   (VFT) Cons Sym(46) not fused but mirrored to Sym(104) because of previous substitutions or effects

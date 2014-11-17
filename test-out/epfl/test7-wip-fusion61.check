@@ -34,7 +34,7 @@ val x12 = ()
   
   (VFT) No producers found for cons Sym(4)
 
-(VFT) Fusing prod Sym(5) with cons Sym(12). Type: Mc_McForlike(Sym(6),Sym(1),Sym(11),Const(100),Mc_McForlike(Sym(6),Sym(2),Sym(11),Sym(1),Single_MC(Sym(6),(Sym(5),Sym(6)),Sym(2),Sym(10),Sym(3),Sym(12)),Sym(10),Sym(3),Sym(4),Sym(12)),Sym(10),Sym(4),Sym(5),Sym(12))
+(VFT) Fusing prod Sym(5) with cons Sym(12). Type: Mc_McForRed(Sym(6),Sym(1),Sym(11),Const(100),Mc_McForRed(Sym(6),Sym(2),Sym(11),Sym(1),Single_McFor(Sym(6),(Sym(5),Sym(6)),Sym(2),Sym(10),Sym(3),Sym(12)),Sym(10),Sym(3),Sym(4),Sym(12)),Sym(10),Sym(4),Sym(5),Sym(12))
 (VFT) Fused prod Sym(5) with cons Sym(12), fused sym: Sym(19)
 
 (VFT) all vertically fused: List(Sym(17), Sym(4))
