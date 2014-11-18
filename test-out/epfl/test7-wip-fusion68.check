@@ -1,0 +1,116 @@
+-- full graph
+TP(Sym(2),EmptyArray(Sym(1)))
+TP(Sym(3),ArrayLength(Sym(2)))
+TP(Sym(5),ArrayIndex(Sym(2),Sym(4)))
+TP(Sym(6),IntPlus(Sym(5),Const(1)))
+TP(Sym(7),SingletonInLoop(Block(Sym(6)),Sym(4)))
+TP(Sym(8),SimpleLoop(Sym(3),Sym(4),MultiArrayElem(Block(Sym(7)))))
+TP(Sym(10),ArrayIndex(Sym(2),Sym(9)))
+TP(Sym(11),IntPlus(Sym(10),Const(1)))
+TP(Sym(12),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+TP(Sym(14),Reflect(SimpleLoop(Sym(3),Sym(9),ForeachElem(Block(Sym(13)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(16),ArrayIndex(Sym(2),Sym(15)))
+TP(Sym(17),IntPlus(Sym(16),Const(1)))
+TP(Sym(18),Singleton(Block(Sym(17))))
+TP(Sym(21),IntPlus(Sym(20),Sym(19)))
+TP(Sym(22),SimpleLoop(Sym(3),Sym(15),MultiReduceElem(Block(Sym(18)),Block(Sym(21)),Const(0),Sym(19),Sym(20))))
+TP(Sym(23),ArrayIndex(Sym(8),Const(0)))
+TP(Sym(24),Reflect(Print(Sym(23)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+TP(Sym(25),Reflect(Print(Sym(22)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(24))))
+TP(Sym(26),Reify(Sym(25),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14), Sym(24), Sym(25))))
+
+-- before transformation
+val x2: Array[Int] = Array.empty
+val x3 = x2.length
+for (x9 <- 0 until x3) {
+val x10 = x2.apply(x9)
+val x11 = x10 + 1
+val x12 = println(x11)
+}
+val x14 = ()
+val x8 = new Array[Int](x3)
+for (x4 <- 0 until x3) {
+val x5 = x2.apply(x4)
+val x6 = x5 + 1
+x8(x4) = x6
+}
+val x23 = x8.apply(0)
+val x24 = println(x23)
+var x19 = 0
+for (x15 <- 0 until x3) {
+val x16 = x2.apply(x15)
+val x17 = x16 + 1
+val x20 = x17
+val x21 = x20 + x19
+x19 = x21
+}
+val x22 = x19
+val x25 = println(x22)
+
+-- vertical transformation
+
+(VFT) Fusing prod Sym(2) with cons Sym(14). Type: Empty_For(Sym(2),Sym(14))
+(VFT) Fused prod Sym(2) with cons Sym(14), fused sym: Const(())
+
+(VFT) Fusing prod Sym(2) with cons Sym(8). Type: Empty_Mc(Sym(2),Sym(2),Sym(8))
+(VFT) Fused prod Sym(2) with cons Sym(8), fused sym: Sym(2)
+
+(VFT) Not fused prod Sym(2) with cons Sym(22) because empty producer not fused with reduce because need to maintain implementation-specific error
+(VFT) No producers found for cons Sym(22)
+
+(VFT) all vertically fused: 
+
+-- after vertical transformation
+val x2: Array[Int] = Array.empty
+val x27 = x2.apply(0)
+val x28 = println(x27)
+val x3 = x2.length
+var x19 = 0
+for (x15 <- 0 until x3) {
+val x16 = x2.apply(x15)
+val x17 = x16 + 1
+val x20 = x17
+val x21 = x20 + x19
+x19 = x21
+}
+val x22 = x19
+val x29 = println(x22)
+
+-- horizontal transformation
+(HFT) Recording Sym(22), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x2: Array[Int] = Array.empty
+val x27 = x2.apply(0)
+val x32 = println(x27)
+val x3 = x2.length
+var x19 = 0
+for (x15 <- 0 until x3) {
+val x16 = x2.apply(x15)
+val x17 = x16 + 1
+val x20 = x17
+val x21 = x20 + x19
+x19 = x21
+}
+val x22 = x19
+val x33 = println(x22)
+
+-- fusion
+val x2: Array[Int] = Array.empty
+val x27 = x2.apply(0)
+val x32 = println(x27)
+val x3 = x2.length
+var x19 = 0
+for (x15 <- 0 until x3) {
+val x16 = x2.apply(x15)
+val x17 = x16 + 1
+val x20 = x17
+val x21 = x20 + x19
+x19 = x21
+}
+val x22 = x19
+val x33 = println(x22)
+-- done

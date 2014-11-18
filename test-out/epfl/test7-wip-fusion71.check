@@ -1,0 +1,180 @@
+-- full graph
+TP(Sym(2),OrderingGT(Sym(1),Const(3)))
+TP(Sym(4),EmptyArray(Sym(3)))
+TP(Sym(5),IntPlus(Sym(1),Const(2)))
+TP(Sym(6),Singleton(Block(Sym(5))))
+TP(Sym(7),IfThenElse(Sym(2),Block(Sym(4)),Block(Sym(6))))
+TP(Sym(8),SimpleLoop(Const(6),Sym(1),MultiArrayElem(Block(Sym(7)))))
+TP(Sym(9),ArrayLength(Sym(8)))
+TP(Sym(11),ArrayIndex(Sym(8),Sym(10)))
+TP(Sym(12),IntPlus(Sym(11),Const(1)))
+TP(Sym(13),Singleton(Block(Sym(12))))
+TP(Sym(16),IntPlus(Sym(15),Sym(14)))
+TP(Sym(17),SimpleLoop(Sym(9),Sym(10),MultiReduceElem(Block(Sym(13)),Block(Sym(16)),Const(0),Sym(14),Sym(15))))
+TP(Sym(18),ArrayIndex(Sym(8),Const(0)))
+TP(Sym(19),Reflect(Print(Sym(18)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(20),Reflect(Print(Sym(17)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(19))))
+TP(Sym(21),Reify(Sym(20),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(19), Sym(20))))
+
+-- before transformation
+val x4: Array[Int] = Array.empty
+val x8_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 6) {
+val x2 = x1 > 3
+val x7 = if (x2) {
+x4
+} else {
+val x5 = x1 + 2
+val x6 = Array(x5)
+x6
+}
+x8_builder ++= x7
+}
+val x8 = x8_builder.result()
+val x18 = x8.apply(0)
+val x19 = println(x18)
+val x9 = x8.length
+var x14 = 0
+for (x10 <- 0 until x9) {
+val x11 = x8.apply(x10)
+val x12 = x11 + 1
+val x15 = x12
+val x16 = x15 + x14
+x14 = x16
+}
+val x17 = x14
+val x20 = println(x17)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(8)
+
+(VFT) Fusing prod Sym(8) with cons Sym(17). Type: Mc_McForRed(Sym(10),Sym(1),Sym(9),Const(6),IfThenElseOneEmpty_Any(Sym(2),Empty_Mc(Sym(23),Sym(4),Sym(17)),Single_McFor(Sym(10),(Sym(8),Sym(10)),Sym(5),Sym(13),Sym(6),Sym(17)),Sym(13),Sym(7),Sym(17)),Sym(13),Sym(7),Sym(8),Sym(17))
+(VFT) Fused prod Sym(8) with cons Sym(17), fused sym: Sym(27)
+
+(VFT) all vertically fused: List(Sym(27), Sym(8))
+List(Sym(7), Sym(26))
+
+-- after vertical transformation
+val x4: Array[Int] = Array.empty
+val x8_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 6) {
+val x2 = x1 > 3
+val x7 = if (x2) {
+x4
+} else {
+val x5 = x1 + 2
+val x6 = Array(x5)
+x6
+}
+x8_builder ++= x7
+}
+val x8 = x8_builder.result()
+val x18 = x8.apply(0)
+val x22 = println(x18)
+var x14 = 0
+for (x1 <- 0 until 6) {
+val x2 = x1 > 3
+val x26 = if (x2) {
+val x23: Array[Int] = Array.empty
+x23
+} else {
+val x5 = x1 + 2
+val x24 = x5 + 1
+val x25 = Array(x24)
+x25
+}
+for (x30 <- 0 until x26.length) {
+val x15 = x26.apply(x30)
+val x16 = x15 + x14
+x14 = x16
+}
+}
+val x27 = x14
+val x28 = println(x27)
+
+-- horizontal transformation
+(HFT) Recording Sym(8), no fusion
+  (HFT) Recording if-sym Sym(7), no fusion
+(HFT) Fusing Sym(27) with containing fusion set FusedLoopSet(shape = Const(6), indexSym = Sym(1), loopSyms = List(Sym(27), Sym(8), Sym(17)))
+(HFT) - already using same index Sym(1)
+  (HFT) Fusing Sym(26) with containing fusion set FusedIfSet(cond = Sym(2), ifSyms = List(Sym(7), Sym(26)))
+
+(HFT) all horizontally fused: List(Sym(8), Sym(27))
+
+-- after horizontal transformation
+val x4: Array[Int] = Array.empty
+val x8_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 6) {
+val x2 = x1 > 3
+val x7 = if (x2) {
+x4
+} else {
+val x5 = x1 + 2
+val x6 = Array(x5)
+x6
+}
+x8_builder ++= x7
+}
+val x8 = x8_builder.result()
+val x18 = x8.apply(0)
+val x31 = println(x18)
+var x14 = 0
+for (x1 <- 0 until 6) {
+val x2 = x1 > 3
+val x26 = if (x2) {
+val x23: Array[Int] = Array.empty
+x23
+} else {
+val x5 = x1 + 2
+val x24 = x5 + 1
+val x25 = Array(x24)
+x25
+}
+for (x34 <- 0 until x26.length) {
+val x15 = x26.apply(x34)
+val x16 = x15 + x14
+x14 = x16
+}
+}
+val x27 = x14
+val x32 = println(x27)
+
+-- fusion
+(CTS) Fusing these loops into one fat TTP: 
+TTP(List(Sym(8)),List(SimpleLoop(Const(6),Sym(1),MultiArrayElem(Block(Sym(7))))),SimpleFatLoop(Const(6),Sym(1),List(MultiArrayElem(Block(Sym(7))))))
+TTP(List(Sym(27)),List(SimpleLoop(Const(6),Sym(1),MultiReduceElem(Block(Sym(26)),Block(Sym(16)),Const(0),Sym(14),Sym(15)))),SimpleFatLoop(Const(6),Sym(1),List(MultiReduceElem(Block(Sym(26)),Block(Sym(16)),Const(0),Sym(14),Sym(15)))))
+
+(CTS) Fusing these ifs into one fat TTP: 
+TTP(List(Sym(7)),List(IfThenElse(Sym(2),Block(Sym(4)),Block(Sym(6)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(4))),List(Block(Sym(6)))))
+TTP(List(Sym(26)),List(IfThenElse(Sym(2),Block(Sym(23)),Block(Sym(25)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(23))),List(Block(Sym(25)))))
+
+val x4: Array[Int] = Array.empty
+val x8_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+var x14 = 0
+for (x1 <- 0 until 6) {
+val x2 = x1 > 3
+// TODO: use vars instead of tuples to return multiple values
+val (x7,x26) = if (x2) {
+val x23: Array[Int] = Array.empty
+(x4,x23)
+} else {
+val x5 = x1 + 2
+val x6 = Array(x5)
+val x24 = x5 + 1
+val x25 = Array(x24)
+(x6,x25)
+}
+x8_builder ++= x7
+for (x35 <- 0 until x26.length) {
+val x15 = x26.apply(x35)
+val x16 = x15 + x14
+x14 = x16
+}
+}
+val x8 = x8_builder.result()
+val x27 = x14
+val x18 = x8.apply(0)
+val x31 = println(x18)
+val x32 = println(x27)
+-- done

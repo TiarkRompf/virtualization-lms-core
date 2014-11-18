@@ -5,19 +5,19 @@ import util.GraphUtil
 import scala.collection.mutable.{HashMap, HashSet}
 
 
-        // TODO asserts?
-
-/* General comments:
- * - The name prefixes p and c are used for producer and consumer entities
- * - Exact scope means the innermost outer scope, so two loops are only in the
- *   same exact scope when the innermost scope that contains them is the same
- * - The shape of a loop is the number of iterations, the length is the length
- *   of the output collection. So shape can be thought of as the input size
- *   and length as output size, or shape is the size of the function domain and
- *   length is the size of the function range/image. For a map, shape = range.
- *   For a filter, shape >= range. For a flatmap, it could be >, = or <.
- */
 trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer { 
+
+  /* General comments:
+   * - The name prefixes p and c are used for producer and consumer entities
+   * - Exact scope means the innermost outer scope, so two loops are only in the
+   *   same exact scope when the innermost scope that contains them is the same
+   * - The shape of a loop is the number of iterations, the length is the length
+   *   of the output collection. So shape can be thought of as the input size
+   *   and length as output size, or shape is the size of the function domain and
+   *   length is the size of the function range/image. For a map, shape = range.
+   *   For a filter, shape >= range. For a flatmap, it could be >, = or <.
+   */
+
   val IR: LoopFusionCore
   import IR.{__newVar => _, _}
 
@@ -602,22 +602,18 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
     // consumers.
 
     def processEmptyProducer(empty: Def[Any], newPSym: Sym[Any]) = (cDef, remapReduceToMc.isDefined) match {
+
       // empty + Mc -> empty of consumer type
-      case (MatchLoop(MultiCollect(_),_,_),_) | (MatchLoop(ForLike(_,false),_,_), true) =>
-        val (cInner, cShape, cIndex) = cDef match {
-          case MatchLoop(MultiCollect(cInner), cShape, cIndex) => (cInner, cShape, cIndex)
-          case MatchLoop(ForLike(cInner, _),   cShape, cIndex) => (cInner, cShape, cIndex)
-        }
-        (empty, cInner, outerIndex) match {
+      case MatchMC(cInner, cShape, cIndex) => (empty, cInner, outerIndex) match {
           case EmptyCollNewEmpty(newEmpty) => Right(Empty_Mc(newEmpty, newPSym, cSym))
           case _ => Left("empty producer not fused with MC because no EmptyCollNewEmpty constructor found")
         }
 
       // empty + For/foreach -> Unit
-      case (MatchLoop(ForLike(_,true),_,_), _) => Right(Empty_For(newPSym, cSym))
+      case (MatchLoop(For(_),_,_), _) => Right(Empty_For(newPSym, cSym))
 
       // empty + Reduce: don't fuse, maintain dsl specific error
-      case (MatchLoop(ForLike(_,false),_,_), false) => 
+      case (MatchLoop(Reduce(_),_,_), false) => 
         Left("empty producer not fused with reduce because need to maintain implementation-specific error")
 
       case _ => Left("empty producer not fused with unknown consumer (have you overridden the LoopFusionExtractors?):" + cSym)
@@ -626,17 +622,13 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
     def processSingletonProducer(pInner: Exp[Any], oldPSym: Sym[Any], newPSym: Sym[Any]) = {
       (cDef, remapReduceToMc.isDefined) match {
 
-        case (MatchLoop(MultiCollect(_),_,_),_) | (MatchLoop(ForLike(_,false),_,_), true) |
-            (MatchLoop(ForLike(_,true),_,_), _) =>
-          val (cInner, cShape, cIndex) = cDef match {
-            case MatchLoop(MultiCollect(cInner), cShape, cIndex) => (cInner, cShape, cIndex)
-            case MatchLoop(ForLike(cInner, _),   cShape, cIndex) => (cInner, cShape, cIndex)
-          }
+        // singleton + MC or For: replace loop by body with singleton element
+        case MatchMcFor(cInner, cShape, cIndex) =>
           val siSyms = outerSISyms.getOrElse((oldPSym, cIndex))
           Right(Single_McFor(cIndex, siSyms, pInner, cInner, newPSym, cSym))
 
         // singleton + Reduce: don't fuse, maintain dsl specific behavior
-        case (MatchLoop(ForLike(_,false),_,_), false) => 
+        case (MatchLoop(Reduce(_),_,_), false) => 
           Left("singleton producer not fused with reduce because need to maintain implementation-specific behavior")
 
         case _ => Left("singleton producer not fused with unknown consumer (have you overridden the LoopFusionExtractors?):" + cSym)
@@ -680,13 +672,12 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
 
         // SL(ps, pi, Mc(pinner(pi))) + SL(prod.len, ci, Reduce(cInner(prod.at(ci))))
         // -> SL(ps, pi, Reduce(pinner(pi) + SL(pinner.len, ci, Mc(cInner(pinner.at(ci))))))
-        case MatchLoop(MultiCollect(Sym(_)), _, _) | MatchLoop(ForLike(Sym(_),_), _, _) =>
-          val (cInner, cShape, cIndex, nextTreatReduceAsMc) = cDef match {
-            case MatchLoop(MultiCollect(cInner@Sym(_)),  cShape, cIndex) => (cInner, cShape, cIndex, false)
-            case MatchLoop(ForLike(cInner@Sym(_),true),  cShape, cIndex) => (cInner, cShape, cIndex, false)
-            case MatchLoop(ForLike(cInner@Sym(_),false), cShape, cIndex) => (cInner, cShape, cIndex, true)
+        
+        case MatchMcForReduce(cInner@Sym(_), cShape, cIndex) =>
+          val nextRemapReduceToMc = cDef match {
+            case MatchLoop(Reduce(_), _, _) => Some(cInner)
+            case _ => None
           }
-          val nextRemapReduceToMc = if (nextTreatReduceAsMc) Some(cInner) else None
 
           val innerFusionInfo = combineProducers(cSym, cDef, 
             List((oldPSym, pInner, RealProd(), false)), Nil, Some(pLoop.v), Some(oldPSym, cIndex), nextRemapReduceToMc)._1
@@ -999,9 +990,9 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
     *         {@code Left(error message)}. */
   def effectsOk(cEffects: LoopEffects, pSym: Sym[Any], newPSym: Sym[Any]): Either[String, Boolean] = {
 
-    val (prod, pEffects) = newPSym match {
-      case Def(LoopOrReflectedLoop(prod, pEffects)) => (prod, pEffects)
-      case _ => return Left("no loop definition found for producer " + newPSym)
+    val pEffects = newPSym match {
+      case Def(Reflect(_, summ, deps)) => Some((summ, deps))
+      case _ => None
     }
 
     (cEffects.isDefined, pEffects.isDefined) match {
@@ -1058,6 +1049,41 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
       case _ => None
     }
   }
+
+  object MatchMC {
+    def unapply(a: Any): Option[(Exp[Any], Exp[Int], Sym[Int])] = a match {
+      case (Right(cLoop: AbstractLoop[_]), remapReduceToMc: Boolean) => cLoop.body match {
+        case MultiCollect(cInner) => Some((cInner, cLoop.size, cLoop.v))
+        case Reduce(cInner) if remapReduceToMc => Some((cInner, cLoop.size, cLoop.v))
+        case _ => None
+      }
+      case _ => None
+    }
+  }
+
+  object MatchMcFor {
+    def unapply(a: Any): Option[(Exp[Any], Exp[Int], Sym[Int])] = a match {
+      case MatchMC(cInner, cSize, cIndex) => Some((cInner, cSize, cIndex))
+      case (Right(cLoop: AbstractLoop[_]), remapReduceToMc) => cLoop.body match {
+        case For(cInner) => Some((cInner, cLoop.size, cLoop.v))
+        case _ => None
+      }
+      case _ => None
+    }    
+  }
+
+  object MatchMcForReduce {
+    def unapply(a: Any): Option[(Exp[Any], Exp[Int], Sym[Int])] = a match {
+      case Right(cLoop: AbstractLoop[_]) => (cLoop.body match {
+        case MultiCollect(cInner) => Some(cInner)
+        case For(cInner) => Some(cInner)
+        case Reduce(cInner) => Some(cInner)
+        case _ => None
+      }).map({t => (t, cLoop.size, cLoop.v)})
+      case _ => None
+    }    
+  }
+
   def stmShort(stm: Stm) = stm match {
     case TP(s@Sym(_), Reflect(loop: AbstractLoop[_], _, _)) => "TP(" + s + ",Reflect(" + loop + ", ...))"
     case _ => stm.toString

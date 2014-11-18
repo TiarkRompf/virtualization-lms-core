@@ -10,6 +10,7 @@ import internal.AbstractSubstTransformer
 
 import util.OverloadHack
 import scala.reflect.SourceContext
+import scala.collection.mutable.HashMap
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
@@ -42,10 +43,10 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
       case _ => false
     }
   }
-  case class EmptyArrayInLoop[T](index: Exp[Int], dummy: Sym[T]) extends Def[Array[T]]
+  case class EmptyArrayInLoop[T](index: Exp[Int], dummy: Sym[T]) extends Def[Array[T]] with CanBeFused
   // Without dummy empty arrays of different types are CSE'd and only
   // the first copy is retained, resulting in type errors
-  case class EmptyArray[T](dummy: Sym[T]) extends Def[Array[T]] 
+  case class EmptyArray[T](dummy: Sym[T]) extends Def[Array[T]] with CanBeFused
 
   // block so that elem can be effectful computation
   object SuperSingleton {
@@ -55,8 +56,8 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
       case _ => None
     }
   }
-  case class Singleton[T](elem: Block[T]) extends Def[Array[T]]
-  case class SingletonInLoop[T](elem: Block[T], index: Exp[Int]) extends Def[Array[T]]
+  case class Singleton[T](elem: Block[T]) extends Def[Array[T]] with CanBeFused
+  case class SingletonInLoop[T](elem: Block[T], index: Exp[Int]) extends Def[Array[T]] with CanBeFused
 
   case class MultiArrayElem[T](y: Block[Array[T]]) extends Def[Array[T]]
 
@@ -68,8 +69,12 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
 
-  def emptyArray[T:Manifest](): Rep[Array[T]] = EmptyArray(fresh[T])
-  def emptyArrayInLoop[T:Manifest](index: Exp[Int]): Rep[Array[T]] = EmptyArrayInLoop(index, fresh[T])
+  // use one symbol per type, like this arrays of same type are CSE'd
+  val typeMap = new HashMap[String, Sym[Any]]()
+  def getDummy[T:Manifest](): Sym[T] = { typeMap.getOrElseUpdate(manifest[T].toString, fresh[T]).asInstanceOf[Sym[T]] }
+
+  def emptyArray[T:Manifest](): Rep[Array[T]] = EmptyArray(getDummy[T]())
+  def emptyArrayInLoop[T:Manifest](index: Exp[Int]): Rep[Array[T]] = EmptyArrayInLoop(index, getDummy[T]())
   
   def singleton[T:Manifest](elem: => Rep[T]): Rep[Array[T]] = {
     val reifiedElem = reifyEffectsHere(elem)
@@ -415,13 +420,16 @@ trait ArrayLoopsMCFusionExtractors extends ArrayLoopsMCFatExp with LoopFusionExt
     case _ => super.unapplyMultiCollect(e)
   }
 
-  override def unapplyForlike[T](e: Def[T]) = e match {
-    case MultiReduceElem(Block(valFunc), _, _, _, _) =>
-      Some((valFunc.asInstanceOf[Exp[T]], false))
-
+  override def unapplyFor(e: Def[Unit]) = e match {
     case ForeachElem(Block(a: Exp[Unit @unchecked])) =>
-      Some((a.asInstanceOf[Exp[T]], true))
-    case _ => super.unapplyForlike(e)
+      Some(a.asInstanceOf[Exp[Unit]])
+    case _ => super.unapplyFor(e)
+  }
+
+  override def unapplyReduce[T](e: Def[T]) = e match {
+    case MultiReduceElem(Block(valFunc), _, _, _, _) =>
+      Some(valFunc.asInstanceOf[Exp[T]])
+    case _ => super.unapplyReduce(e)
   }
 
   override def ignoreIndex(e: Def[Any], index: Sym[Int]): Boolean = e match {

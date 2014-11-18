@@ -12,11 +12,15 @@ trait LoopFusionExtractors extends internal.Expressions with LoopsExp {
   def unapplyEmptyCollNewEmpty[T:Manifest](a: (Def[Any], Exp[T], Option[Sym[Int]])): Option[Exp[T]] = None
 
   def unapplySingletonColl(a: Def[Any]): Option[Exp[Any]] = None
+
+  // FlatMap loops, which encompass map and filter through the use
+  // of Empty and Singleton collections and if-then-else nodes
   def unapplyMultiCollect[T](a: Def[T]): Option[Exp[T]] = None
 
-  // exp is valueFunc block of reduce and bodies of for and foreach
-  // boolean is true if type is Unit (for and foreach), false otherwise (reduce usually)
-  def unapplyForlike[T](e: Def[T]): Option[(Exp[T], Boolean)] = None
+  // For/foreach loops
+  def unapplyFor(e: Def[Unit @unchecked]): Option[Exp[Unit]] = None
+  // Reduce loop, extractor gives valueFunc block, not reduceFunc
+  def unapplyReduce[T](e: Def[T]): Option[Exp[T]] = None
 
   def ignoreIndex(e: Def[Any], index: Sym[Int]): Boolean = false
 
@@ -51,8 +55,12 @@ trait LoopFusionCore extends LoopFusionExtractors with BaseFatExp with LoopsFatE
     def unapply[T](a: Def[T]): Option[Exp[T]] = unapplyMultiCollect(a)
   }
 
-  object ForLike {
-    def unapply[T](a: Def[T]): Option[(Exp[T], Boolean)] = unapplyForlike(a)
+  object For {
+    def unapply(a: Def[Unit]): Option[Exp[Unit]] = unapplyFor(a)
+  }
+
+  object Reduce {
+    def unapply[T](a: Def[T]): Option[Exp[T]] = unapplyReduce(a)
   }
 
   object ProducerResultBlock {
@@ -63,7 +71,7 @@ trait LoopFusionCore extends LoopFusionExtractors with BaseFatExp with LoopsFatE
     }
   }
 
-  override def unapplyFixedDomain(e: Def[Any]): Option[Exp[Int]] = e match {
+  override def unapplyFixedDomain(e: Def[Any @unchecked]): Option[Exp[Int]] = e match {
     case EmptyColl() => Some(Const(0))
     case SingletonColl(_) => Some(Const(1))
     case EatReflect(loop: AbstractLoop[_]) => loop.body match {

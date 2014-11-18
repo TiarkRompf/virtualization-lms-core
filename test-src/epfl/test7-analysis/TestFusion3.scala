@@ -569,7 +569,6 @@ class TestFusion3 extends FileDiffSuite {
         // SimpleCollect + Any fusion
         // Fuse all vertically with range
         // range dce'd, fuse remaining hor. except for inner
-        // TODO vertical fusion fat-Ifs?
         val range = array(100) { i => i + 1 }
         val range2 = array(range.length) { i => range.at(i) + 2 }
         val range3 = arrayIf(range.length)(
@@ -1392,28 +1391,71 @@ class TestFusion3 extends FileDiffSuite {
     }
     new Prog with Impl
   }
-  
-  // def testFusionTransform67 = withOutFileChecked(prefix+"fusion67"+suffix) {
-  //   trait Prog extends MyFusionProg with Impl {
-  //     def test(x: Rep[Int]) = {
-  //       // don't fuse empty with reduce -> but here inner of MC fused with MC of
-  //       // reduce, and then wrapped in reduce
-  //       // needs fat ifs
-  //       // TODO test once empty fused
-  //       val range = flatten(6) { i => if (i > 3) emptyArray[Int]() else singleton(i + 2) }
-  //       val x = reduce[Int](range.length)({ i => singleton(range.at(i) + 1) },
-  //         { (a, b) => a + b }, 0)
-  //       print(range.at(0))
-  //       print(x)
-  //     }
-  //   }
-  //   new Prog with Impl
-  // }
 
-// TODO need to fuse & fatten ifs
+  def testFusionTransform68 = withOutFileChecked(prefix+"fusion68"+suffix) {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // Fuse empty producer with all consumers. Reduce not fused.
+        val range = emptyArray[Int]()
+        val range1 = array(range.length) ({ i => range.at(i) + 1 })
+        val range2 = range.foreach({ e: Rep[Int] => print(e + 1) })
+        val y = reduce[Int](range.length) ({ i => singleton(range.at(i) + 1) },
+          { (a, b) => a + b }, 0)
+        print(range1.at(0))
+        print(y)
+      }
+    }
+    new Prog with Impl
+  }
 
+  def testFusionTransform69 = withOutFileChecked(prefix+"fusion69"+suffix) {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // Fuse singleton producer with all consumers. Reduce not fused.
+        val range = singleton(100)
+        val range1 = array(range.length) ({ i => range.at(i) + 1 })
+        val range2 = range.foreach({ e: Rep[Int] => print(e + 1) })
+        val y = reduce[Int](range.length) ({ i => singleton(range.at(i) + 1) },
+          { (a, b) => a + b }, 0)
+        print(range1.at(0))
+        print(y)
+      }
+    }
+    new Prog with Impl
+  }
 
-    // TODO think about:
+  def testFusionTransform70 = withOutFileChecked(prefix+"fusion70"+suffix) {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // Fuse if-then-else producer with all consumers. Reduce not fused.
+        val range = if (x > 2) singleton(10) else emptyArray[Int]()
+        val range1 = array(range.length) ({ i => range.at(i) + 1 })
+        val range2 = range.foreach({ e: Rep[Int] => print(e + 1) })
+        val y = reduce[Int](range.length) ({ i => singleton(range.at(i) + 1) },
+          { (a, b) => a + b }, 0)
+        print(y)
+        print(range1.at(0))
+      }
+    }
+    new Prog with Impl
+  }
+        
+  def testFusionTransform71 = withOutFileChecked(prefix+"fusion71"+suffix) {
+    trait Prog extends MyFusionProg with Impl {
+      def test(x: Rep[Int]) = {
+        // in general don't fuse empty with reduce -> but here inner of MC fused with MC of
+        // reduce, and then wrapped in reduce
+        val range = flatten(6) { i => if (i > 3) emptyArray[Int]() else singleton(i + 2) }
+        val x = reduce[Int](range.length)({ i => singleton(range.at(i) + 1) },
+          { (a, b) => a + b }, 0)
+        print(range.at(0))
+        print(x)
+      }
+    }
+    new Prog with Impl
+  }
+
+  // TODO think about:
   // Vertical fusion of effectful prod causes fused to have same Reflect around,
   // so could change order, and then horizontal fusion would fuse in wrong order?
 }

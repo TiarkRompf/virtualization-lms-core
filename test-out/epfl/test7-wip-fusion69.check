@@ -1,0 +1,122 @@
+-- full graph
+TP(Sym(1),Singleton(Block(Const(100))))
+TP(Sym(2),ArrayLength(Sym(1)))
+TP(Sym(4),ArrayIndex(Sym(1),Sym(3)))
+TP(Sym(5),IntPlus(Sym(4),Const(1)))
+TP(Sym(6),SingletonInLoop(Block(Sym(5)),Sym(3)))
+TP(Sym(7),SimpleLoop(Sym(2),Sym(3),MultiArrayElem(Block(Sym(6)))))
+TP(Sym(9),ArrayIndex(Sym(1),Sym(8)))
+TP(Sym(10),IntPlus(Sym(9),Const(1)))
+TP(Sym(11),Reflect(Print(Sym(10)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(12),Reify(Sym(11),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11))))
+TP(Sym(13),Reflect(SimpleLoop(Sym(2),Sym(8),ForeachElem(Block(Sym(12)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(15),ArrayIndex(Sym(1),Sym(14)))
+TP(Sym(16),IntPlus(Sym(15),Const(1)))
+TP(Sym(17),Singleton(Block(Sym(16))))
+TP(Sym(20),IntPlus(Sym(19),Sym(18)))
+TP(Sym(21),SimpleLoop(Sym(2),Sym(14),MultiReduceElem(Block(Sym(17)),Block(Sym(20)),Const(0),Sym(18),Sym(19))))
+TP(Sym(22),ArrayIndex(Sym(7),Const(0)))
+TP(Sym(23),Reflect(Print(Sym(22)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(13))))
+TP(Sym(24),Reflect(Print(Sym(21)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(23))))
+TP(Sym(25),Reify(Sym(24),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(13), Sym(23), Sym(24))))
+
+-- before transformation
+val x1 = Array(100)
+val x2 = x1.length
+for (x8 <- 0 until x2) {
+val x9 = x1.apply(x8)
+val x10 = x9 + 1
+val x11 = println(x10)
+}
+val x13 = ()
+val x7 = new Array[Int](x2)
+for (x3 <- 0 until x2) {
+val x4 = x1.apply(x3)
+val x5 = x4 + 1
+x7(x3) = x5
+}
+val x22 = x7.apply(0)
+val x23 = println(x22)
+var x18 = 0
+for (x14 <- 0 until x2) {
+val x15 = x1.apply(x14)
+val x16 = x15 + 1
+val x19 = x16
+val x20 = x19 + x18
+x18 = x20
+}
+val x21 = x18
+val x24 = println(x21)
+
+-- vertical transformation
+
+(VFT) Fusing prod Sym(1) with cons Sym(13). Type: Single_McFor(Sym(8),(Sym(1),Sym(8)),Const(100),Sym(12),Sym(1),Sym(13))
+(VFT) Fused prod Sym(1) with cons Sym(13), fused sym: Sym(26)
+
+(VFT) Fusing prod Sym(1) with cons Sym(7). Type: Single_McFor(Sym(3),(Sym(1),Sym(3)),Const(100),Sym(6),Sym(1),Sym(7))
+(VFT) Fused prod Sym(1) with cons Sym(7), fused sym: Sym(28)
+
+(VFT) Not fused prod Sym(1) with cons Sym(21) because singleton producer not fused with reduce because need to maintain implementation-specific behavior
+(VFT) No producers found for cons Sym(21)
+
+(VFT) all vertically fused: 
+
+-- after vertical transformation
+val x26 = println(101)
+val x28 = Array(101)
+val x29 = x28.apply(0)
+val x30 = println(x29)
+val x1 = Array(100)
+val x2 = x1.length
+var x18 = 0
+for (x14 <- 0 until x2) {
+val x15 = x1.apply(x14)
+val x16 = x15 + 1
+val x19 = x16
+val x20 = x19 + x18
+x18 = x20
+}
+val x21 = x18
+val x31 = println(x21)
+
+-- horizontal transformation
+(HFT) Recording Sym(21), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x33 = println(101)
+val x28 = Array(101)
+val x29 = x28.apply(0)
+val x34 = println(x29)
+val x1 = Array(100)
+val x2 = x1.length
+var x18 = 0
+for (x14 <- 0 until x2) {
+val x15 = x1.apply(x14)
+val x16 = x15 + 1
+val x19 = x16
+val x20 = x19 + x18
+x18 = x20
+}
+val x21 = x18
+val x35 = println(x21)
+
+-- fusion
+val x33 = println(101)
+val x28 = Array(101)
+val x29 = x28.apply(0)
+val x34 = println(x29)
+val x1 = Array(100)
+val x2 = x1.length
+var x18 = 0
+for (x14 <- 0 until x2) {
+val x15 = x1.apply(x14)
+val x16 = x15 + 1
+val x19 = x16
+val x20 = x19 + x18
+x18 = x20
+}
+val x21 = x18
+val x35 = println(x21)
+-- done
