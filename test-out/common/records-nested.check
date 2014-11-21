@@ -1,0 +1,19 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class RecordsNested extends ((java.lang.String)=>(java.lang.String)) {
+def apply(x0:java.lang.String): java.lang.String = {
+val x1 = new Anon1317283319(x0,x0)
+val x2 = new Anon329997084(x0,x1)
+val x3 = x2.lastName
+val x4 = x3.fathers
+x4
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+case class Anon1317283319(fathers: java.lang.String, last: java.lang.String)
+
+case class Anon329997084(name: java.lang.String, lastName: Anon1317283319)
