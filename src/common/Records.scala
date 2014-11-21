@@ -20,11 +20,11 @@ class RecordMacros(val c: Context) {
           recordApply(c.weakTypeTag[Rep].tpe)(v)
         case Literal(Constant(str: String)) =>
           val targetName = c.prefix.actualType.typeSymbol.fullName
-          c.abort(NoPosition,
+          c.abort(c.enclosingPosition,
             s"value $str is not a member of $targetName")
         case _ =>
           val methodName = c.macroApplication.symbol.name
-          c.abort(NoPosition,
+          c.abort(c.enclosingPosition,
             s"You may not invoke Rec.$methodName with a non-literal method name.")
       }
     }
@@ -47,12 +47,12 @@ class RecordMacros(val c: Context) {
       }
       val tuples = v.map(_.tree).map {
         case Tuple2(Literal(Constant(s: String)), v) =>
-          if (s == "") c.abort(NoPosition, noEmptyStrMsg)
+          if (s == "") c.abort(c.enclosingPosition, noEmptyStrMsg)
           else (s, v)
         case Tuple2(_, _) =>
-          c.abort(NoPosition, constantLiteralsMsg)
+          c.abort(c.enclosingPosition, constantLiteralsMsg)
         case x =>
-          c.abort(NoPosition, "Records can only be constructed with named parameters on apply (a = b).")
+          c.abort(c.enclosingPosition, "Records can only be constructed with named parameters on apply (a = b).")
       }
 
       val schema = tuples.map {
@@ -107,9 +107,9 @@ class RecordMacros(val c: Context) {
       if (duplicateFields.nonEmpty) {
         val fields = duplicateFields.keys.toList.sorted
         if (fields.size == 1)
-          c.abort(NoPosition, s"Field ${fields.head} is defined more than once.")
+          c.abort(c.enclosingPosition, s"Field ${fields.head} is defined more than once.")
         else
-          c.abort(NoPosition, s"Fields ${fields.mkString(", ")} are defined more than once.")
+          c.abort(c.enclosingPosition, s"Fields ${fields.mkString(", ")} are defined more than once.")
       }
     }
 
