@@ -166,10 +166,10 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
 
   def classTag[T:Manifest] = ClassTag[T](structName(manifest[T]))
   
-  def registerStruct[T](name: String, elems: Seq[(String, Rep[Any])]) {
-    encounteredStructs += name -> elems.map(e => (e._1, e._2.tp))
+  def registerStruct[T](name: String, tp: Manifest[T], elems: Seq[(String, Rep[Any])]) {
+    encounteredStructs += name -> (tp, elems.map(e => (e._1, e._2.tp)))
   }
-  val encounteredStructs = new scala.collection.mutable.HashMap[String, Seq[(String, Manifest[_])]]
+  val encounteredStructs = new scala.collection.mutable.HashMap[String, (Manifest[_], Seq[(String, Manifest[_])])]
 }
 
 trait StructExpOpt extends StructExp {
@@ -390,7 +390,7 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Struct(tag, elems) =>
-      registerStruct(structName(sym.tp), elems)
+      registerStruct(structName(sym.tp), sym.tp, elems)
       emitValDef(sym, "new " + structName(sym.tp) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
     case FieldApply(struct, index) =>
       emitValDef(sym, quote(struct) + "." + index)
@@ -405,7 +405,7 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
   }
 
   override def emitDataStructures(stream: PrintWriter) {
-    for ((name, elems) <- encounteredStructs) {
+    for ((structTp, (name, elems)) <- encounteredStructs) {
       stream.println()
       stream.print("case class " + name + "(")
       stream.println(elems.map(e => e._1 + ": " + remap(e._2)).mkString(", ") + ")")
