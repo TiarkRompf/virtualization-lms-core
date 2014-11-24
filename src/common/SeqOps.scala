@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -84,4 +83,4 @@ trait CLikeGenSeqOps extends BaseGenSeqOps with CLikeGenBase  {
 trait CudaGenSeqOps extends CudaGenEffect with CLikeGenSeqOps
 trait OpenCLGenSeqOps extends OpenCLGenEffect with CLikeGenSeqOps
 trait CGenSeqOps extends CGenEffect with CLikeGenSeqOps
-*/
+

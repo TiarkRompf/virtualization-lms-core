@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -154,4 +153,3 @@ trait OpenCLGenIOOps extends OpenCLGenBase with CLikeGenIOOps
 trait CGenIOOps extends CGenBase with CLikeGenIOOps
 
 
-*/

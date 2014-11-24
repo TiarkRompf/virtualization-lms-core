@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -66,4 +65,3 @@ trait CGenUncheckedOps extends CGenBase {
     case _ => super.emitNode(sym, rhs)
   }
 }
-*/

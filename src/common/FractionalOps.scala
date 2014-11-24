@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -6,6 +5,7 @@ import java.io.PrintWriter
 import org.scala_lang.virtualized.SourceContext
 
 trait FractionalOps extends ImplicitOps {
+  // TODO(trans) infix_/ won't get called. Is this still needed at all?
   def infix_/[A,T](lhs: Rep[T], rhs: Rep[A])(implicit c: A => T, f: Fractional[T], mA: Manifest[A], mT: Manifest[T], pos: SourceContext) = fractional_divide(lhs,implicit_convert[A,T](rhs))
 
   def fractional_divide[T:Fractional:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[T]
@@ -50,4 +50,3 @@ trait CLikeGenFractionalOps extends CLikeGenBase {
 trait CudaGenFractionalOps extends CudaGenBase with CLikeGenFractionalOps
 trait OpenCLGenFractionalOps extends OpenCLGenBase with CLikeGenFractionalOps
 trait CGenFractionalOps extends CGenBase with CLikeGenFractionalOps
-*/

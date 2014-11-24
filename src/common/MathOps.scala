@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -279,4 +278,3 @@ trait CGenMathOps extends CLikeGenMathOps with CGenEffect {
   }
 
 }
-*/

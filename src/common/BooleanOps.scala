@@ -13,12 +13,12 @@ trait LiftBoolean {
 trait BooleanOps extends Variables {
   implicit class BooleanOps(x: Rep[Boolean]) {
     def unary_!(implicit pos: SourceContext) = boolean_negate(x)
-    def &&(rhs: Rep[Boolean])(implicit pos: SourceContext) = boolean_and(x,rhs)
-    def ||(rhs: Rep[Boolean])(implicit pos: SourceContext) = boolean_or(x,rhs)
+    def &&(rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_and(x,rhs)
+    def ||(rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_or(x,rhs)
   }
-  def infix_unary_!(x: Rep[Boolean])(implicit pos: SourceContext) = boolean_negate(x)
-  def infix_&&(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext) = boolean_and(lhs,rhs)
-  def infix_||(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext) = boolean_or(lhs,rhs)
+  //def infix_unary_!(x: Rep[Boolean])(implicit pos: SourceContext) = boolean_negate(x)
+  //def infix_&&(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext) = boolean_and(lhs,rhs)
+  //def infix_||(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext) = boolean_or(lhs,rhs)
 
   def boolean_negate(lhs: Rep[Boolean])(implicit pos: SourceContext): Rep[Boolean]
   def boolean_and(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext): Rep[Boolean]

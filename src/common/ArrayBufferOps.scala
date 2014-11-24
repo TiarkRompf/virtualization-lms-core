@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package common
 
@@ -26,7 +25,7 @@ trait ArrayBufferOps extends Base {
     def toSeq(implicit pos: SourceContext) = arraybuffer_toseq(l)
   }
   
-  def infix_+=[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A])(implicit pos: SourceContext) = arraybuffer_append(l, e)
+  //def infix_+=[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A])(implicit pos: SourceContext) = arraybuffer_append(l, e)
 
   /* when mixed in with OptiML, one of these infix operations causes an NPE in the scala-virtualized compiler */ //TR: still the case?
   /*
@@ -115,4 +114,3 @@ trait CudaGenArrayBufferOps extends CudaGenEffect with CLikeGenArrayBufferOps
 trait OpenCLGenArrayBufferOps extends OpenCLGenEffect with CLikeGenArrayBufferOps
 trait CGenArrayBufferOps extends CGenEffect with CLikeGenArrayBufferOps
 
-*/
