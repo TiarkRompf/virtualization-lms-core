@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test9
@@ -9,6 +8,8 @@ import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
 import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt}
 
+import org.scala_lang.virtualized.virtualize
+
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
@@ -18,6 +19,7 @@ class TestCrossStage extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test9-"
   
+  @virtualize
   trait DSL extends Functions with ArrayBufferOps with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with RangeOps with Print {
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
     def test(x: Rep[Int]): Rep[Unit]
@@ -26,6 +28,7 @@ class TestCrossStage extends FileDiffSuite {
     implicit def abToRep[T:Manifest](x:ArrayBuffer[T]): Rep[ArrayBuffer[T]]
   }
 
+  @virtualize
   trait Impl extends DSL with StaticDataExp with FunctionsExp with ArrayBufferOpsExp with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp with ScalaCompile { self => 
 
@@ -50,6 +53,7 @@ class TestCrossStage extends FileDiffSuite {
     withOutFile(prefix+"csp1") {
       val f = (x: Int) => println("this is external non-DSL code: " + (2*x))
       
+      @virtualize
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           
@@ -63,10 +67,15 @@ class TestCrossStage extends FileDiffSuite {
 
   def testCrossStage2 = {
     withOutFile(prefix+"csp2") {
-      val acc = new ArrayBuffer[Int]
+      val acc0 = new ArrayBuffer[Int]
       
+      @virtualize
       trait Prog extends DSL {
+
+        implicit def abToRep[T:Manifest](x:ArrayBuffer[T]): Rep[ArrayBuffer[T]]
+
         def test(x: Rep[Int]) = {
+          val acc: Rep[ArrayBuffer[Int]] = acc0 // NOTE(trans) implicit doesn't kick in below
 // Broke test compilation:
 // array buffer switched to use implicis instead of
 // infix methods and lifting did not kick in
@@ -77,10 +86,9 @@ class TestCrossStage extends FileDiffSuite {
       }
       new Prog with Impl
       
-      println("accumulated: " + acc.mkString(","))
+      println("accumulated: " + acc0.mkString(","))
     }
     assertFileEqualsCheck(prefix+"csp2")
   }
 
 }
-*/
