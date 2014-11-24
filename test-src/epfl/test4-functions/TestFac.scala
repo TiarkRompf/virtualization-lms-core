@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test4
@@ -11,6 +10,7 @@ import test3._
 
 import org.scala_lang.virtualized.virtualize
 
+@virtualize
 trait FacProg { this: Arith with Matching with Extractors =>
 
   def fac(n: Rep[Double]): Rep[Double] = n switch {
@@ -21,6 +21,7 @@ trait FacProg { this: Arith with Matching with Extractors =>
 
 }
 
+@virtualize
 trait FacProg2 { this: Arith with Functions with Equal with IfThenElse =>
 
   class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
@@ -148,4 +149,3 @@ class TestFac extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"fac6")
   }
 }
-*/
