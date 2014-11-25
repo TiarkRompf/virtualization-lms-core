@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test10
@@ -13,7 +12,8 @@ import test8._
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 
 
 // test various transform routines -- these are not part of the core library
@@ -254,7 +254,6 @@ trait FWXTransform extends BaseFatExp with EffectExp with IfThenElseFatExp with 
 
 
 
-
 class TestMisc extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test10-"
@@ -279,7 +278,7 @@ class TestMisc extends FileDiffSuite {
   
   // test simple block transform
   def testMisc1 = withOutFileChecked(prefix+"misc1") {
-    trait Prog extends DSL with Impl {
+    @virtualize trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val z = vzeros(100)
         val y = vzeros(100)
@@ -328,7 +327,7 @@ class TestMisc extends FileDiffSuite {
   // test simple block transform -- failure case when transforming
   // different occurences of same stm in different ways
   def testMisc2 = withOutFileChecked(prefix+"misc2") {
-    trait Prog extends DSL with Impl {
+    @virtualize trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val a = vzeros(100) // will be moved into branches
         val b = vzeros(50)
@@ -393,7 +392,7 @@ class TestMisc extends FileDiffSuite {
 
   // test better block transform -- fixing above case
   def testMisc3 = withOutFileChecked(prefix+"misc3") {
-    trait Prog extends DSL with Impl {
+    @virtualize trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val a = vzeros(100) // will be moved into branches
         val b = vzeros(50)
@@ -467,7 +466,7 @@ class TestMisc extends FileDiffSuite {
 
   // test mirror block transform -- regain sharing info but mirroring all statements
   def testMisc4 = withOutFileChecked(prefix+"misc4") {
-    trait Prog extends DSL with Impl {
+    @virtualize trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val a = vzeros(100) // will be moved into branches
         val b = vzeros(50)
@@ -543,7 +542,7 @@ class TestMisc extends FileDiffSuite {
 
   // test mirror block transform -- regain sharing info but mirroring all statements
   def testMisc5 = withOutFileChecked(prefix+"misc5") {
-    trait Prog extends DSL with Impl {
+    @virtualize trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val a = vzeros(100) // will be moved into branches
         val b = vzeros(50)
@@ -617,4 +616,4 @@ class TestMisc extends FileDiffSuite {
   }
 
 }
-*/
+

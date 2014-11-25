@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test10
@@ -10,7 +9,8 @@ import test3._
 import test4._
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 
 class TestTransformRec extends FileDiffSuite {
 
@@ -114,14 +114,14 @@ class TestTransformRec extends FileDiffSuite {
   }
 
   def testSimple = withOutFileChecked(prefix+"transformrec1") {
-    trait Prog extends DSL {
+    @virtualize trait Prog extends DSL {
       def testFun = doLambda { n => n + 1.0 }
     }
     new Prog with Impl
   }
 
   def testRec = withOutFileChecked(prefix+"transformrec2") {
-    trait Prog extends DSL {
+    @virtualize trait Prog extends DSL {
       def testFun = doLambda { n =>
         if (n == 0) 1.0 else n * testFun(n - 1.0)
       }
@@ -130,7 +130,7 @@ class TestTransformRec extends FileDiffSuite {
   }
 
   def testMutuallyRec = withOutFileChecked(prefix+"transformrec3") {
-    trait Prog extends DSL {
+    @virtualize trait Prog extends DSL {
       def testFun = doLambda { n =>
         if (n == 0) 1.0 else n * other(n)
       }
@@ -141,4 +141,3 @@ class TestTransformRec extends FileDiffSuite {
     new Prog with Impl
   }
 }
-*/

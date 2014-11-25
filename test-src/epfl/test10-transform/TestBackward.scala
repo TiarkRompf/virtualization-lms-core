@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test10
@@ -6,7 +5,7 @@ package test10
 import common._
 import internal._
 
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 // investigate backward analysis -- these are preliminary ideas ...
 //
@@ -207,4 +206,3 @@ class TestBackwards extends FileDiffSuite {
   }
 
 }
-*/

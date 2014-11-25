@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test10
@@ -13,7 +12,8 @@ import test8._
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 
 // investigate worklist transform phases (separate from optimization).
 // in particular notation like this:
@@ -24,7 +24,7 @@ import scala.reflect.SourceContext
 //    }
 
 
-
+@virtualize 
 trait FWTransform1 extends BaseFatExp with EffectExp with IfThenElseFatExp with LoopsFatExp { self =>
   
   class MyWorklistTransformer extends WorklistTransformer { val IR: self.type = self }
@@ -66,6 +66,7 @@ trait FWTransform1 extends BaseFatExp with EffectExp with IfThenElseFatExp with 
 
 }
 
+@virtualize 
 trait VectorExpTrans1 extends FWTransform1 with VectorExp with ArrayLoopsExp with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with StructExp //with VariablesExpOpt 
     with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp {
@@ -176,7 +177,7 @@ class TestForward1 extends FileDiffSuite {
   
   
   def testWorklist1 = withOutFileChecked(prefix+"worklist1") {
-    trait Prog extends DSL with Impl {
+    @virtualize trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val z = vzeros(100)
         val y = vzeros(100)
@@ -189,7 +190,7 @@ class TestForward1 extends FileDiffSuite {
   }
 
   def testWorklist2 = withOutFileChecked(prefix+"worklist2") {
-    trait Prog extends DSL with Impl {
+    @virtualize trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val z = vzeros(100)
         val y = vliteral(List(z))
@@ -201,7 +202,7 @@ class TestForward1 extends FileDiffSuite {
   }
 
   def testWorklist3 = withOutFileChecked(prefix+"worklist3") {
-    trait Prog extends DSL with Impl {
+    @virtualize trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val z1 = vzeros(100)
         val z2 = vzeros(50)
@@ -215,4 +216,4 @@ class TestForward1 extends FileDiffSuite {
   }
 
 }
-*/
+
