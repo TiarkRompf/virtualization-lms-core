@@ -31,7 +31,7 @@ class TestSpeculative extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test8-"
   
-  trait DSL extends ArrayMutation with Arith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
+  trait DSL extends ArrayMutation with VarArith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
     def mzeros(l: Rep[Int]) = zeros(l).mutable
     implicit class repIntToDouble(x: Rep[Int]) {

@@ -18,6 +18,23 @@ trait Utils extends Base with OverloadHack {
   def infix_+(a: Rep[Any], b: Rep[String])(implicit x: Overloaded2): Rep[String]
   def infix_+(a: String, b: Rep[Any])(implicit x: Overloaded4): Rep[String]
   def infix_+(a: Rep[Any], b: String)(implicit x: Overloaded5): Rep[String]
+
+  // TODO(trans): we do not have a solution for "string" + exp -- right now we use "string" ^ exp as workaround here
+
+  implicit class strOps(a:Rep[Any]) {
+    def +(b: Rep[String]) = infix_+(a,b)
+    def ^(b: Rep[String]) = infix_+(a,b)
+  }
+  implicit class strOps1(a:String) {
+    def +(b: Rep[Any]) = infix_+(a,b)
+    def ^(b: Rep[Any]) = infix_+(a,b)
+    def ^(b: String) = a + b
+  }
+  implicit class strOps2(a:Rep[String]) {
+    def +(b: Rep[Any]) = infix_+(a,b)
+    def ^(b: Rep[Any]) = infix_+(a,b)
+  }
+
   
   implicit def unit(x:String): Rep[String]
   implicit def unit(x:Int): Rep[Int]
@@ -73,6 +90,10 @@ trait Vectors extends Utils {
   def ZeroVector(n: Rep[Int]): Rep[Vector]
   def RandomVector(n: Rep[Int]): Rep[Vector]
   def infix_+(a: Rep[Vector], b: Rep[Vector])(implicit x: Overloaded3): Rep[Vector]
+
+  implicit class VectorOps(a: Rep[Vector]) {
+    def +(b: Rep[Vector]) = infix_+(a,b)
+  }
 }
 
 trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
@@ -191,7 +212,7 @@ trait VectorsProg extends Vectors {
 trait StringsProg extends Vectors {
   
   def test(x: Rep[Any]) = {
-    val s: Rep[Any] = "hi " + "yo " + x + " done"
+    val s: Rep[Any] = "hi " ^ "yo " ^ x ^ " done"
     s
   }
   

@@ -7,6 +7,8 @@ import common._
 import org.scala_lang.virtualized.SourceContext
 import java.io.PrintWriter
 
+// NOTE(trans) this is getting hacky -- remove and just use PrimitiveOps?
+
 trait LiftArith {
   this: Arith =>
 
@@ -45,6 +47,9 @@ trait Arith extends Base with LiftArith {
   def infix_/(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext): Rep[Double]
 }
 
+trait VarArith extends Arith with Variables {
+  implicit def doubleArithVOps(x: Var[Double]) = new doubleArithOps(readVar(x))
+}
 
 trait ArithExp extends Arith with BaseExp {
   //todo removed below as now handled in Base traits
