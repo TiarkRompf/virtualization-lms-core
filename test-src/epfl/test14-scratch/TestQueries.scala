@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test14
@@ -9,12 +8,13 @@ import internal._
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 
-/-*
+/*
 Staged SQL-like queries, inspired by "the essence of LINQ":
 http://homepages.inf.ed.ac.uk/slindley/papers/essence-of-linq-draft-december2012.pdf
-*-/
+*/
 
 
 // a non-staged, pure library implementation
@@ -222,7 +222,7 @@ trait Shallow extends Util {
 
   // 4 From XPath to SQl
 
-  /-*
+  /*
   +----+--------+------+-----+------+
   | id | parent | name | pre | post |
   +----+--------+------+-----+------+
@@ -234,7 +234,7 @@ trait Shallow extends Util {
   |  5 |    4   |   e  |  7  |   8  |
   |  6 |    4   |   f  |  9  |  10  |
   +----+--------+------+-----+------+
-  *-/
+  */
 
   case class Node(
     val id: Int,
@@ -306,15 +306,15 @@ trait Shallow extends Util {
   } yield s.id
 
 
-  //  /-*-/-*
+  //  /*/*
   val xp0 = PSeq(PAxis(Child), PAxis(Child))
-  //  //-*-/parent::*
+  //  //*/parent::*
   val xp1 = PSeq(PAxis(Descendant), parent)
   // Q: this produces 0,1,2,4 but the paper says 1,2,4 (?)
 
-  //  //-*[following-sibling::d]
+  //  //*[following-sibling::d]
   val xp2 = PSeq(PAxis(Descendant), Filter(PSeq(PAxis(FollowingSibling),NameTest("d"))))
-  //  //f[ancestor::*-/preceding::b]()
+  //  //f[ancestor::*/preceding::b]()
   val xp3 = PSeq(PSeq(PAxis(Descendant), NameTest("f")), Filter(PSeq(ancestor,PSeq(preceding, NameTest("b")))))
 
   val xr0 = xpath(xp0)
@@ -324,13 +324,12 @@ trait Shallow extends Util {
 
 }
 
-
 // a staged implementation
-trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with StructOps {
+@virtualize trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with RecordOps {
   
   def database[T:Manifest](s: String): Rep[T]
   //trait Record extends Struct
-  implicit def recordToRecordOps2(record: Rep[Record]) = new RecordOps(record.asInstanceOf[Rep[Record]])
+  //implicit def recordToRecordOps2(record: Rep[Record]) = new RecordOps(record.asInstanceOf[Rep[Record]])
 
   trait Inner {
 
@@ -352,8 +351,21 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   }
 
   //val db = staticData//database[PeopleDB]("PeopleDB")
-  val db = database[PeopleDB]("db")
-  /-*PeopleDB(
+  //FIXME(trans) val db = database[PeopleDB]("db")
+
+/* FIXME(trans): enabling line above breaks. manifest issue?
+
+java.lang.StackOverflowError
+  at scala.tools.nsc.typechecker.Contexts$Context.enclosingContextChain(Contexts.scala:628)
+  at scala.tools.nsc.typechecker.Contexts$Context.enclosingContextChain(Contexts.scala:628)
+  at scala.tools.nsc.typechecker.Contexts$Context.enclosingContextChain(Contexts.scala:628)
+  at scala.tools.nsc.typechecker.Contexts$Context.enclosingContextChain(Contexts.scala:628)
+  at scala.tools.nsc.typechecker.Contexts$Context.enclosingContextChain(Contexts.scala:628)
+*/
+
+
+
+  /*PeopleDB(
     people = List(
       Person("Alex", 60),
       Person("Bert", 55),
@@ -363,8 +375,9 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
       Person("Fred", 60)),
     couples = List(
       Couple("Alex", "Bert"),
-      Couple("Cora", "Drew")))*-/
+      Couple("Cora", "Drew")))*/
 
+/*
   // 2.1 Comprehensions and queries / 2.2 Query via quotation
 
   val differences: Rep[List[{ val name: String; val diff: Int }]] =
@@ -373,10 +386,10 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
       w <- db.people
       m <- db.people
       if c.her == w.name && c.him == m.name && w.age > m.age
-    } yield new Record { 
-      val name = w.name
-      val diff = w.age - m.age
-    }
+    } yield Record (
+      name = w.name,
+      diff = w.age - m.age
+    )
 
   // 2.3 Abstracting over values
 
@@ -385,9 +398,9 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
     for {
       w <- db.people
       if a <= w.age && w.age < b
-    } yield new Record {
-      val name = w.name
-    }
+    } yield Record (
+      name = w.name
+    )
 
   val thirtySomethings = range(30,40)
 
@@ -397,9 +410,9 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
     for {
       w <- db.people
       if p(w.age)
-    } yield new Record {
-      val name = w.name
-    }
+    } yield Record (
+      name = w.name
+    )
 
   val thirtySomethings2 = satisfies(x => 30 <= x && x < 40)
   val evenAge = satisfies(_ % 2 == 0)
@@ -457,7 +470,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
 
   val org = database[Org]("org")
 
-  /-*val org = new Record {
+  /*val org = new Record {
     val departments = List(
       new Record { val dpt = "Product"},
       new Record { val dpt = "Quality"},
@@ -482,11 +495,11 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
       new Record { val emp = "Edna"; val tsk = "call"},
       new Record { val emp = "Edna"; val tsk = "design"},
       new Record { val emp = "Fred"; val tsk = "call"})
-  }*-/
+  }*/
 
   def exists(xs: Rep[List[Record]]) = !xs.isEmpty // helper method
 
-  val empty = new Record { val ignore = () }
+  val empty = Record(ignore = ())
 
   def expertise(u: Rep[String]): Rep[List[Record { val dpt: String }]] =
     for {
@@ -500,7 +513,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
               if e.emp == t.emp && t.tsk == u 
             } yield empty)
         } yield empty )
-    } yield new Record { val dpt = d.dpt }
+    } yield Record(dpt = d.dpt)
 
   val departmentsFullOfAbstracters = expertise("abstract")
 
@@ -521,17 +534,17 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
       val employees1 = for {
         e <- org.employees
         if d.dpt == e.dpt
-      } yield new Record {
-        val emp = e.emp 
-        val tasks = for {
+      } yield Record(
+        emp = e.emp,
+        tasks = for {
           t <- org.tasks 
           if e.emp == t.emp
         } yield t.tsk
-      }
-      new Record {
-        val dpt = d.dpt
-        val employees = employees1  // FIXME: scalac crash with outer field if records are nested
-      }
+      )
+      Record(
+        dpt = d.dpt,
+        employees = employees1  // FIXME: scalac crash with outer field if records are nested
+      )
     }
 
   // 3.2 Higher-order queries
@@ -549,14 +562,14 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
     for {
       d <- nestedOrg
       if all(d.employees)(e => contains(e.tasks, u)) 
-    } yield new Record { val dpt = d.dpt }
+    } yield Record(dpt = d.dpt)
 
   val departmentsFullOfAbstracters2 = expertise2("abstract")
 
 
   // 4 From XPath to SQl
 
-  /-*
+  /*
   +----+--------+------+-----+------+
   | id | parent | name | pre | post |
   +----+--------+------+-----+------+
@@ -568,7 +581,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   |  5 |    4   |   e  |  7  |   8  |
   |  6 |    4   |   f  |  9  |  10  |
   +----+--------+------+-----+------+
-  *-/
+  */
 
   type Node = Record {
     val id: Int
@@ -580,14 +593,14 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
 
   val db_xml = database[Record { val nodes: List[Node]}]("xml").nodes
 
-  /-*val db_xml = List(
+  /*val db_xml = List(
     Node(0, -1, "#doc", 0, 13),
     Node(1,  0, "a",    1, 12),
     Node(2,  1, "b",    2,  5),
     Node(3,  2, "c",    3,  4),
     Node(4,  1, "d",    6, 11),
     Node(5,  4, "e",    7,  8),
-    Node(6,  4, "f",    9, 10))*-/
+    Node(6,  4, "f",    9, 10))*/
 
 
   abstract class Axis
@@ -657,13 +670,12 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   val xr1 = xpath(xp1)
   val xr2 = xpath(xp2)
   val xr3 = xpath(xp3)
+*/
 
   }
 }
 
-
-
-
+/*
 // internal staged implementation: IR node classes, rewrites for normalization
 trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with StructExpOpt {
 
@@ -723,7 +735,7 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
   }
 
 
-/-*
+/*
   normalized syntax:
 
       (SQLquery)      S ::= [] | X | X1@X2
@@ -752,20 +764,20 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
                          if P then [] --> []
               if P then (if Q then R) --> if (P && Q) then R
           if P then (for x in Q do R) --> for x in Q do (if P then R)
-*-/
+*/
 
 
 
   // implement smart constructor for DBFor nodes; perform normalization.
   // note that we map IR nodes to staged code, not directly to other IR nodes.
   def dbfor[A:Manifest,B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]])(implicit pos: SourceContext): Exp[List[B]] = l match {
-/-*
+/*
              for x in (yield Q)do R --> R[x:=Q]
     for y in (for x in P do Q) do R --> for x in P do (for y in Q do R)
         for x in (if P then Q) do R --> if P then (for x in Q do R)
                    for x in [] do N --> []
               for x in (P @ Q) do R --> (for x in P do R) @ (for x in Q do R)
-*-/
+*/
     case Empty()              => List()
     case Yield(a)             => f(a)
     case IfThen(c,a)          => if (c) for (x <- a; y <- f(x)) yield y else List()
@@ -775,7 +787,7 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
       val a = fresh[A]
       val b = reifyEffects(f(a))
       b match {
-/-*                 for x in P do [] --> []           *-/
+/*                 for x in P do [] --> []           */
         case Block(Empty())              => List()
         case _ =>
           // no rewrites match, go ahead and create IR node
@@ -792,12 +804,12 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
 
   // override `if (c) a else b` smart constructor to add rewrites
   override def ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: Block[T], elsep: Block[T])(implicit pos: SourceContext) = ((thenp.res,elsep.res) match {
-/-*
+/*
                   if P then (Q @ R) --> (if P then Q) @ (if P then R)
                        if P then [] --> []
             if P then (if Q then R) --> if (P && Q) then R
         if P then (for x in Q do R) --> for x in Q do (if P then R)
-*-/
+*/
     case (Empty(),Empty())       => List()
     case (IfThen(c,a),Empty())   => if (cond && c) a else List()
     case (For(l,f),Empty())      => for (x <- l if cond; y <- f(x)) yield y
@@ -865,6 +877,8 @@ trait ScalaGenStaged extends ScalaCodeGenPkg with ScalaGenStruct {
   }
 }
 
+*/
+
 // accessed by generated code
 object Schema extends Shallow
 
@@ -887,7 +901,7 @@ trait Util {
   }
 }
 
-
+/*
 // test cases
 class TestQueries extends FileDiffSuite {
   
