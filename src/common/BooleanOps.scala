@@ -11,6 +11,7 @@ trait LiftBoolean {
 }
 
 trait BooleanOps extends Variables {
+  implicit def var2BooleanOps(x: Var[Boolean]) = new BooleanOps(readVar(x))
   implicit class BooleanOps(x: Rep[Boolean]) {
     def unary_!(implicit pos: SourceContext) = boolean_negate(x)
     def &&(rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_and(x,rhs)

@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test14
@@ -10,13 +9,14 @@ import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
+import org.scala_lang.virtualized.virtualize
 
 
 class TestDataOp extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test14-"
   
-  trait DSL extends ScalaOpsPkg with TupledFunctions with UncheckedOps with LiftPrimitives with LiftString with LiftVariables {
+  @virtualize trait DSL extends ScalaOpsPkg with TupledFunctions with UncheckedOps with LiftPrimitives with LiftString with LiftVariables {
     // keep track of top level functions
     case class TopLevel[A,B](name: String, mA: Manifest[A], mB:Manifest[B], f: Rep[A] => Rep[B])
     val rec = new scala.collection.mutable.HashMap[String,TopLevel[_,_]]
@@ -156,7 +156,7 @@ class TestDataOp extends FileDiffSuite {
 
   }
 
-  trait Impl extends DSL with ScalaOpsPkgExp with VariablesExpOpt with PrimitiveOpsExpOpt with TupledFunctionsRecursiveExp with UncheckedOpsExp { self => 
+  @virtualize trait Impl extends DSL with ScalaOpsPkgExp with VariablesExpOpt with PrimitiveOpsExpOpt with TupledFunctionsRecursiveExp with UncheckedOpsExp { self => 
     val codegen = new CCodeGenPkg with CGenVariables with CGenTupledFunctions with CGenUncheckedOps { 
       val IR: self.type = self 
       override def remap[A](a: Manifest[A]) = 
@@ -189,7 +189,7 @@ class TestDataOp extends FileDiffSuite {
   
   def testDataOp1 = {
     withOutFile(prefix+"dataop1") {
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         toplevel("main") { x: Rep[Int] =>
 
           val table = ColBasedTable("table",Schema("field1","field2","field3"))
@@ -211,7 +211,7 @@ class TestDataOp extends FileDiffSuite {
 
   def testDataOp2 = {
     withOutFile(prefix+"dataop2") {
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         toplevel("main") { x: Rep[Int] =>
 
           val table = RowBasedTable("table",Schema("field1","field2","field3"))
@@ -234,7 +234,7 @@ class TestDataOp extends FileDiffSuite {
 
   def testDataOp3 = {
     withOutFile(prefix+"dataop3") {
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         toplevel("main") { x: Rep[Int] =>
 
           val tableA = RowBasedTable("A",Schema("a1","a2"))
@@ -260,4 +260,4 @@ class TestDataOp extends FileDiffSuite {
   }
 
 
-}*/
+}
