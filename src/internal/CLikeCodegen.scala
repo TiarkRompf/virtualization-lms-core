@@ -99,7 +99,7 @@ trait CLikeCodegen extends GenericCodegen {
 
       out.append(" kernel_" + syms.map(quote).mkString("") + "(")
       if (resourceInfoType != "") {
-        out.append(resourceInfoType + " &" + resourceInfoSym)
+        out.append(resourceInfoType + " *" + resourceInfoSym)
         if ((vals ++ vars).length > 0) out.append(",")
       }
       out.append(vals.map(p => remap(p.tp) + " " + addRef(p.tp) + quote(p)).mkString(", "))
