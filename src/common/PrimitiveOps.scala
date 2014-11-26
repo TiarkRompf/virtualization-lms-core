@@ -887,6 +887,28 @@ trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
     case _ => super.double_to_int(lhs)
   }
 
+  override def double_plus(lhs: Exp[Double], rhs: Exp[Double])(implicit pos: SourceContext) : Exp[Double] = (lhs, rhs) match {
+    case (Const(0.0), r) => r
+    case (l, Const(0.0)) => l
+    case (Const(x), Const(y)) => Const(x+y)
+    case _ => super.double_plus(lhs,rhs)
+  }
+
+  override def double_minus(lhs: Exp[Double], rhs: Exp[Double])(implicit pos: SourceContext) : Exp[Double] = (lhs, rhs) match {
+    case (l, Const(0l)) => l
+    case (Const(x), Const(y)) => Const(x-y)
+    case _ => super.double_minus(lhs,rhs)
+  }
+
+  override def double_times(lhs: Exp[Double], rhs: Exp[Double])(implicit pos: SourceContext) : Exp[Double] = (lhs, rhs) match {
+    case (l@Const(0.0), r) => l
+    case (l, r@Const(0.0)) => r
+    case (Const(1.0), r) => r
+    case (l, Const(1.0)) => l
+    case (Const(x), Const(y)) => Const(x*y)
+    case _ => super.double_times(lhs,rhs)
+  }
+
   override def long_plus(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) : Exp[Long] = (lhs, rhs) match {
     case (Const(0l), r) => r
     case (l, Const(0l)) => l
