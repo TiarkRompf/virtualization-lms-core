@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test13
@@ -14,7 +13,8 @@ import test10._
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 
 
 abstract class RFun {
@@ -153,7 +153,7 @@ class TestInterpret extends FileDiffSuite {
   }
   
   
-  trait InterpretStaged extends DSL with Equal with NumericOps with PrimitiveOps with HashMapOps with ArrayOps with CellOps with StaticData { self =>
+  @virtualize trait InterpretStaged extends DSL with Equal with NumericOps with PrimitiveOps with HashMapOps with ArrayOps with CellOps with StaticData { self =>
 
     // option 1: stage fully, one big method -- remove interpreter abstraction overhead but retain generic types
     // option 2: stage locally, one compiled fun per op -- no global optimizations
@@ -165,6 +165,11 @@ class TestInterpret extends FileDiffSuite {
     def infix_exec(x: Rep[RFun], f: Rep[HashMap[String,Any]]): Rep[Any]
     def infix_execInt(x: Rep[RFun], f: Rep[HashMap[String,Any]]): Rep[Int]
     
+    implicit class rfunOps(x: Rep[RFun]) {
+      def exec(f: Rep[HashMap[String,Any]]): Rep[Any] = infix_exec(x,f)
+      def execInt(f: Rep[HashMap[String,Any]]): Rep[Int] = infix_execInt(x,f)
+    }
+
     def dcompile(x: Rep[Compile], fA: Rep[HashMap[String,Any]]=>Rep[Any], 
                                   fI: Rep[HashMap[String,Any]]=>Rep[Int]): Rep[RFun]
     
@@ -325,7 +330,7 @@ class TestInterpret extends FileDiffSuite {
   }
   
 
-  trait InterpretStagedReopt extends DSL with Equal with NumericOps with PrimitiveOps with HashMapOps 
+  @virtualize trait InterpretStagedReopt extends DSL with Equal with NumericOps with PrimitiveOps with HashMapOps 
       with ArrayOps with CellOps with StableVars with StaticData { self =>
 
     // option 1: stage fully, one big method -- remove interpreter abstraction overhead but retain generic types
@@ -476,7 +481,7 @@ class TestInterpret extends FileDiffSuite {
 
 
 
-  trait InterpretStagedExp extends EffectExp with StaticDataExp with CellOpsExp with UncheckedOpsExp {
+  @virtualize trait InterpretStagedExp extends EffectExp with StaticDataExp with CellOpsExp with UncheckedOpsExp {
     
     override def toString = "IR:" + getClass.getName
 
@@ -514,14 +519,14 @@ class TestInterpret extends FileDiffSuite {
   }
   
   
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
+  @virtualize trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
     with IfThenElse with While with RangeOps with Print with Compile with NumericOps with PrimitiveOps 
     with ArrayOps with HashMapOps with CastingOps {
     
     def test(): Unit
   }
   
-  trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+  @virtualize trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with IfThenElseFatExp with LoopsFatExp with WhileExp
     with RangeOpsExp with PrintExp with FatExpressions with CompileScala
     with NumericOpsExp with PrimitiveOpsExp with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp 
@@ -551,7 +556,7 @@ class TestInterpret extends FileDiffSuite {
   
   
   def testInterpret1 = withOutFileChecked(prefix+"interpret1") {
-    trait Prog extends DSL with InterpretPlain {
+    @virtualize trait Prog extends DSL with InterpretPlain {
       def test() = {
 
         /*
@@ -587,7 +592,7 @@ class TestInterpret extends FileDiffSuite {
   }
 
   def testInterpret2 = withOutFileChecked(prefix+"interpret2") {
-    trait Prog extends DSL with InterpretStaged {
+    @virtualize trait Prog extends DSL with InterpretStaged {
       def test() = {
 
         /*
@@ -626,7 +631,7 @@ class TestInterpret extends FileDiffSuite {
   }
 
   def testInterpret3 = withOutFileChecked(prefix+"interpret3") {
-    trait Prog extends DSL with InterpretStagedReopt {
+    @virtualize trait Prog extends DSL with InterpretStagedReopt {
       def test() = {
 
         /*
@@ -671,4 +676,3 @@ class TestInterpret extends FileDiffSuite {
     new Prog with Impl with StableVarsExp
   }
 }
-*/

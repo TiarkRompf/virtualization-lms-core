@@ -1,4 +1,3 @@
-/*TODO DISABLED
 package scala.virtualization.lms
 package epfl
 package test13
@@ -14,7 +13,8 @@ import test10._
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 
 case class RCell[T](tag: String) {
   var value: T = _
@@ -22,14 +22,18 @@ case class RCell[T](tag: String) {
 }
 
 
-trait CellOps extends Base {
+@virtualize trait CellOps extends Base {
   type Cell[T] = Rep[RCell[T]]
   def cell[T:Manifest](tag: String): Cell[T]
   def infix_set[T:Manifest](c: Cell[T], x: Rep[T]): Rep[Unit]
   def infix_get[T:Manifest](c: Cell[T]): Rep[T]
+  implicit class cellOps[T:Manifest](c: Cell[T]) {
+    def set(x: Rep[T]) = infix_set(c,x)
+    def get = infix_get(c)
+  }
 }
 
-trait CellOpsExp extends CellOps with BaseExp with StaticDataExp {
+@virtualize trait CellOpsExp extends CellOps with BaseExp with StaticDataExp {
   case class CellInit[T](tag: String, x: Rep[T]) extends Def[RCell[T]]
   case class CellSet[T](c: Cell[T], x: Rep[T]) extends Def[Unit]
   case class CellGet[T](c: Cell[T]) extends Def[T]
@@ -52,7 +56,7 @@ trait ScalaGenCellOps extends ScalaGenBase {
 }
 
 
-trait CompileDyn extends Base with Compile {
+@virtualize trait CompileDyn extends Base with Compile {
   
   def dcompile[A:Manifest,B:Manifest](fv: List[Rep[Any]])(f: Rep[A] => Rep[B]): Rep[A=>B]
 
@@ -71,7 +75,7 @@ trait CompileDyn extends Base with Compile {
 
 }
 
-trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with UncheckedOpsExp {
+@virtualize trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with UncheckedOpsExp {
 
   override def toString = "IR:" + getClass.getName
     
@@ -132,7 +136,7 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
 }
 
 
-trait StableVars extends CellOps with CompileDyn with Equal with PrimitiveOps with HashMapOps with ArrayOps with Compile { self =>
+  @virtualize trait StableVars extends CellOps with CompileDyn with Equal with PrimitiveOps with HashMapOps with ArrayOps with Compile { self =>
     
     abstract class Continue[A]
     case class Done[A](x: Rep[A]) extends Continue[A]
@@ -144,7 +148,7 @@ trait StableVars extends CellOps with CompileDyn with Equal with PrimitiveOps wi
 
   }
 
-  trait StableVarsExp extends CellOpsExp with CompileDynExp with EffectExp with StaticDataExp with FunctionsExp with StableVars with EqualExpOpt with IfThenElseFatExp with UncheckedOpsExp {
+  @virtualize trait StableVarsExp extends CellOpsExp with CompileDynExp with EffectExp with StaticDataExp with FunctionsExp with StableVars with EqualExpOpt with IfThenElseFatExp with UncheckedOpsExp {
     
     import scala.collection.mutable.HashMap
       
@@ -199,17 +203,17 @@ class TestStable extends FileDiffSuite {
   val prefix = home + "test-out/epfl/test13-"
   
   
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
+  @virtualize trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
     with IfThenElse with While with RangeOps with Print with Compile with PrimitiveOps
     with ArrayOps with HashMapOps with CastingOps with StableVars {
     
     def test(): Unit
   }
   
-  trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+  @virtualize trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with IfThenElseFatExp with LoopsFatExp with WhileExp
     with RangeOpsExp with PrintExp with FatExpressions with CompileScala
-    with PrimitiveOpsExp with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp 
+    with PrimitiveOpsExpOpt with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp 
     with StableVarsExp { self =>
     override val verbosity = 1
     dumpGeneratedCode = true
@@ -237,7 +241,7 @@ class TestStable extends FileDiffSuite {
 
 
   def testUnstage = withOutFileChecked(prefix+"unstage1") {
-    trait Prog extends DSL with Functions with StaticData {
+    @virtualize trait Prog extends DSL with Functions with StaticData {
       def test() = {
 
         val f = compile { x: Rep[Int] =>
@@ -269,7 +273,7 @@ class TestStable extends FileDiffSuite {
 
   
   def testStable1 = withOutFileChecked(prefix+"stable1") {
-    trait Prog extends DSL with Functions with StaticData {
+    @virtualize trait Prog extends DSL with Functions with StaticData {
       def test() = {
 
 
@@ -316,7 +320,7 @@ class TestStable extends FileDiffSuite {
 
 
   def testStable2 = withOutFileChecked(prefix+"stable2") {
-    trait Prog extends DSL {
+    @virtualize trait Prog extends DSL {
       def test() = {
 
 
@@ -363,4 +367,3 @@ class TestStable extends FileDiffSuite {
 
 
 }
-*/
