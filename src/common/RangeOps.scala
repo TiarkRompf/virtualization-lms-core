@@ -3,10 +3,11 @@ package common
 
 import java.io.PrintWriter
 
+import scala.virtualization.lms.util.OverloadHack
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
 import org.scala_lang.virtualized.SourceContext
 
-trait RangeOps extends Base {
+trait RangeOps extends Base with OverloadHack {
   // workaround for infix not working with manifests
   implicit def repRangeToRangeOps(r: Rep[Range]) = new rangeOpsCls(r)
   class rangeOpsCls(r: Rep[Range]){
@@ -15,7 +16,12 @@ trait RangeOps extends Base {
     def step(implicit pos: SourceContext) = range_step(r)
     def end(implicit pos: SourceContext) = range_end(r)
   }
-  implicit def intToRangeOps(i: Int) = new RangeOpsInfixRepInt(unit(i))
+  // NOTE(trans): it has to be called 'intWrapper' to shadow the standard Range constructor
+  implicit class intWrapper(start: Int) {
+    def until(end: Rep[Int])(implicit pos: SourceContext) = range_until(unit(start),end)
+    def until(end: Int)(implicit pos: SourceContext): Rep[Range] = range_until(unit(start),unit(end))
+    def until(end: Int)(implicit pos: SourceContext, o: Overloaded1): Range = new Range(start,end,1)
+  }
   implicit class RangeOpsInfixRepInt(start: Rep[Int]) {
     def until(end: Rep[Int])(implicit pos: SourceContext) = range_until(start,end)
   }
