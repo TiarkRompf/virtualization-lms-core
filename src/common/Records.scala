@@ -123,7 +123,7 @@ class RecordMacros(val c: Context) {
 
     private def refinedManifest(schema: Seq[(String, Type)]): Tree = q"""
       new _root_.org.scala_lang.virtualized.RefinedManifest[Record] {
-        val fields = List(..${schema.map(v => q"(${v._1}, ${tpeManifest(v._2)})")})
+        val fields = _root_.scala.List(..${schema.map(v => q"(${v._1}, ${tpeManifest(v._2)})")})
         def runtimeClass: Class[_] = classOf[Record]
       }
     """
