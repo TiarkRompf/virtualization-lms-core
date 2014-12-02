@@ -350,20 +350,9 @@ trait Shallow extends Util {
     val couples: List[Couple]
   }
 
+
   //val db = staticData//database[PeopleDB]("PeopleDB")
-  //FIXME(trans) val db = database[PeopleDB]("db")
-
-/* FIXME(trans): enabling line above breaks. manifest issue?
-
-java.lang.StackOverflowError
-  at scala.tools.nsc.typechecker.Contexts$Context.enclosingContextChain(Contexts.scala:628)
-  at scala.tools.nsc.typechecker.Contexts$Context.enclosingContextChain(Contexts.scala:628)
-  at scala.tools.nsc.typechecker.Contexts$Context.enclosingContextChain(Contexts.scala:628)
-  at scala.tools.nsc.typechecker.Contexts$Context.enclosingContextChain(Contexts.scala:628)
-  at scala.tools.nsc.typechecker.Contexts$Context.enclosingContextChain(Contexts.scala:628)
-*/
-
-
+  val db = database[PeopleDB]("db")
 
   /*PeopleDB(
     people = List(
