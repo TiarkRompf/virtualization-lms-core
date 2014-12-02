@@ -39,22 +39,10 @@ trait MixedTypesProg extends TestOps {
     Record(name = s, lastName = "last").lastName
 }
 
-
-/*
-FIXME(trans) this currently doesn't compile:
-
-[error] /Users/me/Desktop/tmpstuff/lms-macro/test-src/common/RecordsTest.scala:49: type mismatch;
-[error]  found   : scala.reflect.Manifest[Object]
-[error]  required: Manifest[AnyRef{val name: String}]
-[error] Note: Object >: AnyRef{val name: String}, but trait Manifest is invariant in type T.
-[error] You may wish to investigate a wildcard type such as `_ >: AnyRef{val name: String}`. (SLS 3.2.10)
-[error]     val xs1 = xs.flatMap { b => ys }
-[error]                          ^
-
 @virtualize
 trait FlatMapProg extends TestOps with ListOps {
   implicit def lift[T: Manifest](t: T): Rep[T]= unit(t)
-  type Names = List[{ val name: String}]
+  type Names = List[Record{val name: String}]
   def f(s: Rep[String]): Rep[String] = {
     val xs: Rep[List[Int]] = List(1,2,3)
     val ys: Rep[Names] = List(Record(name = "A"),Record(name = "B"))
@@ -62,7 +50,7 @@ trait FlatMapProg extends TestOps with ListOps {
     "xx"
   }
 }
-*/
+
 
 trait TestOps extends Functions with Equal with IfThenElse with RecordOps with StructOps
 trait TestExp extends FunctionsExp with EqualExp with IfThenElseExp with StructExp
