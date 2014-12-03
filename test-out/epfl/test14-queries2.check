@@ -6,39 +6,39 @@ nVars=2000
 import scala.virtualization.lms.epfl.test14.Schema
 class staged$0 extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-val x2550 = println("rangeFromNames(\"Edna\",\"Bert\"):")
-val x617 = Schema.db.people.flatMap { x111 => 
-val x616 = Schema.db.people.flatMap { x435 => 
-val x615 = Schema.db.people.flatMap { x598 => 
+val x2469 = println("rangeFromNames(\"Edna\",\"Bert\"):")
+val x536 = Schema.db.people.flatMap { x111 => 
+val x535 = Schema.db.people.flatMap { x413 => 
+val x534 = Schema.db.people.flatMap { x519 => 
 val x112 = x111.name
 val x113 = x112 == "Edna"
-val x438 = x435.name
-val x439 = x438 == "Bert"
+val x414 = x413.name
+val x415 = x414 == "Bert"
 val x116 = x111.age
-val x602 = x598.age
-val x603 = x116 <= x602
-val x441 = x435.age
-val x604 = x602 < x441
-val x605 = x603 && x604
-val x611 = x439 && x605
-val x613 = x113 && x611
-val x614 = if (x613) {
-val x607 = x598.name
-val x608 = new Schema.Record { val name = x607 }
-val x609 = List(x608)
-x609
+val x520 = x519.age
+val x521 = x116 <= x520
+val x418 = x413.age
+val x522 = x520 < x418
+val x523 = x521 && x522
+val x530 = x415 && x523
+val x532 = x113 && x530
+val x533 = if (x532) {
+val x526 = x519.name
+val x527 = new Schema.Record { val name = x526 }
+val x528 = List(x527)
+x528
 } else {
 val x19 = List()
 x19
 }
-x614
+x533
 }
-x615
+x534
 }
-x616
+x535
 }
-val x2551 = println(x617)
-x2551
+val x2470 = println(x536)
+x2470
 }
 }
 /*****************************************

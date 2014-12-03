@@ -350,7 +350,6 @@ trait Shallow extends Util {
     val couples: List[Couple]
   }
 
-
   //val db = staticData//database[PeopleDB]("PeopleDB")
   val db = database[PeopleDB]("db")
 
@@ -366,10 +365,9 @@ trait Shallow extends Util {
       Couple("Alex", "Bert"),
       Couple("Cora", "Drew")))*/
 
-/*
   // 2.1 Comprehensions and queries / 2.2 Query via quotation
 
-  val differences: Rep[List[{ val name: String; val diff: Int }]] =
+  val differences: Rep[List[Record { val name: String; val diff: Int }]] =
     for {
       c <- db.couples
       w <- db.people
@@ -382,7 +380,7 @@ trait Shallow extends Util {
 
   // 2.3 Abstracting over values
 
-  type Names = List[{ val name: String}]
+  type Names = List[Record { val name: String }]
   def range(a: Rep[Int], b: Rep[Int]): Rep[Names] =
     for {
       w <- db.people
@@ -547,7 +545,7 @@ trait Shallow extends Util {
   def contains[A:Manifest](xs: Rep[List[A]], u: Rep[A]): Rep[Boolean] =
     any(xs)(x => x == u)
 
-  def expertise2(u: Rep[String]): Rep[List[{ val dpt: String }]] =
+  def expertise2(u: Rep[String]): Rep[List[Record { val dpt: String }]] =
     for {
       d <- nestedOrg
       if all(d.employees)(e => contains(e.tasks, u)) 
@@ -580,7 +578,7 @@ trait Shallow extends Util {
     val post: Int 
   }
 
-  val db_xml = database[Record { val nodes: List[Node]}]("xml").nodes
+  val db_xml = database[Record { val nodes: List[Node] }]("xml").nodes
 
   /*val db_xml = List(
     Node(0, -1, "#doc", 0, 13),
@@ -659,14 +657,12 @@ trait Shallow extends Util {
   val xr1 = xpath(xp1)
   val xr2 = xpath(xp2)
   val xr3 = xpath(xp3)
-*/
 
   }
 }
 
-/*
 // internal staged implementation: IR node classes, rewrites for normalization
-trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with StructExpOpt {
+@virtualize trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with StructExpOpt {
 
   // IR node representing database("name")
   case class Database[T](s: String) extends Def[T]
@@ -799,10 +795,15 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
             if P then (if Q then R) --> if (P && Q) then R
         if P then (for x in Q do R) --> for x in Q do (if P then R)
 */
+    // NOTE(trans): we need to use List[T]() instead of List().
+    // This is an artifact of if/else being typechecked as regular method call.
+    // We also need an explicit type argument on `map` below.
+
     case (Empty(),Empty())       => List()
-    case (IfThen(c,a),Empty())   => if (cond && c) a else List()
-    case (For(l,f),Empty())      => for (x <- l if cond; y <- f(x)) yield y
-    case (Concat(a,b),Empty())   => (if (cond) a else List()) ++ (if (cond) b else List())
+    case (IfThen(c,a),Empty())   => if (cond && c) a else List[T]()
+    //case (For(l,f),Empty())      => for (x <- l if cond; y <- f(x)) yield y // FIXME(trans)
+    case (For(l,f),Empty())      => l.flatMap(x => if (cond) f(x) else List[Any]())
+    case (Concat(a,b),Empty())   => (if (cond) a else List[T]()) ++ (if (cond) b else List[T]())
     case _                       => super.ifThenElse(cond,thenp,elsep)
   }).asInstanceOf[Exp[T]]
 
@@ -866,8 +867,6 @@ trait ScalaGenStaged extends ScalaCodeGenPkg with ScalaGenStruct {
   }
 }
 
-*/
-
 // accessed by generated code
 object Schema extends Shallow
 
@@ -890,7 +889,6 @@ trait Util {
   }
 }
 
-/*
 // test cases
 class TestQueries extends FileDiffSuite {
   
@@ -1057,4 +1055,3 @@ class TestQueries extends FileDiffSuite {
   }
 
 }
-*/
