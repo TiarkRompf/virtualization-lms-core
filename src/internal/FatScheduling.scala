@@ -20,6 +20,7 @@ trait FatScheduling extends Scheduling {
   def unapplySimpleCollectIf(e: Def[Any]): Option[(Exp[Any],List[Exp[Boolean]])] = unapplySimpleCollect(e).map((_,Nil))
 
   // FIXME: should be Def[A] => Def[A], not Def[Any]
+  def canApplyAddCondition(e: Def[Any]): Boolean = true
   def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]): Def[Any] = sys.error("not implemented")
 
   def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true

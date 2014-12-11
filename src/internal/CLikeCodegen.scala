@@ -41,12 +41,8 @@ trait CLikeCodegen extends GenericCodegen {
   override def remap[A](m: Manifest[A]) : String = {
     if (m.erasure == classOf[Variable[AnyVal]])
       remap(m.typeArguments.head)
-    else if (m.erasure == classOf[List[Any]]) { // Use case: Delite Foreach sync list 
-      deviceTarget.toString + "List< " + remap(m.typeArguments.head) + " >"
-    }
     else {
       m.toString match {
-        case "scala.collection.immutable.List[Float]" => "List"
         case "Boolean" => "bool"
         case "Byte" => "int8_t"
         case "Char" => "uint16_t"
@@ -85,9 +81,6 @@ trait CLikeCodegen extends GenericCodegen {
       tpe
   }
 
-  def resourceInfoType = ""
-  def resourceInfoSym = ""
-
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
 
     stream.append("#include \"" + deviceTarget + "helperFuncs.h\"\n")
@@ -106,7 +99,7 @@ trait CLikeCodegen extends GenericCodegen {
 
       out.append(" kernel_" + syms.map(quote).mkString("") + "(")
       if (resourceInfoType != "") {
-        out.append(resourceInfoType + " &" + resourceInfoSym)
+        out.append(resourceInfoType + " *" + resourceInfoSym)
         if ((vals ++ vars).length > 0) out.append(",")
       }
       out.append(vals.map(p => remap(p.tp) + " " + addRef(p.tp) + quote(p)).mkString(", "))

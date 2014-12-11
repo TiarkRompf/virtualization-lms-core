@@ -12,6 +12,7 @@ trait LiftPrimitives {
   implicit def intToRepInt(x: Int) = unit(x)  
   implicit def floatToRepFloat(x: Float) = unit(x)
   implicit def doubleToRepDouble(x: Double) = unit(x)
+  implicit def longToRepLong(x: Long) = unit(x)
   
   // precision-widening promotions
   implicit def chainIntToRepFloat[A:Manifest](x: A)(implicit c: A => Rep[Int]): Rep[Float] = repIntToRepFloat(c(x))
@@ -33,7 +34,10 @@ trait PrimitiveOps extends Variables with OverloadHack {
    */
   implicit def repIntToRepDouble(x: Rep[Int]): Rep[Double] = x.toDouble
   implicit def repIntToRepFloat(x: Rep[Int]): Rep[Float] = x.toFloat
+  implicit def repIntToRepLong(x: Rep[Int]): Rep[Long] = x.toLong
   implicit def repFloatToRepDouble(x: Rep[Float]): Rep[Double] = x.toDouble
+  implicit def repLongToRepFloat(x: Rep[Long]): Rep[Float] = x.toFloat
+  implicit def repLongToRepDouble(x: Rep[Long]): Rep[Double] = x.toDouble
       
   
   /**
@@ -43,114 +47,199 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def infix_-(lhs: Int, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int] = int_minus(unit(lhs), rhs)
   def infix_-(lhs: Int, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_minus(unit(lhs), rhs)
   def infix_-(lhs: Int, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_minus(unit(lhs), rhs)
-  def infix_-(lhs: Float, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float] = float_minus(unit(lhs),rhs)  
+  def infix_-(lhs: Int, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_minus(unit(lhs), rhs)
+  def infix_-(lhs: Float, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float] = float_minus(unit(lhs), rhs)  
   def infix_-(lhs: Float, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_minus(unit(lhs), rhs)
   def infix_-(lhs: Float, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_minus(unit(lhs), rhs)
+  def infix_-(lhs: Float, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Float] = float_minus(unit(lhs), rhs)
   def infix_-(lhs: Double, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Double] = double_minus(unit(lhs),rhs)  
-  def infix_-(lhs: Double, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_minus(unit(lhs),rhs)
-  def infix_-(lhs: Double, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_minus(unit(lhs),rhs)
+  def infix_-(lhs: Double, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_minus(unit(lhs), rhs)
+  def infix_-(lhs: Double, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_minus(unit(lhs), rhs)
+  def infix_-(lhs: Double, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_minus(unit(lhs), rhs)
+  def infix_-(lhs: Long, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Long] = long_minus(unit(lhs), rhs)
+  def infix_-(lhs: Long, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_minus(unit(lhs), rhs)
+  def infix_-(lhs: Long, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_minus(unit(lhs), rhs)
+  def infix_-(lhs: Long, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_minus(unit(lhs), rhs)  
   def infix_-(lhs: Rep[Int], rhs: Int)(implicit ctx: SourceContext): Rep[Int] = int_minus(lhs, unit(rhs))  
   def infix_-(lhs: Rep[Int], rhs: Double)(implicit ctx: SourceContext): Rep[Double] = double_minus(lhs, unit(rhs))
   def infix_-(lhs: Rep[Int], rhs: Float)(implicit ctx: SourceContext): Rep[Float] = float_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Int], rhs: Long)(implicit ctx: SourceContext): Rep[Long] = long_minus(lhs, unit(rhs))
   def infix_-(lhs: Rep[Float], rhs: Int)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_minus(lhs, unit(rhs))
-  def infix_-(lhs: Rep[Float], rhs: Float)(implicit o: Overloaded2, ctx: SourceContext): Rep[Float] = float_minus(lhs, unit(rhs))
-  def infix_-(lhs: Rep[Float], rhs: Double)(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_minus(lhs, unit(rhs))
-  def infix_-(lhs: Rep[Double], rhs: Int)(implicit o: Overloaded4, ctx: SourceContext): Rep[Double] = double_minus(lhs, unit(rhs))
-  def infix_-(lhs: Rep[Double], rhs: Float)(implicit o: Overloaded5, ctx: SourceContext): Rep[Double] = double_minus(lhs, unit(rhs))
-  def infix_-(lhs: Rep[Double], rhs: Double)(implicit o: Overloaded6, ctx: SourceContext): Rep[Double] = double_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Float], rhs: Float)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Float], rhs: Double)(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Float], rhs: Long)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Double], rhs: Int)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Double], rhs: Float)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Double], rhs: Double)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Double], rhs: Long)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Long], rhs: Int)(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Long], rhs: Float)(implicit o: Overloaded3, ctx: SourceContext): Rep[Float] = float_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Long], rhs: Double)(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_minus(lhs, unit(rhs))
+  def infix_-(lhs: Rep[Long], rhs: Long)(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_minus(lhs, unit(rhs))
   def infix_-(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, ctx: SourceContext): Rep[Int] = int_minus(lhs, rhs)
   def infix_-(lhs: Rep[Int], rhs: Rep[Float])(implicit o: Overloaded2, ctx: SourceContext): Rep[Float] = float_minus(repIntToRepFloat(lhs), rhs)
   def infix_-(lhs: Rep[Int], rhs: Rep[Double])(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_minus(repIntToRepDouble(lhs), rhs)
-  def infix_-(lhs: Rep[Float], rhs: Rep[Int])(implicit o: Overloaded4, ctx: SourceContext): Rep[Float] = float_minus(lhs,repIntToRepFloat(rhs))  
-  def infix_-(lhs: Rep[Float], rhs: Rep[Float])(implicit o: Overloaded5, ctx: SourceContext): Rep[Float] = float_minus(lhs, rhs)
-  def infix_-(lhs: Rep[Float], rhs: Rep[Double])(implicit o: Overloaded6, ctx: SourceContext): Rep[Double] = double_minus(repFloatToRepDouble(lhs), rhs)
-  def infix_-(lhs: Rep[Double], rhs: Rep[Int])(implicit o: Overloaded7, ctx: SourceContext): Rep[Double] = double_minus(lhs,repIntToRepDouble(rhs))  
-  def infix_-(lhs: Rep[Double], rhs: Rep[Float])(implicit o: Overloaded8, ctx: SourceContext): Rep[Double] = double_minus(lhs,repFloatToRepDouble(rhs))
-  def infix_-(lhs: Rep[Double], rhs: Rep[Double])(implicit o: Overloaded9, ctx: SourceContext): Rep[Double] = double_minus(lhs,rhs)    
+  def infix_-(lhs: Rep[Int], rhs: Rep[Long])(implicit o: Overloaded4, ctx: SourceContext): Rep[Long] = long_minus(repIntToRepLong(lhs), rhs)
+  def infix_-(lhs: Rep[Float], rhs: Rep[Int])(implicit o: Overloaded5, ctx: SourceContext): Rep[Float] = float_minus(lhs,repIntToRepFloat(rhs))  
+  def infix_-(lhs: Rep[Float], rhs: Rep[Float])(implicit o: Overloaded6, ctx: SourceContext): Rep[Float] = float_minus(lhs, rhs)
+  def infix_-(lhs: Rep[Float], rhs: Rep[Double])(implicit o: Overloaded7, ctx: SourceContext): Rep[Double] = double_minus(repFloatToRepDouble(lhs), rhs)
+  def infix_-(lhs: Rep[Float], rhs: Rep[Long])(implicit o: Overloaded8, ctx: SourceContext): Rep[Float] = float_minus(lhs, repLongToRepFloat(rhs))
+  def infix_-(lhs: Rep[Double], rhs: Rep[Int])(implicit o: Overloaded9, ctx: SourceContext): Rep[Double] = double_minus(lhs, repIntToRepDouble(rhs))  
+  def infix_-(lhs: Rep[Double], rhs: Rep[Float])(implicit o: Overloaded10, ctx: SourceContext): Rep[Double] = double_minus(lhs, repFloatToRepDouble(rhs))
+  def infix_-(lhs: Rep[Double], rhs: Rep[Double])(implicit o: Overloaded11, ctx: SourceContext): Rep[Double] = double_minus(lhs,rhs)    
+  def infix_-(lhs: Rep[Double], rhs: Rep[Long])(implicit o: Overloaded12, ctx: SourceContext): Rep[Double] = double_minus(lhs, repLongToRepDouble(rhs))
+  def infix_-(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded13, ctx: SourceContext): Rep[Long] = long_minus(lhs, repIntToRepLong(rhs))
+  def infix_-(lhs: Rep[Long], rhs: Rep[Float])(implicit o: Overloaded14, ctx: SourceContext): Rep[Float] = float_minus(repLongToRepFloat(lhs), rhs)
+  def infix_-(lhs: Rep[Long], rhs: Rep[Double])(implicit o: Overloaded15, ctx: SourceContext): Rep[Double] = double_minus(repLongToRepDouble(lhs), rhs)
+  def infix_-(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded16, ctx: SourceContext): Rep[Long] = long_minus(lhs, rhs)
 
   def infix_+(lhs: Int, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int] = int_plus(unit(lhs), rhs)
   def infix_+(lhs: Int, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_plus(unit(lhs), rhs)
   def infix_+(lhs: Int, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_plus(unit(lhs), rhs)
-  def infix_+(lhs: Float, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float] = float_plus(unit(lhs),rhs)  
+  def infix_+(lhs: Int, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_plus(unit(lhs), rhs)
+  def infix_+(lhs: Float, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float] = float_plus(unit(lhs), rhs)  
   def infix_+(lhs: Float, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_plus(unit(lhs), rhs)
   def infix_+(lhs: Float, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_plus(unit(lhs), rhs)
+  def infix_+(lhs: Float, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Float] = float_plus(unit(lhs), rhs)
   def infix_+(lhs: Double, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Double] = double_plus(unit(lhs),rhs)  
-  def infix_+(lhs: Double, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_plus(unit(lhs),rhs)
-  def infix_+(lhs: Double, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_plus(unit(lhs),rhs)
+  def infix_+(lhs: Double, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_plus(unit(lhs), rhs)
+  def infix_+(lhs: Double, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_plus(unit(lhs), rhs)
+  def infix_+(lhs: Double, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_plus(unit(lhs), rhs)
+  def infix_+(lhs: Long, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Long] = long_plus(unit(lhs), rhs)
+  def infix_+(lhs: Long, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_plus(unit(lhs), rhs)
+  def infix_+(lhs: Long, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_plus(unit(lhs), rhs)
+  def infix_+(lhs: Long, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_plus(unit(lhs), rhs)  
   def infix_+(lhs: Rep[Int], rhs: Int)(implicit ctx: SourceContext): Rep[Int] = int_plus(lhs, unit(rhs))  
   def infix_+(lhs: Rep[Int], rhs: Double)(implicit ctx: SourceContext): Rep[Double] = double_plus(lhs, unit(rhs))
   def infix_+(lhs: Rep[Int], rhs: Float)(implicit ctx: SourceContext): Rep[Float] = float_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Int], rhs: Long)(implicit ctx: SourceContext): Rep[Long] = long_plus(lhs, unit(rhs))
   def infix_+(lhs: Rep[Float], rhs: Int)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_plus(lhs, unit(rhs))
-  def infix_+(lhs: Rep[Float], rhs: Float)(implicit o: Overloaded2, ctx: SourceContext): Rep[Float] = float_plus(lhs, unit(rhs))
-  def infix_+(lhs: Rep[Float], rhs: Double)(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_plus(lhs, unit(rhs))
-  def infix_+(lhs: Rep[Double], rhs: Int)(implicit o: Overloaded4, ctx: SourceContext): Rep[Double] = double_plus(lhs, unit(rhs))
-  def infix_+(lhs: Rep[Double], rhs: Float)(implicit o: Overloaded5, ctx: SourceContext): Rep[Double] = double_plus(lhs, unit(rhs))
-  def infix_+(lhs: Rep[Double], rhs: Double)(implicit o: Overloaded6, ctx: SourceContext): Rep[Double] = double_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Float], rhs: Float)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Float], rhs: Double)(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Float], rhs: Long)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Double], rhs: Int)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Double], rhs: Float)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Double], rhs: Double)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Double], rhs: Long)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Long], rhs: Int)(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Long], rhs: Float)(implicit o: Overloaded3, ctx: SourceContext): Rep[Float] = float_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Long], rhs: Double)(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_plus(lhs, unit(rhs))
+  def infix_+(lhs: Rep[Long], rhs: Long)(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_plus(lhs, unit(rhs))
   def infix_+(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded15, ctx: SourceContext): Rep[Int] = int_plus(lhs, rhs)
   def infix_+(lhs: Rep[Int], rhs: Rep[Float])(implicit o: Overloaded16, ctx: SourceContext): Rep[Float] = float_plus(repIntToRepFloat(lhs), rhs)
   def infix_+(lhs: Rep[Int], rhs: Rep[Double])(implicit o: Overloaded17, ctx: SourceContext): Rep[Double] = double_plus(repIntToRepDouble(lhs), rhs)
-  def infix_+(lhs: Rep[Float], rhs: Rep[Int])(implicit o: Overloaded18, ctx: SourceContext): Rep[Float] = float_plus(lhs,repIntToRepFloat(rhs))  
-  def infix_+(lhs: Rep[Float], rhs: Rep[Float])(implicit o: Overloaded19, ctx: SourceContext): Rep[Float] = float_plus(lhs, rhs)
-  def infix_+(lhs: Rep[Float], rhs: Rep[Double])(implicit o: Overloaded20, ctx: SourceContext): Rep[Double] = double_plus(repFloatToRepDouble(lhs), rhs)
-  def infix_+(lhs: Rep[Double], rhs: Rep[Int])(implicit o: Overloaded21, ctx: SourceContext): Rep[Double] = double_plus(lhs,repIntToRepDouble(rhs))  
-  def infix_+(lhs: Rep[Double], rhs: Rep[Float])(implicit o: Overloaded22, ctx: SourceContext): Rep[Double] = double_plus(lhs,repFloatToRepDouble(rhs))
-  def infix_+(lhs: Rep[Double], rhs: Rep[Double])(implicit o: Overloaded23, ctx: SourceContext): Rep[Double] = double_plus(lhs,rhs)    
+  def infix_+(lhs: Rep[Int], rhs: Rep[Long])(implicit o: Overloaded18, ctx: SourceContext): Rep[Long] = long_plus(repIntToRepLong(lhs), rhs)
+  def infix_+(lhs: Rep[Float], rhs: Rep[Int])(implicit o: Overloaded19, ctx: SourceContext): Rep[Float] = float_plus(lhs,repIntToRepFloat(rhs))  
+  def infix_+(lhs: Rep[Float], rhs: Rep[Float])(implicit o: Overloaded20, ctx: SourceContext): Rep[Float] = float_plus(lhs, rhs)
+  def infix_+(lhs: Rep[Float], rhs: Rep[Double])(implicit o: Overloaded21, ctx: SourceContext): Rep[Double] = double_plus(repFloatToRepDouble(lhs), rhs)
+  def infix_+(lhs: Rep[Float], rhs: Rep[Long])(implicit o: Overloaded22, ctx: SourceContext): Rep[Float] = float_plus(lhs, repLongToRepFloat(rhs))
+  def infix_+(lhs: Rep[Double], rhs: Rep[Int])(implicit o: Overloaded23, ctx: SourceContext): Rep[Double] = double_plus(lhs, repIntToRepDouble(rhs))  
+  def infix_+(lhs: Rep[Double], rhs: Rep[Float])(implicit o: Overloaded24, ctx: SourceContext): Rep[Double] = double_plus(lhs, repFloatToRepDouble(rhs))
+  def infix_+(lhs: Rep[Double], rhs: Rep[Double])(implicit o: Overloaded25, ctx: SourceContext): Rep[Double] = double_plus(lhs,rhs)    
+  def infix_+(lhs: Rep[Double], rhs: Rep[Long])(implicit o: Overloaded26, ctx: SourceContext): Rep[Double] = double_plus(lhs, repLongToRepDouble(rhs))
+  def infix_+(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded27, ctx: SourceContext): Rep[Long] = long_plus(lhs, repIntToRepLong(rhs))
+  def infix_+(lhs: Rep[Long], rhs: Rep[Float])(implicit o: Overloaded28, ctx: SourceContext): Rep[Float] = float_plus(repLongToRepFloat(lhs), rhs)
+  def infix_+(lhs: Rep[Long], rhs: Rep[Double])(implicit o: Overloaded29, ctx: SourceContext): Rep[Double] = double_plus(repLongToRepDouble(lhs), rhs)
+  def infix_+(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded30, ctx: SourceContext): Rep[Long] = long_plus(lhs, rhs)
 
   def infix_*(lhs: Int, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int] = int_times(unit(lhs), rhs)
   def infix_*(lhs: Int, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_times(unit(lhs), rhs)
   def infix_*(lhs: Int, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_times(unit(lhs), rhs)
-  def infix_*(lhs: Float, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float] = float_times(unit(lhs),rhs)  
+  def infix_*(lhs: Int, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_times(unit(lhs), rhs)
+  def infix_*(lhs: Float, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float] = float_times(unit(lhs), rhs)  
   def infix_*(lhs: Float, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_times(unit(lhs), rhs)
   def infix_*(lhs: Float, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_times(unit(lhs), rhs)
+  def infix_*(lhs: Float, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Float] = float_times(unit(lhs), rhs)
   def infix_*(lhs: Double, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Double] = double_times(unit(lhs),rhs)  
-  def infix_*(lhs: Double, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_times(unit(lhs),rhs)
-  def infix_*(lhs: Double, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_times(unit(lhs),rhs)
+  def infix_*(lhs: Double, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_times(unit(lhs), rhs)
+  def infix_*(lhs: Double, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_times(unit(lhs), rhs)
+  def infix_*(lhs: Double, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_times(unit(lhs), rhs)
+  def infix_*(lhs: Long, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Long] = long_times(unit(lhs), rhs)
+  def infix_*(lhs: Long, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_times(unit(lhs), rhs)
+  def infix_*(lhs: Long, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_times(unit(lhs), rhs)
+  def infix_*(lhs: Long, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_times(unit(lhs), rhs)  
   def infix_*(lhs: Rep[Int], rhs: Int)(implicit ctx: SourceContext): Rep[Int] = int_times(lhs, unit(rhs))  
   def infix_*(lhs: Rep[Int], rhs: Double)(implicit ctx: SourceContext): Rep[Double] = double_times(lhs, unit(rhs))
   def infix_*(lhs: Rep[Int], rhs: Float)(implicit ctx: SourceContext): Rep[Float] = float_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Int], rhs: Long)(implicit ctx: SourceContext): Rep[Long] = long_times(lhs, unit(rhs))
   def infix_*(lhs: Rep[Float], rhs: Int)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_times(lhs, unit(rhs))
-  def infix_*(lhs: Rep[Float], rhs: Float)(implicit o: Overloaded2, ctx: SourceContext): Rep[Float] = float_times(lhs, unit(rhs))
-  def infix_*(lhs: Rep[Float], rhs: Double)(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_times(lhs, unit(rhs))
-  def infix_*(lhs: Rep[Double], rhs: Int)(implicit o: Overloaded4, ctx: SourceContext): Rep[Double] = double_times(lhs, unit(rhs))
-  def infix_*(lhs: Rep[Double], rhs: Float)(implicit o: Overloaded5, ctx: SourceContext): Rep[Double] = double_times(lhs, unit(rhs))
-  def infix_*(lhs: Rep[Double], rhs: Double)(implicit o: Overloaded6, ctx: SourceContext): Rep[Double] = double_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Float], rhs: Float)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Float], rhs: Double)(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Float], rhs: Long)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Double], rhs: Int)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Double], rhs: Float)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Double], rhs: Double)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Double], rhs: Long)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Long], rhs: Int)(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Long], rhs: Float)(implicit o: Overloaded3, ctx: SourceContext): Rep[Float] = float_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Long], rhs: Double)(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_times(lhs, unit(rhs))
+  def infix_*(lhs: Rep[Long], rhs: Long)(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_times(lhs, unit(rhs))
   def infix_*(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, ctx: SourceContext): Rep[Int] = int_times(lhs, rhs)
   def infix_*(lhs: Rep[Int], rhs: Rep[Float])(implicit o: Overloaded2, ctx: SourceContext): Rep[Float] = float_times(repIntToRepFloat(lhs), rhs)
   def infix_*(lhs: Rep[Int], rhs: Rep[Double])(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_times(repIntToRepDouble(lhs), rhs)
-  def infix_*(lhs: Rep[Float], rhs: Rep[Int])(implicit o: Overloaded4, ctx: SourceContext): Rep[Float] = float_times(lhs,repIntToRepFloat(rhs))  
-  def infix_*(lhs: Rep[Float], rhs: Rep[Float])(implicit o: Overloaded5, ctx: SourceContext): Rep[Float] = float_times(lhs, rhs)
-  def infix_*(lhs: Rep[Float], rhs: Rep[Double])(implicit o: Overloaded6, ctx: SourceContext): Rep[Double] = double_times(repFloatToRepDouble(lhs), rhs)
-  def infix_*(lhs: Rep[Double], rhs: Rep[Int])(implicit o: Overloaded7, ctx: SourceContext): Rep[Double] = double_times(lhs,repIntToRepDouble(rhs))  
-  def infix_*(lhs: Rep[Double], rhs: Rep[Float])(implicit o: Overloaded8, ctx: SourceContext): Rep[Double] = double_times(lhs,repFloatToRepDouble(rhs))
-  def infix_*(lhs: Rep[Double], rhs: Rep[Double])(implicit o: Overloaded9, ctx: SourceContext): Rep[Double] = double_times(lhs,rhs)    
+  def infix_*(lhs: Rep[Int], rhs: Rep[Long])(implicit o: Overloaded4, ctx: SourceContext): Rep[Long] = long_times(repIntToRepLong(lhs), rhs)
+  def infix_*(lhs: Rep[Float], rhs: Rep[Int])(implicit o: Overloaded5, ctx: SourceContext): Rep[Float] = float_times(lhs,repIntToRepFloat(rhs))  
+  def infix_*(lhs: Rep[Float], rhs: Rep[Float])(implicit o: Overloaded6, ctx: SourceContext): Rep[Float] = float_times(lhs, rhs)
+  def infix_*(lhs: Rep[Float], rhs: Rep[Double])(implicit o: Overloaded7, ctx: SourceContext): Rep[Double] = double_times(repFloatToRepDouble(lhs), rhs)
+  def infix_*(lhs: Rep[Float], rhs: Rep[Long])(implicit o: Overloaded8, ctx: SourceContext): Rep[Float] = float_times(lhs, repLongToRepFloat(rhs))
+  def infix_*(lhs: Rep[Double], rhs: Rep[Int])(implicit o: Overloaded9, ctx: SourceContext): Rep[Double] = double_times(lhs, repIntToRepDouble(rhs))  
+  def infix_*(lhs: Rep[Double], rhs: Rep[Float])(implicit o: Overloaded10, ctx: SourceContext): Rep[Double] = double_times(lhs, repFloatToRepDouble(rhs))
+  def infix_*(lhs: Rep[Double], rhs: Rep[Double])(implicit o: Overloaded11, ctx: SourceContext): Rep[Double] = double_times(lhs,rhs)    
+  def infix_*(lhs: Rep[Double], rhs: Rep[Long])(implicit o: Overloaded12, ctx: SourceContext): Rep[Double] = double_times(lhs, repLongToRepDouble(rhs))
+  def infix_*(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded13, ctx: SourceContext): Rep[Long] = long_times(lhs, repIntToRepLong(rhs))
+  def infix_*(lhs: Rep[Long], rhs: Rep[Float])(implicit o: Overloaded14, ctx: SourceContext): Rep[Float] = float_times(repLongToRepFloat(lhs), rhs)
+  def infix_*(lhs: Rep[Long], rhs: Rep[Double])(implicit o: Overloaded15, ctx: SourceContext): Rep[Double] = double_times(repLongToRepDouble(lhs), rhs)
+  def infix_*(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded16, ctx: SourceContext): Rep[Long] = long_times(lhs, rhs)
 
   def infix_/(lhs: Int, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Int] = int_divide(unit(lhs), rhs)
   def infix_/(lhs: Int, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_divide(unit(lhs), rhs)
   def infix_/(lhs: Int, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_divide(unit(lhs), rhs)
-  def infix_/(lhs: Float, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float] = float_divide(unit(lhs),rhs)  
+  def infix_/(lhs: Int, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_divide(unit(lhs), rhs)
+  def infix_/(lhs: Float, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Float] = float_divide(unit(lhs), rhs)  
   def infix_/(lhs: Float, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_divide(unit(lhs), rhs)
   def infix_/(lhs: Float, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_divide(unit(lhs), rhs)
+  def infix_/(lhs: Float, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Float] = float_divide(unit(lhs), rhs)
   def infix_/(lhs: Double, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Double] = double_divide(unit(lhs),rhs)  
-  def infix_/(lhs: Double, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_divide(unit(lhs),rhs)
-  def infix_/(lhs: Double, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_divide(unit(lhs),rhs)
+  def infix_/(lhs: Double, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_divide(unit(lhs), rhs)
+  def infix_/(lhs: Double, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_divide(unit(lhs), rhs)
+  def infix_/(lhs: Double, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_divide(unit(lhs), rhs)
+  def infix_/(lhs: Long, rhs: Rep[Int])(implicit ctx: SourceContext): Rep[Long] = long_divide(unit(lhs), rhs)
+  def infix_/(lhs: Long, rhs: Rep[Float])(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_divide(unit(lhs), rhs)
+  def infix_/(lhs: Long, rhs: Rep[Double])(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_divide(unit(lhs), rhs)
+  def infix_/(lhs: Long, rhs: Rep[Long])(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_divide(unit(lhs), rhs)  
   def infix_/(lhs: Rep[Int], rhs: Int)(implicit ctx: SourceContext): Rep[Int] = int_divide(lhs, unit(rhs))  
   def infix_/(lhs: Rep[Int], rhs: Double)(implicit ctx: SourceContext): Rep[Double] = double_divide(lhs, unit(rhs))
   def infix_/(lhs: Rep[Int], rhs: Float)(implicit ctx: SourceContext): Rep[Float] = float_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Int], rhs: Long)(implicit ctx: SourceContext): Rep[Long] = long_divide(lhs, unit(rhs))
   def infix_/(lhs: Rep[Float], rhs: Int)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_divide(lhs, unit(rhs))
-  def infix_/(lhs: Rep[Float], rhs: Float)(implicit o: Overloaded2, ctx: SourceContext): Rep[Float] = float_divide(lhs, unit(rhs))
-  def infix_/(lhs: Rep[Float], rhs: Double)(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_divide(lhs, unit(rhs))
-  def infix_/(lhs: Rep[Double], rhs: Int)(implicit o: Overloaded4, ctx: SourceContext): Rep[Double] = double_divide(lhs, unit(rhs))
-  def infix_/(lhs: Rep[Double], rhs: Float)(implicit o: Overloaded5, ctx: SourceContext): Rep[Double] = double_divide(lhs, unit(rhs))
-  def infix_/(lhs: Rep[Double], rhs: Double)(implicit o: Overloaded6, ctx: SourceContext): Rep[Double] = double_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Float], rhs: Float)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Float], rhs: Double)(implicit o: Overloaded1, ctx: SourceContext): Rep[Double] = double_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Float], rhs: Long)(implicit o: Overloaded1, ctx: SourceContext): Rep[Float] = float_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Double], rhs: Int)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Double], rhs: Float)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Double], rhs: Double)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Double], rhs: Long)(implicit o: Overloaded2, ctx: SourceContext): Rep[Double] = double_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Long], rhs: Int)(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Long], rhs: Float)(implicit o: Overloaded3, ctx: SourceContext): Rep[Float] = float_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Long], rhs: Double)(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_divide(lhs, unit(rhs))
+  def infix_/(lhs: Rep[Long], rhs: Long)(implicit o: Overloaded3, ctx: SourceContext): Rep[Long] = long_divide(lhs, unit(rhs))
   def infix_/(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, ctx: SourceContext): Rep[Int] = int_divide(lhs, rhs)
   def infix_/(lhs: Rep[Int], rhs: Rep[Float])(implicit o: Overloaded2, ctx: SourceContext): Rep[Float] = float_divide(repIntToRepFloat(lhs), rhs)
   def infix_/(lhs: Rep[Int], rhs: Rep[Double])(implicit o: Overloaded3, ctx: SourceContext): Rep[Double] = double_divide(repIntToRepDouble(lhs), rhs)
-  def infix_/(lhs: Rep[Float], rhs: Rep[Int])(implicit o: Overloaded4, ctx: SourceContext): Rep[Float] = float_divide(lhs,repIntToRepFloat(rhs))  
-  def infix_/(lhs: Rep[Float], rhs: Rep[Float])(implicit o: Overloaded5, ctx: SourceContext): Rep[Float] = float_divide(lhs, rhs)
-  def infix_/(lhs: Rep[Float], rhs: Rep[Double])(implicit o: Overloaded6, ctx: SourceContext): Rep[Double] = double_divide(repFloatToRepDouble(lhs), rhs)
-  def infix_/(lhs: Rep[Double], rhs: Rep[Int])(implicit o: Overloaded7, ctx: SourceContext): Rep[Double] = double_divide(lhs,repIntToRepDouble(rhs))  
-  def infix_/(lhs: Rep[Double], rhs: Rep[Float])(implicit o: Overloaded8, ctx: SourceContext): Rep[Double] = double_divide(lhs,repFloatToRepDouble(rhs))
-  def infix_/(lhs: Rep[Double], rhs: Rep[Double])(implicit o: Overloaded9, ctx: SourceContext): Rep[Double] = double_divide(lhs,rhs)      
+  def infix_/(lhs: Rep[Int], rhs: Rep[Long])(implicit o: Overloaded4, ctx: SourceContext): Rep[Long] = long_divide(repIntToRepLong(lhs), rhs)
+  def infix_/(lhs: Rep[Float], rhs: Rep[Int])(implicit o: Overloaded5, ctx: SourceContext): Rep[Float] = float_divide(lhs,repIntToRepFloat(rhs))  
+  def infix_/(lhs: Rep[Float], rhs: Rep[Float])(implicit o: Overloaded6, ctx: SourceContext): Rep[Float] = float_divide(lhs, rhs)
+  def infix_/(lhs: Rep[Float], rhs: Rep[Double])(implicit o: Overloaded7, ctx: SourceContext): Rep[Double] = double_divide(repFloatToRepDouble(lhs), rhs)
+  def infix_/(lhs: Rep[Float], rhs: Rep[Long])(implicit o: Overloaded8, ctx: SourceContext): Rep[Float] = float_divide(lhs, repLongToRepFloat(rhs))
+  def infix_/(lhs: Rep[Double], rhs: Rep[Int])(implicit o: Overloaded9, ctx: SourceContext): Rep[Double] = double_divide(lhs, repIntToRepDouble(rhs))  
+  def infix_/(lhs: Rep[Double], rhs: Rep[Float])(implicit o: Overloaded10, ctx: SourceContext): Rep[Double] = double_divide(lhs, repFloatToRepDouble(rhs))
+  def infix_/(lhs: Rep[Double], rhs: Rep[Double])(implicit o: Overloaded11, ctx: SourceContext): Rep[Double] = double_divide(lhs,rhs)    
+  def infix_/(lhs: Rep[Double], rhs: Rep[Long])(implicit o: Overloaded12, ctx: SourceContext): Rep[Double] = double_divide(lhs, repLongToRepDouble(rhs))
+  def infix_/(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded13, ctx: SourceContext): Rep[Long] = long_divide(lhs, repIntToRepLong(rhs))
+  def infix_/(lhs: Rep[Long], rhs: Rep[Float])(implicit o: Overloaded14, ctx: SourceContext): Rep[Float] = float_divide(repLongToRepFloat(lhs), rhs)
+  def infix_/(lhs: Rep[Long], rhs: Rep[Double])(implicit o: Overloaded15, ctx: SourceContext): Rep[Double] = double_divide(repLongToRepDouble(lhs), rhs)
+  def infix_/(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded16, ctx: SourceContext): Rep[Long] = long_divide(lhs, rhs)
+
 
   /**
    *  Double
@@ -270,20 +359,38 @@ trait PrimitiveOps extends Variables with OverloadHack {
    */
   object Long {
     def parseLong(s: Rep[String])(implicit pos: SourceContext) = obj_long_parse_long(s)
+    def MaxValue(implicit pos: SourceContext) = obj_long_max_value
+    def MinValue(implicit pos: SourceContext) = obj_long_min_value
   }
 
+  def infix_%(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_mod(lhs, rhs)
   def infix_&(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_binaryand(lhs, rhs)
   def infix_|(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_binaryor(lhs, rhs)
+  def infix_^(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_binaryxor(lhs, rhs)
   def infix_<<(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext) = long_shiftleft(lhs, rhs)
+  def infix_>>(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext) = long_shiftright_signed(lhs, rhs)
   def infix_>>>(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext) = long_shiftright_unsigned(lhs, rhs)
-  def infix_toInt(lhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_toint(lhs)
+  def infix_toInt(lhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_to_int(lhs)
+  def infix_toDouble(lhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_to_double(lhs)
+  def infix_toFloat(lhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_to_float(lhs)
+  def long_plus(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
+  def long_minus(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
+  def long_times(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
+  def long_divide(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
     
   def obj_long_parse_long(s: Rep[String])(implicit pos: SourceContext): Rep[Long]
+  def obj_long_max_value(implicit pos: SourceContext): Rep[Long]
+  def obj_long_min_value(implicit pos: SourceContext): Rep[Long]
+  def long_mod(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
   def long_binaryand(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
   def long_binaryor(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
+  def long_binaryxor(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
   def long_shiftleft(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Long]
+  def long_shiftright_signed(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Long]
   def long_shiftright_unsigned(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Long]
-  def long_toint(lhs: Rep[Long])(implicit pos: SourceContext): Rep[Int]
+  def long_to_int(lhs: Rep[Long])(implicit pos: SourceContext): Rep[Int]
+  def long_to_float(lhs: Rep[Long])(implicit pos: SourceContext): Rep[Float]
+  def long_to_double(lhs: Rep[Long])(implicit pos: SourceContext): Rep[Double]
 }
 
 trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
@@ -405,18 +512,40 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
    * Long
    */
   case class ObjLongParseLong(s: Exp[String]) extends Def[Long]
+  case class ObjLongMaxValue() extends Def[Long]
+  case class ObjLongMinValue() extends Def[Long]
   case class LongBinaryOr(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
   case class LongBinaryAnd(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
+  case class LongBinaryXor(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
   case class LongShiftLeft(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
+  case class LongShiftRightSigned(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
   case class LongShiftRightUnsigned(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
   case class LongToInt(lhs: Exp[Long]) extends Def[Int]
+  case class LongToFloat(lhs: Exp[Long]) extends Def[Float]
+  case class LongToDouble(lhs: Exp[Long]) extends Def[Double]
+  case class LongPlus(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
+  case class LongMinus(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
+  case class LongTimes(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
+  case class LongDivide(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
+  case class LongMod(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
 
   def obj_long_parse_long(s: Exp[String])(implicit pos: SourceContext) = ObjLongParseLong(s)
+  def obj_long_max_value(implicit pos: SourceContext) = ObjLongMaxValue()
+  def obj_long_min_value(implicit pos: SourceContext) = ObjLongMinValue()
+  def long_mod(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext) = LongMod(lhs,rhs)
   def long_binaryor(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBinaryOr(lhs,rhs)
   def long_binaryand(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBinaryAnd(lhs,rhs)  
+  def long_binaryxor(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext) = LongBinaryXor(lhs,rhs)
   def long_shiftleft(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = LongShiftLeft(lhs,rhs)
+  def long_shiftright_signed(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext) = LongShiftRightSigned(lhs,rhs)
   def long_shiftright_unsigned(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = LongShiftRightUnsigned(lhs,rhs)
-  def long_toint(lhs: Exp[Long])(implicit pos: SourceContext) = LongToInt(lhs)
+  def long_to_int(lhs: Exp[Long])(implicit pos: SourceContext) = LongToInt(lhs)
+  def long_to_float(lhs: Exp[Long])(implicit pos: SourceContext) = LongToFloat(lhs)
+  def long_to_double(lhs: Exp[Long])(implicit pos: SourceContext) = LongToDouble(lhs)
+  def long_plus(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) : Exp[Long] = LongPlus(lhs, rhs)
+  def long_minus(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) : Exp[Long] = LongMinus(lhs, rhs)
+  def long_times(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) : Exp[Long] = LongTimes(lhs, rhs)
+  def long_divide(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) : Exp[Long] = LongDivide(lhs, rhs)
     
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
@@ -461,11 +590,22 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case IntShiftRightLogical(x,y) => int_rightshiftlogical(f(x),f(y))
       case IntShiftRightArith(x,y) => int_rightshiftarith(f(x),f(y))
       case ObjLongParseLong(x) => obj_long_parse_long(f(x))
+      case ObjLongMaxValue() => obj_long_max_value
+      case ObjLongMinValue() => obj_long_min_value
       case LongShiftLeft(x,y) => long_shiftleft(f(x),f(y))
       case LongBinaryOr(x,y) => long_binaryor(f(x),f(y))
       case LongBinaryAnd(x,y) => long_binaryand(f(x),f(y))
-      case LongToInt(x) => long_toint(f(x))
+      case LongBinaryXor(x,y) => long_binaryxor(f(x),f(y))
+      case LongToInt(x) => long_to_int(f(x))
+      case LongMod(x,y) => long_mod(f(x),f(y))
+      case LongShiftRightSigned(x,y) => long_shiftright_signed(f(x),f(y))
       case LongShiftRightUnsigned(x,y) => long_shiftright_unsigned(f(x),f(y))
+      case LongToFloat(x) => long_to_float(f(x))
+      case LongToDouble(x) => long_to_double(f(x))
+      case LongPlus(x,y) => long_plus(f(x),f(y))
+      case LongMinus(x,y) => long_minus(f(x),f(y))
+      case LongTimes(x,y) => long_times(f(x),f(y))
+      case LongDivide(x,y) => long_divide(f(x),f(y))
 
       case Reflect(ObjDoubleParseDouble(x), u, es) => reflectMirrored(Reflect(ObjDoubleParseDouble(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjDoublePositiveInfinity(), u, es) => reflectMirrored(Reflect(ObjDoublePositiveInfinity(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
@@ -505,11 +645,23 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case Reflect(IntShiftLeft(x,y), u, es) => reflectMirrored(Reflect(IntShiftLeft(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntShiftRightLogical(x,y), u, es) => reflectMirrored(Reflect(IntShiftRightLogical(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntShiftRightArith(x,y), u, es) => reflectMirrored(Reflect(IntShiftRightArith(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
+      case Reflect(ObjLongParseLong(x), u, es) => reflectMirrored(Reflect(ObjLongParseLong(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(ObjLongMinValue(), u, es) => reflectMirrored(Reflect(ObjLongMinValue(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(ObjLongMaxValue(), u, es) => reflectMirrored(Reflect(ObjLongMaxValue(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(LongShiftLeft(x,y), u, es) => reflectMirrored(Reflect(LongShiftLeft(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(LongShiftRightSigned(x,y), u, es) => reflectMirrored(Reflect(LongShiftRightSigned(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(LongShiftRightUnsigned(x,y), u, es) => reflectMirrored(Reflect(LongShiftRightUnsigned(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(LongBinaryOr(x,y), u, es) => reflectMirrored(Reflect(LongBinaryOr(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(LongBinaryAnd(x,y), u, es) => reflectMirrored(Reflect(LongBinaryAnd(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
+      case Reflect(LongBinaryXor(x,y), u, es) => reflectMirrored(Reflect(LongBinaryXor(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(LongToInt(x), u, es) => reflectMirrored(Reflect(LongToInt(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(LongToFloat(x), u, es) => reflectMirrored(Reflect(LongToFloat(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(LongToDouble(x), u, es) => reflectMirrored(Reflect(LongToDouble(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(LongPlus(x,y), u, es) => reflectMirrored(Reflect(LongPlus(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(LongMinus(x,y), u, es) => reflectMirrored(Reflect(LongMinus(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(LongTimes(x,y), u, es) => reflectMirrored(Reflect(LongTimes(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(LongDivide(x,y), u, es) => reflectMirrored(Reflect(LongDivide(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(LongMod(x,y), u, es) => reflectMirrored(Reflect(LongMod(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case _ => super.mirror(e,f)
     }
   }).asInstanceOf[Exp[A]]
@@ -556,6 +708,28 @@ trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
     case Const(x) => Const(x.toInt)
     case Def(IntToDouble(x)) => x
     case _ => super.double_to_int(lhs)
+  }
+
+  override def long_plus(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) : Exp[Long] = (lhs, rhs) match {
+    case (Const(0l), r) => r
+    case (l, Const(0l)) => l
+    case (Const(x), Const(y)) => Const(x+y)
+    case _ => super.long_plus(lhs,rhs)
+  }
+
+  override def long_minus(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) : Exp[Long] = (lhs, rhs) match {
+    case (l, Const(0l)) => l
+    case (Const(x), Const(y)) => Const(x-y)
+    case _ => super.long_minus(lhs,rhs)
+  }
+
+  override def long_times(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) : Exp[Long] = (lhs, rhs) match {
+    case (l@Const(0l), r) => l
+    case (l, r@Const(0l)) => r
+    case (Const(1l), r) => r
+    case (l, Const(1l)) => l
+    case (Const(x), Const(y)) => Const(x*y)
+    case _ => super.long_times(lhs,rhs)
   }
 }
 
@@ -605,11 +779,22 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntToFloat(lhs) => emitValDef(sym, quote(lhs) + ".toFloat")
     case IntToDouble(lhs) => emitValDef(sym, quote(lhs) + ".toDouble")
     case ObjLongParseLong(s) => emitValDef(sym, "java.lang.Long.parseLong(" + quote(s) + ")")
+    case ObjLongMaxValue() => emitValDef(sym, "scala.Long.MaxValue")
+    case ObjLongMinValue() => emitValDef(sym, "scala.Long.MinValue")
     case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
     case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))    
+    case LongBinaryXor(lhs,rhs) => emitValDef(sym, quote(lhs) + " ^ " + quote(rhs))    
     case LongShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
+    case LongShiftRightSigned(lhs,rhs) => emitValDef(sym, quote(lhs) + " >> " + quote(rhs))    
     case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, quote(lhs) + " >>> " + quote(rhs))    
     case LongToInt(lhs) => emitValDef(sym, quote(lhs) + ".toInt")
+    case LongToFloat(lhs) => emitValDef(sym, quote(lhs) + ".toFloat")
+    case LongToDouble(lhs) => emitValDef(sym, quote(lhs) + ".toDouble")
+    case LongPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
+    case LongMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
+    case LongTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
+    case LongDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
+    case LongMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -637,9 +822,9 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       case FloatMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
       case FloatTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
       case FloatDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))      
+      case ObjIntMaxValue() => emitValDef(sym, "INT32_MAX")
+      case ObjIntMinValue() => emitValDef(sym, "INT32_MAX")    
       case ObjIntegerParseInt(s) => emitValDef(sym, "atoi(" + quote(s) + ".c_str())")
-      case ObjIntMaxValue() => emitValDef(sym, "INT_MAX")
-      case ObjIntMinValue() => emitValDef(sym, "INT_MIN")    
       case IntPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
       case IntMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
       case IntTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
@@ -658,12 +843,23 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       case IntToLong(lhs) => emitValDef(sym, "(int64_t)"+quote(lhs))
       case IntToFloat(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       case IntToDouble(lhs) => emitValDef(sym, "(double)"+quote(lhs))
+      case ObjLongMaxValue() => emitValDef(sym, "INT64_MAX")
+      case ObjLongMinValue() => emitValDef(sym, "INT64_MIN")
       case ObjLongParseLong(s) => emitValDef(sym, "strtod(" + quote(s) + ".c_str(),NULL)")
       case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
-      case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))    
+      case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs)) 
+      case LongBinaryXor(lhs,rhs) => emitValDef(sym, quote(lhs) + " ^ " + quote(rhs))       
       case LongShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
+      case LongShiftRightSigned(lhs,rhs) => emitValDef(sym, quote(lhs) + " >> " + quote(rhs))    
       case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, "(uint64_t)" + quote(lhs) + " >> " + quote(rhs))    
       case LongToInt(lhs) => emitValDef(sym, "(int32_t)"+quote(lhs))
+      case LongToFloat(lhs) => emitValDef(sym, "(float)"+quote(lhs))
+      case LongToDouble(lhs) => emitValDef(sym, "(double)"+quote(lhs))
+      case LongPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
+      case LongMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
+      case LongTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
+      case LongDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
+      case LongMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
       case _ => super.emitNode(sym, rhs)
     }
   }
@@ -696,4 +892,3 @@ trait CGenPrimitiveOps extends CGenBase with CLikeGenPrimitiveOps {
     }
   }
 }
-
