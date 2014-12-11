@@ -26,6 +26,8 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   override def remap[A](m: Manifest[A]) : String = {
     m.toString match {
       case "java.lang.String" => "string"
+      case _ if (m.erasure == classOf[scala.collection.mutable.HashMap[Any,Any]]) && isPrimitiveType(m.typeArguments(0)) && isPrimitiveType(m.typeArguments(1)) =>
+        "std::map<" + remap(m.typeArguments(0)) + "," + remap(m.typeArguments(1)) + ">"
       case _ => super.remap(m)
     }    
   }

@@ -344,8 +344,8 @@ trait OldLoopFusionCore extends internal.FatScheduling with CodeMotion with Simp
 
         def canFuseDirect(a: Stm, b: Stm): Boolean = (a.rhs,b.rhs) match {
           case (SimpleFatLoop(s1,_,_), SimpleFatLoop(s2,_,_)) if s1 == s2 => true  // same size (horizontal or pipeline)
-          case (SimpleFatLoop(Def(SimpleDomain(a1)),_,_), SimpleFatLoop(_,_,_)) if b.lhs contains a1 => true // pipeline
-          case (SimpleFatLoop(_,_,_), SimpleFatLoop(Def(SimpleDomain(b1)),_,_)) if a.lhs contains b1 => true
+          case (SimpleFatLoop(Def(SimpleDomain(a1)),_,arhs), SimpleFatLoop(_,_,brhs)) if (b.lhs contains a1) && arhs.forall(canApplyAddCondition) => true // pipeline
+          case (SimpleFatLoop(_,_,arhs), SimpleFatLoop(Def(SimpleDomain(b1)),_,brhs)) if (a.lhs contains b1) && brhs.forall(canApplyAddCondition) => true
           case _ => false
         }
 

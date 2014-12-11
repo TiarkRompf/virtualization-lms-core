@@ -30,6 +30,9 @@ trait GenericCodegen extends BlockTraversal {
   def getDataStructureHeaders(): String = ""
   def emitTransferFunctions(): Unit = {}
 
+  def resourceInfoType = ""
+  def resourceInfoSym = ""
+
   def dataPath = {
     "data" + java.io.File.separator
   }

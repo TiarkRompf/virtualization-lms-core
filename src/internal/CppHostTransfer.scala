@@ -27,7 +27,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
       val signature = "jobject makeManifest_%s(JNIEnv *env)".format(mangledName(remapHost(tp)))
       out.append(signature + "{\n")
       out.append("jclass cls = env->FindClass(\"Lscala/reflect/ManifestFactory;\");\n")
-      out.append("jmethodID mid = env->GetStaticMethodID(cls,\"%s\",\"()Lscala/reflect/AnyValManifest;\");\n".format(tp.toString))
+      out.append("jmethodID mid = env->GetStaticMethodID(cls,\"%s\",\"()Lscala/reflect/AnyValManifest;\");\n".format(remapToJNI(tp)))
       out.append("jobject mobj = env->CallStaticObjectMethod(cls,mid);\n")
       out.append("return mobj;\n")
       out.append("}\n")
