@@ -24,7 +24,7 @@ trait LoopFusionExtractors extends internal.Expressions with LoopsExp {
 
   def ignoreIndex(e: Def[Any], index: Sym[Int]): Boolean = false
 
-  def shouldApplyFusion = true
+  def shouldDoFusion = true
 }
 
 trait LoopFusionCore extends LoopFusionExtractors with BaseFatExp with LoopsFatExp with IfThenElseFatExp with BooleanOpsExp {

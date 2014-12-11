@@ -230,7 +230,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
   var hasRunOnce = false
   def isDone = hasRunOnce
   def runOnce[A:Manifest](s: Block[A]): Block[A] = {
-    val newBlock = transformBlock(s)
+    val newBlock = if (shouldDoFusion) transformBlock(s) else s
     hasRunOnce = true
     newBlock
   }
