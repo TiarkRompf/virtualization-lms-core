@@ -354,7 +354,7 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
       val z = getBlockResult(y)
       if (remap(z.tp) != "void")
         stream.println("return " + quote(z) + ";")
-      stream.println("}")
+      stream.println("};")
     case Apply(fun, arg) =>
       emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
     case _ => super.emitNode(sym, rhs)
