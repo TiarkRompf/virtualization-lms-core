@@ -8,7 +8,7 @@ int32_t main(int32_t);
 #include <string.h>
 #include <stdbool.h>
 int32_t main(int32_t  x0) {
-auto x1 = [&](int32_t x2,int32_t x3) {
+auto x1 = [&](int32_t& x2,int32_t& x3) {
 int32_t x4 = x2;
 bool x6 = x4 == 0;
 int32_t x12;

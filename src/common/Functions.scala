@@ -349,7 +349,7 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
   // Case for functions with a single argument (therefore, not tupled)
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
-      stream.println("auto "+quote(sym)+" = [&]("+remap(x.tp)+" "+quote(x)+") {")
+      stream.println("auto "+quote(sym)+" = [&]("+remap(x.tp)+"& "+quote(x)+") {")
       emitBlock(y)
       val z = getBlockResult(y)
       if (remap(z.tp) != "void")
@@ -374,7 +374,7 @@ trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAcces
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>
-      stream.println("auto "+quote(sym)+" = [&]("+xs.map(s=>remap(s.tp)+" "+quote(s)).mkString(",")+") {")
+      stream.println("auto "+quote(sym)+" = [&]("+xs.map(s=>remap(s.tp)+"& "+quote(s)).mkString(",")+") {")
       emitBlock(y)
       val z = getBlockResult(y)
       if (remap(z.tp) != "void")
