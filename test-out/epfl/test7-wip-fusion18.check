@@ -92,9 +92,10 @@ val x43 = println(x42)
 (HFT) Recording Sym(4), no fusion
 (HFT) The candidate Sym(34) cannot be fused with the existing FusedLoopSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(4))) because the candidate set depends on Sym(4)
 (HFT) Recording Sym(34), no fusion
-(HFT) - new loop symbol: Sym(34) -> Sym(50)
+(HFT) - remapping index to unique: Sym(1) -> Sym(46)
+(HFT) - new loop symbol: Sym(34) -> Sym(53)
 (HFT) Recording Sym(39), no fusion
-(HFT) - new loop symbol: Sym(39) -> Sym(55)
+(HFT) - new loop symbol: Sym(39) -> Sym(58)
 
 (HFT) all horizontally fused: 
 
@@ -106,22 +107,22 @@ x4(x1) = x2
 }
 val x5 = x4.apply(0)
 val x45 = println(x5)
-val x50 = new Array[Int](x0)
-for (x1 <- 0 until x0) {
-val x29 = x1 + 45
-val x28 = x4.apply(x1)
-val x46 = println(x28)
-x50(x1) = x29
+val x53 = new Array[Int](x0)
+for (x46 <- 0 until x0) {
+val x47 = x46 + 45
+val x48 = x4.apply(x46)
+val x49 = println(x48)
+x53(x46) = x47
 }
-val x55 = new Array[Int](10)
+val x58 = new Array[Int](10)
 for (x16 <- 0 until 10) {
-val x51 = println(x16)
-x55(x16) = x16
+val x54 = println(x16)
+x58(x16) = x16
 }
-val x56 = x50.apply(1)
-val x57 = println(x56)
-val x58 = x55.apply(1)
-val x59 = println(x58)
+val x59 = x53.apply(1)
+val x60 = println(x59)
+val x61 = x58.apply(1)
+val x62 = println(x61)
 
 -- fusion
 val x4 = new Array[Int](x0)
@@ -131,20 +132,20 @@ x4(x1) = x2
 }
 val x5 = x4.apply(0)
 val x45 = println(x5)
-val x50 = new Array[Int](x0)
-for (x1 <- 0 until x0) {
-val x29 = x1 + 45
-val x28 = x4.apply(x1)
-val x46 = println(x28)
-x50(x1) = x29
+val x53 = new Array[Int](x0)
+for (x46 <- 0 until x0) {
+val x47 = x46 + 45
+val x48 = x4.apply(x46)
+val x49 = println(x48)
+x53(x46) = x47
 }
-val x55 = new Array[Int](10)
+val x58 = new Array[Int](10)
 for (x16 <- 0 until 10) {
-val x51 = println(x16)
-x55(x16) = x16
+val x54 = println(x16)
+x58(x16) = x16
 }
-val x56 = x50.apply(1)
-val x57 = println(x56)
-val x58 = x55.apply(1)
-val x59 = println(x58)
+val x59 = x53.apply(1)
+val x60 = println(x59)
+val x61 = x58.apply(1)
+val x62 = println(x61)
 -- done

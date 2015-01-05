@@ -176,6 +176,8 @@ val x71 = println(x70)
 (HFT) - already using same index Sym(1)
 (HFT) The candidate Sym(69) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(63), Sym(26), Sym(48), Sym(4), Sym(10), Sym(58), Sym(53), Sym(20))) because the candidate set depends on Sym(53)
 (HFT) Recording Sym(69), no fusion
+(HFT) - remapping index to unique: Sym(1) -> Sym(78)
+(HFT) - new loop symbol: Sym(69) -> Sym(82)
 
 (HFT) all horizontally fused: List(Sym(4), Sym(48), Sym(53), Sym(58), Sym(63))
 
@@ -221,14 +223,14 @@ x63(x1) = x61
 }
 val x64 = x63.apply(0)
 val x77 = println(x64)
-val x69 = new Array[Int](100)
-for (x1 <- 0 until 100) {
-val x66 = x53.apply(x1)
-val x67 = x66 + x29
-x69(x1) = x67
+val x82 = new Array[Int](100)
+for (x78 <- 0 until 100) {
+val x79 = x53.apply(x78)
+val x80 = x79 + x29
+x82(x78) = x80
 }
-val x70 = x69.apply(0)
-val x78 = println(x70)
+val x83 = x82.apply(0)
+val x84 = println(x83)
 
 -- fusion
 (CTS) Fusing these loops into one fat TTP: 
@@ -265,12 +267,12 @@ val x59 = x58.apply(0)
 val x76 = println(x59)
 val x64 = x63.apply(0)
 val x77 = println(x64)
-val x69 = new Array[Int](100)
-for (x1 <- 0 until 100) {
-val x66 = x53.apply(x1)
-val x67 = x66 + x29
-x69(x1) = x67
+val x82 = new Array[Int](100)
+for (x78 <- 0 until 100) {
+val x79 = x53.apply(x78)
+val x80 = x79 + x29
+x82(x78) = x80
 }
-val x70 = x69.apply(0)
-val x78 = println(x70)
+val x83 = x82.apply(0)
+val x84 = println(x83)
 -- done

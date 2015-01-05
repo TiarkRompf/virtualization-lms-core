@@ -196,6 +196,9 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
     def getRealLoops = realLoopSets.unzip._1.filter(_.length > 1).map(_.reverse.distinct)
 
     override def toString() = "FusionScope(" + loopSets.mkString("\n") + ")"
+
+    /** See remapIndexIfFixedLength. */
+    var fixedLengthIndices: Option[HashMap[Sym[Int], Sym[Any]]] = None
   }
 
   /** Records all fusion scopes and loads correct scope for
@@ -219,7 +222,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
 
   // --- per scope datastructures ----
   var current = new FusionScope
-
+  
   // indented printing to show scopes
   var indent: Int = -2
   def printdbg(x: => Any) { if (verbosity >= 2) System.err.println(" " * indent + x) }
@@ -245,6 +248,47 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
     current = old
     res
   }
+
+  /** Some DSLs use while-loops, so two loops in the same scope with the same
+    * index variable cause an error. Vertical fusion pro-actively remaps
+    * indices to be the same for all loops with the same fixed length in a
+    * scope. The horizontal transformer re-uniquifies them if the loops haven't
+    * been fused after all. The HashMap is created lazily if really needed in
+    * the current scope and goes from loop index to one loop with that index,
+    * any other loops with that index need to be in the same fusion set. */
+  def remapIndexIfFixedLength(loopSym: Sym[Any], loop: AbstractLoop[_]): Option[Sym[Int]] = {
+    val oldIndex = loop.v
+    (hasFixedOutLength(loop), current.fixedLengthIndices) match {
+      case (false, _) => None
+      case (true, None) =>
+        current.fixedLengthIndices = Some(new HashMap[Sym[Int], FusedLoopSet])
+        current.fixedLengthIndices.get += (oldIndex -> loopSym)
+        None
+      case (true, Some(fixedLengthIndicesVal)) => fixedLengthIndicesVal.get(oldIndex) match {
+          case None => 
+            fixedLengthIndicesVal += (oldIndex -> loopSym)
+            None
+          case Some(otherLoop) if (current.getLoopSet(loopSym) == current.getLoopSet(otherLoop)) =>
+              None
+          case _ =>
+              val newIndex = fresh[Int]
+              subst += (oldIndex -> newIndex)
+              fixedLengthIndicesVal += (newIndex -> loopSym)
+              Some(newIndex)
+      }    
+    }
+  }
+
+  def hasFixedOutLength(loop: AbstractLoop[_]): Boolean = loop match {
+    case FixedDomain(Const(len)) => true
+    case FixedDomain(domainSym: Sym[Int @unchecked]) => subst.get(domainSym) match {
+      case Some(Const(_)) => true
+      case Some(sSym: Sym[Int @unchecked]) => !isWritableSym(sSym)
+      case _ => !isWritableSym(domainSym)
+    }
+    case _ => false
+  }
+
 
   /* The transformer: First find HFT set for the current type of CanBeFused (loop or if)
    * 1. If CanBeFused already registered in a HFT set, use that set.
@@ -293,7 +337,9 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
               // 2.b) start new HFT set
               case None =>
                 printdbg("(HFT) Recording " + sym + ", no fusion")
-                (current.recordNewLoop(loop.size, loop.v, setToFuse, setToFuseEffectful), None)
+                val checkIndex = remapIndexIfFixedLength(sym, loop)
+                checkIndex.foreach({ sym: Sym[Int] => printdbg("(HFT) - remapping index to unique: " + loop.v + " -> " + sym) })
+                (current.recordNewLoop(loop.size, checkIndex.getOrElse(loop.v), setToFuse, setToFuseEffectful), checkIndex)
             }
         }
         
@@ -391,10 +437,8 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
       subst.get(oldIndex) match {
         case Some(`newIndex`) => // already present in subst
         
-        // TODO once we implement multiple potential producers mapped to same index
-        // we should return the existing index so it can be reset after we've
-        // transformed this loop
-        // TODO should unique-ify indices
+        // This should never happen, because it means that an outer loop has
+        // the same index
         case Some(existingNew) => sys.error("(HFT) Error: existing remap to " + existingNew + 
             " encountered when fusing " + sym + " by remapping oldIndex " + oldIndex + 
             " to newIndex " + newIndex)
