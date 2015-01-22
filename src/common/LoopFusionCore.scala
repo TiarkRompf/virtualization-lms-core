@@ -25,6 +25,13 @@ trait LoopFusionExtractors extends internal.Expressions with LoopsExp {
   def ignoreIndex(e: Def[Any], index: Sym[Int]): Boolean = false
 
   def shouldDoFusion = true
+
+  /** On by default so that neighboring loops never have the same index after
+    * fusion. If your DSL works with loops with the same index (e.g. because
+    * the index of a for-loop isn't in the outer scope of the loop, or because
+    * loops are wrapped in scope braces {}), override this with false to avoid
+    * some unneeded mirroring. */
+  def shouldReuniquifyIndices = true
 }
 
 trait LoopFusionCore extends LoopFusionExtractors with BaseFatExp with LoopsFatExp with IfThenElseFatExp with BooleanOpsExp {

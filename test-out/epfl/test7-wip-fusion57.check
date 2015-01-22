@@ -126,13 +126,11 @@ val x61 = println(x60)
 (HFT) - already using same index Sym(1)
 (HFT) The candidate Sym(49) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4), Sym(12))) because the candidate set depends on Sym(42)
 (HFT) Recording Sym(49), no fusion
-(HFT) - remapping index to unique: Sym(1) -> Sym(68)
-(HFT) - new loop symbol: Sym(49) -> Sym(75)
-(HFT) The candidate Sym(55) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(68), loopSyms = List(Sym(49))) because the candidate set depends on Sym(49)
+(HFT) - new loop symbol: Sym(49) -> Sym(72)
+(HFT) The candidate Sym(55) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(49))) because the candidate set depends on Sym(49)
 (HFT) The candidate Sym(55) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(42), Sym(4), Sym(12))) because the candidate set depends on Sym(4)
 (HFT) Recording Sym(55), no fusion
-(HFT) - remapping index to unique: Sym(1) -> Sym(76)
-(HFT) - new loop symbol: Sym(55) -> Sym(83)
+(HFT) - new loop symbol: Sym(55) -> Sym(77)
 
 (HFT) all horizontally fused: List(Sym(67), Sym(4))
 
@@ -149,26 +147,26 @@ for (x1 <- 0 until 100) {
 val x2 = x1 + 1
 x4(x1) = x2
 }
-val x75 = new Array[Int](100)
-for (x68 <- 0 until 100) {
-val x69 = x4.apply(x68)
-val x70 = x69 + 3
-val x71 = println(x68)
-x75(x68) = x70
+val x72 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x43 = x4.apply(x1)
+val x44 = x43 + 3
+val x68 = println(x1)
+x72(x1) = x44
 }
-val x83 = new Array[Int](100)
-for (x76 <- 0 until 100) {
-val x77 = x4.apply(x76)
-val x78 = x77 + 4
-val x79 = println(x76)
-x83(x76) = x78
+val x77 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x43 = x4.apply(x1)
+val x50 = x43 + 4
+val x73 = println(x1)
+x77(x1) = x50
 }
-val x84 = x67.apply(0)
-val x85 = println(x84)
-val x86 = x75.apply(0)
-val x87 = println(x86)
-val x88 = x83.apply(0)
-val x89 = println(x88)
+val x78 = x67.apply(0)
+val x79 = println(x78)
+val x80 = x72.apply(0)
+val x81 = println(x80)
+val x82 = x77.apply(0)
+val x83 = println(x82)
 
 -- fusion
 (CTS) Fusing these loops into one fat TTP: 
@@ -184,24 +182,24 @@ val x63 = println(x1)
 x67(x1) = x37
 x4(x1) = x2
 }
-val x75 = new Array[Int](100)
-for (x68 <- 0 until 100) {
-val x69 = x4.apply(x68)
-val x70 = x69 + 3
-val x71 = println(x68)
-x75(x68) = x70
+val x72 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x43 = x4.apply(x1)
+val x44 = x43 + 3
+val x68 = println(x1)
+x72(x1) = x44
 }
-val x83 = new Array[Int](100)
-for (x76 <- 0 until 100) {
-val x77 = x4.apply(x76)
-val x78 = x77 + 4
-val x79 = println(x76)
-x83(x76) = x78
+val x77 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x43 = x4.apply(x1)
+val x50 = x43 + 4
+val x73 = println(x1)
+x77(x1) = x50
 }
-val x84 = x67.apply(0)
-val x85 = println(x84)
-val x86 = x75.apply(0)
-val x87 = println(x86)
-val x88 = x83.apply(0)
-val x89 = println(x88)
+val x78 = x67.apply(0)
+val x79 = println(x78)
+val x80 = x72.apply(0)
+val x81 = println(x80)
+val x82 = x77.apply(0)
+val x83 = println(x82)
 -- done

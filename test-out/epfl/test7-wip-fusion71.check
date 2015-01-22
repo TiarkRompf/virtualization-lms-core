@@ -141,13 +141,13 @@ val x27 = x14
 val x32 = println(x27)
 
 -- fusion
-(CTS) Fusing these ifs into one fat TTP: 
-TTP(List(Sym(7)),List(IfThenElse(Sym(2),Block(Sym(4)),Block(Sym(6)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(4))),List(Block(Sym(6)))))
-TTP(List(Sym(26)),List(IfThenElse(Sym(2),Block(Sym(23)),Block(Sym(25)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(23))),List(Block(Sym(25)))))
-
 (CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(8)),List(SimpleLoop(Const(6),Sym(1),MultiArrayElem(Block(Sym(7))))),SimpleFatLoop(Const(6),Sym(1),List(MultiArrayElem(Block(Sym(7))))))
 TTP(List(Sym(27)),List(SimpleLoop(Const(6),Sym(1),MultiReduceElem(Block(Sym(26)),Block(Sym(16)),Const(0),Sym(14),Sym(15)))),SimpleFatLoop(Const(6),Sym(1),List(MultiReduceElem(Block(Sym(26)),Block(Sym(16)),Const(0),Sym(14),Sym(15)))))
+
+(CTS) Fusing these ifs into one fat TTP: 
+TTP(List(Sym(7)),List(IfThenElse(Sym(2),Block(Sym(4)),Block(Sym(6)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(4))),List(Block(Sym(6)))))
+TTP(List(Sym(26)),List(IfThenElse(Sym(2),Block(Sym(23)),Block(Sym(25)))),SimpleFatIfThenElse(Sym(2),List(Block(Sym(23))),List(Block(Sym(25)))))
 
 val x4: Array[Int] = Array.empty
 val x8_builder = new scala.collection.mutable.ArrayBuilder.ofInt

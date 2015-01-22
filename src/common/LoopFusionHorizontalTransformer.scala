@@ -255,8 +255,13 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
     * scope. The horizontal transformer re-uniquifies them if the loops haven't
     * been fused after all. The HashMap is created lazily if really needed in
     * the current scope and goes from loop index to one loop with that index,
-    * any other loops with that index need to be in the same fusion set. */
+    * any other loops with that index need to be in the same fusion set.
+    *
+    * If neighboring loops with the same index aren't a problem for your DSL,
+    * override LoopFusionExtractors.shouldReuniquifyIndices with false. */
   def remapIndexIfFixedLength(loopSym: Sym[Any], loop: AbstractLoop[_]): Option[Sym[Int]] = {
+    if (!shouldReuniquifyIndices)
+      return None
     val oldIndex = loop.v
     (hasFixedOutLength(loop), current.fixedLengthIndices) match {
       case (false, _) => None

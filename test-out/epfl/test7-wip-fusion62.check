@@ -193,16 +193,16 @@ val x64 = println(x63)
 
 -- fusion
 (CTS) Fusing these loops into one fat TTP: 
+TTP(List(Sym(59)),List(Reflect(SimpleLoop(Const(10),Sym(3),MultiArrayElem(Block(Sym(58)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(50)))),SimpleFatLoop(Const(10),Sym(3),List(MultiArrayElem(Block(Sym(58))))))
+TTP(List(Sym(11)),List(SimpleLoop(Const(10),Sym(3),MultiArrayElem(Block(Sym(10))))),SimpleFatLoop(Const(10),Sym(3),List(MultiArrayElem(Block(Sym(10))))))
+
+(CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(61)),List(Reflect(SimpleLoop(Const(5),Sym(2),MultiArrayElem(Block(Sym(60)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(50)))),SimpleFatLoop(Const(5),Sym(2),List(MultiArrayElem(Block(Sym(60))))))
 TTP(List(Sym(12)),List(SimpleLoop(Const(5),Sym(2),MultiArrayElem(Block(Sym(11))))),SimpleFatLoop(Const(5),Sym(2),List(MultiArrayElem(Block(Sym(11))))))
 
 (CTS) Fusing these ifs into one fat TTP: 
 TTP(List(Sym(57)),List(Reflect(IfThenElse(Sym(4),Block(Sym(56)),Block(Sym(33))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(50)))),SimpleFatIfThenElse(Sym(4),List(Block(Sym(56))),List(Block(Sym(33)))))
 TTP(List(Sym(10)),List(IfThenElse(Sym(4),Block(Sym(7)),Block(Sym(9)))),SimpleFatIfThenElse(Sym(4),List(Block(Sym(7))),List(Block(Sym(9)))))
-
-(CTS) Fusing these loops into one fat TTP: 
-TTP(List(Sym(59)),List(Reflect(SimpleLoop(Const(10),Sym(3),MultiArrayElem(Block(Sym(58)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(50)))),SimpleFatLoop(Const(10),Sym(3),List(MultiArrayElem(Block(Sym(58))))))
-TTP(List(Sym(11)),List(SimpleLoop(Const(10),Sym(3),MultiArrayElem(Block(Sym(10))))),SimpleFatLoop(Const(10),Sym(3),List(MultiArrayElem(Block(Sym(10))))))
 
 val x50 = println(1)
 val x61_builder = new scala.collection.mutable.ArrayBuilder.ofInt

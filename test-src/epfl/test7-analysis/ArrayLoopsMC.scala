@@ -439,6 +439,7 @@ trait ArrayLoopsMCFusionExtractors extends ArrayLoopsMCFatExp with LoopFusionExt
     case _ => super.ignoreIndex(e, index)
   }
 
+  override def shouldReuniquifyIndices = false
 
   // override def unapplyForeach(e: Def[Any]) = e match {
   //   case ForeachElem(Block(a: Exp[Unit])) => Some(a)

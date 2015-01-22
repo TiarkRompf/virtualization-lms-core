@@ -534,15 +534,29 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
   def findProducers[A:Manifest](cSym: Sym[A], cLoop: AbstractLoop[_], cShape: Exp[Int],
       cIndex: Sym[Int], cBody: Def[A], cEffects: LoopEffects): (FusionInfo, Boolean) = {
 
-    /** Get all the statements of the consumer loop body, which means all
-     * statements that depend on the consumer loop index variable (otherwise
-     * they woudn't be scheduled into the loop body). */
-    val cIndexStms = getFatDependentStuff(initialDefs)(List(cIndex))
+    /* Get all the statements of the consumer loop body, which necessarily
+     * depend on the consumer loop index variable (otherwise they woudn't be
+     * scheduled into the loop body). */
+    val cIndexedSyms = getFatDependentStuff(initialDefs)(List(cIndex)).flatMap(_.lhs)
+
+    /* Another necessary condition for being in the loop body is that the loop
+     * result depends on the statement. Expressions in some nodes might depend
+     * on the loop index without being part of the loop body (e.g. old loops
+     * with same index). */
+    val cIndexedSymsPruned: List[Sym[Any]] = Right(cLoop) match {
+      case MatchMcForReduce(cInner@Sym(_), _, _) => 
+        val cIndexStmsMap: HashSet[Sym[Any]] = HashSet(cIndexedSyms: _*)
+        GraphUtil.stronglyConnectedComponents(List(cInner), { sym: Sym[Any] => sym match {
+          case Def(d) => syms(d).filter(cIndexStmsMap.contains(_))
+          case _ => Nil
+        }}).reverse.flatten
+      case _ => cIndexedSyms
+    }
 
     var listOfNotFused: List[(Sym[Any], String)] = Nil
     
-    val producers = cIndexStms.collect({
-      case TP(_, SimpleIndex(pSym@Sym(_), `cIndex`)) => pSym 
+    val producers = cIndexedSymsPruned.collect({
+      case Def(SimpleIndex(pSym@Sym(_), `cIndex`)) => pSym 
     }).filter({ pSym => 
       if (!seenLoops.contains(pSym)) {
         listOfNotFused ::= (pSym, "not in same exact scope"); false
@@ -693,7 +707,8 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
                 Right(InnerMc_Red(cIndex, pLoop.v, innerFusionInfo, cInner, pInner, pLoop, newPSym, cSym))
           }
 
-        case _ => Left("don't know how to fuse MultiCollect producer with consumer of type " + cDef)
+        case _ => Left("don't know how to fuse MultiCollect producer with consumer of " 
+          + cDef.fold("Left type " + _.toString, "Right type " + _.toString))
       }
     }
 

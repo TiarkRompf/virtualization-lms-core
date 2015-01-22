@@ -72,8 +72,7 @@ val x35 = println(x34)
 (HFT) - new loop symbol: Sym(26) -> Sym(42)
 (HFT) The candidate Sym(33) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(2), loopSyms = List(Sym(26))) because the candidate set depends on Sym(26)
 (HFT) Recording Sym(33), no fusion
-(HFT) - remapping index to unique: Sym(2) -> Sym(43)
-(HFT) - new loop symbol: Sym(33) -> Sym(50)
+(HFT) - new loop symbol: Sym(33) -> Sym(49)
 
 (HFT) all horizontally fused: 
 
@@ -85,15 +84,15 @@ val x4 = x2 + 2
 val x38 = println(x2)
 x42(x2) = x4
 }
-val x50 = new Array[Int](100)
-for (x43 <- 0 until 100) {
-val x44 = x42.apply(x43)
-val x45 = x44 + 4
-val x46 = x37 += x44
-x50(x43) = x45
+val x49 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x43 = x42.apply(x2)
+val x44 = x43 + 4
+val x45 = x37 += x43
+x49(x2) = x44
 }
-val x51 = x50.apply(0)
-val x52 = println(x51)
+val x50 = x49.apply(0)
+val x51 = println(x50)
 
 -- fusion
 var x37: Int = 0
@@ -103,13 +102,13 @@ val x4 = x2 + 2
 val x38 = println(x2)
 x42(x2) = x4
 }
-val x50 = new Array[Int](100)
-for (x43 <- 0 until 100) {
-val x44 = x42.apply(x43)
-val x45 = x44 + 4
-val x46 = x37 += x44
-x50(x43) = x45
+val x49 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x43 = x42.apply(x2)
+val x44 = x43 + 4
+val x45 = x37 += x43
+x49(x2) = x44
 }
-val x51 = x50.apply(0)
-val x52 = println(x51)
+val x50 = x49.apply(0)
+val x51 = println(x50)
 -- done

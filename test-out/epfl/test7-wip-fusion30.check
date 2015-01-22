@@ -95,15 +95,11 @@ val x39 = println(x38)
 (HFT) Recording Sym(4), no fusion
 (HFT) The candidate Sym(29) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(37), Sym(4), Sym(22))) because the existing set depends on Sym(29)
 (HFT) Recording Sym(29), no fusion
-(HFT) - remapping index to unique: Sym(1) -> Sym(42)
-(HFT) - new loop symbol: Sym(29) -> Sym(45)
 (HFT) Fusing Sym(37) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(37), Sym(4), Sym(22)))
 (HFT) - already using same index Sym(1)
   (HFT) Recording if-sym Sym(36), no fusion
-  (HFT) - new if symbol: Sym(36) -> Sym(50)
-(HFT) - new loop symbol: Sym(37) -> Sym(51)
 
-(HFT) all horizontally fused: List(Sym(4), Sym(51))
+(HFT) all horizontally fused: List(Sym(4), Sym(37))
 
 -- after horizontal transformation
 val x4 = new Array[Int](100)
@@ -113,52 +109,52 @@ x4(x1) = x2
 }
 val x5 = x4.apply(0)
 val x41 = println(x5)
-val x45 = new Array[Int](100)
-for (x42 <- 0 until 100) {
-val x43 = x42 + 2
-x45(x42) = x43
+val x29 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x27 = x1 + 2
+x29(x1) = x27
 }
-val x46 = x45.apply(0)
-val x47 = println(x46)
-val x48 = x46 + 1
-val x51_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+val x30 = x29.apply(0)
+val x42 = println(x30)
+val x32 = x30 + 1
+val x37_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
 val x33 = x2 > 50
 if (x33) {
-x51_builder += x48
+x37_builder += x32
 }
 }
-val x51 = x51_builder.result()
-val x52 = x51.length
-val x53 = println(x52)
+val x37 = x37_builder.result()
+val x38 = x37.length
+val x43 = println(x38)
 
 -- fusion
 (CTS) Fusing these loops into one fat TTP: 
 TTP(List(Sym(4)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(3))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(3))))))
-TTP(List(Sym(51)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(50))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(50))))))
+TTP(List(Sym(37)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(36))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(36))))))
 
-val x45 = new Array[Int](100)
-for (x42 <- 0 until 100) {
-val x43 = x42 + 2
-x45(x42) = x43
+val x29 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x27 = x1 + 2
+x29(x1) = x27
 }
-val x46 = x45.apply(0)
-val x48 = x46 + 1
+val x30 = x29.apply(0)
+val x32 = x30 + 1
 val x4 = new Array[Int](100)
-val x51_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+val x37_builder = new scala.collection.mutable.ArrayBuilder.ofInt
 for (x1 <- 0 until 100) {
 val x2 = x1 + 1
 val x33 = x2 > 50
 if (x33) {
-x51_builder += x48
+x37_builder += x32
 }
 x4(x1) = x2
 }
-val x51 = x51_builder.result()
+val x37 = x37_builder.result()
 val x5 = x4.apply(0)
 val x41 = println(x5)
-val x47 = println(x46)
-val x52 = x51.length
-val x53 = println(x52)
+val x42 = println(x30)
+val x38 = x37.length
+val x43 = println(x38)
 -- done

@@ -99,13 +99,11 @@ val x49 = println(x48)
 (HFT) - new loop symbol: Sym(34) -> Sym(56)
 (HFT) The candidate Sym(43) and its set (List(Sym(43), Sym(37), Sym(21))) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(6), loopSyms = List(Sym(34))) because both are effectful.
 (HFT) Recording Sym(43), no fusion
-(HFT) - remapping index to unique: Sym(6) -> Sym(57)
-(HFT) - new loop symbol: Sym(43) -> Sym(64)
-(HFT) Fusing Sym(37) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(57), loopSyms = List(Sym(43), Sym(37), Sym(21)))
-(HFT) - remapping index: Sym(6) -> Sym(57)
-(HFT) - new loop symbol: Sym(37) -> Sym(66)
+(HFT) - new loop symbol: Sym(43) -> Sym(61)
+(HFT) Fusing Sym(37) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(6), loopSyms = List(Sym(43), Sym(37), Sym(21)))
+(HFT) - already using same index Sym(6)
 
-(HFT) all horizontally fused: List(Sym(64), Sym(66))
+(HFT) all horizontally fused: List(Sym(61), Sym(37))
 
 -- after horizontal transformation
 var x51: Int = 0
@@ -115,38 +113,38 @@ val x8 = x6 + 2
 val x52 = x51 += x6
 x56(x6) = x8
 }
-val x64 = new Array[Int](100)
-for (x57 <- 0 until 100) {
-val x58 = x57 + 3
-val x59 = x57 + 1
-val x60 = println(x59)
-x64(x57) = x58
+val x61 = new Array[Int](100)
+for (x6 <- 0 until 100) {
+val x38 = x6 + 3
+val x35 = x6 + 1
+val x57 = println(x35)
+x61(x6) = x38
 }
-val x66 = new Array[Int](100)
-for (x57 <- 0 until 100) {
-val x59 = x57 + 1
-x66(x57) = x59
+val x37 = new Array[Int](100)
+for (x6 <- 0 until 100) {
+val x35 = x6 + 1
+x37(x6) = x35
 }
-val x67 = x66.apply(0)
-val x68 = println(x67)
-val x69 = x56.apply(0)
-val x70 = println(x69)
-val x71 = x64.apply(0)
-val x72 = println(x71)
+val x44 = x37.apply(0)
+val x62 = println(x44)
+val x63 = x56.apply(0)
+val x64 = println(x63)
+val x65 = x61.apply(0)
+val x66 = println(x65)
 
 -- fusion
 (CTS) Fusing these loops into one fat TTP: 
-TTP(List(Sym(64)),List(Reflect(SimpleLoop(Const(100),Sym(57),MultiArrayElem(Block(Sym(63)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List())),SimpleFatLoop(Const(100),Sym(57),List(MultiArrayElem(Block(Sym(63))))))
-TTP(List(Sym(66)),List(SimpleLoop(Const(100),Sym(57),MultiArrayElem(Block(Sym(65))))),SimpleFatLoop(Const(100),Sym(57),List(MultiArrayElem(Block(Sym(65))))))
+TTP(List(Sym(61)),List(Reflect(SimpleLoop(Const(100),Sym(6),MultiArrayElem(Block(Sym(60)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List())),SimpleFatLoop(Const(100),Sym(6),List(MultiArrayElem(Block(Sym(60))))))
+TTP(List(Sym(37)),List(SimpleLoop(Const(100),Sym(6),MultiArrayElem(Block(Sym(36))))),SimpleFatLoop(Const(100),Sym(6),List(MultiArrayElem(Block(Sym(36))))))
 
-val x64 = new Array[Int](100)
-val x66 = new Array[Int](100)
-for (x57 <- 0 until 100) {
-val x58 = x57 + 3
-val x59 = x57 + 1
-val x60 = println(x59)
-x64(x57) = x58
-x66(x57) = x59
+val x61 = new Array[Int](100)
+val x37 = new Array[Int](100)
+for (x6 <- 0 until 100) {
+val x38 = x6 + 3
+val x35 = x6 + 1
+val x57 = println(x35)
+x61(x6) = x38
+x37(x6) = x35
 }
 var x51: Int = 0
 val x56 = new Array[Int](100)
@@ -155,10 +153,10 @@ val x8 = x6 + 2
 val x52 = x51 += x6
 x56(x6) = x8
 }
-val x67 = x66.apply(0)
-val x68 = println(x67)
-val x69 = x56.apply(0)
-val x70 = println(x69)
-val x71 = x64.apply(0)
-val x72 = println(x71)
+val x44 = x37.apply(0)
+val x62 = println(x44)
+val x63 = x56.apply(0)
+val x64 = println(x63)
+val x65 = x61.apply(0)
+val x66 = println(x65)
 -- done
