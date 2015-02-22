@@ -100,18 +100,24 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     isNestedNode = false
   }
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
-    if (external) {
-      // CUDA library ops use a C wrapper, so should be generated as a C kernel
-      super.emitKernelHeader(syms, syms ::: vals, vars, resultType, resultIsVar, external)
-    }
-  }
-
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
+    //NOTE: below check relies on the fact that emitNode() for the kernel is called before calling emitKernelHeader()
     if (!isGPUable) throw new GenerationFailedException("This kernel is not GPUable")
 
     if (external) {
-      super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external)
+      // CUDA library ops use a C wrapper, so should be generated as a C kernel
+      super.emitKernelHeader(syms, syms ::: vals, vars, resultType, resultIsVar, external, isMultiLoop)
+    }
+    else if (!isMultiLoop) {
+      super.emitKernelHeader(syms, vals, vars, resultType, resultIsVar, external, isMultiLoop)
+    }
+  }
+
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
+    if (!isGPUable) throw new GenerationFailedException("This kernel is not GPUable")
+
+    if (external || !isMultiLoop) {
+      super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external, isMultiLoop)
     }
 
     // aks TODO: the rest of this stuff adds to metadata and seems necessary even if we are external.

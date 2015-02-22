@@ -208,12 +208,12 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
   def kernelName = "kernel_" + kernelOutputs.map(quote).mkString("")
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
-    super.emitKernelHeader(syms, vals, vars, resultType, resultIsVar, external)
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
+    super.emitKernelHeader(syms, vals, vars, resultType, resultIsVar, external, isMultiLoop)
   }
 
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
-    super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external)
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
+    super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external, isMultiLoop)
   }
 
 }
