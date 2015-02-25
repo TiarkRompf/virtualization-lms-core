@@ -269,7 +269,12 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
       printlog("(VFT) Fusing prod " + pSym + " with cons " + cSym + ". Type: " + this)
     }
     override def printLogAfter(result: FusionOutcome) = (result: @unchecked) match {
-      case FusionResult(fusedSym) => printlog("(VFT) Fused prod " + pSym + " with cons " + cSym + ", fused sym: " + fusedSym)
+      case FusionResult(fusedSym) =>
+        printlog("(VFT) Fused prod " + pSym + " with cons " + cSym + ", fused sym: " + fusedSym)
+        fusedSym match {
+          case Def(LoopOrReflectedLoop(fused, _)) => val x = fused.body // evaluate lazy
+          case _ =>
+        }
     }
     override def getProds = List(pSym)
     override def setNotFused(list: List[(Sym[Any], String)]) = notFused = list
@@ -288,7 +293,12 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
       printlog("(VFT) Fusing prod " + pSym + " with cons " + cSym + " and other prods: " + otherProds + ". Type: " + this)
     }
     override def printLogAfter(result: FusionOutcome) = (result: @unchecked) match {
-      case FusionResult(fusedSym) => printlog("(VFT) Fused prod " + pSym + " and other prods " + otherProds + " with cons " + cSym + ", fused sym: " + fusedSym)
+      case FusionResult(fusedSym) =>
+        printlog("(VFT) Fused prod " + pSym + " and other prods " + otherProds + " with cons " + cSym + ", fused sym: " + fusedSym)
+        fusedSym match {
+          case Def(LoopOrReflectedLoop(fused, _)) => val x = fused.body // evaluate lazy
+          case _ =>
+        }
     }
     override def getProds = pSym :: otherProds
     override def setNotFused(list: List[(Sym[Any], String)]) = sys.error("(VFT) Error: FusionInfoManyto1.notFused is not mutable")

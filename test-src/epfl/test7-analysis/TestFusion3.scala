@@ -1455,6 +1455,27 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
+  // TODO how to fuse this?
+  // def testFusionTransform72 = withOutFileChecked(prefix+"fusion72"+suffix) {
+  //   trait Prog extends MyFusionProg with Impl {
+  //     def test(x: Rep[Int]) = {
+  //       val outer = array(1) { e =>
+  //         // Foreach doesn't get vertically fused, because it is captured in
+  //         // the return singleton's effects, whereas array evaluated before,
+  //         // so not in same exact scope. If boundSyms of singleton doesn't
+  //         // capture all effectSyms, effectful statements are dropped. Thus
+  //         // would need to prevent non-effectful statements from being moved
+  //         // out of singleton body, so they can be fused inside of block?
+  //         array(10) { i => i+e }.foreach({ x: Rep[Int] => print(x) })
+  //         val v = array(10) { i => i + 2*e }
+  //         reduce[Int](10)({ i => singleton(v.at(i)) }, { (a, b) => a + b }, 0)
+  //       }
+  //       print(outer)
+  //     }
+  //   }
+  //   new Prog with Impl
+  // }
+
   // TODO think about:
   // Vertical fusion of effectful prod causes fused to have same Reflect around,
   // so could change order, and then horizontal fusion would fuse in wrong order?

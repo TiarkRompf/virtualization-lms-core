@@ -30,7 +30,8 @@ trait LoopFusionExtractors extends internal.Expressions with LoopsExp {
     * fusion. If your DSL works with loops with the same index (e.g. because
     * the index of a for-loop isn't in the outer scope of the loop, or because
     * loops are wrapped in scope braces {}), override this with false to avoid
-    * some unneeded mirroring. */
+    * some unneeded mirroring. Also note that turning off horizontal fusion
+    * will disable the reuniquification. */
   def shouldReuniquifyIndices = true
 }
 
