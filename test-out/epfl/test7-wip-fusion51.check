@@ -2,7 +2,7 @@
 TP(Sym(1),Reflect(Print(Const(1)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
 TP(Sym(2),Reflect(NewVar(Const(0)),Summary(false,false,false,false,true,false,List(),List(),List(),List()),List()))
 TP(Sym(4),IntPlus(Sym(3),Const(2)))
-TP(Sym(5),SingletonInLoop(Block(Sym(4)),Sym(3)))
+TP(Sym(5),SingletonInLoop(Sym(4),Sym(3)))
 TP(Sym(6),SimpleLoop(Const(100),Sym(3),MultiArrayElem(Block(Sym(5)))))
 TP(Sym(8),ArrayIndex(Sym(6),Sym(7)))
 TP(Sym(9),Reflect(Assign(Variable(Sym(2)),Sym(8)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))

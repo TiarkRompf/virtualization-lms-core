@@ -1,5 +1,5 @@
 -- full graph
-TP(Sym(3),Singleton(Block(Sym(2))))
+TP(Sym(3),Singleton(Sym(2)))
 TP(Sym(4),SimpleLoop(Sym(1),Sym(2),MultiArrayElem(Block(Sym(3)))))
 TP(Sym(5),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(4)))))
 TP(Sym(7),ArrayIndex(Sym(5),Sym(6)))

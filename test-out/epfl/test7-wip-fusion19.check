@@ -1,17 +1,16 @@
 -- full graph
 TP(Sym(2),IntPlus(Sym(1),Const(1)))
-TP(Sym(3),SingletonInLoop(Block(Sym(2)),Sym(1)))
+TP(Sym(3),SingletonInLoop(Sym(2),Sym(1)))
 TP(Sym(4),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(3)))))
 TP(Sym(5),ArrayIndex(Sym(4),Const(0)))
 TP(Sym(6),Reflect(Print(Sym(5)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
 TP(Sym(8),Reflect(Print(Sym(7)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
-TP(Sym(9),Reify(Const(1),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(8))))
-TP(Sym(10),Reflect(SingletonInLoop(Block(Sym(9)),Sym(7)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
-TP(Sym(11),Reify(Sym(10),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10))))
-TP(Sym(12),Reflect(SimpleLoop(Const(100),Sym(7),MultiArrayElem(Block(Sym(11)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
-TP(Sym(13),ArrayIndex(Sym(12),Const(1)))
-TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
-TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6), Sym(12), Sym(14))))
+TP(Sym(9),SingletonInLoop(Const(1),Sym(7)))
+TP(Sym(10),Reify(Sym(9),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(8))))
+TP(Sym(11),Reflect(SimpleLoop(Const(100),Sym(7),MultiArrayElem(Block(Sym(10)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
+TP(Sym(12),ArrayIndex(Sym(11),Const(1)))
+TP(Sym(13),Reflect(Print(Sym(12)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11))))
+TP(Sym(14),Reify(Sym(13),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6), Sym(11), Sym(13))))
 
 -- before transformation
 val x4 = new Array[Int](100)
@@ -21,20 +20,20 @@ x4(x1) = x2
 }
 val x5 = x4.apply(0)
 val x6 = println(x5)
-val x12 = new Array[Int](100)
+val x11 = new Array[Int](100)
 for (x7 <- 0 until 100) {
 val x8 = println(x7)
-x12(x7) = 1
+x11(x7) = 1
 }
-val x13 = x12.apply(1)
-val x14 = println(x13)
+val x12 = x11.apply(1)
+val x13 = println(x12)
 
 -- vertical transformation
 
 (VFT) No producers found for cons Sym(4)
 
-(VFT) No producers found for cons Sym(12)
-(VFT) Cons Sym(12) not fused but mirrored to Sym(21) because of fixed shape
+(VFT) No producers found for cons Sym(11)
+(VFT) Cons Sym(11) not fused but mirrored to Sym(19) because of fixed shape
 
 (VFT) all vertically fused: 
 
@@ -45,20 +44,20 @@ val x2 = x1 + 1
 x4(x1) = x2
 }
 val x5 = x4.apply(0)
-val x16 = println(x5)
-val x21 = new Array[Int](100)
+val x15 = println(x5)
+val x19 = new Array[Int](100)
 for (x1 <- 0 until 100) {
-val x17 = println(x1)
-x21(x1) = 1
+val x16 = println(x1)
+x19(x1) = 1
 }
-val x22 = x21.apply(1)
-val x23 = println(x22)
+val x20 = x19.apply(1)
+val x21 = println(x20)
 
 -- horizontal transformation
 (HFT) Recording Sym(4), no fusion
-(HFT) The candidate Sym(21) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(4))) because the candidate set depends on Sym(4)
-(HFT) Recording Sym(21), no fusion
-(HFT) - new loop symbol: Sym(21) -> Sym(30)
+(HFT) The candidate Sym(19) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(4))) because the candidate set depends on Sym(4)
+(HFT) Recording Sym(19), no fusion
+(HFT) - new loop symbol: Sym(19) -> Sym(26)
 
 (HFT) all horizontally fused: 
 
@@ -69,14 +68,14 @@ val x2 = x1 + 1
 x4(x1) = x2
 }
 val x5 = x4.apply(0)
-val x25 = println(x5)
-val x30 = new Array[Int](100)
+val x23 = println(x5)
+val x26 = new Array[Int](100)
 for (x1 <- 0 until 100) {
-val x26 = println(x1)
-x30(x1) = 1
+val x24 = println(x1)
+x26(x1) = 1
 }
-val x31 = x30.apply(1)
-val x32 = println(x31)
+val x27 = x26.apply(1)
+val x28 = println(x27)
 
 -- fusion
 val x4 = new Array[Int](100)
@@ -85,12 +84,12 @@ val x2 = x1 + 1
 x4(x1) = x2
 }
 val x5 = x4.apply(0)
-val x25 = println(x5)
-val x30 = new Array[Int](100)
+val x23 = println(x5)
+val x26 = new Array[Int](100)
 for (x1 <- 0 until 100) {
-val x26 = println(x1)
-x30(x1) = 1
+val x24 = println(x1)
+x26(x1) = 1
 }
-val x31 = x30.apply(1)
-val x32 = println(x31)
+val x27 = x26.apply(1)
+val x28 = println(x27)
 -- done

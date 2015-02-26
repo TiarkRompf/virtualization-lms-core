@@ -2,7 +2,7 @@
 TP(Sym(2),OrderingGT(Sym(1),Const(5)))
 TP(Sym(4),EmptyArray(Sym(3)))
 TP(Sym(6),IntPlus(Sym(1),Sym(5)))
-TP(Sym(7),SingletonInLoop(Block(Sym(6)),Sym(5)))
+TP(Sym(7),SingletonInLoop(Sym(6),Sym(5)))
 TP(Sym(8),SimpleLoop(Const(3),Sym(5),MultiArrayElem(Block(Sym(7)))))
 TP(Sym(9),IfThenElse(Sym(2),Block(Sym(4)),Block(Sym(8))))
 TP(Sym(10),SimpleLoop(Const(10),Sym(1),MultiArrayElem(Block(Sym(9)))))
