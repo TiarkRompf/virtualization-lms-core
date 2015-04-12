@@ -43,22 +43,20 @@ trait SimplifyTransform extends internal.FatScheduling {
       val tss = t(ss)
       if (ss != tss) {
         val s2 = mirror(x, t)(mtype(s.tp), mpos(s.pos))
-        if (s2 == s) {
-          printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned same object (expected t(syms) = " + tss.mkString(",") + ")")
-        }
+        warn(s2 == s, "mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned same object (expected t(syms) = " + tss.mkString(",") + ")")
         s2 match { 
           case Def(x2) => 
             if (x.getClass == x2.getClass) {
               // if the def class does not change, we expect that the free syms are transformed
               val ss2 = syms(x2)
-              if (ss2 != tss.filter(_.isInstanceOf[Sym[Any]])) // should do filtering in def of tss above?
-                printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned "+s2+"="+x2+" syms " + ss2.mkString(",") + " (expected t(syms) = " + tss.mkString(",") + ")")
+              // should do filtering in def of tss above?
+              warn(ss2 != tss.filter(_.isInstanceOf[Sym[Any]]), 
+                     "mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned "+s2+"="+x2+" syms " + ss2.mkString(",") + " (expected t(syms) = " + tss.mkString(",") + ")")
             }
-            if (!(s2.tp <:< s.tp))
-              printerr("warning: mirroring of "+s+"="+x+" type " + s.tp + " returned "+s2+"="+x2+" type " + s2.tp + " (not a subtype)")
+            warn(!(s2.tp <:< s.tp), "mirroring of "+s+"="+x+" type " + s.tp + " returned "+s2+"="+x2+" type " + s2.tp + " (not a subtype)")
+          
           case _ =>
-            if (!(s2.tp <:< s.tp))
-              printerr("warning: mirroring of "+s+"="+x+" type " + s.tp + " returned "+s2+" type " + s2.tp + " (not a subtype)")
+            warn(!(s2.tp <:< s.tp), "mirroring of "+s+"="+x+" type " + s.tp + " returned "+s2+" type " + s2.tp + " (not a subtype)")
         }
         s2
       } else {
@@ -67,10 +65,10 @@ trait SimplifyTransform extends internal.FatScheduling {
       }
     } catch { //hack
       case e if e.toString contains "don't know how to mirror" => 
-        printerr("error: " + e.getMessage)
+        printerr(e.getMessage)
         s
       case e: Throwable => 
-        printerr("error: exception during mirroring of "+x+": "+ e)
+        printerr("exception during mirroring of "+x+": "+ e)
         e.printStackTrace; 
         s
     }
@@ -223,7 +221,7 @@ trait SimplifyTransform extends internal.FatScheduling {
     currentScope = getSchedule(currentScope)(result) // clean things up!
   
     if (currentScope != previousScope) { // check convergence
-      printerr("error: transformation of scope contents has not converged")
+      printerr("transformation of scope contents has not converged")
       printdbg(previousScope + "-->" + currentScope)
     }
   

@@ -4,7 +4,7 @@ package common
 import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
 
-trait ForwardTransformer extends internal.AbstractSubstTransformer with internal.FatBlockTraversal { self =>
+trait ForwardTransformer extends internal.AbstractSubstTransformer with internal.IRVisitor { self =>
   val IR: BaseFatExp with EffectExp //LoopsFatExp with IfThenElseFatExp
   import IR._
   
@@ -56,7 +56,7 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
         if (recursive.contains(sym)) { // O(n) since recursive is a list!
           transformStm(stm)
         } else {
-          printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
+          warn("transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
           // what to do? bail out? lookup def and then transform???
         }
       }
@@ -82,10 +82,10 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
       mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos)) // cast needed why?
     } catch { //hack -- should not catch errors
       case e if e.toString contains "don't know how to mirror" => 
-        printerr("error: " + e.getMessage)
+        printerr(e.getMessage)
       sym
       case e: Throwable => 
-        printerr("error: exception during mirroring of "+rhs+": "+ e)
+        printerr("exception during mirroring of "+rhs+": "+ e)
         e.printStackTrace; 
         sym            
     }
@@ -96,9 +96,7 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
 trait RecursiveTransformer extends ForwardTransformer { self =>
   import IR._
 
-  def run[A:Manifest](s: Block[A]): Block[A] = {
-    transformBlock(s)
-  }
+  override def runOnce[A:Manifest](s: Block[A]): Block[A] = transformBlock(s)
 
   def transformDef[A](lhs: Sym[A], rhs: Def[A]): Option[() => Def[A]] = None
 
@@ -132,8 +130,8 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
   }
 }
 
-
-trait WorklistTransformer extends ForwardTransformer { // need backward version, too?
+// need backward version, too?
+trait WorklistTransformer extends ForwardTransformer with internal.IterativeIRVisitor { 
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
   var curSubst: Map[Sym[Any],() => Exp[Any]] = Map.empty
@@ -146,16 +144,15 @@ trait WorklistTransformer extends ForwardTransformer { // need backward version,
       nextSubst = nextSubst + (x.asInstanceOf[Sym[A]] -> (() => y))
     }
   }
-  def isDone = nextSubst.isEmpty
-  def runOnce[A:Manifest](s: Block[A]): Block[A] = {
+  override def hasConverged = runs > 0 && nextSubst.isEmpty
+
+  override def runOnce[A:Manifest](s: Block[A]): Block[A] = {
     subst = Map.empty
     curSubst = nextSubst
     nextSubst = Map.empty
     transformBlock(s)
   }
-  def run[A:Manifest](s: Block[A]): Block[A] = {
-    if (isDone) s else run(runOnce(s))
-  }
+
   override def transformStm(stm: Stm): Exp[Any] = stm match {
     case TP(sym, rhs) => 
       curSubst.get(sym) match {

@@ -33,7 +33,7 @@ trait StructTags {
   case class MapTag[T] extends StructTag[T]
 }
 
-trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with OverloadHack {
+trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with AtomicWriteExp with OverloadHack {
 
   // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
 
@@ -74,14 +74,24 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
 
   case class SimpleStruct[T](tag: StructTag[T], elems: Seq[(String, Rep[Any])]) extends AbstractStruct[T]
   case class FieldApply[T](struct: Rep[Any], index: String) extends AbstractField[T]
-  case class FieldUpdate[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]) extends Def[Unit]
+  case class FieldUpdate[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]) extends AtomicWriteDef[T] {
+    def externalFields = List(index,rhs)
+  }
 
   def struct[T:Manifest](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit o: Overloaded1, pos: SourceContext): Rep[T] = struct[T](tag, elems)
   def struct[T:Manifest](tag: StructTag[T], elems: Seq[(String, Rep[Any])])(implicit pos: SourceContext): Rep[T] = SimpleStruct(tag, elems)
 
   def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = FieldApply[T](struct, index)
   def var_field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Var[T] = Variable(FieldApply[Var[T]](struct, index))
-  def field_update[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]): Exp[Unit] = reflectWrite(struct)(FieldUpdate(struct, index, rhs))
+    
+  // Nested write - rewrite rules
+  override def recurseLookup[T:Manifest](sym: Exp[Any], trace: List[AtomicTracer]): (Exp[Any],List[AtomicTracer]) = sym match {
+    case Def(Field(struct,field)) => recurseLookup(struct, StructTracer(field) +: trace)
+    case Def(Reflect(Field(struct,field),_,_)) => recurseLookup(struct, StructTracer(field) +: trace)
+    case _ => super.recurseLookup(sym,trace)
+  }
+  def field_update[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]): Exp[Unit] 
+    = reflectAtomicWrite(struct)(FieldUpdate(struct, index, rhs))
 
   def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]) = {
     val x: Sym[T] = Sym[T](-99) // self symbol -- not defined anywhere, so make it obvious!! (TODO)
@@ -145,9 +155,12 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   }
 
 
+  override def mirrorNestedAtomic[A:Manifest](d: AtomicWrite[A], f: Transformer)(implicit pos: SourceContext): AtomicWrite[A] = d match {
+    case FieldUpdate(struct,key,rhs) => FieldUpdate(struct, key, f(rhs))(mtype(manifest[A]))
+    case _ => super.mirrorNestedAtomic(d,f)
+  }
 
   // TODO: read/write/copy summary
-
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })(mtype(manifest[A]),pos)
     case FieldApply(struct, key) => field(f(struct), key)(mtype(manifest[A]),pos)
@@ -239,7 +252,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
 
   private def unwrap[A](m:Manifest[Variable[A]]): Manifest[A] = m.typeArguments match {
     case a::_ => mtype(a)
-    case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
+    case _ => warn("in struct unwrapping, expected type Variable[A] but got "+m); mtype(manifest[Any])
   }
 
   override def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {
@@ -384,9 +397,16 @@ trait BaseGenStruct extends GenericNestedCodegen {
   //Moved encounteredStructs to IR
 }
 
-trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
+trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct with ScalaGenAtomicOps {
   val IR: StructExp
   import IR._
+
+  override def emitAtomicWrite(sym: Sym[Any], d: AtomicWrite[_], trace: Option[String]) = d match {
+    case FieldUpdate(struct,index,rhs) =>
+      emitValDef(sym, trace.getOrElse(quote(struct)) + "." + index + " = " + quote(rhs))
+
+    case _ => super.emitAtomicWrite(sym,d,trace)
+  }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Struct(tag, elems) =>
@@ -394,8 +414,6 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
       emitValDef(sym, "new " + structName(sym.tp) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
     case FieldApply(struct, index) =>
       emitValDef(sym, quote(struct) + "." + index)
-    case FieldUpdate(struct, index, rhs) =>
-      emitValDef(sym, quote(struct) + "." + index + " = " + quote(rhs))
     case _ => super.emitNode(sym, rhs)
   }
 
@@ -416,10 +434,10 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
 
 }
 
-trait CGenStruct extends CGenBase with BaseGenStruct
-trait CudaGenStruct extends CudaGenBase with BaseGenStruct
-trait OpenCLGenStruct extends OpenCLGenBase with BaseGenStruct
+trait CGenStruct extends CGenBase with BaseGenStruct with CGenAtomicOps { val IR: StructExp }
+trait CudaGenStruct extends CudaGenBase with BaseGenStruct with CudaGenAtomicOps { val IR: StructExp }
+trait OpenCLGenStruct extends OpenCLGenBase with BaseGenStruct with OpenCLGenAtomicOps { val IR: StructExp }
 
+trait CGenFatStruct extends CGenStruct with BaseGenFatStruct
 trait CudaGenFatStruct extends CudaGenStruct with BaseGenFatStruct
 trait OpenCLGenFatStruct extends OpenCLGenStruct with BaseGenFatStruct
-trait CGenFatStruct extends CGenStruct with BaseGenFatStruct

@@ -13,7 +13,7 @@ import java.lang.{StackTraceElement,Thread}
  * 
  * @since 0.1
  */
-trait Expressions extends Utils {
+trait Expressions extends UtilsExp {
 
   abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
     def tp: Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
@@ -34,16 +34,6 @@ trait Expressions extends Utils {
   def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) printlog("nVars="+nVars);  nVars -1 }
 
   def fresh[T:Manifest](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
-
-  def quotePos(e: Exp[Any]): String = e.pos match {
-    case Nil => "<unknown>"
-    case cs => 
-      def all(cs: SourceContext): List[SourceContext] = cs.parent match {
-        case None => List(cs)
-        case Some(p) => cs::all(p)
-      }
-    cs.map(c => all(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
-  }
 
 /*
   def fresh[T:Manifest] = {

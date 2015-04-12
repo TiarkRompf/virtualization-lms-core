@@ -106,7 +106,7 @@ trait CodeMotion extends Scheduling {
           val expected = observable.map(d=>/*fatten*/(findDefinition(d.asInstanceOf[Sym[Any]]).get)) 
           val missing = expected filterNot (actual contains _)
           val printfn = if (missing.isEmpty) printlog _ else printerr _
-          printfn("error: violated ordering of effects")
+          printfn("error: violated ordering of effects in " + result + " = Reify(" + x + ", " + u + ", " + effects + ")")
           printfn("  expected:")
           expected.foreach(d => printfn("    "+d))
           printfn("  actual:")

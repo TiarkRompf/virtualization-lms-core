@@ -80,6 +80,6 @@ trait TupleGenBase extends GenericCodegen with BaseGenStruct {
 }
 
 trait ScalaGenTupleOps extends ScalaGenBase with TupleGenBase with ScalaGenStruct { val IR: TupleOpsExp }
-trait CGenTupleOps extends CGenBase with TupleGenBase with CGenStruct
-trait CudaGenTupleOps extends CudaGenBase with TupleGenBase with CudaGenStruct
-trait OpenCLGenTupleOps extends OpenCLGenBase with TupleGenBase with OpenCLGenStruct
+trait CGenTupleOps extends CGenBase with TupleGenBase with CGenStruct { val IR: TupleOpsExp }
+trait CudaGenTupleOps extends CudaGenBase with TupleGenBase with CudaGenStruct { val IR: TupleOpsExp }
+trait OpenCLGenTupleOps extends OpenCLGenBase with TupleGenBase with OpenCLGenStruct { val IR: TupleOpsExp }
