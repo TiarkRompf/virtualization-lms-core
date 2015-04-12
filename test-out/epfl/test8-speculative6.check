@@ -1,0 +1,114 @@
+promoting to effect: Sym(65)=Reflect(PreviousIteration(Sym(58)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(54)))
+depends on  Sym(2)
+promoting to effect: Sym(71)=Reflect(PreviousIteration(Sym(57)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(54)))
+depends on  Sym(2)
+promoting to effect: Sym(81)=Reflect(PreviousIteration(Sym(58)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(54)))
+depends on  Sym(2)
+promoting to effect: Sym(87)=Reflect(PreviousIteration(Sym(57)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(54)))
+depends on  Sym(2)
+promoting to effect: Sym(100)=Reflect(While(Block(Sym(98)),Block(Sym(99))),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(54)))
+depends on  Sym(2)
+promoting to effect: Sym(127)=Reflect(PreviousIteration(Sym(120)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(116)))
+depends on  Sym(2)
+promoting to effect: Sym(133)=Reflect(PreviousIteration(Sym(119)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(116)))
+depends on  Sym(2)
+promoting to effect: Sym(143)=Reflect(PreviousIteration(Sym(120)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(116)))
+depends on  Sym(2)
+promoting to effect: Sym(149)=Reflect(PreviousIteration(Sym(119)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(116)))
+depends on  Sym(2)
+promoting to effect: Sym(162)=Reflect(While(Block(Sym(160)),Block(Sym(161))),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(),List()),List(Sym(2), Sym(116)))
+depends on  Sym(2)
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Test extends ((Int)=>(Unit)) {
+def apply(x0:Int): Unit = {
+var x176 = null.asInstanceOf[Unit]
+var x180 = null.asInstanceOf[Unit]
+val x1 = println("FIXME -- WRONG RESULT")
+var x2: Int = 0
+var x118: Int = 0
+while ({ // List(Sym(176), Sym(180))
+// dummy placeholder for previous iteration: List(Sym(112), Sym(111)) = Sym(4) / List(Sym(1), Sym(2), Sym(176))
+val x113 = x2
+val x114 = x113 < 10
+x114
+}) {
+var x166 = null.asInstanceOf[Unit]
+var x162 = null.asInstanceOf[Unit]
+var x170 = null.asInstanceOf[Unit]
+// dummy placeholder for previous iteration: List(Sym(116), Sym(117)) = Sym(3) / List(Sym(2), Sym(176), Sym(1))
+while ({ // List(Sym(166), Sym(162), Sym(170))
+// dummy placeholder for previous iteration: List(Sym(144), Sym(143), Sym(145)) = Sym(120) / List(Sym(118), Sym(166), Sym(2), Sym(116), Sym(117))
+val x146 = x118
+val x147 = x146 < 10
+x147
+}) {
+// dummy placeholder for previous iteration: List(Sym(150), Sym(149), Sym(151)) = Sym(119) / List(Sym(118), Sym(166), Sym(2), Sym(116), Sym(117))
+val x152 = println("test")
+val x153 = x2
+val x154 = println(x153)
+val x155 = x118
+val x156 = println(x155)
+val x157 = x118 += 1
+}
+val x171 = x2 += 1
+}
+()
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+promoting to effect: Sym(248)=Reflect(PreviousIteration(Sym(241)),Summary(false,false,false,false,false,false,List(Sym(185)),List(Sym(185)),List(),List()),List(Sym(185), Sym(237)))
+depends on  Sym(185)
+promoting to effect: Sym(254)=Reflect(PreviousIteration(Sym(240)),Summary(false,false,false,false,false,false,List(Sym(185)),List(Sym(185)),List(),List()),List(Sym(185), Sym(237)))
+depends on  Sym(185)
+promoting to effect: Sym(264)=Reflect(PreviousIteration(Sym(241)),Summary(false,false,false,false,false,false,List(Sym(185)),List(Sym(185)),List(),List()),List(Sym(185), Sym(237)))
+depends on  Sym(185)
+promoting to effect: Sym(270)=Reflect(PreviousIteration(Sym(240)),Summary(false,false,false,false,false,false,List(Sym(185)),List(Sym(185)),List(),List()),List(Sym(185), Sym(237)))
+depends on  Sym(185)
+promoting to effect: Sym(283)=Reflect(While(Block(Sym(281)),Block(Sym(282))),Summary(false,false,false,false,false,false,List(Sym(185)),List(Sym(185)),List(),List()),List(Sym(185), Sym(237)))
+depends on  Sym(185)
+promoting to effect: Sym(310)=Reflect(PreviousIteration(Sym(303)),Summary(false,false,false,false,false,false,List(Sym(185)),List(Sym(185)),List(),List()),List(Sym(185), Sym(299)))
+depends on  Sym(185)
+promoting to effect: Sym(316)=Reflect(PreviousIteration(Sym(302)),Summary(false,false,false,false,false,false,List(Sym(185)),List(Sym(185)),List(),List()),List(Sym(185), Sym(299)))
+depends on  Sym(185)
+promoting to effect: Sym(326)=Reflect(PreviousIteration(Sym(303)),Summary(false,false,false,false,false,false,List(Sym(185)),List(Sym(185)),List(),List()),List(Sym(185), Sym(299)))
+depends on  Sym(185)
+promoting to effect: Sym(332)=Reflect(PreviousIteration(Sym(302)),Summary(false,false,false,false,false,false,List(Sym(185)),List(Sym(185)),List(),List()),List(Sym(185), Sym(299)))
+depends on  Sym(185)
+promoting to effect: Sym(345)=Reflect(While(Block(Sym(343)),Block(Sym(344))),Summary(false,false,false,false,false,false,List(Sym(185)),List(Sym(185)),List(),List()),List(Sym(185), Sym(299)))
+depends on  Sym(185)
+compilation: ok
+FIXME -- WRONG RESULT
+test
+0
+0
+test
+0
+1
+test
+0
+2
+test
+0
+3
+test
+0
+4
+test
+0
+5
+test
+0
+6
+test
+0
+7
+test
+0
+8
+test
+0
+9

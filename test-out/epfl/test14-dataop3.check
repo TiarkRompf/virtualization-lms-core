@@ -1,0 +1,220 @@
+/* FILE: main.c */
+int32_t main(int32_t);
+/*****************************************
+  Emitting C Generated Code                  
+*******************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+int32_t main(int32_t  x0) {
+int32_t x7 = 0;
+int32_t x8 = 0;
+int32_t x9 = 0;
+bool x10 = false;
+bool x11 = false;
+int* *x1 = mmap('A.dat') // XX TODO ;
+int32_t x2 = x1->length;
+bool x12 = 0 < x2;
+if (x12) {
+x7 += 2;
+} else {
+}
+x11 = x12;
+int* *x3 = mmap('B.dat') // XX TODO ;
+int32_t x4 = x3->length;
+bool x17 = 0 < x4;
+if (x17) {
+x8 += 2;
+} else {
+}
+x10 = x17;
+int* *x5 = mmap('C.dat') // XX TODO ;
+int32_t x6 = x5->length;
+for (;;) {
+bool x22 = true;
+for (;;) {
+bool x23 = x11;
+bool x26;
+if (x23) {
+bool x24 = x22;
+x26 = x24;
+} else {
+x26 = false;
+}
+if (!x26) break;
+bool x28 = true;
+for (;;) {
+bool x29 = x10;
+bool x32;
+if (x29) {
+bool x30 = x28;
+x32 = x30;
+} else {
+x32 = false;
+}
+if (!x32) break;
+int32_t x34 = x9;
+bool x35 = x34 < x6;
+if (x35) {
+x9 += 2;
+} else {
+}
+bool x39 = x35;
+for (;;) {
+bool x40 = x39;
+bool x51;
+if (x40) {
+int32_t x41 = x8;
+int32_t x45 = x9;
+int32_t x43 = x41 + 1;
+int32_t x44 = x3[x43];
+int32_t x46 = x5[x45];
+bool x49 = x44 != x46;
+x51 = x49;
+} else {
+x51 = false;
+}
+if (!x51) break;
+int32_t x53 = x9;
+bool x54 = x53 < x6;
+if (x54) {
+x9 += 2;
+} else {
+}
+x39 = x54;
+}
+bool x61 = x39;
+bool x62 = !x61;
+if (x62) {
+int32_t x63 = x8;
+bool x64 = x63 < x4;
+if (x64) {
+x8 += 2;
+} else {
+}
+x10 = x64;
+x9 = 0;
+} else {
+x28 = false;
+}
+}
+bool x76 = x10;
+bool x77 = x76;
+for (;;) {
+bool x78 = x77;
+bool x93;
+if (x78) {
+int32_t x79 = x7;
+int32_t x83 = x8;
+int32_t x87 = x9;
+int32_t x81 = x79 + 1;
+int32_t x82 = x1[x81];
+int32_t x84 = x3[x83];
+bool x91 = x82 != x84;
+x93 = x91;
+} else {
+x93 = false;
+}
+if (!x93) break;
+bool x95 = true;
+for (;;) {
+bool x96 = x10;
+bool x99;
+if (x96) {
+bool x97 = x95;
+x99 = x97;
+} else {
+x99 = false;
+}
+if (!x99) break;
+int32_t x101 = x9;
+bool x102 = x101 < x6;
+if (x102) {
+x9 += 2;
+} else {
+}
+bool x106 = x102;
+for (;;) {
+bool x107 = x106;
+bool x118;
+if (x107) {
+int32_t x108 = x8;
+int32_t x112 = x9;
+int32_t x110 = x108 + 1;
+int32_t x111 = x3[x110];
+int32_t x113 = x5[x112];
+bool x116 = x111 != x113;
+x118 = x116;
+} else {
+x118 = false;
+}
+if (!x118) break;
+int32_t x120 = x9;
+bool x121 = x120 < x6;
+if (x121) {
+x9 += 2;
+} else {
+}
+x106 = x121;
+}
+bool x128 = x106;
+bool x129 = !x128;
+if (x129) {
+int32_t x130 = x8;
+bool x131 = x130 < x4;
+if (x131) {
+x8 += 2;
+} else {
+}
+x10 = x131;
+x9 = 0;
+} else {
+x95 = false;
+}
+}
+bool x143 = x10;
+x77 = x143;
+}
+bool x147 = x77;
+bool x148 = !x147;
+if (x148) {
+int32_t x149 = x7;
+bool x150 = x149 < x2;
+if (x150) {
+x7 += 2;
+} else {
+}
+x11 = x150;
+x8 = 0;
+if (x17) {
+x8 += 2;
+} else {
+}
+x10 = x17;
+x9 = 0;
+} else {
+x22 = false;
+}
+}
+bool x167 = x11;
+if (!x167) break;
+int32_t x169 = x7;
+int32_t x173 = x8;
+int32_t x177 = x9;
+int32_t x170 = x1[x169];
+int32_t x171 = x169 + 1;
+int32_t x172 = x1[x171];
+int32_t x174 = x3[x173];
+int32_t x175 = x173 + 1;
+int32_t x176 = x3[x175];
+int32_t x178 = x5[x177];
+int32_t x179 = x177 + 1;
+int32_t x180 = x5[x179];
+printf(string("a1: %d, a2: %d, b1: %d, b2: %d, c1: %d, c2: %d\n").c_str(),x170,x172,x174,x176,x178,x180);
+}
+return 0;
+}
+/*****************************************
+  End of C Generated Code                  
+*******************************************/

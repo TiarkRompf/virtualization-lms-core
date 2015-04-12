@@ -1,3 +1,5 @@
+[![Build Status](https://api.travis-ci.org/TiarkRompf/virtualization-lms-core.png)](https://travis-ci.org/TiarkRompf/virtualization-lms-core)
+
 Lightweight Modular Staging (LMS) is a runtime code generation approach. 
 This framework, LMS-Core, provides a library of core components for building 
 high performance code generators and embedded compilers in Scala. 
@@ -10,6 +12,8 @@ more seamless.
 
 ### Background:
 
+- [LMS website](http://scala-lms.github.io)
+
 - [LMS paper](http://infoscience.epfl.ch/record/150347/files/gpce63-rompf.pdf)
 
 - [Delite website](http://stanford-ppl.github.com/Delite/)
@@ -17,18 +21,15 @@ more seamless.
 - [Scala-Virtualized wiki](https://github.com/TiarkRompf/scala-virtualized/wiki)
 
 
-### Note:
-
-This is branch `master`, which has been outdated for a while. 
-The most recent semi-stable version is in branch `delite-develop`.
-
-
 ### How to build:
 
-1. Install the simple build tool ([SBT](http://www.scala-sbt.org/)). 
-You will need version 0.12.0 of [sbt-launch.jar](http://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/sbt-launch/0.12.0/sbt-launch.jar). 
-Follow the [installation instructions](http://www.scala-sbt.org/download.html#manual) on the SBT website.
+1. Install the [SBT](http://www.scala-sbt.org/) build tool.
 
 2. Run `sbt test` to run the test suite.
 
 3. Run `sbt publish-local` to install LMS-Core for use in other projects.
+
+
+### License:
+
+Copyright 2010-2014, EPFL. Licensed under the revised BSD License.

@@ -36,7 +36,7 @@ trait ScalaGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferO
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case a@SyncArrayBufferNew(xs) => emitValDef(sym, "(new scala.collection.mutable.ArrayBuffer[" + remap(a.mA) + "] with scala.collection.mutable.SynchronizedBuffer[" + remap(a.mA) + "]) ++= List(" + (xs map {quote}).mkString(",") + ")")
+    case a@SyncArrayBufferNew(xs) => emitValDef(sym, src"(new scala.collection.mutable.ArrayBuffer[${a.mA}] with scala.collection.mutable.SynchronizedBuffer[${a.mA}]) ++= List(${(xs map {quote}).mkString(",")})")
     case _ => super.emitNode(sym, rhs)
   }
 }

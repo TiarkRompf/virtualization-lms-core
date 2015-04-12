@@ -131,7 +131,7 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
 }
 
 
-trait StableVars extends CellOps with CompileDyn with Equal with NumericOps with PrimitiveOps with HashMapOps with ArrayOps with Compile { self =>
+trait StableVars extends CellOps with CompileDyn with Equal with PrimitiveOps with HashMapOps with ArrayOps with Compile { self =>
     
     abstract class Continue[A]
     case class Done[A](x: Rep[A]) extends Continue[A]
@@ -199,7 +199,7 @@ class TestStable extends FileDiffSuite {
   
   
   trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
-    with IfThenElse with While with RangeOps with Print with Compile with NumericOps with PrimitiveOps
+    with IfThenElse with While with RangeOps with Print with Compile with PrimitiveOps
     with ArrayOps with HashMapOps with CastingOps with StableVars {
     
     def test(): Unit
@@ -208,7 +208,7 @@ class TestStable extends FileDiffSuite {
   trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with IfThenElseFatExp with LoopsFatExp with WhileExp
     with RangeOpsExp with PrintExp with FatExpressions with CompileScala
-    with NumericOpsExp with PrimitiveOpsExp with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp 
+    with PrimitiveOpsExp with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp 
     with StableVarsExp { self =>
     override val verbosity = 1
     dumpGeneratedCode = true
@@ -220,7 +220,7 @@ class TestStable extends FileDiffSuite {
   trait Codegen extends ScalaGenVector with ScalaGenArith with ScalaGenOrderingOps with ScalaGenBooleanOps
     with ScalaGenVariables with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenWhile
     with ScalaGenRangeOps with ScalaGenPrint with ScalaGenFunctions
-    with ScalaGenNumericOps with ScalaGenPrimitiveOps with ScalaGenArrayOps with ScalaGenHashMapOps with ScalaGenCastingOps with ScalaGenStaticData 
+    with ScalaGenPrimitiveOps with ScalaGenArrayOps with ScalaGenHashMapOps with ScalaGenCastingOps with ScalaGenStaticData 
     with ScalaGenCellOps with ScalaGenUncheckedOps {
     val IR: Impl
   }

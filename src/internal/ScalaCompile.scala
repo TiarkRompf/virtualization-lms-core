@@ -25,13 +25,14 @@ trait ScalaCompile extends Expressions {
       val writer = new PrintWriter(new OutputStreamWriter(output))
     */
     val settings = new Settings()
+	val pathSeparator = System.getProperty("path.separator")
 
     settings.classpath.value = this.getClass.getClassLoader match {
-      case ctx: java.net.URLClassLoader => ctx.getURLs.map(_.getPath).mkString(":")
+      case ctx: java.net.URLClassLoader => ctx.getURLs.map(_.getPath).mkString(pathSeparator)
       case _ => System.getProperty("java.class.path")
     }
     settings.bootclasspath.value = Predef.getClass.getClassLoader match {
-      case ctx: java.net.URLClassLoader => ctx.getURLs.map(_.getPath).mkString(":")
+      case ctx: java.net.URLClassLoader => ctx.getURLs.map(_.getPath).mkString(pathSeparator)
       case _ => System.getProperty("sun.boot.class.path")
     }
     settings.encoding.value = "UTF-8"
@@ -56,8 +57,10 @@ trait ScalaCompile extends Expressions {
     compileCount += 1
     
     val source = new StringWriter()
-    val staticData = codegen.emitSource(f, className, new PrintWriter(source))
-    codegen.emitDataStructures(new PrintWriter(source))
+    val writer = new PrintWriter(source)
+    val staticData = codegen.emitSource(f, className, writer)
+
+    codegen.emitDataStructures(writer)
 
     if (dumpGeneratedCode) println(source)
 

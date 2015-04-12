@@ -35,49 +35,6 @@ trait Expressions extends UtilsExp {
 
   def fresh[T:Manifest](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
 
-/*
-  def fresh[T:Manifest] = {
-    val (name, id, nameId) = nextName("x")
-    val sym = Sym[T](id)
-    sym.name = name
-    sym.nameId = nameId
-    sym
-  }
-
-  def fresh[T:Manifest](d: Def[T], ctx: Option[SourceContext]) = {
-    def enclosingNamedContext(sc: SourceContext): Option[SourceContext] = sc.bindings match {
-      case (null, _) :: _ =>
-        if (!sc.parent.isEmpty) enclosingNamedContext(sc.parent.get)
-        else None
-      case (name, line) :: _ =>
-        Some(sc)
-    }
-
-    // create base name from source context
-    val (basename, line, srcCtx) = if (!ctx.isEmpty) {
-      enclosingNamedContext(ctx.get) match {
-        case None =>
-          // no enclosing context has variable assignment
-          var outermost = ctx.get
-          while (!outermost.parent.isEmpty) {
-            outermost = outermost.parent.get
-          }
-          ("x", 0, Some(outermost))
-        case Some(sc) => sc.bindings match {
-          case (n, l) :: _ =>
-            (n, l, Some(sc))
-        }
-      }
-    } else ("x", 0, None)
-    val (name, id, nameId) = nextName(basename)
-    val sym = Sym[T](id)
-    sym.name = name
-    sym.nameId = nameId
-    sym.sourceContext = srcCtx
-    sym
-  }
-*/
-
   abstract class Def[+T] { // operations (composite)
     override final lazy val hashCode = scala.runtime.ScalaRunTime._hashCode(this.asInstanceOf[Product])
   }
@@ -126,7 +83,8 @@ trait Expressions extends UtilsExp {
   def reflectSubGraph(ds: List[Stm]): Unit = {
     val lhs = ds.flatMap(_.lhs)
     assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
-    val existing = lhs flatMap (globalDefsCache get _)//globalDefs filter (_.lhs exists (lhs contains _))
+    // equivalent to: globalDefs filter (_.lhs exists (lhs contains _))
+    val existing = lhs flatMap (globalDefsCache get _)
     assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
     localDefs = localDefs ::: ds
     globalDefs = globalDefs ::: ds
@@ -162,7 +120,7 @@ trait Expressions extends UtilsExp {
   }
 
   object Def {
-    def unapply[T](e: Exp[T]): Option[Def[T]] = e match { // really need to test for sym?
+    def unapply[T](e: Exp[T]): Option[Def[T]] = e match {
       case s @ Sym(_) =>
         findDefinition(s).flatMap(_.defines(s))
       case _ =>
@@ -179,8 +137,9 @@ trait Expressions extends UtilsExp {
     case ss: Iterable[Any] => ss.toList.flatMap(syms(_))
     // All case classes extend Product!
     case p: Product => 
-      //return p.productIterator.toList.flatMap(syms(_))
-      /* performance hotspot */
+      // performance hotspot: this is the same as
+      // p.productIterator.toList.flatMap(syms(_))
+      // but faster
       val iter = p.productIterator
       val out = new ListBuffer[Sym[Any]]
       while (iter.hasNext) {
@@ -222,7 +181,7 @@ trait Expressions extends UtilsExp {
     case _ => Nil
   }
 
-
+  // generic symbol traversal: f is expected to call rsyms again
   def rsyms[T](e: Any)(f: Any=>List[T]): List[T] = e match {
     case s: Sym[Any] => f(s)
     case ss: Iterable[Any] => ss.toList.flatMap(f)
@@ -243,25 +202,6 @@ trait Expressions extends UtilsExp {
   def freqNormal(e: Any) = symsFreq(e)
   def freqHot(e: Any) = symsFreq(e).map(p=>(p._1,p._2*1000.0))
   def freqCold(e: Any) = symsFreq(e).map(p=>(p._1,p._2*0.5))
-
-
-
-/*
-  def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
-    case s: Sym[Any] => List((s,1.0))
-    case p: Product => p.productIterator.toList.flatMap(symsFreq(_))
-    case _ => Nil
-  }
-*/
-
-/*
-  def symsShare(e: Any): List[(Sym[Any], Int)] = {
-    case s: Sym[Any] => List(s)
-    case p: Product => p.productIterator.toList.flatMap(symsShare(_))
-    case _ => Nil
-  }
-*/
-
 
 
   // bookkeeping
