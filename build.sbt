@@ -39,3 +39,13 @@ autoCompilerPlugins := true
 addCompilerPlugin("org.scala-lang.virtualized.plugins" % "continuations" % virtScala)
 
 scalacOptions += "-P:continuations:enable"
+
+// code coverage
+
+resolvers += Classpaths.sbtPluginReleases
+
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.0.1")
+
+addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.0.0.BETA1")
+
+scoverage.ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := false
