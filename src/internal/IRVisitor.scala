@@ -20,7 +20,7 @@ trait IRVisitor extends FatBlockTraversal { self =>
     val resultBlock = runOnce(curBlock)
     val outputBlock = postprocess(resultBlock) 
     
-    if (hadErrors) { fatalerr(name + " completed with errors") }
+    if (hadErrors) { printlog(name + " completed with errors") }
     else           { printlog("Completed " + name) }
     (outputBlock)
   }
@@ -86,7 +86,6 @@ trait IterativeIRVisitor extends IRVisitor {
       while (!hasConverged && runs < MAX_ITERS) { // convergence condition
         runs += 1
         changed = false
-        if (debugMode) printer.run(curBlock)
         curBlock = runOnce(curBlock)
       } 
       curBlock = postprocess(curBlock)
@@ -95,8 +94,8 @@ trait IterativeIRVisitor extends IRVisitor {
 
     if (!hasCompleted && runs > MAX_ITERS) { failedToConverge() }
     else if (!hasCompleted)                { failedToComplete() }
-    else if (hadErrors)                    { fatalerr(name + " completed with errors") }
-    else if (debugMode)                    { printmsg("Completed " + name); printer.run(curBlock) }
+    else if (hadErrors)                    { printlog(name + " completed with errors") }
+    else if (debugMode)                    { printlog("Completed " + name) }
     (curBlock)
   }    
 
