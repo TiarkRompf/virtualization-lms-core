@@ -1,10 +1,10 @@
 package scala.virtualization.lms.internal
 import scala.reflect.SourceContext
 
-trait IRVisitor extends FatBlockTraversal { 
+trait IRVisitor extends FatBlockTraversal { self =>
   import IR._
 
-  val name: String
+  val name: String = self.getClass.getName
  
   def preprocess[A:Manifest](b: Block[A]): Block[A] = { b }
   def postprocess[A:Manifest](b: Block[A]): Block[A] = { b }
@@ -30,7 +30,7 @@ trait IRVisitor extends FatBlockTraversal {
 
 abstract class IRPrinter extends IRVisitor {
   import IR._
-  val name = "Printer"
+  override val name = "Printer"
   override def traverseStm(stm: Stm): Unit = {
     super.traverseStm(stm)
     stm match { 
