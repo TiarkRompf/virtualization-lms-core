@@ -254,7 +254,8 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
 
   private def unwrap[A](m:Manifest[Variable[A]]): Manifest[A] = m.typeArguments match {
     case a::_ => mtype(a)
-    case _ => warn("in struct unwrapping, expected type Variable[A] but got "+m); mtype(manifest[Any])
+    case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
+      //warn("in struct unwrapping, expected type Variable[A] but got "+m); mtype(manifest[Any])
   }
 
   override def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {

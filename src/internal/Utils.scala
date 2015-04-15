@@ -11,9 +11,10 @@ trait Utils extends Config {
   def __ = throw new RuntimeException("unsupported embedded dsl operation")
 
   def printmsg(x: =>Any) { System.out.println(x) }
-  def printdbg(x: =>Any) { if (verbosity >= 2) {System.err.println(x); System.out.println(x) } }
-  def printlog(x: =>Any) { if (verbosity >= 1) {System.err.println(x); System.out.println(x) } }
-  def printerr(x: =>Any) { System.err.println("[\u001B[31merror\u001B[0m] " + x); System.out.println("[\u001B[31merror\u001B[0m] " + x); _hadErrors = true }
+  def printdbg(x: =>Any) { if (verbosity >= 2) System.err.println(x) }
+  def printlog(x: =>Any) { if (verbosity >= 1) System.err.println(x) }
+  def printerr(x: =>Any) { System.err.println(x); hadErrors = true }
+  /*{ System.err.println("[\u001B[31merror\u001B[0m] " + x); System.out.println("[\u001B[31merror\u001B[0m] " + x); _hadErrors = true }*/
 
   def printsrc(x: =>Any) { if (sourceinfo >= 1) System.err.println(x) }
   

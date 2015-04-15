@@ -56,7 +56,8 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
         if (recursive.contains(sym)) { // O(n) since recursive is a list!
           transformStm(stm)
         } else {
-          warn("transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
+          //warn("transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
+          printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
           // what to do? bail out? lookup def and then transform???
         }
       }
@@ -82,10 +83,10 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
       mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos)) // cast needed why?
     } catch { //hack -- should not catch errors
       case e if e.toString contains "don't know how to mirror" => 
-        printerr(e.getMessage)
+        printerr("error: " + e.getMessage)
       sym
       case e: Throwable => 
-        printerr("exception during mirroring of "+rhs+": "+ e)
+        printerr("error: exception during mirroring of "+rhs+": "+ e)
         e.printStackTrace; 
         sym            
     }

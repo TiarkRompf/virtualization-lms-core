@@ -15,13 +15,13 @@ trait IRVisitor extends FatBlockTraversal { self =>
   def runOnce[A:Manifest](s: Block[A]): Block[A] = { traverseBlock(s); (s) }
 
   def run[A:Manifest](b: Block[A]): Block[A] = { 
-    printlog("Beginning " + name)
+    //printlog("Beginning " + name)
     val curBlock = preprocess(b)
     val resultBlock = runOnce(curBlock)
     val outputBlock = postprocess(resultBlock) 
     
-    if (hadErrors) { printlog(name + " completed with errors") }
-    else           { printlog("Completed " + name) }
+    /*if (hadErrors) { printlog(name + " completed with errors") }
+    else           { printlog("Completed " + name) }*/
     (outputBlock)
   }
 
@@ -36,7 +36,6 @@ abstract class IRPrinter extends IRVisitor {
     stm match { 
       case TP(s,d) => 
         printmsg(strDef(s))
-        printmsg("\tsyms: " + syms(d))
       case _ => //
     }
   }
@@ -61,10 +60,8 @@ trait IterativeIRVisitor extends IRVisitor {
   def hasConverged: Boolean = !changed
   def hasCompleted: Boolean = true
 
-  def failedToConverge() { warn(name + " did not converge within " + MAX_ITERS + " iterations.") }
-  def failedToComplete() { warn(name + " reached convergence but did not report completion.") }
-
-  lazy val printer = new IRPrinter{val IR: IterativeIRVisitor.this.IR.type = IterativeIRVisitor.this.IR }
+  def failedToConverge() { /*warn(name + " did not converge within " + MAX_ITERS + " iterations.")*/ }
+  def failedToComplete() { /*warn(name + " reached convergence but did not report completion.")*/ }
 
   private var _retry = false
   /**
@@ -78,7 +75,7 @@ trait IterativeIRVisitor extends IRVisitor {
    * Run traversal/analysis on a given block until convergence or maximum iterations
    */
   override def run[A:Manifest](b: Block[A]): Block[A] = {
-    printlog("Beginning " + name)
+    //printlog("Beginning " + name)
     var curBlock = preprocess(b)
     do {
       runs = 0
@@ -89,13 +86,13 @@ trait IterativeIRVisitor extends IRVisitor {
         curBlock = runOnce(curBlock)
       } 
       curBlock = postprocess(curBlock)
-      if (_retry && retries < MAX_RETRIES) { retries += 1; printlog(name + " became stuck - retrying (retry " + retries + ")") }
+      if (_retry && retries < MAX_RETRIES) { retries += 1; /*printlog(name + " became stuck - retrying (retry " + retries + ")")*/ }
     } while (_retry)
 
-    if (!hasCompleted && runs > MAX_ITERS) { failedToConverge() }
+    /*if (!hasCompleted && runs > MAX_ITERS) { failedToConverge() }
     else if (!hasCompleted)                { failedToComplete() }
-    else if (hadErrors)                    { printlog(name + " completed with errors") }
-    else if (debugMode)                    { printlog("Completed " + name) }
+    else if (hadErrors)                    { warn(name + " completed with errors") }
+    else if (debugMode)                    { warn("Completed " + name) }*/
     (curBlock)
   }    
 

@@ -386,12 +386,12 @@ trait Effects extends Expressions with Blocks {
 
   def checkIllegalSharing(z: Exp[Any], mutableAliases: List[Sym[Any]]) {
     if (mutableAliases.nonEmpty) {
-      //val zd = z match { case Def(zd) => zd }
-      //printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
-      //printerr("at " + z + "=" + zd)
-      //printsrc("in " + quotePos(z))
-      printerr(quotePos(z.pos) + ": attempted to create illegal alias of mutable objects " + mutableAliases.mkString(", ") + "\n\t" +
-               quoteCode(z.pos).getOrElse(strDef(z)))
+      val zd = z match { case Def(zd) => zd }
+      printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
+      printerr("at " + z + "=" + zd)
+      printsrc("in " + quotePos(z))
+      //printerr(quotePos(z.pos) + ": attempted to create illegal alias of mutable objects " + mutableAliases.mkString(", ") + "\n\t" +
+      //         quoteCode(z.pos).getOrElse(strDef(z)))
     }
   }
 
@@ -462,10 +462,10 @@ trait Effects extends Expressions with Blocks {
         val z = fresh[A](List(pos))
         // make sure all writes go to allocs
         for (w <- u.mayWrite if !isWritableSym(w)) {
-          //printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
-          //printerr("at " + z + "=" + zd)
-          //printsrc("in " + quotePos(z))
-          printerr(quotePos(List(pos)) + ": write to non-mutable " + w.tp.toString + "\n\t" + quoteCode(List(pos)).getOrElse(strDef(w)))
+          printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
+          printerr("at " + z + "=" + zd)
+          printsrc("in " + quotePos(z))
+          //printerr(quotePos(List(pos)) + ": write to non-mutable " + w.tp.toString + "\n\t" + quoteCode(List(pos)).getOrElse(strDef(w)))
         }
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
         // make sure no mutable object becomes part of mutable result (in case of allocation)
@@ -530,10 +530,10 @@ trait Effects extends Expressions with Blocks {
   def createReflectDefinition[A](s: Sym[A], x: Reflect[A]): Sym[A] = {
     x match {
       case Reflect(Reify(_,_,_),_,_) =>
-        printerr(quotePos(s.pos) + ": reflecting a reify node.\nat " + s + " = " + x)
-        //printerr("error: reflecting a reify node")
-        //printerr("at " + s + "=" + x)
-        //printsrc("in " + quotePos(s))
+        printerr("error: reflecting a reify node")
+        printerr("at " + s + "=" + x)
+        printsrc("in " + quotePos(s))
+        //printerr(quotePos(s.pos) + ": reflecting a reify node.\nat " + s + " = " + x)
       case _ => //ok
     }
     createDefinition(s, x)
@@ -606,7 +606,8 @@ trait Effects extends Expressions with Blocks {
     conditionalScope = saveControl
 
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
-      printerr("'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
+      printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
+      //printerr("'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
 
     val deps = if (save eq null) context else context.drop(save.length)
 
