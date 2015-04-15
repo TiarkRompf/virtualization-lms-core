@@ -167,7 +167,7 @@ class TestForward1 extends FileDiffSuite {
         println("--- code ---")
         codegen.emitBlock(b2)
         codegen.stream.flush
-        if (!xform.isDone) iter(n-1,b2)
+        if (!xform.hasCompleted) iter(n-1,b2)
       }
       iter(10,b1) // fixed num of iterations for now
     }

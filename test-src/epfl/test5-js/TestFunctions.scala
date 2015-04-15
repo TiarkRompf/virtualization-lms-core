@@ -55,7 +55,7 @@ trait JSGenStruct extends JSGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Struct(tag, elems) =>
-      registerStruct(structName(sym.tp), elems)
+      registerStruct(structName(sym.tp), sym.tp, elems)
       emitValDef(sym, "{__structName:" + structName(sym.tp) + "," + elems.map(e => e._1+":"+quote(e._2)).mkString(",") + "}")
 //      printlog("WARNING: emitting " + structName(sym.tp) + " struct " + quote(sym))    
     case FieldApply(struct, index) =>

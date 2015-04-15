@@ -36,6 +36,7 @@ abstract class IRPrinter extends IRVisitor {
     stm match { 
       case TP(s,d) => 
         printmsg(strDef(s))
+        printmsg("\tsyms: " + syms(d))
       case _ => //
     }
   }
@@ -85,7 +86,7 @@ trait IterativeIRVisitor extends IRVisitor {
       while (!hasConverged && runs < MAX_ITERS) { // convergence condition
         runs += 1
         changed = false
-        //if (debugMode) printer.run(curBlock)
+        if (debugMode) printer.run(curBlock)
         curBlock = runOnce(curBlock)
       } 
       curBlock = postprocess(curBlock)
@@ -95,7 +96,7 @@ trait IterativeIRVisitor extends IRVisitor {
     if (!hasCompleted && runs > MAX_ITERS) { failedToConverge() }
     else if (!hasCompleted)                { failedToComplete() }
     else if (hadErrors)                    { fatalerr(name + " completed with errors") }
-    else if (debugMode)                    { printmsg("Completed " + name) }
+    else if (debugMode)                    { printmsg("Completed " + name); printer.run(curBlock) }
     (curBlock)
   }    
 
