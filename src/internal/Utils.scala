@@ -13,7 +13,7 @@ trait Utils extends Config {
   def printmsg(x: =>Any) { System.out.println(x) }
   def printdbg(x: =>Any) { if (verbosity >= 2) System.err.println(x) }
   def printlog(x: =>Any) { if (verbosity >= 1) System.err.println(x) }
-  def printerr(x: =>Any) { System.err.println(x); _hadErrors = true }
+  def printerr(x: =>Any) { System.err.println(x); if (testsuite) System.out.println(x); _hadErrors = true }
   /*{ System.err.println("[\u001B[31merror\u001B[0m] " + x); System.out.println("[\u001B[31merror\u001B[0m] " + x); _hadErrors = true }*/
 
   def printsrc(x: =>Any) { if (sourceinfo >= 1) System.err.println(x) }

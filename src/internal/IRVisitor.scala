@@ -63,6 +63,8 @@ trait IterativeIRVisitor extends IRVisitor {
   def failedToConverge() { /*warn(name + " did not converge within " + MAX_ITERS + " iterations.")*/ }
   def failedToComplete() { /*warn(name + " reached convergence but did not report completion.")*/ }
 
+  lazy val printer = new IRPrinter{val IR: IterativeIRVisitor.this.IR.type = IterativeIRVisitor.this.IR}
+
   private var _retry = false
   /**
    * Function to be called to try to recover when visitor converged but did not complete
@@ -83,16 +85,18 @@ trait IterativeIRVisitor extends IRVisitor {
       while (!hasConverged && runs < MAX_ITERS) { // convergence condition
         runs += 1
         changed = false
+        if (debugMode) printer.run(curBlock)
         curBlock = runOnce(curBlock)
       } 
       curBlock = postprocess(curBlock)
-      if (_retry && retries < MAX_RETRIES) { retries += 1; /*printlog(name + " became stuck - retrying (retry " + retries + ")")*/ }
-    } while (_retry)
+      retries += 1
+    } while (_retry && retries <= MAX_RETRIES)
 
     /*if (!hasCompleted && runs > MAX_ITERS) { failedToConverge() }
     else if (!hasCompleted)                { failedToComplete() }
     else if (hadErrors)                    { warn(name + " completed with errors") }
     else if (debugMode)                    { warn("Completed " + name) }*/
+    if (debugMode) printer.run(curBlock)
     (curBlock)
   }    
 
