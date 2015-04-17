@@ -530,7 +530,7 @@ trait Effects extends Expressions with Blocks {
   def createReflectDefinition[A](s: Sym[A], x: Reflect[A]): Sym[A] = {
     x match {
       case Reflect(Reify(_,_,_),_,_) =>
-        printerr("error: reflecting a reify node")
+        printerr("error: reflecting a reify node.")
         printerr("at " + s + "=" + x)
         printsrc("in " + quotePos(s))
         //printerr(quotePos(s.pos) + ": reflecting a reify node.\nat " + s + " = " + x)
