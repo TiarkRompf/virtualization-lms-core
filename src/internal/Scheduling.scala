@@ -78,6 +78,7 @@ trait Scheduling {
   }
 
   def getSchedule(scope: List[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
+    printDebug("scope: " + scope)
     val scopeIndex = buildScopeIndex(scope)
 
     val xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(syms(result), scopeIndex), t => scheduleDepsWithIndex(syms(t.rhs), scopeIndex))
@@ -87,6 +88,8 @@ trait Scheduling {
         (new Exception) printStackTrace
       }
     }
+    printDebug("schedule: " + xx.flatten.reverse)
+
     xx.flatten.reverse
   }
 

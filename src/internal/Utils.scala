@@ -29,6 +29,17 @@ trait Utils extends Config {
   private var _hadErrors = false
   def hadErrors = _hadErrors
   def resetErrors() {_hadErrors = false}
+
+  private var debugging: Boolean = false
+  def inDebugMode[A](block: => A): A = {
+    val prevMode = debugging
+    debugging = true
+    val out = block
+    debugging = prevMode
+    (out)
+  }
+  
+  def printDebug(x: => Any) { if (debugging) printmsg(x) }
 }
 
 trait UtilsExp extends Utils {this: Expressions =>
