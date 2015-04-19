@@ -13,8 +13,10 @@ trait GraphTraversal extends Scheduling {
   
   def availableDefs: List[Stm] = globalDefs
   
-  def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] = 
+  def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] = {
+    printDebug("Getting schedule for " + result)
     getSchedule(availableDefs)(result, sort)
+  }
 
   def getDependentStuff(st: List[Sym[Any]]): List[Stm] = {
     getFatDependentStuff(availableDefs)(st)
@@ -49,6 +51,7 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
 //    outerScope = outerScope ::: levelScope
 //    levelScope = Nil
     innerScope = scope
+    printDebug("Entering scope!\n\t" + (if (scope ne null) innerScope.mkString("\n\t") else "null"))
 
     var rval = null.asInstanceOf[A]
     try {
@@ -61,6 +64,8 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
       innerScope = saveInner
     }
 
+    printDebug("Exiting scope!\n\t" + (if (innerScope ne null) innerScope.mkString("\n\t") else "null"))
+    
 //    outerScope = saveOuter
 //    levelScope = saveLevel
 //    innerScope = saveInner

@@ -587,7 +587,11 @@ trait Effects extends Expressions with Blocks {
     val summary = summarizeAll(deps)
     context = save
 
-    if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
+    // Bit of a hack here - added preservation of result's type for rare case where result.tp =/= manifest[A]
+    if (deps.isEmpty && mustPure(summary)) 
+      Block(result) 
+    else 
+      Block(toAtom(Reify(result, summary, pruneContext(deps)))(result.tp,implicitly[SourceContext])).asInstanceOf[Block[A]]
   }
 
   // reify the effects of a block that is executed 'here' (if it is executed at all).
