@@ -799,7 +799,8 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
 */
     case (Empty(),Empty())       => List()
     case (IfThen(c,a),Empty())   => if (cond && c) a else List()
-    case (For(l,f),Empty())      => for (x <- l if cond; y <- f(x)) yield y
+    case (For(l,f),Empty())      => implicit def unsafe[T] = manifest[Any].asInstanceOf[Manifest[T]] // FIXME: get manifest (for result type) from somewhere else
+                                    for (x <- l if cond; y <- f(x)) yield y
     case (Concat(a,b),Empty())   => (if (cond) a else List()) ++ (if (cond) b else List())
     case _                       => super.ifThenElse(cond,thenp,elsep)
   }).asInstanceOf[Exp[T]]
