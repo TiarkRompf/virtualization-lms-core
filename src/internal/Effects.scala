@@ -368,7 +368,6 @@ trait Effects extends Expressions with Blocks with Utils {
         // specifically, if we return the reified version of a mutable bound var, we get a Reflect(Reify(..)) error, e.g. mutable Sum
         // printlog("ignoring read of Reify(): " + d)
         super.toAtom(d)
-      case _ if conditionalScope && addControlDeps => reflectEffect(d, Control())
       case _ => reflectEffect(d, Pure())
     }
     // reflectEffect(d, Pure())
@@ -432,7 +431,8 @@ trait Effects extends Expressions with Blocks with Utils {
   def reflectEffect[A:Manifest](d: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
     // are we depending on a variable? then we need to be serialized -> effect
     val mutableInputs = readMutableData(d)
-    reflectEffectInternal(d, u andAlso Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
+    val control = if (conditionalScope && addControlDeps) Control() else Pure()
+    reflectEffectInternal(d, u andAlso Read(mutableInputs) andAlso control) // will call super.toAtom if pure
   }
 
   def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
@@ -566,18 +566,12 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // reify the effects of an isolated block.
   // no assumptions about the current context remain valid.
-  def reifyEffects[A:Manifest](block: => Exp[A], controlScope: Boolean = false): Block[A] = {
+  def reifyEffects[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     context = Nil
 
-    // only add control dependencies scopes where controlScope is explicitly true (i.e., the first-level of an IfThenElse)
-    val saveControl = conditionalScope
-    conditionalScope = controlScope
-
     val (result, defs) = reifySubGraph(block)
     reflectSubGraph(defs)
-
-    conditionalScope = saveControl
 
     val deps = context
     val summary = summarizeAll(deps)
@@ -588,18 +582,13 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // reify the effects of a block that is executed 'here' (if it is executed at all).
   // all assumptions about the current context carry over unchanged.
-  def reifyEffectsHere[A:Manifest](block: => Exp[A], controlScope: Boolean = false): Block[A] = {
+  def reifyEffectsHere[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     if (save eq null)
       context = Nil
 
-    val saveControl = conditionalScope
-    conditionalScope = controlScope
-
     val (result, defs) = reifySubGraph(block)
     reflectSubGraph(defs)
-
-    conditionalScope = saveControl
 
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
       printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
