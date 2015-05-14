@@ -34,7 +34,7 @@ abstract class IRPrinter extends IRVisitor {
   override def traverseStm(stm: Stm): Unit = {
     super.traverseStm(stm)
     stm match { 
-      case TP(s,d) => printmsg("(" + s.tp + ") " + strDef(s))
+      case TP(s,d) => printmsg(strDef(s))
       case _ => //
     }
   }
@@ -52,6 +52,7 @@ trait IterativeIRVisitor extends IRVisitor {
   var runs = 0              // Current analysis iteration
   var retries = 0           // Current retry
   val debugMode = false 
+  val fullDebug = false
 
   var changed: Boolean = true    // Flag for if any unpropagated updates have been made to the IR
   def notifyChange() { changed = true }
@@ -76,7 +77,6 @@ trait IterativeIRVisitor extends IRVisitor {
    * Run traversal/analysis on a given block until convergence or maximum iterations
    */
   override def run[A:Manifest](b: Block[A]): Block[A] = {
-    //printlog("Beginning " + name)
     var curBlock = preprocess(b)
     do {
       runs = 0
@@ -84,8 +84,7 @@ trait IterativeIRVisitor extends IRVisitor {
       while (!hasConverged && runs < MAX_ITERS) { // convergence condition
         runs += 1
         changed = false
-        //if (debugMode) printer.run(curBlock)
-        curBlock = runOnce(curBlock)
+        curBlock = if (fullDebug) inDebugMode { runOnce(curBlock) } else runOnce(curBlock)
       } 
       curBlock = postprocess(curBlock)
       retries += 1
@@ -95,8 +94,10 @@ trait IterativeIRVisitor extends IRVisitor {
     else if (!hasCompleted)                { failedToComplete() }
     else if (hadErrors)                    { warn(name + " completed with errors") }
     else if (debugMode)                    { printmsg("Completed " + name) }*/
-    if (debugMode) { printmsg("----------------------\nCompleted " + name + "\n----------------------") }
+    //if (true) { printmsg("----------------------\nCompleted " + name + "\n----------------------") }
+    
     if (debugMode) printer.run(curBlock)
+
     (curBlock)
   }    
 

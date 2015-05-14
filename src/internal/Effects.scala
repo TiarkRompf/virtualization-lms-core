@@ -583,6 +583,8 @@ trait Effects extends Expressions with Blocks {
 
     conditionalScope = saveControl
 
+    if (result == Const(())) printDebug("context: \t" + context.mkString("\n\t"))
+
     val deps = context
     val summary = summarizeAll(deps)
     context = save

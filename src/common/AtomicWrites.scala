@@ -57,8 +57,8 @@ trait AtomicWriteExp extends AtomicWriteOps with EffectExp {
     /* 
      * Symbols which should always be externally visible, even with nesting
      * e.g.:
-     * DeliteArrayApply(array, i) => need to see dependencies (i, array)
-     * NestedAtomicWrite(struct, field, DeliteArrayApply(array, i)) => need (struct, i)
+     * DeliteArrayUpdate(array, i, x) => need to see dependencies (array, i, x)
+     * NestedAtomicWrite(struct, field, DeliteArrayUpdate(array, i, x)) => need (struct, i, x)
      * TODO: Better name for this?
      */
     def externalFields: List[Any]
@@ -104,7 +104,7 @@ trait AtomicWriteExp extends AtomicWriteOps with EffectExp {
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit ctx: SourceContext): Exp[A] = (e match {
     case op: AtomicWrite[_] if op.isNested => sys.error("Shouldn't be mirroring a nested write!")
     case Reflect(NestedAtomicWrite(s,t,d), u, es) => 
-      reflectMirrored(Reflect(NestedAtomicWrite(f(s),t.map{r => mirrorTrace(r,f)}, mirrorNestedAtomic(d,f))(mtype(manifest[A]),ctx), mapOver(f,u), f(es)))(mtype(manifest[Unit]), ctx)
+      reflectMirrored(Reflect(NestedAtomicWrite(f(s),t.map{r => mirrorTrace(r,f)}, mirrorNestedAtomic(d,f).asNested)(mtype(manifest[A]),ctx), mapOver(f,u), f(es)))(mtype(manifest[Unit]), ctx)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
