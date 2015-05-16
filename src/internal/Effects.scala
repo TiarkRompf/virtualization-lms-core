@@ -401,6 +401,10 @@ trait Effects extends Expressions with Blocks {
       case o => globalMutableSyms.contains(w)
     }
   }
+  def isMutable(e: Exp[Any]): Boolean = e match {
+    case s: Sym[_] => isWritableSym(s)
+    case _ => false
+  }
 
 
   var globalMutableSyms: List[Sym[Any]] = Nil

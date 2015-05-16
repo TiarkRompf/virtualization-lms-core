@@ -5,6 +5,7 @@ import reflect.{SourceContext, RefinedManifest}
 import util.OverloadHack
 import java.io.PrintWriter
 import internal.{GenericNestedCodegen, GenericFatCodegen}
+import internal.Meetable._
 
 abstract class Record extends Struct
 
@@ -64,6 +65,16 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     case _ => None
   }
 
+  //TODO: we should have a unified way of handling this, e.g., TypeTag[T] instead of Manifest[T]
+  object StructType { 
+    def unapply[T:Manifest] = unapplyStructType[T]
+  }
+
+  def unapplyStructType[T:Manifest]: Option[(StructTag[T], List[(String,Manifest[_])])] = manifest[T] match {
+    case r: RefinedManifest[T] => Some(AnonTag(r), r.fields)
+    case _ => None
+  }
+
   object Field {
     def unapply[T](d: Def[T]) = unapplyField(d)
   }
@@ -105,6 +116,23 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
 
   def record_select[T : Manifest](record: Rep[Record], fieldName: String) = {
     field(record, fieldName)
+  }
+
+  override def initProps[A](tp: Manifest[A], symData: PropertyMap[Metadata], child: Option[SymbolProperties], index: Option[String])(implicit ctx: SourceContext) = tp match {
+    case StructType(_,elems) =>
+      val typeFields = PropertyMap(elems.map{elem => elem._1 -> Some(initTpe(elem._2)) })
+      val symFields = index match {
+        case Some(index) => attemptMeet(PropertyMap(index, child), typeFields, func = MetaTypeInit)
+        case None => typeFields
+      }
+      StructProperties(symFields, symData)
+    
+    case _ => super.initProps(tp, symData, child, index)
+  }
+  
+  override def isDataStructureTpe[T](tp: Manifest[T]): Boolean = tp match {
+    case StructType(_,_) => true
+    case _ => super.isDataStructureTpe(tp)
   }
 
   override def syms(e: Any): List[Sym[Any]] = e match {

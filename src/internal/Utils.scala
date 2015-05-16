@@ -14,6 +14,7 @@ trait Utils extends Config {
   def printdbg(x: =>Any) { if (verbosity >= 2) System.err.println(x) }
   def printlog(x: =>Any) { if (verbosity >= 1) System.err.println(x) }
   def printerr(x: =>Any) { System.err.println(x); if (testsuite) System.out.println(x); _hadErrors = true }
+
   /*{ System.err.println("[\u001B[31merror\u001B[0m] " + x); System.out.println("[\u001B[31merror\u001B[0m] " + x); _hadErrors = true }*/
 
   def printsrc(x: =>Any) { if (sourceinfo >= 1) System.err.println(x) }
@@ -92,6 +93,10 @@ trait UtilsExp extends Utils {this: Expressions =>
     case Nil => "<unknown>"
     case cs => 
       cs.map(c => all(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
+  }
+
+  def check(cond: Boolean, x: => Any)(implicit ctx: SourceContext) {
+    if (!cond) printerr(quotePos(ctx) + ": " + x + quoteCode(ctx).map{"\n\t" + _}.getOrElse(""))
   }
 
 }

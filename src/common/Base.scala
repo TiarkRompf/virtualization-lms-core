@@ -34,7 +34,7 @@ trait Base extends EmbeddedControls {
  *
  * @since 0.1
  */
-trait BaseExp extends Base with Expressions with Blocks with Transforming {
+trait BaseExp extends Base with Expressions with Blocks with Transforming with MetadataOps {
   type Rep[+T] = Exp[T]
 
   protected def unit[T:Manifest](x: T) = Const(x)

@@ -75,11 +75,6 @@ trait Transforming extends Expressions with Blocks with OverloadHack {
   }*/
 
   // FIXME: mirroring for effects!
-
-  def mtype[A,B](m:Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]] // hack: need to pass explicit manifest during mirroring
-  def mpos(s: List[SourceContext]): SourceContext = if (s.nonEmpty) s.head else implicitly[SourceContext] // hack: got list of pos but need to pass single pos to mirror
-
-  
   
   def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = mirrorDef(e,f)
 

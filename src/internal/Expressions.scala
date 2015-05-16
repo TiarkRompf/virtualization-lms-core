@@ -128,6 +128,8 @@ trait Expressions extends UtilsExp {
     }
   }
 
+  def mtype[A,B](m:Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]] // hack: need to pass explicit manifest (e.g. during mirroring)
+  def mpos(s: List[SourceContext]): SourceContext = if (s.nonEmpty) s.head else implicitly[SourceContext] // hack: got list of pos but need to pass single pos (e.g. to mirror)
 
   // dependencies
 
