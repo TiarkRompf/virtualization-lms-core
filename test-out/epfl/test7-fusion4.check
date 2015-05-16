@@ -19,7 +19,7 @@ super.focusExactScopeFat with result changed from List(Sym(12)) to List(Sym(25))
 *******************************************/
 class Test extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-var x23 = 0
+var x23: Int = 0
 for (x1 <- 0 until 100) {
 val x13 = x1 > 50
 if (x13) x23 += x1

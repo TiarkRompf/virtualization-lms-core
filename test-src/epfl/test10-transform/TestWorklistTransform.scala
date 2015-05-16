@@ -22,11 +22,12 @@ import scala.reflect.SourceContext
 //      vfromarray(data)
 //    }
 
-
-
 trait FWTransform1 extends BaseFatExp with EffectExp with IfThenElseFatExp with LoopsFatExp { self =>
   
-  class MyWorklistTransformer extends WorklistTransformer { val IR: self.type = self }
+  class MyWorklistTransformer extends WorklistTransformer { 
+    val IR: self.type = self 
+    override def hasConverged = nextSubst.isEmpty
+  }
   
   def xform: MyWorklistTransformer
   
@@ -167,7 +168,7 @@ class TestForward1 extends FileDiffSuite {
         println("--- code ---")
         codegen.emitBlock(b2)
         codegen.stream.flush
-        if (!xform.isDone) iter(n-1,b2)
+        if (!xform.hasConverged) iter(n-1,b2)
       }
       iter(10,b1) // fixed num of iterations for now
     }

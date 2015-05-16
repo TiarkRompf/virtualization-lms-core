@@ -101,13 +101,13 @@ trait ScalaGenOrderingOps extends ScalaGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case OrderingLT(a,b) => emitValDef(sym, quote(a) + " < " + quote(b))
-    case OrderingLTEQ(a,b) => emitValDef(sym, quote(a) + " <= " + quote(b))
-    case OrderingGT(a,b) => emitValDef(sym, quote(a) + " > " + quote(b))
-    case OrderingGTEQ(a,b) => emitValDef(sym, quote(a) + " >= " + quote(b))
-    case OrderingEquiv(a,b) => emitValDef(sym, quote(a) + " equiv " + quote(b))
-    case OrderingMax(a,b) => emitValDef(sym, quote(a) + " max " + quote(b))
-    case OrderingMin(a,b) => emitValDef(sym, quote(a) + " min " + quote(b))
+    case OrderingLT(a,b) => emitValDef(sym, src"$a < $b")
+    case OrderingLTEQ(a,b) => emitValDef(sym, src"$a <= $b")
+    case OrderingGT(a,b) => emitValDef(sym, src"$a > $b")
+    case OrderingGTEQ(a,b) => emitValDef(sym, src"$a >= $b")
+    case OrderingEquiv(a,b) => emitValDef(sym, src"$a equiv $b")
+    case OrderingMax(a,b) => emitValDef(sym, src"$a max $b")
+    case OrderingMin(a,b) => emitValDef(sym, src"$a min $b")
     case c@OrderingCompare(a,b) => c.mev match {
       case m if m == Manifest.Int => emitValDef(sym, "java.lang.Integer.compare("+quote(a)+","+quote(b)+")")
       case m if m == Manifest.Long => emitValDef(sym, "java.lang.Long.compare("+quote(a)+","+quote(b)+")")
@@ -131,19 +131,21 @@ trait CLikeGenOrderingOps extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case OrderingLT(a,b) =>
-          emitValDef(sym, quote(a) + " < " + quote(b))
+          emitValDef(sym, src"$a < $b")
         case OrderingLTEQ(a,b) =>
-          emitValDef(sym, quote(a) + " <= " + quote(b))
+          emitValDef(sym, src"$a <= $b")
         case OrderingGT(a,b) =>
-          emitValDef(sym, quote(a) + " > " + quote(b))
+          emitValDef(sym, src"$a > $b")
         case OrderingGTEQ(a,b) =>
-          emitValDef(sym, quote(a) + " >= " + quote(b))
+          emitValDef(sym, src"$a >= $b")
         case OrderingEquiv(a,b) =>
-          emitValDef(sym, quote(a) + " == " + quote(b))
+          emitValDef(sym, src"$a == $b")
         case OrderingMax(a,b) =>
-          emitValDef(sym, quote(a) + ">" + quote(b) + "?" + quote(a) + ":" + quote(b))
+          //emitValDef(sym, quote(a) + ">" + quote(b) + "?" + quote(a) + ":" + quote(b))
+          emitValDef(sym, src"MAX($a, $b)")
         case OrderingMin(a,b) =>
-          emitValDef(sym, quote(a) + "<" + quote(b) + "?" + quote(a) + ":" + quote(b))
+          //emitValDef(sym, quote(a) + "<" + quote(b) + "?" + quote(a) + ":" + quote(b))
+          emitValDef(sym, src"MIN($a, $b)")
         case _ => super.emitNode(sym, rhs)
       }
     }

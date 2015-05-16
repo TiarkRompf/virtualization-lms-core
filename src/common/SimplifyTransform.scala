@@ -46,19 +46,24 @@ trait SimplifyTransform extends internal.FatScheduling {
         if (s2 == s) {
           printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned same object (expected t(syms) = " + tss.mkString(",") + ")")
         }
+
         s2 match { 
           case Def(x2) => 
             if (x.getClass == x2.getClass) {
               // if the def class does not change, we expect that the free syms are transformed
               val ss2 = syms(x2)
+              // should do filtering in def of tss above?
               if (ss2 != tss.filter(_.isInstanceOf[Sym[Any]])) // should do filtering in def of tss above?
                 printerr("warning: mirroring of "+s+"="+x+" syms " + ss.mkString(",") + " returned "+s2+"="+x2+" syms " + ss2.mkString(",") + " (expected t(syms) = " + tss.mkString(",") + ")")
+ 
             }
             if (!(s2.tp <:< s.tp))
               printerr("warning: mirroring of "+s+"="+x+" type " + s.tp + " returned "+s2+"="+x2+" type " + s2.tp + " (not a subtype)")
+ 
           case _ =>
             if (!(s2.tp <:< s.tp))
               printerr("warning: mirroring of "+s+"="+x+" type " + s.tp + " returned "+s2+" type " + s2.tp + " (not a subtype)")
+ 
         }
         s2
       } else {

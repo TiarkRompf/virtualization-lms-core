@@ -27,10 +27,10 @@ trait ScalaGenDSLOps extends ScalaGenEffect with BaseGenDSLOps {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case op: DSLOp[_] =>
       val b = op.representation
-      stream.println("val " + quote(sym) + " = { ")
-      emitBlock(b)
-      stream.println(quote(getBlockResult(b)))
-      stream.println("}")
+      gen"""val $sym = {
+           |${nestedBlock(b)}
+           |$b
+           |}"""
 
     case _ => super.emitNode(sym, rhs)
   }

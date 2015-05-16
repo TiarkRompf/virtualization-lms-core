@@ -8,4 +8,6 @@ trait Config {
   
   // memory management type for C++ target (refcnt or gc)
   val cppMemMgr = System.getProperty("lms.cpp.memmgr","malloc")
+
+  val testsuite: Boolean = false
 }

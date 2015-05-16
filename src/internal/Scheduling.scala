@@ -63,7 +63,7 @@ trait Scheduling {
     val iter = sortedSet.iterator //return stms in the original order given by 'scope'
     while (iter.hasNext) {
       res ::= iter.next._1
-    }
+    } 
     res
   }
 
@@ -80,6 +80,8 @@ trait Scheduling {
   def getSchedule(scope: List[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
     val scopeIndex = buildScopeIndex(scope)
 
+    //printDebug("scope: \n\t" + (if (scope ne null) scope.mkString("\n\t") else "null"))
+
     val xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(syms(result), scopeIndex), t => scheduleDepsWithIndex(syms(t.rhs), scopeIndex))
     if (sort) xx.foreach { x => 
       if (x.length > 1) {
@@ -87,6 +89,9 @@ trait Scheduling {
         (new Exception) printStackTrace
       }
     }
+
+    //printDebug("schedule: \n\t" + xx.flatten.reverse.mkString("\n\t"))
+
     xx.flatten.reverse
   }
 

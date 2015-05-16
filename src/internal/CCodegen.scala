@@ -117,6 +117,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
                      "*******************************************/\n" +
                      "#include <stdio.h>\n" +
                      "#include <stdlib.h>\n" +
+                     "#include <string.h>\n" +
                      "#include <stdbool.h>"
       )
 

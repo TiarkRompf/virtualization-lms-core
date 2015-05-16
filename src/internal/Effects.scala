@@ -22,7 +22,7 @@ trait Blocks extends Expressions {
 }
 
 
-trait Effects extends Expressions with Blocks with Utils {
+trait Effects extends Expressions with Blocks {
 
   // TODO: transform over Summary currently lives in common/Base.scala. move it here?
   // --- context
@@ -393,6 +393,8 @@ trait Effects extends Expressions with Blocks with Utils {
       printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
       printerr("at " + z + "=" + zd)
       printsrc("in " + quotePos(z))
+      //printerr(quotePos(z.pos) + ": attempted to create illegal alias of mutable objects " + mutableAliases.mkString(", ") + "\n\t" +
+      //         quoteCode(z.pos).getOrElse(strDef(z)))
     }
   }
 
@@ -401,6 +403,10 @@ trait Effects extends Expressions with Blocks with Utils {
       case Some(TP(_, Reflect(_, u, _))) if mustMutable(u) => true // ok
       case o => globalMutableSyms.contains(w)
     }
+  }
+  def isMutable(e: Exp[Any]): Boolean = e match {
+    case s: Sym[_] => isWritableSym(s)
+    case _ => false
   }
 
 
@@ -466,6 +472,7 @@ trait Effects extends Expressions with Blocks with Utils {
           printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
           printerr("at " + z + "=" + zd)
           printsrc("in " + quotePos(z))
+          //printerr(quotePos(List(pos)) + ": write to non-mutable " + w.tp.toString + "\n\t" + quoteCode(List(pos)).getOrElse(strDef(w)))
         }
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
         // make sure no mutable object becomes part of mutable result (in case of allocation)
@@ -533,6 +540,7 @@ trait Effects extends Expressions with Blocks with Utils {
         printerr("error: reflecting a reify node.")
         printerr("at " + s + "=" + x)
         printsrc("in " + quotePos(s))
+        //printerr(quotePos(s.pos) + ": reflecting a reify node.\nat " + s + " = " + x)
       case _ => //ok
     }
     createDefinition(s, x)
@@ -582,11 +590,17 @@ trait Effects extends Expressions with Blocks with Utils {
 
     conditionalScope = saveControl
 
+    if (result == Const(())) printDebug("context: \t" + context.mkString("\n\t"))
+
     val deps = context
     val summary = summarizeAll(deps)
     context = save
 
-    if (deps.isEmpty && mustPure(summary)) Block(result) else Block(Reify(result, summary, pruneContext(deps))) // calls toAtom...
+    // Bit of a hack here - added preservation of result's type for rare case where result.tp =/= manifest[A]
+    if (deps.isEmpty && mustPure(summary)) 
+      Block(result) 
+    else 
+      Block(toAtom(Reify(result, summary, pruneContext(deps)))(result.tp,implicitly[SourceContext])).asInstanceOf[Block[A]]
   }
 
   // reify the effects of a block that is executed 'here' (if it is executed at all).
@@ -606,6 +620,7 @@ trait Effects extends Expressions with Blocks with Utils {
 
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
       printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
+      //printerr("'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
 
     val deps = if (save eq null) context else context.drop(save.length)
 

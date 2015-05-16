@@ -34,11 +34,10 @@ trait FileDiffSuite extends Suite {
   }
   
   def readFile(name: String): String = {
-    val buf = new Array[Byte](new File(name).length().toInt)
-    val fis = new FileInputStream(name)
-    fis.read(buf)
-    fis.close()
-    new String(buf)
+    val source = scala.io.Source.fromFile(name)
+    val lines = source.getLines.mkString("\n")
+    source.close()
+    lines
   }
   def assertFileEqualsCheck(name: String): Unit = {
     assert(readFile(name) == readFile(name+".check"), name) // TODO: diff output

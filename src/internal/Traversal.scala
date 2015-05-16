@@ -13,8 +13,10 @@ trait GraphTraversal extends Scheduling {
   
   def availableDefs: List[Stm] = globalDefs
   
-  def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] = 
+  def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] = {
+    printDebug("Getting schedule for " + result)
     getSchedule(availableDefs)(result, sort)
+  }
 
   def getDependentStuff(st: List[Sym[Any]]): List[Stm] = {
     getFatDependentStuff(availableDefs)(st)
@@ -49,6 +51,13 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
 //    outerScope = outerScope ::: levelScope
 //    levelScope = Nil
     innerScope = scope
+    printDebug("Entering scope!\n\t")
+    if (innerScope ne null) {
+      for (stm <- innerScope) {
+        printDebug("\t" + stm)
+        printDebug("\t\tsyms: " + syms(stm.rhs))
+      }
+    }
 
     var rval = null.asInstanceOf[A]
     try {
@@ -61,6 +70,8 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
       innerScope = saveInner
     }
 
+    printDebug("Exiting scope!")
+    
 //    outerScope = saveOuter
 //    levelScope = saveLevel
 //    innerScope = saveInner
@@ -72,7 +83,14 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
   // ----- stateful focus management
 
   def focusSubGraph[A](result: List[Exp[Any]])(body: => A): A = {
-    withInnerScope(buildScheduleForResult(result, false)) { // deep list of deps (unsorted, possibly recursive)
+    val schedule = buildScheduleForResult(result, false)
+    if (schedule.isEmpty && result.map{case Def(Reify(_,_,_)) => true case _ => false}.fold(false){_||_}) {
+      printmsg("warning: Empty schedule for syms: \n\t" + result.map{strDef(_)}.mkString("\n\t"))
+      printmsg(result.flatMap{case Def(Reify(x,_,_)) => List(x) case _ => Nil}.map(strDef(_)).mkString("\n\t"))
+      printmsg("scope:\n\t" + (if (availableDefs ne null) availableDefs.mkString("\n\t") else "null"))
+    }
+    
+    withInnerScope(schedule/*buildScheduleForResult(result, false)*/) { // deep list of deps (unsorted, possibly recursive)
       body
     }
   }
@@ -137,6 +155,8 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
   var recursive: List[Sym[Any]] = Nil // FIXME: should propagate differently
   
   def focusExactScopeSubGraph[A](result: List[Exp[Any]])(body: List[Stm] => A): A = {
+    printDebug("Entering scope for " + result)
+
     val availDefs = availableDefs//getStronglySortedSchedule(availableDefs)(result) // resolve anti-dependencies (may still be recursive -- not sure whether that's a problem)
     val levelScope = getExactScope(availDefs)(result)
     val (levelScope2,recursive) = getStronglySortedSchedule2(availDefs,levelScope,result) // resolve anti-dependencies and recursive declarations
