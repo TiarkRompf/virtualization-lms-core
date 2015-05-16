@@ -8,7 +8,10 @@ import scala.annotation.unchecked.uncheckedVariance
 
 trait Blocks extends Expressions {
 
-  case class Block[+T](val res: Exp[T]) { def tp: Manifest[T @uncheckedVariance] = res.tp } // variance ...
+  case class Block[+T](val res: Exp[T]) {
+    def tp: Manifest[T @uncheckedVariance] = res.tp
+    override def toString = s"blk_$res"
+  } // variance ...
 
   def blocks(e: Any): List[Block[Any]] = e match {
     case b: Block[Any] => List(b)
