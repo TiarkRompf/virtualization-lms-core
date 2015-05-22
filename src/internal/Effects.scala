@@ -10,7 +10,7 @@ trait Blocks extends Expressions {
 
   case class Block[+T](val res: Exp[T]) {
     def tp: Manifest[T @uncheckedVariance] = res.tp
-    override def toString = s"blk_$res"
+    // override def toString = s"blk_$res"
   } // variance ...
 
   def blocks(e: Any): List[Block[Any]] = e match {
@@ -596,7 +596,6 @@ trait Effects extends Expressions with Blocks {
     val summary = summarizeAll(deps)
     context = save
 
-    // Bit of a hack here - added preservation of result's type for rare case where result.tp =/= manifest[A]
     if (deps.isEmpty && mustPure(summary)) 
       Block(result) 
     else 

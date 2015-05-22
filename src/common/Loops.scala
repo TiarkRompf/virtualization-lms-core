@@ -15,8 +15,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val size: Exp[Int]
     val v: Sym[Int]
     val body: Def[A]
-
-    override def toString = s"AbstractLoop: size=$size, v=$v, body=$body"
+    //override def toString = s"AbstractLoop: size=$size, v=$v, body=$body"
   }
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]

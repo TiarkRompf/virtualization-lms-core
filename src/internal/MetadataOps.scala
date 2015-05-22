@@ -113,13 +113,13 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata {
   def getChild(p: SymbolProperties): Option[SymbolProperties] = p match {
     case p: ArrayProperties => p.child
     case _ =>
-      warn("This is likely a compiler bug! No match when attempting to get child of metadata: \n" + makeString(p))
+      cwarn("This is likely a compiler bug! No match when attempting to get child of metadata: \n" + makeString(p))
       None
   }
   def getField(p: SymbolProperties, index: String): Option[SymbolProperties] = p match {
     case p: StructProperties => p.child(index)
     case _ => 
-      warn("This is likely a compiler bug! Attempted to get field " + index + " of metadata: \n" + makeString(p))
+      cwarn("This is likely a compiler bug! Attempted to get field " + index + " of metadata: \n" + makeString(p))
       None
   }
 

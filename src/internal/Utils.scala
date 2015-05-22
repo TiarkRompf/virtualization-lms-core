@@ -21,7 +21,7 @@ trait Utils extends Config {
   def cerr(cond: Boolean, x: => Any) { if (!cond) cerr(x) }
 
   def cwarn(x: =>Any) { System.err.println("[\u001B[33mwarn\u001B[0m] " + x) }
-  def cwarn(cond: Boolean, x: => Any) { if (!cond) warn(x) }
+  def cwarn(cond: Boolean, x: => Any) { if (!cond) cwarn(x) }
 
   def fatalerr(x: =>Any) { 
     if (!testsuite) { printerr(x); sys.exit() }

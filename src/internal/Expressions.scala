@@ -21,14 +21,14 @@ trait Expressions extends UtilsExp {
   }
 
   case class Const[+T:Manifest](x: T) extends Exp[T] {
-    override def toString = s"c$x"
+    //override def toString = s"c$x"
   }
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var sourceContexts: List[SourceContext] = Nil
     override def pos = sourceContexts
     def withPos(pos: List[SourceContext]) = { sourceContexts :::= pos; this }
-    override def toString = s"x$id"
+    //override def toString = s"x$id"
   }
 
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant

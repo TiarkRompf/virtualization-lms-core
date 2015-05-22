@@ -3,6 +3,7 @@ package epfl
 package test8
 
 import common._
+import internal.NestedBlockTraversal
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
 import test7.{ArrayLoops,ArrayLoopsExp,ScalaGenArrayLoops}
@@ -108,9 +109,6 @@ trait ScalaGenArrayMutation extends ScalaGenArrayLoops {
 }
 
 
-
-
-
 class TestMutation extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test8-"
@@ -122,13 +120,34 @@ class TestMutation extends FileDiffSuite {
 
     def test(x: Rep[Int]): Rep[Unit]
   }
+
+  trait ImplPrinter extends NestedBlockTraversal {
+    import IR._
+
+    override def traverseStm(stm: Stm): Unit = {
+      super.traverseStm(stm)
+      stm match { 
+        case TP(s,d) => printmsg(strDef(s))
+        case _ => //
+      }
+    }
+  }
+
   trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with WhileExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 2
+
     val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
-      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhile with ScalaGenRangeOps 
-      with ScalaGenPrint { val IR: self.type = self }
-    codegen.emitSource(test, "Test", new PrintWriter(System.out))
+    with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhile with ScalaGenRangeOps 
+    with ScalaGenPrint{val IR: self.type = self}
+
+    val printer = new ImplPrinter{val IR: self.type = self}
+
+    val in = fresh[Int]
+    val body = reifyEffects(test(in))
+
+    printer.traverseBlock(body)
+    codegen.emitSource(List(in), body, "Test", new PrintWriter(System.out))
   }
   
   def testMutation1 = {

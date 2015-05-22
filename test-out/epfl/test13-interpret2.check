@@ -249,7 +249,6 @@ x90
 compilation: ok
 error: write to non-mutable Sym(91) -> None
 at Sym(94)=Reflect(HashMapUpdate(Sym(91),Const(x),Sym(93)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List())
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(94),Summary(true,true,false,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List(Sym(93), Sym(94)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -380,7 +379,6 @@ x114
 *******************************************/
 
 compilation: ok
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(134),Summary(true,true,false,false,false,false,List(),List(),List(Sym(26)),List()),List(Sym(117), Sym(119), Sym(134)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -474,7 +472,6 @@ x154
 compilation: ok
 error: write to non-mutable Sym(156) -> None
 at Sym(159)=Reflect(HashMapUpdate(Sym(156),Const(n),Sym(158)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List())
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(159),Summary(true,true,false,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List(Sym(158), Sym(159)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -605,7 +602,6 @@ x180
 *******************************************/
 
 compilation: ok
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(186),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(183), Sym(184)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -649,7 +645,6 @@ x193
 *******************************************/
 
 compilation: ok
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(214),Summary(true,true,false,false,false,false,List(),List(),List(Sym(55)),List()),List(Sym(197), Sym(199), Sym(214)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -743,7 +738,6 @@ x234
 compilation: ok
 error: write to non-mutable Sym(236) -> None
 at Sym(239)=Reflect(HashMapUpdate(Sym(236),Const(x),Sym(238)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List())
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(239),Summary(true,true,false,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List(Sym(238), Sym(239)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -821,7 +815,6 @@ x255
 *******************************************/
 
 compilation: ok
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(264),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(264)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -947,7 +940,6 @@ x291
 
 compilation: ok
 spec-add-int: AddN(LookupN(n),ConstN(-1))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(296),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(294), Sym(295)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -989,7 +981,6 @@ x301
 
 compilation: ok
 spec-add-int: AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(306),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(304), Sym(305)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
