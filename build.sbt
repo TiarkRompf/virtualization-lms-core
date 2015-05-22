@@ -18,15 +18,21 @@ scalacOptions += "-Yvirtualize"
 
 //scalacOptions in Compile ++= Seq(/*Unchecked, */Deprecation)
 
+libraryDependencies += ("org.scala-lang.virtualized" % "scala-library" % virtScala)
 
-libraryDependencies += "org.scala-lang.virtualized" % "scala-library" % virtScala
+// Transitive dependency through scala-continuations-library
+libraryDependencies += ("org.scala-lang.virtualized" % "scala-compiler" % virtScala).
+  exclude ("org.scala-lang", "scala-library").
+  exclude ("org.scala-lang", "scala-compiler")
 
-libraryDependencies += "org.scala-lang.virtualized" % "scala-compiler" % virtScala
+libraryDependencies += ("org.scala-lang.plugins" % "scala-continuations-library_2.11" % "1.0.2").
+  exclude ("org.scala-lang", "scala-library").
+  exclude ("org.scala-lang", "scala-compiler")
 
-libraryDependencies += "org.scala-lang.plugins" % "scala-continuations-library_2.11" % "1.0.2"
-
-libraryDependencies += scalaTest
-
+libraryDependencies += ("org.scalatest" % "scalatest_2.11" % "2.2.2").
+  exclude ("org.scala-lang", "scala-library").
+  exclude ("org.scala-lang", "scala-compiler").
+  exclude ("org.scala-lang", "scala-reflect")
 
 // tests are not thread safe
 parallelExecution in Test := false
