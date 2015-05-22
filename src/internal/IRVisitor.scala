@@ -52,7 +52,8 @@ trait IterativeIRVisitor extends IRVisitor {
   var runs = 0              // Current analysis iteration
   var retries = 0           // Current retry
   val debugMode = false 
-  val fullDebug = false
+  val printBefore = false
+  val printAfter = false
 
   var changed: Boolean = true    // Flag for if any unpropagated updates have been made to the IR
   def notifyChange() { changed = true }
@@ -77,6 +78,8 @@ trait IterativeIRVisitor extends IRVisitor {
    * Run traversal/analysis on a given block until convergence or maximum iterations
    */
   override def run[A:Manifest](b: Block[A]): Block[A] = {
+    if (printBefore) printer.run(b)
+
     var curBlock = preprocess(b)
     do {
       runs = 0
@@ -84,7 +87,7 @@ trait IterativeIRVisitor extends IRVisitor {
       while (!hasConverged && runs < MAX_ITERS) { // convergence condition
         runs += 1
         changed = false
-        curBlock = if (fullDebug) inDebugMode { runOnce(curBlock) } else runOnce(curBlock)
+        curBlock = runOnce(curBlock)
       } 
       curBlock = postprocess(curBlock)
       retries += 1
@@ -96,7 +99,7 @@ trait IterativeIRVisitor extends IRVisitor {
     else if (debugMode)                    { printmsg("Completed " + name) }*/
     //if (true) { printmsg("----------------------\nCompleted " + name + "\n----------------------") }
     
-    if (debugMode) printer.run(curBlock)
+    if (printAfter) printer.run(curBlock)
 
     (curBlock)
   }    
