@@ -65,12 +65,14 @@ trait EqualExpBridge extends BaseExp  {
 trait EqualExp extends Equal with EqualExpBridge with VariablesExp
 
 trait EqualExpBridgeOpt extends EqualExpBridge {
-  override def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = if (a == b) Const(true) else (a,b) match {
+  override def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = (a,b) match {
+    case (Sym(a), Sym(b)) if a == b => Const(true)
     case (Const(a),Const(b)) => Const(a == b)
     case _ => super.equals(a,b)
   }
 
-  override def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = if (a == b) Const(false) else (a,b) match {
+  override def notequals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = (a,b) match {
+    case (Sym(a), Sym(b)) if a == b => Const(false)
     case (Const(a),Const(b)) => Const(a != b)
     case _ => super.notequals(a,b)
   }

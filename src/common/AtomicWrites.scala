@@ -223,7 +223,7 @@ trait CudaGenAtomicOps extends CudaGenBase with BaseGenAtomicOps {
 
   // TODO: Are these exceptions inherent to cuda generation? Ask HJ later
   override def quote(trace: List[AtomicTracer]): String = {
-    if (trace.count{_ == VarTracer} > 0) 
+    if (trace.count{case VarTracer => true case _ => false} > 0) 
       throw new GenerationFailedException("CudaCodegen: Does not support arbitrarily nested updates with vars.\n")
    
     if (trace.count{_.isInstanceOf[ArrayTracer]} > 0)

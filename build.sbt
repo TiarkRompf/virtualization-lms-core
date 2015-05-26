@@ -44,4 +44,4 @@ addCompilerPlugin("org.scala-lang.virtualized.plugins" % "continuations" % virtS
 scalacOptions += "-P:continuations:enable"
 
 // code coverage
-// scoverage.ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := false
+scoverage.ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := false
