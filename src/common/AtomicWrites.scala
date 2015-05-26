@@ -165,7 +165,7 @@ trait AtomicWriteExp extends AtomicWriteOps with EffectExp {
   }
   override def copySyms(e: Any): List[Sym[Any]] = e match {
     case op: AtomicWrite[_] if op.isNested => op.externalFields.flatMap(copySyms(_))
-    case _ => super.extractSyms(e)
+    case _ => super.copySyms(e)
   }
 
 }

@@ -141,12 +141,12 @@ class TestMutation extends FileDiffSuite {
     with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhile with ScalaGenRangeOps 
     with ScalaGenPrint{val IR: self.type = self}
 
-    val printer = new ImplPrinter{val IR: self.type = self}
+    //val printer = new ImplPrinter{val IR: self.type = self}
 
     val in = fresh[Int]
     val body = reifyEffects(test(in))
 
-    printer.traverseBlock(body)
+    //printer.traverseBlock(body)
     codegen.emitSource(List(in), body, "Test", new PrintWriter(System.out))
   }
   
