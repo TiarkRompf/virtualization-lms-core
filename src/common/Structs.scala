@@ -405,7 +405,7 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
   }
 
   override def emitDataStructures(stream: PrintWriter) {
-    for ((structTp, (name, elems)) <- encounteredStructs) {
+    for ((name, (structTp, elems)) <- encounteredStructs) {
       stream.println()
       stream.print("case class " + name + "(")
       stream.println(elems.map(e => e._1 + ": " + remap(e._2)).mkString(", ") + ")")

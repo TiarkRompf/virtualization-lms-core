@@ -116,27 +116,15 @@ trait CLikeCodegen extends GenericCodegen {
       out.toString
     }
 
-    //TODO: Remove the dependency to Multiloop to Delite
-    if (!isMultiLoop) {
-      stream.println(kernelSignature + " {")
-      headerStream.println(kernelSignature + ";")
-    }
+    stream.println(kernelSignature + " {")
+    headerStream.println(kernelSignature + ";")
   }
 
   override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
-    if (!isMultiLoop) {
-      if (resultType != "void") stream.println("return " + quote(syms(0)) + ";")
-      stream.println("}")
-    }
-/*
-    for(s <- syms++vals++vars) {
-      if(dsTypesList.contains(s.tp)) println("contains :" + remap(s.tp))
-      else println("not contains: " + remap(s.tp))
-    }
-    println(syms.map(quote).mkString("") + "adding dsTypesList:" + (syms++vals++vars).map(_.tp).mkString(","))
-    dsTypesList ++= (syms++vals++vars).map(_.tp)
-    println("dsTyps-lms:" + dsTypesList.map(remap(_)).mkString(",")) //toString)
-  */
+    if(resultType != "void")
+      stream.println("return " + syms.map(quote).mkString("") + ";")
+    stream.println("}")
+
     dsTypesList ++= (syms++vals++vars).map(s => (s.tp,remap(s.tp)))
   }
 
@@ -151,21 +139,12 @@ trait CLikeCodegen extends GenericCodegen {
     if(tpe == "void") true
     else false
   }
-
-  
-  def CLikeConsts(x:Exp[Any], s:String): String = {
-    s match {
-      case "Infinity" => "std::numeric_limits<%s>::max()".format(remap(x.tp))
-      case _ => super.quote(x)
-    }
-  }
   
   override def quote(x: Exp[Any]) = x match {
     case Const(s: Unit) => ""
-    case Const(s: Float) => s+"f"
+    case Const(l: Long) => l.toString + "LL"
     case Const(null) => "NULL"
-    case Const(z) => CLikeConsts(x, z.toString)
-    case Sym(-1) => "_"
+    case Const(z) if z.toString == "Infinity" => s"std::numeric_limits<${remap(x.tp)}>::infinity()"
     case _ => super.quote(x)
   }
 }

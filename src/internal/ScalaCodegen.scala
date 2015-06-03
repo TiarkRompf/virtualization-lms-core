@@ -11,7 +11,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
 
   override def deviceTarget: Targets.Value = Targets.Scala
 
-  override def kernelFileExt = "scala"
+  override def fileExtension = "scala"
 
   override def toString = "scala"
 
@@ -109,6 +109,12 @@ trait ScalaCodegen extends GenericCodegen with Config {
 
   override def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
     stream.println(quote(sym) + " = " + rhs)
+  }
+
+  override def quote(x: Exp[Any]) = x match {
+    case Const(l: Long) => l.toString + "L"
+    case Const(null) => "null.asInstanceOf["+x.tp+"]"
+    case _ => super.quote(x)
   }
 }
 

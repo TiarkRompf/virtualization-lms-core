@@ -8,30 +8,34 @@ import scala.reflect.RefinedManifest
 trait GenericCodegen extends BlockTraversal {
   val IR: Expressions
   import IR._
-
-  // TODO: should some of the methods be moved into more specific subclasses?
   
+  /** these methods support a kernel model of execution and are only used by Delite, should be moved into Delite only? **/
   def deviceTarget: Targets.Value = throw new Exception("deviceTarget is not defined for this codegen.")
   def hostTarget: Targets.Value = Targets.getHostTarget(deviceTarget)
   def isAcceleratorTarget: Boolean = hostTarget != deviceTarget
 
-  def kernelFileExt = ""
-  def emitFileHeader(): Unit = {}
+  def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
+  def emitKernel(syms: List[Sym[Any]], rhs: Any): Unit = { }
   def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {}
   def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {}
-  
-  // Initializer
-  def initializeGenerator(buildDir:String, args: Array[String]): Unit = { }
-  def finalizeGenerator(): Unit = {}
-  def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
 
-  def emitDataStructures(stream: PrintWriter): Unit = {}
-  def emitDataStructures(path: String): Unit = {}
-  def getDataStructureHeaders(): String = ""
   def emitTransferFunctions(): Unit = {}
 
   def resourceInfoType = ""
   def resourceInfoSym = ""
+  
+  /******/
+
+  def fileExtension = ""
+  def emitFileHeader(): Unit = {}
+
+  def initializeGenerator(buildDir:String): Unit = { }
+  def finalizeGenerator(): Unit = {}
+
+  def emitDataStructures(stream: PrintWriter): Unit = {}
+  def emitDataStructures(path: String): Unit = {}
+  def getDataStructureHeaders(): String = ""
+
 
   def dataPath = {
     "data" + java.io.File.separator
@@ -52,12 +56,6 @@ trait GenericCodegen extends BlockTraversal {
     }
 
     stream.close()
-  }
-
-  // exception handler
-  def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
-      kstream.close()
-      outFile.delete
   }
 
   // optional type remapping (default is identity)
@@ -99,18 +97,18 @@ trait GenericCodegen extends BlockTraversal {
 
   override def traverseStm(stm: Stm) = stm match {
     case TP(sym, rhs) => emitNode(sym,rhs)
-    case _ => throw new GenerationFailedException("don't know how to generate code for statement: " + stm)
+    case _ => throw new GenerationFailedException(this.toString + ": don't know how to generate code for statement: " + stm)
   }
 
   def emitBlock(y: Block[Any]): Unit = traverseBlock(y)
 
   def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = {
-    throw new GenerationFailedException("don't know how to generate code for: " + rhs)
+    throw new GenerationFailedException(this.toString + ": don't know how to generate code for: " + rhs)
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit
-  def emitVarDecl(sym: Sym[Any]): Unit = throw new GenerationFailedException("don't know how to emit variable declaration " + quote(sym))
-  def emitAssignment(sym: Sym[Any], rhs: String): Unit = throw new GenerationFailedException("don't know how to emit variable assignment " + quote(sym))
+  def emitVarDecl(sym: Sym[Any]): Unit = throw new GenerationFailedException(this.toString + ": don't know how to emit variable declaration " + quote(sym))
+  def emitAssignment(sym: Sym[Any], rhs: String): Unit = throw new GenerationFailedException(this.toString + ": don't know how to emit variable assignment " + quote(sym))
 
   def emitSource[T : Manifest, R : Manifest](f: Exp[T] => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s = fresh[T]
@@ -163,9 +161,7 @@ trait GenericCodegen extends BlockTraversal {
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
     case Const(c: Char) => "'"+c+"'"
-    case Const(f: Float) => "%1.10f".format(f) + "f"
-    case Const(l: Long) => l.toString + "L"
-    case Const(null) => "null.asInstanceOf["+x.tp+"]"
+    case Const(f: Float) => f+"f"
     case Const(z) => z.toString
     case Sym(n) => "x"+n
     case _ => throw new RuntimeException("could not quote " + x)
