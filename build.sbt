@@ -23,6 +23,8 @@ libraryDependencies += "org.scala-lang.virtualized" % "scala-library" % virtScal
 
 libraryDependencies += "org.scala-lang.virtualized" % "scala-compiler" % virtScala
 
+libraryDependencies += "org.scala-lang.plugins" % "scala-continuations-library_2.11" % "1.0.2"
+
 libraryDependencies += scalaTest
 
 
@@ -36,6 +38,6 @@ publishArtifact in (Compile, packageDoc) := false
 // continuations
 autoCompilerPlugins := true
 
-addCompilerPlugin("org.scala-lang.virtualized.plugins" % "continuations" % virtScala)
+addCompilerPlugin("org.scala-lang.plugins" % "scala-continuations-plugin_2.11.2" % "1.0.2")
 
 scalacOptions += "-P:continuations:enable"

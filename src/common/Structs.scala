@@ -30,7 +30,7 @@ trait StructTags {
   case class ClassTag[T](name: String) extends StructTag[T]
   case class NestClassTag[C[_],T](elem: StructTag[T]) extends StructTag[C[T]]
   case class AnonTag[T](fields: RefinedManifest[T]) extends StructTag[T]
-  case class MapTag[T] extends StructTag[T]
+  case class MapTag[T]() extends StructTag[T]
 }
 
 trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with OverloadHack {
@@ -405,7 +405,7 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
   }
 
   override def emitDataStructures(stream: PrintWriter) {
-    for ((structTp, (name, elems)) <- encounteredStructs) {
+    for ((name, (structTp, elems)) <- encounteredStructs) {
       stream.println()
       stream.print("case class " + name + "(")
       stream.println(elems.map(e => e._1 + ": " + remap(e._2)).mkString(", ") + ")")

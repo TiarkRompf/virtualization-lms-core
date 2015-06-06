@@ -217,7 +217,7 @@ trait VariablesExpOpt extends VariablesExp {
 
 }
 
-trait ScalaGenVariables extends ScalaGenEffect {
+trait ScalaGenVariables extends ScalaGenEffect with ScalaGenImplicitOps {
   val IR: VariablesExp
   import IR._
 
@@ -233,7 +233,7 @@ trait ScalaGenVariables extends ScalaGenEffect {
   }
 }
 
-trait CLikeGenVariables extends CLikeGenBase {
+trait CLikeGenVariables extends CLikeGenBase with CLikeGenImplicitOps {
   val IR: VariablesExp
   import IR._
 

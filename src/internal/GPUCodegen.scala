@@ -22,7 +22,6 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   def addTab():String = "\t"*tabWidth
 
   var devFuncIdx = 0
-  var isGPUable:Boolean = false
   var processingHelperFunc: Boolean = false
   var isNestedNode: Boolean = false
   var outerLoopSize: Exp[Int] = null
@@ -71,7 +70,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
       val out = new StringBuilder
       out.append("{")
 
-      //if (kernelFileExt == "cu") {
+      //if (fileExtension == "cu") {
       //  out.append("\"gpuInputs\":["+kernelInputs.filter(in => !isPrimitiveType(in.tp)).map(in=>"{\""+quote(in)+"\":[\""+remap(in.tp)+"\"]}").mkString(",")+"],")
         out.append("\"gpuOutputs\":{"+outputs.map(o => "\""+quote(o._1)+"\":"+o._2.toString).mkString(",")+"},")
         out.append("\"gpuTemps\":["+temps.map(t=>"{\""+t.sym+"\":[\""+t.tp+"\",\""+t.size+"\"]}").mkString(",")+"],")
@@ -95,23 +94,23 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     //helperFuncString.clear
     metaData = new GPUMetaData(vals, new ListBuffer[(String,Any)]())
     tabWidth = 1
-    isGPUable = false
     processingHelperFunc = false
     isNestedNode = false
   }
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
     if (external) {
-      // CUDA library ops use a C wrapper, so should be generated as a C kernel
-      super.emitKernelHeader(syms, syms ::: vals, vars, resultType, resultIsVar, external)
+      // CUDA library ops use a C wrapper, so should be generated as a C kernel; output sym passed in as first input
+      super.emitKernelHeader(syms, syms ::: vals, vars, resultType, resultIsVar, external, isMultiLoop)
+    }
+    else if (!isMultiLoop) {
+      super.emitKernelHeader(syms, vals, vars, resultType, resultIsVar, external, isMultiLoop)
     }
   }
 
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
-    if (!isGPUable) throw new GenerationFailedException("This kernel is not GPUable")
-
-    if (external) {
-      super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external)
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
+    if (external || !isMultiLoop) {
+      super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external, isMultiLoop)
     }
 
     // aks TODO: the rest of this stuff adds to metadata and seems necessary even if we are external.
@@ -208,9 +207,8 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   }
 
   def registerKernel(syms: List[Sym[Any]]) {
-    isGPUable = true
     if(kernelsList.intersect(syms).isEmpty) {
-      //headerStream.println("#include \"%s.%s\"".format(syms.map(quote).mkString(""),kernelFileExt))
+      //headerStream.println("#include \"%s.%s\"".format(syms.map(quote).mkString(""),fileExtension))
       kernelsList ++= syms
     }
   }
