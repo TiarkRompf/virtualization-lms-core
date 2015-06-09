@@ -104,7 +104,8 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
       super.emitKernelHeader(syms, syms ::: vals, vars, resultType, resultIsVar, external, isMultiLoop)
     }
     else if (!isMultiLoop) {
-      super.emitKernelHeader(syms, vals, vars, resultType, resultIsVar, external, isMultiLoop)
+      throw new GenerationFailedException("SingleTask not supported on GPU.")
+      //super.emitKernelHeader(syms, vals, vars, resultType, resultIsVar, external, isMultiLoop)
     }
   }
 

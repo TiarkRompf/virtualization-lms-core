@@ -82,7 +82,7 @@ trait CGenMiscOps extends CGenEffect {
       case "int64_t" => "%ld"
       case "float" | "double" => "%f"
       case "string" => "%s" 
-      case _ => throw new GenerationFailedException("CGenMiscOps: cannot print type " + remap(s.tp))
+      case _ => "%p"
     }
   }
 
