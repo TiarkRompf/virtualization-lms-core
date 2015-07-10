@@ -34,7 +34,7 @@ trait Base extends EmbeddedControls {
  *
  * @since 0.1
  */
-trait BaseExp extends Base with Expressions with Blocks with Transforming with MetadataOps {
+trait BaseExp extends Base with Expressions with Blocks with Transforming {
   type Rep[+T] = Exp[T]
 
   protected def unit[T:Manifest](x: T) = Const(x)
@@ -43,7 +43,7 @@ trait BaseExp extends Base with Expressions with Blocks with Transforming with M
 trait BlockExp extends BaseExp with Blocks
 
 
-trait EffectExp extends BaseExp with Effects {
+trait EffectExp extends BaseExp with Effects with MetadataOps {
 
   def mapOver(t: Transformer, u: Summary) = { // TODO: move to effects class?
     u.copy(mayRead = t.onlySyms(u.mayRead), mstRead = t.onlySyms(u.mstRead),

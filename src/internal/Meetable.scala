@@ -21,19 +21,21 @@ trait Meetable[T] {
 
 object Meetable {
   class IllegalMeetException extends Exception("Attempted to meet incompatible metadata instances")
-
-  // TODO: This might be going a bit overboard.. 
-  trait MetaAlias extends MeetFunc               // General aliasing of metadata
-  case object MetaBranch extends MetaAlias       // Aliasing due to conditional branches
-  case object MetaUpdate extends MetaAlias       // Data structure field/element updates
-  case object MetaUnion extends MetaAlias        // Set Union
-  case object MetaIntersect extends MetaAlias    // Set Intersection
+ 
   case object MetaTypeInit extends MeetFunc      // Metadata meeting with initial type metadata
   case object MetaOverwrite extends MeetFunc     // Metadata overwrite
-  case object MetaAdd extends MetaAlias          // VarPlusEquals
-  case object MetaSub extends MetaAlias          // VarMinusEquals
-  case object MetaMul extends MetaAlias          // VarTimesEquals
-  case object MetaDiv extends MetaAlias          // VarDivEquals
+  
+  // TODO: This might be going a bit overboard..
+  trait MetaAlias extends MeetFunc               // General aliasing of metadata
+    case object MetaBranch extends MetaAlias       // Aliasing due to conditional branches
+    case object MetaUpdate extends MetaAlias       // Data structure field/element updates
+    case object MetaUnion extends MetaAlias        // Set Union
+    case object MetaIntersect extends MetaAlias    // Set Intersection
+    case object MetaReduce extends MetaAlias       // General reduction aliasing
+    case object MetaAdd extends MetaAlias          // VarPlusEquals
+    case object MetaSub extends MetaAlias          // VarMinusEquals
+    case object MetaMul extends MetaAlias          // VarTimesEquals
+    case object MetaDiv extends MetaAlias          // VarDivEquals
 
   // Defs use underscore prefix since some implementations require calling other forms of the
   // overloaded method, which is more annoying (need to directly call implicitly[Meetable[...]].func)
@@ -46,4 +48,8 @@ object Meetable {
   def isComplete[T: Meetable](a: T): Boolean = implicitly[Meetable[T]]._isComplete(a)
   def makeString[T: Meetable](a: T, prefix: String = "") = implicitly[Meetable[T]]._makeString(a,prefix)
   def multiLine[T: Meetable](a: T) = implicitly[Meetable[T]]._multiLine(a)
+
+  def meetAll[T:Meetable](t: MeetFunc)(ts: T*): T = {
+    ts.reduce{(a,b) => implicitly[Meetable[T]]._meet(a,b,t)}
+  }
 }
