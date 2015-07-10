@@ -15,7 +15,13 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val size: Exp[Int]
     val v: Sym[Int]
     val body: Def[A]
-    //override def toString = s"AbstractLoop: size=$size, v=$v, body=$body"
+  }
+
+  abstract class AbstractLoopNest[A] extends Def[A] {
+    val vs: List[Sym[Int]]
+    val sizes: List[Exp[Int]]
+    val strides: List[Exp[Int]]
+    val body: Def[A]
   }
   
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
@@ -25,21 +31,25 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => syms(e.size) ::: syms(e.body) // should add super.syms(e) ?? not without a flag ...
+    case e: AbstractLoopNest[_] => syms(e.sizes) ::: syms(e.body)
     case _ => super.syms(e)
   }
 
   override def readSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => readSyms(e.size) ::: readSyms(e.body)
+    case e: AbstractLoopNest[_] => readSyms(e.sizes) ::: readSyms(e.body)
     case _ => super.readSyms(e)
   }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => e.v :: boundSyms(e.body)
+    case e: AbstractLoopNest[_] => e.vs ::: boundSyms(e.body)
     case _ => super.boundSyms(e)
   }
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case e: AbstractLoop[_] => freqNormal(e.size) ::: freqHot(e.body) // should add super.syms(e) ?? not without a flag ...
+    case e: AbstractLoopNest[_] => freqNormal(e.sizes) ::: freqHot(e.body)
     case _ => super.symsFreq(e)
   }
 
@@ -58,21 +68,25 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => aliasSyms(e.body)
+    case e: AbstractLoopNest[_] => aliasSyms(e.body)
     case _ => super.aliasSyms(e)
   }
 
   override def containSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => containSyms(e.body)
+    case e: AbstractLoopNest[_] => containSyms(e.body)
     case _ => super.containSyms(e)
   }
 
   override def extractSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => extractSyms(e.body)
+    case e: AbstractLoopNest[_] => extractSyms(e.body)
     case _ => super.extractSyms(e)
   }
 
   override def copySyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => copySyms(e.body)
+    case e: AbstractLoopNest[_] => copySyms(e.body)
     case _ => super.copySyms(e)
   }
 }

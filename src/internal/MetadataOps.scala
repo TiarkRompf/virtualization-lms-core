@@ -7,7 +7,7 @@ import scala.virtualization.lms.common._
 
 import Meetable._
 
-trait MetadataOps extends Expressions with Blocks with SymbolMetadata {
+trait MetadataOps extends Expressions with SymbolMetadata { this: Effects => 
 
   val symbolData = new HashMap[Exp[Any], SymbolProperties]
 
@@ -29,7 +29,7 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata {
       val inc = incompatibilities(a,b,func)
       if (!inc.isEmpty) {
         fatalerr(quotePos(ctx) + ": " + inc.head + "\n\t" + quoteCode(ctx).map{"\n\t" + _}.getOrElse("") + 
-                  "LHS metadata: " + makeString(a) + "\n" +
+                  "\nLHS metadata: " + makeString(a) + "\n" +
                   "RHS metadata: " + makeString(b) + "\n")
       }
       else {
@@ -75,7 +75,7 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata {
   def setField(e: Exp[Any], p: SymbolProperties, index: String)(implicit ctx: SourceContext) { setField(e, Some(p), index) }
 
   // Infix shortcuts for returning a symbol with metadata added 
-  def infix_withProps[A:Manifest](exp: Exp[A], props: Any): Exp[A] = {
+  def infix_withProps[A:Manifest](exp: Exp[A], props: Any)(implicit ctx: SourceContext): Exp[A] = {
     props match {
       case EatSome(p: SymbolProperties) => setProps(exp, p)
       case _ => // Ignore
@@ -83,7 +83,7 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata {
     (exp)
   }
 
-  def infix_withData[A:Manifest](exp: Exp[A], data: Any): Exp[A] = {
+  def infix_withData[A:Manifest](exp: Exp[A], data: Any)(implicit ctx: SourceContext): Exp[A] = {
     data match {
       case EatSome(m: Metadata) => setMetadata(exp, m)
       case _ => // Ignore
@@ -91,14 +91,14 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata {
     (exp)
   }
 
-  def infix_withChild[A:Manifest](exp: Exp[A], data: Any): Exp[A] = {
+  def infix_withChild[A:Manifest](exp: Exp[A], data: Any)(implicit ctx: SourceContext): Exp[A] = {
     data match {
       case EatSome(p: SymbolProperties) => setChild(exp, p)
       case _ => // Ignore
     }
     (exp)
   }
-  def infix_withField[A:Manifest](exp: Exp[A], data: Any, index: String): Exp[A] = {
+  def infix_withField[A:Manifest](exp: Exp[A], data: Any, index: String)(implicit ctx: SourceContext): Exp[A] = {
     data match {
       case EatSome(p: SymbolProperties) => setField(exp, p, index)
       case _ => // Ignore
@@ -129,22 +129,54 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata {
   def getChild(e: Exp[Any]): Option[SymbolProperties] = getProps(e).flatMap{p => getChild(p)}
   def getField(struct: Exp[Any], index: String): Option[SymbolProperties] = getProps(struct).flatMap{p => getField(p, index)}
 
-  def getProps(b: Block[Any]): Option[SymbolProperties] = getProps(b.res)
-  def getMetadata(b: Block[Any], k: String): Option[Metadata] = getMetadata(b.res, k)
-  def getChild(b: Block[Any]): Option[SymbolProperties] = getChild(b.res)
-  def getField(b: Block[Any], index: String): Option[SymbolProperties] = getField(b.res, index)
+  def extractMetadata(e: Exp[Any], k: String): Metadata = getMetadata(e, k) match {
+    case Some(m) => m
+    case None => sys.error("Symbol " + e + " with properties " + makeString(getProps(e)) + " does not have metadata entry with name " + k)
+  }
+  def extractMetadata(p: SymbolProperties, k: String) = p(k) match {
+    case Some(m) => m
+    case None => sys.error("Symbol properties " + makeString(p) + " does not have metadata entry with name " + k)
+  }
 
-  // --- Shortcuts for properties, manifests
+  // --- Shortcuts for symbol properties
   // These shortcuts should only be used when child is guaranteed to be defined
-  def child(p: SymbolProperties): SymbolProperties = getChild(p).get
-  def child(p: SymbolProperties, index: String): SymbolProperties = getField(p, index).get
-  def props(e: Exp[Any]): SymbolProperties = getProps(e).get
-  def child(e: Exp[Any]): SymbolProperties = getChild(e).get
-  def child(e: Exp[Any], index: String): SymbolProperties = getField(e, index).get
+  def child(p: SymbolProperties): SymbolProperties = getChild(p) match {
+    case Some(c) => c
+    case None => sys.error("Symbol properties " + makeString(p) + " does not have any children")
+  }
+  def child(p: SymbolProperties, index: String): SymbolProperties = getField(p,index) match {
+    case Some(f) => f
+    case None => sys.error("Symbol properties " + makeString(p) + " does not have a field with name " + index)
+  }
 
-  def props(b: Block[Any]): SymbolProperties = getProps(b.res).get
-  def child(b: Block[Any]): SymbolProperties = getChild(b.res).get
-  def child(b: Block[Any], index: String): SymbolProperties = getField(b.res, index).get
+  // --- Shortcuts for symbols
+  def props(e: Exp[Any]): SymbolProperties = getProps(e).get
+  def child(e: Exp[Any]): SymbolProperties = getChild(e) match {
+    case Some(c) => c
+    case None => sys.error("Symbol " + e + " with properties " + makeString(props(e)) + " does not have any children")
+  }
+  def child(e: Exp[Any], index: String): SymbolProperties = getField(e,index) match {
+    case Some(f) => f
+    case None => sys.error("Symbol properties " + makeString(props(e)) + " does not have a field with name " + index)
+  }
+
+  // --- Shortcuts for blocks
+  // Use input to Reify rather than reify itself 
+  // TODO: This doesn't really belong here, is already defined as getBlockResult in BlockTraversal
+  private def blockRes(b: Block[Any]): Exp[Any] = b.res match {
+    case Def(Reify(s,_,_)) => s
+    case _ => b.res
+  }
+
+  def getProps(b: Block[Any]): Option[SymbolProperties] = getProps(blockRes(b))
+  def getMetadata(b: Block[Any], k: String): Option[Metadata] = getMetadata(blockRes(b), k)
+  def getChild(b: Block[Any]): Option[SymbolProperties] = getChild(blockRes(b))
+  def getField(b: Block[Any], index: String): Option[SymbolProperties] = getField(blockRes(b), index)
+
+  def props(b: Block[Any]): SymbolProperties = props(blockRes(b))
+  def child(b: Block[Any]): SymbolProperties = child(blockRes(b))
+  def child(b: Block[Any], index: String): SymbolProperties = child(blockRes(b), index)
+
 
   /**
    * Merge previous metadata for token and new data, notifying update if changes occurred
