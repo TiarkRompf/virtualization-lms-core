@@ -44,8 +44,8 @@ trait AtomicWriteExp extends AtomicWriteOps with EffectExp {
 
   // Filled in by Structs.scala, Variables.scala, and DeliteArray.scala
   // (and DeliteMultiArray.scala)
-  def recurseLookup[T:Manifest](sym: Exp[Any], trace: List[AtomicTracer]): (Exp[Any],List[AtomicTracer]) = sym match {
-    case _ => (sym,trace)
+  def recurseLookup[T:Manifest](sym: Exp[Any], trace: List[AtomicTracer]): (Exp[Any],List[AtomicTracer]) = {
+    (sym,trace)
   }
 
   ///////////////// 
