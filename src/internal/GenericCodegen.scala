@@ -160,8 +160,8 @@ trait GenericCodegen extends BlockTraversal {
 
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
-    case Const(c: Char) => "'"+c+"'"
     case Const(f: Float) => f+"f"
+    case Const(c: Char) => "'"+(""+c).replace("'", "\\'").replace("\n", "\\n")+"'"
     case Const(z) => z.toString
     case Sym(n) => "x"+n
     case _ => throw new RuntimeException("could not quote " + x)

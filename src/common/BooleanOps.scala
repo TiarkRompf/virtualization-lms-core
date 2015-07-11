@@ -43,10 +43,35 @@ trait BooleanOpsExp extends BooleanOps with EffectExp {
   }).asInstanceOf[Exp[A]] // why??
 }
 
+/**
+ * @author  Alen Stojanov (astojanov@inf.ethz.ch)
+ */
 trait BooleanOpsExpOpt extends BooleanOpsExp {
+
   override def boolean_negate(lhs: Exp[Boolean])(implicit pos: SourceContext) = lhs match {
     case Def(BooleanNegate(x)) => x
+    case Const(a) => Const(!a)
     case _ => super.boolean_negate(lhs)
+  }
+
+  override def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = {
+    (lhs, rhs) match {
+      case (Const(false), _) => Const(false)
+      case (_, Const(false)) => Const(false)
+      case (Const(true), x) => x
+      case (x, Const(true)) => x
+      case _ => super.boolean_and(lhs, rhs)
+    }
+  }
+
+  override def boolean_or(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = {
+    (lhs, rhs) match {
+      case (Const(false), x) => x
+      case (x, Const(false)) => x
+      case (Const(true), _) => Const(true)
+      case (_, Const(true)) => Const(true)
+      case _ => super.boolean_or(lhs, rhs)
+    }
   }
 }
 

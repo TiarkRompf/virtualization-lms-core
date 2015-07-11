@@ -61,7 +61,8 @@ x2551
   End of Generated Code                  
 *******************************************/
 
-warning: there were 9 feature warning(s); re-run with -feature for details
+
+warning: there were 9 feature warnings; re-run with -feature for details
 one warning found
 compilation: ok
 expertise("abstract"):
