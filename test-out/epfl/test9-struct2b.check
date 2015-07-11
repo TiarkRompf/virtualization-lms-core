@@ -30,13 +30,13 @@ val x21 = x14
 val x19 = println("foobar false")
 ((),x20,x21)
 }
-val x40 = x13 = x11
-val x41 = x14 = x10
+x13 = x11
+x14 = x10
 val x42 = x13
 val x43 = x14
-val x44 = new Record[]Anon189207751(x42,x43)
+val x44 = new ArrayOfAnon189207751(x42,x43)
 val x45 = println(x44)
-val x46 = new Record[]Anon189207751(x38,x39)
+val x46 = new ArrayOfAnon189207751(x38,x39)
 val x47 = println(x46)
 val x36 = x47
 x36
@@ -46,4 +46,4 @@ x36
   End of Generated Code                  
 *******************************************/
 
-case class Record[]Anon189207751(re: Array[Int], im: Array[Double])
+case class ArrayOfAnon189207751(re: Array[Int], im: Array[Double])

@@ -28,7 +28,7 @@ trait ScalaGenFractionalOps extends ScalaGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case FractionalDivide(a,b) => emitValDef(sym, quote(a) + " / " + quote(b))
+    case FractionalDivide(a,b) => emitValDef(sym, src"$a / $b")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -40,7 +40,7 @@ trait CLikeGenFractionalOps extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case FractionalDivide(a,b) =>
-          emitValDef(sym, quote(a) + " / " + quote(b))
+          emitValDef(sym, src"$a / $b")
         case _ => super.emitNode(sym, rhs)
      }
     }

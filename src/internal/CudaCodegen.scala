@@ -42,7 +42,7 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
   }
 
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
-    val sB = manifest[A].toString
+    val sB = remap(manifest[A])
 
     withStream(out) {
       stream.println("/*****************************************\n"+
@@ -71,7 +71,6 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
 trait CudaNestedCodegen extends CLikeNestedCodegen with CudaCodegen {
   val IR: Expressions with Effects
   import IR._
-  
 }
 
 trait CudaFatCodegen extends CLikeFatCodegen with CudaCodegen {

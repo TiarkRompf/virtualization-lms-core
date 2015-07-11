@@ -13,19 +13,6 @@ import util.OverloadHack
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import scala.reflect.SourceContext
 
-
-trait OrderingOpsExpOpt extends OrderingOpsExp {
-  override def ordering_lt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs,rhs) match {
-    case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].lt(a,b))
-    case _ => super.ordering_lt(lhs,rhs)
-  }
-  override def ordering_gt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs,rhs) match {
-    case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].gt(a,b))
-    case _ => super.ordering_gt(lhs,rhs)
-  }
-}
-
-
 class TestSpeculative extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test8-"
@@ -219,5 +206,33 @@ class TestSpeculative extends FileDiffSuite {
     }
     assertFileEqualsCheck(prefix+"speculative5")
   }
+
+  // FIXME: this one breaks. Variable j is lifted to
+  // top scope because it is not part of the mayWrite
+  // summary of the inner loop.
+  def testSpeculative6 = {
+    withOutFile(prefix+"speculative6") {
+     // test simple copy propagation through variable
+      trait Prog extends DSL {
+        def test(x: Rep[Int]) = {
+          print("FIXME -- WRONG RESULT")
+          var i = 0
+          while (i < 10) {
+            var j = 0
+            while (j < 10) {
+              print("test")
+              print(i)
+              print(j)
+              j += 1
+            }
+            i += 1
+          }
+        }
+      }
+      new Prog with Impl
+    }
+    assertFileEqualsCheck(prefix+"speculative6")
+  }
+
 
 }

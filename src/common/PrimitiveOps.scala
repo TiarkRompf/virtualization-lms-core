@@ -738,7 +738,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case ObjDoubleParseDouble(s) => emitValDef(sym, "java.lang.Double.parseDouble(" + quote(s) + ")")
+    case ObjDoubleParseDouble(s) => emitValDef(sym, src"java.lang.Double.parseDouble($s)")
     case ObjDoublePositiveInfinity() => emitValDef(sym, "scala.Double.PositiveInfinity")
     case ObjDoubleNegativeInfinity() => emitValDef(sym, "scala.Double.NegativeInfinity")
     case ObjDoubleMinValue() => emitValDef(sym, "scala.Double.MinValue")

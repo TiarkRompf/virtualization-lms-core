@@ -40,7 +40,7 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   def error(s: Exp[String])(implicit pos: SourceContext) = reflectEffect(Error(s))
   def returnL(x: Exp[Any])(implicit pos: SourceContext) = {
     printlog("warning: staged return statements are unlikely to work because the surrounding source method does not exist in the generated code.")
-    printsrc("in " + quotePos(x))
+    printsrc(raw"in ${quotePos(x)}")
     reflectEffect(Return(x))
   }
   
@@ -60,12 +60,12 @@ trait ScalaGenMiscOps extends ScalaGenEffect {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case PrintF(f,x) => emitValDef(sym, "printf(" + (f::x.map(quote)).mkString(",") + ")")
-    case PrintLn(s) => emitValDef(sym, "println(" + quote(s) + ")")
-    case Print(s) => emitValDef(sym, "print(" + quote(s) + ")")
-    case Exit(a) => emitValDef(sym, "exit(" + quote(a) + ")")
-    case Return(x) => emitValDef(sym, "return " + quote(x))
-    case Error(s) => emitValDef(sym, "error(" + quote(s) + ")")
+    case PrintF(f,xs) => emitValDef(sym, src"printf(${f::xs})")
+    case PrintLn(s) => emitValDef(sym, src"println($s)")
+    case Print(s) => emitValDef(sym, src"print($s)")
+    case Exit(a) => emitValDef(sym, src"exit($a)")
+    case Return(x) => emitValDef(sym, src"return $x")
+    case Error(s) => emitValDef(sym, src"error($s)")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -75,7 +75,7 @@ trait CGenMiscOps extends CGenEffect {
   val IR: MiscOpsExp
   import IR._
 
-  private def format(s: Exp[Any]): String = {
+  def format(s: Exp[Any]): String = {
     remap(s.tp) match {
       case "uint16_t" => "%c"
       case "bool" | "int8_t" | "int16_t" | "int32_t" => "%d"
@@ -86,7 +86,7 @@ trait CGenMiscOps extends CGenEffect {
     }
   }
 
-  private def quoteRawString(s: Exp[Any]): String = {
+  def quoteRawString(s: Exp[Any]): String = {
     remap(s.tp) match {
       case "string" => quote(s) + ".c_str()"
       case _ => quote(s)

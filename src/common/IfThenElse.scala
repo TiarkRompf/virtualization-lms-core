@@ -384,10 +384,7 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
             emitBlock(b)
             stream.println("}")
           case _ =>
-            if (isPrimitiveType(sym.tp))
-              stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
-            else
-              stream.println("%s *%s;".format(remap(sym.tp),quote(sym)))
+            stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
             stream.println("if (" + quote(c) + ") {")
             emitBlock(a)
             stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(a))))

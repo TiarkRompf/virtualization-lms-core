@@ -66,12 +66,21 @@ trait BaseGenStaticData extends GenericNestedCodegen {
 trait ScalaGenStaticData extends ScalaGenEffect with BaseGenStaticData {
   val IR: StaticDataExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StaticData(x) => 
+    case StaticData(x) =>
       emitValDef(sym, "p"+quote(sym) + " // static data: " + (x match { case x: Array[_] => "Array("+x.mkString(",")+")" case _ => x }))
     case _ => super.emitNode(sym, rhs)
   }
-  
 }
 
+trait CGenStaticData extends CGenEffect with BaseGenStaticData {
+  val IR: StaticDataExp
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case StaticData(x) =>
+      emitValDef(sym, /*"p"+quote(sym)*/ (x match { case x: Array[_] => "("+remap(sym.tp.typeArguments(0))+"[]){"+x.map(v=>quote(Const[Any](v))).mkString(",")+"}" case _ => quote(Const(x)) }))
+    case _ => super.emitNode(sym, rhs)
+  }
+}

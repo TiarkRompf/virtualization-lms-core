@@ -211,9 +211,25 @@ trait VariablesExpOpt extends VariablesExp {
       super.readVar(v)
     }
   }
-
-  // TODO: could eliminate redundant stores, too
-  // by overriding assign ...
+  
+  // eliminate (some) redundant stores
+  // TODO: strong updates. overwriting a var makes previous stores unnecessary
+  override implicit def var_assign[T:Manifest](v: Var[T], e: Exp[T])(implicit pos: SourceContext) : Exp[Unit] = {
+    if (context ne null) {
+      // find the last modification of variable v
+      // if it is an assigment with the same value, we don't need to do anything
+      val vs = v.e.asInstanceOf[Sym[Variable[T]]]
+      //TODO: could use calculateDependencies(Read(v))
+      
+      context.reverse.foreach { 
+        case w @ Def(Reflect(NewVar(rhs: Exp[T]), _, _)) if w == vs => if (rhs == e) return ()
+        case Def(Reflect(Assign(`v`, rhs: Exp[T]), _, _)) => if (rhs == e) return ()
+        case Def(Reflect(_, u, _)) if mayWrite(u, List(vs)) =>  // not a simple assignment
+        case _ => // ...
+      }
+    }
+    super.var_assign(v,e)
+  }
 
 }
 
@@ -224,6 +240,18 @@ trait ScalaGenVariables extends ScalaGenEffect with ScalaGenImplicitOps {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
     case NewVar(init) => emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
+    case Assign(Variable(a), b) => emitAssignment(a.asInstanceOf[Sym[Variable[Any]]],quote(b))
+    case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(b))
+    case VarMinusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(b))
+    case VarTimesEquals(Variable(a), b) => emitValDef(sym, quote(a) + " *= " + quote(b))
+    case VarDivideEquals(Variable(a), b) => emitValDef(sym, quote(a) + " /= " + quote(b))
+    case _ => super.emitNode(sym, rhs)
+  }
+
+/*
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
+    case NewVar(init) => emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
     case Assign(Variable(a), b) => emitValDef(sym, quote(a) + " = " + quote(b))
     case VarPlusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " += " + quote(b))
     case VarMinusEquals(Variable(a), b) => emitValDef(sym, quote(a) + " -= " + quote(b))
@@ -231,6 +259,7 @@ trait ScalaGenVariables extends ScalaGenEffect with ScalaGenImplicitOps {
     case VarDivideEquals(Variable(a), b) => emitValDef(sym, quote(a) + " /= " + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
+*/  
 }
 
 trait CLikeGenVariables extends CLikeGenBase with CLikeGenImplicitOps {
