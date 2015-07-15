@@ -31,6 +31,37 @@ trait Expressions extends UtilsExp {
     //override def toString = s"x$id"
   }
 
+  // TODO: May want Tunable to be set to an Exp[Int] rather than just an Int..
+  // but this may create problems with mirroring if the value is filled in at the wrong time..
+  // Only Ints for now - may want to expand this later?
+  var nTunables = 0
+  case class Tunable(val id: Int) extends Exp[Int] {
+    var value: Option[Int] = None
+    def withValue(x: Int) = { value = Some(x); this }
+    override def toString = value match {
+      case Some(x) => "Tunable(" + x + ")"
+      case _ => "Tunable(?)"
+    }
+  }
+
+  // Tunable mappings
+  // TODO: May not want to have this in the IR
+  // (might make more sense in strip-mining transformer)
+  var tunableParams: Map[Exp[Int], Tunable] = Map.empty
+  def freshTuna(s: Exp[Int]): Tunable = tunableParams.get(s) match {
+    case Some(t) => t
+    case None =>
+      val t = freshTuna()
+      tunableParams += (s -> t)
+      (t)
+  }
+  def freshTuna(s: Exp[Int], defaultValue: Int): Tunable = freshTuna(s).withValue(defaultValue)
+
+  // Tunable w/o mappings
+  def freshTuna(): Tunable = Tunable{ nTunables += 1; nTunables - 1 }
+  def freshTuna(defaultValue: Int): Tunable
+    = freshTuna().withValue(defaultValue)
+
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
   var nVars = 0

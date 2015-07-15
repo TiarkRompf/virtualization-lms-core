@@ -163,6 +163,12 @@ trait GenericCodegen extends BlockTraversal {
     case Const(f: Float) => f+"f"
     case Const(c: Char) => "'"+(""+c).replace("'", "\\'").replace("\n", "\\n")+"'"
     case Const(z) => z.toString
+
+    case t: Tunable => t.value match {
+      case Some(x) => x.toString
+      case _ => throw new RuntimeException("Attempted to quote unset Tunable")
+    }
+
     case Sym(n) => "x"+n
     case _ => throw new RuntimeException("could not quote " + x)
   }

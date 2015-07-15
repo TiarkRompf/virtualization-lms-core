@@ -18,6 +18,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   }
 
   abstract class AbstractLoopNest[A] extends Def[A] {
+    val nestLayers: Int
     val vs: List[Sym[Int]]
     val sizes: List[Exp[Int]]
     val strides: List[Exp[Int]]
@@ -31,13 +32,13 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => syms(e.size) ::: syms(e.body) // should add super.syms(e) ?? not without a flag ...
-    case e: AbstractLoopNest[_] => syms(e.sizes) ::: syms(e.body)
+    case e: AbstractLoopNest[_] => syms(e.sizes) ::: syms(e.strides) ::: syms(e.body)
     case _ => super.syms(e)
   }
 
   override def readSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractLoop[_] => readSyms(e.size) ::: readSyms(e.body)
-    case e: AbstractLoopNest[_] => readSyms(e.sizes) ::: readSyms(e.body)
+    case e: AbstractLoopNest[_] => readSyms(e.sizes) ::: readSyms(e.strides) ::: readSyms(e.body)
     case _ => super.readSyms(e)
   }
 
@@ -49,7 +50,7 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case e: AbstractLoop[_] => freqNormal(e.size) ::: freqHot(e.body) // should add super.syms(e) ?? not without a flag ...
-    case e: AbstractLoopNest[_] => freqNormal(e.sizes) ::: freqHot(e.body)
+    case e: AbstractLoopNest[_] => freqNormal(e.sizes) ::: freqNormal(e.strides) ::: freqHot(e.body)
     case _ => super.symsFreq(e)
   }
 

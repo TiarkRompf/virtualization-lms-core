@@ -73,11 +73,13 @@ trait UtilsExp extends Utils {this: Expressions =>
   // if only a single SourceContext is given, fetch corresponding source code line
   // from top filename and line number. Otherwise returns None
   // FIXME: This is extremely kludgey right now
+  // Commented out for now
   def quoteCode(ctx: SourceContext): Option[String] = quoteCode(List(ctx))
   def quoteCode(ctx: List[SourceContext]): Option[String] = {
     val pos = getPathAndLine(ctx)
     if (pos.length == 1) { 
-      Some(Source.fromFile(pos.head._1).getLines().toList.apply(pos.head._2 - 1))
+      None
+      //Some(Source.fromFile(pos.head._1).getLines().toList.apply(pos.head._2 - 1))
     }
     else None
   }
