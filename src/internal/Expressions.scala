@@ -37,7 +37,9 @@ trait Expressions extends UtilsExp {
   var nTunables = 0
   case class Tunable(val id: Int) extends Exp[Int] {
     var value: Option[Int] = None
+    var maxSize: Option[Int] = None
     def withValue(x: Int) = { value = Some(x); this }
+    def withMax(x: Int) = { maxSize = Some(x); this }
     override def toString = value match {
       case Some(x) => "Tunable(" + x + ")"
       case _ => "Tunable(?)"
