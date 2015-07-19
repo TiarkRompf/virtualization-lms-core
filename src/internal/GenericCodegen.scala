@@ -95,8 +95,30 @@ trait GenericCodegen extends BlockTraversal {
 
   // ----------
 
+  // HACK: Avoid dupliating common statements across blocks (doesn't work that well at the moment)
+  var emittedSyms: List[Sym[Any]] = Nil
+  var trackEmitSyms: Boolean = false
+  var skipDuplicates: Boolean = false
+
+  def emitBlockWithoutDuplicates(b: Block[Any]) {
+    val prevSkip = skipDuplicates
+    skipDuplicates = true
+    emitBlock(b)
+    skipDuplicates = prevSkip
+  }  
+  def emitBlockTrackDuplicates(b: Block[Any]) {
+    val trackOld = trackEmitSyms
+    trackEmitSyms = true
+    emitBlock(b)
+    trackEmitSyms = trackOld
+  }
+  def clearEmittedSyms() { emittedSyms = Nil }
+
   override def traverseStm(stm: Stm) = stm match {
-    case TP(sym, rhs) => emitNode(sym,rhs)
+    case TP(sym, rhs) => 
+      if (!skipDuplicates || !emittedSyms.contains(sym)) emitNode(sym,rhs)
+      if (trackEmitSyms && !emittedSyms.contains(sym)) emittedSyms = emittedSyms :+ sym
+      
     case _ => throw new GenerationFailedException(this.toString + ": don't know how to generate code for statement: " + stm)
   }
 
