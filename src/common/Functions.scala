@@ -378,8 +378,8 @@ trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAcces
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>
       val retType = remap(getBlockResult(y).tp)
-      stream.println("function<"+retType+"("+
-    		  xs.map(s=>remap(s.tp)).mkString(",")+")> "+quote(sym)+
+      val retTp = if (cppExplicitFunRet == "true") "function<"+retType+"("+xs.map(s=>remap(s.tp)).mkString(",")+")>" else "auto"
+      stream.println(retTp+" "+quote(sym)+
     		  " = [&]("+xs.map(s=>remap(s.tp)+" "+quote(s)).mkString(",")+") {")
       emitBlock(y)
       val z = getBlockResult(y)
