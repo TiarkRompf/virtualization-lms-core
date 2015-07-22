@@ -350,8 +350,8 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
       val retType = remap(getBlockResult(y).tp)
-      stream.println("function<"+retType+"("+
-    		  remap(x.tp)+")> "+quote(sym)+
+      val retTp = if (cppExplicitFunRet == "true") "function<"+retType+"("+remap(x.tp)+")>" else "auto"
+      stream.println(retTp+" "+quote(sym)+
     		  " = [&]("+remap(x.tp)+" "+quote(x)+") {")
       emitBlock(y)
       val z = getBlockResult(y)

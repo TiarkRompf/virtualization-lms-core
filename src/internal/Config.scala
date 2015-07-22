@@ -8,4 +8,7 @@ trait Config {
   
   // memory management type for C++ target (refcnt or gc)
   val cppMemMgr = System.getProperty("lms.cpp.memmgr","malloc")
+  
+  // explicit return type of lambda functions (allows recursive functions but is less generic)
+  val cppExplicitFunRet = System.getProperty("lms.cpp.explicitFunRet","true")
 }

@@ -384,14 +384,17 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
             emitBlock(b)
             stream.println("}")
           case _ =>
-            stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
-            stream.println("if (" + quote(c) + ") {")
-            emitBlock(a)
-            stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(a))))
-            stream.println("} else {")
-            emitBlock(b)
-            stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(b))))
-            stream.println("}")
+            val ten = quote(sym) + "True"
+            val fen = quote(sym) + "False"
+            def emitCondFun[T: Manifest](fname: String, block: Block[T]) {
+              stream.println("auto " + fname + " = [&]() {");
+              emitBlock(block)
+              stream.println("return " + quote(getBlockResult(block)) + ";")
+              stream.println("};")
+            }
+            emitCondFun(ten, a)
+            emitCondFun(fen, b)
+            stream.println("auto " + quote(sym) + " = " + quote(c) + " ? " + ten + "() : " + fen + "();")
         }
         /*
         val booll = remap(sym.tp).equals("void")
