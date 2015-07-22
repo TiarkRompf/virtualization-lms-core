@@ -31,7 +31,13 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   //                                                      // but we'd rather have x15 = x9 + x14
   
   override def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
-    case Some(y) => y.asInstanceOf[Exp[A]] case _ => x 
+    case Some(y) => 
+      // HACK: Mirror tunable parameter mappings
+      if (tunableParams.contains(x) && !tunableParams.contains(y))
+        tunableParams += (y -> tunableParams(x))
+
+      y.asInstanceOf[Exp[A]] 
+    case _ => x 
   }
   
   override def reflectBlock[A](block: Block[A]): Exp[A] = {

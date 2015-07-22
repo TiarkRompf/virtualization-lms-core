@@ -40,24 +40,26 @@ trait Expressions extends UtilsExp {
     var maxSize: Option[Int] = None
     def withValue(x: Int) = { value = Some(x); this }
     def withMax(x: Int) = { maxSize = Some(x); this }
-    override def toString = value match {
-      case Some(x) => "Tunable(" + x + ")"
-      case _ => "Tunable(?)"
+    override def toString = (value,maxSize) match {
+      case (Some(x),Some(m)) => "Tunable(" + x + ", " + m + ")"
+      case (Some(x),None) => "Tunable(" + x + ", ?)"
+      case (None,Some(m)) => "Tunable(?, " + m + ")"
+      case _ => "Tunable(?, ?)"
     }
   }
 
   // Tunable mappings
   // TODO: May not want to have this in the IR
   // (might make more sense in strip-mining transformer)
-  var tunableParams: Map[Exp[Int], Tunable] = Map.empty
-  def freshTuna(s: Exp[Int]): Tunable = tunableParams.get(s) match {
+  var tunableParams: Map[Exp[Any], Tunable] = Map.empty
+  def freshTuna(s: Exp[Any]): Tunable = tunableParams.get(s) match {
     case Some(t) => t
     case None =>
       val t = freshTuna()
       tunableParams += (s -> t)
       (t)
   }
-  def freshTuna(s: Exp[Int], defaultValue: Int): Tunable = freshTuna(s).withValue(defaultValue)
+  def freshTuna(s: Exp[Any], defaultValue: Int): Tunable = freshTuna(s).withValue(defaultValue)
 
   // Tunable w/o mappings
   def freshTuna(): Tunable = Tunable{ nTunables += 1; nTunables - 1 }
