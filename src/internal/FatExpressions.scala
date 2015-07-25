@@ -35,4 +35,12 @@ trait FatExpressions extends Expressions {
 
   case class Forward[A](x: Exp[A]) extends Def[A] // TODO: get rid of. used by SimplifyTransform
   
+  // TODO: No CSE here :(
+  // TODO: Vera's code likely has some similar support for this (I assume)
+  def createFatDefinition(lhs: List[Sym[Any]], mhs: List[Def[Any]], rhs: FatDef): Stm = {
+    val f = TTP(lhs, mhs, rhs)
+    reflectSubGraph(List(f))
+    f
+  }
+
 }

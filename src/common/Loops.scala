@@ -94,6 +94,14 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
 
 trait LoopsFatExp extends LoopsExp with BaseFatExp {
 
+  abstract class AbstractFatLoopNest extends FatDef {
+    val nestLayers: Int
+    val sizes: List[Exp[Int]]
+    val strides: List[Exp[Int]]
+    val vs: List[Sym[Int]]
+    val body: List[Def[Any]]
+  }
+
   abstract class AbstractFatLoop extends FatDef {
     val size: Exp[Int]
     val v: Sym[Int]
@@ -102,24 +110,31 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
   
   case class SimpleFatLoop(val size: Exp[Int], val v: Sym[Int], val body: List[Def[Any]]) extends AbstractFatLoop
 
+  case class SimpleFatLoopNest(val sizes: List[Exp[Int]], val strides: List[Exp[Int]], val vs: List[Sym[Int]], val body: List[Def[Any]]) extends AbstractFatLoopNest {
+    val nestLayers = sizes.length
+  }
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => syms(e.size) ::: syms(e.body)
+    case e: AbstractFatLoopNest => syms(e.sizes) ::: syms(e.strides) ::: syms(e.body)
     case _ => super.syms(e)
   }
   
   override def readSyms(e: Any): List[Sym[Any]] = e match { 
     case e: AbstractFatLoop => readSyms(e.size) ::: readSyms(e.body)
+    case e: AbstractFatLoopNest => readSyms(e.sizes) ::: readSyms(e.strides) ::: readSyms(e.body)
     case _ => super.readSyms(e)
   }
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => e.v :: boundSyms(e.body)
+    case e: AbstractFatLoopNest => e.vs ::: boundSyms(e.body)
     case _ => super.boundSyms(e)
   }
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case e: AbstractFatLoop => freqNormal(e.size) ::: freqHot(e.body)
+    case e: AbstractFatLoopNest => freqNormal(e.sizes) ::: freqNormal(e.strides) ::: freqHot(e.body)
     case _ => super.symsFreq(e)
   }
 
@@ -128,22 +143,44 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
 
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => aliasSyms(e.body)
+    case e: AbstractFatLoopNest => aliasSyms(e.body)
     case _ => super.aliasSyms(e)
   }
 
   override def containSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => containSyms(e.body)
+    case e: AbstractFatLoopNest => containSyms(e.body)
     case _ => super.containSyms(e)
   }
 
   override def extractSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => extractSyms(e.body)
+    case e: AbstractFatLoopNest => extractSyms(e.body)
     case _ => super.extractSyms(e)
   }
 
   override def copySyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => copySyms(e.body)
+    case e: AbstractFatLoopNest => copySyms(e.body)
     case _ => super.copySyms(e)
+  }
+
+  // FIXME: This is extremely hacky right now. What if new and old body is the same def?
+  override def mirror(syms: List[Exp[Any]], e: FatDef, f: Transformer)(implicit pos: SourceContext): List[Exp[Any]] = e match {
+    case e@SimpleFatLoopNest(sizes, strides, vs, bodies) => 
+
+      // FIXME: We shouldn't even be calling fresh() here
+      def fresh_hack[A:Manifest]: Exp[A] = fresh[A]
+
+      val newBodies = bodies.zip(syms).map{d => mirrorFatDef(d._1, f)(mtype(d._2.tp), pos) }
+      val newSyms = syms.map{s => fresh_hack(mtype(s.tp)).asInstanceOf[Sym[Any]] }
+
+      val fatLoop = SimpleFatLoopNest(f(sizes), f(strides), vs, newBodies)
+
+      createFatDefinition(newSyms, newBodies, fatLoop)
+      (newSyms)
+
+    case _ => super.mirror(syms, e, f)
   }
 }
 

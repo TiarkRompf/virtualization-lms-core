@@ -92,6 +92,10 @@ trait FatTransforming extends Transforming with FatExpressions {
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] 
   
+  // HACK: How should mirroring fat defs work?
+  def mirror(syms: List[Exp[Any]], e: FatDef, f: Transformer)(implicit pos: SourceContext): List[Exp[Any]]
+    = sys.error("Don't know how to mirror " + e)
+
   //def mirror[A:Manifest](e: FatDef, f: Transformer): Exp[A] = sys.error("don't know how to mirror " + e)  
   
 }

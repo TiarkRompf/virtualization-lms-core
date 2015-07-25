@@ -67,9 +67,25 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
           // what to do? bail out? lookup def and then transform???
         }
       }
+    case TTP(syms, mhs, rhs) => 
+      if ( syms forall {sym => apply(sym) == sym} ) {
+        val replaces = transformFatStm(stm)
+        syms.zip(replaces).foreach{s => 
+          assert(!subst.contains(s._1) || subst(s._1) == s._2)
+          
+          if (s._1 != s._2) subst += (s._1 -> s._2)
+        }
+      }
+      else {
+        printerr("warning: transformer already has a substitution for " + syms + " when encountering stm " + stm)
+      }
   }
   
-  
+  def transformFatStm(stm: Stm): List[Exp[Any]] = stm match {
+    case TTP(syms,mhs,rhs) => 
+      self_fat_mirror(syms, rhs)
+  }
+
   def transformStm(stm: Stm): Exp[Any] = stm match { // override this to implement custom transform
     case TP(sym,rhs) =>
       /*
@@ -82,6 +98,11 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
        }
        */
       self_mirror(sym, rhs)
+  }
+
+  // HACK: 
+  def self_fat_mirror(syms: List[Sym[Any]], rhs: FatDef)(implicit ctx: SourceContext): List[Exp[Any]] = {
+    mirror(syms, rhs, self.asInstanceOf[Transformer])
   }
 
   def self_mirror[A](sym: Sym[A], rhs : Def[A]): Exp[A] = {

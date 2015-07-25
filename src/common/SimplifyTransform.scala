@@ -180,6 +180,13 @@ trait SimplifyTransform extends internal.FatScheduling {
         val rhs2 = lhs2 map (findDefinition(_).get.rhs) //FIXME: will lookup old sym (ie VectorTrans) in case of AbstractCollect
         List(TTP(lhs2, SimpleFatLoop(t(s),t(x).asInstanceOf[Sym[Int]],rhs2)))
   */      
+      
+      // TODO: What to do here? For now just disabling fusion when this is created
+      case TTP(lhs, mhs, SimpleFatLoopNest(sizes,strides,vs,bodies)) => Nil
+        
+        //val lhs2 = mirror(lhs, e, t)
+        //printmsg("mirror in simplifytransform created" + findDefinition(lhs2(0).asInstanceOf[Sym[Any]]))
+        //findDefinition(lhs2(0).asInstanceOf[Sym[Any]]).toList
     }
   }
 

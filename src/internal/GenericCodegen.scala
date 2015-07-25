@@ -95,10 +95,24 @@ trait GenericCodegen extends BlockTraversal {
 
   // ----------
 
-  // HACK: Avoid dupliating common statements across blocks (doesn't work that well at the moment)
+  // HACK: Avoid duplicating common statements across blocks (doesn't work that well at the moment)
+  // TODO: This should either be handled in scheduling or in a much cleaner way during codegen
   var emittedSyms: List[Sym[Any]] = Nil
   var trackEmitSyms: Boolean = false
   var skipDuplicates: Boolean = false
+
+  def emitBlocksWithoutDuplicates(first: => Unit)(others: => Unit) {
+    val saveSkip = skipDuplicates
+    val saveTrack = trackEmitSyms
+    
+    trackEmitSyms = true
+    first
+    trackEmitSyms = saveTrack
+
+    skipDuplicates = true
+    others
+    skipDuplicates = saveSkip
+  }
 
   def emitBlockWithoutDuplicates(b: Block[Any]) {
     val prevSkip = skipDuplicates
@@ -112,7 +126,7 @@ trait GenericCodegen extends BlockTraversal {
     emitBlock(b)
     trackEmitSyms = trackOld
   }
-  def clearEmittedSyms() { emittedSyms = Nil }
+  //def clearEmittedSyms() { emittedSyms = Nil }
 
   override def traverseStm(stm: Stm) = stm match {
     case TP(sym, rhs) => 

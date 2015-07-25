@@ -35,6 +35,9 @@ abstract class IRPrinter extends IRVisitor {
     super.traverseStm(stm)
     stm match { 
       case TP(s,d) => printmsg(strDef(s))
+      case TTP(syms, mhs, d) => 
+        printmsg(syms.mkString("(", ",", ")") + " = " + d.toString)
+        printmsg("   " + mhs.mkString("\n   "))
       case _ => //
     }
   }
@@ -78,6 +81,11 @@ trait IterativeIRVisitor extends IRVisitor {
    * Run traversal/analysis on a given block until convergence or maximum iterations
    */
   override def run[A:Manifest](b: Block[A]): Block[A] = {
+    if (debugMode) {
+      printmsg("----------------------------")
+      printmsg("Beginning " + name)
+      printmsg("----------------------------") 
+    }
     if (printBefore) printer.run(b)
 
     var curBlock = preprocess(b)
@@ -99,6 +107,11 @@ trait IterativeIRVisitor extends IRVisitor {
     else if (debugMode)                    { printmsg("Completed " + name) }*/
     //if (true) { printmsg("----------------------\nCompleted " + name + "\n----------------------") }
     
+    if (debugMode) {
+      printmsg("----------------------------")
+      printmsg("Completed " + name)
+      printmsg("----------------------------") 
+    }
     if (printAfter) printer.run(curBlock)
 
     (curBlock)
