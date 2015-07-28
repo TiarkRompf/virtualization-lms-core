@@ -28,7 +28,7 @@ trait MathOps extends Base {
     def abs[A:Manifest:Numeric](x: Rep[A])(implicit pos: SourceContext) = math_abs(x)
     def max[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext) = math_max(x,y)
     def min[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext) = math_min(x,y)
-    def Pi(implicit pos: SourceContext) = math_pi
+    def Pi(implicit pos: SourceContext) = 3.141592653589793238462643383279502884197169
     def E(implicit pos: SourceContext) = math_e
   }
 
