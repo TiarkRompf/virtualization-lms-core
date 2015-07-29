@@ -134,7 +134,7 @@ class TestForward2 extends FileDiffSuite {
   }
   
   def testWorklist1 = withOutFileChecked(prefix+"worklist21") {
-    @virtualize trait Prog extends DSL with Impl {
+    @virtualize trait Prog extends DSL {
       def test(x: Rep[Int]) = {
         val z = vzeros(100)
         val y = vzeros(100)
@@ -147,7 +147,7 @@ class TestForward2 extends FileDiffSuite {
   }
 
   def testWorklist2 = withOutFileChecked(prefix+"worklist22") {
-    @virtualize trait Prog extends DSL with Impl {
+    @virtualize trait Prog extends DSL {
       def test(x: Rep[Int]) = {
         val z = vzeros(100)
         val y = vliteral(List(z))
@@ -159,7 +159,7 @@ class TestForward2 extends FileDiffSuite {
   }
 
   def testWorklist3 = withOutFileChecked(prefix+"worklist23") {
-    @virtualize trait Prog extends DSL with Impl {
+    @virtualize trait Prog extends DSL {
       def test(x: Rep[Int]) = {
         val z1 = vzeros(100)
         val z2 = vzeros(50)
