@@ -96,12 +96,11 @@ trait GenericCodegen extends BlockTraversal {
   // ----------
 
   // HACK: Avoid duplicating common statements across blocks (doesn't work that well at the moment)
+  // Useful only when duplicated statements are generated within the same scope for now
   // TODO: This should either be handled in scheduling or in a much cleaner way during codegen
-  var emittedSyms: List[Sym[Any]] = Nil
-  var trackEmitSyms: Boolean = false
-  var skipDuplicates: Boolean = false
 
-  def emitBlocksWithoutDuplicates(first: => Unit)(others: => Unit) {
+
+  /*def emitBlocksWithoutDuplicates(first: => Unit)(others: => Unit) {
     val saveSkip = skipDuplicates
     val saveTrack = trackEmitSyms
     
@@ -112,29 +111,148 @@ trait GenericCodegen extends BlockTraversal {
     skipDuplicates = true
     others
     skipDuplicates = saveSkip
+  }*/
+
+  /*class CommonSymTracker extends IRVisitor { 
+    val IR: GenericCodegen.this.IR.type = GenericCodegen.this.IR
+
+    var commonSyms: Map[Sym[Any], Int] = Map.empty
+
+    private def visitSym(s: Sym[Any]) {
+      if (commonSyms.contains(s)) commonSyms += (s -> (commonSyms(s) + 1))
+      else commonSyms += (s -> 1)
+    }
+
+    override def traverseStm(stm: Stm): Unit = stm match {
+      case TP(s,_) => visitSym(s)
+      case TTP(s,_,_) => s.foreach(visitSym(_))
+    }
+  }*/
+
+  // TODO: These don't work terribly well yet for arbitrarily nested things
+  /*def emitBlocksWithCommonSyms(x: List[Block[Any]]) {
+    val tracker = new CommonSymTracker
+    x.foreach(tracker.run(_))
+
+    // Top level
+    if (ignoreDuplicates) {
+      duplicateSyms ++= tracker.commonSyms.toList.filter(_._2 > 1).map(_._1 -> false)
+      ignoreDuplicates = false
+      emitDuplicates = true
+      x.foreach(emitBlock(_))
+      emitDuplicates = false
+      skipDuplicates = true
+      x.foreach(emitBlock(_))
+      skipDuplicates = false
+      duplicateSyms = Map.empty
+      ignoreDuplicates = true
+    }
+    else {  // Lower level (e.g. nested tile elems)
+      x.foreach(emitBlock(_))
+    }
+  }*/
+
+  // Assumes we never have fat nodes within fat nodes..
+  /*def emitNodesWithCommonSyms(sym: List[Sym[Any]], rhs: List[Def[Any]]) {
+    skipDuplicates = true
+    trackSyms = true
+    sym.zip(rhs).foreach(emitNode(_._1, _._2))
+    trackSyms = false
+    skipDuplicates = false
+  }*/
+
+  var emittedSyms: List[Sym[Any]] = Nil
+  var skipDuplicates = false
+  var trackSyms = false
+
+  def emitInCommonScope(emit: => Unit) {
+    var prevEmitted = emittedSyms
+    var prevSkip = skipDuplicates
+    var prevTrack = trackSyms
+
+    skipDuplicates = true
+    trackSyms = true
+
+    emit
+
+    emittedSyms = prevEmitted
+    skipDuplicates = prevSkip
+    trackSyms = prevTrack
+  }
+
+  // Same as emitInCommonScope, but doesn't pop the stack of emittedSyms
+  // (Denotes code being emitted isn't in a different scope but may have duplicated symbols)
+  def emitWithoutDuplicates(emit: => Unit) {
+    var prevSkip = skipDuplicates
+    var prevTrack = trackSyms
+
+    skipDuplicates = true
+    trackSyms = true
+
+    emit
+
+    skipDuplicates = prevSkip
+    trackSyms = prevTrack
+  }
+
+  /*var duplicateSyms: Map[Sym[Any],Boolean] = Map.empty
+  var emitDuplicates: Boolean = false
+  var skipDuplicates: Boolean = false
+  var ignoreDuplicates: Boolean = true
+  var trackSyms: Boolean = false
+
+  def emitWithoutDuplicates(emit: => Unit) {
+    val prevSkip = skipDuplicates
+    val prevTrack = trackSyms
+    val prevIgnore = ignoreDuplicates
+    ignoreDuplicates = false
+    skipDuplicates = true
+    trackSyms = true
+    emit
+    ignoreDuplicates = prevIgnore
+    skipDuplicates = prevSkip
+    trackSyms = prevTrack
   }
 
   def emitBlockWithoutDuplicates(b: Block[Any]) {
     val prevSkip = skipDuplicates
+    val prevTrack = trackSyms
+    val prevIgnore = ignoreDuplicates
     skipDuplicates = true
+    trackSyms = true
+    ignoreDuplicates = false
     emitBlock(b)
     skipDuplicates = prevSkip
-  }  
-  def emitBlockTrackDuplicates(b: Block[Any]) {
+    trackSyms = prevTrack
+    ignoreDuplicates = prevIgnore
+  }*/
+  /*def emitBlockTrackDuplicates(b: Block[Any]) {
     val trackOld = trackEmitSyms
     trackEmitSyms = true
     emitBlock(b)
     trackEmitSyms = trackOld
-  }
+  }*/
   //def clearEmittedSyms() { emittedSyms = Nil }
 
   override def traverseStm(stm: Stm) = stm match {
-    case TP(sym, rhs) => 
+    case TP(sym, rhs) =>
       if (!skipDuplicates || !emittedSyms.contains(sym)) emitNode(sym,rhs)
-      if (trackEmitSyms && !emittedSyms.contains(sym)) emittedSyms = emittedSyms :+ sym
-      
+      if (trackSyms && !emittedSyms.contains(sym)) emittedSyms = emittedSyms :+ sym
+
     case _ => throw new GenerationFailedException(this.toString + ": don't know how to generate code for statement: " + stm)
   }
+
+  /*override def traverseStm(stm: Stm) = stm match {
+    case TP(sym, rhs) => 
+      if (ignoreDuplicates || 
+            (emitDuplicates && duplicateSyms.getOrElse(sym, false)) ||
+            (skipDuplicates && !duplicateSyms.getOrElse(sym, false)) ) {
+        emitNode(sym,rhs)
+        if (duplicateSyms.contains(sym) || trackSyms) duplicateSyms += (sym -> true)
+      }
+
+    case _ => throw new GenerationFailedException(this.toString + ": don't know how to generate code for statement: " + stm)
+  }*/
 
   def emitBlock(y: Block[Any]): Unit = traverseBlock(y)
 
