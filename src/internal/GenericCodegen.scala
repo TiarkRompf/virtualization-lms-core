@@ -272,6 +272,13 @@ trait GenericCodegen extends BlockTraversal {
       stream.println()
     }
   }
+
+  // preCodegenAnalysis: A hook that should be overridden by the concrete code generators
+  // so that they can perform pre-codegen analysis and collect some metadata
+  // As this is optional, the default just does nothing
+  def preCodegenAnalysis(y: Block[Any]): Unit = {
+
+  }
 }
 
 
