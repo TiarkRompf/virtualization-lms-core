@@ -114,6 +114,11 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     val nestLayers = sizes.length
   }
 
+  override def blocks(e: Any): List[Block[Any]] = e match {
+    case op: AbstractFatLoopNest => op.body.flatMap(blocks(_))
+    case _ => super.blocks(e)
+  }
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => syms(e.size) ::: syms(e.body)
     case e: AbstractFatLoopNest => syms(e.sizes) ::: syms(e.strides) ::: syms(e.body)
@@ -167,6 +172,17 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
 
   // FIXME: This is extremely hacky right now. What if new and old body is the same def?
   override def mirror(syms: List[Exp[Any]], e: FatDef, f: Transformer)(implicit pos: SourceContext): List[Exp[Any]] = e match {
+    case e@SimpleFatLoop(size, v, bodies) =>
+      // FIXME: We shouldn't even be calling fresh() here
+      def fresh_hack[A:Manifest]: Exp[A] = fresh[A]
+
+      val newBodies = bodies.zip(syms).map{d => mirrorFatDef(d._1, f)(mtype(d._2.tp), pos) }
+      val newSyms = syms.map{s => fresh_hack(mtype(s.tp)).asInstanceOf[Sym[Any]] }
+      val fatLoop = SimpleFatLoop(f(size), v, newBodies)
+
+      createFatDefinition(newSyms, newBodies, fatLoop)
+      (newSyms)
+
     case e@SimpleFatLoopNest(sizes, strides, vs, bodies) => 
 
       // FIXME: We shouldn't even be calling fresh() here

@@ -43,7 +43,7 @@ abstract class IRPrinter extends IRVisitor {
   }
   override def run[A:Manifest](b: Block[A]) = {
     printmsg("Program IR\n---------------")
-    runOnce(b)
+    super.run(b)
   }
 }
 
@@ -68,6 +68,8 @@ trait IterativeIRVisitor extends IRVisitor {
   def failedToComplete() { /*warn(name + " reached convergence but did not report completion.")*/ }
 
   lazy val printer = new IRPrinter{val IR: IterativeIRVisitor.this.IR.type = IterativeIRVisitor.this.IR}
+
+  def dbgmsg(x: => Any) { if (debugMode) printmsg(x) }
 
   private var _retry = false
   /**
