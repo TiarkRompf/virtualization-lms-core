@@ -8,15 +8,21 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   val IR: BaseFatExp with EffectExp //LoopsFatExp with IfThenElseFatExp
   import IR._
   
+  var blockSubst = immutable.Map.empty[Block[Any], Block[Any]]
+
   def transformBlock[A:Manifest](block: Block[A]): Block[A] = {
-    reifyEffects {
-      reflectBlock(block)
-    }
+    val block2 = reifyEffects { reflectBlock(block) }
+    blockSubst += (block -> block2)
+    block2
   }
 
   override def hasContext = true
   
-  override def apply[A:Manifest](xs: Block[A]): Block[A] = transformBlock(xs)
+  // TODO: This may not always work - check after ASPLOS deadline
+  override def apply[A:Manifest](xs: Block[A]): Block[A] = blockSubst.get(xs) match {
+    case Some(ys) => ys.asInstanceOf[Block[A]]
+    case _ => transformBlock(xs)
+  } 
 
   // perform only one step of lookup, otherwise we confuse things: 
   // TODO: should this be changed in AbstractSubstTransformer, too?

@@ -4,7 +4,7 @@ import scala.reflect.SourceContext
 trait IRVisitor extends FatBlockTraversal { self =>
   import IR._
 
-  val name: String = self.getClass.getName
+  lazy val name: String = self.getClass.getName
  
   def preprocess[A:Manifest](b: Block[A]): Block[A] = { b }
   def postprocess[A:Manifest](b: Block[A]): Block[A] = { b }
@@ -30,7 +30,7 @@ trait IRVisitor extends FatBlockTraversal { self =>
 
 abstract class IRPrinter extends IRVisitor {
   import IR._
-  override val name = "Printer"
+  override lazy val name = "Printer"
   override def traverseStm(stm: Stm): Unit = {
     super.traverseStm(stm)
     stm match { 
@@ -42,7 +42,7 @@ abstract class IRPrinter extends IRVisitor {
     }
   }
   override def run[A:Manifest](b: Block[A]) = {
-    printmsg("Program IR\n---------------")
+    printmsg(name + "\n------------------------------------")
     super.run(b)
   }
 }
