@@ -51,3 +51,12 @@ scalacOptions += "-P:continuations:enable"
 // code coverage
 scoverage.ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := false
 
+// maven publishing
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  val repo = if (version.value.trim.endsWith("SNAPSHOT"))
+    "snapshots" at nexus + "content/repositories/snapshots"
+  else
+    "releases" at nexus + "service/local/staging/deploy/maven2"
+  Some(repo)
+}
