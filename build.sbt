@@ -2,7 +2,7 @@ name := "LMS"
 
 version := "0.3-SNAPSHOT"
 
-organization := "EPFL"
+organization := "org.scala-lang.virtualized"
 
 scalaOrganization := "org.scala-lang.virtualized"
 
@@ -49,5 +49,5 @@ addCompilerPlugin("org.scala-lang.plugins" % "scala-continuations-plugin_2.11.2"
 scalacOptions += "-P:continuations:enable"
 
 // code coverage
-
 scoverage.ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := false
+
