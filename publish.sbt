@@ -1,4 +1,5 @@
-// maven publishing
+// --- maven publishing ---
+
 publishMavenStyle := true
 
 publishArtifact in Test := false
@@ -14,21 +15,11 @@ publishTo := {
   Some(repo)
 }
 
+// do not publish docs for snapshot releases
+publishArtifact in (Compile, packageDoc) := !version.value.trim.endsWith("SNAPSHOT")
+
+// `sbt release` should publish signed artifacts
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
-
-sonatypeProfileName := "org.scala-lang"
-
-// Invalid POM: Project URL missing, License information missing, SCM URL missing, Developer information missing
-
-description := "Lightweight Modular Staging"
-
-homepage := Some(url("https://scala-lms.github.io"))
-
-licenses := List("BSD-like" -> url("http://github.com/TiarkRompf/virtualization-lms-core/tree/master/LICENSE"))
-
-scmInfo := Some(ScmInfo(url("https://github.com/TiarkRompf/virtualization-lms-core"), "git@github.com:TiarkRompf/virtualization-lms-core.git"))
-
-// developers := List(Developer("tiarkrompf", "Tiark Rompf", "@tiarkrompf", url("http://github.com/tiarkrompf")))
 
 pomExtra in Global := {
   <developers>
@@ -39,6 +30,11 @@ pomExtra in Global := {
     </developer>
   </developers>
 }
+
+
+// --- sonatype settings ---
+
+sonatypeProfileName := "org.scala-lang"
 
 credentials ++= (for {
   username <- Option(System.getenv().get("SONATYPE_USER"))
