@@ -1,7 +1,5 @@
 name := "LMS"
 
-version := "0.3-SNAPSHOT"
-
 organization := "org.scala-lang.virtualized"
 
 scalaOrganization := "org.scala-lang.virtualized"
