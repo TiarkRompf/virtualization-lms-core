@@ -1,9 +1,19 @@
+# Use Docker-based container (instead of OpenVZ)
+sudo: false
+
 language: scala
+
 scala:
-   - 2.11.2
+- 2.11.2
 
 script:
-    - sbt clean coverage test && sbt coverageAggregate
+- sbt clean coverage test && sbt coverageAggregate
 
 after_success:
-    - sbt coveralls
+- sbt coveralls
+- sbt 'set credentials += Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", System.getenv("SONATYPE_USER"), System.getenv("SONATYPE_PASS"))' publish
+
+env:
+  global:
+  - secure: X+7udElsP9vnDvz8zM+0rESZQE5rCin4Iw7S0ZqaIgZth1RM+vdmFpOtV7j/YeBtJnpL1s7z9xWpnAf1PzCESp8JrApvHmxyzXC5yRYki0tf8bb9jWJmkNP8ZRAiwe1uSLwhtGGST6kMjuIBjbTlCoizhqu7/abvwZNUYn37Afs=
+  - secure: huTySCqcSt7gBI3I8GTWZDW9wh9aMxqQWl4AwV+jewh0s4jIn++oHUJ5HmKMBOXkkcrA3fxaaI0iwAodBJ/A5nH0Ge1tx0mW1JSYikDbkMNKNvooy0R6qZziACjrJ+7ooxnP/g2g3MrSskGkkZVX7vsH6cgk5Ai4z6FBhXv0DQA=
