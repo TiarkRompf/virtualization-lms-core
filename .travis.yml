@@ -19,7 +19,7 @@ script:
 
 after_success:
   - sbt coveralls
-  - [[ $TRAVIS_PULL_REQUEST == "false" ]] && [[ $TRAVIS_BRANCH == "develop"* ]] && sbt publish
+  - "[[ $TRAVIS_PULL_REQUEST == 'false' && $TRAVIS_BRANCH == 'develop'* ]] && sbt publish"
 
 env:
   global:
