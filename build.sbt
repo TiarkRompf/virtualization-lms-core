@@ -2,7 +2,7 @@
 
 name := "lms-core"
 
-organization := "org.scala-lms"
+organization := "org.scala-lang.lms"
 
 description := "Lightweight Modular Staging"
 
