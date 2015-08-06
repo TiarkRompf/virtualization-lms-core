@@ -272,6 +272,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
     def parseLong(s: Rep[String])(implicit pos: SourceContext) = obj_long_parse_long(s)
   }
 
+  def infix_%(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_mod(lhs, rhs)
   def infix_&(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_binaryand(lhs, rhs)
   def infix_|(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_binaryor(lhs, rhs)
   def infix_<<(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext) = long_shiftleft(lhs, rhs)
@@ -279,6 +280,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def infix_toInt(lhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_toint(lhs)
     
   def obj_long_parse_long(s: Rep[String])(implicit pos: SourceContext): Rep[Long]
+  def long_mod(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
   def long_binaryand(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
   def long_binaryor(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
   def long_shiftleft(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Long]
@@ -410,6 +412,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   case class LongShiftLeft(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
   case class LongShiftRightUnsigned(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
   case class LongToInt(lhs: Exp[Long]) extends Def[Int]
+  case class LongMod(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
 
   def obj_long_parse_long(s: Exp[String])(implicit pos: SourceContext) = ObjLongParseLong(s)
   def long_binaryor(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBinaryOr(lhs,rhs)
@@ -417,6 +420,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   def long_shiftleft(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = LongShiftLeft(lhs,rhs)
   def long_shiftright_unsigned(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = LongShiftRightUnsigned(lhs,rhs)
   def long_toint(lhs: Exp[Long])(implicit pos: SourceContext) = LongToInt(lhs)
+  def long_mod(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongMod(lhs, rhs)
     
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
@@ -461,6 +465,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case IntShiftRightLogical(x,y) => int_rightshiftlogical(f(x),f(y))
       case IntShiftRightArith(x,y) => int_rightshiftarith(f(x),f(y))
       case ObjLongParseLong(x) => obj_long_parse_long(f(x))
+      case LongMod(x,y) => long_mod(f(x),f(y))
       case LongShiftLeft(x,y) => long_shiftleft(f(x),f(y))
       case LongBinaryOr(x,y) => long_binaryor(f(x),f(y))
       case LongBinaryAnd(x,y) => long_binaryand(f(x),f(y))
@@ -505,6 +510,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case Reflect(IntShiftLeft(x,y), u, es) => reflectMirrored(Reflect(IntShiftLeft(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntShiftRightLogical(x,y), u, es) => reflectMirrored(Reflect(IntShiftRightLogical(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntShiftRightArith(x,y), u, es) => reflectMirrored(Reflect(IntShiftRightArith(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
+      case Reflect(LongMod(x,y), u, es) => reflectMirrored(Reflect(LongMod(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(LongShiftLeft(x,y), u, es) => reflectMirrored(Reflect(LongShiftLeft(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(LongShiftRightUnsigned(x,y), u, es) => reflectMirrored(Reflect(LongShiftRightUnsigned(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(LongBinaryOr(x,y), u, es) => reflectMirrored(Reflect(LongBinaryOr(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
@@ -605,6 +611,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntToFloat(lhs) => emitValDef(sym, quote(lhs) + ".toFloat")
     case IntToDouble(lhs) => emitValDef(sym, quote(lhs) + ".toDouble")
     case ObjLongParseLong(s) => emitValDef(sym, "java.lang.Long.parseLong(" + quote(s) + ")")
+    case LongMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
     case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
     case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))    
     case LongShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
@@ -659,6 +666,7 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       case IntToFloat(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       case IntToDouble(lhs) => emitValDef(sym, "(double)"+quote(lhs))
       case ObjLongParseLong(s) => emitValDef(sym, "strtod(" + quote(s) + ".c_str(),NULL)")
+      case LongMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
       case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
       case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))    
       case LongShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
