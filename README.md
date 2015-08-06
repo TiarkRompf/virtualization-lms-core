@@ -1,9 +1,6 @@
 [![Build Status](https://api.travis-ci.org/TiarkRompf/virtualization-lms-core.png)](https://travis-ci.org/TiarkRompf/virtualization-lms-core)
 [![Maven Central](https://img.shields.io/maven-central/v/org.scala-lang.lms/lms-core_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/org.scala-lang.lms/lms-core_2.11)
 
-
-https://img.shields.io/maven-central/v/org.scala-lang.lms/lms-core_2.11.svg
-
 Lightweight Modular Staging (LMS) is a runtime code generation approach. 
 This framework, LMS-Core, provides a library of core components for building 
 high performance code generators and embedded compilers in Scala. 
