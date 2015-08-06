@@ -11,6 +11,8 @@ cache:
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot
 
+# Q: should we use sbt ++$TRAVIS_SCALA_VERSION test?
+
 script:
   - sbt clean coverage test && sbt coverageAggregate
   # Tricks to avoid unnecessary cache updates
