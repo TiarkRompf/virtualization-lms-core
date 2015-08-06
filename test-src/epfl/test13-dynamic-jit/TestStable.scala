@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test13
 
@@ -43,7 +43,7 @@ trait ScalaGenCellOps extends ScalaGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case CellInit(tag,x) =>  emitValDef(sym, "scala.virtualization.lms.epfl.test13.RCell[" + remap(x.tp) + "](\"" + tag + "\")")
+    case CellInit(tag,x) =>  emitValDef(sym, "scala.lms.epfl.test13.RCell[" + remap(x.tp) + "](\"" + tag + "\")")
     case CellSet(c,x) =>  emitValDef(sym, quote(c) + ".set(" + quote(x) + ")")
     case CellGet(c) =>  emitValDef(sym, quote(c) + ".value")
     case _ => super.emitNode(sym, rhs)

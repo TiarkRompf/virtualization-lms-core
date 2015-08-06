@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test6
 
@@ -124,7 +124,7 @@ trait VectorsImplExternal extends VectorsImpl {
   type Vector = Array[Double]
   def mV = manifest[Array[Double]]
 
-  val base = "scala.virtualization.lms.epfl.test6.VectorOps.%s"
+  val base = "scala.lms.epfl.test6.VectorOps.%s"
   
   // FIXME: using base + "zero" crashes the compiler!
   

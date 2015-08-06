@@ -1,4 +1,4 @@
-package scala.virtualization.lms.internal
+package scala.lms.internal
 
 trait CppHostTransfer extends AbstractHostTransfer {
   this: CLikeCodegen =>

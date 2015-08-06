@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import reflect.{SourceContext, RefinedManifest}

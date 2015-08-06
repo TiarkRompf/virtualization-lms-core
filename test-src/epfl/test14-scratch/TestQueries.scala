@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test14
 
@@ -847,7 +847,7 @@ trait ScalaGenStaged extends ScalaCodeGenPkg with ScalaGenStruct {
 
   override def emitFileHeader(): Unit = {
     super.emitFileHeader()
-    stream.println("import scala.virtualization.lms.epfl.test14.Schema")
+    stream.println("import scala.lms.epfl.test14.Schema")
   }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {

@@ -1,8 +1,8 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.NestedBlockTraversal
+import scala.lms.internal.NestedBlockTraversal
 
 import scala.collection.mutable
 

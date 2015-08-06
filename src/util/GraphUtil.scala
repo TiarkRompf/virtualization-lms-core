@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package util
 
 import java.util.{ArrayDeque, HashMap}

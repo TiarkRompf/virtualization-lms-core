@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test4
 
@@ -59,7 +59,7 @@ trait ScalaGenDFAOps extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case DFAState(e,f) => emitValDef(sym, "scala.virtualization.lms.epfl.test4.Automaton(" + quote(e) + "," + quote(f) + ")")
+    case DFAState(e,f) => emitValDef(sym, "scala.lms.epfl.test4.Automaton(" + quote(e) + "," + quote(f) + ")")
     case DFAFlagged(e,l) => emitValDef(sym, quote(l) + ".copy(out = " + quote(e) + "::" + quote(l) + ".out)")
     case _ => super.emitNode(sym, rhs)
   }
@@ -214,7 +214,7 @@ trait ScalaGenGAOps extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case GTrans(e,f) => emitValDef(sym, "List(" + remap(sym.tp.typeArguments(0)) + /*scala.virtualization.lms.epfl.test4.NAutomaton*/ "(" + quote(e) + "," + quote(f) + "))")
+    case GTrans(e,f) => emitValDef(sym, "List(" + remap(sym.tp.typeArguments(0)) + /*scala.lms.epfl.test4.NAutomaton*/ "(" + quote(e) + "," + quote(f) + "))")
     case GCall(f,c) => emitValDef(sym, quote(f) + ".flatMap(_.next.apply(" + quote(c) + "))")
     case GFlags(f) => emitValDef(sym, quote(f) + ".flatMap(_.out)")
     case _ => super.emitNode(sym, rhs)

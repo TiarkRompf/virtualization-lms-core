@@ -1,7 +1,7 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
-import scala.virtualization.lms.internal.GenericCodegen
+import scala.lms.internal.GenericCodegen
 import java.io.PrintWriter
 import scala.reflect.SourceContext
 
