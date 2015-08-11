@@ -40,7 +40,8 @@ trait Base extends EmbeddedControls {
  */
 trait BaseExp extends Base with Expressions with Blocks with Transforming {
   type Rep[+T] = Exp[T]
-  type Typ[T] = TypeExp[T]
+  //type Typ[T] = TypeExp[T] defined in Expressions
+  protected def manifest[T:Typ] = implicitly[Typ[T]] // TODO: change
 
   protected def unit[T:Typ](x: T) = Const(x)
 }
