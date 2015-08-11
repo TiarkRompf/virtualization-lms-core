@@ -8,11 +8,14 @@ import scala.lms.internal.GenericNestedCodegen
 import collection.mutable.ArrayBuffer
 import scala.reflect.SourceContext
 
-trait ArrayBufferOps extends Base {
+trait ArrayBufferOps extends Base with StringOps with ArrayOps {
 
   object ArrayBuffer {
     def apply[A:Typ](xs: Rep[A]*) = arraybuffer_new(xs)
   }
+
+  implicit def arrayBufferTyp[T:Typ]: Typ[ArrayBuffer[T]]
+  implicit def seqTyp[T:Typ]: Typ[Seq[T]] // TODO: remove?
 
   implicit def repToArrayBufferOps[A:Typ](l: Rep[ArrayBuffer[A]]) = new ArrayBufferOpsCls(l)
   
@@ -65,8 +68,8 @@ trait ArrayBufferOpsExp extends ArrayBufferOps with EffectExp {
   // mirroring
 
   override def mirrorDef[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
-    case ArrayBufferMkString(l,r) => ArrayBufferMkString(f(l),f(r))
-    case ArrayBufferAppend(l,r) => ArrayBufferAppend(f(l),f(r))
+    case ArrayBufferMkString(l,r) => ArrayBufferMkString(f(l),f(r))(mtype(manifest[A]))
+    case ArrayBufferAppend(l,r) => ArrayBufferAppend(f(l),f(r))(mtype(manifest[A]))
     case _ => super.mirrorDef(e,f)
   }).asInstanceOf[Def[A]] // why??
   
