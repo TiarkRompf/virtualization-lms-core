@@ -6,6 +6,11 @@ import java.io.PrintWriter
 import scala.reflect.SourceContext
 
 trait TupleOps extends Base {
+  implicit def tuple2_typ[A:Typ,B:Typ]: Typ[(A,B)]
+  implicit def tuple3_typ[A:Typ,B:Typ,C:Typ]: Typ[(A,B,C)]
+  implicit def tuple4_typ[A:Typ,B:Typ,C:Typ,D:Typ]: Typ[(A,B,C,D)]
+  implicit def tuple5_typ[A:Typ,B:Typ,C:Typ,D:Typ,E:Typ]: Typ[(A,B,C,D,E)]
+
   implicit def make_tuple2[A:Typ,B:Typ](t: (Rep[A], Rep[B]))(implicit pos: SourceContext) : Rep[(A,B)]
   implicit def make_tuple3[A:Typ,B:Typ,C:Typ](t: (Rep[A], Rep[B], Rep[C]))(implicit pos: SourceContext) : Rep[(A,B,C)]
   implicit def make_tuple4[A:Typ,B:Typ,C:Typ,D:Typ](t: (Rep[A], Rep[B], Rep[C], Rep[D]))(implicit pos: SourceContext) : Rep[(A,B,C,D)]
