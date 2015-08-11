@@ -21,6 +21,7 @@ trait Base extends EmbeddedControls {
   type API <: Base
 
   type Rep[+T]
+  type Typ[T]
 
   protected def unit[T:Manifest](x: T): Rep[T]
 
@@ -36,6 +37,7 @@ trait Base extends EmbeddedControls {
  */
 trait BaseExp extends Base with Expressions with Blocks with Transforming {
   type Rep[+T] = Exp[T]
+  type Typ[T] = TypeExp[T]
 
   protected def unit[T:Manifest](x: T) = Const(x)
 }

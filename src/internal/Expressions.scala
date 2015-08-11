@@ -15,6 +15,30 @@ import java.lang.{StackTraceElement,Thread}
  */
 trait Expressions extends Utils {
 
+  abstract class TypeExp[T] {
+    def typeArguments: List[Manifest[_]]
+    def arrayManifest: Manifest[Array[T]]
+    def runtimeClass: java.lang.Class[_]
+    def <:<(that: TypeExp[_]): Boolean
+    def erasure: java.lang.Class[_]
+  }
+
+  case class ManifestTyp[T](mf: Manifest[T]) extends TypeExp[T] {
+    def typeArguments: List[Manifest[_]]   = mf.typeArguments
+    def arrayManifest: Manifest[Array[T]] = mf.arrayManifest
+    def runtimeClass: java.lang.Class[_] = mf.runtimeClass
+    def <:<(that: TypeExp[_]): Boolean = that match { 
+      case ManifestTyp(mf1) => mf.<:<(mf1) 
+      case _ => false 
+    }
+    def erasure: java.lang.Class[_] = mf.erasure
+    override def canEqual(that: Any): Boolean = mf.canEqual(that) // TEMP
+    override def equals(that: Any): Boolean = mf.equals(that) // TEMP
+    override def hashCode = mf.hashCode
+    override def toString = mf.toString
+  }
+
+
   abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
     def tp: Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
     def pos: List[SourceContext] = Nil
