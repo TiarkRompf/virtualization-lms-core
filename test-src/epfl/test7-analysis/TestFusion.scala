@@ -82,7 +82,7 @@ trait FusionProg2 extends Arith with ArrayLoops with Print with OrderingOps {
   
   def test(x: Rep[Unit]) = {
     
-    def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) = 
+    def filter[T:Typ](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) = 
       arrayIf(x.length) { i => (p(x.at(i)), x.at(i)) }
     
     val range = array(100) { i => i }

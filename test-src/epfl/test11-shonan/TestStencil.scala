@@ -19,7 +19,7 @@ class TestStencil extends FileDiffSuite {
   trait DSL extends LiftNumeric with NumericOps with PrimitiveOps with ArrayOps with RangeOps 
     with BooleanOps with OrderingOps
     with LiftVariables with IfThenElse with Print {
-    def staticData[T:Manifest](x: T): Rep[T]
+    def staticData[T:Typ](x: T): Rep[T]
     def infix_toDouble(x: Rep[Int]): Rep[Double]
     def test(x: Rep[Array[Double]]): Rep[Array[Double]]
   }
@@ -50,7 +50,7 @@ class TestStencil extends FileDiffSuite {
 
   trait Sliding extends DSL {
     
-    def infix_sliding[T:Manifest](n: Rep[Int], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
+    def infix_sliding[T:Typ](n: Rep[Int], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
       val a = NewArray[T](n)
       sliding(0,n)(i => a(i) = f(i))
       a
@@ -90,13 +90,13 @@ class TestStencil extends FileDiffSuite {
       case _ => super.int_minus(lhs,rhs)
     }).asInstanceOf[Exp[Int]]
 
-    override def numeric_plus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = ((lhs,rhs) match {
+    override def numeric_plus[T:Numeric:Typ](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = ((lhs,rhs) match {
       case (Def(NumericPlus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_plus(x, unit(y+z)) // (x+y)+z --> x+(y+z)
       case (Def(NumericMinus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_minus(x, unit(y-z)) // (x-y)+z --> x-(y-z)
       case _ => super.numeric_plus(lhs,rhs)
     }).asInstanceOf[Exp[T]]
 
-    override def numeric_minus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = ((lhs,rhs) match {
+    override def numeric_minus[T:Numeric:Typ](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = ((lhs,rhs) match {
       case (Def(NumericMinus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_minus(x, unit(y+z)) // (x-y)-z --> x-(y+z)
       case (Def(NumericPlus(x:Exp[Int],Const(y:Int))), Const(z:Int)) => numeric_plus(x, unit(y-z)) // (x+y)-z --> x+(y-z)
       case _ => super.numeric_minus(lhs,rhs)
@@ -236,7 +236,7 @@ class TestStencil extends FileDiffSuite {
     trait Prog extends DSL {
       
       // not actually sliding -- just to have a baseline reference
-      def infix_sliding[T:Manifest](n: Rep[Int], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
+      def infix_sliding[T:Typ](n: Rep[Int], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
         val a = NewArray[T](n)
         (0 until n) foreach { i =>
           a(i) = f(i)

@@ -35,9 +35,9 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   
   case class ArraySoaTag[T](base: StructTag[T], len: Exp[Int]) extends StructTag[T]
   
-  override def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A])(implicit pos: SourceContext): Exp[A] = body match {
+  override def simpleLoop[A:Typ](size: Exp[Int], v: Sym[Int], body: Def[A])(implicit pos: SourceContext): Exp[A] = body match {
     case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) => 
-      struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.arrayManifest, pos))))
+      struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.arrayTyp, pos))))
     case ArrayElem(Block(Def(ArrayIndex(b,`v`)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] 
     // eta-reduce! <--- should live elsewhere, not specific to struct
     // rewrite loop(a.length) { i => a(i) } to a
@@ -45,19 +45,19 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
   }
   
   
-  override def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
+  override def infix_at[T:Typ](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = a match {
     case Def(Struct(ArraySoaTag(tag,len),elems: Iterable[(String,Rep[Array[T]])])) =>
-      def unwrap[A](m:Manifest[Array[A]]): Manifest[A] = m.typeArguments match {
+      def unwrap[A](m:Typ[Array[A]]): Typ[A] = m.typeArguments match {
         case a::_ => mtype(a)
         case _ =>
-          if (m.erasure.isArray) mtype(Manifest.classType(m.erasure.getComponentType))
+          if (m.erasure.isArray) mtype(Typ.classType(m.erasure.getComponentType))
           else { printerr("warning: expect type Array[A] but got "+m); mtype(manifest[Any]) }
       }
       struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))
     case _ => super.infix_at(a,i)
   }
   
-  override def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
+  override def infix_length[T:Typ](a: Rep[Array[T]]): Rep[Int] = a match {
     case Def(Struct(ArraySoaTag(tag,len),elems)) => len
     case _ => super.infix_length(a)
   }
@@ -83,7 +83,7 @@ class TestStruct extends FileDiffSuite {
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
 
-  /*override def fresh[T:Manifest]: Sym[T] = Sym[T] { 
+  /*override def fresh[T:Typ]: Sym[T] = Sym[T] { 
     if (nVars < 3) {
       System.out.println(nVars)
       (new Exception).printStackTrace
@@ -206,7 +206,7 @@ class TestStruct extends FileDiffSuite {
           val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
 
           def conj(c: Rep[Complex]) = Complex(c.re, 0.0 - c.im)
-          def infix_map[A:Manifest,B:Manifest](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
+          def infix_map[A:Typ,B:Typ](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
 
           val vector3 = vector1.map(conj)
 
@@ -238,7 +238,7 @@ class TestStruct extends FileDiffSuite {
           val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
 
           def conj(c: Rep[Complex]) = Complex(c.re, 0.0 - c.im)
-          def infix_map[A:Manifest,B:Manifest](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
+          def infix_map[A:Typ,B:Typ](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
 
           var vvar = vector1 // force access outside conditional, otherwise construction will be moved inside, defeating purpose of test
 

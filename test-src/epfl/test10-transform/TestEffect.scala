@@ -63,7 +63,7 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
   
   case class Multi(as: List[Def[Any]]) extends FatDef
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Mutate(a,b) => toAtom(Mutate(f(a),f(b)))
     case Copy(a) => toAtom(Copy(f(a)))
     case _ => super.mirror(e,f)
@@ -94,7 +94,7 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
   // speculative nature: we must be able to back off if speculation fails.
   // ergo, need to save original Defs (or have a way to reconstruct them).
 
-  override implicit def toAtom[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
+  override implicit def toAtom[A:Typ](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
     val in = syms(d)
     val actual = in map (s => subst.getOrElse(s,s))
     

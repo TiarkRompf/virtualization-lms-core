@@ -21,10 +21,10 @@ trait FacProg { this: Arith with Matching with Extractors =>
 
 trait FacProg2 { this: Arith with Functions with Equal with IfThenElse =>
 
-  class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
+  class LambdaOps[A:Typ,B:Typ](f: Rep[A=>B]) {
     def apply(x:Rep[A]): Rep[B] = doApply(f, x)
   }
-  implicit def lam[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
+  implicit def lam[A:Typ,B:Typ](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
   //implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
 
 

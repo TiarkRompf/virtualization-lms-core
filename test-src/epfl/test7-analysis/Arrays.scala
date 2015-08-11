@@ -15,14 +15,14 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 trait ArrayLoops extends Loops with OverloadHack {
-  def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]]
+  def array[T:Typ](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]]
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] // TODO: make reduce operation configurable!
-  def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]]
+  def arrayIf[T:Typ](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]]
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] // TODO: make reduce operation configurable!
-  def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
+  def flatten[T:Typ](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
 
-  def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T]
-  def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int]
+  def infix_at[T:Typ](a: Rep[Array[T]], i: Rep[Int]): Rep[T]
+  def infix_length[T:Typ](a: Rep[Array[T]]): Rep[Int]
 }
 
 
@@ -39,7 +39,7 @@ trait ArrayLoopsExp extends LoopsExp {
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
   case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
   
-  def array[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
+  def array[T:Typ](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
     val y = reifyEffects(f(x))
     simpleLoop(shape, x, ArrayElem(y))
@@ -51,7 +51,7 @@ trait ArrayLoopsExp extends LoopsExp {
     simpleLoop(shape, x, ReduceElem(y))
   }
 
-  def arrayIf[T:Manifest](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]] = {
+  def arrayIf[T:Typ](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]] = {
     val x = fresh[Int]
     //val (c,y) = f(x)
     var c: Rep[Boolean] = null
@@ -67,16 +67,16 @@ trait ArrayLoopsExp extends LoopsExp {
     simpleLoop(shape, x, ReduceIfElem(c,y)) // TODO: simplify for const true/false
   }
 
-  def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]] = {
+  def flatten[T:Typ](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]] = {
     val x = fresh[Int]
     val y = reifyEffects(f(x))
     simpleLoop(shape, x, FlattenElem(y))
   }
 
 
-  def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = ArrayIndex(a, i)
+  def infix_at[T:Typ](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = ArrayIndex(a, i)
 
-  def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
+  def infix_length[T:Typ](a: Rep[Array[T]]): Rep[Int] = a match {
     case Def(SimpleLoop(s, x, ArrayElem(y))) => s
     case _ => ArrayLength(a)
   }
@@ -90,7 +90,7 @@ trait ArrayLoopsExp extends LoopsExp {
   }
 
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case SimpleLoop(s,i, ArrayElem(y)) if f.hasContext => 
       array(f(s)) { j => f.asInstanceOf[AbstractSubstTransformer{val IR:ArrayLoopsExp.this.type}].withSubstScope(i -> j) { f.reflectBlock(y) } }
     case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
@@ -98,7 +98,7 @@ trait ArrayLoopsExp extends LoopsExp {
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
-  override def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+  override def mirrorFatDef[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
     case ArrayElem(y) => ArrayElem(f(y))
     case ReduceElem(y) => ReduceElem(f(y))
     case ArrayIfElem(c,y) => ArrayIfElem(f(c),f(y))

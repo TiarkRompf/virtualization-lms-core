@@ -122,7 +122,7 @@ def convertNFAtoDFA(in: NIO): DIO = {
 
   
   
-  def exploreNFA[A:Manifest](xs: NIO, cin: Rep[Char])(flag: Rep[Any] => Rep[A] => Rep[A])(k: NIO => Rep[A]): Rep[A] = xs match {
+  def exploreNFA[A:Typ](xs: NIO, cin: Rep[Char])(flag: Rep[Any] => Rep[A] => Rep[A])(k: NIO => Rep[A]): Rep[A] = xs match {
     case Nil => k(Nil)
     case NTrans(cset@Some(c), e, s)::rest =>
       if (cset contains cin) {
@@ -227,12 +227,12 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
   
   // Producers: produce values by executing state transitions
   
-  def Prod[S:Manifest](s0: Rep[S], cond: Rep[S] => Rep[Boolean], step: Rep[S] => Rep[S]) = 
+  def Prod[S:Typ](s0: Rep[S], cond: Rep[S] => Rep[Boolean], step: Rep[S] => Rep[S]) = 
     Prod2(Stepper2[Unit,S,S](s0,cond,x=>step,x=>x))
   
   type Prod[S] = Prod2[S,S]
   
-  case class Prod2[S,O:Manifest](st: Stepper2[Unit,S,O]) {
+  case class Prod2[S,O:Typ](st: Stepper2[Unit,S,O]) {
     implicit def mfs = st.mfs
     
     def step = st.yld(unit())
@@ -244,7 +244,7 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
       st.res(iter(st.s))
     }
 
-    def foreach[S1:Manifest](yld: Rep[O] => Rep[S1] => Rep[S1]) = { s1: Rep[S1] =>
+    def foreach[S1:Typ](yld: Rep[O] => Rep[S1] => Rep[S1]) = { s1: Rep[S1] =>
       into(Foreach[O,S1](s1, yld)).run()
     }
 
@@ -267,15 +267,15 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
         { x => s => seek(step(s)) }, st.res))
     }
 
-    def map[O1:Manifest](f: Rep[O] => Rep[O1]) = {
+    def map[O1:Typ](f: Rep[O] => Rep[O1]) = {
       Prod2[S,O1](Stepper2(st.s,st.cond,st.yld,x=>f(st.res(x))))
     }
 
-    def zip[S1,O1:Manifest](b: Prod2[S1,O1]) = {
+    def zip[S1,O1:Typ](b: Prod2[S1,O1]) = {
       Prod2(st.zip(b.st))
     }
     
-    def into[S1,O1:Manifest](b: Stepper2[O,S1,O1]) = {
+    def into[S1,O1:Typ](b: Stepper2[O,S1,O1]) = {
       Prod2(st.into(b))
     }
 
@@ -285,15 +285,15 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
 
   // Steppers: do a state transition for each input value. can calculate output from each state.
   
-  def Foreach[T:Manifest,S:Manifest](s0: Rep[S], yld: Rep[T] => Rep[S] => Rep[S]) = 
+  def Foreach[T:Typ,S:Typ](s0: Rep[S], yld: Rep[T] => Rep[S] => Rep[S]) = 
     Stepper2[T,S,S](s0, s => unit(true), yld, s => s)
   
   type Foreach[T,S] = Stepper2[T,S,S]
   
-  case class Stepper2[I:Manifest,S:Manifest,O:Manifest](s: Rep[S], cond: Rep[S] => Rep[Boolean], yld: Rep[I] => Rep[S] => Rep[S], res: Rep[S] => Rep[O]) {
+  case class Stepper2[I:Typ,S:Typ,O:Typ](s: Rep[S], cond: Rep[S] => Rep[Boolean], yld: Rep[I] => Rep[S] => Rep[S], res: Rep[S] => Rep[O]) {
     def mfs = manifest[S]
     
-    def zip[S1,O1:Manifest](o: Stepper2[I,S1,O1]) = {
+    def zip[S1,O1:Typ](o: Stepper2[I,S1,O1]) = {
       implicit val mfs1 = o.mfs
       Stepper2[I,(S,S1),(O,O1)]((s,o.s), 
         ss => band(cond(ss._1), o.cond(ss._2)),
@@ -301,7 +301,7 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
         ss => (res(ss._1), o.res(ss._2)))
     }
     
-    def into[S1,O1:Manifest](b: Stepper2[O,S1,O1]) = {
+    def into[S1,O1:Typ](b: Stepper2[O,S1,O1]) = {
       implicit val mfs1 = b.mfs
       Stepper2[I,(S,S1),O1]((s,b.s), 
         ss => band(cond(ss._1), b.cond(ss._2)),
@@ -314,8 +314,8 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
     def result = new Stream[O] {
       type XI[I1] = I
       type XS[S1] = (S,S1)
-      //def into[S:Manifest](x: Foreach[T,S]) = x
-      def into[S1:Manifest,O1:Manifest](x: Stepper2[O,S1,O1]) = Stepper2.this.into(x)
+      //def into[S:Typ](x: Foreach[T,S]) = x
+      def into[S1:Typ,O1:Typ](x: Stepper2[O,S1,O1]) = Stepper2.this.into(x)
     }
     
   }
@@ -324,61 +324,61 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
   def band(a: Rep[Boolean], b: Rep[Boolean]) = if (a) b else unit(false)
   def bandnot(a: Rep[Boolean], b: Rep[Boolean]) = if (b) unit(false) else a
   def ftuple[S,S1](f1:S=>S, f2:S1=>S1) = (ss: (S,S1)) => (f1(ss._1), f2(ss._2))
-  def frtuple[S:Manifest,S1:Manifest](f1:Rep[S]=>Rep[S], f2:Rep[S1]=>Rep[S1]) = (ss: Rep[(S,S1)]) => make_tuple2(f1(ss._1), f2(ss._2))
+  def frtuple[S:Typ,S1:Typ](f1:Rep[S]=>Rep[S], f2:Rep[S1]=>Rep[S1]) = (ss: Rep[(S,S1)]) => make_tuple2(f1(ss._1), f2(ss._2))
 
 
   // Streams: streams are stepper transformers
 
-  def Stream[T:Manifest] = new Stream[T] {
+  def Stream[T:Typ] = new Stream[T] {
     def mf = manifest[T]
     type XI[I] = T
     type XS[S] = S
-    //def into[S:Manifest](x: Foreach[T,S]) = x
-    def into[S:Manifest,O:Manifest](x: Stepper2[T,S,O]): Stepper2[XI[T],XS[S],O] = x
+    //def into[S:Typ](x: Foreach[T,S]) = x
+    def into[S:Typ,O:Typ](x: Stepper2[T,S,O]): Stepper2[XI[T],XS[S],O] = x
   }
 
-  abstract class Stream[T:Manifest] extends Serializable { o =>
+  abstract class Stream[T:Typ] extends Serializable { o =>
     type XI[I]
     type XS[S]
-    //def into[S:Manifest](x: Foreach[T,S]): Foreach[XI[T],XS[S]]
-    def into[S:Manifest,O:Manifest](x: Stepper2[T,S,O]): Stepper2[XI[T],XS[S],O]
+    //def into[S:Typ](x: Foreach[T,S]): Foreach[XI[T],XS[S]]
+    def into[S:Typ,O:Typ](x: Stepper2[T,S,O]): Stepper2[XI[T],XS[S],O]
 
     def filter(p: Rep[T] => Rep[Boolean]) = new Stream[T] {
       type XI[I] = o.XI[T]
       type XS[S] = o.XS[S]
-      //def into[S:Manifest](x: Foreach[T,S]) = o.into(x.prefilter(p))
-      def into[S:Manifest,O:Manifest](k: Stepper2[T,S,O]) = {
+      //def into[S:Typ](x: Foreach[T,S]) = o.into(x.prefilter(p))
+      def into[S:Typ,O:Typ](k: Stepper2[T,S,O]) = {
         o.into(k.copy(yld = { x => s => if (p(x)) k.yld(x)(s) else s }))
       }
     }
 
-    def map[U:Manifest](f: Rep[T] => Rep[U]) = new Stream[U] {
+    def map[U:Typ](f: Rep[T] => Rep[U]) = new Stream[U] {
       type XI[I] = o.XI[T]
       type XS[S] = o.XS[S]
-      /*def into[S:Manifest](x: Foreach[U,S]) = {
+      /*def into[S:Typ](x: Foreach[U,S]) = {
         o.into(x.premap(f))
       }*/
-      def into[S:Manifest,O:Manifest](k: Stepper2[U,S,O]) = {
+      def into[S:Typ,O:Typ](k: Stepper2[U,S,O]) = {
         o.into(k.copy(yld = { x => k.yld(f(x)) }))
       }
     }
 
-    def flatMap[S1,U:Manifest](f: Rep[T] => Prod2[S1,U]) = new Stream[U] {
+    def flatMap[S1,U:Typ](f: Rep[T] => Prod2[S1,U]) = new Stream[U] {
       type XI[I] = o.XI[T]
       type XS[S] = o.XS[S]
-      /*def into[S:Manifest](x: Foreach[U,S]) = {
+      /*def into[S:Typ](x: Foreach[U,S]) = {
         o.into(x.preflatMap(f))
       }*/
-      def into[S:Manifest,O:Manifest](k: Stepper2[U,S,O]) = {
+      def into[S:Typ,O:Typ](k: Stepper2[U,S,O]) = {
         o.into(Stepper2(k.s, k.cond, { x => f(x).foreach(k.yld) }, k.res))
       }
     }
 
-    def split[S1:Manifest,O1:Manifest](p: Rep[T]=>Rep[Boolean], a: Stepper2[T,S1,O1]) = new Stream[O1] {
+    def split[S1:Typ,O1:Typ](p: Rep[T]=>Rep[Boolean], a: Stepper2[T,S1,O1]) = new Stream[O1] {
      type XI[I] = o.XI[T]
      type XS[S2] = o.XS[(S1,S2)]
      
-      def into[S2:Manifest,O2:Manifest](b: Stepper2[O1,S2,O2]) = {
+      def into[S2:Typ,O2:Typ](b: Stepper2[O1,S2,O2]) = {
         o.into(Stepper2[T,(S1,S2),O2]((a.s,b.s), 
           ss => b.cond(ss._2), 
           c => ss => if (p(c)) (a.s, b.yld(a.res(ss._1))(ss._2)) else (a.yld(c)(ss._1), ss._2), 
@@ -387,10 +387,10 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
       }
     }
     
-    /*def into[U:Manifest](b: Stream[U]): Stream[U] = new Stream[U] { // not in general: b may have wrong input type
+    /*def into[U:Typ](b: Stream[U]): Stream[U] = new Stream[U] { // not in general: b may have wrong input type
       type XI[I] = o.XI[T]
       type XS[S] = o.XS[S]
-      def into[S:Manifest,O:Manifest](k: Stepper2[U,S,O]) = {
+      def into[S:Typ,O:Typ](k: Stepper2[U,S,O]) = {
         val k1 = b.into(k)
         o.into(k)
       }
@@ -398,7 +398,7 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
 
     /*def zip[U](b: Stream[U]) = new Stream[(T,U)] { // not in general: one stream may skip elements (or create more)
       type FE[S] = (o.FE[S],b.FE[S])
-      def into[S:Manifest](x: Foreach[(T,U),S]) = {
+      def into[S:Typ](x: Foreach[(T,U),S]) = {
         //o.into(x) zip b.into(x)
       }
     }*/
@@ -410,7 +410,7 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
   // --- stepper ---
 
   // convert stepper to coroutine / da
-  def stepthrough[S:Manifest,O:Manifest](st: Stepper2[Char,S,O]): DIO = {
+  def stepthrough[S:Typ,O:Typ](st: Stepper2[Char,S,O]): DIO = {
 
     val step = st.yld
     def iter: Rep[S => DfaState] = doLambda { (s: Rep[S]) =>

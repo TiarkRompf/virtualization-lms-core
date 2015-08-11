@@ -25,9 +25,9 @@ trait MathOps extends Base {
     def atan(x: Rep[Double])(implicit pos: SourceContext) = math_atan(x)
     def atan2(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = math_atan2(x,y)
     def pow(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = math_pow(x,y)
-    def abs[A:Manifest:Numeric](x: Rep[A])(implicit pos: SourceContext) = math_abs(x)
-    def max[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext) = math_max(x,y)
-    def min[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext) = math_min(x,y)
+    def abs[A:Typ:Numeric](x: Rep[A])(implicit pos: SourceContext) = math_abs(x)
+    def max[A:Typ:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext) = math_max(x,y)
+    def min[A:Typ:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext) = math_min(x,y)
     def Pi(implicit pos: SourceContext) = 3.141592653589793238462643383279502884197169
     def E(implicit pos: SourceContext) = math_e
   }
@@ -49,9 +49,9 @@ trait MathOps extends Base {
   def math_atan(x: Rep[Double])(implicit pos: SourceContext) : Rep[Double]
   def math_atan2(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) : Rep[Double]
   def math_pow(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext): Rep[Double]
-  def math_abs[A:Manifest:Numeric](x: Rep[A])(implicit pos: SourceContext) : Rep[A]
-  def math_max[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext): Rep[A]
-  def math_min[A:Manifest:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext): Rep[A]
+  def math_abs[A:Typ:Numeric](x: Rep[A])(implicit pos: SourceContext) : Rep[A]
+  def math_max[A:Typ:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext): Rep[A]
+  def math_min[A:Typ:Numeric](x: Rep[A], y: Rep[A])(implicit pos: SourceContext): Rep[A]
   def math_pi(implicit pos: SourceContext): Rep[Double]
   def math_e(implicit pos: SourceContext): Rep[Double]
 }
@@ -74,9 +74,9 @@ trait MathOpsExp extends MathOps with EffectExp {
   case class MathAtan(x: Exp[Double]) extends Def[Double]
   case class MathAtan2(x: Exp[Double], y: Exp[Double]) extends Def[Double]
   case class MathPow(x: Exp[Double], y: Exp[Double]) extends Def[Double]
-  case class MathAbs[A:Manifest:Numeric](x: Exp[A]) extends Def[A]
-  case class MathMax[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
-  case class MathMin[A:Manifest:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
+  case class MathAbs[A:Typ:Numeric](x: Exp[A]) extends Def[A]
+  case class MathMax[A:Typ:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
+  case class MathMin[A:Typ:Numeric](x: Exp[A], y: Exp[A]) extends Def[A]
   case class MathPi() extends Def[Double]
   case class MathE() extends Def[Double]
 
@@ -97,13 +97,13 @@ trait MathOpsExp extends MathOps with EffectExp {
   def math_atan(x: Exp[Double])(implicit pos: SourceContext) = MathAtan(x)
   def math_atan2(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = MathAtan2(x,y)
   def math_pow(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = MathPow(x,y)
-  def math_abs[A:Manifest:Numeric](x: Exp[A])(implicit pos: SourceContext) = MathAbs(x)
-  def math_max[A:Manifest:Numeric](x: Exp[A], y: Exp[A])(implicit pos: SourceContext) = MathMax(x, y)
-  def math_min[A:Manifest:Numeric](x: Exp[A], y: Exp[A])(implicit pos: SourceContext) = MathMin(x, y)
+  def math_abs[A:Typ:Numeric](x: Exp[A])(implicit pos: SourceContext) = MathAbs(x)
+  def math_max[A:Typ:Numeric](x: Exp[A], y: Exp[A])(implicit pos: SourceContext) = MathMax(x, y)
+  def math_min[A:Typ:Numeric](x: Exp[A], y: Exp[A])(implicit pos: SourceContext) = MathMin(x, y)
   def math_pi(implicit pos: SourceContext) = MathPi()
   def math_e(implicit pos: SourceContext) = MathE()  
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case MathCeil(x) => math_ceil(f(x))

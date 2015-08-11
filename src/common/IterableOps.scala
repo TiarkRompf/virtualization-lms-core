@@ -9,34 +9,34 @@ trait IterableOps extends Variables {
 
   // multiple definitions needed because implicits won't chain
   // not using infix here because apply doesn't work with infix methods
-  implicit def varToIterableOps[A:Manifest](x: Var[Iterable[A]]) = new IterableOpsCls(readVar(x))
-  implicit def repIterableToIterableOps[T:Manifest](a: Rep[Iterable[T]]) = new IterableOpsCls(a)
-  implicit def iterableToIterableOps[T:Manifest](a: Iterable[T]) = new IterableOpsCls(unit(a))
+  implicit def varToIterableOps[A:Typ](x: Var[Iterable[A]]) = new IterableOpsCls(readVar(x))
+  implicit def repIterableToIterableOps[T:Typ](a: Rep[Iterable[T]]) = new IterableOpsCls(a)
+  implicit def iterableToIterableOps[T:Typ](a: Iterable[T]) = new IterableOpsCls(unit(a))
 
-  class IterableOpsCls[T:Manifest](a: Rep[Iterable[T]]){
+  class IterableOpsCls[T:Typ](a: Rep[Iterable[T]]){
     def foreach(block: Rep[T] => Rep[Unit])(implicit pos: SourceContext) = iterable_foreach(a, block)
     def toArray(implicit pos: SourceContext) = iterable_toarray(a)
   }
 
-  def iterable_foreach[T:Manifest](x: Rep[Iterable[T]], block: Rep[T] => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
-  def iterable_toarray[T:Manifest](x: Rep[Iterable[T]])(implicit pos: SourceContext): Rep[Array[T]]
+  def iterable_foreach[T:Typ](x: Rep[Iterable[T]], block: Rep[T] => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
+  def iterable_toarray[T:Typ](x: Rep[Iterable[T]])(implicit pos: SourceContext): Rep[Array[T]]
 }
 
 trait IterableOpsExp extends IterableOps with EffectExp with VariablesExp {
 
-  case class IterableForeach[T:Manifest](a: Exp[Iterable[T]], x: Sym[T], block: Block[Unit]) extends Def[Unit]
-  case class IterableToArray[T:Manifest](a: Exp[Iterable[T]]) extends Def[Array[T]] {
+  case class IterableForeach[T:Typ](a: Exp[Iterable[T]], x: Sym[T], block: Block[Unit]) extends Def[Unit]
+  case class IterableToArray[T:Typ](a: Exp[Iterable[T]]) extends Def[Array[T]] {
     val m = manifest[T]
   }
   
-  def iterable_foreach[T:Manifest](a: Exp[Iterable[T]], block: Exp[T] => Exp[Unit])(implicit pos: SourceContext): Exp[Unit] = {
+  def iterable_foreach[T:Typ](a: Exp[Iterable[T]], block: Exp[T] => Exp[Unit])(implicit pos: SourceContext): Exp[Unit] = {
     val x = fresh[T]
     val b = reifyEffects(block(x))
     reflectEffect(IterableForeach(a, x, b), summarizeEffects(b).star)
   }
-  def iterable_toarray[T:Manifest](a: Exp[Iterable[T]])(implicit pos: SourceContext) = IterableToArray(a)
+  def iterable_toarray[T:Typ](a: Exp[Iterable[T]])(implicit pos: SourceContext) = IterableToArray(a)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
     (e match {
       case e@IterableToArray(x) => iterable_toarray(f(x))(e.m,pos)
       case Reflect(e@IterableForeach(x,y,b), u, es) => reflectMirrored(Reflect(IterableForeach(f(x),f(y).asInstanceOf[Sym[_]],f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    

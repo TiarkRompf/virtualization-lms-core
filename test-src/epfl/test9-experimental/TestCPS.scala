@@ -17,7 +17,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 trait CpsProg1 extends Arith with IfThenElse with Equal with Print with Compile {
   
-  def choose[A:Manifest](x: Rep[Boolean]): Boolean @cps[Rep[A]] = shift { k: (Boolean => Rep[A]) =>
+  def choose[A:Typ](x: Rep[Boolean]): Boolean @cps[Rep[A]] = shift { k: (Boolean => Rep[A]) =>
     if (x)
       k(true)
     else
@@ -39,7 +39,7 @@ trait CpsProg1 extends Arith with IfThenElse with Equal with Print with Compile 
 
 trait CpsProg2 extends Arith with IfThenElse with Equal with Print with Compile {
   
-  def choose[A:Manifest](x: Rep[Boolean]): Boolean @cps[Rep[A]] = shift { k: (Boolean => Rep[A]) =>
+  def choose[A:Typ](x: Rep[Boolean]): Boolean @cps[Rep[A]] = shift { k: (Boolean => Rep[A]) =>
     if (x)
       k(true)
     else
@@ -47,7 +47,7 @@ trait CpsProg2 extends Arith with IfThenElse with Equal with Print with Compile 
   }
   
   
-  def pickValue[A:Manifest](x: Rep[Boolean]): Rep[Int] @cps[Rep[A]] = { 
+  def pickValue[A:Typ](x: Rep[Boolean]): Rep[Int] @cps[Rep[A]] = { 
     val c = choose[A](x)
     if (c) 
       unit(7) 
@@ -67,7 +67,7 @@ trait CpsProg2 extends Arith with IfThenElse with Equal with Print with Compile 
 
 trait AmbProg1 extends Arith with IfThenElse with Equal with Print with Compile {
   
-  //def __ifThenElse[T:Manifest,U](cond: Rep[Boolean], thenp: => Rep[T]@cps[U], elsep: => Rep[T]@cps[U]): Rep[T]@cps[U] = cond match { case true => thenp case false => elsep }
+  //def __ifThenElse[T:Typ,U](cond: Rep[Boolean], thenp: => Rep[T]@cps[U], elsep: => Rep[T]@cps[U]): Rep[T]@cps[U] = cond match { case true => thenp case false => elsep }
   
   
   // xs could be either Rep[List[T]] or List[Rep[T]]

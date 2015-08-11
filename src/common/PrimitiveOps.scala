@@ -14,8 +14,8 @@ trait LiftPrimitives {
   implicit def doubleToRepDouble(x: Double) = unit(x)
   
   // precision-widening promotions
-  implicit def chainIntToRepFloat[A:Manifest](x: A)(implicit c: A => Rep[Int]): Rep[Float] = repIntToRepFloat(c(x))
-  implicit def chainFloatToRepDouble[A:Manifest](x: A)(implicit c: A => Rep[Float]): Rep[Double] = repFloatToRepDouble(c(x))
+  implicit def chainIntToRepFloat[A:Typ](x: A)(implicit c: A => Rep[Int]): Rep[Float] = repIntToRepFloat(c(x))
+  implicit def chainFloatToRepDouble[A:Typ](x: A)(implicit c: A => Rep[Float]): Rep[Double] = repFloatToRepDouble(c(x))
 }
 
 
@@ -222,7 +222,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
     
   class IntOpsCls(lhs: Rep[Int]){
     // TODO (tiark): either of these cause scalac to crash        
-    //def /[A](rhs: Rep[A])(implicit mA: Manifest[A], f: Fractional[A], o: Overloaded1) = int_divide_frac(lhs, rhs)
+    //def /[A](rhs: Rep[A])(implicit mA: Typ[A], f: Fractional[A], o: Overloaded1) = int_divide_frac(lhs, rhs)
     //def /(rhs: Rep[Int]) = int_divide(lhs, rhs)
     // TODO Something is wrong if we just use floatValue. implicits get confused
     def floatValueL()(implicit pos: SourceContext) = int_float_value(lhs)
@@ -248,7 +248,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def int_plus(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
   def int_minus(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
   def int_times(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
-  // def int_divide_frac[A:Manifest:Fractional](lhs: Rep[Int], rhs: Rep[A])(implicit pos: SourceContext): Rep[A]
+  // def int_divide_frac[A:Typ:Fractional](lhs: Rep[Int], rhs: Rep[A])(implicit pos: SourceContext): Rep[A]
   def int_divide(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
   
   def int_mod(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
@@ -348,7 +348,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   case class IntPlus(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntMinus(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntTimes(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
-  // case class IntDivideFrac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) extends Def[A]
+  // case class IntDivideFrac[A:Typ:Fractional](lhs: Exp[Int], rhs: Exp[A]) extends Def[A]
   case class IntDivide(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntMod(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntBinaryOr(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
@@ -386,7 +386,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
     case (Const(x), Const(y)) => Const(x*y)
     case _ => IntTimes(lhs, rhs)
   }
-  // def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A])(implicit pos: SourceContext) : Exp[A] = IntDivideFrac(lhs, rhs)
+  // def int_divide_frac[A:Typ:Fractional](lhs: Exp[Int], rhs: Exp[A])(implicit pos: SourceContext) : Exp[A] = IntDivideFrac(lhs, rhs)
   def int_divide(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntDivide(lhs, rhs)
   def int_mod(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntMod(lhs, rhs)
   def int_binaryor(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntBinaryOr(lhs, rhs)
@@ -422,7 +422,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   def long_toint(lhs: Exp[Long])(implicit pos: SourceContext) = LongToInt(lhs)
   def long_mod(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongMod(lhs, rhs)
     
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
       case ObjDoubleParseDouble(x) => obj_double_parse_double(f(x))

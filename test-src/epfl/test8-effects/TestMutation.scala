@@ -18,10 +18,10 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 trait ArrayMutation extends ArrayLoops {
   
-  def infix_update[T:Manifest](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]): Rep[Unit]
+  def infix_update[T:Typ](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]): Rep[Unit]
 
-  def infix_mutable[T:Manifest](a: Rep[Array[T]]): Rep[Array[T]]
-  def infix_clone[T:Manifest](a: Rep[Array[T]]): Rep[Array[T]]
+  def infix_mutable[T:Typ](a: Rep[Array[T]]): Rep[Array[T]]
+  def infix_clone[T:Typ](a: Rep[Array[T]]): Rep[Array[T]]
   
 }
 
@@ -32,10 +32,10 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
   case class ArrayMutable[T](a: Rep[Array[T]]) extends Def[Array[T]]
   case class ArrayClone[T](a: Rep[Array[T]]) extends Def[Array[T]]
   
-  def infix_update[T:Manifest](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]) = reflectWrite(a)(ArrayUpdate(a,i,x))
+  def infix_update[T:Typ](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]) = reflectWrite(a)(ArrayUpdate(a,i,x))
 
-  def infix_mutable[T:Manifest](a: Rep[Array[T]]) = reflectMutable(ArrayMutable(a))
-  def infix_clone[T:Manifest](a: Rep[Array[T]]) = ArrayClone(a)
+  def infix_mutable[T:Typ](a: Rep[Array[T]]) = reflectMutable(ArrayMutable(a))
+  def infix_clone[T:Typ](a: Rep[Array[T]]) = ArrayClone(a)
   
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case SimpleLoop(s,i, ArrayElem(y)) => Nil

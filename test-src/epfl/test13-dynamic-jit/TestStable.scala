@@ -23,9 +23,9 @@ case class RCell[T](tag: String) {
 
 trait CellOps extends Base {
   type Cell[T] = Rep[RCell[T]]
-  def cell[T:Manifest](tag: String): Cell[T]
-  def infix_set[T:Manifest](c: Cell[T], x: Rep[T]): Rep[Unit]
-  def infix_get[T:Manifest](c: Cell[T]): Rep[T]
+  def cell[T:Typ](tag: String): Cell[T]
+  def infix_set[T:Typ](c: Cell[T], x: Rep[T]): Rep[Unit]
+  def infix_get[T:Typ](c: Cell[T]): Rep[T]
 }
 
 trait CellOpsExp extends CellOps with BaseExp with StaticDataExp {
@@ -33,9 +33,9 @@ trait CellOpsExp extends CellOps with BaseExp with StaticDataExp {
   case class CellSet[T](c: Cell[T], x: Rep[T]) extends Def[Unit]
   case class CellGet[T](c: Cell[T]) extends Def[T]
   
-  def cell[T:Manifest](tag: String): Cell[T] = staticData(new RCell[T](tag))//reflectMutable(CellInit(tag, x))
-  def infix_set[T:Manifest](c: Cell[T], x: Rep[T]): Rep[Unit] = reflectWrite(c)(CellSet(c,x))
-  def infix_get[T:Manifest](c: Cell[T]): Rep[T] = CellGet(c)
+  def cell[T:Typ](tag: String): Cell[T] = staticData(new RCell[T](tag))//reflectMutable(CellInit(tag, x))
+  def infix_set[T:Typ](c: Cell[T], x: Rep[T]): Rep[Unit] = reflectWrite(c)(CellSet(c,x))
+  def infix_get[T:Typ](c: Cell[T]): Rep[T] = CellGet(c)
 }
 
 trait ScalaGenCellOps extends ScalaGenBase {
@@ -53,15 +53,15 @@ trait ScalaGenCellOps extends ScalaGenBase {
 
 trait CompileDyn extends Base with Compile {
   
-  def dcompile[A:Manifest,B:Manifest](fv: List[Rep[Any]])(f: Rep[A] => Rep[B]): Rep[A=>B]
+  def dcompile[A:Typ,B:Typ](fv: List[Rep[Any]])(f: Rep[A] => Rep[B]): Rep[A=>B]
 
-  def dcompile[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = dcompile(freesyms(f))(f)
+  def dcompile[A:Typ,B:Typ](f: Rep[A] => Rep[B]): Rep[A=>B] = dcompile(freesyms(f))(f)
 
-  def dlet[A:Manifest,B:Manifest](x:Rep[A], fv: List[Rep[Any]])(f: A => Rep[B]): Rep[B]
+  def dlet[A:Typ,B:Typ](x:Rep[A], fv: List[Rep[Any]])(f: A => Rep[B]): Rep[B]
 
-  def dlet[A:Manifest,B:Manifest](x:Rep[A])(f: A => Rep[B]): Rep[B] = dlet(x, freesyms(f))(f)
+  def dlet[A:Typ,B:Typ](x:Rep[A])(f: A => Rep[B]): Rep[B] = dlet(x, freesyms(f))(f)
 
-  def unstage[A:Manifest,B:Manifest](x:Rep[A])(f: A => Rep[B]): Rep[B] = dlet(x)(f)
+  def unstage[A:Typ,B:Typ](x:Rep[A])(f: A => Rep[B]): Rep[B] = dlet(x)(f)
 
   // TODO: @cps version of unstage
 
@@ -83,14 +83,14 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
   }
 
 
-  def dcompile[A:Manifest,B:Manifest](fv: List[Exp[Any]])(f: Rep[A] => Rep[B]): Rep[A=>B] = {
+  def dcompile[A:Typ,B:Typ](fv: List[Exp[Any]])(f: Rep[A] => Rep[B]): Rep[A=>B] = {
     
     // compile { u: Rep[A] => f(u) }
 
     dcompileInternal[A,Rep[A],B](fv, (u,v) => u)(f)
   }
   
-  def dlet[A:Manifest,B:Manifest](x:Exp[A], fv: List[Exp[Any]])(f: A => Rep[B]): Rep[B] = {
+  def dlet[A:Typ,B:Typ](x:Exp[A], fv: List[Exp[Any]])(f: A => Rep[B]): Rep[B] = {
     
     // compile { u: Rep[Unit] => f(x) }  <--- x is runtime value
 
@@ -98,7 +98,7 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
     unchecked(fc,".apply(())")    
   }
 
-  def dcompileInternal[U:Manifest,A,B:Manifest](fv: List[Exp[Any]], g: (Rep[U],List[Any]) => A)(f: A => Rep[B]): Rep[U=>B] = {
+  def dcompileInternal[U:Typ,A,B:Typ](fv: List[Exp[Any]], g: (Rep[U],List[Any]) => A)(f: A => Rep[B]): Rep[U=>B] = {
 
     // will generate:  compile { u => f(g(u)) }
 
@@ -135,11 +135,11 @@ trait StableVars extends CellOps with CompileDyn with Equal with PrimitiveOps wi
     
     abstract class Continue[A]
     case class Done[A](x: Rep[A]) extends Continue[A]
-    case class ReadValue[A:Manifest,B](s: RCell[A], f: A => Continue[B], fv: List[Rep[Any]]) extends Continue[B] { val m = manifest[A] }
+    case class ReadValue[A:Typ,B](s: RCell[A], f: A => Continue[B], fv: List[Rep[Any]]) extends Continue[B] { val m = manifest[A] }
 
-    def readValue[A:Manifest,B](s: RCell[A])(f: A => Rep[B]) = ReadValue(s, (x:A) => Done(f(x)), freesyms(f))
-    def readOneValue[A:Manifest,B](s: RCell[A])(f: A => Continue[B]) = ReadValue(s, f, freesyms(f))
-    def compileStable[A:Manifest,B:Manifest](f: Rep[A] => Continue[B]): A=>B
+    def readValue[A:Typ,B](s: RCell[A])(f: A => Rep[B]) = ReadValue(s, (x:A) => Done(f(x)), freesyms(f))
+    def readOneValue[A:Typ,B](s: RCell[A])(f: A => Continue[B]) = ReadValue(s, f, freesyms(f))
+    def compileStable[A:Typ,B:Typ](f: Rep[A] => Continue[B]): A=>B
 
   }
 
@@ -148,11 +148,11 @@ trait StableVars extends CellOps with CompileDyn with Equal with PrimitiveOps wi
     import scala.collection.mutable.HashMap
       
     
-    def compileStable[A:Manifest,B:Manifest](f: Rep[A] => Continue[B]): A=>B = {
+    def compileStable[A:Typ,B:Typ](f: Rep[A] => Continue[B]): A=>B = {
 
       val codeHolder = RCell[A=>B]("code")
 
-      def compPart[A:Manifest](m: Continue[A]): Rep[A] = m match {
+      def compPart[A:Typ](m: Continue[A]): Rep[A] = m match {
         case e@ReadValue(s,f:((a)=>Continue[A]), fv) => 
           implicit val m = e.m 
 

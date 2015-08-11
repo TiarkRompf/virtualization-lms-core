@@ -21,15 +21,15 @@ class TestCrossStage extends FileDiffSuite {
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
     def test(x: Rep[Int]): Rep[Unit]
     
-    implicit def funToRep[T:Manifest,U:Manifest](x:T=>U): Rep[T=>U]
-    implicit def abToRep[T:Manifest](x:ArrayBuffer[T]): Rep[ArrayBuffer[T]]
+    implicit def funToRep[T:Typ,U:Typ](x:T=>U): Rep[T=>U]
+    implicit def abToRep[T:Typ](x:ArrayBuffer[T]): Rep[ArrayBuffer[T]]
   }
 
   trait Impl extends DSL with StaticDataExp with FunctionsExp with ArrayBufferOpsExp with ArithExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp with ScalaCompile { self => 
 
-    def funToRep[T:Manifest,U:Manifest](x:T=>U): Rep[T=>U] = staticData(x)
-    def abToRep[T:Manifest](x:ArrayBuffer[T]): Rep[ArrayBuffer[T]] = staticData(x)
+    def funToRep[T:Typ,U:Typ](x:T=>U): Rep[T=>U] = staticData(x)
+    def abToRep[T:Typ](x:ArrayBuffer[T]): Rep[ArrayBuffer[T]] = staticData(x)
 
     override val verbosity = 2
     val codegen = new ScalaGenStaticData with ScalaGenFunctions with ScalaGenArrayBufferOps with ScalaGenArith with ScalaGenOrderingOps 

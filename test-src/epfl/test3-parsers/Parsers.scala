@@ -6,8 +6,8 @@ trait Parsers { this: Matching with Extractors =>
   
   type Elem
   type Input = List[Elem]
-  implicit val mE: Manifest[Elem]
-  //implicit val mI: Manifest[List[Elem]]
+  implicit val mE: Typ[Elem]
+  //implicit val mI: Typ[List[Elem]]
   
   abstract class Parser {
     def apply(in: Rep[Input]): Rep[ParseResult]
@@ -30,9 +30,9 @@ trait Parsers { this: Matching with Extractors =>
   } // TODO: not so nice...
 
   object :!: {
-    def apply[A:Manifest](x: Rep[A], xs: Rep[List[A]]) = construct(classOf[::[A]], (::.apply[A] _).tupled, tuple(x, xs))
+    def apply[A:Typ](x: Rep[A], xs: Rep[List[A]]) = construct(classOf[::[A]], (::.apply[A] _).tupled, tuple(x, xs))
 //    def unapply[A](x: Rep[::[A]]) = deconstruct2(classOf[::[A]], ::.unapply[A], x) // doesn't work: hd is private in :: !
-    def unapply[A:Manifest](x: Rep[::[A]]): Option[(Rep[A], Rep[List[A]])] = deconstruct2(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
+    def unapply[A:Typ](x: Rep[::[A]]): Option[(Rep[A], Rep[List[A]])] = deconstruct2(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
   }
 
 

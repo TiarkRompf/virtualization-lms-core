@@ -19,11 +19,11 @@ trait PrintExp extends Print with EffectExp {
   implicit def unit(s: String): Rep[String] = Const(s)
   case class Print(s: Rep[Any]) extends Def[Unit]
   def print(s: Rep[Any]) = reflectEffect(Print(s))
-  override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+  override def mirrorDef[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
     case Print(s) => Print(f(s))
     case _ => super.mirrorDef(e,f)
   }).asInstanceOf[Def[A]] // why??
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Reflect(Print(s), u, es) => reflectMirrored(Reflect(Print(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
