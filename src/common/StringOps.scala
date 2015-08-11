@@ -16,6 +16,8 @@ trait StringOps extends Variables with OverloadHack {
   // NOTE: if something doesn't get lifted, this won't give you a compile time error,
   //       since string concat is defined on all objects
   
+  implicit def stringTyp: Typ[String]
+
   def infix_+(s1: String, s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(unit(s1), s2)
   def infix_+[T:Typ](s1: String, s2: Var[T])(implicit o: Overloaded2, pos: SourceContext) = string_plus(unit(s1), readVar(s2))
   def infix_+(s1: Rep[String], s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(s1, s2)
