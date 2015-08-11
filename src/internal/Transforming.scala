@@ -13,7 +13,7 @@ trait AbstractTransformer {
   def reflectBlock[A](xs: Block[A]): Exp[A] = sys.error("reflectBlock not supported by context-free transformers")
   
   def apply[A](x: Exp[A]): Exp[A]
-  def apply[A:Typ](xs: Block[A]): Block[A] = {
+  def apply[A](xs: Block[A]): Block[A] = {
     // should be overridden by transformers with context
     assert(!hasContext) 
     Block(apply(xs.res)) 
