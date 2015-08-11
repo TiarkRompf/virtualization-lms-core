@@ -8,6 +8,8 @@ import java.util.HashMap
 import scala.reflect.SourceContext
 
 trait HashMapOps extends Base {
+  implicit def hashMapTyp[K:Typ,V:Typ]: Typ[HashMap[K,V]]
+
   object HashMap {
     def apply[K:Typ,V:Typ]()(implicit pos: SourceContext) = hashmap_new[K,V]()
   }
