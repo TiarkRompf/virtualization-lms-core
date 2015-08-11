@@ -10,6 +10,8 @@ import scala.reflect.SourceContext
 
 trait Functions extends Base {
 
+  implicit def funTyp[A:Typ,B:Typ]: Typ[A => B]
+
   def doLambda[A:Typ,B:Typ](fun: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[A => B]
   implicit def fun[A:Typ,B:Typ](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
 
@@ -50,8 +52,8 @@ trait TupledFunctions extends Functions with TupleOps {
     def apply(x1: Rep[A1], x2: Rep[A2], x3: Rep[A3], x4: Rep[A4], x5: Rep[A5]) = doApply(f,(x1, x2, x3, x4, x5))
     def apply(x: Rep[(A1,A2,A3,A4,A5)]): Rep[B] = doApply(f,x)
   }
-  implicit def toLambdaOpsAny[B:Typ](fun: Rep[Any => B]) =
-    toLambdaOps(fun)
+  //implicit def toLambdaOpsAny[B:Typ](fun: Rep[Any => B]) =
+  //  toLambdaOps(fun)
   implicit def toLambdaOps2[A1:Typ,A2:Typ,B:Typ](fun: Rep[((A1,A2)) => B]) =
     new LambdaOps2(fun)
   implicit def toLambdaOps3[A1:Typ,A2:Typ,A3:Typ,B:Typ](fun: Rep[((A1,A2,A3)) => B]) =
@@ -99,8 +101,8 @@ trait FunctionsExp extends Functions with EffectExp {
   }
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case e@Lambda(g,x,y) => toAtom(Lambda(f(g),f(x),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
-    case e@Apply(g,arg) => doApply(f(g), f(arg))(e.mA,mtype(e.mB),implicitly[SourceContext])
+    case e@Lambda(g,x:Exp[Any],y:Block[b]) => toAtom(Lambda(f(g),f(x),f(y))(e.mA,e.mB))(mtype(manifest[A]),pos)
+    case e@Apply(g,arg) => doApply(f(g), f(arg))(e.mA,mtype(e.mB),pos)
     case Reflect(e@Apply(g,arg), u, es) => reflectMirrored(Reflect(Apply(f(g),f(arg))(e.mA,mtype(e.mB)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
@@ -194,7 +196,7 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
   }
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case e@Lambda(g,UnboxedTuple(xs),y) => toAtom(Lambda(f(g),UnboxedTuple(f(xs))(e.mA),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Lambda(g,UnboxedTuple(xs),y:Exp[b]) => toAtom(Lambda(f(g),UnboxedTuple(f(xs))(e.mA),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
