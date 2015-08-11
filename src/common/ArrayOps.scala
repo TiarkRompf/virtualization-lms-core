@@ -7,6 +7,10 @@ import scala.reflect.SourceContext
 
 trait ArrayOps extends Variables {
 
+  implicit def intTyp: Typ[Int] // import
+  implicit def seqTyp[T:Typ]: Typ[Seq[T]] // import
+  implicit def arrayTyp[T:Typ]: Typ[Array[T]]
+
   // multiple definitions needed because implicits won't chain
   // not using infix here because apply doesn't work with infix methods
   implicit def varToArrayOps[T:Typ](x: Var[Array[T]]) = new ArrayOpsCls(readVar(x))
@@ -16,7 +20,7 @@ trait ArrayOps extends Variables {
   // substitution for "new Array[T](...)"
   // TODO: look into overriding __new for arrays
   object NewArray {
-    def apply[T:Typ](n: Rep[Int]) = array_obj_new(n)
+    def apply[T:Typ](n: Rep[Int]) = array_obj_new[T](n)
   }
 
   object Array {
@@ -50,14 +54,19 @@ trait ArrayOps extends Variables {
 }
 
 trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
+
   case class ArrayNew[T:Typ](n: Exp[Int]) extends Def[Array[T]] {
     val m = manifest[T]
   }
   case class ArrayFromSeq[T:Typ](xs: Seq[Exp[T]]) extends Def[Array[T]] {
     val m = manifest[T]
   }
-  case class ArrayApply[T:Typ](a: Exp[Array[T]], n: Exp[Int]) extends Def[T]
-  case class ArrayUpdate[T:Typ](a: Exp[Array[T]], n: Exp[Int], y: Exp[T]) extends Def[Unit]
+  case class ArrayApply[T:Typ](a: Exp[Array[T]], n: Exp[Int]) extends Def[T] {
+    val m = manifest[T]
+  }
+  case class ArrayUpdate[T:Typ](a: Exp[Array[T]], n: Exp[Int], y: Exp[T]) extends Def[Unit] {
+    val m = manifest[T]
+  }
   case class ArrayLength[T:Typ](a: Exp[Array[T]]) extends Def[Int] {
     val m = manifest[T]
   }
@@ -79,7 +88,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   def array_apply[T:Typ](x: Exp[Array[T]], n: Exp[Int])(implicit pos: SourceContext): Exp[T] = ArrayApply(x, n)
   def array_update[T:Typ](x: Exp[Array[T]], n: Exp[Int], y: Exp[T])(implicit pos: SourceContext) = reflectWrite(x)(ArrayUpdate(x,n,y))
   def array_unsafe_update[T:Typ](x: Rep[Array[T]], n: Rep[Int], y: Rep[T])(implicit pos: SourceContext) = ArrayUpdate(x,n,y)
-  def array_length[T:Typ](a: Exp[Array[T]])(implicit pos: SourceContext) : Rep[Int] = ArrayLength(a)
+  def array_length[T:Typ](a: Exp[Array[T]])(implicit pos: SourceContext) : Rep[Int] = toAtom(ArrayLength(a))
   def array_foreach[T:Typ](a: Exp[Array[T]], block: Exp[T] => Exp[Unit])(implicit pos: SourceContext): Exp[Unit] = {
     val x = fresh[T]
     val b = reifyEffects(block(x))
@@ -101,14 +110,14 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case ArrayApply(a,x) => array_apply(f(a),f(x))(mtype(manifest[A]),pos)
-    case ArrayLength(x) => array_length(f(x))
-    case e@ArraySort(x) => array_sort(f(x))(e.m,pos)
-    case e@ArrayCopy(a,ap,d,dp,l) => toAtom(ArrayCopy(f(a),f(ap),f(d),f(dp),f(l))(e.m))(mtype(manifest[A]),pos)
+    case ArrayLength(x) => array_length(f(x))(mtype(manifest[A]),pos)
+    case e@ArraySort(x) => array_sort(f(x))(mtype(manifest[A]),pos)
+    case e@ArrayCopy(a,ap,d,dp,l) => array_copy(f(a),f(ap),f(d),f(dp),f(l))(mtype(manifest[A]),pos)
     case Reflect(e@ArrayNew(n), u, es) => reflectMirrored(Reflect(ArrayNew(f(n))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
     case Reflect(e@ArrayLength(x), u, es) => reflectMirrored(Reflect(ArrayLength(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
-    case Reflect(ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r))(mtype(manifest[A])), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case Reflect(e@ArraySort(x), u, es) => reflectMirrored(Reflect(ArraySort(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(ArrayUpdate(l,i,r), u, es) => reflectMirrored(Reflect(ArrayUpdate(f(l),f(i),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)   
+    case Reflect(e@ArrayUpdate(l,i,r), u, es) => reflectMirrored(Reflect(ArrayUpdate(f(l),f(i),f(r))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)   
     case Reflect(e@ArrayCopy(a,ap,d,dp,l), u, es) => reflectMirrored(Reflect(ArrayCopy(f(a),f(ap),f(d),f(dp),f(l))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)     
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
@@ -142,11 +151,11 @@ trait ArrayOpsExpOpt extends ArrayOpsExp {
     case Def(ArrayNew(n: Exp[Int])) => n
     case Def(ArrayFromSeq(xs)) => Const(xs.size)
     case Def(ArraySort(x)) => array_length(x)
-    case Def(ArrayMap(x, _, _)) => array_length(x)
+    case Def(ArrayMap(x: Exp[Array[T]], _, _)) => array_length(x)
     case Def(Reflect(ArrayNew(n: Exp[Int]), _, _)) => n
     case Def(Reflect(ArrayFromSeq(xs), _, _)) => Const(xs.size)
     case Def(Reflect(ArraySort(x), _, _)) => array_length(x)
-    case Def(Reflect(ArrayMap(x, _, _), _, _)) => array_length(x)
+    case Def(Reflect(ArrayMap(x: Exp[Array[T]], _, _), _, _)) => array_length(x)
     case _ => super.array_length(a)
   }
 
