@@ -13,15 +13,15 @@ trait CastingOps extends Variables with OverloadHack {
   implicit def varAnyToCastingOps[A:Typ](lhs: Var[A]) = new CastingOpsCls(readVar(lhs))
     
   class CastingOpsCls[A:Typ](lhs: Rep[A]){
-    def IsInstanceOf[B:Typ](implicit pos: SourceContext): Rep[Boolean] = rep_isinstanceof(lhs, manifest[A], manifest[B])
-    def AsInstanceOf[B:Typ](implicit pos: SourceContext): Rep[B] = rep_asinstanceof(lhs, manifest[A], manifest[B])
+    def IsInstanceOf[B:Typ](implicit pos: SourceContext): Rep[Boolean] = rep_isinstanceof(lhs, typ[A], typ[B])
+    def AsInstanceOf[B:Typ](implicit pos: SourceContext): Rep[B] = rep_asinstanceof(lhs, typ[A], typ[B])
   }
 
   def rep_isinstanceof[A,B](lhs: Rep[A], mA: Typ[A], mB: Typ[B])(implicit pos: SourceContext) : Rep[Boolean]
   def rep_asinstanceof[A,B:Typ](lhs: Rep[A], mA: Typ[A], mB: Typ[B])(implicit pos: SourceContext) : Rep[B]
 }
 
-trait CastingOpsExp extends CastingOps with BaseExp with EffectExp {
+trait CastingOpsExp extends CastingOps with BaseExp with EffectExp with BooleanOpsExp {
   this: ImplicitOps =>
 
   case class RepIsInstanceOf[A,B](lhs: Exp[A], mA: Typ[A], mB: Typ[B]) extends Def[Boolean]
