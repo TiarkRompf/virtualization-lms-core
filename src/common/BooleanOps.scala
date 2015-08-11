@@ -7,10 +7,13 @@ import scala.reflect.SourceContext
 trait LiftBoolean {
   this: Base =>
 
+  implicit def boolTyp: Typ[Boolean]
   implicit def boolToBoolRep(b: Boolean) = unit(b)
 }
 
 trait BooleanOps extends Variables {
+  implicit def boolTyp: Typ[Boolean]
+
   def infix_unary_!(x: Rep[Boolean])(implicit pos: SourceContext) = boolean_negate(x)
   def infix_&&(lhs: Rep[Boolean], rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_and(lhs,rhs)
   def infix_||(lhs: Rep[Boolean], rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_or(lhs,rhs)
