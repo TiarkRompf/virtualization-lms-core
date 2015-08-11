@@ -1,7 +1,7 @@
 package scala.lms
 package common
 
-import reflect.{SourceContext, RefinedTyp}
+import reflect.{SourceContext, RefinedManifest}
 import util.OverloadHack
 import java.io.PrintWriter
 import internal.{GenericNestedCodegen, GenericFatCodegen}
