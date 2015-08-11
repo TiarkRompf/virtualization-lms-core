@@ -39,23 +39,29 @@ trait Equal extends Base with Variables with OverloadHack {
   def notequals[A:Typ,B:Typ](a: Rep[A], b: Rep[B])(implicit pos: SourceContext) : Rep[Boolean]
 }
 
-trait EqualExpBridge extends BaseExp  {
+trait EqualExpBridge extends BaseExp with BooleanOpsExp {
 
-  case class Equal[A:Typ,B:Typ](a: Exp[A], b: Exp[B]) extends Def[Boolean]
-  case class NotEqual[A:Typ,B:Typ](a: Exp[A], b: Exp[B]) extends Def[Boolean]
+  case class Equal[A:Typ,B:Typ](a: Exp[A], b: Exp[B]) extends Def[Boolean] {
+    def mA = typ[A]
+    def mB = typ[B]
+  }
+  case class NotEqual[A:Typ,B:Typ](a: Exp[A], b: Exp[B]) extends Def[Boolean] {
+    def mA = typ[A]
+    def mB = typ[B]
+  }
 
   def equals[A:Typ,B:Typ](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = Equal(a,b)
   def notequals[A:Typ,B:Typ](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = NotEqual(a,b)
 
   override def mirrorDef[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
-    case Equal(a, b) => Equal(f(a),f(b))
-    case NotEqual(a, b) => NotEqual(f(a),f(b))
+    case e@Equal(a, b) => Equal(f(a),f(b))(e.mA,e.mB)
+    case e@NotEqual(a, b) => NotEqual(f(a),f(b))(e.mA,e.mB)
     case _ => super.mirrorDef(e,f)
   }).asInstanceOf[Def[A]]
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case Equal(a, b) => equals(f(a),f(b))
-    case NotEqual(a, b) => notequals(f(a),f(b))
+    case e@Equal(a, b) => equals(f(a),f(b))(e.mA,e.mB,pos)
+    case e@NotEqual(a, b) => notequals(f(a),f(b))(e.mA,e.mB,pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
