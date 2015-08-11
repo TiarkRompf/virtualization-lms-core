@@ -11,11 +11,11 @@ trait ExceptionOps extends Variables {
   
   def fatal(m: Rep[String]) = throw_exception(m)
   
-  def throw_exception(m: Rep[String]): Rep[Nothing]  
+  def throw_exception(m: Rep[String]): Rep[Unit]  
 }
 
-trait ExceptionOpsExp extends ExceptionOps with EffectExp {
-  case class ThrowException(m: Rep[String]) extends Def[Nothing]
+trait ExceptionOpsExp extends ExceptionOps with EffectExp with StringOpsExp {
+  case class ThrowException(m: Rep[String]) extends Def[Unit]
   
   def throw_exception(m: Exp[String]) = reflectEffect(ThrowException(m), Global())    
   
