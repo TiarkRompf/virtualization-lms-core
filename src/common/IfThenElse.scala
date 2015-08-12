@@ -194,7 +194,7 @@ trait IfThenElseExpOpt extends IfThenElseExp { this: BooleanOpsExp with EqualExp
     case Const(true) => thenp
     case Const(false) => elsep
     case Def(BooleanNegate(a)) => __ifThenElse(a, elsep, thenp)
-    case Def(NotEqual(a,b)) => __ifThenElse(equals(a,b), elsep, thenp)
+    case Def(e@NotEqual(a,b)) => __ifThenElse(equals(a,b)(e.mA,e.mB,pos), elsep, thenp)
     case _ =>
       super.__ifThenElse(cond, thenp, elsep)
   }
@@ -387,7 +387,7 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
             if (cppIfElseAutoRet == "true") {
               val ten = quote(sym) + "True"
               val fen = quote(sym) + "False"
-              def emitCondFun[T: Typ](fname: String, block: Block[T]) {
+              def emitCondFun[T](fname: String, block: Block[T]) {
                 stream.println("auto " + fname + " = [&]() {");
                 emitBlock(block)
                 stream.println("return " + quote(getBlockResult(block)) + ";")
