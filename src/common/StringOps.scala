@@ -7,7 +7,7 @@ import scala.lms.internal.{GenerationFailedException}
 import scala.reflect.SourceContext
 
 trait LiftString {
-  this: Base =>
+  this: StringOps =>
 
   implicit def strToRepStr(s: String) = unit(s)
 }
@@ -80,7 +80,7 @@ trait StringOps extends Variables with OverloadHack with PrimitiveOps {
   def string_length(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
 }
 
-trait StringOpsExp extends StringOps with VariablesExp {
+trait StringOpsExp extends StringOps with BooleanOps with ArrayOps with VariablesExp {
   case class StringPlus(s: Exp[Any], o: Exp[Any]) extends Def[String]
   case class StringStartsWith(s1: Exp[String], s2: Exp[String]) extends Def[Boolean]
   case class StringTrim(s: Exp[String]) extends Def[String]
