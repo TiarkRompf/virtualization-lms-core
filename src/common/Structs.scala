@@ -10,11 +10,13 @@ abstract class Record extends Struct
 
 trait StructOps extends Base {
 
+  implicit def recordTyp[T<:Record:RefinedManifest]: Typ[T]
+
   /**
    * Allows to write things like “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
    */
 
-  def __new[T : Typ](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
+  def __new[T:Typ](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
 
   class RecordOps(record: Rep[Record]) {
     def selectDynamic[T : Typ](field: String): Rep[T] = record_select[T](record, field)
@@ -30,7 +32,7 @@ trait StructTags {
   abstract class StructTag[+T]
   case class ClassTag[T](name: String) extends StructTag[T]
   case class NestClassTag[C[_],T](elem: StructTag[T]) extends StructTag[C[T]]
-  case class AnonTag[T](fields: RefinedTyp[T]) extends StructTag[T]
+  case class AnonTag[T](fields: RefinedManifest[T]) extends StructTag[T]
   case class MapTag[T]() extends StructTag[T]
 }
 
@@ -50,7 +52,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
 
   /* override def fresh[T:Typ] = manifest[T] match {
     case s if s <:< manifest[Record] =>
-      val m = spawnRefinedTyp
+      val m = spawnRefinedManifest
       super.fresh(m)
     case _ => super.fresh
   } */ //TODO: best way to ensure full structural type is always available?
@@ -75,7 +77,9 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
 
   case class SimpleStruct[T](tag: StructTag[T], elems: Seq[(String, Rep[Any])]) extends AbstractStruct[T]
   case class FieldApply[T](struct: Rep[Any], index: String) extends AbstractField[T]
-  case class FieldUpdate[T:Typ](struct: Exp[Any], index: String, rhs: Exp[T]) extends Def[Unit]
+  case class FieldUpdate[T:Typ](struct: Exp[Any], index: String, rhs: Exp[T]) extends Def[Unit] {
+    def mA = manifest[T]
+  }
 
   def struct[T:Typ](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit o: Overloaded1, pos: SourceContext): Rep[T] = struct[T](tag, elems)
   def struct[T:Typ](tag: StructTag[T], elems: Seq[(String, Rep[Any])])(implicit pos: SourceContext): Rep[T] = SimpleStruct(tag, elems)
@@ -84,13 +88,14 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   def var_field[T:Typ](struct: Rep[Any], index: String)(implicit pos: SourceContext): Var[T] = Variable(FieldApply[Var[T]](struct, index))
   def field_update[T:Typ](struct: Exp[Any], index: String, rhs: Exp[T]): Exp[Unit] = reflectWrite(struct)(FieldUpdate(struct, index, rhs))
 
-  def record_new[T : Typ](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]) = {
+  def record_new[T:Typ](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]) = {
     val x: Sym[T] = Sym[T](-99) // self symbol -- not defined anywhere, so make it obvious!! (TODO)
     val fieldSyms = fields map {
       case (index, false, rhs) => (index, rhs(x))
-      case (index, true, rhs) => (index, var_new(rhs(x)).e)
+      case (index, true, rhs) => val y = rhs(x); (index, var_new(y)(y.tp,implicitly[SourceContext]).e)
     }
-    struct(AnonTag(manifest.asInstanceOf[RefinedTyp[T]]), fieldSyms)
+    val ManifestTyp(manifest) = typ[T]
+    struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fieldSyms)
   }
 
   def record_select[T : Typ](record: Rep[Record], fieldName: String) = {
@@ -100,8 +105,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   def imm_field(struct: Exp[Any], name: String, f: Exp[Any])(implicit pos: SourceContext): Exp[Any] = {
     if (f.tp.erasure.getSimpleName == "Variable") {
       field(struct,name)(mtype(f.tp.typeArguments(0)),pos)
-    }
-    else {
+    } else {
       object_unsafe_immutable(f)(mtype(f.tp),pos)
     }
   }
@@ -169,15 +173,15 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })(mtype(manifest[A]),pos)
     case FieldApply(struct, key) => field(f(struct), key)(mtype(manifest[A]),pos)
     case Reflect(FieldApply(struct, key), u, es) => reflectMirrored(Reflect(FieldApply(f(struct), key), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(FieldUpdate(struct, key, rhs), u, es) => reflectMirrored(Reflect(FieldUpdate(f(struct), key, f(rhs)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@FieldUpdate(struct, key, rhs), u, es) => reflectMirrored(Reflect(FieldUpdate(f(struct), key, f(rhs))(e.mA), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case Reflect(SimpleStruct(tag, elems), u, es) => reflectMirrored(Reflect(SimpleStruct(tag, elems map { case (k,v) => (k, f(v)) }), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
   def structName[T](m: Typ[T]): String = m match {
     // FIXME: move to codegen? we should be able to have different policies/naming schemes
-    case rm: RefinedTyp[_] => "Anon" + math.abs(rm.fields.map(f => f._1.## + f._2.toString.##).sum)
-    case _ if (m <:< manifest[AnyVal]) => m.toString
+    case ManifestTyp(rm: RefinedManifest[_]) => "Anon" + math.abs(rm.fields.map(f => f._1.## + f._2.toString.##).sum)
+    case ManifestTyp(m) if (m <:< implicitly[Manifest[AnyVal]]) => m.toString
     case _ if m.erasure.isArray => "ArrayOf" + structName(m.typeArguments.head)
     case _ => m.erasure.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
   }
@@ -187,7 +191,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   override def object_tostring(x: Exp[Any])(implicit pos: SourceContext): Exp[String] = x match {
     case Def(s@Struct(tag, elems)) => //tag(elem1, elem2, ...)
       val e = elems.map(e=>string_plus(unit(e._1 + " = "), object_tostring(e._2))).reduceLeft((l,r)=>string_plus(string_plus(l,unit(", ")),r))
-      string_plus(unit(structName(s.tp)+"("),string_plus(e,unit(")")))
+      string_plus(unit(structName(x.tp)+"("),string_plus(e,unit(")")))
     case _ => super.object_tostring(x)
   }
 
@@ -265,7 +269,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
 
   private def unwrap[A](m:Typ[Variable[A]]): Typ[A] = m.typeArguments match {
     case a::_ => mtype(a)
-    case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Any])
+    case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Unit])
   }
 
   override def readVar[T:Typ](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {
@@ -427,7 +431,7 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
   }
 
   override def remap[A](m: Typ[A]) = m match {
-    case s if s <:< manifest[Record] => structName(m)
+    case ManifestTyp(s) if s <:< manifest[Record] => structName(m)
     case _ => super.remap(m)
   }
 

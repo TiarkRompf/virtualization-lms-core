@@ -88,6 +88,8 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
   //case class Variable[+T](val e: Exp[Variable[T]]) // FIXME: in Expressions because used by codegen...
   type Var[+T] = Variable[T] //FIXME: should be invariant
 
+  implicit def varTyp[T:Typ]: Typ[Var[T]]
+
   case class ReadVar[T:Typ](v: Var[T]) extends Def[T]
   case class NewVar[T:Typ](init: Exp[T]) extends Def[Variable[T]]
   case class Assign[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
