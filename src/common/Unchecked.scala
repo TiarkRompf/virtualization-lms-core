@@ -10,17 +10,18 @@ trait UncheckedOps extends Base {
   def unchecked[T:Typ](s: Any*): Rep[T]
   def uncheckedPure[T:Typ](s: Any*): Rep[T]
 
-  implicit def richQuote(c: StringContext) = new {
-    def raw(args: Thunk[Rep[Any]]*) = new {
-      def as[T]: Rep[T] = {
+  implicit class richQuote(c: StringContext) {
+    class QuoteOps(args: Thunk[Rep[Any]]*) {
+      def as[T:Typ]: Rep[T] = {
         //reflect(c.s(args map (a => reify(a.eval())):_*))
         def merge(a: List[Any], b: List[Any]): List[Any] = a match {
           case Nil => Nil
           case x::xs => x::merge(b,a)
         }
-        unchecked(merge(c.parts.toList, args.toList.map(_.eval())):_*)
+        unchecked[T](merge(c.parts.toList, args.toList.map(_.eval())):_*)
       }
     }
+    def raw(args: Thunk[Rep[Any]]*) = new QuoteOps(args:_*)
   }
   
   // args: =>Code* is not allowed so we make thunks explicit
