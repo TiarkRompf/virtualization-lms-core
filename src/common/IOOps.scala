@@ -8,11 +8,12 @@ import scala.reflect.SourceContext
 
 // TODO: fine grained effects
 
-trait IOOps extends Variables with OverloadHack {
+trait IOOps extends Variables with OverloadHack with StringOps {
 
   /**
    * File
    */
+  implicit def fileTyp: Typ[File]
   object File {
     def apply(dir: Rep[String])(implicit pos: SourceContext) = obj_file_apply(dir)
   }
@@ -28,6 +29,7 @@ trait IOOps extends Variables with OverloadHack {
   /**
    * BufferedReader
    */
+  implicit def bufferedReaderTyp: Typ[BufferedReader]
   object BufferedReader {
     def apply(f: Rep[FileReader])(implicit pos: SourceContext) = obj_br_apply(f)
   }
@@ -41,6 +43,7 @@ trait IOOps extends Variables with OverloadHack {
   /**
    * BufferedWriter
    */
+  implicit def bufferedWriterTyp: Typ[BufferedWriter]
   object BufferedWriter {
     def apply(f: Rep[FileWriter])(implicit pos: SourceContext) = obj_bw_apply(f)    
   }
@@ -55,6 +58,7 @@ trait IOOps extends Variables with OverloadHack {
   /**
    * FileReader
    */
+  implicit def fileReaderTyp: Typ[FileReader]
   object FileReader {
     def apply(s: Rep[String])(implicit pos: SourceContext) = obj_fr_apply(s)
   }
@@ -63,13 +67,14 @@ trait IOOps extends Variables with OverloadHack {
   /**
    * FileWriter
    */
+  implicit def fileWriterTyp: Typ[FileWriter]
   object FileWriter {
     def apply(s: Rep[String])(implicit pos: SourceContext) = obj_fw_apply(s)
   }
   def obj_fw_apply(s: Rep[String])(implicit pos: SourceContext): Rep[FileWriter]
 }
 
-trait IOOpsExp extends IOOps with DSLOpsExp {
+trait IOOpsExp extends IOOps with DSLOpsExp with ArrayOpsExp {
   case class ObjFileApply(dir: Exp[String]) extends Def[File]
   case class FileGetCanonicalFile(f: Exp[File]) extends Def[File]
   case class FileGetPath(f: Exp[File]) extends Def[String]
