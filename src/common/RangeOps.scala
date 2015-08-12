@@ -7,6 +7,8 @@ import scala.lms.internal.{GenericNestedCodegen, GenerationFailedException}
 import scala.reflect.SourceContext
 
 trait RangeOps extends Base {
+  implicit def rangeTyp: Typ[Range]
+
   // workaround for infix not working with manifests
   implicit def repRangeToRangeOps(r: Rep[Range]) = new rangeOpsCls(r)
   class rangeOpsCls(r: Rep[Range]){
@@ -26,7 +28,7 @@ trait RangeOps extends Base {
   def range_foreach(r: Rep[Range], f: (Rep[Int]) => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
 }
 
-trait RangeOpsExp extends RangeOps with FunctionsExp {
+trait RangeOpsExp extends RangeOps with PrimitiveOps with EffectExp {
   case class Until(start: Exp[Int], end: Exp[Int]) extends Def[Range]
   case class RangeStart(r: Exp[Range]) extends Def[Int]
   case class RangeStep(r: Exp[Range]) extends Def[Int]
