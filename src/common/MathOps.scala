@@ -5,7 +5,7 @@ import java.io.PrintWriter
 import internal.{GenericNestedCodegen}
 import scala.reflect.SourceContext
 
-trait MathOps extends Base {
+trait MathOps extends Base with PrimitiveOps {
 
   object Math {
     def ceil(x: Rep[Double])(implicit pos: SourceContext) = math_ceil(x)
