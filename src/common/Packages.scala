@@ -8,7 +8,7 @@ import scala.lms.common._
  *     packages if they choose.
  */
 
-trait LiftScala extends LiftAll with LiftVariables with LiftEquals {
+trait LiftScala extends LiftAll with LiftVariables with LiftEquals with LiftArrays {
   this: ScalaOpsPkg =>
 }
 

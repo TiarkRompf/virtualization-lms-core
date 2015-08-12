@@ -5,6 +5,15 @@ import java.io.PrintWriter
 import internal._
 import scala.reflect.SourceContext
 
+trait LiftArrays { 
+  this: ArrayOps =>
+  
+  object Array {
+    def apply[T:Typ](xs: Rep[T]*) = array_obj_fromseq(xs)
+  }
+}
+
+
 trait ArrayOps extends Variables {
 
   implicit def intTyp: Typ[Int] // import
@@ -21,10 +30,6 @@ trait ArrayOps extends Variables {
   // TODO: look into overriding __new for arrays
   object NewArray {
     def apply[T:Typ](n: Rep[Int]) = array_obj_new[T](n)
-  }
-
-  object Array {
-    def apply[T:Typ](xs: Rep[T]*) = array_obj_fromseq(xs)
   }
 
   class ArrayOpsCls[T:Typ](a: Rep[Array[T]]){
@@ -251,7 +256,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
            |d
            |}"""
     case n@ArrayMap(a,x,blk) =>
-      gen"""// workaround for refinedTyp problem
+      gen"""// workaround for refinedManifest problem
            |val $sym = {
            |val out = ${n.array}
            |val in = $a
