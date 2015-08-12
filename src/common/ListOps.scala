@@ -7,6 +7,8 @@ import scala.reflect.SourceContext
 
 trait ListOps extends Variables {
 
+  implicit def listTyp[T:Typ]: Typ[List[T]]
+
   object List {
     def apply[A:Typ](xs: Rep[A]*)(implicit pos: SourceContext) = list_new(xs)
   }
@@ -49,8 +51,10 @@ trait ListOps extends Variables {
   def list_isEmpty[A:Typ](xs: Rep[List[A]])(implicit pos: SourceContext): Rep[Boolean]
 }
 
-trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
-  case class ListNew[A:Typ](xs: Seq[Rep[A]]) extends Def[List[A]]
+trait ListOpsExp extends ListOps with EffectExp with VariablesExp with BooleanOpsExp with ArrayOpsExp with StringOpsExp {
+  case class ListNew[A:Typ](xs: Seq[Rep[A]]) extends Def[List[A]] {
+    def mA = manifest[A]
+  }
   case class ListFromSeq[A:Typ](xs: Rep[Seq[A]]) extends Def[List[A]]
   case class ListMap[A:Typ,B:Typ](l: Exp[List[A]], x: Sym[A], block: Block[B]) extends Def[List[B]]
   case class ListFlatMap[A:Typ, B:Typ](l: Exp[List[A]], x: Sym[A], block: Block[List[B]]) extends Def[List[B]]
@@ -100,12 +104,10 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp {
   def list_tail[A:Typ](xs: Rep[List[A]])(implicit pos: SourceContext) = ListTail(xs)
   def list_isEmpty[A:Typ](xs: Rep[List[A]])(implicit pos: SourceContext) = ListIsEmpty(xs)
   
-  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
-    (e match {
-      case ListNew(xs) => list_new(f(xs))
-      case _ => super.mirror(e,f)
-    }).asInstanceOf[Exp[A]] // why??
-  }
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case e@ListNew(xs) => list_new(f(xs))(e.mA,pos)
+    case _ => super.mirror(e,f)
+  }).asInstanceOf[Exp[A]] // why??
   
   override def syms(e: Any): List[Sym[Any]] = e match {
     case ListMap(a, x, body) => syms(a):::syms(body)
