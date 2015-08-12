@@ -74,6 +74,7 @@ trait TupleOpsExp extends TupleOps with StructExpOpt {
 
 trait TupleGenBase extends GenericCodegen with BaseGenStruct { 
   val IR: TupleOpsExp
+  import IR._
 
   override def remap[A](m: Typ[A]) = m.erasure.getSimpleName match {
     case "Tuple2" => IR.structName(m)
