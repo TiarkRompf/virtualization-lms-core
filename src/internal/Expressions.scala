@@ -19,7 +19,7 @@ trait Expressions extends Utils {
     def typeArguments: List[Typ[_]]
     def arrayTyp: Typ[Array[T]]
     def runtimeClass: java.lang.Class[_]
-    def <:<(that: TypeExp[_]): Boolean
+    def <:<(that: Typ[_]): Boolean
     def erasure: java.lang.Class[_]
   }
 
