@@ -78,9 +78,15 @@ trait CGenStaticData extends CGenEffect with BaseGenStaticData {
   val IR: StaticDataExp
   import IR._
 
+  // TODO: this does not quite do the right thing!
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case StaticData(x) =>
-      emitValDef(sym, /*"p"+quote(sym)*/ (x match { case x: Array[_] => "("+remap(sym.tp.typeArguments(0))+"[]){"+x.map(v=>quote(Const[Any](v))).mkString(",")+"}" case _ => quote(Const(x)) }))
+      emitValDef(sym, /*"p"+quote(sym)*/ (x match { 
+        case x: Array[a] => 
+          val tp = sym.tp.typeArguments(0).asInstanceOf[Typ[a]]
+          "("+remap(tp)+"[]){"+x.map(v=>quote(Const(v)(tp))).mkString(",")+"}" 
+        case _ => quote(Const(x)(sym.tp))
+      }))
     case _ => super.emitNode(sym, rhs)
   }
 }
