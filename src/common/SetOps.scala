@@ -7,6 +7,8 @@ import scala.collection.mutable.Set
 import scala.reflect.SourceContext
 
 trait SetOps extends Base {
+  implicit def setTyp[T:Typ]: Typ[Set[T]]
+
   object Set {
     def apply[A:Typ](xs: Rep[A]*)(implicit pos: SourceContext) = set_new[A](xs)
   }
@@ -33,7 +35,7 @@ trait SetOps extends Base {
   def set_toarray[A:Typ](s: Rep[Set[A]])(implicit pos: SourceContext): Rep[Array[A]]
 }
 
-trait SetOpsExp extends SetOps with ArrayOps with EffectExp {
+trait SetOpsExp extends SetOps with ArrayOps with BooleanOps with EffectExp {
   case class SetNew[A:Typ](xs: Seq[Exp[A]], mA: Typ[A]) extends Def[Set[A]]
   case class SetContains[A:Typ](s: Exp[Set[A]], i: Exp[A]) extends Def[Boolean]
   case class SetAdd[A:Typ](s: Exp[Set[A]], i: Exp[A]) extends Def[Unit]
