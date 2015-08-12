@@ -28,6 +28,8 @@ trait LiftPrimitives {
 trait PrimitiveOps extends Variables with OverloadHack { 
   this: ImplicitOps =>
 
+  implicit def byteTyp: Typ[Byte]
+  implicit def charTyp: Typ[Char]
   implicit def shortTyp: Typ[Short]
   implicit def intTyp: Typ[Int]
   implicit def longTyp: Typ[Long]

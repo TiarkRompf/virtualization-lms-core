@@ -5,7 +5,7 @@ import java.io.PrintWriter
 import scala.lms.util.OverloadHack
 import scala.reflect.SourceContext
 
-trait OrderingOps extends Base with Variables with OverloadHack {
+trait OrderingOps extends Base with Variables with BooleanOps with PrimitiveOps with OverloadHack {
   // workaround for infix not working with implicits in PrimitiveOps
   implicit def orderingToOrderingOps[T:Ordering:Typ](n: T) = new OrderingOpsCls(unit(n))
   implicit def repOrderingToOrderingOps[T:Ordering:Typ](n: Rep[T]) = new OrderingOpsCls(n)
@@ -155,14 +155,14 @@ trait ScalaGenOrderingOps extends ScalaGenBase {
     case OrderingMax(a,b) => emitValDef(sym, src"$a max $b")
     case OrderingMin(a,b) => emitValDef(sym, src"$a min $b")
     case c@OrderingCompare(a,b) => c.mev match {
-      case m if m == Typ.Int => emitValDef(sym, "java.lang.Integer.compare("+quote(a)+","+quote(b)+")")
-      case m if m == Typ.Long => emitValDef(sym, "java.lang.Long.compare("+quote(a)+","+quote(b)+")")
-      case m if m == Typ.Double => emitValDef(sym, "java.lang.Double.compare("+quote(a)+","+quote(b)+")")
-      case m if m == Typ.Float => emitValDef(sym, "java.lang.Float.compare("+quote(a)+","+quote(b)+")")
-      case m if m == Typ.Boolean => emitValDef(sym, "java.lang.Boolean.compare("+quote(a)+","+quote(b)+")")
-      case m if m == Typ.Byte => emitValDef(sym, "java.lang.Byte.compare("+quote(a)+","+quote(b)+")")
-      case m if m == Typ.Char => emitValDef(sym, "java.lang.Character.compare("+quote(a)+","+quote(b)+")")
-      case m if m == Typ.Short => emitValDef(sym, "java.lang.Short.compare("+quote(a)+","+quote(b)+")")
+      case m if m == typ[Int] => emitValDef(sym, "java.lang.Integer.compare("+quote(a)+","+quote(b)+")")
+      case m if m == typ[Long] => emitValDef(sym, "java.lang.Long.compare("+quote(a)+","+quote(b)+")")
+      case m if m == typ[Double] => emitValDef(sym, "java.lang.Double.compare("+quote(a)+","+quote(b)+")")
+      case m if m == typ[Float] => emitValDef(sym, "java.lang.Float.compare("+quote(a)+","+quote(b)+")")
+      case m if m == typ[Boolean] => emitValDef(sym, "java.lang.Boolean.compare("+quote(a)+","+quote(b)+")")
+      case m if m == typ[Byte] => emitValDef(sym, "java.lang.Byte.compare("+quote(a)+","+quote(b)+")")
+      case m if m == typ[Char] => emitValDef(sym, "java.lang.Character.compare("+quote(a)+","+quote(b)+")")
+      case m if m == typ[Short] => emitValDef(sym, "java.lang.Short.compare("+quote(a)+","+quote(b)+")")
       case _ => emitValDef(sym, quote(a) + " compare " + quote(b))
     }
     case _ => super.emitNode(sym, rhs)
