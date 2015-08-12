@@ -7,6 +7,8 @@ import scala.reflect.SourceContext
 
 trait SeqOps extends Variables {
 
+  implicit def seqTyp[T:Typ]: Typ[Seq[T]]
+
   object Seq {
     def apply[A:Typ](xs: Rep[A]*)(implicit pos: SourceContext) = seq_new(xs)
   }
@@ -25,8 +27,10 @@ trait SeqOps extends Variables {
   def seq_length[T:Typ](x: Rep[Seq[T]])(implicit pos: SourceContext): Rep[Int]
 }
 
-trait SeqOpsExp extends SeqOps with EffectExp {
-  case class SeqNew[A:Typ](xs: List[Rep[A]]) extends Def[Seq[A]]
+trait SeqOpsExp extends SeqOps with PrimitiveOps with EffectExp {
+  case class SeqNew[A:Typ](xs: List[Rep[A]]) extends Def[Seq[A]] {
+    def mA = manifest[A]
+  }
   case class SeqLength[T:Typ](a: Exp[Seq[T]]) extends Def[Int]
   case class SeqApply[T:Typ](x: Exp[Seq[T]], n: Exp[Int]) extends Def[T]
   
@@ -35,7 +39,7 @@ trait SeqOpsExp extends SeqOps with EffectExp {
   def seq_length[T:Typ](a: Exp[Seq[T]])(implicit pos: SourceContext): Exp[Int] = SeqLength(a)
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case SeqNew(xs) => seq_new(f(xs))
+    case e@SeqNew(xs) => seq_new(f(xs))(e.mA,pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
