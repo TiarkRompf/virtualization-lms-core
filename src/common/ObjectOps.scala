@@ -6,7 +6,7 @@ import scala.lms.util.OverloadHack
 import scala.lms.internal.{GenerationFailedException}
 import scala.reflect.SourceContext
 
-trait ObjectOps extends Variables with OverloadHack {
+trait ObjectOps extends Variables with StringOps with OverloadHack {
   def infix_toString(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
   def infix_ToString(lhs: Rep[Any])(implicit pos: SourceContext) = object_tostring(lhs)
   def infix_unsafeImmutable[A:Typ](lhs: Rep[A])(implicit pos: SourceContext) = object_unsafe_immutable(lhs)
@@ -17,7 +17,7 @@ trait ObjectOps extends Variables with OverloadHack {
   def object_unsafe_mutable[A:Typ](lhs: Rep[A])(implicit pos: SourceContext): Rep[A]
 }
 
-trait ObjectOpsExp extends ObjectOps with VariablesExp {
+trait ObjectOpsExp extends ObjectOps with StringOpsExp with VariablesExp {
   case class ObjectToString(o: Exp[Any]) extends Def[String]
   case class ObjectUnsafeImmutable[A:Typ](o: Exp[A]) extends Def[A] {
     val m = manifest[A]
