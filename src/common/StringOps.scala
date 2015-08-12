@@ -12,18 +12,11 @@ trait LiftString {
   implicit def strToRepStr(s: String) = unit(s)
 }
 
-trait StringOps extends Variables with OverloadHack {
+trait StringOps extends Variables with OverloadHack with PrimitiveOps {
   // NOTE: if something doesn't get lifted, this won't give you a compile time error,
   //       since string concat is defined on all objects
   
   implicit def stringTyp: Typ[String]
-
-  implicit def shortTyp: Typ[Short]
-  implicit def intTyp: Typ[Int]
-  implicit def longTyp: Typ[Long]
-  implicit def floatTyp: Typ[Float]
-  implicit def doubleTyp: Typ[Double]
-
 
   def infix_+(s1: String, s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(unit(s1), s2)
   def infix_+[T:Typ](s1: String, s2: Var[T])(implicit o: Overloaded2, pos: SourceContext) = string_plus(unit(s1), readVar(s2))
