@@ -93,7 +93,7 @@ trait Transforming extends Expressions with Blocks with OverloadHack {
 trait FatTransforming extends Transforming with FatExpressions {
   
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case Forward(x) => toAtom(Forward(f(x)))(mtype(manifest[A]),pos)
+    case Forward(x) => toAtom(Forward(f(x)))(mtype(typ[A]),pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] 
   
