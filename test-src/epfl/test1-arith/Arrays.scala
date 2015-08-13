@@ -20,6 +20,8 @@ trait Arrays extends Base {
 }
 
 trait ArraysExp extends Arrays with BaseExp {
+  implicit def arrayTyp[T:Typ]: Typ[Array[T]] = typ[T].arrayTyp
+
   case class ArrayApply[T:Typ](x:Rep[Array[T]], i:Int) extends Def[T]
   //case class ArrayUpdate[T](x:Rep[Array[T]], i:Int) extends Def[T]
   case class MakeArray[T:Typ](x:List[Rep[T]]) extends Def[Array[T]]
