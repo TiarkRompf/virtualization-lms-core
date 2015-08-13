@@ -12,6 +12,8 @@ trait Effects extends Base {
   type State
   type Effectful[A]
   
+  implicit def effectfulTyp[A]: Typ[Effectful[A]]
+
   def noEffect: State
   def bindEffect[A:Typ](x: State, y: Rep[A]): State
   def reifyState[A:Typ](x: Rep[A], y: State): Rep[Effectful[A]]
