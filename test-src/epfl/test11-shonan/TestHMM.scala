@@ -37,7 +37,7 @@ class TestHMM extends FileDiffSuite {
 
 
   // test case input data
-  trait Runner extends Compile {
+  trait Runner extends Compile with PrimitiveOps with ArrayOps {
     def test(x: Rep[Array[Int]]): Rep[Array[Int]]
     def run() {
       val f = compile(test)
