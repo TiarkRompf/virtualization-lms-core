@@ -10,7 +10,7 @@ abstract class Record extends Struct
 
 trait StructOps extends Base {
 
-  implicit def recordTyp[T<:Record:RefinedManifest]: Typ[T]
+  implicit def recordTyp[T<:Record:Manifest]: Typ[T]
 
   /**
    * Allows to write things like “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
