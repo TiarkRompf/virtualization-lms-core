@@ -11,7 +11,12 @@ import scala.reflect.SourceContext
 
 
 trait FunctionsExp extends Functions with BaseExp { // shadow trait with same name in core package
-    
+  implicit def fun2Typ[A1:Typ,A2:Typ,B:Typ]: Typ[(A1,A2)=>B] = {
+    implicit val ManifestTyp(mA1) = typ[A1]
+    implicit val ManifestTyp(mA2) = typ[A2]
+    implicit val ManifestTyp(mB) = typ[B]
+    ManifestTyp(implicitly)
+  }
   // FIXME: there might be a conflict since this pulls in internal.Effects which is different from test1.Effects
   case class Lambda[A:Typ,B:Typ](fun: Exp[A] => Exp[B]) extends Def[A => B]
   case class Lambda2[A1:Typ,A2:Typ,B:Typ](fun: (Exp[A1],Exp[A2]) => Exp[B]) extends Def[(A1,A2) => B]
