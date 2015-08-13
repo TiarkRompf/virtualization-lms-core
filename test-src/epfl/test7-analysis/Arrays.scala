@@ -14,7 +14,9 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 
-trait ArrayLoops extends Loops with OverloadHack {
+trait ArrayLoops extends Loops with OverloadHack { this: PrimitiveOps =>
+  implicit def arrayTyp[T:Typ]: Typ[Array[T]]
+
   def array[T:Typ](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]]
   def sum(shape: Rep[Int])(f: Rep[Int] => Rep[Double]): Rep[Double] // TODO: make reduce operation configurable!
   def arrayIf[T:Typ](shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[T])): Rep[Array[T]]
@@ -26,8 +28,9 @@ trait ArrayLoops extends Loops with OverloadHack {
 }
 
 
-trait ArrayLoopsExp extends LoopsExp {
-  
+trait ArrayLoopsExp extends LoopsExp { this: PrimitiveOpsExp =>
+  implicit def arrayTyp[T:Typ]: Typ[Array[T]] = typ[T].arrayTyp
+
   case class ArrayElem[T](y: Block[T]) extends Def[Array[T]]
   case class ReduceElem(y: Block[Double]) extends Def[Double]
 
@@ -92,7 +95,12 @@ trait ArrayLoopsExp extends LoopsExp {
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case SimpleLoop(s,i, ArrayElem(y)) if f.hasContext => 
-      array(f(s)) { j => f.asInstanceOf[AbstractSubstTransformer{val IR:ArrayLoopsExp.this.type}].withSubstScope(i -> j) { f.reflectBlock(y) } }
+      implicit def anyTyp: Typ[Any] = ??? // FIXME: wrong type
+      array(f(s)) { j => 
+        f.asInstanceOf[AbstractSubstTransformer{val IR:ArrayLoopsExp.this.type}].withSubstScope(i -> j) { 
+          f.reflectBlock(y)
+        } 
+      }
     case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
     case ArrayLength(a) => infix_length(f(a))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
@@ -109,7 +117,7 @@ trait ArrayLoopsExp extends LoopsExp {
 
 }
 
-trait ArrayLoopsFatExp extends ArrayLoopsExp with LoopsFatExp
+trait ArrayLoopsFatExp extends ArrayLoopsExp with LoopsFatExp { this: PrimitiveOpsExp => }
 
 
 
@@ -198,13 +206,15 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
 
 
 
-trait Arrays extends Base with OverloadHack {
+trait Arrays extends Base with PrimitiveOps with OverloadHack {
+  implicit def arrayTyp[T:Typ]: Typ[Array[T]]
   def zeroes(n: Rep[Int]): Rep[Array[Int]]
   def infix_update(a: Rep[Array[Int]], x: Rep[Int], v: Rep[Int]): Rep[Array[Int]]
   def infix_+(a: Rep[Array[Int]], b: Rep[Array[Int]])(implicit o: Overloaded1): Rep[Array[Int]]
 }
 
-trait ArraysExp extends Arrays with EffectExp {
+trait ArraysExp extends Arrays with PrimitiveOpsExp with EffectExp {
+  implicit def arrayTyp[T:Typ]: Typ[Array[T]] = typ[T].arrayTyp
   case class ArrayZero(n: Rep[Int]) extends Def[Array[Int]]
   case class ArrayUpdate(a: Rep[Array[Int]], x: Rep[Int], v: Rep[Int]) extends Def[Array[Int]]
   case class ArrayPlus(a: Rep[Array[Int]], b: Rep[Array[Int]]) extends Def[Array[Int]]
