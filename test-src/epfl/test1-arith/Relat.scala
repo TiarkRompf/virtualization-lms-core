@@ -32,7 +32,8 @@ trait Relat extends Base {
 }
 
 trait RelatExp extends Relat with BaseExp {
-  
+  implicit def doubleTyp: Typ[Double] = ManifestTyp(implicitly)
+
   case class Min(x: Rep[Double], y: Rep[Double]) extends Def[Double]
   case class Max(x: Rep[Double], y: Rep[Double]) extends Def[Double]
   
