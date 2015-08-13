@@ -39,8 +39,13 @@ trait VectorOps extends Base {
 }
 
 trait VectorExp extends VectorOps with EffectExp {
-  implicit def vectorTyp[T:Typ]: Typ[Vector[T]] = ManifestTyp(implicitly)
-  
+  implicit def vectorTyp[T:Typ]: Typ[Vector[T]] = { 
+    implicit val ManifestTyp(m) = typ[T]
+    ManifestTyp(implicitly)
+  }
+  implicit def intTyp: Typ[Int]
+  implicit def doubleTyp: Typ[Double]
+
   case class VectorZeros(n: Rep[Int]) extends Def[Vector[Double]]
   case class VectorLiteral[T](a: List[Rep[T]]) extends Def[Vector[T]]
   case class VectorApply[T](a: Rep[Vector[T]], x: Rep[Int]) extends Def[T]
@@ -55,12 +60,13 @@ trait VectorExp extends VectorOps with EffectExp {
   def vupdate[T:Typ](a: Rep[Vector[T]], x: Rep[Int], y: Rep[T]): Rep[Unit] = VectorUpdate(a,x,y)
   def vlength[T:Typ](a: Rep[Vector[T]]): Rep[Int] = VectorLength(a)
 
+  // FIXME: wrong manifests -- need to take from Def
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case VectorZeros(n) => vzeros(f(n))
-    case VectorLiteral(a) => vliteral(f(a))
+    case VectorLiteral(a) => vliteral(f(a))(mtype(manifest[A]))
     case VectorApply(a,x) => vapply(f(a),f(x))(mtype(manifest[A]))
-    case VectorUpdate(a,x,y) => vupdate(f(a),f(x),f(y))
-    case VectorLength(a) => vlength(f(a))
+    case VectorUpdate(a,x,y) => vupdate(f(a),f(x),f(y))(mtype(manifest[A]))
+    case VectorLength(a) => vlength(f(a))(mtype(manifest[A]))
     case VectorPlus(a, b) => vplus(f(a),f(b))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
