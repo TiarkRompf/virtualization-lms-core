@@ -8,7 +8,8 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   val IR: BaseFatExp with EffectExp //LoopsFatExp with IfThenElseFatExp
   import IR._
   
-  def transformBlock[A:Typ](block: Block[A]): Block[A] = {
+  def transformBlock[A](block: Block[A]): Block[A] = {
+    implicit val tp = getBlockResult(block).tp
     reifyEffects {
       reflectBlock(block)
     }
@@ -16,7 +17,7 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
 
   override def hasContext = true
   
-  override def apply[A:Typ](xs: Block[A]): Block[A] = transformBlock(xs)
+  override def apply[A](xs: Block[A]): Block[A] = transformBlock(xs)
 
   // perform only one step of lookup, otherwise we confuse things: 
   // TODO: should this be changed in AbstractSubstTransformer, too?
