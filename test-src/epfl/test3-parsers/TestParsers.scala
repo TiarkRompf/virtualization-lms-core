@@ -35,8 +35,7 @@ class TestParsers extends FileDiffSuite {
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll with FlatResult // with ControlOpt
         with DisableCSE {
           type Elem = Char
-          implicit val mE = manifest[Char]
-          //implicit val mI = manifest[List[Char]]
+          implicit val mE: Typ[Char] = ManifestTyp(implicitly)
           def toElem(c: Char) = c
         }
       import ParsersProgExp._
@@ -57,8 +56,7 @@ class TestParsers extends FileDiffSuite {
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll with FlatResult // with ControlOpt
         {
           type Elem = Char
-          implicit val mE = manifest[Char]
-          //implicit val mI = manifest[List[Char]]
+          implicit val mE: Typ[Char] = ManifestTyp(implicitly)
           def toElem(c: Char) = c
         }
       import ParsersProgExp._
@@ -67,7 +65,7 @@ class TestParsers extends FileDiffSuite {
       println(globalDefs.mkString("\n"))
       println(r)
       val p = new ExtractorsGraphViz { val IR: ParsersProgExp.type = ParsersProgExp }
-      p.emitDepGraph(result(r), prefix+"parse2-dot")
+      p.emitDepGraph(result[Unit](r), prefix+"parse2-dot")
     }
     assertFileEqualsCheck(prefix+"parse2")
     assertFileEqualsCheck(prefix+"parse2-dot")
