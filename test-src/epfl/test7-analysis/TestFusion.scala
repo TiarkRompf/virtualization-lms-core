@@ -49,15 +49,15 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
 // trait NestLambdaProg extends Arith with Functions with Print 
 // --> from TestCodeMotion.scala
 
-trait FusionProg extends Arith with ArrayLoops with Print {
+trait FusionProg extends LiftPrimitives with PrimitiveOps with ArrayLoops with Print {
   
   implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
   
   def test(x: Rep[Unit]) = {
     
-    val constant = array(100) { i => 1 }
+    val constant = array(100) { i => 1.0 }
 
-    val linear = array(100) { i => 2*i }
+    val linear = array(100) { i => 2.0*i }
 
     val affine = array(100) { i => constant.at(i) + linear.at(i) }
     
@@ -76,7 +76,7 @@ trait FusionProg extends Arith with ArrayLoops with Print {
   
 }
 
-trait FusionProg2 extends Arith with ArrayLoops with Print with OrderingOps {
+trait FusionProg2 extends LiftPrimitives with PrimitiveOps with ArrayLoops with Print with OrderingOps {
   
   implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
   
@@ -142,7 +142,7 @@ class TestFusion extends FileDiffSuite {
   
   def testFusion1 = {
     withOutFile(prefix+"fusion1") {
-      new FusionProg with ArithExp with ArrayLoopsExp with PrintExp { self =>
+      new FusionProg with PrimitiveOpsExp with ArrayLoopsExp with PrintExp { self =>
         val codegen = new ScalaGenArrayLoops with ScalaGenArith with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
@@ -153,7 +153,7 @@ class TestFusion extends FileDiffSuite {
   def testFusion2 = {
     withOutFile(prefix+"fusion2") {
       // LoopsExp2 with ArithExp with PrintExp with BaseFatExp
-      new FusionProg with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp  { self =>
+      new FusionProg with PrimitiveOpsExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp  { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
@@ -164,7 +164,7 @@ class TestFusion extends FileDiffSuite {
  
   def testFusion3 = {
     withOutFile(prefix+"fusion3") {
-      new FusionProg2 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
+      new FusionProg2 with PrimitiveOpsExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
@@ -177,7 +177,7 @@ class TestFusion extends FileDiffSuite {
 
   def testFusion4 = {
     withOutFile(prefix+"fusion4") {
-      new FusionProg2 with ArithExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
+      new FusionProg2 with PrimitiveOpsExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
