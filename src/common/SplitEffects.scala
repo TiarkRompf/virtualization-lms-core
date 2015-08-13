@@ -159,11 +159,11 @@ override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
 
 trait PreviousIterationDummyExp extends BaseFatExp with EffectExp {
   
-  case class PreviousIteration(k: Exp[Nothing]) extends Def[Unit]
+  case class PreviousIteration(k: Exp[Unit]) extends Def[Unit]
   
-  case class SimpleFatPrevious(k: Exp[Nothing], extra: List[Exp[Any]]) extends FatDef
+  case class SimpleFatPrevious(k: Exp[Unit], extra: List[Exp[Any]]) extends FatDef
   
-  def reflectPreviousDummy(k: Exp[Nothing], u: Summary) = reflectEffect(PreviousIteration(k), u)
+  def reflectPreviousDummy(k: Exp[Unit], u: Summary) = reflectEffect(PreviousIteration(k), u)
   // TBD: does previousIteration need to reference the loop?
   // what if we split the loop?
 
