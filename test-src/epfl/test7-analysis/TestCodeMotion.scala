@@ -129,7 +129,7 @@ trait NestCondProg7 extends LiftAll with BooleanOps with PrimitiveOps with Order
 
   def test(x: Rep[Unit]) = {    
     doLambda { y: Rep[Double] => 
-      if (y < 100) {
+      if (y < 100.0) {
         val z = y + unit(9.0) // should stay inside conditional: 
                               // apparently z was moved up because it is also used in the lambda (z+u)
         doLambda { u: Rep[Double] =>
