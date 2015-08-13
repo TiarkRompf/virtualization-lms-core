@@ -8,6 +8,7 @@ import test1._
 import test2._
 import test3._
 
+// FIXME: pulling in both Arith and PrimitiveOps at the moment
 
 trait FacProg { this: Arith with Matching with Extractors =>
 
