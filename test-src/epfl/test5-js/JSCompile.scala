@@ -14,7 +14,9 @@ trait JSCodegen extends GenericCodegen {
   def emitHTMLPage[B](f: () => Exp[B], stream: PrintWriter)(implicit mB: Typ[B]): Unit = {
     stream.println("<html><head><title>Scala2JS</title><script type=\"text/JavaScript\">")
     
-    emitSource((x:Exp[Int]) => f(), "main", stream)
+    implicit val unitTyp: Typ[Unit] = ManifestTyp(implicitly)
+
+    emitSource((x:Exp[Unit]) => f(), "main", stream)
     
     stream.println("</script><body onload=\"main(0)\">")
     stream.println("</body></html>")
