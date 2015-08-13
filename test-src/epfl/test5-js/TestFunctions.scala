@@ -94,7 +94,7 @@ trait FunctionsProg { this: Print with Functions with IfThenElse with Equal =>
   }
 
   def test2(x: Rep[Double]): Rep[Double => Double] =
-    fun {(y: Rep[Double]) => if(y == x) unit(2 : Double) else y}
+    fun {(y: Rep[Double]) => if(y == x) unit(2.0) else y}
 }
 
 trait FunctionsRecursiveProg { this: Arith with Print with Functions =>
@@ -115,21 +115,21 @@ trait FunctionsRecursiveProg { this: Arith with Print with Functions =>
   }
 }
 
-trait TwoArgsFunProg { this: TupledFunctions =>
+trait TwoArgsFunProg { this: LiftPrimitives with PrimitiveOps with TupledFunctions =>
   def test(x: Rep[Double]): Rep[(Double, Double)] = {
     val f = fun { (a : Rep[Double], b : Rep[Double]) => (b,a) }
     f(f(x, x))
   }
 }
 
-trait TupleFunProg { this: Arith with TupledFunctions =>
+trait TupleFunProg { this: LiftPrimitives with PrimitiveOps with TupledFunctions =>
   def test (x: Rep[Double]): Rep[(Double, Double)] = {
     val f = fun { t : Rep[(Double, Double)] => t }
     f(1.0, x)
   }
 }
 
-trait NoArgFunProg { this: TupledFunctions =>
+trait NoArgFunProg { this: Print with TupledFunctions =>
   def test (x: Rep[Any]): Rep[Any] = {
     val f = fun { () => x }
     f()
@@ -245,7 +245,7 @@ class TestFunctions extends FileDiffSuite {
 
   def testTwoArgsFun = {
     withOutFile(prefix+"twoargsfun") {
-      new TwoArgsFunProg with TupledFunctionsExp { self =>
+      new TwoArgsFunProg with LiftPrimitives with PrimitiveOpsExp with TupledFunctionsExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
         codegen.emitSource(test _, "main", new PrintWriter(System.out))
       }
@@ -255,7 +255,7 @@ class TestFunctions extends FileDiffSuite {
 
   def testTupleFun = {
     withOutFile(prefix+"tuplefun") {
-      new TupleFunProg with ArithExp with TupledFunctionsExp { self =>
+      new TupleFunProg with LiftPrimitives with PrimitiveOpsExp with TupledFunctionsExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
         codegen.emitSource(test _, "main", new PrintWriter(System.out))
       }
@@ -265,7 +265,7 @@ class TestFunctions extends FileDiffSuite {
 
   def testNoArgFun = {
     withOutFile(prefix+"noargfun") {
-      new NoArgFunProg with TupledFunctionsRecursiveExp { self =>
+      new NoArgFunProg with PrintExp with TupledFunctionsRecursiveExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
         codegen.emitSource(test _, "main", new PrintWriter(System.out))
       }
