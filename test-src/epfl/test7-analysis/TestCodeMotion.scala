@@ -11,7 +11,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 
-trait NestLambdaProg1 extends Arith with Functions with Print { // also used by TestLambdaLift
+trait NestLambdaProg1 extends BooleanOps with PrimitiveOps with Functions with Print { // also used by TestLambdaLift
   
   def test(x: Rep[Unit]) = {
     val f = doLambda { x: Rep[Double] =>
@@ -26,7 +26,7 @@ trait NestLambdaProg1 extends Arith with Functions with Print { // also used by 
   
 }
 
-trait NestCondProg2 extends Arith with Functions with IfThenElse with Print {
+trait NestCondProg2 extends BooleanOps with PrimitiveOps with Functions with IfThenElse with Print {
   
   /* Previously this program exhibited behavior that is likely undesired in many
   cases. The definition of f was moved *into* g and into the conditional.
@@ -54,7 +54,7 @@ trait NestCondProg2 extends Arith with Functions with IfThenElse with Print {
 }
 
 
-trait NestCondProg3 extends Arith with Functions with IfThenElse with Print {
+trait NestCondProg3 extends BooleanOps with PrimitiveOps with Functions with IfThenElse with Print {
   
   def test(x: Rep[Unit]) = {
     val f = if (unit(true)) doLambda { x: Rep[Double] => 2 * x } else doLambda { x: Rep[Double] => 4 * x }
@@ -74,7 +74,7 @@ trait NestCondProg3 extends Arith with Functions with IfThenElse with Print {
   
 }
 
-trait NestCondProg4 extends Arith with Functions with IfThenElse with Print {
+trait NestCondProg4 extends BooleanOps with PrimitiveOps with Functions with IfThenElse with Print {
   
   def test(x: Rep[Unit]) = {
     val g = doLambda { y: Rep[Double] =>
@@ -91,7 +91,7 @@ trait NestCondProg4 extends Arith with Functions with IfThenElse with Print {
 }
 
 
-trait NestCondProg5 extends Arith with Functions with IfThenElse with Print {
+trait NestCondProg5 extends BooleanOps with PrimitiveOps with Functions with IfThenElse with Print {
   
   def test(x: Rep[Unit]) = {
     if (unit(true)) {
@@ -100,13 +100,14 @@ trait NestCondProg5 extends Arith with Functions with IfThenElse with Print {
         print(unit(7.0) + unit(9.0))
       }
     } else {
+      ???
     }
   }
   
 }
 
 
-trait NestCondProg6 extends Arith with Functions with IfThenElse with Print {
+trait NestCondProg6 extends BooleanOps with PrimitiveOps with Functions with IfThenElse with Print {
   
   // FIXME: this one doesn't work yet!!!
 
@@ -124,7 +125,7 @@ trait NestCondProg6 extends Arith with Functions with IfThenElse with Print {
 }
 
 
-trait NestCondProg7 extends Arith with OrderingOps with Functions with IfThenElse with Print {
+trait NestCondProg7 extends LiftAll with BooleanOps with PrimitiveOps with OrderingOps with Functions with IfThenElse with Print {
 
   def test(x: Rep[Unit]) = {    
     doLambda { y: Rep[Double] => 
@@ -135,6 +136,7 @@ trait NestCondProg7 extends Arith with OrderingOps with Functions with IfThenEls
           z + u
         }
       } else {
+        ???
       }
     }
   }
@@ -144,7 +146,7 @@ trait NestCondProg7 extends Arith with OrderingOps with Functions with IfThenEls
 /*
 seems to be another incarnation of test6
 
-trait NestCondProg8 extends Arith with OrderingOps with Functions with IfThenElse with Print {
+trait NestCondProg8 extends PrimitiveOps with OrderingOps with Functions with IfThenElse with Print {
   
   // FIXME
 
@@ -171,8 +173,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion1 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion1") {
-      new NestLambdaProg1 with ArithExp with FunctionsExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenPrint { val IR: self.type = self }
+      new NestLambdaProg1 with BooleanOpsExp with PrimitiveOpsExp with FunctionsExp with PrintExp { self =>
+        val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -182,8 +184,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion2 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion2") {
-      new NestCondProg2 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+      new NestCondProg2 with BooleanOpsExp with PrimitiveOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -193,8 +195,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion3 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion3") {
-      new NestCondProg3 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+      new NestCondProg3 with BooleanOpsExp with PrimitiveOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -204,8 +206,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion4 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion4") {
-      new NestCondProg4 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+      new NestCondProg4 with BooleanOpsExp with PrimitiveOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -215,8 +217,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion5 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion5") {
-      new NestCondProg5 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+      new NestCondProg5 with PrimitiveOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -226,8 +228,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion6 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion6") {
-      new NestCondProg6 with ArithExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+      new NestCondProg6 with PrimitiveOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
         println("// NOTE: generated code is not ideal yet (x1=7+9 should be moved inside conditional). see source for discussion.")
       }
@@ -239,8 +241,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion7 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion7") {
-      new NestCondProg7 with ArithExp with OrderingOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenOrderingOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
+      new NestCondProg7 with PrimitiveOpsExp with OrderingOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+        val codegen = new ScalaGenPrimitiveOps with ScalaGenOrderingOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
         println("// was a Delite issue (Scratchpad in optiml-beta).")
       }
