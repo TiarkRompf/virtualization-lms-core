@@ -65,7 +65,9 @@ trait FWTransform1 extends BaseFatExp with EffectExp with IfThenElseFatExp with 
 
 }
 
-trait VectorExpTrans1 extends FWTransform1 with VectorExp with ArrayLoopsExp with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+trait VectorExpTrans1 extends FWTransform1 with VectorExp with ArrayLoopsExp with ArrayMutationExp 
+    with PrimitiveOpsExp with LiftPrimitives
+    with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with StructExp //with VariablesExpOpt 
     with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp {
   
@@ -75,7 +77,7 @@ trait VectorExpTrans1 extends FWTransform1 with VectorExp with ArrayLoopsExp wit
   // separate trait? the argument against it is that we could just
   // implement the transform by pattern matching against Defs
 
-  override def vzeros(n: Rep[Int]) =  VectorZeros(n).atPhase(xform) { vfromarray(array(n) { i => 0 }) }
+  override def vzeros(n: Rep[Int]) =  VectorZeros(n).atPhase(xform) { vfromarray(array(n) { i => 0.0 }) }
 
   override def vapply[T:Typ](a: Rep[Vector[T]], x: Rep[Int]) = (a,x) match {
     case (Def(VectorLiteral(ax)), Const(x)) => ax(x)
@@ -141,7 +143,7 @@ class TestForward1 extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test10-"
   
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
+  trait DSL extends VectorOps with PrimitiveOps with OrderingOps with BooleanOps with LiftVariables 
     with IfThenElse with While with RangeOps with Print {
     def test(x: Rep[Int]): Rep[Unit]
   }
@@ -156,7 +158,7 @@ class TestForward1 extends FileDiffSuite {
 
     codegen.withStream(new PrintWriter(System.out)) {
       println("### first")
-      val b1 = reifyEffects(test(fresh))
+      val b1 = reifyEffects(test(fresh(intTyp)))
       println("--- code ---")
       codegen.emitBlock(b1)
       codegen.stream.flush
