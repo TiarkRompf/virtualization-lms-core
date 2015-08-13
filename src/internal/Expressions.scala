@@ -24,11 +24,11 @@ trait Expressions extends Utils {
   }
 
   case class ManifestTyp[T](mf: Manifest[T]) extends Typ[T] {
-    def typeArguments: List[Typ[_]]   = mf.typeArguments
-    def arrayTyp: Typ[Array[T]] = mf.arrayTyp
+    def typeArguments: List[Typ[_]]   = mf.typeArguments.map(ManifestTyp(_))
+    def arrayTyp: Typ[Array[T]] = ManifestTyp(mf.arrayManifest)
     def runtimeClass: java.lang.Class[_] = mf.runtimeClass
     def <:<(that: Typ[_]): Boolean = that match { 
-      case TypTyp(mf1) => mf.<:<(mf1) 
+      case ManifestTyp(mf1) => mf.<:<(mf1) 
       case _ => false 
     }
     def erasure: java.lang.Class[_] = mf.erasure
