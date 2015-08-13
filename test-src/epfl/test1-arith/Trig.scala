@@ -15,6 +15,7 @@ trait Trig extends Base {
 }
 
 trait TrigExp extends Trig with BaseExp {
+  implicit def doubleTyp: Typ[Double]
 
   case class Sin(x: Exp[Double]) extends Def[Double]
   case class Cos(x: Exp[Double]) extends Def[Double]
