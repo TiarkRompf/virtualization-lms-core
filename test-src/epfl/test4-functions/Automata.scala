@@ -37,8 +37,14 @@ trait DFAOps extends Base {
 
   type DIO = Rep[DfaState]
 
+  implicit def charTyp: Typ[Char]
+  implicit def boolTyp: Typ[Boolean]
+  implicit def stringTyp: Typ[String]
+  implicit def dfaTyp: Typ[DfaState]
+  implicit def anyLTyp: Typ[List[Any]]
+
   def dfa_flagged(e: Rep[Any])(rec: DIO): DIO
-  def dfa_trans(f: Rep[Char] => DIO): DIO = dfa_trans(unit(Nil))(f)
+  def dfa_trans(f: Rep[Char] => DIO): DIO = dfa_trans(unit(List[Any]()))(f)
   def dfa_trans(e: Rep[List[Any]])(f: Rep[Char] => DIO): DIO
 }
 
@@ -161,7 +167,12 @@ trait GAOps extends Base {
 
   type GIO = List[gTrans] // unstaged Automaton type = State type (State = list of possible transitions)
   
-  def gtrans(f: Rep[Char] => Rep[GIO]): Rep[GIO] = gtrans(unit(Nil))(f)
+  implicit def charTyp: Typ[Char]
+  implicit def anyLTyp: Typ[List[Any]]
+  implicit def gtransTyp: Typ[gTrans]
+  implicit def gioTyp: Typ[GIO]
+
+  def gtrans(f: Rep[Char] => Rep[GIO]): Rep[GIO] = gtrans(unit(List[Any]()))(f)
   def gtrans(e: Rep[List[Any]])(f: Rep[Char] => Rep[GIO]): Rep[GIO]
   def gcall(f: Rep[GIO], c: Rep[Char]): Rep[GIO]
 
@@ -204,7 +215,7 @@ trait GAOpsExp extends BaseExp with GAOps { this: ListOps with IfThenElse with F
   
   def gguard(c: Rep[Boolean], s: Boolean = false)(d: Rep[GIO]): Rep[GIO] = if (c) d else gstop()
 
-  def gstop(): Rep[GIO] = list_new(Nil)
+  def gstop(): Rep[GIO] = list_new[gTrans](Nil)
   def gor(a: Rep[GIO], b: Rep[GIO]): Rep[GIO] = list_concat(a,b)
 
 }
@@ -291,7 +302,7 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
   type Foreach[T,S] = Stepper2[T,S,S]
   
   case class Stepper2[I:Typ,S:Typ,O:Typ](s: Rep[S], cond: Rep[S] => Rep[Boolean], yld: Rep[I] => Rep[S] => Rep[S], res: Rep[S] => Rep[O]) {
-    def mfs = manifest[S]
+    def mfs = typ[S]
     
     def zip[S1,O1:Typ](o: Stepper2[I,S1,O1]) = {
       implicit val mfs1 = o.mfs
@@ -330,7 +341,7 @@ trait StepperOps extends DFAOps with Util { this: IfThenElse with ListOps with T
   // Streams: streams are stepper transformers
 
   def Stream[T:Typ] = new Stream[T] {
-    def mf = manifest[T]
+    def mf = typ[T]
     type XI[I] = T
     type XS[S] = S
     //def into[S:Typ](x: Foreach[T,S]) = x
