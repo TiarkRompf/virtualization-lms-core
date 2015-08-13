@@ -447,7 +447,7 @@ trait MatcherNewProgTrivialC {
 
 
 
-trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with IfThenElse =>
+trait MatcherNewProgA extends Util { this: PrimitiveOps with BooleanOps with StringOps with Functions with Equal with IfThenElse =>
 
   type IO = Rep[Unit]
   
@@ -476,6 +476,8 @@ trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with 
   type TT = (Char => Any) // should be recursive Char => TT
   type Thread = Rep[Char]=>Rep[Unit]
   type CondThread = (Rep[Boolean], Thread)
+
+  implicit def ttTyp: Typ[TT]
 
   def collectall(in: List[Rep[Any]]): Rep[Unit]
   def printL(in: Rep[Any]): Rep[Unit]
@@ -534,7 +536,7 @@ trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with 
 }
 
 
-trait MatcherNewProgB extends Util { this: Arith with Functions with Equal with IfThenElse =>
+trait MatcherNewProgB extends Util { this: PrimitiveOps with BooleanOps with StringOps with Functions with Equal with IfThenElse =>
 
   abstract class EX
   
@@ -684,7 +686,7 @@ trait Util extends Base with Arith with Functions {
 
 
 
-trait MatcherNewProg extends DFAOps with GAOps with NFAtoDFA with GAtoDA with Util { this: Arith with Functions with Equal with IfThenElse =>
+trait MatcherNewProg extends DFAOps with GAOps with NFAtoDFA with GAtoDA with Util { this: PrimitiveOps with Functions with Equal with IfThenElse =>
 
   // -- begin general automaton
   
@@ -696,7 +698,7 @@ trait MatcherNewProg extends DFAOps with GAOps with NFAtoDFA with GAtoDA with Ut
             gtrans { a3 =>
               gguard (a3 == 'B', true) {
                 //gstop()
-                gtrans(unit(List(1))) { a4 => gstop() }
+                gtrans(unit(List[Any](1))) { a4 => gstop() }
     }}}}}},
     gtrans { _ => gfindAAB() }) // in parallel...
   }
@@ -732,7 +734,7 @@ class TestMatcherNew extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test4-"
   
-  trait DSL extends MatcherNewProg with Arith with Functions with Equal with IfThenElse {
+  trait DSL extends MatcherNewProg with PrimitiveOps with Functions with Equal with IfThenElse {
     def bare[T:Typ](x: Rep[Any], f: String => String): Rep[T]
     def test(x: Rep[Unit]): DIO
   }
@@ -884,7 +886,7 @@ class TestMatcherNew extends FileDiffSuite {
                   gtrans { a3 =>
                     gguard (a3 == 'B', true) {
                       //gstop()
-                      gtrans(unit(List(1))) { a4 => gstop() }
+                      gtrans(unit(List[Any](1))) { a4 => gstop() }
           }}}}}},
           gtrans { _ => gfindAAB() }) // in parallel...
         }
@@ -913,7 +915,7 @@ class TestMatcherNew extends FileDiffSuite {
                   gtrans { a3 =>
                     gguard (a3 == 'B'/*, true*/) {
                       //gstop()
-                      gtrans(unit(List(1))) { a4 => gstop() }
+                      gtrans(unit(List[Any](1))) { a4 => gstop() }
           }}}}}})
         }
         
@@ -954,7 +956,7 @@ class TestMatcherNew extends FileDiffSuite {
     def fcount[T:Typ] = Foreach[T,Double](0, c => s => s + 1)
     def fwhile[T:Typ](p: Rep[T] => Rep[Boolean]) = Foreach[T,Boolean](unit(true), c => s => if (s && p(c)) unit(true) else unit(false))
     def flast[T:Typ](s: Rep[T]) = Foreach[T,T](s, c => s => c)
-    def fcollect[T:Typ] = Foreach[T,List[T]](List(), c => s => list_concat(s,List(c)))
+    def fcollect[T:Typ] = Foreach[T,List[T]](List[T](), c => s => list_concat(s,List(c)))
 
     def switcher[T:Typ,S1:Typ,S2:Typ,O1:Typ,O2:Typ](s: Stream[T])(p: Rep[T]=>Rep[Boolean])(a: Stepper2[T,S1,O1], b: Stepper2[O1,S2,O2]) = 
       Stepper2[T,(S1,S2),O2]((a.s,b.s), ss => b.cond(ss._2), c => ss => if (p(c)) (a.s, b.yld(a.res(ss._1))(ss._2)) else (a.yld(c)(ss._1), ss._2), ss => b.res(ss._2))
