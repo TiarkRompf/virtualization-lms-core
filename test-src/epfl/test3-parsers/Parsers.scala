@@ -13,11 +13,18 @@ trait Parsers { this: Matching with Extractors =>
     def apply(in: Rep[Input]): Rep[ParseResult]
   }
 
-  abstract class ParseResult
+  abstract class ParseResult extends Product with Serializable // instances are case classes
 
   case class Success(rest: Input) extends ParseResult
   case class Failure() extends ParseResult
 
+  implicit def inputTyp: Typ[Input]
+  implicit def resultTyp: Typ[ParseResult]
+  implicit def successTyp: Typ[Success]
+  implicit def failureTyp: Typ[Failure]
+
+  implicit def listTyp[T:Typ]: Typ[List[T]]
+  implicit def consTyp[T:Typ]: Typ[::[T]]
 
   object SuccessR {
     def apply(x: Rep[Input]): Rep[Success] = construct(classOf[Success], Success.apply, x)
@@ -32,7 +39,9 @@ trait Parsers { this: Matching with Extractors =>
   object :!: {
     def apply[A:Typ](x: Rep[A], xs: Rep[List[A]]) = construct(classOf[::[A]], (::.apply[A] _).tupled, tuple(x, xs))
 //    def unapply[A](x: Rep[::[A]]) = deconstruct2(classOf[::[A]], ::.unapply[A], x) // doesn't work: hd is private in :: !
-    def unapply[A:Typ](x: Rep[::[A]]): Option[(Rep[A], Rep[List[A]])] = deconstruct2(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
+//    def unapply[A:Typ](x: Rep[::[A]]): Option[(Rep[A], Rep[List[A]])] = deconstruct2(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
+    def unapply[A:Typ](x: Rep[List[A]]): Option[(Rep[A], Rep[List[A]])] = 
+      deconstruct2(classOf[::[A]].asInstanceOf[Class[List[A]]], (x: List[A]) => Some(x.head, x.tail), x)
   }
 
 
