@@ -19,7 +19,7 @@ trait Arith extends Base with LiftArith {
   //implicit def unit(x: Double): Rep[Double]
 
   implicit def intTyp: Typ[Int]
-  implicit def doulbeTyp: Typ[Double]
+  implicit def doubleTyp: Typ[Double]
 
   // aks: this is a workaround for the infix methods not intercepting after Typs were added everywhere
   implicit def intToArithOps(i: Int) = new arithOps(unit(i))
