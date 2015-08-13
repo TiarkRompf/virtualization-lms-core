@@ -3,7 +3,7 @@ package internal
 
 import util.GraphUtil
 import java.io.{File, PrintWriter}
-import scala.reflect.RefinedTyp
+import scala.reflect.RefinedManifest
 
 trait GenericCodegen extends BlockTraversal {
   val IR: Expressions
@@ -62,7 +62,7 @@ trait GenericCodegen extends BlockTraversal {
   def remap[A](s: String, method: String, t: Typ[A]) : String = remap(s, method, t.toString)
   def remap(s: String, method: String, t: String) : String = s + method + "[" + remap(t) + "]"    
   def remap[A](m: Typ[A]): String = m match {
-    case rm: RefinedTyp[A] =>  "AnyRef{" + rm.fields.foldLeft(""){(acc, f) => {val (n,mnf) = f; acc + "val " + n + ": " + remap(mnf) + ";"}} + "}"
+    case ManifestTyp(rm: RefinedManifest[A]) =>  "AnyRef{" + rm.fields.foldLeft(""){(acc, f) => {val (n,mnf) = f; acc + "val " + n + ": " + remap(ManifestTyp(mnf)) + ";"}} + "}"
     case _ if m.erasure == classOf[Variable[Any]] =>
         remap(m.typeArguments.head)
     case _ =>
