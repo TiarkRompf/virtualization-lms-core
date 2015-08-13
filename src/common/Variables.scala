@@ -31,6 +31,10 @@ trait ReadVarImplicitExp extends EffectExp {
 trait LowPriorityVariableImplicits extends ImplicitOps {
   this: Variables =>
 
+  implicit def intTyp: Typ[Int]
+  implicit def floatTyp: Typ[Float]
+  implicit def doubleTyp: Typ[Double]
+
   implicit def varIntToRepDouble(x: Var[Int])(implicit pos: SourceContext): Rep[Double] = implicit_convert[Int,Double](readVar(x))
   implicit def varIntToRepFloat(x: Var[Int])(implicit pos: SourceContext): Rep[Float] = implicit_convert[Int,Float](readVar(x))
   implicit def varFloatToRepDouble(x: Var[Float])(implicit pos: SourceContext): Rep[Double] = implicit_convert[Float,Double](readVar(x))
@@ -78,7 +82,7 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
   def infix_/=[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded3, mT: Typ[T], pos: SourceContext) = var_divideequals(lhs,readVar(rhs))
 }
 
-trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits with ReadVarImplicitExp {
+trait VariablesExp extends Variables with PrimitiveOps with ImplicitOpsExp with VariableImplicits with ReadVarImplicitExp {
   // REMARK:
   // defining Var[T] as Sym[T] is dangerous. If someone forgets to define a more-specific implicit conversion from
   // Var[T] to Ops, e.g. implicit def varToRepStrOps(s: Var[String]) = new RepStrOpsCls(varToRep(s))
@@ -91,12 +95,24 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
   implicit def varTyp[T:Typ]: Typ[Var[T]]
 
   case class ReadVar[T:Typ](v: Var[T]) extends Def[T]
-  case class NewVar[T:Typ](init: Exp[T]) extends Def[Variable[T]]
-  case class Assign[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
-  case class VarPlusEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
-  case class VarMinusEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
-  case class VarTimesEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
-  case class VarDivideEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit]
+  case class NewVar[T:Typ](init: Exp[T]) extends Def[Variable[T]] {
+    def m = manifest[T]
+  }
+  case class Assign[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
+    def m = manifest[T]
+  }
+  case class VarPlusEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
+    def m = manifest[T]
+  }
+  case class VarMinusEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
+    def m = manifest[T]
+  }
+  case class VarTimesEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
+    def m = manifest[T]
+  }
+  case class VarDivideEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
+    def m = manifest[T]
+  }
 
   def var_new[T:Typ](init: Exp[T])(implicit pos: SourceContext): Var[T] = {
     //reflectEffect(NewVar(init)).asInstanceOf[Var[T]]
@@ -176,13 +192,13 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case ReadVar(Variable(a)) => readVar(Variable(f(a)))
-    case Reflect(NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(Assign(Variable(a),b), u, es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(VarPlusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(VarMinusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarMinusEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(VarTimesEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarTimesEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(VarDivideEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarDivideEquals(Variable(f(a)), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@Assign(Variable(a),b), u, es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@VarPlusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@VarMinusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarMinusEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@VarTimesEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarTimesEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@VarDivideEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarDivideEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -266,18 +282,16 @@ trait CLikeGenVariables extends CLikeGenBase {
   val IR: VariablesExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-      rhs match {
-        case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
-        case NewVar(init) => emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
-        case Assign(Variable(a), b) => stream.println(quote(a) + " = " + quote(b) + ";")
-        case VarPlusEquals(Variable(a), b) => stream.println(quote(a) + " += " + quote(b) + ";")
-        case VarMinusEquals(Variable(a), b) =>stream.println(quote(a) + " -= " + quote(b) + ";")
-        case VarTimesEquals(Variable(a), b) => stream.println(quote(a) + " *= " + quote(b) + ";")
-        case VarDivideEquals(Variable(a), b) => stream.println(quote(a) + " /= " + quote(b) + ";")
-        case _ => super.emitNode(sym, rhs)
-      }
-    }
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case ReadVar(Variable(a)) => emitValDef(sym, quote(a))
+    case NewVar(init) => emitVarDef(sym.asInstanceOf[Sym[Variable[Any]]], quote(init))
+    case Assign(Variable(a), b) => stream.println(quote(a) + " = " + quote(b) + ";")
+    case VarPlusEquals(Variable(a), b) => stream.println(quote(a) + " += " + quote(b) + ";")
+    case VarMinusEquals(Variable(a), b) =>stream.println(quote(a) + " -= " + quote(b) + ";")
+    case VarTimesEquals(Variable(a), b) => stream.println(quote(a) + " *= " + quote(b) + ";")
+    case VarDivideEquals(Variable(a), b) => stream.println(quote(a) + " /= " + quote(b) + ";")
+    case _ => super.emitNode(sym, rhs)
+  }
 }
 
 trait CudaGenVariables extends CudaGenEffect with CLikeGenVariables
