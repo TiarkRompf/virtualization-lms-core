@@ -8,6 +8,8 @@ import test2._
 
 trait Extractors extends Base {
   
+  implicit def tupleTyp[A:Typ,B:Typ]: Typ[(A,B)]
+
   def construct[A:Typ,B:Typ](c: Class[A], f: B => A, x: Rep[B]): Rep[A]
   def deconstruct[A,B:Typ](c: Class[A], f: A => Option[B], x: Rep[A]): Option[Rep[B]]
 
@@ -104,6 +106,12 @@ trait MatchingExtractorsRepString {
 
 trait MatchingExtractorsExp extends FunctionsExp with Effects with Control {
 
+  implicit def tupleTyp[A:Typ,B:Typ]: Typ[(A,B)] = {
+    implicit val ManifestTyp(mA) = typ[A]
+    implicit val ManifestTyp(mB) = typ[B]
+    ManifestTyp(implicitly)
+  }
+
   case class Construct[A:Typ,B:Typ](c: Class[A], x: Rep[B]) extends Def[A]
   case class Deconstruct[A,B:Typ](c: Class[A], x: Rep[A]) extends Def[B]
   case class TupleR[A:Typ,B:Typ](x: Exp[A], y: Exp[B]) extends Def[(A,B)]
@@ -116,7 +124,7 @@ trait MatchingExtractorsExp extends FunctionsExp with Effects with Control {
 
   def construct[A:Typ,B:Typ](c: Class[A], f: B => A, x: Rep[B]): Rep[A] = Construct(c, x)
   def deconstruct[A,B:Typ](c: Class[A], f: A => Option[B], x: Rep[A]): Option[Rep[B]] = {
-    val s = Deconstruct(c, x)
+    val s = Deconstruct[A,B](c, x)
     Some(reflectEffect(s))
   }
 
