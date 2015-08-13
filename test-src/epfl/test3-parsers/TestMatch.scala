@@ -9,6 +9,13 @@ import test2._
 trait MatchProg { this: Matching with Extractors =>
   
   case class Success(x: Int)
+
+  implicit def successTyp: Typ[Success]
+
+  implicit def intTyp: Typ[Int]
+  implicit def stringTyp: Typ[String]
+  implicit def listTyp[T:Typ]: Typ[List[T]]
+  implicit def consTyp[T:Typ]: Typ[::[T]]
   
   object SuccessR {
     def apply(x: Rep[Int]): Rep[Success] = construct(classOf[Success], Success.apply, x)
@@ -18,7 +25,8 @@ trait MatchProg { this: Matching with Extractors =>
   object :!: {
     def apply[A:Typ](x: Rep[A], xs: Rep[List[A]]) = construct(classOf[::[A]], (::.apply[A] _).tupled, tuple(x, xs))
 //    def unapply[A](x: Rep[::[A]]) = deconstruct2(classOf[::[A]], ::.unapply[A], x) // doesn't work: hd is private in :: !
-    def unapply[A:Typ](x: Rep[::[A]]) = deconstruct(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
+    def unapply[A:Typ](x: Rep[List[A]]): Option[(Rep[A], Rep[List[A]])] = 
+      deconstruct2(classOf[::[A]].asInstanceOf[Class[List[A]]], (x: List[A]) => Some(x.head, x.tail), x)
   }
   
   def infix_unapply(o: SuccessR.type, x: Rep[Success]): Option[Rep[Int]] = deconstruct(classOf[Success], Success.unapply, x)
@@ -62,11 +70,11 @@ class TestMatch extends FileDiffSuite {
         with FlatResult with DisableCSE
       import MatchProgExp._
 
-      val r = reifyEffects(test(fresh))
+      val r = reifyEffects(test(fresh[Success]))
       println(globalDefs.mkString("\n"))
       println(r)
       val p = new ExtractorsGraphViz { val IR: MatchProgExp.type = MatchProgExp }
-      p.emitDepGraph(result(r), prefix+"match1-dot")
+      p.emitDepGraph(result[Unit](r), prefix+"match1-dot")
     }
     assertFileEqualsCheck(prefix+"match1")
     assertFileEqualsCheck(prefix+"match1-dot")
@@ -79,11 +87,11 @@ class TestMatch extends FileDiffSuite {
         with FlatResult
       import MatchProgExp._
 
-      val r = reifyEffects(test(fresh))
+      val r = reifyEffects(test(fresh[Success]))
       println(globalDefs.mkString("\n"))
       println(r)
       val p = new ExtractorsGraphViz { val IR: MatchProgExp.type = MatchProgExp }
-      p.emitDepGraph(result(r), prefix+"match2-dot")
+      p.emitDepGraph(result[Unit](r), prefix+"match2-dot")
     }
     assertFileEqualsCheck(prefix+"match2")
     assertFileEqualsCheck(prefix+"match2-dot")

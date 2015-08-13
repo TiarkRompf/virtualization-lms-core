@@ -39,7 +39,6 @@ trait Parsers { this: Matching with Extractors =>
   object :!: {
     def apply[A:Typ](x: Rep[A], xs: Rep[List[A]]) = construct(classOf[::[A]], (::.apply[A] _).tupled, tuple(x, xs))
 //    def unapply[A](x: Rep[::[A]]) = deconstruct2(classOf[::[A]], ::.unapply[A], x) // doesn't work: hd is private in :: !
-//    def unapply[A:Typ](x: Rep[::[A]]): Option[(Rep[A], Rep[List[A]])] = deconstruct2(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
     def unapply[A:Typ](x: Rep[List[A]]): Option[(Rep[A], Rep[List[A]])] = 
       deconstruct2(classOf[::[A]].asInstanceOf[Class[List[A]]], (x: List[A]) => Some(x.head, x.tail), x)
   }
