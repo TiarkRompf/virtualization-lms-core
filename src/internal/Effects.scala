@@ -353,7 +353,7 @@ trait Effects extends Expressions with Blocks with Utils {
         createReflectDefinition  // if summary is not pure
 */    
     // warn if type is Any. TODO: make optional, sometimes Exp[Any] is fine
-    if (manifest[T] == manifest[Any]) printlog("warning: possible missing mtype call - toAtom with Def of type Any " + d)
+    if (typ[T] == ManifestTyp(manifest[Any])) printlog("warning: possible missing mtype call - toAtom with Def of type Any " + d)
     
     // AKS NOTE: this was removed on 6/27/12, but it is still a problem in OptiML apps without it,
     // so I'm putting it back until we can get it resolved properly.
@@ -372,7 +372,7 @@ trait Effects extends Expressions with Blocks with Utils {
   def reflectMirrored[A:Typ](zd: Reflect[A])(implicit pos: SourceContext): Exp[A] = {
     checkContext()
     // warn if type is Any. TODO: make optional, sometimes Exp[Any] is fine
-    if (manifest[A] == manifest[Any]) printlog("warning: possible missing mtype call - reflectMirrored with Def of type Any: " + zd)
+    if (typ[A] == ManifestTyp(manifest[Any])) printlog("warning: possible missing mtype call - reflectMirrored with Def of type Any: " + zd)
     context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
       //case z::_ => z.asInstanceOf[Exp[A]]  -- unsafe: we don't have a tight context, so we might pick one from a flattened subcontext
       case _ => createReflectDefinition(fresh[A].withPos(List(pos)), zd)

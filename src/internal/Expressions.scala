@@ -38,6 +38,8 @@ trait Expressions extends Utils {
     override def toString = mf.toString
   }
 
+  def typ[T:Typ]: Typ[T] = implicitly[Typ[T]]
+
 
   abstract class Exp[+T:Typ] { // constants/symbols (atomic)
     def tp: Typ[T @uncheckedVariance] = implicitly[Typ[T]] //invariant position! but hey...

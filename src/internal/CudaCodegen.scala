@@ -42,7 +42,7 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
   }
 
   def emitSource[A : Typ](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
-    val sB = remap(manifest[A])
+    val sB = remap(typ[A])
 
     withStream(out) {
       stream.println("/*****************************************\n"+

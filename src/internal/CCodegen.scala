@@ -101,12 +101,12 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   }
 
   def emitForwardDef[A:Typ](args: List[Typ[_]], functionName: String, out: PrintWriter) = {
-    out.println(remap(manifest[A])+" "+functionName+"("+args.map(a => remap(a)).mkString(", ")+");")
+    out.println(remap(typ[A])+" "+functionName+"("+args.map(a => remap(a)).mkString(", ")+");")
   }
       
   def emitSource[A:Typ](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
 
-    val sA = remap(manifest[A])
+    val sA = remap(typ[A])
 
     withStream(out) {
       stream.println("/*****************************************\n"+

@@ -28,7 +28,7 @@ trait Base extends EmbeddedControls {
   implicit def unitTyp: Typ[Unit]
   implicit def nullTyp: Typ[Null]
 
-  def typ[T:Typ] = implicitly[Typ[T]]
+  def typ[T:Typ]: Typ[T]
 
   // always lift Unit and Null (for now)
   implicit def unitToRepUnit(x: Unit) = unit(x)
