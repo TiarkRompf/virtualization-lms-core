@@ -26,6 +26,10 @@ trait Utils extends Base with OverloadHack {
 
 trait UtilExp extends BaseExp with Utils {
 
+  implicit def intTyp: Typ[Int]
+  implicit def stringTyp: Typ[String]
+  implicit def tupleTyp[A:Typ,B:Typ]: Typ[(A,B)]
+
   implicit def unit(x:Int): Rep[Int] = Const(x)
   implicit def unit(x:String): Rep[String] = Const(x)
   
@@ -112,6 +116,9 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
 
 trait VectorsImpl extends Vectors with FunctionsExp with UtilExp {
 
+  implicit def vecTyp: Typ[Vector]
+  implicit def funTyp[A:Typ,B:Typ]: Typ[A=>B]
+
   val vectorZero: Exp[Int => Vector]
   val vectorRandom: Exp[Int => Vector]
   val vectorPlus: Exp[((Vector,Vector)) => Vector]
@@ -122,7 +129,6 @@ trait VectorsImpl extends Vectors with FunctionsExp with UtilExp {
 trait VectorsImplExternal extends VectorsImpl {
 
   type Vector = Array[Double]
-  def mV = manifest[Array[Double]]
 
   val base = "scala.lms.epfl.test6.VectorOps.%s"
   
@@ -149,7 +155,6 @@ object VectorOps {
 trait VectorsImplConst extends VectorsImpl {
 
   type Vector = Array[Double]
-  def mV = manifest[Array[Double]]
 
   // kernels implementations as function-type constants
 
@@ -187,9 +192,8 @@ trait VectorsProg extends Vectors {
 
 trait StringsProg extends Vectors {
   
-  def test(x: Rep[Any]) = {
-    val s: Rep[Any] = "hi " + "yo " + x + " done"
-    s
+  def test(x: Rep[Int]) = {
+    "hi " + "yo " + x + " done"
   }
   
 }
