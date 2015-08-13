@@ -22,6 +22,8 @@ class TestTransformRec extends FileDiffSuite {
 
   trait Impl extends DSL with ArithExpOpt with EqualExp with IfThenElseFatExp with LoopsFatExp with FunctionsExternalDef1 { self =>
     override val verbosity = 1
+    
+    //implicit def funTyp[A:Typ,B:Typ]: Typ[A=>B] = ManifestTyp(implicitly)
 
     case class DefineFun2[A,B](res: Block[B])(val arg1: Sym[A], val arg2: Sym[Int]) extends Def[A=>B]
 
@@ -36,8 +38,8 @@ class TestTransformRec extends FileDiffSuite {
     }
 
     override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-      case Apply(x,y) => toAtom(Apply(f(x),f(y)))
-      case g@DefineFun(y) => toAtom(DefineFun(f(y))(g.arg))
+      case g@Apply(x,y) => toAtom(Apply(f(x),f(y))(mtype(g.mA),mtype(g.mB)))
+      case g@DefineFun(y) => toAtom(DefineFun(f(y))(g.arg))(mtype(typ[A]),pos)
       case _ => super.mirror(e,f)
     }).asInstanceOf[Exp[A]]
 
@@ -48,6 +50,7 @@ class TestTransformRec extends FileDiffSuite {
   trait Runner {
     val p: Impl
     def run() = {
+      import p.{intTyp,doubleTyp,unitTyp}
       val x = p.fresh[Double]
       val y = p.reifyEffects(p.test(x))
 
