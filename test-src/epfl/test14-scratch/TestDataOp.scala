@@ -21,7 +21,7 @@ class TestDataOp extends FileDiffSuite {
     val rec = new scala.collection.mutable.HashMap[String,TopLevel[_,_]]
     def toplevel[A:Typ,B:Typ](name: String)(f: Rep[A] => Rep[B]): Rep[A] => Rep[B] = {
       val g = (x: Rep[A]) => unchecked[B](name,"(",x,")")
-      rec.getOrElseUpdate(name, TopLevel(name, manifest[A], manifest[B], f))
+      rec.getOrElseUpdate(name, TopLevel(name, typ[A], typ[B], f))
       g
     }
     val L = scala.List
