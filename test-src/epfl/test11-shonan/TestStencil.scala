@@ -38,7 +38,7 @@ class TestStencil extends FileDiffSuite {
     dumpGeneratedCode = true
     run()
   }
-  trait Runner extends Compile {
+  trait Runner extends Compile with PrimitiveOps with ArrayOps {
     def test(x: Rep[Array[Double]]): Rep[Array[Double]]
     def run() {
       val f = compile(test)
@@ -202,7 +202,7 @@ class TestStencil extends FileDiffSuite {
         
           // read the overlap variables
         
-          val reads = (overlap0 zip vars) map (p => (p._1, readVar(p._2)))
+          val reads = (overlap0 zip vars) map (p => (p._1, readVar(p._2)(p._1.tp,p._1.pos.head)))
         
           println("var reads: " + reads)
         
@@ -215,7 +215,7 @@ class TestStencil extends FileDiffSuite {
         
           // write the new values to the overlap vars
         
-          val writes = (overlap1 zip vars) map (p => (p._1, var_assign(p._2, substY1(p._1))))
+          val writes = (overlap1 zip vars) map (p => (p._1, var_assign(p._2, substY1(p._1))(p._1.tp,p._1.pos.head)))
 
           println("var writes: " + writes)
         }
