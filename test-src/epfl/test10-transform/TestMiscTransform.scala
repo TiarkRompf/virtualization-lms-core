@@ -288,6 +288,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.{intTyp,unitTyp}
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
     
@@ -340,6 +341,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.{intTyp,unitTyp}
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
     
@@ -372,7 +374,7 @@ class TestMisc extends FileDiffSuite {
           val a2 = transformBlock(a)
           isInThenBranch = saveFlag
           val b2 = transformBlock(b)
-          List(TP(s,Reflect(IfThenElse(c,a2,b2), u, es)))
+          List(TP(s,Reflect(IfThenElse(c,a2,b2)(mtype(s.tp)), u, es)))
         case _ => super.transformStm(stm)
       }
     }
@@ -410,6 +412,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.{intTyp,unitTyp}
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
     
@@ -443,7 +446,7 @@ class TestMisc extends FileDiffSuite {
           val a2 = transformBlock(a)
           isInThenBranch = saveFlag
           val b2 = transformBlock(b)
-          List(TP(s,Reflect(IfThenElse(c2,a2,b2), u, es map transformExp))) // TODO: u
+          List(TP(s,Reflect(IfThenElse(c2,a2,b2)(mtype(s.tp)), u, es map transformExp))) // TODO: u
         case _ => super.transformStm(stm)
       }
     }
@@ -484,6 +487,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.{intTyp,unitTyp}
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
     
@@ -560,6 +564,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.{intTyp,unitTyp}
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
     

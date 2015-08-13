@@ -19,7 +19,7 @@ trait Arith extends Base with LiftArith {
   //implicit def unit(x: Double): Rep[Double]
 
   implicit def intTyp: Typ[Int]
-  implicit def doubleTyp: Typ[Double]
+  implicit def doubleTyp: Typ[Double] 
 
   // aks: this is a workaround for the infix methods not intercepting after Typs were added everywhere
   implicit def intToArithOps(i: Int) = new arithOps(unit(i))
@@ -44,7 +44,7 @@ trait ArithExp extends Arith with BaseExp {
   //implicit def unit(x: Double) = Const(x)
 
   implicit def intTyp: Typ[Int] = ManifestTyp(implicitly)
-  implicit def doulbeTyp: Typ[Double] = ManifestTyp(implicitly)
+  implicit def doubleTyp: Typ[Double] = ManifestTyp(implicitly)
   
   case class Plus(x: Exp[Double], y: Exp[Double]) extends Def[Double]
   case class Minus(x: Exp[Double], y: Exp[Double]) extends Def[Double]
