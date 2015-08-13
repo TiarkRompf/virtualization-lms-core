@@ -114,7 +114,7 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
         val sym = fresh[A]
         
         for (TP(s,rhs) <- transitive) {
-          subst += (s -> toAtom(Mutate(s, sym)))
+          subst += (s -> toAtom(Mutate(s, sym))(s.tp,mpos(s.pos)))
         }
         
         // add soft dependencies on transitive to ensure ordering!
@@ -171,13 +171,13 @@ class TestEffects extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test10-"
   
-  trait DSL extends Lib with ArrayMutation with Arith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
+  trait DSL extends Lib with ArrayMutation with Arith with OrderingOps with PrimitiveOps with LiftVariables with IfThenElse with While with RangeOps with Print {
 
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
     def test(x: Rep[Int]): Rep[Unit]
   }
-  trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+  trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with PrimitiveOpsExp 
       with EqualExpOpt //with VariablesExpOpt 
       with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp 
       with Lib with LibExp { self => 
