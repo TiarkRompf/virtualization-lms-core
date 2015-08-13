@@ -29,6 +29,7 @@ import scala.reflect.SourceContext
 
 trait VectorOps extends Base {
   trait Vector[T]
+  implicit def vectorTyp[T:Typ]: Typ[Vector[T]]
   def vzeros(n: Rep[Int]): Rep[Vector[Double]]
   def vliteral[T:Typ](a: List[Rep[T]]): Rep[Vector[T]]
   def vapply[T:Typ](a: Rep[Vector[T]], x: Rep[Int]): Rep[T]
@@ -38,6 +39,7 @@ trait VectorOps extends Base {
 }
 
 trait VectorExp extends VectorOps with EffectExp {
+  implicit def vectorTyp[T:Typ]: Typ[Vector[T]] = ManifestTyp(implicitly)
   
   case class VectorZeros(n: Rep[Int]) extends Def[Vector[Double]]
   case class VectorLiteral[T](a: List[Rep[T]]) extends Def[Vector[T]]
