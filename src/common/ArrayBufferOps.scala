@@ -48,6 +48,11 @@ trait ArrayBufferOps extends Base with StringOps with ArrayOps {
 }
 
 trait ArrayBufferOpsExp extends ArrayBufferOps with EffectExp {
+  implicit def arrayBufferTyp[T:Typ]: Typ[ArrayBuffer[T]] = {
+    implicit val ManifestTyp(m) = typ[T]
+    manifestTyp
+  }
+  
   case class ArrayBufferNew[A:Typ](xs: Seq[Exp[A]]) extends Def[ArrayBuffer[A]]  {
     val mA = manifest[A]
   }

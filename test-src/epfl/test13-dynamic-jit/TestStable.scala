@@ -206,16 +206,17 @@ class TestStable extends FileDiffSuite {
   val prefix = home + "test-out/epfl/test13-"
   
   
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
-    with IfThenElse with While with RangeOps with Print with Compile with PrimitiveOps
+  trait DSL extends VectorOps with LiftPrimitives with PrimitiveOps with OrderingOps with BooleanOps with LiftVariables 
+    with IfThenElse with While with RangeOps with Print with Compile
     with ArrayOps with CastingOps with StableVars {
     
     def test(): Unit
   }
   
-  trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+  trait Impl extends DSL with VectorExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with IfThenElseFatExp with LoopsFatExp with WhileExp
     with RangeOpsExp with PrintExp with FatExpressions with CompileScala
+    with SeqOpsExp with StringOpsExp
     with PrimitiveOpsExp with ArrayOpsExp with CastingOpsExp with StaticDataExp 
     with StableVarsExp { self =>
     override val verbosity = 1
@@ -225,7 +226,7 @@ class TestStable extends FileDiffSuite {
     runner.run()
   }
   
-  trait Codegen extends ScalaGenVector with ScalaGenArith with ScalaGenOrderingOps with ScalaGenBooleanOps
+  trait Codegen extends ScalaGenVector with ScalaGenOrderingOps with ScalaGenBooleanOps
     with ScalaGenVariables with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenWhile
     with ScalaGenRangeOps with ScalaGenPrint with ScalaGenFunctions
     with ScalaGenPrimitiveOps with ScalaGenArrayOps with ScalaGenCastingOps with ScalaGenStaticData 
