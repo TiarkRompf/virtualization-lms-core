@@ -27,7 +27,7 @@ trait ParsersProg extends Parsers { this: Matching with Extractors =>
 
 trait ParsersProgExp0 extends common.BaseExp with ParsersProg { this: Matching with Extractors =>
 
-  implicit def inputTyp: Typ[Input] = ManifestTyp(implicitly)
+  implicit def inputTyp: Typ[Input] = listTyp
   implicit def resultTyp: Typ[ParseResult] = ManifestTyp(implicitly)
   implicit def successTyp: Typ[Success] = ManifestTyp(implicitly)
   implicit def failureTyp: Typ[Failure] = ManifestTyp(implicitly)
