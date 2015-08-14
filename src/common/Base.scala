@@ -44,6 +44,10 @@ trait BaseExp extends Base with Expressions with Blocks with Transforming {
   type Rep[+T] = Exp[T]
   //type Typ[T] = TypeExp[T] defined in Expressions
   protected def manifest[T:Typ] = implicitly[Typ[T]] // TODO: change
+  protected def manifestTyp[T:Manifest]: Typ[T] = ManifestTyp(implicitly)
+
+  implicit def unitTyp: Typ[Unit] = manifestTyp
+  implicit def nullTyp: Typ[Null] = manifestTyp
 
   protected def unit[T:Typ](x: T) = Const(x)
 }
