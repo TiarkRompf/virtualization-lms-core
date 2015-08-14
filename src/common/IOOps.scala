@@ -75,6 +75,12 @@ trait IOOps extends Variables with OverloadHack with StringOps {
 }
 
 trait IOOpsExp extends IOOps with DSLOpsExp with ArrayOpsExp {
+  implicit def fileTyp: Typ[File] = manifestTyp
+  implicit def bufferedReaderTyp: Typ[BufferedReader] = manifestTyp
+  implicit def bufferedWriterTyp: Typ[BufferedWriter] = manifestTyp
+  implicit def fileReaderTyp: Typ[FileReader] = manifestTyp
+  implicit def fileWriterTyp: Typ[FileWriter] = manifestTyp
+
   case class ObjFileApply(dir: Exp[String]) extends Def[File]
   case class FileGetCanonicalFile(f: Exp[File]) extends Def[File]
   case class FileGetPath(f: Exp[File]) extends Def[String]
