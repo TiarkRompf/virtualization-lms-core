@@ -16,7 +16,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
   if there's a crash here during compilation, it's likely due to #4363 (need latest scala-virtualized for fix)
 */
 
-trait ArrayMutation extends ArrayLoops {
+trait ArrayMutation extends ArrayLoops with PrimitiveOps {
   
   def infix_update[T:Typ](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]): Rep[Unit]
 
@@ -26,7 +26,7 @@ trait ArrayMutation extends ArrayLoops {
 }
 
 
-trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
+trait ArrayMutationExp extends ArrayMutation with PrimitiveOpsExp with ArrayLoopsExp {
   
   case class ArrayUpdate[T](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]) extends Def[Unit]
   case class ArrayMutable[T](a: Rep[Array[T]]) extends Def[Array[T]]
@@ -115,14 +115,14 @@ class TestMutation extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test8-"
   
-  trait DSL extends ArrayMutation with Arith with OrderingOps with Variables with IfThenElse with While with RangeOps with Print {
+  trait DSL extends ArrayMutation with LiftPrimitives with PrimitiveOps with OrderingOps with Variables with IfThenElse with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
     def mzeros(l: Rep[Int]) = zeros(l).mutable
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
     def test(x: Rep[Int]): Rep[Unit]
   }
-  trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExp with VariablesExp 
+  trait Impl extends DSL with ArrayMutationExp with PrimitiveOpsExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with WhileExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 2
     val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
@@ -348,7 +348,7 @@ class TestMutation extends FileDiffSuite {
             c = c + 1
           }
           if (c < x)
-            c = 8
+            c = 8.0
           print(c)
         }
       }
