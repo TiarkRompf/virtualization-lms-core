@@ -11,7 +11,7 @@ class TestArrayOps extends FileDiffSuite {
 
   def testIntArrayCreation() {
     withOutFile(prefix+"array-seq-creation") {
-      val prog = new LiftArrays with ArrayOps with MiscOps with ArrayOpsExp with MiscOpsExp {
+      val prog = new LiftArrays with ArrayOps with MiscOps with ArrayOpsExp with SeqOpsExp with StringOpsExp with MiscOpsExp {
         def f(i : Rep[Int]): Rep[Unit] = {
           val a = Array(unit(1), unit(2), unit(3))
           println(a(unit(0)))
