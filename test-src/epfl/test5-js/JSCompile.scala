@@ -71,15 +71,15 @@ trait JSGenIfThenElse extends BaseGenIfThenElse with JSGenEffect { // it's more 
   }
 }
 
-trait JSGenArith extends JSGenBase { // TODO: define a generic one
-  val IR: ArithExp
+trait JSGenPrimitiveOps extends JSGenBase { // TODO: define a generic one
+  val IR: PrimitiveOpsExp
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Plus(a,b) =>  emitValDef(sym, "" + quote(a) + "+" + quote(b))
-    case Minus(a,b) => emitValDef(sym, "" + quote(a) + "-" + quote(b))
-    case Times(a,b) => emitValDef(sym, "" + quote(a) + "*" + quote(b))
-    case Div(a,b) =>   emitValDef(sym, "" + quote(a) + "/" + quote(b))
+    case DoublePlus(a,b) =>  emitValDef(sym, "" + quote(a) + "+" + quote(b))
+    case DoubleMinus(a,b) => emitValDef(sym, "" + quote(a) + "-" + quote(b))
+    case DoubleTimes(a,b) => emitValDef(sym, "" + quote(a) + "*" + quote(b))
+    case DoubleDivide(a,b) =>   emitValDef(sym, "" + quote(a) + "/" + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 } 

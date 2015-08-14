@@ -70,7 +70,7 @@ trait Dom extends Base {
 
 
 
-trait ConditionalProg { this: Arith with Equal with Print with IfThenElse =>
+trait ConditionalProg { this: PrimitiveOps with Equal with Print with IfThenElse =>
   
   def test(x: Rep[Double]): Rep[Double] = {
     
@@ -104,9 +104,9 @@ class TestConditional extends FileDiffSuite {
     
       println("-- begin")
 
-      new ConditionalProg with ArithExpOpt with EqualExp with PrintExp
+      new ConditionalProg with PrimitiveOpsExpOpt with EqualExp with PrintExp
       with IfThenElseExp with CompileScala { self =>
-        val codegen = new ScalaGenIfThenElse with ScalaGenArith 
+        val codegen = new ScalaGenIfThenElse with ScalaGenPrimitiveOps 
         with ScalaGenEqual with ScalaGenPrint { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)
@@ -117,7 +117,7 @@ class TestConditional extends FileDiffSuite {
     
       new ConditionalProg with IfThenElseExp with ArithExpOpt with EqualExp
       with PrintExp { self =>
-        val codegen = new JSGenIfThenElse with JSGenArith 
+        val codegen = new JSGenIfThenElse with JSGenPrimitiveOps 
         with JSGenEqual with JSGenPrint { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)
