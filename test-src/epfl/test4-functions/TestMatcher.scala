@@ -56,8 +56,22 @@ trait MatcherProg { this: Matching with ListMatch =>
 }
 
 
+trait MatcherProgExp0 extends common.BaseExp with MatcherProg { this: Matching with ListMatch =>
 
+  implicit def charTyp: Typ[Char] = ManifestTyp(implicitly)
+  implicit def boolTyp: Typ[Boolean] = ManifestTyp(implicitly)
+  implicit def inputTyp: Typ[Input] = ManifestTyp(implicitly)
 
+  implicit def listTyp[T:Typ]: Typ[List[T]] = {
+    implicit val ManifestTyp(m) = typ[T]
+    ManifestTyp(implicitly)
+  }
+  implicit def consTyp[T:Typ]: Typ[::[T]] = {
+    implicit val ManifestTyp(m) = typ[T]
+    ManifestTyp(implicitly)
+  }
+
+}
 
 
 class TestMatcher extends FileDiffSuite {
@@ -66,7 +80,7 @@ class TestMatcher extends FileDiffSuite {
   
   def testMatcher1 = {
     withOutFile(prefix+"matcher1") {
-      object MatcherProgExp extends MatcherProg with Matching with Extractors with ListMatch
+      object MatcherProgExp extends MatcherProgExp0 with Matching with Extractors with ListMatch
         with MatchingExtractorsExpOpt
         with FunctionExpUnfoldRecursion with FunctionsExternalDef2
       import MatcherProgExp._
