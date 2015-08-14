@@ -23,7 +23,7 @@ class TestHMM extends FileDiffSuite {
     def staticData[T:Typ](x: T): Rep[T]
     def test(x: Rep[Array[Int]]): Rep[Array[Int]]
   }
-  trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp 
+  trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp with SeqOpsExp
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp with StaticDataExp
       with IfThenElseExpOpt with PrintExp 
       with CompileScala { self => 
