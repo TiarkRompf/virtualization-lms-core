@@ -45,6 +45,32 @@ trait TupleOps extends Base {
 }
 
 trait TupleOpsExp extends TupleOps with StructExpOpt {
+  implicit def tuple2_typ[A:Typ,B:Typ]: Typ[(A,B)] = {
+    implicit val ManifestTyp(mA) = typ[A]
+    implicit val ManifestTyp(mB) = typ[B]
+    manifestTyp
+  }
+  implicit def tuple3_typ[A:Typ,B:Typ,C:Typ]: Typ[(A,B,C)] = {
+    implicit val ManifestTyp(mA) = typ[A]
+    implicit val ManifestTyp(mB) = typ[B]
+    implicit val ManifestTyp(mC) = typ[C]
+    manifestTyp
+  }
+  implicit def tuple4_typ[A:Typ,B:Typ,C:Typ,D:Typ]: Typ[(A,B,C,D)] = {
+    implicit val ManifestTyp(mA) = typ[A]
+    implicit val ManifestTyp(mB) = typ[B]
+    implicit val ManifestTyp(mC) = typ[C]
+    implicit val ManifestTyp(mD) = typ[D]
+    manifestTyp
+  }
+  implicit def tuple5_typ[A:Typ,B:Typ,C:Typ,D:Typ,E:Typ]: Typ[(A,B,C,D,E)] = {
+    implicit val ManifestTyp(mA) = typ[A]
+    implicit val ManifestTyp(mB) = typ[B]
+    implicit val ManifestTyp(mC) = typ[C]
+    implicit val ManifestTyp(mD) = typ[D]
+    implicit val ManifestTyp(mE) = typ[E]
+    manifestTyp
+  }
 
   implicit def make_tuple2[A:Typ,B:Typ](t: (Exp[A],Exp[B]))(implicit pos: SourceContext) : Exp[(A,B)] = struct(classTag[(A,B)], "_1" -> t._1, "_2" -> t._2)
   implicit def make_tuple3[A:Typ,B:Typ,C:Typ](t: (Exp[A],Exp[B],Exp[C]))(implicit pos: SourceContext) : Exp[(A,B,C)] = struct(classTag[(A,B,C)], "_1" -> t._1, "_2" -> t._2, "_3" -> t._3)
