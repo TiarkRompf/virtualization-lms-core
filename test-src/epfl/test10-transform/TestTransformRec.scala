@@ -23,8 +23,6 @@ class TestTransformRec extends FileDiffSuite {
   trait Impl extends DSL with PrimitiveOpsExpOpt with EqualExp with IfThenElseFatExp with LoopsFatExp with FunctionsExternalDef1 { self =>
     override val verbosity = 1
     
-    //implicit def funTyp[A:Typ,B:Typ]: Typ[A=>B] = ManifestTyp(implicitly)
-
     case class DefineFun2[A,B](res: Block[B])(val arg1: Sym[A], val arg2: Sym[Int]) extends Def[A=>B]
 
     override def boundSyms(e: Any): List[Sym[Any]] = e match {
