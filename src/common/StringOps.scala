@@ -80,7 +80,9 @@ trait StringOps extends Variables with OverloadHack with PrimitiveOps {
   def string_length(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
 }
 
-trait StringOpsExp extends StringOps with BooleanOps with ArrayOps with VariablesExp {
+trait StringOpsExp extends StringOps with BooleanOpsExp with VariablesExp {
+  implicit def arrayTyp[T:Typ]: Typ[Array[T]]  
+
   case class StringPlus(s: Exp[Any], o: Exp[Any]) extends Def[String]
   case class StringStartsWith(s1: Exp[String], s2: Exp[String]) extends Def[Boolean]
   case class StringTrim(s: Exp[String]) extends Def[String]
