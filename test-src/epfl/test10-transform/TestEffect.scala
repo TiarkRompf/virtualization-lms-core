@@ -180,6 +180,7 @@ class TestEffects extends FileDiffSuite {
   trait Impl extends DSL with ArrayMutationExp with PrimitiveOpsExp with OrderingOpsExpOpt
       with EqualExpOpt //with VariablesExpOpt 
       with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp 
+      with StringOpsExp with SeqOpsExp
       with Lib with LibExp { self => 
     override val verbosity = 2
     val codegen = new ScalaGenFat with ScalaGenArrayMutation with ScalaGenPrimitiveOps with ScalaGenOrderingOps 
