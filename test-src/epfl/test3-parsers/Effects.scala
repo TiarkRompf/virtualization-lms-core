@@ -12,7 +12,7 @@ trait Effects extends Base {
   type State
   type Effectful[A]
   
-  implicit def effectfulTyp[A]: Typ[Effectful[A]]
+  implicit def effectfulTyp[A:Typ]: Typ[Effectful[A]]
 
   def noEffect: State
   def bindEffect[A:Typ](x: State, y: Rep[A]): State
@@ -70,7 +70,7 @@ trait Effects2 extends Effects {
 
 trait Control extends Effects with BaseExp {
   
-  implicit def effectfulTyp[A]: Typ[Effectful[A]] = {
+  implicit def effectfulTyp[A:Typ]: Typ[Effectful[A]] = {
     implicit val ManifestTyp(m) = typ[A]
     manifestTyp
   }
