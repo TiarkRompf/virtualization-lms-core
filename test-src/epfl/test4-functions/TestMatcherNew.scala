@@ -670,7 +670,7 @@ trait MemoUtils extends util.ClosureCompare {
 
 
 
-trait Util extends Base with Arith with Functions {
+trait Util extends Base with LiftPrimitives with PrimitiveOps with Functions {
   
   class LambdaOps[A:Typ,B:Typ](f: Rep[A=>B]) {
     def apply(x:Rep[A]): Rep[B] = doApply(f, x)
@@ -761,8 +761,8 @@ class TestMatcherNew extends FileDiffSuite {
   }
 
   trait Impl extends DSL with RunTest with DFAOpsExp with GAOpsExp
-    with ArithExpOpt with EqualExpOpt with TupleOpsExp with OrderingOpsExp 
-    with BooleanOpsExp with IfThenElseExpOpt with IfThenElseFatExp with ListOpsExp
+    with PrimitiveOpsExpOpt with EqualExpOpt with TupleOpsExp with OrderingOpsExp 
+    with BooleanOpsExp with IfThenElseExpOpt with IfThenElseFatExp with ListOpsExp with SeqOpsExp
     with SplitEffectsExpFat // temporary!
     //with FunctionExpUnfoldRecursion 
     with FunctionsExternalDef1 /* was 2 */ 
@@ -775,7 +775,7 @@ class TestMatcherNew extends FileDiffSuite {
       def bare[T:Typ](x: Exp[Any], f: String => String): Exp[T] = Bare[T](x,f)
       //def printL(in: Rep[Any]): Rep[Unit] = /*reflectEffect*/(Result(List(in))) //FIXME violate ordering
       override val verbosity = 1
-      object codegen extends ScalaGenArith with ScalaGenEqual with ScalaGenListOps with ScalaGenTupleOps
+      object codegen extends ScalaGenPrimitiveOps with ScalaGenEqual with ScalaGenListOps with ScalaGenTupleOps
           with ScalaGenIfThenElseFat with ScalaGenSplitEffects with ScalaGenOrderingOps
           with ScalaGenDFAOps with ScalaGenGAOps
           with ScalaGenFunctionsExternal { 
@@ -927,7 +927,7 @@ class TestMatcherNew extends FileDiffSuite {
 
 
   def testCounter1 = withOutFileChecked(prefix+"counter1") {
-    trait Prog extends DSL with ListOps with Arith {
+    trait Prog extends DSL with ListOps with LiftPrimitives {
 
       def protect[A:Typ](a:Rep[A],b:Rep[Any]): Rep[A] = protect(a, Seq(b).toList)
 
@@ -946,7 +946,7 @@ class TestMatcherNew extends FileDiffSuite {
   }
 
 
-  trait StreamHelpers extends DSL with ListOps with Arith with BooleanOps with TupleOps with OrderingOps with StepperOps {
+  trait StreamHelpers extends DSL with ListOps with LiftAll with PrimitiveOps with BooleanOps with TupleOps with OrderingOps with StepperOps {
     def countChar(c:Rep[Char]) = Stream[Char] filter (_ == c) into fcount
 
     def pcount(n: Rep[Double]) = Prod[Double](0, _ < n, _ + 1)

@@ -51,6 +51,9 @@ trait DFAOps extends Base {
 
 trait DFAOpsExp extends BaseExp with DFAOps { this: Functions => 
 
+  implicit def dfaTyp: Typ[DfaState] = manifestTyp
+  implicit def anyLTyp: Typ[List[Any]] = manifestTyp
+
   case class DFAFlagged(e: Rep[Any], link: DIO) extends Def[DfaState]
   case class DFAState(e: Rep[List[Any]], f: Rep[Char => DfaState]) extends Def[DfaState]
   
@@ -72,7 +75,7 @@ trait ScalaGenDFAOps extends ScalaGenBase {
 }
 
 
-trait NFAtoDFA extends DFAOps { this: Arith with Functions with Equal with IfThenElse =>
+trait NFAtoDFA extends DFAOps { this: PrimitiveOps with Functions with Equal with IfThenElse =>
 
 /*
 case class Automaton[I,O](out: O, next: I => Automaton[I,O])
@@ -203,6 +206,9 @@ trait GAtoDA extends DFAOps with GAOps { this: Functions =>
 
 
 trait GAOpsExp extends BaseExp with GAOps { this: ListOps with IfThenElse with Functions =>
+
+  implicit def gtransTyp: Typ[gTrans] = manifestTyp
+  implicit def gioTyp: Typ[GIO] = manifestTyp
 
   case class GTrans(e: Rep[List[Any]], f: Rep[Char => GIO]) extends Def[GIO]
   case class GCall(f: Rep[GIO], c: Rep[Char]) extends Def[GIO]
