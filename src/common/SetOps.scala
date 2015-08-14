@@ -36,6 +36,8 @@ trait SetOps extends Base {
 }
 
 trait SetOpsExp extends SetOps with ArrayOps with BooleanOps with EffectExp {
+  implicit def setTyp[T:Typ]: Typ[Set[T]] = manifestTyp
+
   case class SetNew[A:Typ](xs: Seq[Exp[A]], mA: Typ[A]) extends Def[Set[A]]
   case class SetContains[A:Typ](s: Exp[Set[A]], i: Exp[A]) extends Def[Boolean]
   case class SetAdd[A:Typ](s: Exp[Set[A]], i: Exp[A]) extends Def[Unit]
