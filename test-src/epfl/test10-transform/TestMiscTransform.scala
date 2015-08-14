@@ -265,6 +265,7 @@ class TestMisc extends FileDiffSuite {
   
   trait Impl extends DSL with VectorExp with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with ArrayMutationExp with IfThenElseFatExp with LoopsFatExp with WhileExpOptSpeculative 
+    with StringOpsExp with SeqOpsExp
     with RangeOpsExp with PrintExp with FatExpressions {
     override val verbosity = 1
   }
