@@ -189,7 +189,7 @@ class TestSpeculative extends FileDiffSuite {
      // test simple copy propagation through variable
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
-          var x = 7
+          var x = 7.0
           var c = 0.0
           while (c < 10) {
             if (x < 10)
@@ -197,7 +197,7 @@ class TestSpeculative extends FileDiffSuite {
             else
               x = c
             print(x)
-            c += 1
+            c += 1.0
           }
           print(x)
         }
