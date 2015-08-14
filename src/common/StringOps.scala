@@ -82,6 +82,7 @@ trait StringOps extends Variables with OverloadHack with PrimitiveOps {
 
 trait StringOpsExp extends StringOps with BooleanOpsExp with VariablesExp {
   implicit def arrayTyp[T:Typ]: Typ[Array[T]]  
+  implicit def stringTyp: Typ[String] = manifestTyp
 
   case class StringPlus(s: Exp[Any], o: Exp[Any]) extends Def[String]
   case class StringStartsWith(s1: Exp[String], s2: Exp[String]) extends Def[Boolean]
