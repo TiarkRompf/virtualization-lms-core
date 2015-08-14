@@ -99,7 +99,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   }
 
   def record_select[T : Typ](record: Rep[Record], fieldName: String) = {
-    field(record, fieldName)
+    field[T](record, fieldName)
   }
 
   def imm_field(struct: Exp[Any], name: String, f: Exp[Any])(implicit pos: SourceContext): Exp[Any] = {
@@ -218,8 +218,8 @@ trait StructExpOpt extends StructExp {
 
   override def field[T:Typ](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = fieldLookup[T](struct, index) match {
     // the two variable pattern matches each seem to miss certain cases, so both are needed. why?
-    case Some(Def(Reflect(NewVar(x),u,es))) => super.field(struct, index)
-    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
+    case Some(Def(Reflect(NewVar(x),u,es))) => super.field[T](struct, index)
+    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field[T](struct, index) //readVar(Variable(x))
     case Some(x) => x
     case _ => super.field[T](struct, index)
   }
