@@ -15,12 +15,12 @@ class TestTransformRec extends FileDiffSuite {
 
   val prefix = home + "test-out/epfl/test10-"
 
-  trait DSL extends Arith with Functions with Equal with IfThenElse {
+  trait DSL extends LiftPrimitives with PrimitiveOps with Functions with Equal with IfThenElse {
     def testFun: Rep[Double => Double]
     def test(x: Rep[Double]): Rep[Double] = testFun(x)
   }
 
-  trait Impl extends DSL with ArithExpOpt with EqualExp with IfThenElseFatExp with LoopsFatExp with FunctionsExternalDef1 { self =>
+  trait Impl extends DSL with PrimitiveOpsExpOpt with EqualExp with IfThenElseFatExp with LoopsFatExp with FunctionsExternalDef1 { self =>
     override val verbosity = 1
     
     //implicit def funTyp[A:Typ,B:Typ]: Typ[A=>B] = ManifestTyp(implicitly)
@@ -101,7 +101,7 @@ class TestTransformRec extends FileDiffSuite {
     }).asInstanceOf[Option[() => Def[A]]]
   }
 
-  trait Codegen extends ScalaGenArith with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenFunctionsExternal {
+  trait Codegen extends ScalaGenPrimitiveOps with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenFunctionsExternal {
     val IR: Impl
     import IR._
 
