@@ -52,6 +52,7 @@ trait ListOps extends Variables {
 }
 
 trait ListOpsExp extends ListOps with EffectExp with VariablesExp with BooleanOpsExp with ArrayOpsExp with StringOpsExp {
+  implicit def listTyp[T:Typ]: Typ[List[T]] = manifestTyp
   case class ListNew[A:Typ](xs: Seq[Rep[A]]) extends Def[List[A]] {
     def mA = manifest[A]
   }
