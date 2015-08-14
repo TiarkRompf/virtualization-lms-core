@@ -38,6 +38,8 @@ trait StructTags {
 
 trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with ObjectOpsExp with StringOpsExp with OverloadHack {
 
+  implicit def recordTyp[T<:Record:Manifest]: Typ[T] = manifestTyp
+
   // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
 
   abstract class AbstractStruct[T] extends Def[T] {
