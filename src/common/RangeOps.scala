@@ -29,6 +29,8 @@ trait RangeOps extends Base {
 }
 
 trait RangeOpsExp extends RangeOps with PrimitiveOps with EffectExp {
+  implicit def rangeTyp: Typ[Range] = manifestTyp
+
   case class Until(start: Exp[Int], end: Exp[Int]) extends Def[Range]
   case class RangeStart(r: Exp[Range]) extends Def[Int]
   case class RangeStep(r: Exp[Range]) extends Def[Int]
