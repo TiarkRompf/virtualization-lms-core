@@ -70,6 +70,11 @@ trait Effects2 extends Effects {
 
 trait Control extends Effects with BaseExp {
   
+  implicit def effectfulTyp[A]: Typ[Effectful[A]] = {
+    implicit val ManifestTyp(m) = typ[A]
+    manifestTyp
+  }
+
   case class OrElse[A:Typ](x: List[Rep[Effectful[A]]]) extends Def[A]
   
 //  def orElse[A](xs: List[Rep[Effectful[A]]]): Rep[A] = reflectEffect(OrElse(xs))
