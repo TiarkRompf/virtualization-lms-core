@@ -25,6 +25,7 @@ class TestHMM extends FileDiffSuite {
   }
   trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp with SeqOpsExp
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp with StaticDataExp
+      with StringOpsExp with SeqOpsExp
       with IfThenElseExpOpt with PrintExp 
       with CompileScala { self => 
     //override val verbosity = 1
