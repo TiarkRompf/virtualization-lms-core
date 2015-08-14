@@ -24,8 +24,9 @@ class TestStencil extends FileDiffSuite {
     def test(x: Rep[Array[Double]]): Rep[Array[Double]]
   }
   trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt
-      with OrderingOpsExpOpt with BooleanOpsExp with SeqOpsExp
+      with OrderingOpsExpOpt with BooleanOpsExp
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp with StaticDataExp
+      with StringOpsExp with SeqOpsExp
       with IfThenElseExpOpt with PrintExp with PrimitiveOpsExp
       with CompileScala { self => 
     //override val verbosity = 1
