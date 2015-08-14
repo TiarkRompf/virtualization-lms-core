@@ -37,7 +37,7 @@ class TestList extends FileDiffSuite {
 
   def testMapFlatMapAndFilter() {
     withOutFile(prefix+"map-flatmap-filter") {
-      val prog = new MapFlatMapAndFilter with ListOpsExp with SeqOpsExp with NumericOpsExp with PrimitiveOpsExp with OrderingOpsExp
+      val prog = new MapFlatMapAndFilter with ListOpsExp with SeqOpsExp with ArrayOpsExp with NumericOpsExp with PrimitiveOpsExp with OrderingOpsExp
       val codegen = new ScalaGenEffect with ScalaGenListOps with ScalaGenNumericOps with ScalaGenPrimitiveOps with ScalaGenOrderingOps { val IR: prog.type = prog }
       import prog.{intTyp,unitTyp,listTyp}
       codegen.emitSource(prog.test, "MapFlatMapAndFilter", new PrintWriter(System.out))
@@ -47,7 +47,7 @@ class TestList extends FileDiffSuite {
 
   def testConcat() {
     withOutFile(prefix+"concat") {
-      val prog = new Concat with ListOpsExpOpt with SeqOpsExp
+      val prog = new Concat with ListOpsExpOpt with SeqOpsExp with ArrayOpsExp with PrimitiveOpsExp
       val codegen = new ScalaGenEffect with ScalaGenListOps { val IR: prog.type = prog }
       import prog.{intTyp,unitTyp,listTyp}
       codegen.emitSource(prog.test, "Concat", new PrintWriter(System.out))
@@ -59,7 +59,7 @@ class TestList extends FileDiffSuite {
 
   def testMkString() {
     withOutFile(prefix+"mkstring") {
-      val prog = new MkString with ListOpsExp with SeqOpsExp
+      val prog = new MkString with ListOpsExp with SeqOpsExp with PrimitiveOpsExp
       val codegen = new ScalaGenEffect with ScalaGenListOps { val IR: prog.type = prog }
       import prog.{intTyp,unitTyp,listTyp,stringTyp}
       codegen.emitSource(prog.test, "MkString", new PrintWriter(System.out))
