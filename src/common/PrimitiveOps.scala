@@ -299,6 +299,14 @@ trait PrimitiveOps extends Variables with OverloadHack {
 trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   this: ImplicitOps =>
   
+  implicit def byteTyp: Typ[Byte] = manifestTyp
+  implicit def charTyp: Typ[Char] = manifestTyp
+  implicit def shortTyp: Typ[Short] = manifestTyp
+  implicit def intTyp: Typ[Int] = manifestTyp
+  implicit def longTyp: Typ[Long] = manifestTyp
+  implicit def floatTyp: Typ[Float] = manifestTyp
+  implicit def doubleTyp: Typ[Double] = manifestTyp
+
   /**
    * Double
    */
