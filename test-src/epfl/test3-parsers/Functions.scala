@@ -11,6 +11,11 @@ import scala.reflect.SourceContext
 
 
 trait FunctionsExp extends Functions with BaseExp { // shadow trait with same name in core package
+  implicit def funTyp[A:Typ,B:Typ]: Typ[A => B] = {
+    implicit val ManifestTyp(mA) = typ[A]
+    implicit val ManifestTyp(mB) = typ[B]
+    ManifestTyp(implicitly)
+  }
   implicit def fun2Typ[A1:Typ,A2:Typ,B:Typ]: Typ[(A1,A2)=>B] = {
     implicit val ManifestTyp(mA1) = typ[A1]
     implicit val ManifestTyp(mA2) = typ[A2]
