@@ -28,6 +28,11 @@ trait SeqOps extends Variables {
 }
 
 trait SeqOpsExp extends SeqOps with PrimitiveOps with EffectExp {
+  implicit def seqTyp[T:Typ]: Typ[Seq[T]] = {
+    implicit val ManifestTyp(m) = typ[T]
+    manifestTyp    
+  }
+
   case class SeqNew[A:Typ](xs: List[Rep[A]]) extends Def[Seq[A]] {
     def mA = manifest[A]
   }
