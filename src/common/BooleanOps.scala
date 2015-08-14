@@ -26,6 +26,8 @@ trait BooleanOps extends Variables {
 }
 
 trait BooleanOpsExp extends BooleanOps with EffectExp {
+  implicit def boolTyp: Typ[Boolean] = manifestTyp
+
   case class BooleanNegate(lhs: Exp[Boolean]) extends Def[Boolean]
   case class BooleanAnd(lhs: Exp[Boolean], rhs: Exp[Boolean]) extends Def[Boolean]
   case class BooleanOr(lhs: Exp[Boolean], rhs: Exp[Boolean]) extends Def[Boolean]
