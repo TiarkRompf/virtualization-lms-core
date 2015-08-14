@@ -16,7 +16,7 @@ import util.OverloadHack
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
-trait ComplexArith extends Arith with ComplexBase with OverloadHack {
+trait ComplexArith extends PrimitiveOps with ComplexBase with OverloadHack {
   
   def infix_+(x: Rep[Complex], y: Rep[Complex])(implicit o: Overloaded1): Rep[Complex] = Complex(x.re + y.re, x.im + y.im)
   def infix_-(x: Rep[Complex], y: Rep[Complex])(implicit o: Overloaded1): Rep[Complex] = Complex(x.re - y.re, x.im - y.im)
@@ -24,21 +24,21 @@ trait ComplexArith extends Arith with ComplexBase with OverloadHack {
   
 }
 
-trait ComplexBase extends Arith with StructOps {
+trait ComplexBase extends StructOps {
   type Complex = Record { val re: Double; val im: Double }
   def Complex(r: Rep[Double], i: Rep[Double]): Rep[Complex] = new Record { val re = r; val im = i }
 }
 
 // ------ struct impl follows, will move to common once stable
 
-trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
+trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp with PrimitiveOpsExp {
   
   case class ArraySoaTag[T](base: StructTag[T], len: Exp[Int]) extends StructTag[T]
   
   override def simpleLoop[A:Typ](size: Exp[Int], v: Sym[Int], body: Def[A])(implicit pos: SourceContext): Exp[A] = body match {
     case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) => 
       struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.arrayTyp, pos))))
-    case ArrayElem(Block(Def(ArrayIndex(b,`v`)))) if infix_length(b) == size => b.asInstanceOf[Exp[A]] 
+    case ArrayElem(Block(Def(ArrayIndex(b,`v`)))) if infix_length(b)(mtype(ManifestTyp[Any](implicitly)/*FIXME:wrong type!*/)) == size => b.asInstanceOf[Exp[A]] 
     // eta-reduce! <--- should live elsewhere, not specific to struct
     // rewrite loop(a.length) { i => a(i) } to a
     case _ => super.simpleLoop(size, v, body)
@@ -50,8 +50,8 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp {
       def unwrap[A](m:Typ[Array[A]]): Typ[A] = m.typeArguments match {
         case a::_ => mtype(a)
         case _ =>
-          if (m.erasure.isArray) mtype(Typ.classType(m.erasure.getComponentType))
-          else { printerr("warning: expect type Array[A] but got "+m); mtype(manifest[Any]) }
+          if (m.erasure.isArray) mtype(ManifestTyp(Manifest.classType(m.erasure.getComponentType)))
+          else { printerr("warning: expect type Array[A] but got "+m); mtype(ManifestTyp[Any](implicitly)) }
       }
       struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))
     case _ => super.infix_at(a,i)
@@ -71,15 +71,15 @@ class TestStruct extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test9-"
   
-  trait DSL extends ComplexArith with ArrayLoops with Arith with OrderingOps with Variables with LiftVariables with IfThenElse with RangeOps with Print {
+  trait DSL extends ComplexArith with ArrayLoops with PrimitiveOps with OrderingOps with Variables with LiftVariables with LiftPrimitives with IfThenElse with RangeOps with Print {
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
     def test(x: Rep[Int]): Rep[Unit]
   }
 
-  trait Impl extends DSL with StructExp with ArrayLoopsExp with StructExpOptLoops with ArithExp with OrderingOpsExp with VariablesExp 
+  trait Impl extends DSL with StructExp with ArrayLoopsExp with StructExpOptLoops with PrimitiveOpsExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 1
-    val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenArrayLoops with ScalaGenStruct with ScalaGenPrimitiveOps with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
 
@@ -101,7 +101,7 @@ class TestStruct extends FileDiffSuite {
     }
   }
 
-  trait ImplFused extends DSL with StructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with ArithExp with OrderingOpsExp with VariablesExp 
+  trait ImplFused extends DSL with StructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with PrimitiveOpsExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 1
     val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
@@ -216,7 +216,7 @@ class TestStruct extends FileDiffSuite {
       new Prog with ImplFused {
         // TODO: use a generic Opt trait instead of defining rewrites here...
         override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
-          case (x, Def(Minus(Const(0.0),y))) => infix_+(x,y)
+          case (x, Def(DoubleMinus(Const(0.0),y))) => infix_+(x,y)
           case _ => super.infix_-(x,y)
         }
         override def infix_+(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
