@@ -28,7 +28,6 @@ trait Print extends Base {
 }
 
 trait PrintExp extends Print with EffectExp {
-  implicit def stringTyp: Typ[String] = ManifestTyp(implicitly)
   implicit def anyTyp: Typ[Any] = ManifestTyp(implicitly)
   implicit def unit(s: String): Rep[String] = Const(s)
   case class Print(s: Rep[Any]) extends Def[Unit]
