@@ -13,7 +13,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
 
-trait FusionProg21 extends LiftPrimitives with PrimitiveOps with ArrayLoops with Print with OrderingOps {
+trait FusionProg21 extends PrimitiveOps with LiftPrimitives with ArrayLoops with Print with OrderingOps {
   
   def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
   
@@ -40,7 +40,7 @@ trait FusionProg21 extends LiftPrimitives with PrimitiveOps with ArrayLoops with
 }
 
 
-trait FusionProg22 extends LiftPrimitives with PrimitiveOps with ArrayLoops with Print with OrderingOps {
+trait FusionProg22 extends PrimitiveOps with LiftPrimitives with ArrayLoops with Print with OrderingOps {
   
   def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
   
@@ -85,7 +85,7 @@ trait FusionProg22 extends LiftPrimitives with PrimitiveOps with ArrayLoops with
 }
 
 
-trait FusionProg23 extends LiftPrimitives with PrimitiveOps with ArrayLoops with Print with OrderingOps {
+trait FusionProg23 extends PrimitiveOps with LiftPrimitives with ArrayLoops with Print with OrderingOps {
   
   def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
   
@@ -121,7 +121,7 @@ trait FusionProg23 extends LiftPrimitives with PrimitiveOps with ArrayLoops with
 }
 
 
-trait FusionProg24 extends LiftPrimitives with PrimitiveOps with ArrayLoops with Print with OrderingOps {
+trait FusionProg24 extends PrimitiveOps with LiftPrimitives with ArrayLoops with Print with OrderingOps {
   
   def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
   
@@ -216,7 +216,7 @@ class TestFusion2 extends FileDiffSuite {
          override def double_minus(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = if (x == y) {
            println("*** removing self subtraction " + x + " - " + y)
            0
-         } else super.infix_-(x,y) //  optimizations to trigger test behavior
+         } else super.double_minus(x,y) //  optimizations to trigger test behavior
 
          override val verbosity = 1
          override def arrayTyp[T:Typ]: Typ[Array[T]] = typ[T].arrayTyp
