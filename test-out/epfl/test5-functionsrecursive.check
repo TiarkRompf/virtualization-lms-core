@@ -19,7 +19,7 @@ val x15 = x1(x14)
 val x16 = x9(x15)
 val x5 = {x6: (Any) => 
 val x7 = println("baz")
-1.0: Double
+1: Int
 }
 val x17 = x5(x16)
 x17
@@ -43,7 +43,7 @@ var x15 = x1(x14)
 var x16 = x9(x15)
 var x5 = function(x6) {
 var x7 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("baz"))
-return 1.0
+return 1
 }
 var x17 = x5(x16)
 return x17
