@@ -10,11 +10,11 @@ depends on  Sym(6)
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
 val x2 = LoopArray(100) { x1 => 
-0.0
+0
 }
 val x3 = x2.clone // mutable
 val x5 = LoopArray(100) { x4 => 
-0.0
+0
 }
 val x6 = x5.clone // mutable
 val x7 = x0 > 7
@@ -24,10 +24,10 @@ x3
 x6
 }
 val x9 = x8.apply(10)
-val x10 = x3.update(10, 10.0)
-val x11 = x6.update(10, 20.0)
+val x10 = x3.update(10, 10)
+val x11 = x6.update(10, 20)
 val x12 = x8.apply(10)
-val x13 = x12-x9
+val x13 = x12 - x9
 val x14 = println(x13)
 x14
 }

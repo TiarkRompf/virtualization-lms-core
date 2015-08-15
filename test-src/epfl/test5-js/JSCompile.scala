@@ -11,17 +11,19 @@ import java.io.PrintWriter
 trait JSCodegen extends GenericCodegen {
   import IR._
   
-  def emitHTMLPage[B](f: () => Exp[B], stream: PrintWriter)(implicit mB: Manifest[B]): Unit = {
+  def emitHTMLPage[B](f: () => Exp[B], stream: PrintWriter)(implicit mB: Typ[B]): Unit = {
     stream.println("<html><head><title>Scala2JS</title><script type=\"text/JavaScript\">")
     
-    emitSource((x:Exp[Int]) => f(), "main", stream)
+    implicit val unitTyp: Typ[Unit] = ManifestTyp(implicitly)
+
+    emitSource((x:Exp[Unit]) => f(), "main", stream)
     
     stream.println("</script><body onload=\"main(0)\">")
     stream.println("</body></html>")
     stream.flush
   }
 
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], methName: String, out: PrintWriter) = {
+  def emitSource[A : Typ](args: List[Sym[_]], body: Block[A], methName: String, out: PrintWriter) = {
     withStream(out) {
       stream.println("function "+methName+"("+args.map(quote).mkString(", ")+") {")
     
@@ -69,15 +71,15 @@ trait JSGenIfThenElse extends BaseGenIfThenElse with JSGenEffect { // it's more 
   }
 }
 
-trait JSGenArith extends JSGenBase { // TODO: define a generic one
-  val IR: ArithExp
+trait JSGenPrimitiveOps extends JSGenBase { // TODO: define a generic one
+  val IR: PrimitiveOpsExp
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Plus(a,b) =>  emitValDef(sym, "" + quote(a) + "+" + quote(b))
-    case Minus(a,b) => emitValDef(sym, "" + quote(a) + "-" + quote(b))
-    case Times(a,b) => emitValDef(sym, "" + quote(a) + "*" + quote(b))
-    case Div(a,b) =>   emitValDef(sym, "" + quote(a) + "/" + quote(b))
+    case DoublePlus(a,b) =>  emitValDef(sym, "" + quote(a) + "+" + quote(b))
+    case DoubleMinus(a,b) => emitValDef(sym, "" + quote(a) + "-" + quote(b))
+    case DoubleTimes(a,b) => emitValDef(sym, "" + quote(a) + "*" + quote(b))
+    case DoubleDivide(a,b) =>   emitValDef(sym, "" + quote(a) + "/" + quote(b))
     case _ => super.emitNode(sym, rhs)
   }
 } 

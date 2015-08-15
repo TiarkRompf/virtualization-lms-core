@@ -8,10 +8,14 @@ import test3._
 
 trait ListMatch extends Extractors {
   
+  implicit def listTyp[A:Typ]: Typ[List[A]]
+  implicit def consTyp[T:Typ]: Typ[::[T]]
+
   object :!: {
-    def apply[A:Manifest](x: Rep[A], xs: Rep[List[A]]) = construct(classOf[::[A]], (::.apply[A] _).tupled, tuple(x, xs))
+    def apply[A:Typ](x: Rep[A], xs: Rep[List[A]]) = construct(classOf[::[A]], (::.apply[A] _).tupled, tuple(x, xs))
 //    def unapply[A](x: Rep[::[A]]) = deconstruct2(classOf[::[A]], ::.unapply[A], x) // doesn't work: hd is private in :: !
-    def unapply[A:Manifest](x: Rep[::[A]]) = deconstruct2(classOf[::[A]], (x: ::[A]) => Some(x.head, x.tail), x)
+    def unapply[A:Typ](x: Rep[List[A]]): Option[(Rep[A], Rep[List[A]])] = 
+      deconstruct2(classOf[::[A]].asInstanceOf[Class[List[A]]], (x: List[A]) => Some(x.head, x.tail), x)
   }
 
 }
@@ -20,6 +24,10 @@ trait ListMatch extends Extractors {
 trait MatcherProg { this: Matching with ListMatch =>
   
   type Input = List[Char]
+
+  implicit def charTyp: Typ[Char]
+  implicit def boolTyp: Typ[Boolean]
+  implicit def inputTyp: Typ[Input]
   
   def find(p: Input, s: Rep[Input]) = loop(p,s,p,s)
 
@@ -48,8 +56,22 @@ trait MatcherProg { this: Matching with ListMatch =>
 }
 
 
+trait MatcherProgExp0 extends common.BaseExp with MatcherProg { this: Matching with ListMatch =>
 
+  implicit def charTyp: Typ[Char] = ManifestTyp(implicitly)
+  implicit def boolTyp: Typ[Boolean] = ManifestTyp(implicitly)
+  implicit def inputTyp: Typ[Input] = ManifestTyp(implicitly)
 
+  implicit def listTyp[T:Typ]: Typ[List[T]] = {
+    implicit val ManifestTyp(m) = typ[T]
+    ManifestTyp(implicitly)
+  }
+  implicit def consTyp[T:Typ]: Typ[::[T]] = {
+    implicit val ManifestTyp(m) = typ[T]
+    ManifestTyp(implicitly)
+  }
+
+}
 
 
 class TestMatcher extends FileDiffSuite {
@@ -58,12 +80,12 @@ class TestMatcher extends FileDiffSuite {
   
   def testMatcher1 = {
     withOutFile(prefix+"matcher1") {
-      object MatcherProgExp extends MatcherProg with Matching with Extractors with ListMatch
+      object MatcherProgExp extends MatcherProgExp0 with Matching with Extractors with ListMatch
         with MatchingExtractorsExpOpt
         with FunctionExpUnfoldRecursion with FunctionsExternalDef2
       import MatcherProgExp._
 
-      val r = find("AAB".toList, fresh)
+      val r = find("AAB".toList, fresh[Input])
       println(globalDefs.mkString("\n"))
       println(r)
       val p = new ExtractorsGraphViz with FunctionsGraphViz { val IR: MatcherProgExp.type = MatcherProgExp }

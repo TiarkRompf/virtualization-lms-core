@@ -1,23 +1,26 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Unit)=>(scala.Function1[Double, Any])) {
-def apply(x0:Unit): scala.Function1[Double, Any] = {
-val x8 = {x1: (Double) => 
+class Test extends ((Unit)=>(scala.Function1[Double, scala.Function1[Double, Double]])) {
+def apply(x0:Unit): scala.Function1[Double, scala.Function1[Double, Double]] = {
+val x8 = {x7: (Double) => 
+x7: Double
+}
+val x10 = {x1: (Double) => 
 val x2 = x1 < 100.0
-val x7 = if (x2) {
-val x3 = x1+9.0
+val x9 = if (x2) {
+val x3 = x1 + 9.0
 val x6 = {x4: (Double) => 
-val x5 = x3+x4
+val x5 = x3 + x4
 x5: Double
 }
 x6
 } else {
-()
-}
-x7: Any
-}
 x8
+}
+x9: scala.Function1[Double, Double]
+}
+x10
 }
 }
 /*****************************************

@@ -34,14 +34,14 @@ val x7 = LoopArray(100) { x6 =>
 val x8 = new VectorDouble(x7,100)
 val x12 = LoopArray(100) { x9 => 
 val x10 = VectorApply(Sym(8),Sym(9))
-val x11 = x10+x10
+val x11 = x10 + x10
 x11
 }
 val x13 = new VectorDouble(x12,100)
 val x18 = LoopArray(100) { x14 => 
 val x15 = VectorApply(Sym(8),Sym(14))
 val x16 = VectorApply(Sym(13),Sym(14))
-val x17 = x15+x16
+val x17 = x15 + x16
 x17
 }
 val x19 = new VectorDouble(x18,100)
@@ -60,13 +60,13 @@ val x23 = LoopArray(100) { x22 =>
 }
 val x28 = LoopArray(100) { x25 => 
 val x26 = x23.apply(x25)
-val x27 = x26+x26
+val x27 = x26 + x26
 x27
 }
 val x34 = LoopArray(100) { x30 => 
 val x31 = x23.apply(x30)
 val x32 = x28.apply(x30)
-val x33 = x31+x32
+val x33 = x31 + x32
 x33
 }
 val x35 = new VectorDouble(x34,100)

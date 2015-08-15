@@ -11,7 +11,7 @@ trait CLikeCodegen extends GenericCodegen {
   def mangledName(name: String) = name.replaceAll("\\s","").map(c => if(!c.isDigit && !c.isLetter) '_' else c) 
 
   // List of datastructure types that requires transfer functions to be generated for this target
-  val dsTypesList = HashSet[(Manifest[_],String)]()
+  val dsTypesList = HashSet[(Typ[_],String)]()
 
   // Streams for helper functions and its header
   var helperFuncStream: PrintWriter = _
@@ -23,7 +23,7 @@ trait CLikeCodegen extends GenericCodegen {
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = emitValDef(quote(sym), sym.tp, rhs)
 
-  def emitValDef(sym: String, tpe: Manifest[_], rhs: String): Unit = {
+  def emitValDef(sym: String, tpe: Typ[_], rhs: String): Unit = {
     if(remap(tpe) != "void") stream.println(remap(tpe) + " " + sym + " = " + rhs + ";")
   }
 
@@ -35,10 +35,10 @@ trait CLikeCodegen extends GenericCodegen {
     stream.println(quote(sym) + " = " + rhs + ";")
   }
 
-  def remapWithRef[A](m: Manifest[A]): String = remap(m) + addRef(m)
+  def remapWithRef[A](m: Typ[A]): String = remap(m) + addRef(m)
   def remapWithRef(tpe: String): String = tpe + addRef(tpe)
 
-  override def remap[A](m: Manifest[A]) : String = {
+  override def remap[A](m: Typ[A]) : String = {
     if (m.erasure == classOf[Variable[AnyVal]])
       remap(m.typeArguments.head)
     else if (m.erasure == classOf[List[Any]]) { // Use case: Delite Foreach sync list 
@@ -63,7 +63,7 @@ trait CLikeCodegen extends GenericCodegen {
   }
 
   def addRef(): String = if (cppMemMgr=="refcnt") " " else " *"
-  def addRef[A](m: Manifest[A]): String = addRef(remap(m))
+  def addRef[A](m: Typ[A]): String = addRef(remap(m))
   def addRef(tpe: String): String = {
     if (!isPrimitiveType(tpe) && !isVoidType(tpe)) addRef()
     else " "

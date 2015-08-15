@@ -5,9 +5,9 @@ val x3 = x2 == 0
 val x7 = if (x3) {
 1.0
 } else {
-val x4 = x2-1.0
+val x4 = x2 - 1.0
 val x5 = x1(x4)
-val x6 = x2*x5
+val x6 = x2 * x5
 x6
 }
 x7
@@ -20,9 +20,9 @@ val x3 = x2 == 0
 val x12 = if (x3) {
 1.0
 } else {
-val x4 = x2-1.0
+val x4 = x2 - 1.0
 val x10 = x9(x4)
-val x11 = x2*x10
+val x11 = x2 * x10
 x11
 }
 x12
@@ -35,9 +35,9 @@ val x3 = x2 == 0
 val x18 = if (x3) {
 1.0
 } else {
-val x4 = x2-1.0
+val x4 = x2 - 1.0
 val x16 = x15(x4)
-val x17 = x2*x16
+val x17 = x2 * x16
 x17
 }
 x18

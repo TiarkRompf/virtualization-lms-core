@@ -2,19 +2,21 @@
 function main(x14) {
 var x15 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
 var x16 = 7.0==7.0
-var x21
+var x20 = 7.0+4.0
+var x23
 if (x16) {
 var x17 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
 var x18 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("xxx"))
 var x19 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
-x21=11.0
+x23=x20
 } else {
-x21=13.0
+var x22 = 7.0+6.0
+x23=x22
 }
-var x22 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yyy"))
-var x23 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
-var x24 = x21+11.0
-return x24
+var x24 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yyy"))
+var x25 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
+var x26 = x23+x20
+return x26
 }
 </script><body onload="main(0)">
 </body></html>

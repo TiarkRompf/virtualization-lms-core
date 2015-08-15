@@ -16,20 +16,20 @@ trait FunctionBlocksExp extends BaseExp with Blocks with Effects with OverloadHa
   /*
    * BlockN definitions
    */
-  implicit def lambdaToBlock0[R:Manifest](f: () => Exp[R]) = Block0(reifyEffects(f()))
-  case class Block0[R:Manifest](blockRes: Block[R])
+  implicit def lambdaToBlock0[R:Typ](f: () => Exp[R]) = Block0(reifyEffects(f()))
+  case class Block0[R:Typ](blockRes: Block[R])
      
-  implicit def lambdaToBlock1[T1:Manifest,R:Manifest](f: Exp[T1] => Exp[R]) = {
+  implicit def lambdaToBlock1[T1:Typ,R:Typ](f: Exp[T1] => Exp[R]) = {
     val x1 = fresh[T1]
     Block1(x1,reifyEffects(f(x1)))
   }    
-  case class Block1[T1:Manifest,R:Manifest](blockArg1: Sym[T1], blockRes: Block[R]) 
+  case class Block1[T1:Typ,R:Typ](blockArg1: Sym[T1], blockRes: Block[R]) 
   
-  implicit def lambdaToBlock2[T1:Manifest,T2:Manifest,R:Manifest](f: (Exp[T1],Exp[T2]) => Exp[R]) = {
+  implicit def lambdaToBlock2[T1:Typ,T2:Typ,R:Typ](f: (Exp[T1],Exp[T2]) => Exp[R]) = {
     val (x1,x2) = (fresh[T1],fresh[T2])
     Block2(x1,x2,reifyEffects(f(x1,x2)))
   }
-  case class Block2[T1:Manifest,T2:Manifest,R:Manifest](blockArg1: Sym[T1], blockArg2: Sym[T2], blockRes: Block[R]) 
+  case class Block2[T1:Typ,T2:Typ,R:Typ](blockArg1: Sym[T1], blockArg2: Sym[T2], blockRes: Block[R]) 
  
  
   /*
@@ -62,8 +62,8 @@ trait FunctionBlocksExp extends BaseExp with Blocks with Effects with OverloadHa
   /*
    * For mirroring of BlockN types without conversion to lambdas
    */
-   def copyBlock0[R:Manifest](b: Block0[R], t: Transformer) = Block0(t(b.blockRes))
-   def copyBlock1[T1:Manifest,R:Manifest](b: Block1[T1,R], t: Transformer) = Block1(t(b.blockArg1).asInstanceOf[Sym[T1]], t(b.blockRes))
-   def copyBlock2[T1:Manifest,T2:Manifest,R:Manifest](b: Block2[T1,T2,R], t: Transformer) = Block2(t(b.blockArg1).asInstanceOf[Sym[T1]], t(b.blockArg2).asInstanceOf[Sym[T2]], t(b.blockRes))  
+   def copyBlock0[R:Typ](b: Block0[R], t: Transformer) = Block0(t(b.blockRes))
+   def copyBlock1[T1:Typ,R:Typ](b: Block1[T1,R], t: Transformer) = Block1(t(b.blockArg1).asInstanceOf[Sym[T1]], t(b.blockRes))
+   def copyBlock2[T1:Typ,T2:Typ,R:Typ](b: Block2[T1,T2,R], t: Transformer) = Block2(t(b.blockArg1).asInstanceOf[Sym[T1]], t(b.blockArg2).asInstanceOf[Sym[T2]], t(b.blockRes))  
 }
   

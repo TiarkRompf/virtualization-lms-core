@@ -3,12 +3,22 @@ package common
 
 import scala.lms.common._
 
+trait CoreOpsPkgExp 
+    extends PrimitiveOpsExp
+    with BooleanOpsExp
+    with StringOpsExp
+    with ArrayOpsExp
+    with SeqOpsExp
+    with TupleOpsExp
+
+
+
 /**
  * IR: this is the front-end that defines what operations are available in user applications. Backends can share
  *     packages if they choose.
  */
 
-trait LiftScala extends LiftAll with LiftVariables with LiftEquals {
+trait LiftScala extends LiftAll with LiftVariables with LiftEquals with LiftArrays {
   this: ScalaOpsPkg =>
 }
 

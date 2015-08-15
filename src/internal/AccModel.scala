@@ -6,12 +6,12 @@ trait AbstractHostTransfer {
   val IR: Expressions
   import IR._
 
-  def emitSend(tp: Manifest[_], peer: Targets.Value): (String,String)
-  def emitRecv(tp: Manifest[_], peer: Targets.Value): (String,String)
-  def emitSendView(tp: Manifest[_], peer: Targets.Value): (String,String)
-  def emitRecvView(tp: Manifest[_], peer: Targets.Value): (String,String)
-  def emitSendUpdate(tp: Manifest[_], peer: Targets.Value): (String,String)
-  def emitRecvUpdate(tp: Manifest[_], peer: Targets.Value): (String,String)
+  def emitSend(tp: Typ[_], peer: Targets.Value): (String,String)
+  def emitRecv(tp: Typ[_], peer: Targets.Value): (String,String)
+  def emitSendView(tp: Typ[_], peer: Targets.Value): (String,String)
+  def emitRecvView(tp: Typ[_], peer: Targets.Value): (String,String)
+  def emitSendUpdate(tp: Typ[_], peer: Targets.Value): (String,String)
+  def emitRecvUpdate(tp: Typ[_], peer: Targets.Value): (String,String)
 }
 
 trait AbstractDeviceTransfer {
@@ -20,12 +20,12 @@ trait AbstractDeviceTransfer {
   val IR: Expressions
   import IR._
 
-  def emitSendSlave(tp: Manifest[_]) : (String,String)
-  def emitRecvSlave(tp: Manifest[_]) : (String,String)
-  //def emitSendViewSlave(tp: Manifest[_]) : (String,String)
-  //def emitRecvViewSlave(tp: Manifest[_]) : (String,String)
-  def emitSendUpdateSlave(tp: Manifest[_]) : (String,String)
-  def emitRecvUpdateSlave(tp: Manifest[_]) : (String,String)
+  def emitSendSlave(tp: Typ[_]) : (String,String)
+  def emitRecvSlave(tp: Typ[_]) : (String,String)
+  //def emitSendViewSlave(tp: Typ[_]) : (String,String)
+  //def emitRecvViewSlave(tp: Typ[_]) : (String,String)
+  def emitSendUpdateSlave(tp: Typ[_]) : (String,String)
+  def emitRecvUpdateSlave(tp: Typ[_]) : (String,String)
 
   //def allocOutput(newSym: Sym[_], sym: Sym[_], reset: Boolean = false) : Unit
 }

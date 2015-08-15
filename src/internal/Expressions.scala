@@ -15,14 +15,40 @@ import java.lang.{StackTraceElement,Thread}
  */
 trait Expressions extends Utils {
 
-  abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
-    def tp: Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
+  abstract class Typ[T] {
+    def typeArguments: List[Typ[_]]
+    def arrayTyp: Typ[Array[T]]
+    def runtimeClass: java.lang.Class[_]
+    def <:<(that: Typ[_]): Boolean
+    def erasure: java.lang.Class[_]
+  }
+
+  case class ManifestTyp[T](mf: Manifest[T]) extends Typ[T] {
+    def typeArguments: List[Typ[_]]   = mf.typeArguments.map(ManifestTyp(_))
+    def arrayTyp: Typ[Array[T]] = ManifestTyp(mf.arrayManifest)
+    def runtimeClass: java.lang.Class[_] = mf.runtimeClass
+    def <:<(that: Typ[_]): Boolean = that match { 
+      case ManifestTyp(mf1) => mf.<:<(mf1) 
+      case _ => false 
+    }
+    def erasure: java.lang.Class[_] = mf.erasure
+    //override def canEqual(that: Any): Boolean = mf.canEqual(that) // TEMP
+    //override def equals(that: Any): Boolean = mf.equals(that) // TEMP
+    //override def hashCode = mf.hashCode
+    override def toString = mf.toString
+  }
+
+  def typ[T:Typ]: Typ[T] = implicitly[Typ[T]]
+
+
+  abstract class Exp[+T:Typ] { // constants/symbols (atomic)
+    def tp: Typ[T @uncheckedVariance] = implicitly[Typ[T]] //invariant position! but hey...
     def pos: List[SourceContext] = Nil
   }
 
-  case class Const[+T:Manifest](x: T) extends Exp[T]
+  case class Const[+T:Typ](x: T) extends Exp[T]
 
-  case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
+  case class Sym[+T:Typ](val id: Int) extends Exp[T] {
     var sourceContexts: List[SourceContext] = Nil
     override def pos = sourceContexts
     def withPos(pos: List[SourceContext]) = { sourceContexts :::= pos; this }
@@ -31,9 +57,9 @@ trait Expressions extends Utils {
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
 
   var nVars = 0
-  def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) printlog("nVars="+nVars);  nVars -1 }
+  def fresh[T:Typ]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) printlog("nVars="+nVars);  nVars -1 }
 
-  def fresh[T:Manifest](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
+  def fresh[T:Typ](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
 
   def quotePos(e: Exp[Any]): String = e.pos match {
     case Nil => "<unknown>"
@@ -111,12 +137,12 @@ trait Expressions extends Utils {
   def findDefinition[T](d: Def[T]): Option[Stm] =
     globalDefs.find(x => x.defines(d).nonEmpty)
 
-  def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): Stm =
+  def findOrCreateDefinition[T:Typ](d: Def[T], pos: List[SourceContext]): Stm =
     findDefinition[T](d) map { x => x.defines(d).foreach(_.withPos(pos)); x } getOrElse {
       createDefinition(fresh[T](pos), d)
     }
 
-  def findOrCreateDefinitionExp[T:Manifest](d: Def[T], pos: List[SourceContext]): Exp[T] =
+  def findOrCreateDefinitionExp[T:Typ](d: Def[T], pos: List[SourceContext]): Exp[T] =
     findOrCreateDefinition(d, pos).defines(d).get
 
   def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
@@ -126,7 +152,7 @@ trait Expressions extends Utils {
   }
   
 
-  protected implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
+  protected implicit def toAtom[T:Typ](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
     findOrCreateDefinitionExp(d, List(pos)) // TBD: return Const(()) if type is Unit??
   }
 

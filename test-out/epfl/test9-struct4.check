@@ -16,7 +16,7 @@ def apply(x0:Int): Unit = {
 var x4 = new Array[Int](100)
 var x5 = new Array[Double](100)
 for (x1 <- 0 until 100) {
-val x2 = 0.0-x1
+val x2 = 0.0 - x1
 x4(x1) = x1
 x5(x1) = x2
 }
@@ -27,7 +27,7 @@ val x26 = if (x16) {
 var x23 = new Array[Double](100)
 for (x17 <- 0 until 100) {
 val x19 = x5.apply(x17)
-val x21 = 0.0-x19
+val x21 = 0.0 - x19
 x23(x17) = x21
 }
 x23

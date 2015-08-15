@@ -13,11 +13,11 @@ val x23 = x22 < 10.0
 x23
 }) {
 // dummy placeholder for previous iteration: List(Sym(25), Sym(26)) = Sym(3) / List(Sym(2), Sym(34))
-val x29 = x2 += 1
+val x29 = x2 += 1.0
 val x27 = println("test")
-val x28 = println(7)
+val x28 = println(7.0)
 }
-val x39 = println(7)
+val x39 = println(7.0)
 x39
 }
 }
@@ -26,23 +26,23 @@ x39
 *******************************************/
 compilation: ok
 test
-7
+7.0
 test
-7
+7.0
 test
-7
+7.0
 test
-7
+7.0
 test
-7
+7.0
 test
-7
+7.0
 test
-7
+7.0
 test
-7
+7.0
 test
-7
+7.0
 test
-7
-7
+7.0
+7.0

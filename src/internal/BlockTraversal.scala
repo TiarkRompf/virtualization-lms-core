@@ -11,7 +11,7 @@ trait BlockTraversal extends GraphTraversal {
 
   type Block[+T]
   
-  def reifyBlock[T: Manifest](x: => Exp[T]): Block[T]
+  def reifyBlock[T: Typ](x: => Exp[T]): Block[T]
 
   def compactize(start: Block[Any], local: List[Sym[Any]]): List[Sym[Any]] = { throw new Exception("Method compactize should be overriden.") }
 
@@ -38,7 +38,7 @@ trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
   // ----- block definition
 
   type Block[+T] = IR.Block[T]
-  def reifyBlock[T: Manifest](x: => Exp[T]): Block[T] = IR.reifyEffects(x)
+  def reifyBlock[T: Typ](x: => Exp[T]): Block[T] = IR.reifyEffects(x)
 
   override def getBlockResultFull[A](s: Block[A]): Exp[A] = s.res
   

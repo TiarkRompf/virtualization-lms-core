@@ -8,7 +8,7 @@ x1 = {x2: (Double) =>
 val x3 = List(x2)
 val x4 = {x5: (Char) => 
 val x6 = x2 // x5
-val x7 = x6+1.0
+val x7 = x6 + 1.0
 val x8 = x1(x7)
 x8
 }

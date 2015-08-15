@@ -16,7 +16,7 @@ val x3 = x2 < 8.0
 x3
 }
 val x8 = if (x5) {
-val x6 = x2+1.0
+val x6 = x2 + 1.0
 val x7 = x1(x6)
 x7
 } else {
@@ -33,7 +33,7 @@ val x35 = x34 < 8.0
 x35
 }
 val x40 = if (x37) {
-val x38 = x34+1.0
+val x38 = x34 + 1.0
 val x39 = x33(x38)
 x39
 } else {
@@ -64,9 +64,9 @@ true
 false
 }
 val x48 = if (x30) {
-val x31 = x23+1.0
+val x31 = x23 + 1.0
 val x24 = x21._2
-val x32 = x24+1.0
+val x32 = x24 + 1.0
 val x41 = x33(x32)
 val x42 = new Tuple2DoubleDouble(x31,x41)
 val x22 = x20._2

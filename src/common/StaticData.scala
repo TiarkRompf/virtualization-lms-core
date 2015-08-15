@@ -6,15 +6,15 @@ import scala.lms.internal.GenericNestedCodegen
 import scala.reflect.SourceContext
 
 trait StaticData extends Base {
-  def staticData[T:Manifest](x: T): Rep[T]
+  def staticData[T:Typ](x: T): Rep[T]
 }
 
 trait StaticDataExp extends EffectExp {
   case class StaticData[T](x: T) extends Def[T]
-  def staticData[T:Manifest](x: T): Exp[T] = StaticData(x)
+  def staticData[T:Typ](x: T): Exp[T] = StaticData(x)
 
   // StaticData doesn't play well with control dependencies.. looks like we somehow lose updates
-  override implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext) = d match {
+  override implicit def toAtom[T:Typ](d: Def[T])(implicit pos: SourceContext) = d match {
     case StaticData(x) if addControlDeps =>
       val save = conditionalScope
       conditionalScope = false
@@ -29,7 +29,7 @@ trait StaticDataExp extends EffectExp {
     case _ => super.isWritableSym(w)
   }
   
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case StaticData(x) => staticData(x)(mtype(manifest[A]))        
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]   
@@ -78,9 +78,15 @@ trait CGenStaticData extends CGenEffect with BaseGenStaticData {
   val IR: StaticDataExp
   import IR._
 
+  // TODO: this does not quite do the right thing!
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case StaticData(x) =>
-      emitValDef(sym, /*"p"+quote(sym)*/ (x match { case x: Array[_] => "("+remap(sym.tp.typeArguments(0))+"[]){"+x.map(v=>quote(Const[Any](v))).mkString(",")+"}" case _ => quote(Const(x)) }))
+      emitValDef(sym, /*"p"+quote(sym)*/ (x match { 
+        case x: Array[a] => 
+          val tp = sym.tp.typeArguments(0).asInstanceOf[Typ[a]]
+          "("+remap(tp)+"[]){"+x.map(v=>quote(Const(v)(tp))).mkString(",")+"}" 
+        case _ => quote(Const(x)(sym.tp))
+      }))
     case _ => super.emitNode(sym, rhs)
   }
 }

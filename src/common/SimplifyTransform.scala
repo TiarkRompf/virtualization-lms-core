@@ -86,11 +86,11 @@ trait SimplifyTransform extends internal.FatScheduling {
   }
 
   def transformLoopBody[A](s: Sym[A], x: Def[A], t: SubstTransformer): Def[A] = {
-    implicit val m: Manifest[A] = s.tp.asInstanceOf[Manifest[A]]
+    implicit val m: Typ[A] = s.tp.asInstanceOf[Typ[A]]
     mirrorFatDef(x, t)
   }
   def transformIfBody[A](s: Sym[A], x: Block[A], t: SubstTransformer): Block[A] = {
-    implicit val m: Manifest[A] = s.tp.asInstanceOf[Manifest[A]]
+    implicit val m: Typ[A] = s.tp.asInstanceOf[Typ[A]]
     //transformOne(s,x,t)
     t(x)
   }

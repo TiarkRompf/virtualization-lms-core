@@ -8,7 +8,7 @@ depends on  Sym(14)
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
 val x10 = LoopArray(100) { x7 => 
-val x8 = 0.0-x7
+val x8 = 0.0 - x7
 x8
 }
 var x13: Array[Double] = x10
@@ -20,7 +20,7 @@ val x4 = LoopArray(100) { x1 =>
 x1
 }
 val x5 = LoopArray(100) { x1 => 
-val x2 = 0.0-x1
+val x2 = 0.0 - x1
 x2
 }
 val x16 = x0 > 7
