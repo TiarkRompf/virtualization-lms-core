@@ -2,8 +2,8 @@ import sbt._
 import java.io.File
 
 object LMSBuild extends Build {
-  System.setProperty("showSuppressedErrors", "true")
-  System.setProperty("showTimings", "true")
+  System.setProperty("showSuppressedErrors", "false")
+  System.setProperty("showTimings", "false")
 
   val virtScala = Option(System.getenv("SCALA_VIRTUALIZED_VERSION")).getOrElse("2.11.2")
 
