@@ -100,7 +100,7 @@ trait NestCondProg5 extends BooleanOps with PrimitiveOps with Functions with IfT
         print(unit(7.0) + unit(9.0))
       }
     } else {
-      ???
+      doLambda { u: Rep[Double] => } // dummy
     }
   }
   
@@ -136,7 +136,7 @@ trait NestCondProg7 extends LiftAll with BooleanOps with PrimitiveOps with Order
           z + u
         }
       } else {
-        ???
+        doLambda { u: Rep[Double] => u} // dummy
       }
     }
   }

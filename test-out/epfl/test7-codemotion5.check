@@ -1,9 +1,9 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Unit)=>(Any)) {
-def apply(x0:Unit): Any = {
-val x6 = if (true) {
+class Test extends ((Unit)=>(scala.Function1[Double, Unit])) {
+def apply(x0:Unit): scala.Function1[Double, Unit] = {
+val x8 = if (true) {
 val x2 = 7.0 + 9.0
 val x5 = {x1: (Double) => 
 val x3 = println(x2)
@@ -11,9 +11,12 @@ x3: Unit
 }
 x5
 } else {
-()
+val x7 = {x6: (Double) => 
+(): Unit
 }
-x6
+x7
+}
+x8
 }
 }
 /*****************************************
