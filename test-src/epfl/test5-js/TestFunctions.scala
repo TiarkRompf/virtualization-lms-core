@@ -168,7 +168,7 @@ class TestFunctions extends FileDiffSuite {
 
       println("-- begin")
 
-      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp with EqualExp{ self =>
+      new FunctionsProg with PrintExp with PrimitiveOpsExp with StringOpsExp with ArrayOpsExp with SeqOpsExp with FunctionsExp with IfThenElseExp with EqualExp { self =>
         val codegen = new ScalaGenPrint with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenEqual{ val IR: self.type = self }
 
         val f = (x: Rep[Double]) => test(x)
@@ -178,7 +178,7 @@ class TestFunctions extends FileDiffSuite {
         codegen.emitSource(g, "Test2", new PrintWriter(System.out))
       }
 
-      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp with EqualExp{ self =>
+      new FunctionsProg with PrintExp with PrimitiveOpsExp with StringOpsExp with ArrayOpsExp with SeqOpsExp with FunctionsExp with IfThenElseExp with EqualExp { self =>
         val codegen = new JSGenPrint with JSGenFunctions with JSGenIfThenElse with JSGenEqual{ val IR: self.type = self }
 
         val f = (x: Rep[Double]) => test(x)
@@ -198,7 +198,7 @@ class TestFunctions extends FileDiffSuite {
 
       println("-- begin")
 
-      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp with EqualExp{ self =>
+      new FunctionsProg with PrintExp with PrimitiveOpsExp with StringOpsExp with ArrayOpsExp with SeqOpsExp with FunctionsExp with IfThenElseExp with EqualExp { self =>
         val codegen = new ScalaGenPrint with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenEqual{
           val IR: self.type = self
         }
@@ -207,7 +207,7 @@ class TestFunctions extends FileDiffSuite {
         codegen.emitSource(f, "Test", new PrintWriter(System.out))
       }
 
-      new FunctionsProg with PrintExp with FunctionsExp with IfThenElseExp  with EqualExp{ self =>
+      new FunctionsProg with PrintExp with PrimitiveOpsExp with StringOpsExp with ArrayOpsExp with SeqOpsExp with FunctionsExp with IfThenElseExp  with EqualExp { self =>
         val codegen = new JSGenPrint with JSGenFunctions with JSGenIfThenElse  with JSGenEqual{ val IR: self.type = self }
 
         val f = (x: Rep[Double]) => doLambda{(y: Rep[Int]) => test(x)}
@@ -224,14 +224,20 @@ class TestFunctions extends FileDiffSuite {
 
       println("-- begin")
 
-      new FunctionsRecursiveProg with PrimitiveOpsExpOpt with PrintExp with FunctionsRecursiveExp { self =>
+      new FunctionsRecursiveProg with FunctionsRecursiveExp 
+        with PrintExp with PrimitiveOpsExp with StringOpsExp 
+        with ArrayOpsExp with SeqOpsExp with FunctionsExp 
+        with IfThenElseExp with EqualExp { self =>
         val codegen = new ScalaGenPrimitiveOps with ScalaGenPrint with ScalaGenFunctions { val IR: self.type = self }
 
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "Test", new PrintWriter(System.out))
       }
 
-      new FunctionsRecursiveProg with PrimitiveOpsExpOpt with PrintExp with FunctionsRecursiveExp { self =>
+      new FunctionsRecursiveProg with FunctionsRecursiveExp 
+        with PrintExp with PrimitiveOpsExp with StringOpsExp 
+        with ArrayOpsExp with SeqOpsExp with FunctionsExp 
+        with IfThenElseExp with EqualExp { self =>      
         val codegen = new JSGenPrimitiveOps with JSGenPrint with JSGenFunctions { val IR: self.type = self }
 
         val f = (x: Rep[Double]) => test(x)
@@ -245,7 +251,10 @@ class TestFunctions extends FileDiffSuite {
 
   def testTwoArgsFun = {
     withOutFile(prefix+"twoargsfun") {
-      new TwoArgsFunProg with LiftPrimitives with PrimitiveOpsExp with TupledFunctionsExp { self =>
+      new TwoArgsFunProg with LiftPrimitives with TupledFunctionsExp 
+        with PrintExp with PrimitiveOpsExp with StringOpsExp 
+        with ArrayOpsExp with SeqOpsExp with FunctionsExp 
+        with IfThenElseExp with EqualExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
         codegen.emitSource(test _, "main", new PrintWriter(System.out))
       }
@@ -255,7 +264,10 @@ class TestFunctions extends FileDiffSuite {
 
   def testTupleFun = {
     withOutFile(prefix+"tuplefun") {
-      new TupleFunProg with LiftPrimitives with PrimitiveOpsExp with TupledFunctionsExp { self =>
+      new TupleFunProg with LiftPrimitives with TupledFunctionsExp 
+        with PrintExp with PrimitiveOpsExp with StringOpsExp 
+        with ArrayOpsExp with SeqOpsExp with FunctionsExp 
+        with IfThenElseExp with EqualExp { self =>      
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
         codegen.emitSource(test _, "main", new PrintWriter(System.out))
       }
@@ -265,7 +277,10 @@ class TestFunctions extends FileDiffSuite {
 
   def testNoArgFun = {
     withOutFile(prefix+"noargfun") {
-      new NoArgFunProg with PrintExp with TupledFunctionsRecursiveExp { self =>
+      new NoArgFunProg with TupledFunctionsRecursiveExp 
+        with PrintExp with PrimitiveOpsExp with StringOpsExp 
+        with ArrayOpsExp with SeqOpsExp with FunctionsExp 
+        with IfThenElseExp with EqualExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
         codegen.emitSource(test _, "main", new PrintWriter(System.out))
       }
@@ -275,7 +290,10 @@ class TestFunctions extends FileDiffSuite {
 
   def testTwoArgsRecursiveFun = {
     withOutFile(prefix+"twoargsrecfun") {
-      new TwoArgsRecursiveFunProg with TupledFunctionsRecursiveExp with PrimitiveOpsExpOpt with EqualExp with IfThenElseExp { self =>
+      new TwoArgsRecursiveFunProg with TupledFunctionsRecursiveExp
+        with PrintExp with PrimitiveOpsExp with StringOpsExp 
+        with ArrayOpsExp with SeqOpsExp with FunctionsExp 
+        with IfThenElseExp with EqualExp { self =>      
         val codegen = new JSGenTupledFunctions with JSGenPrimitiveOps with JSGenEqual with JSGenIfThenElse with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
         codegen.emitSource(test _, "main", new PrintWriter(System.out))
       }
@@ -285,7 +303,10 @@ class TestFunctions extends FileDiffSuite {
 
   def testSchedFun = {
     withOutFile(prefix+"schedfun") {
-      new SchedFunProg with FunctionsRecursiveExp with PrimitiveOpsExpOpt with EqualExp with IfThenElseExp { self =>
+      new SchedFunProg with FunctionsRecursiveExp
+        with PrintExp with PrimitiveOpsExp with StringOpsExp 
+        with ArrayOpsExp with SeqOpsExp with FunctionsExp 
+        with IfThenElseExp with EqualExp { self =>      
         val codegen = new JSGenFunctions with JSGenPrimitiveOps with JSGenEqual with JSGenIfThenElse { val IR: self.type = self }
         val f = (x: Rep[Double]) => test(x)
         codegen.emitSource(f, "Test", new PrintWriter(System.out))
