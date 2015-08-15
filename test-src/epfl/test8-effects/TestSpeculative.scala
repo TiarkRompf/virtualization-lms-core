@@ -17,19 +17,21 @@ class TestSpeculative extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test8-"
   
-  trait DSL extends ArrayMutation with Arith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
+  trait DSL extends ArrayMutation with LiftPrimitives with PrimitiveOps 
+    with OrderingOps with BooleanOps with LiftVariables with IfThenElse 
+    with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
     def mzeros(l: Rep[Int]) = zeros(l).mutable
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
     def test(x: Rep[Int]): Rep[Unit]
   }
-  trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
-      with EqualExpOpt with VariablesExpOpt 
+  trait Impl extends DSL with ArrayMutationExp with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp 
+      with EqualExpOpt with VariablesExpOpt with StringOpsExp
       with IfThenElseExpOpt with WhileExpOptSpeculative with SplitEffectsExpFat with RangeOpsExp with PrintExp 
       with CompileScala { self => 
     override val verbosity = 1
-    val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenArrayMutation with ScalaGenPrimitiveOps with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenWhileOptSpeculative with ScalaGenSplitEffects
       with ScalaGenRangeOps with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
