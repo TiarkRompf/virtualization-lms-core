@@ -60,13 +60,13 @@ val x23 = LoopArray(100) { x22 =>
 }
 val x28 = LoopArray(100) { x25 => 
 val x26 = x23.apply(x25)
-val x27 = x26+x26
+val x27 = x26 + x26
 x27
 }
 val x34 = LoopArray(100) { x30 => 
 val x31 = x23.apply(x30)
 val x32 = x28.apply(x30)
-val x33 = x31+x32
+val x33 = x31 + x32
 x33
 }
 val x35 = new VectorDouble(x34,100)
