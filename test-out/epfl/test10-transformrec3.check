@@ -12,7 +12,7 @@ val x10 = if (x3) {
 1.0
 } else {
 val x8 = x4(x2)
-val x9 = x2*x8
+val x9 = x2 * x8
 x9
 }
 x10
