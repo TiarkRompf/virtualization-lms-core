@@ -17,7 +17,7 @@ val x35 = x2
 val x34 = println(7)
 val x36 = println(x35)
 val x40 = println(2)
-val x38 = x35+1.0
+val x38 = x35 + 1.0
 x2 = x38
 }
 val x51 = println(7)
