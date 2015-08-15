@@ -17,7 +17,7 @@ class TestSpeculative extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test8-"
   
-  trait DSL extends ArrayMutation with LiftPrimitives with PrimitiveOps 
+  trait DSL extends ArrayMutation with PrimitiveOps with LiftPrimitives
     with OrderingOps with BooleanOps with LiftVariables with IfThenElse 
     with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
@@ -128,7 +128,7 @@ class TestSpeculative extends FileDiffSuite {
         def test(x: Rep[Int]) = {
           var x = 7
           var c = 0.0
-          while (c < 10) {
+          while (c < 10.0) {
             print(x) // should be const 7
             print(c)
             var z = 2 // should remove var
@@ -152,7 +152,7 @@ class TestSpeculative extends FileDiffSuite {
           var x = 7
           var y = 4.0 // should remove
           var c = 0.0
-          while (c < 10) {
+          while (c < 10.0) {
             print(x) // should be const 7
             print(c)
             var z = 2 // should remove var
@@ -175,7 +175,7 @@ class TestSpeculative extends FileDiffSuite {
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var c = 0.0
-          while (c > 10) {
+          while (c > 10.0) {
             print("booooring!")
           }
           print("done")
@@ -193,8 +193,8 @@ class TestSpeculative extends FileDiffSuite {
         def test(x: Rep[Int]) = {
           var x = 7.0
           var c = 0.0
-          while (c < 10) {
-            if (x < 10)
+          while (c < 10.0) {
+            if (x < 10.0)
               print("test")
             else
               x = c
