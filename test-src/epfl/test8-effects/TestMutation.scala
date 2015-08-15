@@ -115,7 +115,7 @@ class TestMutation extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test8-"
   
-  trait DSL extends ArrayMutation with LiftPrimitives with PrimitiveOps with OrderingOps with Variables with IfThenElse with While with RangeOps with Print {
+  trait DSL extends ArrayMutation with PrimitiveOps with LiftPrimitives with OrderingOps with Variables with IfThenElse with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
     def mzeros(l: Rep[Int]) = zeros(l).mutable
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
