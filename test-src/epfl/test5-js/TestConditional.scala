@@ -105,7 +105,8 @@ class TestConditional extends FileDiffSuite {
       println("-- begin")
 
       new ConditionalProg with PrimitiveOpsExpOpt with EqualExp with PrintExp
-      with IfThenElseExp with CompileScala { self =>
+      with IfThenElseExp with StringOpsExp with ArrayOpsExp with SeqOpsExp
+      with CompileScala { self =>
         val codegen = new ScalaGenIfThenElse with ScalaGenPrimitiveOps 
         with ScalaGenEqual with ScalaGenPrint { val IR: self.type = self }
         
@@ -116,7 +117,8 @@ class TestConditional extends FileDiffSuite {
       }
     
       new ConditionalProg with LiftPrimitives with IfThenElseExp 
-      with PrimitiveOpsExpOpt with EqualExp
+      with PrimitiveOpsExpOpt with StringOpsExp with ArrayOpsExp with SeqOpsExp
+      with EqualExp
       with PrintExp { self =>
         val codegen = new JSGenIfThenElse with JSGenPrimitiveOps 
         with JSGenEqual with JSGenPrint { val IR: self.type = self }
