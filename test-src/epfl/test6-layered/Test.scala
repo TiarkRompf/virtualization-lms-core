@@ -28,7 +28,7 @@ trait UtilExp extends BaseExp with Utils {
 
   implicit def intTyp: Typ[Int]
   implicit def stringTyp: Typ[String]
-  implicit def tupleTyp[A:Typ,B:Typ]: Typ[(A,B)]
+  implicit def tuple2_typ[A:Typ,B:Typ]: Typ[(A,B)]
 
   implicit def unit(x:Int): Rep[Int] = Const(x)
   implicit def unit(x:String): Rep[String] = Const(x)
@@ -71,7 +71,7 @@ trait ScalaGenUtil extends ScalaGenBase {
 trait Vectors extends Utils {
 
   type Vector
-  implicit def mV: Typ[Vector]
+  implicit def vecTyp: Typ[Vector]
 
   def ZeroVector(n: Rep[Int]): Rep[Vector]
   def RandomVector(n: Rep[Int]): Rep[Vector]
@@ -116,7 +116,6 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
 
 trait VectorsImpl extends Vectors with FunctionsExp with UtilExp {
 
-  implicit def vecTyp: Typ[Vector]
   implicit def funTyp[A:Typ,B:Typ]: Typ[A=>B]
 
   val vectorZero: Exp[Int => Vector]
@@ -129,6 +128,7 @@ trait VectorsImpl extends Vectors with FunctionsExp with UtilExp {
 trait VectorsImplExternal extends VectorsImpl {
 
   type Vector = Array[Double]
+  implicit def vecTyp: Typ[Vector] = ManifestTyp(implicitly)
 
   val base = "scala.lms.epfl.test6.VectorOps.%s"
   
@@ -209,8 +209,9 @@ class TestVectors extends FileDiffSuite {
     
       println("-- begin")
 
-      new VectorsProg with VectorsExp with VectorsImplExternal
-      with CompileScala { self =>
+      new VectorsProg with VectorsExp with VectorsImplExternal 
+        with PrimitiveOpsExp with StringOpsExp with ArrayOpsExp with SeqOpsExp with TupleOpsExp
+        with CompileScala { self =>
         val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
         val g = compile(test)
@@ -218,7 +219,8 @@ class TestVectors extends FileDiffSuite {
       }
     
       new StringsProg with VectorsExp with VectorsImplExternal
-      with CompileScala { self =>
+        with PrimitiveOpsExp with StringOpsExp with ArrayOpsExp with SeqOpsExp with TupleOpsExp
+        with CompileScala { self =>
         val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
         val g = compile(test)
