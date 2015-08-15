@@ -173,7 +173,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion1 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion1") {
-      new NestLambdaProg1 with BooleanOpsExp with PrimitiveOpsExp with FunctionsExp with PrintExp { self =>
+      new NestLambdaProg1 with FunctionsExp with PrintExp
+        with CoreOpsPkgExp  { self =>
         val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
@@ -184,7 +185,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion2 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion2") {
-      new NestCondProg2 with BooleanOpsExp with PrimitiveOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+      new NestCondProg2 with FunctionsExp with PrintExp with IfThenElseExp
+        with CoreOpsPkgExp  { self =>
         val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
@@ -195,7 +197,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion3 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion3") {
-      new NestCondProg3 with BooleanOpsExp with PrimitiveOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+      new NestCondProg3 with FunctionsExp with PrintExp with IfThenElseExp
+        with CoreOpsPkgExp  { self =>
         val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
@@ -206,7 +209,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion4 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion4") {
-      new NestCondProg4 with BooleanOpsExp with PrimitiveOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+      new NestCondProg4 with FunctionsExp with PrintExp with IfThenElseExp
+        with CoreOpsPkgExp  { self =>
         val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
@@ -217,7 +221,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion5 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion5") {
-      new NestCondProg5 with PrimitiveOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+      new NestCondProg5 with FunctionsExp with PrintExp with IfThenElseExp
+        with CoreOpsPkgExp  { self =>
         val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
