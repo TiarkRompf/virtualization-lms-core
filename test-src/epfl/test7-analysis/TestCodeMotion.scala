@@ -233,7 +233,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion6 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion6") {
-      new NestCondProg6 with PrimitiveOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+      new NestCondProg6 with FunctionsExp with IfThenElseExp with PrintExp
+        with CoreOpsPkgExp  { self =>
         val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
         println("// NOTE: generated code is not ideal yet (x1=7+9 should be moved inside conditional). see source for discussion.")
@@ -246,7 +247,8 @@ class TestCodemotion extends FileDiffSuite {
   def testCodemotion7 = {
     // test loop hoisting (should use loops but lambdas will do for now)
     withOutFile(prefix+"codemotion7") {
-      new NestCondProg7 with PrimitiveOpsExp with OrderingOpsExp with FunctionsExp with IfThenElseExp with PrintExp { self =>
+      new NestCondProg7 with OrderingOpsExp with FunctionsExp with IfThenElseExp with PrintExp 
+        with CoreOpsPkgExp  { self =>
         val codegen = new ScalaGenPrimitiveOps with ScalaGenOrderingOps with ScalaGenFunctions with ScalaGenIfThenElse with ScalaGenPrint { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
         println("// was a Delite issue (Scratchpad in optiml-beta).")
