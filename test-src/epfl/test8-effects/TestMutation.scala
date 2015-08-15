@@ -123,9 +123,10 @@ class TestMutation extends FileDiffSuite {
     def test(x: Rep[Int]): Rep[Unit]
   }
   trait Impl extends DSL with ArrayMutationExp with PrimitiveOpsExp with OrderingOpsExp with VariablesExp 
+      with BooleanOpsExp with StringOpsExp
       with IfThenElseExp with WhileExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 2
-    val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenArrayMutation with ScalaGenPrimitiveOps with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhile with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
