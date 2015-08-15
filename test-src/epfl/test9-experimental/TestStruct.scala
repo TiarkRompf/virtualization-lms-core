@@ -104,7 +104,7 @@ class TestStruct extends FileDiffSuite {
   trait ImplFused extends DSL with StructExp with StructExpOptLoops with StructFatExpOptCommon with ArrayLoopsFatExp with PrimitiveOpsExp with OrderingOpsExp with VariablesExp 
       with IfThenElseExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 1
-    val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenPrimitiveOps with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self;
         override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
@@ -215,13 +215,13 @@ class TestStruct extends FileDiffSuite {
       }
       new Prog with ImplFused {
         // TODO: use a generic Opt trait instead of defining rewrites here...
-        override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
+        override def double_minus(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
           case (x, Def(DoubleMinus(Const(0.0),y))) => infix_+(x,y)
-          case _ => super.infix_-(x,y)
+          case _ => super.double_minus(x,y)
         }
-        override def infix_+(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
+        override def double_plus(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = (x, y) match {
           case (Const(0.0), y) => y
-          case _ => super.infix_+(x,y)
+          case _ => super.double_plus(x,y)
         }
       }
     }
@@ -284,7 +284,7 @@ class TestStruct extends FileDiffSuite {
   def testStruct6 = {
     withOutFile(prefix+"struct6") {
 
-      trait Complex2 extends Arith with StructOps {
+      trait Complex2 extends PrimitiveOps with StructOps {
         type Complex2 = Record { val re: Double; val im: Double }
         def Complex2(r: Rep[Double], i: Rep[Double]): Rep[Complex2] = new Record { val re = r; val im = i }
       }
