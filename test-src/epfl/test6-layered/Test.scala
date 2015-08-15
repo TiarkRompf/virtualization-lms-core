@@ -210,7 +210,7 @@ class TestVectors extends FileDiffSuite {
       println("-- begin")
 
       new VectorsProg with VectorsExp with VectorsImplExternal 
-        with PrimitiveOpsExp with StringOpsExp with ArrayOpsExp with SeqOpsExp with TupleOpsExp
+        with CoreOpsPkgExp
         with CompileScala { self =>
         val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
@@ -219,7 +219,7 @@ class TestVectors extends FileDiffSuite {
       }
     
       new StringsProg with VectorsExp with VectorsImplExternal
-        with PrimitiveOpsExp with StringOpsExp with ArrayOpsExp with SeqOpsExp with TupleOpsExp
+        with CoreOpsPkgExp
         with CompileScala { self =>
         val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
