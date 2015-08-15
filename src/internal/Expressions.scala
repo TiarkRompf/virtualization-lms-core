@@ -32,9 +32,9 @@ trait Expressions extends Utils {
       case _ => false 
     }
     def erasure: java.lang.Class[_] = mf.erasure
-    override def canEqual(that: Any): Boolean = mf.canEqual(that) // TEMP
-    override def equals(that: Any): Boolean = mf.equals(that) // TEMP
-    override def hashCode = mf.hashCode
+    //override def canEqual(that: Any): Boolean = mf.canEqual(that) // TEMP
+    //override def equals(that: Any): Boolean = mf.equals(that) // TEMP
+    //override def hashCode = mf.hashCode
     override def toString = mf.toString
   }
 
