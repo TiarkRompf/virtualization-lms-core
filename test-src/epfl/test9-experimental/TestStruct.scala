@@ -124,8 +124,8 @@ class TestStruct extends FileDiffSuite {
       // test variable splitting
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
-          var c = Complex(x.toDouble, 0)
-          c = c + Complex(0,x.toDouble)
+          var c = Complex(x.toDouble, 0.0)
+          c = c + Complex(0.0,x.toDouble)
           print(c)
         }
       }
