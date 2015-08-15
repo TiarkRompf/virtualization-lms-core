@@ -216,10 +216,10 @@ trait Arrays extends Base with PrimitiveOps with OverloadHack {
 trait ArraysExp extends Arrays with PrimitiveOpsExp with EffectExp {
   implicit def arrayTyp[T:Typ]: Typ[Array[T]] = typ[T].arrayTyp
   case class ArrayZero(n: Rep[Int]) extends Def[Array[Int]]
-  case class ArrayUpdate(a: Rep[Array[Int]], x: Rep[Int], v: Rep[Int]) extends Def[Array[Int]]
+  case class ArrayWrite(a: Rep[Array[Int]], x: Rep[Int], v: Rep[Int]) extends Def[Array[Int]]
   case class ArrayPlus(a: Rep[Array[Int]], b: Rep[Array[Int]]) extends Def[Array[Int]]
   def zeroes(n: Rep[Int]) = ArrayZero(n)
-  def infix_update(a: Rep[Array[Int]], x: Rep[Int], v: Rep[Int]) = ArrayUpdate(a,x,v)
+  def infix_update(a: Rep[Array[Int]], x: Rep[Int], v: Rep[Int]) = ArrayWrite(a,x,v)
   def infix_+(a: Rep[Array[Int]], b: Rep[Array[Int]])(implicit o: Overloaded1) = ArrayPlus(a,b)
 }
 
@@ -230,7 +230,7 @@ trait ScalaGenArrays extends ScalaGenEffect {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ArrayZero(n) =>  
       emitValDef(sym, "new Array[Int](" + quote(n) + ")")
-    case ArrayUpdate(a,x,v) =>  
+    case ArrayWrite(a,x,v) =>  
       emitValDef(sym, quote(a) +".clone()")
       stream.println(quote(sym) + "(" + quote(x) + ") = " + quote(v))
     case ArrayPlus(a,b) =>  
