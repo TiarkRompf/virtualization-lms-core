@@ -49,9 +49,9 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
 // trait NestLambdaProg extends Arith with Functions with Print 
 // --> from TestCodeMotion.scala
 
-trait FusionProg extends LiftPrimitives with PrimitiveOps with ArrayLoops with Print {
+trait FusionProg extends PrimitiveOps with LiftPrimitives with ArrayLoops with Print {
   
-  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+  override implicit def repIntToRepDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
   
   def test(x: Rep[Unit]) = {
     
@@ -76,7 +76,7 @@ trait FusionProg extends LiftPrimitives with PrimitiveOps with ArrayLoops with P
   
 }
 
-trait FusionProg2 extends LiftPrimitives with PrimitiveOps with ArrayLoops with Print with OrderingOps {
+trait FusionProg2 extends PrimitiveOps with LiftPrimitives with ArrayLoops with Print with OrderingOps {
   
   implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
   
