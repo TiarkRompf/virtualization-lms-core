@@ -169,8 +169,9 @@ class TestFusion2 extends FileDiffSuite {
   
   def testFusion21 = {
     withOutFile(prefix+"fusion21") {
-      new FusionProg21 with PrimitiveOpsExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
+      new FusionProg21 with CoreOpsPkgExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
         override val verbosity = 1
+        override def arrayTyp[T:Typ]: Typ[Array[T]] = typ[T].arrayTyp
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
@@ -182,8 +183,9 @@ class TestFusion2 extends FileDiffSuite {
 
   def testFusion22 = {
     withOutFile(prefix+"fusion22") {
-      new FusionProg22 with PrimitiveOpsExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
+      new FusionProg22 with CoreOpsPkgExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
         override val verbosity = 1
+        override def arrayTyp[T:Typ]: Typ[Array[T]] = typ[T].arrayTyp
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
@@ -195,8 +197,9 @@ class TestFusion2 extends FileDiffSuite {
 
   def testFusion23 = {
     withOutFile(prefix+"fusion23") {
-      new FusionProg23 with PrimitiveOpsExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
+      new FusionProg23 with CoreOpsPkgExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
         override val verbosity = 1
+        override def arrayTyp[T:Typ]: Typ[Array[T]] = typ[T].arrayTyp
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
@@ -208,7 +211,7 @@ class TestFusion2 extends FileDiffSuite {
 
   def testFusion24 = {
      withOutFile(prefix+"fusion24") {
-       new FusionProg24 with PrimitiveOpsExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
+       new FusionProg24 with CoreOpsPkgExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
 
          override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = if (x == y) {
            println("*** removing self subtraction " + x + " - " + y)
@@ -216,6 +219,7 @@ class TestFusion2 extends FileDiffSuite {
          } else super.infix_-(x,y) //  optimizations to trigger test behavior
 
          override val verbosity = 1
+         override def arrayTyp[T:Typ]: Typ[Array[T]] = typ[T].arrayTyp
          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
            with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
              override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
