@@ -8,7 +8,7 @@ val x3 = println(x1)
 install replacement for Sym(1)
 --- code ---
 val x6 = LoopArray(100) { x5 => 
-0.0
+0
 }
-val x7 = new VectorDouble(x6,100)
+val x7 = new VectorInt(x6,100)
 val x8 = println(x7)
