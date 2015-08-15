@@ -213,7 +213,7 @@ class TestFusion2 extends FileDiffSuite {
      withOutFile(prefix+"fusion24") {
        new FusionProg24 with CoreOpsPkgExp with ArrayLoopsFatExp with IfThenElseFatExp with PrintExp with IfThenElseExp with OrderingOpsExp  { self =>
 
-         override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = if (x == y) {
+         override def double_minus(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = if (x == y) {
            println("*** removing self subtraction " + x + " - " + y)
            0
          } else super.infix_-(x,y) //  optimizations to trigger test behavior
