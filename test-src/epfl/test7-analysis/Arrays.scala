@@ -40,7 +40,7 @@ trait ArrayLoopsExp extends LoopsExp { this: PrimitiveOpsExp =>
   case class FlattenElem[T](y: Block[Array[T]]) extends Def[Array[T]]
 
   case class ArrayIndex[T](a: Rep[Array[T]], i: Rep[Int]) extends Def[T]  
-  case class ArrayLength[T](a: Rep[Array[T]]) extends Def[Int]
+  case class ArrayLen[T](a: Rep[Array[T]]) extends Def[Int]
   
   def array[T:Typ](shape: Rep[Int])(f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
     val x = fresh[Int]
@@ -81,7 +81,7 @@ trait ArrayLoopsExp extends LoopsExp { this: PrimitiveOpsExp =>
 
   def infix_length[T:Typ](a: Rep[Array[T]]): Rep[Int] = a match {
     case Def(SimpleLoop(s, x, ArrayElem(y))) => s
-    case _ => ArrayLength(a)
+    case _ => ArrayLen(a)
   }
 
 
@@ -102,7 +102,7 @@ trait ArrayLoopsExp extends LoopsExp { this: PrimitiveOpsExp =>
         } 
       }
     case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
-    case ArrayLength(a) => infix_length(f(a))(mtype(manifest[A]))
+    case ArrayLen(a) => infix_length(f(a))(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -145,7 +145,7 @@ trait ScalaGenArrayLoops extends ScalaGenLoops {
       stream.println("}")
     case ArrayIndex(a,i) =>  
       emitValDef(sym, quote(a) + ".apply(" + quote(i) + ")")
-    case ArrayLength(a) =>  
+    case ArrayLen(a) =>  
       emitValDef(sym, quote(a) + ".length")
     case _ => super.emitNode(sym, rhs)
   }
