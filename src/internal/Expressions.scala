@@ -40,6 +40,17 @@ trait Expressions extends Utils {
 
   def typ[T:Typ]: Typ[T] = implicitly[Typ[T]]
 
+  def simpleClassTyp[C](c: Class[C]): Typ[C] =
+    ManifestTyp(scala.reflect.ManifestFactory.classType(c))
+  def simpleClassTyp[C[_],A:Typ](c: Class[C[A]]) = {
+    val ManifestTyp(m) = typ[A]
+    ManifestTyp(scala.reflect.ManifestFactory.classType(c,m))
+  }
+  def simpleClassTyp[C[_,_],A:Typ,B:Typ](c: Class[C[A,B]]) = {
+    val ManifestTyp(mA) = typ[A]
+    val ManifestTyp(mB) = typ[B]
+    ManifestTyp(scala.reflect.ManifestFactory.classType(c,mA,mB))
+  }
 
   abstract class Exp[+T:Typ] { // constants/symbols (atomic)
     def tp: Typ[T @uncheckedVariance] = implicitly[Typ[T]] //invariant position! but hey...
