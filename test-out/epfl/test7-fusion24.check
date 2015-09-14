@@ -16,12 +16,12 @@ wtableneg: List()
 partitions: List(TTP(List(Sym(8), Sym(22)),List(SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(7)))), SimpleLoop(Sym(5),Sym(11),ArrayElem(Block(Sym(21))))),SimpleFatLoop(Sym(5),Sym(6),List(ArrayElem(Block(Sym(7))), ArrayElem(Block(Sym(21)))))))
 considering TP(Sym(20),ArrayIndex(Sym(8),Sym(11)))
 replace TP(Sym(20),ArrayIndex(Sym(8),Sym(11))) at 0 within TTP(List(Sym(8), Sym(22)),List(SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(7)))), SimpleLoop(Sym(5),Sym(11),ArrayElem(Block(Sym(21))))),SimpleFatLoop(Sym(5),Sym(6),List(ArrayElem(Block(Sym(7))), ArrayElem(Block(Sym(21))))))
-*** removing self subtraction Sym(7) - Sym(7)
+Sym(28)
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(26)),List(SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Const(0.0))))),SimpleFatLoop(Sym(5),Sym(6),List(ArrayElem(Block(Const(0.0)))))))
+partitions: List(TTP(List(Sym(29)),List(SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Const(0.0))))),SimpleFatLoop(Sym(5),Sym(6),List(ArrayElem(Block(Const(0.0)))))))
 no changes, we're done
-super.focusExactScopeFat with result changed from List(Sym(22)) to List(Sym(26))
+super.focusExactScopeFat with result changed from List(Sym(22)) to List(Sym(29))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -37,11 +37,11 @@ val x17 = println(x4)
 val x7 = x2.apply(0)
 var x23 = new Array[Array[Double]](100)
 for (x5 <- 0 until 100) {
-var x26 = new Array[Double](x5)
+var x29 = new Array[Double](x5)
 for (x6 <- 0 until x5) {
-x26(x6) = 0.0
+x29(x6) = 0.0
 }
-val x22 = x26
+val x22 = x29
 x23(x5) = x22
 }
 val x24 = println(x23)

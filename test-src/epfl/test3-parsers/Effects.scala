@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test3
 
@@ -12,18 +12,20 @@ trait Effects extends Base {
   type State
   type Effectful[A]
   
+  implicit def effectfulTyp[A:Typ]: Typ[Effectful[A]]
+
   def noEffect: State
-  def bindEffect[A:Manifest](x: State, y: Rep[A]): State
-  def reifyState[A:Manifest](x: Rep[A], y: State): Rep[Effectful[A]]
+  def bindEffect[A:Typ](x: State, y: Rep[A]): State
+  def reifyState[A:Typ](x: Rep[A], y: State): Rep[Effectful[A]]
 
   var context: State = _
   
-  def reflectEffect[A:Manifest](x: Rep[A]): Rep[A] = {
+  def reflectEffect[A:Typ](x: Rep[A]): Rep[A] = {
     context = bindEffect(context, x)
     x
   }
   
-  def reifyEffects[A:Manifest](block: => Rep[A]): Rep[Effectful[A]] = {
+  def reifyEffects[A:Typ](block: => Rep[A]): Rep[Effectful[A]] = {
     val save = context
     context = noEffect
     
@@ -68,10 +70,15 @@ trait Effects2 extends Effects {
 
 trait Control extends Effects with BaseExp {
   
-  case class OrElse[A:Manifest](x: List[Rep[Effectful[A]]]) extends Def[A]
+  implicit def effectfulTyp[A:Typ]: Typ[Effectful[A]] = {
+    implicit val ManifestTyp(m) = typ[A]
+    manifestTyp
+  }
+
+  case class OrElse[A:Typ](x: List[Rep[Effectful[A]]]) extends Def[A]
   
 //  def orElse[A](xs: List[Rep[Effectful[A]]]): Rep[A] = reflectEffect(OrElse(xs))
-  def orElse[A:Manifest](xs: List[Rep[Effectful[A]]]): Rep[A] = OrElse(xs)
+  def orElse[A:Typ](xs: List[Rep[Effectful[A]]]): Rep[A] = OrElse(xs)
   
   // OrElse will be pure if all branches contain only match effects!!
   // if any branch contains output, OrElse will be impure
@@ -82,12 +89,12 @@ trait Control extends Effects with BaseExp {
   type State = List[Rep[Any]]
   abstract class Effectful[A]
   
-  case class Reify[A:Manifest](x: Rep[A], es: List[Rep[Any]]) extends Def[Effectful[A]]
-  case class Pure[A:Manifest](x: Rep[A]) extends Exp[Effectful[A]] 
+  case class Reify[A:Typ](x: Rep[A], es: List[Rep[Any]]) extends Def[Effectful[A]]
+  case class Pure[A:Typ](x: Rep[A]) extends Exp[Effectful[A]] 
   
   def noEffect: State = Nil
-  def bindEffect[A:Manifest](x: State, y: Rep[A]): State = x:::List(y)
-  def reifyState[A:Manifest](x: Rep[A], y: State): Rep[Effectful[A]] = y match {
+  def bindEffect[A:Typ](x: State, y: Rep[A]): State = x:::List(y)
+  def reifyState[A:Typ](x: Rep[A], y: State): Rep[Effectful[A]] = y match {
     case Nil => Pure(x)
     case _ => Reify(x, y)
   }

@@ -1,0 +1,29 @@
+# Use Docker-based container (instead of OpenVZ)
+sudo: false
+
+language: scala
+
+scala:
+  - 2.11.2
+
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt/boot
+
+# Q: should we use sbt ++$TRAVIS_SCALA_VERSION test?
+
+script:
+  - sbt clean coverage test && sbt coverageAggregate
+  # Tricks to avoid unnecessary cache updates
+  - find $HOME/.sbt -name "*.lock" | xargs rm
+  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+
+after_success:
+  - sbt coveralls
+  - "[[ $TRAVIS_PULL_REQUEST == 'false' && $TRAVIS_BRANCH == 'develop'* ]] && sbt publish"
+
+env:
+  global:
+  - secure: X+7udElsP9vnDvz8zM+0rESZQE5rCin4Iw7S0ZqaIgZth1RM+vdmFpOtV7j/YeBtJnpL1s7z9xWpnAf1PzCESp8JrApvHmxyzXC5yRYki0tf8bb9jWJmkNP8ZRAiwe1uSLwhtGGST6kMjuIBjbTlCoizhqu7/abvwZNUYn37Afs=
+  - secure: huTySCqcSt7gBI3I8GTWZDW9wh9aMxqQWl4AwV+jewh0s4jIn++oHUJ5HmKMBOXkkcrA3fxaaI0iwAodBJ/A5nH0Ge1tx0mW1JSYikDbkMNKNvooy0R6qZziACjrJ+7ooxnP/g2g3MrSskGkkZVX7vsH6cgk5Ai4z6FBhXv0DQA=

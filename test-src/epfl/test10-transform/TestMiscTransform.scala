@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test10
 
@@ -49,7 +49,7 @@ trait SimpleBlockTransformer extends internal.FatBlockTraversal {
       val trans = new AbstractTransformer {
         val IR: SimpleBlockTransformer.this.IR.type = SimpleBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = x 
-        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
+        override def apply[A](x: Block[A]) = transformBlock(x)
       }
       List(TP(s, mirrorDef(d, trans)(mtype(s.tp),mpos(s.pos))))
     // blocks(d) map transformBlock
@@ -115,7 +115,7 @@ trait NestedBlockTransformer extends internal.FatBlockTraversal {
       val trans = new AbstractTransformer {
         val IR: NestedBlockTransformer.this.IR.type = NestedBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
-        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
+        override def apply[A](x: Block[A]) = transformBlock(x)
       }
       List(TP(s, mirrorDef(d, trans)(mtype(s.tp),mpos(s.pos))))
     // blocks(d) map transformBlock
@@ -180,7 +180,7 @@ trait MirrorBlockTransformer extends internal.FatBlockTraversal {
       val trans = new AbstractTransformer {
         val IR: MirrorBlockTransformer.this.IR.type = MirrorBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
-        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
+        override def apply[A](x: Block[A]) = transformBlock(x)
       }
       mirror(d,trans)(mtype(s.tp),mpos(s.pos))
   }
@@ -217,7 +217,7 @@ trait MirrorRetainBlockTransformer extends MirrorBlockTransformer {
       val trans = new AbstractTransformer {
         val IR: MirrorRetainBlockTransformer.this.IR.type = MirrorRetainBlockTransformer.this.IR
         def apply[A](x: Exp[A]) = transformExp(x)
-        override def apply[A:Manifest](x: Block[A]) = transformBlock(x)
+        override def apply[A](x: Block[A]) = transformBlock(x)
       }
       mirror(d,trans)(mtype(s.tp),mpos(s.pos))
   }
@@ -234,7 +234,7 @@ trait FWXTransform extends BaseFatExp with EffectExp with IfThenElseFatExp with 
   
   var subst: Map[Sym[_], Exp[_]] = xform.subst
 
-  override implicit def toAtom[A:Manifest](d: Def[A]): Exp[A] = { // override createDefinition instead?
+  override implicit def toAtom[A:Typ](d: Def[A]): Exp[A] = { // override createDefinition instead?
     val in = syms(d)
     val actual = in map (s => subst.getOrElse(s,s))
     
@@ -258,18 +258,19 @@ class TestMisc extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test10-"
   
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
+  trait DSL extends VectorOps with LiftPrimitives with PrimitiveOps with OrderingOps with BooleanOps with LiftVariables 
     with IfThenElse with While with RangeOps with Print {
     def test(x: Rep[Int]): Rep[Unit]
   }
   
-  trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+  trait Impl extends DSL with VectorExp with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with ArrayMutationExp with IfThenElseFatExp with LoopsFatExp with WhileExpOptSpeculative 
+    with StringOpsExp with SeqOpsExp
     with RangeOpsExp with PrintExp with FatExpressions {
     override val verbosity = 1
   }
   
-  trait Codegen extends ScalaGenVector with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
+  trait Codegen extends ScalaGenVector with ScalaGenArrayMutation with ScalaGenPrimitiveOps with ScalaGenOrderingOps 
     with ScalaGenVariables with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative 
     with ScalaGenRangeOps with ScalaGenPrint {
     val IR: Impl
@@ -288,6 +289,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.{intTyp,unitTyp}
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
     
@@ -340,6 +342,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.{intTyp,unitTyp}
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
     
@@ -372,7 +375,7 @@ class TestMisc extends FileDiffSuite {
           val a2 = transformBlock(a)
           isInThenBranch = saveFlag
           val b2 = transformBlock(b)
-          List(TP(s,Reflect(IfThenElse(c,a2,b2), u, es)))
+          List(TP(s,Reflect(IfThenElse(c,a2,b2)(mtype(s.tp)), u, es)))
         case _ => super.transformStm(stm)
       }
     }
@@ -410,6 +413,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.{intTyp,unitTyp}
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
     
@@ -443,7 +447,7 @@ class TestMisc extends FileDiffSuite {
           val a2 = transformBlock(a)
           isInThenBranch = saveFlag
           val b2 = transformBlock(b)
-          List(TP(s,Reflect(IfThenElse(c2,a2,b2), u, es map transformExp))) // TODO: u
+          List(TP(s,Reflect(IfThenElse(c2,a2,b2)(mtype(s.tp)), u, es map transformExp))) // TODO: u
         case _ => super.transformStm(stm)
       }
     }
@@ -484,6 +488,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.{intTyp,unitTyp}
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
     
@@ -560,6 +565,7 @@ class TestMisc extends FileDiffSuite {
       }
     }
     val p = new Prog with Impl
+    import p.{intTyp,unitTyp}
     val x = p.fresh[Int]
     val y = p.reifyEffects(p.test(x))
     

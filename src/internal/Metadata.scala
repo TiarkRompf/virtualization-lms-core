@@ -1,11 +1,9 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import scala.collection.immutable.HashMap
 
-import Meetable._
-
-trait SymbolMetadata {
+trait SymbolMetadata extends MeetableOps {
   implicit def OptionCanBeMeetable[T: Meetable]: Meetable[Option[T]] = new Meetable[Option[T]] {
     def _matches(a: Option[T], b: Option[T]) = (a,b) match {
       case (Some(a),Some(b)) => matches(a,b)
@@ -61,7 +59,6 @@ trait SymbolMetadata {
    * returns true if they are identical, false otherwise
    */
   def metadataMatches(a: Metadata, b: Metadata): Boolean = false
-
   def metadataIncompatibilities(a: Metadata, b: Metadata, t: MeetFunc): List[String] = Nil
 
   /**
@@ -131,8 +128,6 @@ trait SymbolMetadata {
       val allKeys = this.keys ++ that.keys
       allKeys.isEmpty || allKeys.map{k => f(this(k), that(k)) }.reduce{_&&_}
     }
-
-    def :+ (item: (String, Option[T])) = new PropertyMap(this.toList :+ item)
   }
   object PropertyMap {
     // Have to be careful with this construction - could easily create a 
@@ -163,13 +158,10 @@ trait SymbolMetadata {
    */ 
   sealed abstract class SymbolProperties (val data: PropertyMap[Metadata]) {
     def apply(x: String) = data(x)
-    def withData(m: Metadata): SymbolProperties
   }
 
   // Metadata for scalar symbols (single element)
-  case class ScalarProperties(override val data: PropertyMap[Metadata]) extends SymbolProperties(data) {
-    def withData(m: Metadata) = new ScalarProperties(data :+ (m.name -> Some(m)) )
-  }
+  case class ScalarProperties(override val data: PropertyMap[Metadata]) extends SymbolProperties(data)
 
   // Metadata for DeliteStructs 
   case class StructProperties(children: PropertyMap[SymbolProperties], override val data: PropertyMap[Metadata]) 
@@ -177,14 +169,11 @@ trait SymbolMetadata {
   {
     def child(field: String) = children(field)
     def fields = children.keys
-    def withData(m: Metadata) = new StructProperties(children, data :+ (m.name -> Some(m)) )
   }
 
   // Metadata for arrays
   case class ArrayProperties(child: Option[SymbolProperties], override val data: PropertyMap[Metadata])
-    extends SymbolProperties(data) {
-    def withData(m: Metadata) = new ArrayProperties(child, data :+ (m.name -> Some(m)) )
-  }
+    extends SymbolProperties(data)
 
   implicit object SymbolPropertiesIsMeetable extends Meetable[SymbolProperties] {
     def _matches(a: SymbolProperties, b: SymbolProperties): Boolean = (a,b) match {

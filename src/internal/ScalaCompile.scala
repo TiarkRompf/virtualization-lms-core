@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import java.io._
@@ -10,14 +10,13 @@ import scala.tools.nsc.io._
 
 import scala.tools.nsc.interpreter.AbstractFileClassLoader
 
-
-trait ScalaCompile extends Expressions {
+trait ScalaCompile extends Expressions { this: BaseExp =>
 
   val codegen: ScalaCodegen { val IR: ScalaCompile.this.type }
 
   var compiler: Global = _
   var reporter: ConsoleReporter = _
-  //var output: ByteArrayOutputStream = _ 
+  //var output: ByteArrayOutputStream = _
 
   def setupCompiler() = {
     /*
@@ -25,7 +24,7 @@ trait ScalaCompile extends Expressions {
       val writer = new PrintWriter(new OutputStreamWriter(output))
     */
     val settings = new Settings()
-	val pathSeparator = System.getProperty("path.separator")
+	  val pathSeparator = System.getProperty("path.separator")
 
     settings.classpath.value = this.getClass.getClassLoader match {
       case ctx: java.net.URLClassLoader => ctx.getURLs.map(_.getPath).mkString(pathSeparator)
@@ -46,16 +45,16 @@ trait ScalaCompile extends Expressions {
   }
 
   var compileCount = 0
-  
+
   var dumpGeneratedCode = false
 
-  def compile[A,B](f: Exp[A] => Exp[B])(implicit mA: Manifest[A], mB: Manifest[B]): A=>B = {
+  def compile[A,B](f: Exp[A] => Exp[B])(implicit mA: Typ[A], mB: Typ[B]): A=>B = {
     if (this.compiler eq null)
       setupCompiler()
-    
+
     val className = "staged$" + compileCount
     compileCount += 1
-    
+
     val source = new StringWriter()
     val writer = new PrintWriter(source)
     val staticData = codegen.emitSource(f, className, writer)
@@ -87,7 +86,7 @@ trait ScalaCompile extends Expressions {
 
     val cls: Class[_] = loader.loadClass(className)
     val cons = cls.getConstructor(staticData.map(_._1.tp.erasure):_*)
-    
+
     val obj: A=>B = cons.newInstance(staticData.map(_._2.asInstanceOf[AnyRef]):_*).asInstanceOf[A=>B]
     obj
   }

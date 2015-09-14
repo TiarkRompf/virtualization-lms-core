@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test7
 
@@ -80,7 +80,7 @@ trait ScalaGenArraysLiveOpt extends ScalaGenArrays with Liveness {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ArrayZero(n) =>  
       emitValDef(sym, "new Array[Int](" + quote(n) + ")")
-    case ArrayUpdate(a,x,v) =>  
+    case ArrayWrite(a,x,v) =>  
       if (tryKill(a, sym))
         emitValDef(sym, quote(a))
       else
@@ -104,7 +104,7 @@ trait ScalaGenArraysLiveOpt extends ScalaGenArrays with Liveness {
 // trait NestLambdaProg extends Arith with Functions with Print 
 // --> from TestCodeMotion.scala
 
-trait LiveProg extends Arith with Arrays with Print {
+trait LiveProg extends LiftPrimitives with PrimitiveOps with Arrays with Print {
   
   def test(x: Rep[Unit]) = {
     val a = zeroes(100) // allocation
@@ -129,8 +129,9 @@ class TestLiveness extends FileDiffSuite {
   
   def testLiveness1 = {
     withOutFile(prefix+"liveness1") {
-      new LiveProg with ArithExp with ArraysExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenArrays with ScalaGenPrint with Liveness { val IR: self.type = self }
+      new LiveProg with CoreOpsPkgExp with ArraysExp with PrintExp { self =>
+        override def arrayTyp[T:Typ]: Typ[Array[T]] = typ[T].arrayTyp
+        val codegen = new ScalaGenPrimitiveOps with ScalaGenArrays with ScalaGenPrint with Liveness { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -139,8 +140,9 @@ class TestLiveness extends FileDiffSuite {
 
   def testLiveness2 = {
     withOutFile(prefix+"liveness2") {
-      new LiveProg with ArithExp with ArraysExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenArraysLiveOpt with ScalaGenPrint with Liveness { val IR: self.type = self }
+      new LiveProg with CoreOpsPkgExp with ArraysExp with PrintExp { self =>
+        override def arrayTyp[T:Typ]: Typ[Array[T]] = typ[T].arrayTyp
+        val codegen = new ScalaGenPrimitiveOps with ScalaGenArraysLiveOpt with ScalaGenPrint with Liveness { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }

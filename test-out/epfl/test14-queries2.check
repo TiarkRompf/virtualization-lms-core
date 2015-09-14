@@ -3,7 +3,7 @@ nVars=2000
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-import scala.virtualization.lms.epfl.test14.Schema
+import scala.lms.epfl.test14.Schema
 class staged$0 extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
 val x2550 = println("rangeFromNames(\"Edna\",\"Bert\"):")

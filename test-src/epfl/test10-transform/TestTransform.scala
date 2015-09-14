@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test10
 
@@ -20,20 +20,21 @@ class TestTransform extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test10-"
   
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
+  trait DSL extends VectorOps with LiftPrimitives with PrimitiveOps with OrderingOps with BooleanOps with LiftVariables 
     with IfThenElse with While with RangeOps with Print {
     def test(x: Rep[Int]): Rep[Unit]
   }
   
-  trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+  trait Impl extends DSL with VectorExp with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with ArrayMutationExp with IfThenElseFatExp with LoopsFatExp with WhileExpOptSpeculative 
+    with StringOpsExp with SeqOpsExp    
     with RangeOpsExp with PrintExp with FatExpressions { self =>
     override val verbosity = 1
     val runner = new Runner { val p: self.type = self }
     runner.run()
   }
   
-  trait Codegen extends ScalaGenVector with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
+  trait Codegen extends ScalaGenVector with ScalaGenArrayMutation with ScalaGenPrimitiveOps with ScalaGenOrderingOps 
     with ScalaGenVariables with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative 
     with ScalaGenRangeOps with ScalaGenPrint {
     val IR: Impl
@@ -43,6 +44,7 @@ class TestTransform extends FileDiffSuite {
   trait Runner {
     val p: Impl
     def run() = {
+      import p.{intTyp,unitTyp}
       val x = p.fresh[Int]
       val y = p.reifyEffects(p.test(x))
 

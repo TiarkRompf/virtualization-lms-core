@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test6
 
@@ -26,6 +26,10 @@ trait Utils extends Base with OverloadHack {
 
 trait UtilExp extends BaseExp with Utils {
 
+  implicit def intTyp: Typ[Int]
+  implicit def stringTyp: Typ[String]
+  implicit def tuple2_typ[A:Typ,B:Typ]: Typ[(A,B)]
+
   implicit def unit(x:Int): Rep[Int] = Const(x)
   implicit def unit(x:String): Rep[String] = Const(x)
   
@@ -38,7 +42,7 @@ trait UtilExp extends BaseExp with Utils {
 
   case class Tup[A,B](a: Exp[A],b: Exp[B]) extends Def[(A,B)]
   
-  case class External[A:Manifest](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
+  case class External[A:Typ](s: String, fmt_args: List[Exp[Any]] = List()) extends Exp[A]
   
 }
 
@@ -67,7 +71,7 @@ trait ScalaGenUtil extends ScalaGenBase {
 trait Vectors extends Utils {
 
   type Vector
-  implicit def mV: Manifest[Vector]
+  implicit def vecTyp: Typ[Vector]
 
   def ZeroVector(n: Rep[Int]): Rep[Vector]
   def RandomVector(n: Rep[Int]): Rep[Vector]
@@ -87,7 +91,7 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
     case _ => Apply(vectorPlus, toAtom(Tup(a, b)))
   }
   
-  class ApplyExtractor[A:Manifest,B:Manifest](f: Exp[A => B]) {
+  class ApplyExtractor[A:Typ,B:Typ](f: Exp[A => B]) {
     def apply(x: Exp[A]): Exp[B] = Apply(f,x)
     def unapply(e: Def[B]): Option[Exp[A]] = e match {
       case Apply(`f`, x: Exp[A]) => Some(x)
@@ -112,6 +116,8 @@ trait VectorsExp extends Vectors with BaseExp { this: VectorsImpl =>
 
 trait VectorsImpl extends Vectors with FunctionsExp with UtilExp {
 
+  implicit def funTyp[A:Typ,B:Typ]: Typ[A=>B]
+
   val vectorZero: Exp[Int => Vector]
   val vectorRandom: Exp[Int => Vector]
   val vectorPlus: Exp[((Vector,Vector)) => Vector]
@@ -122,9 +128,9 @@ trait VectorsImpl extends Vectors with FunctionsExp with UtilExp {
 trait VectorsImplExternal extends VectorsImpl {
 
   type Vector = Array[Double]
-  def mV = manifest[Array[Double]]
+  implicit def vecTyp: Typ[Vector] = ManifestTyp(implicitly)
 
-  val base = "scala.virtualization.lms.epfl.test6.VectorOps.%s"
+  val base = "scala.lms.epfl.test6.VectorOps.%s"
   
   // FIXME: using base + "zero" crashes the compiler!
   
@@ -149,7 +155,6 @@ object VectorOps {
 trait VectorsImplConst extends VectorsImpl {
 
   type Vector = Array[Double]
-  def mV = manifest[Array[Double]]
 
   // kernels implementations as function-type constants
 
@@ -187,9 +192,8 @@ trait VectorsProg extends Vectors {
 
 trait StringsProg extends Vectors {
   
-  def test(x: Rep[Any]) = {
-    val s: Rep[Any] = "hi " + "yo " + x + " done"
-    s
+  def test(x: Rep[Int]) = {
+    "hi " + "yo " + x + " done"
   }
   
 }
@@ -205,8 +209,9 @@ class TestVectors extends FileDiffSuite {
     
       println("-- begin")
 
-      new VectorsProg with VectorsExp with VectorsImplExternal
-      with CompileScala { self =>
+      new VectorsProg with VectorsExp with VectorsImplExternal 
+        with CoreOpsPkgExp
+        with CompileScala { self =>
         val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
         val g = compile(test)
@@ -214,7 +219,8 @@ class TestVectors extends FileDiffSuite {
       }
     
       new StringsProg with VectorsExp with VectorsImplExternal
-      with CompileScala { self =>
+        with CoreOpsPkgExp
+        with CompileScala { self =>
         val codegen = new ScalaGenFunctions with ScalaGenUtil { val IR: self.type = self }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
         val g = compile(test)

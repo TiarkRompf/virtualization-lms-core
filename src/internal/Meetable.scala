@@ -1,5 +1,8 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
+
+import scala.lms.util.Utils
+import scala.reflect.SourceContext
 
 trait MeetFunc
 
@@ -19,23 +22,21 @@ trait Meetable[T] {
   def _multiLine(a: T): Boolean
 }
 
-object Meetable {
+trait MeetableOps extends Utils {
   class IllegalMeetException extends Exception("Attempted to meet incompatible metadata instances")
- 
+
+  // TODO: This might be going a bit overboard.. 
+  trait MetaAlias extends MeetFunc               // General aliasing of metadata
+  case object MetaBranch extends MetaAlias       // Aliasing due to conditional branches
+  case object MetaUpdate extends MetaAlias       // Data structure field/element updates
+  case object MetaUnion extends MetaAlias        // Set Union
+  case object MetaIntersect extends MetaAlias    // Set Intersection
   case object MetaTypeInit extends MeetFunc      // Metadata meeting with initial type metadata
   case object MetaOverwrite extends MeetFunc     // Metadata overwrite
-  
-  // TODO: This might be going a bit overboard..
-  trait MetaAlias extends MeetFunc               // General aliasing of metadata
-    case object MetaBranch extends MetaAlias       // Aliasing due to conditional branches
-    case object MetaUpdate extends MetaAlias       // Data structure field/element updates
-    case object MetaUnion extends MetaAlias        // Set Union
-    case object MetaIntersect extends MetaAlias    // Set Intersection
-    case object MetaReduce extends MetaAlias       // General reduction aliasing
-    case object MetaAdd extends MetaAlias          // VarPlusEquals
-    case object MetaSub extends MetaAlias          // VarMinusEquals
-    case object MetaMul extends MetaAlias          // VarTimesEquals
-    case object MetaDiv extends MetaAlias          // VarDivEquals
+  case object MetaAdd extends MetaAlias          // VarPlusEquals
+  case object MetaSub extends MetaAlias          // VarMinusEquals
+  case object MetaMul extends MetaAlias          // VarTimesEquals
+  case object MetaDiv extends MetaAlias          // VarDivEquals
 
   // Defs use underscore prefix since some implementations require calling other forms of the
   // overloaded method, which is more annoying (need to directly call implicitly[Meetable[...]].func)
@@ -48,8 +49,18 @@ object Meetable {
   def isComplete[T: Meetable](a: T): Boolean = implicitly[Meetable[T]]._isComplete(a)
   def makeString[T: Meetable](a: T, prefix: String = "") = implicitly[Meetable[T]]._makeString(a,prefix)
   def multiLine[T: Meetable](a: T) = implicitly[Meetable[T]]._multiLine(a)
-
-  def meetAll[T:Meetable](t: MeetFunc)(ts: T*): T = {
-    ts.reduce{(a,b) => implicitly[Meetable[T]]._meet(a,b,t)}
+  
+  // Meet with error reporting for incompatible metadata
+  def tryMeet[T: Meetable](a: T, b: T, func: MeetFunc)(implicit ctx: SourceContext): T = {
+    if (canMeet(a,b,func)) { meet(a,b,func) }
+    else {
+      val inc = incompatibilities(a,b,func)
+      cfatal(quoteCtx(ctx) + ": " + (if (inc.isEmpty) "" else inc.head) + "\n" + 
+             "Attempted to meet incompatible metadata for symbol used here:\n" + 
+             "\tLHS metadata: " + makeString(a) + "\n" + 
+             "\tRHS metadata: " + makeString(a) + "\n" +
+             quoteCode(ctx).map("\t" + _).getOrElse("")
+            )
+    }
   }
 }

@@ -1,12 +1,12 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Match extends ((Unit)=>(scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
-def apply(x0:Unit): scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
+class Match extends ((Unit)=>(scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
+def apply(x0:Unit): scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
 var x1 = null.asInstanceOf[scala.Function1[Double, Double]]
 var x33 = null.asInstanceOf[scala.Function1[Double, Double]]
 var x19 = null.asInstanceOf[scala.Function1[Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble, Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble]]
-var x12 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[Tuple2DoubleDouble], scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+var x12 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[Tuple2DoubleDouble], scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
 x1 = {x2: (Double) => 
 val x4 = x2%2 == 0
 val x5 = if (x4) {
@@ -16,7 +16,7 @@ val x3 = x2 < 8.0
 x3
 }
 val x8 = if (x5) {
-val x6 = x2+1.0
+val x6 = x2 + 1.0
 val x7 = x1(x6)
 x7
 } else {
@@ -33,7 +33,7 @@ val x35 = x34 < 8.0
 x35
 }
 val x40 = if (x37) {
-val x38 = x34+1.0
+val x38 = x34 + 1.0
 val x39 = x33(x38)
 x39
 } else {
@@ -64,9 +64,9 @@ true
 false
 }
 val x48 = if (x30) {
-val x31 = x23+1.0
+val x31 = x23 + 1.0
 val x24 = x21._2
-val x32 = x24+1.0
+val x32 = x24 + 1.0
 val x41 = x33(x32)
 val x42 = new Tuple2DoubleDouble(x31,x41)
 val x22 = x20._2
@@ -93,7 +93,7 @@ val x51 = x49._2
 val x52 = x12(x51)
 x52
 }
-val x53 = scala.virtualization.lms.epfl.test4.Automaton(x14,x15)
+val x53 = scala.lms.epfl.test4.Automaton(x14,x15)
 x53
 }
 val x11 = List()

@@ -1,17 +1,68 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
-import util.GraphUtil
+import scala.lms.util.GraphUtil
 import scala.collection.mutable
 import java.util.IdentityHashMap
 import scala.collection.JavaConversions._
 
 trait Scheduling {
-  val IR: Expressions
+  val IR: BaseExp
   import IR._
-
-  def getUnsortedSchedule(scope: List[Stm])(result: Any): List[Stm] = {
-    getSchedule(scope)(result, false)
+  
+  def fatten(e: Stm): Stm = e
+  def fattenAll(e: List[Stm]) = e.map(fatten)
+  
+  def getStronglySortedSchedule(scope: List[Stm], level: List[Stm], result: Any): (List[Stm], List[Sym[Any]]) = {
+    val scopeIndex = buildScopeIndex(scope)
+    
+    val fixed = new collection.mutable.HashMap[Any,List[Sym[Any]]]
+    def allSyms(r: Any) = fixed.getOrElse(r, syms(r) ++ softSyms(r))
+    
+    val inner = scope diff level
+    var recursive: List[Sym[Any]] = Nil
+    
+    var xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(allSyms(result), scopeIndex), 
+    			t => scheduleDepsWithIndex(allSyms(t.rhs), scopeIndex))
+    
+    // Fix recursion in graph
+    xx.foreach{ xs =>
+      if (xs.length > 1 && (xs intersect level).nonEmpty) {
+        cwarn(s"Recursive schedule for result $result: $xs")
+        
+        val fs = (xs intersect level) flatMap (_.lhs)
+        recursive = fs ::: recursive
+        
+        // Eliminate all outward dependencies
+        // CAVEAT: This *only* works for lambdas if initialization happens before first call
+        // problematic if sym is used in both lambda and an if branch (may lead to NPE)
+        // TODO: Restrict 'inner' to functions
+        // TODO: Check order somehow? Maybe insert a dep from the call site?
+        (inner intersect xs) foreach {
+          case stm if allSyms(stm.rhs) exists (fs contains _) =>
+            fixed(stm.rhs) = allSyms(stm.rhs) filterNot (fs contains _)
+            cdbg("Fixing deps of " + stm.rhs + " to " + fixed(stm.rhs))
+          case _ => 
+        }
+        (level intersect xs) foreach {
+          case stm if allSyms(blocks(stm.rhs)) exists (fs contains _) => 
+            fixed(stm.rhs) = allSyms(stm.rhs) filterNot (fs contains _)
+            cdbg("Fixing deps of " + stm.rhs + " to " + fixed(stm.rhs)) 
+          case _ =>
+        }
+      }
+    }
+    xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(allSyms(result) ++ allSyms(recursive), scopeIndex), 
+    			t => scheduleDepsWithIndex(allSyms(t.rhs), scopeIndex))
+    
+    xx.foreach{ xs =>
+      if (xs.length > 1 && (xs intersect level).nonEmpty) {
+        cerror(s"Recursive schedule did not go away for result $result: $xs")
+      }
+    }
+    			
+    val xxf = xx.flatten.reverse
+    (xxf filter (level contains _), recursive)
   }
   
   // checks if a and b share at least one element. O(N^2), but with no allocation and possible early exit.
@@ -27,23 +78,6 @@ trait Scheduling {
       }
     }
     false
-  }
-   
-  //TBD: not used?
-  def getStronglySortedSchedule(scope: List[Stm])(result: Any): List[Stm] = {
-    def deps(st: List[Sym[Any]]): List[Stm] = 
-      scope.filter(d => containsAny(st, d.lhs))
-      // scope.filter(d => (st intersect d.lhs).nonEmpty)
-    def allSyms(r: Any) = syms(r) ++ softSyms(r)
-    
-    val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result)), t => deps(allSyms(t.rhs)))
-    xx.foreach { x => 
-      if (x.length > 1) {
-        printerr("warning: recursive schedule for result " + result + ": " + x)
-        (new Exception) printStackTrace
-      }
-    }
-    xx.flatten.reverse
   }
 
   //performance hotspot!
@@ -77,24 +111,32 @@ trait Scheduling {
     cache
   }
 
+  /**
+   * Build traversal schedule for result in given scope, returning a list of statements
+   **/
   def getSchedule(scope: List[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
     val scopeIndex = buildScopeIndex(scope)
-
-    //printDebug("scope: \n\t" + (if (scope ne null) scope.mkString("\n\t") else "null"))
 
     val xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(syms(result), scopeIndex), t => scheduleDepsWithIndex(syms(t.rhs), scopeIndex))
     if (sort) xx.foreach { x => 
       if (x.length > 1) {
-        printerr("warning: recursive schedule for result " + result + ": " + x)
+        cwarn("Recursive schedule for result " + result + ": " + x)
         (new Exception) printStackTrace
       }
     }
-
-    //printDebug("schedule: \n\t" + xx.flatten.reverse.mkString("\n\t"))
-
     xx.flatten.reverse
   }
+  def getUnsortedSchedule(scope: List[Stm])(result: Any): List[Stm] = getSchedule(scope)(result, false)
 
+  /**
+   * Create traversal schedule for result in given scope, filtering by sym frequency
+   * | cold |  hot |  freq. range
+   * --------------------------------
+   * |  T   |   T  |  (all)
+   * |  T   |   F  |  x < 100
+   * |  F   |   T  |  x > 0.75
+   * |  F   |   F  |  0.75 < x < 100
+   **/
   def getScheduleM(scope: List[Stm])(result: Any, cold: Boolean, hot: Boolean): List[Stm] = {
     def mysyms(st: Any) = {
       val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
@@ -113,15 +155,14 @@ trait Scheduling {
   
   /** begin performance hotspot **/
   
-  /*
-  for each symbol s in sts, find all statements that depend on it.
-  we need to stop when we reach the statement where s is bound.
-  
-  it would be tempting to do only one scc call but then we mix
-  up the locations where different symbols are bound.
-  */
-  
-  def getFatDependentStuff(scope: List[Stm])(sts: List[Sym[Any]]): List[Stm] = {
+  /**
+   * For each symbol s in sts, find all statements in scope that depend on it.
+   * We need to stop when we reach the statement where s is bound.
+   * 
+   * It would be tempting to do only one scc call but then we mix
+   * up the locations where different symbols are bound.
+   **/
+  def getFatDependents(scope: List[Stm])(sts: List[Sym[Any]]): List[Stm] = {
     if (sts.isEmpty) return Nil
     /*
      precompute:
@@ -133,11 +174,9 @@ trait Scheduling {
     
     // IdentityHashMap appears faster than scala.collection.mutable.HashMap here (based on perf. testing)
     // possible improvement: use an integer hashmap that works directly with sym ids
-    
     val lhsCache = new IdentityHashMap[Sym[Any], List[Stm]]()
     val symsCache = new IdentityHashMap[Sym[Any], List[Stm]]()
     val boundSymsCache = new IdentityHashMap[Sym[Any], List[Stm]]()
-    //val boundSymsCache = new IdentityHashMap[Sym[Any], Set[Stm]]()
     
     def infix_getOrElse[K,V](map: IdentityHashMap[K, V], s: K, f: => V) = {
       var res = map.get(s) //map(s)
@@ -200,22 +239,11 @@ trait Scheduling {
       ).flatten
     }
     
-    /* 
-    reference impl:*/
-    val res = sts.flatMap(getDepStuff).distinct
-    
-    /*if (sts.contains(Sym(1064))) {
-      println("dep on x1064:")
-      res.foreach { r =>
-        println("   " + r)
-      }
-    }*/
-    res
-
     // CAVEAT: TRANSFORMERS !!!  see CloseWorldRestage app in Delite
     //sts.sortBy(_.id).flatMap(getDepStuff)
+    
+    sts.flatMap(getDepStuff).distinct
   }
   
   /** end performance hotspot **/
-
 }

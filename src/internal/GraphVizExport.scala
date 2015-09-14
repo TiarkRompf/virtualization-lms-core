@@ -1,14 +1,14 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import java.io.{PrintWriter, FileOutputStream}
 
 trait GraphVizExport extends GraphTraversal {
-  val IR: Expressions
+  val IR: BaseExp
   import IR._
 
   def quote(x: Any) = "\""+x+"\""
-  
+
   def emitNode(sym: Sym[Any], rhs: Def[Any])(implicit stream: PrintWriter) = {
     stream.println("label=" + quote(sym + " \\n " + rhs))
     stream.println("shape=box")
@@ -43,7 +43,7 @@ trait GraphVizExport extends GraphTraversal {
       emitNode(sym, rhs)(stream)
 
       stream.println("]")
-      
+
       emitDeps(sym, rhs, deps)(stream)
 
     }
@@ -51,7 +51,7 @@ trait GraphVizExport extends GraphTraversal {
     stream.println("}")
     stream.close()
   }
- 
-  
-  
+
+
+
 }

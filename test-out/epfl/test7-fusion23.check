@@ -34,7 +34,7 @@ var x30 = new Array[Array[Double]](100)
 var x33 = new Array[Double](100)
 var x40 = new Array[Double](100)
 for (x1 <- 0 until 100) {
-val x43 = 1.0+2.0
+val x43 = 1.0 + 2.0
 var x3 = new Array[Double](x1)
 var x29 = new Array[Double](x1)
 var x32: Double = 0
@@ -45,7 +45,7 @@ x29(x2) = 2.0
 x32 += 4.0
 x44 += x43
 }
-val x45 = x44+x32
+val x45 = x44 + x32
 val x39 = x45
 x4(x1) = x3
 x30(x1) = x29

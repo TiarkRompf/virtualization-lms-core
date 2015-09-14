@@ -24,24 +24,24 @@ register replacement for Sym(21)
 --- code ---
 val x3 = x0 > 0
 val x9 = LoopArray(100) { x8 => 
-0.0
+0
 }
 // TODO: use vars instead of tuples to return multiple values
 val (x15,x16) = if (x3) {
 (x9,100)
 } else {
 val x12 = LoopArray(50) { x11 => 
-0.0
+0
 }
 (x12,50)
 }
 val x17 = new VectorDouble(x15,x16)
 val x18 = VectorLength(Sym(17))
-val x10 = new VectorDouble(x9,100)
+val x10 = new VectorInt(x9,100)
 val x23 = LoopArray(x18) { x19 => 
 val x20 = VectorApply(Sym(17),Sym(19))
 val x21 = VectorApply(Sym(10),Sym(19))
-val x22 = x20+x21
+val x22 = x20 + x21
 x22
 }
 val x24 = new VectorDouble(x23,x18)
@@ -54,21 +54,21 @@ install replacement for Sym(21)
 --- code ---
 val x3 = x0 > 0
 val x28 = LoopArray(100) { x27 => 
-0.0
+0
 }
 // TODO: use vars instead of tuples to return multiple values
 val (x16,x31) = if (x3) {
 (100,x28)
 } else {
 val x30 = LoopArray(50) { x29 => 
-0.0
+0
 }
 (50,x30)
 }
 val x38 = LoopArray(x16) { x34 => 
 val x35 = x31.apply(x34)
 val x36 = x28.apply(x34)
-val x37 = x35+x36
+val x37 = x35 + x36
 x37
 }
 val x39 = new VectorDouble(x38,x16)

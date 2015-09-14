@@ -1,11 +1,11 @@
-package scala.virtualization.lms
-package internal
+package scala.lms
+package common
 
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import collection.immutable.List._
 
 trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfer {
-  val IR: Expressions
+  val IR: BaseExp
   import IR._
 
   override def deviceTarget: Targets.Value = Targets.Cuda
@@ -13,19 +13,19 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
   override def fileExtension = "cu"
   override def toString = "cuda"
   override def devFuncPrefix = "__device__"
-  
+
   override def initializeGenerator(buildDir:String): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
 
     actRecordStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "actRecords.h"))
-    
+
     helperFuncStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.cu"))
-    helperFuncStream.print("#include \"" + deviceTarget + "helperFuncs.h\"\n")    
-    
+    helperFuncStream.print("#include \"" + deviceTarget + "helperFuncs.h\"\n")
+
     typesStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "types.h"))
     typesStream.flush
-    
+
     //TODO: Put all the DELITE APIs declarations somewhere
     headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
     headerStream.println("#include <iostream>")
@@ -41,8 +41,8 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
     super.initializeGenerator(buildDir)
   }
 
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
-    val sB = remap(manifest[A])
+  def emitSource[A : Typ](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
+    val sB = remap(typ[A])
 
     withStream(out) {
       stream.println("/*****************************************\n"+
@@ -65,15 +65,4 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
     Nil
   }
 
-}
-
-// TODO: do we need this for each target?
-trait CudaNestedCodegen extends CLikeNestedCodegen with CudaCodegen {
-  val IR: Expressions with Effects
-  import IR._
-}
-
-trait CudaFatCodegen extends CLikeFatCodegen with CudaCodegen {
-  val IR: Expressions with Effects with FatExpressions
-  import IR._
 }

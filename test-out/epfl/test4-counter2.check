@@ -1,10 +1,10 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Match extends ((Unit)=>(scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
-def apply(x0:Unit): scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
+class Match extends ((Unit)=>(scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
+def apply(x0:Unit): scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
 var x59 = null.asInstanceOf[scala.Function1[Tuple2ListCharListChar, Tuple2ListCharListChar]]
-var x7 = null.asInstanceOf[scala.Function1[Tuple2Tuple2Tuple2Tuple2DoubleTuple2DoubleDoubleDoubleDoubleListChar, scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+var x7 = null.asInstanceOf[scala.Function1[Tuple2Tuple2Tuple2Tuple2DoubleTuple2DoubleDoubleDoubleDoubleListChar, scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
 x59 = {x60: (Tuple2ListCharListChar) => 
 val x61 = x60._1
 val x63 = x61.isEmpty
@@ -51,7 +51,7 @@ val x28 = x27._1
 val x30 = x28._1
 val x32 = x30._1
 val x34 = x32._1
-val x37 = x34+1.0
+val x37 = x34 + 1.0
 val x35 = x32._2
 val x39 = x35._1
 val x42 = x39 == 0
@@ -60,7 +60,7 @@ val x40 = x35._2
 x40
 } else {
 val x40 = x35._2
-val x43 = x40+1.0
+val x43 = x40 + 1.0
 x43
 }
 val x45 = new Tuple2DoubleDouble(0.0,x44)
@@ -73,7 +73,7 @@ val x34 = x32._1
 val x35 = x32._2
 val x40 = x35._2
 val x39 = x35._1
-val x46 = x39+1.0
+val x46 = x39 + 1.0
 val x47 = new Tuple2DoubleDouble(x46,x40)
 (x34,x47)
 }
@@ -83,7 +83,7 @@ val x52 = if (x50) {
 val x28 = x27._1
 val x30 = x28._1
 val x33 = x30._2
-val x51 = x33+1.0
+val x51 = x33 + 1.0
 x51
 } else {
 val x28 = x27._1
@@ -96,7 +96,7 @@ val x54 = x25 == 'C'
 val x56 = if (x54) {
 val x28 = x27._1
 val x31 = x28._2
-val x55 = x31+1.0
+val x55 = x31 + 1.0
 x55
 } else {
 val x28 = x27._1
@@ -113,7 +113,7 @@ val x76 = new Tuple2Tuple2Tuple2Tuple2DoubleTuple2DoubleDoubleDoubleDoubleListCh
 val x77 = x7(x76)
 x77
 }
-val x78 = scala.virtualization.lms.epfl.test4.Automaton(x23,x24)
+val x78 = scala.lms.epfl.test4.Automaton(x23,x24)
 x78
 }
 val x1 = List()

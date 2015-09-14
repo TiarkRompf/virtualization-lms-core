@@ -1,13 +1,14 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
+
+import scala.reflect.SourceContext
 
 import java.io.{StringWriter, PrintWriter, File}
 import collection.immutable.List._
-import scala.reflect.SourceContext
 import collection.mutable.{HashMap, HashSet, ArrayBuffer, ListMap, ListBuffer}
 
 trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDeviceTransfer {
-  val IR: Expressions
+  val IR: BaseExp
   import IR._
 
   // Prefix string for device functions on the target GPU programming model (e.g., __device__ for CUDA)
@@ -16,7 +17,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   // List of kernels and helper functions emitted so far (not to emit the same thing multiple times)
   private val kernelsList = ArrayBuffer[Exp[Any]]()
   protected val helperFuncList = ArrayBuffer[String]()
- 
+
   // Current tab location for pretty printing
   protected var tabWidth:Int = 0
   def addTab():String = "\t"*tabWidth
@@ -31,11 +32,11 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   protected var inVars = List[Sym[Any]]()
   protected val boundMap = HashMap[Exp[Int],Exp[Int]]()
   private val ptrSymSet = HashSet[Sym[Any]]()
- 
-  // GPU currently does not use reference types
-  override def remapWithRef[A](m: Manifest[A]): String = remap(m)
 
-  protected def registerTempAlloc(sym:Sym[Any], tp:Manifest[Any], size:Exp[Int]):String = {
+  // GPU currently does not use reference types
+  override def remapWithRef[A](m: Typ[A]): String = remap(m)
+
+  protected def registerTempAlloc(sym:Sym[Any], tp:Typ[Any], size:Exp[Int]):String = {
     metaData.temps prepend TempAlloc(quote(sym)+"_temp",remap(tp),quote(size))
     quote(sym) + "_temp"
   }
@@ -46,19 +47,19 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   var metaData: GPUMetaData = null
 
   final class LoopElem(val elemType: String, val types: Map[String,String]) {
-    val funcs = new HashMap[String,List[String]]() // Mapping of function name to the argument list   
+    val funcs = new HashMap[String,List[String]]() // Mapping of function name to the argument list
 
     override def toString: String = {
-      "{\"elemType\":\"" + 
-      elemType + 
-      "\",\"types\":" + 
-      types.map(t => "\"" + t._1 + "\":\"" + t._2 + "\"").mkString("{",",","}") + 
-      ",\"funcs\":" + 
-      funcs.map(f => "\"" + f._1 + "\":[" + f._2.map(i => "\"" + i +  "\"").mkString(",") + "]").mkString("{",",","}") + 
+      "{\"elemType\":\"" +
+      elemType +
+      "\",\"types\":" +
+      types.map(t => "\"" + t._1 + "\":\"" + t._2 + "\"").mkString("{",",","}") +
+      ",\"funcs\":" +
+      funcs.map(f => "\"" + f._1 + "\":[" + f._2.map(i => "\"" + i +  "\"").mkString(",") + "]").mkString("{",",","}") +
       "}"
     }
   }
-  
+
   case class TempAlloc(sym: String, tp: String, size:String)
 
   final class GPUMetaData(val kernelInputs: List[Sym[Any]], val auxMeta: ListBuffer[(String,Any)]) {
@@ -127,7 +128,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
     typesStream.flush
   }
 
-  override def emitTransferFunctions() {    
+  override def emitTransferFunctions() {
     for ((tp,name) <- dsTypesList) {
       // Emit input copy helper functions for object type inputs
       //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
@@ -196,7 +197,7 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
         }
       }
       catch {
-        case e: GenerationFailedException => 
+        case e: GenerationFailedException =>
           helperFuncStream.flush
           headerStream.flush
         case e: Exception => throw(e)
@@ -227,10 +228,6 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   }
 
   def printDebug(sym: Sym[Any], msg: String) {
-    def getFirstStack(cs: SourceContext): SourceContext = cs.parent match {
-      case None => cs
-      case Some(p) => getFirstStack(p)
-    }
     print("\n** GPU Warning ")
     sym.pos match {
       case Nil => println("[unknown file] **")
@@ -241,13 +238,13 @@ trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDev
   }
 
   def clearPtrDef() = ptrSymSet.clear
-  
+
   def registerPtrDef(sym: Sym[Any]): Unit = ptrSymSet.add(sym)
-  
+
   def emitPtrDef(sym: Sym[Any], rhs: Exp[Any]): Unit = {
     if(processingHelperFunc && !isPrimitiveType(sym.tp)) {
       rhs match {
-        case s@Sym(_) => 
+        case s@Sym(_) =>
           if(!ptrSymSet.contains(s)) throw new GenerationFailedException("Ptr is not defined for " + quote(s))
           emitValDef(quote(sym) + "_ptr", sym.tp, quote(rhs) + "_ptr")
           registerPtrDef(s)

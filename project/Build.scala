@@ -3,7 +3,7 @@ import java.io.File
 
 object LMSBuild extends Build {
   System.setProperty("showSuppressedErrors", "false")
-  //System.setProperty("showTimings", "true")
+  System.setProperty("showTimings", "false")
 
   val virtScala = Option(System.getenv("SCALA_VIRTUALIZED_VERSION")).getOrElse("2.11.2")
 

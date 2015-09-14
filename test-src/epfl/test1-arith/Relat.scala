@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test1
 
@@ -32,7 +32,8 @@ trait Relat extends Base {
 }
 
 trait RelatExp extends Relat with BaseExp {
-  
+  implicit def doubleTyp: Typ[Double] = manifestTyp
+
   case class Min(x: Rep[Double], y: Rep[Double]) extends Def[Double]
   case class Max(x: Rep[Double], y: Rep[Double]) extends Def[Double]
   

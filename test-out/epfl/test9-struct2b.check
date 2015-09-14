@@ -13,7 +13,7 @@ def apply(x0:Int): Unit = {
 var x10 = new Array[Double](100)
 var x11 = new Array[Int](100)
 for (x7 <- 0 until 100) {
-val x8 = 0.0-x7
+val x8 = 0.0 - x7
 x10(x7) = x8
 x11(x7) = x7
 }

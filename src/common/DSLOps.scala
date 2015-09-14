@@ -1,29 +1,28 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
 
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
+import scala.lms.codegen.GenericCodegen
+import scala.lms.internal._
 
-//TODO: is this used at all? should it be merge with DeliteOps?
-
-//TODO rename this to something more meaningful
-
-trait DSLOpsExp extends EffectExp {
+//TODO: Is this used at all? should it be merge with DeliteOps?
+//TODO: Rename this to something more meaningful
+trait DSLOpsExp extends BaseExp {
   // representation must be reified! this places the burden on the caller, but allows the caller to avoid the
   // use of function values (which can be uglier).
   class DSLOp[A](val representation: Block[A]) extends Def[A]
 }
 
-trait BaseGenDSLOps extends GenericNestedCodegen {
+trait BaseGenDSLOps extends GenericCodegen {
   val IR: DSLOpsExp
   import IR._
 }
 
-trait ScalaGenDSLOps extends ScalaGenEffect with BaseGenDSLOps {
+trait ScalaGenDSLOps extends ScalaGenBase with BaseGenDSLOps {
   val IR: DSLOpsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case op: DSLOp[_] =>
       val b = op.representation
@@ -47,7 +46,6 @@ trait CLikeGenDSLOps extends BaseGenDSLOps with CLikeGenBase {
   }
 }
 
-trait CudaGenDSLOps extends CudaGenEffect with CLikeGenDSLOps
-trait OpenCLGenDSLOps extends OpenCLGenEffect with CLikeGenDSLOps
-trait CGenDSLOps extends CGenEffect with CLikeGenDSLOps
-
+trait CudaGenDSLOps extends CudaGenBase with CLikeGenDSLOps
+trait OpenCLGenDSLOps extends OpenCLGenBase with CLikeGenDSLOps
+trait CGenDSLOps extends CGenBase with CLikeGenDSLOps

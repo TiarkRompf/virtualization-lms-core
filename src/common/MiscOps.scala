@@ -1,11 +1,12 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal._
-import scala.reflect.SourceContext
 
-trait MiscOps extends Base {
+import scala.reflect.SourceContext
+import scala.lms.internal._
+
+trait MiscOps extends Base with PrimitiveOps with StringOps {
   /**
    * Other things that need to get lifted like exit, there should be
    * a better way to do this
@@ -16,21 +17,21 @@ trait MiscOps extends Base {
   def printf(f: String, x: Rep[Any]*)(implicit pos: SourceContext): Rep[Unit]
 
   // TODO: there is no way to override this behavior
-  def exit(status: Int)(implicit pos: SourceContext): Rep[Nothing] = exit(unit(status))
-  def exit()(implicit pos: SourceContext): Rep[Nothing] = exit(0)
-  def exit(status: Rep[Int])(implicit pos: SourceContext): Rep[Nothing]
-  def error(s: Rep[String])(implicit pos: SourceContext): Rep[Nothing]
+  def exit(status: Int)(implicit pos: SourceContext): Rep[Unit] = exit(unit(status))
+  def exit()(implicit pos: SourceContext): Rep[Unit] = exit(0)
+  def exit(status: Rep[Int])(implicit pos: SourceContext): Rep[Unit]
+  def error(s: Rep[String])(implicit pos: SourceContext): Rep[Unit]
   def returnL(x: Rep[Any])(implicit pos: SourceContext): Rep[Unit]
 }
 
 
 
-trait MiscOpsExp extends MiscOps with EffectExp {
+trait MiscOpsExp extends MiscOps with BaseExp with PrimitiveOpsExp with StringOpsExp {
   case class Print(x: Exp[Any]) extends Def[Unit]
   case class PrintLn(x: Exp[Any]) extends Def[Unit]
   case class PrintF(f: String, x: List[Exp[Any]]) extends Def[Unit]
-  case class Exit(s: Exp[Int]) extends Def[Nothing]
-  case class Error(s: Exp[String]) extends Def[Nothing]
+  case class Exit(s: Exp[Int]) extends Def[Unit]
+  case class Error(s: Exp[String]) extends Def[Unit]
   case class Return(x: Exp[Any]) extends Def[Unit]
 
   def print(x: Exp[Any])(implicit pos: SourceContext) = reflectEffect(Print(x)) // TODO: simple effect
@@ -39,23 +40,23 @@ trait MiscOpsExp extends MiscOps with EffectExp {
   def exit(s: Exp[Int])(implicit pos: SourceContext) = reflectEffect(Exit(s))
   def error(s: Exp[String])(implicit pos: SourceContext) = reflectEffect(Error(s))
   def returnL(x: Exp[Any])(implicit pos: SourceContext) = {
-    printlog("warning: staged return statements are unlikely to work because the surrounding source method does not exist in the generated code.")
-    printsrc(raw"in ${quotePos(x)}")
+    cwarn("Staged return statements are unlikely to work because the surrounding source method does not exist in the generated code.")
+    cwarn(raw"in ${quotePos(x)}")
     reflectEffect(Return(x))
   }
-  
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case Reflect(Error(x), u, es) => reflectMirrored(Reflect(Error(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(PrintLn(x), u, es) => reflectMirrored(Reflect(PrintLn(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(PrintF(fm,x), u, es) => reflectMirrored(Reflect(PrintF(fm,f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(Exit(x), u, es) => reflectMirrored(Reflect(Exit(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(Return(x), u, es) => reflectMirrored(Reflect(Return(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case Reflect(Error(x), u, es) => reflectMirrored(Reflect(Error(f(x)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(PrintLn(x), u, es) => reflectMirrored(Reflect(PrintLn(f(x)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(PrintF(fm,x), u, es) => reflectMirrored(Reflect(PrintF(fm,f(x)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(Exit(x), u, es) => reflectMirrored(Reflect(Exit(f(x)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(Return(x), u, es) => reflectMirrored(Reflect(Return(f(x)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
 
-trait ScalaGenMiscOps extends ScalaGenEffect {
+trait ScalaGenMiscOps extends ScalaGenBase {
   val IR: MiscOpsExp
   import IR._
 
@@ -71,7 +72,7 @@ trait ScalaGenMiscOps extends ScalaGenEffect {
 }
 
 
-trait CGenMiscOps extends CGenEffect {
+trait CGenMiscOps extends CGenBase {
   val IR: MiscOpsExp
   import IR._
 
@@ -81,7 +82,7 @@ trait CGenMiscOps extends CGenEffect {
       case "bool" | "int8_t" | "int16_t" | "int32_t" => "%d"
       case "int64_t" => "%ld"
       case "float" | "double" => "%f"
-      case "string" => "%s" 
+      case "string" => "%s"
       case _ => "%p"
     }
   }
@@ -104,7 +105,7 @@ trait CGenMiscOps extends CGenEffect {
   }
 }
 
-trait CudaGenMiscOps extends CudaGenEffect {
+trait CudaGenMiscOps extends CudaGenBase {
   val IR: MiscOpsExp
   import IR._
 
@@ -114,7 +115,7 @@ trait CudaGenMiscOps extends CudaGenEffect {
 }
 
 
-trait OpenCLGenMiscOps extends OpenCLGenEffect {
+trait OpenCLGenMiscOps extends OpenCLGenBase {
   val IR: MiscOpsExp
   import IR._
 

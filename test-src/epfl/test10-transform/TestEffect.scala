@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test10
 
@@ -63,7 +63,7 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
   
   case class Multi(as: List[Def[Any]]) extends FatDef
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Mutate(a,b) => toAtom(Mutate(f(a),f(b)))
     case Copy(a) => toAtom(Copy(f(a)))
     case _ => super.mirror(e,f)
@@ -94,7 +94,7 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
   // speculative nature: we must be able to back off if speculation fails.
   // ergo, need to save original Defs (or have a way to reconstruct them).
 
-  override implicit def toAtom[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
+  override implicit def toAtom[A:Typ](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
     val in = syms(d)
     val actual = in map (s => subst.getOrElse(s,s))
     
@@ -114,7 +114,7 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
         val sym = fresh[A]
         
         for (TP(s,rhs) <- transitive) {
-          subst += (s -> toAtom(Mutate(s, sym)))
+          subst += (s -> toAtom(Mutate(s, sym))(s.tp,mpos(s.pos)))
         }
         
         // add soft dependencies on transitive to ensure ordering!
@@ -171,18 +171,19 @@ class TestEffects extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test10-"
   
-  trait DSL extends Lib with ArrayMutation with Arith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
+  trait DSL extends Lib with ArrayMutation with OrderingOps with PrimitiveOps with LiftPrimitives with LiftVariables with IfThenElse with While with RangeOps with Print {
 
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
     def test(x: Rep[Int]): Rep[Unit]
   }
-  trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+  trait Impl extends DSL with ArrayMutationExp with PrimitiveOpsExp with OrderingOpsExpOpt
       with EqualExpOpt //with VariablesExpOpt 
       with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp 
+      with StringOpsExp with SeqOpsExp
       with Lib with LibExp { self => 
     override val verbosity = 2
-    val codegen = new ScalaGenFat with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenFat with ScalaGenArrayMutation with ScalaGenPrimitiveOps with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative with ScalaGenRangeOps 
       with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self 
         override def fattenAll(e: List[Stm]): List[Stm] = {
@@ -233,7 +234,7 @@ class TestEffects extends FileDiffSuite {
       def test(x: Rep[Int]) = {
         val x = vzeros(100)
         val as = vliteral(List(x))
-        vupdate(x,5,7) // later reads of as must come after this
+        vupdate(x,5,7.0) // later reads of as must come after this
         val y = vapply(as,0)
         print(y)
       }
@@ -248,7 +249,7 @@ class TestEffects extends FileDiffSuite {
         val y = vzeros(100) // this will do speculative cse (or call copy)
         val as = vliteral(List(x))
         val bs = vliteral(List(y))
-        vupdate(x,5,7) // must undo cse: now x and y are different. also, as and bs are different now
+        vupdate(x,5,7.0) // must undo cse: now x and y are different. also, as and bs are different now
         val u = vapply(as,0)
         val v = vapply(bs,0)
         print(u)
@@ -265,7 +266,7 @@ class TestEffects extends FileDiffSuite {
         val y = vzeros(100) // this will do speculative cse  (or call copy)
         val e = vliteral(List(y)) // assume that this operation is expensive (don't want to do it twice)
         print(e)
-        vupdate(x,5,7) // must undo cse: now x and y are different. also, as and bs are different now
+        vupdate(x,5,7.0) // must undo cse: now x and y are different. also, as and bs are different now
         print(e)
       }
     }
@@ -279,7 +280,7 @@ class TestEffects extends FileDiffSuite {
         val y = x
         val as = vliteral(List(x))
         val bs = vliteral(List(y)) // this one should be dce'd because it is never used
-        vupdate(x,5,7) // this will invalidate bs (anti-dep) but should not give rise to a hard dependency
+        vupdate(x,5,7.0) // this will invalidate bs (anti-dep) but should not give rise to a hard dependency
         val u = vapply(as,0)
         val v = vapply(bs,0)
         print(u)

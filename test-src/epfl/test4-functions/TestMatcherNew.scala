@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test4
 
@@ -447,7 +447,7 @@ trait MatcherNewProgTrivialC {
 
 
 
-trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with IfThenElse =>
+trait MatcherNewProgA extends Util { this: PrimitiveOps with BooleanOps with StringOps with Functions with Equal with IfThenElse =>
 
   type IO = Rep[Unit]
   
@@ -477,6 +477,8 @@ trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with 
   type Thread = Rep[Char]=>Rep[Unit]
   type CondThread = (Rep[Boolean], Thread)
 
+  implicit def ttTyp: Typ[TT]
+
   def collectall(in: List[Rep[Any]]): Rep[Unit]
   def printL(in: Rep[Any]): Rep[Unit]
 
@@ -497,7 +499,7 @@ trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with 
     }
     
     // run all combinations of conditions
-    def combinations[A,B:Manifest](rest: List[(Rep[Boolean], List[A])], 
+    def combinations[A,B:Typ](rest: List[(Rep[Boolean], List[A])], 
       acc: List[A] = Nil)(handler: List[A] => Rep[B]): Rep[B] = rest match {
       
       case Nil =>
@@ -534,7 +536,7 @@ trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with 
 }
 
 
-trait MatcherNewProgB extends Util { this: Arith with Functions with Equal with IfThenElse =>
+trait MatcherNewProgB extends Util { this: PrimitiveOps with BooleanOps with StringOps with Functions with Equal with IfThenElse =>
 
   abstract class EX
   
@@ -579,7 +581,7 @@ trait MatcherNewProgB extends Util { this: Arith with Functions with Equal with 
   }
 
 
-  def interpret[A:Manifest](xs: IO)(k: List[Rep[Char]=>IO] => Rep[A]): Rep[A] = xs match {
+  def interpret[A:Typ](xs: IO)(k: List[Rep[Char]=>IO] => Rep[A]): Rep[A] = xs match {
     case Nil => k(Nil)
     case ID(s,e)::rest =>
       val rec = interpret(rest)(k)
@@ -668,23 +670,23 @@ trait MemoUtils extends util.ClosureCompare {
 
 
 
-trait Util extends Base with Arith with Functions {
+trait Util extends Base with LiftPrimitives with PrimitiveOps with Functions {
   
-  class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
+  class LambdaOps[A:Typ,B:Typ](f: Rep[A=>B]) {
     def apply(x:Rep[A]): Rep[B] = doApply(f, x)
   }
-  implicit def lam[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
+  implicit def lam[A:Typ,B:Typ](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
   //implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
 
   implicit def toDouble(f: Rep[Int]): Rep[Double] = f.asInstanceOf[Rep[Double]]
   
   def collectall(in: List[Rep[Any]]): Rep[Unit]
-  def protect[A:Manifest](x: Rep[A], in: List[Rep[Any]]): Rep[A]
+  def protect[A:Typ](x: Rep[A], in: List[Rep[Any]]): Rep[A]
 }
 
 
 
-trait MatcherNewProg extends DFAOps with GAOps with NFAtoDFA with GAtoDA with Util { this: Arith with Functions with Equal with IfThenElse =>
+trait MatcherNewProg extends DFAOps with GAOps with NFAtoDFA with GAtoDA with Util { this: PrimitiveOps with Functions with Equal with IfThenElse =>
 
   // -- begin general automaton
   
@@ -696,7 +698,7 @@ trait MatcherNewProg extends DFAOps with GAOps with NFAtoDFA with GAtoDA with Ut
             gtrans { a3 =>
               gguard (a3 == 'B', true) {
                 //gstop()
-                gtrans(unit(List(1))) { a4 => gstop() }
+                gtrans(unit(List[Any](1))) { a4 => gstop() }
     }}}}}},
     gtrans { _ => gfindAAB() }) // in parallel...
   }
@@ -732,8 +734,8 @@ class TestMatcherNew extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test4-"
   
-  trait DSL extends MatcherNewProg with Arith with Functions with Equal with IfThenElse {
-    def bare[T:Manifest](x: Rep[Any], f: String => String): Rep[T]
+  trait DSL extends MatcherNewProg with PrimitiveOps with Functions with Equal with IfThenElse {
+    def bare[T:Typ](x: Rep[Any], f: String => String): Rep[T]
     def test(x: Rep[Unit]): DIO
   }
 
@@ -759,8 +761,8 @@ class TestMatcherNew extends FileDiffSuite {
   }
 
   trait Impl extends DSL with RunTest with DFAOpsExp with GAOpsExp
-    with ArithExpOpt with EqualExpOpt with TupleOpsExp with OrderingOpsExp 
-    with BooleanOpsExp with IfThenElseExpOpt with IfThenElseFatExp with ListOpsExp
+    with PrimitiveOpsExpOpt with EqualExpOpt with TupleOpsExp with OrderingOpsExp 
+    with BooleanOpsExp with IfThenElseExpOpt with IfThenElseFatExp with ListOpsExp with SeqOpsExp
     with SplitEffectsExpFat // temporary!
     //with FunctionExpUnfoldRecursion 
     with FunctionsExternalDef1 /* was 2 */ 
@@ -769,11 +771,11 @@ class TestMatcherNew extends FileDiffSuite {
       case class ResultA[A](x: Exp[A], in: List[Exp[Any]]) extends Def[A] //FIXME
       case class Bare[T](x: Exp[Any], f: String => String) extends Def[T] //FIXME
       def collectall(in: List[Rep[Any]]): Rep[Unit] = Result(in)
-      def protect[A:Manifest](x: Exp[A], in: List[Rep[Any]]): Rep[A] = ResultA(x,in)
-      def bare[T:Manifest](x: Exp[Any], f: String => String): Exp[T] = Bare[T](x,f)
+      def protect[A:Typ](x: Exp[A], in: List[Rep[Any]]): Rep[A] = ResultA(x,in)
+      def bare[T:Typ](x: Exp[Any], f: String => String): Exp[T] = Bare[T](x,f)
       //def printL(in: Rep[Any]): Rep[Unit] = /*reflectEffect*/(Result(List(in))) //FIXME violate ordering
       override val verbosity = 1
-      object codegen extends ScalaGenArith with ScalaGenEqual with ScalaGenListOps with ScalaGenTupleOps
+      object codegen extends ScalaGenPrimitiveOps with ScalaGenEqual with ScalaGenListOps with ScalaGenTupleOps
           with ScalaGenIfThenElseFat with ScalaGenSplitEffects with ScalaGenOrderingOps
           with ScalaGenDFAOps with ScalaGenGAOps
           with ScalaGenFunctionsExternal { 
@@ -884,7 +886,7 @@ class TestMatcherNew extends FileDiffSuite {
                   gtrans { a3 =>
                     gguard (a3 == 'B', true) {
                       //gstop()
-                      gtrans(unit(List(1))) { a4 => gstop() }
+                      gtrans(unit(List[Any](1))) { a4 => gstop() }
           }}}}}},
           gtrans { _ => gfindAAB() }) // in parallel...
         }
@@ -913,7 +915,7 @@ class TestMatcherNew extends FileDiffSuite {
                   gtrans { a3 =>
                     gguard (a3 == 'B'/*, true*/) {
                       //gstop()
-                      gtrans(unit(List(1))) { a4 => gstop() }
+                      gtrans(unit(List[Any](1))) { a4 => gstop() }
           }}}}}})
         }
         
@@ -925,9 +927,9 @@ class TestMatcherNew extends FileDiffSuite {
 
 
   def testCounter1 = withOutFileChecked(prefix+"counter1") {
-    trait Prog extends DSL with ListOps with Arith {
+    trait Prog extends DSL with ListOps with LiftPrimitives {
 
-      def protect[A:Manifest](a:Rep[A],b:Rep[Any]): Rep[A] = protect(a, Seq(b).toList)
+      def protect[A:Typ](a:Rep[A],b:Rep[Any]): Rep[A] = protect(a, Seq(b).toList)
 
       def test(x: Rep[Unit]) = {
         
@@ -944,19 +946,19 @@ class TestMatcherNew extends FileDiffSuite {
   }
 
 
-  trait StreamHelpers extends DSL with ListOps with Arith with BooleanOps with TupleOps with OrderingOps with StepperOps {
+  trait StreamHelpers extends DSL with ListOps with LiftAll with PrimitiveOps with BooleanOps with TupleOps with OrderingOps with StepperOps {
     def countChar(c:Rep[Char]) = Stream[Char] filter (_ == c) into fcount
 
     def pcount(n: Rep[Double]) = Prod[Double](0, _ < n, _ + 1)
-    def ptails[T:Manifest](xs: Rep[List[T]]) = Prod[List[T]](xs, !list_isEmpty(_), list_tail(_))
-    def plist[T:Manifest](xs: Rep[List[T]]) = ptails(xs) map (list_head(_))
+    def ptails[T:Typ](xs: Rep[List[T]]) = Prod[List[T]](xs, !list_isEmpty(_), list_tail(_))
+    def plist[T:Typ](xs: Rep[List[T]]) = ptails(xs) map (list_head(_))
 
-    def fcount[T:Manifest] = Foreach[T,Double](0, c => s => s + 1)
-    def fwhile[T:Manifest](p: Rep[T] => Rep[Boolean]) = Foreach[T,Boolean](unit(true), c => s => if (s && p(c)) unit(true) else unit(false))
-    def flast[T:Manifest](s: Rep[T]) = Foreach[T,T](s, c => s => c)
-    def fcollect[T:Manifest] = Foreach[T,List[T]](List(), c => s => list_concat(s,List(c)))
+    def fcount[T:Typ] = Foreach[T,Double](0, c => s => s + 1)
+    def fwhile[T:Typ](p: Rep[T] => Rep[Boolean]) = Foreach[T,Boolean](unit(true), c => s => if (s && p(c)) unit(true) else unit(false))
+    def flast[T:Typ](s: Rep[T]) = Foreach[T,T](s, c => s => c)
+    def fcollect[T:Typ] = Foreach[T,List[T]](List[T](), c => s => list_concat(s,List(c)))
 
-    def switcher[T:Manifest,S1:Manifest,S2:Manifest,O1:Manifest,O2:Manifest](s: Stream[T])(p: Rep[T]=>Rep[Boolean])(a: Stepper2[T,S1,O1], b: Stepper2[O1,S2,O2]) = 
+    def switcher[T:Typ,S1:Typ,S2:Typ,O1:Typ,O2:Typ](s: Stream[T])(p: Rep[T]=>Rep[Boolean])(a: Stepper2[T,S1,O1], b: Stepper2[O1,S2,O2]) = 
       Stepper2[T,(S1,S2),O2]((a.s,b.s), ss => b.cond(ss._2), c => ss => if (p(c)) (a.s, b.yld(a.res(ss._1))(ss._2)) else (a.yld(c)(ss._1), ss._2), ss => b.res(ss._2))
       
   }

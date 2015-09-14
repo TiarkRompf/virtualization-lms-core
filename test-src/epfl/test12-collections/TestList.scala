@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test12
 
@@ -25,7 +25,7 @@ class TestList extends FileDiffSuite {
       List[Int]() ++ xs // VIRT 2.11: need type annotation
 
     def emptyRight(xs: Rep[List[Int]]): Rep[List[Int]] =
-      xs ++ List()
+      xs ++ List[Int]()
   }
 
   trait MkString { this: ListOps =>
@@ -37,8 +37,9 @@ class TestList extends FileDiffSuite {
 
   def testMapFlatMapAndFilter() {
     withOutFile(prefix+"map-flatmap-filter") {
-      val prog = new MapFlatMapAndFilter with ListOpsExp with NumericOpsExp with PrimitiveOpsExp with OrderingOpsExp
+      val prog = new MapFlatMapAndFilter with ListOpsExp with SeqOpsExp with ArrayOpsExp with NumericOpsExp with PrimitiveOpsExp with OrderingOpsExp
       val codegen = new ScalaGenEffect with ScalaGenListOps with ScalaGenNumericOps with ScalaGenPrimitiveOps with ScalaGenOrderingOps { val IR: prog.type = prog }
+      import prog.{intTyp,unitTyp,listTyp}
       codegen.emitSource(prog.test, "MapFlatMapAndFilter", new PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"map-flatmap-filter")
@@ -46,8 +47,9 @@ class TestList extends FileDiffSuite {
 
   def testConcat() {
     withOutFile(prefix+"concat") {
-      val prog = new Concat with ListOpsExpOpt
+      val prog = new Concat with ListOpsExpOpt with SeqOpsExp with ArrayOpsExp with PrimitiveOpsExp
       val codegen = new ScalaGenEffect with ScalaGenListOps { val IR: prog.type = prog }
+      import prog.{intTyp,unitTyp,listTyp}
       codegen.emitSource(prog.test, "Concat", new PrintWriter(System.out))
       codegen.emitSource(prog.emptyLeft, "ConcatEmptyLeft", new PrintWriter(System.out))
       codegen.emitSource(prog.emptyRight, "ConcatEmptyRight", new PrintWriter(System.out))
@@ -57,8 +59,9 @@ class TestList extends FileDiffSuite {
 
   def testMkString() {
     withOutFile(prefix+"mkstring") {
-      val prog = new MkString with ListOpsExp
+      val prog = new MkString with ListOpsExp with SeqOpsExp with PrimitiveOpsExp
       val codegen = new ScalaGenEffect with ScalaGenListOps { val IR: prog.type = prog }
+      import prog.{intTyp,unitTyp,listTyp,stringTyp}
       codegen.emitSource(prog.test, "MkString", new PrintWriter(System.out))
     }
     assertFileEqualsCheck(prefix+"mkstring")

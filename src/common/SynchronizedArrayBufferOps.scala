@@ -1,29 +1,28 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.internal.GenericNestedCodegen
+import scala.lms.codegen.GenericCodegen
 import collection.mutable.ArrayBuffer
 import scala.reflect.SourceContext
+import scala.lms.internal._
 
 trait SynchronizedArrayBufferOps extends ArrayBufferOps {
 
 /*
   object SynchronizedArrayBuffer {
-    def apply[A:Manifest](xs: Rep[A]*)(implicit pos: SourceContext) = arraybuffer_new(xs)
+    def apply[A:Typ](xs: Rep[A]*)(implicit pos: SourceContext) = arraybuffer_new(xs)
   }
 */
 
 }
 
 trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with ArrayBufferOpsExp {
-  case class SyncArrayBufferNew[A:Manifest](xs: Seq[Exp[A]]) extends Def[ArrayBuffer[A]]  {
-    val mA = manifest[A]
-  }
+  case class SyncArrayBufferNew[A:Typ](xs: Seq[Exp[A]]) extends Def2[A,ArrayBuffer[A]]
 
-  // all array buffers are synchronized (nackward compat). TODO: separate constructor
+  // all array buffers are synchronized (backward compat). TODO: separate constructor
 
-  override def arraybuffer_new[A:Manifest](xs: Seq[Exp[A]])(implicit pos: SourceContext) = reflectMutable(SyncArrayBufferNew(xs))
+  override def arraybuffer_new[A:Typ](xs: Seq[Exp[A]])(implicit pos: SourceContext) = reflectMutable(SyncArrayBufferNew(xs))
 }
 
 trait BaseGenSynchronizedArrayBufferOps extends BaseGenArrayBufferOps {
@@ -52,7 +51,7 @@ trait CLikeGenSynchronizedArrayBufferOps extends BaseGenSynchronizedArrayBufferO
     }
 }
 
-trait CudaGenSynchronizedArrayBufferOps extends CudaGenEffect with CLikeGenSynchronizedArrayBufferOps
-trait OpenCLGenSynchronizedArrayBufferOps extends OpenCLGenEffect with CLikeGenSynchronizedArrayBufferOps
-trait CGenSynchronizedArrayBufferOps extends CGenEffect with CLikeGenSynchronizedArrayBufferOps
+trait CudaGenSynchronizedArrayBufferOps extends CudaGenBase with CLikeGenSynchronizedArrayBufferOps
+trait OpenCLGenSynchronizedArrayBufferOps extends OpenCLGenBase with CLikeGenSynchronizedArrayBufferOps
+trait CGenSynchronizedArrayBufferOps extends CGenBase with CLikeGenSynchronizedArrayBufferOps
 

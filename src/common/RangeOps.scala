@@ -1,12 +1,15 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
 
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
+import scala.lms.internal._
+import scala.lms.codegen.GenericCodegen
 import scala.reflect.SourceContext
 
 trait RangeOps extends Base {
+  implicit def rangeTyp: Typ[Range]
+
   // workaround for infix not working with manifests
   implicit def repRangeToRangeOps(r: Rep[Range]) = new rangeOpsCls(r)
   class rangeOpsCls(r: Rep[Range]){
@@ -26,7 +29,9 @@ trait RangeOps extends Base {
   def range_foreach(r: Rep[Range], f: (Rep[Int]) => Rep[Unit])(implicit pos: SourceContext): Rep[Unit]
 }
 
-trait RangeOpsExp extends RangeOps with FunctionsExp {
+trait RangeOpsExp extends RangeOps with PrimitiveOps with BaseExp {
+  implicit def rangeTyp: Typ[Range] = manifestTyp
+
   case class Until(start: Exp[Int], end: Exp[Int]) extends Def[Range]
   case class RangeStart(r: Exp[Range]) extends Def[Int]
   case class RangeStep(r: Exp[Range]) extends Def[Int]
@@ -34,30 +39,30 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
   //case class RangeForeach(r: Exp[Range], i: Exp[Int], body: Exp[Unit]) extends Def[Unit]
   case class RangeForeach(start: Exp[Int], end: Exp[Int], i: Sym[Int], body: Block[Unit]) extends Def[Unit]
 
-  def range_until(start: Exp[Int], end: Exp[Int])(implicit pos: SourceContext) : Exp[Range] = Until(start, end)
-  def range_start(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = r match { 
+  def range_until(start: Exp[Int], end: Exp[Int])(implicit pos: SourceContext) : Exp[Range] = toAtom(Until(start, end))
+  def range_start(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = r match {
     case Def(Until(start, end)) => start
     case Def(Reflect(Until(start, end), u, es)) => start
-    case _ => RangeStart(r)
+    case _ => toAtom(RangeStart(r))
   }
-  def range_step(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = RangeStep(r)
-  def range_end(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = r match { 
+  def range_step(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = toAtom(RangeStep(r))
+  def range_end(r: Exp[Range])(implicit pos: SourceContext) : Exp[Int] = r match {
     case Def(Until(start, end)) => end
     case Def(Reflect(Until(start, end), u, es)) => end
-    case _ => RangeEnd(r)
+    case _ => toAtom(RangeEnd(r))
   }
   def range_foreach(r: Exp[Range], block: Exp[Int] => Exp[Unit])(implicit pos: SourceContext) : Exp[Unit] = {
     val i = fresh[Int]
     val a = reifyEffects(block(i))
-    reflectEffect(RangeForeach(r.start, r.end, i, a), summarizeEffects(a).star)
+    reflectEffect(RangeForeach(range_start(r), range_end(r), i, a), summarizeEffects(a).star)
   }
-  
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case Reflect(RangeForeach(s,e,i,b), u, es) => reflectMirrored(Reflect(RangeForeach(f(s),f(e),f(i).asInstanceOf[Sym[Int]],f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
-    case Reflect(RangeStart(r), u, es) => reflectMirrored(Reflect(RangeStart(f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(RangeStep(r), u, es) => reflectMirrored(Reflect(RangeStep(f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(RangeEnd(r), u, es) => reflectMirrored(Reflect(RangeEnd(f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(Until(s,e), u, es) => reflectMirrored(Reflect(Until(f(s),f(e)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case Reflect(RangeForeach(s,e,i,b), u, es) => reflectMirrored(Reflect(RangeForeach(f(s),f(e),f(i).asInstanceOf[Sym[Int]],f(b)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(RangeStart(r), u, es) => reflectMirrored(Reflect(RangeStart(f(r)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(RangeStep(r), u, es) => reflectMirrored(Reflect(RangeStep(f(r)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(RangeEnd(r), u, es) => reflectMirrored(Reflect(RangeEnd(f(r)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(Until(s,e), u, es) => reflectMirrored(Reflect(Until(f(s),f(e)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -80,13 +85,13 @@ trait RangeOpsExp extends RangeOps with FunctionsExp {
 
 }
 
-trait BaseGenRangeOps extends GenericNestedCodegen {
+trait BaseGenRangeOps extends GenericCodegen {
   val IR: RangeOpsExp
   import IR._
 
 }
 
-trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
+trait ScalaGenRangeOps extends ScalaGenBase with BaseGenRangeOps {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
@@ -115,7 +120,7 @@ trait ScalaGenRangeOps extends ScalaGenEffect with BaseGenRangeOps {
   }
 }
 
-trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
+trait CudaGenRangeOps extends CudaGenBase with BaseGenRangeOps {
   val IR: RangeOpsExp
   import IR._
 
@@ -148,7 +153,7 @@ trait CudaGenRangeOps extends CudaGenEffect with BaseGenRangeOps {
   }
 }
 
-trait OpenCLGenRangeOps extends OpenCLGenEffect with BaseGenRangeOps {
+trait OpenCLGenRangeOps extends OpenCLGenBase with BaseGenRangeOps {
   val IR: RangeOpsExp
   import IR._
 
@@ -164,7 +169,7 @@ trait OpenCLGenRangeOps extends OpenCLGenEffect with BaseGenRangeOps {
   }
 }
 
-trait CGenRangeOps extends CGenEffect with BaseGenRangeOps {
+trait CGenRangeOps extends CGenBase with BaseGenRangeOps {
   val IR: RangeOpsExp
   import IR._
 

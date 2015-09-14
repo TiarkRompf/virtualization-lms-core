@@ -1,18 +1,18 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.{File, FileReader, FileWriter, BufferedReader, BufferedWriter, PrintWriter}
-import scala.virtualization.lms.internal.{GenerationFailedException}
 import util.OverloadHack
 import scala.reflect.SourceContext
+import scala.lms.internal._
 
-// TODO: fine grained effects
-
-trait IOOps extends Variables with OverloadHack {
+// TODO: fine-grained effects
+trait IOOps extends Variables with OverloadHack with StringOps {
 
   /**
    * File
    */
+  implicit def fileTyp: Typ[File]
   object File {
     def apply(dir: Rep[String])(implicit pos: SourceContext) = obj_file_apply(dir)
   }
@@ -24,10 +24,11 @@ trait IOOps extends Variables with OverloadHack {
   def file_getcanonicalfile(f: Rep[File])(implicit pos: SourceContext): Rep[File]
   def file_getpath(f: Rep[File])(implicit pos: SourceContext): Rep[String]
   def file_listfiles(f: Rep[File])(implicit pos: SourceContext): Rep[Array[File]]
-  
+
   /**
    * BufferedReader
    */
+  implicit def bufferedReaderTyp: Typ[BufferedReader]
   object BufferedReader {
     def apply(f: Rep[FileReader])(implicit pos: SourceContext) = obj_br_apply(f)
   }
@@ -41,8 +42,9 @@ trait IOOps extends Variables with OverloadHack {
   /**
    * BufferedWriter
    */
+  implicit def bufferedWriterTyp: Typ[BufferedWriter]
   object BufferedWriter {
-    def apply(f: Rep[FileWriter])(implicit pos: SourceContext) = obj_bw_apply(f)    
+    def apply(f: Rep[FileWriter])(implicit pos: SourceContext) = obj_bw_apply(f)
   }
 
   def infix_write(b: Rep[BufferedWriter], s: Rep[String])(implicit pos: SourceContext) = bw_write(b,s)
@@ -55,6 +57,7 @@ trait IOOps extends Variables with OverloadHack {
   /**
    * FileReader
    */
+  implicit def fileReaderTyp: Typ[FileReader]
   object FileReader {
     def apply(s: Rep[String])(implicit pos: SourceContext) = obj_fr_apply(s)
   }
@@ -63,13 +66,20 @@ trait IOOps extends Variables with OverloadHack {
   /**
    * FileWriter
    */
+  implicit def fileWriterTyp: Typ[FileWriter]
   object FileWriter {
     def apply(s: Rep[String])(implicit pos: SourceContext) = obj_fw_apply(s)
   }
   def obj_fw_apply(s: Rep[String])(implicit pos: SourceContext): Rep[FileWriter]
 }
 
-trait IOOpsExp extends IOOps with DSLOpsExp {
+trait IOOpsExp extends IOOps with DSLOpsExp with ArrayOpsExp {
+  implicit def fileTyp: Typ[File] = manifestTyp
+  implicit def bufferedReaderTyp: Typ[BufferedReader] = manifestTyp
+  implicit def bufferedWriterTyp: Typ[BufferedWriter] = manifestTyp
+  implicit def fileReaderTyp: Typ[FileReader] = manifestTyp
+  implicit def fileWriterTyp: Typ[FileWriter] = manifestTyp
+
   case class ObjFileApply(dir: Exp[String]) extends Def[File]
   case class FileGetCanonicalFile(f: Exp[File]) extends Def[File]
   case class FileGetPath(f: Exp[File]) extends Def[String]
@@ -86,10 +96,10 @@ trait IOOpsExp extends IOOps with DSLOpsExp {
   case class BrClose(b: Exp[BufferedReader]) extends Def[Unit]
 
   def obj_file_apply(dir: Exp[String])(implicit pos: SourceContext): Exp[File] = reflectEffect(ObjFileApply(dir))
-  def file_getcanonicalfile(f: Exp[File])(implicit pos: SourceContext) = FileGetCanonicalFile(f)
-  def file_getpath(f: Exp[File])(implicit pos: SourceContext) = FileGetPath(f)
-  def file_listfiles(f: Exp[File])(implicit pos: SourceContext) = FileListFiles(f)
-  
+  def file_getcanonicalfile(f: Exp[File])(implicit pos: SourceContext) = toAtom(FileGetCanonicalFile(f))
+  def file_getpath(f: Exp[File])(implicit pos: SourceContext) = toAtom(FileGetPath(f))
+  def file_listfiles(f: Exp[File])(implicit pos: SourceContext) = toAtom(FileListFiles(f))
+
   def obj_br_apply(f: Exp[FileReader])(implicit pos: SourceContext): Exp[BufferedReader] = reflectEffect(ObjBrApply(f))
   def obj_bw_apply(f: Exp[FileWriter])(implicit pos: SourceContext): Exp[BufferedWriter] = reflectEffect(ObjBwApply(f))
   def obj_fr_apply(s: Exp[String])(implicit pos: SourceContext): Exp[FileReader] = reflectEffect(ObjFrApply(s))
@@ -99,26 +109,24 @@ trait IOOpsExp extends IOOps with DSLOpsExp {
   def bw_close(b: Exp[BufferedWriter])(implicit pos: SourceContext) = reflectEffect(BwClose(b))
   def br_readline(b: Exp[BufferedReader])(implicit pos: SourceContext) : Exp[String] = reflectEffect(BrReadline(b))
   def br_close(b: Exp[BufferedReader])(implicit pos: SourceContext) : Exp[Unit] = reflectEffect(BrClose(b))
-  
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
-    e match {
-      case Reflect(ObjFrApply(s), u, es) => reflectMirrored(Reflect(ObjFrApply(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(ObjBrApply(x), u, es) => reflectMirrored(Reflect(ObjBrApply(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(ObjFwApply(s), u, es) => reflectMirrored(Reflect(ObjFwApply(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(ObjBwApply(x), u, es) => reflectMirrored(Reflect(ObjBwApply(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(BrReadline(b), u, es) => reflectMirrored(Reflect(BrReadline(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(BwWrite(b,s), u, es) => reflectMirrored(Reflect(BwWrite(f(b),f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(BrClose(b), u, es) => reflectMirrored(Reflect(BrClose(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(BwClose(b), u, es) => reflectMirrored(Reflect(BwClose(f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case _ => super.mirror(e,f)
-    }
-  }).asInstanceOf[Exp[A]]  
+
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
+    case Reflect(ObjFrApply(s), u, es) => reflectMirrored(Reflect(ObjFrApply(f(s)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(ObjBrApply(x), u, es) => reflectMirrored(Reflect(ObjBrApply(f(x)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(ObjFwApply(s), u, es) => reflectMirrored(Reflect(ObjFwApply(f(s)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(ObjBwApply(x), u, es) => reflectMirrored(Reflect(ObjBwApply(f(x)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(BrReadline(b), u, es) => reflectMirrored(Reflect(BrReadline(f(b)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(BwWrite(b,s), u, es) => reflectMirrored(Reflect(BwWrite(f(b),f(s)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(BrClose(b), u, es) => reflectMirrored(Reflect(BrClose(f(b)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case Reflect(BwClose(b), u, es) => reflectMirrored(Reflect(BwClose(f(b)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case _ => super.mirror(e,f)
+  }
 }
 
 trait ScalaGenIOOps extends ScalaGenBase {
   val IR: IOOpsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case ObjFileApply(dir) => emitValDef(sym, src"new java.io.File($dir)")
     case FileGetCanonicalFile(f) => emitValDef(sym, src"$f.getCanonicalFile()")

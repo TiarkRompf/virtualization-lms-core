@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test7
 
@@ -76,8 +76,8 @@ class TestLambdalift extends FileDiffSuite {
         def emitFocused[A,B](name: String, params: List[Exp[Any]], x: Exp[A], y: Block[B], out: PrintWriter): Unit
       }
       
-      new NestLambdaProg1 with ArithExp with FunctionsExp with PrintExp { self =>
-        val codegen = new ScalaGenArith with ScalaGenFunctions with ScalaGenPrint { 
+      new NestLambdaProg1 with CoreOpsPkgExp with FunctionsExp with PrintExp { self =>
+        val codegen = new ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenPrint { 
           val IR: self.type = self
           
           /*def boundAndUsedInScope(x: Exp[Any], y: Exp[Any]): (List[Sym[Any]], List[Sym[Any]]) = {
@@ -106,7 +106,7 @@ class TestLambdalift extends FileDiffSuite {
             case _ => super.emitNode(sym, rhs)
           }
         }
-        val codegen2 = new ScalaGenBla with ScalaGenArith with ScalaGenFunctions with ScalaGenPrint { 
+        val codegen2 = new ScalaGenBla with ScalaGenPrimitiveOps with ScalaGenFunctions with ScalaGenPrint { 
           val IR: self.type = self
           
           override def initialDefs = codegen.availableDefs

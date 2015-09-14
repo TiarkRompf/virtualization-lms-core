@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test14
 
@@ -17,11 +17,11 @@ class TestDataOp extends FileDiffSuite {
   
   trait DSL extends ScalaOpsPkg with TupledFunctions with UncheckedOps with LiftPrimitives with LiftString with LiftVariables {
     // keep track of top level functions
-    case class TopLevel[A,B](name: String, mA: Manifest[A], mB:Manifest[B], f: Rep[A] => Rep[B])
+    case class TopLevel[A,B](name: String, mA: Typ[A], mB:Typ[B], f: Rep[A] => Rep[B])
     val rec = new scala.collection.mutable.HashMap[String,TopLevel[_,_]]
-    def toplevel[A:Manifest,B:Manifest](name: String)(f: Rep[A] => Rep[B]): Rep[A] => Rep[B] = {
+    def toplevel[A:Typ,B:Typ](name: String)(f: Rep[A] => Rep[B]): Rep[A] => Rep[B] = {
       val g = (x: Rep[A]) => unchecked[B](name,"(",x,")")
-      rec.getOrElseUpdate(name, TopLevel(name, manifest[A], manifest[B], f))
+      rec.getOrElseUpdate(name, TopLevel(name, typ[A], typ[B], f))
       g
     }
     val L = scala.List
@@ -158,7 +158,7 @@ class TestDataOp extends FileDiffSuite {
   trait Impl extends DSL with ScalaOpsPkgExp with VariablesExpOpt with PrimitiveOpsExpOpt with TupledFunctionsRecursiveExp with UncheckedOpsExp { self => 
     val codegen = new CCodeGenPkg with CGenVariables with CGenTupledFunctions with CGenUncheckedOps { 
       val IR: self.type = self 
-      override def remap[A](a: Manifest[A]) = 
+      override def remap[A](a: Typ[A]) = 
         if (a == manifest[Array[Int]]) "int*"
         else super.remap(a)
       override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {

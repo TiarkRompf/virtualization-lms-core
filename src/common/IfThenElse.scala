@@ -1,12 +1,13 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
 import scala.reflect.SourceContext
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
+import scala.lms.internal._
+import scala.lms.codegen.GenericCodegen
 
 trait IfThenElse extends Base {
-  def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit pos: SourceContext): Rep[T]
+  def __ifThenElse[T:Typ](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit pos: SourceContext): Rep[T]
 
   // HACK -- bug in scala-virtualized
   override def __ifThenElse[T](cond: =>Boolean, thenp: => T, elsep: => T) = cond match {
@@ -17,71 +18,72 @@ trait IfThenElse extends Base {
 
 // TODO: it would be nice if IfThenElseExp would extend IfThenElsePureExp
 // but then we would need to use different names.
+trait IfThenElsePureExp extends IfThenElse with Expressions {
 
-trait IfThenElsePureExp extends IfThenElse with BaseExp {
+  case class IfThenElse[T:Typ](cond: Exp[Boolean], thenp: Exp[T], elsep: Exp[T]) extends Def[T]
 
-  case class IfThenElse[T:Manifest](cond: Exp[Boolean], thenp: Exp[T], elsep: Exp[T]) extends Def[T]
-
-  def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit pos: SourceContext) = IfThenElse(cond, thenp, elsep)
+  def __ifThenElse[T:Typ](cond: Exp[Boolean], thenp: => Exp[T], elsep: => Exp[T])(implicit pos: SourceContext)
+    = toAtom(IfThenElse(cond, thenp, elsep))
 }
 
 
-trait IfThenElseExp extends IfThenElse with EffectExp {
+trait IfThenElseExp extends IfThenElse with BaseExp {
 
   abstract class AbstractIfThenElse[T] extends Def[T] {
     val cond: Exp[Boolean]
     val thenp: Block[T]
     val elsep: Block[T]
   }
-  
-  case class IfThenElse[T:Manifest](cond: Exp[Boolean], thenp: Block[T], elsep: Block[T]) extends AbstractIfThenElse[T]
 
-  override def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit pos: SourceContext) = {
+  case class IfThenElse[T:Typ](cond: Exp[Boolean], thenp: Block[T], elsep: Block[T]) extends AbstractIfThenElse[T]
+
+  override def __ifThenElse[T:Typ](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit pos: SourceContext) = {
     val a = reifyEffectsHere(thenp)
     val b = reifyEffectsHere(elsep)
 
     ifThenElse(cond,a,b)
   }
 
-  def ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: Block[T], elsep: Block[T])(implicit pos: SourceContext) = {
+  def ifThenElse[T:Typ](cond: Rep[Boolean], thenp: Block[T], elsep: Block[T])(implicit pos: SourceContext) = {
     val ae = summarizeEffects(thenp)
     val be = summarizeEffects(elsep)
-    
+
     // TODO: make a decision whether we should call reflect or reflectInternal.
     // the former will look for any read mutable effects in addition to the passed
     // summary whereas reflectInternal will take ae orElse be literally.
     // the case where this comes up is if (c) a else b, with a or b mutable.
     // (see TestMutation, for now sticking to old behavior)
-    
+
     ////reflectEffect(IfThenElse(cond,thenp,elsep), ae orElse be)
     reflectEffectInternal(IfThenElse(cond,thenp,elsep), ae orElse be)
   }
-  
-  override def mirrorDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
+
+  // TODO: Unused?
+  override def mirrorDef[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
     case IfThenElse(c,a,b) => IfThenElse(f(c),f(a),f(b))
     case _ => super.mirrorDef(e,f)
   }
-  
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
-    case Reflect(IfThenElse(c,a,b), u, es) => 
+
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
+    case Reflect(IfThenElse(c,a,b), u, es) =>
       if (f.hasContext)
         __ifThenElse(f(c),f.reflectBlock(a),f.reflectBlock(b))
       else
-        reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case IfThenElse(c,a,b) => 
+        reflectMirrored(Reflect(IfThenElse(f(c),f(a),f(b)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
+    case IfThenElse(c,a,b) =>
       if (f.hasContext)
         __ifThenElse(f(c),f.reflectBlock(a),f.reflectBlock(b))
       else
-        IfThenElse(f(c),f(a),f(b)) // FIXME: should apply pattern rewrites (ie call smart constructor)
+        toAtom(IfThenElse(f(c),f(a),f(b))) // FIXME: should apply pattern rewrites (i.e. call smart constructor)
     case _ => super.mirror(e,f)
   }
 
 /*
-  override def mirror[A:Manifest](e: Def[A], f: Transformer): Exp[A] = e match {
+  override def mirror[A:Typ](e: Def[A], f: Transformer): Exp[A] = e match {
     case Reflect(IfThenElse(c,a,b), u, es) => mirror(IfThenElse(c,a,b)) // discard reflect
     case IfThenElse(c,a,b) => ifThenElse(f(c),f(a),f(b)) // f.apply[A](a: Block[A]): Exp[A] mirrors the block into the current context
     case _ => super.mirror(e,f)
-  }  
+  }
 */
 
 
@@ -126,17 +128,20 @@ trait IfThenElseExp extends IfThenElse with EffectExp {
 
 }
 
-trait IfThenElseFatExp extends IfThenElseExp with BaseFatExp {
+trait IfThenElseFatExp extends IfThenElseExp with BaseExp {
 
   abstract class AbstractFatIfThenElse extends FatDef {
     val cond: Exp[Boolean]
     val thenp: List[Block[Any]]
     val elsep: List[Block[Any]]
-    
-    var extradeps: List[Exp[Any]] = Nil //HACK
+
+    var extradeps: List[Exp[Any]] = Nil //TODO: HACK
   }
 
-  case class SimpleFatIfThenElse(cond: Exp[Boolean], thenp: List[Block[Any]], elsep: List[Block[Any]]) extends AbstractFatIfThenElse
+  case class SimpleFatIfThenElse(cond: Exp[Boolean], thenp: List[Block[Any]], elsep: List[Block[Any]]) extends AbstractFatIfThenElse {
+    def tps = thenp.map(_.tp)
+    def mhs = thenp.zip(elsep).map{case (thenp,elsep) => IfThenElse(cond, thenp, elsep)(mtype(thenp.tp)) }
+  }
 
 /* HACK */
 
@@ -159,7 +164,7 @@ trait IfThenElseFatExp extends IfThenElseExp with BaseFatExp {
   }
 
   // aliasing / sharing
-  
+
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case SimpleFatIfThenElse(c,a,b) => syms(a):::syms(b)
     case _ => super.aliasSyms(e)
@@ -183,39 +188,39 @@ trait IfThenElseFatExp extends IfThenElseExp with BaseFatExp {
 
 
 trait IfThenElseExpOpt extends IfThenElseExp { this: BooleanOpsExp with EqualExpBridge =>
-  
+
   //TODO: eliminate conditional if both branches return same value!
 
   // it would be nice to handle rewrites in method ifThenElse but we'll need to
-  // 'de-reify' blocks in case we rewrite if(true) to thenp. 
+  // 'de-reify' blocks in case we rewrite if(true) to thenp.
   // TODO: make reflect(Reify(..)) do the right thing
-  
-  override def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit pos: SourceContext) = cond match {
+
+  override def __ifThenElse[T:Typ](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit pos: SourceContext) = cond match {
     case Const(true) => thenp
     case Const(false) => elsep
     case Def(BooleanNegate(a)) => __ifThenElse(a, elsep, thenp)
-    case Def(NotEqual(a,b)) => __ifThenElse(equals(a,b), elsep, thenp)
+    case Def(e@NotEqual(a,b)) => __ifThenElse(equals(a,b)(e.mA,e.mB,pos), elsep, thenp)
     case _ =>
       super.__ifThenElse(cond, thenp, elsep)
   }
 }
 
-trait BaseGenIfThenElse extends GenericNestedCodegen {
+trait BaseGenIfThenElse extends GenericCodegen {
   val IR: IfThenElseExp
   import IR._
 
 }
 
-trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen {
+trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericCodegen {
   val IR: IfThenElseFatExp
   import IR._
 
   override def fatten(e: Stm): Stm = e match {
-    case TP(sym, o: AbstractIfThenElse[_]) => 
+    case TP(sym, o: AbstractIfThenElse[_]) =>
       TTP(List(sym), List(o), SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)))
     case TP(sym, p @ Reflect(o: AbstractIfThenElse[_], u, es)) => //if !u.maySimple && !u.mayGlobal =>  // contrary, fusing will not change observable order
       // assume body will reflect, too...
-      printdbg("-- fatten effectful if/then/else " + e)
+      cdbg("-- fatten effectful if/then/else " + e)
       val e2 = SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep))
       e2.extradeps = es //HACK
       TTP(List(sym), List(p), e2)
@@ -224,9 +229,9 @@ trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen {
 }
 
 
-trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
+trait ScalaGenIfThenElse extends ScalaGenBase with BaseGenIfThenElse {
   import IR._
- 
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IfThenElse(c,a,b) =>
       stream.println("val " + quote(sym) + " = if (" + quote(c) + ") {")
@@ -240,11 +245,11 @@ trait ScalaGenIfThenElse extends ScalaGenEffect with BaseGenIfThenElse {
   }
 }
 
-trait ScalaGenIfThenElseFat extends ScalaGenIfThenElse with ScalaGenFat with BaseGenIfThenElseFat {
+trait ScalaGenIfThenElseFat extends ScalaGenIfThenElse with ScalaGenBase with BaseGenIfThenElseFat {
   import IR._
 
   override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
-    case SimpleFatIfThenElse(c,as,bs) => 
+    case SimpleFatIfThenElse(c,as,bs) =>
       def quoteList[T](xs: List[Exp[T]]) = if (xs.length > 1) xs.map(quote).mkString("(",",",")") else xs.map(quote).mkString(",")
       if (symList.length > 1) stream.println("// TODO: use vars instead of tuples to return multiple values")
       stream.println("val " + quoteList(symList) + " = if (" + quote(c) + ") {")
@@ -259,56 +264,53 @@ trait ScalaGenIfThenElseFat extends ScalaGenIfThenElse with ScalaGenFat with Bas
 
 }
 
-trait CudaGenIfThenElse extends CudaGenEffect with BaseGenIfThenElse {
+trait CudaGenIfThenElse extends CudaGenBase with BaseGenIfThenElse {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-      rhs match {
-        case IfThenElse(c,a,b) =>
-          // TODO: Not GPUable if the result is not primitive types.
-          // TODO: Changing the reference of the output is dangerous in general.
-          // TODO: In the future, consider passing the object references to the GPU kernels rather than copying by value.
-          // Below is a safety check related to changing the output reference of the kernel.
-          // This is going to be changed when above TODOs are done.
-          //if( (sym==kernelSymbol) && (isObjectType(sym.tp)) ) throw new RuntimeException("CudaGen: Changing the reference of output is not allowed within GPU kernel.")
-
-          val objRetType = (!isVoidType(sym.tp)) && (!isPrimitiveType(sym.tp))
-          objRetType match {
-            case true => throw new GenerationFailedException("CudaGen: If-Else cannot return object type.")
-            case _ =>
-          }
-          isVoidType(sym.tp) match {
-            case true =>
-              stream.println(addTab() + "if (" + quote(c) + ") {")
-              tabWidth += 1
-              emitBlock(a)
-              tabWidth -= 1
-              stream.println(addTab() + "} else {")
-              tabWidth += 1
-              emitBlock(b)
-              tabWidth -= 1
-              stream.println(addTab()+"}")
-            case false =>
-              stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
-              stream.println(addTab() + "if (" + quote(c) + ") {")
-              tabWidth += 1
-              emitBlock(a)
-              stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
-              tabWidth -= 1
-              stream.println(addTab() + "} else {")
-              tabWidth += 1
-              emitBlock(b)
-              stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
-              tabWidth -= 1
-              stream.println(addTab()+"}")
-          }
-
-        case _ => super.emitNode(sym, rhs)
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case IfThenElse(c,a,b) =>
+      // TODO: Not GPUable if the result is not primitive types.
+      // TODO: Changing the reference of the output is dangerous in general.
+      // TODO: In the future, consider passing the object references to the GPU kernels rather than copying by value.
+      // Below is a safety check related to changing the output reference of the kernel.
+      // This is going to be changed when above TODOs are done.
+      //if( (sym==kernelSymbol) && (isObjectType(sym.tp)) ) throw new RuntimeException("CudaGen: Changing the reference of output is not allowed within GPU kernel.")
+      val objRetType = (!isVoidType(sym.tp)) && (!isPrimitiveType(sym.tp))
+      objRetType match {
+        case true => throw new GenerationFailedException("CudaGen: If-Else cannot return object type.")
+        case _ =>
       }
-    }
+      isVoidType(sym.tp) match {
+        case true =>
+          stream.println(addTab() + "if (" + quote(c) + ") {")
+          tabWidth += 1
+          emitBlock(a)
+          tabWidth -= 1
+          stream.println(addTab() + "} else {")
+          tabWidth += 1
+          emitBlock(b)
+          tabWidth -= 1
+          stream.println(addTab()+"}")
+        case false =>
+          stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
+          stream.println(addTab() + "if (" + quote(c) + ") {")
+          tabWidth += 1
+          emitBlock(a)
+          stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
+          tabWidth -= 1
+          stream.println(addTab() + "} else {")
+          tabWidth += 1
+          emitBlock(b)
+          stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
+          tabWidth -= 1
+          stream.println(addTab()+"}")
+      }
+
+    case _ => super.emitNode(sym, rhs)
+  }
 }
 
-trait CudaGenIfThenElseFat extends CudaGenIfThenElse with CudaGenFat with BaseGenIfThenElseFat {
+trait CudaGenIfThenElseFat extends CudaGenIfThenElse with CudaGenBase with BaseGenIfThenElseFat {
   import IR._
 
   override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
@@ -317,50 +319,48 @@ trait CudaGenIfThenElseFat extends CudaGenIfThenElse with CudaGenFat with BaseGe
   }
 }
 
-trait OpenCLGenIfThenElse extends OpenCLGenEffect with BaseGenIfThenElse {
+trait OpenCLGenIfThenElse extends OpenCLGenBase with BaseGenIfThenElse {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-      rhs match {
-        case IfThenElse(c,a,b) =>
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case IfThenElse(c,a,b) =>
 
-          val objRetType = (!isVoidType(sym.tp)) && (!isPrimitiveType(sym.tp))
-          objRetType match {
-            case true => throw new GenerationFailedException("OpenCLGen: If-Else cannot return object type.")
-            case _ =>
-          }
-          isVoidType(sym.tp) match {
-            case true =>
-              stream.println(addTab() + "if (" + quote(c) + ") {")
-              tabWidth += 1
-              emitBlock(a)
-              tabWidth -= 1
-              stream.println(addTab() + "} else {")
-              tabWidth += 1
-              emitBlock(b)
-              tabWidth -= 1
-              stream.println(addTab()+"}")
-            case false =>
-              stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
-              stream.println(addTab() + "if (" + quote(c) + ") {")
-              tabWidth += 1
-              emitBlock(a)
-              stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
-              tabWidth -= 1
-              stream.println(addTab() + "} else {")
-              tabWidth += 1
-              emitBlock(b)
-              stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
-              tabWidth -= 1
-              stream.println(addTab()+"}")
-          }
-
-        case _ => super.emitNode(sym, rhs)
+      val objRetType = (!isVoidType(sym.tp)) && (!isPrimitiveType(sym.tp))
+      objRetType match {
+        case true => throw new GenerationFailedException("OpenCLGen: If-Else cannot return object type.")
+        case _ =>
       }
-    }
+      isVoidType(sym.tp) match {
+        case true =>
+          stream.println(addTab() + "if (" + quote(c) + ") {")
+          tabWidth += 1
+          emitBlock(a)
+          tabWidth -= 1
+          stream.println(addTab() + "} else {")
+          tabWidth += 1
+          emitBlock(b)
+          tabWidth -= 1
+          stream.println(addTab()+"}")
+        case false =>
+          stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
+          stream.println(addTab() + "if (" + quote(c) + ") {")
+          tabWidth += 1
+          emitBlock(a)
+          stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(a))))
+          tabWidth -= 1
+          stream.println(addTab() + "} else {")
+          tabWidth += 1
+          emitBlock(b)
+          stream.println(addTab() + "%s = %s;".format(quote(sym),quote(getBlockResult(b))))
+          tabWidth -= 1
+          stream.println(addTab()+"}")
+      }
+
+    case _ => super.emitNode(sym, rhs)
+  }
 }
 
-trait OpenCLGenIfThenElseFat extends OpenCLGenIfThenElse with OpenCLGenFat with BaseGenIfThenElseFat {
+trait OpenCLGenIfThenElseFat extends OpenCLGenIfThenElse with OpenCLGenBase with BaseGenIfThenElseFat {
   import IR._
 
   override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
@@ -369,21 +369,33 @@ trait OpenCLGenIfThenElseFat extends OpenCLGenIfThenElse with OpenCLGenFat with 
   }
 }
 
-trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
+trait CGenIfThenElse extends CGenBase with BaseGenIfThenElse {
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-    rhs match {
-      case IfThenElse(c,a,b) =>
-        //TODO: using if-else does not work 
-        remap(sym.tp) match {
-          case "void" =>
-            stream.println("if (" + quote(c) + ") {")
-            emitBlock(a)
-            stream.println("} else {")
-            emitBlock(b)
-            stream.println("}")
-          case _ =>
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case IfThenElse(c,a,b) =>
+      //TODO: using if-else does not work
+      remap(sym.tp) match {
+        case "void" =>
+          stream.println("if (" + quote(c) + ") {")
+          emitBlock(a)
+          stream.println("} else {")
+          emitBlock(b)
+          stream.println("}")
+        case _ =>
+          if (cppIfElseAutoRet == "true") {
+            val ten = quote(sym) + "True"
+            val fen = quote(sym) + "False"
+            def emitCondFun[T](fname: String, block: Block[T]) {
+              stream.println("auto " + fname + " = [&]() {");
+              emitBlock(block)
+              stream.println("return " + quote(getBlockResult(block)) + ";")
+              stream.println("};")
+            }
+            emitCondFun(ten, a)
+            emitCondFun(fen, b)
+            stream.println("auto " + quote(sym) + " = " + quote(c) + " ? " + ten + "() : " + fen + "();")
+          } else {
             stream.println("%s %s;".format(remap(sym.tp),quote(sym)))
             stream.println("if (" + quote(c) + ") {")
             emitBlock(a)
@@ -392,7 +404,8 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
             emitBlock(b)
             stream.println("%s = %s;".format(quote(sym),quote(getBlockResult(b))))
             stream.println("}")
-        }
+          }
+      }
         /*
         val booll = remap(sym.tp).equals("void")
         if(booll) {
@@ -413,12 +426,11 @@ trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
           stream.println("}")
         }
         */
-      case _ => super.emitNode(sym, rhs)
-    }
+    case _ => super.emitNode(sym, rhs)
   }
 }
 
-trait CGenIfThenElseFat extends CGenIfThenElse with CGenFat with BaseGenIfThenElseFat {
+trait CGenIfThenElseFat extends CGenIfThenElse with CGenBase with BaseGenIfThenElseFat {
   import IR._
 
   override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {

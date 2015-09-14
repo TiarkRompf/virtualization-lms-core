@@ -1,5 +1,5 @@
 TP(Sym(1),Lambda(<function1>))
-TP(Sym(2),Deconstruct(class scala.virtualization.lms.epfl.test3.MatchProg$Success,Sym(0)))
+TP(Sym(2),Deconstruct(class scala.lms.epfl.test3.MatchProg$Success,Sym(0)))
 TP(Sym(3),Test(Sym(2),7))
 TP(Sym(4),Reify(Const(yes),List(Sym(2), Sym(3))))
 TP(Sym(5),Lambda(<function1>))

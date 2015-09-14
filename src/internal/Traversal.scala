@@ -1,172 +1,73 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
-import util.GraphUtil
-import java.io.{File, PrintWriter}
-
-
-// traversals are stateful (scheduling is stateless)
-
-trait GraphTraversal extends Scheduling {
-  val IR: Expressions
+trait Traversal extends BlockTraversal { self =>
   import IR._
-  
-  def availableDefs: List[Stm] = globalDefs
-  
-  def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] = {
-    printDebug("Getting schedule for " + result)
-    getSchedule(availableDefs)(result, sort)
+
+  val name: String = self.getClass.getName.split('$').last
+
+  def preprocess[A:Typ](b: Block[A]): Block[A] = { b }
+  def postprocess[A:Typ](b: Block[A]): Block[A] = { b }
+
+  /**
+   * A single iteration of traversal
+   */
+  def runOnce[A:Typ](s: Block[A]): Block[A] = { traverseBlock(s); (s) }
+
+  def run[A:Typ](b: Block[A]): Block[A] = {
+    val curBlock = preprocess(b)
+    val resultBlock = runOnce(curBlock)
+    val outputBlock = postprocess(resultBlock)
+    (outputBlock)
   }
 
-  def getDependentStuff(st: List[Sym[Any]]): List[Stm] = {
-    getFatDependentStuff(availableDefs)(st)
-  }
-
-  def getDependentStuff(st: Sym[Any]): List[Stm] = {
-    getDependentStuff(List(st))
-  }
-
+  override def traverseStm(stm: Stm): Unit = super.traverseStm(stm)
 }
 
-
-trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
-  val IR: Expressions with Effects /* effects just for sanity check */
+trait IterativeTraversal extends Traversal {
   import IR._
-  
-  // ----- stateful focus management
 
-//  var outerScope: List[TP[Any]] = Nil
-//  var levelScope: List[TP[Any]] = Nil
-  var innerScope: List[Stm] = null  // no, it's not a typo
+  var MAX_ITERS: Int = 10   // maximum number of iterations to run
+  var MAX_RETRIES: Int = 1  // maximum number of retries to allow
+  protected var runs = 0    // Current analysis iteration
+  protected var retries = 0 // Current retry
 
-  def initialDefs = super.availableDefs
+  var changed: Boolean = true    // Flag for if any unpropagated updates have been made to the IR
+  def notifyChange() { changed = true }
 
-  override def availableDefs = if (innerScope ne null) innerScope else initialDefs
+  def hasConverged: Boolean = !changed
+  def hasCompleted: Boolean = true
 
-  def withInnerScope[A](scope: List[Stm])(body: => A): A = {
-//    val saveOuter = outerScope
-//    val saveLevel = levelScope
-    val saveInner = innerScope
+  def failedToConverge() { cwarn(s"$name did not converge within $MAX_ITERS iterations.") }
+  def failedToComplete() { cwarn(s"$name reached convergence but did not report completion.") }
 
-//    outerScope = outerScope ::: levelScope
-//    levelScope = Nil
-    innerScope = scope
-    printDebug("Entering scope!\n\t")
-    if (innerScope ne null) {
-      for (stm <- innerScope) {
-        printDebug("\t" + stm)
-        printDebug("\t\tsyms: " + syms(stm.rhs))
+  private var _retry = false
+  /**
+   * Function to be called to try to recover when visitor converged but did not complete
+   * In postprocess, modify state, then call resume() to resume looping. Resets run number.
+   * Can also implement auto-increase of MAX_ITERS using resume() in postprocess
+   */
+  def resume() { _retry = true }
+
+  /**
+   * Run traversal/analysis on a given block until convergence or maximum # of iterations reached
+   */
+  override def run[A:Typ](b: Block[A]): Block[A] = {
+    var curBlock = preprocess(b)
+    do {
+      runs = 0
+      _retry = false
+      while (!hasConverged && runs < MAX_ITERS) { // convergence condition
+        runs += 1
+        changed = false
+        curBlock = runOnce(curBlock)
       }
-    }
+      curBlock = postprocess(curBlock)
+      retries += 1
+    } while (_retry && retries <= MAX_RETRIES)
 
-    var rval = null.asInstanceOf[A]
-    try {
-      rval = body
-    }
-    catch {
-      case e => throw e
-    }
-    finally {
-      innerScope = saveInner
-    }
-
-    printDebug("Exiting scope!")
-    
-//    outerScope = saveOuter
-//    levelScope = saveLevel
-//    innerScope = saveInner
-
-    rval
+    (curBlock)
   }
 
-
-  // ----- stateful focus management
-
-  def focusSubGraph[A](result: List[Exp[Any]])(body: => A): A = {
-    val schedule = buildScheduleForResult(result, false)
-    if (schedule.isEmpty && result.map{case Def(Reify(_,_,_)) => true case _ => false}.fold(false){_||_}) {
-      printmsg("warning: Empty schedule for syms: \n\t" + result.map{strDef(_)}.mkString("\n\t"))
-      printmsg(result.flatMap{case Def(Reify(x,_,_)) => List(x) case _ => Nil}.map(strDef(_)).mkString("\n\t"))
-      printmsg("scope:\n\t" + (if (availableDefs ne null) availableDefs.mkString("\n\t") else "null"))
-    }
-    
-    withInnerScope(schedule/*buildScheduleForResult(result, false)*/) { // deep list of deps (unsorted, possibly recursive)
-      body
-    }
-  }
-  
-  // strong order for levelScope (as obtained by code motion), taking care of recursive dependencies.
-  def getStronglySortedSchedule2(scope: List[Stm], level: List[Stm], result: Any): (List[Stm], List[Sym[Any]]) = {
-    val scopeIndex = buildScopeIndex(scope)
-    
-    val fixed = new collection.mutable.HashMap[Any,List[Sym[Any]]]
-    def allSyms(r: Any) = fixed.getOrElse(r, syms(r) ++ softSyms(r))
-
-
-    val inner = scope diff level // TODO: restrict to things referenced by functions (not ifs) ?
-
-    var recursive: List[Sym[Any]] = Nil
-
-    var xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(allSyms(result), scopeIndex), t => scheduleDepsWithIndex(allSyms(t.rhs), scopeIndex))  
-    xx.foreach { xs => 
-      if (xs.length > 1 && (xs intersect level).nonEmpty) {
-        printdbg("warning: recursive schedule for result " + result + ": " + xs)
-
-        // find things residing on top level
-        val fs = (xs intersect level) flatMap (_.lhs)
-
-        recursive = fs ::: recursive
-
-        // eliminate all outward dependencies
-        // CAVEAT: this *only* works for lambdas
-        // problematic if sym is used both in a lambda and an if branch (may lead to NPE) 
-        // TODO: restrict 'inner' to functions
-        // CAVEAT: even for lambdas, this works *only* if the initialization happens before the first call
-        // TODO: can we check that somehow? -- maybe insert a dep from the call
-        (inner intersect xs) foreach {
-          case stm if allSyms(stm.rhs) exists (fs contains _) => 
-            fixed(stm.rhs) = allSyms(stm.rhs) filterNot (fs contains _)
-            printdbg("fixing deps of " + stm.rhs + " to " + fixed(stm.rhs))
-          case _ =>
-        }
-        
-        // also remove direct inner deps (without inner stms): x1 = Lambda { x2 => Block(x3) }
-        (level intersect xs) foreach {
-          case stm if allSyms(blocks(stm.rhs)) exists (fs contains _) => 
-            fixed(stm.rhs) = allSyms(stm.rhs) filterNot (fs contains _)
-            printdbg("fixing deps of " + stm.rhs + " to " + fixed(stm.rhs))
-          case _ =>
-        }
-      }
-    }
-    xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(allSyms(result) ++ allSyms(recursive), scopeIndex), t => scheduleDepsWithIndex(allSyms(t.rhs), scopeIndex))
-    xx.foreach { xs => 
-      if (xs.length > 1 && (xs intersect level).nonEmpty) {
-        // see test5-schedfun. since we're only returning level scope (not inner)
-        // we're still fine if the order for strictly inner stms is not quite right
-        // but we need to ensure that levelScope's order is correct. 
-        printerr("error: recursive schedule did not go away for result " + result + ": " + xs)
-      }
-    }
-    val xxf = xx.flatten.reverse
-    (xxf filter (level contains _), recursive)
-  }
-  
-  var recursive: List[Sym[Any]] = Nil // FIXME: should propagate differently
-  
-  def focusExactScopeSubGraph[A](result: List[Exp[Any]])(body: List[Stm] => A): A = {
-    printDebug("Entering scope for " + result)
-
-    val availDefs = availableDefs//getStronglySortedSchedule(availableDefs)(result) // resolve anti-dependencies (may still be recursive -- not sure whether that's a problem)
-    val levelScope = getExactScope(availDefs)(result)
-    val (levelScope2,recursive) = getStronglySortedSchedule2(availDefs,levelScope,result) // resolve anti-dependencies and recursive declarations
-    withInnerScope(availDefs diff levelScope2) { // delay everything that remains
-      val save = this.recursive
-      this.recursive = recursive
-      val r = body(levelScope2)
-      this.recursive = save
-      r
-    }
-  }
-
+  override def traverseStm(stm: Stm): Unit = super.traverseStm(stm)
 }

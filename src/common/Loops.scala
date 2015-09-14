@@ -1,15 +1,16 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
 import scala.reflect.SourceContext
-import scala.virtualization.lms.internal.{FatBlockTraversal,GenericNestedCodegen,GenericFatCodegen}
+import scala.lms.codegen.GenericCodegen
+import scala.lms.internal._
 
-trait Loops extends Base { // no surface constructs for now
-
+trait Loops extends Base {
+  // no surface constructs for now
 }
 
-trait LoopsExp extends Loops with BaseExp with EffectExp {
+trait LoopsExp extends Loops with BaseExp {
 
   abstract class AbstractLoop[A] extends Def[A] {
     val size: Exp[Int]
@@ -24,10 +25,11 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     val strides: List[Exp[Int]]
     val body: Def[A]
   }
-  
+
   case class SimpleLoop[A](val size: Exp[Int], val v: Sym[Int], val body: Def[A]) extends AbstractLoop[A]
-  
-  def simpleLoop[A:Manifest](size: Exp[Int], v: Sym[Int], body: Def[A])(implicit pos: SourceContext): Exp[A] = SimpleLoop(size, v, body)
+
+  def simpleLoop[A:Typ](size: Exp[Int], v: Sym[Int], body: Def[A])(implicit pos: SourceContext): Exp[A]
+    = toAtom(SimpleLoop(size, v, body))
 
 
   override def syms(e: Any): List[Sym[Any]] = e match {
@@ -58,11 +60,12 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
   //////////////
   // mirroring
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case SimpleLoop(s,v,body: Def[A]) => simpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f))
-    case Reflect(SimpleLoop(s,v,body: Def[A]), u, es) if u == Control() => reflectMirrored(Reflect(SimpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorFatDef(body,f)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos) 
+  // TODO: mirrorDef is only used for loops right now
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
+    case SimpleLoop(s,v,body: Def[A]) => simpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorDef(body,f))
+    case Reflect(SimpleLoop(s,v,body: Def[A]), u, es) if u == Control() => reflectMirrored(Reflect(SimpleLoop(f(s),f(v).asInstanceOf[Sym[Int]],mirrorDef(body,f)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
     case _ => super.mirror(e,f)
-  }).asInstanceOf[Exp[A]] // why??
+  }
 
   /////////////////////
   // aliases and sharing
@@ -90,9 +93,31 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case e: AbstractLoopNest[_] => copySyms(e.body)
     case _ => super.copySyms(e)
   }
+
+  // --- Loop fusion stuff
+  def unapplySimpleIndex(e: Def[Any]): Option[(Exp[Any], Exp[Int])] = None
+  def unapplySimpleDomain(e: Def[Int]): Option[Exp[Any]] = None
+  def unapplySimpleCollect(e: Def[Any]): Option[Exp[Any]] = None
+  def unapplySimpleCollectIf(e: Def[Any]): Option[(Exp[Any],List[Exp[Boolean]])] = unapplySimpleCollect(e).map((_,Nil))
+
+  // FIXME: should be Def[A] => Def[A], not Def[Any]
+  def canApplyAddCondition(e: Def[Any]): Boolean = true
+  def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]): Def[Any] = sys.error("not implemented")
+
+  def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+  // ---
 }
 
-trait LoopsFatExp extends LoopsExp with BaseFatExp {
+trait LoopsFatExp extends LoopsExp with BaseExp {
+
+  abstract class AbstractFatLoop extends FatDef {
+    val size: Exp[Int]
+    val v: Sym[Int]
+    val body: List[Def[Any]]
+    val btps: List[Typ[_]]
+    def tps = btps
+    def mhs = body
+  }
 
   abstract class AbstractFatLoopNest extends FatDef {
     val nestLayers: Int
@@ -100,21 +125,19 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     val strides: List[Exp[Int]]
     val vs: List[Sym[Int]]
     val body: List[Def[Any]]
+    val btps: List[Typ[_]]
+    def tps = btps
+    def mhs = body
   }
 
-  abstract class AbstractFatLoop extends FatDef {
-    val size: Exp[Int]
-    val v: Sym[Int]
-    val body: List[Def[Any]]
-  }
-  
-  case class SimpleFatLoop(val size: Exp[Int], val v: Sym[Int], val body: List[Def[Any]]) extends AbstractFatLoop
+  case class SimpleFatLoop(size: Exp[Int], v: Sym[Int], body: List[Def[Any]], btps: List[Typ[_]]) extends AbstractFatLoop
 
-  case class SimpleFatLoopNest(val sizes: List[Exp[Int]], val strides: List[Exp[Int]], val vs: List[Sym[Int]], val body: List[Def[Any]]) extends AbstractFatLoopNest {
+  case class SimpleFatLoopNest(sizes: List[Exp[Int]], strides: List[Exp[Int]], vs: List[Sym[Int]], body: List[Def[Any]], btps: List[Typ[_]]) extends AbstractFatLoopNest {
     val nestLayers = sizes.length
   }
 
   override def blocks(e: Any): List[Block[Any]] = e match {
+    case op: AbstractFatLoop => op.body.flatMap(blocks(_))
     case op: AbstractFatLoopNest => op.body.flatMap(blocks(_))
     case _ => super.blocks(e)
   }
@@ -124,8 +147,8 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     case e: AbstractFatLoopNest => syms(e.sizes) ::: syms(e.strides) ::: syms(e.body)
     case _ => super.syms(e)
   }
-  
-  override def readSyms(e: Any): List[Sym[Any]] = e match { 
+
+  override def readSyms(e: Any): List[Sym[Any]] = e match {
     case e: AbstractFatLoop => readSyms(e.size) ::: readSyms(e.body)
     case e: AbstractFatLoopNest => readSyms(e.sizes) ::: readSyms(e.strides) ::: readSyms(e.body)
     case _ => super.readSyms(e)
@@ -170,23 +193,17 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
     case _ => super.copySyms(e)
   }
 
-  // FIXME: This is extremely hacky right now. What if new and old body is the same def?
-  override def mirror(syms: List[Exp[Any]], e: FatDef, f: Transformer)(implicit pos: SourceContext): List[Exp[Any]] = e match {
+  // FIXME: Change to use new Fat stuff
+  /*override def mirror(syms: List[Exp[Any]], e: FatDef, f: Transformer)(implicit pos: SourceContext): List[Exp[Any]] = e match {
     case e@SimpleFatLoop(size, v, bodies) =>
-      // FIXME: We shouldn't even be calling fresh() here
-      def fresh_hack[A:Manifest]: Exp[A] = fresh[A]
-
       val newBodies = bodies.zip(syms).map{d => mirrorFatDef(d._1, f)(mtype(d._2.tp), pos) }
-      val newSyms = syms.map{s => fresh_hack(mtype(s.tp)).asInstanceOf[Sym[Any]] }
+      val newSyms = syms.map{s => bound(mtype(s.tp)).asInstanceOf[Sym[Any]] }
       val fatLoop = SimpleFatLoop(f(size), v, newBodies)
 
       createFatDefinition(newSyms, newBodies, fatLoop)
       (newSyms)
 
-    case e@SimpleFatLoopNest(sizes, strides, vs, bodies) => 
-
-      // FIXME: We shouldn't even be calling fresh() here
-      def fresh_hack[A:Manifest]: Exp[A] = fresh[A]
+    case e@SimpleFatLoopNest(sizes, strides, vs, bodies) =>
 
       val newBodies = bodies.zip(syms).map{d => mirrorFatDef(d._1, f)(mtype(d._2.tp), pos) }
       val newSyms = syms.map{s => fresh_hack(mtype(s.tp)).asInstanceOf[Sym[Any]] }
@@ -197,32 +214,32 @@ trait LoopsFatExp extends LoopsExp with BaseFatExp {
       (newSyms)
 
     case _ => super.mirror(syms, e, f)
-  }
+  }*/
 }
 
 
-trait BaseLoopsTraversalFat extends FatBlockTraversal {
+trait BaseLoopsTraversal extends Traversal {
   val IR: LoopsFatExp
   import IR._
 
   override def fatten(e: Stm): Stm = e match {
     case TP(sym, op: AbstractLoop[_]) =>
-      TTP(List(sym), List(op), SimpleFatLoop(op.size, op.v, List(op.body)))
+      TTP(List(sym), List(op), SimpleFatLoop(op.size, op.v, List(op.body), List(sym.tp)))
     case TP(sym, p @ Reflect(op: AbstractLoop[_], u, es)) if !u.maySimple && !u.mayGlobal => // assume body will reflect, too. bring it on...
-      printdbg("-- fatten effectful loop " + e)
-      TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body)))
+      cdbg("-- fatten effectful loop " + e)
+      TTP(List(sym), List(p), SimpleFatLoop(op.size, op.v, List(op.body), List(sym.tp)))
     case _ => super.fatten(e)
   }
-  
+
 }
 
-trait BaseGenLoops extends GenericNestedCodegen {
+trait BaseGenLoops extends GenericCodegen {
   val IR: LoopsExp
   import IR._
 
 }
 
-trait BaseGenLoopsFat extends BaseGenLoops with BaseLoopsTraversalFat with GenericFatCodegen {
+trait BaseGenLoopsFat extends BaseGenLoops with BaseLoopsTraversal with GenericCodegen {
   val IR: LoopsFatExp
   import IR._
 
@@ -235,7 +252,7 @@ trait ScalaGenLoops extends ScalaGenBase with BaseGenLoops {
 
 }
 
-trait ScalaGenLoopsFat extends ScalaGenLoops with ScalaGenFat with BaseGenLoopsFat {
+trait ScalaGenLoopsFat extends ScalaGenLoops with ScalaGenBase with BaseGenLoopsFat {
   import IR._
 
   //TODO
@@ -243,16 +260,16 @@ trait ScalaGenLoopsFat extends ScalaGenLoops with ScalaGenFat with BaseGenLoopsF
 }
 
 trait CLikeGenLoops extends CLikeGenBase with BaseGenLoops
-trait CLikeGenLoopsFat extends CLikeGenLoops with CLikeGenFat with BaseGenLoopsFat
+trait CLikeGenLoopsFat extends CLikeGenLoops with CLikeGenBase with BaseGenLoopsFat
 
 trait CGenLoops extends CGenBase with CLikeGenLoops
-trait CGenLoopsFat extends CGenLoops with CGenFat with CLikeGenLoopsFat
+trait CGenLoopsFat extends CGenLoops with CGenBase with CLikeGenLoopsFat
 
 trait GPUGenLoops extends GPUGenBase with CLikeGenLoops
-trait GPUGenLoopsFat extends GPUGenLoops with GPUGenFat with CLikeGenLoopsFat 
+trait GPUGenLoopsFat extends GPUGenLoops with GPUGenBase with CLikeGenLoopsFat
 
 trait CudaGenLoops extends CudaGenBase with GPUGenLoops
-trait CudaGenLoopsFat extends CudaGenLoops with CudaGenFat with GPUGenLoopsFat
+trait CudaGenLoopsFat extends CudaGenLoops with CudaGenBase with GPUGenLoopsFat
 
 trait OpenCLGenLoops extends OpenCLGenBase with GPUGenLoops
-trait OpenCLGenLoopsFat extends OpenCLGenLoops with OpenCLGenFat with GPUGenLoopsFat
+trait OpenCLGenLoopsFat extends OpenCLGenLoops with OpenCLGenBase with GPUGenLoopsFat

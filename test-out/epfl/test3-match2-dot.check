@@ -1,6 +1,6 @@
 digraph G {
 "Sym(2)" [
-label="Sym(2) \n Deconstruct(class scala.virtualization.lms.epfl.test3.MatchProg$Success,Sym(0))"
+label="Sym(2) \n Deconstruct(class scala.lms.epfl.test3.MatchProg$Success,Sym(0))"
 shape=box
 color=red
 ]

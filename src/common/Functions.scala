@@ -1,70 +1,78 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
 
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
-import scala.virtualization.lms.util.ClosureCompare
-
 import scala.reflect.SourceContext
+import scala.lms.util.ClosureCompare
+import scala.lms.internal._
+import scala.lms.codegen.GenericCodegen
 
 trait Functions extends Base {
 
-  def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[A => B]
-   def fun[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
+  implicit def funTyp[A:Typ,B:Typ]: Typ[A => B]
 
-  implicit def toLambdaOps[A:Manifest,B:Manifest](fun: Rep[A => B]) = new LambdaOps(fun)
+  def doLambda[A:Typ,B:Typ](fun: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[A => B]
+  implicit def fun[A:Typ,B:Typ](f: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[A=>B] = doLambda(f)
 
-  class LambdaOps[A:Manifest,B:Manifest](f: Rep[A => B]) {
+  implicit def toLambdaOps[A:Typ,B:Typ](fun: Rep[A => B]) = new LambdaOps(fun)
+
+  class LambdaOps[A:Typ,B:Typ](f: Rep[A => B]) {
     def apply(x: Rep[A])(implicit pos: SourceContext): Rep[B] = doApply(f,x)
   }
 
-  def doApply[A:Manifest,B:Manifest](fun: Rep[A => B], arg: Rep[A])(implicit pos: SourceContext): Rep[B]
+  def doApply[A:Typ,B:Typ](fun: Rep[A => B], arg: Rep[A])(implicit pos: SourceContext): Rep[B]
 }
 
 trait TupledFunctions extends Functions with TupleOps {
-   def fun[B:Manifest](f: () => Rep[B]): Rep[Unit=>B] =
+  implicit def fun[B:Typ](f: () => Rep[B])(implicit pos: SourceContext): Rep[Unit=>B] =
     fun((t: Rep[Unit]) => f())
-   def fun[A1:Manifest,A2:Manifest,B:Manifest](f: (Rep[A1], Rep[A2]) => Rep[B]): Rep[((A1,A2))=>B] =
+  implicit def fun[A1:Typ,A2:Typ,B:Typ](f: (Rep[A1], Rep[A2]) => Rep[B])(implicit pos: SourceContext): Rep[((A1,A2))=>B] =
     fun((t: Rep[(A1,A2)]) => f(tuple2_get1(t), tuple2_get2(t)))
-   def fun[A1:Manifest,A2:Manifest,A3:Manifest,B:Manifest](f: (Rep[A1], Rep[A2], Rep[A3]) => Rep[B]): Rep[((A1,A2,A3))=>B] =
+  implicit def fun[A1:Typ,A2:Typ,A3:Typ,B:Typ](f: (Rep[A1], Rep[A2], Rep[A3]) => Rep[B])(implicit pos: SourceContext): Rep[((A1,A2,A3))=>B] =
     fun((t: Rep[(A1,A2,A3)]) => f(tuple3_get1(t), tuple3_get2(t), tuple3_get3(t)))
-   def fun[A1:Manifest,A2:Manifest,A3:Manifest,A4:Manifest,B:Manifest](f: (Rep[A1], Rep[A2], Rep[A3], Rep[A4]) => Rep[B]): Rep[((A1,A2,A3,A4))=>B] =
+  implicit def fun[A1:Typ,A2:Typ,A3:Typ,A4:Typ,B:Typ](f: (Rep[A1], Rep[A2], Rep[A3], Rep[A4]) => Rep[B])(implicit pos: SourceContext): Rep[((A1,A2,A3,A4))=>B] =
     fun((t: Rep[(A1,A2,A3,A4)]) => f(tuple4_get1(t), tuple4_get2(t), tuple4_get3(t), tuple4_get4(t)))
-   def fun[A1:Manifest,A2:Manifest,A3:Manifest,A4:Manifest,A5:Manifest,B:Manifest](f: (Rep[A1], Rep[A2], Rep[A3], Rep[A4], Rep[A5]) => Rep[B]): Rep[((A1,A2,A3,A4,A5))=>B] =
+  implicit def fun[A1:Typ,A2:Typ,A3:Typ,A4:Typ,A5:Typ,B:Typ](f: (Rep[A1], Rep[A2], Rep[A3], Rep[A4], Rep[A5]) => Rep[B])(implicit pos: SourceContext): Rep[((A1,A2,A3,A4,A5))=>B] =
     fun((t: Rep[(A1,A2,A3,A4,A5)]) => f(tuple5_get1(t), tuple5_get2(t), tuple5_get3(t), tuple5_get4(t), tuple5_get5(t)))
 
-  class LambdaOps2[A1:Manifest,A2:Manifest,B:Manifest](f: Rep[((A1,A2)) => B]) {
+  class LambdaOps2[A1:Typ,A2:Typ,B:Typ](f: Rep[((A1,A2)) => B])(implicit pos: SourceContext) {
     def apply(x1: Rep[A1], x2: Rep[A2]) = doApply(f,(x1, x2))
     def apply(x: Rep[(A1,A2)]): Rep[B] = doApply(f,x)
   }
-  class LambdaOps3[A1:Manifest,A2:Manifest,A3:Manifest,B:Manifest](f: Rep[((A1,A2,A3)) => B]) {
+  class LambdaOps3[A1:Typ,A2:Typ,A3:Typ,B:Typ](f: Rep[((A1,A2,A3)) => B])(implicit pos: SourceContext) {
     def apply(x1: Rep[A1], x2: Rep[A2], x3: Rep[A3]) = doApply(f,(x1, x2, x3))
     def apply(x: Rep[(A1,A2,A3)]): Rep[B] = doApply(f,x)
   }
-  class LambdaOps4[A1:Manifest,A2:Manifest,A3:Manifest,A4:Manifest,B:Manifest](f: Rep[((A1,A2,A3,A4)) => B]) {
+  class LambdaOps4[A1:Typ,A2:Typ,A3:Typ,A4:Typ,B:Typ](f: Rep[((A1,A2,A3,A4)) => B])(implicit pos: SourceContext) {
     def apply(x1: Rep[A1], x2: Rep[A2], x3: Rep[A3], x4: Rep[A4]) = doApply(f,(x1, x2, x3, x4))
     def apply(x: Rep[(A1,A2,A3,A4)]): Rep[B] = doApply(f,x)
   }
-  class LambdaOps5[A1:Manifest,A2:Manifest,A3:Manifest,A4:Manifest,A5:Manifest,B:Manifest](f: Rep[((A1,A2,A3,A4,A5)) => B]) {
+  class LambdaOps5[A1:Typ,A2:Typ,A3:Typ,A4:Typ,A5:Typ,B:Typ](f: Rep[((A1,A2,A3,A4,A5)) => B])(implicit pos: SourceContext) {
     def apply(x1: Rep[A1], x2: Rep[A2], x3: Rep[A3], x4: Rep[A4], x5: Rep[A5]) = doApply(f,(x1, x2, x3, x4, x5))
     def apply(x: Rep[(A1,A2,A3,A4,A5)]): Rep[B] = doApply(f,x)
   }
-  implicit def toLambdaOpsAny[B:Manifest](fun: Rep[Any => B]) =
-    toLambdaOps(fun)
-  implicit def toLambdaOps2[A1:Manifest,A2:Manifest,B:Manifest](fun: Rep[((A1,A2)) => B]) =
+  //implicit def toLambdaOpsAny[B:Typ](fun: Rep[Any => B]) =
+  //  toLambdaOps(fun)
+  implicit def toLambdaOps2[A1:Typ,A2:Typ,B:Typ](fun: Rep[((A1,A2)) => B])(implicit pos: SourceContext) =
     new LambdaOps2(fun)
-  implicit def toLambdaOps3[A1:Manifest,A2:Manifest,A3:Manifest,B:Manifest](fun: Rep[((A1,A2,A3)) => B]) =
+  implicit def toLambdaOps3[A1:Typ,A2:Typ,A3:Typ,B:Typ](fun: Rep[((A1,A2,A3)) => B])(implicit pos: SourceContext) =
     new LambdaOps3(fun)
-  implicit def toLambdaOps4[A1:Manifest,A2:Manifest,A3:Manifest,A4:Manifest,B:Manifest](fun: Rep[((A1,A2,A3,A4)) => B]) =
+  implicit def toLambdaOps4[A1:Typ,A2:Typ,A3:Typ,A4:Typ,B:Typ](fun: Rep[((A1,A2,A3,A4)) => B])(implicit pos: SourceContext) =
     new LambdaOps4(fun)
-  implicit def toLambdaOps5[A1:Manifest,A2:Manifest,A3:Manifest,A4:Manifest,A5:Manifest,B:Manifest](fun: Rep[((A1,A2,A3,A4,A5)) => B]) =
+  implicit def toLambdaOps5[A1:Typ,A2:Typ,A3:Typ,A4:Typ,A5:Typ,B:Typ](fun: Rep[((A1,A2,A3,A4,A5)) => B])(implicit pos: SourceContext) =
     new LambdaOps5(fun)
 }
 
-trait FunctionsExp extends Functions with EffectExp {
-  case class Lambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B], x: Exp[A], y: Block[B]) extends Def[A => B] { val mA = manifest[A]; val mB = manifest[B] }
-  case class Apply[A:Manifest,B:Manifest](f: Exp[A => B], arg: Exp[A]) extends Def[B] { val mA = manifest[A]; val mB = manifest[B] }
+trait FunctionsExp extends Functions with BaseExp {
+  implicit def funTyp[A:Typ,B:Typ]: Typ[A => B] = {
+    implicit val ManifestTyp(mA) = typ[A]
+    implicit val ManifestTyp(mB) = typ[B]
+    manifestTyp
+  }
+
+  case class Lambda[A:Typ,B:Typ](f: Exp[A] => Exp[B], x: Exp[A], y: Block[B]) extends Def3[A, B, A => B]
+  case class Apply[A:Typ,B:Typ](f: Exp[A => B], arg: Exp[A]) extends Def3[A,B,B]
 
   // unboxedFresh and unbox are hooks that can be overridden to
   // implement multiple-arity functions with tuples. These two methods
@@ -72,20 +80,20 @@ trait FunctionsExp extends Functions with EffectExp {
   // creating an abstraction, and unbox when applying it. See
   // TupledFunctionsExp for an example.
 
-  def unboxedFresh[A:Manifest] : Exp[A] = fresh[A]
-  def unbox[A:Manifest](x : Exp[A])(implicit pos: SourceContext) : Exp[A] = x
+  def unboxedFresh[A:Typ] : Exp[A] = bound[A]
+  def unbox[A:Typ](x : Exp[A])(implicit pos: SourceContext) : Exp[A] = x
 
-  def doLambdaDef[A:Manifest,B:Manifest](f: Exp[A] => Exp[B]) : Def[A => B] = {
+  def doLambdaDef[A:Typ,B:Typ](f: Exp[A] => Exp[B]) : Def[A => B] = {
     val x = unboxedFresh[A]
     val y = reifyEffects(f(x)) // unfold completely at the definition site.
 
     Lambda(f, x, y)
   }
 
-  override def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B])(implicit pos: SourceContext): Exp[A => B] =
-    doLambdaDef(f)
+  override def doLambda[A:Typ,B:Typ](f: Exp[A] => Exp[B])(implicit pos: SourceContext): Exp[A => B] =
+    toAtom(doLambdaDef(f))
 
-  override def doApply[A:Manifest,B:Manifest](f: Exp[A => B], x: Exp[A])(implicit pos: SourceContext): Exp[B] = {
+  override def doApply[A:Typ,B:Typ](f: Exp[A => B], x: Exp[A])(implicit pos: SourceContext): Exp[B] = {
     val x1 = unbox(x)
     f match {
       case Def(Lambda(_,_,y)) =>
@@ -98,10 +106,10 @@ trait FunctionsExp extends Functions with EffectExp {
     }
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case e@Lambda(g,x,y) => toAtom(Lambda(f(g),f(x),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
-    case e@Apply(g,arg) => doApply(f(g), f(arg))(e.mA,mtype(e.mB),implicitly[SourceContext])
-    case Reflect(e@Apply(g,arg), u, es) => reflectMirrored(Reflect(Apply(f(g),f(arg))(e.mA,mtype(e.mB)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case e@Lambda(g,x:Exp[Any],y:Block[b]) => toAtom(Lambda(f(g),f(x),f(y))(e.mA,e.mB))(mtype(typ[A]),pos)
+    case e@Apply(g,arg) => doApply(f(g), f(arg))(e.mA,mtype(e.mB),pos)
+    case Reflect(e@Apply(g,arg), u, es) => reflectMirrored(Reflect(Apply(f(g),f(arg))(e.mA,mtype(e.mB)), mapOver(f,u), f(es)))(mtype(typ[A]), pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 
@@ -136,53 +144,53 @@ trait FunctionsExp extends Functions with EffectExp {
 trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOpsExp {
   // used to represent unboxed tuples by a list of vars
   // T will be a tuple of a specified arity
-  case class UnboxedTuple[T: Manifest](val vars: List[Exp[Any]]) extends Exp[T]
+  case class UnboxedTuple[T: Typ](val vars: List[Exp[Any]]) extends Exp[T]
 
-  private def tupledManifest[T](m: Manifest[T]): Boolean = m.erasure.getName startsWith "scala.Tuple"
-  private def tupledManifestOf[T](m: Manifest[T], arity: Int): Boolean = m.erasure.getName == "scala.Tuple" + arity
+  private def tupledTyp[T](m: Typ[T]): Boolean = m.erasure.getName startsWith "scala.Tuple"
+  private def tupledTypOf[T](m: Typ[T], arity: Int): Boolean = m.erasure.getName == "scala.Tuple" + arity
 
-  override def unboxedFresh[A:Manifest] : Exp[A] = {
-    val mA = implicitly[Manifest[A]]
-    if (mA == implicitly[Manifest[Unit]] || tupledManifest(mA))
-      UnboxedTuple[A](mA.typeArguments.map(fresh(_)))
-    else fresh[A]
+  override def unboxedFresh[A:Typ] : Exp[A] = {
+    val mA = implicitly[Typ[A]]
+    if (mA == implicitly[Typ[Unit]] || tupledTyp(mA))
+      UnboxedTuple[A](mA.typeArguments.map(bound(_)))
+    else bound[A]
   }
 
-  override def unbox[A:Manifest](x : Exp[A])(implicit pos: SourceContext) : Exp[A] = {
-    val mA = implicitly[Manifest[A]]
+  override def unbox[A:Typ](x : Exp[A])(implicit pos: SourceContext) : Exp[A] = {
+    val mA = implicitly[Typ[A]]
     x match {
       case _ : UnboxedTuple[A] => x
-      case _ if mA == implicitly[Manifest[Unit]] =>
+      case _ if mA == implicitly[Typ[Unit]] =>
         UnboxedTuple[A](List())
-      case _ if tupledManifestOf(mA, 2) =>
+      case _ if tupledTypOf(mA, 2) =>
         x match { case t : Rep[(a1,a2)] =>
           UnboxedTuple[A](List(
-            tuple2_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]], pos),
-            tuple2_get2(t)(mA.typeArguments(1).asInstanceOf[Manifest[a2]], pos)))
+            tuple2_get1(t)(mA.typeArguments(0).asInstanceOf[Typ[a1]], pos),
+            tuple2_get2(t)(mA.typeArguments(1).asInstanceOf[Typ[a2]], pos)))
         }
-      case _ if tupledManifestOf(mA, 3) =>
+      case _ if tupledTypOf(mA, 3) =>
         x match { case t : Rep[(a1,a2,a3)] =>
           UnboxedTuple[A](List(
-            tuple3_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]], pos),
-            tuple3_get2(t)(mA.typeArguments(1).asInstanceOf[Manifest[a2]], pos),
-            tuple3_get3(t)(mA.typeArguments(2).asInstanceOf[Manifest[a3]], pos)))
+            tuple3_get1(t)(mA.typeArguments(0).asInstanceOf[Typ[a1]], pos),
+            tuple3_get2(t)(mA.typeArguments(1).asInstanceOf[Typ[a2]], pos),
+            tuple3_get3(t)(mA.typeArguments(2).asInstanceOf[Typ[a3]], pos)))
         }
-      case _ if tupledManifestOf(mA, 4) =>
+      case _ if tupledTypOf(mA, 4) =>
         x match { case t : Rep[(a1,a2,a3,a4)] =>
           UnboxedTuple[A](List(
-            tuple4_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]], pos),
-            tuple4_get2(t)(mA.typeArguments(1).asInstanceOf[Manifest[a2]], pos),
-            tuple4_get3(t)(mA.typeArguments(2).asInstanceOf[Manifest[a3]], pos),
-            tuple4_get4(t)(mA.typeArguments(3).asInstanceOf[Manifest[a4]], pos)))
+            tuple4_get1(t)(mA.typeArguments(0).asInstanceOf[Typ[a1]], pos),
+            tuple4_get2(t)(mA.typeArguments(1).asInstanceOf[Typ[a2]], pos),
+            tuple4_get3(t)(mA.typeArguments(2).asInstanceOf[Typ[a3]], pos),
+            tuple4_get4(t)(mA.typeArguments(3).asInstanceOf[Typ[a4]], pos)))
         }
-      case _ if tupledManifestOf(mA, 5) =>
+      case _ if tupledTypOf(mA, 5) =>
         x match { case t : Rep[(a1,a2,a3,a4,a5)] =>
           UnboxedTuple[A](List(
-            tuple5_get1(t)(mA.typeArguments(0).asInstanceOf[Manifest[a1]], pos),
-            tuple5_get2(t)(mA.typeArguments(1).asInstanceOf[Manifest[a2]], pos),
-            tuple5_get3(t)(mA.typeArguments(2).asInstanceOf[Manifest[a3]], pos),
-            tuple5_get4(t)(mA.typeArguments(3).asInstanceOf[Manifest[a4]], pos),
-            tuple5_get5(t)(mA.typeArguments(4).asInstanceOf[Manifest[a5]], pos)))
+            tuple5_get1(t)(mA.typeArguments(0).asInstanceOf[Typ[a1]], pos),
+            tuple5_get2(t)(mA.typeArguments(1).asInstanceOf[Typ[a2]], pos),
+            tuple5_get3(t)(mA.typeArguments(2).asInstanceOf[Typ[a3]], pos),
+            tuple5_get4(t)(mA.typeArguments(3).asInstanceOf[Typ[a4]], pos),
+            tuple5_get5(t)(mA.typeArguments(4).asInstanceOf[Typ[a5]], pos)))
         }
       case _ => x
     }
@@ -193,15 +201,15 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
     case _ => super.boundSyms(e)
   }
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case e@Lambda(g,UnboxedTuple(xs),y) => toAtom(Lambda(f(g),UnboxedTuple(f(xs))(e.mA),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+    case e@Lambda(g,UnboxedTuple(xs),y:Block[b]) => toAtom(Lambda(f(g),UnboxedTuple(f(xs))(e.mA),f(y))(e.mA,e.mB))(mtype(typ[A]),pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
 
 trait FunctionsRecursiveExp extends FunctionsExp with ClosureCompare {
   var funTable: List[(Sym[_], Any)] = List()
-  override def doLambda[A:Manifest,B:Manifest](f: Exp[A] => Exp[B])(implicit pos: SourceContext): Exp[A => B] = {
+  override def doLambda[A:Typ,B:Typ](f: Exp[A] => Exp[B])(implicit pos: SourceContext): Exp[A => B] = {
     val can = canonicalize(f)
     funTable.find(_._2 == can) match {
       case Some((funSym, _)) =>
@@ -209,7 +217,7 @@ trait FunctionsRecursiveExp extends FunctionsExp with ClosureCompare {
       case _ =>
         val funSym = fresh[A=>B]
         funTable = (funSym,can)::funTable
-        createDefinition(funSym, doLambdaDef(f))
+        createStm(List(funSym), doLambdaDef(f))
         funSym
     }
   }
@@ -218,7 +226,7 @@ trait FunctionsRecursiveExp extends FunctionsExp with ClosureCompare {
 
 trait TupledFunctionsRecursiveExp extends FunctionsRecursiveExp with TupledFunctionsExp
 
-trait GenericGenUnboxedTupleAccess extends GenericNestedCodegen {
+trait GenericGenUnboxedTupleAccess extends GenericCodegen {
   val IR: TupledFunctionsExp
   import IR._
 
@@ -232,13 +240,13 @@ trait GenericGenUnboxedTupleAccess extends GenericNestedCodegen {
   }
 }
 
-trait BaseGenFunctions extends GenericNestedCodegen {
+trait BaseGenFunctions extends GenericCodegen {
   val IR: FunctionsExp
   import IR._
 
 }
 
-trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
+trait ScalaGenFunctions extends ScalaGenBase with BaseGenFunctions {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
@@ -276,14 +284,14 @@ trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTu
 
     case _ => super.emitNode(sym,rhs)
   }
-  
-  def unwrapTupleStr[A](m: Manifest[A]): Array[String] = {
+
+  def unwrapTupleStr[A](m: Typ[A]): Array[String] = {
     val s = m.toString
     if (s.startsWith("scala.Tuple")) s.slice(s.indexOf("[")+1,s.length-1).filter(c => c != ' ').split(",")
     else Array(remap(m))
-  } 
-  
-  override def remap[A](m: Manifest[A]): String = m.toString match {    
+  }
+
+  override def remap[A](m: Typ[A]): String = m.toString match {
     case f if f.startsWith("scala.Function") =>
       val targs = m.typeArguments.dropRight(1)
       val res = remap(m.typeArguments.last)
@@ -295,54 +303,50 @@ trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTu
   }
 }
 
-trait CudaGenFunctions extends CudaGenEffect with BaseGenFunctions {
+trait CudaGenFunctions extends CudaGenBase with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-    rhs match {
-      case e@Lambda(fun, x, y) =>
-        throw new GenerationFailedException("CudaGenFunctions: Lambda is not supported yet")
-        // The version for inlined device function
-        //stream.println(addTab() + "%s %s = %s;".format(remap(x.tp), quote(x), quote(sym)+"_1"))
-        //emitBlock(y)
-        //stream.println(addTab() + "%s %s = %s;".format(remap(y.tp), quote(sym), quote(getBlockResult(y))))
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case e@Lambda(fun, x, y) =>
+      throw new GenerationFailedException("CudaGenFunctions: Lambda is not supported yet")
+      // The version for inlined device function
+      //stream.println(addTab() + "%s %s = %s;".format(remap(x.tp), quote(x), quote(sym)+"_1"))
+      //emitBlock(y)
+      //stream.println(addTab() + "%s %s = %s;".format(remap(y.tp), quote(sym), quote(getBlockResult(y))))
 
-        // The version for separate device function
-        /*
-        //TODO: If function parameter was originally tuple, then each element should be renamed?
-        val freeVars = buildScheduleForResult(y).filter(scope.contains(_)).map(_.sym)
-        stream.println("__device__ %s %s(%s %s) {".format(e.mB, quote(sym), e.mA, quote(x)))
-        emitBlock(y)
-        stream.println("%s %s = %s;".format(e.mB, quote(sym), quote(getBlockResult(y))))
-        stream.println("return %s;".format(quote(getBlockResult(y))))
-        stream.println("}")
-        */
-      case Apply(fun, arg) =>
-        emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
+      // The version for separate device function
+      /*
+      //TODO: If function parameter was originally tuple, then each element should be renamed?
+      val freeVars = buildScheduleForResult(y).filter(scope.contains(_)).map(_.sym)
+      stream.println("__device__ %s %s(%s %s) {".format(e.mB, quote(sym), e.mA, quote(x)))
+      emitBlock(y)
+      stream.println("%s %s = %s;".format(e.mB, quote(sym), quote(getBlockResult(y))))
+      stream.println("return %s;".format(quote(getBlockResult(y))))
+      stream.println("}")
+      */
+    case Apply(fun, arg) =>
+      emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 
-      case _ => super.emitNode(sym, rhs)
-    }
+    case _ => super.emitNode(sym, rhs)
   }
 }
 
-trait OpenCLGenFunctions extends OpenCLGenEffect with BaseGenFunctions {
+trait OpenCLGenFunctions extends OpenCLGenBase with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
-    rhs match {
-      case e@Lambda(fun, x, y) =>
-        throw new GenerationFailedException("OpenCLGenFunctions: Lambda is not supported yet")
-      case Apply(fun, arg) =>
-        emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case e@Lambda(fun, x, y) =>
+      throw new GenerationFailedException("OpenCLGenFunctions: Lambda is not supported yet")
+    case Apply(fun, arg) =>
+      emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
 
-      case _ => super.emitNode(sym, rhs)
-    }
+    case _ => super.emitNode(sym, rhs)
   }
 }
 
-trait CGenFunctions extends CGenEffect with BaseGenFunctions {
+trait CGenFunctions extends CGenBase with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
@@ -350,8 +354,8 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
       val retType = remap(getBlockResult(y).tp)
-      stream.println("function<"+retType+"("+
-    		  remap(x.tp)+")> "+quote(sym)+
+      val retTp = if (cppExplicitFunRet == "true") "function<"+retType+"("+remap(x.tp)+")>" else "auto"
+      stream.println(retTp+" "+quote(sym)+
     		  " = [&]("+remap(x.tp)+" "+quote(x)+") {")
       emitBlock(y)
       val z = getBlockResult(y)
@@ -362,13 +366,13 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
       emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
     case _ => super.emitNode(sym, rhs)
   }
-  
+
 }
 
 trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAccess {
   val IR: TupledFunctionsExp
   import IR._
-  
+
   /*override def quote(x: Exp[Any]) : String = x match {
     case UnboxedTuple(t) => t.map(quote).mkString("((", ",", "))")
     case _ => super.quote(x)
@@ -378,8 +382,8 @@ trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAcces
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>
       val retType = remap(getBlockResult(y).tp)
-      stream.println("function<"+retType+"("+
-    		  xs.map(s=>remap(s.tp)).mkString(",")+")> "+quote(sym)+
+      val retTp = if (cppExplicitFunRet == "true") "function<"+retType+"("+xs.map(s=>remap(s.tp)).mkString(",")+")>" else "auto"
+      stream.println(retTp+" "+quote(sym)+
     		  " = [&]("+xs.map(s=>remap(s.tp)+" "+quote(s)).mkString(",")+") {")
       emitBlock(y)
       val z = getBlockResult(y)
@@ -396,7 +400,7 @@ trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAcces
     else Array(s)
   }*/
 
-  /*override def remap[A](m: Manifest[A]): String = m.toString match {
+  /*override def remap[A](m: Typ[A]): String = m.toString match {
     case f if f.startsWith("scala.Function") =>
       val targs = m.typeArguments.dropRight(1)
       val res = remap(m.typeArguments.last)

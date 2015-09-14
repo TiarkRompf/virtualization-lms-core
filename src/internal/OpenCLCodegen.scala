@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
@@ -7,7 +7,7 @@ import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
 import collection.immutable.List._
 
 trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTransfer {
-  val IR: Expressions
+  val IR: BaseExp
   import IR._
 
   override def deviceTarget: Targets.Value = Targets.OpenCL
@@ -22,7 +22,7 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
     helperFuncStream.println("#include \"" + deviceTarget + "helperFuncs.h\"")
 
     typesStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "types.h"))
-    
+
     //TODO: Put all the DELITE APIs declarations somewhere
     headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
     headerStream.println("#include <iostream>")
@@ -31,13 +31,13 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
     headerStream.println("#include <jni.h>")
     headerStream.println("#include \"" + deviceTarget + "types.h\"")
     headerStream.println(getDataStructureHeaders())
-    
+
     super.initializeGenerator(buildDir)
   }
 
-  def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
+  def emitSource[A : Typ](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
 
-    val sB = manifest[A].toString
+    val sB = typ[A].toString
 
     withStream(out) {
       stream.println("/*****************************************\n"+
@@ -60,16 +60,4 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
     Nil
   }
 
-}
-
-// TODO: do we need this for each target?
-trait OpenCLNestedCodegen extends CLikeNestedCodegen with OpenCLCodegen {
-  val IR: Expressions with Effects
-  import IR._
-  
-}
-
-trait OpenCLFatCodegen extends CLikeFatCodegen with OpenCLCodegen {
-  val IR: Expressions with Effects with FatExpressions
-	import IR._
 }

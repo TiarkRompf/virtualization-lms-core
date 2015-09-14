@@ -1,16 +1,19 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
-import java.io.PrintWriter
 import scala.reflect.SourceContext
+import scala.lms.internal._
 
-trait LiftBoolean {
-  this: Base =>
+import java.io.PrintWriter
 
+trait LiftBoolean { this: Base =>
+  implicit def boolTyp: Typ[Boolean]
   implicit def boolToBoolRep(b: Boolean) = unit(b)
 }
 
 trait BooleanOps extends Variables {
+  implicit def boolTyp: Typ[Boolean]
+
   def infix_unary_!(x: Rep[Boolean])(implicit pos: SourceContext) = boolean_negate(x)
   def infix_&&(lhs: Rep[Boolean], rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_and(lhs,rhs)
   def infix_||(lhs: Rep[Boolean], rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_or(lhs,rhs)
@@ -22,25 +25,23 @@ trait BooleanOps extends Variables {
   def boolean_or(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext): Rep[Boolean]
 }
 
-trait BooleanOpsExp extends BooleanOps with EffectExp {
+trait BooleanOpsExp extends BooleanOps with BaseExp {
+  implicit def boolTyp: Typ[Boolean] = manifestTyp
+
   case class BooleanNegate(lhs: Exp[Boolean]) extends Def[Boolean]
   case class BooleanAnd(lhs: Exp[Boolean], rhs: Exp[Boolean]) extends Def[Boolean]
   case class BooleanOr(lhs: Exp[Boolean], rhs: Exp[Boolean]) extends Def[Boolean]
 
-  def boolean_negate(lhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = BooleanNegate(lhs)
-  def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = BooleanAnd(lhs,rhs)
-  def boolean_or(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = BooleanOr(lhs,rhs)
+  def boolean_negate(lhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = toAtom(BooleanNegate(lhs))
+  def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = toAtom(BooleanAnd(lhs,rhs))
+  def boolean_or(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = toAtom(BooleanOr(lhs,rhs))
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = e match {
     case BooleanNegate(x) => boolean_negate(f(x))
     case BooleanAnd(x,y) => boolean_and(f(x),f(y))
     case BooleanOr(x,y) => boolean_or(f(x),f(y))
-
-    case Reflect(BooleanNegate(x), u, es) => reflectMirrored(Reflect(BooleanNegate(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(BooleanAnd(x,y), u, es) => reflectMirrored(Reflect(BooleanAnd(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(BooleanOr(x,y), u, es) => reflectMirrored(Reflect(BooleanOr(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case _ => super.mirror(e, f)
-  }).asInstanceOf[Exp[A]] // why??
+  }
 }
 
 /**
@@ -54,24 +55,20 @@ trait BooleanOpsExpOpt extends BooleanOpsExp {
     case _ => super.boolean_negate(lhs)
   }
 
-  override def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = {
-    (lhs, rhs) match {
-      case (Const(false), _) => Const(false)
-      case (_, Const(false)) => Const(false)
-      case (Const(true), x) => x
-      case (x, Const(true)) => x
-      case _ => super.boolean_and(lhs, rhs)
-    }
+  override def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = (lhs, rhs) match {
+    case (Const(false), _) => Const(false)
+    case (_, Const(false)) => Const(false)
+    case (Const(true), x) => x
+    case (x, Const(true)) => x
+    case _ => super.boolean_and(lhs, rhs)
   }
 
-  override def boolean_or(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = {
-    (lhs, rhs) match {
-      case (Const(false), x) => x
-      case (x, Const(false)) => x
-      case (Const(true), _) => Const(true)
-      case (_, Const(true)) => Const(true)
-      case _ => super.boolean_or(lhs, rhs)
-    }
+  override def boolean_or(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = (lhs, rhs) match {
+    case (Const(false), x) => x
+    case (x, Const(false)) => x
+    case (Const(true), _) => Const(true)
+    case (_, Const(true)) => Const(true)
+    case _ => super.boolean_or(lhs, rhs)
   }
 }
 

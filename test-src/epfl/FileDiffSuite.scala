@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 
 import java.io.{PrintStream,File,FileInputStream,FileOutputStream,ByteArrayOutputStream}

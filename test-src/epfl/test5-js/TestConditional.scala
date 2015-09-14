@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test5
 
@@ -21,11 +21,14 @@ trait JSGenEqual extends JSGenBase {
 
 
 trait Print extends Base {
+  implicit def stringTyp: Typ[String]
+  implicit def anyTyp: Typ[Any]
   implicit def unit(s: String): Rep[String]
   def print(s: Rep[Any]): Rep[Unit]
 }
 
 trait PrintExp extends Print with EffectExp {
+  implicit def anyTyp: Typ[Any] = ManifestTyp(implicitly)
   implicit def unit(s: String): Rep[String] = Const(s)
   case class Print(s: Rep[Any]) extends Def[Unit]
   def print(s: Rep[Any]) = reflectEffect(Print(s))
@@ -67,7 +70,7 @@ trait Dom extends Base {
 
 
 
-trait ConditionalProg { this: Arith with Equal with Print with IfThenElse =>
+trait ConditionalProg { this: PrimitiveOps with Equal with Print with IfThenElse =>
   
   def test(x: Rep[Double]): Rep[Double] = {
     
@@ -101,9 +104,10 @@ class TestConditional extends FileDiffSuite {
     
       println("-- begin")
 
-      new ConditionalProg with ArithExpOpt with EqualExp with PrintExp
-      with IfThenElseExp with CompileScala { self =>
-        val codegen = new ScalaGenIfThenElse with ScalaGenArith 
+      new ConditionalProg with PrimitiveOpsExpOpt with EqualExp with PrintExp
+      with IfThenElseExp with StringOpsExp with ArrayOpsExp with SeqOpsExp
+      with CompileScala { self =>
+        val codegen = new ScalaGenIfThenElse with ScalaGenPrimitiveOps 
         with ScalaGenEqual with ScalaGenPrint { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)
@@ -112,9 +116,11 @@ class TestConditional extends FileDiffSuite {
         println(g(7))
       }
     
-      new ConditionalProg with IfThenElseExp with ArithExpOpt with EqualExp
+      new ConditionalProg with LiftPrimitives with IfThenElseExp 
+      with PrimitiveOpsExpOpt with StringOpsExp with ArrayOpsExp with SeqOpsExp
+      with EqualExp
       with PrintExp { self =>
-        val codegen = new JSGenIfThenElse with JSGenArith 
+        val codegen = new JSGenIfThenElse with JSGenPrimitiveOps 
         with JSGenEqual with JSGenPrint { val IR: self.type = self }
         
         val f = (x: Rep[Double]) => test(x)

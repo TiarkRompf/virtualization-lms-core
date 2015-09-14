@@ -4,11 +4,11 @@
 class Test extends ((Unit)=>(scala.Function1[Boolean, scala.Function1[Double, Double]])) {
 def apply(x0:Unit): scala.Function1[Boolean, scala.Function1[Double, Double]] = {
 val x3 = {x1: (Double) => 
-val x2 = 2.0*x1
+val x2 = 2.0 * x1
 x2: Double
 }
 val x8 = {x6: (Double) => 
-val x7 = x6+1.0
+val x7 = x6 + 1.0
 x7: Double
 }
 val x11 = {x4: (Boolean) => 

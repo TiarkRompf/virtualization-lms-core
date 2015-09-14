@@ -1,110 +1,151 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import scala.reflect.SourceContext
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.mutable.ListBuffer
-import java.lang.{StackTraceElement,Thread}
 
-
-/**
- * The Expressions trait houses common AST nodes. It also manages a list of encountered Definitions which
- * allows for common sub-expression elimination (CSE).  
- * 
- * @since 0.1
- */
-trait Expressions extends UtilsExp {
-
-  abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
-    def tp: Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
-    def pos: List[SourceContext] = Nil
-  }
-
-  case class Const[+T:Manifest](x: T) extends Exp[T] {
-    //override def toString = s"c$x"
-  }
-
-  case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
-    var sourceContexts: List[SourceContext] = Nil
-    override def pos = sourceContexts
-    def withPos(pos: List[SourceContext]) = { sourceContexts :::= pos; this }
-    //override def toString = s"x$id"
-  }
-
-  // TODO: May want Tunable to be set to an Exp[Int] rather than just an Int..
-  // but this may create problems with mirroring if the value is filled in at the wrong time..
-  // Only Ints for now - may want to expand this later?
-  var nTunables = 0
-  case class Tunable(val id: Int) extends Exp[Int] {
-    var value: Option[Int] = None
-    var maxSize: Option[Int] = None
-    def withValue(x: Int) = { value = Some(x); this }
-    def withMax(x: Int) = { maxSize = Some(x); this }
-    override def toString = (value,maxSize) match {
-      case (Some(x),Some(m)) => "Tunable(" + x + ", " + m + ")"
-      case (Some(x),None) => "Tunable(" + x + ", ?)"
-      case (None,Some(m)) => "Tunable(?, " + m + ")"
-      case _ => "Tunable(?, ?)"
-    }
-  }
-
-  // Tunable mappings
-  // TODO: May not want to have this in the IR
-  // (might make more sense in strip-mining transformer)
-  var tunableParams: Map[Exp[Any], Tunable] = Map.empty
-  def freshTuna(s: Exp[Any]): Tunable = tunableParams.get(s) match {
-    case Some(t) => t
-    case None =>
-      val t = freshTuna()
-      tunableParams += (s -> t)
-      (t)
-  }
-  def freshTuna(s: Exp[Any], defaultValue: Int): Tunable = freshTuna(s).withValue(defaultValue)
-
-  // Tunable w/o mappings
-  def freshTuna(): Tunable = Tunable{ nTunables += 1; nTunables - 1 }
-  def freshTuna(defaultValue: Int): Tunable
-    = freshTuna().withValue(defaultValue)
-
-  case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
-
-  var nVars = 0
-  def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) printlog("nVars="+nVars);  nVars -1 }
-
-  def fresh[T:Manifest](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
-
-  abstract class Def[+T] { // operations (composite)
-    override final lazy val hashCode = scala.runtime.ScalaRunTime._hashCode(this.asInstanceOf[Product])
-  }
-
-  abstract class Stm // statement (links syms and definitions)
+trait Expressions extends Typs with SymbolMetadata {
   
-  def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {
-    case TP(sym, rhs) => sym::Nil
+  // --- Symbols
+  abstract class Exp[+T:Typ] {
+    val tp: Typ[T @ uncheckedVariance] = typ[T]
+    var pos: List[SourceContext] = Nil
+    def withPos(ctx: List[SourceContext]) = { pos :::= ctx; this }
+   
+    // Infix shortcuts for returning a symbol with metadata added 
+    private implicit def ctx = mpos(pos)
+    def withProps(props: Any) = props match { case EatSome(p: SymbolProperties) => setProps(this, p); this }
+    def withData(data: Any) = data match { case EatSome(m: Metadata) => setMetadata(this, m); this }
+    def withChild(data: Any) = data match { case EatSome(p: SymbolProperties) => setChild(this, p); this }
+    def withField(data: Any, index: String) = data match { case EatSome(p: SymbolProperties) => setField(this, p, index); this }
+  }
+    
+  case class Sym[+T:Typ](id: Int) extends Exp[T]
+  case class Const[+T:Typ](x: T) extends Exp[T]
+  case class Variable[+T](val e: Exp[Variable[T]]) // FIXME: should be invariant
+
+  // --- Operations (composite)
+  abstract class Op
+  abstract class Def[+R] extends Op
+  abstract class FatDef extends Op {
+    def tps: List[Typ[_]]
+    def mhs: List[Def[Any]]
   }
   
-  def infix_rhs(stm: Stm): Any = stm match { // clients use syms(e.rhs), boundSyms(e.rhs) etc.
-    case TP(sym, rhs) => rhs
+  abstract class Def1[R:Typ] extends Def[R] { val mR = typ[R] }
+  abstract class Def2[A:Typ,R:Typ] extends Def1[R] { val mA = typ[A] }
+  abstract class Def3[A:Typ,B:Typ,R:Typ] extends Def2[A,R] { val mB = typ[B] }
+  abstract class NumericDef1[A:Typ:Numeric] extends Def1[A] { val nR = implicitly[Numeric[A]] }
+  
+  // statement (links symbols and definitions)
+  sealed abstract class Stm {
+    def lhs: List[Sym[Any]]
+    def rhs: Op
+    def defines[A](l: Sym[A]): Option[Def[A]]
+    def defines(r: Op): List[Sym[Any]]
+  }
+  case class TP[+T](left: Sym[T], right: Def[T]) extends Stm {
+    override def lhs = List(left)
+    override def rhs = right
+    override def defines[A](l: Sym[A]) = if (left == l) Some(right.asInstanceOf[Def[A]]) else None
+    override def defines(r: Op) = if (right == r) List(left) else Nil 
+  }
+  case class TTP(left: List[Sym[Any]], middle: List[Def[Any]], right: FatDef) extends Stm {
+    override def lhs = left
+    def mhs = middle
+    override def rhs = right
+    override def defines[A](l: Sym[A]) = lhs.indexOf(l) match { case idx if idx >= 0 => Some(mhs(idx).asInstanceOf[Def[A]]); case _ => None }
+    override def defines(r: Op) = if (right == r) left else Nil
   }
 
-  def infix_defines[A](stm: Stm, sym: Sym[A]): Option[Def[A]] = stm match {
-    case TP(`sym`, rhs: Def[A]) => Some(rhs)
-    case _ => None
+  // --- Blocks
+  case class Block[+T](res: Exp[T]) { def tp: Typ[T @uncheckedVariance] = res.tp }
+  
+  def getBlockResult[A](b: Block[A]): Exp[A] 
+  def getBlockResultFull[A](b: Block[A]): Exp[A] = b.res
+  
+  ////////////////
+  // --- Metadata
+  var metadata: Map[Exp[Any], SymbolProperties] = Map.empty
+  private var metadataUpdateFlag: Boolean = false
+  private def setMetadataUpdateFlag() { metadataUpdateFlag = true }
+  def clearMetadataUpdateFlag() { metadataUpdateFlag = false }
+  def getMetadataUpdateFlag() = metadataUpdateFlag
+  
+  // Setters
+  // Directly add symbol property metadata mapping for symbol 
+  def setProps(e: Exp[Any], p: SymbolProperties)(implicit ctx: SourceContext) { updateProperties(e, p) }
+  def setProps(e: Exp[Any], p: Option[SymbolProperties])(implicit ctx: SourceContext) { if (p.isDefined) setProps(e, p.get) }
+
+  // Add metadata information for this symbol (possibly using meet)
+  def setMetadata(e: Exp[Any], m: Option[Metadata])(implicit ctx: SourceContext) { updateProperties(e, initExp(e, m)) }
+  def setMetadata(e: Exp[Any], m: Metadata)(implicit ctx: SourceContext) { setMetadata(e, Some(m)) }
+
+  // Add child information for this symbol (possibly using meet)
+  def setChild(e: Exp[Any], p: Option[SymbolProperties])(implicit ctx: SourceContext) { updateProperties(e, initExp(e, None, p)) }
+  def setChild(e: Exp[Any], p: SymbolProperties)(implicit ctx: SourceContext) { setChild(e, Some(p)) }
+  
+  def setField(e: Exp[Any], p: Option[SymbolProperties], index: String)(implicit ctx: SourceContext) { updateProperties(e, initExp(e, None, p, Some(index))) }
+  def setField(e: Exp[Any], p: SymbolProperties, index: String)(implicit ctx: SourceContext) { setField(e, Some(p), index) }
+
+  // Getters
+  // Get child metadata for given symbol properties
+  def getChild(p: SymbolProperties): Option[SymbolProperties] = p match { 
+    case p: ArrayProperties => p.child 
+    case _ => cwarn("Attempted to get child of symbol properties with no child!"); None
+  }
+  def getField(p: SymbolProperties, index: String): Option[SymbolProperties] = p match { 
+    case p: StructProperties => p.child(index) 
+    case _ => cwarn("Attempted to get field of symbol properties with no fields!"); None
   }
 
-  def infix_defines[A](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
-    case TP(sym: Sym[A], `rhs`) => Some(sym)
-    case _ => None
+  // Get child metadata for given symbol
+  def getProps(e: Exp[Any]): Option[SymbolProperties] = Some(metadata.getOrElse(e, initExp(e)(mpos(e.pos))))
+  def getMetadata(e: Exp[Any], k: String): Option[Metadata] = getProps(e).flatMap{p => p(k)}
+  def getChild(e: Exp[Any]): Option[SymbolProperties] = getProps(e).flatMap{p => getChild(p)}
+  def getField(struct: Exp[Any], index: String): Option[SymbolProperties] = getProps(struct).flatMap{p => getField(p, index)}
+
+  def getProps(b: Block[Any]): Option[SymbolProperties] = getProps(b.res)
+  def getMetadata(b: Block[Any], k: String): Option[Metadata] = getMetadata(b.res, k)
+  def getChild(b: Block[Any]): Option[SymbolProperties] = getChild(b.res)
+  def getField(b: Block[Any], index: String): Option[SymbolProperties] = getField(b.res, index)
+  
+  /**
+   * Merge previous metadata for token and new data, notifying update if changes occurred
+   * During merge, new metadata overrides pre-existing data when possible
+   */ 
+  private def updateProperties(e: Exp[Any], p: SymbolProperties)(implicit ctx: SourceContext) {
+    val prevProps = metadata.get(e)
+    val newProps = tryMeet(prevProps, Some(p), func = MetaOverwrite)
+    metadata = metadata ++ List(e -> newProps.get)
+    if (!matches(prevProps, newProps)) setMetadataUpdateFlag()
   }
   
-  case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
+  def defaultMetadata[T](tp: Typ[T]): List[Metadata] = Nil
 
-  // graph construction state
+  // Symbol property initialization
+  def initExp(e: Exp[Any], data: Option[Metadata] = None, child: Option[SymbolProperties] = None, index: Option[String] = None)(implicit ctx: SourceContext): SymbolProperties
+    = initTpe(e.tp, data, child, index)
+
+  def initTpe[A](tp: Typ[A], data: Option[Metadata] = None, child: Option[SymbolProperties] = None, index: Option[String] = None)(implicit ctx: SourceContext): SymbolProperties = {
+    val givenData = PropertyMap(data.map{m => m.name -> Some(m)}.toList)
+    val typeData = PropertyMap(defaultMetadata(tp).map{m => m.name -> Some(m)}) 
+    val symData = tryMeet(givenData, typeData, func = MetaTypeInit)
+    initProps(tp, symData, child, index)
+  }
+
+  // Should be overwritten for data structure types (e.g. structs, arrays)
+  def initProps[A](tp: Typ[A], symData: PropertyMap[Metadata], child: Option[SymbolProperties], index: Option[String])(implicit ctx: SourceContext): SymbolProperties = tp match {
+    case _ => ScalarProperties(symData)
+  }
   
+  ////////////////////////////////
+  // --- Graph construction state
   var globalDefs: List[Stm] = Nil
   var localDefs: List[Stm] = Nil
   var globalDefsCache: Map[Sym[Any],Stm] = Map.empty
-
+  
   def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
     val saveLocal = localDefs
     val saveGlobal = globalDefs
@@ -123,134 +164,84 @@ trait Expressions extends UtilsExp {
     assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
     // equivalent to: globalDefs filter (_.lhs exists (lhs contains _))
     val existing = lhs flatMap (globalDefsCache get _)
-    assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
+    assert(existing.isEmpty, s"already defined: $existing for $ds")
     localDefs = localDefs ::: ds
     globalDefs = globalDefs ::: ds
     for (stm <- ds; s <- stm.lhs) {      
-      globalDefsCache += (s->stm)
+      globalDefsCache += (s -> stm)
     }
   }
 
-  def findDefinition[T](s: Sym[T]): Option[Stm] =
-    globalDefsCache.get(s)
-    //globalDefs.find(x => x.defines(s).nonEmpty)
+  var nSyms = 0
+  def bound[T:Typ]: Sym[T] = Sym[T] { nSyms += 1; nSyms - 1 }
+  def fresh[T:Typ](implicit ctx: SourceContext): Sym[T] = Sym[T] { nSyms += 1;  nSyms -1 }
+  
+  def findStm[T](s: Sym[T]): Option[Stm] = globalDefsCache.get(s)
+  def findStm(d: Op): Option[Stm] = globalDefs.find(x => x.defines(d).nonEmpty)
 
-  def findDefinition[T](d: Def[T]): Option[Stm] =
-    globalDefs.find(x => x.defines(d).nonEmpty)
-
-  def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): Stm =
-    findDefinition[T](d) map { x => x.defines(d).foreach(_.withPos(pos)); x } getOrElse {
-      createDefinition(fresh[T](pos), d)
+  def createStm(s: List[Sym[Any]], d: Op): Stm = {
+    val f = d match {
+      case d: Def[_] => TP(s.head, d)
+      case d: FatDef => TTP(s, d.mhs, d)
     }
-
-  def findOrCreateDefinitionExp[T:Manifest](d: Def[T], pos: List[SourceContext]): Exp[T] =
-    findOrCreateDefinition(d, pos).defines(d).get
-
-  def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
-    val f = TP(s, d)
     reflectSubGraph(List(f))
     f
   }
   
-
-  protected implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
-    findOrCreateDefinitionExp(d, List(pos)) // TBD: return Const(()) if type is Unit??
+  // Thin Defs
+  def findOrCreateDefinition[T:Typ](d: Def[T])(implicit ctx: SourceContext): Stm 
+    = findStm(d) map {x => x.defines(d).foreach(_.withPos(List(ctx))); x } getOrElse { createStm(List(fresh[T]), d) }
+  def findOrCreateDefinitionExp[T:Typ](d: Def[T])(implicit ctx: SourceContext): Exp[T] 
+    = findOrCreateDefinition(d).defines(d).head.asInstanceOf[Exp[T]]
+  
+  // Fat Defs
+  def findOrCreateFatDefinition(d: FatDef)(implicit ctx: SourceContext): Stm 
+    = findStm(d) map {x => x.defines(d).foreach(_.withPos(List(ctx))); x } getOrElse { createStm(d.tps.map(tp => fresh(mtype(tp),ctx)), d) }
+  def findOrCreateFatDefinitionExp(d: FatDef)(implicit ctx: SourceContext): List[Exp[Any]] 
+    = findOrCreateFatDefinition(d).defines(d)
+  
+  protected def toAtom[T:Typ](d: Def[T])(implicit ctx: SourceContext): Exp[T] = findOrCreateDefinitionExp(d)
+  protected def toAtom(d: FatDef)(implicit ctx: SourceContext): List[Exp[Any]] = findOrCreateFatDefinitionExp(d)
+ 
+  // TODO: Unused. Needed?
+  object Op { 
+    def unapply[T](e: Exp[T]): Option[Op] = e match {
+      case s: Sym[_] => findStm(s).flatMap(_.defines(s))
+      case _ => None
+    }
   }
-
+  
+  // TODO: Should this return mhs def of TTPs?
   object Def {
     def unapply[T](e: Exp[T]): Option[Def[T]] = e match {
-      case s @ Sym(_) =>
-        findDefinition(s).flatMap(_.defines(s))
-      case _ =>
-        None
+      case s: Sym[_] => findStm(s) match {
+        case Some(TP(_,d)) => Some(d.asInstanceOf[Def[T]])
+        case _ => None
+      }
+      case _ => None
     }
   }
 
-  def mtype[A,B](m:Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]] // hack: need to pass explicit manifest (e.g. during mirroring)
-  def mpos(s: List[SourceContext]): SourceContext = if (s.nonEmpty) s.head else implicitly[SourceContext] // hack: got list of pos but need to pass single pos (e.g. to mirror)
-
-  // dependencies
-
-  // regular data (and effect) dependencies
-  def syms(e: Any): List[Sym[Any]] = e match {
-    case s: Sym[Any] => List(s)
-    case ss: Iterable[Any] => ss.toList.flatMap(syms(_))
-    // All case classes extend Product!
-    case p: Product => 
-      // performance hotspot: this is the same as
-      // p.productIterator.toList.flatMap(syms(_))
-      // but faster
-      val iter = p.productIterator
-      val out = new ListBuffer[Sym[Any]]
-      while (iter.hasNext) {
-        val e = iter.next()
-        out ++= syms(e)
+  object FatDef {
+    def unapply[T](e: Exp[T]): Option[(FatDef, Int)] = e match {
+      case s: Sym[_] => findStm(s) match {
+        case Some(TTP(syms,mhs,fd)) => Some(fd, syms.indexOf(s))
+        case _ => None
       }
-      out.result
-    case _ => Nil
+      case _ => None
+    }
   }
-
-  // symbols which are bound in a definition
-  def boundSyms(e: Any): List[Sym[Any]] = e match {
-    case ss: Iterable[Any] => ss.toList.flatMap(boundSyms(_))
-    case p: Product => p.productIterator.toList.flatMap(boundSyms(_))
-    case _ => Nil
-  }
-
-  // symbols which are bound in a definition, but also defined elsewhere
-  def tunnelSyms(e: Any): List[Sym[Any]] = e match {
-    case ss: Iterable[Any] => ss.toList.flatMap(tunnelSyms(_))
-    case p: Product => p.productIterator.toList.flatMap(tunnelSyms(_))
-    case _ => Nil
-  }
-
-  // symbols of effectful components of a definition
-  def effectSyms(x: Any): List[Sym[Any]] = x match {
-    case ss: Iterable[Any] => ss.toList.flatMap(effectSyms(_))
-    case p: Product => p.productIterator.toList.flatMap(effectSyms(_))
-    case _ => Nil
-  }
-
-  // soft dependencies: they are not required but if they occur, 
-  // they must be scheduled before
-  def softSyms(e: Any): List[Sym[Any]] = e match {
-    // empty by default
-    //case s: Sym[Any] => List(s)
-    case ss: Iterable[Any] => ss.toList.flatMap(softSyms(_))
-    case p: Product => p.productIterator.toList.flatMap(softSyms(_))
-    case _ => Nil
-  }
-
-  // generic symbol traversal: f is expected to call rsyms again
-  def rsyms[T](e: Any)(f: Any=>List[T]): List[T] = e match {
-    case s: Sym[Any] => f(s)
-    case ss: Iterable[Any] => ss.toList.flatMap(f)
-    case p: Product => p.productIterator.toList.flatMap(f)
-    case _ => Nil
-  }
-
-  // frequency information for dependencies: used/computed
-  // often (hot) or not often (cold). used to drive code motion.
-  def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
-    case s: Sym[Any] => List((s,1.0))
-    case ss: Iterable[Any] => ss.toList.flatMap(symsFreq(_))
-    case p: Product => p.productIterator.toList.flatMap(symsFreq(_))
-    //case _ => rsyms(e)(symsFreq)
-    case _ => Nil
-  }
-
-  def freqNormal(e: Any) = symsFreq(e)
-  def freqHot(e: Any) = symsFreq(e).map(p=>(p._1,p._2*1000.0))
-  def freqCold(e: Any) = symsFreq(e).map(p=>(p._1,p._2*0.5))
-
-
-  // bookkeeping
-
-  def reset { // used by delite?
-    nVars = 0
-    globalDefs = Nil
-    localDefs = Nil
-    globalDefsCache = Map.empty
-  }
-
+  
+  // TODO: Remove these - used by SimplifyTransform
+  case class Combine(a: List[Exp[Any]]) extends Exp[Any]()(ManifestTyp(manifest[Any]))
+  case class Forward[A](x: Exp[A]) extends Def[A]
+  
+  
+  // HACK: got list but need to pass single source context
+  def mpos(s: List[SourceContext]): SourceContext = if (s.nonEmpty) s.head else SourceContext.empty
+  def mpos(e: Exp[Any]): SourceContext = mpos(e.pos)
+  def mpos(b: Block[Any]): SourceContext = mpos(getBlockResult(b).pos)
+  
+  // Filter out symbols with primitive types (as defined in Typ.scala)
+  def noPrim(sm: List[Sym[Any]]): List[Sym[Any]] = sm.filterNot(s=>isPrimitiveType(s.tp))
 }

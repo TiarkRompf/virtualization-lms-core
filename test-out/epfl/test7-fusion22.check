@@ -14,7 +14,7 @@ replace TP(Sym(21),ArrayIndex(Sym(12),Sym(13))) at 2 within TTP(List(Sym(4), Sym
 try once more ...
 fusion of List((Sym(3),Sym(4)), (Sym(3),Sym(8)), (Sym(3),Sym(12)), (Sym(3),Sym(34))) prevented by TP(Sym(29),ArrayIndex(Sym(3),Sym(14))) which is required by body of List(Sym(4), Sym(8), Sym(12), Sym(34))
 fusion of List((Sym(7),Sym(4)), (Sym(7),Sym(8)), (Sym(7),Sym(12)), (Sym(7),Sym(34))) prevented by TP(Sym(30),ArrayIndex(Sym(7),Sym(14))) which is required by body of List(Sym(4), Sym(8), Sym(12), Sym(34))
-fusion of List((Sym(32),Sym(4)), (Sym(32),Sym(8)), (Sym(32),Sym(12)), (Sym(32),Sym(34)), (Sym(11),Sym(4)), (Sym(11),Sym(8)), (Sym(11),Sym(12)), (Sym(11),Sym(34))) prevented by TP(Sym(33),Plus(Sym(32),Sym(11))) which is required by body of List(Sym(4), Sym(8), Sym(12), Sym(34))
+fusion of List((Sym(32),Sym(4)), (Sym(32),Sym(8)), (Sym(32),Sym(12)), (Sym(32),Sym(34)), (Sym(11),Sym(4)), (Sym(11),Sym(8)), (Sym(11),Sym(12)), (Sym(11),Sym(34))) prevented by TP(Sym(33),DoublePlus(Sym(32),Sym(11))) which is required by body of List(Sym(4), Sym(8), Sym(12), Sym(34))
 wtableneg: List((Sym(3),Sym(4)), (Sym(3),Sym(8)), (Sym(3),Sym(12)), (Sym(3),Sym(34)), (Sym(7),Sym(4)), (Sym(7),Sym(8)), (Sym(7),Sym(12)), (Sym(7),Sym(34)), (Sym(32),Sym(4)), (Sym(32),Sym(8)), (Sym(32),Sym(12)), (Sym(32),Sym(34)), (Sym(11),Sym(4)), (Sym(11),Sym(8)), (Sym(11),Sym(12)), (Sym(11),Sym(34)))
 partitions: List(TTP(List(Sym(4), Sym(8), Sym(12), Sym(34)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))), SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(7)))), SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Sym(11)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(33))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(3))), ArrayElem(Block(Sym(7))), ArrayElem(Block(Sym(11))), ArrayElem(Block(Sym(33)))))), TTP(List(Sym(3), Sym(7), Sym(11), Sym(32)),List(SimpleLoop(Const(50),Sym(2),ArrayElem(Block(Const(1.0)))), SimpleLoop(Const(50),Sym(6),ArrayElem(Block(Const(2.0)))), SimpleLoop(Const(50),Sym(10),ReduceElem(Block(Const(4.0)))), SimpleLoop(Const(50),Sym(14),ReduceElem(Block(Sym(31))))),SimpleFatLoop(Const(50),Sym(2),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Const(2.0))), ReduceElem(Block(Const(4.0))), ReduceElem(Block(Sym(31)))))))
 considering TP(Sym(29),ArrayIndex(Sym(3),Sym(14)))
@@ -22,7 +22,7 @@ replace TP(Sym(29),ArrayIndex(Sym(3),Sym(14))) at 0 within TTP(List(Sym(3), Sym(
 considering TP(Sym(30),ArrayIndex(Sym(7),Sym(14)))
 replace TP(Sym(30),ArrayIndex(Sym(7),Sym(14))) at 1 within TTP(List(Sym(3), Sym(7), Sym(11), Sym(32)),List(SimpleLoop(Const(50),Sym(2),ArrayElem(Block(Const(1.0)))), SimpleLoop(Const(50),Sym(6),ArrayElem(Block(Const(2.0)))), SimpleLoop(Const(50),Sym(10),ReduceElem(Block(Const(4.0)))), SimpleLoop(Const(50),Sym(14),ReduceElem(Block(Sym(31))))),SimpleFatLoop(Const(50),Sym(2),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Const(2.0))), ReduceElem(Block(Const(4.0))), ReduceElem(Block(Sym(31))))))
 try once more ...
-fusion of List((Sym(38),Sym(4)), (Sym(38),Sym(8)), (Sym(38),Sym(12)), (Sym(38),Sym(40)), (Sym(11),Sym(4)), (Sym(11),Sym(8)), (Sym(11),Sym(12)), (Sym(11),Sym(40))) prevented by TP(Sym(39),Plus(Sym(38),Sym(11))) which is required by body of List(Sym(4), Sym(8), Sym(12), Sym(40))
+fusion of List((Sym(38),Sym(4)), (Sym(38),Sym(8)), (Sym(38),Sym(12)), (Sym(38),Sym(40)), (Sym(11),Sym(4)), (Sym(11),Sym(8)), (Sym(11),Sym(12)), (Sym(11),Sym(40))) prevented by TP(Sym(39),DoublePlus(Sym(38),Sym(11))) which is required by body of List(Sym(4), Sym(8), Sym(12), Sym(40))
 wtableneg: List((Sym(38),Sym(4)), (Sym(38),Sym(8)), (Sym(38),Sym(12)), (Sym(38),Sym(40)), (Sym(11),Sym(4)), (Sym(11),Sym(8)), (Sym(11),Sym(12)), (Sym(11),Sym(40)))
 partitions: List(TTP(List(Sym(4), Sym(8), Sym(12), Sym(40)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))), SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(7)))), SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Sym(11)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(39))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(3))), ArrayElem(Block(Sym(7))), ArrayElem(Block(Sym(11))), ArrayElem(Block(Sym(39)))))), TTP(List(Sym(3), Sym(7), Sym(11), Sym(38)),List(SimpleLoop(Const(50),Sym(2),ArrayElem(Block(Const(1.0)))), SimpleLoop(Const(50),Sym(6),ArrayElem(Block(Const(2.0)))), SimpleLoop(Const(50),Sym(10),ReduceElem(Block(Const(4.0)))), SimpleLoop(Const(50),Sym(2),ReduceElem(Block(Sym(37))))),SimpleFatLoop(Const(50),Sym(2),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Const(2.0))), ReduceElem(Block(Const(4.0))), ReduceElem(Block(Sym(37)))))))
 no changes, we're done
@@ -32,7 +32,7 @@ super.focusExactScopeFat with result changed from List(Sym(28)) to List(Sym(42))
 *******************************************/
 class Test extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-val x37 = 1.0+2.0
+val x37 = 1.0 + 2.0
 var x3 = new Array[Double](50)
 var x7 = new Array[Double](50)
 var x11: Double = 0
@@ -43,7 +43,7 @@ x7(x2) = 2.0
 x11 += 4.0
 x38 += x37
 }
-val x39 = x38+x11
+val x39 = x38 + x11
 var x4 = new Array[Array[Double]](100)
 var x8 = new Array[Array[Double]](100)
 var x12 = new Array[Double](100)

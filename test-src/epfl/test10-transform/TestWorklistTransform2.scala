@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test10
 
@@ -33,7 +33,7 @@ trait FWTransform2 extends BaseFatExp with EffectExp with IfThenElseFatExp with 
   
   // ---------- Exp api
   
-  implicit def toAfter[A:Manifest](x: Def[A]) = new { def atPhase(t: MyWorklistTransformer)(y: => Exp[A]) = transformAtPhase(x)(t)(y) }
+  implicit def toAfter[A:Typ](x: Def[A]) = new { def atPhase(t: MyWorklistTransformer)(y: => Exp[A]) = transformAtPhase(x)(t)(y) }
   implicit def toAfter[A](x: Exp[A]) = new { def atPhase(t: MyWorklistTransformer)(y: => Exp[A]) = transformAtPhase(x)(t)(y) }
 
   // transform x to y at the *next* iteration of t. 
@@ -46,7 +46,7 @@ trait FWTransform2 extends BaseFatExp with EffectExp with IfThenElseFatExp with 
   }
     
   
-  def onCreate[A:Manifest](s: Sym[A], d: Def[A]): Exp[A] = s
+  def onCreate[A:Typ](s: Sym[A], d: Def[A]): Exp[A] = s
 
   // ----------
   
@@ -57,31 +57,34 @@ trait FWTransform2 extends BaseFatExp with EffectExp with IfThenElseFatExp with 
 
 }
 
-trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp with ArrayMutationExp 
+    with PrimitiveOpsExp with LiftPrimitives
+    with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with StructExp //with VariablesExpOpt 
     with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp {
   
   
   def vzeros_xform(n: Rep[Int]) = vfromarray(array(n) { i => 0 })
 
-  def vapply_xform[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]) = vtoarray(a).at(x)
+  def vapply_xform[T:Typ](a: Rep[Vector[T]], x: Rep[Int]) = vtoarray(a).at(x)
 
   def vplus_xform(a: Rep[Vector[Double]], b: Rep[Vector[Double]]): Rep[Vector[Double]] = {
     val data = array(vlength(a)) { i => vapply(a,i) + vapply(b,i) }
     vfromarray(data)
   }
 
-  def vlength_xform[T:Manifest](a: Rep[Vector[T]]) = field[Int](a, "length")
+  def vlength_xform[T:Typ](a: Rep[Vector[T]]) = field[Int](a, "length")
   
 
-  def vfromarray[A:Manifest](x: Exp[Array[A]]): Exp[Vector[A]] = struct(ClassTag[Vector[A]]("Vector"), "data" -> x, "length" -> x.length)
-  def vtoarray[A:Manifest](x: Exp[Vector[A]]): Exp[Array[A]] = field[Array[A]](x, "data")
+  def vfromarray[A:Typ](x: Exp[Array[A]]): Exp[Vector[A]] = struct(ClassTag[Vector[A]]("Vector"), "data" -> x, "length" -> x.length)
+  def vtoarray[A:Typ](x: Exp[Vector[A]]): Exp[Array[A]] = field[Array[A]](x, "data")
 
 
-  override def onCreate[A:Manifest](s: Sym[A], d: Def[A]) = (d match {
+  // FIXME: manifests are wrong -- need to take from Def
+  override def onCreate[A:Typ](s: Sym[A], d: Def[A]) = (d match {
     case VectorZeros(n)   => s.atPhase(xform) { vzeros_xform(xform(n)).asInstanceOf[Exp[A]] }
     case VectorApply(a,x) => s.atPhase(xform) { vapply_xform(xform(a), xform(x))(mtype(manifest[A])).asInstanceOf[Exp[A]] }
-    case VectorLength(x)  => s.atPhase(xform) { vlength_xform(xform(x)).asInstanceOf[Exp[A]] }
+    case VectorLength(x)  => s.atPhase(xform) { vlength_xform(xform(x))(mtype(manifest[A])).asInstanceOf[Exp[A]] }
     case VectorPlus(a,b)  => s.atPhase(xform) { vplus_xform(xform(a),xform(b)).asInstanceOf[Exp[A]] }
     case _ => super.onCreate(s,d)
   }).asInstanceOf[Exp[A]]
@@ -89,7 +92,7 @@ trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp wit
 
   val xform = new MyWorklistTransformer
 
-  override def vapply[T:Manifest](a: Rep[Vector[T]], x: Rep[Int]) = (a,x) match {
+  override def vapply[T:Typ](a: Rep[Vector[T]], x: Rep[Int]) = (a,x) match {
     case (Def(VectorLiteral(ax)), Const(x)) => ax(x)
     case _ => super.vapply(a,x)
   }
@@ -102,22 +105,22 @@ class TestForward2 extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test10-"
   
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
+  trait DSL extends VectorOps with PrimitiveOps with OrderingOps with BooleanOps with LiftVariables 
     with IfThenElse with While with RangeOps with Print {
     def test(x: Rep[Int]): Rep[Unit]
   }
-  trait Impl extends DSL with VectorExpTrans2 with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+  trait Impl extends DSL with VectorExpTrans2 with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with StructFatExpOptCommon //with VariablesExpOpt 
     with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp { self => 
     override val verbosity = 2
 
-    val codegen = new ScalaGenVector with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenVector with ScalaGenArrayMutation with ScalaGenPrimitiveOps with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenStruct with ScalaGenRangeOps 
       with ScalaGenPrint with ScalaGenFatStruct { val IR: self.type = self }
 
     codegen.withStream(new PrintWriter(System.out)) {
       println("### first")
-      val b1 = reifyEffects(test(fresh))
+      val b1 = reifyEffects(test(fresh(intTyp)))
       println("--- code ---")
       codegen.emitBlock(b1)
       codegen.stream.flush

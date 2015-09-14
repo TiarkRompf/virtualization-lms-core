@@ -1,38 +1,35 @@
-package scala.virtualization.lms.internal
+package scala.lms
+package internal
 
-trait AbstractHostTransfer {
-  this: GenericCodegen =>
+import scala.lms.internal.Expressions
 
+trait AbstractHostTransfer { this: GenericCodegen =>
   val IR: Expressions
   import IR._
 
-  def emitSend(tp: Manifest[_], peer: Targets.Value): (String,String)
-  def emitRecv(tp: Manifest[_], peer: Targets.Value): (String,String)
-  def emitSendView(tp: Manifest[_], peer: Targets.Value): (String,String)
-  def emitRecvView(tp: Manifest[_], peer: Targets.Value): (String,String)
-  def emitSendUpdate(tp: Manifest[_], peer: Targets.Value): (String,String)
-  def emitRecvUpdate(tp: Manifest[_], peer: Targets.Value): (String,String)
-  def emitMakeManifest(tp: Manifest[_]): (String,String)
+  def emitSend(tp: Typ[_], peer: Targets.Value): (String,String)
+  def emitRecv(tp: Typ[_], peer: Targets.Value): (String,String)
+  def emitSendView(tp: Typ[_], peer: Targets.Value): (String,String)
+  def emitRecvView(tp: Typ[_], peer: Targets.Value): (String,String)
+  def emitSendUpdate(tp: Typ[_], peer: Targets.Value): (String,String)
+  def emitRecvUpdate(tp: Typ[_], peer: Targets.Value): (String,String)
 }
 
-trait AbstractDeviceTransfer {
-  this: GenericCodegen =>
-
+trait AbstractDeviceTransfer { this: GenericCodegen =>
   val IR: Expressions
   import IR._
 
-  def emitSendSlave(tp: Manifest[_]) : (String,String)
-  def emitRecvSlave(tp: Manifest[_]) : (String,String)
-  //def emitSendViewSlave(tp: Manifest[_]) : (String,String)
-  //def emitRecvViewSlave(tp: Manifest[_]) : (String,String)
-  def emitSendUpdateSlave(tp: Manifest[_]) : (String,String)
-  def emitRecvUpdateSlave(tp: Manifest[_]) : (String,String)
+  def emitSendSlave(tp: Typ[_]) : (String,String)
+  def emitRecvSlave(tp: Typ[_]) : (String,String)
+  //def emitSendViewSlave(tp: Typ[_]) : (String,String)
+  //def emitRecvViewSlave(tp: Typ[_]) : (String,String)
+  def emitSendUpdateSlave(tp: Typ[_]) : (String,String)
+  def emitRecvUpdateSlave(tp: Typ[_]) : (String,String)
 
   //def allocOutput(newSym: Sym[_], sym: Sym[_], reset: Boolean = false) : Unit
 }
 
 object Targets extends Enumeration {
-  
   //TODO: Get rid of JVM target, or make an hierarchy
   val JVM = Value("jvm")
   val Scala = Value("scala")
@@ -40,7 +37,7 @@ object Targets extends Enumeration {
   val Cuda = Value("cuda")
   val OpenCL = Value("opencl")
   val Hw = Value("hw")
-  
+
   def apply(s: String): Value = s.toLowerCase() match {
     case "jvm" => JVM
     case "scala" => Scala

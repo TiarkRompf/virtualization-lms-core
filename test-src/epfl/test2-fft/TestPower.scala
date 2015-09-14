@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package epfl
 package test2
 
@@ -25,12 +25,22 @@ trait Power2 { this: Arith =>
 trait BaseStr extends Base {
   type Rep[+T] = String
   //todo added this to provide required unit implicit conversion
-  implicit def unit[T:Manifest](x: T): Rep[T] = x.toString
+  implicit def unit[T:Typ](x: T): Rep[T] = x.toString
+
+  case class Typ[T](m: Manifest[T])
+
+  def typ[T:Typ]: Typ[T] = implicitly[Typ[T]]
+
+  implicit def unitTyp: Typ[Unit] = Typ(implicitly)
+  implicit def nullTyp: Typ[Null] = Typ(implicitly)
 }
 
 trait ArithStr extends Arith with BaseStr {
   //todo removed below
   //implicit def unit(x: Double) = x.toString
+
+  implicit def intTyp: Typ[Int] = Typ(implicitly)
+  implicit def doubleTyp: Typ[Double] = Typ(implicitly)
 
   def infix_+(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s+%s)".format(x,y)
   def infix_-(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext) = "(%s-%s)".format(x,y)
