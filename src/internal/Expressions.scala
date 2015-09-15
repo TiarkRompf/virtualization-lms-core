@@ -9,8 +9,8 @@ import java.lang.{StackTraceElement,Thread}
 
 /**
  * The Expressions trait houses common AST nodes. It also manages a list of encountered Definitions which
- * allows for common sub-expression elimination (CSE).  
- * 
+ * allows for common sub-expression elimination (CSE).
+ *
  * @since 0.1
  */
 trait Expressions extends Utils {
@@ -37,7 +37,7 @@ trait Expressions extends Utils {
 
   def quotePos(e: Exp[Any]): String = e.pos match {
     case Nil => "<unknown>"
-    case cs => 
+    case cs =>
       def all(cs: SourceContext): List[SourceContext] = cs.parent match {
         case None => List(cs)
         case Some(p) => cs::all(p)
@@ -45,17 +45,16 @@ trait Expressions extends Utils {
     cs.map(c => all(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
   }
 
-
   abstract class Def[+T] { // operations (composite)
     override final lazy val hashCode = scala.runtime.ScalaRunTime._hashCode(this.asInstanceOf[Product])
   }
 
   abstract class Stm // statement (links syms and definitions)
-  
+
   def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {
     case TP(sym, rhs) => sym::Nil
   }
-  
+
   def infix_rhs(stm: Stm): Any = stm match { // clients use syms(e.rhs), boundSyms(e.rhs) etc.
     case TP(sym, rhs) => rhs
   }
@@ -69,11 +68,11 @@ trait Expressions extends Utils {
     case TP(sym: Sym[A], `rhs`) => Some(sym)
     case _ => None
   }
-  
+
   case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
 
   // graph construction state
-  
+
   var globalDefs: List[Stm] = Nil
   var localDefs: List[Stm] = Nil
   var globalDefsCache: Map[Sym[Any],Stm] = Map.empty
@@ -99,7 +98,7 @@ trait Expressions extends Utils {
     assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
     localDefs = localDefs ::: ds
     globalDefs = globalDefs ::: ds
-    for (stm <- ds; s <- stm.lhs) {      
+    for (stm <- ds; s <- stm.lhs) {
       globalDefsCache += (s->stm)
     }
   }
@@ -124,7 +123,7 @@ trait Expressions extends Utils {
     reflectSubGraph(List(f))
     f
   }
-  
+
 
   protected implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
     findOrCreateDefinitionExp(d, List(pos)) // TBD: return Const(()) if type is Unit??
@@ -147,7 +146,7 @@ trait Expressions extends Utils {
     case s: Sym[Any] => List(s)
     case ss: Iterable[Any] => ss.toList.flatMap(syms(_))
     // All case classes extend Product!
-    case p: Product => 
+    case p: Product =>
       // performance hotspot: this is the same as
       // p.productIterator.toList.flatMap(syms(_))
       // but faster
@@ -182,7 +181,7 @@ trait Expressions extends Utils {
     case _ => Nil
   }
 
-  // soft dependencies: they are not required but if they occur, 
+  // soft dependencies: they are not required but if they occur,
   // they must be scheduled before
   def softSyms(e: Any): List[Sym[Any]] = e match {
     // empty by default

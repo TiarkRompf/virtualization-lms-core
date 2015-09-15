@@ -1,6 +1,8 @@
 package scala.virtualization.lms
 package internal
 
+import scala.reflect.SourceContext
+
 // TODO: add logging, etc.
 trait Utils extends Config {
   def __ = throw new RuntimeException("unsupported embedded dsl operation")
@@ -10,6 +12,12 @@ trait Utils extends Config {
   def printerr(x: =>Any) { System.err.println(x); hadErrors = true }
 
   def printsrc(x: =>Any) { if (sourceinfo >= 1) System.err.println(x) }
-  
+
+  def printwarn(x: =>Any) { if (verbosity >= 1) System.err.println(x) }
+
   var hadErrors = false
+
+  // Hacks for mirroring, etc.
+  def mtype[A,B](m: Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]]
+  def mpos(s: List[SourceContext]): SourceContext = if (s.nonEmpty) s.head else implicitly[SourceContext]
 }
