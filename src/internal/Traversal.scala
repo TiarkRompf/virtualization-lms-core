@@ -7,7 +7,7 @@ package internal
 trait Traversal extends FatBlockTraversal { self =>
   import IR._
 
-  val name: String = self.getClass.getName.split('$').last
+  val name: String = self.getClass.getName.split('$').filterNot(_ forall Character.isDigit).mkString(".")
 
   def preprocess[A:Manifest](b: Block[A]): Block[A] = { b }
   def postprocess[A:Manifest](b: Block[A]): Block[A] = { b }
