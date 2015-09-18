@@ -7,9 +7,7 @@ import scala.reflect.SourceContext
 trait AbstractAnalyzer extends Traversal
 trait IterativeAnalyzer extends AbstractAnalyzer with IterativeTraversal
 
-trait Analyzing extends MetadataOps { self =>
-
-  type Analyzer = AbstractAnalyzer { val IR: self.type }
+trait Analyzing extends MetadataOps {
 
   // --- Shortcuts for properties
   // These shortcuts should only be used when child is guaranteed to be defined

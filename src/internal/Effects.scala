@@ -30,6 +30,17 @@ trait Effects extends Expressions with Blocks with Utils {
 
   var conditionalScope = false // used to construct Control nodes
 
+  /**
+   * Remove a symbol from graph construction state
+   * Needed to keep intermediate transformer steps from causing
+   * code duplication by getting into reflect/reify node symbol lists
+   * Symbol should be dead (i.e. after mirroring)
+   */
+  override def scrubSym(sym: Sym[Any]) = {
+    super.scrubSym(sym)
+    context = context filterNot {s => s == sym}
+  }
+
   // --- class defs
 
   case class Reflect[+A](x:Def[A], summary: Summary, deps: List[Exp[Any]]) extends Def[A]

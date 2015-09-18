@@ -20,4 +20,14 @@ trait Utils extends Config {
   // Hacks for mirroring, etc.
   def mtype[A,B](m: Manifest[A]): Manifest[B] = m.asInstanceOf[Manifest[B]]
   def mpos(s: List[SourceContext]): SourceContext = if (s.nonEmpty) s.head else implicitly[SourceContext]
+
+  // TODO: Better way to do this? manifest <:< comparisons seem to fail
+  def isSubtype(x: java.lang.Class[_], cls: java.lang.Class[_]): Boolean = {
+    if ((x == cls) || x.getInterfaces().contains(cls)) true
+    else if (x.getSuperclass() == null && x.getInterfaces().length == 0) false
+    else {
+      val superIsSub = if (x.getSuperclass() != null) isSubtype(x.getSuperclass(), cls) else false
+      superIsSub || x.getInterfaces().exists(s=>isSubtype(s,cls))
+    }
+  }
 }

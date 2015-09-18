@@ -5,6 +5,10 @@ import scala.collection.immutable.HashMap
 import scala.reflect.SourceContext
 
 trait SymbolMetadata extends MeetableOps {
+  // TODO: Better way to reference metadata?
+  // Bonus points for being able to represent hierarchy (subclasses of Metadata)
+  type Datakey = Class[_]
+
   implicit def OptionCanBeMeetable[T: Meetable]: Meetable[Option[T]] = new Meetable[Option[T]] {
     def _matches(a: Option[T], b: Option[T]) = (a,b) match {
       case (Some(a),Some(b)) => matches(a,b)
@@ -45,8 +49,9 @@ trait SymbolMetadata extends MeetableOps {
    * New Metadata types should extend this abstract class
    * and add cases to metadataMatches, canMeetMetadata, meetMetadata, metadataIsComplete
    */
-  abstract class Metadata {
-    def name: String
+  abstract class Metadata { self =>
+    def key: Datakey = self.getClass
+    //def name: String
     //Test if this metadata instance has been sufficiently filled in
     def isComplete: Boolean = true
 
@@ -88,26 +93,28 @@ trait SymbolMetadata extends MeetableOps {
     def _multiLine(a: Metadata) = a.multiLine
   }
 
-  case class PropertyMap[T:Meetable](__info: Iterable[(String, Option[T])]) {
-    def this(info: PropertyMap[T]) { this(info.toList) }
+  // TODO: Can this just be changed to a HashMap?
+  // TODO: Is the extra Option layer necessary here?
+  case class PropertyMap[K,V:Meetable](__info: Iterable[(K, Option[V])]) {
+    def this(info: PropertyMap[K,V]) { this(info.toList) }
 
-    val data = new HashMap[String, Option[T]] ++ __info
+    val data = new HashMap[K, Option[V]] ++ __info
 
     def size: Int = data.size
-    def apply(x: String): Option[T] = data.getOrElse(x, None)
-    def contains(x: String): Boolean = data.contains(x)
-    def toList: List[(String, Option[T])] = data.toList
-    def keys: Set[String] = data.keySet
+    def apply(x: K): Option[V] = data.getOrElse(x, None)
+    def contains(x: K): Boolean = data.contains(x)
+    def toList: List[(K, Option[V])] = data.toList
+    def keys: Set[K] = data.keySet
 
-    def map(f: (String, Option[T]) => (String, Option[T])): PropertyMap[T]
-      = PropertyMap(data.map{e => f(e._1,e._2)}.toList)
+    def map(f: (K, Option[V]) => (K, Option[V])): PropertyMap[K,V]
+      = PropertyMap[K,V](data.map{e => f(e._1,e._2)}.toList)
 
-    def zip(that: PropertyMap[T])(f: (Option[T], Option[T]) => Option[T]): PropertyMap[T] = {
+    def zip(that: PropertyMap[K,V])(f: (Option[V], Option[V]) => Option[V]): PropertyMap[K,V] = {
       val allKeys = this.keys ++ that.keys
-      PropertyMap[T](allKeys.map{k => k -> f(this(k), that(k))} )
+      PropertyMap[K,V](allKeys.map{k => k -> f(this(k), that(k))} )
     }
 
-    def zipToList[R](that: PropertyMap[T])(f: (Option[T], Option[T]) => R): List[R] = {
+    def zipToList[R](that: PropertyMap[K,V])(f: (Option[V], Option[V]) => R): List[R] = {
       val allKeys = this.keys ++ that.keys
       allKeys.map{k => f(this(k), that(k))}.toList
     }
@@ -116,7 +123,7 @@ trait SymbolMetadata extends MeetableOps {
      * Reduce operation. Check that all properties in this map match the given condition
      * Trivially true if this contains no keys
      */
-    def requireAll(f: Option[T] => Boolean): Boolean = {
+    def forall(f: Option[V] => Boolean): Boolean = {
       this.keys.isEmpty || this.keys.map{k => f(this(k))}.reduce{_&&_}
     }
 
@@ -125,7 +132,7 @@ trait SymbolMetadata extends MeetableOps {
      * produces a boolean for every pair. Then reduce the booleans using the AND operation
      * Trivially true if neither this nor that contains any keys
      */
-    def zipRequireAll(that: PropertyMap[T])(f: (Option[T], Option[T]) => Boolean): Boolean = {
+    def zipForall(that: PropertyMap[K,V])(f: (Option[V], Option[V]) => Boolean): Boolean = {
       val allKeys = this.keys ++ that.keys
       allKeys.isEmpty || allKeys.map{k => f(this(k), that(k)) }.reduce{_&&_}
     }
@@ -133,39 +140,39 @@ trait SymbolMetadata extends MeetableOps {
   object PropertyMap {
     // Have to be careful with this construction - could easily create a
     // PropertyMap[Option[Option[T]]] when PropertyMap[Option[T]] was desired
-    def apply[T:Meetable](index: String, datum: Option[T]) = new PropertyMap(List(index -> datum))
-    def apply[T:Meetable](index: String, datum: T) = new PropertyMap(List(index -> Some(datum)))
-    def apply[T:Meetable]() = new PropertyMap[T](Nil)
+    def apply[K,V:Meetable](index: K, datum: Option[V]) = new PropertyMap(List(index -> datum))
+    def apply[K,V:Meetable](index: K, datum: V) = new PropertyMap(List(index -> Some(datum)))
+    def apply[K,V:Meetable]() = new PropertyMap[K,V](Nil)
   }
 
-  implicit def PropertyMapIsMeetable[T:Meetable]: Meetable[PropertyMap[T]] = new Meetable[PropertyMap[T]] {
-    def _matches(a: PropertyMap[T], b: PropertyMap[T]): Boolean = a.zipRequireAll(b){(am,bm) => matches(am,bm)}
-    def _incompatibilities(a: PropertyMap[T], b: PropertyMap[T], t: MeetFunc): List[String] = a.zipToList(b){(am,bm) => incompatibilities(am,bm,t)}.flatMap{i => i}
-    def _canMeet(a: PropertyMap[T], b: PropertyMap[T], t: MeetFunc): Boolean = a.zipRequireAll(b){(am,bm) => canMeet(am,bm,t)}
-    def _isComplete(a: PropertyMap[T]): Boolean = a.requireAll{am => isComplete(am)}
-    def _meet(a: PropertyMap[T], b: PropertyMap[T], t: MeetFunc): PropertyMap[T] = a.zip(b){(am,bm) => meet(am,bm,t)}
+  implicit def PropertyMapIsMeetable[K,V:Meetable]: Meetable[PropertyMap[K,V]] = new Meetable[PropertyMap[K,V]] {
+    def _matches(a: PropertyMap[K,V], b: PropertyMap[K,V]): Boolean = a.zipForall(b){(am,bm) => matches(am,bm)}
+    def _incompatibilities(a: PropertyMap[K,V], b: PropertyMap[K,V], t: MeetFunc): List[String] = a.zipToList(b){(am,bm) => incompatibilities(am,bm,t)}.flatMap{i => i}
+    def _canMeet(a: PropertyMap[K,V], b: PropertyMap[K,V], t: MeetFunc): Boolean = a.zipForall(b){(am,bm) => canMeet(am,bm,t)}
+    def _isComplete(a: PropertyMap[K,V]): Boolean = a.forall{am => isComplete(am)}
+    def _meet(a: PropertyMap[K,V], b: PropertyMap[K,V], t: MeetFunc): PropertyMap[K,V] = a.zip(b){(am,bm) => meet(am,bm,t)}
 
-    def _makeString(a: PropertyMap[T], prefix: String): String = {
+    def _makeString(a: PropertyMap[K,V], prefix: String): String = {
       if (a.data.isEmpty) ""
       else
-        a.data.toList.sortBy{x => x._1}.map{dat => prefix + "." + dat._1 + makeString(dat._2, prefix)}.mkString("\n")
+        a.data.toList.sortBy{x => x._1.toString}.map{dat => prefix + "." + dat._1 + makeString(dat._2, prefix)}.mkString("\n")
     }
-    def _multiLine(a: PropertyMap[T]): Boolean = a.size > 0
+    def _multiLine(a: PropertyMap[K,V]): Boolean = a.size > 0
   }
 
   /**
    * Parent class for metadata containers. Holds a hash map of
    * string keys to single properties (Metadata instances)
    */
-  sealed abstract class SymbolProperties (val data: PropertyMap[Metadata]) {
-    def apply(x: String) = data(x)
+  sealed abstract class SymbolProperties (val data: PropertyMap[Datakey,Metadata]) {
+    def apply(x: Datakey) = data(x)
   }
 
   // Metadata for scalar symbols (single element)
-  case class ScalarProperties(override val data: PropertyMap[Metadata]) extends SymbolProperties(data)
+  case class ScalarProperties(override val data: PropertyMap[Datakey,Metadata]) extends SymbolProperties(data)
 
   // Metadata for DeliteStructs
-  case class StructProperties(children: PropertyMap[SymbolProperties], override val data: PropertyMap[Metadata])
+  case class StructProperties(children: PropertyMap[String,SymbolProperties], override val data: PropertyMap[Datakey,Metadata])
     extends SymbolProperties(data)
   {
     def child(field: String) = children(field)
@@ -173,7 +180,7 @@ trait SymbolMetadata extends MeetableOps {
   }
 
   // Metadata for arrays
-  case class ArrayProperties(child: Option[SymbolProperties], override val data: PropertyMap[Metadata])
+  case class ArrayProperties(child: Option[SymbolProperties], override val data: PropertyMap[Datakey,Metadata])
     extends SymbolProperties(data)
 
   implicit object SymbolPropertiesIsMeetable extends Meetable[SymbolProperties] {
@@ -236,19 +243,24 @@ trait SymbolMetadata extends MeetableOps {
     }
   }
 
-  object NoData extends PropertyMap[Metadata](Nil)
-  object NoChildren extends PropertyMap[SymbolProperties](Nil)
+  object NoData extends PropertyMap[Datakey, Metadata](Nil)
+  object NoChildren extends PropertyMap[String, SymbolProperties](Nil)
 }
 
 
-trait MetadataOps extends Expressions with Blocks with SymbolMetadata {
-   ///////////////////
+trait MetadataOps extends Expressions with Blocks with SymbolMetadata { self =>
+  type Analyzer = Traversal { val IR: self.type }
+
+  ///////////////////
   // Symbol Metadata
 
   // TODO: Is this the right spot for these?
   // Note that SourceContext is used all over the place with the intention for use in error messages - may not need to keep these around
 
   var metadata: Map[Exp[Any], SymbolProperties] = Map.empty
+  var validData: List[Datakey] = Nil
+  var analyzers: Map[Datakey, Analyzer] = Map.empty
+
   private var metadataUpdateFlag: Boolean = false
   private def setMetadataUpdateFlag() { metadataUpdateFlag = true }
   def clearMetadataUpdateFlag() { metadataUpdateFlag = false }
@@ -283,13 +295,13 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata {
 
   // Get child metadata for given symbol
   def getProps(e: Exp[Any]): Option[SymbolProperties] = Some(metadata.getOrElse(e, initExp(e)(mpos(e.pos))))
-  def getMetadata(e: Exp[Any], k: String): Option[Metadata] = getProps(e).flatMap{p => p(k)}
+  def getMetadata(e: Exp[Any], k: Datakey): Option[Metadata] = getProps(e).flatMap{p => p(k)}
   def getChild(e: Exp[Any]): Option[SymbolProperties] = getProps(e).flatMap{p => getChild(p)}
   def getField(struct: Exp[Any], index: String): Option[SymbolProperties] = getProps(struct).flatMap{p => getField(p, index)}
 
   // TODO: Use getBlockResult instead?
   def getProps(b: Block[Any]): Option[SymbolProperties] = getProps(b.res)
-  def getMetadata(b: Block[Any], k: String): Option[Metadata] = getMetadata(b.res, k)
+  def getMetadata(b: Block[Any], k: Datakey): Option[Metadata] = getMetadata(b.res, k)
   def getChild(b: Block[Any]): Option[SymbolProperties] = getChild(b.res)
   def getField(b: Block[Any], index: String): Option[SymbolProperties] = getField(b.res, index)
 
@@ -311,14 +323,14 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata {
     = initType(e.tp, data, child, index)
 
   def initType[A](tp: Manifest[A], data: Option[Metadata] = None, child: Option[SymbolProperties] = None, index: Option[String] = None)(implicit ctx: SourceContext): SymbolProperties = {
-    val givenData = PropertyMap(data.map{m => m.name -> Some(m)}.toList)
-    val typeData = PropertyMap(defaultMetadata(tp).map{m => m.name -> Some(m)})
+    val givenData = PropertyMap[Datakey,Metadata](data.map{m => m.key -> Some(m)}.toList)
+    val typeData = PropertyMap[Datakey,Metadata](defaultMetadata(tp).map{m => m.key -> Some(m)})
     val symData = tryMeet(givenData, typeData, func = MetaTypeInit)
     initProps(tp, symData, child, index)
   }
 
   // Should be overwritten for data structure types (e.g. structs, arrays)
-  def initProps[A](tp: Manifest[A], symData: PropertyMap[Metadata], child: Option[SymbolProperties], index: Option[String])(implicit ctx: SourceContext): SymbolProperties = tp match {
+  def initProps[A](tp: Manifest[A], symData: PropertyMap[Datakey,Metadata], child: Option[SymbolProperties], index: Option[String])(implicit ctx: SourceContext): SymbolProperties = tp match {
     case _ => ScalarProperties(symData)
   }
 }

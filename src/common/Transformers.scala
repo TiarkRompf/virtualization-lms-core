@@ -13,6 +13,8 @@ trait ForwardTransformer extends AbstractSubstTransformer with Traversal { self 
 
   override def hasContext = true
 
+  override def processBlock[A:Manifest](xs: Block[A]): Block[A] = transformBlock(xs)
+
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
     withSubstScope {
       traverseBlock(block)
@@ -57,15 +59,18 @@ trait ForwardTransformer extends AbstractSubstTransformer with Traversal { self 
   */
   // override this to implement custom transform
   def transformStm(stm: Stm): Exp[Any] = stm match {
-    case TP(sym,rhs) => self_mirror(sym, rhs)
+    case TP(sym,rhs) =>
+      self_mirror(sym, rhs)
   }
 
   // TODO: Should be removed eventually
   def self_mirror[A](sym: Sym[A], rhs : Def[A]): Exp[A] = {
-    try {
-      mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos)) // cast needed why?
-    }
     //TODO: HACK -- should not catch errors
+    try {
+      val sym2 = mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos))
+      setProps(sym2, getProps(sym))
+      (sym2)
+    }
     catch {
       case e if e.toString contains "don't know how to mirror" =>
         printerr("error: " + e.getMessage)
@@ -80,8 +85,6 @@ trait ForwardTransformer extends AbstractSubstTransformer with Traversal { self 
 
 trait RecursiveTransformer extends ForwardTransformer { self =>
   import IR._
-
-  override def runOnce[A:Manifest](s: Block[A]): Block[A] = transformBlock(s)
 
   def transformDef[A](lhs: Sym[A], rhs: Def[A]): Option[() => Def[A]] = None
 
@@ -138,7 +141,7 @@ trait WorklistTransformer extends IterativeTransformer {
 
   def isDone = nextSubst.isEmpty // Needed for LMS tests
 
-  override def runOnce[A:Manifest](s: Block[A]): Block[A] = {
+  override def processBlock[A:Manifest](s: Block[A]): Block[A] = {
     subst = Map.empty
     curSubst = nextSubst
     nextSubst = Map.empty

@@ -71,11 +71,24 @@ trait Expressions extends Utils {
 
   case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
 
-  // graph construction state
-
+  // --- Graph construction state
   var globalDefs: List[Stm] = Nil
   var localDefs: List[Stm] = Nil
   var globalDefsCache: Map[Sym[Any],Stm] = Map.empty
+
+  /**
+   * Remove a symbol from the graph construction state.
+   * Symbol should be dead (i.e. after transformer mirroring)
+   */
+  def scrubSym(sym: Sym[Any]) = {
+    def scrubStms(stms: List[Stm]) = stms filterNot {
+      case TP(lhs,rhs) => (lhs == sym)
+      case _ => false
+    }
+    localDefs = scrubStms(localDefs)
+    globalDefs = scrubStms(globalDefs)
+    globalDefsCache = globalDefsCache filterNot{case(s,_) => s == sym }
+  }
 
   def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
     val saveLocal = localDefs
