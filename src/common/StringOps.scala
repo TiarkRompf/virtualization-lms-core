@@ -34,10 +34,11 @@ trait StringOps extends Variables with OverloadHack {
     def charAt(i: Rep[Int])(implicit pos: SourceContext) = string_charAt(s1,i)
     def endsWith(e: Rep[String])(implicit pos: SourceContext) = string_endsWith(s1,e)
     def contains(s2: Rep[String])(implicit pos: SourceContext) = string_contains(s1,s2)
-    def toDouble(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = string_substring(s1,start,end)
+    //def toDouble(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = //FIXME string_substring(s1,start,end)
+    def toInt(implicit pos: SourceContext) = string_toint(s1)
     // TODO(trans) check if FIXME still valid
     // FIXME: enabling this causes trouble with DeliteOpSuite. investigate!!
-    def length(s1: Rep[String])(implicit pos: SourceContext) = string_length(s1)
+    def length(implicit pos: SourceContext) = string_length(s1)
   }
 
   object String {
