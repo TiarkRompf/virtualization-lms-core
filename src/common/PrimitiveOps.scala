@@ -32,6 +32,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
   implicit def repFloatToRepDouble(x: Rep[Float]): Rep[Double] = x.toDouble
   implicit def repLongToRepFloat(x: Rep[Long]): Rep[Float] = x.toFloat
   implicit def repLongToRepDouble(x: Rep[Long]): Rep[Double] = x.toDouble
+  implicit def repCharToRepInt(x: Rep[Char]): Rep[Int] = x.toInt
 
 
   /**
@@ -511,6 +512,17 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def int_rightshiftarith(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
   def int_rightshiftlogical(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
 
+  /**
+   * Char
+   */
+
+  implicit def charToCharOps(self: Rep[Char]) = new CharOpsCls(self)
+
+  class CharOpsCls(self: Rep[Char])(implicit pos: SourceContext) {
+    def toInt(implicit pos: SourceContext) = char_toInt(self)
+  }
+
+  def char_toInt(lhs: Rep[Char])(implicit pos: SourceContext): Rep[Int]
 
   /**
    * Long
@@ -696,6 +708,13 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   def int_rightshiftarith(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntShiftRightArith(lhs, rhs)
   def int_rightshiftlogical(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntShiftRightLogical(lhs, rhs)
 
+  /**
+   * Char
+   */
+
+  case class CharToInt(lhs: Exp[Char]) extends Def[Int]
+
+  def char_toInt(lhs: Exp[Char])(implicit pos: SourceContext) = CharToInt(lhs) //toAtom(
 
   /**
    * Long
@@ -971,6 +990,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntToLong(lhs) => emitValDef(sym, quote(lhs) + ".toLong")
     case IntToFloat(lhs) => emitValDef(sym, quote(lhs) + ".toFloat")
     case IntToDouble(lhs) => emitValDef(sym, quote(lhs) + ".toDouble")
+    case CharToInt(lhs) => emitValDef(sym, quote(lhs) + ".toInt")
     case ObjLongMaxValue() => emitValDef(sym, "scala.Long.MaxValue")
     case ObjLongMinValue() => emitValDef(sym, "scala.Long.MinValue")
     case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
