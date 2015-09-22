@@ -118,6 +118,23 @@ trait StructExp extends StructOps with StructTags with AtomicWrites with EffectE
     field(record, fieldName)
   }
 
+  override def initProps[A](tp: Manifest[A], symData: PropertyMap[Datakey,Metadata], child: Option[SymbolProperties], index: Option[String])(implicit ctx: SourceContext): SymbolProperties = tp match {
+    case StructType(_,elems) =>
+      val typeFields = PropertyMap(elems.map{elem => elem._1 -> Some(initType(elem._2)) })
+      val symFields = index match {
+        case Some(index) => tryMeet(PropertyMap(index, child), typeFields, func = MetaTypeInit)
+        case None => typeFields
+      }
+      StructProperties(symFields, symData)
+
+    case _ => super.initProps(tp, symData, child, index)
+  }
+
+  def isDataStructureType[T](tp: Manifest[T]): Boolean = tp match {
+    case StructType(_,_) => true
+    case _ => false
+  }
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case s:AbstractStruct[_] => s.elems.flatMap(e => syms(e._2)).toList
     case _ => super.syms(e)

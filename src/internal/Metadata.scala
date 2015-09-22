@@ -138,8 +138,6 @@ trait SymbolMetadata extends MeetableOps {
     }
   }
   object PropertyMap {
-    // Have to be careful with this construction - could easily create a
-    // PropertyMap[Option[Option[T]]] when PropertyMap[Option[T]] was desired
     def apply[K,V:Meetable](index: K, datum: Option[V]) = new PropertyMap(List(index -> datum))
     def apply[K,V:Meetable](index: K, datum: V) = new PropertyMap(List(index -> Some(datum)))
     def apply[K,V:Meetable]() = new PropertyMap[K,V](Nil)
