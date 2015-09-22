@@ -14,7 +14,7 @@ libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-library" % _ % 
 
 libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _ % "compile")
 
-libraryDependencies ++= Seq(
+libraryDependencies ++= Seq( 
   "org.scala-lang.virtualized" %% "scala-virtualized" % "0.0.1-SNAPSHOT"
 )
 
