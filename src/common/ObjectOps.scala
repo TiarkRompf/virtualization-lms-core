@@ -83,7 +83,7 @@ trait ObjectOpsStructExp extends ObjectOpsExpOpt with StructExp with StringOpsEx
   override def object_tostring(x: Exp[Any])(implicit pos: SourceContext): Exp[String] = x match {
     case Def(s@Struct(tag, elems)) => //tag(elem1, elem2, ...)
       val e = elems.map(e=>string_plus(unit(e._1 + " = "), object_tostring(e._2))).reduceLeft((l,r)=>string_plus(string_plus(l,unit(", ")),r))
-      string_plus(unit(structName(s.tp)+"("),string_plus(e,unit(")")))
+      string_plus(unit(structName(x.tp)+"("),string_plus(e,unit(")")))
     case _ => super.object_tostring(x)
   }
 
