@@ -10,11 +10,11 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
 
   override def deviceTarget: Targets.Value = Targets.Cuda
 
-  override def kernelFileExt = "cu"
+  override def fileExtension = "cu"
   override def toString = "cuda"
   override def devFuncPrefix = "__device__"
   
-  override def initializeGenerator(buildDir:String, args: Array[String]): Unit = {
+  override def initializeGenerator(buildDir:String): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
 
@@ -38,11 +38,11 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
     headerStream.println(getDataStructureHeaders())
     headerStream.println("#include \"" + deviceTarget + "actRecords.h\"")
 
-    super.initializeGenerator(buildDir, args)
+    super.initializeGenerator(buildDir)
   }
 
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
-    val sB = manifest[A].toString
+    val sB = remap(manifest[A])
 
     withStream(out) {
       stream.println("/*****************************************\n"+
@@ -71,7 +71,6 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
 trait CudaNestedCodegen extends CLikeNestedCodegen with CudaCodegen {
   val IR: Expressions with Effects
   import IR._
-  
 }
 
 trait CudaFatCodegen extends CLikeFatCodegen with CudaCodegen {

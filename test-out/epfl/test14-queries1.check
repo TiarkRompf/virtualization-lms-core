@@ -1,0 +1,16 @@
+db
+{people:List({name:Alex,age:60}, {name:Bert,age:55}, {name:Cora,age:33}, {name:Drew,age:31}, {name:Edna,age:21}, {name:Fred,age:60}),couples:List({her:Alex,him:Bert}, {her:Cora,him:Drew})}
+List({name:Alex,diff:5}, {name:Cora,diff:2})
+List({name:Cora}, {name:Drew})
+List({name:Cora}, {name:Drew})
+List({name:Alex}, {name:Fred})
+List({name:Cora}, {name:Drew}, {name:Edna})
+List({name:Cora}, {name:Drew})
+List({name:Cora}, {name:Drew})
+List({dpt:Quality}, {dpt:Research})
+List({dpt:Product,employees:List({emp:Alex,tasks:List(build)}, {emp:Bert,tasks:List(build)})}, {dpt:Quality,employees:List()}, {dpt:Research,employees:List({emp:Cora,tasks:List(abstract, build, design)}, {emp:Drew,tasks:List(abstract, design)}, {emp:Edna,tasks:List(abstract, call, design)})}, {dpt:Sales,employees:List({emp:Fred,tasks:List(call)})})
+List({dpt:Quality}, {dpt:Research})
+List(2, 4)
+List(0, 1, 2, 4)
+List(2)
+List(6)

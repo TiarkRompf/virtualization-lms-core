@@ -217,9 +217,9 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
     * producer etc.)
     */
   sealed abstract class ProdType { val intVal: Int; val shortName: String }
-  case class RealProd extends ProdType { val intVal = 1; val shortName = "real" }
-  case class ReconstrProd extends ProdType { val intVal = 2; val shortName = "reconstructed" }
-  case class PartialProd extends ProdType { val intVal = 3; val shortName = "partial" }
+  case class RealProd() extends ProdType { val intVal = 1; val shortName = "real" }
+  case class ReconstrProd() extends ProdType { val intVal = 2; val shortName = "reconstructed" }
+  case class PartialProd() extends ProdType { val intVal = 3; val shortName = "partial" }
 
 
   /* The following are the supported producers:

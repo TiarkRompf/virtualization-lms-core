@@ -13,6 +13,7 @@ trait StructOps extends Base {
   /**
    * Allows to write things like “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
    */
+
   def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
 
   class RecordOps(record: Rep[Record]) {
@@ -30,7 +31,7 @@ trait StructTags {
   case class ClassTag[T](name: String) extends StructTag[T]
   case class NestClassTag[C[_],T](elem: StructTag[T]) extends StructTag[C[T]]
   case class AnonTag[T](fields: RefinedManifest[T]) extends StructTag[T]
-  case class MapTag[T] extends StructTag[T]
+  case class MapTag[T]() extends StructTag[T]
 }
 
 trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with OverloadHack {
@@ -161,6 +162,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     // FIXME: move to codegen? we should be able to have different policies/naming schemes
     case rm: RefinedManifest[_] => "Anon" + math.abs(rm.fields.map(f => f._1.## + f._2.toString.##).sum)
     case _ if (m <:< manifest[AnyVal]) => m.toString
+    case _ if m.erasure.isArray => "ArrayOf" + structName(m.typeArguments.head)
     case _ => m.erasure.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
   }
 
@@ -320,6 +322,7 @@ trait StructFatExpOptCommon extends StructFatExp with StructExpOptCommon with If
 
     case _ => super.ifThenElse(cond,a,b)
   }
+
 }
 
 trait BaseGenFatStruct extends GenericFatCodegen {
@@ -405,7 +408,7 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
   }
 
   override def emitDataStructures(stream: PrintWriter) {
-    for ((structTp, (name, elems)) <- encounteredStructs) {
+    for ((name, (structTp, elems)) <- encounteredStructs) {
       stream.println()
       stream.print("case class " + name + "(")
       stream.println(elems.map(e => e._1 + ": " + remap(e._2)).mkString(", ") + ")")

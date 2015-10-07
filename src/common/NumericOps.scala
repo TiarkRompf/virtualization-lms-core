@@ -98,10 +98,10 @@ trait ScalaGenNumericOps extends ScalaGenFat {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case NumericPlus(a,b) => emitValDef(sym, quote(a) + " + " + quote(b))
-    case NumericMinus(a,b) => emitValDef(sym, quote(a) + " - " + quote(b))
-    case NumericTimes(a,b) => emitValDef(sym, quote(a) + " * " + quote(b))
-    case NumericDivide(a,b) => emitValDef(sym, quote(a) + " / " + quote(b))
+    case NumericPlus(a,b) => emitValDef(sym, src"$a + $b")
+    case NumericMinus(a,b) => emitValDef(sym, src"$a - $b")
+    case NumericTimes(a,b) => emitValDef(sym, src"$a * $b")
+    case NumericDivide(a,b) => emitValDef(sym, src"$a / $b")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -113,13 +113,13 @@ trait CLikeGenNumericOps extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case NumericPlus(a,b) =>
-          emitValDef(sym, quote(a) + " + " + quote(b))
+          emitValDef(sym, src"$a + $b")
         case NumericMinus(a,b) =>
-          emitValDef(sym, quote(a) + " - " + quote(b))
+          emitValDef(sym, src"$a - $b")
         case NumericTimes(a,b) =>
-          emitValDef(sym, quote(a) + " * " + quote(b))
+          emitValDef(sym, src"$a * $b")
         case NumericDivide(a,b) =>
-          emitValDef(sym, quote(a) + " / " + quote(b))
+          emitValDef(sym, src"$a / $b")
         case _ => super.emitNode(sym, rhs)
       }
     }
