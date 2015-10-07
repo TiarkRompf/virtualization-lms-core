@@ -1,0 +1,231 @@
+-- full graph
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),SingletonInLoop(Sym(2),Sym(1)))
+TP(Sym(4),SimpleLoop(Sym(0),Sym(1),MultiArrayElem(Block(Sym(3)))))
+TP(Sym(5),ArrayLength(Sym(4)))
+TP(Sym(7),ArrayIndex(Sym(4),Sym(6)))
+TP(Sym(8),SingletonInLoop(Sym(7),Sym(6)))
+TP(Sym(9),SimpleLoop(Sym(5),Sym(6),MultiArrayElem(Block(Sym(8)))))
+TP(Sym(10),ArrayLength(Sym(9)))
+TP(Sym(11),Reflect(Print(Sym(10)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(12),IntPlus(Sym(0),Const(2)))
+TP(Sym(14),ArrayIndex(Sym(4),Sym(13)))
+TP(Sym(15),SingletonInLoop(Sym(14),Sym(13)))
+TP(Sym(16),SimpleLoop(Sym(12),Sym(13),MultiArrayElem(Block(Sym(15)))))
+TP(Sym(18),ArrayIndex(Sym(16),Sym(17)))
+TP(Sym(19),SingletonInLoop(Sym(18),Sym(17)))
+TP(Sym(20),SimpleLoop(Sym(12),Sym(17),MultiArrayElem(Block(Sym(19)))))
+TP(Sym(21),ArrayLength(Sym(20)))
+TP(Sym(22),Reflect(Print(Sym(21)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11))))
+TP(Sym(24),IntPlus(Sym(23),Const(1)))
+TP(Sym(25),SingletonInLoop(Sym(24),Sym(23)))
+TP(Sym(26),SimpleLoop(Const(100),Sym(23),MultiArrayElem(Block(Sym(25)))))
+TP(Sym(27),ArrayLength(Sym(26)))
+TP(Sym(29),ArrayIndex(Sym(26),Sym(28)))
+TP(Sym(30),SingletonInLoop(Sym(29),Sym(28)))
+TP(Sym(31),SimpleLoop(Sym(27),Sym(28),MultiArrayElem(Block(Sym(30)))))
+TP(Sym(33),ArrayIndex(Sym(31),Sym(32)))
+TP(Sym(34),SingletonInLoop(Sym(33),Sym(32)))
+TP(Sym(35),SimpleLoop(Sym(27),Sym(32),MultiArrayElem(Block(Sym(34)))))
+TP(Sym(37),ArrayIndex(Sym(26),Sym(36)))
+TP(Sym(38),SingletonInLoop(Sym(37),Sym(36)))
+TP(Sym(39),SimpleLoop(Const(90),Sym(36),MultiArrayElem(Block(Sym(38)))))
+TP(Sym(41),ArrayIndex(Sym(39),Sym(40)))
+TP(Sym(42),SingletonInLoop(Sym(41),Sym(40)))
+TP(Sym(43),SimpleLoop(Sym(27),Sym(40),MultiArrayElem(Block(Sym(42)))))
+TP(Sym(45),ArrayIndex(Sym(26),Sym(44)))
+TP(Sym(46),SingletonInLoop(Sym(45),Sym(44)))
+TP(Sym(47),SimpleLoop(Const(100),Sym(44),MultiArrayElem(Block(Sym(46)))))
+TP(Sym(48),ArrayIndex(Sym(35),Const(1)))
+TP(Sym(49),Reflect(Print(Sym(48)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(22))))
+TP(Sym(50),ArrayIndex(Sym(43),Const(1)))
+TP(Sym(51),Reflect(Print(Sym(50)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(49))))
+TP(Sym(52),ArrayIndex(Sym(47),Const(1)))
+TP(Sym(53),Reflect(Print(Sym(52)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(51))))
+TP(Sym(54),Reify(Sym(53),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11), Sym(22), Sym(49), Sym(51), Sym(53))))
+
+-- before transformation
+val x4 = new Array[Int](x0)
+for (x1 <- 0 until x0) {
+val x2 = x1 + 1
+x4(x1) = x2
+}
+val x5 = x4.length
+val x9 = new Array[Int](x5)
+for (x6 <- 0 until x5) {
+val x7 = x4.apply(x6)
+x9(x6) = x7
+}
+val x10 = x9.length
+val x11 = println(x10)
+val x12 = x0 + 2
+val x16 = new Array[Int](x12)
+for (x13 <- 0 until x12) {
+val x14 = x4.apply(x13)
+x16(x13) = x14
+}
+val x20 = new Array[Int](x12)
+for (x17 <- 0 until x12) {
+val x18 = x16.apply(x17)
+x20(x17) = x18
+}
+val x21 = x20.length
+val x22 = println(x21)
+val x26 = new Array[Int](100)
+for (x23 <- 0 until 100) {
+val x24 = x23 + 1
+x26(x23) = x24
+}
+val x27 = x26.length
+val x31 = new Array[Int](x27)
+for (x28 <- 0 until x27) {
+val x29 = x26.apply(x28)
+x31(x28) = x29
+}
+val x35 = new Array[Int](x27)
+for (x32 <- 0 until x27) {
+val x33 = x31.apply(x32)
+x35(x32) = x33
+}
+val x48 = x35.apply(1)
+val x49 = println(x48)
+val x39 = new Array[Int](90)
+for (x36 <- 0 until 90) {
+val x37 = x26.apply(x36)
+x39(x36) = x37
+}
+val x43 = new Array[Int](x27)
+for (x40 <- 0 until x27) {
+val x41 = x39.apply(x40)
+x43(x40) = x41
+}
+val x50 = x43.apply(1)
+val x51 = println(x50)
+val x47 = new Array[Int](100)
+for (x44 <- 0 until 100) {
+val x45 = x26.apply(x44)
+x47(x44) = x45
+}
+val x52 = x47.apply(1)
+val x53 = println(x52)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(4)
+(VFT) Replaced TP(Sym(5),ArrayLength(Sym(4))) with fixed length: Sym(0)
+
+(VFT) Fusing prod Sym(4) with cons Sym(9). Type: Mc_McForRed(Sym(6),Sym(1),Sym(5),Sym(0),Single_McFor(Sym(6),(Sym(4),Sym(6)),Sym(2),Sym(8),Sym(3),Sym(9)),Sym(8),Sym(3),Sym(4),Sym(9))
+(VFT) Fused prod Sym(4) with cons Sym(9), fused sym: Sym(4)
+(VFT) Replaced TP(Sym(10),ArrayLength(Sym(9))) with fixed length: Sym(0)
+
+(VFT) Not fused prod Sym(4) with cons Sym(16) because consumer loop might not iterate over full range of producer collection
+(VFT) No producers found for cons Sym(16)
+
+(VFT) Fusing prod Sym(16) with cons Sym(20). Type: Mc_McForRed(Sym(17),Sym(13),Sym(12),Sym(12),Single_McFor(Sym(17),(Sym(16),Sym(17)),Sym(14),Sym(19),Sym(15),Sym(20)),Sym(19),Sym(15),Sym(16),Sym(20))
+(VFT) Fused prod Sym(16) with cons Sym(20), fused sym: Sym(16)
+(VFT) Replaced TP(Sym(21),ArrayLength(Sym(20))) with fixed length: Sym(12)
+
+(VFT) No producers found for cons Sym(26)
+(VFT) Replaced TP(Sym(27),ArrayLength(Sym(26))) with fixed length: Const(100)
+
+(VFT) Fusing prod Sym(26) with cons Sym(31). Type: Mc_McForRed(Sym(28),Sym(23),Sym(27),Const(100),Single_McFor(Sym(28),(Sym(26),Sym(28)),Sym(24),Sym(30),Sym(25),Sym(31)),Sym(30),Sym(25),Sym(26),Sym(31))
+(VFT) Fused prod Sym(26) with cons Sym(31), fused sym: Sym(26)
+
+(VFT) Fusing prod Sym(26) with cons Sym(35). Type: Mc_McForRed(Sym(32),Sym(23),Sym(27),Const(100),Single_McFor(Sym(32),(Sym(31),Sym(32)),Sym(24),Sym(34),Sym(25),Sym(35)),Sym(34),Sym(25),Sym(26),Sym(35))
+(VFT) Fused prod Sym(26) with cons Sym(35), fused sym: Sym(26)
+
+(VFT) Not fused prod Sym(26) with cons Sym(39) because consumer loop might not iterate over full range of producer collection
+(VFT) No producers found for cons Sym(39)
+
+(VFT) Not fused prod Sym(39) with cons Sym(43) because consumer loop might not iterate over full range of producer collection
+(VFT) No producers found for cons Sym(43)
+(VFT) Cons Sym(43) not fused but mirrored to Sym(61) because of fixed shape
+
+(VFT) Fusing prod Sym(26) with cons Sym(47). Type: Mc_McForRed(Sym(44),Sym(23),Const(100),Const(100),Single_McFor(Sym(44),(Sym(26),Sym(44)),Sym(24),Sym(46),Sym(25),Sym(47)),Sym(46),Sym(25),Sym(26),Sym(47))
+(VFT) Fused prod Sym(26) with cons Sym(47), fused sym: Sym(26)
+
+(VFT) all vertically fused: 
+
+-- after vertical transformation
+val x55 = println(x0)
+val x12 = x0 + 2
+val x56 = println(x12)
+val x26 = new Array[Int](100)
+for (x23 <- 0 until 100) {
+val x24 = x23 + 1
+x26(x23) = x24
+}
+val x57 = x26.apply(1)
+val x58 = println(x57)
+val x39 = new Array[Int](90)
+for (x36 <- 0 until 90) {
+val x37 = x26.apply(x36)
+x39(x36) = x37
+}
+val x61 = new Array[Int](100)
+for (x23 <- 0 until 100) {
+val x59 = x39.apply(x23)
+x61(x23) = x59
+}
+val x62 = x61.apply(1)
+val x63 = println(x62)
+val x64 = println(x57)
+
+-- horizontal transformation
+(HFT) Recording Sym(26), no fusion
+(HFT) Recording Sym(39), no fusion
+(HFT) The candidate Sym(61) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(23), loopSyms = List(Sym(47), Sym(35), Sym(26), Sym(31))) because the candidate set depends on Sym(26)
+(HFT) Recording Sym(61), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x66 = println(x0)
+val x12 = x0 + 2
+val x67 = println(x12)
+val x26 = new Array[Int](100)
+for (x23 <- 0 until 100) {
+val x24 = x23 + 1
+x26(x23) = x24
+}
+val x57 = x26.apply(1)
+val x68 = println(x57)
+val x39 = new Array[Int](90)
+for (x36 <- 0 until 90) {
+val x37 = x26.apply(x36)
+x39(x36) = x37
+}
+val x61 = new Array[Int](100)
+for (x23 <- 0 until 100) {
+val x59 = x39.apply(x23)
+x61(x23) = x59
+}
+val x62 = x61.apply(1)
+val x69 = println(x62)
+val x70 = println(x57)
+
+-- fusion
+val x66 = println(x0)
+val x12 = x0 + 2
+val x67 = println(x12)
+val x26 = new Array[Int](100)
+for (x23 <- 0 until 100) {
+val x24 = x23 + 1
+x26(x23) = x24
+}
+val x57 = x26.apply(1)
+val x68 = println(x57)
+val x39 = new Array[Int](90)
+for (x36 <- 0 until 90) {
+val x37 = x26.apply(x36)
+x39(x36) = x37
+}
+val x61 = new Array[Int](100)
+for (x23 <- 0 until 100) {
+val x59 = x39.apply(x23)
+x61(x23) = x59
+}
+val x62 = x61.apply(1)
+val x69 = println(x62)
+val x70 = println(x57)
+-- done

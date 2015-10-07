@@ -1,0 +1,151 @@
+-- full graph
+TP(Sym(2),OrderingGT(Sym(1),Const(2)))
+TP(Sym(4),IntPlus(Sym(1),Sym(3)))
+TP(Sym(5),IntPlus(Sym(4),Const(1)))
+TP(Sym(6),SingletonInLoop(Sym(5),Sym(3)))
+TP(Sym(7),SimpleLoop(Const(5),Sym(3),MultiArrayElem(Block(Sym(6)))))
+TP(Sym(8),IntPlus(Sym(1),Const(2)))
+TP(Sym(9),Singleton(Sym(8)))
+TP(Sym(10),IfThenElse(Sym(2),Block(Sym(7)),Block(Sym(9))))
+TP(Sym(11),SimpleLoop(Const(6),Sym(1),MultiArrayElem(Block(Sym(10)))))
+TP(Sym(13),ArrayIndex(Sym(11),Sym(12)))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+TP(Sym(16),ArrayLength(Sym(11)))
+TP(Sym(17),Reflect(SimpleLoop(Sym(16),Sym(12),ForeachElem(Block(Sym(15)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(18),Reflect(Print(Const(3)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(17))))
+TP(Sym(19),Reify(Sym(18),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(17), Sym(18))))
+
+-- before transformation
+val x11_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 6) {
+val x2 = x1 > 2
+val x10 = if (x2) {
+val x7 = new Array[Int](5)
+for (x3 <- 0 until 5) {
+val x4 = x1 + x3
+val x5 = x4 + 1
+x7(x3) = x5
+}
+x7
+} else {
+val x8 = x1 + 2
+val x9 = Array(x8)
+x9
+}
+x11_builder ++= x10
+}
+val x11 = x11_builder.result()
+val x16 = x11.length
+for (x12 <- 0 until x16) {
+val x13 = x11.apply(x12)
+val x14 = println(x13)
+}
+val x17 = ()
+val x18 = println(3)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(11)
+    
+    (VFT) No producers found for cons Sym(7)
+
+(VFT) Not fused prod Sym(11) with cons Sym(17) because multicollect producer's inner collection cannot be fused with consumer
+(VFT) No producers found for cons Sym(17)
+(VFT) Cons Sym(17) not fused but mirrored to Sym(22) because of previous substitutions or effects
+
+(VFT) all vertically fused: 
+
+-- after vertical transformation
+val x11_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 6) {
+val x2 = x1 > 2
+val x10 = if (x2) {
+val x7 = new Array[Int](5)
+for (x3 <- 0 until 5) {
+val x4 = x1 + x3
+val x5 = x4 + 1
+x7(x3) = x5
+}
+x7
+} else {
+val x8 = x1 + 2
+val x9 = Array(x8)
+x9
+}
+x11_builder ++= x10
+}
+val x11 = x11_builder.result()
+val x16 = x11.length
+for (x12 <- 0 until x16) {
+val x13 = x11.apply(x12)
+val x20 = println(x13)
+}
+val x22 = ()
+val x23 = println(3)
+
+-- horizontal transformation
+(HFT) Recording Sym(11), no fusion
+  (HFT) Recording if-sym Sym(10), no fusion
+    (HFT) Recording Sym(7), no fusion
+(HFT) Recording Sym(22), no fusion
+(HFT) - new loop symbol: Sym(22) -> Sym(27)
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x11_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 6) {
+val x2 = x1 > 2
+val x10 = if (x2) {
+val x7 = new Array[Int](5)
+for (x3 <- 0 until 5) {
+val x4 = x1 + x3
+val x5 = x4 + 1
+x7(x3) = x5
+}
+x7
+} else {
+val x8 = x1 + 2
+val x9 = Array(x8)
+x9
+}
+x11_builder ++= x10
+}
+val x11 = x11_builder.result()
+val x16 = x11.length
+for (x12 <- 0 until x16) {
+val x13 = x11.apply(x12)
+val x25 = println(x13)
+}
+val x27 = ()
+val x28 = println(3)
+
+-- fusion
+val x11_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 6) {
+val x2 = x1 > 2
+val x10 = if (x2) {
+val x7 = new Array[Int](5)
+for (x3 <- 0 until 5) {
+val x4 = x1 + x3
+val x5 = x4 + 1
+x7(x3) = x5
+}
+x7
+} else {
+val x8 = x1 + 2
+val x9 = Array(x8)
+x9
+}
+x11_builder ++= x10
+}
+val x11 = x11_builder.result()
+val x16 = x11.length
+for (x12 <- 0 until x16) {
+val x13 = x11.apply(x12)
+val x25 = println(x13)
+}
+val x27 = ()
+val x28 = println(3)
+-- done

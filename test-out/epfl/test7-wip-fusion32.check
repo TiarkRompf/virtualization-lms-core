@@ -1,0 +1,136 @@
+-- full graph
+TP(Sym(2),IntPlus(Sym(1),Const(10)))
+TP(Sym(3),OrderingGT(Sym(2),Const(0)))
+TP(Sym(4),Singleton(Sym(1)))
+TP(Sym(6),EmptyArrayInLoop(Sym(1),Sym(5)))
+TP(Sym(7),IfThenElse(Sym(3),Block(Sym(4)),Block(Sym(6))))
+TP(Sym(8),SimpleLoop(Sym(0),Sym(1),MultiArrayElem(Block(Sym(7)))))
+TP(Sym(9),ArrayIndex(Sym(8),Const(0)))
+TP(Sym(10),Reflect(Print(Sym(9)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(11),ArrayLength(Sym(8)))
+TP(Sym(13),ArrayIndex(Sym(8),Sym(12)))
+TP(Sym(14),IntPlus(Sym(13),Const(2)))
+TP(Sym(15),SingletonInLoop(Sym(14),Sym(12)))
+TP(Sym(16),SimpleLoop(Sym(11),Sym(12),MultiArrayElem(Block(Sym(15)))))
+TP(Sym(17),ArrayIndex(Sym(16),Const(0)))
+TP(Sym(18),Reflect(Print(Sym(17)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10))))
+TP(Sym(19),Reify(Sym(18),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10), Sym(18))))
+
+-- before transformation
+val x8_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until x0) {
+val x2 = x1 + 10
+val x3 = x2 > 0
+if (x3) {
+x8_builder += x1
+}
+}
+val x8 = x8_builder.result()
+val x9 = x8.apply(0)
+val x10 = println(x9)
+val x11 = x8.length
+val x16 = new Array[Int](x11)
+for (x12 <- 0 until x11) {
+val x13 = x8.apply(x12)
+val x14 = x13 + 2
+x16(x12) = x14
+}
+val x17 = x16.apply(0)
+val x18 = println(x17)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(8)
+
+(VFT) Fusing prod Sym(8) with cons Sym(16). Type: Mc_McForRed(Sym(12),Sym(1),Sym(11),Sym(0),IfThenElseOneEmpty_Any(Sym(3),Single_McFor(Sym(12),(Sym(8),Sym(12)),Sym(1),Sym(15),Sym(4),Sym(16)),Empty_Mc(Sym(22),Sym(6),Sym(16)),Sym(16),Sym(7),Sym(16)),Sym(15),Sym(7),Sym(8),Sym(16))
+(VFT) Fused prod Sym(8) with cons Sym(16), fused sym: Sym(26)
+
+(VFT) all vertically fused: List(Sym(26), Sym(8))
+List(Sym(7), Sym(25))
+
+-- after vertical transformation
+val x8_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until x0) {
+val x2 = x1 + 10
+val x3 = x2 > 0
+if (x3) {
+x8_builder += x1
+}
+}
+val x8 = x8_builder.result()
+val x9 = x8.apply(0)
+val x20 = println(x9)
+val x26_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until x0) {
+val x2 = x1 + 10
+val x3 = x2 > 0
+if (x3) {
+val x23 = x1 + 2
+x26_builder += x23
+}
+}
+val x26 = x26_builder.result()
+val x27 = x26.apply(0)
+val x28 = println(x27)
+
+-- horizontal transformation
+(HFT) Recording Sym(8), no fusion
+  (HFT) Recording if-sym Sym(7), no fusion
+(HFT) Fusing Sym(26) with containing fusion set FusedLoopSet(shape = Sym(0), indexSym = Sym(1), loopSyms = List(Sym(26), Sym(8), Sym(16)))
+(HFT) - already using same index Sym(1)
+  (HFT) Fusing Sym(25) with containing fusion set FusedIfSet(cond = Sym(3), ifSyms = List(Sym(7), Sym(25)))
+
+(HFT) all horizontally fused: List(Sym(8), Sym(26))
+
+-- after horizontal transformation
+val x8_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until x0) {
+val x2 = x1 + 10
+val x3 = x2 > 0
+if (x3) {
+x8_builder += x1
+}
+}
+val x8 = x8_builder.result()
+val x9 = x8.apply(0)
+val x30 = println(x9)
+val x26_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until x0) {
+val x2 = x1 + 10
+val x3 = x2 > 0
+if (x3) {
+val x23 = x1 + 2
+x26_builder += x23
+}
+}
+val x26 = x26_builder.result()
+val x27 = x26.apply(0)
+val x31 = println(x27)
+
+-- fusion
+(CTS) Fusing these ifs into one fat TTP: 
+TTP(List(Sym(7)),List(IfThenElse(Sym(3),Block(Sym(4)),Block(Sym(6)))),SimpleFatIfThenElse(Sym(3),List(Block(Sym(4))),List(Block(Sym(6)))))
+TTP(List(Sym(25)),List(IfThenElse(Sym(3),Block(Sym(24)),Block(Sym(22)))),SimpleFatIfThenElse(Sym(3),List(Block(Sym(24))),List(Block(Sym(22)))))
+
+(CTS) Fusing these loops into one fat TTP: 
+TTP(List(Sym(8)),List(SimpleLoop(Sym(0),Sym(1),MultiArrayElem(Block(Sym(7))))),SimpleFatLoop(Sym(0),Sym(1),List(MultiArrayElem(Block(Sym(7))))))
+TTP(List(Sym(26)),List(SimpleLoop(Sym(0),Sym(1),MultiArrayElem(Block(Sym(25))))),SimpleFatLoop(Sym(0),Sym(1),List(MultiArrayElem(Block(Sym(25))))))
+
+val x8_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+val x26_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until x0) {
+val x2 = x1 + 10
+val x3 = x2 > 0
+if (x3) {
+x8_builder += x1
+val x23 = x1 + 2
+x26_builder += x23
+}
+}
+val x8 = x8_builder.result()
+val x26 = x26_builder.result()
+val x9 = x8.apply(0)
+val x30 = println(x9)
+val x27 = x26.apply(0)
+val x31 = println(x27)
+-- done

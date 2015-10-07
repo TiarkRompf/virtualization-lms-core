@@ -1,0 +1,112 @@
+-- full graph
+TP(Sym(1),Reflect(Print(Const(1)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(3),Reflect(Print(Sym(2)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(1))))
+TP(Sym(4),IntPlus(Sym(2),Const(2)))
+TP(Sym(5),Reify(Sym(4),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(3))))
+TP(Sym(6),Reflect(SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(5)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(1))))
+TP(Sym(7),Reflect(Print(Const(3)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
+TP(Sym(8),ArrayLength(Sym(6)))
+TP(Sym(10),ArrayIndex(Sym(6),Sym(9)))
+TP(Sym(11),IntPlus(Sym(10),Const(1)))
+TP(Sym(12),SimpleLoop(Sym(8),Sym(9),ArrayElem(Block(Sym(11)))))
+TP(Sym(13),ArrayIndex(Sym(12),Const(0)))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(7))))
+TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(1), Sym(6), Sym(7), Sym(14))))
+
+-- before transformation
+val x1 = println(1)
+var x6 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x3 = println(x2)
+val x4 = x2 + 2
+x6(x2) = x4
+}
+val x7 = println(3)
+val x8 = x6.length
+var x12 = new Array[Int](x8)
+for (x9 <- 0 until x8) {
+val x10 = x6.apply(x9)
+val x11 = x10 + 1
+x12(x9) = x11
+}
+val x13 = x12.apply(0)
+val x14 = println(x13)
+
+-- vertical transformation
+
+(VFT) No producers found for TP(Sym(6),Reflect(SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(5)))), ...)), changed to Sym(19) because of existing substitutions or to reflect effects
+(VFT) Replaced TP(Sym(8),ArrayLength(Sym(6))) with fixed length: Const(100)
+
+(VFT) Fusing consumer TP(Sym(12),SimpleLoop(Sym(8),Sym(9),ArrayElem(Block(Sym(11))))) with real producer: Sym(19) (was Sym(6))
+(VFT) Combined effect of fused loop is: (Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(16)))
+(VFT) General fusion: remap index to Sym(2), SimpleIndex to Sym(18).
+(VFT) SimpleCollect+Any fusion: nothing more to do.
+
+(VFT) Finished fusion of prod: Sym(19) and cons: Sym(12), the resulting fused loop is Sym(22)
+
+(VFT) all vertically fused: List(Sym(22), Sym(19))
+
+-- after vertical transformation
+val x16 = println(1)
+var x19 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x4 = x2 + 2
+val x17 = println(x2)
+x19(x2) = x4
+}
+val x20 = println(3)
+var x22 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x4 = x2 + 2
+val x21 = x4 + 1
+x22(x2) = x21
+}
+val x23 = x22.apply(0)
+val x24 = println(x23)
+
+-- horizontal transformation
+(HFT) Recording Sym(19), no fusion
+(HFT) - new loop symbol: Sym(19) -> Sym(30)
+(HFT) Fusing Sym(22) with containing fusion set FusedSet(shape = Const(100), indexSym = Sym(2), loopSyms = List(Sym(22), Sym(19)))
+(HFT) - already using same index Sym(2)
+(HFT) - new loop symbol: Sym(22) -> Sym(32)
+
+(HFT) all horizontally fused: List(Sym(30), Sym(32))
+
+-- after horizontal transformation
+val x27 = println(1)
+var x30 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x4 = x2 + 2
+val x28 = println(x2)
+x30(x2) = x4
+}
+val x31 = println(3)
+var x32 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x4 = x2 + 2
+val x21 = x4 + 1
+x32(x2) = x21
+}
+val x33 = x32.apply(0)
+val x34 = println(x33)
+
+-- fusion
+(FTO) Fusing these loops into one fat TTP: 
+TTP(List(Sym(30)),List(Reflect(SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(29)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(27)))),SimpleFatLoop(Const(100),Sym(2),List(ArrayElem(Block(Sym(29))))))
+TTP(List(Sym(32)),List(Reflect(SimpleLoop(Const(100),Sym(2),ArrayElem(Block(Sym(21)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(27)))),SimpleFatLoop(Const(100),Sym(2),List(ArrayElem(Block(Sym(21))))))
+
+val x27 = println(1)
+var x30 = new Array[Int](100)
+var x32 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x4 = x2 + 2
+val x28 = println(x2)
+val x21 = x4 + 1
+x30(x2) = x4
+x32(x2) = x21
+}
+val x31 = println(3)
+val x33 = x32.apply(0)
+val x34 = println(x33)
+-- done

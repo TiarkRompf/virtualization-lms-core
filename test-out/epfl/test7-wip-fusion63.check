@@ -1,0 +1,127 @@
+-- full graph
+TP(Sym(3),EmptyArray(Sym(2)))
+TP(Sym(4),SimpleLoop(Const(10),Sym(1),MultiArrayElem(Block(Sym(3)))))
+TP(Sym(6),ArrayIndex(Sym(4),Sym(5)))
+TP(Sym(7),Reflect(Print(Sym(6)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(8),Reify(Sym(7),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(7))))
+TP(Sym(9),ArrayLength(Sym(4)))
+TP(Sym(10),Reflect(SimpleLoop(Sym(9),Sym(5),ForeachElem(Block(Sym(8)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(11),Reflect(Print(Const(1)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10))))
+TP(Sym(13),OrderingGT(Sym(12),Const(2)))
+TP(Sym(14),IntPlus(Sym(12),Const(3)))
+TP(Sym(15),SingletonInLoop(Sym(14),Sym(12)))
+TP(Sym(17),EmptyArrayInLoop(Sym(12),Sym(16)))
+TP(Sym(18),IfThenElse(Sym(13),Block(Sym(15)),Block(Sym(17))))
+TP(Sym(19),SimpleLoop(Const(6),Sym(12),MultiArrayElem(Block(Sym(18)))))
+TP(Sym(21),ArrayIndex(Sym(19),Sym(20)))
+TP(Sym(22),IntPlus(Sym(21),Const(4)))
+TP(Sym(23),Reflect(Print(Sym(22)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11))))
+TP(Sym(24),Reify(Sym(23),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(23))))
+TP(Sym(25),ArrayLength(Sym(19)))
+TP(Sym(26),Reflect(SimpleLoop(Sym(25),Sym(20),ForeachElem(Block(Sym(24)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(11))))
+TP(Sym(27),Reflect(Print(Const(5)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(26))))
+TP(Sym(28),Reify(Sym(27),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10), Sym(11), Sym(26), Sym(27))))
+
+-- before transformation
+val x3: Array[Int] = Array.empty
+val x4_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 10) {
+x4_builder ++= x3
+}
+val x4 = x4_builder.result()
+val x9 = x4.length
+for (x5 <- 0 until x9) {
+val x6 = x4.apply(x5)
+val x7 = println(x6)
+}
+val x10 = ()
+val x11 = println(1)
+val x19_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x12 <- 0 until 6) {
+val x13 = x12 > 2
+if (x13) {
+val x14 = x12 + 3
+x19_builder += x14
+}
+}
+val x19 = x19_builder.result()
+val x25 = x19.length
+for (x20 <- 0 until x25) {
+val x21 = x19.apply(x20)
+val x22 = x21 + 4
+val x23 = println(x22)
+}
+val x26 = ()
+val x27 = println(5)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(4)
+
+(VFT) Fusing prod Sym(4) with cons Sym(10). Type: Empty_For(Sym(4),Sym(10))
+(VFT) Fused prod Sym(4) with cons Sym(10), fused sym: Const(())
+
+(VFT) No producers found for cons Sym(19)
+
+(VFT) Fusing prod Sym(19) with cons Sym(26). Type: Mc_McForRed(Sym(20),Sym(12),Sym(25),Const(6),IfThenElseOneEmpty_Any(Sym(13),Single_McFor(Sym(20),(Sym(19),Sym(20)),Sym(14),Sym(24),Sym(15),Sym(26)),Empty_For(Sym(17),Sym(26)),Sym(26),Sym(18),Sym(26)),Sym(24),Sym(18),Sym(19),Sym(26))
+(VFT) Fused prod Sym(19) with cons Sym(26), fused sym: Sym(35)
+
+(VFT) all vertically fused: List(Sym(35), Sym(19))
+List(Sym(33), Sym(18))
+
+-- after vertical transformation
+val x29 = println(1)
+for (x12 <- 0 until 6) {
+val x13 = x12 > 2
+val x33 = if (x13) {
+val x14 = x12 + 3
+val x30 = x14 + 4
+val x31 = println(x30)
+x31
+} else {
+()
+}
+}
+val x35 = ()
+val x36 = println(5)
+
+-- horizontal transformation
+(HFT) Recording Sym(35), no fusion
+  (HFT) Recording if-sym Sym(33), no fusion
+  (HFT) - new if symbol: Sym(33) -> Sym(42)
+(HFT) - new loop symbol: Sym(35) -> Sym(44)
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x39 = println(1)
+for (x12 <- 0 until 6) {
+val x13 = x12 > 2
+val x42 = if (x13) {
+val x14 = x12 + 3
+val x30 = x14 + 4
+val x40 = println(x30)
+x40
+} else {
+()
+}
+}
+val x44 = ()
+val x45 = println(5)
+
+-- fusion
+val x39 = println(1)
+for (x12 <- 0 until 6) {
+val x13 = x12 > 2
+val x42 = if (x13) {
+val x14 = x12 + 3
+val x30 = x14 + 4
+val x40 = println(x30)
+x40
+} else {
+()
+}
+}
+val x44 = ()
+val x45 = println(5)
+-- done

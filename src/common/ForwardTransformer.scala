@@ -92,7 +92,6 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   }
 }
 
-
 trait RecursiveTransformer extends ForwardTransformer { self =>
   import IR._
 
@@ -132,8 +131,64 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
   }
 }
 
+/** 
+ * Delite transformers are run in a fixpoint fashion, but with a limited number of iterations.
+ * At the beginning of each iteration, the info string is printed to the log.
+ */
+trait FixpointTransformer extends ForwardTransformer {
+  def getInfoString: String
+  def isDone: Boolean
+  def runOnce[A:Manifest](s: Block[A]): Block[A]
+  def run[A:Manifest](s: Block[A]): Block[A] = {
+    if (isDone) s else run(runOnce(s))
+  }
+}
 
-trait WorklistTransformer extends ForwardTransformer { // need backward version, too?
+/**
+ * Skip statements that don't have symbols which need substitution, unless they contain
+ * blocks (need to recurse into blocks).
+ */
+trait PreservingFixpointTransformer extends FixpointTransformer {
+  import IR._
+
+  // Implement optimization suggested in ForwardTransformer:
+  // optimization from MirrorRetainBlockTransformer in TestMiscTransform
+  // we want to skip those statements that don't have symbols that need substitution
+  // however we need to recurse into any blocks
+  // Also need to mirror all effects because otherwise they won't be reified
+  override def transformStm(stm: Stm): Exp[Any] = {
+    stm match {
+    case TP(sym, rhs@Reflect(_, _, _)) =>
+      self_mirror(sym, rhs)
+    case TP(sym, rhs) if (needsSubst(rhs) || needsRecursion(rhs)) =>
+      self_mirror(sym, rhs)
+    case TP(sym, rhs) => // no mirroring, preserve statements
+      if (!globalDefs.contains(stm)) 
+        reflectSubGraph(List(stm))
+      sym
+  }}
+
+  def needsSubst(e: Any) = (syms(e) ++ boundSyms(e)).exists(subst contains _)
+  def needsRecursion(e: Any) = !blocks(e).isEmpty || hasFuncs(e)
+  def hasFuncs(e: Any): Boolean = e match {
+    case _: Function0[_] | _: Function1[_,_] | _: Function2[_,_,_] | _: Function3[_,_,_,_] |
+         _: Function4[_,_,_,_,_] | _: Function5[_,_,_,_,_,_] | _: Function6[_,_,_,_,_,_,_] |
+         _: Function7[_,_,_,_,_,_,_,_] | _: Function8[_,_,_,_,_,_,_,_,_] | _: Function9[_,_,_,_,_,_,_,_,_,_] |
+         _: Function10[_,_,_,_,_,_,_,_,_,_,_] | _: Function11[_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function12[_,_,_,_,_,_,_,_,_,_,_,_,_] | _: Function13[_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function14[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | _: Function15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | _: Function17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] |
+         _: Function22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] => true
+    case p: Product => p.productIterator.exists(hasFuncs(_))
+    case _ => false
+  }
+}
+
+trait WorklistTransformer extends FixpointTransformer { // need backward version, too?
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
   var curSubst: Map[Sym[Any],() => Exp[Any]] = Map.empty
@@ -146,15 +201,12 @@ trait WorklistTransformer extends ForwardTransformer { // need backward version,
       nextSubst = nextSubst + (x.asInstanceOf[Sym[A]] -> (() => y))
     }
   }
-  def isDone = nextSubst.isEmpty
-  def runOnce[A:Manifest](s: Block[A]): Block[A] = {
+  override def isDone = nextSubst.isEmpty
+  override def runOnce[A:Manifest](s: Block[A]): Block[A] = {
     subst = Map.empty
     curSubst = nextSubst
     nextSubst = Map.empty
     transformBlock(s)
-  }
-  def run[A:Manifest](s: Block[A]): Block[A] = {
-    if (isDone) s else run(runOnce(s))
   }
   override def transformStm(stm: Stm): Exp[Any] = stm match {
     case TP(sym, rhs) => 
@@ -168,5 +220,5 @@ trait WorklistTransformer extends ForwardTransformer { // need backward version,
           super.transformStm(stm)
       }
   }
-
+  override def getInfoString = nextSubst.toString
 }
