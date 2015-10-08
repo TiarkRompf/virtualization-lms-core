@@ -34,7 +34,7 @@ trait StructTags {
   case class MapTag[T]() extends StructTag[T]
 }
 
-trait StructExp extends StructOps with StructTags with BaseExp with EffectExp with VariablesExp with OverloadHack {
+trait StructExp extends StructOps with StructTags with AtomicWrites with EffectExp with VariablesExp with OverloadHack {
 
   // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
 
@@ -64,6 +64,17 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     case _ => None
   }
 
+  //TODO: we should have a unified way of handling this, e.g., TypeTag[T] instead of Manifest[T]
+  object StructType {
+    def unapply[T:Manifest] = unapplyStructType[T]
+  }
+
+  def unapplyStructType[T:Manifest]: Option[(StructTag[T], List[(String,Manifest[_])])] = manifest[T] match {
+    case r: RefinedManifest[T] => Some(AnonTag(r), r.fields)
+    case _ => None
+  }
+
+
   object Field {
     def unapply[T](d: Def[T]) = unapplyField(d)
   }
@@ -75,14 +86,24 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
 
   case class SimpleStruct[T](tag: StructTag[T], elems: Seq[(String, Rep[Any])]) extends AbstractStruct[T]
   case class FieldApply[T](struct: Rep[Any], index: String) extends AbstractField[T]
-  case class FieldUpdate[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]) extends Def[Unit]
+  case class FieldUpdate[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]) extends AtomicWriteDef[T] {
+    def externalFields = List(index, rhs)
+  }
 
   def struct[T:Manifest](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit o: Overloaded1, pos: SourceContext): Rep[T] = struct[T](tag, elems)
   def struct[T:Manifest](tag: StructTag[T], elems: Seq[(String, Rep[Any])])(implicit pos: SourceContext): Rep[T] = SimpleStruct(tag, elems)
 
   def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T] = FieldApply[T](struct, index)
   def var_field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Var[T] = Variable(FieldApply[Var[T]](struct, index))
-  def field_update[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]): Exp[Unit] = reflectWrite(struct)(FieldUpdate(struct, index, rhs))
+
+  // Nested write - rewrite rules
+  override def recurseLookup[T:Manifest](sym: Exp[Any], trace: List[AtomicTracer]): (Exp[Any],List[AtomicTracer]) = sym match {
+    case Def(Field(struct,field)) => recurseLookup(struct, StructTracer(field) +: trace)
+    case Def(Reflect(Field(struct,field),_,_)) => recurseLookup(struct, StructTracer(field) +: trace)
+    case _ => super.recurseLookup(sym,trace)
+  }
+  def field_update[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]): Exp[Unit]
+    = reflectAtomicWrite(struct)(FieldUpdate(struct, index, rhs))
 
   def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]) = {
     val x: Sym[T] = Sym[T](-99) // self symbol -- not defined anywhere, so make it obvious!! (TODO)
@@ -145,7 +166,10 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     case _ => super.copySyms(e)
   }
 
-
+  override def mirrorNestedAtomic[A:Manifest](d: AtomicWrite[A], f: Transformer)(implicit pos: SourceContext): AtomicWrite[A] = d match {
+    case FieldUpdate(struct,key,rhs) => FieldUpdate(struct, key, f(rhs))(mtype(manifest[A]))
+    case _ => super.mirrorNestedAtomic(d,f)
+  }
 
   // TODO: read/write/copy summary
 
@@ -167,7 +191,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   }
 
   def classTag[T:Manifest] = ClassTag[T](structName(manifest[T]))
-  
+
   def registerStruct[T](name: String, tp: Manifest[T], elems: Seq[(String, Rep[Any])]) {
     encounteredStructs += name -> (tp, elems.map(e => (e._1, e._2.tp)))
   }
@@ -387,9 +411,16 @@ trait BaseGenStruct extends GenericNestedCodegen {
   //Moved encounteredStructs to IR
 }
 
-trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
+trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct with ScalaGenAtomicOps {
   val IR: StructExp
   import IR._
+
+  override def emitAtomicWrite(sym: Sym[Any], d: AtomicWrite[_], trace: Option[String]) = d match {
+    case FieldUpdate(struct,index,rhs) =>
+      emitValDef(sym, trace.getOrElse(quote(struct)) + "." + index + " = " + quote(rhs))
+
+    case _ => super.emitAtomicWrite(sym,d,trace)
+  }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Struct(tag, elems) =>
@@ -397,8 +428,6 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct {
       emitValDef(sym, "new " + structName(sym.tp) + "(" + elems.map(e => quote(e._2)).mkString(",") + ")")
     case FieldApply(struct, index) =>
       emitValDef(sym, quote(struct) + "." + index)
-    case FieldUpdate(struct, index, rhs) =>
-      emitValDef(sym, quote(struct) + "." + index + " = " + quote(rhs))
     case _ => super.emitNode(sym, rhs)
   }
 
