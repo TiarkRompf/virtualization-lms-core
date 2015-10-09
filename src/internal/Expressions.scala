@@ -38,11 +38,7 @@ trait Expressions extends Utils {
   def quotePos(e: Exp[Any]): String = e.pos match {
     case Nil => "<unknown>"
     case cs =>
-      def all(cs: SourceContext): List[SourceContext] = cs.parent match {
-        case None => List(cs)
-        case Some(p) => cs::all(p)
-      }
-    cs.map(c => all(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
+      cs.map(c => all(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
   }
 
   abstract class Def[+T] { // operations (composite)
@@ -80,7 +76,7 @@ trait Expressions extends Utils {
 
   /* Create a string representing the original code creating an expression
      if possible or the internal IR node definition otherwise */
-  def quoteDef(e: Exp[Any]): String = quoteCode(s.pos).getOrElse(strDef(e))
+  def quoteDef(e: Exp[Any]): String = quoteCode(e.pos).getOrElse(strDef(e))
 
   // --- Graph construction state
   var globalDefs: List[Stm] = Nil

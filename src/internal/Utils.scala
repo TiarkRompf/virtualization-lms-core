@@ -2,6 +2,8 @@ package scala.virtualization.lms
 package internal
 
 import scala.reflect.SourceContext
+import java.nio.file.{Files,Paths}
+import scala.io.Source
 
 // TODO: add logging, etc.
 trait Utils extends Config {
@@ -31,6 +33,11 @@ trait Utils extends Config {
     }
   }
 
+  protected def all(cs: SourceContext): List[SourceContext] = cs.parent match {
+    case None => List(cs)
+    case Some(p) => cs::all(p)
+  }
+
   def getPathAndLine(ctx: List[SourceContext]): List[(String,Int)] = {
     ctx.map{c => val top = all(c).last; (top.fileName, top.line) }
   }
@@ -44,8 +51,8 @@ trait Utils extends Config {
       val path = pos.head._1
       val line = pos.head._2
 
-      if (java.io.File(path).exists)
-        Some(Source.fromFile(path).getLines().toList.apply(line - 1))
+      if (Files.exists(Paths.get(path)))
+        Some(Source.fromFile(path).getLines.toList.apply(line - 1))
       else None
     }
     else None
