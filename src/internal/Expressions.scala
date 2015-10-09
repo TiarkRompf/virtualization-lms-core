@@ -71,6 +71,17 @@ trait Expressions extends Utils {
 
   case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
 
+  /* Create a string representing the IR node definition for the given expression */
+  def strDef(e: Exp[Any]): String = e match {
+    case Const(z) => z.toString
+    case Def(d) => e.toString + " = " + d.toString
+    case e: Exp[_] => "(bound " + e.toString + ")"
+  }
+
+  /* Create a string representing the original code creating an expression
+     if possible or the internal IR node definition otherwise */
+  def quoteDef(e: Exp[Any]): String = quoteCode(s.pos).getOrElse(strDef(e))
+
   // --- Graph construction state
   var globalDefs: List[Stm] = Nil
   var localDefs: List[Stm] = Nil

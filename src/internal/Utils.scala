@@ -30,4 +30,25 @@ trait Utils extends Config {
       superIsSub || x.getInterfaces().exists(s=>isSubtype(s,cls))
     }
   }
+
+  def getPathAndLine(ctx: List[SourceContext]): List[(String,Int)] = {
+    ctx.map{c => val top = all(c).last; (top.fileName, top.line) }
+  }
+
+  // if only a single SourceContext is given, fetch corresponding source code line
+  // from top filename and line number. Otherwise returns None
+  def quoteCode(ctx: SourceContext): Option[String] = quoteCode(List(ctx))
+  def quoteCode(ctx: List[SourceContext]): Option[String] = {
+    val pos = getPathAndLine(ctx)
+    if (pos.length == 1) {
+      val path = pos.head._1
+      val line = pos.head._2
+
+      if (java.io.File(path).exists)
+        Some(Source.fromFile(path).getLines().toList.apply(line - 1))
+      else None
+    }
+    else None
+  }
+
 }
