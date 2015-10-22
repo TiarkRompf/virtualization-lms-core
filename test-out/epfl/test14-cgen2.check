@@ -8,7 +8,11 @@ int32_t main(int32_t);
 #include <string.h>
 #include <stdbool.h>
 int32_t main(int32_t  x0) {
+<<<<<<< HEAD
 int32_t x1(int32_t x2,int32_t x3) {
+=======
+function<int32_t(int32_t,int32_t)> x1 = [&](int32_t x2,int32_t x3) {
+>>>>>>> wip-master
 int32_t x4 = x2;
 bool x6 = x4 == 0;
 int32_t x12;
@@ -22,7 +26,11 @@ int32_t x10 = x4 * x9;
 x12 = x10;
 }
 return x12;
+<<<<<<< HEAD
 }
+=======
+};
+>>>>>>> wip-master
 int32_t x15 = x1(4,0);
 printf(string("Hello, world! %d\n").c_str(),x15);
 return 0;

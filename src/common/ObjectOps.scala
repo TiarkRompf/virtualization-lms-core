@@ -85,6 +85,34 @@ trait ObjectOpsExpOpt extends ObjectOpsExp {
   }
 }
 
+// This trait provides some useful additional short-circuits when calling object methods on structs.
+// Since it brings in both Structs and Strings, we factor it out as a separate trait.
+trait ObjectOpsStructExp extends ObjectOpsExpOpt with StructExp with StringOpsExp {
+
+  override def object_tostring(x: Exp[Any])(implicit pos: SourceContext): Exp[String] = x match {
+    case Def(s@Struct(tag, elems)) => //tag(elem1, elem2, ...)
+      val e = elems.map(e=>string_plus(unit(e._1 + " = "), object_tostring(e._2))).reduceLeft((l,r)=>string_plus(string_plus(l,unit(", ")),r))
+      string_plus(unit(structName(x.tp)+"("),string_plus(e,unit(")")))
+    case _ => super.object_tostring(x)
+  }
+
+  def imm_field(struct: Exp[Any], name: String, f: Exp[Any])(implicit pos: SourceContext): Exp[Any] = {
+    if (f.tp.erasure.getSimpleName == "Variable") {
+      field(struct,name)(mtype(f.tp.typeArguments(0)),pos)
+    }
+    else {
+      object_unsafe_immutable(f)(mtype(f.tp),pos)
+    }
+  }
+
+  // don't let unsafeImmutable hide struct-ness
+  override def object_unsafe_immutable[A:Manifest](lhs: Exp[A])(implicit pos: SourceContext) = lhs match {
+    case Def(Struct(tag,elems)) => struct[A](tag, elems.map(t => (t._1, imm_field(lhs, t._1, t._2))))
+    case Def(d@Reflect(Struct(tag, elems), u, es)) => struct[A](tag, elems.map(t => (t._1, imm_field(lhs, t._1, t._2))))
+    case _ => super.object_unsafe_immutable(lhs)
+  }
+}
+
 trait ScalaGenObjectOps extends ScalaGenBase {
   val IR: ObjectOpsExp
   import IR._

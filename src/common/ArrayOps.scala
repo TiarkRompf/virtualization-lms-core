@@ -135,6 +135,20 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
 
 trait ArrayOpsExpOpt extends ArrayOpsExp {
 
+  /**
+   * @author  Alen Stojanov (astojanov@inf.ethz.ch)
+   */
+  override def array_length[T:Manifest](a: Exp[Array[T]])(implicit pos: SourceContext) : Rep[Int] = a match {
+    case Def(ArrayNew(n: Exp[Int])) => n
+    case Def(ArrayFromSeq(xs)) => Const(xs.size)
+    case Def(ArraySort(x)) => array_length(x)
+    case Def(ArrayMap(x, _, _)) => array_length(x)
+    case Def(Reflect(ArrayNew(n: Exp[Int]), _, _)) => n
+    case Def(Reflect(ArrayFromSeq(xs), _, _)) => Const(xs.size)
+    case Def(Reflect(ArraySort(x), _, _)) => array_length(x)
+    case Def(Reflect(ArrayMap(x, _, _), _, _)) => array_length(x)
+    case _ => super.array_length(a)
+  }
 
   override def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Int])(implicit pos: SourceContext): Exp[T] = {
     if (context ne null) {
@@ -172,8 +186,6 @@ trait ArrayOpsExpOpt extends ArrayOpsExp {
     }
   }
 
-
-
 }
 
 
@@ -192,7 +204,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
   val ARRAY_LITERAL_MAX_SIZE = 1000
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case a@ArrayNew(n) => emitValDef(sym, src"new Array[${a.m}]($n)")
+    case a@ArrayNew(n) => emitValDef(sym, src"new Array[${remap(a.m)}]($n)")
     case e@ArrayFromSeq(xs) => {
       emitData(sym, xs)
       emitValDef(sym,
@@ -216,7 +228,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
     case ArrayUpdate(x,n,y) => emitValDef(sym, src"$x($n) = $y")
     case ArrayLength(x) => emitValDef(sym, src"$x.length")
     case ArrayForeach(a,x,block) =>
-      gen"""val $sym = $a.foreach{"
+      gen"""val $sym = $a.foreach{
            |$x => 
            |${nestedBlock(block)}
            |$block
@@ -224,7 +236,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
     case ArrayCopy(src,srcPos,dest,destPos,len) => emitValDef(sym, src"System.arraycopy($src,$srcPos,$dest,$destPos,$len)")
     case a@ArraySort(x) =>
       gen"""val $sym = {
-           |val d = new Array[${a.m}]($x.length)
+           |val d = new Array[${remap(a.m)}]($x.length)
            |System.arraycopy($x, 0, d, 0, $x.length)
            |scala.util.Sorting.quickSort(d)
            |d

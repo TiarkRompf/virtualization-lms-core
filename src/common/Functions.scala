@@ -10,7 +10,7 @@ import org.scala_lang.virtualized.SourceContext
 trait Functions extends Base {
 
   def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[A => B]
-  implicit def fun[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
+   def fun[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
 
   implicit def toLambdaOps[A:Manifest,B:Manifest](fun: Rep[A => B]) = new LambdaOps(fun)
 
@@ -22,15 +22,15 @@ trait Functions extends Base {
 }
 
 trait TupledFunctions extends Functions with TupleOps {
-  implicit def fun[B:Manifest](f: () => Rep[B]): Rep[Unit=>B] =
+   def fun[B:Manifest](f: () => Rep[B]): Rep[Unit=>B] =
     fun((t: Rep[Unit]) => f())
-  implicit def fun[A1:Manifest,A2:Manifest,B:Manifest](f: (Rep[A1], Rep[A2]) => Rep[B]): Rep[((A1,A2))=>B] =
+   def fun[A1:Manifest,A2:Manifest,B:Manifest](f: (Rep[A1], Rep[A2]) => Rep[B]): Rep[((A1,A2))=>B] =
     fun((t: Rep[(A1,A2)]) => f(tuple2_get1(t), tuple2_get2(t)))
-  implicit def fun[A1:Manifest,A2:Manifest,A3:Manifest,B:Manifest](f: (Rep[A1], Rep[A2], Rep[A3]) => Rep[B]): Rep[((A1,A2,A3))=>B] =
+   def fun[A1:Manifest,A2:Manifest,A3:Manifest,B:Manifest](f: (Rep[A1], Rep[A2], Rep[A3]) => Rep[B]): Rep[((A1,A2,A3))=>B] =
     fun((t: Rep[(A1,A2,A3)]) => f(tuple3_get1(t), tuple3_get2(t), tuple3_get3(t)))
-  implicit def fun[A1:Manifest,A2:Manifest,A3:Manifest,A4:Manifest,B:Manifest](f: (Rep[A1], Rep[A2], Rep[A3], Rep[A4]) => Rep[B]): Rep[((A1,A2,A3,A4))=>B] =
+   def fun[A1:Manifest,A2:Manifest,A3:Manifest,A4:Manifest,B:Manifest](f: (Rep[A1], Rep[A2], Rep[A3], Rep[A4]) => Rep[B]): Rep[((A1,A2,A3,A4))=>B] =
     fun((t: Rep[(A1,A2,A3,A4)]) => f(tuple4_get1(t), tuple4_get2(t), tuple4_get3(t), tuple4_get4(t)))
-  implicit def fun[A1:Manifest,A2:Manifest,A3:Manifest,A4:Manifest,A5:Manifest,B:Manifest](f: (Rep[A1], Rep[A2], Rep[A3], Rep[A4], Rep[A5]) => Rep[B]): Rep[((A1,A2,A3,A4,A5))=>B] =
+   def fun[A1:Manifest,A2:Manifest,A3:Manifest,A4:Manifest,A5:Manifest,B:Manifest](f: (Rep[A1], Rep[A2], Rep[A3], Rep[A4], Rep[A5]) => Rep[B]): Rep[((A1,A2,A3,A4,A5))=>B] =
     fun((t: Rep[(A1,A2,A3,A4,A5)]) => f(tuple5_get1(t), tuple5_get2(t), tuple5_get3(t), tuple5_get4(t), tuple5_get5(t)))
 
   class LambdaOps2[A1:Manifest,A2:Manifest,B:Manifest](f: Rep[((A1,A2)) => B]) {
@@ -345,22 +345,23 @@ trait CGenFunctions extends CGenEffect with BaseGenFunctions {
   val IR: FunctionsExp
   import IR._
 
-  // Nested functions are not allowed in standard C.
-  // TODO: Either emit the function other place or use C++11 (or only gcc)
-  /*
+  // Case for functions with a single argument (therefore, not tupled)
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
-      stream.println(remap(y.tp)+" "+quote(sym)+"("+remap(x.tp)+" "+quote(x)+") {")
+      val retType = remap(getBlockResult(y).tp)
+      stream.println("function<"+retType+"("+
+    		  remap(x.tp)+")> "+quote(sym)+
+    		  " = [&]("+remap(x.tp)+" "+quote(x)+") {")
       emitBlock(y)
       val z = getBlockResult(y)
-      if (remap(z.tp) != "void")
+      if (retType != "void")
         stream.println("return " + quote(z) + ";")
-      stream.println("}")
+      stream.println("};")
     case Apply(fun, arg) =>
       emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
     case _ => super.emitNode(sym, rhs)
   }
-  */
+  
 }
 
 trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAccess {
@@ -375,12 +376,15 @@ trait CGenTupledFunctions extends CGenFunctions with GenericGenUnboxedTupleAcces
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Lambda(fun, UnboxedTuple(xs), y) =>
-      stream.println(remap(y.tp)+" "+quote(sym)+"("+xs.map(s=>remap(s.tp)+" "+quote(s)).mkString(",")+") {")
+      val retType = remap(getBlockResult(y).tp)
+      stream.println("function<"+retType+"("+
+    		  xs.map(s=>remap(s.tp)).mkString(",")+")> "+quote(sym)+
+    		  " = [&]("+xs.map(s=>remap(s.tp)+" "+quote(s)).mkString(",")+") {")
       emitBlock(y)
       val z = getBlockResult(y)
-      if (remap(z.tp) != "void")
+      if (retType != "void")
         stream.println("return " + quote(z) + ";")
-      stream.println("}")
+      stream.println("};")
     case Apply(fun, UnboxedTuple(args)) =>
       emitValDef(sym, quote(fun) + args.map(quote).mkString("(", ",", ")"))
     case _ => super.emitNode(sym,rhs)

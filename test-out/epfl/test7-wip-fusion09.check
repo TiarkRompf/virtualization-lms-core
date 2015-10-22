@@ -1,0 +1,99 @@
+-- full graph
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),SingletonInLoop(Sym(2),Sym(1)))
+TP(Sym(4),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(3)))))
+TP(Sym(5),ArrayLength(Sym(4)))
+TP(Sym(8),ArrayIndex(Sym(4),Sym(6)))
+TP(Sym(9),IntPlus(Sym(7),Sym(8)))
+TP(Sym(10),SingletonInLoop(Sym(9),Sym(7)))
+TP(Sym(11),SimpleLoop(Sym(5),Sym(7),MultiArrayElem(Block(Sym(10)))))
+TP(Sym(12),SimpleLoop(Sym(5),Sym(6),MultiArrayElem(Block(Sym(11)))))
+TP(Sym(13),ArrayIndex(Sym(12),Const(0)))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+
+-- before transformation
+val x4 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x4(x1) = x2
+}
+val x5 = x4.length
+val x12_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x6 <- 0 until x5) {
+val x8 = x4.apply(x6)
+val x11 = new Array[Int](x5)
+for (x7 <- 0 until x5) {
+val x9 = x7 + x8
+x11(x7) = x9
+}
+x12_builder ++= x11
+}
+val x12 = x12_builder.result()
+val x13 = x12.apply(0)
+val x14 = println(x13)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(4)
+(VFT) Replaced TP(Sym(5),ArrayLength(Sym(4))) with fixed length: Const(100)
+
+(VFT) Fusing prod Sym(4) with cons Sym(12). Type: Mc_McForRed(Sym(6),Sym(1),Sym(5),Const(100),Single_McFor(Sym(6),(Sym(4),Sym(6)),Sym(2),Sym(11),Sym(3),Sym(12)),Sym(11),Sym(3),Sym(4),Sym(12))
+  
+  (VFT) No producers found for cons Sym(11)
+  (VFT) Cons Sym(11) not fused but mirrored to Sym(18) because of previous substitutions or effects
+(VFT) Fused prod Sym(4) with cons Sym(12), fused sym: Sym(19)
+
+(VFT) all vertically fused: List(Sym(4), Sym(19))
+
+-- after vertical transformation
+val x19_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x18 = new Array[Int](100)
+for (x7 <- 0 until 100) {
+val x16 = x7 + x2
+x18(x7) = x16
+}
+x19_builder ++= x18
+}
+val x19 = x19_builder.result()
+val x20 = x19.apply(0)
+val x21 = println(x20)
+
+-- horizontal transformation
+(HFT) Recording Sym(19), no fusion
+  (HFT) Recording Sym(18), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x19_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x18 = new Array[Int](100)
+for (x7 <- 0 until 100) {
+val x16 = x7 + x2
+x18(x7) = x16
+}
+x19_builder ++= x18
+}
+val x19 = x19_builder.result()
+val x20 = x19.apply(0)
+val x23 = println(x20)
+
+-- fusion
+val x19_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x18 = new Array[Int](100)
+for (x7 <- 0 until 100) {
+val x16 = x7 + x2
+x18(x7) = x16
+}
+x19_builder ++= x18
+}
+val x19 = x19_builder.result()
+val x20 = x19.apply(0)
+val x23 = println(x20)
+-- done

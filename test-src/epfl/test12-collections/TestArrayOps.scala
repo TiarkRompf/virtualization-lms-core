@@ -29,5 +29,4 @@ class TestArrayOps extends FileDiffSuite {
     }
     assertFileEqualsCheck(prefix+"array-seq-creation")
   }
-
 }

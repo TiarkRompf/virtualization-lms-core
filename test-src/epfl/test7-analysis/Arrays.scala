@@ -83,7 +83,7 @@ trait ArrayLoopsExp extends LoopsExp {
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = ArrayIndex(a, i)
 
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
-    case Def(SimpleLoop(s, x, ArrayElem(y))) => s
+//    case Def(SimpleLoop(s, x, ArrayElem(y))) => s
     case _ => ArrayLength(a)
   }
 
@@ -158,15 +158,15 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
       for ((l,r) <- sym zip rhs) {
         r match {
           case ArrayElem(y) =>
-            stream.println("var " + quote(l) + " = new Array[" + getBlockResult(y).tp + "]("+quote(s)+")")
+            stream.println("var " + quote(l) + " = new Array[" + remap(getBlockResult(y).tp) + "]("+quote(s)+")")
           case ReduceElem(y) =>
-            stream.println("var " + quote(l) + " = 0")
+            stream.println("var " + quote(l) + ": " + remap(getBlockResult(y).tp) + " = 0")
           case ArrayIfElem(c,y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).tp + "]")
+            stream.println("var " + quote(l) + " = new ArrayBuilder[" + remap(getBlockResult(y).tp) + "]")
           case ReduceIfElem(c,y) =>
-            stream.println("var " + quote(l) + " = 0")
+            stream.println("var " + quote(l) + ": " + remap(getBlockResult(y).tp) + " = 0")
           case FlattenElem(y) =>
-            stream.println("var " + quote(l) + " = new ArrayBuilder[" + getBlockResult(y).tp + "]")
+            stream.println("var " + quote(l) + " = new ArrayBuilder[" + remap(getBlockResult(y).tp.typeArguments(0)) + "]")
         }
       }
       val ii = x // was: x(i)

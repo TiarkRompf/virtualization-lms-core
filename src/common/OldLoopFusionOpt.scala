@@ -170,12 +170,13 @@ import internal.Scheduling
 */
 
 
-
-trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
+@deprecated("The old loop fusion is deprecated, please use the transformers and CombineTTPScheduling.")
+trait LoopFusionOpt extends internal.FatBlockTraversal with OldLoopFusionCore {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
 
-  
+  // Legacy mode for old loop fusion.
+  override def shouldFattenEffectfulLoops() = false
 
   override def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A = {
     val result0 = resultB.map(getBlockResultFull) flatMap { case Combine(xs) => xs case x => List(x) }
@@ -212,7 +213,7 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
 
 
 
-trait LoopFusionCore extends internal.FatScheduling with CodeMotion with SimplifyTransform {
+trait OldLoopFusionCore extends internal.FatScheduling with CodeMotion with SimplifyTransform {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
   
@@ -343,8 +344,8 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
 
         def canFuseDirect(a: Stm, b: Stm): Boolean = (a.rhs,b.rhs) match {
           case (SimpleFatLoop(s1,_,_), SimpleFatLoop(s2,_,_)) if s1 == s2 => true  // same size (horizontal or pipeline)
-          case (SimpleFatLoop(Def(SimpleDomain(a1)),_,_), SimpleFatLoop(_,_,_)) if b.lhs contains a1 => true // pipeline
-          case (SimpleFatLoop(_,_,_), SimpleFatLoop(Def(SimpleDomain(b1)),_,_)) if a.lhs contains b1 => true
+          case (SimpleFatLoop(Def(SimpleDomain(a1)),_,arhs), SimpleFatLoop(_,_,brhs)) if (b.lhs contains a1) && arhs.forall(canApplyAddCondition) => true // pipeline
+          case (SimpleFatLoop(_,_,arhs), SimpleFatLoop(Def(SimpleDomain(b1)),_,brhs)) if (a.lhs contains b1) && brhs.forall(canApplyAddCondition) => true
           case _ => false
         }
 

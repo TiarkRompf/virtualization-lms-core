@@ -9,6 +9,34 @@ trait CppHostTransfer extends AbstractHostTransfer {
   // NOTE: strings are in general treated as primitive types to avoid the memory management,
   //       but for transfer functions strings must be treated separately from primitive types
 
+  def emitMakeManifest(tp: Manifest[_]): (String,String) = {
+    if (remap(tp) == "string") {
+      val out = new StringBuilder
+      val signature = "jobject makeManifest_%s(JNIEnv *env)".format(mangledName(remapHost(tp)))
+      out.append(signature + "{\n")
+      out.append("jclass cls = env->FindClass(\"Lscala/reflect/ManifestFactory;\");\n")
+      out.append("jmethodID mid = env->GetStaticMethodID(cls,\"classType\",\"(Ljava/lang/Class;)Lscala/reflect/Manifest;\");\n")
+      out.append("jclass clsString = env->FindClass(\"Ljava/lang/String;\");\n")
+      out.append("jobject mobj = env->CallStaticObjectMethod(cls,mid,clsString);\n")
+      out.append("return mobj;\n")
+      out.append("}\n")
+      (signature+";\n", out.toString)
+    }
+    else if (isPrimitiveType(tp)) {
+      val out = new StringBuilder
+      val signature = "jobject makeManifest_%s(JNIEnv *env)".format(mangledName(remapHost(tp)))
+      out.append(signature + "{\n")
+      out.append("jclass cls = env->FindClass(\"Lscala/reflect/ManifestFactory;\");\n")
+      out.append("jmethodID mid = env->GetStaticMethodID(cls,\"%s\",\"()Lscala/reflect/AnyValManifest;\");\n".format(remapToJNI(tp)))
+      out.append("jobject mobj = env->CallStaticObjectMethod(cls,mid);\n")
+      out.append("return mobj;\n")
+      out.append("}\n")
+      (signature+";\n", out.toString)
+    }
+    else
+      throw new GenerationFailedException("CppHostTransfer: Unknown type to make manifest: " + tp.toString)
+  }
+
   def emitSend(tp: Manifest[_], peer: Targets.Value): (String,String) = {
     if (peer == Targets.JVM) {
       if (remap(tp) == "string") {

@@ -13,6 +13,10 @@ trait LiftPrimitives {
   implicit def floatToRepFloat(x: Float) = unit(x)
   implicit def doubleToRepDouble(x: Double) = unit(x)
   implicit def longToRepLong(x: Long) = unit(x)
+
+  // precision-widening promotions
+  implicit def chainIntToRepFloat[A:Manifest](x: A)(implicit c: A => Rep[Int]): Rep[Float] = repIntToRepFloat(c(x))
+  implicit def chainFloatToRepDouble[A:Manifest](x: A)(implicit c: A => Rep[Float]): Rep[Double] = repFloatToRepDouble(c(x))
 }
 
 /**
@@ -33,7 +37,6 @@ trait PrimitiveOps extends Variables with OverloadHack {
   implicit def repLongToRepFloat(x: Rep[Long]): Rep[Float] = x.toFloat
   implicit def repLongToRepDouble(x: Rep[Long]): Rep[Double] = x.toDouble
   implicit def repCharToRepInt(x: Rep[Char]): Rep[Int] = x.toInt
-
 
   /**
    * Enumerate all combinations of primitive math.
@@ -262,10 +265,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
     def *(rhs: Var[Long])(implicit __pos: SourceContext,__imp1: Overloaded116) = { long_times(self, readVar(rhs)) }
     def /(rhs: Var[Long])(implicit __pos: SourceContext,__imp1: Overloaded117) = { long_divide(self, readVar(rhs)) }
   }
-
-
   // -- END FORGE-GENERATED SECTION
-
 
   /**
    *  Double
@@ -529,6 +529,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
    */
 
   object Long {
+    def parseLong(s: Rep[String])(implicit pos: SourceContext) = obj_long_parse_long(s)
     def MaxValue(implicit pos: SourceContext) = obj_long_max_value
     def MinValue(implicit pos: SourceContext) = obj_long_min_value
   }
@@ -603,6 +604,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def long_times(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
   def long_divide(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
 
+  def obj_long_parse_long(s: Rep[String])(implicit pos: SourceContext): Rep[Long]
   def obj_long_max_value(implicit pos: SourceContext): Rep[Long]
   def obj_long_min_value(implicit pos: SourceContext): Rep[Long]
   def long_mod(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
@@ -623,7 +625,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   /**
    * Double
    */
-
+  case class ObjDoubleParseDouble(s: Exp[String]) extends Def[Double]
   case class ObjDoublePositiveInfinity() extends Def[Double]
   case class ObjDoubleNegativeInfinity() extends Def[Double]
   case class ObjDoubleMinValue() extends Def[Double]
@@ -672,6 +674,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
    * Int
    */
 
+  case class ObjIntegerParseInt(s: Exp[String]) extends Def[Int]
   case class ObjIntMaxValue() extends Def[Int]
   case class ObjIntMinValue() extends Def[Int]
   case class IntPlus(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
@@ -719,7 +722,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   /**
    * Long
    */
-
+  case class ObjLongParseLong(s: Exp[String]) extends Def[Long]
   case class ObjLongMaxValue() extends Def[Long]
   case class ObjLongMinValue() extends Def[Long]
   case class LongBinaryOr(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
@@ -737,6 +740,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   case class LongDivide(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
   case class LongMod(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
 
+  def obj_long_parse_long(s: Exp[String])(implicit pos: SourceContext) = ObjLongParseLong(s)
   def obj_long_max_value(implicit pos: SourceContext) = ObjLongMaxValue()
   def obj_long_min_value(implicit pos: SourceContext) = ObjLongMinValue()
   def long_mod(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext) = LongMod(lhs,rhs)
@@ -791,6 +795,8 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case IntShiftLeft(x,y) => int_leftshift(f(x),f(y))
       case IntShiftRightLogical(x,y) => int_rightshiftlogical(f(x),f(y))
       case IntShiftRightArith(x,y) => int_rightshiftarith(f(x),f(y))
+
+      case ObjLongParseLong(x) => obj_long_parse_long(f(x))
       case ObjLongMaxValue() => obj_long_max_value
       case ObjLongMinValue() => obj_long_min_value
       case LongShiftLeft(x,y) => long_shiftleft(f(x),f(y))
@@ -842,6 +848,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case Reflect(IntShiftLeft(x,y), u, es) => reflectMirrored(Reflect(IntShiftLeft(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntShiftRightLogical(x,y), u, es) => reflectMirrored(Reflect(IntShiftRightLogical(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntShiftRightArith(x,y), u, es) => reflectMirrored(Reflect(IntShiftRightArith(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(ObjLongParseLong(x), u, es) => reflectMirrored(Reflect(ObjLongParseLong(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjLongMinValue(), u, es) => reflectMirrored(Reflect(ObjLongMinValue(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjLongMaxValue(), u, es) => reflectMirrored(Reflect(ObjLongMaxValue(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(LongShiftLeft(x,y), u, es) => reflectMirrored(Reflect(LongShiftLeft(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
@@ -956,6 +963,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case ObjDoubleParseDouble(s) => emitValDef(sym, src"java.lang.Double.parseDouble($s)")
     case ObjDoublePositiveInfinity() => emitValDef(sym, "scala.Double.PositiveInfinity")
     case ObjDoubleNegativeInfinity() => emitValDef(sym, "scala.Double.NegativeInfinity")
     case ObjDoubleMinValue() => emitValDef(sym, "scala.Double.MinValue")
@@ -991,6 +999,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case IntToFloat(lhs) => emitValDef(sym, quote(lhs) + ".toFloat")
     case IntToDouble(lhs) => emitValDef(sym, quote(lhs) + ".toDouble")
     case CharToInt(lhs) => emitValDef(sym, quote(lhs) + ".toInt")
+    case ObjLongParseLong(s) => emitValDef(sym, "java.lang.Long.parseLong(" + quote(s) + ")")
     case ObjLongMaxValue() => emitValDef(sym, "scala.Long.MaxValue")
     case ObjLongMinValue() => emitValDef(sym, "scala.Long.MinValue")
     case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
@@ -1017,6 +1026,7 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
+      case ObjDoubleParseDouble(s) => emitValDef(sym, "strtod(" + quote(s) + ".c_str(),NULL)")
       case ObjDoubleMinValue() => emitValDef(sym, "DBL_MIN")
       case ObjDoubleMaxValue() => emitValDef(sym, "DBL_MAX")
       case DoublePlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
@@ -1033,6 +1043,7 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       case FloatDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
       case ObjIntMaxValue() => emitValDef(sym, "INT32_MAX")
       case ObjIntMinValue() => emitValDef(sym, "INT32_MAX")
+      case ObjIntegerParseInt(s) => emitValDef(sym, "atoi(" + quote(s) + ".c_str())")
       case IntPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
       case IntMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
       case IntTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
@@ -1050,6 +1061,7 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       case IntToDouble(lhs) => emitValDef(sym, "(double)"+quote(lhs))
       case ObjLongMaxValue() => emitValDef(sym, "INT64_MAX")
       case ObjLongMinValue() => emitValDef(sym, "INT64_MIN")
+      case ObjLongParseLong(s) => emitValDef(sym, "strtod(" + quote(s) + ".c_str(),NULL)")
       case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
       case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
       case LongBinaryXor(lhs,rhs) => emitValDef(sym, quote(lhs) + " ^ " + quote(rhs))

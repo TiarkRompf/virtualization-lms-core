@@ -325,10 +325,12 @@ trait Shallow extends Util {
 }
 
 // a staged implementation
-@virtualize trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with RecordOps {
+@virtualize
+trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with RecordOps {
   
   def database[T:Manifest](s: String): Rep[T]
   //trait Record extends Struct
+  //TODO(trans): check if this is still needed with the new virtualized records
   //implicit def recordToRecordOps2(record: Rep[Record]) = new RecordOps(record.asInstanceOf[Rep[Record]])
 
   trait Inner {
@@ -381,6 +383,7 @@ trait Shallow extends Util {
   // 2.3 Abstracting over values
 
   type Names = List[Record { val name: String }]
+
   def range(a: Rep[Int], b: Rep[Int]): Rep[Names] =
     for {
       w <- db.people
@@ -641,7 +644,6 @@ trait Shallow extends Util {
     if (root.parent == -1) && path(p)(root, s)
   } yield s.id
 
-
   //  /-*-/-*
   val xp0 = PSeq(PAxis(Child), PAxis(Child))
   //  //-*-/parent::*
@@ -662,7 +664,8 @@ trait Shallow extends Util {
 }
 
 // internal staged implementation: IR node classes, rewrites for normalization
-@virtualize trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with StructExpOpt {
+@virtualize
+trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with StructExpOpt {
 
   // IR node representing database("name")
   case class Database[T](s: String) extends Def[T]
@@ -802,7 +805,10 @@ trait Shallow extends Util {
     case (Empty(),Empty())       => List()
     case (IfThen(c,a),Empty())   => if (cond && c) a else List[T]()
     //case (For(l,f),Empty())      => for (x <- l if cond; y <- f(x)) yield y // FIXME(trans)
-    case (For(l,f),Empty())      => l.flatMap(x => if (cond) f(x) else List[Any]())
+    case (For(l,f),Empty())      =>
+      l.flatMap(x => if (cond) f(x) else List[Any]())
+      // implicit def unsafe[T] = manifest[Any].asInstanceOf[Manifest[T]] // FIXME: get manifest (for result type) from somewhere else
+      // for (x <- l if cond; y <- f(x)) yield y
     case (Concat(a,b),Empty())   => (if (cond) a else List[T]()) ++ (if (cond) b else List[T]())
     case _                       => super.ifThenElse(cond,thenp,elsep)
   }).asInstanceOf[Exp[T]]
@@ -1053,5 +1059,4 @@ class TestQueries extends FileDiffSuite {
     val o = new Prog with Impl
     //println(o.)
   }
-
 }

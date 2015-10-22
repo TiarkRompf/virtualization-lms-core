@@ -11,7 +11,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
   override def deviceTarget: Targets.Value = Targets.Cpp
 
-  override def kernelFileExt = "cpp"
+  override def fileExtension = "cpp"
   override def toString = "cpp"
 
   val helperFuncList = ArrayBuffer[String]()
@@ -20,9 +20,14 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   var kernelInputVars: List[Sym[Any]] = Nil
   var kernelOutputs: List[Sym[Any]] = Nil
 
+  override def resourceInfoType = "resourceInfo_t"
+  override def resourceInfoSym = "resourceInfo"
+
   override def remap[A](m: Manifest[A]) : String = {
     m.toString match {
       case "java.lang.String" => "string"
+      case _ if (m.erasure == classOf[scala.collection.mutable.HashMap[Any,Any]]) && isPrimitiveType(m.typeArguments(0)) && isPrimitiveType(m.typeArguments(1)) =>
+        "std::map<" + remap(m.typeArguments(0)) + "," + remap(m.typeArguments(1)) + ">"
       case _ => super.remap(m)
     }    
   }
@@ -61,14 +66,18 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   }
 
   override def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {
+    //TODO: this is redundant with functionality provided by DeliteKernelCodegen, should be replaced
     kernelInputVals = vals
     kernelInputVars = vars
     kernelOutputs = syms
   }
 
-  override def initializeGenerator(buildDir:String, args: Array[String]): Unit = {
+  override def initializeGenerator(buildDir:String): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
+
+    actRecordStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "actRecords.h"))
+    actRecordStream.println(getDataStructureHeaders())
 
     /* file for helper functions (transfer function, allocation function) */
     helperFuncStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.cpp"))
@@ -93,9 +102,9 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     headerStream.println("#include <limits>")
     headerStream.println("#include <algorithm>")
     headerStream.println("#include \"" + deviceTarget + "types.h\"")
-    headerStream.println(getDataStructureHeaders())
+    headerStream.println("#include \"" + deviceTarget + "actRecords.h\"")
 
-    super.initializeGenerator(buildDir, args)
+    super.initializeGenerator(buildDir)
   }
 
   def emitForwardDef[A:Manifest](args: List[Manifest[_]], functionName: String, out: PrintWriter) = {
@@ -182,6 +191,12 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
           helperFuncStream.println(sendViewSource)
           helperFuncList.append(sendViewHeader)
         }
+        val (mkManifestHeader, mkManifestSource) = emitMakeManifest(tp)
+        if (!helperFuncList.contains(mkManifestHeader)) {
+          headerStream.println(mkManifestHeader)
+          helperFuncStream.println(mkManifestSource)
+          helperFuncList.append(mkManifestHeader)
+        }
       }
       catch {
         case e: GenerationFailedException => 
@@ -194,16 +209,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     helperFuncStream.flush
     headerStream.flush
     typesStream.flush
-  }
-
-  def kernelName = "kernel_" + kernelOutputs.map(quote).mkString("")
-
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
-    super.emitKernelHeader(syms, vals, vars, resultType, resultIsVar, external)
-  }
-
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
-    super.emitKernelFooter(syms, vals, vars, resultType, resultIsVar, external)
+    actRecordStream.flush
   }
 
 }

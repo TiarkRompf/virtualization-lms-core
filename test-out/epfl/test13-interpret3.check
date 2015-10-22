@@ -57,7 +57,7 @@ x27
 x29
 } else {
 val x31 = px31 // static data: RCell(code)
-val x32 = x31.set(null)
+val x32 = x31.set(null.asInstanceOf[Null])
 val x33 = px33 // static data: <function1>
 val x34 = x33.apply(List(x13, x2))// compile dynamic: fv = List(Sym(13), Sym(2))
 val x35 = x34.apply(())
@@ -66,7 +66,7 @@ x35
 x37
 } else {
 val x31 = px31 // static data: RCell(code)
-val x39 = x31.set(null)
+val x39 = x31.set(null.asInstanceOf[Null])
 val x40 = px40 // static data: <function1>
 val x41 = x40.apply(List(x8, x2))// compile dynamic: fv = List(Sym(8), Sym(2))
 val x42 = x41.apply(())
@@ -75,7 +75,7 @@ x42
 x44
 } else {
 val x31 = px31 // static data: RCell(code)
-val x46 = x31.set(null)
+val x46 = x31.set(null.asInstanceOf[Null])
 val x47 = px47 // static data: <function1>
 val x48 = x47.apply(List(x4, x2))// compile dynamic: fv = List(Sym(4), Sym(2))
 val x49 = x48.apply(())
@@ -127,7 +127,7 @@ val x18 = x11 + x17
 x18
 } else {
 val x19 = px19 // static data: RCell(code)
-val x20 = x19.set(null)
+val x20 = x19.set(null.asInstanceOf[Null])
 val x2 = px2 // static data: {a=SomethingElse, n=256}
 val x21 = px21 // static data: <function1>
 val x22 = x21.apply(List(x13, x2))// compile dynamic: fv = List(Sym(13), Sym(2))
@@ -137,7 +137,7 @@ x23
 x25
 } else {
 val x19 = px19 // static data: RCell(code)
-val x27 = x19.set(null)
+val x27 = x19.set(null.asInstanceOf[Null])
 val x2 = px2 // static data: {a=SomethingElse, n=256}
 val x28 = px28 // static data: <function1>
 val x29 = x28.apply(List(x7, x2))// compile dynamic: fv = List(Sym(7), Sym(2))

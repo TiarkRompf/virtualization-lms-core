@@ -1,0 +1,107 @@
+-- full graph
+TP(Sym(1),IntPlus(Sym(0),Const(1)))
+TP(Sym(3),Reflect(Print(Sym(2)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(4),Singleton(Sym(2)))
+TP(Sym(5),Reify(Sym(4),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(3))))
+TP(Sym(6),Reflect(SimpleLoop(Const(100),Sym(2),MultiArrayElem(Block(Sym(5)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(8),ArrayIndex(Sym(6),Const(0)))
+TP(Sym(9),Reflect(Print(Sym(8)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
+TP(Sym(10),Singleton(Sym(7)))
+TP(Sym(11),Reify(Sym(10),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(9))))
+TP(Sym(12),Reflect(SimpleLoop(Const(200),Sym(7),MultiArrayElem(Block(Sym(11)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
+TP(Sym(13),ArrayIndex(Sym(12),Const(0)))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+TP(Sym(15),Reflect(Print(Sym(1)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+TP(Sym(16),Reflect(Print(Sym(8)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(15))))
+TP(Sym(17),Reify(Sym(16),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6), Sym(12), Sym(14), Sym(15), Sym(16))))
+
+-- before transformation
+val x6 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x3 = println(x2)
+x6(x2) = x2
+}
+val x8 = x6.apply(0)
+val x12 = new Array[Int](200)
+for (x7 <- 0 until 200) {
+val x9 = println(x8)
+x12(x7) = x7
+}
+val x13 = x12.apply(0)
+val x14 = println(x13)
+val x1 = x0 + 1
+val x15 = println(x1)
+val x16 = println(x8)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(6)
+(VFT) Cons Sym(6) not fused but mirrored to Sym(20) because of previous substitutions or effects
+
+(VFT) No producers found for cons Sym(12)
+(VFT) Cons Sym(12) not fused but mirrored to Sym(24) because of previous substitutions or effects
+
+(VFT) all vertically fused: 
+
+-- after vertical transformation
+val x20 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x18 = println(x2)
+x20(x2) = x2
+}
+val x21 = x20.apply(0)
+val x24 = new Array[Int](200)
+for (x7 <- 0 until 200) {
+val x22 = println(x21)
+x24(x7) = x7
+}
+val x25 = x24.apply(0)
+val x26 = println(x25)
+val x1 = x0 + 1
+val x27 = println(x1)
+val x28 = println(x21)
+
+-- horizontal transformation
+(HFT) Recording Sym(20), no fusion
+(HFT) - new loop symbol: Sym(20) -> Sym(32)
+(HFT) Recording Sym(24), no fusion
+(HFT) - new loop symbol: Sym(24) -> Sym(36)
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x32 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x30 = println(x2)
+x32(x2) = x2
+}
+val x33 = x32.apply(0)
+val x36 = new Array[Int](200)
+for (x7 <- 0 until 200) {
+val x34 = println(x33)
+x36(x7) = x7
+}
+val x37 = x36.apply(0)
+val x38 = println(x37)
+val x1 = x0 + 1
+val x39 = println(x1)
+val x40 = println(x33)
+
+-- fusion
+val x32 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x30 = println(x2)
+x32(x2) = x2
+}
+val x33 = x32.apply(0)
+val x36 = new Array[Int](200)
+for (x7 <- 0 until 200) {
+val x34 = println(x33)
+x36(x7) = x7
+}
+val x37 = x36.apply(0)
+val x38 = println(x37)
+val x1 = x0 + 1
+val x39 = println(x1)
+val x40 = println(x33)
+-- done

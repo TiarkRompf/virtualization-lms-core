@@ -5,7 +5,7 @@ package test11
 import common._
 import test1._
 import test7._
-import test8.{ArrayMutation,ArrayMutationExp,ScalaGenArrayMutation,OrderingOpsExpOpt}
+import test8.{ArrayMutation,ArrayMutationExp,ScalaGenArrayMutation}
 
 import util.OverloadHack
 
@@ -69,7 +69,8 @@ class TestStencil extends FileDiffSuite {
   }
   
   //trait SlidingExp extends Impl with Sliding {
-  @virtualize trait SlidingExp extends ArrayOpsExpOpt with NumericOpsExpOpt with PrimitiveOpsExpOpt
+  @virtualize
+  trait SlidingExp extends ArrayOpsExpOpt with NumericOpsExpOpt with PrimitiveOpsExpOpt
       with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp
       with IfThenElseExpOpt {

@@ -2,13 +2,10 @@ package scala.virtualization.lms
 package epfl
 package test2
 
-//TODO(cleanup)
-
-/*
 import common._
 import test1._
 
-trait TestSort { this: Relat =>
+trait MergeSort { this: Relat =>
 
   def splitOddEven[T](xs: List[T]): (List[T], List[T]) = (xs: @unchecked) match {
     case o :: e :: xt =>
@@ -55,19 +52,23 @@ trait TestSort { this: Relat =>
 }
 
 
-object TestTestSort {
-  def main(args: Array[String]) {
-      {
-        val o = new TestSort with RelatExpOpt with GraphVizExport with FlatResult
-        import o._
+class TestSort extends FileDiffSuite {
+  
+  val prefix = home + "test-out/epfl/test2-"
 
-        val r = sort(List.tabulate(8)(_ => fresh))
-        println(globalDefs.mkString("\n"))
-        println(r)
-        emitDepGraph(result(r)), "test2-sort1-dot", true)
-      }
+  def testSort = {
+    withOutFile(prefix+"sort1") {
+      val o = new MergeSort with RelatExpOpt with FlatResult
+      import o._
+
+      val r = sort(List.tabulate(8)(_ => fresh))
+      println(globalDefs.mkString("\n"))
+      println(r)
+
+      val p = new ExportGraph { val IR: o.type = o }
+      p.emitDepGraph(result(r), prefix+"sort1-dot", true)
+    }
+    assertFileEqualsCheck(prefix+"sort1")
+    assertFileEqualsCheck(prefix+"sort1-dot")
   }
 }
-
-
-*/

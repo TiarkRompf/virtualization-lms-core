@@ -6,6 +6,7 @@ nVars=2000
 import scala.virtualization.lms.epfl.test14.Schema
 class staged$0 extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
+<<<<<<< HEAD
 val x2469 = println("rangeFromNames(\"Edna\",\"Bert\"):")
 val x536 = Schema.db.people.flatMap { x111 => 
 val x535 = Schema.db.people.flatMap { x413 => 
@@ -27,10 +28,34 @@ val x526 = x519.name
 val x527 = new Schema.Record { val name = x526 }
 val x528 = List(x527)
 x528
+=======
+val x2550 = println("rangeFromNames(\"Edna\",\"Bert\"):")
+val x617 = Schema.db.people.flatMap { x111 => 
+val x616 = Schema.db.people.flatMap { x435 => 
+val x615 = Schema.db.people.flatMap { x598 => 
+val x112 = x111.name
+val x113 = x112 == "Edna"
+val x438 = x435.name
+val x439 = x438 == "Bert"
+val x116 = x111.age
+val x602 = x598.age
+val x603 = x116 <= x602
+val x441 = x435.age
+val x604 = x602 < x441
+val x605 = x603 && x604
+val x611 = x439 && x605
+val x613 = x113 && x611
+val x614 = if (x613) {
+val x607 = x598.name
+val x608 = new Schema.Record { val name = x607 }
+val x609 = List(x608)
+x609
+>>>>>>> wip-master
 } else {
 val x19 = List()
 x19
 }
+<<<<<<< HEAD
 x533
 }
 x534
@@ -39,6 +64,16 @@ x535
 }
 val x2470 = println(x536)
 x2470
+=======
+x614
+}
+x615
+}
+x616
+}
+val x2551 = println(x617)
+x2551
+>>>>>>> wip-master
 }
 }
 /*****************************************

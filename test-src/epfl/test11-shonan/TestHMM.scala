@@ -5,7 +5,7 @@ package test11
 import common._
 import test1._
 import test7._
-import test8.{ArrayMutation,ArrayMutationExp,ScalaGenArrayMutation,OrderingOpsExpOpt}
+import test8.{ArrayMutation,ArrayMutationExp,ScalaGenArrayMutation}
 
 import util.OverloadHack
 

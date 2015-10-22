@@ -1,0 +1,4 @@
+-J-Xms4G 
+-J-Xmx4G 
+-J-Xss2M 
+-J-XX:+UseParallelGC

@@ -37,8 +37,8 @@ for (x1 <- 0 until 100) {
 val x43 = 1.0+2.0
 var x3 = new Array[Double](x1)
 var x29 = new Array[Double](x1)
-var x32 = 0
-var x44 = 0
+var x32: Double = 0
+var x44: Double = 0
 for (x2 <- 0 until x1) {
 x3(x2) = 1.0
 x29(x2) = 2.0

@@ -6,6 +6,7 @@ nVars=2000
 import scala.virtualization.lms.epfl.test14.Schema
 class staged$0 extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
+<<<<<<< HEAD
 val x2469 = println("expertise(\"abstract\"):")
 val x719 = Schema.org.departments.flatMap { x651 => 
 val x711 = Schema.org.employees.flatMap { x682 => 
@@ -23,10 +24,30 @@ val x703 = if (x700) {
 val x580 = new Schema.Record { val ignore = () }
 val x607 = List(x580)
 x607
+=======
+val x2550 = println("expertise(\"abstract\"):")
+val x800 = Schema.org.departments.flatMap { x732 => 
+val x792 = Schema.org.employees.flatMap { x763 => 
+val x734 = x732.dpt
+val x764 = x763.dpt
+val x765 = x734 == x764
+val x785 = Schema.org.tasks.flatMap { x776 => 
+val x767 = x763.emp
+val x777 = x776.emp
+val x778 = x767 == x777
+val x779 = x776.tsk
+val x780 = x779 == "abstract"
+val x781 = x778 && x780
+val x784 = if (x781) {
+val x661 = new Schema.Record { val ignore = () }
+val x688 = List(x661)
+x688
+>>>>>>> wip-master
 } else {
 val x19 = List()
 x19
 }
+<<<<<<< HEAD
 x703
 }
 val x705 = x704.isEmpty
@@ -35,10 +56,21 @@ val x710 = if (x707) {
 val x580 = new Schema.Record { val ignore = () }
 val x607 = List(x580)
 x607
+=======
+x784
+}
+val x786 = x785.isEmpty
+val x788 = x765 && x786
+val x791 = if (x788) {
+val x661 = new Schema.Record { val ignore = () }
+val x688 = List(x661)
+x688
+>>>>>>> wip-master
 } else {
 val x19 = List()
 x19
 }
+<<<<<<< HEAD
 x710
 }
 val x712 = x711.isEmpty
@@ -47,14 +79,31 @@ val x653 = x651.dpt
 val x716 = new Schema.Record { val dpt = x653 }
 val x717 = List(x716)
 x717
+=======
+x791
+}
+val x793 = x792.isEmpty
+val x799 = if (x793) {
+val x734 = x732.dpt
+val x797 = new Schema.Record { val dpt = x734 }
+val x798 = List(x797)
+x798
+>>>>>>> wip-master
 } else {
 val x19 = List()
 x19
 }
+<<<<<<< HEAD
 x718
 }
 val x2470 = println(x719)
 x2470
+=======
+x799
+}
+val x2551 = println(x800)
+x2551
+>>>>>>> wip-master
 }
 }
 /*****************************************

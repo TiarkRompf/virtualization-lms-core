@@ -11,15 +11,12 @@ trait ScalaCodegen extends GenericCodegen with Config {
 
   override def deviceTarget: Targets.Value = Targets.Scala
 
-  override def kernelFileExt = "scala"
+  override def fileExtension = "scala"
 
   override def toString = "scala"
 
-  override def exceptionHandler(e: Exception, outFile:File, kstream:PrintWriter): Unit = {
-      e.printStackTrace()
-      kstream.close()
-      outFile.delete
-  }
+  override def resourceInfoType = "generated.scala.ResourceInfo"
+  override def resourceInfoSym = "resourceInfo"
 
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
 
@@ -55,15 +52,19 @@ trait ScalaCodegen extends GenericCodegen with Config {
     // empty by default. override to emit package or import declarations.
   }
 
-  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
+  override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
     stream.println("object kernel_" + kernelName + " {")
     stream.print("def apply(")
+    if (resourceInfoType != "") {
+      stream.print(resourceInfoSym + ":" + resourceInfoType)
+      if ((vals ++ vars).length > 0) stream.print(",")
+    }
     stream.print(vals.map(p => quote(p) + ":" + remap(p.tp)).mkString(","))
 
     // variable name mangling
     if (vals.length > 0 && vars.length > 0){
-      stream.print(", ")
+      stream.print(",")
     }
     // TODO: remap Ref instead of explicitly adding generated.scala
     if (vars.length > 0){
@@ -79,7 +80,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
     stream.println("")
   }
 
-  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean): Unit = {
+  override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
     stream.println(kernelName)
     stream.println("}}")
@@ -108,6 +109,12 @@ trait ScalaCodegen extends GenericCodegen with Config {
 
   override def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
     stream.println(quote(sym) + " = " + rhs)
+  }
+
+  override def quote(x: Exp[Any]) = x match {
+    case Const(l: Long) => l.toString + "L"
+    case Const(null) => "null.asInstanceOf["+x.tp+"]"
+    case _ => super.quote(x)
   }
 }
 
