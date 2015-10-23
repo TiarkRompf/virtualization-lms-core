@@ -1,6 +1,6 @@
 name := "macro-LMS"
 
-version := "1.0.0-macrovirt"
+version := "1.0.0-wip-macro"
 
 organization := "EPFL"
 
