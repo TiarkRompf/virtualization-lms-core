@@ -203,7 +203,7 @@ class TestStable extends FileDiffSuite {
   val prefix = home + "test-out/epfl/test13-"
   
   @virtualize
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
+  trait DSL extends VectorOps with   Arith with OrderingOps with BooleanOps with LiftVariables
     with IfThenElse with While with RangeOps with Print with Compile with PrimitiveOps
     with ArrayOps with HashMapOps with CastingOps with StableVars {
     
@@ -214,7 +214,7 @@ class TestStable extends FileDiffSuite {
   trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
     with EqualExpOpt with IfThenElseFatExp with LoopsFatExp with WhileExp
     with RangeOpsExp with PrintExp with FatExpressions with CompileScala
-    with PrimitiveOpsExp with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp 
+    with PrimitiveOpsExpOpt with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp
     with StableVarsExp { self =>
     override val verbosity = 1
     dumpGeneratedCode = true

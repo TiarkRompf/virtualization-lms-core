@@ -6,25 +6,6 @@ nVars=2000
 import scala.virtualization.lms.epfl.test14.Schema
 class staged$0 extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-<<<<<<< HEAD
-val x2469 = println("expertise2(\"abstract\"):")
-val x1066 = Schema.org.departments.flatMap { x910 => 
-val x1059 = Schema.org.employees.flatMap { x1002 => 
-val x912 = x910.dpt
-val x1003 = x1002.dpt
-val x1004 = x912 == x1003
-val x1052 = Schema.org.tasks.flatMap { x1039 => 
-val x1007 = x1002.emp
-val x1040 = x1039.emp
-val x1041 = x1007 == x1040
-val x1044 = x1039.tsk
-val x1047 = x1044 == "abstract"
-val x1049 = x1041 && x1047
-val x1051 = if (x1049) {
-val x580 = new Schema.Record { val ignore = () }
-val x607 = List(x580)
-x607
-=======
 val x2550 = println("expertise2(\"abstract\"):")
 val x1147 = Schema.org.departments.flatMap { x991 => 
 val x1140 = Schema.org.employees.flatMap { x1083 => 
@@ -42,21 +23,10 @@ val x1132 = if (x1130) {
 val x661 = new Schema.Record { val ignore = () }
 val x688 = List(x661)
 x688
->>>>>>> wip-master
 } else {
 val x19 = List()
 x19
 }
-<<<<<<< HEAD
-x1051
-}
-val x1053 = x1052.isEmpty
-val x1056 = x1004 && x1053
-val x1058 = if (x1056) {
-val x580 = new Schema.Record { val ignore = () }
-val x607 = List(x580)
-x607
-=======
 x1132
 }
 val x1134 = x1133.isEmpty
@@ -65,21 +35,10 @@ val x1139 = if (x1137) {
 val x661 = new Schema.Record { val ignore = () }
 val x688 = List(x661)
 x688
->>>>>>> wip-master
 } else {
 val x19 = List()
 x19
 }
-<<<<<<< HEAD
-x1058
-}
-val x1060 = x1059.isEmpty
-val x1065 = if (x1060) {
-val x912 = x910.dpt
-val x1063 = new Schema.Record { val dpt = x912 }
-val x1064 = List(x1063)
-x1064
-=======
 x1139
 }
 val x1141 = x1140.isEmpty
@@ -88,22 +47,14 @@ val x993 = x991.dpt
 val x1144 = new Schema.Record { val dpt = x993 }
 val x1145 = List(x1144)
 x1145
->>>>>>> wip-master
 } else {
 val x19 = List()
 x19
 }
-<<<<<<< HEAD
-x1065
-}
-val x2470 = println(x1066)
-x2470
-=======
 x1146
 }
 val x2551 = println(x1147)
 x2551
->>>>>>> wip-master
 }
 }
 /*****************************************

@@ -95,8 +95,7 @@ trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp wit
   
 }
 
-
-
+@virtualize
 class TestForward2 extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test10-"

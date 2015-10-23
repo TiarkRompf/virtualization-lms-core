@@ -24,13 +24,14 @@ trait RangeOps extends Base with OverloadHack {
   }
   implicit class RangeOpsInfixRepInt(start: Rep[Int]) {
     def until(end: Rep[Int])(implicit pos: SourceContext) = range_until(start,end)
+    def until(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = range_until(start,end)
+    def start(r: Rep[Range])(implicit pos: SourceContext) = range_start(r)
+    def step(r: Rep[Range])(implicit pos: SourceContext) = range_step(r)
+    def end(r: Rep[Range])(implicit pos: SourceContext) = range_end(r)
+    def foreach(r: Rep[Range], f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
   }
 
-  //def infix_until(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = range_until(start,end)
-  //def infix_start(r: Rep[Range])(implicit pos: SourceContext) = range_start(r)
-  //def infix_step(r: Rep[Range])(implicit pos: SourceContext) = range_step(r)
-  //def infix_end(r: Rep[Range])(implicit pos: SourceContext) = range_end(r)
-  //def infix_foreach(r: Rep[Range], f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
+
 
   def range_until(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext): Rep[Range]
   def range_start(r: Rep[Range])(implicit pos: SourceContext) : Rep[Int]

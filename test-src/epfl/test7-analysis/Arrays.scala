@@ -32,7 +32,7 @@ trait ArrayLoops extends Loops with OverloadHack {
 }
 
 
-trait ArrayLoopsExp extends LoopsExp {
+trait ArrayLoopsExp extends ArrayLoops with LoopsExp {
   
   case class ArrayElem[T](y: Block[T]) extends Def[Array[T]]
   case class ReduceElem(y: Block[Double]) extends Def[Double]
@@ -83,7 +83,7 @@ trait ArrayLoopsExp extends LoopsExp {
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = ArrayIndex(a, i)
 
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
-//    case Def(SimpleLoop(s, x, ArrayElem(y))) => s
+    case Def(SimpleLoop(s, x, ArrayElem(y))) => s
     case _ => ArrayLength(a)
   }
 

@@ -1,40 +1,24 @@
 Map(Sym(10) -> Sym(16), Sym(4) -> Sym(8), Sym(6) -> Sym(12), Sym(7) -> Sym(13), Sym(11) -> Sym(17), Sym(3) -> Sym(7), Sym(5) -> Sym(9), Sym(8) -> Sym(14), Sym(9) -> Sym(15), Sym(2) -> Sym(6))
 r0:
-<<<<<<< HEAD
-TP(Sym(3),IntToDouble(Sym(2)))
-TP(Sym(4),DoubleTimes(Const(2.0),Sym(3)))
-TP(Sym(5),DoublePlus(Sym(4),Const(3.0)))
-TP(Sym(6),IntPlus(Sym(2),Const(1)))
-TP(Sym(7),IntToDouble(Sym(6)))
-=======
 TP(Sym(3),IntDoubleValue(Sym(2)))
 TP(Sym(4),DoubleTimes(Const(2.0),Sym(3)))
 TP(Sym(5),DoublePlus(Sym(4),Const(3.0)))
 TP(Sym(6),IntPlus(Sym(2),Const(1)))
 TP(Sym(7),IntDoubleValue(Sym(6)))
->>>>>>> wip-master
 TP(Sym(8),DoubleTimes(Const(2.0),Sym(7)))
 TP(Sym(9),DoublePlus(Sym(8),Const(3.0)))
 TP(Sym(10),DoublePlus(Sym(5),Sym(9)))
 TP(Sym(11),Reflect(ArrayUpdate(Sym(1),Sym(2),Sym(10)),Summary(false,false,false,false,false,false,List(Sym(1)),List(Sym(1)),List(Sym(1)),List(Sym(1))),List(Sym(1))))
 r1:
 TP(Sym(12),IntPlus(Sym(2),Const(2)))
-<<<<<<< HEAD
-TP(Sym(13),IntToDouble(Sym(12)))
-=======
 TP(Sym(13),IntDoubleValue(Sym(12)))
->>>>>>> wip-master
 TP(Sym(14),DoubleTimes(Const(2.0),Sym(13)))
 TP(Sym(15),DoublePlus(Sym(14),Const(3.0)))
 TP(Sym(16),DoublePlus(Sym(9),Sym(15)))
 TP(Sym(17),Reflect(ArrayUpdate(Sym(1),Sym(6),Sym(16)),Summary(false,false,false,false,false,false,List(Sym(1)),List(Sym(1)),List(Sym(1)),List(Sym(1))),List(Sym(1))))
 r2:
 TP(Sym(18),IntPlus(Sym(2),Const(3)))
-<<<<<<< HEAD
-TP(Sym(19),IntToDouble(Sym(18)))
-=======
 TP(Sym(19),IntDoubleValue(Sym(18)))
->>>>>>> wip-master
 TP(Sym(20),DoubleTimes(Const(2.0),Sym(19)))
 TP(Sym(21),DoublePlus(Sym(20),Const(3.0)))
 TP(Sym(22),DoublePlus(Sym(15),Sym(21)))
@@ -55,25 +39,6 @@ var writes: List((Sym(15),Const(())), (Sym(12),Const(())))
 class staged$0 extends ((Array[Double])=>(Array[Double])) {
 def apply(x0:Array[Double]): Array[Double] = {
 val x1 = new Array[Double](20)
-<<<<<<< HEAD
-val x24 = x1(0) = 8.0
-var x25: Double = 5.0
-var x26: Int = 1
-var x28 : Int = 1
-val x41 = while (x28 < 20) {
-val x29 = x25
-val x30 = x26
-val x32 = x28 + 1
-val x33 = x32.toDouble
-val x34 = 2.0 * x33
-val x35 = x34 + 3.0
-val x36 = x29 + x35
-val x37 = x1(x30) = x36
-x25 = x35
-x26 = x32
-
-x28 = x28 + 1
-=======
 val x24 = 0.doubleValue()
 val x25 = 2.0 * x24
 val x26 = x25 + 3.0
@@ -98,7 +63,6 @@ x32 = x42
 x33 = x39
 
 x35 = x35 + 1
->>>>>>> wip-master
 }
 x1
 }
