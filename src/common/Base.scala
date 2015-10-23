@@ -20,7 +20,6 @@ trait LiftAll extends Base {
  */
 trait Base extends EmbeddedControls {
   type API <: Base
-
   type Rep[+T]
 
   protected def unit[T:Manifest](x: T): Rep[T]

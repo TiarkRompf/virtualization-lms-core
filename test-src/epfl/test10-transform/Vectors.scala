@@ -38,7 +38,7 @@ trait VectorOps extends Base {
 }
 
 trait VectorExp extends VectorOps with EffectExp {
-  
+
   case class VectorZeros(n: Rep[Int]) extends Def[Vector[Double]]
   case class VectorLiteral[T](a: List[Rep[T]]) extends Def[Vector[T]]
   case class VectorApply[T](a: Rep[Vector[T]], x: Rep[Int]) extends Def[T]
@@ -105,8 +105,10 @@ trait VectorExpOpt extends VectorExp {
 trait ScalaGenVector extends ScalaGenBase {
   val IR: VectorExp
   import IR._
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case _:Def[Vector[_]] => emitValDef(sym, rhs.toString)
-    case _ => super.emitNode(sym,rhs)
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
+    if (rhs.toString.startsWith("Vector"))
+      emitValDef(sym, rhs.toString)
+    else
+      super.emitNode(sym,rhs)
   }
 }
