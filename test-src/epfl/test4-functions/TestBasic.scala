@@ -34,7 +34,6 @@ class TestBasic extends FileDiffSuite {
         with ArithExpOpt with EqualExp with IfThenElseExp 
         with FunctionsExternalDef1
       import BasicProgExp._
-
       val p = new ScalaGenArith with ScalaGenEqual with 
         ScalaGenIfThenElse with ScalaGenFunctionsExternal { val IR: BasicProgExp.type = BasicProgExp }
       p.emitSource(f, "Basic", new java.io.PrintWriter(System.out))

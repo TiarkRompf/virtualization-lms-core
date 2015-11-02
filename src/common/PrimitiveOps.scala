@@ -272,6 +272,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
    */
 
   object Double {
+    def parseDouble(s:Rep[String]) = obj_double_parseDouble(s)
     def PositiveInfinity(implicit pos: SourceContext) = obj_double_positive_infinity
     def NegativeInfinity(implicit pos: SourceContext) = obj_double_negative_infinity
     def MinValue(implicit pos: SourceContext) = obj_double_min_value
@@ -336,6 +337,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
     def toLong(implicit pos: SourceContext) = double_to_long(self)
   }
 
+  def obj_double_parseDouble(s:Rep[String])(implicit pos: SourceContext): Rep[Double]
   def obj_double_positive_infinity(implicit pos: SourceContext): Rep[Double]
   def obj_double_negative_infinity(implicit pos: SourceContext): Rep[Double]
   def obj_double_min_value(implicit pos: SourceContext): Rep[Double]
@@ -352,6 +354,9 @@ trait PrimitiveOps extends Variables with OverloadHack {
   /**
    * Float
    */
+  object Float {
+    def parseFloat(s: Rep[String])(implicit pos: SourceContext) = obj_float_parse_float(s)
+  }
 
   implicit def repToFloatOpsCls(x: Rep[Float])(implicit pos: SourceContext) = new FloatOpsCls(x)(pos)
   implicit def liftToFloatOpsCls(x: Float)(implicit pos: SourceContext) = new FloatOpsCls(unit(x))(pos)
@@ -410,6 +415,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
     def toDouble(implicit pos: SourceContext) = float_to_double(self)
   }
 
+  def obj_float_parse_float(s: Rep[String])(implicit pos: SourceContext): Rep[Float]
   def float_plus(lhs: Rep[Float], rhs: Rep[Float])(implicit pos: SourceContext): Rep[Float]
   def float_minus(lhs: Rep[Float], rhs: Rep[Float])(implicit pos: SourceContext): Rep[Float]
   def float_times(lhs: Rep[Float], rhs: Rep[Float])(implicit pos: SourceContext): Rep[Float]
@@ -425,6 +431,10 @@ trait PrimitiveOps extends Variables with OverloadHack {
   object Int {
     def MaxValue(implicit pos: SourceContext) = obj_int_max_value
     def MinValue(implicit pos: SourceContext) = obj_int_min_value
+  }
+
+  object Integer {
+    def parseInt(s: Rep[String])  = obj_integer_parseInt(s)
   }
 
   implicit def intToIntOps(n: Int): IntOpsCls = new IntOpsCls(unit(n))
@@ -493,6 +503,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
     def toFloat(implicit pos: SourceContext) = int_to_float(self)
   }
 
+  def obj_integer_parseInt(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
   def obj_int_max_value(implicit pos: SourceContext): Rep[Int]
   def obj_int_min_value(implicit pos: SourceContext): Rep[Int]
   def int_plus(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
@@ -638,6 +649,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   case class DoubleTimes(lhs: Exp[Double], rhs: Exp[Double]) extends Def[Double]
   case class DoubleDivide(lhs: Exp[Double], rhs: Exp[Double]) extends Def[Double]
 
+  def obj_double_parseDouble(s:Exp[String])(implicit pos: SourceContext): Rep[Double] = ObjDoubleParseDouble(s)
   def obj_double_positive_infinity(implicit pos: SourceContext) = ObjDoublePositiveInfinity()
   def obj_double_negative_infinity(implicit pos: SourceContext) = ObjDoubleNegativeInfinity()
   def obj_double_min_value(implicit pos: SourceContext) = ObjDoubleMinValue()
@@ -654,7 +666,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   /**
    * Float
    */
-
+  case class ObjFloatParseFloat(s: Exp[String]) extends Def[Float]
   case class FloatToInt(lhs: Exp[Float]) extends Def[Int]
   case class FloatToDouble(lhs: Exp[Float]) extends Def[Double]
   case class FloatPlus(lhs: Exp[Float], rhs: Exp[Float]) extends Def[Float]
@@ -662,6 +674,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   case class FloatTimes(lhs: Exp[Float], rhs: Exp[Float]) extends Def[Float]
   case class FloatDivide(lhs: Exp[Float], rhs: Exp[Float]) extends Def[Float]
 
+  def obj_float_parse_float(s: Exp[String])(implicit pos: SourceContext) = ObjFloatParseFloat(s)
   def float_to_int(lhs: Exp[Float])(implicit pos: SourceContext) = FloatToInt(lhs)
   def float_to_double(lhs: Exp[Float])(implicit pos: SourceContext) = FloatToDouble(lhs)
   def float_plus(lhs: Exp[Float], rhs: Exp[Float])(implicit pos: SourceContext) : Exp[Float] = FloatPlus(lhs,rhs)
@@ -693,6 +706,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   case class IntToFloat(lhs: Exp[Int]) extends Def[Float]
   case class IntToDouble(lhs: Exp[Int]) extends Def[Double]
 
+  def obj_integer_parseInt(s: Exp[String])(implicit pos: SourceContext) = ObjIntegerParseInt(s)
   def obj_int_max_value(implicit pos: SourceContext) = ObjIntMaxValue()
   def obj_int_min_value(implicit pos: SourceContext) = ObjIntMinValue()
   def int_plus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext): Exp[Int] = IntPlus(lhs,rhs)
@@ -761,6 +775,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
     implicit var a: Numeric[A] = null // hack!! need to store it in Def instances??
     e match {
+      case ObjDoubleParseDouble(s) => obj_double_parseDouble(s)
       case ObjDoublePositiveInfinity() => obj_double_positive_infinity
       case ObjDoubleNegativeInfinity() => obj_double_negative_infinity
       case ObjDoubleMinValue() => obj_double_min_value
@@ -772,12 +787,14 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case DoubleMinus(x,y) => double_minus(f(x),f(y))
       case DoubleTimes(x,y) => double_times(f(x),f(y))
       case DoubleDivide(x,y) => double_divide(f(x),f(y))
+      case ObjFloatParseFloat(x) => obj_float_parse_float(f(x))
       case FloatToInt(x) => float_to_int(f(x))
       case FloatToDouble(x) => float_to_double(f(x))
       case FloatPlus(x,y) => float_plus(f(x),f(y))
       case FloatMinus(x,y) => float_minus(f(x),f(y))
       case FloatTimes(x,y) => float_times(f(x),f(y))
       case FloatDivide(x,y) => float_divide(f(x),f(y))
+      case ObjIntegerParseInt(s) => obj_integer_parseInt(s)
       case ObjIntMaxValue() => obj_int_max_value
       case ObjIntMinValue() => obj_int_min_value
       case IntBitwiseNot(x) => int_bitwise_not(f(x))
@@ -795,7 +812,6 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case IntShiftLeft(x,y) => int_leftshift(f(x),f(y))
       case IntShiftRightLogical(x,y) => int_rightshiftlogical(f(x),f(y))
       case IntShiftRightArith(x,y) => int_rightshiftarith(f(x),f(y))
-
       case ObjLongParseLong(x) => obj_long_parse_long(f(x))
       case ObjLongMaxValue() => obj_long_max_value
       case ObjLongMinValue() => obj_long_min_value
@@ -814,6 +830,8 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case LongTimes(x,y) => long_times(f(x),f(y))
       case LongDivide(x,y) => long_divide(f(x),f(y))
 
+      //TODO(trans) what is this used for and is it correct?
+      case Reflect(ObjDoubleParseDouble(s), u, es) => reflectMirrored(Reflect(ObjDoubleParseDouble(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjDoublePositiveInfinity(), u, es) => reflectMirrored(Reflect(ObjDoublePositiveInfinity(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjDoubleNegativeInfinity(), u, es) => reflectMirrored(Reflect(ObjDoubleNegativeInfinity(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjDoubleMinValue(), u, es) => reflectMirrored(Reflect(ObjDoubleMinValue(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
@@ -831,6 +849,7 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case Reflect(FloatMinus(x,y), u, es) => reflectMirrored(Reflect(FloatMinus(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(FloatTimes(x,y), u, es) => reflectMirrored(Reflect(FloatTimes(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(FloatDivide(x,y), u, es) => reflectMirrored(Reflect(FloatDivide(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(ObjIntegerParseInt(s), u, es) => reflectMirrored(Reflect(ObjIntegerParseInt(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjIntMinValue(), u, es) => reflectMirrored(Reflect(ObjIntMinValue(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjIntMaxValue(), u, es) => reflectMirrored(Reflect(ObjIntMaxValue(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntBitwiseNot(x), u, es) => reflectMirrored(Reflect(IntBitwiseNot(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
@@ -974,6 +993,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case DoubleDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case DoubleToInt(lhs) => emitValDef(sym, quote(lhs) + ".toInt")
     case DoubleToFloat(lhs) => emitValDef(sym, quote(lhs) + ".toFloat")
+    case ObjFloatParseFloat(s) => emitValDef(sym, "java.lang.Float.parseFloat(" + quote(s) + ")")
     case DoubleToLong(lhs) => emitValDef(sym, quote(lhs) + ".toLong")
     case FloatToInt(lhs) => emitValDef(sym, quote(lhs) + ".toInt")
     case FloatToDouble(lhs) => emitValDef(sym, quote(lhs) + ".toDouble")
@@ -981,6 +1001,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case FloatMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
     case FloatTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
     case FloatDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
+    case ObjIntegerParseInt(s) => emitValDef(sym, "Integer.parseInt("+quote(s)+")") //this is rather like Java virtualization?
     case ObjIntMaxValue() => emitValDef(sym, "scala.Int.MaxValue")
     case ObjIntMinValue() => emitValDef(sym, "scala.Int.MinValue")
     case IntPlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))

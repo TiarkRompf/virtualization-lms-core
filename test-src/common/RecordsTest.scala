@@ -5,9 +5,31 @@ import scala.virtualization.lms.epfl._
 import scala.virtualization.lms.epfl.test2._
 import scala.virtualization.lms.epfl.test3._
 
-import org.scala_lang.virtualized.virtualize
-import org.scala_lang.virtualized.Struct
+import org.scala_lang.virtualized.{RefinedManifest, virtualize, Struct}
 import common._
+
+@virtualize
+trait BasicRecord extends TestOps {
+  def f(s: Rep[String]) = {
+    Record(name = s, lastName = s)
+  }
+  def m(s:Rep[String]) = f(s).lastName
+}
+
+@virtualize
+trait ExtendedProg extends TestOps with LiftAll with BaseExp {
+  def m[T](x:Manifest[T]):String = x match {
+    case rf:org.scala_lang.virtualized.RefinedManifest[_] => "RF: "+rf.fields.map(x=> x._1 +" => "+ m(x._2) +", " ).reduce(_+_)
+    case m: Manifest[_] => m.toString
+  }
+  def f():String = {
+    val res = Record(name = "nme", lastName = 56)
+    def x[T](r:Exp[T]): String = {
+      m(r.tp)
+    }
+    x(res)
+  }
+}
 
 @virtualize
 trait BasicProg extends TestOps {
@@ -59,6 +81,18 @@ trait TestGen extends ScalaGenFunctions with ScalaGenEqual with ScalaGenIfThenEl
 class TestBasic extends FileDiffSuite {
 
   val prefix = home + "test-out/common/records-"
+
+  def testExtended = {
+    object BasicRecordExp extends BasicRecord with TestExp
+    import BasicRecordExp._
+    m(unit("name"))
+  }
+
+  def testExtended = {
+      object ExtendedProgExp extends ExtendedProg with TestExp
+      import ExtendedProgExp._
+    assert(ExtendedProgExp.f() == "")
+  }
 
   def testRecordsBasic = {
     withOutFile(prefix+"basic") {
