@@ -21,7 +21,6 @@ class TestNumeric extends FileDiffSuite {
         def test(x: Rep[Int]) = {
           
           val a = unit(2.0)
-          val x = "here"
           val f1 = (1.0 + a) // this one is ok
 
           val struct = new Record {  // FIXME: each of the statements below cause compiler errors ("erroneous or inaccessible type")

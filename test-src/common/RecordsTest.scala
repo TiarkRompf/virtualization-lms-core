@@ -82,18 +82,6 @@ class TestBasic extends FileDiffSuite {
 
   val prefix = home + "test-out/common/records-"
 
-  def testExtended = {
-    object BasicRecordExp extends BasicRecord with TestExp
-    import BasicRecordExp._
-    m(unit("name"))
-  }
-
-  def testExtended = {
-      object ExtendedProgExp extends ExtendedProg with TestExp
-      import ExtendedProgExp._
-    assert(ExtendedProgExp.f() == "")
-  }
-
   def testRecordsBasic = {
     withOutFile(prefix+"basic") {
       object BasicProgExp extends BasicProg with TestExp
