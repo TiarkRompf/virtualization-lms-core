@@ -8,6 +8,23 @@ import scala.virtualization.lms.epfl.test3._
 import org.scala_lang.virtualized.{RefinedManifest, virtualize, Struct}
 import common._
 
+trait RecordManifestTest extends TestOps {
+  def f(s: Rep[String]) = {
+    val r = Record(name = s, lastName = s)
+    print
+    r
+  }
+  def print[T](implicit mani: Manifest[T]) = {
+    println(mani.toString)
+    println(mani.typeArguments)
+    println(mani.arrayManifest)
+    println(mani.runtimeClass)
+    println(mani.getClass)
+    println(mani.typeArguments)
+  }
+  def m(s:Rep[String]) = f(s).lastName
+}
+
 @virtualize
 trait BasicRecord extends TestOps {
   def f(s: Rep[String]) = {
@@ -81,6 +98,14 @@ trait TestGen extends ScalaGenFunctions with ScalaGenEqual with ScalaGenIfThenEl
 class TestBasic extends FileDiffSuite {
 
   val prefix = home + "test-out/common/records-"
+
+  def testRecordManifest = {
+    object BasicProgExp extends RecordManifestTest with TestExp {
+      def xx = m(unit("str"))
+    }
+    BasicProgExp.xx
+//    assertFileEqualsCheck(prefix+"basic")
+  }
 
   def testRecordsBasic = {
     withOutFile(prefix+"basic") {
