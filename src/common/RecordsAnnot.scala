@@ -42,19 +42,24 @@ object mRecord {
     //assert(list.size == 1) //we can only use @record on a single case class
     val tree = list.head
     tree match {
-      case ClassDef(mods, className: TypeName, tparams, impl@Template(parents, selfType, bodyList))
-        if mods.hasFlag(Flag.CASE) =>
-        val fields = bodyList.take(bodyList.size - 1)
-        assert(fields.forall { case _: ValDef => true }) //all except the last parameter should be field definitions
-        assert(bodyList.last match { case _: DefDef => true }) //the constructor
-        c.warning(tree.pos, "NOW IN RECORD TRANSFORM!")
+      case cd@ClassDef(mods, className: TypeName, tparams, impl@Template(parents, selfType, bodyList))
+        if mods.hasFlag(Flag.CASE) => //only case classes can be transformed into records
+        val (fields, methods) = bodyList.partition{case _:ValDef => true case _ => false}
+        if (fields.isEmpty) {
+          return c.Expr(q""" throw new Exception("case classes need at least one field in order to be transformed into records")""") //defer Exception to runtime
+        }
+        if (methods.size != 1) {
+          return c.Expr(q""" throw new Exception("case classes with a body (e.g. methods) cannot be transformed into records")""")
+        }
+        if (tparams.size != 0) {
+          return c.Expr(q""" throw new Exception("Type parameters are not supported with record annotation macros")""")
+        }
 
-        //just a dummy set of variable declarations so we can test our implementation without actually calling the macro
-//        val dummyVars = fields.map{
-//          case ValDef(_, termName, typeIdent, rhs) =>
-//            val tn = TermName("r_"+termName)
-//            ValDef(Modifiers(Flag.MUTABLE | Flag.DEFAULTINIT), tn, typeIdent, EmptyTree) //var c_r:C = _
-//        }
+        println(fields)
+        println(methods)
+        assert(methods.size == 1) //case class should have an empty body
+        assert(methods.head match { case _: DefDef => true }) //the constructor
+        c.warning(tree.pos, "NOW IN RECORD TRANSFORM!")
 
         val fieldList = fields.map{
           case ValDef(_, termName, typeIdent, rhs) =>
@@ -77,7 +82,7 @@ object mRecord {
 
         val objectName = TermName("O_"+className)
 
-        //val importt = //FIXME
+        //val importt = //FIXME can we return a tree which represents a
 
         val cc = q"object $objectName { $atype ; $mdef }"
 
