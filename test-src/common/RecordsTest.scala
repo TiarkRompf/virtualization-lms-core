@@ -8,29 +8,19 @@ import scala.virtualization.lms.epfl.test3._
 import org.scala_lang.virtualized.{RefinedManifest, virtualize, Struct}
 import common._
 
-trait RecordManifestTest extends TestOps {
-  def f(s: Rep[String]) = {
-    val r = Record(name = s, lastName = s)
-    print
-    r
-  }
-  def print[T](implicit mani: Manifest[T]) = {
-    println(mani.toString)
-    println(mani.typeArguments)
-    println(mani.arrayManifest)
-    println(mani.runtimeClass)
-    println(mani.getClass)
-    println(mani.typeArguments)
-  }
-  def m(s:Rep[String]) = f(s).lastName
-}
-
 @virtualize
-trait BasicRecord extends TestOps {
-  def f(s: Rep[String]) = {
-    Record(name = s, lastName = s)
+trait ManifestProg extends TestOps {
+  def print[T](x:Rep[T])(implicit mani: Manifest[T]) = {
+    println("toString: "+mani.toString)
+    println("typeArguments: "+mani.typeArguments)
+    println("arrayManifest: "+mani.arrayManifest)
+    println("runtimeClass: "+mani.runtimeClass)
+    println("getClass: "+mani.getClass)
+    mani match {
+      case rf: RefinedManifest[_] => println("fields: "+rf.fields)
+      case _ => println("fields: not refined")
+    }
   }
-  def m(s:Rep[String]) = f(s).lastName
 }
 
 @virtualize
@@ -95,16 +85,28 @@ trait TestOps extends Functions with Equal with IfThenElse with RecordOps with S
 trait TestExp extends FunctionsExp with EqualExp with IfThenElseExp with StructExp
 trait TestGen extends ScalaGenFunctions with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenStruct {val IR: TestExp}
 
-class TestBasic extends FileDiffSuite {
+class RecordsTest extends FileDiffSuite {
+
 
   val prefix = home + "test-out/common/records-"
 
   def testRecordManifest = {
-    object BasicProgExp extends RecordManifestTest with TestExp {
-      def xx = m(unit("str"))
+    object BasicProgExp extends ManifestProg with TestExp {
+      //method to test that a refined manifest actually got created with the correct number of fields
+      def m[T](r: Rep[T])(implicit m:Manifest[T]): List[_] = {
+        m match {
+          case rf:RefinedManifest[T] => rf.fields
+          case _ => Nil
+        }
+      }
+      val res = Record(name = unit("nme"), lastName = unit(56))
+      assert(m(res).size == 2)
+//      print(res)
+      val res2 = Record(name = unit("nme"), lastName = unit(56), rec=Record(name = unit("nme"), lastName = unit(56)))
+//      print(res2)
+      assert(m(res2).size == 3)
     }
-    BasicProgExp.xx
-//    assertFileEqualsCheck(prefix+"basic")
+    BasicProgExp //we need to call the object in order for it to be executed
   }
 
   def testRecordsBasic = {
