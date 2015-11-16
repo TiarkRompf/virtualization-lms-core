@@ -1,8 +1,6 @@
 package scala.lms
 package common
 
-import java.io.PrintWriter
-
 import scala.lms.util.OverloadHack
 import scala.reflect.SourceContext
 
@@ -168,7 +166,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
   }
 
   class DoubleOpsCls(lhs: Rep[Double]){
-    def floatValue()(implicit pos: SourceContext) = double_float_value(lhs)
+    def floatValue()(implicit pos: SourceContext) = double_to_float(lhs)
     def toInt(implicit pos: SourceContext) = double_to_int(lhs)
     def toFloat(implicit pos: SourceContext) = double_to_float(lhs)
   }
@@ -178,7 +176,6 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def obj_double_negative_infinity(implicit pos: SourceContext): Rep[Double]
   def obj_double_min_value(implicit pos: SourceContext): Rep[Double]
   def obj_double_max_value(implicit pos: SourceContext): Rep[Double]
-  def double_float_value(lhs: Rep[Double])(implicit pos: SourceContext): Rep[Float]
   def double_plus(lhs: Rep[Double], rhs: Rep[Double])(implicit pos: SourceContext): Rep[Double]
   def double_minus(lhs: Rep[Double], rhs: Rep[Double])(implicit pos: SourceContext): Rep[Double]
   def double_times(lhs: Rep[Double], rhs: Rep[Double])(implicit pos: SourceContext): Rep[Double]
@@ -195,7 +192,7 @@ trait PrimitiveOps extends Variables with OverloadHack {
 
   def infix_toInt(lhs: Rep[Float])(implicit o: Overloaded1, pos: SourceContext): Rep[Int] = float_to_int(lhs)
   def infix_toDouble(lhs: Rep[Float])(implicit o: Overloaded1, pos: SourceContext): Rep[Double] = float_to_double(lhs) 
-  
+
   def obj_float_parse_float(s: Rep[String])(implicit pos: SourceContext): Rep[Float]
   def float_plus(lhs: Rep[Float], rhs: Rep[Float])(implicit pos: SourceContext): Rep[Float]
   def float_minus(lhs: Rep[Float], rhs: Rep[Float])(implicit pos: SourceContext): Rep[Float]
@@ -216,6 +213,9 @@ trait PrimitiveOps extends Variables with OverloadHack {
     def MinValue(implicit pos: SourceContext) = obj_int_min_value
   }
 
+  def infix_toFloat(lhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext): Rep[Float] = int_to_float(lhs)
+  def infix_toDouble(lhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext): Rep[Double] = int_to_double(lhs) 
+
   implicit def intToIntOps(n: Int): IntOpsCls = new IntOpsCls(unit(n))
   implicit def repIntToIntOps(n: Rep[Int]): IntOpsCls = new IntOpsCls(n)
   implicit def varIntToIntOps(n: Var[Int]): IntOpsCls = new IntOpsCls(readVar(n))
@@ -225,22 +225,22 @@ trait PrimitiveOps extends Variables with OverloadHack {
     //def /[A](rhs: Rep[A])(implicit mA: Manifest[A], f: Fractional[A], o: Overloaded1) = int_divide_frac(lhs, rhs)
     //def /(rhs: Rep[Int]) = int_divide(lhs, rhs)
     // TODO Something is wrong if we just use floatValue. implicits get confused
-    def floatValueL()(implicit pos: SourceContext) = int_float_value(lhs)
-    def doubleValue()(implicit pos: SourceContext) = int_double_value(lhs)
+    def floatValueL()(implicit pos: SourceContext) = int_to_float(lhs)
+    def doubleValue()(implicit pos: SourceContext) = int_to_double(lhs)
     def unary_~()(implicit pos: SourceContext) = int_bitwise_not(lhs)
-    def toLong(implicit pos: SourceContext) = int_tolong(lhs)
+    def toLong(implicit pos: SourceContext) = int_to_long(lhs)
     def toDouble(implicit pos: SourceContext) = int_to_double(lhs)
     def toFloat(implicit pos: SourceContext) = int_to_float(lhs)        
   }
 
   
   def infix_%(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_mod(lhs, rhs)
-  def infix_&(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_binaryand(lhs, rhs)
-  def infix_|(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_binaryor(lhs, rhs)
-  def infix_^(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_binaryxor(lhs, rhs)
-  def infix_<<(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_leftshift(lhs, rhs)
-  def infix_>>(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_rightshiftarith(lhs, rhs)
-  def infix_>>>(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_rightshiftlogical(lhs, rhs)
+  def infix_&(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_bitwise_and(lhs, rhs)
+  def infix_|(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_bitwise_or(lhs, rhs)
+  def infix_^(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_bitwise_xor(lhs, rhs)
+  def infix_<<(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_left_shift(lhs, rhs)
+  def infix_>>(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_right_shift_arithmetic(lhs, rhs)
+  def infix_>>>(lhs: Rep[Int], rhs: Rep[Int])(implicit o: Overloaded1, pos: SourceContext) = int_right_shift_logical(lhs, rhs)
 
   def obj_integer_parse_int(s: Rep[String])(implicit pos: SourceContext): Rep[Int]
   def obj_int_max_value(implicit pos: SourceContext): Rep[Int]
@@ -252,18 +252,16 @@ trait PrimitiveOps extends Variables with OverloadHack {
   def int_divide(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
   
   def int_mod(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
-  def int_binaryor(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
-  def int_binaryand(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
-  def int_binaryxor(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
-  def int_float_value(lhs: Rep[Int])(implicit pos: SourceContext): Rep[Float]
-  def int_double_value(lhs: Rep[Int])(implicit pos: SourceContext): Rep[Double]
+  def int_bitwise_or(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_bitwise_and(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_bitwise_xor(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
   def int_bitwise_not(lhs: Rep[Int])(implicit pos: SourceContext) : Rep[Int]
-  def int_tolong(lhs: Rep[Int])(implicit pos: SourceContext) : Rep[Long]
+  def int_to_long(lhs: Rep[Int])(implicit pos: SourceContext) : Rep[Long]
   def int_to_float(lhs: Rep[Int])(implicit pos: SourceContext) : Rep[Float]
   def int_to_double(lhs: Rep[Int])(implicit pos: SourceContext) : Rep[Double]
-  def int_leftshift(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
-  def int_rightshiftarith(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
-  def int_rightshiftlogical(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_left_shift(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_right_shift_arithmetic(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
+  def int_right_shift_logical(lhs: Rep[Int], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Int]
 
   /**
    * Long
@@ -273,19 +271,19 @@ trait PrimitiveOps extends Variables with OverloadHack {
   }
 
   def infix_%(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_mod(lhs, rhs)
-  def infix_&(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_binaryand(lhs, rhs)
-  def infix_|(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_binaryor(lhs, rhs)
-  def infix_<<(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext) = long_shiftleft(lhs, rhs)
-  def infix_>>>(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext) = long_shiftright_unsigned(lhs, rhs)
-  def infix_toInt(lhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_toint(lhs)
+  def infix_&(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_bitwise_and(lhs, rhs)
+  def infix_|(lhs: Rep[Long], rhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_bitwise_or(lhs, rhs)
+  def infix_<<(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext) = long_left_shift(lhs, rhs)
+  def infix_>>>(lhs: Rep[Long], rhs: Rep[Int])(implicit o: Overloaded2, pos: SourceContext) = long_right_shift_arithmetic(lhs, rhs)
+  def infix_toInt(lhs: Rep[Long])(implicit o: Overloaded2, pos: SourceContext) = long_to_int(lhs)
     
   def obj_long_parse_long(s: Rep[String])(implicit pos: SourceContext): Rep[Long]
   def long_mod(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
-  def long_binaryand(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
-  def long_binaryor(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
-  def long_shiftleft(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Long]
-  def long_shiftright_unsigned(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Long]
-  def long_toint(lhs: Rep[Long])(implicit pos: SourceContext): Rep[Int]
+  def long_bitwise_and(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
+  def long_bitwise_or(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext): Rep[Long]
+  def long_left_shift(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Long]
+  def long_right_shift_arithmetic(lhs: Rep[Long], rhs: Rep[Int])(implicit pos: SourceContext): Rep[Long]
+  def long_to_int(lhs: Rep[Long])(implicit pos: SourceContext): Rep[Int]
 }
 
 trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
@@ -299,7 +297,6 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   case class ObjDoubleNegativeInfinity() extends Def[Double]
   case class ObjDoubleMinValue() extends Def[Double]
   case class ObjDoubleMaxValue() extends Def[Double]
-  case class DoubleFloatValue(lhs: Exp[Double]) extends Def[Float]
   case class DoubleToInt(lhs: Exp[Double]) extends Def[Int]
   case class DoubleToFloat(lhs: Exp[Double]) extends Def[Float]
   case class DoublePlus(lhs: Exp[Double], rhs: Exp[Double]) extends Def[Double]
@@ -312,7 +309,6 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   def obj_double_negative_infinity(implicit pos: SourceContext) = ObjDoubleNegativeInfinity()
   def obj_double_min_value(implicit pos: SourceContext) = ObjDoubleMinValue()
   def obj_double_max_value(implicit pos: SourceContext) = ObjDoubleMaxValue()
-  def double_float_value(lhs: Exp[Double])(implicit pos: SourceContext) = DoubleFloatValue(lhs)
   def double_to_int(lhs: Exp[Double])(implicit pos: SourceContext) = DoubleToInt(lhs)
   def double_to_float(lhs: Exp[Double])(implicit pos: SourceContext) = DoubleToFloat(lhs)
   def double_plus(lhs: Exp[Double], rhs: Exp[Double])(implicit pos: SourceContext) : Exp[Double] = DoublePlus(lhs,rhs)
@@ -351,14 +347,12 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   // case class IntDivideFrac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A]) extends Def[A]
   case class IntDivide(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntMod(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
-  case class IntBinaryOr(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
-  case class IntBinaryAnd(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
-  case class IntBinaryXor(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
-  case class IntShiftLeft(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
-  case class IntShiftRightArith(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
-  case class IntShiftRightLogical(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
-  case class IntDoubleValue(lhs: Exp[Int]) extends Def[Double]
-  case class IntFloatValue(lhs: Exp[Int]) extends Def[Float]
+  case class IntBitwiseOr(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntBitwiseAnd(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntBitwiseXor(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntLeftShift(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntRightShiftArith(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
+  case class IntRightShiftLogical(lhs: Exp[Int], rhs: Exp[Int]) extends Def[Int]
   case class IntBitwiseNot(lhs: Exp[Int]) extends Def[Int]
   case class IntToLong(lhs: Exp[Int]) extends Def[Long]
   case class IntToFloat(lhs: Exp[Int]) extends Def[Float]
@@ -389,37 +383,35 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
   // def int_divide_frac[A:Manifest:Fractional](lhs: Exp[Int], rhs: Exp[A])(implicit pos: SourceContext) : Exp[A] = IntDivideFrac(lhs, rhs)
   def int_divide(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = IntDivide(lhs, rhs)
   def int_mod(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntMod(lhs, rhs)
-  def int_binaryor(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntBinaryOr(lhs, rhs)
-  def int_binaryand(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntBinaryAnd(lhs, rhs)
-  def int_binaryxor(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntBinaryXor(lhs, rhs)
-  def int_double_value(lhs: Exp[Int])(implicit pos: SourceContext) = IntDoubleValue(lhs)
-  def int_float_value(lhs: Exp[Int])(implicit pos: SourceContext) = IntFloatValue(lhs)
+  def int_bitwise_or(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntBitwiseOr(lhs, rhs)
+  def int_bitwise_and(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntBitwiseAnd(lhs, rhs)
+  def int_bitwise_xor(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntBitwiseXor(lhs, rhs)
   def int_bitwise_not(lhs: Exp[Int])(implicit pos: SourceContext) = IntBitwiseNot(lhs)
-  def int_tolong(lhs: Exp[Int])(implicit pos: SourceContext) = IntToLong(lhs)
+  def int_to_long(lhs: Exp[Int])(implicit pos: SourceContext) = IntToLong(lhs)
   def int_to_float(lhs: Exp[Int])(implicit pos: SourceContext) = IntToFloat(lhs)
   def int_to_double(lhs: Exp[Int])(implicit pos: SourceContext) = IntToDouble(lhs)
-  def int_leftshift(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntShiftLeft(lhs, rhs)
-  def int_rightshiftarith(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntShiftRightArith(lhs, rhs)
-  def int_rightshiftlogical(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntShiftRightLogical(lhs, rhs)
+  def int_left_shift(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntLeftShift(lhs, rhs)
+  def int_right_shift_arithmetic(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntRightShiftArith(lhs, rhs)
+  def int_right_shift_logical(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = IntRightShiftLogical(lhs, rhs)
 
 
   /**
    * Long
    */
   case class ObjLongParseLong(s: Exp[String]) extends Def[Long]
-  case class LongBinaryOr(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
-  case class LongBinaryAnd(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
-  case class LongShiftLeft(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
-  case class LongShiftRightUnsigned(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
+  case class LongBitwiseOr(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
+  case class LongBitwiseAnd(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
+  case class LongLeftShift(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
+  case class LongRightShiftUnsigned(lhs: Exp[Long], rhs: Exp[Int]) extends Def[Long]
   case class LongToInt(lhs: Exp[Long]) extends Def[Int]
   case class LongMod(lhs: Exp[Long], rhs: Exp[Long]) extends Def[Long]
 
   def obj_long_parse_long(s: Exp[String])(implicit pos: SourceContext) = ObjLongParseLong(s)
-  def long_binaryor(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBinaryOr(lhs,rhs)
-  def long_binaryand(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBinaryAnd(lhs,rhs)  
-  def long_shiftleft(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = LongShiftLeft(lhs,rhs)
-  def long_shiftright_unsigned(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = LongShiftRightUnsigned(lhs,rhs)
-  def long_toint(lhs: Exp[Long])(implicit pos: SourceContext) = LongToInt(lhs)
+  def long_bitwise_or(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBitwiseOr(lhs,rhs)
+  def long_bitwise_and(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongBitwiseAnd(lhs,rhs)
+  def long_left_shift(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = LongLeftShift(lhs,rhs)
+  def long_right_shift_arithmetic(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = LongRightShiftUnsigned(lhs,rhs)
+  def long_to_int(lhs: Exp[Long])(implicit pos: SourceContext) = LongToInt(lhs)
   def long_mod(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = LongMod(lhs, rhs)
     
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = ({
@@ -430,7 +422,6 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case ObjDoubleNegativeInfinity() => obj_double_negative_infinity
       case ObjDoubleMinValue() => obj_double_min_value
       case ObjDoubleMaxValue() => obj_double_max_value
-      case DoubleFloatValue(x) => double_float_value(f(x))
       case DoubleToInt(x) => double_to_int(f(x))
       case DoubleToFloat(x) => double_to_float(f(x))
       case DoublePlus(x,y) => double_plus(f(x),f(y))
@@ -447,37 +438,34 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case ObjIntegerParseInt(x) => obj_integer_parse_int(f(x))
       case ObjIntMaxValue() => obj_int_max_value
       case ObjIntMinValue() => obj_int_min_value
-      case IntDoubleValue(x) => int_double_value(f(x))
-      case IntFloatValue(x) => int_float_value(f(x))
       case IntBitwiseNot(x) => int_bitwise_not(f(x))
       case IntPlus(x,y) => int_plus(f(x),f(y))
       case IntMinus(x,y) => int_minus(f(x),f(y))
       case IntTimes(x,y) => int_times(f(x),f(y))
       case IntDivide(x,y) => int_divide(f(x),f(y))
       case IntMod(x,y) => int_mod(f(x),f(y))
-      case IntBinaryOr(x,y) => int_binaryor(f(x),f(y))
-      case IntBinaryAnd(x,y) => int_binaryand(f(x),f(y))
-      case IntBinaryXor(x,y) => int_binaryxor(f(x),f(y))
-      case IntToLong(x) => int_tolong(f(x))
+      case IntBitwiseOr(x,y) => int_bitwise_or(f(x),f(y))
+      case IntBitwiseAnd(x,y) => int_bitwise_and(f(x),f(y))
+      case IntBitwiseXor(x,y) => int_bitwise_xor(f(x),f(y))
+      case IntToLong(x) => int_to_long(f(x))
       case IntToFloat(x) => int_to_float(f(x))
       case IntToDouble(x) => int_to_double(f(x))
-      case IntShiftLeft(x,y) => int_leftshift(f(x),f(y))
-      case IntShiftRightLogical(x,y) => int_rightshiftlogical(f(x),f(y))
-      case IntShiftRightArith(x,y) => int_rightshiftarith(f(x),f(y))
+      case IntLeftShift(x,y) => int_left_shift(f(x),f(y))
+      case IntRightShiftLogical(x,y) => int_right_shift_logical(f(x),f(y))
+      case IntRightShiftArith(x,y) => int_right_shift_arithmetic(f(x),f(y))
       case ObjLongParseLong(x) => obj_long_parse_long(f(x))
       case LongMod(x,y) => long_mod(f(x),f(y))
-      case LongShiftLeft(x,y) => long_shiftleft(f(x),f(y))
-      case LongBinaryOr(x,y) => long_binaryor(f(x),f(y))
-      case LongBinaryAnd(x,y) => long_binaryand(f(x),f(y))
-      case LongToInt(x) => long_toint(f(x))
-      case LongShiftRightUnsigned(x,y) => long_shiftright_unsigned(f(x),f(y))
+      case LongLeftShift(x,y) => long_left_shift(f(x),f(y))
+      case LongBitwiseOr(x,y) => long_bitwise_or(f(x),f(y))
+      case LongBitwiseAnd(x,y) => long_bitwise_and(f(x),f(y))
+      case LongToInt(x) => long_to_int(f(x))
+      case LongRightShiftUnsigned(x,y) => long_right_shift_arithmetic(f(x),f(y))
 
       case Reflect(ObjDoubleParseDouble(x), u, es) => reflectMirrored(Reflect(ObjDoubleParseDouble(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjDoublePositiveInfinity(), u, es) => reflectMirrored(Reflect(ObjDoublePositiveInfinity(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjDoubleNegativeInfinity(), u, es) => reflectMirrored(Reflect(ObjDoubleNegativeInfinity(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjDoubleMinValue(), u, es) => reflectMirrored(Reflect(ObjDoubleMinValue(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjDoubleMaxValue(), u, es) => reflectMirrored(Reflect(ObjDoubleMaxValue(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(DoubleFloatValue(x), u, es) => reflectMirrored(Reflect(DoubleFloatValue(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(DoubleToInt(x), u, es) => reflectMirrored(Reflect(DoubleToInt(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(DoubleToFloat(x), u, es) => reflectMirrored(Reflect(DoubleToFloat(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(DoublePlus(x,y), u, es) => reflectMirrored(Reflect(DoublePlus(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
@@ -493,28 +481,26 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
       case Reflect(ObjIntegerParseInt(x), u, es) => reflectMirrored(Reflect(ObjIntegerParseInt(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjIntMinValue(), u, es) => reflectMirrored(Reflect(ObjIntMinValue(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(ObjIntMaxValue(), u, es) => reflectMirrored(Reflect(ObjIntMaxValue(), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(IntDoubleValue(x), u, es) => reflectMirrored(Reflect(IntDoubleValue(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(IntFloatValue(x), u, es) => reflectMirrored(Reflect(IntFloatValue(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntBitwiseNot(x), u, es) => reflectMirrored(Reflect(IntBitwiseNot(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntPlus(x,y), u, es) => reflectMirrored(Reflect(IntPlus(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntMinus(x,y), u, es) => reflectMirrored(Reflect(IntMinus(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntTimes(x,y), u, es) => reflectMirrored(Reflect(IntTimes(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntDivide(x,y), u, es) => reflectMirrored(Reflect(IntDivide(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntMod(x,y), u, es) => reflectMirrored(Reflect(IntMod(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(IntBinaryOr(x,y), u, es) => reflectMirrored(Reflect(IntBinaryOr(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(IntBinaryAnd(x,y), u, es) => reflectMirrored(Reflect(IntBinaryAnd(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(IntBinaryXor(x,y), u, es) => reflectMirrored(Reflect(IntBinaryXor(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(IntBitwiseOr(x,y), u, es) => reflectMirrored(Reflect(IntBitwiseOr(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(IntBitwiseAnd(x,y), u, es) => reflectMirrored(Reflect(IntBitwiseAnd(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(IntBitwiseXor(x,y), u, es) => reflectMirrored(Reflect(IntBitwiseXor(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntToLong(x), u, es) => reflectMirrored(Reflect(IntToLong(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntToFloat(x), u, es) => reflectMirrored(Reflect(IntToFloat(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(IntToDouble(x), u, es) => reflectMirrored(Reflect(IntToDouble(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
-      case Reflect(IntShiftLeft(x,y), u, es) => reflectMirrored(Reflect(IntShiftLeft(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(IntShiftRightLogical(x,y), u, es) => reflectMirrored(Reflect(IntShiftRightLogical(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(IntShiftRightArith(x,y), u, es) => reflectMirrored(Reflect(IntShiftRightArith(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
+      case Reflect(IntLeftShift(x,y), u, es) => reflectMirrored(Reflect(IntLeftShift(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(IntRightShiftLogical(x,y), u, es) => reflectMirrored(Reflect(IntRightShiftLogical(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(IntRightShiftArith(x,y), u, es) => reflectMirrored(Reflect(IntRightShiftArith(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
       case Reflect(LongMod(x,y), u, es) => reflectMirrored(Reflect(LongMod(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(LongShiftLeft(x,y), u, es) => reflectMirrored(Reflect(LongShiftLeft(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(LongShiftRightUnsigned(x,y), u, es) => reflectMirrored(Reflect(LongShiftRightUnsigned(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(LongBinaryOr(x,y), u, es) => reflectMirrored(Reflect(LongBinaryOr(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-      case Reflect(LongBinaryAnd(x,y), u, es) => reflectMirrored(Reflect(LongBinaryAnd(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
+      case Reflect(LongLeftShift(x,y), u, es) => reflectMirrored(Reflect(LongLeftShift(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(LongRightShiftUnsigned(x,y), u, es) => reflectMirrored(Reflect(LongRightShiftUnsigned(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(LongBitwiseOr(x,y), u, es) => reflectMirrored(Reflect(LongBitwiseOr(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+      case Reflect(LongBitwiseAnd(x,y), u, es) => reflectMirrored(Reflect(LongBitwiseAnd(f(x),f(y)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case Reflect(LongToInt(x), u, es) => reflectMirrored(Reflect(LongToInt(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
       case _ => super.mirror(e,f)
     }
@@ -522,19 +508,21 @@ trait PrimitiveOpsExp extends PrimitiveOps with EffectExp {
 }
 
 trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
-  override def int_plus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs,rhs) match {
+  override def int_plus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext): Exp[Int] = (lhs,rhs) match {
     case (Const(a),Const(b)) => unit(a+b)
     case (Const(0),b) => b
     case (a,Const(0)) => a
     case _ => super.int_plus(lhs,rhs)
   }
-  override def int_minus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs,rhs) match {
+
+  override def int_minus(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext): Exp[Int] = (lhs,rhs) match {
     case (Const(a),Const(b)) => unit(a-b)
     case (a,Const(0)) => a
     case (Def(IntPlus(llhs,lrhs)), rhs) if lrhs.equals(rhs) => llhs
     case _ => super.int_minus(lhs,rhs)    
   }
-  override def int_times(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) : Exp[Int] = (lhs,rhs) match {
+
+  override def int_times(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext): Exp[Int] = (lhs,rhs) match {
     case (Const(a),Const(b)) => unit(a*b)
     case (Const(0),b) => Const(0)
     case (Const(1),b) => b
@@ -542,6 +530,19 @@ trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
     case (a,Const(1)) => a
     case _ => super.int_times(lhs,rhs)    
   }
+
+  override def int_divide(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext): Exp[Int] = (lhs,rhs) match {
+    case (Const(a),Const(b)) if b != 0 => unit(a/b)
+    // case (Const(0),b) => Const(0) // invalid because b may be 0
+    case (a,Const(1)) => a
+    case _ => super.int_divide(lhs, rhs)
+  }
+
+  override def int_to_long(lhs: Rep[Int])(implicit pos: SourceContext): Rep[Long] = lhs match {
+    case Const(x) => Const(x.toLong)
+    case _ => super.int_to_long(lhs)
+  }
+
   override def int_to_float(lhs: Rep[Int])(implicit pos: SourceContext): Rep[Float] = lhs match {
     case Const(x) => Const(x.toFloat)
     case _ => super.int_to_float(lhs)
@@ -552,16 +553,93 @@ trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
     case _ => super.int_to_double(lhs)
   }
 
+  override def float_plus(lhs: Exp[Float], rhs: Exp[Float])(implicit pos: SourceContext): Exp[Float] = (lhs,rhs) match {
+    case (Const(a),Const(b)) => unit(a+b)
+    case (Const(0),b) => b
+    case (a,Const(0)) => a
+    case _ => super.float_plus(lhs,rhs)
+  }
+
+  override def float_minus(lhs: Exp[Float], rhs: Exp[Float])(implicit pos: SourceContext): Exp[Float] = (lhs,rhs) match {
+    case (Const(a),Const(b)) => unit(a-b)
+    case (a,Const(0)) => a
+    // case (Def(FloatPlus(llhs,lrhs)), rhs) if lrhs.equals(rhs) => llhs // invalid if lhs overflows
+    case _ => super.float_minus(lhs,rhs)
+  }
+
+  override def float_times(lhs: Exp[Float], rhs: Exp[Float])(implicit pos: SourceContext): Exp[Float] = (lhs,rhs) match {
+    case (Const(a),Const(b)) => unit(a*b)
+    case (Const(0),b) => Const(0)
+    case (Const(1),b) => b
+    case (a,Const(0)) => Const(0)
+    case (a,Const(1)) => a
+    case _ => super.float_times(lhs,rhs)
+  }
+
+  override def float_divide(lhs: Exp[Float], rhs: Exp[Float])(implicit pos: SourceContext): Exp[Float] = (lhs,rhs) match {
+    case (Const(a),Const(b)) if b != 0 => unit(a/b)
+    // case (Const(0),b) => Const(0) // invalid because b may be 0
+    case (a,Const(1)) => a
+    case _ => super.float_divide(lhs, rhs)
+  }
+
+  override def float_to_int(lhs: Rep[Float])(implicit pos: SourceContext): Rep[Int] = lhs match {
+    case Const(x) => Const(x.toInt)
+    case _ => super.float_to_int(lhs)
+  }
+
   override def float_to_double(lhs: Rep[Float])(implicit pos: SourceContext): Rep[Double] = lhs match {
     case Const(x) => Const(x.toDouble)
     case Def(IntToFloat(x)) => int_to_double(x)
     case _ => super.float_to_double(lhs)
   }
-  
+
+  override def double_plus(lhs: Exp[Double], rhs: Exp[Double])(implicit pos: SourceContext): Exp[Double] = (lhs,rhs) match {
+    case (Const(a),Const(b)) => unit(a+b)
+    case (Const(0),b) => b
+    case (a,Const(0)) => a
+    case _ => super.double_plus(lhs,rhs)
+  }
+
+  override def double_minus(lhs: Exp[Double], rhs: Exp[Double])(implicit pos: SourceContext): Exp[Double] = (lhs,rhs) match {
+    case (Const(a),Const(b)) => unit(a-b)
+    case (a,Const(0)) => a
+    // case (Def(DoublePlus(llhs,lrhs)), rhs) if lrhs.equals(rhs) => llhs // invalid if lhs overflows
+    case _ => super.double_minus(lhs,rhs)
+  }
+
+  override def double_times(lhs: Exp[Double], rhs: Exp[Double])(implicit pos: SourceContext): Exp[Double] = (lhs,rhs) match {
+    case (Const(a),Const(b)) => unit(a*b)
+    case (Const(0),b) => Const(0)
+    case (Const(1),b) => b
+    case (a,Const(0)) => Const(0)
+    case (a,Const(1)) => a
+    case _ => super.double_times(lhs,rhs)
+  }
+
+  override def double_divide(lhs: Exp[Double], rhs: Exp[Double])(implicit pos: SourceContext): Exp[Double] = (lhs,rhs) match {
+    case (Const(a),Const(b)) if b != 0 => unit(a/b)
+    // case (Const(0),b) => Const(0) // invalid since b may be 0
+    case (a,Const(1)) => a
+    case _ => super.double_divide(lhs, rhs)
+  }
+
   override def double_to_int(lhs: Rep[Double])(implicit pos: SourceContext): Rep[Int] = lhs match {
     case Const(x) => Const(x.toInt)
     case Def(IntToDouble(x)) => x
     case _ => super.double_to_int(lhs)
+  }
+
+  override def double_to_float(lhs: Rep[Double])(implicit pos: SourceContext): Rep[Float] = lhs match {
+    case Const(x) => Const(x.toFloat)
+    case Def(FloatToDouble(x)) => x
+    case _ => super.double_to_float(lhs)
+  }
+
+  override def long_to_int(lhs: Rep[Long])(implicit pos: SourceContext): Rep[Int] = lhs match {
+    case Const(x) => Const(x.toInt)
+    case Def(IntToLong(x)) => x
+    case _ => super.long_to_int(lhs)
   }
 }
 
@@ -575,7 +653,6 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case ObjDoubleNegativeInfinity() => emitValDef(sym, "scala.Double.NegativeInfinity")
     case ObjDoubleMinValue() => emitValDef(sym, "scala.Double.MinValue")
     case ObjDoubleMaxValue() => emitValDef(sym, "scala.Double.MaxValue")
-    case DoubleFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
     case DoublePlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
     case DoubleMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
     case DoubleTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
@@ -598,24 +675,22 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     // case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
     case IntMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
-    case IntBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
-    case IntBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
-    case IntBinaryXor(lhs,rhs) => emitValDef(sym, quote(lhs) + " ^ " + quote(rhs))
-    case IntShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
-    case IntShiftRightArith(lhs, rhs) => emitValDef(sym, quote(lhs) + " >> " + quote(rhs))
-    case IntShiftRightLogical(lhs, rhs) => emitValDef(sym, quote(lhs) + " >>> " + quote(rhs))
-    case IntDoubleValue(lhs) => emitValDef(sym, quote(lhs) + ".doubleValue()")
-    case IntFloatValue(lhs) => emitValDef(sym, quote(lhs) + ".floatValue()")
+    case IntBitwiseOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
+    case IntBitwiseAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
+    case IntBitwiseXor(lhs,rhs) => emitValDef(sym, quote(lhs) + " ^ " + quote(rhs))
+    case IntLeftShift(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
+    case IntRightShiftArith(lhs, rhs) => emitValDef(sym, quote(lhs) + " >> " + quote(rhs))
+    case IntRightShiftLogical(lhs, rhs) => emitValDef(sym, quote(lhs) + " >>> " + quote(rhs))
     case IntBitwiseNot(lhs) => emitValDef(sym, "~" + quote(lhs))
     case IntToLong(lhs) => emitValDef(sym, quote(lhs) + ".toLong")
     case IntToFloat(lhs) => emitValDef(sym, quote(lhs) + ".toFloat")
     case IntToDouble(lhs) => emitValDef(sym, quote(lhs) + ".toDouble")
     case ObjLongParseLong(s) => emitValDef(sym, "java.lang.Long.parseLong(" + quote(s) + ")")
     case LongMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
-    case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
-    case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))    
-    case LongShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
-    case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, quote(lhs) + " >>> " + quote(rhs))    
+    case LongBitwiseOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
+    case LongBitwiseAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
+    case LongLeftShift(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
+    case LongRightShiftUnsigned(lhs,rhs) => emitValDef(sym, quote(lhs) + " >>> " + quote(rhs))    
     case LongToInt(lhs) => emitValDef(sym, quote(lhs) + ".toInt")
     case _ => super.emitNode(sym, rhs)
   }
@@ -630,7 +705,6 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       case ObjDoubleParseDouble(s) => emitValDef(sym, "strtod(" + quote(s) + ",NULL)")
       case ObjDoubleMinValue() => emitValDef(sym, "DBL_MIN")
       case ObjDoubleMaxValue() => emitValDef(sym, "DBL_MAX")
-      case DoubleFloatValue(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       case DoublePlus(lhs,rhs) => emitValDef(sym, quote(lhs) + " + " + quote(rhs))
       case DoubleMinus(lhs,rhs) => emitValDef(sym, quote(lhs) + " - " + quote(rhs))
       case DoubleTimes(lhs,rhs) => emitValDef(sym, quote(lhs) + " * " + quote(rhs))
@@ -653,24 +727,22 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       // case IntDivideFrac(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
       case IntDivide(lhs,rhs) => emitValDef(sym, quote(lhs) + " / " + quote(rhs))
       case IntMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
-      case IntBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
-      case IntBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
-      case IntBinaryXor(lhs,rhs) => emitValDef(sym, quote(lhs) + " ^ " + quote(rhs))
-      case IntShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
-      case IntShiftRightArith(lhs, rhs) => emitValDef(sym, quote(lhs) + " >> " + quote(rhs))
-      case IntShiftRightLogical(lhs, rhs) => emitValDef(sym, "(uint32_t)" + quote(lhs) + " >> " + quote(rhs))
-      case IntDoubleValue(lhs) => emitValDef(sym, "(double)"+quote(lhs))
-      case IntFloatValue(lhs) => emitValDef(sym, "(float)"+quote(lhs))
+      case IntBitwiseOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
+      case IntBitwiseAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
+      case IntBitwiseXor(lhs,rhs) => emitValDef(sym, quote(lhs) + " ^ " + quote(rhs))
+      case IntLeftShift(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
+      case IntRightShiftArith(lhs, rhs) => emitValDef(sym, quote(lhs) + " >> " + quote(rhs))
+      case IntRightShiftLogical(lhs, rhs) => emitValDef(sym, "(uint32_t)" + quote(lhs) + " >> " + quote(rhs))
       case IntBitwiseNot(lhs) => emitValDef(sym, "~" + quote(lhs))
       case IntToLong(lhs) => emitValDef(sym, "(int64_t)"+quote(lhs))
       case IntToFloat(lhs) => emitValDef(sym, "(float)"+quote(lhs))
       case IntToDouble(lhs) => emitValDef(sym, "(double)"+quote(lhs))
       case ObjLongParseLong(s) => emitValDef(sym, "strtod(" + quote(s) + ".c_str(),NULL)")
       case LongMod(lhs,rhs) => emitValDef(sym, quote(lhs) + " % " + quote(rhs))
-      case LongBinaryOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
-      case LongBinaryAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))    
-      case LongShiftLeft(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
-      case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, "(uint64_t)" + quote(lhs) + " >> " + quote(rhs))    
+      case LongBitwiseOr(lhs,rhs) => emitValDef(sym, quote(lhs) + " | " + quote(rhs))
+      case LongBitwiseAnd(lhs,rhs) => emitValDef(sym, quote(lhs) + " & " + quote(rhs))
+      case LongLeftShift(lhs,rhs) => emitValDef(sym, quote(lhs) + " << " + quote(rhs))
+      case LongRightShiftUnsigned(lhs,rhs) => emitValDef(sym, "(uint64_t)" + quote(lhs) + " >> " + quote(rhs))    
       case LongToInt(lhs) => emitValDef(sym, "(int32_t)"+quote(lhs))
       case _ => super.emitNode(sym, rhs)
     }
@@ -704,4 +776,3 @@ trait CGenPrimitiveOps extends CGenBase with CLikeGenPrimitiveOps {
     }
   }
 }
-
