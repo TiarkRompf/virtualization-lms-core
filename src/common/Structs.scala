@@ -365,18 +365,17 @@ trait BaseGenFatStruct extends GenericFatCodegen {
     //println("grouped: ")
     //println(m.mkString("\n"))
     def fatphi(s:Sym[Unit]) = m.get(s).map { phis =>
-      val ss = phis collect { case TP(s, _) => s }
       val us = phis collect { case TP(_, Phi(c,a,u,b,v)) => u } // assert c,a,b match
       val vs = phis collect { case TP(_, Phi(c,a,u,b,v)) => v }
       val c  = phis collect { case TP(_, Phi(c,a,u,b,v)) => c } reduceLeft { (c1,c2) => assert(c1 == c2); c1 }
-      TTP(ss, phis map (_.rhs), SimpleFatIfThenElse(c,us,vs))
+      TTP(phis, SimpleFatIfThenElse(c,us,vs))
     }
     def fatif(s:Sym[Unit],o:Def[Unit],c:Exp[Boolean],a:Block[Unit],b:Block[Unit]) = fatphi(s) match {
-      case Some(TTP(ss, oo, SimpleFatIfThenElse(c2,us,vs))) =>
+      case Some(TTP(tps, SimpleFatIfThenElse(c2,us,vs))) =>
         assert(c == c2)
-        TTP(s::ss, o::oo, SimpleFatIfThenElse(c,a::us,b::vs))
+        TTP(TP(s, o) :: tps, SimpleFatIfThenElse(c,a::us,b::vs))
       case _ =>
-        TTP(s::Nil, o::Nil, SimpleFatIfThenElse(c,a::Nil,b::Nil))
+        TTP(List(TP(s, o)), SimpleFatIfThenElse(c,a::Nil,b::Nil))
     }
 
     val orphans = m.keys.toList.filterNot(k => e exists (_.lhs contains k)) // parent if/else might have been removed!

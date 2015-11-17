@@ -106,20 +106,22 @@ trait SimplifyTransform extends internal.FatScheduling {
           case s: Sym[Any] => (Option(scopeIndex.get(s)) orElse findDefinition(s)).toList // check scope before target graph
           case _ => Nil
         }
-      case TTP(lhs, mhs, SimpleFatIfThenElse(c,as,bs)) =>
+      case TTP(tps, SimpleFatIfThenElse(c,as,bs)) =>
         // alternate strategy: transform thin def, then fatten again (a little detour)
-        printdbg("need to transform rhs of fat if/then/else: " + lhs + ", if " + c + " then " + as + " else " + bs)
-        val lhs2 = (lhs zip mhs).map { case (s,r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
+        val lhs1 = tps.map(_.sym)
+        printdbg("need to transform rhs of fat if/then/else: " + lhs1 + ", if " + c + " then " + as + " else " + bs)
+        val lhs2 = tps.map { case TP(s,r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
         val mhs2 = lhs2.map(s => findDefinition(s).get.defines(s).get)
         // TBD: we're mirroring the defs in mhs, creating new stms
         // we don't really want new stms: if the defs are just abstract descriptions we only want them updated
         
         // this means we'll have both a TP and a TTP defining the same sym in globalDefs --> bad!
         // not quite so fast, chances are the TTP's never make it into globalDefs (no toAtom call)!!!
-        
-        if (lhs != lhs2) {
+
+        val lhsesAreDifferent = lhs1 != lhs2
+        if (lhsesAreDifferent) {
           val missing = Nil//(lhs2.map(s => findDefinition(s).get) diff innerScope)
-          printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
+          printdbg("tps changed! will add to innerScope: "+missing.mkString(","))
           //innerScope = innerScope ::: missing
         }
 
@@ -127,44 +129,65 @@ trait SimplifyTransform extends internal.FatScheduling {
           case l: AbstractIfThenElse[_] => l
           case Reflect(l: AbstractIfThenElse[_], _, _) => l
         }
-        val cond2 = if (lhs != lhs2) mhs2.map (_.toIf.cond) reduceLeft { (s1,s2) => assert(s1==s2,"conditions don't agree: "+s1+","+s2); s1 }
-                    else t(c)
-        val as2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toIf.thenp)))
-                   else (lhs zip as)) map { case (s,r) => transformIfBody(s,r,t) }
-        val bs2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toIf.elsep)))
-                   else (lhs zip bs)) map { case (s,r) => transformIfBody(s,r,t) }
+        def branches(ifDifferent: AbstractIfThenElse[_] => Block[_], ifSame: List[Block[_]]) = {
+          val rhs2 = if (lhsesAreDifferent)
+            mhs2.map(x => ifDifferent(x.toIf))
+          else
+            ifSame
+          lhs2.zip(rhs2).map { case (s,r) => transformIfBody(s,r,t) }
+        }
+
+        val cond2 = if (lhsesAreDifferent)
+          mhs2.map(_.toIf.cond).reduceLeft { (s1,s2) =>
+            assert(s1==s2,"conditions don't agree: "+s1+","+s2)
+            s1
+          }
+        else
+          t(c)
+        val as2 = branches(_.thenp, as)
+        val bs2 = branches(_.elsep, bs)
       
         printdbg("came up with: " + lhs2 + ", if " + cond2 + " then " + as2 + " else " + bs2 + " with subst " + t.subst.mkString(","))
-        List(TTP(lhs2, mhs2, SimpleFatIfThenElse(cond2,as2,bs2)))
+        List(TTP(lhs2.zip(mhs2).map { case (s, d) => TP(s,d) }, SimpleFatIfThenElse(cond2,as2,bs2)))
         
-      case TTP(lhs, mhs, SimpleFatLoop(s,x,rhs)) =>
+      case TTP(tps, SimpleFatLoop(s,x,rhs)) =>
         // alternate strategy: transform thin def, then fatten again (a little detour)
-        printdbg("need to transform rhs of fat loop: " + lhs + ", " + rhs)
-        val lhs2 = (lhs zip mhs).map { case (s,r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
+        val lhs1 = tps.map(_.sym)
+        printdbg("need to transform rhs of fat loop: " + lhs1 + ", " + rhs)
+        val lhs2 = tps.map { case TP(s,r) => transformOne(s, r, t) }.distinct.asInstanceOf[List[Sym[Any]]]
         val mhs2 = lhs2.map(s => findDefinition(s).get.defines(s).get)
-        if (lhs != lhs2) {
+        val lhsesAreDifferent = lhs1 != lhs2
+        if (lhsesAreDifferent) {
           val missing = (lhs2.map(s => findDefinition(s).get) diff scope/*innerScope*/)
-          printdbg("lhs changed! will add to innerScope: "+missing.mkString(","))
+          printdbg("tps changed! will add to innerScope: "+missing.mkString(","))
           //innerScope = innerScope ::: missing
         }
-        //val shape2 = if (lhs != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
+        //val shape2 = if (lhs1 != lhs2) lhs2.map { case Def(SimpleLoop(s,_,_)) => s } reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
         def infix_toLoop(d: Def[Any]) = d match {
           case l: AbstractLoop[_] => l
           case Reflect(l: AbstractLoop[_], _, _) => l
         }
-        val shape2 = if (lhs != lhs2) mhs2.map (_.toLoop.size) reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
-                     else t(s)
-        val rhs2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toLoop.body)))
-                    else (lhs zip rhs)) map { case (s,r) => transformLoopBody(s,r,t) }
+        val shape2 = if (lhsesAreDifferent)
+          mhs2.map(_.toLoop.size).reduceLeft { (s1,s2) =>
+            assert(s1==s2,"shapes don't agree: "+s1+","+s2)
+            s1
+          }
+        else
+          t(s)
+        val rhs2 = if (lhsesAreDifferent)
+          mhs2 map (_.toLoop.body)
+        else
+          rhs
+        val rhs3 = lhs2.zip(rhs2).map { case (s,r) => transformLoopBody(s,r,t) }
         
   /*      //update innerScope -- change definition of lhs2 in place (necessary?)
         innerScope = innerScope map {
-          case TP(l,_) if lhs2 contains l => TP(l, SimpleLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2(lhs2.indexOf(l)))) 
+          case TP(l,_) if lhs2 contains l => TP(l, SimpleLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs3(lhs2.indexOf(l))))
           case d => d
         }*/
         
-        printdbg("came up with: " + lhs2 + ", " + rhs2 + " with subst " + t.subst.mkString(","))
-        List(TTP(lhs2, mhs2, SimpleFatLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs2)))
+        printdbg("came up with: " + lhs2 + ", " + rhs3 + " with subst " + t.subst.mkString(","))
+        List(TTP(lhs2.zip(mhs2).map { case (s, d) => TP(s,d) }, SimpleFatLoop(shape2,t(x).asInstanceOf[Sym[Int]],rhs3)))
         // still problem: VectorSum(a,b) = SimpleLoop(i, ReduceElem(f(i))) 
         // might need to translate f(i), but looking up VectorSum will not be changed at all!!!
         // --> change rhs nonetheless???

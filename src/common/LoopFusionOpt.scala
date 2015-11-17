@@ -269,7 +269,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
       val levelScope = getExactScope(currentScope)(result) // could provide as input ...
       // TODO: cannot in general fuse several effect loops (one effectful and several pure ones is ok though)
       // so we need a strategy. a simple one would be exclude all effectful loops right away (TODO).
-      levelScope collect { case e @ TTP(_, _, SimpleFatLoop(_,_,_)) => e }
+      levelScope collect { case e @ TTP(_, SimpleFatLoop(_,_,_)) => e }
     }
 
     // FIXME: more than one super call means exponential cost -- is there a better way?
@@ -284,7 +284,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
       var done = false
 
       // keep track of loops in inner scopes
-      var UloopSyms = currentScope collect { case e @ TTP(lhs, _, SimpleFatLoop(_,_,_)) if !Wloops.contains(e) => lhs }
+      var UloopSyms = currentScope collect { case e @ TTP(_, SimpleFatLoop(_,_,_)) if !Wloops.contains(e) => e.lhs }
 
       //do{
         
@@ -367,7 +367,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
         var partitionsIn = Wloops
         var partitionsOut = Nil:List[Stm]
 
-        for (b@ TTP(_,_,_) <- partitionsIn) {
+        for (b@ TTP(_,_) <- partitionsIn) {
           // try to add to an item in partitionsOut, if not possible add as-is
           partitionsOut.find(a => canFuse(a,b)) match {
             case Some(a: TTP) => 
@@ -394,13 +394,14 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
                 shapeA
               }
 
-              val lhs = a.lhs ++ b.lhs
+              val tps = a.tps ++ b.tps
 
-              val fused = TTP(lhs, a.mhs ++ b.mhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
+              val fused = TTP(tps, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
               partitionsOut = fused :: (partitionsOut diff List(a))
 
-              val preNeg = WtableNeg collect { case p if (lhs contains p._2) => p._1 }
-              val postNeg = WtableNeg collect { case p if (lhs contains p._1) => p._2 }
+              val syms = tps.map(_.sym).toSet
+              val preNeg = WtableNeg collect { case p if (syms contains p._2) => p._1 }
+              val postNeg = WtableNeg collect { case p if (syms contains p._1) => p._2 }
 
               val fusedNeg = preNeg flatMap { s1 => postNeg map { s2 => (s1,s2) } }
               WtableNeg = (fusedNeg ++ WtableNeg).distinct
@@ -461,10 +462,10 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
 
           // prune Wloops (some might be no longer necessary)
           Wloops = pOutT map {
-            case TTP(lhs, mhs, SimpleFatLoop(s, x, rhs)) =>
-              val ex = lhs map (s => currentScope exists (_.lhs contains s))
+            case TTP(tps, SimpleFatLoop(s, x, rhs)) =>
+              val ex = tps map (s => currentScope exists (_.lhs contains s.sym))
               def select[A](a: List[A], b: List[Boolean]) = (a zip b) collect { case (w, true) => w }
-              TTP(select(lhs, ex), select(mhs, ex), SimpleFatLoop(s, x, select(rhs, ex)))
+              TTP(select(tps, ex), SimpleFatLoop(s, x, select(rhs, ex)))
           }
 
           currentScope = (currentScope diff pInT) ++ Wloops
@@ -520,7 +521,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
       val levelScope = getExactScope(currentScope)(result) // could provide as input ...
       // TODO: cannot in general fuse several effect loops (one effectful and several pure ones is ok though)
       // so we need a strategy. a simple one would be exclude all effectful loops right away (TODO).
-      levelScope collect { case e @ TTP(_, _, SimpleFatLoop(_,_,_)) => e }
+      levelScope collect { case e @ TTP(_, SimpleFatLoop(_,_,_)) => e }
     }
     
     // FIXME: more than one super call means exponential cost -- is there a better way?
@@ -535,7 +536,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
       var done = false
 
       // keep track of loops in inner scopes
-      var UloopSyms = currentScope collect { case e @ TTP(lhs, _, SimpleFatLoop(_,_,_)) if !Wloops.contains(e) => lhs }
+      var UloopSyms = currentScope collect { case e @ TTP(lhs, SimpleFatLoop(_,_,_)) if !Wloops.contains(e) => lhs.map(_.sym) }
       
       do {
         // utils
@@ -630,7 +631,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
         var partitionsIn = Wloops
         var partitionsOut = Nil:List[Stm]
       
-        for (b@ TTP(_,_,_) <- partitionsIn) {
+        for (b@ TTP(_,_) <- partitionsIn) {
           // try to add to an item in partitionsOut, if not possible add as-is
           partitionsOut.find(a => canFuse(a,b)) match {
             case Some(a: TTP) => 
@@ -659,11 +660,12 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
 
               val lhs = a.lhs ++ b.lhs
 
-              val fused = TTP(lhs, a.mhs ++ b.mhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
+              val fused = TTP(lhs, SimpleFatLoop(shape, targetVar, WgetLoopRes(a):::WgetLoopRes(b)))
               partitionsOut = fused :: (partitionsOut diff List(a))
 
-              val preNeg = WtableNeg collect { case p if (lhs contains p._2) => p._1 }
-              val postNeg = WtableNeg collect { case p if (lhs contains p._1) => p._2 }
+              val syms = lhs.map(_.sym).toSet
+              val preNeg = WtableNeg collect { case p if (syms contains p._2) => p._1 }
+              val postNeg = WtableNeg collect { case p if (syms contains p._1) => p._2 }
               
               val fusedNeg = preNeg flatMap { s1 => postNeg map { s2 => (s1,s2) } }
               WtableNeg = (fusedNeg ++ WtableNeg).distinct
@@ -722,10 +724,10 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
       
       // prune Wloops (some might be no longer necessary)
       Wloops = Wloops map {
-        case TTP(lhs, mhs, SimpleFatLoop(s, x, rhs)) =>
-          val ex = lhs map (s => currentScope exists (_.lhs == List(s)))
+        case TTP(lhs, SimpleFatLoop(s, x, rhs)) =>
+          val ex = lhs map (s => currentScope exists (_.lhs == List(s.sym)))
           def select[A](a: List[A], b: List[Boolean]) = (a zip b) collect { case (w, true) => w }
-          TTP(select(lhs, ex), select(mhs, ex), SimpleFatLoop(s, x, select(rhs, ex)))
+          TTP(select(lhs, ex), SimpleFatLoop(s, x, select(rhs, ex)))
       }
       
       // PREVIOUS PROBLEM: don't throw out all loops, might have some that are *not* in levelScope
@@ -733,8 +735,8 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
       // FatCodegen.focusExactScopeFat below. --> how to go back from SimpleFatLoop to VectorPlus??
       // UPDATE: UloopSyms puts a tentative fix in place. check if it is sufficient!!
       // what is the reason we cannot just look at Wloops??
-      currentScope = currentScope.filter { case e@TTP(lhs, _, _: AbstractFatLoop) => 
-        val keep = UloopSyms contains lhs
+      currentScope = currentScope.filter { case e@TTP(lhs, _: AbstractFatLoop) =>
+        val keep = UloopSyms contains lhs.map(_.sym)
         //if (!keep) println("dropping: " + e + ", not int UloopSyms: " + UloopSyms)
         keep case _ => true } ::: Wloops
 

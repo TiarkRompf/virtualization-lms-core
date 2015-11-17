@@ -195,9 +195,8 @@ class TestEffects extends FileDiffSuite {
           val e2 = e map {
             case e@TP(s, rhs) if mg.contains(s) => 
               val vs = mg(s)
-              val llhs = vs map (_.sym)
               val rrhs = vs map (_.rhs)
-              TTP(s::llhs, rhs::rrhs, Multi(rhs::rrhs))
+              TTP(e::vs, Multi(rhs::rrhs))
             case e => e
           }
           val e3 = e2 diff m

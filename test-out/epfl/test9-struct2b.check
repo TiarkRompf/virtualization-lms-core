@@ -1,8 +1,8 @@
 wtableneg: List()
-partitions: List(TTP(List(Sym(10), Sym(11), Sym(4), Sym(5)),List(SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8)))), SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(7)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2))))),SimpleFatLoop(Const(100),Sym(7),List(ArrayElem(Block(Sym(8))), ArrayElem(Block(Sym(7))), ArrayElem(Block(Sym(1))), ArrayElem(Block(Sym(2)))))))
+partitions: List(TTP(List(TP(Sym(10),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8))))), TP(Sym(11),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(7))))), TP(Sym(4),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1))))), TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))),SimpleFatLoop(Const(100),Sym(7),List(ArrayElem(Block(Sym(8))), ArrayElem(Block(Sym(7))), ArrayElem(Block(Sym(1))), ArrayElem(Block(Sym(2)))))))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(10), Sym(11)),List(SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8)))), SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(7))))),SimpleFatLoop(Const(100),Sym(7),List(ArrayElem(Block(Sym(8))), ArrayElem(Block(Sym(7)))))))
+partitions: List(TTP(List(TP(Sym(10),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(8))))), TP(Sym(11),SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(7)))))),SimpleFatLoop(Const(100),Sym(7),List(ArrayElem(Block(Sym(8))), ArrayElem(Block(Sym(7)))))))
 no changes, we're done
 super.focusExactScopeFat with result changed from List(Sym(37)) to List(Sym(48))
 /*****************************************

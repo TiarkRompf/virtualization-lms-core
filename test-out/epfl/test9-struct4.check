@@ -1,12 +1,12 @@
 wtableneg: List()
-partitions: List(TTP(List(Sym(4), Sym(5)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(1))), ArrayElem(Block(Sym(2)))))))
+partitions: List(TTP(List(TP(Sym(4),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1))))), TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(1))), ArrayElem(Block(Sym(2)))))))
 considering TP(Sym(19),ArrayIndex(Sym(5),Sym(17)))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(4), Sym(5)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(1))), ArrayElem(Block(Sym(2)))))))
+partitions: List(TTP(List(TP(Sym(4),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1))))), TP(Sym(5),SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(1))), ArrayElem(Block(Sym(2)))))))
 no changes, we're done
 wtableneg: List()
-partitions: List(TTP(List(Sym(23)),List(SimpleLoop(Const(100),Sym(17),ArrayElem(Block(Sym(21))))),SimpleFatLoop(Const(100),Sym(17),List(ArrayElem(Block(Sym(21)))))))
+partitions: List(TTP(List(TP(Sym(23),SimpleLoop(Const(100),Sym(17),ArrayElem(Block(Sym(21)))))),SimpleFatLoop(Const(100),Sym(17),List(ArrayElem(Block(Sym(21)))))))
 no changes, we're done
 /*****************************************
   Emitting Generated Code                  

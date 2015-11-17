@@ -1,25 +1,25 @@
 fusion of List((Sym(2),Sym(9))) prevented by TP(Sym(7),ArrayIndex(Sym(2),Const(0))) which is required by body of List(Sym(9))
 fusion of List((Sym(2),Sym(16))) prevented by TP(Sym(7),ArrayIndex(Sym(2),Const(0))) which is required by body of List(Sym(16))
 wtableneg: List((Sym(2),Sym(9)), (Sym(2),Sym(16)))
-partitions: List(TTP(List(Sym(9), Sym(16)),List(SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(8)))), SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(15))))),SimpleFatLoop(Const(100),Sym(5),List(ArrayElem(Block(Sym(8))), ArrayElem(Block(Sym(15)))))), TTP(List(Sym(4), Sym(2)),List(SimpleLoop(Const(200),Sym(3),ArrayElem(Block(Const(2.0)))), SimpleLoop(Const(200),Sym(1),ArrayElem(Block(Const(1.0))))),SimpleFatLoop(Const(200),Sym(3),List(ArrayElem(Block(Const(2.0))), ArrayElem(Block(Const(1.0)))))))
+partitions: List(TTP(List(TP(Sym(9),SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(8))))), TP(Sym(16),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(15)))))),SimpleFatLoop(Const(100),Sym(5),List(ArrayElem(Block(Sym(8))), ArrayElem(Block(Sym(15)))))), TTP(List(TP(Sym(4),SimpleLoop(Const(200),Sym(3),ArrayElem(Block(Const(2.0))))), TP(Sym(2),SimpleLoop(Const(200),Sym(1),ArrayElem(Block(Const(1.0)))))),SimpleFatLoop(Const(200),Sym(3),List(ArrayElem(Block(Const(2.0))), ArrayElem(Block(Const(1.0)))))))
 considering TP(Sym(7),ArrayIndex(Sym(2),Const(0)))
 considering TP(Sym(12),ArrayIndex(Sym(9),Sym(10)))
-replace TP(Sym(12),ArrayIndex(Sym(9),Sym(10))) at 0 within TTP(List(Sym(9), Sym(16)),List(SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(8)))), SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(15))))),SimpleFatLoop(Const(100),Sym(5),List(ArrayElem(Block(Sym(8))), ArrayElem(Block(Sym(15))))))
+replace TP(Sym(12),ArrayIndex(Sym(9),Sym(10))) at 0 within TTP(List(TP(Sym(9),SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(8))))), TP(Sym(16),SimpleLoop(Const(100),Sym(10),ArrayElem(Block(Sym(15)))))),SimpleFatLoop(Const(100),Sym(5),List(ArrayElem(Block(Sym(8))), ArrayElem(Block(Sym(15))))))
 considering TP(Sym(13),ArrayIndex(Sym(12),Sym(11)))
 try once more ...
 fusion of List((Sym(2),Sym(23))) prevented by TP(Sym(7),ArrayIndex(Sym(2),Const(0))) which is required by body of List(Sym(23))
 wtableneg: List((Sym(2),Sym(23)))
-partitions: List(TTP(List(Sym(23)),List(SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(22))))),SimpleFatLoop(Const(100),Sym(5),List(ArrayElem(Block(Sym(22)))))), TTP(List(Sym(4), Sym(2)),List(SimpleLoop(Const(200),Sym(3),ArrayElem(Block(Const(2.0)))), SimpleLoop(Const(200),Sym(1),ArrayElem(Block(Const(1.0))))),SimpleFatLoop(Const(200),Sym(3),List(ArrayElem(Block(Const(2.0))), ArrayElem(Block(Const(1.0)))))))
+partitions: List(TTP(List(TP(Sym(23),SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(22)))))),SimpleFatLoop(Const(100),Sym(5),List(ArrayElem(Block(Sym(22)))))), TTP(List(TP(Sym(4),SimpleLoop(Const(200),Sym(3),ArrayElem(Block(Const(2.0))))), TP(Sym(2),SimpleLoop(Const(200),Sym(1),ArrayElem(Block(Const(1.0)))))),SimpleFatLoop(Const(200),Sym(3),List(ArrayElem(Block(Const(2.0))), ArrayElem(Block(Const(1.0)))))))
 no changes, we're done
 super.focusExactScopeFat with result changed from List(Sym(19)) to List(Sym(25))
 wtableneg: List()
-partitions: List(TTP(List(Sym(8), Sym(22)),List(SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(7)))), SimpleLoop(Sym(5),Sym(11),ArrayElem(Block(Sym(21))))),SimpleFatLoop(Sym(5),Sym(6),List(ArrayElem(Block(Sym(7))), ArrayElem(Block(Sym(21)))))))
+partitions: List(TTP(List(TP(Sym(8),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(7))))), TP(Sym(22),SimpleLoop(Sym(5),Sym(11),ArrayElem(Block(Sym(21)))))),SimpleFatLoop(Sym(5),Sym(6),List(ArrayElem(Block(Sym(7))), ArrayElem(Block(Sym(21)))))))
 considering TP(Sym(20),ArrayIndex(Sym(8),Sym(11)))
-replace TP(Sym(20),ArrayIndex(Sym(8),Sym(11))) at 0 within TTP(List(Sym(8), Sym(22)),List(SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(7)))), SimpleLoop(Sym(5),Sym(11),ArrayElem(Block(Sym(21))))),SimpleFatLoop(Sym(5),Sym(6),List(ArrayElem(Block(Sym(7))), ArrayElem(Block(Sym(21))))))
+replace TP(Sym(20),ArrayIndex(Sym(8),Sym(11))) at 0 within TTP(List(TP(Sym(8),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Sym(7))))), TP(Sym(22),SimpleLoop(Sym(5),Sym(11),ArrayElem(Block(Sym(21)))))),SimpleFatLoop(Sym(5),Sym(6),List(ArrayElem(Block(Sym(7))), ArrayElem(Block(Sym(21))))))
 *** removing self subtraction Sym(7) - Sym(7)
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(26)),List(SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Const(0.0))))),SimpleFatLoop(Sym(5),Sym(6),List(ArrayElem(Block(Const(0.0)))))))
+partitions: List(TTP(List(TP(Sym(26),SimpleLoop(Sym(5),Sym(6),ArrayElem(Block(Const(0.0)))))),SimpleFatLoop(Sym(5),Sym(6),List(ArrayElem(Block(Const(0.0)))))))
 no changes, we're done
 super.focusExactScopeFat with result changed from List(Sym(22)) to List(Sym(26))
 /*****************************************

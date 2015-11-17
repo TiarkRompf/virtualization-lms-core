@@ -183,14 +183,14 @@ trait BaseGenSplitEffects extends BaseGenIfThenElseFat with GenericFatCodegen {
 
 
   override def fatten(e: Stm): Stm = e match {
-    case TP(s,d@While(c,b)) => TTP(List(s),List(d),SimpleFatWhile(c,List(b)))
-    case TP(s,d@Reflect(While(c,b),u,es)) => 
+    case tp @ TP(s,d@While(c,b)) => TTP(List(tp),SimpleFatWhile(c,List(b)))
+    case tp @ TP(s,d@Reflect(While(c,b),u,es)) =>
       val x = SimpleFatWhile(c,List(b))
       x.extradeps = es.asInstanceOf[List[Sym[Any]]]
-      TTP(List(s),List(d),x)
-    case TP(s,d@Reflect(PreviousIteration(k),u,es)) => 
+      TTP(List(tp),x)
+    case tp @ TP(s,d@Reflect(PreviousIteration(k),u,es)) =>
       val x = SimpleFatPrevious(k,es.asInstanceOf[List[Sym[Any]]])
-      TTP(List(s),List(d),x)
+      TTP(List(tp),x)
     case _ => super.fatten(e)
   }
 
@@ -205,31 +205,31 @@ trait BaseGenSplitEffects extends BaseGenIfThenElseFat with GenericFatCodegen {
     //println(e1)
     
     val e2 = e1 collect {
-      case t@TTP(lhs, mhs, p @ SimpleFatIfThenElse(c,as,bs)) => t
-      case t@TTP(lhs, mhs, p @ SimpleFatWhile(c,b)) => t
-      case t@TTP(lhs, mhs, p @ SimpleFatPrevious(k,es)) => t
+      case t@TTP(_, p @ SimpleFatIfThenElse(c,as,bs)) => t
+      case t@TTP(_, p @ SimpleFatWhile(c,b)) => t
+      case t@TTP(_, p @ SimpleFatPrevious(k,es)) => t
     }
     
     val m = e2 groupBy { 
-      case t@TTP(lhs, mhs, p @ SimpleFatIfThenElse(c,as,bs)) => (c, "if")
-      case t@TTP(lhs, mhs, p @ SimpleFatWhile(Block(Def(Reify(c,_,_))),b)) => (c, "while")
-      case t@TTP(lhs, mhs, p @ SimpleFatPrevious(k,es)) => (k,"prev")
+      case t@TTP(_, p @ SimpleFatIfThenElse(c,as,bs)) => (c, "if")
+      case t@TTP(_, p @ SimpleFatWhile(Block(Def(Reify(c,_,_))),b)) => (c, "while")
+      case t@TTP(_, p @ SimpleFatPrevious(k,es)) => (k,"prev")
     }
     
     val e3 = e1 diff e2
 
     val g1 = m map {
-      case ((c:Exp[Boolean], "if"), ifs: List[TTP]) => TTP(ifs.flatMap(_.lhs), ifs.flatMap(_.mhs), 
+      case ((c:Exp[Boolean], "if"), ifs: List[TTP]) => TTP(ifs.flatMap(_.tps),
         SimpleFatIfThenElse(c, ifs.flatMap(_.rhs.asInstanceOf[SimpleFatIfThenElse].thenp), 
           ifs.flatMap(_.rhs.asInstanceOf[SimpleFatIfThenElse].elsep)))
       case ((c, "while"), wls: List[TTP]) => 
         val x = SimpleFatWhile(wls.map(_.rhs.asInstanceOf[SimpleFatWhile].cond).apply(0), //FIXME: merge cond!!!
           wls.flatMap(_.rhs.asInstanceOf[SimpleFatWhile].body))
-        x.extradeps = wls.flatMap(_.rhs.asInstanceOf[SimpleFatWhile].extradeps) diff wls.flatMap(_.lhs)
-        TTP(wls.flatMap(_.lhs), wls.flatMap(_.mhs), // TODO: merge cond blocks!
+        x.extradeps = wls.flatMap(_.rhs.asInstanceOf[SimpleFatWhile].extradeps) diff wls.flatMap(_.tps)
+        TTP(wls.flatMap(_.tps), // TODO: merge cond blocks!
         x)
       case ((k:Exp[Nothing],"prev"), pvs: List[TTP]) => 
-        TTP(pvs.flatMap(_.lhs), pvs.flatMap(_.mhs), SimpleFatPrevious(k,pvs.flatMap(_.rhs.asInstanceOf[SimpleFatPrevious].extra)))
+        TTP(pvs.flatMap(_.tps), SimpleFatPrevious(k,pvs.flatMap(_.rhs.asInstanceOf[SimpleFatPrevious].extra)))
     }
 
     val r = e3 ++ g1

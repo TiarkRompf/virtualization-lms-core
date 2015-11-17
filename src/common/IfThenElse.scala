@@ -211,14 +211,14 @@ trait BaseGenIfThenElseFat extends BaseGenIfThenElse with GenericFatCodegen {
   import IR._
 
   override def fatten(e: Stm): Stm = e match {
-    case TP(sym, o: AbstractIfThenElse[_]) => 
-      TTP(List(sym), List(o), SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)))
-    case TP(sym, p @ Reflect(o: AbstractIfThenElse[_], u, es)) => //if !u.maySimple && !u.mayGlobal =>  // contrary, fusing will not change observable order
+    case tp @ TP(sym, o: AbstractIfThenElse[_]) =>
+      TTP(List(tp), SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep)))
+    case tp @ TP(sym, p @ Reflect(o: AbstractIfThenElse[_], u, es)) => //if !u.maySimple && !u.mayGlobal =>  // contrary, fusing will not change observable order
       // assume body will reflect, too...
       printdbg("-- fatten effectful if/then/else " + e)
       val e2 = SimpleFatIfThenElse(o.cond, List(o.thenp), List(o.elsep))
       e2.extradeps = es //HACK
-      TTP(List(sym), List(p), e2)
+      TTP(List(tp), e2)
     case _ => super.fatten(e)
   }
 }

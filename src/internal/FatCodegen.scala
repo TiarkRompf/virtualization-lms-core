@@ -10,7 +10,7 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatBlockTraversal {
   
   
   override def traverseStm(stm: Stm) = stm match {
-    case TTP(lhs, mhs, rhs) => emitFatNode(lhs, rhs)
+    case ttp: TTP => emitFatNode(ttp.lhs, ttp.rhs)
     case _ => super.traverseStm(stm)
   }
 
