@@ -6,39 +6,39 @@ nVars=2000
 import scala.lms.epfl.test14.Schema
 class staged$0 extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-val x2550 = println("rangeFromNames(\"Edna\",\"Bert\"):")
-val x617 = Schema.db.people.flatMap { x111 => 
-val x616 = Schema.db.people.flatMap { x435 => 
-val x615 = Schema.db.people.flatMap { x598 => 
-val x112 = x111.name
-val x113 = x112 == "Edna"
-val x438 = x435.name
-val x439 = x438 == "Bert"
-val x116 = x111.age
-val x602 = x598.age
-val x603 = x116 <= x602
-val x441 = x435.age
-val x604 = x602 < x441
-val x605 = x603 && x604
-val x611 = x439 && x605
-val x613 = x113 && x611
-val x614 = if (x613) {
-val x607 = x598.name
-val x608 = new Schema.Record { val name = x607 }
-val x609 = List(x608)
-x609
+val x2580 = println("rangeFromNames(\"Edna\",\"Bert\"):")
+val x641 = Schema.db.people.flatMap { x112 => 
+val x640 = Schema.db.people.flatMap { x445 => 
+val x639 = Schema.db.people.flatMap { x620 => 
+val x113 = x112.name
+val x114 = x113 == "Edna"
+val x448 = x445.name
+val x449 = x448 == "Bert"
+val x117 = x112.age
+val x624 = x620.age
+val x625 = x117 <= x624
+val x452 = x445.age
+val x626 = x624 < x452
+val x627 = x625 && x626
+val x634 = x449 && x627
+val x637 = x114 && x634
+val x638 = if (x637) {
+val x630 = x620.name
+val x631 = new Schema.Record { val name = x630 }
+val x632 = List(x631)
+x632
 } else {
-val x19 = List()
-x19
+val x34 = List()
+x34
 }
-x614
+x638
 }
-x615
+x639
 }
-x616
+x640
 }
-val x2551 = println(x617)
-x2551
+val x2581 = println(x641)
+x2581
 }
 }
 /*****************************************

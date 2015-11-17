@@ -3,24 +3,25 @@ partitions: List(TTP(List(Sym(4), Sym(5), Sym(13)),List(SimpleLoop(Const(100),Sy
 considering TP(Sym(9),ArrayIndex(Sym(5),Sym(7)))
 replace TP(Sym(9),ArrayIndex(Sym(5),Sym(7))) at 1 within TTP(List(Sym(4), Sym(5), Sym(13)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(2)))), SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(11))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(1))), ArrayElem(Block(Sym(2))), ArrayElem(Block(Sym(11))))))
 warning: mirroring of Sym(11)=Minus(Const(0.0),Sym(9)) type Double returned Sym(1) type Int (not a subtype)
-warning: mirroring of Sym(13)=SimpleLoop(Const(100),Sym(7),ArrayElem(Block(Sym(11)))) type Array[Double] returned Sym(4)=SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))) type Array[Int] (not a subtype)
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(4)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(1)))))))
+partitions: List(TTP(List(Sym(4), Sym(17)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(1))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(1))), ArrayElem(Block(Sym(1)))))))
 no changes, we're done
-super.focusExactScopeFat with result changed from List(Sym(16)) to List(Sym(19))
+super.focusExactScopeFat with result changed from List(Sym(16)) to List(Sym(20))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
 var x4 = new Array[Int](100)
+var x17 = new Array[Int](100)
 for (x1 <- 0 until 100) {
 x4(x1) = x1
+x17(x1) = x1
 }
-val x17 = new ArrayOfAnon189207751(x4,x4)
-val x18 = println(x17)
-val x15 = x18
+val x18 = new ArrayOfAnon189207751(x4,x17)
+val x19 = println(x18)
+val x15 = x19
 x15
 }
 }
@@ -28,4 +29,4 @@ x15
   End of Generated Code                  
 *******************************************/
 
-case class ArrayOfAnon189207751(re: Array[Int], im: Array[Int])
+case class ArrayOfAnon189207751(re: Array[Int], im: Array[Double])
