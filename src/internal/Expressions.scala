@@ -20,7 +20,12 @@ trait Expressions extends Utils {
     def pos: List[SourceContext] = Nil
   }
 
-  case class Const[+T:Manifest](x: T) extends Exp[T]
+  case class Const[+T:Manifest](x: T) extends Exp[T] {
+    override def equals(other: Any) = other match {
+      case c: Const[_] => x == c.x && tp == c.tp
+      case _ => false
+    }
+  }
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var sourceContexts: List[SourceContext] = Nil
