@@ -99,13 +99,16 @@ trait ScalaCodegen extends GenericCodegen with Config {
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    stream.println("val " + quote(sym) + " = " + rhs + valDefExtra(sym))
+    if (scalaExplicitTypes)
+      emitTypedValDef(sym, rhs)
+    else
+      stream.println(src"val $sym = $rhs" + valDefExtra(sym))
   }
 
   def emitTypedValDef(sym: Sym[Any], rhs: String): Unit = {
     stream.println(src"val $sym: ${sym.tp} = $rhs" + valDefExtra(sym))
   }
-  
+
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
