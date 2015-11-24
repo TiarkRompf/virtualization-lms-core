@@ -24,6 +24,10 @@ trait ScalaOpsPkgExp extends ScalaOpsPkg
     with FunctionsExp with EqualExp with IfThenElseExp with VariablesExp with WhileExp with TupleOpsExp with ListOpsExp
     with SeqOpsExp with DSLOpsExp with MathOpsExp with CastingOpsExp with SetOpsExp with ObjectOpsExp with ArrayBufferOpsExp
 
+trait ScalaOpsPkgExpOpt extends ScalaOpsPkgExp
+    with ArrayOpsExpOpt with BooleanOpsExpOpt with CastingOpsExpOpt with EqualExpOpt with IfThenElseExpOpt
+    with ListOpsExpOpt with NumericOpsExpOpt with ObjectOpsExpOpt with OrderingOpsExpOpt with PrimitiveOpsExpOpt
+    with StructExpOpt with VariablesExpOpt
 
 /**
  * Code gen: each target must define a code generator package.
