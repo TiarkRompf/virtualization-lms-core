@@ -90,12 +90,20 @@ trait ScalaCodegen extends GenericCodegen with Config {
     fileName.substring(i + 1)
   }
 
-  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    val extra = if ((sourceinfo < 2) || sym.pos.isEmpty) "" else {
-      val context = sym.pos(0)
-      "      // " + relativePath(context.fileName) + ":" + context.line
+  private def valDefExtra(sym: IR.Sym[Any]): String = {
+    sym.pos.headOption match {
+      case Some(context) if sourceinfo >= 2 =>
+        "      // " + relativePath(context.fileName) + ":" + context.line
+      case _ => ""
     }
-    stream.println("val " + quote(sym) + " = " + rhs + extra)
+  }
+
+  def emitValDef(sym: Sym[Any], rhs: String): Unit = {
+    stream.println("val " + quote(sym) + " = " + rhs + valDefExtra(sym))
+  }
+
+  def emitTypedValDef(sym: Sym[Any], rhs: String): Unit = {
+    stream.println(src"val $sym: ${sym.tp} = $rhs" + valDefExtra(sym))
   }
   
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
@@ -132,7 +140,14 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
     else
       super.emitValDef(sym,rhs)
   }
-  
+
+  // special case for recursive vals
+  override def emitTypedValDef(sym: Sym[Any], rhs: String): Unit = {
+    if (recursive contains sym)
+      stream.println(quote(sym) + " = " + rhs) // we have a forward declaration above.
+    else
+      super.emitTypedValDef(sym,rhs)
+  }
 }
 
 

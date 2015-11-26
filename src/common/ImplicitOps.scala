@@ -15,14 +15,14 @@ trait ImplicitOps extends Base {
 }
 
 trait ImplicitOpsExp extends ImplicitOps with BaseExp {
-  case class ImplicitConvert[X,Y](x: Exp[X])(implicit val mX: Manifest[X], val mY: Manifest[Y]) extends Def[Y]
+  case class ImplicitConvert[X,Y](x: Exp[X], mY: Manifest[Y])(implicit val mX: Manifest[X]) extends Def[Y]
 
   def implicit_convert[X,Y](x: Exp[X])(implicit c: X => Y, mX: Manifest[X], mY: Manifest[Y], pos: SourceContext) : Rep[Y] = {
-    if (mX == mY) x.asInstanceOf[Rep[Y]] else ImplicitConvert[X,Y](x)
+    if (mX == mY) x.asInstanceOf[Rep[Y]] else ImplicitConvert[X,Y](x, mY)
   }
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case im@ImplicitConvert(x) => toAtom(ImplicitConvert(f(x))(im.mX,im.mY))(mtype(manifest[A]),pos)
+    case im@ImplicitConvert(x, mY) => toAtom(ImplicitConvert(f(x), mY)(im.mX))(mtype(manifest[A]),pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -33,9 +33,9 @@ trait ScalaGenImplicitOps extends ScalaGenBase {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    // TODO: this valDef is redundant; we really just want the conversion to be a no-op in the generated code.
-    // TODO: but we still need to link the defs together
-    case ImplicitConvert(x) => emitValDef(sym, quote(x))
+    // Make sure it's typed to trigger the implicit conversion
+    // Otherwise we can get type mismatch in generated code
+    case ImplicitConvert(x, mY) => emitTypedValDef(sym, quote(x))
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -46,8 +46,8 @@ trait CLikeGenImplicitOps extends CLikeGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
-        case im@ImplicitConvert(x) =>
-          gen"${im.mY} $sym = (${im.mY})$x;"
+        case ImplicitConvert(x, mY) =>
+          gen"$mY $sym = ($mY)$x;"
         case _ => super.emitNode(sym, rhs)
       }
     }
