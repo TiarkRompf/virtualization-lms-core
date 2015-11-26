@@ -5,7 +5,7 @@ package test1
 import common._
 
 import java.io.PrintWriter
-
+import org.scala_lang.virtualized.SourceContext
 
 trait Arrays extends Base {
 

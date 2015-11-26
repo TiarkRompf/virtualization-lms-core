@@ -5,7 +5,7 @@ import scala.virtualization.lms.epfl._
 import scala.virtualization.lms.epfl.test2._
 import scala.virtualization.lms.epfl.test3._
 
-import org.scala_lang.virtualized.{RefinedManifest, virtualize, Struct}
+import org.scala_lang.virtualized.{RefinedManifest, virtualize, Struct, SourceContext}
 import common._
 
 @virtualize
