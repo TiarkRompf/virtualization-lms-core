@@ -110,7 +110,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   def array_map[A:Typ,B:Typ](a: Exp[Array[A]], f: Exp[A] => Exp[B]) = {
     val x = fresh[A]
     val b = reifyEffects(f(x))
-    reflectEffect(ArrayMap(a, x, b), summarizeEffects(b))
+    reflectEffect(ArrayMap(a, x, b), summarizeEffects(b).star)
   }
   def array_toseq[A:Typ](a: Exp[Array[A]]) = ArrayToSeq(a)
   def array_slice[A:Typ](a: Rep[Array[A]], start:Rep[Int], end:Rep[Int]) = ArraySlice(a,start,end)
