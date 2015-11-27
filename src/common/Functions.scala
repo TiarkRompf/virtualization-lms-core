@@ -113,6 +113,12 @@ trait FunctionsExp extends Functions with EffectExp {
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 
+  override def mirrorDef[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+    case e@Lambda(g, x, y) => Lambda(f(g), f(x), f(y))(e.mA,e.mB)
+    case e@Apply(g, arg) => Apply(f(g), f(arg))(e.mA, mtype(e.mB))
+    case _ => super.mirrorDef(e, f)
+  }).asInstanceOf[Def[A]]
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => syms(y)
     case _ => super.syms(e)
@@ -146,8 +152,8 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
   // T will be a tuple of a specified arity
   case class UnboxedTuple[T: Typ](val vars: List[Exp[Any]]) extends Exp[T]
 
-  private def tupledTyp[T](m: Typ[T]): Boolean = m.erasure.getName startsWith "scala.Tuple"
-  private def tupledTypOf[T](m: Typ[T], arity: Int): Boolean = m.erasure.getName == "scala.Tuple" + arity
+  private def tupledTyp[T](m: Typ[T]): Boolean = m.runtimeClass.getName startsWith "scala.Tuple"
+  private def tupledTypOf[T](m: Typ[T], arity: Int): Boolean = m.runtimeClass.getName == "scala.Tuple" + arity
 
   override def unboxedFresh[A:Typ] : Exp[A] = {
     val mA = implicitly[Typ[A]]
