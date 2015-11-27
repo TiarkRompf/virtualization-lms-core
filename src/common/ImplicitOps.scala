@@ -22,7 +22,7 @@ trait ImplicitOpsExp extends ImplicitOps with BaseExp {
   }
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case im@ImplicitConvert(x) => toAtom(ImplicitConvert(f(x))(im.mX,im.mY))(mtype(manifest[A]),pos)
+    case im@ImplicitConvert(x) => toAtom(ImplicitConvert(f(x))(im.mX,im.mY))(mtyp1[A],pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 

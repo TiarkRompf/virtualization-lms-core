@@ -30,7 +30,7 @@ trait StaticDataExp extends EffectExp {
   }
   
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case StaticData(x) => staticData(x)(mtype(manifest[A]))        
+    case StaticData(x) => staticData(x)(mtyp1[A])
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]   
 }

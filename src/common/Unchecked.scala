@@ -39,7 +39,7 @@ trait UncheckedOpsExp extends EffectExp {
   def uncheckedPure[T:Typ](s: Any*): Rep[T] = toAtom[T](Unchecked(s.toList))
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    //case Reflect(ThrowException(s), u, es) => reflectMirrored(Reflect(ThrowException(f(s)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    //case Reflect(ThrowException(s), u, es) => reflectMirrored(Reflect(ThrowException(f(s)), mapOver(f,u), f(es)))(mtyp1[A])
     // TODO mirror Unchecked and Reflect(Unchecked)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]  

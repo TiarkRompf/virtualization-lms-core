@@ -83,19 +83,20 @@ trait ArrayBufferOpsExp extends ArrayBufferOps with EffectExp {
   // mirroring
 
   override def mirrorDef[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
-    case ArrayBufferMkString(l,r) => ArrayBufferMkString(f(l),f(r))(mtype(manifest[A]))
-    case ArrayBufferAppend(l,r) => ArrayBufferAppend(f(l),f(r))(mtype(manifest[A]))
-    case ArrayBufferAppendArray(l,r) => ArrayBufferAppendArray(f(l),f(r))(mtype(manifest[A]))
-    case ArrayBufferAppendSeq(l,r) => ArrayBufferAppendSeq(f(l),f(r))(mtype(manifest[A]))
+    case ArrayBufferMkString(l,r) => ArrayBufferMkString(f(l),f(r))(
+      mtyp1[A])
+    case ArrayBufferAppend(l,r) => ArrayBufferAppend(f(l),f(r))(mtyp1[A])
+    case ArrayBufferAppendArray(l,r) => ArrayBufferAppendArray(f(l),f(r))(mtyp1[A])
+    case ArrayBufferAppendSeq(l,r) => ArrayBufferAppendSeq(f(l),f(r))(mtyp1[A])
     case _ => super.mirrorDef(e,f)
   }).asInstanceOf[Def[A]] // why??
   
 /*
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case Reflect(ArrayBufferMkString(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferMkString(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(ArrayBufferAppend(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferAppend(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(ArrayBufferAppendArray(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferAppendArray(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
-    case Reflect(ArrayBufferAppendSeq(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferAppendSeq(f(l),f(r)), mapOver(f,u), f(es)))(mtype(manifest[A]))
+    case Reflect(ArrayBufferMkString(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferMkString(f(l),f(r)), mapOver(f,u), f(es)))(mtyp1[A])
+    case Reflect(ArrayBufferAppend(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferAppend(f(l),f(r)), mapOver(f,u), f(es)))(mtyp1[A])
+    case Reflect(ArrayBufferAppendArray(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferAppendArray(f(l),f(r)), mapOver(f,u), f(es)))(mtyp1[A])
+    case Reflect(ArrayBufferAppendSeq(l,r), u, es) => reflectMirrored(Reflect(ArrayBufferAppendSeq(f(l),f(r)), mapOver(f,u), f(es)))(mtyp1[A])
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 */

@@ -107,9 +107,9 @@ trait FunctionsExp extends Functions with EffectExp {
   }
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case e@Lambda(g,x:Exp[Any],y:Block[b]) => toAtom(Lambda(f(g),f(x),f(y))(e.mA,e.mB))(mtype(manifest[A]),pos)
+    case e@Lambda(g,x:Exp[Any],y:Block[b]) => toAtom(Lambda(f(g),f(x),f(y))(e.mA,e.mB))(mtyp1[A],pos)
     case e@Apply(g,arg) => doApply(f(g), f(arg))(e.mA,mtype(e.mB),pos)
-    case Reflect(e@Apply(g,arg), u, es) => reflectMirrored(Reflect(Apply(f(g),f(arg))(e.mA,mtype(e.mB)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@Apply(g,arg), u, es) => reflectMirrored(Reflect(Apply(f(g),f(arg))(e.mA,mtype(e.mB)), mapOver(f,u), f(es)))(mtyp1[A], pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 
@@ -208,7 +208,7 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
   }
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case e@Lambda(g,UnboxedTuple(xs),y:Block[b]) => toAtom(Lambda(f(g),UnboxedTuple(f(xs))(e.mA),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Lambda(g,UnboxedTuple(xs),y:Block[b]) => toAtom(Lambda(f(g),UnboxedTuple(f(xs))(e.mA),f(y))(e.mA,e.mB))(mtyp1[A],implicitly[SourceContext])
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }

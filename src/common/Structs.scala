@@ -171,11 +171,11 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   // TODO: read/write/copy summary
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })(mtype(manifest[A]),pos)
-    case FieldApply(struct, key) => field(f(struct), key)(mtype(manifest[A]),pos)
-    case Reflect(FieldApply(struct, key), u, es) => reflectMirrored(Reflect(FieldApply(f(struct), key), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@FieldUpdate(struct, key, rhs), u, es) => reflectMirrored(Reflect(FieldUpdate(f(struct), key, f(rhs))(e.mA), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(SimpleStruct(tag, elems), u, es) => reflectMirrored(Reflect(SimpleStruct(tag, elems map { case (k,v) => (k, f(v)) }), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case SimpleStruct(tag, elems) => struct(tag, elems map { case (k,v) => (k, f(v)) })(mtyp1[A],pos)
+    case FieldApply(struct, key) => field(f(struct), key)(mtyp1[A],pos)
+    case Reflect(FieldApply(struct, key), u, es) => reflectMirrored(Reflect(FieldApply(f(struct), key), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@FieldUpdate(struct, key, rhs), u, es) => reflectMirrored(Reflect(FieldUpdate(f(struct), key, f(rhs))(e.mA), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(SimpleStruct(tag, elems), u, es) => reflectMirrored(Reflect(SimpleStruct(tag, elems map { case (k,v) => (k, f(v)) }), mapOver(f,u), f(es)))(mtyp1[A], pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
@@ -270,7 +270,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
 
   private def unwrap[A](m:Typ[Variable[A]]): Typ[A] = m.typeArguments match {
     case a::_ => mtype(a)
-    case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Unit])
+    case _ => printerr("warning: expect type Variable[A] but got "+m); mtyp1[Unit]
   }
 
   override def readVar[T:Typ](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {

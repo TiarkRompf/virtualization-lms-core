@@ -101,8 +101,8 @@ trait ArrayLoopsExp extends LoopsExp { this: PrimitiveOpsExp =>
           f.reflectBlock(y)
         } 
       }
-    case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
-    case ArrayLen(a) => infix_length(f(a))(mtype(manifest[A]))
+    case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtyp1[A])
+    case ArrayLen(a) => infix_length(f(a))(mtyp1[A])
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 

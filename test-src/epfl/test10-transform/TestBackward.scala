@@ -124,7 +124,7 @@ trait TestDSL extends BaseExp with LiftAll {
   }
 
   def reflect[T](d: Def[T]): Exp[T] = {
-    val sym = fresh[T](List(implicitly[SourceContext]))(mtype(manifest[Any]))
+    val sym = fresh[T](List(implicitly[SourceContext]))(mtyp1[Any])
     curStms = curStms :+ createDefinition(sym,d)
     sym
   }
@@ -169,7 +169,7 @@ trait TestDSL extends BaseExp with LiftAll {
   def emitSource[A,B](f: Rep[A] => Rep[B]) = {
     
     val block1 = reifyBlock {
-      f(fresh[A](List(implicitly[SourceContext]))(mtype(manifest[Any])))
+      f(fresh[A](List(implicitly[SourceContext]))(mtyp1[Any]))
     }
     
     println("===== first round")
