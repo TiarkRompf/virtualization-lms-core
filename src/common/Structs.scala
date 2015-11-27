@@ -104,12 +104,11 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     field[T](record, fieldName)
   }
 
-  def imm_field(struct: Exp[Any], name: String, f: Exp[Any])(implicit pos: SourceContext): Exp[Any] = {
-    if (f.tp.erasure.getSimpleName == "Variable") {
-      field(struct,name)(mtype(f.tp.typeArguments(0)),pos)
-    } else {
-      object_unsafe_immutable(f)(mtype(f.tp),pos)
-    }
+  def imm_field(struct: Exp[Any], name: String, f: Exp[Any])(implicit pos: SourceContext): Exp[Any] = f.tp match {
+    case VariableTyp(tp1) =>
+      field(struct,name)(mtype(tp1),pos)
+    case tp =>
+      object_unsafe_immutable(f)(mtype(tp),pos)
   }
 
   // don't let unsafeImmutable hide struct-ness
@@ -184,8 +183,8 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     // FIXME: move to codegen? we should be able to have different policies/naming schemes
     case ManifestTyp(rm: RefinedManifest[_]) => "Anon" + math.abs(rm.fields.map(f => f._1.## + f._2.toString.##).sum)
     case ManifestTyp(m) if (m <:< implicitly[Manifest[AnyVal]]) => m.toString
-    case _ if m.erasure.isArray => "ArrayOf" + structName(m.typeArguments.head)
-    case _ => m.erasure.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
+    case ArrayTyp(tp) => "ArrayOf" + structName(tp)
+    case _ => m.runtimeClass.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
   }
 
   def classTag[T:Typ] = ClassTag[T](structName(manifest[T]))
@@ -238,8 +237,8 @@ trait StructExpOpt extends StructExp {
 
 trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseExp {
 
-  override def structName[T](m: Typ[T]): String = m.erasure.getSimpleName match {
-    case "Variable" => structName(m.typeArguments(0))
+  override def structName[T](m: Typ[T]): String = m match {
+    case VariableTyp(tp) => structName(tp)
     case _ => super.structName(m)
   }
 

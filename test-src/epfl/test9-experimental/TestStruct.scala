@@ -50,7 +50,7 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp with Primi
       def unwrap[A](m:Typ[Array[A]]): Typ[A] = m.typeArguments match {
         case a::_ => mtype(a)
         case _ =>
-          if (m.erasure.isArray) mtype(ManifestTyp(Manifest.classType(m.erasure.getComponentType)))
+          if (m.isArray) mtype(simpleClassTyp(m.runtimeClass.getComponentType))
           else { printerr("warning: expect type Array[A] but got "+m); mtype(ManifestTyp[Any](implicitly)) }
       }
       struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))

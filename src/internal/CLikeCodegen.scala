@@ -38,13 +38,12 @@ trait CLikeCodegen extends GenericCodegen {
   def remapWithRef[A](m: Typ[A]): String = remap(m) + addRef(m)
   def remapWithRef(tpe: String): String = tpe + addRef(tpe)
 
-  override def remap[A](m: Typ[A]) : String = {
-    if (m.erasure == classOf[Variable[AnyVal]])
-      remap(m.typeArguments.head)
-    else if (m.erasure == classOf[List[Any]]) { // Use case: Delite Foreach sync list 
+  override def remap[A](m: Typ[A]) : String = m match {
+    case VariableTyp(tp) =>
+      remap(tp)
+    case _ if m.runtimeClass == classOf[List[_]] => // Use case: Delite Foreach sync list
       deviceTarget.toString + "List< " + remap(m.typeArguments.head) + " >"
-    }
-    else {
+    case _ =>
       m.toString match {
         case "scala.collection.immutable.List[Float]" => "List"
         case "Boolean" => "bool"
@@ -59,7 +58,6 @@ trait CLikeCodegen extends GenericCodegen {
         case "Nothing" => "void"
         case _ => throw new GenerationFailedException("CLikeGen: remap(m) : Type %s cannot be remapped.".format(m.toString))
       }
-    }
   }
 
   def addRef(): String = if (cppMemMgr=="refcnt") " " else " *"
