@@ -39,7 +39,7 @@ trait CLikeCodegen extends GenericCodegen {
   def remapWithRef(tpe: String): String = tpe + addRef(tpe)
 
   override def remap[A](m: Manifest[A]) : String = {
-    if (m.erasure == classOf[Variable[AnyVal]])
+    if (m.erasure == classOf[Variable[_]])
       remap(m.typeArguments.head)
     else {
       m.toString match {

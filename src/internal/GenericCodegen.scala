@@ -189,7 +189,7 @@ trait GenericCodegen extends BlockTraversal {
   }
 
   def isVariableType[A](m: Manifest[A]) : Boolean = {
-    if(m.erasure == classOf[Variable[AnyVal]]) true
+    if(m.erasure == classOf[Variable[_]]) true
     else false
   }
 

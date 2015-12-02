@@ -148,62 +148,32 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   }  
 
   override def emitTransferFunctions() {
-
-    for ((tp,name) <- dsTypesList) {
+    def printToStream(emitter: => (String,String)) = {
       try {
-        // Emit input copy helper functions for object type inputs
-        //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
-        val (recvHeader, recvSource) = emitRecv(tp, Targets.JVM)
-        if (!helperFuncList.contains(recvHeader)) {
-          headerStream.println(recvHeader)
-          helperFuncStream.println(recvSource)
-          helperFuncList.append(recvHeader)
-        }
-        val (recvViewHeader, recvViewSource) = emitRecvView(tp, Targets.JVM)
-        if (!helperFuncList.contains(recvViewHeader)) {
-          headerStream.println(recvViewHeader)
-          helperFuncStream.println(recvViewSource)
-          helperFuncList.append(recvViewHeader)
-        }
-        val (sendUpdateHeader, sendUpdateSource) = emitSendUpdate(tp, Targets.JVM)
-        if (!helperFuncList.contains(sendUpdateHeader)) {
-          headerStream.println(sendUpdateHeader)
-          helperFuncStream.println(sendUpdateSource)
-          helperFuncList.append(sendUpdateHeader)
-        }
-        val (recvUpdateHeader, recvUpdateSource) = emitRecvUpdate(tp, Targets.JVM)
-        if (!helperFuncList.contains(recvUpdateHeader)) {
-          headerStream.println(recvUpdateHeader)
-          helperFuncStream.println(recvUpdateSource)
-          helperFuncList.append(recvUpdateHeader)
-        }
-
-        // Emit output copy helper functions for object type inputs
-        val (sendHeader, sendSource) = emitSend(tp, Targets.JVM)
-        if (!helperFuncList.contains(sendHeader)) {
-          headerStream.println(sendHeader)
-          helperFuncStream.println(sendSource)
-          helperFuncList.append(sendHeader)
-        }
-        val (sendViewHeader, sendViewSource) = emitSendView(tp, Targets.JVM)
-        if (!helperFuncList.contains(sendViewHeader)) {
-          headerStream.println(sendViewHeader)
-          helperFuncStream.println(sendViewSource)
-          helperFuncList.append(sendViewHeader)
-        }
-        val (mkManifestHeader, mkManifestSource) = emitMakeManifest(tp)
-        if (!helperFuncList.contains(mkManifestHeader)) {
-          headerStream.println(mkManifestHeader)
-          helperFuncStream.println(mkManifestSource)
-          helperFuncList.append(mkManifestHeader)
+        val (header, source) = emitter
+        if (!helperFuncList.contains(header)) {
+          headerStream.println(header)
+          helperFuncStream.println(source)
+          helperFuncList.append(header)
         }
       }
       catch {
         case e: GenerationFailedException => 
           helperFuncStream.flush
           headerStream.flush
-        case e: Exception => throw(e)
       }
+    }
+
+    // Emit copy helper functions for object types
+    //TODO: For now just iterate over all possible hosts, but later we can pick one depending on the input target
+    for ((tp,name) <- dsTypesList) {
+      printToStream(emitRecv(tp, Targets.JVM))
+      printToStream(emitRecvView(tp, Targets.JVM))
+      printToStream(emitSendUpdate(tp, Targets.JVM))
+      printToStream(emitRecvUpdate(tp, Targets.JVM))
+      printToStream(emitSend(tp, Targets.JVM))  
+      printToStream(emitSendView(tp, Targets.JVM))
+      printToStream(emitMakeManifest(tp))
     }
 
     helperFuncStream.flush
