@@ -37,7 +37,7 @@ class RecordsAnnotationTest extends FlatSpec with FileDiffSuite with ShouldMatch
     @mRecord
     case class RTest1(i:Int)
     import O_RTest1._
-    val rt = RTest1(42)
+    val rt:RTest1 = RTest1(42)
     println(rt.r_i)
 //    rt.r_i should be (42)
   }

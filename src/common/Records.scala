@@ -16,8 +16,10 @@ class RecordMacros(val c: Context) {
     import c.universe._
     def apply_impl[Rep: c.WeakTypeTag](method: c.Expr[String])(v: c.Expr[(String, Any)]*): c.Expr[Any] = {
       method.tree match {
+        //the "constructor" of the record
         case Literal(Constant(str: String)) if str == "apply" =>
           recordApply(c.weakTypeTag[Rep].tpe)(v)
+        //accessor method
         case Literal(Constant(str: String)) =>
           val targetName = c.prefix.actualType.typeSymbol.fullName
           c.abort(c.enclosingPosition,
@@ -140,6 +142,8 @@ trait RecordOps extends StructOps {
      * Rec(name = "Hans", age = 7)
      * }}}
      */
+    //we could also avoid the dynamic dispatch for the "constructor" case:
+    //def apply(v: (String, Any)*): Any = macro RecordMacros.apply_impl[Rep[_]]
     def applyDynamicNamed(method: String)(v: (String, Any)*): Any =
       macro RecordMacros.apply_impl[Rep[_]]
   }
