@@ -9,6 +9,7 @@ import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import org.scala_lang.virtualized.virtualize
+import org.scala_lang.virtualized.SourceContext
 
 class TestDataOp extends FileDiffSuite {
   

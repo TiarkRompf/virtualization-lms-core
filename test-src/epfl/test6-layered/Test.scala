@@ -11,6 +11,7 @@ import java.io.PrintWriter
 import java.io.FileOutputStream
 
 import org.scala_lang.virtualized.virtualize
+import org.scala_lang.virtualized.SourceContext
 
 trait Utils extends Base with OverloadHack {
   

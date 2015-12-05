@@ -8,6 +8,7 @@ import test2._
 import test3._
 
 import org.scala_lang.virtualized.virtualize
+import org.scala_lang.virtualized.SourceContext
 
 @virtualize
 trait BasicProg { this: Arith with Functions with Equal with IfThenElse =>

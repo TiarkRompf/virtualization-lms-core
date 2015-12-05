@@ -4,6 +4,7 @@ package test12
 
 import common._
 import java.io.PrintWriter
+import org.scala_lang.virtualized.SourceContext
 
 class TestArrayOps extends FileDiffSuite {
 

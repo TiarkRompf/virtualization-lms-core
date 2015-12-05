@@ -36,8 +36,8 @@ class RecordsAnnotationTest extends FlatSpec with FileDiffSuite with ShouldMatch
   it should "work for primitive types" in {
     @mRecord
     case class RTest1(i:Int)
-    import O_RTest1._
-    val rt:RTest1 = RTest1(42)
+//    import O_RTest1._
+    val rt:Rep[RTest1] = RTest1(42)
     println(rt.r_i)
 //    rt.r_i should be (42)
   }
@@ -45,7 +45,7 @@ class RecordsAnnotationTest extends FlatSpec with FileDiffSuite with ShouldMatch
   it should "also work for object types" in {
     @mRecord
     case class RTest1(a:Any)
-    import O_RTest1._
+//    import O_RTest1._
     val rt = RTest1(List(1,2,3))
 //    Def(rt.r_a) should be (unit(42))
   }
@@ -55,7 +55,7 @@ class RecordsAnnotationTest extends FlatSpec with FileDiffSuite with ShouldMatch
   it should "work" in {
     @mRecord
     case class RTest2(i:Int, s:String)
-    import O_RTest2._
+//    import O_RTest2._
     val rt = RTest2(42, "sdf")
   }
 
@@ -64,10 +64,10 @@ class RecordsAnnotationTest extends FlatSpec with FileDiffSuite with ShouldMatch
   it should "work" in {
     @mRecord
     case class RTest1(i:Int)
-    import O_RTest1._
+//    import O_RTest1._
     @mRecord
     case class RTest2(i:Int, r:RTest1)
-    import O_RTest2._
+//    import O_RTest2._
     val rt = RTest2(42, RTest1(45))
   }
 
@@ -85,7 +85,7 @@ class RecordsAnnotationTest extends FlatSpec with FileDiffSuite with ShouldMatch
   it should "created and implicit refined manifest" in {
     @mRecord
     case class RTest(i:Int, s:String)
-    import O_RTest._
+//    import O_RTest._
     val x:Rep[RTest] = RTest(6, "ewf")
     m(x).size should be (2)
     val y = RTest(unit(6), unit("ewf"))

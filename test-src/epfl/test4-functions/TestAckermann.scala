@@ -7,6 +7,7 @@ import common._
 import test1._
 import test2._
 import test3._
+import org.scala_lang.virtualized.SourceContext
 
 import org.scala_lang.virtualized.virtualize
 

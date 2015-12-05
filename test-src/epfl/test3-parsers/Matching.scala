@@ -5,6 +5,7 @@ package test3
 import common._
 import test1._
 import test2._
+import org.scala_lang.virtualized.SourceContext
 
 trait Extractors extends Base {
   

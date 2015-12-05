@@ -99,7 +99,7 @@ class RecordsTest extends FileDiffSuite {
           case _ => Nil
         }
       }
-      val res:Record = Record(name = unit("nme"), lastName = unit(56))
+      val res = Record(name = unit("nme"), lastName = unit(56))
       assert(m(res).size == 2)
 //      print(res)
       val res2 = Record(name = unit("nme"), lastName = unit(56), rec=Record(name = unit("nme"), lastName = unit(56)))

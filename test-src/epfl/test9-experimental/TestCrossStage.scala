@@ -14,6 +14,7 @@ import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import collection.mutable.ArrayBuffer
+import org.scala_lang.virtualized.SourceContext
 
 class TestCrossStage extends FileDiffSuite {
   

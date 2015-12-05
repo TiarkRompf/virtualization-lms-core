@@ -84,7 +84,8 @@ object mRecord {
 
         //val importt = //FIXME can we return a tree which represents a
 
-        val cc = q"object $objectName { $atype ; $mdef }"
+//        val cc = q"object $objectName { $atype ; $mdef }"
+        val cc = q"$atype ; $mdef"
 
         //        def ${className.toTermName}(
         //        ${

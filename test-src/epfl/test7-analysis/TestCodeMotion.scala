@@ -10,6 +10,7 @@ import util.OverloadHack
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 import org.scala_lang.virtualized.virtualize
+import org.scala_lang.virtualized.SourceContext
 
 trait NestLambdaProg1 extends Arith with Functions with Print { // also used by TestLambdaLift
   
