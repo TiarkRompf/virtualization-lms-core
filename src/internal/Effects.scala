@@ -416,6 +416,10 @@ trait Effects extends Expressions with Blocks with Utils {
       case o => globalMutableSyms.contains(w)
     }
   }
+  def isMutable[A](x: Exp[A]): Boolean = x match {
+    case x: Sym[A] => isWritableSym(x)
+    case _ => false
+  }
 
 
   var globalMutableSyms: List[Sym[Any]] = Nil
@@ -584,7 +588,7 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // reify the effects of an isolated block.
   // no assumptions about the current context remain valid.
-  def reifyEffects[A:Manifest](block: => Exp[A]): Block[A] = {
+  def reifyEffects[A:Manifest](block: => Exp[A])(implicit ctx: SourceContext): Block[A] = {
     val save = context
     context = Nil
 

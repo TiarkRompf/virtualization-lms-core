@@ -40,6 +40,10 @@ trait Expressions extends Utils {
     case cs =>
       cs.map(c => all(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
   }
+  def quoteTopPos(e: Exp[Any]): String = e.pos match {
+    case Nil => "<unknown>"
+    case cs => getPathAndLine(cs).map{case (path,line) => path.split("/").last + ":" + line}.mkString(";")
+  }
 
   abstract class Def[+T] { // operations (composite)
     override final lazy val hashCode = scala.runtime.ScalaRunTime._hashCode(this.asInstanceOf[Product])

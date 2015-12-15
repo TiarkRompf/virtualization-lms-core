@@ -8,19 +8,19 @@ trait Traversal extends FatBlockTraversal { self =>
   val IR: FatExpressions with Effects with MetadataOps
   import IR._
 
-  protected var datRequire: List[Datakey] = Nil
-  protected var datUpdate:  List[Datakey] = Nil
-  protected var datCreate:  List[Datakey] = Nil
-  protected var datInvalid: List[Datakey] = Nil
+  protected var datRequire: List[Datakey[_]] = Nil
+  protected var datUpdate:  List[Datakey[_]] = Nil
+  protected var datCreate:  List[Datakey[_]] = Nil
+  protected var datInvalid: List[Datakey[_]] = Nil
 
   // Metadata invalidated by running this traversal
-  protected def invalidates(x: Datakey*) { datInvalid = datInvalid ++ x.toList }
+  protected def invalidates(x: Datakey[_]*) { datInvalid = datInvalid ++ x.toList }
   // Metadata required prior to running traversal
-  protected def requires(x: Datakey*) { datRequire = datRequire ++ x.toList }
+  protected def requires(x: Datakey[_]*) { datRequire = datRequire ++ x.toList }
   // Metadata updated (made valid) by running this traversal
-  protected def updates(x: Datakey*) { datCreate = datCreate ++ datCreate }
+  protected def updates(x: Datakey[_]*) { datCreate = datCreate ++ datCreate }
   // Metadata created (made valid) by running this traversal
-  protected def creates(x: Datakey*) { datUpdate = datUpdate ++ datUpdate }
+  protected def creates(x: Datakey[_]*) { datUpdate = datUpdate ++ datUpdate }
 
   val name: String = self.getClass.getName.split('$').filterNot(_ forall Character.isDigit).mkString(".")
 
@@ -69,14 +69,13 @@ trait IterativeTraversal extends Traversal { self =>
   protected var runs = 0                // Current analysis iteration
   private var retries = 0               // Current retry
   private var _retry = false
-  protected var changed: Boolean = true // Flag for if any unpropagated updates have been made to the IR
 
-  def notifyChange() { changed = true }
-  def hasConverged: Boolean = !changed
+  def hasConverged: Boolean = runs > 0 && !getMetadataUpdateFlag()
   def hasCompleted: Boolean = true
 
-  def failedToConverge() { printwarn(s"$name did not converge within $MAX_ITERS iterations.") }
-  def failedToComplete() { printwarn(s"$name reached convergence but did not report completion.") }
+  // TODO: Should these be exception throws instead?
+  def failedToConverge() { printerr(s"$name did not converge within $MAX_ITERS iterations.") }
+  def failedToComplete() { printerr(s"$name did not complete.") }
 
   /**
    * Function to be called to try to recover when visitor converged but did not complete
@@ -95,12 +94,21 @@ trait IterativeTraversal extends Traversal { self =>
       _retry = false
       while (!hasConverged && runs < MAX_ITERS) { // convergence condition
         runs += 1
-        changed = false
+
+        //println("-----------------------------------")
+        //println(s"Beginining run #$runs of $name")
+
+        clearMetadataUpdateFlag()
         curBlock = runOnce(curBlock)
       }
       curBlock = postprocess(curBlock)
       retries += 1
+
+      //if (_retry && retries <= MAX_RETRIES) println(s"Resetting and retrying $name")
+
     } while (_retry && retries <= MAX_RETRIES)
+
+    if (!hasCompleted || !hasConverged) { IR.hadErrors = true }
 
     if (!hasCompleted) failedToComplete()
     else if (!hasConverged) failedToConverge()

@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package internal
 
 import scala.collection.{immutable,mutable}
-import scala.reflect.SourceContext
+import scala.reflect._
 
 trait AbstractAnalyzer extends Traversal
 trait IterativeAnalyzer extends AbstractAnalyzer with IterativeTraversal
@@ -20,4 +20,8 @@ trait Analyzing extends MetadataOps {
   def props(b: Block[Any]): SymbolProperties = getProps(b.res).get
   def child(b: Block[Any]): SymbolProperties = getChild(b.res).get
   def child(b: Block[Any], index: String): SymbolProperties = getField(b.res, index).get
+
+  // --- Shortcuts for metadata instances
+  def meta[T<:Metadata](x: Exp[Any])(implicit ct: ClassTag[T]): Option[T] = getMetadata(x, ct.runtimeClass.asInstanceOf[Class[T]])
+  def meta[T<:Metadata](x: Block[Any])(implicit ct: ClassTag[T]): Option[T] = getMetadata(x, ct.runtimeClass.asInstanceOf[Class[T]])
 }
