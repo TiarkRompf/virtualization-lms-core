@@ -1,12 +1,13 @@
 package scala.virtualization.lms
 package common
+
 import scala.virtualization.lms.epfl._
 
 import scala.virtualization.lms.epfl.test2._
 import scala.virtualization.lms.epfl.test3._
 
 import org.scala_lang.virtualized.{RefinedManifest, virtualize, Struct, SourceContext}
-import common._
+import scala.virtualization.lms.common._
 
 @virtualize
 trait ManifestProg extends TestOps {
@@ -79,7 +80,6 @@ trait FlatMapProg extends TestOps with ListOps {
     "xx"
   }
 }
-
 
 trait TestOps extends Functions with Equal with IfThenElse with RecordOps with StructOps
 trait TestExp extends FunctionsExp with EqualExp with IfThenElseExp with StructExp
