@@ -274,7 +274,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
     case _ => printerr("warning: expect type Variable[A] but got "+m); mtype(manifest[Unit])
   }
 
-  override def readVar[T:Typ](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {
+  override implicit def readVar[T:Typ](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {
     case Variable(Def(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]))) =>
       struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.tp), pos))))
     case Variable(Def(Field(struct,idx))) =>
