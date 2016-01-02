@@ -95,8 +95,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
       val context = sym.pos(0)
       "      // " + relativePath(context.fileName) + ":" + context.line
     }
-    val typeSignature = if (scalaExplicitTypes) ": " + remap(sym.tp) else ""
-    stream.println("val " + quote(sym) + typeSignature + " = " + rhs + extra)
+    stream.println("val " + quote(sym) + " = " + rhs + extra)
   }
   
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {

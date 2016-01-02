@@ -206,7 +206,6 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case a@ArrayNew(n) => emitValDef(sym, src"new Array[${remap(a.m)}]($n)")
     case e@ArrayFromSeq(xs) => {
-      val m = e.m
       emitData(sym, xs)
       emitValDef(sym,
         if(xs.size > ARRAY_LITERAL_MAX_SIZE) {
@@ -218,15 +217,10 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
           }
           val numBlocks = Math.ceil(xs.size / ARRAY_LITERAL_MAX_SIZE).intValue
           "{val buf=new Array[" + remap(e.mt) + "](" + xs.size + ")\n" + ((0 until numBlocks).map(append)).mkString("\n") + "buf}" */
-          val parseMethod = m.asInstanceOf[Manifest[_]] match {
-            case Manifest.Int => "Integer.parseInt"
-            case Manifest.Long | Manifest.Float | Manifest.Double => s"java.lang.$m.parse$m"
-            case _ if m == manifest[String] => "x => x"
-            case _ => throw new GenerationFailedException(s"Can't store an array of type $m in a file")
-          }
-          s"""scala.io.Source.fromFile("${symDataPath(sym)}").getLines.map($parseMethod).toArray"""
-        } else {
-          src"Array[$m]($xs)"
+          "{import scala.io.Source;(Source.fromFile(\"" + symDataPath(sym) + "\").getLines.map{Integer.parseInt(_)}).toArray}"
+        }
+        else {
+          "Array(" + (xs map quote).mkString(",") + ")"
         }
       )
     }
