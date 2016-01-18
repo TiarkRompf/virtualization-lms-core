@@ -109,7 +109,7 @@ trait MatchingExtractorsExp extends FunctionsExp with Effects with Control {
   implicit def tupleTyp[A:Typ,B:Typ]: Typ[(A,B)] = {
     implicit val ManifestTyp(mA) = typ[A]
     implicit val ManifestTyp(mB) = typ[B]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
 
   case class Construct[A:Typ,B:Typ](c: Class[A], x: Rep[B]) extends Def[A]

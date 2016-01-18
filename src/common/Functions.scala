@@ -156,17 +156,17 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
   private def tupledTypOf[T](m: Typ[T], arity: Int): Boolean = m.runtimeClass.getName == "scala.Tuple" + arity
 
   override def unboxedFresh[A:Typ] : Exp[A] = {
-    val mA = implicitly[Typ[A]]
-    if (mA == implicitly[Typ[Unit]] || tupledTyp(mA))
+    val mA = typ[A]
+    if (mA == typ[Unit] || tupledTyp(mA))
       UnboxedTuple[A](mA.typeArguments.map(fresh(_)))
     else fresh[A]
   }
 
   override def unbox[A:Typ](x : Exp[A])(implicit pos: SourceContext) : Exp[A] = {
-    val mA = implicitly[Typ[A]]
+    val mA = typ[A]
     x match {
       case _ : UnboxedTuple[A] => x
-      case _ if mA == implicitly[Typ[Unit]] =>
+      case _ if mA == typ[Unit] =>
         UnboxedTuple[A](List())
       case _ if tupledTypOf(mA, 2) =>
         x match { case t : Rep[(a1,a2)] =>

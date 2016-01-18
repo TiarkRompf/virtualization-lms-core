@@ -20,10 +20,10 @@ import scala.reflect.SourceContext
 
 trait TestDSL extends BaseExp with LiftAll {
   
-  implicit def anyTyp: Typ[Any] = ManifestTyp(implicitly)
-  implicit def boolTyp: Typ[Boolean] = ManifestTyp(implicitly)
-  implicit def intTyp: Typ[Int] = ManifestTyp(implicitly)
-  implicit def stringTyp: Typ[String] = ManifestTyp(implicitly)
+  implicit def anyTyp: Typ[Any] = manifestTyp
+  implicit def boolTyp: Typ[Boolean] = manifestTyp
+  implicit def intTyp: Typ[Int] = manifestTyp
+  implicit def stringTyp: Typ[String] = manifestTyp
 
   case class BlockStm[+T](stms: List[Stm], res: Exp[T])
 

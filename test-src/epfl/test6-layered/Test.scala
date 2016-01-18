@@ -128,7 +128,7 @@ trait VectorsImpl extends Vectors with FunctionsExp with UtilExp {
 trait VectorsImplExternal extends VectorsImpl {
 
   type Vector = Array[Double]
-  implicit def vecTyp: Typ[Vector] = ManifestTyp(implicitly)
+  implicit def vecTyp: Typ[Vector] = manifestTyp
 
   val base = "scala.lms.epfl.test6.VectorOps.%s"
   

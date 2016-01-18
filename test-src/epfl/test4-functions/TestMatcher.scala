@@ -58,17 +58,17 @@ trait MatcherProg { this: Matching with ListMatch =>
 
 trait MatcherProgExp0 extends common.BaseExp with MatcherProg { this: Matching with ListMatch =>
 
-  implicit def charTyp: Typ[Char] = ManifestTyp(implicitly)
-  implicit def boolTyp: Typ[Boolean] = ManifestTyp(implicitly)
-  implicit def inputTyp: Typ[Input] = ManifestTyp(implicitly)
+  implicit def charTyp: Typ[Char] = manifestTyp
+  implicit def boolTyp: Typ[Boolean] = manifestTyp
+  implicit def inputTyp: Typ[Input] = manifestTyp
 
   implicit def listTyp[T:Typ]: Typ[List[T]] = {
     implicit val ManifestTyp(m) = typ[T]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
   implicit def consTyp[T:Typ]: Typ[::[T]] = {
     implicit val ManifestTyp(m) = typ[T]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
 
 }

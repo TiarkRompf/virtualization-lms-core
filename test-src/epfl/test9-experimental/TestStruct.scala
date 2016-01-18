@@ -38,7 +38,7 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp with Primi
   override def simpleLoop[A:Typ](size: Exp[Int], v: Sym[Int], body: Def[A])(implicit pos: SourceContext): Exp[A] = body match {
     case ArrayElem(Block(Def(Struct(tag:StructTag[A], elems)))) => 
       struct[A](ArraySoaTag[A](tag,size), elems.map(p=>(p._1,simpleLoop(size, v, ArrayElem(Block(p._2)))(p._2.tp.arrayTyp, pos))))
-    case ArrayElem(Block(Def(ArrayIndex(b,`v`)))) if infix_length(b)(mtype(ManifestTyp[Any](implicitly)/*FIXME:wrong type!*/)) == size => b.asInstanceOf[Exp[A]]
+    case ArrayElem(Block(Def(ArrayIndex(b,`v`)))) if infix_length(b)(mtype(manifestTyp[Any]/*FIXME:wrong type!*/)) == size => b.asInstanceOf[Exp[A]]
     // eta-reduce! <--- should live elsewhere, not specific to struct
     // rewrite loop(a.length) { i => a(i) } to a
     case _ => super.simpleLoop(size, v, body)
@@ -51,7 +51,7 @@ trait StructExpOptLoops extends StructExpOptCommon with ArrayLoopsExp with Primi
         case a::_ => mtype(a)
         case _ =>
           if (m.isArray) mtype(simpleClassTyp(m.runtimeClass.getComponentType))
-          else { printerr("warning: expect type Array[A] but got "+m); mtype(ManifestTyp[Any](implicitly)) }
+          else { printerr("warning: expect type Array[A] but got "+m); mtype(manifestTyp[Any]) }
       }
       struct[T](tag.asInstanceOf[StructTag[T]], elems.map(p=>(p._1,infix_at(p._2, i)(unwrap(p._2.tp)))))
     case _ => super.infix_at(a,i)

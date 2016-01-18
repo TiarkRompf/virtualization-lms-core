@@ -41,7 +41,7 @@ trait VectorOps extends Base {
 trait VectorExp extends VectorOps with EffectExp {
   implicit def vectorTyp[T:Typ]: Typ[Vector[T]] = { 
     implicit val ManifestTyp(m) = typ[T]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
   implicit def intTyp: Typ[Int]
   implicit def doubleTyp: Typ[Double]
