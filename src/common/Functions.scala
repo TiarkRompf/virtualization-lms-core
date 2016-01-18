@@ -71,8 +71,8 @@ trait FunctionsExp extends Functions with EffectExp {
     manifestTyp
   }
 
-  case class Lambda[A:Typ,B:Typ](f: Exp[A] => Exp[B], x: Exp[A], y: Block[B]) extends Def[A => B] { val mA = manifest[A]; val mB = manifest[B] }
-  case class Apply[A:Typ,B:Typ](f: Exp[A => B], arg: Exp[A]) extends Def[B] { val mA = manifest[A]; val mB = manifest[B] }
+  case class Lambda[A:Typ,B:Typ](f: Exp[A] => Exp[B], x: Exp[A], y: Block[B]) extends Def[A => B] { def mA = typ[A]; def mB = typ[B] }
+  case class Apply[A:Typ,B:Typ](f: Exp[A => B], arg: Exp[A]) extends Def[B] { def mA = typ[A]; def mB = typ[B] }
 
   // unboxedFresh and unbox are hooks that can be overridden to
   // implement multiple-arity functions with tuples. These two methods

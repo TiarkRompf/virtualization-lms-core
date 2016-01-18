@@ -52,8 +52,8 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     val index: String
   }
 
-  /* override def fresh[T:Typ] = manifest[T] match {
-    case s if s <:< manifest[Record] =>
+  /* override def fresh[T:Typ] = typ[T] match {
+    case ManifestTyp(s) if s <:< manifest[Record] =>
       val m = spawnRefinedManifest
       super.fresh(m)
     case _ => super.fresh
@@ -80,7 +80,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
   case class SimpleStruct[T](tag: StructTag[T], elems: Seq[(String, Rep[Any])]) extends AbstractStruct[T]
   case class FieldApply[T](struct: Rep[Any], index: String) extends AbstractField[T]
   case class FieldUpdate[T:Typ](struct: Exp[Any], index: String, rhs: Exp[T]) extends Def[Unit] {
-    def mA = manifest[T]
+    def mA = typ[T]
   }
 
   def struct[T:Typ](tag: StructTag[T], elems: (String, Rep[Any])*)(implicit o: Overloaded1, pos: SourceContext): Rep[T] = struct[T](tag, elems)
@@ -187,7 +187,7 @@ trait StructExp extends StructOps with StructTags with BaseExp with EffectExp wi
     case _ => m.runtimeClass.getSimpleName + m.typeArguments.map(a => structName(a)).mkString("")
   }
 
-  def classTag[T:Typ] = ClassTag[T](structName(manifest[T]))
+  def classTag[T:Typ] = ClassTag[T](structName(typ[T]))
 
   override def object_tostring(x: Exp[Any])(implicit pos: SourceContext): Exp[String] = x match {
     case Def(s@Struct(tag, elems)) => //tag(elem1, elem2, ...)
@@ -220,7 +220,8 @@ trait StructExpOpt extends StructExp {
   override def field[T:Typ](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = fieldLookup[T](struct, index) match {
     // the two variable pattern matches each seem to miss certain cases, so both are needed. why?
     case Some(Def(Reflect(NewVar(x),u,es))) => super.field[T](struct, index)
-    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field[T](struct, index) //readVar(Variable(x))
+    // TODO match on VariableTyp instead?
+    case Some(x: Exp[Var[T]]) if x.tp == typ[Var[T]] => super.field[T](struct, index) //readVar(Variable(x))
     case Some(x) => x
     case _ => super.field[T](struct, index)
   }
@@ -228,7 +229,7 @@ trait StructExpOpt extends StructExp {
   //TODO: need to be careful unwrapping Structs of vars since partial unwrapping can result in reads & writes to two different memory locations in the generated code
   //(the original var and the struct)
   /* override def var_field[T:Typ](struct: Exp[Any], index: String)(implicit pos: SourceContext): Var[T] = fieldLookup(struct, index) match {
-    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => Variable(x)
+    case Some(x: Exp[Var[T]]) if x.tp == typ[Var[T]] => Variable(x)
     case Some(x) => throw new RuntimeException("ERROR: " + index + " is not a variable field of type " + struct.tp)
     case None => super.var_field(struct, index)
   } */
@@ -273,7 +274,7 @@ trait StructExpOptCommon extends StructExpOpt with VariablesExp with IfThenElseE
     case _ => printerr("warning: expect type Variable[A] but got "+m); mtyp1[Unit]
   }
 
-  override def readVar[T:Typ](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {
+  override implicit def readVar[T:Typ](v: Var[T])(implicit pos: SourceContext): Exp[T] = v match {
     case Variable(Def(Struct(NestClassTag(tag), elems: Seq[(String,Exp[Variable[Any]])]))) =>
       struct[T](tag, elems.map(p=>(p._1,readVar(Variable(p._2))(unwrap(p._2.tp), pos))))
     case Variable(Def(Field(struct,idx))) =>

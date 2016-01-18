@@ -99,22 +99,22 @@ trait VariablesExp extends Variables with PrimitiveOps with ImplicitOpsExp with 
 
   case class ReadVar[T:Typ](v: Var[T]) extends Def[T]
   case class NewVar[T:Typ](init: Exp[T]) extends Def[Variable[T]] {
-    def m = manifest[T]
+    def m = typ[T]
   }
   case class Assign[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
-    def m = manifest[T]
+    def m = typ[T]
   }
   case class VarPlusEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
-    def m = manifest[T]
+    def m = typ[T]
   }
   case class VarMinusEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
-    def m = manifest[T]
+    def m = typ[T]
   }
   case class VarTimesEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
-    def m = manifest[T]
+    def m = typ[T]
   }
   case class VarDivideEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
-    def m = manifest[T]
+    def m = typ[T]
   }
 
   def var_new[T:Typ](init: Exp[T])(implicit pos: SourceContext): Var[T] = {

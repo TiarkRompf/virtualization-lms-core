@@ -60,7 +60,7 @@ trait ArrayBufferOpsExp extends ArrayBufferOps with EffectExp {
   }
   
   case class ArrayBufferNew[A:Typ](xs: Seq[Exp[A]]) extends Def[ArrayBuffer[A]]  {
-    val mA = manifest[A]
+    def mA = typ[A]
   }
   case class ArrayBufferMkString[A:Typ](l: Exp[ArrayBuffer[A]], sep: Exp[String]) extends Def[String]
   case class ArrayBufferAppend[A:Typ](l: Exp[ArrayBuffer[A]], e: Exp[A]) extends Def[Unit]

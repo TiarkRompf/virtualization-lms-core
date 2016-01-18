@@ -20,11 +20,11 @@ trait ObjectOps extends Variables with StringOps with OverloadHack {
 trait ObjectOpsExp extends ObjectOps with StringOpsExp with VariablesExp {
   case class ObjectToString(o: Exp[Any]) extends Def[String]
   case class ObjectUnsafeImmutable[A:Typ](o: Exp[A]) extends Def[A] {
-    val m = manifest[A]
+    def m = typ[A]
   }
- case class ObjectUnsafeMutable[A:Typ](o: Exp[A]) extends Def[A] {
-   val m = manifest[A]
- }
+  case class ObjectUnsafeMutable[A:Typ](o: Exp[A]) extends Def[A] {
+    def m = typ[A]
+  }
 
   def object_tostring(lhs: Exp[Any])(implicit pos: SourceContext) = ObjectToString(lhs)
   def object_unsafe_immutable[A:Typ](lhs: Exp[A])(implicit pos: SourceContext) = lhs match {
@@ -71,7 +71,7 @@ trait ObjectOpsExp extends ObjectOps with StringOpsExp with VariablesExp {
 
 trait ObjectOpsExpOpt extends ObjectOpsExp {
   override def object_tostring(lhs: Exp[Any])(implicit pos: SourceContext) = {
-    if (lhs.tp <:< manifest[String]) lhs.asInstanceOf[Exp[String]]
+    if (lhs.tp.runtimeClass == classOf[String]) lhs.asInstanceOf[Exp[String]]
     else super.object_tostring(lhs)
   }
 }

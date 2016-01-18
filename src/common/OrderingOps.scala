@@ -44,7 +44,7 @@ trait OrderingOps extends Base with Variables with BooleanOps with PrimitiveOps 
 
 trait OrderingOpsExp extends OrderingOps with VariablesExp {
   abstract class DefMN[T:Ordering:Typ,A] extends Def[A] {
-    def mev = manifest[T]
+    def mev = typ[T]
     def aev = implicitly[Ordering[T]]
   }
   case class OrderingLT      [T:Ordering:Typ](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T,Boolean]

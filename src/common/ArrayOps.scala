@@ -66,26 +66,26 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   }
 
   case class ArrayNew[T:Typ](n: Exp[Int]) extends Def[Array[T]] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayFromSeq[T:Typ](xs: Seq[Exp[T]]) extends Def[Array[T]] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayApply[T:Typ](a: Exp[Array[T]], n: Exp[Int]) extends Def[T] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayUpdate[T:Typ](a: Exp[Array[T]], n: Exp[Int], y: Exp[T]) extends Def[Unit] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayLength[T:Typ](a: Exp[Array[T]]) extends Def[Int] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayForeach[T](a: Exp[Array[T]], x: Sym[T], block: Block[Unit]) extends Def[Unit]
   case class ArrayCopy[T:Typ](src: Exp[Array[T]], srcPos: Exp[Int], dest: Exp[Array[T]], destPos: Exp[Int], len: Exp[Int]) extends Def[Unit] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArraySort[T:Typ](x: Exp[Array[T]]) extends Def[Array[T]] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayMap[A:Typ,B:Typ](a: Exp[Array[A]], x: Sym[A], block: Block[B]) extends Def[Array[B]] {
     val array = NewArray[B](a.length)

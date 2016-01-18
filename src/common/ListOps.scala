@@ -57,7 +57,7 @@ trait ListOpsExp extends ListOps with EffectExp with VariablesExp with BooleanOp
     manifestTyp
   }
   case class ListNew[A:Typ](xs: Seq[Rep[A]]) extends Def[List[A]] {
-    def mA = manifest[A]
+    def mA = typ[A]
   }
   case class ListFromSeq[A:Typ](xs: Rep[Seq[A]]) extends Def[List[A]]
   case class ListMap[A:Typ,B:Typ](l: Exp[List[A]], x: Sym[A], block: Block[B]) extends Def[List[B]]

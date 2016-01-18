@@ -53,7 +53,7 @@ trait SetOpsExp extends SetOps with ArrayOps with BooleanOps with EffectExp {
     val array = NewArray[A](s.size)
   }
 
-  def set_new[A:Typ](xs: Seq[Exp[A]])(implicit pos: SourceContext) = reflectMutable(SetNew(xs, manifest[A]))
+  def set_new[A:Typ](xs: Seq[Exp[A]])(implicit pos: SourceContext) = reflectMutable(SetNew(xs, typ[A]))
   def set_contains[A:Typ](s: Exp[Set[A]], i: Exp[A])(implicit pos: SourceContext) = SetContains(s, i)
   def set_add[A:Typ](s: Exp[Set[A]], i: Exp[A])(implicit pos: SourceContext) = reflectWrite(s)(SetAdd(s, i))
   def set_remove[A:Typ](s: Exp[Set[A]], i: Exp[A])(implicit pos: SourceContext) = reflectWrite(s)(SetRemove(s, i))
