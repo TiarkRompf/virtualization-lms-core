@@ -204,6 +204,8 @@ trait CLikeGenOrderingOps extends CLikeGenBase {
         case OrderingMin(a,b) =>
           //emitValDef(sym, quote(a) + "<" + quote(b) + "?" + quote(a) + ":" + quote(b))
           emitValDef(sym, src"MIN($a, $b)")
+        case OrderingCompare(a,b) =>
+          emitValDef(sym, src"($a < $b) ? -1 : ($a == $b) ? 0 : 1")
         case _ => super.emitNode(sym, rhs)
       }
     }
