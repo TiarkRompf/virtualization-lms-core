@@ -34,7 +34,17 @@ class TestNumeric extends FileDiffSuite {
     }
   }
 
-
+  trait NoTest extends Base with TupleOps{
+    def m = {
+      val a = (3, true, "String", true)
+      val t = unit((1, "sfdg", true))
+      t match {
+        case (a, b, c) => "sd"
+        case _ => "blalba"
+      }
+      val x = (t._1, t._3)
+    }
+  }
 
   trait MinimalIntf {
     def infix_/(lhs: Rep[Int], rhs: Rep[Int]): Rep[Int]
@@ -59,7 +69,7 @@ class TestNumeric extends FileDiffSuite {
         def test = {
           val r = unit(6.0)
           val q = unit(6.0)
-          //val theta = r/sqrt(-1.0*q*q*q*q)   // FIXME: "erroneous or inaccessible type" on one of the *q trees
+          val theta = r/sqrt(-1.0*q*q*q*q)   // FIXME: "erroneous or inaccessible type" on one of the *q trees
         }
 
       }
@@ -73,8 +83,7 @@ class TestNumeric extends FileDiffSuite {
       trait Prog extends MinimalIntf {
         def test = {
           val numRows = unit(7)
-
-          //val xstep = 25.0/numRows //FIXME: "erroneous or inaccessible type"
+          val xstep = 25.0/numRows //FIXME: "erroneous or inaccessible type"
         }
 
       }
@@ -88,10 +97,8 @@ class TestNumeric extends FileDiffSuite {
 
         def test = {
           val numRows = unit(7)
-
-          //val xstep = 25.0/numRows // could not find implicit Numeric[AnyVal]  (this is ok)
-          //val msg = "step = " + xstep  //FIXME: "EMBEDDING: cannot resolve target method (sym=<none>): infix_$plus("res = ", xstep)"
-
+          val xstep = 25.0/numRows // could not find implicit Numeric[AnyVal]  (this is ok)
+          val msg = "step = " + xstep  //FIXME: "EMBEDDING: cannot resolve target method (sym=<none>): infix_$plus("res = ", xstep)"
         }
 
       }

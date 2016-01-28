@@ -28,6 +28,9 @@ parallelExecution in Test := false
 // disable publishing of main docs
 publishArtifact in (Compile, packageDoc) := false
 
+
+publishArtifact in (Test, packageBin) := true
+
 // continuations
 val contVersion = "1.0.2"
 

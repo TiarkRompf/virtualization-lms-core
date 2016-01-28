@@ -116,7 +116,7 @@ class RecordMacros(val c: Context) {
     }
 
     private def recordTypes(tpe: Type): Seq[(String, Type)] = for {
-      mem <- tpe.members.toSeq
+      mem <- tpe.members.toSeq.reverse //reverse added to make Delite work as before!
       if mem.asMethod.isStable
     } yield (mem.name.encoded, mem.asMethod.returnType)
 

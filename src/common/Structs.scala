@@ -435,6 +435,7 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct with ScalaGenAtomic
   }
 
   override def remap[A](m: Manifest[A]) = m match {
+
     case s if s <:< manifest[Record] => structName(m)
     case _ => super.remap(m)
   }
