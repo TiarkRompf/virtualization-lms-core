@@ -9,11 +9,11 @@ trait Meetable[T] {
   // Tests whether a and b are identical
   def _matches(a: T, b: T): Boolean
   // Output list of why a and b cannot meet (for error reporting)
-  def _incompatibilities(a: T, b: T, t: MeetFunc): List[String]
+  def _incompatibilities(a: T, b: T)(implicit t: MeetFunc): List[String]
   // Tests whether a and b can be met successfully (equiv. to _incompatibilities.isEmpty)
-  def _canMeet(a: T, b: T, t: MeetFunc): Boolean
+  def _canMeet(a: T, b: T)(implicit t: MeetFunc): Boolean
   // Meet a and b
-  def _meet(a: T, b: T, t: MeetFunc): T
+  def _meet(a: T, b: T)(implicit t: MeetFunc): T
   // Test if a is completely filled in (known)
   def _isComplete(a: T): Boolean
   // Debugging / pretty printing
@@ -24,7 +24,7 @@ trait Meetable[T] {
 trait MeetableOps {
   class IllegalMeetException extends Exception("Attempted to meet incompatible metadata instances")
 
-  // TODO: This might be going a bit overboard..
+  // TODO: This might be going a bit overboard.. How to narrow these down?
   trait MetaAlias extends MeetFunc                // General aliasing of metadata
   case object ReduceAlias extends MetaAlias       // Aliasing due to reduction of elements
   case object BranchAlias extends MetaAlias       // Aliasing due to conditional branches
@@ -44,16 +44,17 @@ trait MeetableOps {
   // This effectively does the same thing as using implicitly[...] but with less code
   // Internal API for metadata
   def matches[T: Meetable](a: T, b: T): Boolean = implicitly[Meetable[T]]._matches(a,b)
-  def incompatibilities[T:Meetable](a: T, b: T, t: MeetFunc): List[String] = implicitly[Meetable[T]]._incompatibilities(a,b,t)
-  def canMeet[T: Meetable](a: T, b: T, t: MeetFunc): Boolean = implicitly[Meetable[T]]._canMeet(a,b,t)
-  def meet[T:Meetable](t: MeetFunc)(ts: T*): T = ts.reduce{(a,b) => tryMeet(a,b,t)}
+  def incompatibilities[T:Meetable](a: T, b: T)(implicit t: MeetFunc): List[String] = implicitly[Meetable[T]]._incompatibilities(a,b)(t)
+  def canMeet[T: Meetable](a: T, b: T)(implicit t: MeetFunc): Boolean = { implicitly[Meetable[T]]._canMeet(a,b)(t) }
+  def meet[T:Meetable](ts: T*)(implicit t: MeetFunc): T = ts.reduce{(a,b) => tryMeet(a,b) }
+  def meet[T:Meetable](t: MeetFunc, ts: T*): T = { implicit val func = t; meet(ts:_*) }
   def isComplete[T: Meetable](a: T): Boolean = implicitly[Meetable[T]]._isComplete(a)
   def makeString[T: Meetable](a: T, prefix: String = "") = implicitly[Meetable[T]]._makeString(a,prefix)
   def multiLine[T: Meetable](a: T) = implicitly[Meetable[T]]._multiLine(a)
 
   // Meet with error reporting for incompatible metadata
-  private def tryMeet[T: Meetable](a: T, b: T, func: MeetFunc)(implicit ctx: SourceContext): T = {
-    if (canMeet(a,b,func)) { implicitly[Meetable[T]]._meet(a,b,func) }
+  private def tryMeet[T: Meetable](a: T, b: T)(implicit func: MeetFunc, ctx: SourceContext): T = {
+    if (canMeet(a,b)) { implicitly[Meetable[T]]._meet(a,b) }
     else {
       //val inc = incompatibilities(a,b,func)
       sys.error("Attempted to meet incompatible metadata for symbol used here:\n" +

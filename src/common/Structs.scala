@@ -122,7 +122,7 @@ trait StructExp extends StructOps with StructTags with AtomicWrites with EffectE
     case StructType(_,elems) =>
       val typeFields = PropMap(elems.map{case (index,tp) => index -> initType(tp) })
       val symFields = (index,child) match {
-        case (Some(index),Some(child)) => meet(MetaTypeInit)(PropMap(index, child), typeFields)
+        case (Some(index),Some(child)) => meet(MetaTypeInit, PropMap(index, child), typeFields)
         case _ => typeFields
       }
       StructProperties(symFields, symData)

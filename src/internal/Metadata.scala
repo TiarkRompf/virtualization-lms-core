@@ -19,16 +19,16 @@ trait SymbolMetadata extends MeetableOps {
       case (None, Some(_)) => false
       case (None,None) => true
     }
-    def _incompatibilities(a: Option[T], b: Option[T], t: MeetFunc): List[String] = (a,b) match {
-      case (Some(am), Some(bm)) => incompatibilities(am,bm,t)
+    def _incompatibilities(a: Option[T], b: Option[T])(implicit t: MeetFunc): List[String] = (a,b) match {
+      case (Some(am), Some(bm)) => incompatibilities(am,bm)
       case _ => Nil
     }
-    def _canMeet(a: Option[T], b: Option[T], t: MeetFunc): Boolean = (a,b) match {
-      case (Some(am), Some(bm)) => canMeet(am,bm,t)
+    def _canMeet(a: Option[T], b: Option[T])(implicit t: MeetFunc): Boolean = (a,b) match {
+      case (Some(am), Some(bm)) => canMeet(am,bm)
       case _ => true
     }
-    def _meet(a: Option[T], b: Option[T], t: MeetFunc): Option[T] = (a,b) match {
-      case (Some(am), Some(bm)) if canMeet(am,bm,t) => Some(meet(t)(am,bm))
+    def _meet(a: Option[T], b: Option[T])(implicit t: MeetFunc): Option[T] = (a,b) match {
+      case (Some(am), Some(bm)) if canMeet(am,bm) => Some(meet(am,bm))
       case (Some(am), None) => Some(am)
       case (None, Some(bm)) => Some(bm)
       case (None, None) => None
@@ -64,14 +64,14 @@ trait SymbolMetadata extends MeetableOps {
 
     // Test if this and that can be met to produce valid metadata
     // TODO: Probably don't need both canMeet and incompatibilities, can just have latter
-    def _canMeet(that: self.type, t: MeetFunc): Boolean = _incompatibilities(that,t).isEmpty
-    def metaCanMeet(that: Metadata, t: MeetFunc) = this.getClass == that.getClass && _canMeet(that.asInstanceOf[self.type], t)
+    def _canMeet(that: self.type)(implicit t: MeetFunc): Boolean = _incompatibilities(that).isEmpty
+    def metaCanMeet(that: Metadata)(implicit t: MeetFunc) = this.getClass == that.getClass && _canMeet(that.asInstanceOf[self.type])
 
-    def _incompatibilities(that: self.type, t: MeetFunc): List[String]
-    def metaIncompatibilities(that: Metadata, t: MeetFunc) = if (this.getClass == that.getClass) _incompatibilities(that.asInstanceOf[self.type], t) else List("Cannot meet metadata of different types")
+    def _incompatibilities(that: self.type)(implicit t: MeetFunc): List[String]
+    def metaIncompatibilities(that: Metadata)(implicit t: MeetFunc) = if (this.getClass == that.getClass) _incompatibilities(that.asInstanceOf[self.type]) else List("Cannot meet metadata of different types")
 
-    def _meet(that: self.type, t: MeetFunc): Metadata
-    def metaMeet(that: Metadata, t: MeetFunc) = if (this.getClass == that.getClass) _meet(that.asInstanceOf[self.type], t) else throw new IllegalMeetException
+    def _meet(that: self.type)(implicit t: MeetFunc): Metadata
+    def metaMeet(that: Metadata)(implicit t: MeetFunc) = if (this.getClass == that.getClass) _meet(that.asInstanceOf[self.type])(t) else throw new IllegalMeetException
 
     // Pretty printing metadata (mostly for debugging)
     def makeString(prefix: String): String = this.toString()
@@ -105,14 +105,21 @@ trait SymbolMetadata extends MeetableOps {
   //  case _ => throw new IllegalMeetException
   //}
 
-  implicit object MetadataIsMeetable extends Meetable[Metadata] {
-    def _matches(a: Metadata, b: Metadata) = a.metaMatches(b)
-    def _incompatibilities(a: Metadata, b: Metadata, t: MeetFunc) = a.metaIncompatibilities(b, t)
-    def _canMeet(a: Metadata, b: Metadata, t: MeetFunc) = a.metaCanMeet(b, t)
-    def _meet(a: Metadata, b: Metadata, t: MeetFunc) = a.metaMeet(b, t)
-    def _isComplete(a: Metadata) = a.isComplete
-    def _makeString(a: Metadata, prefix: String) = " = " + a.makeString(prefix)
-    def _multiLine(a: Metadata) = a.multiLine
+  //implicit object MetadataIsMeetable extends Meetable[Metadata] {
+
+  // All concrete classes (T) that extend Metadata should be meetable
+  // This has the disadvantage of not being a static object, but it means we can write things like
+  // case class MyData(...) extends Metadata
+  // val x = MyData(..); val y = MyData(...); meet(x,y)
+  // without having to define implicit meet rules for each subclass explicitly
+  implicit def MetadataIsMeetable[T<:Metadata]: Meetable[T] = new Meetable[T] {
+    def _matches(a: T, b: T) = a.metaMatches(b)
+    def _incompatibilities(a: T, b: T)(implicit t: MeetFunc) = a.metaIncompatibilities(b)(t)
+    def _canMeet(a: T, b: T)(implicit t: MeetFunc) = a.metaCanMeet(b)(t)
+    def _meet(a: T, b: T)(implicit t: MeetFunc) = a.metaMeet(b)(t).asInstanceOf[T]
+    def _isComplete(a: T) = a.isComplete
+    def _makeString(a: T, prefix: String) = " = " + a.makeString(prefix)
+    def _multiLine(a: T) = a.multiLine
   }
 
   /**
@@ -162,12 +169,15 @@ trait SymbolMetadata extends MeetableOps {
 
   implicit def PropMapCanBeMeetable[K,V:Meetable]: Meetable[PropMap[K,V]] = new Meetable[PropMap[K,V]] {
     def _matches(a: PropMap[K,V], b: PropMap[K,V]): Boolean = a.zipForall(b){(am,bm) => matches(am,bm)}
-    def _incompatibilities(a: PropMap[K,V], b: PropMap[K,V], t: MeetFunc): List[String] = {
-      a.zip(b){(am,bm) => val inc = incompatibilities(am,bm,t); if (inc.isEmpty) None else Some(inc.head)}.values
+    def _incompatibilities(a: PropMap[K,V], b: PropMap[K,V])(implicit t: MeetFunc): List[String] = {
+      a.zip(b){ (am,bm) =>
+        val inc = incompatibilities(am,bm)
+        if (inc.isEmpty) None else Some(inc.head)
+      }.values
     }
-    def _canMeet(a: PropMap[K,V], b: PropMap[K,V], t: MeetFunc): Boolean = a.zipForall(b){(am,bm) => canMeet(am,bm,t)}
+    def _canMeet(a: PropMap[K,V], b: PropMap[K,V])(implicit t: MeetFunc): Boolean = a.zipForall(b){(am,bm) => canMeet(am,bm)}
     def _isComplete(a: PropMap[K,V]): Boolean = a.forall{am => isComplete(am)}
-    def _meet(a: PropMap[K,V], b: PropMap[K,V], t: MeetFunc): PropMap[K,V] = a.zip(b){(am,bm) => meet(t)(am,bm)}
+    def _meet(a: PropMap[K,V], b: PropMap[K,V])(implicit t: MeetFunc): PropMap[K,V] = a.zip(b){(am,bm) => meet(am,bm)}
 
     def _makeString(a: PropMap[K,V], prefix: String): String = {
       a.toList.sortBy{x => x._1.toString}.map{case (k,v) => prefix + "." + k + makeString(v, prefix)}.mkString("\n")
@@ -206,22 +216,22 @@ trait SymbolMetadata extends MeetableOps {
       case (a: ArrayProperties, b: ArrayProperties) => matches(a.data, b.data) && matches(a.child, b.child)
       case _ => false
     }
-    def _incompatibilities(a: SymbolProperties, b: SymbolProperties, t: MeetFunc): List[String] = (a,b) match {
-      case (a: ScalarProperties, b: ScalarProperties) => incompatibilities(a.data, b.data, t)
-      case (a: StructProperties, b: StructProperties) => incompatibilities(a.data, b.data, t) ::: incompatibilities(a.children, b.children, t)
-      case (a: ArrayProperties, b: ArrayProperties) => incompatibilities(a.data, b.data, t) ::: incompatibilities(a.child, b.child, t)
+    def _incompatibilities(a: SymbolProperties, b: SymbolProperties)(implicit t: MeetFunc): List[String] = (a,b) match {
+      case (a: ScalarProperties, b: ScalarProperties) => incompatibilities(a.data, b.data)
+      case (a: StructProperties, b: StructProperties) => incompatibilities(a.data, b.data) ::: incompatibilities(a.children, b.children)
+      case (a: ArrayProperties, b: ArrayProperties) => incompatibilities(a.data, b.data) ::: incompatibilities(a.child, b.child)
       case _ => List("different symbol property types")
     }
-    def _canMeet(a: SymbolProperties, b: SymbolProperties, t: MeetFunc): Boolean = (a,b,t) match {
-      case (a: ScalarProperties, b: ScalarProperties, _) => canMeet(a.data, b.data, t)
-      case (a: StructProperties, b: StructProperties, _) => canMeet(a.data, b.data, t) && canMeet(a.children, b.children, t)
-      case (a: ArrayProperties, b: ArrayProperties, _) => canMeet(a.data, b.data, t) && canMeet(a.child, b.child, t)
+    def _canMeet(a: SymbolProperties, b: SymbolProperties)(implicit t: MeetFunc): Boolean = (a,b) match {
+      case (a: ScalarProperties, b: ScalarProperties) => canMeet(a.data, b.data)
+      case (a: StructProperties, b: StructProperties) => canMeet(a.data, b.data) && canMeet(a.children, b.children)
+      case (a: ArrayProperties, b: ArrayProperties) => canMeet(a.data, b.data) && canMeet(a.child, b.child)
       case _ => false
     }
-    def _meet(a: SymbolProperties, b: SymbolProperties, t: MeetFunc): SymbolProperties = (a,b) match {
-      case (a: ScalarProperties, b: ScalarProperties) if _canMeet(a,b,t) => ScalarProperties(meet(t)(a.data, b.data))
-      case (a: StructProperties, b: StructProperties) if _canMeet(a,b,t)=> StructProperties(meet(t)(a.children, b.children), meet(t)(a.data, b.data))
-      case (a: ArrayProperties, b: ArrayProperties) if _canMeet(a,b,t) => ArrayProperties(meet(t)(a.child, b.child), meet(t)(a.data, b.data))
+    def _meet(a: SymbolProperties, b: SymbolProperties)(implicit t: MeetFunc): SymbolProperties = (a,b) match {
+      case (a: ScalarProperties, b: ScalarProperties) if _canMeet(a,b) => ScalarProperties(meet(a.data, b.data))
+      case (a: StructProperties, b: StructProperties) if _canMeet(a,b)=> StructProperties(meet(a.children, b.children), meet(a.data, b.data))
+      case (a: ArrayProperties, b: ArrayProperties) if _canMeet(a,b) => ArrayProperties(meet(a.child, b.child), meet(a.data, b.data))
       case _ => throw new IllegalMeetException
     }
     def _isComplete(a: SymbolProperties): Boolean = a match {
@@ -314,8 +324,8 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata { self =>
    */
   private def updateProperties(e: Exp[Any], p: SymbolProperties)(implicit ctx: SourceContext) {
     val prevProps = metadata.get(e)
-    val newProps = meet(MetaOverwrite)(prevProps, Some(p))
-    metadata = metadata ++ List(e -> newProps.get)
+    val newProps = meet(MetaOverwrite, prevProps, Some(p))
+    metadata += e -> newProps.get
     if (!matches(prevProps, newProps)) setMetadataUpdateFlag()
   }
 
@@ -328,7 +338,7 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata { self =>
   def initType[A](tp: Manifest[A], data: Option[Metadata] = None, child: Option[SymbolProperties] = None, index: Option[String] = None)(implicit ctx: SourceContext): SymbolProperties = {
     val givenData = PropMap[Datakey[_],Metadata](data.map{m => m.key -> m}.toList)
     val typeData = PropMap[Datakey[_],Metadata](defaultMetadata(tp).map{m => m.key -> m})
-    val symData = meet(MetaTypeInit)(givenData, typeData)
+    val symData = meet(MetaTypeInit, givenData, typeData)
     initProps(tp, symData, child, index)
   }
 
