@@ -121,3 +121,17 @@ trait IterativeTraversal extends Traversal { self =>
     (curBlock)
   }
 }
+
+trait IRPrinter extends Traversal {
+  import IR._
+
+  override def traverseStm(stm: Stm): Unit = {
+    super.traverseStm(stm)
+    stm match {
+      case TP(s,d) => println(strDef(s))
+      case TTP(syms, mhs, d) =>
+        println(syms.mkString("(", ",", ")") + " = " + d.toString)
+        println("   " + mhs.mkString("\n   "))
+    }
+  }
+}
