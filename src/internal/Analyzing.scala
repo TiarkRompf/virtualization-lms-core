@@ -24,4 +24,5 @@ trait Analyzing extends MetadataOps {
   // --- Shortcuts for metadata instances
   def meta[T<:Metadata](x: Exp[Any])(implicit ct: ClassTag[T]): Option[T] = getMetadata(x, ct.runtimeClass.asInstanceOf[Class[T]])
   def meta[T<:Metadata](x: Block[Any])(implicit ct: ClassTag[T]): Option[T] = getMetadata(x, ct.runtimeClass.asInstanceOf[Class[T]])
+  def meta[T<:Metadata](p: SymbolProperties)(implicit ct: ClassTag[T]): Option[T] = p[T]
 }
