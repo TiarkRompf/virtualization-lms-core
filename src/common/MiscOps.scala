@@ -63,7 +63,7 @@ trait ScalaGenMiscOps extends ScalaGenEffect {
     case PrintF(f,xs) => emitValDef(sym, src"printf(${f::xs})")
     case PrintLn(s) => emitValDef(sym, src"println($s)")
     case Print(s) => emitValDef(sym, src"print($s)")
-    case Exit(a) => emitValDef(sym, src"exit($a)")
+    case Exit(a) => emitValDef(sym, src"sys.exit($a)")
     case Return(x) => emitValDef(sym, src"return $x")
     case Error(s) => emitValDef(sym, src"error($s)")
     case _ => super.emitNode(sym, rhs)
