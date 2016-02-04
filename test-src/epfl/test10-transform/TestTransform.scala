@@ -15,8 +15,6 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 import org.scala_lang.virtualized.SourceContext
 import org.scala_lang.virtualized.virtualize
 
-
-
 class TestTransform extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test10-"
@@ -109,7 +107,8 @@ class TestTransform extends FileDiffSuite {
   
   // test simple block transform
   def testTransform1 = withOutFileChecked(prefix+"transform1") {
-    @virtualize trait Prog extends DSL with Impl {
+    @virtualize
+    trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val z = vzeros(100)
         val y = vzeros(100)
@@ -122,7 +121,8 @@ class TestTransform extends FileDiffSuite {
   }
 
   def testTransform2 = withOutFileChecked(prefix+"transform2") {
-    @virtualize trait Prog extends DSL with Impl {
+    @virtualize
+    trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val a = vzeros(100) // will be moved into branches
         val b = vzeros(50)
@@ -138,7 +138,8 @@ class TestTransform extends FileDiffSuite {
   }
 
   def testTransform3 = withOutFileChecked(prefix+"transform3") {
-    @virtualize trait Prog extends DSL with Impl {
+    @virtualize
+    trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val a = vzeros(100) // will be moved into branches
         val b = vzeros(50)
