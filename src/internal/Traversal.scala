@@ -5,7 +5,7 @@ package internal
  * Single traversal of the IR with pre- and post- processing
  */
 trait Traversal extends FatBlockTraversal { self =>
-  val IR: FatExpressions with Effects with MetadataOps
+  val IR: FatExpressions with Effects with Analyzing
   import IR._
 
   protected var datRequire: List[Datakey[_]] = Nil

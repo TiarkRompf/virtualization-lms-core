@@ -79,7 +79,7 @@ trait AbstractSubstTransformer extends AbstractTransformer {
   }
 }
 
-trait Transforming extends MetadataOps { self =>
+trait Transforming extends MetadataExp { self =>
 
   type Transformer = AbstractTransformer { val IR: self.type }
 

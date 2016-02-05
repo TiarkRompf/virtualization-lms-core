@@ -8,7 +8,7 @@ import internal.{AbstractSubstTransformer, Traversal, IterativeTraversal}
 import internal.{FatExpressions, Effects, Transforming}
 
 trait ForwardTransformer extends AbstractSubstTransformer with Traversal { self =>
-  val IR: FatExpressions with Effects with Transforming
+  val IR: FatExpressions with EffectExp
   import IR._
 
   override def hasContext = true

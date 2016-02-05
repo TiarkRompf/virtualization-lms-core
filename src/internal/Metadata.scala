@@ -3,6 +3,9 @@ package internal
 
 import scala.collection.immutable.HashMap
 import scala.reflect._
+import scala.virtualization.lms.common.Base
+
+// TODO: This should probably be moved to LMS common since we reference Base?
 
 trait SymbolMetadata extends MeetableOps {
   // TODO: Better way to reference metadata?
@@ -260,10 +263,49 @@ trait SymbolMetadata extends MeetableOps {
   object NoChildren extends PropMap[String, SymbolProperties](Nil)
 }
 
+trait MetadataOps extends Base with SymbolMetadata { this: MetadataExp =>
+  // --- API
+  def setProps(e: Rep[Any], p: SymbolProperties)(implicit ctx: SourceContext): Unit
+  def setProps(e: Rep[Any], p: Option[SymbolProperties])(implicit ctx: SourceContext): Unit
+  def setMetadata(e: Rep[Any], m: Metadata)(implicit ctx: SourceContext): Unit
+  def setMetadata(e: Rep[Any], m: Option[Metadata])(implicit ctx: SourceContext): Unit
+  def setChild(e: Rep[Any], p: SymbolProperties)(implicit ctx: SourceContext): Unit
+  def setChild(e: Rep[Any], p: Option[SymbolProperties])(implicit ctx: SourceContext): Unit
+  def setField(e: Rep[Any], p: SymbolProperties, index: String)(implicit ctx: SourceContext): Unit
+  def setField(e: Rep[Any], p: Option[SymbolProperties], index: String)(implicit ctx: SourceContext): Unit
 
-trait MetadataOps extends Expressions with Blocks with SymbolMetadata { self =>
-  type Analyzer = Traversal { val IR: self.type }
+  def getChild(p: SymbolProperties): Option[SymbolProperties]
+  def getField(p: SymbolProperties, index: String): Option[SymbolProperties]
 
+  def getMetadata[T<:Metadata](e: Rep[Any], k: Datakey[T]): Option[T]
+  def getProps(e: Rep[Any]): Option[SymbolProperties]
+  def getChild(e: Rep[Any]): Option[SymbolProperties]
+  def getField(e: Rep[Any], index: String): Option[SymbolProperties]
+
+  def getMetadata[T<:Metadata](b: Block[Any], k: Datakey[T]): Option[T]
+  def getProps(b: Block[Any]): Option[SymbolProperties]
+  def getChild(b: Block[Any]): Option[SymbolProperties]
+  def getField(b: Block[Any], index: String): Option[SymbolProperties]
+
+  def meta[T<:Metadata](p: SymbolProperties)(implicit ct: ClassTag[T]): Option[T] = p[T]
+  def meta[T<:Metadata](x: Rep[Any])(implicit ct: ClassTag[T]): Option[T] = getMetadata(x, ct.runtimeClass.asInstanceOf[Class[T]])
+  def meta[T<:Metadata](x: Block[Any])(implicit ct: ClassTag[T]): Option[T] = getMetadata(x, ct.runtimeClass.asInstanceOf[Class[T]])
+
+  // Shortcuts for properties
+  // These shortcuts should only be used when child is guaranteed to be defined
+  def child(p: SymbolProperties): SymbolProperties = getChild(p).get
+  def child(p: SymbolProperties, index: String): SymbolProperties = getField(p, index).get
+
+  def props(e: Rep[Any]): SymbolProperties = getProps(e).get
+  def child(e: Rep[Any]): SymbolProperties = getChild(e).get
+  def child(e: Rep[Any], index: String): SymbolProperties = getField(e, index).get
+
+  def props(b: Block[Any]): SymbolProperties = getProps(b).get
+  def child(b: Block[Any]): SymbolProperties = getChild(b).get
+  def child(b: Block[Any], index: String): SymbolProperties = getField(b, index).get
+}
+
+trait MetadataExp extends MetadataOps with Expressions with Blocks {
   ///////////////////
   // Symbol Metadata
 
@@ -271,8 +313,6 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata { self =>
   // Note that SourceContext is used all over the place with the intention for use in error messages - may not need to keep these around
 
   var metadata: Map[Exp[Any], SymbolProperties] = Map.empty
-  var validData: List[Datakey[_]] = Nil
-  var analyzers: Map[Datakey[_], Analyzer] = Map.empty
 
   private var metadataUpdateFlag: Boolean = false
   private def setMetadataUpdateFlag() { metadataUpdateFlag = true }
@@ -346,4 +386,7 @@ trait MetadataOps extends Expressions with Blocks with SymbolMetadata { self =>
   def initProps[A](tp: Manifest[A], symData: PropMap[Datakey[_],Metadata], child: Option[SymbolProperties], index: Option[String])(implicit ctx: SourceContext): SymbolProperties = tp match {
     case _ => ScalarProperties(symData)
   }
+
+
+
 }
