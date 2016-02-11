@@ -3,7 +3,7 @@ package internal
 
 import scala.collection.immutable.HashMap
 import scala.reflect._
-import scala.virtualization.lms.common.Base
+import scala.virtualization.lms.common.{Base,BaseExp}
 
 // TODO: This should probably be moved to LMS common since we reference Base?
 
@@ -263,33 +263,42 @@ trait SymbolMetadata extends MeetableOps {
   object NoChildren extends PropMap[String, SymbolProperties](Nil)
 }
 
-trait MetadataOps extends Base with SymbolMetadata { this: MetadataExp =>
+trait MetadataOps extends SymbolMetadata { this: Base =>
+
   // --- API
+  // Directly add symbol property metadata mapping for symbol
   def setProps(e: Rep[Any], p: SymbolProperties)(implicit ctx: SourceContext): Unit
-  def setProps(e: Rep[Any], p: Option[SymbolProperties])(implicit ctx: SourceContext): Unit
-  def setMetadata(e: Rep[Any], m: Metadata)(implicit ctx: SourceContext): Unit
-  def setMetadata(e: Rep[Any], m: Option[Metadata])(implicit ctx: SourceContext): Unit
-  def setChild(e: Rep[Any], p: SymbolProperties)(implicit ctx: SourceContext): Unit
-  def setChild(e: Rep[Any], p: Option[SymbolProperties])(implicit ctx: SourceContext): Unit
-  def setField(e: Rep[Any], p: SymbolProperties, index: String)(implicit ctx: SourceContext): Unit
-  def setField(e: Rep[Any], p: Option[SymbolProperties], index: String)(implicit ctx: SourceContext): Unit
+  def initRep(e: Rep[Any], data: Option[Metadata] = None, child: Option[SymbolProperties] = None, index: Option[String] = None)(implicit ctx: SourceContext): SymbolProperties
 
-  def getChild(p: SymbolProperties): Option[SymbolProperties]
-  def getField(p: SymbolProperties, index: String): Option[SymbolProperties]
+  def setMetadata(e: Rep[Any], m: Option[Metadata])(implicit ctx: SourceContext) { setProps(e, initRep(e, m)) }
+  def setChild(e: Rep[Any], p: Option[SymbolProperties])(implicit ctx: SourceContext) { setProps(e, initRep(e, None, p)) }
+  def setField(e: Rep[Any], p: Option[SymbolProperties], index: String)(implicit ctx: SourceContext) { setProps(e, initRep(e, None, p, Some(index))) }
 
-  def getMetadata[T<:Metadata](e: Rep[Any], k: Datakey[T]): Option[T]
+  // Alternative versions
+  def setProps(e: Rep[Any], p: Option[SymbolProperties])(implicit ctx: SourceContext) { if (p.isDefined) setProps(e, p.get) }
+  def setMetadata(e: Rep[Any], m: Metadata)(implicit ctx: SourceContext) { setMetadata(e, Some(m)) }
+  def setChild(e: Rep[Any], p: SymbolProperties)(implicit ctx: SourceContext) { setChild(e, Some(p)) }
+  def setField(e: Rep[Any], p: SymbolProperties, index: String)(implicit ctx: SourceContext) { setField(e, Some(p), index) }
+
+  // Get properties for given symbol
   def getProps(e: Rep[Any]): Option[SymbolProperties]
-  def getChild(e: Rep[Any]): Option[SymbolProperties]
-  def getField(e: Rep[Any], index: String): Option[SymbolProperties]
 
-  def getMetadata[T<:Metadata](b: Block[Any], k: Datakey[T]): Option[T]
-  def getProps(b: Block[Any]): Option[SymbolProperties]
-  def getChild(b: Block[Any]): Option[SymbolProperties]
-  def getField(b: Block[Any], index: String): Option[SymbolProperties]
+  // Get child metadata for given symbol properties
+  def getChild(p: SymbolProperties): Option[SymbolProperties] = p match {
+    case p: ArrayProperties => p.child
+    case _ => None
+  }
+  def getField(p: SymbolProperties, index: String): Option[SymbolProperties] = p match {
+    case p: StructProperties => p.child(index)
+    case _ => None
+  }
+
+  def getMetadata[T<:Metadata](e: Rep[Any], k: Datakey[T]): Option[T] = getProps(e).flatMap{p => p(k)}
+  def getChild(e: Rep[Any]): Option[SymbolProperties] = getProps(e).flatMap{p => getChild(p)}
+  def getField(e: Rep[Any], index: String): Option[SymbolProperties] = getProps(e).flatMap{p => getField(p, index)}
 
   def meta[T<:Metadata](p: SymbolProperties)(implicit ct: ClassTag[T]): Option[T] = p[T]
   def meta[T<:Metadata](x: Rep[Any])(implicit ct: ClassTag[T]): Option[T] = getMetadata(x, ct.runtimeClass.asInstanceOf[Class[T]])
-  def meta[T<:Metadata](x: Block[Any])(implicit ct: ClassTag[T]): Option[T] = getMetadata(x, ct.runtimeClass.asInstanceOf[Class[T]])
 
   // Shortcuts for properties
   // These shortcuts should only be used when child is guaranteed to be defined
@@ -299,19 +308,11 @@ trait MetadataOps extends Base with SymbolMetadata { this: MetadataExp =>
   def props(e: Rep[Any]): SymbolProperties = getProps(e).get
   def child(e: Rep[Any]): SymbolProperties = getChild(e).get
   def child(e: Rep[Any], index: String): SymbolProperties = getField(e, index).get
-
-  def props(b: Block[Any]): SymbolProperties = getProps(b).get
-  def child(b: Block[Any]): SymbolProperties = getChild(b).get
-  def child(b: Block[Any], index: String): SymbolProperties = getField(b, index).get
 }
 
-trait MetadataExp extends MetadataOps with Expressions with Blocks {
-  ///////////////////
-  // Symbol Metadata
+trait MetadataExp extends MetadataOps with Expressions with Blocks { this: BaseExp =>
 
-  // TODO: Is this the right spot for these?
-  // Note that SourceContext is used all over the place with the intention for use in error messages - may not need to keep these around
-
+  // State for compiler traversal use
   var metadata: Map[Exp[Any], SymbolProperties] = Map.empty
 
   private var metadataUpdateFlag: Boolean = false
@@ -320,37 +321,19 @@ trait MetadataExp extends MetadataOps with Expressions with Blocks {
   def getMetadataUpdateFlag() = metadataUpdateFlag
 
   // Setters
-  // Directly add symbol property metadata mapping for symbol
-  def setProps(e: Exp[Any], p: SymbolProperties)(implicit ctx: SourceContext) { updateProperties(e, p) }
-  def setProps(e: Exp[Any], p: Option[SymbolProperties])(implicit ctx: SourceContext) { if (p.isDefined) setProps(e, p.get) }
-
-  // Add metadata information for this symbol (possibly using meet)
-  def setMetadata(e: Exp[Any], m: Option[Metadata])(implicit ctx: SourceContext) { updateProperties(e, initExp(e, m)) }
-  def setMetadata(e: Exp[Any], m: Metadata)(implicit ctx: SourceContext) { setMetadata(e, Some(m)) }
-
-  // Add child information for this symbol (possibly using meet)
-  def setChild(e: Exp[Any], p: Option[SymbolProperties])(implicit ctx: SourceContext) { updateProperties(e, initExp(e, None, p)) }
-  def setChild(e: Exp[Any], p: SymbolProperties)(implicit ctx: SourceContext) { setChild(e, Some(p)) }
-
-  def setField(e: Exp[Any], p: Option[SymbolProperties], index: String)(implicit ctx: SourceContext) { updateProperties(e, initExp(e, None, p, Some(index))) }
-  def setField(e: Exp[Any], p: SymbolProperties, index: String)(implicit ctx: SourceContext) { setField(e, Some(p), index) }
+  /**
+   * Merge previous metadata for token and new data, notifying update if changes occurred
+   * During merge, new metadata overrides pre-existing data when possible
+   */
+  def setProps(e: Rep[Any], p: SymbolProperties)(implicit ctx: SourceContext) {
+    val prevProps = metadata.get(e)
+    val newProps = meet(MetaOverwrite, prevProps, Some(p))
+    metadata += e -> newProps.get
+    if (!matches(prevProps, newProps)) setMetadataUpdateFlag()
+  }
 
   // Getters
-  // Get child metadata for given symbol properties
-  def getChild(p: SymbolProperties): Option[SymbolProperties] = p match {
-    case p: ArrayProperties => p.child
-    case _ => printwarn("Attempted to get child of symbol properties with no child!"); None
-  }
-  def getField(p: SymbolProperties, index: String): Option[SymbolProperties] = p match {
-    case p: StructProperties => p.child(index)
-    case _ => printwarn("Attempted to get field of symbol properties with no fields!"); None
-  }
-
-  // Get child metadata for given symbol
-  def getProps(e: Exp[Any]): Option[SymbolProperties] = Some(metadata.getOrElse(e, initExp(e)(mpos(e.pos))))
-  def getMetadata[T<:Metadata](e: Exp[Any], k: Datakey[T]): Option[T] = getProps(e).flatMap{p => p(k)}
-  def getChild(e: Exp[Any]): Option[SymbolProperties] = getProps(e).flatMap{p => getChild(p)}
-  def getField(struct: Exp[Any], index: String): Option[SymbolProperties] = getProps(struct).flatMap{p => getField(p, index)}
+  def getProps(e: Rep[Any]): Option[SymbolProperties] = Some(metadata.getOrElse(e, initRep(e)(mpos(e.pos))))
 
   // TODO: Use getBlockResult instead?
   def getProps(b: Block[Any]): Option[SymbolProperties] = getProps(b.res)
@@ -358,21 +341,10 @@ trait MetadataExp extends MetadataOps with Expressions with Blocks {
   def getChild(b: Block[Any]): Option[SymbolProperties] = getChild(b.res)
   def getField(b: Block[Any], index: String): Option[SymbolProperties] = getField(b.res, index)
 
-  /**
-   * Merge previous metadata for token and new data, notifying update if changes occurred
-   * During merge, new metadata overrides pre-existing data when possible
-   */
-  private def updateProperties(e: Exp[Any], p: SymbolProperties)(implicit ctx: SourceContext) {
-    val prevProps = metadata.get(e)
-    val newProps = meet(MetaOverwrite, prevProps, Some(p))
-    metadata += e -> newProps.get
-    if (!matches(prevProps, newProps)) setMetadataUpdateFlag()
-  }
-
   def defaultMetadata[T](tp: Manifest[T]): List[Metadata] = Nil
 
   // Symbol property initialization
-  def initExp(e: Exp[Any], data: Option[Metadata] = None, child: Option[SymbolProperties] = None, index: Option[String] = None)(implicit ctx: SourceContext): SymbolProperties
+  def initRep(e: Rep[Any], data: Option[Metadata] = None, child: Option[SymbolProperties] = None, index: Option[String] = None)(implicit ctx: SourceContext): SymbolProperties
     = initType(e.tp, data, child, index)
 
   def initType[A](tp: Manifest[A], data: Option[Metadata] = None, child: Option[SymbolProperties] = None, index: Option[String] = None)(implicit ctx: SourceContext): SymbolProperties = {
@@ -386,7 +358,4 @@ trait MetadataExp extends MetadataOps with Expressions with Blocks {
   def initProps[A](tp: Manifest[A], symData: PropMap[Datakey[_],Metadata], child: Option[SymbolProperties], index: Option[String])(implicit ctx: SourceContext): SymbolProperties = tp match {
     case _ => ScalarProperties(symData)
   }
-
-
-
 }

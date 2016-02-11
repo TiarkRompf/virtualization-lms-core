@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package internal
 
+import scala.virtualization.lms.common.BaseExp
 import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
 
@@ -79,7 +80,7 @@ trait AbstractSubstTransformer extends AbstractTransformer {
   }
 }
 
-trait Transforming extends MetadataExp { self =>
+trait Transforming extends MetadataExp { self: BaseExp =>
 
   type Transformer = AbstractTransformer { val IR: self.type }
 
@@ -99,7 +100,7 @@ trait Transforming extends MetadataExp { self =>
 }
 
 
-trait FatTransforming extends Transforming with FatExpressions {
+trait FatTransforming extends Transforming with FatExpressions { this: BaseExp =>
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Forward(x) => toAtom(Forward(f(x)))(mtype(manifest[A]),pos)
