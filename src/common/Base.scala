@@ -34,12 +34,13 @@ trait Base extends EmbeddedControls {
  *
  * @since 0.1
  */
-trait BaseExp extends Base with Transforming with Analyzing {
+trait BaseExp extends Base with Transforming with MetadataExp {
   type Rep[+T] = Exp[T]
 
   protected def unit[T:Manifest](x: T) = Const(x)
 }
 
+// TODO: This isn't useful right now since MetadataExp mixes in Blocks. Remove? Refactor?
 trait BlockExp extends BaseExp with Blocks
 
 
