@@ -19,10 +19,8 @@ trait StringOps extends Variables with OverloadHack {
   // TODO(trans) need to check if string concat works
   def infix_+(s1: String, s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(unit(s1), s2)
   def infix_+[T:Manifest](s1: String, s2: Var[T])(implicit o: Overloaded2, pos: SourceContext) = string_plus(unit(s1), readVar(s2))
-  def infix_+(s1: Rep[String], s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(s1, s2)
   def infix_+[T:Manifest](s1: Rep[String], s2: Var[T])(implicit o: Overloaded2, pos: SourceContext) = string_plus(s1, readVar(s2))
-  def infix_+(s1: Rep[String], s2: Rep[String])(implicit o: Overloaded3, pos: SourceContext) = string_plus(s1, s2)
-  def infix_+(s1: Rep[String], s2: Var[String])(implicit o: Overloaded4, pos: SourceContext) = string_plus(s1, readVar(s2))
+
   def infix_+(s1: Rep[Any], s2: Rep[String])(implicit o: Overloaded5, pos: SourceContext) = string_plus(s1, s2)
   def infix_+(s1: Rep[Any], s2: Var[String])(implicit o: Overloaded6, pos: SourceContext) = string_plus(s1, readVar(s2))
   def infix_+(s1: Rep[Any], s2: String)(implicit o: Overloaded7, pos: SourceContext) = string_plus(s1, unit(s2))
@@ -35,11 +33,19 @@ trait StringOps extends Variables with OverloadHack {
     def charAt(i: Rep[Int])(implicit pos: SourceContext) = string_charAt(s1,i)
     def endsWith(e: Rep[String])(implicit pos: SourceContext) = string_endsWith(s1,e)
     def contains(s2: Rep[String])(implicit pos: SourceContext) = string_contains(s1,s2)
-    //def toDouble(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = //FIXME string_substring(s1,start,end)
+    def toDouble(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = string_todouble(s1)
     def toInt(implicit pos: SourceContext) = string_toint(s1)
+    def substring(start:Rep[Int], end:Rep[Int])(implicit pos: SourceContext) = string_substring(s1, start, end)
     // TODO(trans) check if FIXME still valid
     // FIXME: enabling this causes trouble with DeliteOpSuite. investigate!!
     def length(implicit pos: SourceContext) = string_length(s1)
+    def +(s2: String)(implicit o: Overloaded1, pos: SourceContext) = string_plus(s1, unit(s2))
+    def +(s2: Rep[String])(implicit o: Overloaded3, pos: SourceContext) = string_plus(s1, s2)
+    def +(s2: Var[String])(implicit o: Overloaded4, pos: SourceContext) = string_plus(s1, readVar(s2))
+    // def +(s2: Rep[Any])
+    // def +(s2: Any)
+    def infix_+(s1: Rep[String], s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(s1, s2)
+
   }
 
   object String {
