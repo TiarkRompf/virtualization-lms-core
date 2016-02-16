@@ -230,12 +230,15 @@ trait StructExpOpt extends StructExp {
     }
   }
 
-  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = fieldLookup[T](struct, index) match {
-    // the two variable pattern matches each seem to miss certain cases, so both are needed. why?
-    case Some(Def(Reflect(NewVar(x),u,es))) => super.field(struct, index)
-    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
-    case Some(x) => x
-    case _ => super.field[T](struct, index)
+  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = {
+    if (unwrapStructs) fieldLookup[T](struct, index) match {
+      // the two variable pattern matches each seem to miss certain cases, so both are needed. why?
+      case Some(Def(Reflect(NewVar(x),u,es))) => super.field(struct, index)
+      case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
+      case Some(x) => x
+      case _ => super.field[T](struct, index)
+    }
+    else super.field[T](struct, index)
   }
 
   //TODO: need to be careful unwrapping Structs of vars since partial unwrapping can result in reads & writes to two different memory locations in the generated code
