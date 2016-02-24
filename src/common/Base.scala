@@ -97,3 +97,8 @@ trait OpenCLGenFat extends OpenCLFatCodegen with OpenCLGenBase
 trait CGenBase extends CCodegen
 trait CGenEffect extends CNestedCodegen with CGenBase
 trait CGenFat extends CFatCodegen with CGenBase
+
+trait DotGenBase extends DotCodegen
+trait DotGenEffect extends DotNestedCodegen with DotGenBase
+trait DotGenFat extends DotFatCodegen with DotGenBase
+
