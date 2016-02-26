@@ -8,7 +8,7 @@ import scala.reflect.RefinedManifest
 trait GenericCodegen extends BlockTraversal {
   val IR: Expressions
   import IR._
-  
+
   /** these methods support a kernel model of execution and are only used by Delite, should be moved into Delite only? **/
   def deviceTarget: Targets.Value = throw new Exception("deviceTarget is not defined for this codegen.")
   def hostTarget: Targets.Value = Targets.getHostTarget(deviceTarget)
@@ -23,7 +23,7 @@ trait GenericCodegen extends BlockTraversal {
 
   def resourceInfoType = ""
   def resourceInfoSym = ""
-  
+
   /******/
 
   def fileExtension = ""

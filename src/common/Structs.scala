@@ -130,11 +130,6 @@ trait StructExp extends StructOps with StructTags with AtomicWrites with EffectE
     case _ => super.initProps(tp, symData, child, index)
   }
 
-  def isDataStructureType[T](tp: Manifest[T]): Boolean = tp match {
-    case StructType(_,_) => true
-    case _ => false
-  }
-
   override def syms(e: Any): List[Sym[Any]] = e match {
     case s:AbstractStruct[_] => s.elems.flatMap(e => syms(e._2)).toList
     case _ => super.syms(e)
