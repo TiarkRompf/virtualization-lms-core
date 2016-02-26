@@ -74,6 +74,10 @@ trait StructExp extends StructOps with StructTags with AtomicWrites with EffectE
     case _ => None
   }
 
+  override def unapplyStructLike[A](tp: Manifest[A]) = tp match {
+    case StructType(_,elems) => Some(elems)
+    case _ => super.unapplyStructLike(tp)
+  }
 
   object Field {
     def unapply[T](d: Def[T]) = unapplyField(d)
@@ -116,18 +120,6 @@ trait StructExp extends StructOps with StructTags with AtomicWrites with EffectE
 
   def record_select[T : Manifest](record: Rep[Record], fieldName: String) = {
     field(record, fieldName)
-  }
-
-  override def initProps[A](tp: Manifest[A], symData: PropMap[Datakey[_],Metadata], child: Option[SymbolProperties], index: Option[String])(implicit ctx: SourceContext): SymbolProperties = tp match {
-    case StructType(_,elems) =>
-      val typeFields = PropMap(elems.map{case (index,tp) => index -> initType(tp) })
-      val symFields = (index,child) match {
-        case (Some(index),Some(child)) => meet(MetaTypeInit, PropMap(index, child), typeFields)
-        case _ => typeFields
-      }
-      StructProperties(symFields, symData)
-
-    case _ => super.initProps(tp, symData, child, index)
   }
 
   override def syms(e: Any): List[Sym[Any]] = e match {
