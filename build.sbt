@@ -2,6 +2,8 @@ name := "macro-LMS"
 
 version := "1.0.0-wip-macro"
 
+isSnapshot := true //allows to overwrites old local published version
+
 organization := "EPFL"
 
 scalaVersion := "2.11.2"

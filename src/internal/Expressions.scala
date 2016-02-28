@@ -18,6 +18,7 @@ trait Expressions extends Utils {
   abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
     def tp: Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
     def pos: List[SourceContext] = Nil
+    //TODO(macrotrans) def +(s: Rep[String]/String) ??
   }
 
   case class Const[+T:Manifest](x: T) extends Exp[T]

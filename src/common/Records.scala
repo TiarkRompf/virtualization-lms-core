@@ -116,7 +116,7 @@ class RecordMacros(val c: Context) {
     }
 
     private def recordTypes(tpe: Type): Seq[(String, Type)] = for {
-      mem <- tpe.members.toSeq.reverse //reverse added to make Delite work as before!
+      mem <- tpe.declarations.sorted //changed for Delite to work properly
       if mem.asMethod.isStable
     } yield (mem.name.encoded, mem.asMethod.returnType)
 
@@ -146,6 +146,8 @@ trait RecordOps extends StructOps {
     //def apply(v: (String, Any)*): Any = macro RecordMacros.apply_impl[Rep[_]]
     def applyDynamicNamed(method: String)(v: (String, Any)*): Any =
       macro RecordMacros.apply_impl[Rep[_]]
+    def applyDynamicNamed(method: Rep[String])(v: Rep[(String, Any)]*): Any = ???
+    //fool compliler around yinyang??
   }
 
   implicit def __$materializeRecordAccessor[A <: Record, B]: RecordAccessor[Rep[A], B] =

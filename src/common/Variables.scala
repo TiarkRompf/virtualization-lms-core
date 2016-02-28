@@ -55,10 +55,10 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
   //implicit def chainReadVar[T,U](x: Var[T])(implicit f: Rep[T] => U): U = f(readVar(x))
   def var_new[T:Manifest](init: Rep[T])(implicit pos: SourceContext): Var[T]
   def var_assign[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
-  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
-  def var_minusequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
-  def var_timesequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
-  def var_divideequals[T:Manifest](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
+  def var_plusequals[T:Manifest:Numeric](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
+  def var_minusequals[T:Manifest:Numeric](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
+  def var_timesequals[T:Manifest:Numeric](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
+  def var_divideequals[T:Manifest:Numeric](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
 
   def __assign[T:Manifest](lhs: Var[T], rhs: T)(implicit pos: SourceContext) = var_assign(lhs, unit(rhs))
   def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_assign(lhs, rhs)
@@ -69,19 +69,20 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
 
   // TODO: why doesn't this implicit kick in automatically? <--- do they belong here? maybe better move to NumericOps
   // we really need to refactor this. +=/-= shouldn't be here or in Arith, but in some other type class, which includes Numeric variables
-  implicit class OpsInfixVarT[T](lhs: Var[T]) {
-    def +=[T](rhs: T)(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_plusequals(lhs, unit(rhs))
-    def +=[T](rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_plusequals(lhs,rhs)
-    def +=[T](rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T], pos: SourceContext) = var_plusequals(lhs,readVar(rhs))
-    def -=[T](rhs: T)(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_minusequals(lhs, unit(rhs))
-    def -=[T](rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_minusequals(lhs,rhs)
-    def -=[T](rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T], pos: SourceContext) = var_minusequals(lhs,readVar(rhs))
-    def *=[T](rhs: T)(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_timesequals(lhs, unit(rhs))
-    def *=[T](rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_timesequals(lhs,rhs)
-    def *=[T](rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T], pos: SourceContext) = var_timesequals(lhs,readVar(rhs))
-    def /=[T](rhs: T)(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_divideequals(lhs, unit(rhs))
-    def /=[T](rhs: Rep[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_divideequals(lhs,rhs)
-    def /=[T](rhs: Var[T])(implicit o: Overloaded3, mT: Manifest[T], pos: SourceContext) = var_divideequals(lhs,readVar(rhs))
+  implicit class OpsInfixVarT[T:Manifest:Numeric](lhs: Var[T]) {
+    def +=(rhs: T)(implicit o: Overloaded1, pos: SourceContext) = var_plusequals(lhs, unit(rhs))
+    def +=(rhs: Rep[T])(implicit o: Overloaded2, pos: SourceContext) = var_plusequals(lhs,rhs)
+    def +=(rhs: Var[T])(implicit o: Overloaded3, pos: SourceContext) = var_plusequals(lhs,readVar(rhs))
+    //TODO(trans) plusequals should also work on String variables!
+    def -=(rhs: T)(implicit o: Overloaded1, pos: SourceContext) = var_minusequals(lhs, unit(rhs))
+    def -=(rhs: Rep[T])(implicit o: Overloaded2, pos: SourceContext) = var_minusequals(lhs,rhs)
+    def -=(rhs: Var[T])(implicit o: Overloaded3, pos: SourceContext) = var_minusequals(lhs,readVar(rhs))
+    def *=(rhs: T)(implicit o: Overloaded1, pos: SourceContext) = var_timesequals(lhs, unit(rhs))
+    def *=(rhs: Rep[T])(implicit o: Overloaded2, pos: SourceContext) = var_timesequals(lhs,rhs)
+    def *=(rhs: Var[T])(implicit o: Overloaded3, pos: SourceContext) = var_timesequals(lhs,readVar(rhs))
+    def /=(rhs: T)(implicit o: Overloaded1, pos: SourceContext) = var_divideequals(lhs, unit(rhs))
+    def /=(rhs: Rep[T])(implicit o: Overloaded2, pos: SourceContext) = var_divideequals(lhs,rhs)
+    def /=(rhs: Var[T])(implicit o: Overloaded3, pos: SourceContext) = var_divideequals(lhs,readVar(rhs))
   }
 }
 
@@ -120,22 +121,22 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
     Const()
   }
 
-  def var_plusequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
+  def var_plusequals[T:Manifest:Numeric](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarPlusEquals(lhs, rhs))
     Const()
   }
 
-  def var_minusequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
+  def var_minusequals[T:Manifest:Numeric](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarMinusEquals(lhs, rhs))
     Const()
   }
 
-  def var_timesequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
+  def var_timesequals[T:Manifest:Numeric](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarTimesEquals(lhs, rhs))
     Const()
   }
 
-  def var_divideequals[T:Manifest](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
+  def var_divideequals[T:Manifest:Numeric](lhs: Var[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[Unit] = {
     reflectWrite(lhs.e)(VarDivideEquals(lhs, rhs))
     Const()
   }

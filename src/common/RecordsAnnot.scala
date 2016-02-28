@@ -9,7 +9,7 @@ import scala.annotation.StaticAnnotation
   *
   * INPUT: when given:
   *
-  * @record
+  * @mRecord
   * case class Region(key: Int, name: String, comment: String)
   *
   * OUTPUT: it should generate:
@@ -27,7 +27,7 @@ import scala.annotation.StaticAnnotation
   * )
   */
 
-/** Annotation class for @record macro annotation. */
+/** Annotation class for @mRecord macro annotation. */
 final class mRecord extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro mRecord.impl
 }

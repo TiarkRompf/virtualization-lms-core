@@ -17,15 +17,29 @@ trait StringOps extends Variables with OverloadHack {
   //       since string concat is defined on all objects
 
   // TODO(trans) need to check if string concat works
+
+  implicit def repToStringOpsRepTCls[T:Manifest](x: Rep[T])/*(implicit __pos: SourceContext)*/ = new StringOpsRepT(x)//(__pos)
+  implicit def liftToStringOpsRepTCls[T:Manifest](x: T)/*(implicit __pos: SourceContext)*/ = new StringOpsRepT(unit(x))//(__pos)
+  implicit def varToStringOpsRepTCls[T:Manifest](x: Var[T])/*(implicit __pos: SourceContext)*/ = new StringOpsRepT(readVar(x))//(__pos)
+
+  class StringOpsRepT[T:Manifest](val s1:Rep[T]) {
+    def +(s2: Rep[String])(implicit o: Overloaded5, pos: SourceContext) = string_plus(s1, s2)
+    def +(s2: Var[String])(implicit o: Overloaded6, pos: SourceContext) = string_plus(s1, readVar(s2))
+    def +(s2: String)(implicit o: Overloaded7, pos: SourceContext) = string_plus(s1, unit(s2))
+  }
+
+  //TODO(macrotrans): these will not be overloaded by macro trans but have to be taken care of by scala virtualized
   def infix_+(s1: String, s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(unit(s1), s2)
   def infix_+[T:Manifest](s1: String, s2: Var[T])(implicit o: Overloaded2, pos: SourceContext) = string_plus(unit(s1), readVar(s2))
+  //can this one be inferred? scala-virtualized doesn't know about Rep nor Var...
   def infix_+[T:Manifest](s1: Rep[String], s2: Var[T])(implicit o: Overloaded2, pos: SourceContext) = string_plus(s1, readVar(s2))
 
-  def infix_+(s1: Rep[Any], s2: Rep[String])(implicit o: Overloaded5, pos: SourceContext) = string_plus(s1, s2)
-  def infix_+(s1: Rep[Any], s2: Var[String])(implicit o: Overloaded6, pos: SourceContext) = string_plus(s1, readVar(s2))
-  def infix_+(s1: Rep[Any], s2: String)(implicit o: Overloaded7, pos: SourceContext) = string_plus(s1, unit(s2))
-
-  implicit class StringOpsInfixRepString(s1: Rep[String]) {
+  implicit def repToStringOpsCls(x: Rep[String])/*(implicit __pos: SourceContext)*/ = new StringOpsInfixRepString(x)//(__pos)
+  //don't lift String otherwise we clash with build-in no-arguments pimpops such as "def toInt"
+  //implicit def liftToStringOpsCls(x: String)/*(implicit __pos: SourceContext)*/ = new StringOpsInfixRepString(unit(x))//(__pos)
+  implicit def varToStringOpsCls(x: Var[String])/*(implicit __pos: SourceContext)*/ = new StringOpsInfixRepString(readVar(x))//(__pos)
+  
+  class StringOpsInfixRepString(val s1: Rep[String]) {
     def startsWith(s2: Rep[String])(implicit pos: SourceContext) = string_startswith(s1,s2)
     def trim(separators: Rep[String])(implicit pos: SourceContext) = string_split(s1, separators, unit(0))
     def split(separators: Rep[String])(implicit pos: SourceContext) = string_split(s1, separators)
@@ -45,7 +59,6 @@ trait StringOps extends Variables with OverloadHack {
     // def +(s2: Rep[Any])
     // def +(s2: Any)
     def infix_+(s1: Rep[String], s2: Rep[Any])(implicit o: Overloaded1, pos: SourceContext) = string_plus(s1, s2)
-
   }
 
   object String {

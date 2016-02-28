@@ -20,6 +20,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 @virtualize
 trait ComplexArith extends Variables with Arith with ComplexBase with OverloadHack {
   
+  //no lifting?
   implicit def var2ComplexOps(x: Var[Complex]) = new ComplexOps(readVar(x))
   implicit class ComplexOps(x: Rep[Complex]) {
     def +(y: Rep[Complex]): Rep[Complex] = Complex(x.re + y.re, x.im + y.im)

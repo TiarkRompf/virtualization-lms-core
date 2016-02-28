@@ -47,16 +47,16 @@ class RecordsAnnotationTest extends FlatSpec with FileDiffSuite with ShouldMatch
     case class RTest1(a:Any)
 //    import O_RTest1._
     val rt = RTest1(List(1,2,3))
-//    Def(rt.r_a) should be (unit(42))
+    (rt.r_a) should be (unit(42))
   }
 
   behavior of "A case class with more argument"
 
   it should "work" in {
-    @mRecord
-    case class RTest2(i:Int, s:String)
+    @mRecord case class RTest2(i:Int, s:String)
 //    import O_RTest2._
     val rt = RTest2(42, "sdf")
+    // assert (rt.s + rt.i == "sdf42")
   }
 
   behavior of "A case class with nested argument"
