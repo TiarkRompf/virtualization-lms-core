@@ -2,7 +2,7 @@ name := "macro-LMS"
 
 version := "1.0.0-wip-macro"
 
-isSnapshot := true //allows to overwrites old local published version
+isSnapshot := true //allows to overwrites old local published version 
 
 organization := "EPFL"
 
