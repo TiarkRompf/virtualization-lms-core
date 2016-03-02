@@ -51,15 +51,15 @@ trait DotCodegen extends GenericCodegen with Config {
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
-    stream.println("object kernel_" + kernelName + " {")
-    stream.print("def apply(")
+    stream.print("// kernel_" + kernelName + " (")
     if (resourceInfoType != "") {
       stream.print(resourceInfoSym + ":" + resourceInfoType)
       if ((vals ++ vars).length > 0) stream.print(",")
     }
+    // Print all val arguments
     stream.print(vals.map(p => quote(p) + ":" + remap(p.tp)).mkString(","))
 
-    // variable name mangling
+    // Print all var arguments
     if (vals.length > 0 && vars.length > 0){
       stream.print(",")
     }
@@ -67,6 +67,8 @@ trait DotCodegen extends GenericCodegen with Config {
     if (vars.length > 0){
       stream.print(vars.map(v => quote(v) + ":" + "generated.scala.Ref[" + remap(v.tp) +"]").mkString(","))
     }
+
+    // Print result type
     if (resultIsVar){
       stream.print("): " + "generated.scala.Ref[" + resultType + "] = {")
     }
@@ -79,8 +81,7 @@ trait DotCodegen extends GenericCodegen with Config {
 
   override def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
-    stream.println(kernelName)
-    stream.println("}}")
+    stream.println(s"// } $kernelName")
   }
 
   def relativePath(fileName: String): String = {
