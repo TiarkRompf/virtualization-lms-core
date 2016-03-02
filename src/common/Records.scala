@@ -146,7 +146,7 @@ trait RecordOps extends StructOps {
     //def apply(v: (String, Any)*): Any = macro RecordMacros.apply_impl[Rep[_]]
     def applyDynamicNamed(method: String)(v: (String, Any)*): Any =
       macro RecordMacros.apply_impl[Rep[_]]
-    def applyDynamicNamed(method: Rep[String])(v: Rep[(String, Any)]*): Any = ???
+    def applyDynamicNamed(method: Rep[String])(v: Rep[(String, Any)]*): Rep[Any] = ???
     //fool compliler around yinyang??
   }
 
