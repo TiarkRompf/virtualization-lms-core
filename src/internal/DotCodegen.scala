@@ -18,6 +18,9 @@ trait DotCodegen extends GenericCodegen with Config {
   override def resourceInfoType = ""
   override def resourceInfoSym = ""
 
+  // Generate all code into one file
+  override def emitSingleFile() = true
+
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
 
     val sA = remap(manifest[A])
@@ -43,6 +46,25 @@ trait DotCodegen extends GenericCodegen with Config {
     }
 
     staticData
+  }
+
+  private var bd = ""
+  override def initializeGenerator(buildDir: String) = {
+    bd = buildDir
+    val sep = java.io.File.separator
+//    val buildPath = buildDir + sep + toString + sep + "kernels" + sep
+    val outDir = new File(buildDir); outDir.mkdirs()
+    val f = getFile(bd, singleFileName)
+    val pw = getPrintWriter(f)
+    pw.println("digraph G {")
+    pw.flush()
+  }
+
+  override def finalizeGenerator() = {
+    val f = getFile(bd, singleFileName)
+    val pw = getPrintWriter(f)
+    pw.println("}")
+    pw.flush()
   }
 
   override def emitFileHeader() {
