@@ -116,7 +116,7 @@ class RecordMacros(val c: Context) {
     }
 
     private def recordTypes(tpe: Type): Seq[(String, Type)] = for {
-      mem <- tpe.declarations.sorted //changed for Delite to work properly
+      mem <- tpe.declarations.sorted
       if mem.asMethod.isStable
     } yield (mem.name.encoded, mem.asMethod.returnType)
 
