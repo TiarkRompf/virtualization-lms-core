@@ -86,7 +86,6 @@ trait MetadataExp extends MetadataOps with Expressions with Blocks { self: BaseE
   // Getters
   def getProps(e: Rep[Any]): Option[SymbolProperties] = Some(metadata.getOrElse(e, initRep(e)(mpos(e.pos))))
 
-  // TODO: Use getBlockResult instead?
   def getProps(b: Block[Any]): Option[SymbolProperties] = getProps(b.res)
   def getMetadata[T<:Metadata](b: Block[Any], k: Datakey[T]): Option[T] = getMetadata(b.res, k)
   def getChild(b: Block[Any]): Option[SymbolProperties] = getChild(b.res)

@@ -158,6 +158,18 @@ trait GenericCodegen extends BlockTraversal {
    */
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, stream: PrintWriter): List[(Sym[Any], Any)] // return free static data in block
 
+  // TODO: Can probably just use toString for all types here, throwing an exception now to catch
+  // any unexpected calls to this function
+  def quote(x: Any): String = x match {
+    case x: Int => x.toString
+    case x: Long => x.toString
+    case x: Float => x.toString
+    case x: Double => x.toString
+    case x: String => x
+    case x: Exp[_] => quote(x)
+    case _ => throw new RuntimeException("could not quote " + x)
+  }
+
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
     case Const(f: Float) => f+"f"
