@@ -204,6 +204,7 @@ trait GenericCodegen extends BlockTraversal {
     case x: Float => x.toString
     case x: Double => x.toString
     case x: String => x
+    case x: Boolean => x.toString
     case x: Exp[_] => quote(x)
     case _ => throw new RuntimeException("could not quote " + x)
   }
