@@ -34,10 +34,13 @@ trait DotCodegen extends GenericCodegen with Config {
       emitFileHeader()
 
       stream.println("digraph G {")
-
-      emitBlock(body)
-      stream.println(quote(getBlockResult(body)))
-
+      try {
+        emitBlock(body)
+      } catch {
+        case e: GenerationFailedException =>
+          stream.println("// Generation failed exception")
+          e.printStackTrace
+      }
       stream.println("}")
 
       stream.println("/*****************************************\n"+
@@ -52,19 +55,10 @@ trait DotCodegen extends GenericCodegen with Config {
   override def initializeGenerator(buildDir: String) = {
     bd = buildDir
     val sep = java.io.File.separator
-//    val buildPath = buildDir + sep + toString + sep + "kernels" + sep
     val outDir = new File(buildDir); outDir.mkdirs()
-    val f = getFile(bd, singleFileName)
-    val pw = getPrintWriter(f)
-    pw.println("digraph G {")
-    pw.flush()
   }
 
   override def finalizeGenerator() = {
-    val f = getFile(bd, singleFileName)
-    val pw = getPrintWriter(f)
-    pw.println("}")
-    pw.flush()
   }
 
   override def emitFileHeader() {
