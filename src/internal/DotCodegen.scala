@@ -39,7 +39,7 @@ trait DotCodegen extends GenericCodegen with Config {
       } catch {
         case e: GenerationFailedException =>
           stream.println("// Generation failed exception")
-          e.printStackTrace
+          Console.println(Console.BLACK + Console.YELLOW_B + e.getMessage() + Console.RESET)
       }
       stream.println("}")
 
