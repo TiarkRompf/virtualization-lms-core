@@ -102,3 +102,7 @@ trait DotGenBase extends DotCodegen
 trait DotGenEffect extends DotNestedCodegen with DotGenBase
 trait DotGenFat extends DotFatCodegen with DotGenBase
 
+trait MaxJGenBase extends MaxJCodegen
+trait MaxJGenEffect extends MaxJNestedCodegen with MaxJGenBase
+trait MaxJGenFat extends MaxJFatCodegen with MaxJGenBase
+

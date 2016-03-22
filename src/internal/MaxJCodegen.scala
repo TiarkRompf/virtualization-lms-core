@@ -5,17 +5,18 @@ import java.io.{File, FileWriter, PrintWriter}
 
 import scala.reflect.SourceContext
 
-trait DotCodegen extends GenericCodegen with Config {
+trait MaxJCodegen extends GenericCodegen with Config {
   val IR: Expressions
   import IR._
 
 	var inHwScope = false
 
-  override def deviceTarget: Targets.Value = Targets.Dot
 
-  override def fileExtension = "dot"
+  override def deviceTarget: Targets.Value = Targets.MaxJ
 
-  override def toString = "dot"
+  override def fileExtension = "maxj"
+
+  override def toString = "maxj"
 
   override def resourceInfoType = ""
   override def resourceInfoSym = ""
@@ -31,7 +32,7 @@ trait DotCodegen extends GenericCodegen with Config {
 
     withStream(out) {
       stream.println("/*****************************************\n"+
-                     "  DOT BACKEND: emitSource \n"+
+                     "  MaxJ BACKEND: emitSource \n"+
                      "*******************************************/")
       emitFileHeader()
 
@@ -46,7 +47,7 @@ trait DotCodegen extends GenericCodegen with Config {
       stream.println("}")
 
       stream.println("/*****************************************\n"+
-                     "  End of DOT BACKEND \n"+
+                     "  End of MaxJ BACKEND \n"+
                      "*******************************************/")
     }
 
@@ -113,8 +114,7 @@ trait DotCodegen extends GenericCodegen with Config {
       val context = sym.pos(0)
       "      // " + relativePath(context.fileName) + ":" + context.line
     }
-		if (!isVoidType(sym.tp))
-    	stream.println("val " + quote(sym) + " = " + rhs + extra)
+    stream.println("val " + quote(sym) + " = " + rhs + extra)
   }
 
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
@@ -135,13 +135,6 @@ trait DotCodegen extends GenericCodegen with Config {
     case _ => super.quote(x)
   }
 
-	def emitAlias(x: Exp[Any], y: Exp[Any]) {
-		stream.println(s"""define(`${quote(x)}', `${quote(y)}')""")
-	}
-	def emitAlias(x: Sym[Any], y: String) {
-		stream.println(s"""define(`${quote(x)}', `${y}')""")
-	}
-
 	def emit(str: String):Unit = {
 		stream.println(str)
 	}
@@ -150,34 +143,35 @@ trait DotCodegen extends GenericCodegen with Config {
 		stream.println(s"""/* $str */ """)
 	}
 
-	val arrowSize = 0.6
-	val edgeThickness = 0.5
-	val memColor = "#6ce6e1"
-	val regColor = "#8bd645"
-	val offChipColor = "#1A0000"
-	val dblbufBorderColor = "#4fb0b0"
-	val ctrlColor = "red"
-	val counterColor = "#e8e8e8"
-	val counterInnerColor = "gray"
-	val fontsize = 10
-	val defaultShape = "square"
-	val bgcolor = "white"
+  val importPrefix = "com.maxeler.maxcompiler.v2"
 
-	// Metapipeline colors
-	val mpFillColor = "#4FA1DB"
-	val mpBorderColor = "#4FA1DB"
-	val mpStageFillColor = "#BADDFF"
-	val mpStageBorderColor = "none"
-
-	// Parallel colors
-	val parallelFillColor = "#4FDBC2"
-	val parallelBorderColor = "#00AB8C"
-	val parallelStageFillColor = "#CCFFF6"
-	val parallelStageBorderColor = "none"
+  val imports = List(
+    "kernelcompiler.stdlib.core.Count.Counter",
+    "kernelcompiler.stdlib.core.CounterChain",
+    "kernelcompiler.stdlib.core.Count",
+    "kernelcompiler.stdlib.core.Count.Params",
+    "kernelcompiler.stdlib.memory.Memory",
+    "kernelcompiler.Kernel",
+    "kernelcompiler.KernelParameters",
+    "kernelcompiler.types.base.DFEVar",
+    "utils.MathUtils",
+    "utils.Bits",
+    "kernelcompiler.KernelLib",
+    "kernelcompiler.stdlib.KernelMath",
+    "kernelcompiler.types.base.DFEType",
+    "kernelcompiler.stdlib.core.Stream.OffsetExpr",
+    "kernelcompiler.stdlib.Reductions",
+    "kernelcompiler.SMIO",
+    "kernelcompiler.stdlib.Accumulator",
+    "kernelcompiler.types.base.DFEType",
+    "kernelcompiler.types.composite.DFEVector",
+    "kernelcompiler.types.composite.DFEVectorType",
+    "kernelcompiler.types.base.DFEFix.SignMode"
+  )
 
 }
 
-trait DotNestedCodegen extends GenericNestedCodegen with DotCodegen {
+trait MaxJNestedCodegen extends GenericNestedCodegen with MaxJCodegen {
   val IR: Expressions with Effects
   import IR._
 
@@ -202,7 +196,8 @@ trait DotNestedCodegen extends GenericNestedCodegen with DotCodegen {
 }
 
 
-trait DotFatCodegen extends GenericFatCodegen with DotCodegen {
+trait MaxJFatCodegen extends GenericFatCodegen with MaxJCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
 }
+
