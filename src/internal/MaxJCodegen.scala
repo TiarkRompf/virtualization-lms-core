@@ -1,6 +1,7 @@
 package scala.virtualization.lms
 package internal
 
+import util.NullOutputStream
 import java.io.{File, FileWriter, PrintWriter}
 
 import scala.reflect.SourceContext
@@ -9,15 +10,19 @@ trait MaxJCodegen extends GenericCodegen with Config {
   val IR: Expressions
   import IR._
 
-	var inHwScope = false
-
+  var inHwScope = false
+  private val _nullstream = new PrintWriter(new NullOutputStream())
+  override def stream = if (inHwScope) super.stream else _nullstream
+  def alwaysGen(x: => Any) {
+    val inScope = inHwScope
+    inHwScope = true
+    x
+    inHwScope = inScope
+  }
 
   override def deviceTarget: Targets.Value = Targets.MaxJ
-
   override def fileExtension = "maxj"
-
   override def toString = "maxj"
-
   override def resourceInfoType = ""
   override def resourceInfoSym = ""
 

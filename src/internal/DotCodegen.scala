@@ -1,6 +1,8 @@
 package scala.virtualization.lms
 package internal
 
+import util.NullOutputStream
+
 import java.io.{File, FileWriter, PrintWriter}
 
 import scala.reflect.SourceContext
@@ -10,6 +12,15 @@ trait DotCodegen extends GenericCodegen with Config {
   import IR._
 
 	var inHwScope = false
+  private val _nullstream = new PrintWriter(new NullOutputStream())
+  override def stream = if (inHwScope) super.stream else _nullstream
+  def alwaysGen(x: => Any) {
+    val inScope = inHwScope
+    inHwScope = true
+    x
+    inHwScope = inScope
+  }
+
 
   override def deviceTarget: Targets.Value = Targets.Dot
 
