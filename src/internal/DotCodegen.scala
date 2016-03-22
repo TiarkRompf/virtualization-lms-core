@@ -13,7 +13,7 @@ trait DotCodegen extends GenericCodegen with Config {
 
 	var inHwScope = false
   private val _nullstream = new PrintWriter(new NullOutputStream())
-  override def stream = if (inHwScope) super.stream else _nullstream
+  override def stream = if (inHwScope) _stream else _nullstream
   def alwaysGen(x: => Any) {
     val inScope = inHwScope
     inHwScope = true
@@ -23,11 +23,8 @@ trait DotCodegen extends GenericCodegen with Config {
 
 
   override def deviceTarget: Targets.Value = Targets.Dot
-
   override def fileExtension = "dot"
-
   override def toString = "dot"
-
   override def resourceInfoType = ""
   override def resourceInfoSym = ""
 
@@ -35,33 +32,31 @@ trait DotCodegen extends GenericCodegen with Config {
   override def emitSingleFile() = true
 
   override def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
-
-    val sA = remap(manifest[A])
-
     val staticData = getFreeDataBlock(body)
 
     withStream(out) {
-      stream.println("/*****************************************\n"+
-                     "  DOT BACKEND: emitSource \n"+
-                     "*******************************************/")
-      emitFileHeader()
-
-      stream.println("digraph G {")
-      try {
-        emitBlock(body)
-      } catch {
-        case e: GenerationFailedException =>
-          stream.println("// Generation failed exception")
-          Console.println(Console.BLACK + Console.YELLOW_B + e.getMessage() + Console.RESET)
+      alwaysGen {
+        stream.println("/*****************************************\n"+
+                       "  DOT BACKEND: emitSource \n"+
+                       "*******************************************/")
+        emitFileHeader()
+        stream.println("digraph G {")
       }
-      stream.println("}")
 
-      stream.println("/*****************************************\n"+
-                     "  End of DOT BACKEND \n"+
-                     "*******************************************/")
+      emitBlock(body)
+
+      alwaysGen {
+        stream.println("}")
+        stream.println("/*****************************************\n"+
+                       "  End of DOT BACKEND \n"+
+                       "*******************************************/")
+      }
     }
-
     staticData
+  }
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = {
+    Console.println(Console.BLACK + Console.YELLOW_B + this.toString + ": don't know how to generate code for: " + rhs + Console.RESET)
   }
 
   private var bd = ""
@@ -191,6 +186,13 @@ trait DotCodegen extends GenericCodegen with Config {
 trait DotNestedCodegen extends GenericNestedCodegen with DotCodegen {
   val IR: Expressions with Effects
   import IR._
+
+  // Need this again since we override base behavior in DotCodegen
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case Reflect(s, u, effects) => emitNode(sym, s)
+    case Reify(s, u, effects) =>
+    case _ => super.emitNode(sym, rhs)
+  }
 
   // emit forward decls for recursive vals
   override def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
