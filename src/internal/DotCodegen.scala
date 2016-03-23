@@ -2,7 +2,6 @@ package scala.virtualization.lms
 package internal
 
 import util.NullOutputStream
-
 import java.io.{File, FileWriter, PrintWriter}
 
 import scala.reflect.SourceContext
@@ -138,6 +137,7 @@ trait DotCodegen extends GenericCodegen with Config {
   override def quote(x: Exp[Any]) = x match {
     case Const(l: Long) => l.toString + "L"
     case Const(null) => "null.asInstanceOf["+x.tp+"]"
+    case Const(s: Unit) => ""
     case _ => super.quote(x)
   }
 
