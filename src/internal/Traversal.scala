@@ -17,7 +17,7 @@ trait Traversal extends FatBlockTraversal { self =>
       IR.verbosity = 2
       val out = x
       IR.verbosity = oldVerbosity
-      x
+      out
     }
     else x
   }
