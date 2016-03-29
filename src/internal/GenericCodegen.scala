@@ -28,6 +28,7 @@ trait GenericCodegen extends BlockTraversal {
 
   def fileExtension = ""
   def emitFileHeader(): Unit = {}
+  def emitFileFooter(): Unit = {}
 
   def initializeGenerator(buildDir:String): Unit = { }
   def finalizeGenerator(): Unit = {}

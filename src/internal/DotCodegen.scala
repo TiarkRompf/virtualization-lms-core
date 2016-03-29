@@ -35,20 +35,11 @@ trait DotCodegen extends GenericCodegen with Config {
 
     withStream(out) {
       alwaysGen {
-        stream.println("/*****************************************\n"+
-                       "  DOT BACKEND: emitSource \n"+
-                       "*******************************************/")
         emitFileHeader()
-        stream.println("digraph G {")
       }
-
       emitBlock(body)
-
       alwaysGen {
-        stream.println("}")
-        stream.println("/*****************************************\n"+
-                       "  End of DOT BACKEND \n"+
-                       "*******************************************/")
+				emitFileFooter()
       }
     }
     staticData
@@ -71,7 +62,17 @@ trait DotCodegen extends GenericCodegen with Config {
 
   override def emitFileHeader() {
     // empty by default. override to emit package or import declarations.
+    emit("/*****************************************\n"+
+         "  DOT BACKEND: emitSource \n"+
+         "*******************************************/")
+    emit("digraph G {")
   }
+	override def emitFileFooter() = {
+		emit("}")
+    emit("/*****************************************\n"+
+         "  End of Dot BACKEND \n"+
+         "*******************************************/")
+	}
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
@@ -141,11 +142,35 @@ trait DotCodegen extends GenericCodegen with Config {
     case _ => super.quote(x)
   }
 
-	def emitAlias(x: Exp[Any], y: Exp[Any]) {
+	def emitAlias(x: Exp[Any], y: Exp[Any]):Unit = {
 		stream.println(s"""define(`${quote(x)}', `${quote(y)}')""")
 	}
-	def emitAlias(x: Sym[Any], y: String) {
+	def emitAlias(x: Sym[Any], y: String):Unit = {
 		stream.println(s"""define(`${quote(x)}', `${y}')""")
+	}
+	def emitEdge(x:Sym[Any], y:Exp[Any]):Unit = {
+		stream.println(s"""${quote(x)} -> ${quote(y)}""")
+	}
+	def emitEdge(x:Sym[Any], y:Exp[Any], label:String):Unit = {
+		stream.println(s"""${quote(x)} -> ${quote(y)} [label="${label}"]""")
+	}
+	def emitEdge(x:Sym[Any], y:Sym[Any]):Unit = {
+		stream.println(s"""${quote(x)} -> ${quote(y)}""")
+	}
+	def emitEdge(x:Sym[Any], y:Sym[Any], label:String):Unit = {
+		stream.println(s"""${quote(x)} -> ${quote(y)} [label="${label}"]""")
+	}
+	def emitEdge(x:Exp[Any], y:Sym[Any]):Unit = {
+		stream.println(s"""${quote(x)} -> ${quote(y)}""")
+	}
+	def emitEdge(x:Exp[Any], y:Sym[Any], label:String):Unit = {
+		stream.println(s"""${quote(x)} -> ${quote(y)} [label="${label}"]""")
+	}
+	def emitEdge(x:Exp[Any], y:Exp[Any]):Unit = {
+		stream.println(s"""${quote(x)} -> ${quote(y)}""")
+	}
+	def emitEdge(x:Exp[Any], y:Exp[Any], label:String):Unit = {
+		stream.println(s"""${quote(x)} -> ${quote(y)} [label="${label}"]""")
 	}
 
 	def emit(str: String):Unit = {
@@ -169,6 +194,15 @@ trait DotCodegen extends GenericCodegen with Config {
 	val defaultShape = "square"
 	val bgcolor = "white"
 
+	// Pipe Colors
+	val pipeFillColor = "white"
+
+	// Block Colors
+	val mapFuncColor = "#f7f26f"
+	val reduceFuncColor = "#f2a2cc"
+	val ldFuncColor = "#7be58f"
+	val stFuncColor = "#7be58f"
+
 	// Metapipeline colors
 	val mpFillColor = "#4FA1DB"
 	val mpBorderColor = "#4FA1DB"
@@ -180,6 +214,9 @@ trait DotCodegen extends GenericCodegen with Config {
 	val parallelBorderColor = "#00AB8C"
 	val parallelStageFillColor = "#CCFFF6"
 	val parallelStageBorderColor = "none"
+
+	// Tile transfer colors
+	val tileTransFillColor = "#FFA500" 
 
 }
 

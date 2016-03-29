@@ -34,18 +34,11 @@ trait MaxJCodegen extends GenericCodegen with Config {
 
     withStream(out) {
       alwaysGen {
-        stream.println("/*****************************************\n"+
-                       "  MaxJ BACKEND: emitSource \n"+
-                       "*******************************************/")
         emitFileHeader()
-        stream.println("digraph G {")
       }
       emitBlock(body)
       alwaysGen {
-        stream.println("}")
-        stream.println("/*****************************************\n"+
-                       "  End of MaxJ BACKEND \n"+
-                       "*******************************************/")
+				emitFileFooter()
       }
     }
     staticData
@@ -63,12 +56,27 @@ trait MaxJCodegen extends GenericCodegen with Config {
     val outDir = new File(buildDir); outDir.mkdirs()
   }
 
-  override def finalizeGenerator() = {
+  override def finalizeGenerator() = {}
+
+  override def emitFileHeader() = {
+    // empty by default. override to emit package or import declarations.
+    emit("/*****************************************\n"+
+         "  MaxJ BACKEND: emitSource \n"+
+         "*******************************************/")
+    emit(s"""package engine;""")
+    imports.map(x => emit(s"""import ${importPrefix}.${x};"""))
+    emit(s"""class TopKernelLib extends KernelLib {""")
+    emit(s"""TopKernelLib(KernelLib owner, DFEVar top_en, DFEVar top_done) {""")
+    emit(s"""super(owner);""")
   }
 
-  override def emitFileHeader() {
-    // empty by default. override to emit package or import declarations.
-  }
+	override def emitFileFooter() = {
+		emit("	}")
+		emit("}")
+    emit("/*****************************************\n"+
+         "  End of MaxJ BACKEND \n"+
+         "*******************************************/")
+	}
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
