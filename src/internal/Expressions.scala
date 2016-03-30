@@ -22,6 +22,8 @@ trait Expressions extends Utils {
 
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
+  case class Param[+T:Manifest](val id: Int, var x: T) extends Exp[T]
+
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var sourceContexts: List[SourceContext] = Nil
     override def pos = sourceContexts
@@ -29,6 +31,9 @@ trait Expressions extends Utils {
   }
 
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
+
+  var nParams = 0
+  def param[T:Manifest](default: T) = { nParams += 1; Param[T](nParams - 1, default) }
 
   var nVars = 0
   def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) printlog("nVars="+nVars);  nVars -1 }
@@ -242,6 +247,7 @@ trait Expressions extends Utils {
 
   def reset { // used by delite?
     nVars = 0
+    nParams = 0
     globalDefs = Nil
     localDefs = Nil
     globalDefsCache = Map.empty

@@ -182,6 +182,7 @@ trait GenericCodegen extends BlockTraversal {
     case Const(f: Float) => f+"f"
     case Const(c: Char) => "'"+(""+c).replace("'", "\\'").replace("\n", "\\n")+"'"
     case Const(z) => z.toString
+    case Param(id, x) => quote(Const(x))  // Quote as if it was defined as a constant
     case Sym(n) => "x"+n
     case _ => throw new RuntimeException("could not quote " + x)
   }
