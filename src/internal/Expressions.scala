@@ -22,7 +22,7 @@ trait Expressions extends Utils {
 
   case class Const[+T:Manifest](x: T) extends Exp[T]
 
-  case class Param[+T:Manifest](val id: Int, var x: T) extends Exp[T]
+  case class Param[T:Manifest](val id: Int, var x: T) extends Exp[T]
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var sourceContexts: List[SourceContext] = Nil
