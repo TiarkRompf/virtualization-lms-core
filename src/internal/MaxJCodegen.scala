@@ -6,11 +6,11 @@ import java.io.{File, FileWriter, PrintWriter}
 
 import scala.reflect.SourceContext
 
-trait DotCodegen extends GenericCodegen with Config {
+trait MaxJCodegen extends GenericCodegen with Config {
   val IR: Expressions
   import IR._
 
-	var inHwScope = false
+  var inHwScope = false
   private val _nullstream = new PrintWriter(new NullOutputStream())
   override def stream = if (inHwScope) _stream else _nullstream
   def alwaysGen(x: => Any) {
@@ -20,10 +20,9 @@ trait DotCodegen extends GenericCodegen with Config {
     inHwScope = inScope
   }
 
-
-  override def deviceTarget: Targets.Value = Targets.Dot
-  override def fileExtension = "dot"
-  override def toString = "dot"
+  override def deviceTarget: Targets.Value = Targets.MaxJ
+  override def fileExtension = "maxj"
+  override def toString = "maxj"
   override def resourceInfoType = ""
   override def resourceInfoSym = ""
 
@@ -57,20 +56,25 @@ trait DotCodegen extends GenericCodegen with Config {
     val outDir = new File(buildDir); outDir.mkdirs()
   }
 
-  override def finalizeGenerator() = {
-  }
+  override def finalizeGenerator() = {}
 
-  override def emitFileHeader() {
+  override def emitFileHeader() = {
     // empty by default. override to emit package or import declarations.
     emit("/*****************************************\n"+
-         "  DOT BACKEND: emitSource \n"+
+         "  MaxJ BACKEND: emitSource \n"+
          "*******************************************/")
-    emit("digraph G {")
+    emit(s"""package engine;""")
+    imports.map(x => emit(s"""import ${importPrefix}.${x};"""))
+    emit(s"""class TopKernelLib extends KernelLib {""")
+    emit(s"""TopKernelLib(KernelLib owner, DFEVar top_en, DFEVar top_done) {""")
+    emit(s"""super(owner);""")
   }
+
 	override def emitFileFooter() = {
+		emit("	}")
 		emit("}")
     emit("/*****************************************\n"+
-         "  End of Dot BACKEND \n"+
+         "  End of MaxJ BACKEND \n"+
          "*******************************************/")
 	}
 
@@ -119,8 +123,7 @@ trait DotCodegen extends GenericCodegen with Config {
       val context = sym.pos(0)
       "      // " + relativePath(context.fileName) + ":" + context.line
     }
-		if (!isVoidType(sym.tp))
-    	stream.println("val " + quote(sym) + " = " + rhs + extra)
+    stream.println("val " + quote(sym) + " = " + rhs + extra)
   }
 
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
@@ -138,40 +141,8 @@ trait DotCodegen extends GenericCodegen with Config {
   override def quote(x: Exp[Any]) = x match {
     case Const(l: Long) => l.toString + "L"
     case Const(null) => "null.asInstanceOf["+x.tp+"]"
-    case Const(s: Unit) => ""
     case _ => super.quote(x)
   }
-
-	def emitAlias(x: Exp[Any], y: Exp[Any]):Unit = {
-		stream.println(s"""define(`${quote(x)}', `${quote(y)}')""")
-	}
-	def emitAlias(x: Sym[Any], y: String):Unit = {
-		stream.println(s"""define(`${quote(x)}', `${y}')""")
-	}
-	def emitEdge(x:Sym[Any], y:Exp[Any]):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)}""")
-	}
-	def emitEdge(x:Sym[Any], y:Exp[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
-	}
-	def emitEdge(x:Sym[Any], y:Sym[Any]):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)}""")
-	}
-	def emitEdge(x:Sym[Any], y:Sym[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
-	}
-	def emitEdge(x:Exp[Any], y:Sym[Any]):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)}""")
-	}
-	def emitEdge(x:Exp[Any], y:Sym[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
-	}
-	def emitEdge(x:Exp[Any], y:Exp[Any]):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)}""")
-	}
-	def emitEdge(x:Exp[Any], y:Exp[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
-	}
 
 	def emit(str: String):Unit = {
 		stream.println(str)
@@ -181,54 +152,39 @@ trait DotCodegen extends GenericCodegen with Config {
 		stream.println(s"""/* $str */ """)
 	}
 
-	val arrowSize = 0.6
-	val edgeThickness = 0.5
-	val memColor = s""""#6ce6e1""""
-	val regColor = s""""#8bd645""""
-	val offChipColor = s""""#1A0000""""
-	val dblbufBorderColor = s""""#4fb0b0""""
-	val ctrlColor = s""""red""""
-	val counterColor = s""""#e8e8e8""""
-	val counterInnerColor = s""""gray""""
-	val fontsize = 10
-	val defaultShape = "square"
-	val bgcolor = s""""white""""
+  val importPrefix = "com.maxeler.maxcompiler.v2"
 
-	// Pipe Colors
-	//val pipeFillColor = "#4FA1DB"
-	val pipeFillColor = s""""white""""
-	val pipeBorderColor = s""""black""""
-
-	// Block Colors
-	val mapFuncColor = s""""#f7f26f""""
-	val reduceFuncColor = s""""#f2a2cc""""
-	val ldFuncColor = s""""#7be58f""""
-	val stFuncColor = s""""#7be58f""""
-
-	// Metapipeline colors
-	val mpFillColor = s""""#4FA1DB""""
-	val mpBorderColor = s""""#4FA1DB""""
-	val mpStageFillColor = s""""#BADDFF""""
-	val mpStageBorderColor = s""""none""""
-
-	// Parallel colors
-	//val parallelFillColor = "#4FDBC2"
-	val parallelFillColor = s""""white""""
-	//val parallelBorderColor = s""""#00AB8C""""
-	val parallelBorderColor = s""""black""""
-	val parallelStageFillColor = s""""#CCFFF6""""
-	val parallelStageBorderColor = s""""none""""
-
-	// Tile transfer colors
-	val tileTransFillColor = s""""#FFA500"""" 
+  val imports = List(
+    "kernelcompiler.stdlib.core.Count.Counter",
+    "kernelcompiler.stdlib.core.CounterChain",
+    "kernelcompiler.stdlib.core.Count",
+    "kernelcompiler.stdlib.core.Count.Params",
+    "kernelcompiler.stdlib.memory.Memory",
+    "kernelcompiler.Kernel",
+    "kernelcompiler.KernelParameters",
+    "kernelcompiler.types.base.DFEVar",
+    "utils.MathUtils",
+    "utils.Bits",
+    "kernelcompiler.KernelLib",
+    "kernelcompiler.stdlib.KernelMath",
+    "kernelcompiler.types.base.DFEType",
+    "kernelcompiler.stdlib.core.Stream.OffsetExpr",
+    "kernelcompiler.stdlib.Reductions",
+    "kernelcompiler.SMIO",
+    "kernelcompiler.stdlib.Accumulator",
+    "kernelcompiler.types.base.DFEType",
+    "kernelcompiler.types.composite.DFEVector",
+    "kernelcompiler.types.composite.DFEVectorType",
+    "kernelcompiler.types.base.DFEFix.SignMode"
+  )
 
 }
 
-trait DotNestedCodegen extends GenericNestedCodegen with DotCodegen {
+trait MaxJNestedCodegen extends GenericNestedCodegen with MaxJCodegen {
   val IR: Expressions with Effects
   import IR._
 
-  // Need this again since we override base behavior in DotCodegen
+  // Need this again since we override base behavior in MaxJCodegen
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Reflect(s, u, effects) => emitNode(sym, s)
     case Reify(s, u, effects) =>
@@ -256,7 +212,8 @@ trait DotNestedCodegen extends GenericNestedCodegen with DotCodegen {
 }
 
 
-trait DotFatCodegen extends GenericFatCodegen with DotCodegen {
+trait MaxJFatCodegen extends GenericFatCodegen with MaxJCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
 }
+

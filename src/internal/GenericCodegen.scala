@@ -28,6 +28,7 @@ trait GenericCodegen extends BlockTraversal {
 
   def fileExtension = ""
   def emitFileHeader(): Unit = {}
+  def emitFileFooter(): Unit = {}
 
   def initializeGenerator(buildDir:String): Unit = { }
   def finalizeGenerator(): Unit = {}
@@ -39,41 +40,6 @@ trait GenericCodegen extends BlockTraversal {
   // Define if code generation should produce everything
   // in a single file. Defaults to generating multiple files (one per kernel)
   def emitSingleFile(): Boolean = false
-
-  // Define the default name of the single file
-  def singleFileName(): String = "Top"
-
-  // File and PrintWriter objects for the single file
-  private var singleFile: Option[File] = None
-  private var singlePrintWriter: Option[PrintWriter] = None
-
-  // Returns a java.io.File for the file into which code is
-  // generated for the given kernel
-  def getFile(buildPath: String, kernelName: String) = {
-    val fileName = if (emitSingleFile) singleFileName else kernelName
-    val fullFilePath = s"${buildPath}${fileName}.${fileExtension}"
-    if (emitSingleFile) {
-      if (!singleFile.isDefined) {
-        singleFile = Some(new File(fullFilePath))
-      }
-      singleFile.get
-    } else {
-      new File(fullFilePath)
-    }
-  }
-
-  // Returns a java.io.Printer of the file into which code is
-  // generated for the given kernel
-  def getPrintWriter(f: File) = {
-    if (emitSingleFile) {
-      if (!singlePrintWriter.isDefined) {
-        singlePrintWriter = Some(new PrintWriter(singleFile.get))
-      }
-      singlePrintWriter.get
-    } else {
-      new PrintWriter(f)
-    }
-  }
 
   def dataPath = {
     "data" + java.io.File.separator
@@ -123,7 +89,9 @@ trait GenericCodegen extends BlockTraversal {
 
   // ---------
 
-  var stream: PrintWriter = _
+  protected var _stream: PrintWriter = _
+  def stream = _stream
+  def stream_=(s: PrintWriter) { _stream = s }
 
   def withStream[A](out: PrintWriter)(body: => A): A = {
     val save = stream
@@ -196,11 +164,25 @@ trait GenericCodegen extends BlockTraversal {
    */
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, stream: PrintWriter): List[(Sym[Any], Any)] // return free static data in block
 
+  // TODO: Can probably just use toString for all types here, throwing an exception now to catch
+  // any unexpected calls to this function
+  def quote(x: Any): String = x match {
+    case x: Int => x.toString
+    case x: Long => x.toString
+    case x: Float => x.toString
+    case x: Double => x.toString
+    case x: String => x
+    case x: Boolean => x.toString
+    case x: Exp[_] => quote(x)
+    case _ => throw new RuntimeException("could not quote " + x)
+  }
+
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
     case Const(f: Float) => f+"f"
     case Const(c: Char) => "'"+(""+c).replace("'", "\\'").replace("\n", "\\n")+"'"
     case Const(z) => z.toString
+    case Param(id, x) => quote(Const(x))  // Quote as if it was defined as a constant
     case Sym(n) => "x"+n
     case _ => throw new RuntimeException("could not quote " + x)
   }

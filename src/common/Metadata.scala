@@ -86,7 +86,6 @@ trait MetadataExp extends MetadataOps with Expressions with Blocks { self: BaseE
   // Getters
   def getProps(e: Rep[Any]): Option[SymbolProperties] = Some(metadata.getOrElse(e, initRep(e)(mpos(e.pos))))
 
-  // TODO: Use getBlockResult instead?
   def getProps(b: Block[Any]): Option[SymbolProperties] = getProps(b.res)
   def getMetadata[T<:Metadata](b: Block[Any], k: Datakey[T]): Option[T] = getMetadata(b.res, k)
   def getChild(b: Block[Any]): Option[SymbolProperties] = getChild(b.res)
@@ -105,8 +104,31 @@ trait MetadataExp extends MetadataOps with Expressions with Blocks { self: BaseE
     initProps(tp, symData, child, index)
   }
 
+  def unapplyArrayLike[A](tp: Manifest[A]): Option[Manifest[_]] = None
+  def unapplyStructLike[A](tp: Manifest[A]): Option[List[(String,Manifest[_])]] = None
+
+  object ArrayLike {
+    def unapply[A](tp: Manifest[A]): Option[Manifest[_]] = unapplyArrayLike(tp)
+  }
+  object StructLike {
+    def unapply[A](tp: Manifest[A]): Option[List[(String,Manifest[_])]] = unapplyStructLike(tp)
+  }
+
   // Should be overwritten for data structure types (e.g. structs, arrays)
   def initProps[A](tp: Manifest[A], symData: PropMap[Datakey[_],Metadata], child: Option[SymbolProperties], index: Option[String])(implicit ctx: SourceContext): SymbolProperties = tp match {
+    case ArrayLike(childtp) =>
+      val typeChild = initType(childtp)
+      val symChild = meet(MetaTypeInit, child, Some(typeChild))
+      ArrayProperties(symChild, symData)
+
+    case StructLike(elems) =>
+      val typeFields = PropMap(elems.map{case (index,tp) => index -> initType(tp) })
+      val symFields = (index,child) match {
+        case (Some(index),Some(child)) => meet(MetaTypeInit, PropMap(index, child), typeFields)
+        case _ => typeFields
+      }
+      StructProperties(symFields, symData)
+
     case _ => ScalarProperties(symData)
   }
 }

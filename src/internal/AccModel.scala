@@ -40,6 +40,7 @@ object Targets extends Enumeration {
   val Cuda = Value("cuda")
   val OpenCL = Value("opencl")
   val Dot = Value("dot")
+  val MaxJ = Value("maxj")
   
   def apply(s: String): Value = s.toLowerCase() match {
     case "jvm" => JVM
@@ -48,6 +49,7 @@ object Targets extends Enumeration {
     case "cuda" => Cuda
     case "opencl" => OpenCL
     case "dot" => Dot
+    case "maxj" => MaxJ 
     case _ => throw new IllegalArgumentException("unsupported target: " + s)
   }
 
@@ -58,6 +60,7 @@ object Targets extends Enumeration {
       case Targets.Cuda => Targets.Cpp
       case Targets.OpenCL => Targets.Cpp
       case Targets.Dot => Targets.Dot
+      case Targets.MaxJ => Targets.MaxJ
       case _ => throw new IllegalArgumentException("Cannot find a host target for target " + target)
     }
   }
