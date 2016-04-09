@@ -186,6 +186,16 @@ trait StructExp extends StructOps with StructTags with AtomicWrites with EffectE
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
+  override def propagate(lhs: Exp[Any], rhs: Def[Any]) = rhs match {
+    case Struct(_, elems) => elems foreach {case (index,sym) => setField(lhs, getProps(sym), index) }
+    case FieldApply(struct, index) => setProps(lhs, getField(struct, index))
+    case FieldUpdate(struct, index, x) =>
+      val updatedField = meet(getField(struct, index), getProps(x))
+      setField(struct, updatedField, index)
+
+    case _ => super.propagate(lhs,rhs)
+  }
+
   def structName[T](m: Manifest[T]): String = m match {
     // FIXME: move to codegen? we should be able to have different policies/naming schemes
     case rm: RefinedManifest[_] => "Anon" + math.abs(rm.fields.map(f => f._1.## + f._2.toString.##).sum)

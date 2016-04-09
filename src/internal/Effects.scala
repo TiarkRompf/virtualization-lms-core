@@ -16,10 +16,17 @@ trait Blocks extends Expressions {
     case _ => Nil
   }
 
+  def getBlockResultFull[A](s: Block[A]): Exp[A] = s.res
+  def getBlockResult[A](s: Block[A]): Exp[A] = s.res
 }
 
 
 trait Effects extends Expressions with Blocks with Utils {
+
+  override def getBlockResult[A](s: Block[A]): Exp[A] = s match {
+    case Block(Def(Reify(x, _, _))) => x
+    case _ => super.getBlockResult(s)
+  }
 
   // TODO: transform over Summary currently lives in common/Base.scala. move it here?
   // --- context

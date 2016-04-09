@@ -1,8 +1,7 @@
 package scala.virtualization.lms
 package common
 
-import internal.{SymbolMetadata, Expressions, Blocks, Effects}
-import internal.{Traversal, IterativeTraversal}
+import internal.{SymbolMetadata, Expressions, Blocks, Analyzing}
 
 import scala.reflect._
 
@@ -53,18 +52,7 @@ trait MetadataOps extends Base with SymbolMetadata {
   def child(e: Rep[Any], index: String): SymbolProperties = getField(e, index).get
 }
 
-trait MetadataExp extends MetadataOps with Expressions with Blocks { self: BaseExp =>
-
-  type Analyzer = AbstractAnalyzer { val IR: self.type }
-
-  // State for compiler traversal use
-  var metadata: Map[Exp[Any], SymbolProperties] = Map.empty
-
-  // -----
-  // TODO: These are currently unused, but may be useful later?
-  var analyzers: Map[Datakey[_], Analyzer] = Map.empty
-  var validData: List[Datakey[_]] = Nil
-  // -----
+trait MetadataExp extends MetadataOps with Expressions with Blocks { this: BaseExp =>
 
   private var metadataUpdateFlag: Boolean = false
   private def setMetadataUpdateFlag() { metadataUpdateFlag = true }
@@ -86,10 +74,10 @@ trait MetadataExp extends MetadataOps with Expressions with Blocks { self: BaseE
   // Getters
   def getProps(e: Rep[Any]): Option[SymbolProperties] = Some(metadata.getOrElse(e, initRep(e)(mpos(e.pos))))
 
-  def getProps(b: Block[Any]): Option[SymbolProperties] = getProps(b.res)
-  def getMetadata[T<:Metadata](b: Block[Any], k: Datakey[T]): Option[T] = getMetadata(b.res, k)
-  def getChild(b: Block[Any]): Option[SymbolProperties] = getChild(b.res)
-  def getField(b: Block[Any], index: String): Option[SymbolProperties] = getField(b.res, index)
+  def getProps(b: Block[Any]): Option[SymbolProperties] = getProps(getBlockResult(b))
+  def getMetadata[T<:Metadata](b: Block[Any], k: Datakey[T]): Option[T] = getMetadata(getBlockResult(b), k)
+  def getChild(b: Block[Any]): Option[SymbolProperties] = getChild(getBlockResult(b))
+  def getField(b: Block[Any], index: String): Option[SymbolProperties] = getField(getBlockResult(b), index)
 
   def defaultMetadata[T](tp: Manifest[T]): List[Metadata] = Nil
 
@@ -131,55 +119,4 @@ trait MetadataExp extends MetadataOps with Expressions with Blocks { self: BaseE
 
     case _ => ScalarProperties(symData)
   }
-}
-
-// Experimental version of traversal where traversal schedule can be determined dynamically by metadata dependencies
-// TODO: Expected behavior for iterative traversal to attempt to run an analyzer prior to every iteration?
-trait AbstractAnalyzer extends IterativeTraversal { self =>
-  val IR: BaseFatExp with Effects
-  import IR._
-
-  override def hasConverged: Boolean = runs > 0 && !getMetadataUpdateFlag()
-
-  protected var datRequire: List[Datakey[_]] = Nil
-  protected var datUpdate:  List[Datakey[_]] = Nil
-  protected var datCreate:  List[Datakey[_]] = Nil
-  protected var datInvalid: List[Datakey[_]] = Nil
-
-  // Metadata invalidated by running this traversal
-  protected def invalidates(x: Datakey[_]*) { datInvalid = datInvalid ++ x.toList }
-  // Metadata required prior to running traversal
-  protected def requires(x: Datakey[_]*) { datRequire = datRequire ++ x.toList }
-  // Metadata updated (made valid) by running this traversal
-  protected def updates(x: Datakey[_]*) { datCreate = datCreate ++ datCreate }
-  // Metadata created (made valid) by running this traversal
-  protected def creates(x: Datakey[_]*) { datUpdate = datUpdate ++ datUpdate }
-
-  override def runOnce[A:Manifest](b: Block[A]): Block[A] = {
-    clearMetadataUpdateFlag()
-
-    for (data <- datRequire) {
-      if (!(validData contains data))
-        analyzers(data).run(b)
-    }
-    val out = super.runOnce(b)
-
-    // Invalidate all metadata which are subtypes of the list of this traversal's invalidation
-    // Allows us to write, for example, invalidates (classOf[Metadata]) to invalidate all metadata
-    validData = validData filterNot (dat => datInvalid.exists(isSubtype(dat, _)) )
-
-    (out)
-  }
-
-  override def run[A:Manifest](b: Block[A]): Block[A] = withDebugging {
-    val out = super.run(b)
-    if (hasCompleted && hasConverged) {
-      // Update metadata state
-      datUpdate foreach {dat => analyzers += (dat -> self.asInstanceOf[Analyzer]) }
-      validData = (validData ++ datCreate ++ datUpdate).distinct
-    }
-    (out)
-  }
-
-  datCreate foreach {dat => analyzers += (dat -> self.asInstanceOf[Analyzer]) }
 }
