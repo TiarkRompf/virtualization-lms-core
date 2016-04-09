@@ -152,25 +152,25 @@ trait DotCodegen extends GenericCodegen with Config {
 		stream.println(s"""${quote(x)} -> ${quote(y)}""")
 	}
 	def emitEdge(x:Sym[Any], y:Exp[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [label="${label}"]""")
+		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
 	}
 	def emitEdge(x:Sym[Any], y:Sym[Any]):Unit = {
 		stream.println(s"""${quote(x)} -> ${quote(y)}""")
 	}
 	def emitEdge(x:Sym[Any], y:Sym[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [label="${label}"]""")
+		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
 	}
 	def emitEdge(x:Exp[Any], y:Sym[Any]):Unit = {
 		stream.println(s"""${quote(x)} -> ${quote(y)}""")
 	}
 	def emitEdge(x:Exp[Any], y:Sym[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [label="${label}"]""")
+		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
 	}
 	def emitEdge(x:Exp[Any], y:Exp[Any]):Unit = {
 		stream.println(s"""${quote(x)} -> ${quote(y)}""")
 	}
 	def emitEdge(x:Exp[Any], y:Exp[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [label="${label}"]""")
+		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
 	}
 
 	def emit(str: String):Unit = {
@@ -183,40 +183,44 @@ trait DotCodegen extends GenericCodegen with Config {
 
 	val arrowSize = 0.6
 	val edgeThickness = 0.5
-	val memColor = "#6ce6e1"
-	val regColor = "#8bd645"
-	val offChipColor = "#1A0000"
-	val dblbufBorderColor = "#4fb0b0"
-	val ctrlColor = "red"
-	val counterColor = "#e8e8e8"
-	val counterInnerColor = "gray"
+	val memColor = s""""#6ce6e1""""
+	val regColor = s""""#8bd645""""
+	val offChipColor = s""""#1A0000""""
+	val dblbufBorderColor = s""""#4fb0b0""""
+	val ctrlColor = s""""red""""
+	val counterColor = s""""#e8e8e8""""
+	val counterInnerColor = s""""gray""""
 	val fontsize = 10
 	val defaultShape = "square"
-	val bgcolor = "white"
+	val bgcolor = s""""white""""
 
 	// Pipe Colors
-	val pipeFillColor = "white"
+	//val pipeFillColor = "#4FA1DB"
+	val pipeFillColor = s""""white""""
+	val pipeBorderColor = s""""black""""
 
 	// Block Colors
-	val mapFuncColor = "#f7f26f"
-	val reduceFuncColor = "#f2a2cc"
-	val ldFuncColor = "#7be58f"
-	val stFuncColor = "#7be58f"
+	val mapFuncColor = s""""#f7f26f""""
+	val reduceFuncColor = s""""#f2a2cc""""
+	val ldFuncColor = s""""#7be58f""""
+	val stFuncColor = s""""#7be58f""""
 
 	// Metapipeline colors
-	val mpFillColor = "#4FA1DB"
-	val mpBorderColor = "#4FA1DB"
-	val mpStageFillColor = "#BADDFF"
-	val mpStageBorderColor = "none"
+	val mpFillColor = s""""#4FA1DB""""
+	val mpBorderColor = s""""#4FA1DB""""
+	val mpStageFillColor = s""""#BADDFF""""
+	val mpStageBorderColor = s""""none""""
 
 	// Parallel colors
-	val parallelFillColor = "#4FDBC2"
-	val parallelBorderColor = "#00AB8C"
-	val parallelStageFillColor = "#CCFFF6"
-	val parallelStageBorderColor = "none"
+	//val parallelFillColor = "#4FDBC2"
+	val parallelFillColor = s""""white""""
+	//val parallelBorderColor = s""""#00AB8C""""
+	val parallelBorderColor = s""""black""""
+	val parallelStageFillColor = s""""#CCFFF6""""
+	val parallelStageBorderColor = s""""none""""
 
 	// Tile transfer colors
-	val tileTransFillColor = "#FFA500"
+	val tileTransFillColor = s""""#FFA500""""
 
 }
 
