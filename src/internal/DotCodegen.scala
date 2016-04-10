@@ -152,25 +152,25 @@ trait DotCodegen extends GenericCodegen with Config {
 		stream.println(s"""${quote(x)} -> ${quote(y)}""")
 	}
 	def emitEdge(x:Sym[Any], y:Exp[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
+		stream.println(s"""${quote(x)} -> ${quote(y)} [ headlabel="${label}" ]""")
 	}
 	def emitEdge(x:Sym[Any], y:Sym[Any]):Unit = {
 		stream.println(s"""${quote(x)} -> ${quote(y)}""")
 	}
 	def emitEdge(x:Sym[Any], y:Sym[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
+		stream.println(s"""${quote(x)} -> ${quote(y)} [ headlabel="${label}" ]""")
 	}
 	def emitEdge(x:Exp[Any], y:Sym[Any]):Unit = {
 		stream.println(s"""${quote(x)} -> ${quote(y)}""")
 	}
 	def emitEdge(x:Exp[Any], y:Sym[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
+		stream.println(s"""${quote(x)} -> ${quote(y)} [ headlabel="${label}" ]""")
 	}
 	def emitEdge(x:Exp[Any], y:Exp[Any]):Unit = {
 		stream.println(s"""${quote(x)} -> ${quote(y)}""")
 	}
 	def emitEdge(x:Exp[Any], y:Exp[Any], label:String):Unit = {
-		stream.println(s"""${quote(x)} -> ${quote(y)} [ xlabel="${label}" ]""")
+		stream.println(s"""${quote(x)} -> ${quote(y)} [ headlabel="${label}" ]""")
 	}
 
 	def emit(str: String):Unit = {
@@ -183,10 +183,6 @@ trait DotCodegen extends GenericCodegen with Config {
 
 	val arrowSize = 0.6
 	val edgeThickness = 0.5
-	val memColor = s""""#6ce6e1""""
-	val regColor = s""""#8bd645""""
-	val offChipColor = s""""#1A0000""""
-	val dblbufBorderColor = s""""#4fb0b0""""
 	val ctrlColor = s""""red""""
 	val counterColor = s""""#e8e8e8""""
 	val counterInnerColor = s""""gray""""
@@ -200,10 +196,11 @@ trait DotCodegen extends GenericCodegen with Config {
 	val pipeBorderColor = s""""black""""
 
 	// Block Colors
-	val mapFuncColor = s""""#f7f26f""""
-	val reduceFuncColor = s""""#f2a2cc""""
-	val ldFuncColor = s""""#7be58f""""
-	val stFuncColor = s""""#7be58f""""
+	val foreachFillColor = s""""#F6EC93""""
+	val mapFillColor = s""""#56D9D2""""
+	val reduceFillColor = s""""#FE7365""""
+	val ldFillColor = s""""#7be58f""""
+	val stFillColor = s""""#7be58f""""
 
 	// Metapipeline colors
 	val mpFillColor = s""""#4FA1DB""""
@@ -221,6 +218,12 @@ trait DotCodegen extends GenericCodegen with Config {
 
 	// Tile transfer colors
 	val tileTransFillColor = s""""#FFA500""""
+
+	// Memories
+	val bramFillColor = s""""#70C6E6""""
+	val dramFillColor = s""""#685643""""
+	val regFillColor = s""""#8bd645""""
+	val dblbufBorderColor = s""""#4fb0b0""""
 
 }
 
