@@ -6,10 +6,10 @@ import java.io.{File, PrintWriter}
 
 
 trait BlockTraversal extends GraphTraversal {
-  val IR: Expressions
+  val IR: Blocks
   import IR._
 
-  type Block[+T]
+  //type Block[+T]
 
   def reifyBlock[T: Manifest](x: => Exp[T]): Block[T]
 
@@ -18,9 +18,6 @@ trait BlockTraversal extends GraphTraversal {
   def getFreeVarBlock(start: Block[Any], local: List[Sym[Any]]): List[Sym[Any]] = Nil
 
   def getFreeDataBlock[A](start: Block[A]): List[(Sym[Any],Any)] = Nil // TODO: Nil or Exception??
-
-  def getBlockResult[A](s: Block[A]): Exp[A] = getBlockResultFull(s) // = s.res
-  def getBlockResultFull[A](s: Block[A]): Exp[A] // = s.res
 
   def traverseBlock[A](block: Block[A]): Unit
   def traverseStm(stm: Stm): Unit
@@ -32,12 +29,12 @@ trait BlockTraversal extends GraphTraversal {
 
 
 trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
-  val IR: Expressions with Effects
+  val IR: Effects
   import IR._
 
   // ----- block definition
 
-  type Block[+T] = IR.Block[T]
+  //type Block[+T] = IR.Block[T]
 
   /**
    * Reify a given code block into a block of IR nodes
@@ -52,14 +49,6 @@ trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
       innerScope = innerScope ::: newDefs
     (block)
   }
-
-  override def getBlockResultFull[A](s: Block[A]): Exp[A] = s.res
-
-  override def getBlockResult[A](s: Block[A]): Exp[A] = s match {
-    case Block(Def(Reify(x, _, _))) => x
-    case Block(x) => x
-  }
-
 
   def focusBlock[A](result: Block[Any])(body: => A): A =
     focusFatBlock(List(result))(body)

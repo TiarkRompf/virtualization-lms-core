@@ -20,9 +20,41 @@ trait Expressions extends Utils {
     def pos: List[SourceContext] = Nil
   }
 
-  case class Const[+T:Manifest](x: T) extends Exp[T]
+  // Exps which will be known by codegen time
+  abstract class ConstExp[+T:Manifest] extends Exp[T]
 
-  case class Param[T:Manifest](val id: Int, var x: T) extends Exp[T]
+  // Exp which is known at staging time
+  class Const[+T:Manifest](val x: T) extends ConstExp[T] {
+    override def equals(x: Any): Boolean = x match {
+      case that: Exp[_] => that match {
+        case Const(y) => this.tp == that.tp && x == y // value and type equality
+        case _ => false
+      }
+      case _ => false
+    }
+    override def toString = "Const(" + x.toString + ")"
+  }
+  object Const {
+    def unapply[T](x: Exp[T]): Option[T] = x match {
+      case c: Const[_] => Some(c.x.asInstanceOf[T])
+      case p: Param[_] if p.finalized => Some(p.x.asInstanceOf[T])
+      case _ => None
+    }
+    def apply[T:Manifest](x: T) = new Const[T](x)
+  }
+
+  var nParams = 0
+  case class Param[T:Manifest](private var _x: T) extends ConstExp[T] {
+    val id: Int = {nParams += 1; nParams - 1}
+    var finalized = false
+    def x = _x
+    def x_=(v: T) { if (!finalized) _x = v else throw new Exception("Attempted to set finalized param") }
+
+    override def equals(x: Any): Boolean = x match {
+      case that: Param[_] => this.id == that.id // TODO: value equality?
+      case _ => false
+    }
+  }
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var sourceContexts: List[SourceContext] = Nil
@@ -31,9 +63,6 @@ trait Expressions extends Utils {
   }
 
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
-
-  var nParams = 0
-  def param[T:Manifest](default: T) = { nParams += 1; Param[T](nParams - 1, default) }
 
   var nVars = 0
   def fresh[T:Manifest]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) printlog("nVars="+nVars);  nVars -1 }

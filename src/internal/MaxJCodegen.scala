@@ -7,7 +7,7 @@ import java.io.{File, FileWriter, PrintWriter}
 import scala.reflect.SourceContext
 
 trait MaxJCodegen extends GenericCodegen with Config {
-  val IR: Expressions
+  val IR: Blocks
   import IR._
 
   var inHwScope = false

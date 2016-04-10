@@ -7,7 +7,7 @@ import java.io.{File, FileWriter, PrintWriter}
 import scala.reflect.SourceContext
 
 trait DotCodegen extends GenericCodegen with Config {
-  val IR: Expressions
+  val IR: Blocks
   import IR._
 
 	var inHwScope = false
@@ -220,7 +220,7 @@ trait DotCodegen extends GenericCodegen with Config {
 	val parallelStageBorderColor = s""""none""""
 
 	// Tile transfer colors
-	val tileTransFillColor = s""""#FFA500"""" 
+	val tileTransFillColor = s""""#FFA500""""
 
 }
 

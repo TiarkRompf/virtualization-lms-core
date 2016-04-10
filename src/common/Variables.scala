@@ -196,6 +196,13 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
+  override def propagate(lhs: Exp[Any], rhs: Def[Any]) = rhs match {
+    case ReadVar(Variable(v)) => setProps(lhs, getProps(v))
+    case NewVar(init) => setProps(lhs, getProps(init))
+    case Assign(Variable(v), x) => setProps(v, meet(getProps(v), getProps(x)) )
+    case _ => super.propagate(lhs, rhs)
+  }
+
 }
 
 

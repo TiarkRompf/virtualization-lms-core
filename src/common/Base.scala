@@ -23,6 +23,7 @@ trait Base extends EmbeddedControls {
   type Rep[+T]
 
   protected def unit[T:Manifest](x: T): Rep[T]
+  protected def param[T:Manifest](x: T): Rep[T]
 
   // always lift Unit and Null (for now)
   implicit def unitToRepUnit(x: Unit) = unit(x)
@@ -34,10 +35,11 @@ trait Base extends EmbeddedControls {
  *
  * @since 0.1
  */
-trait BaseExp extends Base with Transforming with MetadataExp {
+trait BaseExp extends Base with Transforming with Analyzing with MetadataExp {
   type Rep[+T] = Exp[T]
 
   protected def unit[T:Manifest](x: T) = Const(x)
+  protected def param[T:Manifest](x: T) = Param(x)
 }
 
 // TODO: This isn't useful right now since MetadataExp mixes in Blocks. Remove? Refactor?
@@ -61,6 +63,12 @@ trait EffectExp extends BaseExp with Effects {
     case Reflect(x, u, es) => reflectMirrored(mirrorDef(e,f).asInstanceOf[Reflect[A]])
     case Reify(x, u, es) => Reify(f(x), mapOver(f,u), f(es))
     case _ => super.mirror(e,f)
+  }
+
+  override def propagate(lhs: Exp[Any], rhs: Def[Any]): Unit = rhs match {
+    case Reify(sym, _, _) => setProps(lhs, getProps(sym))
+    case Reflect(d, _, _) => propagate(lhs, d)
+    case _ => super.propagate(lhs, rhs)
   }
 
 }

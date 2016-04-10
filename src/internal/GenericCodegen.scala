@@ -6,7 +6,7 @@ import java.io.{File, PrintWriter}
 import scala.reflect.RefinedManifest
 
 trait GenericCodegen extends BlockTraversal {
-  val IR: Expressions
+  val IR: Blocks
   import IR._
 
   /** these methods support a kernel model of execution and are only used by Delite, should be moved into Delite only? **/
@@ -182,7 +182,7 @@ trait GenericCodegen extends BlockTraversal {
     case Const(f: Float) => f+"f"
     case Const(c: Char) => "'"+(""+c).replace("'", "\\'").replace("\n", "\\n")+"'"
     case Const(z) => z.toString
-    case Param(id, x) => quote(Const(x))  // Quote as if it was defined as a constant
+    case Param(x) => quote(Const(x))  // Quote as if it was defined as a constant
     case Sym(n) => "x"+n
     case _ => throw new RuntimeException("could not quote " + x)
   }
