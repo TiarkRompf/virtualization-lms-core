@@ -37,7 +37,7 @@ trait Expressions extends Utils {
   object Const {
     def unapply[T](x: Exp[T]): Option[T] = x match {
       case c: Const[_] => Some(c.x.asInstanceOf[T])
-      case p: Param[_] if p.finalized => Some(p.x.asInstanceOf[T])
+      case p: Param[_] if p.isFixed => Some(p.x.asInstanceOf[T])
       case _ => None
     }
     def apply[T:Manifest](x: T) = new Const[T](x)
@@ -46,9 +46,12 @@ trait Expressions extends Utils {
   var nParams = 0
   case class Param[T:Manifest](private var _x: T) extends ConstExp[T] {
     val id: Int = {nParams += 1; nParams - 1}
-    var finalized = false
+    private var fixed = false
+    def fix { fixed = true }
+    def isFixed = fixed
+
     def x = _x
-    def x_=(v: T) { if (!finalized) _x = v else throw new Exception("Attempted to set finalized param") }
+    def x_=(v: T) { if (!fixed) _x = v else throw new Exception("Attempted to set fixed param") }
 
     override def equals(x: Any): Boolean = x match {
       case that: Param[_] => this.id == that.id // TODO: value equality?

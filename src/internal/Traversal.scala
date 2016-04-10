@@ -29,7 +29,7 @@ trait Traversal extends FatBlockTraversal { self =>
 
   def runOnce[A:Manifest](b: Block[A]): Block[A] = processBlock(b)
 
-  def run[A:Manifest](b: Block[A]): Block[A] = withDebugging {
+  def run[A:Manifest](b: Block[A]): Block[A] = {
     val curBlock = preprocess(b)
     val resultBlock = runOnce(curBlock)
     postprocess(resultBlock)
@@ -65,7 +65,7 @@ trait IterativeTraversal extends Traversal { self =>
   /**
    * Run traversal/analysis on a given block until convergence or maximum # of iterations reached
    */
-  override def run[A:Manifest](b: Block[A]): Block[A] = withDebugging {
+  override def run[A:Manifest](b: Block[A]): Block[A] = {
     var curBlock = preprocess(b)
     do {
       runs = 0
