@@ -52,11 +52,14 @@ trait Expressions extends Utils {
 
     def x = _x
     def x_=(v: T) { if (!fixed) _x = v else throw new Exception("Attempted to set fixed param") }
+    def setValue(v: T) { if (!fixed) _x = v else throw new Exception("Attempted to set fixed param") }
 
     override def equals(x: Any): Boolean = x match {
       case that: Param[_] => this.id == that.id // TODO: value equality?
       case _ => false
     }
+
+    override def toString = "Param#" + id
   }
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
