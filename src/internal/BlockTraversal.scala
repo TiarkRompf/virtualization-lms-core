@@ -115,6 +115,17 @@ trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
     }
   }
 
+  // Bit of a hack here - use scheduling to return list of statements
+  def getStmsInBlock[A](block: Block[A]): List[Stm] = {
+    var stms: List[Stm] = Nil
+    focusBlock(block) {
+      focusExactScope(block){ levelScope =>
+        stms = levelScope
+      }
+    }
+    stms
+  }
+
   def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
     stms foreach traverseStm
   }
