@@ -60,6 +60,7 @@ trait Expressions extends Utils {
     }
 
     override def toString = "Param#" + id
+    override def hashCode = id
   }
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
