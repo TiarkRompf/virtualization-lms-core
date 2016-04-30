@@ -123,6 +123,10 @@ trait DotCodegen extends GenericCodegen with Config {
     	stream.println("val " + quote(sym) + " = " + rhs + extra)
   }
 
+  def emitValDef(sym: Exp[Any], rhs: Exp[Any]): Unit = {
+    stream.println(quote(sym) + " = " + quote(rhs))
+  }
+
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
