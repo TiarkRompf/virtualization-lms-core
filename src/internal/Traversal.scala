@@ -9,7 +9,13 @@ trait Traversal extends FatBlockTraversal { self =>
   import IR._
 
   val name: String = self.getClass.getName.split('$').filterNot(_ forall Character.isDigit).mkString(".")
-  val debugMode: Boolean = false
+  var debugMode: Boolean = false    // Traversal-specific debug enable
+  var verboseMode: Boolean = true   // Traversal-specific verbosity
+
+  def silence() {
+    verboseMode = false
+    debugMode = false
+  }
 
   def withDebugging[T](x: => T): T = {
     if (debugMode) {
@@ -21,7 +27,8 @@ trait Traversal extends FatBlockTraversal { self =>
     }
     else x
   }
-  def debug(x: => Any) = withDebugging{ printdbg(x) }
+  final def debug(x: => Any) = withDebugging{ printdbg(x) }
+  final def msg(x: => Any) { if (verbose) System.out.println(x) }
 
   def preprocess[A:Manifest](b: Block[A]): Block[A] = { b }
   def postprocess[A:Manifest](b: Block[A]): Block[A] = { b }
