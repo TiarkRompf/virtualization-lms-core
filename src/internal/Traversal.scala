@@ -28,7 +28,7 @@ trait Traversal extends FatBlockTraversal { self =>
     else x
   }
   final def debug(x: => Any) = withDebugging{ printdbg(x) }
-  final def msg(x: => Any) { if (verbose) System.out.println(x) }
+  final def msg(x: => Any) { if (verboseMode) System.out.println(x) }
 
   def preprocess[A:Manifest](b: Block[A]): Block[A] = { b }
   def postprocess[A:Manifest](b: Block[A]): Block[A] = { b }
@@ -53,7 +53,7 @@ trait IterativeTraversal extends Traversal { self =>
   protected val MAX_RETRIES: Int = 1    // maximum number of retries to allow
   protected var runs = 0                // Current analysis iteration
   private var retries = 0               // Current retry
-  private var retry = false
+  private var _retry = false
 
   def hasConverged: Boolean = runs > 0
   def hasCompleted: Boolean = true
@@ -64,10 +64,10 @@ trait IterativeTraversal extends Traversal { self =>
 
   /**
    * Function to be called to try to recover when visitor converged but did not complete
-   * In postprocess, modify state, then call resume() to resume looping. Resets run number.
-   * Can also implement auto-increase of MAX_ITERS using resume() in postprocess
+   * In postprocess, modify state, then call retry() to resume looping. Resets run number.
+   * Can also implement auto-increase of MAX_ITERS using retry() in postprocess
    */
-  def resume() { retry = true }
+  def retry() { _retry = true }
 
   /**
    * Run traversal/analysis on a given block until convergence or maximum # of iterations reached
@@ -76,14 +76,14 @@ trait IterativeTraversal extends Traversal { self =>
     var curBlock = preprocess(b)
     do {
       runs = 0
-      retry = false
+      _retry = false
       while (!hasConverged && runs < MAX_ITERS) { // convergence condition
         runs += 1
         curBlock = runOnce(curBlock)
       }
       curBlock = postprocess(curBlock)
       retries += 1
-    } while (retry && retries <= MAX_RETRIES)
+    } while (_retry && retries <= MAX_RETRIES)
 
     if (!hasCompleted || !hasConverged) { IR.hadErrors = true }
     if (!hasCompleted) { failedToComplete() }
