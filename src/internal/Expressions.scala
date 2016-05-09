@@ -100,9 +100,9 @@ trait Expressions extends Utils {
     // equivalent to: globalDefs filter (_.lhs exists (lhs contains _))
     val existing = lhs flatMap (globalSymsCache get _)
     assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
-    localDefs = localDefs ::: ds
-    globalDefs = globalDefs ::: ds
     for (stm <- ds) {
+      localDefs = stm :: localDefs
+      globalDefs = stm :: globalDefs
       globalDefsCache += (stm.rhs->stm)
       for (s <- stm.lhs) globalSymsCache += (s->stm)
     }
