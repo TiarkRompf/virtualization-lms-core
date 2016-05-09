@@ -76,18 +76,21 @@ trait Expressions extends Utils {
   
   var globalDefs: List[Stm] = Nil
   var localDefs: List[Stm] = Nil
-  var globalDefsCache: Map[Sym[Any],Stm] = Map.empty
+  var globalSymsCache: Map[Sym[Any],Stm] = Map.empty
+  var globalDefsCache: Map[Any,Stm] = Map.empty
 
   def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
     val saveLocal = localDefs
     val saveGlobal = globalDefs
-    val saveGlobalCache = globalDefsCache
+    val saveGlobalSyms = globalSymsCache
+    val saveGlobalDefs = globalDefsCache
     localDefs = Nil
     val r = b
     val defs = localDefs
     localDefs = saveLocal
     globalDefs = saveGlobal
-    globalDefsCache = saveGlobalCache
+    globalSymsCache = saveGlobalSyms
+    globalDefsCache = saveGlobalDefs
     (r, defs)
   }
 
@@ -95,21 +98,23 @@ trait Expressions extends Utils {
     val lhs = ds.flatMap(_.lhs)
     assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
     // equivalent to: globalDefs filter (_.lhs exists (lhs contains _))
-    val existing = lhs flatMap (globalDefsCache get _)
+    val existing = lhs flatMap (globalSymsCache get _)
     assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
     localDefs = localDefs ::: ds
     globalDefs = globalDefs ::: ds
-    for (stm <- ds; s <- stm.lhs) {      
-      globalDefsCache += (s->stm)
+    for (stm <- ds) {
+      globalDefsCache += (stm.rhs->stm)
+      for (s <- stm.lhs) globalSymsCache += (s->stm)
     }
   }
 
   def findDefinition[T](s: Sym[T]): Option[Stm] =
-    globalDefsCache.get(s)
+    globalSymsCache.get(s)
     //globalDefs.find(x => x.defines(s).nonEmpty)
 
   def findDefinition[T](d: Def[T]): Option[Stm] =
-    globalDefs.find(x => x.defines(d).nonEmpty)
+    globalDefsCache.get(d)
+    //globalDefs.find(x => x.defines(d).nonEmpty)
 
   def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): Stm =
     findDefinition[T](d) map { x => x.defines(d).foreach(_.withPos(pos)); x } getOrElse {
@@ -221,6 +226,7 @@ trait Expressions extends Utils {
     nVars = 0
     globalDefs = Nil
     localDefs = Nil
+    globalSymsCache = Map.empty
     globalDefsCache = Map.empty
   }
 
