@@ -59,8 +59,8 @@ val x41 = 2.0 * x40
 val x42 = x41 + 3.0
 val x43 = x36 + x42
 val x44 = x1(x37) = x43
-x32 = x42
-x33 = x39
+val x45 = x32 = x42
+val x46 = x33 = x39
 
 x35 = x35 + 1
 }
