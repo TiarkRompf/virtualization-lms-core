@@ -102,14 +102,6 @@ trait ScalaCodegen extends GenericCodegen with Config {
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
-  
-  override def emitVarDecl(sym: Sym[Any]): Unit = {
-    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = null.asInstanceOf[" + remap(sym.tp) + "];")
-  }
-
-  override def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
-    stream.println(quote(sym) + " = " + rhs)
-  }
 
   override def quote(x: Exp[Any]) = x match {
     case Const(l: Long) => l.toString + "L"
