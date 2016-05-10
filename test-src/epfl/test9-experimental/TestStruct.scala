@@ -107,7 +107,7 @@ class TestStruct extends FileDiffSuite {
     val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenFatStruct with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self;
-        override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
+        override def shouldApplyFusion(currentScope: Seq[Stm])(result: List[Exp[Any]]): Boolean = true }
     {
       val x = fresh[Int]
       val y = reifyEffects(test(x))

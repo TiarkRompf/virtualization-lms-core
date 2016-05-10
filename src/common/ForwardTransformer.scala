@@ -1,8 +1,8 @@
 package scala.virtualization.lms
 package common
 
-import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
+
 
 trait ForwardTransformer extends internal.AbstractSubstTransformer with internal.FatBlockTraversal { self =>
   val IR: BaseFatExp with EffectExp //LoopsFatExp with IfThenElseFatExp
@@ -101,7 +101,7 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
 
   def transformDef[A](lhs: Sym[A], rhs: Def[A]): Option[() => Def[A]] = None
 
-  override def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
+  override def traverseStmsInBlock[A](stms: Seq[Stm]): Unit = {
     for (sym <- recursive) {
       subst += (sym -> fresh(mtype(sym.tp)))
     }

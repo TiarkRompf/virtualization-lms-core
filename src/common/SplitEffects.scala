@@ -195,7 +195,7 @@ trait BaseGenSplitEffects extends BaseGenIfThenElseFat with GenericFatCodegen {
   }
 
   // this is really the 'OPT' case ... <--- merge stms that have been split by Opt trait before
-  override def fattenAll(e: List[Stm]): List[Stm] = {
+  override def fattenAll(e: Seq[Stm]): Seq[Stm] = {
     // FIXME: will need to check dependencies -- just grouping by condition won't work
 
     val e1 = super.fattenAll(e)

@@ -1,5 +1,5 @@
 cse: Sym(2) -> Sym(1)
-killing: List(Sym(1))/List(Sym(1), Sym(2), Sym(3), Sym(4)) by VectorUpdate(Sym(1),Const(5),Const(7.0))
+killing: List(Sym(1))/Vector(Sym(1), Sym(2), Sym(3), Sym(4)) by VectorUpdate(Sym(1),Const(5),Const(7.0))
 **fatten List(TP(Sym(1),VectorZeros(Const(100))), TP(Sym(3),VectorLiteral(List(Sym(1)))), TP(Sym(5),ReflectSoft(VectorUpdate(Sym(1),Const(5),Const(7.0)),List(Sym(1), Sym(2), Sym(3), Sym(4)))), TP(Sym(8),Mutate(Sym(3),Sym(5))), TP(Sym(10),VectorApply(Sym(8),Const(0))), TP(Sym(12),Reflect(Print(Sym(10)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List())), TP(Sym(2),Copy(Sym(1))), TP(Sym(4),VectorLiteral(List(Sym(2)))), TP(Sym(9),Mutate(Sym(4),Sym(5))), TP(Sym(11),VectorApply(Sym(9),Const(0))), TP(Sym(13),Reflect(Print(Sym(11)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12)))), TP(Sym(14),Reify(Sym(13),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12), Sym(13)))))
 /*****************************************
   Emitting Generated Code                  

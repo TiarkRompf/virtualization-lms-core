@@ -277,7 +277,7 @@ class TestMisc extends FileDiffSuite {
   
   
   def resetGraph(p: Impl) { // reset graph, transformer will build anew
-    p.globalDefs = Nil
+    p.globalDefs = Vector.empty
     p.globalSymsCache = Map.empty
     p.globalDefsCache = Map.empty
   }
@@ -576,7 +576,7 @@ class TestMisc extends FileDiffSuite {
       codegen.emitBlock(y)
     }
     
-    //p.globalDefs = Nil don't reset graph to get better sharing ... // reset graph, transformer will build anew
+    //resetGraph(p) ... don't reset graph to get better sharing
     val trans = new MirrorRetainBlockTransformer { // a + b --> b + a, but only in then-branches of an if-then-else
       val IR: p.type = p
       import IR.{__newVar => _, _}

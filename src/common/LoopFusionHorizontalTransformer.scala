@@ -38,9 +38,9 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
               case TP(fusedSym, `d`) => fusedSym
               case TP(fusedSym, Reflect(`d`, _, _)) => setToFuseEffectful = true; fusedSym
           }) match {
-            case Nil => sys.error("(HFT) No statements/symbols found for definition. Def: " + d)
-            case fusedSym :: Nil => fusedSym
-            case list => sys.error("(HFT) Multiple statements/symbols found for definition. Def: " + d + ", syms: " + list)
+            case e if e.isEmpty => sys.error("(HFT) No statements/symbols found for definition. Def: " + d)
+            case e if (e.length == 1) => e.head
+            case e => sys.error("(HFT) Multiple statements/symbols found for definition. Def: " + d + ", syms: " + e)
           }
         }))
     }

@@ -136,7 +136,7 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
           
         */
         
-        createDefinition(sym, ReflectSoft(d, transitive.flatMap(_.lhs)))
+        createDefinition(sym, ReflectSoft(d, transitive.flatMap(_.lhs).toList))
         sym
       } else {
         // right now we add copy statements whenever we'd do CSE.
@@ -185,7 +185,7 @@ class TestEffects extends FileDiffSuite {
     val codegen = new ScalaGenFat with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative with ScalaGenRangeOps 
       with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self 
-        override def fattenAll(e: List[Stm]): List[Stm] = {
+        override def fattenAll(e: Seq[Stm]): Seq[Stm] = {
           println("**fatten "+e)
           // group all Mutate helper nodes together with the mutation
           // TBD: is this necessary (if not, desirable) ?
@@ -194,7 +194,7 @@ class TestEffects extends FileDiffSuite {
           
           val e2 = e map {
             case e@TP(s, rhs) if mg.contains(s) => 
-              val vs = mg(s)
+              val vs = mg(s) toList
               val llhs = vs map (_.sym)
               val rrhs = vs map (_.rhs)
               TTP(s::llhs, rhs::rrhs, Multi(rhs::rrhs))

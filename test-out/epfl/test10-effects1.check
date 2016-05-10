@@ -1,4 +1,4 @@
-killing: List(Sym(1))/List(Sym(1), Sym(2)) by VectorUpdate(Sym(1),Const(5),Const(7.0))
+killing: List(Sym(1))/Vector(Sym(1), Sym(2)) by VectorUpdate(Sym(1),Const(5),Const(7.0))
 **fatten List(TP(Sym(1),VectorZeros(Const(100))), TP(Sym(2),VectorLiteral(List(Sym(1)))), TP(Sym(3),ReflectSoft(VectorUpdate(Sym(1),Const(5),Const(7.0)),List(Sym(1), Sym(2)))), TP(Sym(5),Mutate(Sym(2),Sym(3))), TP(Sym(6),VectorApply(Sym(5),Const(0))), TP(Sym(7),Reflect(Print(Sym(6)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List())), TP(Sym(8),Reify(Sym(7),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(7)))))
 /*****************************************
   Emitting Generated Code                  

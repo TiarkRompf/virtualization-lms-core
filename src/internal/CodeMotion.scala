@@ -9,7 +9,7 @@ trait CodeMotion extends Scheduling {
   val IR: Expressions with Effects /* effects just for sanity check */
   import IR._
 
-  def getExactScope[A](currentScope: List[Stm])(result: List[Exp[Any]]): List[Stm] = {
+  def getExactScope[A](currentScope: Seq[Stm])(result: List[Exp[Any]]): Seq[Stm] = {
     // currentScope must be tight for result and strongly sorted
     val e1 = currentScope
 

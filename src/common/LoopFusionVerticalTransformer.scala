@@ -553,7 +553,7 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
      * result depends on the statement. Expressions in some nodes might depend
      * on the loop index without being part of the loop body (e.g. old loops
      * with same index). */
-    val cIndexedSymsPruned: List[Sym[Any]] = Right(cLoop) match {
+    val cIndexedSymsPruned: Seq[Sym[Any]] = Right(cLoop) match {
       case MatchMcForReduce(cInner@Sym(_), _, _) => 
         val cIndexStmsMap: HashSet[Sym[Any]] = HashSet(cIndexedSyms: _*)
         GraphUtil.stronglyConnectedComponents(List(cInner), { sym: Sym[Any] => sym match {
@@ -615,7 +615,7 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
   /** Prunes the producer candidates and creates the FusionInfo containing all
     * compatible fusions. */
   def combineProducers[A:Manifest](cSym: Sym[A], cDef: Either[Def[A], AbstractLoop[_]],
-      prodCandidates: List[(Sym[Any], Sym[Any], ProdType, Boolean)],
+      prodCandidates: Seq[(Sym[Any], Sym[Any], ProdType, Boolean)],
       notFused: List[(Sym[Any], String)], outerIndex: Option[Sym[Int]],
       outerSISyms: Option[SISyms], remapReduceToMc: Option[Sym[Any]]): (FusionInfo, Boolean) = {
     
@@ -723,7 +723,7 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
     }
 
     /** Check all candidates and retain all that could be fused. */
-    val producers: List[(FusionInfo1to1, ProdType, Boolean)] = prodCandidates.map({ 
+    val producers: Seq[(FusionInfo1to1, ProdType, Boolean)] = prodCandidates.map({ 
       case (oldPSym, newPSym, prodType, effectful) => 
         val fusionInfo: Either[String, FusionInfo1to1] = newPSym match {
 

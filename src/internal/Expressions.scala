@@ -1,10 +1,11 @@
 package scala.virtualization.lms
 package internal
 
-import scala.reflect.SourceContext
-import scala.annotation.unchecked.uncheckedVariance
-import scala.collection.mutable.ListBuffer
 import java.lang.{StackTraceElement,Thread}
+import scala.annotation.unchecked.uncheckedVariance
+import scala.collection.immutable.Vector
+import scala.collection.mutable.ListBuffer
+import scala.reflect.SourceContext
 
 
 /**
@@ -74,12 +75,12 @@ trait Expressions extends Utils {
 
   // graph construction state
   
-  var globalDefs: List[Stm] = Nil
-  var localDefs: List[Stm] = Nil
+  var globalDefs: Seq[Stm] = Vector.empty
+  var localDefs: Seq[Stm] = Vector.empty
   var globalSymsCache: Map[Sym[Any],Stm] = Map.empty
   var globalDefsCache: Map[Any,Stm] = Map.empty
 
-  def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
+  def reifySubGraph[T](b: =>T): (T, Seq[Stm]) = {
     val saveLocal = localDefs
     val saveGlobal = globalDefs
     val saveGlobalSyms = globalSymsCache
@@ -94,15 +95,15 @@ trait Expressions extends Utils {
     (r, defs)
   }
 
-  def reflectSubGraph(ds: List[Stm]): Unit = {
+  def reflectSubGraph(ds: Seq[Stm]): Unit = {
     val lhs = ds.flatMap(_.lhs)
     assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
     // equivalent to: globalDefs filter (_.lhs exists (lhs contains _))
     val existing = lhs flatMap (globalSymsCache get _)
     assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
     for (stm <- ds) {
-      localDefs = stm :: localDefs
-      globalDefs = stm :: globalDefs
+      localDefs :+= stm
+      globalDefs :+= stm
       globalDefsCache += (stm.rhs->stm)
       for (s <- stm.lhs) globalSymsCache += (s->stm)
     }
@@ -224,8 +225,8 @@ trait Expressions extends Utils {
 
   def reset { // used by delite?
     nVars = 0
-    globalDefs = Nil
-    localDefs = Nil
+    globalDefs = Vector.empty
+    localDefs = Vector.empty
     globalSymsCache = Map.empty
     globalDefsCache = Map.empty
   }

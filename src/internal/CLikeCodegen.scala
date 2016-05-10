@@ -24,7 +24,15 @@ trait CLikeCodegen extends GenericCodegen {
   def emitValDef(sym: Sym[Any], rhs: String): Unit = emitValDef(quote(sym), sym.tp, rhs)
 
   def emitValDef(sym: String, tpe: Manifest[_], rhs: String): Unit = {
-    if(remap(tpe) != "void") stream.println(remap(tpe) + " " + sym + " = " + rhs + ";")
+    if (!isVoidType(remap(tpe))) stream.println(remap(tpe) + " " + sym + " = " + rhs + ";")
+  }
+
+  def emitVarDecl(sym: Sym[Any]): Unit = {
+    stream.println(remap(sym.tp) + " " + quote(sym) + ";")
+  }
+
+  def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
+    stream.println(quote(sym) + " = " + rhs + ";")
   }
 
   def remapWithRef[A](m: Manifest[A]): String = remap(m) + addRef(m)
