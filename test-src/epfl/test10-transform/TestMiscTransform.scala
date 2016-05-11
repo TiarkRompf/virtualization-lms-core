@@ -277,7 +277,7 @@ class TestMisc extends FileDiffSuite {
   
   
   def resetGraph(p: Impl) { // reset graph, transformer will build anew
-    p.globalDefs = Vector.empty
+    p.globalDefs = scala.collection.immutable.Queue.empty
     p.globalSymsCache = Map.empty
     p.globalDefsCache = Map.empty
   }

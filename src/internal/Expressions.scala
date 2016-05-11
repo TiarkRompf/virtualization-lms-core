@@ -3,7 +3,7 @@ package internal
 
 import java.lang.{StackTraceElement,Thread}
 import scala.annotation.unchecked.uncheckedVariance
-import scala.collection.immutable.Vector
+import scala.collection.immutable.Queue
 import scala.collection.mutable.ListBuffer
 import scala.reflect.SourceContext
 
@@ -75,8 +75,8 @@ trait Expressions extends Utils {
 
   // graph construction state
   
-  var globalDefs: Seq[Stm] = Vector.empty
-  var localDefs: Seq[Stm] = Vector.empty
+  var globalDefs: Seq[Stm] = Queue.empty
+  var localDefs: Seq[Stm] = Queue.empty
   var globalSymsCache: Map[Sym[Any],Stm] = Map.empty
   var globalDefsCache: Map[Any,Stm] = Map.empty
 
@@ -85,7 +85,7 @@ trait Expressions extends Utils {
     val saveGlobal = globalDefs
     val saveGlobalSyms = globalSymsCache
     val saveGlobalDefs = globalDefsCache
-    localDefs = Nil
+    localDefs = Queue.empty
     val r = b
     val defs = localDefs
     localDefs = saveLocal
@@ -225,8 +225,8 @@ trait Expressions extends Utils {
 
   def reset { // used by delite?
     nVars = 0
-    globalDefs = Vector.empty
-    localDefs = Vector.empty
+    globalDefs = Queue.empty
+    localDefs = Queue.empty
     globalSymsCache = Map.empty
     globalDefsCache = Map.empty
   }

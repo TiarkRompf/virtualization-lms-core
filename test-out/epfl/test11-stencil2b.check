@@ -30,11 +30,11 @@ overlap1:
 (Sym(9),Sym(18))
 (Sym(7),Sym(16))
 overlap2:
-var inits: List(Sym(8), Sym(9), Sym(7)) -> List(Variable(Sym(37)), Variable(Sym(38)), Variable(Sym(39)))
-will become var reads: List(Sym(8), Sym(9), Sym(7))
-will become var writes: List(Sym(17), Sym(18), Sym(16))
-var reads: List((Sym(8),Sym(42)), (Sym(9),Sym(43)), (Sym(7),Sym(44)))
-var writes: List((Sym(17),Const(())), (Sym(18),Const(())), (Sym(16),Const(())))
+var inits: Queue(Sym(8), Sym(9), Sym(7)) -> Queue(Variable(Sym(37)), Variable(Sym(38)), Variable(Sym(39)))
+will become var reads: Queue(Sym(8), Sym(9), Sym(7))
+will become var writes: Queue(Sym(17), Sym(18), Sym(16))
+var reads: Queue((Sym(8),Sym(42)), (Sym(9),Sym(43)), (Sym(7),Sym(44)))
+var writes: Queue((Sym(17),Const(())), (Sym(18),Const(())), (Sym(16),Const(())))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
