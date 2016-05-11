@@ -66,7 +66,7 @@ trait MetadataExp extends MetadataOps with Expressions with Blocks { this: BaseE
    */
   def setProps(e: Rep[Any], p: SymbolProperties)(implicit ctx: SourceContext) {
     val prevProps = metadata.get(e)
-    val newProps = meet(MetaOverwrite, prevProps, Some(p))
+    val newProps = meet(MetaOverwrite, Some(p), prevProps)
     metadata += e -> newProps.get
     if (!matches(prevProps, newProps)) setMetadataUpdateFlag()
   }

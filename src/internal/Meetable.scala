@@ -115,7 +115,7 @@ trait SymbolMetadata extends MeetableOps {
     def isComplete: Boolean = true
 
     // Tests if this and that are identical
-    def _matches(that: self.type): Boolean
+    def _matches(that: self.type): Boolean = {this == that}
     def metaMatches(that: Metadata) = this.getClass == that.getClass && _matches(that.asInstanceOf[self.type])
 
     // Test if this and that can be met to produce valid metadata
@@ -123,10 +123,13 @@ trait SymbolMetadata extends MeetableOps {
     def _canMeet(that: self.type)(implicit t: MeetFunc): Boolean = _incompatibilities(that).isEmpty
     def metaCanMeet(that: Metadata)(implicit t: MeetFunc) = this.getClass == that.getClass && _canMeet(that.asInstanceOf[self.type])
 
-    def _incompatibilities(that: self.type)(implicit t: MeetFunc): List[String]
+    def _incompatibilities(that: self.type)(implicit t: MeetFunc): List[String] = Nil
     def metaIncompatibilities(that: Metadata)(implicit t: MeetFunc) = if (this.getClass == that.getClass) _incompatibilities(that.asInstanceOf[self.type]) else List("Cannot meet metadata of different types")
 
-    def _meet(that: self.type)(implicit t: MeetFunc): Metadata
+    // this: always preserve newest value
+    // that: always preserve oldest value
+    // or something else entirely, depends on metadata!
+    def _meet(that: self.type)(implicit t: MeetFunc): Metadata = this
     def metaMeet(that: Metadata)(implicit t: MeetFunc) = if (this.getClass == that.getClass) _meet(that.asInstanceOf[self.type])(t) else throw new IllegalMeetException
 
     // Pretty printing metadata (mostly for debugging)
