@@ -135,7 +135,7 @@ trait MaxJCodegen extends GenericCodegen with Config {
   }
 
   override def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
-    stream.println(quote(sym) + " = " + rhs)
+    stream.println(quote(sym) + " = " + rhs + ";")
   }
 
   override def quote(x: Exp[Any]) = x match {
