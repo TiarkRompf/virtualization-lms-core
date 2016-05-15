@@ -11,21 +11,30 @@ object GraphUtil {
   }
 
   /**
-      Returns the least common ancestor of two nodes in some directed, acyclic graph
-
+      Returns the least common ancestor of two nodes in some directed, acyclic graph.
+      If the nodes share no common parent at any point in the tree, the LCA is undefined (None).
+      Also returns the paths from the least common ancestor to each node.
+      The paths do not contain the LCA, as it may be undefined.
    */
-  def leastCommonAncestor[T](x: T, y: T, parent: T => Option[T]): Option[T] = {
+  def leastCommonAncestorWithPaths[T](x: T, y: T, parent: T => Option[T]): (Option[T], List[T], List[T]) = {
     var pathX: List[Option[T]] = List(Some(x))
     var pathY: List[Option[T]] = List(Some(y))
 
-    var curX = Some(x)
-    while (curX.isDefined) { curX = parent(curX); pathX ::= curX }
+    var curX: Option[T] = Some(x)
+    while (curX.isDefined) { curX = parent(curX.get); pathX ::= curX }
 
-    var curY = Some(y)
-    while (curY.isDefined) { curY = parent(curY); pathY ::= curY }
+    var curY: Option[T] = Some(y)
+    while (curY.isDefined) { curY = parent(curY.get); pathY ::= curY }
 
     // Choose last node where paths are the same
-    pathX.zip(pathY).filter{case (x,y) => x == y}.last
+    val lca = pathX.zip(pathY).filter{case (x,y) => x == y}.last._1
+    val pathToX = pathX.drop(pathX.indexOf(lca)+1).map(_.get)
+    val pathToY = pathY.drop(pathY.indexOf(lca)+1).map(_.get)
+    (lca,pathToX,pathToY)
+  }
+
+  def leastCommonAncestor[T](x: T, y: T, parent: T => Option[T]): Option[T] = {
+    leastCommonAncestorWithPaths(x,y,parent)._1
   }
 
   /* test cases
