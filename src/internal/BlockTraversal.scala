@@ -55,24 +55,24 @@ trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
     focusSubGraph[A](result.map(getBlockResultFull))(body)
 
 
-  def focusExactScope[A](resultB: Block[Any])(body: List[Stm] => A): A = 
+  def focusExactScope[A](resultB: Block[Any])(body: Seq[Stm] => A): A = 
     focusExactScopeFat(List(resultB))(body)
   
-  def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A = 
+  def focusExactScopeFat[A](resultB: List[Block[Any]])(body: Seq[Stm] => A): A = 
     focusExactScopeSubGraph[A](resultB.map(getBlockResultFull))(body)
   
   // ---- bound and free vars
 
   def boundInScope(x: List[Exp[Any]]): List[Sym[Any]] = {
-    (x.flatMap(syms):::innerScope.flatMap(t => t.lhs:::boundSyms(t.rhs))).distinct
+    (x.flatMap(syms)++innerScope.flatMap(t => t.lhs:::boundSyms(t.rhs))).distinct
   }
   
   def usedInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
-    (y.flatMap(syms):::innerScope.flatMap(t => syms(t.rhs))).distinct
+    (y.flatMap(syms)++innerScope.flatMap(t => syms(t.rhs))).distinct
   }
   
   def readInScope(y: List[Exp[Any]]): List[Sym[Any]] = {
-    (y.flatMap(syms):::innerScope.flatMap(t => readSyms(t.rhs))).distinct
+    (y.flatMap(syms)++innerScope.flatMap(t => readSyms(t.rhs))).distinct
   }
   
   // bound/used/free variables in current scope, with input vars x (bound!) and result y (used!)
@@ -113,7 +113,7 @@ trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
     }
   }
 
-  def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
+  def traverseStmsInBlock[A](stms: Seq[Stm]): Unit = {
     stms foreach traverseStm
   }
 

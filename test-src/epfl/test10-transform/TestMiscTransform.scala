@@ -276,6 +276,12 @@ class TestMisc extends FileDiffSuite {
   }  
   
   
+  def resetGraph(p: Impl) { // reset graph, transformer will build anew
+    p.globalDefs = scala.collection.immutable.Queue.empty
+    p.globalSymsCache = Map.empty
+    p.globalDefsCache = Map.empty
+  }
+
   // test simple block transform
   def testMisc1 = withOutFileChecked(prefix+"misc1") {
     trait Prog extends DSL with Impl {
@@ -302,8 +308,7 @@ class TestMisc extends FileDiffSuite {
       codegen.emitBlock(y)
     }
     
-    p.globalDefs = Nil // reset graph, transformer will build anew
-    p.globalDefsCache = Map.empty
+    resetGraph(p)
     val trans = new SimpleBlockTransformer { // a + b --> b + a
       val IR: p.type = p
       import IR._
@@ -354,8 +359,7 @@ class TestMisc extends FileDiffSuite {
       codegen.emitBlock(y)
     }
     
-    p.globalDefs = Nil // reset graph, transformer will build anew
-    p.globalDefsCache = Map.empty
+    resetGraph(p)
     val trans = new SimpleBlockTransformer { // a + b --> b + a, but only in then-branches of an if-then-else
       val IR: p.type = p
       import IR.{__newVar => _, _}
@@ -424,8 +428,7 @@ class TestMisc extends FileDiffSuite {
       codegen.emitBlock(y)
     }
     
-    p.globalDefs = Nil // reset graph, transformer will build anew
-    p.globalDefsCache = Map.empty
+    resetGraph(p)
     val trans = new NestedBlockTransformer { // a + b --> b + a, but only in then-branches of an if-then-else
       val IR: p.type = p
       import IR.{__newVar => _, _}
@@ -498,8 +501,7 @@ class TestMisc extends FileDiffSuite {
       codegen.emitBlock(y)
     }
     
-    p.globalDefs = Nil // reset graph, transformer will build anew
-    p.globalDefsCache = Map.empty
+    resetGraph(p)
     val trans = new MirrorBlockTransformer { // a + b --> b + a, but only in then-branches of an if-then-else
       val IR: p.type = p
       import IR.{__newVar => _, _}
@@ -574,7 +576,7 @@ class TestMisc extends FileDiffSuite {
       codegen.emitBlock(y)
     }
     
-    //p.globalDefs = Nil don't reset graph to get better sharing ... // reset graph, transformer will build anew
+    //resetGraph(p) ... don't reset graph to get better sharing
     val trans = new MirrorRetainBlockTransformer { // a + b --> b + a, but only in then-branches of an if-then-else
       val IR: p.type = p
       import IR.{__newVar => _, _}

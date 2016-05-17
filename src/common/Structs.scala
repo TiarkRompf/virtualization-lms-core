@@ -1,10 +1,10 @@
 package scala.virtualization.lms
 package common
 
-import reflect.{SourceContext, RefinedManifest}
-import util.OverloadHack
-import java.io.PrintWriter
 import internal.{GenericNestedCodegen, GenericFatCodegen}
+import java.io.PrintWriter
+import scala.reflect.{SourceContext, RefinedManifest}
+import util.OverloadHack
 
 abstract class Record extends Struct
 
@@ -355,7 +355,7 @@ trait BaseGenFatStruct extends GenericFatCodegen {
 
   // TODO: implement regular fatten ?
 
-  override def fattenAll(e: List[Stm]): List[Stm] = {
+  override def fattenAll(e: Seq[Stm]): Seq[Stm] = {
     val m = e collect {
       case t@TP(sym, p @ Phi(c,a,u,b,v)) => t
     } groupBy {
@@ -364,7 +364,8 @@ trait BaseGenFatStruct extends GenericFatCodegen {
 
     //println("grouped: ")
     //println(m.mkString("\n"))
-    def fatphi(s:Sym[Unit]) = m.get(s).map { phis =>
+    def fatphi(s:Sym[Unit]) = m.get(s).map { p =>
+      val phis = p.toList
       val ss = phis collect { case TP(s, _) => s }
       val us = phis collect { case TP(_, Phi(c,a,u,b,v)) => u } // assert c,a,b match
       val vs = phis collect { case TP(_, Phi(c,a,u,b,v)) => v }

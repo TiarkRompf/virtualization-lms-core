@@ -39,9 +39,12 @@ trait FileDiffSuite extends Suite {
     source.close()
     lines
   }
-  def assertFileEqualsCheck(name: String): Unit = {
-    assert(readFile(name) == readFile(name+".check"), name) // TODO: diff output
+  def assertFileCheck(name: String, expected: String): Unit = {
+    assert(readFile(name) == expected, name) // TODO: diff output
     new File(name) delete ()
+  }
+  def assertFileEqualsCheck(name: String): Unit = {
+    assertFileCheck(name, readFile(name+".check"))
   }
   def withOutFileChecked(name: String)(func: => Unit): Unit = {
     withOutFile(name)(func)

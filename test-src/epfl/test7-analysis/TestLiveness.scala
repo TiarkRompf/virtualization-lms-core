@@ -14,7 +14,7 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
 trait Liveness extends internal.GenericNestedCodegen {
   import IR._
 
-  var defuse: List[(Sym[Any],Sym[Any])] = Nil
+  var defuse: Seq[(Sym[Any],Sym[Any])] = Nil
 
   override def traverseBlockFocused[A](result: Block[A]): Unit = {
     focusExactScope(result) { levelScope => 
@@ -25,7 +25,7 @@ trait Liveness extends internal.GenericNestedCodegen {
       // a possible first step: handle only straightline code and mark
       // everything used by innerScope as escaping (plus the result) 
       
-      def usesOf(s: Sym[Any]): List[TP[Any]] = levelScope.flatMap {
+      def usesOf(s: Sym[Any]): Seq[TP[Any]] = levelScope.flatMap {
         case TP(s1, Reify(rhs1,_,_)) => // reify nodes are eliminated, so we need to find all uses of the reified thing
           if (syms(rhs1).contains(s)) usesOf(s1) else Nil
         case d@TP(_, rhs1) =>

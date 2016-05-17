@@ -10,7 +10,7 @@ trait FatScheduling extends Scheduling {
   
   def fatten(e: Stm): Stm = e
 
-  def fattenAll(e: List[Stm]): List[Stm] = e.map(fatten)
+  def fattenAll(e: Seq[Stm]): Seq[Stm] = e.map(fatten)
 
   def combineFat(list: List[TTP]): TTP = sys.error("ERROR: Don't know how to combineFat " + list.mkString("\n","\n","\n"))
 
@@ -29,6 +29,6 @@ trait FatScheduling extends Scheduling {
   // FIXME: should be Def[A] => Def[A], not Def[Any]
   def canApplyAddCondition(e: Def[Any]): Boolean = true
   def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]): Def[Any] = sys.error("not implemented")
-  def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true
+  def shouldApplyFusion(currentScope: Seq[Stm])(result: List[Exp[Any]]): Boolean = true
   // -------------------   
 }

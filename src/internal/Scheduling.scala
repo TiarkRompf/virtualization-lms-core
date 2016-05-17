@@ -2,9 +2,10 @@ package scala.virtualization.lms
 package internal
 
 import util.GraphUtil
-import scala.collection.mutable
 import java.util.IdentityHashMap
 import scala.collection.JavaConversions._
+import scala.collection.mutable
+
 
 trait Scheduling {
   val IR: Expressions
@@ -67,7 +68,7 @@ trait Scheduling {
     res
   }
 
-  protected def buildScopeIndex(scope: List[Stm]): IdentityHashMap[Sym[Any], (Stm,Int)] = {
+  protected def buildScopeIndex(scope: Seq[Stm]): IdentityHashMap[Sym[Any], (Stm,Int)] = {
     val cache = new IdentityHashMap[Sym[Any], (Stm,Int)]
     var idx = 0
     for (stm <- scope) {
@@ -77,7 +78,7 @@ trait Scheduling {
     cache
   }
 
-  def getSchedule(scope: List[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
+  def getSchedule(scope: Seq[Stm])(result: Any, sort: Boolean = true): List[Stm] = {
     val scopeIndex = buildScopeIndex(scope)
 
     val xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(syms(result), scopeIndex), t => scheduleDepsWithIndex(syms(t.rhs), scopeIndex))
@@ -90,7 +91,7 @@ trait Scheduling {
     xx.flatten.reverse
   }
 
-  def getScheduleM(scope: List[Stm])(result: Any, cold: Boolean, hot: Boolean): List[Stm] = {
+  def getScheduleM(scope: Seq[Stm])(result: Any, cold: Boolean, hot: Boolean): List[Stm] = {
     def mysyms(st: Any) = {
       val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
       assert(syms(st).toSet == db.map(_._1).toSet, "different list of syms: "+syms(st)+"!="+db+" for "+st)
@@ -116,7 +117,7 @@ trait Scheduling {
   up the locations where different symbols are bound.
   */
   
-  def getFatDependentStuff(scope: List[Stm])(sts: List[Sym[Any]]): List[Stm] = {
+  def getFatDependentStuff(scope: Seq[Stm])(sts: Seq[Sym[Any]]): Seq[Stm] = {
     if (sts.isEmpty) return Nil
     /*
      precompute:

@@ -147,7 +147,7 @@ trait ScalaGenPrintX extends ScalaGenEffect {
 
 class TestFusion3 extends FileDiffSuite {
 
-  val prefix = "test-out/epfl/test7-wip-"
+  val prefix = home + "test-out/epfl/test7-wip-"
   val suffix = ""//".check"
 
   def testFusionTransform00 = withOutFileChecked(prefix+"fusion00"+suffix) {

@@ -9,7 +9,7 @@ trait CodeMotion extends Scheduling {
   val IR: Expressions with Effects /* effects just for sanity check */
   import IR._
 
-  def getExactScope[A](currentScope: List[Stm])(result: List[Exp[Any]]): List[Stm] = {
+  def getExactScope[A](currentScope: Seq[Stm])(result: List[Exp[Any]]): Seq[Stm] = {
     // currentScope must be tight for result and strongly sorted
     val e1 = currentScope
 
@@ -18,19 +18,19 @@ trait CodeMotion extends Scheduling {
 
     // find transitive dependencies on bound syms, including their defs (in case of effects)
     val bound = e1.flatMap(z => boundSyms(z.rhs))
-    val g1 = getFatDependentStuff(currentScope)(bound)
+    val g1 = getFatDependentStuff(currentScope)(bound).toSet
 
     // e1 = reachable
     val h1 = e1 filterNot (g1 contains _) // 'may outside'
     val f1 = g1.flatMap { t => syms(t.rhs) } flatMap { s => h1 filter (_.lhs contains s) } // fringe: 1 step from g1
 
-    val e2 = getScheduleM(e1)(result, false, true)       // (shallow|hot)*  no cold ref on path
+    val e2 = getScheduleM(e1)(result, false, true).toSet       // (shallow|hot)*  no cold ref on path
 
-    val e3 = getScheduleM(e1)(result, true, false)       // (shallow|cold)* no hot ref on path
+    val e3 = getScheduleM(e1)(result, true, false).toSet       // (shallow|cold)* no hot ref on path
 
-    val f2 = f1 filterNot (e3 contains _)                   // fringe restricted to: any* hot any*
+    // val f2 = f1 filterNot (e3 contains _)                   // fringe restricted to: any* hot any*
 
-    val h2 = getScheduleM(e1)(f2.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
+    // val h2 = getScheduleM(e1)(f2.flatMap(_.lhs), false, true).toSet    // anything that depends non-cold on it...
 
     // things that should live on this level:
     // - not within conditional: no cold ref on path (shallow|hot)*
@@ -48,12 +48,12 @@ trait CodeMotion extends Scheduling {
     //TODO: uncomment after resolving the issue above
     
     val loopsNotInIfs = e2 filterNot (e3 contains _)    // (shallow|hot)* hot (shallow|hot)*   <---- a hot ref on all paths!
-    val reachFromTopLoops = getSchedule(e1)(loopsNotInIfs,false)
+    val reachFromTopLoops = getSchedule(e1)(loopsNotInIfs,false).toSet
 
     val f3 = f1 filter (reachFromTopLoops contains _)    // fringe restricted to: (shallow|hot)* hot any*
-    val h3 = getScheduleM(e1)(f3.flatMap(_.lhs), false, true)    // anything that depends non-cold on it...
+    val h3 = getScheduleM(e1)(f3.flatMap(_.lhs), false, true).toSet    // anything that depends non-cold on it...
     
-    val shouldOutside = e1 filter (z => (e2 contains z) || (h3 contains z))
+    val shouldOutside = e1 filter (z => (e2 contains z) || (h3 contains z)) toSet
     
     //val shouldOutside = e1 filter (z => (e2 contains z) || (h2 contains z))
     //*/

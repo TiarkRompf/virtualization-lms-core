@@ -2,8 +2,8 @@ package scala.virtualization.lms
 package internal
 
 import java.io.{File, FileWriter, PrintWriter}
-
 import scala.reflect.SourceContext
+
 
 trait ScalaCodegen extends GenericCodegen with Config {
   val IR: Expressions
@@ -102,12 +102,12 @@ trait ScalaCodegen extends GenericCodegen with Config {
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
-  
-  override def emitVarDecl(sym: Sym[Any]): Unit = {
+
+  def emitVarDecl(sym: Sym[Any]): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = null.asInstanceOf[" + remap(sym.tp) + "];")
   }
 
-  override def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
+  def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
     stream.println(quote(sym) + " = " + rhs)
   }
 
@@ -123,7 +123,7 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   import IR._
   
   // emit forward decls for recursive vals
-  override def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
+  override def traverseStmsInBlock[A](stms: Seq[Stm]): Unit = {
     recursive foreach emitForwardDef
     super.traverseStmsInBlock(stms)
   }

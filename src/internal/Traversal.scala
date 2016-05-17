@@ -11,16 +11,16 @@ trait GraphTraversal extends Scheduling {
   val IR: Expressions
   import IR._
   
-  def availableDefs: List[Stm] = globalDefs
+  def availableDefs: Seq[Stm] = globalDefs
   
   def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] = 
     getSchedule(availableDefs)(result, sort)
 
-  def getDependentStuff(st: List[Sym[Any]]): List[Stm] = {
+  def getDependentStuff(st: List[Sym[Any]]): Seq[Stm] = {
     getFatDependentStuff(availableDefs)(st)
   }
 
-  def getDependentStuff(st: Sym[Any]): List[Stm] = {
+  def getDependentStuff(st: Sym[Any]): Seq[Stm] = {
     getDependentStuff(List(st))
   }
 
@@ -35,13 +35,13 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
 
 //  var outerScope: List[TP[Any]] = Nil
 //  var levelScope: List[TP[Any]] = Nil
-  var innerScope: List[Stm] = null  // no, it's not a typo
+  var innerScope: Seq[Stm] = null  // no, it's not a typo
 
   def initialDefs = super.availableDefs
 
   override def availableDefs = if (innerScope ne null) innerScope else initialDefs
 
-  def withInnerScope[A](scope: List[Stm])(body: => A): A = {
+  def withInnerScope[A](scope: Seq[Stm])(body: => A): A = {
 //    val saveOuter = outerScope
 //    val saveLevel = levelScope
     val saveInner = innerScope
@@ -53,9 +53,6 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
     var rval = null.asInstanceOf[A]
     try {
       rval = body
-    }
-    catch {
-      case e => throw e
     }
     finally {
       innerScope = saveInner
@@ -78,7 +75,7 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
   }
   
   // strong order for levelScope (as obtained by code motion), taking care of recursive dependencies.
-  def getStronglySortedSchedule2(scope: List[Stm], level: List[Stm], result: Any): (List[Stm], List[Sym[Any]]) = {
+  def getStronglySortedSchedule2(scope: Seq[Stm], level: Seq[Stm], result: Any): (Seq[Stm], List[Sym[Any]]) = {
     val scopeIndex = buildScopeIndex(scope)
     
     val fixed = new collection.mutable.HashMap[Any,List[Sym[Any]]]
@@ -136,7 +133,7 @@ trait NestedGraphTraversal extends GraphTraversal with CodeMotion {
   
   var recursive: List[Sym[Any]] = Nil // FIXME: should propagate differently
   
-  def focusExactScopeSubGraph[A](result: List[Exp[Any]])(body: List[Stm] => A): A = {
+  def focusExactScopeSubGraph[A](result: List[Exp[Any]])(body: Seq[Stm] => A): A = {
     val availDefs = availableDefs//getStronglySortedSchedule(availableDefs)(result) // resolve anti-dependencies (may still be recursive -- not sure whether that's a problem)
     val levelScope = getExactScope(availDefs)(result)
     val (levelScope2,recursive) = getStronglySortedSchedule2(availDefs,levelScope,result) // resolve anti-dependencies and recursive declarations

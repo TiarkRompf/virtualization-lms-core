@@ -77,7 +77,7 @@ trait ArrayLoopsExp extends LoopsExp {
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T] = ArrayIndex(a, i)
 
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int] = a match {
-//    case Def(SimpleLoop(s, x, ArrayElem(y))) => s
+    case Def(SimpleLoop(s, x, ArrayElem(y))) => s
     case _ => ArrayLength(a)
   }
 

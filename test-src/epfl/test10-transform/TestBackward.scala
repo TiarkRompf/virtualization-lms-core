@@ -114,7 +114,8 @@ trait TestDSL extends BaseExp with LiftAll {
   override def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
     // remove previous definition and update in place. TODO: find a better way ...
     globalDefs = globalDefs filterNot (_.lhs contains s)
-    globalDefsCache = globalDefsCache - s
+    globalSymsCache = globalSymsCache - s
+    globalDefsCache = globalDefsCache - d
     super.createDefinition(s,d)
   }
 

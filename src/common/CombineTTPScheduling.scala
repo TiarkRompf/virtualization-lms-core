@@ -17,7 +17,7 @@ trait CombineTTPScheduling extends BaseLoopsTraversalFat with BaseIfThenElseTrav
   // of the entire program. Don't rescan inner scopes.
   var needsFusion = true
 
-  override def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A = {
+  override def focusExactScopeFat[A](resultB: List[Block[Any]])(body: Seq[Stm] => A): A = {
     if (needsFusion) {
       val fusedScope = fuseAllLoops(innerScope)
       needsFusion = false
@@ -27,7 +27,7 @@ trait CombineTTPScheduling extends BaseLoopsTraversalFat with BaseIfThenElseTrav
     super.focusExactScopeFat(resultB)(body)
   }
 
-  def fuseAllLoops(currentScope: List[Stm]): List[Stm] = {
+  def fuseAllLoops(currentScope: Seq[Stm]): Seq[Stm] = {
     // build map to lookup loops&ifs to be fused
     val (toBeFused, restOfScope) = currentScope.partition { 
       case TTP(_, _, c: CanBeFused) if c.getFusedSetID.isDefined => true
@@ -56,7 +56,7 @@ trait CombineTTPScheduling extends BaseLoopsTraversalFat with BaseIfThenElseTrav
       }
     })
 
-    fusedTTPs ::: restOfScope
+    fusedTTPs ++ restOfScope
   }
 }
 
