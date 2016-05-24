@@ -46,7 +46,7 @@ trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
     val block = IR.reifyEffects(x)
     val newDefs = globalDefs filterNot ( prevDefs contains _ )
     if (innerScope ne null)
-      innerScope = innerScope ::: newDefs
+      innerScope ++= newDefs
     (block)
   }
 

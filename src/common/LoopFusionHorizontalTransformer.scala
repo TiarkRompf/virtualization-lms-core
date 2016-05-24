@@ -5,7 +5,7 @@ import util.GraphUtil
 import scala.collection.mutable.{HashMap, HashSet}
 
 // TODO document interface
-trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer { 
+trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
   val IR: LoopFusionCore
   import IR.{__newVar => _, _}
 
@@ -33,8 +33,8 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
         // ignore fat defs, they're added by fattening, but are already
         // present in their slim forms
         val defs = fusedDefs.filter({ case d: Def[_] => true case _ => false })
-        Some(defs.map({ d => 
-          globalDefs.collect({ 
+        Some(defs.map({ d =>
+          globalDefs.collect({
               case TP(fusedSym, `d`) => fusedSym
               case TP(fusedSym, Reflect(`d`, _, _)) => setToFuseEffectful = true; fusedSym
           }) match {
@@ -115,7 +115,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
     def getByCond(cond: Exp[Boolean]): List[FusedIfSet] = cond2ifSets.get(cond).getOrElse(Nil).map(getIfSet(_))
     def getAllFusedLoops(syms: List[Sym[Any]]): List[Sym[Any]] = (syms ++ syms.flatMap(getLoopSet(_).map(_.syms).getOrElse(Nil)))
     def getAllFusedIfs(syms: List[Sym[Any]]): List[Sym[Any]] = (syms ++ syms.flatMap(getIfSet(_).map(_.syms).getOrElse(Nil)))
-    
+
     // Start a new fusion set
     def recordNewLoop(shape: Exp[Int], index: Sym[Int], syms: List[Sym[Any]], effectful: Boolean) = {
       val setIndex = loopSets.length
@@ -125,7 +125,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
       val indexList = setIndex :: shape2loopSets.get(shape).getOrElse(Nil)
       shape2loopSets.put(shape, indexList)
       set.syms.foreach({ otherSym => sym2loopSet.put(otherSym, setIndex) match {
-        case Some(old) => sys.error("FusedLoopSet already had a set for symbol " + otherSym + ": " + old + " = " 
+        case Some(old) => sys.error("FusedLoopSet already had a set for symbol " + otherSym + ": " + old + " = "
           + getLoopSet(old) + " instead of new " + set)
         case None =>
       }})
@@ -139,7 +139,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
       val indexList = setIndex :: cond2ifSets.get(cond).getOrElse(Nil)
       cond2ifSets.put(cond, indexList)
       set.syms.foreach({ otherSym => sym2ifSet.put(otherSym, setIndex) match {
-        case Some(old) => sys.error("FusedIfSet already had a set for symbol " + otherSym + ": " + old + " = " 
+        case Some(old) => sys.error("FusedIfSet already had a set for symbol " + otherSym + ": " + old + " = "
           + getIfSet(old) + " instead of new " + set)
         case None =>
       }})
@@ -222,7 +222,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
 
   // --- per scope datastructures ----
   var current = new FusionScope
-  
+
   // indented printing to show scopes
   var indent: Int = -2
   def printdbg(x: => Any) { if (verbosity >= 2) System.err.println(" " * indent + x) }
@@ -232,7 +232,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
   def getInfoString = "LoopFusionHorizontalTransformer only runs once"
   var hasRunOnce = false
   def isDone = hasRunOnce
-  def runOnce[A:Manifest](s: Block[A]): Block[A] = {
+  override def runOnce[A:Manifest](s: Block[A]): Block[A] = {
     val newBlock = if (shouldDoFusion) transformBlock(s) else s
     hasRunOnce = true
     newBlock
@@ -270,7 +270,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
         current.fixedLengthIndices.get += (oldIndex -> loopSym)
         None
       case (true, Some(fixedLengthIndicesVal)) => fixedLengthIndicesVal.get(oldIndex) match {
-          case None => 
+          case None =>
             fixedLengthIndicesVal += (oldIndex -> loopSym)
             None
           case Some(otherLoop) if (current.getLoopSet(loopSym) == current.getLoopSet(otherLoop)) =>
@@ -280,7 +280,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
               subst += (oldIndex -> newIndex)
               fixedLengthIndicesVal += (newIndex -> loopSym)
               Some(newIndex)
-      }    
+      }
     }
   }
 
@@ -313,19 +313,19 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
     val transfStm = stm match {
 
       // Fusion for loops remaps loop index and uses one combined scope for all bodies
-      case TP(sym, LoopOrReflectedLoop(loop, effects)) => 
+      case TP(sym, LoopOrReflectedLoop(loop, effects)) =>
         val (innerScope, checkIndex) = current.getLoopSet(sym) match {
 
           // 1. CanBeFused already registered in existing horizontal transformer set
-          case Some(horizontal) => 
+          case Some(horizontal) =>
             printlog("(HFT) Fusing " + sym + " with containing fusion set " + horizontal)
             assert(loop.size == horizontal.shape, "Error: HFT with different shapes")
             val checkIndex = fuse(sym, loop.v, horizontal.index)
             (horizontal.innerScope, checkIndex)
 
           // 2. Get CanBeFused set (maybe singleton if no previous transformers fused it)
-          case None => 
-            val (setToFuse, setToFuseEffectful) = 
+          case None =>
+            val (setToFuse, setToFuseEffectful) =
                 getFusedSyms(loop, effects.isDefined).getOrElse((List(sym), effects.isDefined))
             val existing = current.getByShape(loop.size)
               .filter({ candidate => checkIndep(sym, candidate, setToFuse) })
@@ -347,7 +347,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
                 (current.recordNewLoop(loop.size, checkIndex.getOrElse(loop.v), setToFuse, setToFuseEffectful), checkIndex)
             }
         }
-        
+
         // 3. Fusion: set correct inner scope for reflecting body
         AllFusionScopes.set(blocks(loop), innerScope)
         val superTransformedStm = super.transformStm(stm)
@@ -381,10 +381,10 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
         Some(superTransformedStm)
 
       // Fusion for ifs doesn't remap anything, but combines the inner scopes per branch
-      case TP(sym, IfOrReflectedIf(ifthenelse, effects)) => 
+      case TP(sym, IfOrReflectedIf(ifthenelse, effects)) =>
 
         val (thenInnerScope, elseInnerScope) = current.getIfSet(sym) match {
-            
+
           // 1. CanBeFused already registered in existing horizontal transformer set
           case Some(horizontal) =>
             assert(ifthenelse.cond == horizontal.cond, "Error: HFT found ifs with different conds")
@@ -392,15 +392,15 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
             (horizontal.thenInnerScope, horizontal.elseInnerScope)
 
           // 2. Get CanBeFused set (maybe singleton if no previous transformers fused it)
-          case None => 
-            val (setToFuse, setToFuseEffectful) =  
+          case None =>
+            val (setToFuse, setToFuseEffectful) =
                 getFusedSyms(ifthenelse, effects.isDefined).getOrElse((List(sym), effects.isDefined))
 
             val existing = current.getByCond(ifthenelse.cond)
               .filter({ candidate => checkIndep(sym, candidate, setToFuse) })
               .filter({ candidate => checkEffects(sym, candidate, setToFuse, setToFuseEffectful) })
               .headOption
-            
+
             existing match {
               // 2.a) fuse set with existing HFT set
               case Some(fusedIfSet) =>
@@ -441,11 +441,11 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
       printdbg("(HFT) - remapping index: " + oldIndex + " -> " + newIndex)
       subst.get(oldIndex) match {
         case Some(`newIndex`) => // already present in subst
-        
+
         // This should never happen, because it means that an outer loop has
         // the same index
-        case Some(existingNew) => sys.error("(HFT) Error: existing remap to " + existingNew + 
-            " encountered when fusing " + sym + " by remapping oldIndex " + oldIndex + 
+        case Some(existingNew) => sys.error("(HFT) Error: existing remap to " + existingNew +
+            " encountered when fusing " + sym + " by remapping oldIndex " + oldIndex +
             " to newIndex " + newIndex)
         case None => // new substitution
       }
@@ -465,9 +465,9 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
     case class DependencyException(dependsOn: Either[Sym[Any],Sym[Any]]) extends Exception
     try {
       // check both ways - each has to be indep of other
-      GraphUtil.stronglyConnectedComponents(setToFuse, { sym: Sym[Any] => 
+      GraphUtil.stronglyConnectedComponents(setToFuse, { sym: Sym[Any] =>
         findDefinition(sym) match {
-          case Some(d) => 
+          case Some(d) =>
             val next = current.getAllFusedLoops(syms(d.rhs))
             next.find(existingSet.contains(_)).map({ t => throw DependencyException(Left(t)) })
             next
@@ -475,9 +475,9 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
         }
       })
       // this is necessary, see fusion30 test for example
-      GraphUtil.stronglyConnectedComponents(existingSet, { sym: Sym[Any] => 
+      GraphUtil.stronglyConnectedComponents(existingSet, { sym: Sym[Any] =>
         findDefinition(sym) match {
-          case Some(d) => 
+          case Some(d) =>
             val next = current.getAllFusedLoops(syms(d.rhs))
             next.find(setToFuse.contains(_)).map({ t => throw DependencyException(Right(t)) })
             next
@@ -486,7 +486,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
       })
       true
     } catch {
-      case DependencyException(dependsOn) => 
+      case DependencyException(dependsOn) =>
         val setS = if (setToFuse.length > 1) " and its set (" + setToFuse + ")" else ""
         val msg = "(HFT) The candidate " + sym + setS + " cannot be fused with the existing " + existing + " because "
         printdbg(msg + (dependsOn match {
@@ -500,7 +500,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
   def checkEffects(sym: Sym[Any], existing: FusedSet, setToFuse: List[Sym[Any]],
       setToFuseEffectful: Boolean): Boolean = {
     // TODO what about order of effects between loops?
-    val effectsOk = !(setToFuseEffectful && existing.hasEffects) 
+    val effectsOk = !(setToFuseEffectful && existing.hasEffects)
     if (!effectsOk) {
       val setS = if (setToFuse.length > 1) " and its set (" + setToFuse + ")" else ""
       printdbg("(HFT) The candidate " + sym + setS + " cannot be fused with the existing " + existing + " because both are effectful.")

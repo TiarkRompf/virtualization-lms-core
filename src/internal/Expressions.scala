@@ -165,18 +165,11 @@ trait Expressions extends Utils {
     // equivalent to: globalDefs filter (_.lhs exists (lhs contains _))
     val existing = lhs flatMap (globalSymsCache get _)
     assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
-<<<<<<< HEAD
     for (stm <- ds) {
       localDefs :+= stm
       globalDefs :+= stm
       globalDefsCache += (stm.rhs->stm)
       for (s <- stm.lhs) globalSymsCache += (s->stm)
-=======
-    localDefs = localDefs ::: ds
-    globalDefs = globalDefs ::: ds
-    for (stm <- ds; s <- stm.lhs) {
-      globalDefsCache += (s->stm)
->>>>>>> metadata
     }
   }
 
@@ -296,15 +289,10 @@ trait Expressions extends Utils {
 
   def reset { // used by delite?
     nVars = 0
-<<<<<<< HEAD
+    nParams = 0
     globalDefs = Queue.empty
     localDefs = Queue.empty
     globalSymsCache = Map.empty
-=======
-    nParams = 0
-    globalDefs = Nil
-    localDefs = Nil
->>>>>>> metadata
     globalDefsCache = Map.empty
   }
 

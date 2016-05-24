@@ -95,7 +95,7 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
 
   def transformDef[A](lhs: Sym[A], rhs: Def[A]): Option[() => Def[A]] = None
 
-  override def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
+  override def traverseStmsInBlock[A](stms: Seq[Stm]): Unit = {
     for (sym <- recursive) {
       subst += (sym -> fresh(mtype(sym.tp)))
     }
@@ -129,8 +129,20 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
  * Delite transformers are run in a fixpoint fashion, but with a limited number of iterations.
  * At the beginning of each iteration, the info string is printed to the log.
  */
-trait FixpointTransformer extends ForwardTransformer with IterativeTraversal {
+// TODO: Unify this with IterativeTraversal
+trait FixpointTransformer extends ForwardTransformer with Traversal {
+  import IR._
+  var runs = 0
   def getInfoString: String
+  def isDone: Boolean
+  override def run[A:Manifest](s: Block[A]): Block[A] = {
+    var blk = s
+    while (!isDone) {
+      blk = runOnce(blk)
+      runs += 1
+    }
+    blk
+  }
 }
 
 /**
@@ -178,8 +190,10 @@ trait PreservingFixpointTransformer extends FixpointTransformer {
 }
 
 
-trait WorklistTransformer extends IterativeTransformer {
+trait WorklistTransformer extends FixpointTransformer {
   import IR._
+
+  override def getInfoString = nextSubst.toString
 
   var curSubst: Map[Sym[Any],() => Exp[Any]] = Map.empty
   var nextSubst: Map[Sym[Any],() => Exp[Any]] = Map.empty
@@ -192,9 +206,8 @@ trait WorklistTransformer extends IterativeTransformer {
     }
   }
 
-  override def hasConverged = runs > 0 && nextSubst.isEmpty
-
-  def isDone = nextSubst.isEmpty // Needed for LMS tests
+  //override def hasConverged = runs > 0 && nextSubst.isEmpty
+  def isDone = runs > 0 && nextSubst.isEmpty // Needed for LMS tests
 
   override def processBlock[A:Manifest](s: Block[A]): Block[A] = {
     subst = Map.empty
