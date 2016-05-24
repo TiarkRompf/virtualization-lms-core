@@ -2,38 +2,19 @@ package scala.virtualization.lms
 package common
 
 import scala.reflect.SourceContext
+import scala.collection.{immutable,mutable}
 
+import internal.{AbstractSubstTransformer, Traversal, IterativeTraversal}
+import internal.{FatExpressions, Effects, Transforming}
 
-trait ForwardTransformer extends internal.AbstractSubstTransformer with internal.FatBlockTraversal { self =>
-  val IR: BaseFatExp with EffectExp //LoopsFatExp with IfThenElseFatExp
+trait ForwardTransformer extends AbstractSubstTransformer with Traversal { self =>
+  val IR: FatExpressions with EffectExp
   import IR._
-  
-  def transformBlock[A:Manifest](block: Block[A]): Block[A] = {
-    reifyEffects {
-      reflectBlock(block)
-    }
-  }
 
   override def hasContext = true
-  
-  override def apply[A:Manifest](xs: Block[A]): Block[A] = transformBlock(xs)
 
-  // perform only one step of lookup, otherwise we confuse things: 
-  // TODO: should this be changed in AbstractSubstTransformer, too?
-  //
-  //                     x4 --> x7 (input)
-  // val x5 = 2 * x4     x5 --> x8
-  // val x6 = x5 + 3     x6 --> x9          
-  // val x7 = x4 + 1                val x12 = x7 + 1
-  // val x8 = 2 * x7                val x13 = 2 * x12
-  // val x9 = x8 + 3                val x14 = x13 + 3     // this sets x9 --> x14
-  // val x10 = x6 + x9              val x15 = x14 + x14   // here, transitively x6 --> x9 --> x14
-  //                                                      // but we'd rather have x15 = x9 + x14
-  
-  override def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
-    case Some(y) => y.asInstanceOf[Exp[A]] case _ => x 
-  }
-  
+  override def processBlock[A:Manifest](xs: Block[A]): Block[A] = transformBlock(xs)
+
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
     withSubstScope {
       traverseBlock(block)
@@ -41,67 +22,80 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
     }
   }
 
-  override def traverseStm(stm: Stm): Unit = stm match {
-    case TP(sym, rhs) => 
-      val sym2 = apply(sym)
-      if (sym2 == sym) {
-        val replace = transformStm(stm)
-        // printlog("registering forward transformation: " + sym + " to " + replace)
-        // printlog("while processing stm: " + stm)          
-        assert(!subst.contains(sym) || subst(sym) == replace)
-        if (sym != replace) { // record substitution only if result is different
-          subst += (sym -> replace)
-        }
-      } else {
-        if (recursive.contains(sym)) { // O(n) since recursive is a list!
-          transformStm(stm)
-        } else {
-          printerr("warning: transformer already has a substitution " + sym + "->" + sym2 + " when encountering stm " + stm)
-          // what to do? bail out? lookup def and then transform???
-        }
-      }
+  override def transformBlock[A](xs: Block[A]): Block[A] = {
+    implicit val mA: Manifest[A] = xs.res.tp
+    val block2 = reifyBlock { reflectBlock(xs) }
+    if (!copyingBlocks) blockSubst += xs -> block2
+    (block2)
   }
-  
-  
-  def transformStm(stm: Stm): Exp[Any] = stm match { // override this to implement custom transform
+
+  /**
+   * TODO: How to handle TTP here?
+   */
+  override def traverseStm(stm: Stm): Unit = stm match {
+    case TP(sym, rhs) if apply(sym) == sym =>
+      val replace = transformStm(stm)
+      assert(!subst.contains(sym) || subst(sym) == replace)
+      if (sym != replace) subst += (sym -> replace) // record substitution only if result is different
+
+    case TP(sym, rhs) =>
+      if (recursive.contains(sym))  // O(n) since recursive is a list!
+        transformStm(stm)
+      else
+        // TODO: What to do when sym already has replacement? Bail out? Look up def and then transform???
+        printerr("warning: transformer already has a substitution " + sym + "->" + apply(sym) + " when encountering stm " + stm)
+  }
+
+  /*
+    TBD: optimization from MirrorRetainBlockTransformer in TestMiscTransform -- is it worth doing??
+    We want to skip those statements that don't have symbols that need substitution
+    However we need to recurse into any blocks
+    if (!syms(rhs).exists(subst contains _) && blocks(rhs).isEmpty) {
+    if (!globalDefs.contains(stm)) reflectSubGraph(List(stm))
+      return sym
+    }
+
+    TODO: What to do for TTP?
+  */
+  // override this to implement custom transform
+  def transformStm(stm: Stm): Exp[Any] = stm match {
     case TP(sym,rhs) =>
-      /*
-       TBD: optimization from MirrorRetainBlockTransformer in TestMiscTransform -- is it worth doing??        
-       // we want to skip those statements that don't have symbols that need substitution
-       // however we need to recurse into any blocks
-       if (!syms(rhs).exists(subst contains _) && blocks(rhs).isEmpty) {
-       if (!globalDefs.contains(stm)) reflectSubGraph(List(stm))
-       return sym
-       }
-       */
       self_mirror(sym, rhs)
   }
 
+  // TODO: Should be removed eventually
   def self_mirror[A](sym: Sym[A], rhs : Def[A]): Exp[A] = {
+    //TODO: HACK -- should not catch errors
     try {
-      mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos)) // cast needed why?
-    } catch { //hack -- should not catch errors
-      case e if e.toString contains "don't know how to mirror" => 
-        printerr("error: " + e.getMessage)
-      sym
-      case e: Throwable => 
-        printerr("error: exception during mirroring of "+rhs+": "+ e)
-        e.printStackTrace; 
-        sym            
+      val sym2 = mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos))
+      setProps(sym2, getProps(sym))
+      (sym2)
     }
+    catch {
+      case e if e.toString contains "don't know how to mirror" =>
+        printerr("error: " + e.getMessage)
+        sym
+      case e: Throwable =>
+        printerr("error: exception during mirroring of "+rhs+": "+ e)
+        e.printStackTrace;
+        sym
+    }
+  }
+
+  // Mirror metadata only after transformer has completed. Metadata is not required
+  // to follow forward dataflow, so mirroring metadata on the fly will not necessarily be correct
+  override def postprocess[A:Manifest](b: Block[A]): Block[A] = {
+    subst.values.foreach{sym => setProps(sym, mirror(getProps(sym), self.asInstanceOf[Transformer])) }
+    super.postprocess(b)
   }
 }
 
 trait RecursiveTransformer extends ForwardTransformer { self =>
   import IR._
 
-  def run[A:Manifest](s: Block[A]): Block[A] = {
-    transformBlock(s)
-  }
-
   def transformDef[A](lhs: Sym[A], rhs: Def[A]): Option[() => Def[A]] = None
 
-  override def traverseStmsInBlock[A](stms: Seq[Stm]): Unit = {
+  override def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
     for (sym <- recursive) {
       subst += (sym -> fresh(mtype(sym.tp)))
     }
@@ -131,17 +125,12 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
   }
 }
 
-/** 
+/**
  * Delite transformers are run in a fixpoint fashion, but with a limited number of iterations.
  * At the beginning of each iteration, the info string is printed to the log.
  */
-trait FixpointTransformer extends ForwardTransformer {
+trait FixpointTransformer extends ForwardTransformer with IterativeTraversal {
   def getInfoString: String
-  def isDone: Boolean
-  def runOnce[A:Manifest](s: Block[A]): Block[A]
-  def run[A:Manifest](s: Block[A]): Block[A] = {
-    if (isDone) s else run(runOnce(s))
-  }
 }
 
 /**
@@ -163,7 +152,7 @@ trait PreservingFixpointTransformer extends FixpointTransformer {
     case TP(sym, rhs) if (needsSubst(rhs) || needsRecursion(rhs)) =>
       self_mirror(sym, rhs)
     case TP(sym, rhs) => // no mirroring, preserve statements
-      if (!globalDefs.contains(stm)) 
+      if (!globalDefs.contains(stm))
         reflectSubGraph(List(stm))
       sym
   }}
@@ -188,9 +177,10 @@ trait PreservingFixpointTransformer extends FixpointTransformer {
   }
 }
 
-trait WorklistTransformer extends FixpointTransformer { // need backward version, too?
-  val IR: LoopsFatExp with IfThenElseFatExp
+
+trait WorklistTransformer extends IterativeTransformer {
   import IR._
+
   var curSubst: Map[Sym[Any],() => Exp[Any]] = Map.empty
   var nextSubst: Map[Sym[Any],() => Exp[Any]] = Map.empty
   def register[A](x: Exp[A])(y: => Exp[A]): Unit = {
@@ -201,24 +191,28 @@ trait WorklistTransformer extends FixpointTransformer { // need backward version
       nextSubst = nextSubst + (x.asInstanceOf[Sym[A]] -> (() => y))
     }
   }
-  override def isDone = nextSubst.isEmpty
-  override def runOnce[A:Manifest](s: Block[A]): Block[A] = {
+
+  override def hasConverged = runs > 0 && nextSubst.isEmpty
+
+  def isDone = nextSubst.isEmpty // Needed for LMS tests
+
+  override def processBlock[A:Manifest](s: Block[A]): Block[A] = {
     subst = Map.empty
     curSubst = nextSubst
     nextSubst = Map.empty
     transformBlock(s)
   }
+
   override def transformStm(stm: Stm): Exp[Any] = stm match {
-    case TP(sym, rhs) => 
+    case TP(sym, rhs) =>
       curSubst.get(sym) match {
         case Some(replace) =>
           printdbg("install replacement for " + sym)
           //val b = reifyEffects(replace())
           //reflectBlock(b)
           replace()
-        case None => 
+        case None =>
           super.transformStm(stm)
       }
   }
-  override def getInfoString = nextSubst.toString
 }

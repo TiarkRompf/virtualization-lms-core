@@ -74,6 +74,10 @@ trait StructExp extends StructOps with StructTags with AtomicWrites with EffectE
     case _ => None
   }
 
+  override def unapplyStructLike[A](tp: Manifest[A]) = tp match {
+    case StructType(_,elems) => Some(elems)
+    case _ => super.unapplyStructLike(tp)
+  }
 
   object Field {
     def unapply[T](d: Def[T]) = unapplyField(d)
@@ -182,6 +186,16 @@ trait StructExp extends StructOps with StructTags with AtomicWrites with EffectE
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 
+  override def propagate(lhs: Exp[Any], rhs: Def[Any]) = rhs match {
+    case Struct(_, elems) => elems foreach {case (index,sym) => setField(lhs, getProps(sym), index) }
+    case FieldApply(struct, index) => setProps(lhs, getField(struct, index))
+    case FieldUpdate(struct, index, x) =>
+      val updatedField = meet(getField(struct, index), getProps(x))
+      setField(struct, updatedField, index)
+
+    case _ => super.propagate(lhs,rhs)
+  }
+
   def structName[T](m: Manifest[T]): String = m match {
     // FIXME: move to codegen? we should be able to have different policies/naming schemes
     case rm: RefinedManifest[_] => "Anon" + math.abs(rm.fields.map(f => f._1.## + f._2.toString.##).sum)
@@ -213,12 +227,15 @@ trait StructExpOpt extends StructExp {
     }
   }
 
-  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = fieldLookup[T](struct, index) match {
-    // the two variable pattern matches each seem to miss certain cases, so both are needed. why?
-    case Some(Def(Reflect(NewVar(x),u,es))) => super.field(struct, index)
-    case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
-    case Some(x) => x
-    case _ => super.field[T](struct, index)
+  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = {
+    if (unwrapStructs) fieldLookup[T](struct, index) match {
+      // the two variable pattern matches each seem to miss certain cases, so both are needed. why?
+      case Some(Def(Reflect(NewVar(x),u,es))) => super.field(struct, index)
+      case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
+      case Some(x) => x
+      case _ => super.field[T](struct, index)
+    }
+    else super.field[T](struct, index)
   }
 
   //TODO: need to be careful unwrapping Structs of vars since partial unwrapping can result in reads & writes to two different memory locations in the generated code

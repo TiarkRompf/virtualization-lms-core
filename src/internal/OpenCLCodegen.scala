@@ -7,7 +7,7 @@ import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap}
 import collection.immutable.List._
 
 trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTransfer {
-  val IR: Expressions
+  val IR: Blocks
   import IR._
 
   override def deviceTarget: Targets.Value = Targets.OpenCL
@@ -22,7 +22,7 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
     helperFuncStream.println("#include \"" + deviceTarget + "helperFuncs.h\"")
 
     typesStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "types.h"))
-    
+
     //TODO: Put all the DELITE APIs declarations somewhere
     headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
     headerStream.println("#include <iostream>")
@@ -31,7 +31,7 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
     headerStream.println("#include <jni.h>")
     headerStream.println("#include \"" + deviceTarget + "types.h\"")
     headerStream.println(getDataStructureHeaders())
-    
+
     super.initializeGenerator(buildDir)
   }
 
@@ -66,7 +66,7 @@ trait OpenCLCodegen extends GPUCodegen with CppHostTransfer with OpenCLDeviceTra
 trait OpenCLNestedCodegen extends CLikeNestedCodegen with OpenCLCodegen {
   val IR: Expressions with Effects
   import IR._
-  
+
 }
 
 trait OpenCLFatCodegen extends CLikeFatCodegen with OpenCLCodegen {

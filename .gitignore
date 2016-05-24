@@ -1,5 +1,6 @@
 lib_managed
 *.iml
+*.swp
 .DS_Store
 local.properties
 project/boot

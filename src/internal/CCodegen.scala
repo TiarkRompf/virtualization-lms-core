@@ -6,7 +6,7 @@ import collection.immutable.List._
 import collection.mutable.ArrayBuffer
 
 trait CCodegen extends CLikeCodegen with CppHostTransfer {
-  val IR: Expressions
+  val IR: Expressions with Blocks
   import IR._
 
   override def deviceTarget: Targets.Value = Targets.Cpp
@@ -29,7 +29,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
       case _ if (m.erasure == classOf[scala.collection.mutable.HashMap[Any,Any]]) && isPrimitiveType(m.typeArguments(0)) && isPrimitiveType(m.typeArguments(1)) =>
         "std::map<" + remap(m.typeArguments(0)) + "," + remap(m.typeArguments(1)) + ">"
       case _ => super.remap(m)
-    }    
+    }
   }
 
   // we treat string as a primitive type to prevent memory management on strings
@@ -40,7 +40,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
       case _ => super.isPrimitiveType(tpe)
     }
   }
-  
+
   override def quote(x: Exp[Any]) = x match {
     case Const(s: String) => "string(" + super.quote(x) + ")"
     case _ => super.quote(x)
@@ -106,7 +106,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
   def emitForwardDef[A:Manifest](args: List[Manifest[_]], functionName: String, out: PrintWriter) = {
     out.println(remap(manifest[A])+" "+functionName+"("+args.map(a => remap(a)).mkString(", ")+");")
   }
-      
+
   def emitSource[A:Manifest](args: List[Sym[_]], body: Block[A], functionName: String, out: PrintWriter) = {
 
     val sA = remap(manifest[A])
@@ -124,7 +124,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
       // TODO: static data
 
-      //stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" 
+      //stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+"
       //extends (("+args.map(a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
 
       stream.println(sA+" "+functionName+"("+args.map(a => remapWithRef(a.tp)+" "+quote(a)).mkString(", ")+") {")
@@ -141,7 +141,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
                      "*******************************************/")
     }
     Nil
-  }  
+  }
 
   override def emitTransferFunctions() {
     def printToStream(emitter: => (String,String)) = {
@@ -154,7 +154,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
         }
       }
       catch {
-        case e: GenerationFailedException => 
+        case e: GenerationFailedException =>
           helperFuncStream.flush
           headerStream.flush
       }
@@ -183,7 +183,7 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 trait CNestedCodegen extends CLikeNestedCodegen with CCodegen {
   val IR: Expressions with Effects
   import IR._
-  
+
 }
 
 trait CFatCodegen extends CLikeFatCodegen with CCodegen {

@@ -15,7 +15,7 @@ trait LiftAll extends Base {
  * The Base trait defines the type constructor Rep, which is the higher-kinded type that allows for other DSL types to be
  * polymorphically embedded.
  *
- * @since 0.1 
+ * @since 0.1
  */
 trait Base extends EmbeddedControls {
   type API <: Base
@@ -23,6 +23,7 @@ trait Base extends EmbeddedControls {
   type Rep[+T]
 
   protected def unit[T:Manifest](x: T): Rep[T]
+  protected def param[T:Manifest](x: T): Rep[T]
 
   // always lift Unit and Null (for now)
   implicit def unitToRepUnit(x: Unit) = unit(x)
@@ -34,12 +35,14 @@ trait Base extends EmbeddedControls {
  *
  * @since 0.1
  */
-trait BaseExp extends Base with Expressions with Blocks with Transforming {
+trait BaseExp extends Base with MetaTransforming with Analyzing with MetadataExp {
   type Rep[+T] = Exp[T]
 
   protected def unit[T:Manifest](x: T) = Const(x)
+  protected def param[T:Manifest](x: T) = Param(x)
 }
 
+// TODO: This isn't useful right now since MetadataExp mixes in Blocks. Remove? Refactor?
 trait BlockExp extends BaseExp with Blocks
 
 
@@ -61,7 +64,13 @@ trait EffectExp extends BaseExp with Effects {
     case Reify(x, u, es) => Reify(f(x), mapOver(f,u), f(es))
     case _ => super.mirror(e,f)
   }
-    
+
+  override def propagate(lhs: Exp[Any], rhs: Def[Any]): Unit = rhs match {
+    case Reify(sym, _, _) => setProps(lhs, getProps(sym))
+    case Reflect(d, _, _) => propagate(lhs, d)
+    case _ => super.propagate(lhs, rhs)
+  }
+
 }
 
 trait BaseFatExp extends BaseExp with FatExpressions with FatTransforming
@@ -96,3 +105,12 @@ trait OpenCLGenFat extends OpenCLFatCodegen with OpenCLGenBase
 trait CGenBase extends CCodegen
 trait CGenEffect extends CNestedCodegen with CGenBase
 trait CGenFat extends CFatCodegen with CGenBase
+
+trait DotGenBase extends DotCodegen
+trait DotGenEffect extends DotNestedCodegen with DotGenBase
+trait DotGenFat extends DotFatCodegen with DotGenBase
+
+trait MaxJGenBase extends MaxJCodegen
+trait MaxJGenEffect extends MaxJNestedCodegen with MaxJGenBase
+trait MaxJGenFat extends MaxJFatCodegen with MaxJGenBase
+

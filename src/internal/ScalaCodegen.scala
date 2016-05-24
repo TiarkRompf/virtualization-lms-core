@@ -6,7 +6,7 @@ import scala.reflect.SourceContext
 
 
 trait ScalaCodegen extends GenericCodegen with Config {
-  val IR: Expressions
+  val IR: Blocks
   import IR._
 
   override def deviceTarget: Targets.Value = Targets.Scala
@@ -33,18 +33,18 @@ trait ScalaCodegen extends GenericCodegen with Config {
       // TODO: separate concerns, should not hard code "pxX" name scheme for static data here
       stream.println("class "+className+(if (staticData.isEmpty) "" else "("+staticData.map(p=>"p"+quote(p._1)+":"+p._1.tp).mkString(",")+")")+" extends (("+args.map(a => remap(a.tp)).mkString(", ")+")=>("+sA+")) {")
       stream.println("def apply("+args.map(a => quote(a) + ":" + remap(a.tp)).mkString(", ")+"): "+sA+" = {")
-    
+
       emitBlock(body)
       stream.println(quote(getBlockResult(body)))
-    
+
       stream.println("}")
-    
+
       stream.println("}")
       stream.println("/*****************************************\n"+
                      "  End of Generated Code                  \n"+
                      "*******************************************/")
     }
-    
+
     staticData
   }
 
@@ -98,7 +98,7 @@ trait ScalaCodegen extends GenericCodegen with Config {
     }
     stream.println("val " + quote(sym) + " = " + rhs + extra)
   }
-  
+
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
@@ -121,17 +121,17 @@ trait ScalaCodegen extends GenericCodegen with Config {
 trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
   val IR: Expressions with Effects
   import IR._
-  
+
   // emit forward decls for recursive vals
   override def traverseStmsInBlock[A](stms: Seq[Stm]): Unit = {
     recursive foreach emitForwardDef
     super.traverseStmsInBlock(stms)
   }
-  
+
   def emitForwardDef(sym: Sym[Any]): Unit = {
     stream.println("var " + quote(sym) + /*": " + remap(sym.tp) +*/ " = null.asInstanceOf[" + remap(sym.tp) + "]")
   }
-  
+
   // special case for recursive vals
   override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
     if (recursive contains sym)
@@ -139,14 +139,14 @@ trait ScalaNestedCodegen extends GenericNestedCodegen with ScalaCodegen {
     else
       super.emitValDef(sym,rhs)
   }
-  
+
 }
 
 
 trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
-  
+
   def emitKernelExtra(syms: List[Sym[Any]]): Unit = {
     val kernelName = syms.map(quote).mkString("")
     stream.println("final class activation_" + kernelName + " {")
@@ -155,7 +155,7 @@ trait ScalaFatCodegen extends GenericFatCodegen with ScalaCodegen {
     }
     stream.println("}")
   }
-  
+
   override def emitFatNodeKernelExtra(syms: List[Sym[Any]], rhs: FatDef): Unit = emitKernelExtra(syms)
   override def emitNodeKernelExtra(syms: List[Sym[Any]], rhs: Def[Any]): Unit = emitKernelExtra(syms)
 

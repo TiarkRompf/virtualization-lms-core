@@ -6,9 +6,9 @@ import java.io.{File, PrintWriter}
 import scala.reflect.RefinedManifest
 
 trait GenericCodegen extends BlockTraversal {
-  val IR: Expressions
+  val IR: Blocks
   import IR._
-  
+
   /** these methods support a kernel model of execution and are only used by Delite, should be moved into Delite only? **/
   def deviceTarget: Targets.Value = throw new Exception("deviceTarget is not defined for this codegen.")
   def hostTarget: Targets.Value = Targets.getHostTarget(deviceTarget)
@@ -23,11 +23,12 @@ trait GenericCodegen extends BlockTraversal {
 
   def resourceInfoType = ""
   def resourceInfoSym = ""
-  
+
   /******/
 
   def fileExtension = ""
   def emitFileHeader(): Unit = {}
+  def emitFileFooter(): Unit = {}
 
   def initializeGenerator(buildDir:String): Unit = { }
   def finalizeGenerator(): Unit = {}
@@ -36,6 +37,9 @@ trait GenericCodegen extends BlockTraversal {
   def emitDataStructures(path: String): Unit = {}
   def getDataStructureHeaders(): String = ""
 
+  // Define if code generation should produce everything
+  // in a single file. Defaults to generating multiple files (one per kernel)
+  def emitSingleFile(): Boolean = false
 
   def dataPath = {
     "data" + java.io.File.separator
@@ -85,7 +89,9 @@ trait GenericCodegen extends BlockTraversal {
 
   // ---------
 
-  var stream: PrintWriter = _
+  protected var _stream: PrintWriter = _
+  def stream = _stream
+  def stream_=(s: PrintWriter) { _stream = s }
 
   def withStream[A](out: PrintWriter)(body: => A): A = {
     val save = stream
@@ -156,11 +162,25 @@ trait GenericCodegen extends BlockTraversal {
    */
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, stream: PrintWriter): List[(Sym[Any], Any)] // return free static data in block
 
+  // TODO: Can probably just use toString for all types here, throwing an exception now to catch
+  // any unexpected calls to this function
+  def quote(x: Any): String = x match {
+    case x: Int => x.toString
+    case x: Long => x.toString
+    case x: Float => x.toString
+    case x: Double => x.toString
+    case x: String => x
+    case x: Boolean => x.toString
+    case x: Exp[_] => quote(x)
+    case _ => throw new RuntimeException("could not quote " + x)
+  }
+
   def quote(x: Exp[Any]) : String = x match {
     case Const(s: String) => "\""+s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
     case Const(f: Float) => f+"f"
     case Const(c: Char) => "'"+(""+c).replace("'", "\\'").replace("\n", "\\n")+"'"
     case Const(z) => z.toString
+    case Param(x) => quote(Const(x))  // Quote as if it was defined as a constant
     case Sym(n) => "x"+n
     case _ => throw new RuntimeException("could not quote " + x)
   }

@@ -5,10 +5,10 @@ import java.io.PrintWriter
 import collection.mutable.HashSet
 
 trait CLikeCodegen extends GenericCodegen {
-  val IR: Expressions
+  val IR: Blocks
   import IR._
 
-  def mangledName(name: String) = name.replaceAll("\\s","").map(c => if(!c.isDigit && !c.isLetter) '_' else c) 
+  def mangledName(name: String) = name.replaceAll("\\s","").map(c => if(!c.isDigit && !c.isLetter) '_' else c)
 
   // List of datastructure types that requires transfer functions to be generated for this target
   val dsTypesList = HashSet[(Manifest[_],String)]()
@@ -64,27 +64,27 @@ trait CLikeCodegen extends GenericCodegen {
     if (!isPrimitiveType(tpe) && !isVoidType(tpe)) addRef()
     else " "
   }
-  
+
   // move to CCodegen?
   def unwrapSharedPtr(tpe: String): String = {
     assert(cppMemMgr == "refcnt")
-    if(tpe.contains("std::shared_ptr")) 
-      tpe.replaceAll("std::shared_ptr<","").replaceAll(">","") 
-    else 
+    if(tpe.contains("std::shared_ptr"))
+      tpe.replaceAll("std::shared_ptr<","").replaceAll(">","")
+    else
       tpe
   }
   def wrapSharedPtr(tpe: String): String = {
     assert(cppMemMgr == "refcnt")
-    if(!isPrimitiveType(tpe) && !isVoidType(tpe)) 
-      "std::shared_ptr<" + tpe + ">" 
-    else 
+    if(!isPrimitiveType(tpe) && !isVoidType(tpe))
+      "std::shared_ptr<" + tpe + ">"
+    else
       tpe
   }
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
 
     stream.append("#include \"" + deviceTarget + "helperFuncs.h\"\n")
-    
+
     def kernelSignature: String = {
       val out = new StringBuilder
       if(resultIsVar) {
@@ -139,7 +139,7 @@ trait CLikeCodegen extends GenericCodegen {
     if(tpe == "void") true
     else false
   }
-  
+
   override def quote(x: Exp[Any]) = x match {
     case Const(s: Unit) => ""
     case Const(l: Long) => l.toString + "LL"

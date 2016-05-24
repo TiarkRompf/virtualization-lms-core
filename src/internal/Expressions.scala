@@ -10,8 +10,8 @@ import scala.reflect.SourceContext
 
 /**
  * The Expressions trait houses common AST nodes. It also manages a list of encountered Definitions which
- * allows for common sub-expression elimination (CSE).  
- * 
+ * allows for common sub-expression elimination (CSE).
+ *
  * @since 0.1
  */
 trait Expressions extends Utils {
@@ -21,7 +21,48 @@ trait Expressions extends Utils {
     def pos: List[SourceContext] = Nil
   }
 
-  case class Const[+T:Manifest](x: T) extends Exp[T]
+  // Exps which will be known by codegen time
+  abstract class ConstExp[+T:Manifest] extends Exp[T]
+
+  // Exp which is known at staging time
+  class Const[+T:Manifest](val x: T) extends ConstExp[T] {
+    override def equals(x: Any): Boolean = x match {
+      case that: Exp[_] => that match {
+        case Const(y) => this.tp == that.tp && x == y // value and type equality
+        case _ => false
+      }
+      case _ => false
+    }
+    override def toString = "Const(" + x.toString + ")"
+  }
+  object Const {
+    def unapply[T](x: Exp[T]): Option[T] = x match {
+      case c: Const[_] => Some(c.x.asInstanceOf[T])
+      case p: Param[_] if p.isFixed => Some(p.x.asInstanceOf[T])
+      case _ => None
+    }
+    def apply[T:Manifest](x: T) = new Const[T](x)
+  }
+
+  var nParams = 0
+  case class Param[T:Manifest](private var _x: T) extends ConstExp[T] {
+    val id: Int = {nParams += 1; nParams - 1}
+    private var fixed = false
+    def fix { fixed = true }
+    def isFixed = fixed
+
+    def x = _x
+    def x_=(v: T) { if (!fixed) _x = v else throw new Exception("Attempted to set fixed param") }
+    def setValue(v: T) { if (!fixed) _x = v else throw new Exception("Attempted to set fixed param") }
+
+    override def equals(x: Any): Boolean = x match {
+      case that: Param[_] => this.id == that.id // TODO: value equality?
+      case _ => false
+    }
+
+    override def toString = "Param#" + id
+    override def hashCode = id
+  }
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var sourceContexts: List[SourceContext] = Nil
@@ -38,25 +79,24 @@ trait Expressions extends Utils {
 
   def quotePos(e: Exp[Any]): String = e.pos match {
     case Nil => "<unknown>"
-    case cs => 
-      def all(cs: SourceContext): List[SourceContext] = cs.parent match {
-        case None => List(cs)
-        case Some(p) => cs::all(p)
-      }
-    cs.map(c => all(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
+    case cs =>
+      cs.map(c => all(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
   }
-
+  def quoteTopPos(e: Exp[Any]): String = e.pos match {
+    case Nil => "<unknown>"
+    case cs => getPathAndLine(cs).map{case (path,line) => path.split("/").last + ":" + line}.mkString(";")
+  }
 
   abstract class Def[+T] { // operations (composite)
     override final lazy val hashCode = scala.runtime.ScalaRunTime._hashCode(this.asInstanceOf[Product])
   }
 
   abstract class Stm // statement (links syms and definitions)
-  
+
   def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {
     case TP(sym, rhs) => sym::Nil
   }
-  
+
   def infix_rhs(stm: Stm): Any = stm match { // clients use syms(e.rhs), boundSyms(e.rhs) etc.
     case TP(sym, rhs) => rhs
   }
@@ -70,15 +110,39 @@ trait Expressions extends Utils {
     case TP(sym: Sym[A], `rhs`) => Some(sym)
     case _ => None
   }
-  
+
   case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
 
-  // graph construction state
-  
+  // --- Graph construction state
   var globalDefs: Seq[Stm] = Queue.empty
   var localDefs: Seq[Stm] = Queue.empty
   var globalSymsCache: Map[Sym[Any],Stm] = Map.empty
   var globalDefsCache: Map[Any,Stm] = Map.empty
+
+  /* Create a string representing the IR node definition for the given expression */
+  def strDef(e: Exp[Any]): String = e match {
+    case Const(z) => z.toString
+    case Def(d) => e.toString + " = " + d.toString
+    case e: Exp[_] => "(bound " + e.toString + ")"
+  }
+
+  /* Create a string representing the original code creating an expression
+     if possible or the internal IR node definition otherwise */
+  def quoteDef(e: Exp[Any]): String = quoteCode(e.pos).getOrElse(strDef(e))
+
+  /**
+   * Remove a symbol from the graph construction state.
+   * Symbol should be dead (i.e. after transformer mirroring)
+   */
+  def scrubSym(sym: Sym[Any]) = {
+    def scrubStms(stms: Seq[Stm]) = stms filterNot {
+      case TP(lhs,rhs) => (lhs == sym)
+      case _ => false
+    }
+    localDefs = scrubStms(localDefs)
+    globalDefs = scrubStms(globalDefs)
+    globalDefsCache = globalDefsCache filterNot{case(s,_) => s == sym }
+  }
 
   def reifySubGraph[T](b: =>T): (T, Seq[Stm]) = {
     val saveLocal = localDefs
@@ -101,11 +165,18 @@ trait Expressions extends Utils {
     // equivalent to: globalDefs filter (_.lhs exists (lhs contains _))
     val existing = lhs flatMap (globalSymsCache get _)
     assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
+<<<<<<< HEAD
     for (stm <- ds) {
       localDefs :+= stm
       globalDefs :+= stm
       globalDefsCache += (stm.rhs->stm)
       for (s <- stm.lhs) globalSymsCache += (s->stm)
+=======
+    localDefs = localDefs ::: ds
+    globalDefs = globalDefs ::: ds
+    for (stm <- ds; s <- stm.lhs) {
+      globalDefsCache += (s->stm)
+>>>>>>> metadata
     }
   }
 
@@ -130,7 +201,7 @@ trait Expressions extends Utils {
     reflectSubGraph(List(f))
     f
   }
-  
+
 
   protected implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
     findOrCreateDefinitionExp(d, List(pos)) // TBD: return Const(()) if type is Unit??
@@ -153,7 +224,7 @@ trait Expressions extends Utils {
     case s: Sym[Any] => List(s)
     case ss: Iterable[Any] => ss.toList.flatMap(syms(_))
     // All case classes extend Product!
-    case p: Product => 
+    case p: Product =>
       // performance hotspot: this is the same as
       // p.productIterator.toList.flatMap(syms(_))
       // but faster
@@ -188,7 +259,7 @@ trait Expressions extends Utils {
     case _ => Nil
   }
 
-  // soft dependencies: they are not required but if they occur, 
+  // soft dependencies: they are not required but if they occur,
   // they must be scheduled before
   def softSyms(e: Any): List[Sym[Any]] = e match {
     // empty by default
@@ -225,9 +296,15 @@ trait Expressions extends Utils {
 
   def reset { // used by delite?
     nVars = 0
+<<<<<<< HEAD
     globalDefs = Queue.empty
     localDefs = Queue.empty
     globalSymsCache = Map.empty
+=======
+    nParams = 0
+    globalDefs = Nil
+    localDefs = Nil
+>>>>>>> metadata
     globalDefsCache = Map.empty
   }
 

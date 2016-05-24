@@ -15,7 +15,7 @@ import internal.{GenerationFailedException, GenericCodegen}
  * Note that these accesses aren't 'atomic' in the concurrency sense, just in the
  * code generation sense
  */
-// NOTE: Doesn't need to be in internal, but EffectExp is the first time where
+// NOTE: Doesn't need to be in common, but EffectExp is the first time where
 // transforming and effects are mixed
 trait AtomicWrites extends EffectExp {
   //////////////
