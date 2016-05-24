@@ -35,7 +35,7 @@ trait AbstractSubstTransformer extends AbstractTransformer {
   import IR._
   var subst = immutable.Map.empty[Exp[Any], Exp[Any]]
   var blockSubst = immutable.Map.empty[Block[Any], Block[Any]]
-  var copyingBlocks: Boolean = false
+  var copyingBlocks: Boolean = true // Default behavior: never use block substitution method
 
   def copyBlock[A](xs: Block[A]): Block[A] = {
     val oldCopy = copyingBlocks
