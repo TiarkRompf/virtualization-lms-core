@@ -69,7 +69,6 @@ trait Effects extends Expressions with Blocks with Utils {
     }
   }
 
-
   // --- summary
 
   case class Summary(

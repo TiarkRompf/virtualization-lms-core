@@ -1,0 +1,123 @@
+-- full graph
+TP(Sym(2),Singleton(Block(Sym(1))))
+TP(Sym(3),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(2)))))
+TP(Sym(4),ArrayLength(Sym(3)))
+TP(Sym(6),ArrayIndex(Sym(3),Sym(5)))
+TP(Sym(7),OrderingGT(Sym(6),Const(50)))
+TP(Sym(8),SingletonInLoop(Block(Sym(6)),Sym(5)))
+TP(Sym(10),EmptyArrayInLoop(Sym(5),Sym(9)))
+TP(Sym(11),IfThenElse(Sym(7),Block(Sym(8)),Block(Sym(10))))
+TP(Sym(12),SimpleLoop(Sym(4),Sym(5),MultiArrayElem(Block(Sym(11)))))
+TP(Sym(13),ArrayLength(Sym(12)))
+TP(Sym(15),ArrayIndex(Sym(12),Sym(14)))
+TP(Sym(16),SingletonInLoop(Block(Sym(15)),Sym(14)))
+TP(Sym(19),DoublePlus(Sym(18),Sym(17)))
+TP(Sym(20),SimpleLoop(Sym(13),Sym(14),MultiReduceElem(Block(Sym(16)),Block(Sym(19)),Const(0.0),Sym(17),Sym(18))))
+TP(Sym(21),Reflect(Print(Sym(20)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(22),Reify(Sym(21),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(21))))
+
+-- before transformation
+val x3 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+x3(x1) = x1
+}
+val x4 = x3.length
+val x12_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x5 <- 0 until x4) {
+val x6 = x3.apply(x5)
+val x7 = x6 > 50
+if (x7) {
+x12_builder += x6
+}
+}
+val x12 = x12_builder.result()
+val x13 = x12.length
+var x17 = 0.0
+for (x14 <- 0 until x13) {
+val x15 = x12.apply(x14)
+val x18 = x15
+val x19 = x18 + x17
+x17 = x19
+}
+val x20 = x17
+val x21 = println(x20)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(3)
+(VFT) Replaced TP(Sym(4),ArrayLength(Sym(3))) with fixed length: Const(100)
+
+(VFT) Fusing prod Sym(3) with cons Sym(12). Type: Mc_McForlike(Sym(5),Sym(1),Sym(4),Const(100),Single_MC(Sym(5),(Sym(3),Sym(5)),Sym(1),Sym(11),Sym(2),Sym(12)),Sym(11),Sym(2),Sym(3),Sym(12))
+(VFT) Fused prod Sym(3) with cons Sym(12), fused sym: Sym(27)
+
+(VFT) Fusing prod Sym(27) with cons Sym(20). Type: Mc_McForlike(Sym(14),Sym(1),Sym(13),Const(100),IfThenElseOneEmpty_Any(Sym(23),Single_MC(Sym(14),(Sym(12),Sym(14)),Sym(1),Sym(16),Sym(24),Sym(20)),Empty_MCSingle(Sym(30),Sym(25),Sym(20)),Sym(16),Sym(26),Sym(20)),Sym(16),Sym(26),Sym(27),Sym(20))
+(VFT) Fused prod Sym(27) with cons Sym(20), fused sym: Sym(32)
+
+(VFT) all vertically fused: List(Sym(3), Sym(32), Sym(27))
+List(Sym(26), Sym(31))
+
+-- after vertical transformation
+var x17 = 0.0
+for (x1 <- 0 until 100) {
+val x23 = x1 > 50
+val x31 = if (x23) {
+val x24 = Array(x1)
+x24
+} else {
+val x30: Array[Double] = Array.empty
+x30
+}
+for (x35 <- 0 until x31.length) {
+val x18 = x31.apply(x35)
+val x19 = x18 + x17
+x17 = x19
+}
+}
+val x32 = x17
+val x33 = println(x32)
+
+-- horizontal transformation
+(HFT) Recording Sym(32), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+var x17 = 0.0
+for (x1 <- 0 until 100) {
+val x23 = x1 > 50
+val x31 = if (x23) {
+val x24 = Array(x1)
+x24
+} else {
+val x30: Array[Double] = Array.empty
+x30
+}
+for (x38 <- 0 until x31.length) {
+val x18 = x31.apply(x38)
+val x19 = x18 + x17
+x17 = x19
+}
+}
+val x32 = x17
+val x36 = println(x32)
+
+-- fusion
+var x17 = 0.0
+for (x1 <- 0 until 100) {
+val x23 = x1 > 50
+val x31 = if (x23) {
+val x24 = Array(x1)
+x24
+} else {
+val x30: Array[Double] = Array.empty
+x30
+}
+for (x39 <- 0 until x31.length) {
+val x18 = x31.apply(x39)
+val x19 = x18 + x17
+x17 = x19
+}
+}
+val x32 = x17
+val x36 = println(x32)
+-- done

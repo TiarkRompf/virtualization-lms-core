@@ -1,0 +1,185 @@
+-- full graph
+TP(Sym(1),OrderingGT(Sym(0),Const(2)))
+TP(Sym(2),Singleton(Const(10)))
+TP(Sym(4),EmptyArray(Sym(3)))
+TP(Sym(5),IfThenElse(Sym(1),Block(Sym(2)),Block(Sym(4))))
+TP(Sym(6),ArrayLength(Sym(5)))
+TP(Sym(8),ArrayIndex(Sym(5),Sym(7)))
+TP(Sym(9),IntPlus(Sym(8),Const(1)))
+TP(Sym(10),SingletonInLoop(Sym(9),Sym(7)))
+TP(Sym(11),SimpleLoop(Sym(6),Sym(7),MultiArrayElem(Block(Sym(10)))))
+TP(Sym(13),ArrayIndex(Sym(5),Sym(12)))
+TP(Sym(14),IntPlus(Sym(13),Const(1)))
+TP(Sym(15),Reflect(Print(Sym(14)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(16),Reify(Sym(15),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(15))))
+TP(Sym(17),Reflect(SimpleLoop(Sym(6),Sym(12),ForeachElem(Block(Sym(16)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(19),ArrayIndex(Sym(5),Sym(18)))
+TP(Sym(20),IntPlus(Sym(19),Const(1)))
+TP(Sym(21),Singleton(Sym(20)))
+TP(Sym(24),IntPlus(Sym(23),Sym(22)))
+TP(Sym(25),SimpleLoop(Sym(6),Sym(18),MultiReduceElem(Block(Sym(21)),Block(Sym(24)),Const(0),Sym(22),Sym(23))))
+TP(Sym(26),Reflect(Print(Sym(25)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(17))))
+TP(Sym(27),ArrayIndex(Sym(11),Const(0)))
+TP(Sym(28),Reflect(Print(Sym(27)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(26))))
+TP(Sym(29),Reify(Sym(28),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(17), Sym(26), Sym(28))))
+
+-- before transformation
+val x1 = x0 > 2
+val x5 = if (x1) {
+val x2 = Array(10)
+x2
+} else {
+val x4: Array[Int] = Array.empty
+x4
+}
+val x6 = x5.length
+for (x12 <- 0 until x6) {
+val x13 = x5.apply(x12)
+val x14 = x13 + 1
+val x15 = println(x14)
+}
+val x17 = ()
+var x22 = 0
+for (x18 <- 0 until x6) {
+val x19 = x5.apply(x18)
+val x20 = x19 + 1
+val x23 = x20
+val x24 = x23 + x22
+x22 = x24
+}
+val x25 = x22
+val x26 = println(x25)
+val x11 = new Array[Int](x6)
+for (x7 <- 0 until x6) {
+val x8 = x5.apply(x7)
+val x9 = x8 + 1
+x11(x7) = x9
+}
+val x27 = x11.apply(0)
+val x28 = println(x27)
+
+-- vertical transformation
+
+(VFT) Fusing prod Sym(5) with cons Sym(17). Type: IfThenElseOneEmpty_Any(Sym(1),Single_McFor(Sym(12),(Sym(5),Sym(12)),Const(10),Sym(16),Sym(2),Sym(17)),Empty_For(Sym(4),Sym(17)),Sym(17),Sym(5),Sym(17))
+(VFT) Fused prod Sym(5) with cons Sym(17), fused sym: Sym(32)
+
+(VFT) Not fused prod Sym(5) with cons Sym(25) because if-then-else producer not fused because empty branch cannot be fused with consumer (don't want to duplicate consumer code)
+(VFT) No producers found for cons Sym(25)
+
+(VFT) Fusing prod Sym(5) with cons Sym(11). Type: IfThenElseOneEmpty_Any(Sym(1),Single_McFor(Sym(7),(Sym(5),Sym(7)),Const(10),Sym(10),Sym(2),Sym(11)),Empty_Mc(Sym(4),Sym(4),Sym(11)),Sym(11),Sym(5),Sym(11))
+(VFT) Fused prod Sym(5) with cons Sym(11), fused sym: Sym(35)
+
+(VFT) all vertically fused: List(Sym(35), Sym(32), Sym(5))
+
+-- after vertical transformation
+val x1 = x0 > 2
+val x32 = if (x1) {
+val x30 = println(11)
+x30
+} else {
+()
+}
+val x5 = if (x1) {
+val x2 = Array(10)
+x2
+} else {
+val x4: Array[Int] = Array.empty
+x4
+}
+val x6 = x5.length
+var x22 = 0
+for (x18 <- 0 until x6) {
+val x19 = x5.apply(x18)
+val x20 = x19 + 1
+val x23 = x20
+val x24 = x23 + x22
+x22 = x24
+}
+val x25 = x22
+val x33 = println(x25)
+val x35 = if (x1) {
+val x34 = Array(11)
+x34
+} else {
+val x4: Array[Int] = Array.empty
+x4
+}
+val x36 = x35.apply(0)
+val x37 = println(x36)
+
+-- horizontal transformation
+(HFT) Recording if-sym Sym(32), no fusion
+(HFT) - new if symbol: Sym(32) -> Sym(41)
+(HFT) Fusing Sym(5) with containing fusion set FusedIfSet(cond = Sym(1), ifSyms = List(Sym(35), Sym(11), Sym(32), Sym(5), Sym(17)))
+(HFT) Recording Sym(25), no fusion
+(HFT) Fusing Sym(35) with containing fusion set FusedIfSet(cond = Sym(1), ifSyms = List(Sym(35), Sym(11), Sym(32), Sym(5), Sym(17)))
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x1 = x0 > 2
+val x41 = if (x1) {
+val x39 = println(11)
+x39
+} else {
+()
+}
+val x5 = if (x1) {
+val x2 = Array(10)
+x2
+} else {
+val x4: Array[Int] = Array.empty
+x4
+}
+val x6 = x5.length
+var x22 = 0
+for (x18 <- 0 until x6) {
+val x19 = x5.apply(x18)
+val x20 = x19 + 1
+val x23 = x20
+val x24 = x23 + x22
+x22 = x24
+}
+val x25 = x22
+val x42 = println(x25)
+val x35 = if (x1) {
+val x34 = Array(11)
+x34
+} else {
+val x4: Array[Int] = Array.empty
+x4
+}
+val x36 = x35.apply(0)
+val x43 = println(x36)
+
+-- fusion
+(CTS) Fusing these ifs into one fat TTP: 
+TTP(List(Sym(41)),List(Reflect(IfThenElse(Sym(1),Block(Sym(40)),Block(Const(()))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List())),SimpleFatIfThenElse(Sym(1),List(Block(Sym(40))),List(Block(Const(())))))
+TTP(List(Sym(5)),List(IfThenElse(Sym(1),Block(Sym(2)),Block(Sym(4)))),SimpleFatIfThenElse(Sym(1),List(Block(Sym(2))),List(Block(Sym(4)))))
+TTP(List(Sym(35)),List(IfThenElse(Sym(1),Block(Sym(34)),Block(Sym(4)))),SimpleFatIfThenElse(Sym(1),List(Block(Sym(34))),List(Block(Sym(4)))))
+
+val x1 = x0 > 2
+val x4: Array[Int] = Array.empty
+// TODO: use vars instead of tuples to return multiple values
+val (x41,x5,x35) = if (x1) {
+val x39 = println(11)
+val x2 = Array(10)
+val x34 = Array(11)
+(x39,x2,x34)
+} else {
+((),x4,x4)
+}
+val x6 = x5.length
+var x22 = 0
+for (x18 <- 0 until x6) {
+val x19 = x5.apply(x18)
+val x20 = x19 + 1
+val x23 = x20
+val x24 = x23 + x22
+x22 = x24
+}
+val x25 = x22
+val x42 = println(x25)
+val x36 = x35.apply(0)
+val x43 = println(x36)
+-- done

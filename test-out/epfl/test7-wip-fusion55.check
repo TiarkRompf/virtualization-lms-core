@@ -1,0 +1,103 @@
+-- full graph
+TP(Sym(1),Reflect(NewVar(Const(0)),Summary(false,false,false,false,true,false,List(),List(),List(),List()),List()))
+TP(Sym(3),Reflect(Print(Sym(2)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(4),IntPlus(Sym(2),Const(2)))
+TP(Sym(5),SingletonInLoop(Sym(4),Sym(2)))
+TP(Sym(6),Reify(Sym(5),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(3))))
+TP(Sym(7),Reflect(SimpleLoop(Const(100),Sym(2),MultiArrayElem(Block(Sym(6)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(9),Reflect(VarPlusEquals(Variable(Sym(1)),Sym(8)),Summary(false,false,false,false,false,false,List(Sym(1)),List(Sym(1)),List(Sym(1)),List(Sym(1))),List(Sym(1))))
+TP(Sym(10),IntPlus(Sym(8),Const(4)))
+TP(Sym(11),SingletonInLoop(Sym(10),Sym(8)))
+TP(Sym(12),Reify(Sym(11),Summary(false,false,false,false,false,false,List(Sym(1)),List(Sym(1)),List(Sym(1)),List(Sym(1))),List(Sym(9))))
+TP(Sym(13),Reflect(SimpleLoop(Const(100),Sym(8),MultiArrayElem(Block(Sym(12)))),Summary(false,false,false,false,false,false,List(Sym(1)),List(),List(Sym(1)),List()),List(Sym(1))))
+TP(Sym(14),ArrayIndex(Sym(13),Const(0)))
+TP(Sym(15),Reflect(Print(Sym(14)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(7))))
+TP(Sym(16),Reify(Sym(15),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(1), Sym(7), Sym(13), Sym(15))))
+
+-- before transformation
+var x1: Int = 0
+val x7 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x3 = println(x2)
+val x4 = x2 + 2
+x7(x2) = x4
+}
+val x13 = new Array[Int](100)
+for (x8 <- 0 until 100) {
+val x9 = x1 += x8
+val x10 = x8 + 4
+x13(x8) = x10
+}
+val x14 = x13.apply(0)
+val x15 = println(x14)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(7)
+(VFT) Cons Sym(7) not fused but mirrored to Sym(20) because of previous substitutions or effects
+
+(VFT) No producers found for cons Sym(13)
+(VFT) Cons Sym(13) not fused but mirrored to Sym(25) because of fixed shape
+
+(VFT) all vertically fused: 
+
+-- after vertical transformation
+var x17: Int = 0
+val x20 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x4 = x2 + 2
+val x18 = println(x2)
+x20(x2) = x4
+}
+val x25 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x21 = x17 += x2
+val x22 = x2 + 4
+x25(x2) = x22
+}
+val x26 = x25.apply(0)
+val x27 = println(x26)
+
+-- horizontal transformation
+(HFT) Recording Sym(20), no fusion
+(HFT) - new loop symbol: Sym(20) -> Sym(32)
+(HFT) The candidate Sym(25) cannot be fused with the existing FusedLoopSet(shape = Const(100), indexSym = Sym(2), loopSyms = List(Sym(20))) because both are effectful.
+(HFT) Recording Sym(25), no fusion
+(HFT) - new loop symbol: Sym(25) -> Sym(35)
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+var x29: Int = 0
+val x32 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x4 = x2 + 2
+val x30 = println(x2)
+x32(x2) = x4
+}
+val x35 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x22 = x2 + 4
+val x33 = x29 += x2
+x35(x2) = x22
+}
+val x36 = x35.apply(0)
+val x37 = println(x36)
+
+-- fusion
+var x29: Int = 0
+val x32 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x4 = x2 + 2
+val x30 = println(x2)
+x32(x2) = x4
+}
+val x35 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x22 = x2 + 4
+val x33 = x29 += x2
+x35(x2) = x22
+}
+val x36 = x35.apply(0)
+val x37 = println(x36)
+-- done

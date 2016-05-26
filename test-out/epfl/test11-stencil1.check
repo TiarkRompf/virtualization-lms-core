@@ -28,11 +28,11 @@ overlap1:
 (Sym(9),Sym(15))
 (Sym(6),Sym(12))
 overlap2:
-var inits: List(Sym(9), Sym(6)) -> List(Variable(Sym(32)), Variable(Sym(33)))
-will become var reads: List(Sym(9), Sym(6))
-will become var writes: List(Sym(15), Sym(12))
-var reads: List((Sym(9),Sym(36)), (Sym(6),Sym(37)))
-var writes: List((Sym(15),Const(())), (Sym(12),Const(())))
+var inits: Queue(Sym(9), Sym(6)) -> Queue(Variable(Sym(32)), Variable(Sym(33)))
+will become var reads: Queue(Sym(9), Sym(6))
+will become var writes: Queue(Sym(15), Sym(12))
+var reads: Queue((Sym(9),Sym(36)), (Sym(6),Sym(37)))
+var writes: Queue((Sym(15),Const(())), (Sym(12),Const(())))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -59,8 +59,8 @@ val x41 = 2.0 * x40
 val x42 = x41 + 3.0
 val x43 = x36 + x42
 val x44 = x1(x37) = x43
-x32 = x42
-x33 = x39
+val x45 = x32 = x42
+val x46 = x33 = x39
 
 x35 = x35 + 1
 }

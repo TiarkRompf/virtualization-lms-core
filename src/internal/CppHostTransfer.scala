@@ -16,7 +16,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
       out.append(signature + "{\n")
       out.append("jclass cls = env->FindClass(\"Lscala/reflect/ManifestFactory;\");\n")
       out.append("jmethodID mid = env->GetStaticMethodID(cls,\"classType\",\"(Ljava/lang/Class;)Lscala/reflect/Manifest;\");\n")
-      out.append("jclass clsString = env->FindClass(\"Ljava/lang/string;\");\n")
+      out.append("jclass clsString = env->FindClass(\"Ljava/lang/String;\");\n")
       out.append("jobject mobj = env->CallStaticObjectMethod(cls,mid,clsString);\n")
       out.append("return mobj;\n")
       out.append("}\n")

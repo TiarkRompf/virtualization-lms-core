@@ -1,0 +1,90 @@
+-- full graph
+TP(Sym(3),IntPlus(Sym(2),Sym(1)))
+TP(Sym(4),SingletonInLoop(Sym(3),Sym(2)))
+TP(Sym(5),SimpleLoop(Const(10),Sym(2),MultiArrayElem(Block(Sym(4)))))
+TP(Sym(7),ArrayIndex(Sym(5),Sym(6)))
+TP(Sym(8),Reflect(Print(Sym(7)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(9),Reify(Sym(8),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(8))))
+TP(Sym(10),ArrayLength(Sym(5)))
+TP(Sym(11),Reflect(SimpleLoop(Sym(10),Sym(6),ForeachElem(Block(Sym(9)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(12),SingletonInLoop(Const(0),Sym(1)))
+TP(Sym(13),Reify(Sym(12),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(11))))
+TP(Sym(14),Reflect(SimpleLoop(Const(1),Sym(1),MultiArrayElem(Block(Sym(13)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(15),Reflect(Print(Sym(14)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+TP(Sym(16),Reify(Sym(15),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14), Sym(15))))
+
+-- before transformation
+val x14 = new Array[Int](1)
+for (x1 <- 0 until 1) {
+val x5 = new Array[Int](10)
+for (x2 <- 0 until 10) {
+val x3 = x2 + x1
+x5(x2) = x3
+}
+val x10 = x5.length
+for (x6 <- 0 until x10) {
+val x7 = x5.apply(x6)
+val x8 = println(x7)
+}
+val x11 = ()
+x14(x1) = 0
+}
+val x15 = println(x14)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(14)
+  
+  (VFT) No producers found for cons Sym(5)
+  (VFT) Replaced TP(Sym(10),ArrayLength(Sym(5))) with fixed length: Const(10)
+  
+  (VFT) Fusing prod Sym(5) with cons Sym(11). Type: Mc_McForRed(Sym(6),Sym(2),Sym(10),Const(10),Single_McFor(Sym(6),(Sym(5),Sym(6)),Sym(3),Sym(9),Sym(4),Sym(11)),Sym(9),Sym(4),Sym(5),Sym(11))
+  (VFT) Fused prod Sym(5) with cons Sym(11), fused sym: Sym(19)
+(VFT) Cons Sym(14) not fused but mirrored to Sym(21) because of previous substitutions or effects
+
+(VFT) all vertically fused: List(Sym(5), Sym(19))
+
+-- after vertical transformation
+val x21 = new Array[Int](1)
+for (x1 <- 0 until 1) {
+for (x2 <- 0 until 10) {
+val x3 = x2 + x1
+val x17 = println(x3)
+}
+val x19 = ()
+x21(x1) = 0
+}
+val x22 = println(x21)
+
+-- horizontal transformation
+(HFT) Recording Sym(21), no fusion
+  (HFT) Recording Sym(19), no fusion
+  (HFT) - new loop symbol: Sym(19) -> Sym(26)
+(HFT) - new loop symbol: Sym(21) -> Sym(28)
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x28 = new Array[Int](1)
+for (x1 <- 0 until 1) {
+for (x2 <- 0 until 10) {
+val x3 = x2 + x1
+val x24 = println(x3)
+}
+val x26 = ()
+x28(x1) = 0
+}
+val x29 = println(x28)
+
+-- fusion
+val x28 = new Array[Int](1)
+for (x1 <- 0 until 1) {
+for (x2 <- 0 until 10) {
+val x3 = x2 + x1
+val x24 = println(x3)
+}
+val x26 = ()
+x28(x1) = 0
+}
+val x29 = println(x28)
+-- done

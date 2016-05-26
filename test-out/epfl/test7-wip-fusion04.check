@@ -1,0 +1,84 @@
+-- full graph
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),IntTimes(Sym(2),Sym(1)))
+TP(Sym(4),IntTimes(Sym(1),Sym(3)))
+TP(Sym(5),SingletonInLoop(Sym(4),Sym(1)))
+TP(Sym(6),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(5)))))
+TP(Sym(7),ArrayLength(Sym(6)))
+TP(Sym(9),ArrayIndex(Sym(6),Sym(8)))
+TP(Sym(10),IntPlus(Sym(9),Sym(7)))
+TP(Sym(11),SingletonInLoop(Sym(10),Sym(8)))
+TP(Sym(12),SimpleLoop(Sym(7),Sym(8),MultiArrayElem(Block(Sym(11)))))
+TP(Sym(13),ArrayIndex(Sym(12),Const(0)))
+TP(Sym(14),Reflect(Print(Sym(13)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+
+-- before transformation
+val x6 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x3 = x2 * x1
+val x4 = x1 * x3
+x6(x1) = x4
+}
+val x7 = x6.length
+val x12 = new Array[Int](x7)
+for (x8 <- 0 until x7) {
+val x9 = x6.apply(x8)
+val x10 = x9 + x7
+x12(x8) = x10
+}
+val x13 = x12.apply(0)
+val x14 = println(x13)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(6)
+(VFT) Replaced TP(Sym(7),ArrayLength(Sym(6))) with fixed length: Const(100)
+
+(VFT) Fusing prod Sym(6) with cons Sym(12). Type: Mc_McForRed(Sym(8),Sym(1),Sym(7),Const(100),Single_McFor(Sym(8),(Sym(6),Sym(8)),Sym(4),Sym(11),Sym(5),Sym(12)),Sym(11),Sym(5),Sym(6),Sym(12))
+(VFT) Fused prod Sym(6) with cons Sym(12), fused sym: Sym(18)
+
+(VFT) all vertically fused: List(Sym(6), Sym(18))
+
+-- after vertical transformation
+val x18 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x3 = x2 * x1
+val x4 = x1 * x3
+val x16 = x4 + 100
+x18(x1) = x16
+}
+val x19 = x18.apply(0)
+val x20 = println(x19)
+
+-- horizontal transformation
+(HFT) Recording Sym(18), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x18 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x3 = x2 * x1
+val x4 = x1 * x3
+val x16 = x4 + 100
+x18(x1) = x16
+}
+val x19 = x18.apply(0)
+val x22 = println(x19)
+
+-- fusion
+val x18 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x3 = x2 * x1
+val x4 = x1 * x3
+val x16 = x4 + 100
+x18(x1) = x16
+}
+val x19 = x18.apply(0)
+val x22 = println(x19)
+-- done

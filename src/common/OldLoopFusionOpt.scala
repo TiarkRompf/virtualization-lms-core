@@ -170,14 +170,15 @@ import internal.Scheduling
 */
 
 
-
-trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
+@deprecated("The old loop fusion is deprecated, please use the transformers and CombineTTPScheduling.")
+trait LoopFusionOpt extends internal.FatBlockTraversal with OldLoopFusionCore {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
 
-  
+  // Legacy mode for old loop fusion.
+  override def shouldFattenEffectfulLoops() = false
 
-  override def focusExactScopeFat[A](resultB: List[Block[Any]])(body: List[Stm] => A): A = {
+  override def focusExactScopeFat[A](resultB: List[Block[Any]])(body: Seq[Stm] => A): A = {
     val result0 = resultB.map(getBlockResultFull) flatMap { case Combine(xs) => xs case x => List(x) }
     val (scope,result) = fuseTopLevelLoops(innerScope)(result0)
     innerScope = scope
@@ -212,7 +213,7 @@ trait LoopFusionOpt extends internal.FatBlockTraversal with LoopFusionCore {
 
 
 
-trait LoopFusionCore extends internal.FatScheduling with CodeMotion with SimplifyTransform {
+trait OldLoopFusionCore extends internal.FatScheduling with CodeMotion with SimplifyTransform {
   val IR: LoopsFatExp with IfThenElseFatExp
   import IR._  
   
@@ -248,9 +249,9 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
     returns updated scope and results.
   */
 
-  def fuseTopLevelLoops(currentScope0: List[Stm])(result0: List[Exp[Any]]): (List[Stm], List[Exp[Any]]) = {
+  def fuseTopLevelLoops(currentScope0: Seq[Stm])(result0: List[Exp[Any]]): (Seq[Stm], List[Exp[Any]]) = {
     var result: List[Exp[Any]] = result0
-    var currentScope: List[Stm] = currentScope0
+    var currentScope: Seq[Stm] = currentScope0
 
     if (!shouldApplyFusion(currentScope)(result))
       return (currentScope, result)
@@ -265,7 +266,7 @@ trait LoopFusionCore extends internal.FatScheduling with CodeMotion with Simplif
 */
 
     // find loops at current top level
-    var Wloops: List[Stm] = {
+    var Wloops: Seq[Stm] = {
       val levelScope = getExactScope(currentScope)(result) // could provide as input ...
       // TODO: cannot in general fuse several effect loops (one effectful and several pure ones is ok though)
       // so we need a strategy. a simple one would be exclude all effectful loops right away (TODO).

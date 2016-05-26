@@ -1,0 +1,129 @@
+-- full graph
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),SingletonInLoop(Sym(2),Sym(1)))
+TP(Sym(4),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(3)))))
+TP(Sym(6),ArrayIndex(Sym(4),Sym(5)))
+TP(Sym(7),IntPlus(Sym(6),Const(2)))
+TP(Sym(8),SingletonInLoop(Sym(7),Sym(5)))
+TP(Sym(9),SimpleLoop(Const(100),Sym(5),MultiArrayElem(Block(Sym(8)))))
+TP(Sym(10),ArrayIndex(Sym(9),Const(0)))
+TP(Sym(11),Reflect(Print(Sym(10)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(12),IntPlus(Sym(0),Const(5)))
+TP(Sym(14),IntPlus(Sym(13),Const(3)))
+TP(Sym(15),SingletonInLoop(Sym(14),Sym(13)))
+TP(Sym(16),SimpleLoop(Sym(12),Sym(13),MultiArrayElem(Block(Sym(15)))))
+TP(Sym(18),ArrayIndex(Sym(16),Sym(17)))
+TP(Sym(19),IntPlus(Sym(18),Const(4)))
+TP(Sym(20),SingletonInLoop(Sym(19),Sym(17)))
+TP(Sym(21),SimpleLoop(Sym(12),Sym(17),MultiArrayElem(Block(Sym(20)))))
+TP(Sym(22),ArrayIndex(Sym(21),Const(0)))
+TP(Sym(23),Reflect(Print(Sym(22)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11))))
+TP(Sym(24),Reify(Sym(23),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(11), Sym(23))))
+
+-- before transformation
+val x4 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x4(x1) = x2
+}
+val x9 = new Array[Int](100)
+for (x5 <- 0 until 100) {
+val x6 = x4.apply(x5)
+val x7 = x6 + 2
+x9(x5) = x7
+}
+val x10 = x9.apply(0)
+val x11 = println(x10)
+val x12 = x0 + 5
+val x16 = new Array[Int](x12)
+for (x13 <- 0 until x12) {
+val x14 = x13 + 3
+x16(x13) = x14
+}
+val x21 = new Array[Int](x12)
+for (x17 <- 0 until x12) {
+val x18 = x16.apply(x17)
+val x19 = x18 + 4
+x21(x17) = x19
+}
+val x22 = x21.apply(0)
+val x23 = println(x22)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(4)
+
+(VFT) Fusing prod Sym(4) with cons Sym(9). Type: Mc_McForRed(Sym(5),Sym(1),Const(100),Const(100),Single_McFor(Sym(5),(Sym(4),Sym(5)),Sym(2),Sym(8),Sym(3),Sym(9)),Sym(8),Sym(3),Sym(4),Sym(9))
+(VFT) Fused prod Sym(4) with cons Sym(9), fused sym: Sym(27)
+
+(VFT) No producers found for cons Sym(16)
+
+(VFT) Fusing prod Sym(16) with cons Sym(21). Type: Mc_McForRed(Sym(17),Sym(13),Sym(12),Sym(12),Single_McFor(Sym(17),(Sym(16),Sym(17)),Sym(14),Sym(20),Sym(15),Sym(21)),Sym(20),Sym(15),Sym(16),Sym(21))
+(VFT) Fused prod Sym(16) with cons Sym(21), fused sym: Sym(32)
+
+(VFT) all vertically fused: List(Sym(4), Sym(27))
+List(Sym(32), Sym(16))
+
+-- after vertical transformation
+val x27 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x25 = x2 + 2
+x27(x1) = x25
+}
+val x28 = x27.apply(0)
+val x29 = println(x28)
+val x12 = x0 + 5
+val x32 = new Array[Int](x12)
+for (x13 <- 0 until x12) {
+val x14 = x13 + 3
+val x30 = x14 + 4
+x32(x13) = x30
+}
+val x33 = x32.apply(0)
+val x34 = println(x33)
+
+-- horizontal transformation
+(HFT) Recording Sym(27), no fusion
+(HFT) Recording Sym(32), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x27 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x25 = x2 + 2
+x27(x1) = x25
+}
+val x28 = x27.apply(0)
+val x36 = println(x28)
+val x12 = x0 + 5
+val x32 = new Array[Int](x12)
+for (x13 <- 0 until x12) {
+val x14 = x13 + 3
+val x30 = x14 + 4
+x32(x13) = x30
+}
+val x33 = x32.apply(0)
+val x37 = println(x33)
+
+-- fusion
+val x27 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x25 = x2 + 2
+x27(x1) = x25
+}
+val x28 = x27.apply(0)
+val x36 = println(x28)
+val x12 = x0 + 5
+val x32 = new Array[Int](x12)
+for (x13 <- 0 until x12) {
+val x14 = x13 + 3
+val x30 = x14 + 4
+x32(x13) = x30
+}
+val x33 = x32.apply(0)
+val x37 = println(x33)
+-- done

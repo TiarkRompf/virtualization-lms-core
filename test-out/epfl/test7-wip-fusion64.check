@@ -1,0 +1,115 @@
+-- full graph
+TP(Sym(2),OrderingGT(Sym(1),Const(5)))
+TP(Sym(4),EmptyArray(Sym(3)))
+TP(Sym(6),IntPlus(Sym(1),Sym(5)))
+TP(Sym(7),SingletonInLoop(Sym(6),Sym(5)))
+TP(Sym(8),SimpleLoop(Const(3),Sym(5),MultiArrayElem(Block(Sym(7)))))
+TP(Sym(9),IfThenElse(Sym(2),Block(Sym(4)),Block(Sym(8))))
+TP(Sym(10),SimpleLoop(Const(10),Sym(1),MultiArrayElem(Block(Sym(9)))))
+TP(Sym(12),ArrayIndex(Sym(10),Sym(11)))
+TP(Sym(13),Reflect(Print(Sym(12)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(14),Reify(Sym(13),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(13))))
+TP(Sym(15),ArrayLength(Sym(10)))
+TP(Sym(16),Reflect(SimpleLoop(Sym(15),Sym(11),ForeachElem(Block(Sym(14)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(17),Reflect(Print(Const(1)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(16))))
+TP(Sym(18),Reify(Sym(17),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(16), Sym(17))))
+
+-- before transformation
+val x4: Array[Int] = Array.empty
+val x10_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x1 <- 0 until 10) {
+val x2 = x1 > 5
+val x9 = if (x2) {
+x4
+} else {
+val x8 = new Array[Int](3)
+for (x5 <- 0 until 3) {
+val x6 = x1 + x5
+x8(x5) = x6
+}
+x8
+}
+x10_builder ++= x9
+}
+val x10 = x10_builder.result()
+val x15 = x10.length
+for (x11 <- 0 until x15) {
+val x12 = x10.apply(x11)
+val x13 = println(x12)
+}
+val x16 = ()
+val x17 = println(1)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(10)
+    
+    (VFT) No producers found for cons Sym(8)
+
+(VFT) Fusing prod Sym(10) with cons Sym(16). Type: Mc_McForRed(Sym(11),Sym(1),Sym(15),Const(10),IfThenElseOneEmpty_Any(Sym(2),Empty_For(Sym(4),Sym(16)),Mc_McForRed(Sym(11),Sym(5),Sym(15),Const(3),Single_McFor(Sym(11),(Sym(10),Sym(11)),Sym(6),Sym(14),Sym(7),Sym(16)),Sym(14),Sym(7),Sym(8),Sym(16)),Sym(16),Sym(9),Sym(16)),Sym(14),Sym(9),Sym(10),Sym(16))
+(VFT) Fused prod Sym(10) with cons Sym(16), fused sym: Sym(25)
+
+(VFT) all vertically fused: List(Sym(9), Sym(23))
+List(Sym(10), Sym(25))
+
+-- after vertical transformation
+for (x1 <- 0 until 10) {
+val x2 = x1 > 5
+val x23 = if (x2) {
+()
+} else {
+for (x5 <- 0 until 3) {
+val x6 = x1 + x5
+val x19 = println(x6)
+}
+val x21 = ()
+x21
+}
+}
+val x25 = ()
+val x26 = println(1)
+
+-- horizontal transformation
+(HFT) Recording Sym(25), no fusion
+  (HFT) Recording if-sym Sym(23), no fusion
+    (HFT) Recording Sym(21), no fusion
+    (HFT) - new loop symbol: Sym(21) -> Sym(30)
+  (HFT) - new if symbol: Sym(23) -> Sym(32)
+(HFT) - new loop symbol: Sym(25) -> Sym(34)
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+for (x1 <- 0 until 10) {
+val x2 = x1 > 5
+val x32 = if (x2) {
+()
+} else {
+for (x5 <- 0 until 3) {
+val x6 = x1 + x5
+val x28 = println(x6)
+}
+val x30 = ()
+x30
+}
+}
+val x34 = ()
+val x35 = println(1)
+
+-- fusion
+for (x1 <- 0 until 10) {
+val x2 = x1 > 5
+val x32 = if (x2) {
+()
+} else {
+for (x5 <- 0 until 3) {
+val x6 = x1 + x5
+val x28 = println(x6)
+}
+val x30 = ()
+x30
+}
+}
+val x34 = ()
+val x35 = println(1)
+-- done

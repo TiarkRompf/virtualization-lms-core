@@ -1,0 +1,122 @@
+-- full graph
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),IntTimes(Sym(2),Sym(1)))
+TP(Sym(4),IntTimes(Sym(1),Sym(3)))
+TP(Sym(5),SingletonInLoop(Sym(4),Sym(1)))
+TP(Sym(6),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(5)))))
+TP(Sym(8),ArrayIndex(Sym(6),Sym(7)))
+TP(Sym(9),OrderingGT(Sym(8),Const(50)))
+TP(Sym(10),BooleanNegate(Sym(9)))
+TP(Sym(11),IntPlus(Sym(8),Const(2)))
+TP(Sym(12),SingletonInLoop(Sym(11),Sym(7)))
+TP(Sym(14),EmptyArrayInLoop(Sym(7),Sym(13)))
+TP(Sym(15),IfThenElse(Sym(10),Block(Sym(12)),Block(Sym(14))))
+TP(Sym(16),SimpleLoop(Const(10),Sym(7),MultiArrayElem(Block(Sym(15)))))
+TP(Sym(17),ArrayLength(Sym(16)))
+TP(Sym(18),Reflect(Print(Sym(17)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(19),Reify(Sym(18),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(18))))
+
+-- before transformation
+val x6 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x3 = x2 * x1
+val x4 = x1 * x3
+x6(x1) = x4
+}
+val x16_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x7 <- 0 until 10) {
+val x8 = x6.apply(x7)
+val x9 = x8 > 50
+val x10 = !x9
+if (x10) {
+val x11 = x8 + 2
+x16_builder += x11
+}
+}
+val x16 = x16_builder.result()
+val x17 = x16.length
+val x18 = println(x17)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(6)
+
+(VFT) Not fused prod Sym(6) with cons Sym(16) because consumer loop might not iterate over full range of producer collection
+(VFT) No producers found for cons Sym(16)
+
+(VFT) all vertically fused: 
+
+-- after vertical transformation
+val x6 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x3 = x2 * x1
+val x4 = x1 * x3
+x6(x1) = x4
+}
+val x16_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x7 <- 0 until 10) {
+val x8 = x6.apply(x7)
+val x9 = x8 > 50
+val x10 = !x9
+if (x10) {
+val x11 = x8 + 2
+x16_builder += x11
+}
+}
+val x16 = x16_builder.result()
+val x17 = x16.length
+val x20 = println(x17)
+
+-- horizontal transformation
+(HFT) Recording Sym(6), no fusion
+(HFT) Recording Sym(16), no fusion
+  (HFT) Recording if-sym Sym(15), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x6 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x3 = x2 * x1
+val x4 = x1 * x3
+x6(x1) = x4
+}
+val x16_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x7 <- 0 until 10) {
+val x8 = x6.apply(x7)
+val x9 = x8 > 50
+val x10 = !x9
+if (x10) {
+val x11 = x8 + 2
+x16_builder += x11
+}
+}
+val x16 = x16_builder.result()
+val x17 = x16.length
+val x22 = println(x17)
+
+-- fusion
+val x6 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x3 = x2 * x1
+val x4 = x1 * x3
+x6(x1) = x4
+}
+val x16_builder = new scala.collection.mutable.ArrayBuilder.ofInt
+for (x7 <- 0 until 10) {
+val x8 = x6.apply(x7)
+val x9 = x8 > 50
+val x10 = !x9
+if (x10) {
+val x11 = x8 + 2
+x16_builder += x11
+}
+}
+val x16 = x16_builder.result()
+val x17 = x16.length
+val x22 = println(x17)
+-- done

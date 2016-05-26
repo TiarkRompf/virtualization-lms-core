@@ -140,9 +140,7 @@ trait GenericCodegen extends BlockTraversal with QuotingExp {
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit
-  def emitVarDecl(sym: Sym[Any]): Unit = throw new GenerationFailedException(this.toString + ": don't know how to emit variable declaration " + quote(sym))
-  def emitAssignment(sym: Sym[Any], rhs: String): Unit = throw new GenerationFailedException(this.toString + ": don't know how to emit variable assignment " + quote(sym))
-
+  
   def emitSource[T : Manifest, R : Manifest](f: Exp[T] => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s = fresh[T]
     val body = reifyBlock(f(s))
@@ -213,7 +211,7 @@ trait GenericCodegen extends BlockTraversal with QuotingExp {
   }
 
   def isVariableType[A](m: Manifest[A]) : Boolean = {
-    if(m.erasure == classOf[Variable[AnyVal]]) true
+    if(m.erasure == classOf[Variable[_]]) true
     else false
   }
 

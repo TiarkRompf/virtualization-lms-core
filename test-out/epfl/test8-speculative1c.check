@@ -7,7 +7,7 @@ var x1: Int = 7
 val x2 = 7 > x0
 // TODO: use vars instead of tuples to return multiple values
 val (x10,x8) = if (x2) {
-x1 = 5
+val x3 = x1 = 5
 ((),())
 } else {
 val x5 = println("no")
