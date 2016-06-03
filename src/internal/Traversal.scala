@@ -9,7 +9,13 @@ trait Traversal extends FatBlockTraversal { self =>
   import IR._
 
   val name: String = self.getClass.getName.split('$').filterNot(_ forall Character.isDigit).mkString(".")
-  val debugMode: Boolean = false
+  var debugMode: Boolean = false    // Traversal-specific debug enable
+  var verboseMode: Boolean = true   // Traversal-specific verbosity
+
+  def silence() {
+    verboseMode = false
+    debugMode = false
+  }
 
   def withDebugging[T](x: => T): T = {
     if (debugMode) {
@@ -21,7 +27,8 @@ trait Traversal extends FatBlockTraversal { self =>
     }
     else x
   }
-  def debug(x: => Any) = withDebugging{ printdbg(x) }
+  final def debug(x: => Any) = withDebugging{ printdbg(x) }
+  final def msg(x: => Any) { if (verboseMode) System.out.println(x) }
 
   def preprocess[A:Manifest](b: Block[A]): Block[A] = { b }
   def postprocess[A:Manifest](b: Block[A]): Block[A] = { b }
@@ -30,6 +37,7 @@ trait Traversal extends FatBlockTraversal { self =>
   def runOnce[A:Manifest](b: Block[A]): Block[A] = processBlock(b)
 
   def run[A:Manifest](b: Block[A]): Block[A] = {
+    debug("Starting traversal " + name)
     val curBlock = preprocess(b)
     val resultBlock = runOnce(curBlock)
     postprocess(resultBlock)
@@ -46,7 +54,7 @@ trait IterativeTraversal extends Traversal { self =>
   protected val MAX_RETRIES: Int = 1    // maximum number of retries to allow
   protected var runs = 0                // Current analysis iteration
   private var retries = 0               // Current retry
-  private var retry = false
+  private var _retry = false
 
   def hasConverged: Boolean = runs > 0
   def hasCompleted: Boolean = true
@@ -57,26 +65,27 @@ trait IterativeTraversal extends Traversal { self =>
 
   /**
    * Function to be called to try to recover when visitor converged but did not complete
-   * In postprocess, modify state, then call resume() to resume looping. Resets run number.
-   * Can also implement auto-increase of MAX_ITERS using resume() in postprocess
+   * In postprocess, modify state, then call retry() to resume looping. Resets run number.
+   * Can also implement auto-increase of MAX_ITERS using retry() in postprocess
    */
-  def resume() { retry = true }
+  def retry() { _retry = true }
 
   /**
    * Run traversal/analysis on a given block until convergence or maximum # of iterations reached
    */
   override def run[A:Manifest](b: Block[A]): Block[A] = {
+    debug("Starting traversal " + name)
     var curBlock = preprocess(b)
     do {
       runs = 0
-      retry = false
+      _retry = false
       while (!hasConverged && runs < MAX_ITERS) { // convergence condition
         runs += 1
         curBlock = runOnce(curBlock)
       }
       curBlock = postprocess(curBlock)
       retries += 1
-    } while (retry && retries <= MAX_RETRIES)
+    } while (_retry && retries <= MAX_RETRIES)
 
     if (!hasCompleted || !hasConverged) { IR.hadErrors = true }
     if (!hasCompleted) { failedToComplete() }

@@ -81,6 +81,13 @@ trait ForwardTransformer extends AbstractSubstTransformer with Traversal { self 
         sym
     }
   }
+
+  // Mirror metadata only after transformer has completed. Metadata is not required
+  // to follow forward dataflow, so mirroring metadata on the fly will not necessarily be correct
+  override def postprocess[A:Manifest](b: Block[A]): Block[A] = {
+    subst.values.foreach{sym => setProps(sym, mirror(getProps(sym), self.asInstanceOf[Transformer])) }
+    super.postprocess(b)
+  }
 }
 
 trait RecursiveTransformer extends ForwardTransformer { self =>

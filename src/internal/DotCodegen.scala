@@ -114,14 +114,12 @@ trait DotCodegen extends GenericCodegen with Config {
     fileName.substring(i + 1)
   }
 
-  override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    val extra = if ((sourceinfo < 2) || sym.pos.isEmpty) "" else {
-      val context = sym.pos(0)
-      "      // " + relativePath(context.fileName) + ":" + context.line
-    }
-		if (!isVoidType(sym.tp))
-    	stream.println("val " + quote(sym) + " = " + rhs + extra)
-  }
+	def emitValDef(lhs: Exp[Any], rhs: Exp[Any]):Unit = {
+		emitValDef(lhs.asInstanceOf[Sym[Any]], quote(rhs))
+	}
+  //override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
+	//	stream.println(s"""define(`${quote(sym)}', `${rhs}')""")
+  //}
 
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
@@ -142,12 +140,6 @@ trait DotCodegen extends GenericCodegen with Config {
     case _ => super.quote(x)
   }
 
-	def emitAlias(x: Exp[Any], y: Exp[Any]):Unit = {
-		stream.println(s"""define(`${quote(x)}', `${quote(y)}')""")
-	}
-	def emitAlias(x: Sym[Any], y: String):Unit = {
-		stream.println(s"""define(`${quote(x)}', `${y}')""")
-	}
 	def emitEdge(x:Sym[Any], y:Exp[Any]):Unit = {
 		stream.println(s"""${quote(x)} -> ${quote(y)}""")
 	}
@@ -221,6 +213,7 @@ trait DotCodegen extends GenericCodegen with Config {
 
 	// Memories
 	val bramFillColor = s""""#70C6E6""""
+	val cacheFillColor = s""""#B3A582""""
 	val dramFillColor = s""""#685643""""
 	val regFillColor = s""""#8bd645""""
 	val dblbufBorderColor = s""""#4fb0b0""""
@@ -250,10 +243,8 @@ trait DotNestedCodegen extends GenericNestedCodegen with DotCodegen {
 
   // special case for recursive vals
   override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    if (recursive contains sym)
-      stream.println(quote(sym) + " = " + rhs) // we have a forward declaration above.
-    else
-      super.emitValDef(sym,rhs)
+		stream.println(s"""define(`${quote(sym)}', `${rhs}')""")
+    //stream.println(quote(sym) + " = " + rhs) // we have a forward declaration above.
   }
 
 }

@@ -35,7 +35,7 @@ trait AbstractSubstTransformer extends AbstractTransformer {
   import IR._
   var subst = immutable.Map.empty[Exp[Any], Exp[Any]]
   var blockSubst = immutable.Map.empty[Block[Any], Block[Any]]
-  var copyingBlocks: Boolean = false
+  var copyingBlocks: Boolean = true // Default behavior: never use block substitution method
 
   def copyBlock[A](xs: Block[A]): Block[A] = {
     val oldCopy = copyingBlocks
@@ -98,7 +98,6 @@ trait Transforming extends Expressions with Blocks { self =>
   def mirrorFatDef[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = sys.error("don't know how to mirror " + e) //hm...
 }
 
-
 trait FatTransforming extends Transforming with FatExpressions {
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
@@ -109,3 +108,30 @@ trait FatTransforming extends Transforming with FatExpressions {
   //def mirror[A:Manifest](e: FatDef, f: Transformer): Exp[A] = sys.error("don't know how to mirror " + e)
 
 }
+
+
+trait MetaTransforming extends Transforming with SymbolMetadata {
+  // Mirroring metadata
+  def mirror(p: SymbolProperties, f: Transformer): SymbolProperties = p match {
+    case ScalarProperties(data) => ScalarProperties(mirror(data,f))
+    case StructProperties(children,data) => StructProperties(mirror(children,f),mirror(data,f))
+    case ArrayProperties(child,data) => ArrayProperties(mirror(child,f),mirror(data,f))
+  }
+
+  def mirror[K,V](p: PropMap[K,V], f: Transformer): PropMap[K,V] = {
+    PropMap(p.toList.map{case (k,v) => metaMirror(k,f) -> metaMirror(v,f) })
+  }
+
+  // By default, do nothing (most metadata does not include symbols)
+  def mirror[T<:Metadata](m: T, f: Transformer): T = m
+
+  def mirror[T](x: Option[T], f: Transformer): Option[T] = x.map(v=> metaMirror(v,f))
+
+  // HACK: Double dispatch for mirroring unknown types (for prop map keys/values)
+  def metaMirror[T](x: T, f: Transformer): T = x match {
+    case p: SymbolProperties => mirror(p, f).asInstanceOf[T]
+    case m: Metadata => mirror(m, f).asInstanceOf[T]
+    case _ => x
+  }
+}
+
