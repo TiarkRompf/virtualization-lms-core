@@ -11,8 +11,6 @@ import scala.reflect.SourceContext
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
-
-
 trait FusionProg21 extends Arith with ArrayLoops with Print with OrderingOps {
   
   def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
@@ -173,7 +171,7 @@ class TestFusion2 extends FileDiffSuite {
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
+            override def shouldApplyFusion(currentScope: Seq[Stm])(result: List[Exp[Any]]): Boolean = true }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -186,7 +184,7 @@ class TestFusion2 extends FileDiffSuite {
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
+            override def shouldApplyFusion(currentScope: Seq[Stm])(result: List[Exp[Any]]): Boolean = true }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -199,7 +197,7 @@ class TestFusion2 extends FileDiffSuite {
         override val verbosity = 1
         val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
           with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
-            override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
+            override def shouldApplyFusion(currentScope: Seq[Stm])(result: List[Exp[Any]]): Boolean = true }
         codegen.emitSource(test, "Test", new PrintWriter(System.out))
       }
     }
@@ -218,7 +216,7 @@ class TestFusion2 extends FileDiffSuite {
          override val verbosity = 1
          val codegen = new ScalaGenFatArrayLoopsFusionOpt with ScalaGenArith with ScalaGenPrint 
            with ScalaGenIfThenElse with ScalaGenOrderingOps { val IR: self.type = self;
-             override def shouldApplyFusion(currentScope: List[Stm])(result: List[Exp[Any]]): Boolean = true }
+             override def shouldApplyFusion(currentScope: Seq[Stm])(result: List[Exp[Any]]): Boolean = true }
          codegen.emitSource(test, "Test", new PrintWriter(System.out))
          println("// NOTE: generated code is not ideal yet (x2 is never used). see source for discussion.")
        }

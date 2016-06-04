@@ -1,0 +1,90 @@
+-- full graph
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),SingletonInLoop(Sym(2),Sym(1)))
+TP(Sym(4),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(3)))))
+TP(Sym(6),IntPlus(Sym(5),Const(2)))
+TP(Sym(7),SingletonInLoop(Sym(6),Sym(5)))
+TP(Sym(8),SimpleLoop(Const(100),Sym(5),MultiArrayElem(Block(Sym(7)))))
+TP(Sym(9),ArrayLength(Sym(8)))
+TP(Sym(11),ArrayIndex(Sym(4),Sym(10)))
+TP(Sym(12),ArrayIndex(Sym(8),Sym(10)))
+TP(Sym(13),IntPlus(Sym(11),Sym(12)))
+TP(Sym(14),SingletonInLoop(Sym(13),Sym(10)))
+TP(Sym(15),SimpleLoop(Sym(9),Sym(10),MultiArrayElem(Block(Sym(14)))))
+TP(Sym(16),ArrayIndex(Sym(15),Const(0)))
+TP(Sym(17),Reflect(Print(Sym(16)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(18),Reify(Sym(17),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(17))))
+
+-- before transformation
+val x8 = new Array[Int](100)
+for (x5 <- 0 until 100) {
+val x6 = x5 + 2
+x8(x5) = x6
+}
+val x9 = x8.length
+val x4 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x4(x1) = x2
+}
+val x15 = new Array[Int](x9)
+for (x10 <- 0 until x9) {
+val x11 = x4.apply(x10)
+val x12 = x8.apply(x10)
+val x13 = x11 + x12
+x15(x10) = x13
+}
+val x16 = x15.apply(0)
+val x17 = println(x16)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(8)
+(VFT) Replaced TP(Sym(9),ArrayLength(Sym(8))) with fixed length: Const(100)
+
+(VFT) No producers found for cons Sym(4)
+(VFT) Cons Sym(4) not fused but mirrored to Sym(21) because of fixed shape
+
+(VFT) Fusing prod Sym(8) with cons Sym(15) and other prods: List(Sym(4)). Type: ManyMcsingle_McFor(Sym(10),Sym(5),(Sym(8),Sym(10)),Sym(6),List(((Sym(4),Sym(10)),Sym(19))),Sym(8),Sym(15),List())
+(VFT) Fused prod Sym(8) and other prods List(Sym(4)) with cons Sym(15), fused sym: Sym(24)
+
+(VFT) all vertically fused: List(Sym(21), Sym(24), Sym(8))
+
+-- after vertical transformation
+val x24 = new Array[Int](100)
+for (x5 <- 0 until 100) {
+val x6 = x5 + 2
+val x19 = x5 + 1
+val x22 = x19 + x6
+x24(x5) = x22
+}
+val x25 = x24.apply(0)
+val x26 = println(x25)
+
+-- horizontal transformation
+(HFT) Recording Sym(24), no fusion
+
+(HFT) all horizontally fused: 
+
+-- after horizontal transformation
+val x24 = new Array[Int](100)
+for (x5 <- 0 until 100) {
+val x6 = x5 + 2
+val x19 = x5 + 1
+val x22 = x19 + x6
+x24(x5) = x22
+}
+val x25 = x24.apply(0)
+val x28 = println(x25)
+
+-- fusion
+val x24 = new Array[Int](100)
+for (x5 <- 0 until 100) {
+val x6 = x5 + 2
+val x19 = x5 + 1
+val x22 = x19 + x6
+x24(x5) = x22
+}
+val x25 = x24.apply(0)
+val x28 = println(x25)
+-- done

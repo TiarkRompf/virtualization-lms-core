@@ -96,7 +96,7 @@ trait SimplifyTransform extends internal.FatScheduling {
   }
   
   // TODO: generalize, abstract out SimpleFatXX types
-  def transformAll(scope: List[Stm], t: SubstTransformer): List[Stm] = {
+  def transformAll(scope: Seq[Stm], t: SubstTransformer): Seq[Stm] = {
     val scopeIndex = new java.util.IdentityHashMap[Sym[Any],Stm]
     for (stm <- scope; s <- stm.lhs) scopeIndex.put(s,stm)    
 
@@ -178,7 +178,7 @@ trait SimplifyTransform extends internal.FatScheduling {
     }
   }
 
-  def transformAllFully(currentScope0: List[Stm], result0: List[Exp[Any]], t: SubstTransformer): (List[Stm], List[Exp[Any]]) = {
+  def transformAllFully(currentScope0: Seq[Stm], result0: List[Exp[Any]], t: SubstTransformer): (Seq[Stm], List[Exp[Any]]) = {
     var currentScope = currentScope0
     var result = result0
     
@@ -191,7 +191,7 @@ trait SimplifyTransform extends internal.FatScheduling {
 
     // SIMPLIFY! <--- multiple steps necessary???
   
-    def withEffectContext(body: =>List[Stm]): List[Stm] = {
+    def withEffectContext(body: =>Seq[Stm]): Seq[Stm] = {
       val save = context
       context = Nil
       val scope = body
@@ -235,7 +235,7 @@ trait SimplifyTransform extends internal.FatScheduling {
   }
   
   
-  def simplify(scope: List[Stm])(results: List[Exp[Any]]): (List[Stm], List[Exp[Any]]) = {
+  def simplify(scope: Seq[Stm])(results: List[Exp[Any]]): (Seq[Stm], List[Exp[Any]]) = {
     val t = new SubstTransformer    
     val scope2 = transformAll(scope, t)
     val results2 = results map (t apply _)

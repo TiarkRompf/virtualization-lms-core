@@ -1,10 +1,11 @@
 package scala.virtualization.lms
 package internal
 
-import scala.reflect.SourceContext
-import scala.annotation.unchecked.uncheckedVariance
-import scala.collection.mutable.ListBuffer
 import java.lang.{StackTraceElement,Thread}
+import scala.annotation.unchecked.uncheckedVariance
+import scala.collection.immutable.Queue
+import scala.collection.mutable.ListBuffer
+import scala.reflect.SourceContext
 
 
 /**
@@ -112,6 +113,12 @@ trait Expressions extends Utils {
 
   case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
 
+  // --- Graph construction state
+  var globalDefs: Seq[Stm] = Queue.empty
+  var localDefs: Seq[Stm] = Queue.empty
+  var globalSymsCache: Map[Sym[Any],Stm] = Map.empty
+  var globalDefsCache: Map[Any,Stm] = Map.empty
+
   /* Create a string representing the IR node definition for the given expression */
   def strDef(e: Exp[Any]): String = e match {
     case Const(z) => z.toString
@@ -123,17 +130,12 @@ trait Expressions extends Utils {
      if possible or the internal IR node definition otherwise */
   def quoteDef(e: Exp[Any]): String = quoteCode(e.pos).getOrElse(strDef(e))
 
-  // --- Graph construction state
-  var globalDefs: List[Stm] = Nil
-  var localDefs: List[Stm] = Nil
-  var globalDefsCache: Map[Sym[Any],Stm] = Map.empty
-
   /**
    * Remove a symbol from the graph construction state.
    * Symbol should be dead (i.e. after transformer mirroring)
    */
   def scrubSym(sym: Sym[Any]) = {
-    def scrubStms(stms: List[Stm]) = stms filterNot {
+    def scrubStms(stms: Seq[Stm]) = stms filterNot {
       case TP(lhs,rhs) => (lhs == sym)
       case _ => false
     }
@@ -142,38 +144,42 @@ trait Expressions extends Utils {
     globalDefsCache = globalDefsCache filterNot{case(s,_) => s == sym }
   }
 
-  def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
+  def reifySubGraph[T](b: =>T): (T, Seq[Stm]) = {
     val saveLocal = localDefs
     val saveGlobal = globalDefs
-    val saveGlobalCache = globalDefsCache
-    localDefs = Nil
+    val saveGlobalSyms = globalSymsCache
+    val saveGlobalDefs = globalDefsCache
+    localDefs = Queue.empty
     val r = b
     val defs = localDefs
     localDefs = saveLocal
     globalDefs = saveGlobal
-    globalDefsCache = saveGlobalCache
+    globalSymsCache = saveGlobalSyms
+    globalDefsCache = saveGlobalDefs
     (r, defs)
   }
 
-  def reflectSubGraph(ds: List[Stm]): Unit = {
+  def reflectSubGraph(ds: Seq[Stm]): Unit = {
     val lhs = ds.flatMap(_.lhs)
     assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
     // equivalent to: globalDefs filter (_.lhs exists (lhs contains _))
-    val existing = lhs flatMap (globalDefsCache get _)
+    val existing = lhs flatMap (globalSymsCache get _)
     assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
-    localDefs = localDefs ::: ds
-    globalDefs = globalDefs ::: ds
-    for (stm <- ds; s <- stm.lhs) {
-      globalDefsCache += (s->stm)
+    for (stm <- ds) {
+      localDefs :+= stm
+      globalDefs :+= stm
+      globalDefsCache += (stm.rhs->stm)
+      for (s <- stm.lhs) globalSymsCache += (s->stm)
     }
   }
 
   def findDefinition[T](s: Sym[T]): Option[Stm] =
-    globalDefsCache.get(s)
+    globalSymsCache.get(s)
     //globalDefs.find(x => x.defines(s).nonEmpty)
 
   def findDefinition[T](d: Def[T]): Option[Stm] =
-    globalDefs.find(x => x.defines(d).nonEmpty)
+    globalDefsCache.get(d)
+    //globalDefs.find(x => x.defines(d).nonEmpty)
 
   def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): Stm =
     findDefinition[T](d) map { x => x.defines(d).foreach(_.withPos(pos)); x } getOrElse {
@@ -284,8 +290,9 @@ trait Expressions extends Utils {
   def reset { // used by delite?
     nVars = 0
     nParams = 0
-    globalDefs = Nil
-    localDefs = Nil
+    globalDefs = Queue.empty
+    localDefs = Queue.empty
+    globalSymsCache = Map.empty
     globalDefsCache = Map.empty
   }
 

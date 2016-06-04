@@ -1,0 +1,232 @@
+-- full graph
+TP(Sym(2),IntPlus(Sym(1),Const(1)))
+TP(Sym(3),SingletonInLoop(Sym(2),Sym(1)))
+TP(Sym(4),SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(3)))))
+TP(Sym(5),ArrayLength(Sym(4)))
+TP(Sym(7),ArrayIndex(Sym(4),Sym(6)))
+TP(Sym(8),IntPlus(Sym(7),Const(2)))
+TP(Sym(9),SingletonInLoop(Sym(8),Sym(6)))
+TP(Sym(10),SimpleLoop(Sym(5),Sym(6),MultiArrayElem(Block(Sym(9)))))
+TP(Sym(12),IntPlus(Sym(11),Const(3)))
+TP(Sym(13),SingletonInLoop(Sym(12),Sym(11)))
+TP(Sym(14),SimpleLoop(Const(100),Sym(11),MultiArrayElem(Block(Sym(13)))))
+TP(Sym(15),ArrayLength(Sym(14)))
+TP(Sym(17),ArrayIndex(Sym(14),Sym(16)))
+TP(Sym(18),IntPlus(Sym(17),Const(4)))
+TP(Sym(19),SingletonInLoop(Sym(18),Sym(16)))
+TP(Sym(20),SimpleLoop(Sym(15),Sym(16),MultiArrayElem(Block(Sym(19)))))
+TP(Sym(22),ArrayIndex(Sym(10),Sym(21)))
+TP(Sym(23),ArrayIndex(Sym(20),Sym(21)))
+TP(Sym(24),IntPlus(Sym(22),Sym(23)))
+TP(Sym(25),SingletonInLoop(Sym(24),Sym(21)))
+TP(Sym(26),SimpleLoop(Const(100),Sym(21),MultiArrayElem(Block(Sym(25)))))
+TP(Sym(27),ArrayIndex(Sym(4),Const(0)))
+TP(Sym(28),Reflect(Print(Sym(27)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(29),ArrayIndex(Sym(10),Const(0)))
+TP(Sym(30),Reflect(Print(Sym(29)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(28))))
+TP(Sym(31),ArrayIndex(Sym(14),Const(0)))
+TP(Sym(32),Reflect(Print(Sym(31)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(30))))
+TP(Sym(33),ArrayIndex(Sym(20),Const(0)))
+TP(Sym(34),Reflect(Print(Sym(33)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(32))))
+TP(Sym(35),ArrayIndex(Sym(26),Const(0)))
+TP(Sym(36),Reflect(Print(Sym(35)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(34))))
+TP(Sym(37),Reify(Sym(36),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(28), Sym(30), Sym(32), Sym(34), Sym(36))))
+
+-- before transformation
+val x4 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x4(x1) = x2
+}
+val x27 = x4.apply(0)
+val x28 = println(x27)
+val x5 = x4.length
+val x10 = new Array[Int](x5)
+for (x6 <- 0 until x5) {
+val x7 = x4.apply(x6)
+val x8 = x7 + 2
+x10(x6) = x8
+}
+val x29 = x10.apply(0)
+val x30 = println(x29)
+val x14 = new Array[Int](100)
+for (x11 <- 0 until 100) {
+val x12 = x11 + 3
+x14(x11) = x12
+}
+val x31 = x14.apply(0)
+val x32 = println(x31)
+val x15 = x14.length
+val x20 = new Array[Int](x15)
+for (x16 <- 0 until x15) {
+val x17 = x14.apply(x16)
+val x18 = x17 + 4
+x20(x16) = x18
+}
+val x33 = x20.apply(0)
+val x34 = println(x33)
+val x26 = new Array[Int](100)
+for (x21 <- 0 until 100) {
+val x22 = x10.apply(x21)
+val x23 = x20.apply(x21)
+val x24 = x22 + x23
+x26(x21) = x24
+}
+val x35 = x26.apply(0)
+val x36 = println(x35)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(4)
+(VFT) Replaced TP(Sym(5),ArrayLength(Sym(4))) with fixed length: Const(100)
+
+(VFT) Fusing prod Sym(4) with cons Sym(10). Type: Mc_McForRed(Sym(6),Sym(1),Sym(5),Const(100),Single_McFor(Sym(6),(Sym(4),Sym(6)),Sym(2),Sym(9),Sym(3),Sym(10)),Sym(9),Sym(3),Sym(4),Sym(10))
+(VFT) Fused prod Sym(4) with cons Sym(10), fused sym: Sym(41)
+
+(VFT) No producers found for cons Sym(14)
+(VFT) Cons Sym(14) not fused but mirrored to Sym(46) because of fixed shape
+(VFT) Replaced TP(Sym(15),ArrayLength(Sym(14))) with fixed length: Const(100)
+
+(VFT) Fusing prod Sym(46) with cons Sym(20). Type: Mc_McForRed(Sym(16),Sym(1),Sym(15),Const(100),Single_McFor(Sym(16),(Sym(14),Sym(16)),Sym(44),Sym(19),Sym(45),Sym(20)),Sym(19),Sym(45),Sym(46),Sym(20))
+(VFT) Fused prod Sym(46) with cons Sym(20), fused sym: Sym(51)
+
+(VFT) Fusing prod Sym(41) with cons Sym(26) and other prods: List(Sym(20)). Type: ManyMcsingle_McFor(Sym(21),Sym(1),(Sym(10),Sym(21)),Sym(39),List(((Sym(20),Sym(21)),Sym(49))),Sym(41),Sym(26),List())
+(VFT) Fused prod Sym(41) and other prods List(Sym(20)) with cons Sym(26), fused sym: Sym(56)
+
+(VFT) all vertically fused: List(Sym(51), Sym(4), Sym(46), Sym(56), Sym(41))
+
+-- after vertical transformation
+val x4 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x4(x1) = x2
+}
+val x27 = x4.apply(0)
+val x38 = println(x27)
+val x41 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x39 = x2 + 2
+x41(x1) = x39
+}
+val x42 = x41.apply(0)
+val x43 = println(x42)
+val x46 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x44 = x1 + 3
+x46(x1) = x44
+}
+val x47 = x46.apply(0)
+val x48 = println(x47)
+val x51 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x44 = x1 + 3
+val x49 = x44 + 4
+x51(x1) = x49
+}
+val x52 = x51.apply(0)
+val x53 = println(x52)
+val x56 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x39 = x2 + 2
+val x44 = x1 + 3
+val x49 = x44 + 4
+val x54 = x39 + x49
+x56(x1) = x54
+}
+val x57 = x56.apply(0)
+val x58 = println(x57)
+
+-- horizontal transformation
+(HFT) Recording Sym(4), no fusion
+(HFT) Fusing Sym(41) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(56), Sym(26), Sym(41), Sym(4), Sym(10), Sym(51), Sym(46), Sym(20)))
+(HFT) - already using same index Sym(1)
+(HFT) Fusing Sym(46) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(56), Sym(26), Sym(41), Sym(4), Sym(10), Sym(51), Sym(46), Sym(20)))
+(HFT) - already using same index Sym(1)
+(HFT) Fusing Sym(51) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(56), Sym(26), Sym(41), Sym(4), Sym(10), Sym(51), Sym(46), Sym(20)))
+(HFT) - already using same index Sym(1)
+(HFT) Fusing Sym(56) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(1), loopSyms = List(Sym(56), Sym(26), Sym(41), Sym(4), Sym(10), Sym(51), Sym(46), Sym(20)))
+(HFT) - already using same index Sym(1)
+
+(HFT) all horizontally fused: List(Sym(4), Sym(41), Sym(46), Sym(51), Sym(56))
+
+-- after horizontal transformation
+val x4 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+x4(x1) = x2
+}
+val x27 = x4.apply(0)
+val x60 = println(x27)
+val x41 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x39 = x2 + 2
+x41(x1) = x39
+}
+val x42 = x41.apply(0)
+val x61 = println(x42)
+val x46 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x44 = x1 + 3
+x46(x1) = x44
+}
+val x47 = x46.apply(0)
+val x62 = println(x47)
+val x51 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x44 = x1 + 3
+val x49 = x44 + 4
+x51(x1) = x49
+}
+val x52 = x51.apply(0)
+val x63 = println(x52)
+val x56 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x39 = x2 + 2
+val x44 = x1 + 3
+val x49 = x44 + 4
+val x54 = x39 + x49
+x56(x1) = x54
+}
+val x57 = x56.apply(0)
+val x64 = println(x57)
+
+-- fusion
+(CTS) Fusing these loops into one fat TTP: 
+TTP(List(Sym(4)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(3))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(3))))))
+TTP(List(Sym(41)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(40))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(40))))))
+TTP(List(Sym(46)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(45))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(45))))))
+TTP(List(Sym(51)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(50))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(50))))))
+TTP(List(Sym(56)),List(SimpleLoop(Const(100),Sym(1),MultiArrayElem(Block(Sym(55))))),SimpleFatLoop(Const(100),Sym(1),List(MultiArrayElem(Block(Sym(55))))))
+
+val x4 = new Array[Int](100)
+val x41 = new Array[Int](100)
+val x46 = new Array[Int](100)
+val x51 = new Array[Int](100)
+val x56 = new Array[Int](100)
+for (x1 <- 0 until 100) {
+val x2 = x1 + 1
+val x39 = x2 + 2
+val x44 = x1 + 3
+val x49 = x44 + 4
+val x54 = x39 + x49
+x4(x1) = x2
+x41(x1) = x39
+x46(x1) = x44
+x51(x1) = x49
+x56(x1) = x54
+}
+val x27 = x4.apply(0)
+val x60 = println(x27)
+val x42 = x41.apply(0)
+val x61 = println(x42)
+val x47 = x46.apply(0)
+val x62 = println(x47)
+val x52 = x51.apply(0)
+val x63 = println(x52)
+val x57 = x56.apply(0)
+val x64 = println(x57)
+-- done

@@ -125,11 +125,13 @@ trait DotCodegen extends GenericCodegen with Config {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = " + rhs)
   }
 
-  override def emitVarDecl(sym: Sym[Any]): Unit = {
+  // TODO: Unused?
+  def emitVarDecl(sym: Sym[Any]): Unit = {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = null.asInstanceOf[" + remap(sym.tp) + "];")
   }
 
-  override def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
+  // TODO: Unused?
+  def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
     stream.println(quote(sym) + " = " + rhs)
   }
 
@@ -232,7 +234,7 @@ trait DotNestedCodegen extends GenericNestedCodegen with DotCodegen {
   }
 
   // emit forward decls for recursive vals
-  override def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
+  override def traverseStmsInBlock[A](stms: Seq[Stm]): Unit = {
     recursive foreach emitForwardDef
     super.traverseStmsInBlock(stms)
   }

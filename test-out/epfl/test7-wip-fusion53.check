@@ -1,0 +1,114 @@
+-- full graph
+TP(Sym(1),Reflect(Print(Const(1)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(3),IntPlus(Sym(2),Const(2)))
+TP(Sym(4),SingletonInLoop(Sym(3),Sym(2)))
+TP(Sym(5),SimpleLoop(Const(100),Sym(2),MultiArrayElem(Block(Sym(4)))))
+TP(Sym(6),Reflect(Print(Const(3)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(1))))
+TP(Sym(7),ArrayLength(Sym(5)))
+TP(Sym(9),ArrayIndex(Sym(5),Sym(8)))
+TP(Sym(10),Reflect(Print(Sym(9)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
+TP(Sym(11),SingletonInLoop(Const(4),Sym(8)))
+TP(Sym(12),Reify(Sym(11),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10))))
+TP(Sym(13),Reflect(SimpleLoop(Sym(7),Sym(8),MultiArrayElem(Block(Sym(12)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
+TP(Sym(14),ArrayIndex(Sym(5),Const(0)))
+TP(Sym(15),Reflect(Print(Sym(14)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(13))))
+TP(Sym(16),ArrayIndex(Sym(13),Const(5)))
+TP(Sym(17),Reflect(Print(Sym(16)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(15))))
+TP(Sym(18),Reify(Sym(17),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(1), Sym(6), Sym(13), Sym(15), Sym(17))))
+
+-- before transformation
+val x1 = println(1)
+val x6 = println(3)
+val x5 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x3 = x2 + 2
+x5(x2) = x3
+}
+val x7 = x5.length
+val x13 = new Array[Int](x7)
+for (x8 <- 0 until x7) {
+val x9 = x5.apply(x8)
+val x10 = println(x9)
+x13(x8) = 4
+}
+val x14 = x5.apply(0)
+val x15 = println(x14)
+val x16 = x13.apply(5)
+val x17 = println(x16)
+
+-- vertical transformation
+
+(VFT) No producers found for cons Sym(5)
+(VFT) Replaced TP(Sym(7),ArrayLength(Sym(5))) with fixed length: Const(100)
+
+(VFT) Fusing prod Sym(5) with cons Sym(13). Type: Mc_McForRed(Sym(8),Sym(2),Sym(7),Const(100),Single_McFor(Sym(8),(Sym(5),Sym(8)),Sym(3),Sym(12),Sym(4),Sym(13)),Sym(12),Sym(4),Sym(5),Sym(13))
+(VFT) Fused prod Sym(5) with cons Sym(13), fused sym: Sym(24)
+
+(VFT) all vertically fused: List(Sym(5), Sym(24))
+
+-- after vertical transformation
+val x19 = println(1)
+val x20 = println(3)
+val x24 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x3 = x2 + 2
+val x21 = println(x3)
+x24(x2) = 4
+}
+val x5 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x3 = x2 + 2
+x5(x2) = x3
+}
+val x14 = x5.apply(0)
+val x25 = println(x14)
+val x26 = x24.apply(5)
+val x27 = println(x26)
+
+-- horizontal transformation
+(HFT) Recording Sym(24), no fusion
+(HFT) - new loop symbol: Sym(24) -> Sym(33)
+(HFT) Fusing Sym(5) with containing fusion set FusedLoopSet(shape = Const(100), indexSym = Sym(2), loopSyms = List(Sym(24), Sym(5), Sym(13)))
+(HFT) - already using same index Sym(2)
+
+(HFT) all horizontally fused: List(Sym(33), Sym(5))
+
+-- after horizontal transformation
+val x29 = println(1)
+val x30 = println(3)
+val x33 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x3 = x2 + 2
+val x31 = println(x3)
+x33(x2) = 4
+}
+val x5 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x3 = x2 + 2
+x5(x2) = x3
+}
+val x14 = x5.apply(0)
+val x34 = println(x14)
+val x35 = x33.apply(5)
+val x36 = println(x35)
+
+-- fusion
+(CTS) Fusing these loops into one fat TTP: 
+TTP(List(Sym(33)),List(Reflect(SimpleLoop(Const(100),Sym(2),MultiArrayElem(Block(Sym(32)))),Summary(true,false,false,false,false,false,List(),List(),List(),List()),List(Sym(30)))),SimpleFatLoop(Const(100),Sym(2),List(MultiArrayElem(Block(Sym(32))))))
+TTP(List(Sym(5)),List(SimpleLoop(Const(100),Sym(2),MultiArrayElem(Block(Sym(4))))),SimpleFatLoop(Const(100),Sym(2),List(MultiArrayElem(Block(Sym(4))))))
+
+val x29 = println(1)
+val x30 = println(3)
+val x33 = new Array[Int](100)
+val x5 = new Array[Int](100)
+for (x2 <- 0 until 100) {
+val x3 = x2 + 2
+val x31 = println(x3)
+x33(x2) = 4
+x5(x2) = x3
+}
+val x14 = x5.apply(0)
+val x34 = println(x14)
+val x35 = x33.apply(5)
+val x36 = println(x35)
+-- done

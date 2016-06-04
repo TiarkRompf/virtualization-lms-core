@@ -32,6 +32,7 @@ class TestNumeric extends FileDiffSuite {
         }
       }
     }
+    assertFileCheck(prefix+"numeric1", "")
   }
 
 
@@ -64,6 +65,7 @@ class TestNumeric extends FileDiffSuite {
 
       }
     }
+    assertFileCheck(prefix+"numeric2", "")
   }
 
   // this one may be slightly simpler to debug
@@ -79,6 +81,7 @@ class TestNumeric extends FileDiffSuite {
 
       }
     }
+    assertFileCheck(prefix+"numeric2b", "")
   }
 
 
@@ -93,9 +96,9 @@ class TestNumeric extends FileDiffSuite {
           //val msg = "step = " + xstep  //FIXME: "EMBEDDING: cannot resolve target method (sym=<none>): infix_$plus("res = ", xstep)"
 
         }
-
       }
     }
+    assertFileCheck(prefix+"numeric3", "")
   }
 
 

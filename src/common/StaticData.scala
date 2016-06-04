@@ -50,7 +50,7 @@ trait BaseGenStaticData extends GenericNestedCodegen {
         case TP(sym, rhs) =>
           getFreeDataExp(sym, rhs)
         case _ => Nil //static data is never fat
-      }
+      } toList
       /*focusExactScope(start) { levelScope =>
         levelScope flatMap { 
           case TP(sym, rhs) =>

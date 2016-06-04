@@ -54,11 +54,11 @@ overlap1:
 overlap2:
 (Sym(15),Sym(39))
 NOTE: overlap beyond a single loop iteration will be ignored (not yet implemented)
-var inits: List(Sym(16), Sym(17), Sym(19), Sym(20), Sym(7), Sym(15)) -> List(Variable(Sym(69)), Variable(Sym(70)), Variable(Sym(71)), Variable(Sym(72)), Variable(Sym(73)), Variable(Sym(74)))
-will become var reads: List(Sym(16), Sym(17), Sym(19), Sym(20), Sym(7), Sym(15))
-will become var writes: List(Sym(31), Sym(32), Sym(34), Sym(35), Sym(15), Sym(30))
-var reads: List((Sym(16),Sym(77)), (Sym(17),Sym(78)), (Sym(19),Sym(79)), (Sym(20),Sym(80)), (Sym(7),Sym(81)), (Sym(15),Sym(82)))
-var writes: List((Sym(31),Const(())), (Sym(32),Const(())), (Sym(34),Const(())), (Sym(35),Const(())), (Sym(15),Const(())), (Sym(30),Const(())))
+var inits: Queue(Sym(16), Sym(17), Sym(19), Sym(20), Sym(7), Sym(15)) -> Queue(Variable(Sym(69)), Variable(Sym(70)), Variable(Sym(71)), Variable(Sym(72)), Variable(Sym(73)), Variable(Sym(74)))
+will become var reads: Queue(Sym(16), Sym(17), Sym(19), Sym(20), Sym(7), Sym(15))
+will become var writes: Queue(Sym(31), Sym(32), Sym(34), Sym(35), Sym(15), Sym(30))
+var reads: Queue((Sym(16),Sym(77)), (Sym(17),Sym(78)), (Sym(19),Sym(79)), (Sym(20),Sym(80)), (Sym(7),Sym(81)), (Sym(15),Sym(82)))
+var writes: Queue((Sym(31),Const(())), (Sym(32),Const(())), (Sym(34),Const(())), (Sym(35),Const(())), (Sym(15),Const(())), (Sym(30),Const(())))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -112,12 +112,12 @@ val x89 = x79 * x88
 val x90 = x79 - x89
 val x91 = x90 + x80
 val x92 = x2(x81) = x91
-x69 = x85
-x70 = x86
-x71 = x88
-x72 = x89
-x73 = x82
-x74 = x84
+val x93 = x69 = x85
+val x94 = x70 = x86
+val x95 = x71 = x88
+val x96 = x72 = x89
+val x97 = x73 = x82
+val x98 = x74 = x84
 
 x76 = x76 + 1
 }
