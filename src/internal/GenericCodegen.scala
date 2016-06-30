@@ -42,7 +42,7 @@ trait GenericCodegen extends BlockTraversal with QuotingExp {
   def isAcceleratorTarget: Boolean = hostTarget != deviceTarget
 
   def kernelInit(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultIsVar: Boolean): Unit = {}
-  def emitKernel(syms: List[Sym[Any]], rhs: Any): Unit = { }
+  def emitKernel(syms: List[Sym[Any]], rhs: Any): Unit = { throw new Exception("emitKernel not implemented!") } 
   def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {}
   def emitKernelFooter(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {}
 
@@ -67,6 +67,25 @@ trait GenericCodegen extends BlockTraversal with QuotingExp {
   // Define if code generation should produce everything
   // in a single file. Defaults to generating multiple files (one per kernel)
   def emitSingleFile(): Boolean = false
+
+  var kernelFile: Option[File] = None
+  var kernelStream: Option[PrintWriter] = None
+  def getFileStream(fileName: String): (File, PrintWriter) = {
+    if (emitSingleFile) {
+      if (!kernelFile.isDefined) {
+        kernelFile = Some(new File(fileName))
+        kernelStream = Some(new PrintWriter(kernelFile.get))
+        Console.println(s"""Created file $fileName""")
+      }
+      Console.println(s"fileName: $fileName, requesting kernelStream")
+      kernelStream.get.println(s"// fileName: $fileName, Returning kernelStream")
+      (kernelFile.get, kernelStream.get)
+    } else {
+      val outFile = new File(fileName)
+      val kStream = new PrintWriter(outFile)
+      (outFile, kStream)
+    }
+  }
 
   def dataPath = {
     "data" + java.io.File.separator
