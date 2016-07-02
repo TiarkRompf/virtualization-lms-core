@@ -26,6 +26,8 @@ trait MaxJCodegen extends GenericCodegen with Config {
   override def resourceInfoType = ""
   override def resourceInfoSym = ""
 
+  override def singleFileName = s"TopKernelLib.$fileExtension"
+
   // Generate all code into one file
   override def emitSingleFile() = true
 
@@ -44,6 +46,25 @@ trait MaxJCodegen extends GenericCodegen with Config {
     staticData
   }
 
+  override def preProcess[A: Manifest](body: Block[A]) = {
+    val fullPath = s"""${bd}/$singleFileName"""
+    val (file, stream) = getFileStream(fullPath)
+    withStream(stream) {
+      alwaysGen {
+        emitFileHeader()
+      }
+    }
+  }
+
+  override def postProcess[A: Manifest](body: Block[A]) = {
+    val (file, stream) = getFileStream()
+    withStream(stream) {
+      alwaysGen {
+        emitFileFooter()
+      }
+    }
+  }
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = {
     Console.println(Console.BLACK + Console.YELLOW_B + this.toString + ": don't know how to generate code for: " + rhs + Console.RESET)
   }
@@ -56,7 +77,11 @@ trait MaxJCodegen extends GenericCodegen with Config {
     val outDir = new File(buildDir); outDir.mkdirs()
   }
 
-  override def finalizeGenerator() = {}
+  override def finalizeGenerator() = {
+    val (file, stream) = getFileStream()
+    stream.flush
+    stream.close
+  }
 
   override def emitFileHeader() = {
     // empty by default. override to emit package or import declarations.
