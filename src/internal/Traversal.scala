@@ -8,9 +8,16 @@ trait Traversal extends FatBlockTraversal { self =>
   val IR: FatExpressions with Effects
   import IR._
 
+  sealed abstract class RecurseCondition
+  protected case object Always extends RecurseCondition     // Always recurse
+  protected case object AsDefault extends RecurseCondition  // Only traverse as default
+  protected case object Never extends RecurseCondition      // Never recurse
+
   val name: String = self.getClass.getName.split('$').filterNot(_ forall Character.isDigit).mkString(".")
-  var debugMode: Boolean = false    // Traversal-specific debug enable
-  var verboseMode: Boolean = true   // Traversal-specific verbosity
+  var debugMode: Boolean = false              // Traversal-specific debug enable
+  var verboseMode: Boolean = true             // Traversal-specific verbosity
+  val recurse: RecurseCondition = AsDefault   // Recursive traversal of IR hierarchy
+  val eatReflect: Boolean = false             // Ignore reflect nodes when matching?
 
   def silence() {
     verboseMode = false
@@ -42,6 +49,22 @@ trait Traversal extends FatBlockTraversal { self =>
     val resultBlock = runOnce(curBlock)
     postprocess(resultBlock)
   }
+
+  override def traverseStm(stm: Stm) = stm match {
+    case TP(lhs, rhs) =>
+      traverse(lhs, rhs)
+      if (recurse == Always) blocks(rhs).foreach{blk => traverseBlock(blk)}
+
+    case TTP(lhs, mhs, rhs) =>
+      traverse(lhs, mhs, rhs)
+      // TODO: Recursive traversal for TTP?
+  }
+  def traverse(lhs: Sym[Any], rhs: Def[Any]): Unit = rhs match {
+    case Reflect(d, u, es) if eatReflect => traverse(lhs, d)
+    case _ => if (recurse == AsDefault) blocks(rhs).foreach{blk => traverseBlock(blk)}
+  }
+
+  def traverse(lhs: List[Sym[Any]], mhs: List[Def[Any]], rhs: FatDef): Unit = {}
 }
 
 /**

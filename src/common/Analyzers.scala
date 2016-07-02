@@ -19,14 +19,12 @@ trait IterativeAnalyzer extends IterativeTraversal with AbstractAnalyzer { self 
   /**
    * Main functions for analysis.
    * By default called after metadata propagation has been completed
-   * By default ignores reflect - override this behavior by not calling super.analyze
    */
   def analyze(lhs: Exp[Any], rhs: Def[Any]): Unit = rhs match {
-    case Reflect(d, _, _) => analyze(lhs, d)
-    case _ => // No action
+    case Reflect(d, u, es) if eatReflect => analyze(lhs, d)
+    case _ => if (recurse == AsDefault) blocks(rhs).foreach{blk => traverseBlock(blk)}
   }
   def analyze(lhs: List[Exp[Any]], mhs: List[Def[Any]], rhs: FatDef): Unit = {}
-
 
   def tracerToProperties(t: AtomicTracer, child: Option[SymbolProperties]): Option[SymbolProperties] = t match {
     case StructTracer(index) => Some(StructProperties(PropMap(index,child), NoData))
@@ -117,20 +115,18 @@ trait IterativeAnalyzer extends IterativeTraversal with AbstractAnalyzer { self 
   }
 
 
-
-  def analyzeStm(stm: Stm) = stm match {
-    case TP(lhs, rhs) =>
-      if (autopropagate) {
-        propagateViaSyms(lhs,rhs)
-        propagate(lhs, rhs)
-      }
-      analyze(lhs, rhs)
-
-    case TTP(lhs, mhs, rhs) =>
-      // TODO: What to do for TTPs?
-      analyze(lhs, mhs, rhs)
+  override final def traverse(lhs: Sym[Any], rhs: Def[Any]) = {
+    if (autopropagate) {
+      propagateViaSyms(lhs, rhs)
+      propagate(lhs, rhs)
+    }
+    analyze(lhs, rhs)
   }
 
+  override final def traverse(lhs: List[Sym[Any]], mhs: List[Def[Any]], rhs: FatDef) = {
+    // TODO: Autopropagation for TTP?
+    analyze(lhs, mhs, rhs)
+  }
 
   override def runOnce[A:Manifest](b: Block[A]): Block[A] = {
     clearMetadataUpdateFlag()
@@ -156,16 +152,6 @@ trait IterativeAnalyzer extends IterativeTraversal with AbstractAnalyzer { self 
       validData = (validData ++ datCreate ++ datUpdate).distinct
     }
     (out)
-  }
-
-  override def processBlock[A:Manifest](block: Block[A]): Block[A] = {
-    traverseBlock(block)
-    (block)
-  }
-
-  override def traverseStm(stm: Stm) = {
-    super.traverseStm(stm)
-    analyzeStm(stm)
   }
 
 }

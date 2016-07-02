@@ -80,7 +80,7 @@ trait Expressions extends Utils {
   def quotePos(e: Exp[Any]): String = e.pos match {
     case Nil => "<unknown>"
     case cs =>
-      cs.map(c => all(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
+      cs.map(c => allContexts(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
   }
   def quoteTopPos(e: Exp[Any]): String = e.pos match {
     case Nil => "<unknown>"
