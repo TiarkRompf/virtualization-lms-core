@@ -68,17 +68,17 @@ trait GenericCodegen extends BlockTraversal with QuotingExp {
   // in a single file. Defaults to generating multiple files (one per kernel)
   def emitSingleFile(): Boolean = false
 
-  var kernelFile: Option[File] = None
-  var kernelStream: Option[PrintWriter] = None
-  def getFileStream(fileName: String): (File, PrintWriter) = {
+  def singleFileName = s"UnnamedSingleFile.$fileExtension"
+
+  private var kernelFile: Option[File] = None
+  private var kernelStream: Option[PrintWriter] = None
+  def getFileStream(fileName: String = ""): (File, PrintWriter) = {
     if (emitSingleFile) {
       if (!kernelFile.isDefined) {
         kernelFile = Some(new File(fileName))
         kernelStream = Some(new PrintWriter(kernelFile.get))
-        Console.println(s"""Created file $fileName""")
+        Console.println(s"""[getFileStream] Created file $fileName""")
       }
-      Console.println(s"fileName: $fileName, requesting kernelStream")
-      kernelStream.get.println(s"// fileName: $fileName, Returning kernelStream")
       (kernelFile.get, kernelStream.get)
     } else {
       val outFile = new File(fileName)
@@ -159,7 +159,10 @@ trait GenericCodegen extends BlockTraversal with QuotingExp {
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit
-  
+
+  def preProcess[A : Manifest](body: Block[A]): Unit = { }
+  def postProcess[A : Manifest](body: Block[A]): Unit = { }
+
   def emitSource[T : Manifest, R : Manifest](f: Exp[T] => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s = fresh[T]
     val body = reifyBlock(f(s))
