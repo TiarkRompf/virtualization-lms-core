@@ -1,6 +1,7 @@
 lib_managed
 *.iml
 *.swp
+*.tags
 .DS_Store
 local.properties
 project/boot
