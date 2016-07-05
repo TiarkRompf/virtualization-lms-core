@@ -5,6 +5,7 @@ import util.NullOutputStream
 import java.io.{File, FileWriter, PrintWriter}
 
 import scala.reflect.SourceContext
+import scala.collection.mutable.Stack
 
 trait MaxJCodegen extends GenericCodegen with Config {
   val IR: Blocks
@@ -30,6 +31,8 @@ trait MaxJCodegen extends GenericCodegen with Config {
 
   // Generate all code into one file
   override def emitSingleFile() = true
+
+  val controlNodeStack = Stack[Sym[Any]]()
 
   override def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
     val staticData = getFreeDataBlock(body)
