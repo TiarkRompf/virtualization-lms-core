@@ -37,9 +37,10 @@ trait Utils extends Config {
     case None => List(cs)
     case Some(p) => cs::allContexts(p)
   }
+  def topContext(cs: SourceContext) = allContexts(cs).last
 
   def getPathAndLine(ctx: List[SourceContext]): List[(String,Int)] = {
-    ctx.map{c => val top = allContexts(c).last; (top.fileName, top.line) }
+    ctx.map{c => val top = topContext(c); (top.fileName, top.line) }
   }
 
   // if only a single SourceContext is given, fetch corresponding source code line

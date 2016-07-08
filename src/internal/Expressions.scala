@@ -270,6 +270,7 @@ trait Expressions extends Utils {
     case _ => Nil
   }
 
+
   // frequency information for dependencies: used/computed
   // often (hot) or not often (cold). used to drive code motion.
   def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
