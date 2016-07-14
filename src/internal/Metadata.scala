@@ -111,7 +111,7 @@ trait SymbolMetadata extends MeetableOps {
    */
   abstract class Metadata { self =>
     def key = self.getClass
-    //Test if this metadata instance has been sufficiently filled in
+    // Test if this metadata instance has been sufficiently filled in
     def isComplete: Boolean = true
 
     // Tests if this and that are identical
@@ -136,35 +136,6 @@ trait SymbolMetadata extends MeetableOps {
     def makeString(prefix: String): String = this.toString()
     def multiLine = false
   }
-
-  /**
-   * Tests if this and that are identical (have no differences)
-   * returns true if they are identical, false otherwise
-   */
-  //def metadataMatches(a: Metadata, b: Metadata): Boolean = (a == b)
-
-  /**
-   * Test if this and that can be met to produce valid metadata
-   * returns true if the two definitely can be met successfully
-   */
-  /*def canMeetMetadata(a: Metadata, b: Metadata, t: MeetFunc): Boolean = a.getClass == b.getClass
-
-  def metadataIncompatibilities(a: Metadata, b: Metadata, t: MeetFunc): List[String] = {
-    if (a.getClass != b.getClass)
-      List("Cannot meet different metadata types!")
-    else
-      Nil
-  }*/
-
-  /**
-   * Meet this and that. If canMeetMetadata returns false for this and that,
-   * meet should throw an exception, since the meet is invalid
-   */
-  //def meetMetadata(a: Metadata, b: Metadata, t: MeetFunc): Metadata = (a,b,t) match {
-  //  case _ => throw new IllegalMeetException
-  //}
-
-  //implicit object MetadataIsMeetable extends Meetable[Metadata] {
 
   // All concrete classes (T) that extend Metadata should be meetable
   // This has the disadvantage of not being a static object, but it means we can write things like
