@@ -23,7 +23,7 @@ trait Base extends EmbeddedControls with Utils {
   type Rep[+T]
 
   protected def unit[T:Manifest](x: T): Rep[T]
-  protected def param[T:Manifest](x: T): Rep[T]
+  protected def param[T:Manifest](x: T)(implicit ctx: SourceContext): Rep[T]
 
   // always lift Unit and Null (for now)
   implicit def unitToRepUnit(x: Unit) = unit(x)
@@ -39,7 +39,7 @@ trait BaseExp extends Base with MetaTransforming with Analyzing with MetadataExp
   type Rep[+T] = Exp[T]
 
   protected def unit[T:Manifest](x: T) = Const(x)
-  protected def param[T:Manifest](x: T) = Param(x)
+  protected def param[T:Manifest](x: T)(implicit ctx: SourceContext) = Param(x).withPos(ctx)
 }
 
 // TODO: This isn't useful right now since MetadataExp mixes in Blocks. Remove? Refactor?
