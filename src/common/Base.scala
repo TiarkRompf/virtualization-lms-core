@@ -17,7 +17,7 @@ trait LiftAll extends Base {
  *
  * @since 0.1
  */
-trait Base extends EmbeddedControls {
+trait Base extends EmbeddedControls with Utils {
   type API <: Base
 
   type Rep[+T]
