@@ -25,23 +25,16 @@ trait Expressions extends Utils {
   abstract class ConstExp[+T:Manifest] extends Exp[T]
 
   // Exp which is known at staging time
-  class Const[+T:Manifest](val x: T) extends ConstExp[T] {
-    override def equals(x: Any): Boolean = x match {
-      case that: Exp[_] => that match {
-        case Const(y) => this.tp == that.tp && x == y // value and type equality
-        case _ => false
-      }
+  case class Const[+T:Manifest](x: T) extends ConstExp[T] {
+    /*override def equals(x: Any): Boolean = x match {
+      case that@Const(y) =>
+        println(s"Comparing $this to $that (${this.tp} to ${that.tp}")
+        val eql = this.tp == that.tp && x == y // value and type equality
+        println(s"Equal: $eql")
+        eql
+
       case _ => false
-    }
-    override def toString = "Const(" + x.toString + ")"
-  }
-  object Const {
-    def unapply[T](x: Exp[T]): Option[T] = x match {
-      case c: Const[_] => Some(c.x.asInstanceOf[T])
-      case p: Param[_] if p.isFixed => Some(p.x.asInstanceOf[T])
-      case _ => None
-    }
-    def apply[T:Manifest](x: T) = new Const[T](x)
+    }*/
   }
 
   var nParams = 0
