@@ -93,11 +93,6 @@ trait IterativeTraversal extends Traversal { self =>
    */
   def retry() { _retry = true }
 
-  override def runOnce[A:Manifest](b: Block[A]): Block[A] = {
-    runs += 1
-    super.runOnce(b)
-  }
-
   /**
    * Run traversal/analysis on a given block until convergence or maximum # of iterations reached
    */

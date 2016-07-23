@@ -83,7 +83,7 @@ trait Effects extends Expressions with Blocks with Utils {
     val mayWrite: List[Sym[Any]],
     val mstWrite: List[Sym[Any]]) {
 
-    /*override def toString = {
+    override def toString = {
       "Summary(" +
       ((if (maySimple) List("maySimple") else Nil) ++
       (if (mstSimple) List("mstSimple") else Nil) ++
@@ -95,7 +95,7 @@ trait Effects extends Expressions with Blocks with Utils {
       (if (mstRead.nonEmpty) List("mstRead(" + mstRead.mkString(", ") + ")") else Nil) ++
       (if (mayWrite.nonEmpty) List("mayWrite(" + mayWrite.mkString(", ") + ")") else Nil) ++
       (if (mstWrite.nonEmpty) List("mstWrite(" + mstWrite.mkString(", ") + ")") else Nil)).mkString(", ") + ")"
-    }*/
+    }
   }
 
   def Pure() = new Summary(false,false,false,false,false,false,Nil,Nil,Nil,Nil)

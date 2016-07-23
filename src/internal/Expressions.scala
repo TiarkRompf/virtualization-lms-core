@@ -26,6 +26,8 @@ trait Expressions extends Utils {
 
   // Exp which is known at staging time
   case class Const[+T:Manifest](x: T) extends ConstExp[T] {
+    // TODO: Equality of Const(1.0) == Const(1) can cause weird type issues in generated code
+    // but this check can cause weird issues where, e.g. it appears Const(true) != Const(true)
     /*override def equals(x: Any): Boolean = x match {
       case that@Const(y) =>
         println(s"Comparing $this to $that (${this.tp} to ${that.tp}")
