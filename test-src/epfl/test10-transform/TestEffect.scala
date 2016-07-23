@@ -16,29 +16,29 @@ import scala.reflect.SourceContext
 
 
 // investigate modified mutation tracking similar to SSA form.
-// 
+//
 //    val x = vzeros(100)
 //    val as = vliteral(List(x))
 //    vupdate(x,5,7)
 //    val y = as(0)
 //    println(y)
-// 
+//
 // becomes:
-// 
+//
 //    val x0 = vzeros(100)
 //    val as0 = vliteral(List(x))
 //    val m0 = vupdate(x0,5,7)
 //    val x1 = x0 // mutate m0
 //    val as1 = as0 // mutate m0
-// 
-// current questions: 
+//
+// current questions:
 //    what do we gain?
 //      improved DCE: no Mutate node -> vupdate stm can go, too
 //    can we do without .mutable annotations?
 //      probably not. would need to be pessimistic about everything, i.e. no CSE at all
 //    can we do cse for mutable data?
 //      one idea was to introduce copy on write, i.e. undo cse when mutation is detected.
-//      this seems hard: original data may be used as part of complex structures that 
+//      this seems hard: original data may be used as part of complex structures that
 //      would need to be recreated and the previous version is not guaranteed to be DCEd.
 //      another idea was to recognize common subexpressions but insert copy nodes instead
 //      of eliminating them (similar to mzeros(100) = zeros(100).mutable)
@@ -46,7 +46,7 @@ import scala.reflect.SourceContext
 // implementation (DONE):
 //    ensure anti-deps: mutated symbols must be dead after the VectorUpdate stm
 //    add fattening: fuse VectorUpdate and those Mutate nodes that aren't DCEd
-//      is this really necessary? it seems like 
+//      is this really necessary? it seems like
 
 
 
@@ -54,13 +54,13 @@ trait Lib extends VectorOps
 
 
 trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
-  
+
   case class Mutate[T](a: Rep[T], b: Rep[Any]) extends Def[T]
 
   case class Copy[T](a: Rep[T]) extends Def[T]
-  
+
   case class ReflectSoft[T](a: Def[T], es: List[Exp[Any]]) extends Def[T]
-  
+
   case class Multi(as: List[Def[Any]]) extends FatDef
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
@@ -97,35 +97,35 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
   override implicit def toAtom[A:Manifest](d: Def[A])(implicit pos: SourceContext): Exp[A] = {
     val in = syms(d)
     val actual = in map (s => subst.getOrElse(s,s))
-    
+
     if (in != actual) {
       val t = new SubstTransformer
       t.subst ++= subst
       mirror(d,t)
     } else {
-      
+
       val kill = writeSyms(d)
       if (kill.nonEmpty) {
-        
+
         val transitive = globalDefs collect { case e@TP(s,rhs) if (s::allAliases(rhs) intersect kill).nonEmpty => e }
-        
+
         println("killing: " + kill + "/" + transitive.map(_.sym) + " by " + d)
-        
+
         val sym = fresh[A]
-        
+
         for (TP(s,rhs) <- transitive) {
           subst += (s -> toAtom(Mutate(s, sym)))
         }
-        
+
         // add soft dependencies on transitive to ensure ordering!
-        
-        // at first sight it should be enough that for each s in transitive 
+
+        // at first sight it should be enough that for each s in transitive
         // there is a Mutate node with a dependency.
         // however the Mutate node might be DCE'd, but not the original
         // mutable sym.
-        
+
         /* scenario:
-          
+
           val v = vrand(100)
           val w = v
           println(w)
@@ -133,18 +133,18 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
           val v1 = v // mutated
         [ val w1 = w // mutated ]  <--- dce
           println(v)
-          
+
         */
-        
+
         createDefinition(sym, ReflectSoft(d, transitive.flatMap(_.lhs).toList))
         sym
       } else {
         // right now we add copy statements whenever we'd do CSE.
         // TODO: re-introduce a split between mutable and immutable data.
         val o = findDefinition(d)
-        
+
         val sym = fresh[A]
-        if (o.nonEmpty) { //d available as s1          
+        if (o.nonEmpty) { //d available as s1
           val s1 = o.get.lhs.head
           println("cse: " + sym + " -> " + s1)
           //subst += (sym -> s1)
@@ -158,7 +158,7 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
     }
   }
 
-  
+
   override def findDefinition[A](d: Sym[A]): Option[Stm] = {
     super.findDefinition(d)
   }
@@ -168,32 +168,33 @@ trait LibExp extends Lib with VectorExp with BaseFatExp with EffectExp {
 
 
 class TestEffects extends FileDiffSuite {
-  
+
   val prefix = home + "test-out/epfl/test10-"
-  
+
   trait DSL extends Lib with ArrayMutation with Arith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
 
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
     def test(x: Rep[Int]): Rep[Unit]
   }
-  trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
-      with EqualExpOpt //with VariablesExpOpt 
-      with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp 
-      with Lib with LibExp { self => 
-    override val verbosity = 2
-    val codegen = new ScalaGenFat with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
-      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative with ScalaGenRangeOps 
-      with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self 
+  trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp
+      with EqualExpOpt //with VariablesExpOpt
+      with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp
+      with Lib with LibExp { self =>
+    verbosity = 2
+
+    val codegen = new ScalaGenFat with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps
+      with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative with ScalaGenRangeOps
+      with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self
         override def fattenAll(e: Seq[Stm]): Seq[Stm] = {
           println("**fatten "+e)
           // group all Mutate helper nodes together with the mutation
           // TBD: is this necessary (if not, desirable) ?
-          val m = e collect { case e@TP(s, Mutate(a,b)) => e } 
-          val mg = m groupBy { case e@TP(s, Mutate(a,b)) => b } 
-          
+          val m = e collect { case e@TP(s, Mutate(a,b)) => e }
+          val mg = m groupBy { case e@TP(s, Mutate(a,b)) => b }
+
           val e2 = e map {
-            case e@TP(s, rhs) if mg.contains(s) => 
+            case e@TP(s, rhs) if mg.contains(s) =>
               val vs = mg(s) toList
               val llhs = vs map (_.sym)
               val rrhs = vs map (_.rhs)
@@ -201,18 +202,18 @@ class TestEffects extends FileDiffSuite {
             case e => e
           }
           val e3 = e2 diff m
-          
+
           super.fattenAll(getSchedule(e3)(e3.flatMap(_.lhs)))
         }
         override def emitFatNode(symList: List[Sym[Any]], rhs: FatDef) = rhs match {
-          case Multi(as) => 
+          case Multi(as) =>
             stream.println("// begin multi")
             (symList zip as) foreach { case (s,e) => emitNode(s,e) }
             stream.println("// end multi")
           case _ => super.emitFatNode(symList, rhs)
         }
         override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-          case _ if rhs.toString.startsWith("Vector") => 
+          case _ if rhs.toString.startsWith("Vector") =>
             emitValDef(sym, rhs.toString)
           case ReflectSoft(x,es) =>
             stream.println("// soft deps: "+es.map(quote).mkString(","))
@@ -227,7 +228,7 @@ class TestEffects extends FileDiffSuite {
       }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
-  
+
   def testEffects1 = withOutFileChecked(prefix+"effects1") { // test ordering
     trait Prog extends DSL {
       def test(x: Rep[Int]) = {

@@ -14,7 +14,7 @@ trait Scheduling {
   def getUnsortedSchedule(scope: List[Stm])(result: Any): List[Stm] = {
     getSchedule(scope)(result, false)
   }
-  
+
   // checks if a and b share at least one element. O(N^2), but with no allocation and possible early exit.
   def containsAny(a: List[Sym[Any]], b: List[Sym[Any]]): Boolean = {
     var aIter = a
@@ -29,16 +29,16 @@ trait Scheduling {
     }
     false
   }
-   
+
   //TBD: not used?
   def getStronglySortedSchedule(scope: List[Stm])(result: Any): List[Stm] = {
-    def deps(st: List[Sym[Any]]): List[Stm] = 
+    def deps(st: List[Sym[Any]]): List[Stm] =
       scope.filter(d => containsAny(st, d.lhs))
       // scope.filter(d => (st intersect d.lhs).nonEmpty)
     def allSyms(r: Any) = syms(r) ++ softSyms(r)
-    
+
     val xx = GraphUtil.stronglyConnectedComponents[Stm](deps(allSyms(result)), t => deps(allSyms(t.rhs)))
-    xx.foreach { x => 
+    xx.foreach { x =>
       if (x.length > 1) {
         printerr("warning: recursive schedule for result " + result + ": " + x)
         (new Exception) printStackTrace
@@ -54,7 +54,7 @@ trait Scheduling {
     val sortedSet = new java.util.TreeSet[(Stm,Int)](
       new java.util.Comparator[(Stm,Int)] { def compare(a:(Stm,Int), b:(Stm,Int)) = if (b._2 < a._2) -1 else if (b._2 == a._2) 0 else 1 }
     )
-    
+
     for (sym <- syms) {
       val stm = cache.get(sym)
       if (stm ne null) sortedSet.add(stm)
@@ -82,7 +82,7 @@ trait Scheduling {
     val scopeIndex = buildScopeIndex(scope)
 
     val xx = GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(syms(result), scopeIndex), t => scheduleDepsWithIndex(syms(t.rhs), scopeIndex))
-    if (sort) xx.foreach { x => 
+    if (sort) xx.foreach { x =>
       if (x.length > 1) {
         printerr("warning: recursive schedule for result " + result + ": " + x)
         (new Exception) printStackTrace
@@ -93,7 +93,7 @@ trait Scheduling {
 
   def getScheduleM(scope: Seq[Stm])(result: Any, cold: Boolean, hot: Boolean): List[Stm] = {
     def mysyms(st: Any) = {
-      val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList
+      val db = symsFreq(st).groupBy(_._1).mapValues(_.map(_._2).sum).toList // sum of freq for each sym
       assert(syms(st).toSet == db.map(_._1).toSet, "different list of syms: "+syms(st)+"!="+db+" for "+st)
       if (cold && hot) db.map(_._1)
       else if (cold && !hot) db.withFilter(_._2 < 100.0).map(_._1)
@@ -103,20 +103,20 @@ trait Scheduling {
 
     val scopeIndex = buildScopeIndex(scope)
 
+
     GraphUtil.stronglyConnectedComponents[Stm](scheduleDepsWithIndex(mysyms(result), scopeIndex), t => scheduleDepsWithIndex(mysyms(t.rhs), scopeIndex)).flatten.reverse
   }
-    
-  
+
   /** begin performance hotspot **/
-  
+
   /*
   for each symbol s in sts, find all statements that depend on it.
   we need to stop when we reach the statement where s is bound.
-  
+
   it would be tempting to do only one scc call but then we mix
   up the locations where different symbols are bound.
   */
-  
+
   def getFatDependentStuff(scope: Seq[Stm])(sts: Seq[Sym[Any]]): Seq[Stm] = {
     if (sts.isEmpty) return Nil
     /*
@@ -124,23 +124,23 @@ trait Scheduling {
      s => all d in scope such that: d.lhs contains s || syms(d.rhs).contains(s)
      st => all d in scope such that: boundSyms(d.rhs) contains st
     */
-    
+
     //type IdentityHashMap[K,V] = HashMap[K,V]
-    
+
     // IdentityHashMap appears faster than scala.collection.mutable.HashMap here (based on perf. testing)
     // possible improvement: use an integer hashmap that works directly with sym ids
-    
+
     val lhsCache = new IdentityHashMap[Sym[Any], List[Stm]]()
     val symsCache = new IdentityHashMap[Sym[Any], List[Stm]]()
     val boundSymsCache = new IdentityHashMap[Sym[Any], List[Stm]]()
     //val boundSymsCache = new IdentityHashMap[Sym[Any], Set[Stm]]()
-    
+
     def infix_getOrElse[K,V](map: IdentityHashMap[K, V], s: K, f: => V) = {
       var res = map.get(s) //map(s)
       if (res == null) res = f
       res
     }
-    
+
     def putDef(map: IdentityHashMap[Sym[Any], List[Stm]], s: Sym[Any], d: Stm): Unit = {
       var res = map.get(s) //map(s)
       if (res == null) res = Nil
@@ -150,7 +150,7 @@ trait Scheduling {
         case ds => map.update(s,d::ds) //map.put(s,d::ds)
       }
     }
-    
+
     def putDefSet(map: IdentityHashMap[Sym[Any], Set[Stm]], s: Sym[Any], d: Stm): Unit = {
       var res = map(s) //map.get(s)
       if (res == null) {
@@ -159,17 +159,17 @@ trait Scheduling {
       }
       res += d
     }
-    
+
     for (d <- scope) {
       d.lhs.foreach(s => putDef(lhsCache, s, d))
-      syms(d.rhs).foreach(s => putDef(symsCache, s, d))      
+      syms(d.rhs).foreach(s => putDef(symsCache, s, d))
       boundSyms(d.rhs).foreach(st => putDef(boundSymsCache, st, d))
       tunnelSyms(d.rhs).foreach(st => putDef(boundSymsCache, st, d)) // treat tunnel like bound
     }
-    
+
     /*
     optimization:
-      traverse syms by ascending id. if sym s1 is used by s2, do not evaluate further 
+      traverse syms by ascending id. if sym s1 is used by s2, do not evaluate further
       uses of s2 because they are already there.
 
     CAVEAT: TRANSFORMERS !!!
@@ -183,10 +183,10 @@ trait Scheduling {
     */
 
     val seen = new mutable.HashSet[Sym[Any]]
-    
+
     def getDepStuff(st: Sym[Any]) = {
       // could also precalculate uses, but computing all combinations eagerly is also expensive
-      def uses(s: Sym[Any]): List[Stm] = if (seen(s)) Nil else { 
+      def uses(s: Sym[Any]): List[Stm] = if (seen(s)) Nil else {
         //seen += s
         lhsCache.getOrElse(s,Nil) ::: symsCache.getOrElse(s,Nil) filterNot (boundSymsCache.getOrElse(st, Nil) contains _)
       }
@@ -195,11 +195,11 @@ trait Scheduling {
         t => t.lhs flatMap uses
       ).flatten
     }
-    
-    /* 
+
+    /*
     reference impl:*/
     val res = sts.flatMap(getDepStuff).distinct
-    
+
     /*if (sts.contains(Sym(1064))) {
       println("dep on x1064:")
       res.foreach { r =>
@@ -211,7 +211,7 @@ trait Scheduling {
     // CAVEAT: TRANSFORMERS !!!  see CloseWorldRestage app in Delite
     //sts.sortBy(_.id).flatMap(getDepStuff)
   }
-  
+
   /** end performance hotspot **/
 
 }

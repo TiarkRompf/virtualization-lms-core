@@ -18,7 +18,7 @@ http://homepages.inf.ed.ac.uk/slindley/papers/essence-of-linq-draft-december2012
 
 // a non-staged, pure library implementation
 trait Shallow extends Util {
-  
+
   // people db schema
 
   case class Person(name: String, age: Int) extends Record
@@ -45,7 +45,7 @@ trait Shallow extends Util {
       w <- db.people
       m <- db.people
       if c.her == w.name && c.him == m.name && w.age > m.age
-    } yield new Record { 
+    } yield new Record {
       val name = w.name
       val diff = w.age - m.age
     }
@@ -65,7 +65,7 @@ trait Shallow extends Util {
 
   // 2.4 Abstracting over a predicate
 
-  def satisfies(p: Int => Boolean): Names = 
+  def satisfies(p: Int => Boolean): Names =
     for {
       w <- db.people
       if p(w.age)
@@ -136,13 +136,13 @@ trait Shallow extends Util {
     val employees = List(
       new Record { val dpt = "Product"; val emp = "Alex"},
       new Record { val dpt = "Product"; val emp = "Bert"},
-      new Record { val dpt = "Research"; val emp = "Cora"}, 
-      new Record { val dpt = "Research"; val emp = "Drew"}, 
-      new Record { val dpt = "Research"; val emp = "Edna"}, 
+      new Record { val dpt = "Research"; val emp = "Cora"},
+      new Record { val dpt = "Research"; val emp = "Drew"},
+      new Record { val dpt = "Research"; val emp = "Edna"},
       new Record { val dpt = "Sales"; val emp = "Fred"})
     val tasks = List(
       new Record { val emp = "Alex"; val tsk = "build"},
-      new Record { val emp = "Bert"; val tsk = "build"}, 
+      new Record { val emp = "Bert"; val tsk = "build"},
       new Record { val emp = "Cora"; val tsk = "abstract"},
       new Record { val emp = "Cora"; val tsk = "build"},
       new Record { val emp = "Cora"; val tsk = "design"},
@@ -165,7 +165,7 @@ trait Shallow extends Util {
           if d.dpt == e.dpt && !exists(
             for {
               t <- org.tasks
-              if e.emp == t.emp && t.tsk == u 
+              if e.emp == t.emp && t.tsk == u
             } yield new Record {})
         } yield new Record {})
     } yield new Record { val dpt = d.dpt }
@@ -183,7 +183,7 @@ trait Shallow extends Util {
   }]
 
   val nestedOrg: NestedOrg =
-    for { 
+    for {
       d <- org.departments
     } yield new Record {
       val dpt = d.dpt
@@ -191,9 +191,9 @@ trait Shallow extends Util {
         e <- org.employees
         if d.dpt == e.dpt
       } yield new Record {
-        val emp = e.emp 
+        val emp = e.emp
         val tasks = for {
-          t <- org.tasks 
+          t <- org.tasks
           if e.emp == t.emp
         } yield t.tsk
       }
@@ -213,7 +213,7 @@ trait Shallow extends Util {
   def expertise2(u: String): List[{ val dpt: String }] =
     for {
       d <- nestedOrg
-      if all(d.employees)(e => contains(e.tasks, u)) 
+      if all(d.employees)(e => contains(e.tasks, u))
     } yield new Record { val dpt = d.dpt }
 
   val departmentsFullOfAbstracters2 = expertise2("abstract")
@@ -240,7 +240,7 @@ trait Shallow extends Util {
     val parent: Int,
     val name: String,
     val pre: Int,
-    val post: Int 
+    val post: Int
   ) extends Record
 
   val db_xml = List(
@@ -261,7 +261,7 @@ trait Shallow extends Util {
   case object Following extends Axis
   case object FollowingSibling extends Axis
   case class Rev(x: Axis) extends Axis
- 
+
   def parent = PAxis(Rev(Child))
   def ancestor = PAxis(Rev(Descendant))
   def preceding = PAxis(Rev(Following))
@@ -277,24 +277,24 @@ trait Shallow extends Util {
     case Child            => s.id == t.parent
     case Descendant       => s.pre < t.pre && t.post < s.post
     case DescendantOrSelf => s.pre <= t.pre && t.post <= s.post
-    case Following        => s.pre < t.pre 
+    case Following        => s.pre < t.pre
     case FollowingSibling => s.post < t.pre && s.parent == t.parent
     case Rev(ax)          => axis(ax)(t, s)
   }
 
   // code in paper:
-  // | Rev(axis) → <@ fun(s, t) → (%axis(ax))(t, s) @> 
+  // | Rev(axis) → <@ fun(s, t) → (%axis(ax))(t, s) @>
   //       ^^^^                     ^^^^
   //   should be ax?
 
   def path(p : Path)(s: Node, u: Node): Boolean = p match {
-    case PSeq(p, q) => 
+    case PSeq(p, q) =>
       any(db_xml)(t => path(p)(s, t) && path(q)(t, u))
-    case PAxis(ax) => 
+    case PAxis(ax) =>
       axis(ax)(s, u)
     case NameTest(name) =>
       s.id == u.id && s.name == name
-    case Filter(p) => 
+    case Filter(p) =>
       s.id == u.id && any(db_xml)(t => path(p)(s, t))
   }
 
@@ -326,7 +326,7 @@ trait Shallow extends Util {
 
 // a staged implementation
 trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with StructOps {
-  
+
   def database[T:Manifest](s: String): Rep[T]
   //trait Record extends Struct
   implicit def recordToRecordOps2(record: Rep[Record]) = new RecordOps(record.asInstanceOf[Rep[Record]])
@@ -372,7 +372,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
       w <- db.people
       m <- db.people
       if c.her == w.name && c.him == m.name && w.age > m.age
-    } yield new Record { 
+    } yield new Record {
       val name = w.name
       val diff = w.age - m.age
     }
@@ -392,7 +392,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
 
   // 2.4 Abstracting over a predicate
 
-  def satisfies(p: Rep[Int] => Rep[Boolean]): Rep[Names] = 
+  def satisfies(p: Rep[Int] => Rep[Boolean]): Rep[Names] =
     for {
       w <- db.people
       if p(w.age)
@@ -465,13 +465,13 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
     val employees = List(
       new Record { val dpt = "Product"; val emp = "Alex"},
       new Record { val dpt = "Product"; val emp = "Bert"},
-      new Record { val dpt = "Research"; val emp = "Cora"}, 
-      new Record { val dpt = "Research"; val emp = "Drew"}, 
-      new Record { val dpt = "Research"; val emp = "Edna"}, 
+      new Record { val dpt = "Research"; val emp = "Cora"},
+      new Record { val dpt = "Research"; val emp = "Drew"},
+      new Record { val dpt = "Research"; val emp = "Edna"},
       new Record { val dpt = "Sales"; val emp = "Fred"})
     val tasks = List(
       new Record { val emp = "Alex"; val tsk = "build"},
-      new Record { val emp = "Bert"; val tsk = "build"}, 
+      new Record { val emp = "Bert"; val tsk = "build"},
       new Record { val emp = "Cora"; val tsk = "abstract"},
       new Record { val emp = "Cora"; val tsk = "build"},
       new Record { val emp = "Cora"; val tsk = "design"},
@@ -496,7 +496,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
           if d.dpt == e.dpt && !exists(
             for {
               t <- org.tasks
-              if e.emp == t.emp && t.tsk == u 
+              if e.emp == t.emp && t.tsk == u
             } yield empty)
         } yield empty )
     } yield new Record { val dpt = d.dpt }
@@ -514,16 +514,16 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   }]
 
   val nestedOrg: Rep[NestedOrg] =
-    for { 
+    for {
       d <- org.departments
     } yield {
       val employees1 = for {
         e <- org.employees
         if d.dpt == e.dpt
       } yield new Record {
-        val emp = e.emp 
+        val emp = e.emp
         val tasks = for {
-          t <- org.tasks 
+          t <- org.tasks
           if e.emp == t.emp
         } yield t.tsk
       }
@@ -547,7 +547,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   def expertise2(u: Rep[String]): Rep[List[{ val dpt: String }]] =
     for {
       d <- nestedOrg
-      if all(d.employees)(e => contains(e.tasks, u)) 
+      if all(d.employees)(e => contains(e.tasks, u))
     } yield new Record { val dpt = d.dpt }
 
   val departmentsFullOfAbstracters2 = expertise2("abstract")
@@ -574,7 +574,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
     val parent: Int
     val name: String
     val pre: Int
-    val post: Int 
+    val post: Int
   }
 
   val db_xml = database[Record { val nodes: List[Node]}]("xml").nodes
@@ -597,7 +597,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   case object Following extends Axis
   case object FollowingSibling extends Axis
   case class Rev(x: Axis) extends Axis
- 
+
   def parent = PAxis(Rev(Child))
   def ancestor = PAxis(Rev(Descendant))
   def preceding = PAxis(Rev(Following))
@@ -613,24 +613,24 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
     case Child            => s.id == t.parent
     case Descendant       => s.pre < t.pre && t.post < s.post
     case DescendantOrSelf => s.pre <= t.pre && t.post <= s.post
-    case Following        => s.pre < t.pre 
+    case Following        => s.pre < t.pre
     case FollowingSibling => s.post < t.pre && s.parent == t.parent
     case Rev(ax)          => axis(ax)(t, s)
   }
 
   // code in paper:
-  // | Rev(axis) → <@ fun(s, t) → (%axis(ax))(t, s) @> 
+  // | Rev(axis) → <@ fun(s, t) → (%axis(ax))(t, s) @>
   //       ^^^^                     ^^^^
   //   should be ax?
 
   def path(p : Path)(s: Rep[Node], u: Rep[Node]): Rep[Boolean] = p match {
-    case PSeq(p, q) => 
+    case PSeq(p, q) =>
       any(db_xml)(t => path(p)(s, t) && path(q)(t, u))
-    case PAxis(ax) => 
+    case PAxis(ax) =>
       axis(ax)(s, u)
     case NameTest(name) =>
       s.id == u.id && s.name == name
-    case Filter(p) => 
+    case Filter(p) =>
       s.id == u.id && any(db_xml)(t => path(p)(s, t))
   }
 
@@ -678,7 +678,7 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
   //   used for code generation
   // - the former is the input form, extensional representation,
   //   used to perform rewriting in NBE style ("normalization by evaluation")
-  case class DBFor[A:Manifest, B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]], 
+  case class DBFor[A:Manifest, B:Manifest](l: Exp[List[A]], f: Exp[A] => Exp[List[B]],
     db: String, tbl: String, x: Sym[A], block: Block[List[B]]) extends Def[List[B]]
 
 
@@ -732,9 +732,9 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
 
   normalization 1:
 
-                       (fun(x) → R) Q --> R[x:=Q] 
+                       (fun(x) → R) Q --> R[x:=Q]
                              {l=Q}.li --> Qi
-      
+
                for x in (yield Q)do R --> R[x:=Q]
       for y in (for x in P do Q) do R --> for x in P do (for y in Q do R)
           for x in (if P then Q) do R --> if P then (for x in Q do R)
@@ -742,7 +742,7 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
                 for x in (P @ Q) do R --> (for x in P do R) @ (for x in Q do R)
                        if true then Q --> Q
                       if false then Q --> []
-      
+
   normalization 2:
 
                 for x in P do (Q @ R) --> (for x in P do Q) @ (for x in P do R)
@@ -770,7 +770,7 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
     case IfThen(c,a)          => if (c) for (x <- a; y <- f(x)) yield y else List()
     case For(l2,f2)           => for (x <- l2; y <- f2(x); z <- f(y)) yield z
     case Concat(a,b)          => a.flatMap(f) ++ b.flatMap(f)
-    case (Def(FieldApply(Def(Database(db)), tbl))) =>     
+    case (Def(FieldApply(Def(Database(db)), tbl))) =>
       val a = fresh[A]
       val b = reifyEffects(f(a))
       b match {
@@ -780,7 +780,7 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
           // no rewrites match, go ahead and create IR node
           reflectEffect(DBFor(l, f, db, tbl, a, b), summarizeEffects(b).star)
       }
-    case (Def(ld)) => 
+    case (Def(ld)) =>
       // cannot normalize, report error and throw exception
       printerr("error: cannot normalize for expression")
       printerr(s"at $l=$ld")
@@ -831,9 +831,9 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
   }
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
-    // normally we'd want `freqHot` to hoist code out of the loop, 
+    // normally we'd want `freqHot` to hoist code out of the loop,
     // but here we want to keep it inside for clarity
-    case DBFor(_, _, _, _, _, body) => freqCold(body) 
+    case DBFor(_, _, _, _, _, body) => freqCold(body)
     case _ => super.symsFreq(e)
   }
 
@@ -851,9 +851,9 @@ trait ScalaGenStaged extends ScalaCodeGenPkg with ScalaGenStruct {
   }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Database(s) => 
+    case Database(s) =>
       emitValDef(sym, "Schema."+s)
-    case DBFor(l, f, db, tbl, x, b) => 
+    case DBFor(l, f, db, tbl, x, b) =>
       val sdb = "Schema."+db+"."+tbl
       stream.println("val " + quote(sym) + " = " + sdb + ".flatMap { " + quote(x) + " => ")
       emitBlock(b)
@@ -890,32 +890,32 @@ trait Util {
 
 // test cases
 class TestQueries extends FileDiffSuite {
-  
+
   val prefix = home + "test-out/epfl/test14-"
-  
+
   trait DSL extends Staged with Compile {
     def test(): Unit
   }
-  
+
   trait Impl extends DSL with StagedExp with ScalaCompile { self =>
-    override val verbosity = 1
+    verbosity = 1
     dumpGeneratedCode = true
     val codegen = new Codegen { val IR: self.type = self }
     val runner = new Runner { val p: self.type = self }
     runner.run()
   }
-  
+
   trait Codegen extends ScalaGenStaged {
     val IR: Impl
-  }  
-  
+  }
+
   trait Runner {
     val p: Impl
     def run() = {
       p.test()
     }
   }
-  
+
 
 
   def testQueries1 = withOutFileChecked(prefix+"queries1") {

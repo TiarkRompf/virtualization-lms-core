@@ -12,7 +12,7 @@ import org.scalatest._
 
 
 trait FFT { this: Arith with Trig =>
-  
+
   def omega(k: Int, N: Int): Complex = {
     val kth = -2.0 * k * math.Pi / N
     Complex(cos(kth), sin(kth))
@@ -92,27 +92,26 @@ trait TrigExpOptFFT extends TrigExpOpt {
 trait FlatResult extends BaseExp { // just to make dot output nicer
 
   case class Result(x: Any) extends Def[Any]
-  
+
   def result(x: Any): Exp[Any] = toAtom(Result(x))
-  
+
 }
 
 trait ScalaGenFlat extends ScalaGenBase {
    import IR._
-   type Block[+T] = Exp[T]
-   def getBlockResultFull[T](x: Block[T]): Exp[T] = x
-   def reifyBlock[T:Manifest](x: =>Exp[T]): Block[T] = x
+   def getBlockResultFull[T](x: Block[T]): Exp[T] = x.res
+   def reifyBlock[T:Manifest](x: =>Exp[T]): Block[T] = Block(x)
    def traverseBlock[A](block: Block[A]): Unit = {
-     buildScheduleForResult(block) foreach traverseStm
+     buildScheduleForResult(block.res) foreach traverseStm
    }
 }
 
 
 
 class TestFFT extends FileDiffSuite {
-  
+
   val prefix = home + "test-out/epfl/test2-"
-  
+
   def testFFT1 = {
     withOutFile(prefix+"fft1") {
       val o = new FFT with ArithExp with TrigExpOpt with FlatResult with DisableCSE //with DisableDCE
@@ -121,7 +120,7 @@ class TestFFT extends FileDiffSuite {
       val r = fft(List.tabulate(4)(_ => Complex(fresh, fresh)))
       println(globalDefs.mkString("\n"))
       println(r)
-      
+
       val p = new ExportGraph with DisableDCE { val IR: o.type = o }
       p.emitDepGraph(result(r), prefix+"fft1-dot", true)
     }
@@ -135,7 +134,7 @@ class TestFFT extends FileDiffSuite {
       import o._
 
       case class Result(x: Any) extends Exp[Any]
-      
+
       val r = fft(List.tabulate(4)(_ => Complex(fresh, fresh)))
       println(globalDefs.mkString("\n"))
       println(r)
@@ -159,12 +158,12 @@ class TestFFT extends FileDiffSuite {
           // make a new array for now - doing in-place update would be better
           makeArray(r.flatMap { case Complex(re,im) => List(re,im) })
         }
-        
+
         val codegen = new ScalaGenFlat with ScalaGenArith with ScalaGenArrays { val IR: FooBar.this.type = FooBar.this } // TODO: find a better way...
       }
       val o = new FooBar
       import o._
-    
+
       val fft4 = (input: Rep[Array[Double]]) => ffts(input, 4)
       codegen.emitSource(fft4, "FFT4", new PrintWriter(System.out))
       val fft4c = compile(fft4)
@@ -172,5 +171,5 @@ class TestFFT extends FileDiffSuite {
     }
     assertFileEqualsCheck(prefix+"fft3")
   }
-  
+
 }

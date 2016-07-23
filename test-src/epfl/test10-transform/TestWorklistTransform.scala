@@ -148,7 +148,7 @@ class TestForward1 extends FileDiffSuite {
   trait Impl extends DSL with VectorExpTrans1 with ArithExp with OrderingOpsExpOpt with BooleanOpsExp
     with EqualExpOpt with StructFatExpOptCommon //with VariablesExpOpt
     with IfThenElseExpOpt with WhileExpOptSpeculative with RangeOpsExp with PrintExp { self =>
-    override val verbosity = 2
+    verbosity = 2
 
     val codegen = new ScalaGenVector with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps
       with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenStruct with ScalaGenRangeOps
