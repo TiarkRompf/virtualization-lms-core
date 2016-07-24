@@ -130,16 +130,21 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
  * At the beginning of each iteration, the info string is printed to the log.
  */
 // TODO: Unify this with IterativeTraversal
-trait FixpointTransformer extends ForwardTransformer with Traversal {
+trait FixpointTransformer extends ForwardTransformer {
   import IR._
   var runs = 0
   def getInfoString: String
   def isDone: Boolean
+
+  override def runOnce[A:Manifest](b: Block[A]): Block[A] = {
+    runs += 1
+    super.runOnce(b)
+  }
+
   override def run[A:Manifest](s: Block[A]): Block[A] = {
     var blk = s
     while (!isDone) {
       blk = runOnce(blk)
-      runs += 1
     }
     blk
   }

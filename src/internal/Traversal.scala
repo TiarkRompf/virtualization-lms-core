@@ -103,7 +103,6 @@ trait IterativeTraversal extends Traversal { self =>
       runs = 0
       _retry = false
       while (!hasConverged && runs < MAX_ITERS) { // convergence condition
-        runs += 1
         curBlock = runOnce(curBlock)
       }
       curBlock = postprocess(curBlock)

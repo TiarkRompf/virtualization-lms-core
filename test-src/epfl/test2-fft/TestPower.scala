@@ -9,7 +9,7 @@ import reflect.SourceContext
 import java.io.PrintWriter
 
 trait Power1 { this: Arith =>
-  def power(b: Rep[Double], x: Int): Rep[Double] = 
+  def power(b: Rep[Double], x: Int): Rep[Double] =
     if (x == 0) 1.0 else b * power(b, x - 1)
 }
 
@@ -26,6 +26,7 @@ trait BaseStr extends Base {
   type Rep[+T] = String
   //todo added this to provide required unit implicit conversion
   implicit def unit[T:Manifest](x: T): Rep[T] = x.toString
+  protected def param[T:Manifest](x: T)(implicit ctx: SourceContext): Rep[T] = x.toString
 }
 
 trait ArithStr extends Arith with BaseStr {
@@ -41,12 +42,12 @@ trait ArithStr extends Arith with BaseStr {
 
 
 class TestPower extends FileDiffSuite {
-  
+
   val prefix = home + "test-out/epfl/test2-"
 
   def testPower = {
     withOutFile(prefix+"power") {
-/*    
+/*
     println {
       val o = new TestPower with ArithRepDirect
       import o._
@@ -58,7 +59,7 @@ class TestPower extends FileDiffSuite {
       import o._
       power(2,4)
     }
-    
+
     println {
       val o = new TestPower with ArithRepString
       import o._
@@ -134,7 +135,7 @@ class TestPower extends FileDiffSuite {
 
 
     {
-      val o = new Power1 with ArithExpOpt with CompileScala { self => 
+      val o = new Power1 with ArithExpOpt with CompileScala { self =>
         val codegen = new ScalaGenFlat with ScalaGenArith { val IR: self.type = self }
       }
       import o._

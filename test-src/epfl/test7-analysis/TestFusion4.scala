@@ -20,7 +20,7 @@ trait ImplArith extends MyFusionProgArith with ArithExp  with ArrayLoopsMCFatExp
     with IfThenElseFatExp with PrintExp with OrderingOpsExp
 //    with NumericOpsExp with PrimitiveOpsExp with BooleanOpsExp
     with LoopFusionCore { self =>
-  override val verbosity = 2 // 1: only printlog, 2: also printdbg
+  verbosity = 2 // 1: only printlog, 2: also printdbg
   val runner = new RunnerArith { val p: self.type = self }
   runner.run()
 }
@@ -50,7 +50,7 @@ trait RunnerArith {
     codegen.withStream(new PrintWriter(System.out)) {
       codegen.emitBlock(y)
     }
-    
+
     val verticalTransf = new LoopFusionVerticalTransformer {
       val IR: p.type = p
     }
@@ -101,7 +101,7 @@ trait RunnerArith {
 
 // Original loop fusion tests
 class TestFusion4 extends FileDiffSuite {
-/* 
+/*
   // Commented out, need to recheck with MultiCollect-based IR, adding specialized codegen to recreate filter
   // code might not be worth the effort for this test DSL.
   val prefix = "test-out/epfl/test7-wip2-"
@@ -118,7 +118,7 @@ class TestFusion4 extends FileDiffSuite {
         def mean(x: Rep[Array[Double]]) = sumD(x.length) { i => x.at(i) } / x.length
         def variance(x: Rep[Array[Double]]) = sumD(x.length) { i => square(x.at(i)) } / x.length - square(mean(x))
 
-        val data = affine  
+        val data = affine
         val m = mean(data)
         val v = variance(data)
 
@@ -133,19 +133,19 @@ class TestFusion4 extends FileDiffSuite {
     trait Prog extends MyFusionProgArith with ImplArith {
       implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
       def test(x: Rep[Int]) = {
-        def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) = 
+        def filter[T:Manifest](x: Rep[Array[T]])(p: Rep[T] => Rep[Boolean]) =
           arrayIf(x.length)({ i => p(x.at(i)) }, { i => x.at(i) })
-        
+
         val range = array(100) { i => i }
         val odds = filter(range) { z => z > 50 }
         val res = sumD(odds.length) { i => odds.at(i) }
-            
+
         print(res)
       }
     }
     new Prog with ImplArith
   }
-  
+
   def testFusionTransform02 = withOutFileChecked(prefix+"fusion02") {
     trait Prog extends MyFusionProgArith with ImplArith {
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
@@ -154,12 +154,12 @@ class TestFusion4 extends FileDiffSuite {
         // as,bs are fused (no dependencies)
         // cs,ds are fused (no dependencies)
         // but there are cross deps ds->as, bs->cs ...
-        
+
         val cs = array(100) { i => 9.0 }
         val as = array(50) { i => 3.0 }
         val bs = array(50) { i => cs.foo }
         val ds = array(100) { i => as.foo }
-        
+
         print(as)
         print(bs)
         print(cs)
@@ -181,17 +181,17 @@ class TestFusion4 extends FileDiffSuite {
         // on lower level despite them being on higher level because in the
         // original code they are on the lower level too, they're in scope because
         // outer loops are fused.
-      
-        val as = array(100) { i => 
+
+        val as = array(100) { i =>
           array(50) { j => 1.0 } // ax
         }
-        val bs = array(100) { i => 
+        val bs = array(100) { i =>
           array(50) { j => 2.0 } // bx
         }
-        val cs = array(100) { i => 
+        val cs = array(100) { i =>
           sumD(50) { j => 4.0 } // cx
         }
-        val ds = array(100) { i => 
+        val ds = array(100) { i =>
           val x = sumD(50) { j => as.at(i).at(j) + bs.at(i).at(j) }
           val y = cs.at(i)
           x + y
@@ -216,17 +216,17 @@ class TestFusion4 extends FileDiffSuite {
         // as.at(i) -> ax, bs.at(i) -> bx, cs.at(i) -> cx
         // x is now consumer of ax and bx which are in same (fused) scope,
         // so fuse again
-      
-        val as = array(100) { i => 
+
+        val as = array(100) { i =>
           array(i) { j => 1.0 }
         }
-        val bs = array(100) { i => 
+        val bs = array(100) { i =>
           array(i) { j => 2.0 }
         }
-        val cs = array(100) { i => 
+        val cs = array(100) { i =>
           sumD(i) { j => 4.0 }
         }
-        val ds = array(100) { i => 
+        val ds = array(100) { i =>
           val x = sumD(i) { j => as.at(i).at(j) + bs.at(i).at(j) }
           val y = cs.at(i)
           x + y
@@ -248,16 +248,16 @@ class TestFusion4 extends FileDiffSuite {
       // } else super.infix_-(x,y) //  optimizations to trigger test behavior
 
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
-      def test(x: Rep[Int]) = {    
+      def test(x: Rep[Int]) = {
         // Successive fusion with some extra DCE, better than the original
         // loop fusion because as actually goes away once it becomes dead
 
         val as = array(200) { i => 1.0 }
         val bs = array(200) { i => 2.0 }
-        val cs = array(100) { i => 
+        val cs = array(100) { i =>
           array(i) { j => as.foo }
         }
-        val ds = array(100) { i => 
+        val ds = array(100) { i =>
           val dx = cs.at(i)
           array(i) { j => dx.at(j) - as.foo }
           // this will become as.foo - as.foo = 0  -->  i.e. as becomes dead but is already fused with bs, which is used...
