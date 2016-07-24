@@ -82,6 +82,9 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
 
     /* type aliases */
     typesStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "types.h"))
+    typesStream.println(
+s"""#ifndef __${deviceTarget.toUpperCase}TYPES_H__
+#define __${deviceTarget.toUpperCase}TYPES_H__""")
 
     /* header file for kernels and helper functions */
     headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
@@ -101,6 +104,12 @@ trait CCodegen extends CLikeCodegen with CppHostTransfer {
     headerStream.println("#include \"" + deviceTarget + "actRecords.h\"")
 
     super.initializeGenerator(buildDir)
+  }
+
+  override def finalizeGenerator() {
+    typesStream.println(s"""#endif""")
+    typesStream.close
+    super.finalizeGenerator
   }
 
   def emitForwardDef[A:Manifest](args: List[Manifest[_]], functionName: String, out: PrintWriter) = {
