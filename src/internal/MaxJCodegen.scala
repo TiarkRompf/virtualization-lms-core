@@ -256,8 +256,13 @@ trait MaxJFatCodegen extends GenericFatCodegen with MaxJCodegen {
     focusFatBlock(used.map(Block(_))) { freeInScope(bound, used) }
   }
 
+  def hasDef(sym: Sym[Any]) = sym match {
+    case Def(d) => true
+    case _ => false
+  }
+
   def recursiveDeps(rhs: Any): List[Sym[Any]] = {
-    val deps: List[Sym[Any]] = dataDeps(rhs)
+    val deps: List[Sym[Any]] = dataDeps(rhs).filter { hasDef(_) }
     val deps2: List[Sym[Any]] = deps.map { s =>
       val Def(d) = s
       recursiveDeps(d)
