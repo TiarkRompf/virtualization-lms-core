@@ -34,6 +34,10 @@ trait MaxJCodegen extends GenericCodegen with Config {
 
   val controlNodeStack = Stack[Sym[Any]]()
 
+  var hwblockDeps = List[Sym[Any]]()
+
+
+
   override def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
     val staticData = getFreeDataBlock(body)
 
@@ -245,5 +249,20 @@ trait MaxJNestedCodegen extends GenericNestedCodegen with MaxJCodegen {
 trait MaxJFatCodegen extends GenericFatCodegen with MaxJCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
+
+  private def dataDeps(rhs: Any) = {
+    val bound = boundSyms(rhs)
+    val used = syms(rhs)
+    focusFatBlock(used.map(Block(_))) { freeInScope(bound, used) }
+  }
+
+  def recursiveDeps(rhs: Any): List[Sym[Any]] = {
+    val deps: List[Sym[Any]] = dataDeps(rhs)
+    val deps2: List[Sym[Any]] = deps.map { s =>
+      val Def(d) = s
+      recursiveDeps(d)
+    }.flatten.toList
+    (deps2 ++ deps).distinct
+  }
 }
 
