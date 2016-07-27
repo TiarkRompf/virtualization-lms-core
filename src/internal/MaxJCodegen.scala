@@ -192,6 +192,7 @@ trait MaxJCodegen extends GenericCodegen with Config {
     "kernelcompiler.stdlib.core.Count.Counter",
     "kernelcompiler.stdlib.core.CounterChain",
     "kernelcompiler.stdlib.core.Count",
+    "kernelcompiler.stdlib.core.Count.WrapMode",
     "kernelcompiler.stdlib.core.Count.Params",
     "kernelcompiler.stdlib.memory.Memory",
     "kernelcompiler.Kernel",
