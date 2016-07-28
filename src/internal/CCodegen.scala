@@ -109,6 +109,10 @@ s"""#ifndef __${deviceTarget.toUpperCase}TYPES_H__
   override def finalizeGenerator() {
     typesStream.println(s"""#endif""")
     typesStream.close
+    helperFuncStream.flush
+    headerStream.flush
+    typesStream.flush
+    actRecordStream.flush
     super.finalizeGenerator
   }
 
@@ -181,10 +185,6 @@ s"""#ifndef __${deviceTarget.toUpperCase}TYPES_H__
       printToStream(emitMakeManifest(tp))
     }
 
-    helperFuncStream.flush
-    headerStream.flush
-    typesStream.flush
-    actRecordStream.flush
   }
 
 }
