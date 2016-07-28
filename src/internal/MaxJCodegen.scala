@@ -97,6 +97,7 @@ trait MaxJCodegen extends GenericCodegen with Config {
          "*******************************************/")
     emit(s"""package engine;""")
     imports.map(x => emit(s"""import ${importPrefix}.${x};"""))
+    emit(s"""import java.util.Arrays;""")
     emit(s"""class TopKernelLib extends KernelLib {""")
     emit(s"""TopKernelLib(KernelLib owner, DFEVar top_en, DFEVar top_done) {""")
     emit(s"""super(owner);""")
