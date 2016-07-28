@@ -130,7 +130,7 @@ trait CLikeCodegen extends GenericCodegen {
 
   def isPrimitiveType(tpe: String) : Boolean = {
     tpe match {
-      case "bool" | "int8_t" | "uint16_t" | "int16_t" | "int32_t" | "int64_t" | "float" | "double" => true
+      case "bool" | "int8_t" | "uint16_t" | "int16_t" | "int32_t" | "uint32_t" | "int64_t" | "uint64_t" | "float" | "double" => true
       case _ => false
     }
   }
