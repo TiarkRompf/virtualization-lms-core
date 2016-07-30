@@ -113,7 +113,8 @@ trait MaxJCodegen extends GenericCodegen with Config {
     imports.map(x => emit(s"""import ${importPrefix}.${x};"""))
     emit(s"""import java.util.Arrays;""")
     emit(s"""class BaseLib extends KernelLib {""")
-    emit(s"""BaseLib(KernelLib owner) { super(owner); }""")
+    emit(s"""BaseLib(KernelLib owner) { super(owner); }
+      SpatialUtils spatialUtils = new SpatialUtils(this);""")
   }
 
   private def emitBaseFileFooter() = {
@@ -222,7 +223,7 @@ trait MaxJCodegen extends GenericCodegen with Config {
   }
 
 	def emitComment(str: String):Unit = {
-		stream.println(s"""/* $str */ """)
+		stream.println(s"""/* $str */""")
 	}
 
   val importPrefix = "com.maxeler.maxcompiler.v2"
