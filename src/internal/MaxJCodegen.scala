@@ -36,10 +36,15 @@ trait MaxJCodegen extends GenericCodegen with Config {
 
   var hwblockDeps = List[Sym[Any]]()
 
+  private var _baseStream: PrintWriter = _
+  def baseStream = _baseStream
+  def baseStream_=(s: PrintWriter) { _baseStream = s }
+
 
 
   override def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
     val staticData = getFreeDataBlock(body)
+
 
     withStream(out) {
       alwaysGen {
@@ -50,6 +55,8 @@ trait MaxJCodegen extends GenericCodegen with Config {
 				emitFileFooter()
       }
     }
+
+
     staticData
   }
 
@@ -61,6 +68,9 @@ trait MaxJCodegen extends GenericCodegen with Config {
         emitFileHeader()
       }
     }
+    withStream(baseStream) {
+      alwaysGen { emitBaseFileHeader() }
+    }
   }
 
   override def postProcess[A: Manifest](body: Block[A]) = {
@@ -69,6 +79,9 @@ trait MaxJCodegen extends GenericCodegen with Config {
       alwaysGen {
         emitFileFooter()
       }
+    }
+    withStream(baseStream) {
+      alwaysGen { emitBaseFileFooter() }
     }
   }
 
@@ -82,12 +95,29 @@ trait MaxJCodegen extends GenericCodegen with Config {
     bd = buildDir
     val sep = java.io.File.separator
     val outDir = new File(buildDir); outDir.mkdirs()
+
+    val baseFilePath = s"""${bd}/BaseLib.$fileExtension"""
+    baseStream = new PrintWriter(new File(baseFilePath))
   }
 
   override def finalizeGenerator() = {
     val (file, stream) = getFileStream()
     stream.flush
     stream.close
+    baseStream.flush
+    baseStream.close
+  }
+
+  private def emitBaseFileHeader() = {
+    emit(s"""package engine;""")
+    imports.map(x => emit(s"""import ${importPrefix}.${x};"""))
+    emit(s"""import java.util.Arrays;""")
+    emit(s"""class BaseLib extends KernelLib {""")
+    emit(s"""BaseLib(KernelLib owner) { super(owner); }""")
+  }
+
+  private def emitBaseFileFooter() = {
+    emit("}")
   }
 
   override def emitFileHeader() = {
@@ -98,7 +128,7 @@ trait MaxJCodegen extends GenericCodegen with Config {
     emit(s"""package engine;""")
     imports.map(x => emit(s"""import ${importPrefix}.${x};"""))
     emit(s"""import java.util.Arrays;""")
-    emit(s"""class TopKernelLib extends KernelLib {""")
+    emit(s"""class TopKernelLib extends BaseLib {""")
     emit(s"""TopKernelLib(KernelLib owner, DFEVar top_en, DFEVar top_done) {""")
     emit(s"""super(owner);""")
   }
@@ -182,6 +212,14 @@ trait MaxJCodegen extends GenericCodegen with Config {
 	def emit(str: String):Unit = {
 		stream.println(str)
 	}
+
+	def emitGlobal(str: String):Unit = {
+		baseStream.println(str)
+	}
+
+  def emitGlobalWire(str: String): Unit = {
+    emitGlobal(s"""DFEVar $str = dfeBool().newInstance(this);""")
+  }
 
 	def emitComment(str: String):Unit = {
 		stream.println(s"""/* $str */ """)
