@@ -97,7 +97,7 @@ trait IterativeTraversal extends Traversal { self =>
    * Run traversal/analysis on a given block until convergence or maximum # of iterations reached
    */
   override def run[A:Manifest](b: Block[A]): Block[A] = {
-    debug("Starting traversal " + name)
+    msg("Starting traversal " + name)
     var curBlock = preprocess(b)
     do {
       runs = 0

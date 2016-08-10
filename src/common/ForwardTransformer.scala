@@ -68,7 +68,8 @@ trait ForwardTransformer extends AbstractSubstTransformer with Traversal { self 
     //TODO: HACK -- should not catch errors
     try {
       val sym2 = mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos))
-      setProps(sym2, getProps(sym))
+      // Attempt to mirror metadata during symbol mirroring
+      setProps(sym2, mirror(getProps(sym), self.asInstanceOf[Transformer]))
       (sym2)
     }
     catch {
@@ -84,6 +85,7 @@ trait ForwardTransformer extends AbstractSubstTransformer with Traversal { self 
 
   // Mirror metadata only after transformer has completed. Metadata is not required
   // to follow forward dataflow, so mirroring metadata on the fly will not necessarily be correct
+  // FIXME: substitutions are scoped, may not still be visible at postprocessing
   override def postprocess[A:Manifest](b: Block[A]): Block[A] = {
     subst.values.foreach{sym => setProps(sym, mirror(getProps(sym), self.asInstanceOf[Transformer])) }
     super.postprocess(b)
