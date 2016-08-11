@@ -43,6 +43,10 @@ trait LoopsExp extends Loops with BaseExp with EffectExp {
     case _ => super.symsFreq(e)
   }
 
+  override def blocks(e: Any): List[Block[Any]] = e match {
+    case l: AbstractLoop[_] => blocks(l.body)
+    case _ => super.blocks(e)
+  }
 
   //////////////
   // mirroring

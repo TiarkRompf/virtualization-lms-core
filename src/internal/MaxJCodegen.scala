@@ -5,6 +5,7 @@ import util.NullOutputStream
 import java.io.{File, FileWriter, PrintWriter}
 
 import scala.reflect.SourceContext
+import scala.collection.mutable.Stack
 
 trait MaxJCodegen extends GenericCodegen with Config {
   val IR: Blocks
@@ -26,11 +27,24 @@ trait MaxJCodegen extends GenericCodegen with Config {
   override def resourceInfoType = ""
   override def resourceInfoSym = ""
 
+  override def singleFileName = s"TopKernelLib.$fileExtension"
+
   // Generate all code into one file
   override def emitSingleFile() = true
 
+  val controlNodeStack = Stack[Sym[Any]]()
+
+  var hwblockDeps = List[Sym[Any]]()
+
+  private var _baseStream: PrintWriter = _
+  def baseStream = _baseStream
+  def baseStream_=(s: PrintWriter) { _baseStream = s }
+
+
+
   override def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
     val staticData = getFreeDataBlock(body)
+
 
     withStream(out) {
       alwaysGen {
@@ -41,7 +55,34 @@ trait MaxJCodegen extends GenericCodegen with Config {
 				emitFileFooter()
       }
     }
+
+
     staticData
+  }
+
+  override def preProcess[A: Manifest](body: Block[A]) = {
+    val fullPath = s"""${bd}/$singleFileName"""
+    val (file, stream) = getFileStream(fullPath)
+    withStream(stream) {
+      alwaysGen {
+        emitFileHeader()
+      }
+    }
+    withStream(baseStream) {
+      alwaysGen { emitBaseFileHeader() }
+    }
+  }
+
+  override def postProcess[A: Manifest](body: Block[A]) = {
+    val (file, stream) = getFileStream()
+    withStream(stream) {
+      alwaysGen {
+        emitFileFooter()
+      }
+    }
+    withStream(baseStream) {
+      alwaysGen { emitBaseFileFooter() }
+    }
   }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = {
@@ -54,9 +95,31 @@ trait MaxJCodegen extends GenericCodegen with Config {
     bd = buildDir
     val sep = java.io.File.separator
     val outDir = new File(buildDir); outDir.mkdirs()
+
+    val baseFilePath = s"""${bd}/BaseLib.$fileExtension"""
+    baseStream = new PrintWriter(new File(baseFilePath))
   }
 
-  override def finalizeGenerator() = {}
+  override def finalizeGenerator() = {
+    val (file, stream) = getFileStream()
+    stream.flush
+    stream.close
+    baseStream.flush
+    baseStream.close
+  }
+
+  private def emitBaseFileHeader() = {
+    emit(s"""package engine;""")
+    imports.map(x => emit(s"""import ${importPrefix}.${x};"""))
+    emit(s"""import java.util.Arrays;""")
+    emit(s"""class BaseLib extends KernelLib {""")
+    emit(s"""BaseLib(KernelLib owner) { super(owner); }
+      SpatialUtils spatialUtils = new SpatialUtils(this);""")
+  }
+
+  private def emitBaseFileFooter() = {
+    emit("}")
+  }
 
   override def emitFileHeader() = {
     // empty by default. override to emit package or import declarations.
@@ -65,7 +128,8 @@ trait MaxJCodegen extends GenericCodegen with Config {
          "*******************************************/")
     emit(s"""package engine;""")
     imports.map(x => emit(s"""import ${importPrefix}.${x};"""))
-    emit(s"""class TopKernelLib extends KernelLib {""")
+    emit(s"""import java.util.Arrays;""")
+    emit(s"""class TopKernelLib extends BaseLib {""")
     emit(s"""TopKernelLib(KernelLib owner, DFEVar top_en, DFEVar top_done) {""")
     emit(s"""super(owner);""")
   }
@@ -135,9 +199,9 @@ trait MaxJCodegen extends GenericCodegen with Config {
     stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = null.asInstanceOf[" + remap(sym.tp) + "];")
   }
 
-  // TODO: Unused?
   def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
-    stream.println(quote(sym) + " = " + rhs)
+    stream.println(quote(sym) + " = " + rhs + ";")
+
   }
 
   override def quote(x: Exp[Any]) = x match {
@@ -150,8 +214,16 @@ trait MaxJCodegen extends GenericCodegen with Config {
 		stream.println(str)
 	}
 
+	def emitGlobal(str: String):Unit = {
+		baseStream.println(str)
+	}
+
+  def emitGlobalWire(str: String): Unit = {
+    emitGlobal(s"""DFEVar $str = dfeBool().newInstance(this);""")
+  }
+
 	def emitComment(str: String):Unit = {
-		stream.println(s"""/* $str */ """)
+		stream.println(s"""/* $str */""")
 	}
 
   val importPrefix = "com.maxeler.maxcompiler.v2"
@@ -160,6 +232,7 @@ trait MaxJCodegen extends GenericCodegen with Config {
     "kernelcompiler.stdlib.core.Count.Counter",
     "kernelcompiler.stdlib.core.CounterChain",
     "kernelcompiler.stdlib.core.Count",
+    "kernelcompiler.stdlib.core.Count.WrapMode",
     "kernelcompiler.stdlib.core.Count.Params",
     "kernelcompiler.stdlib.memory.Memory",
     "kernelcompiler.Kernel",
@@ -217,5 +290,25 @@ trait MaxJNestedCodegen extends GenericNestedCodegen with MaxJCodegen {
 trait MaxJFatCodegen extends GenericFatCodegen with MaxJCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
+
+  private def dataDeps(rhs: Any) = {
+    val bound = boundSyms(rhs)
+    val used = syms(rhs)
+    focusFatBlock(used.map(Block(_))) { freeInScope(bound, used) }
+  }
+
+  def hasDef(sym: Sym[Any]) = sym match {
+    case Def(d) => true
+    case _ => false
+  }
+
+  def recursiveDeps(rhs: Any): List[Sym[Any]] = {
+    val deps: List[Sym[Any]] = dataDeps(rhs).filter { hasDef(_) }
+    val deps2: List[Sym[Any]] = deps.map { s =>
+      val Def(d) = s
+      recursiveDeps(d)
+    }.flatten.toList
+    (deps2 ++ deps).distinct
+  }
 }
 
