@@ -66,7 +66,15 @@ trait EffectExp extends BaseExp with Effects {
   }
 
   override def propagate(lhs: Exp[Any], rhs: Def[Any]): Unit = rhs match {
-    case Reify(sym, _, _) => setProps(lhs, getProps(sym))
+    case Reify(sym, _, _) =>
+      try {
+        // HACK: This can fail, e.g. in Delite ops where blocks might throw an exception but return type A
+        setProps(lhs, getProps(sym))
+      }
+      catch {case e: Throwable =>
+        // Do nothing (technically ok for now)
+        //println(s"Tried to propagate from $sym [${sym.tp}] to $lhs [${lhs.tp}]!")
+      }
     case Reflect(d, _, _) => propagate(lhs, d)
     case _ => super.propagate(lhs, rhs)
   }
