@@ -36,7 +36,8 @@ trait ForwardTransformer extends AbstractSubstTransformer with Traversal { self 
     case TP(sym, rhs) if apply(sym) == sym =>
       val replace = transformStm(stm)
       assert(!subst.contains(sym) || subst(sym) == replace)
-      if (sym != replace) subst += (sym -> replace) // record substitution only if result is different
+      if (sym != replace)
+        register(sym -> replace)  // record substitution only if result is different
 
     case TP(sym, rhs) =>
       if (recursive.contains(sym))  // O(n) since recursive is a list!
@@ -85,11 +86,11 @@ trait ForwardTransformer extends AbstractSubstTransformer with Traversal { self 
 
   // Mirror metadata only after transformer has completed. Metadata is not required
   // to follow forward dataflow, so mirroring metadata on the fly will not necessarily be correct
-  // FIXME: substitutions are scoped, may not still be visible at postprocessing
-  override def postprocess[A:Manifest](b: Block[A]): Block[A] = {
+  // TODO: Does this need to be here? Commented out for now
+  /*override def postprocess[A:Manifest](b: Block[A]): Block[A] = {
     subst.values.foreach{sym => setProps(sym, mirror(getProps(sym), self.asInstanceOf[Transformer])) }
     super.postprocess(b)
-  }
+  }*/
 }
 
 trait RecursiveTransformer extends ForwardTransformer { self =>
@@ -99,7 +100,7 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
 
   override def traverseStmsInBlock[A](stms: Seq[Stm]): Unit = {
     for (sym <- recursive) {
-      subst += (sym -> fresh(mtype(sym.tp)))
+      register(sym -> fresh(mtype(sym.tp)))
     }
     super.traverseStmsInBlock(stms)
   }
@@ -217,7 +218,7 @@ trait WorklistTransformer extends FixpointTransformer {
   def isDone = runs > 0 && nextSubst.isEmpty // Needed for LMS tests
 
   override def processBlock[A:Manifest](s: Block[A]): Block[A] = {
-    subst = Map.empty
+    resetSubst()
     curSubst = nextSubst
     nextSubst = Map.empty
     transformBlock(s)

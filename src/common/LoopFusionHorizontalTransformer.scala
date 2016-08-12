@@ -277,7 +277,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
               None
           case _ =>
               val newIndex = fresh[Int]
-              subst += (oldIndex -> newIndex)
+              register(oldIndex -> newIndex)
               fixedLengthIndicesVal += (newIndex -> loopSym)
               Some(newIndex)
       }
@@ -375,7 +375,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
         }
 
         // don't want to change other indices, TODO reset to old (see fuse)
-        subst -= loop.v
+        remove(loop.v)
         if (superTransformedStm != sym)
           printdbg("(HFT) - new loop symbol: " + sym + " -> " + superTransformedStm)
         Some(superTransformedStm)
@@ -449,7 +449,7 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
             " to newIndex " + newIndex)
         case None => // new substitution
       }
-      subst += (oldIndex -> newIndex)
+      register(oldIndex -> newIndex)
       Some(newIndex)
     }
   }

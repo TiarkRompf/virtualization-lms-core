@@ -191,7 +191,7 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
         fixedLengthIndex = Some(new HashMap[Exp[Int], Sym[Int]])
       fixedLengthIndex.get.get(shape) match {
         case Some(`oldIndex`) | None => fixedLengthIndex.get += (shape -> oldIndex); false
-        case Some(newIndex) => subst += (oldIndex -> newIndex); true
+        case Some(newIndex) => register(oldIndex -> newIndex); true
       }
     case None => false
   }
@@ -851,7 +851,7 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
 
       case Single_McFor(cIndex, siSyms, pInner, cInner, _, _) =>
         if (!subst.contains(cIndex))
-          subst += (cIndex -> Const(0))
+          register(cIndex -> Const(0))
         addSimpleIndexReplacement(siSyms, pInner)
         // fused is not cons=Mc(cInner), but cInner, so don't record as fused with singleton (different shapes)
         overrideRecordFusion = Some(Right(false))
@@ -864,21 +864,21 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
           doFusion(elseFusionInfo, cStm, Right(false), false).transformed)(mtype(typeSym.tp), mpos(cSym.pos)))
 
       case Mc_McForRed(cIndex, pIndex, cShape, pShape, innerFusionInfo, cInner, pInner, _, _) =>
-        subst += (cIndex -> pIndex)
+        register(cIndex -> pIndex)
         val innerFused = reifyEffects(doFusion(innerFusionInfo, cStm, Left(pInner), false).transformed)(mtype(cInner.tp), mpos(cInner.pos))
         onceSubst += (cShape -> pShape)
         onceSubst += (cInner -> getBlockResultFull(innerFused))
-        subst += (cIndex -> pIndex)
+        register(cIndex -> pIndex)
         FusionResult(super.transformStm(cStm))
 
       case InnerMc_Red(cIndex, pIndex, innerFusionInfo, cInner, pInner, pLoop, _, _) =>
-        subst += (cIndex -> pIndex)
+        register(cIndex -> pIndex)
         val innerFused = reifyEffects(doFusion(innerFusionInfo, cStm, Left(pInner), false).transformed)(mtype(cInner.tp), mpos(cInner.pos))
         onceSubst += (pInner -> getBlockResultFull(innerFused))
         FusionResult(self_mirror(cInner, pLoop))
 
       case ManyMcsingle_McFor(cIndex, pIndex, siSyms, pInner, otherProds, _,_,_) =>
-        subst += (cIndex -> pIndex) // otherProds have same pIndex
+        register(cIndex -> pIndex) // otherProds have same pIndex
         // onceSubst += (cShape -> Const(1)) // for reduce need loop?
         addSimpleIndexReplacement(siSyms, pInner)
         otherProds.foreach({ case (osiSyms, opInner) => addSimpleIndexReplacement(osiSyms, opInner) })

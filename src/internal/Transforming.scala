@@ -1,12 +1,21 @@
 package scala.virtualization.lms
 package internal
 
-import scala.collection.{immutable,mutable}
+import scala.collection.mutable.HashMap
 import scala.reflect.SourceContext
 
 trait AbstractTransformer {
   val IR: Transforming
   import IR._
+
+  protected var globalMode = false
+  def inGlobalMode[A:Manifest](block: => A): A = {
+    var prevMode = globalMode
+    globalMode = true
+    val r = block
+    globalMode = prevMode
+    r
+  }
 
   def hasContext = false
   def reflectBlock[A](xs: Block[A]): Exp[A] = sys.error("reflectBlock not supported by context-free transformers")
@@ -34,9 +43,10 @@ trait AbstractTransformer {
 
 trait AbstractSubstTransformer extends AbstractTransformer {
   import IR._
-  var subst = immutable.Map.empty[Exp[Any], Exp[Any]]
-  var blockSubst = immutable.Map.empty[Block[Any], Block[Any]]
-  var copyingBlocks: Boolean = true // Default behavior: never use block substitution method
+  private var _subst: Map[Exp[Any],Exp[Any]] = Map.empty
+  private var allSubst: Map[Exp[Any], Exp[Any]] = Map.empty
+  protected var blockSubst: Map[Block[Any], Block[Any]] = Map.empty
+  protected var copyingBlocks: Boolean = true // Default behavior: never use block substitution method
 
   def copyBlock[A](xs: Block[A]): Block[A] = {
     val oldCopy = copyingBlocks
@@ -46,16 +56,40 @@ trait AbstractSubstTransformer extends AbstractTransformer {
     (block2)
   }
 
+  // TODO: These should not be necessary, but defining the setter method for subst causes the
+  // scala typer to crash...
+
+  def subst: Map[Exp[Any],Exp[Any]] = { _subst }
+  def resetSubst() { _subst = Map.empty }
+
+  def remove(x: Exp[Any]) { _subst -= x }
+
+  def register(x: Exp[Any], y: Exp[Any]) {
+    _subst += x -> y
+    allSubst += x -> y
+  }
+  def register(extend: (Exp[Any], Exp[Any])*) {
+    _subst ++= extend
+    allSubst ++= extend
+  }
+
   def withSubstScope[A](extend: (Exp[Any],Exp[Any])*)(block: => A): A =
     withSubstScope {
-      subst ++= extend
+      register(extend:_*)
       block
     }
 
   def withSubstScope[A](block: => A): A = {
     val save = subst
     val r = block
-    subst = save
+    _subst = save
+    r
+  }
+  def withSubstRules[A](rules: Map[Exp[Any],Exp[Any]])(block: => A): A = {
+    val save = subst
+    _subst = rules
+    val r = block
+    _subst = save
     r
   }
 
@@ -74,9 +108,15 @@ trait AbstractSubstTransformer extends AbstractTransformer {
     case None => transformBlock(xs)
   }
 
-  def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match {
-    case Some(y) => y.asInstanceOf[Exp[A]]
-    case None => x
+  def apply[A](x: Exp[A]): Exp[A] = {
+    if (globalMode) allSubst.get(x) match {
+      case Some(y) => y.asInstanceOf[Exp[A]]  // TODO: Should allSubst be transitive?
+      case None => x
+    }
+    else subst.get(x) match {
+      case Some(y) => y.asInstanceOf[Exp[A]]
+      case None => x
+    }
   }
 }
 
@@ -86,7 +126,7 @@ trait Transforming extends Expressions with Blocks { self =>
 
   class SubstTransformer extends AbstractTransformer {
     val IR: self.type = self
-    val subst = new mutable.HashMap[Exp[Any], Exp[Any]]
+    val subst = new HashMap[Exp[Any], Exp[Any]]
     def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match {
       case Some(y) if y != x => apply(y.asInstanceOf[Exp[A]]) case _ => x
     }
@@ -113,13 +153,13 @@ trait FatTransforming extends Transforming with FatExpressions {
 
 trait MetaTransforming extends Transforming with SymbolMetadata {
   // Mirroring metadata
-  def mirror(p: SymbolProperties, f: Transformer): SymbolProperties = p match {
+  final def mirror(p: SymbolProperties, f: Transformer): SymbolProperties = f.inGlobalMode{ p match {
     case ScalarProperties(data) => ScalarProperties(mirror(data,f))
     case StructProperties(children,data) => StructProperties(mirror(children,f),mirror(data,f))
     case ArrayProperties(child,data) => ArrayProperties(mirror(child,f),mirror(data,f))
-  }
+  }}
 
-  def mirror[K,V](p: PropMap[K,V], f: Transformer): PropMap[K,V] = {
+  final def mirror[K,V](p: PropMap[K,V], f: Transformer): PropMap[K,V] = {
     PropMap(p.toList.map{case (k,v) => metaMirror(k,f) -> metaMirror(v,f) })
   }
 
