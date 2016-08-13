@@ -36,6 +36,7 @@ trait Traversal extends FatBlockTraversal { self =>
   }
   final def debug(x: => Any) = withDebugging{ printdbg(x) }
   final def msg(x: => Any) { if (verboseMode) System.out.println(x) }
+  final def report(x: => Any) { System.out.println(x) }
 
   def preprocess[A:Manifest](b: Block[A]): Block[A] = { b }
   def postprocess[A:Manifest](b: Block[A]): Block[A] = { b }
