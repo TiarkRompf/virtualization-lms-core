@@ -108,15 +108,14 @@ trait AbstractSubstTransformer extends AbstractTransformer {
     case None => transformBlock(xs)
   }
 
-  def apply[A](x: Exp[A]): Exp[A] = {
-    if (globalMode) allSubst.get(x) match {
-      case Some(y) => y.asInstanceOf[Exp[A]]  // TODO: Should allSubst be transitive?
-      case None => x
-    }
-    else subst.get(x) match {
+  // Attempt to use closest substitution rule. If none exists, use global rule if global is enabled
+  def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match {
+    case Some(y) => y.asInstanceOf[Exp[A]]
+    case None if globalMode => allSubst.get(x) match {
       case Some(y) => y.asInstanceOf[Exp[A]]
       case None => x
     }
+    case None => x
   }
 }
 
