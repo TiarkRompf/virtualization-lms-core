@@ -15,13 +15,15 @@ trait Traversal extends FatBlockTraversal { self =>
 
   val name: String = self.getClass.getName.split('$').filterNot(_ forall Character.isDigit).mkString(".")
   var debugMode: Boolean = false              // Traversal-specific debug enable
-  var verboseMode: Boolean = true             // Traversal-specific verbosity
+  var verboseMode: Boolean = false            // Traversal-specific verbosity
+  var reportMode: Boolean = true
   val recurse: RecurseCondition = AsDefault   // Recursive traversal of IR hierarchy
   val eatReflect: Boolean = false             // Ignore reflect nodes when matching?
 
   def silence() {
     verboseMode = false
     debugMode = false
+    reportMode = false
   }
 
   def withDebugging[T](x: => T): T = {
@@ -36,7 +38,7 @@ trait Traversal extends FatBlockTraversal { self =>
   }
   final def debug(x: => Any) = withDebugging{ printdbg(x) }
   final def msg(x: => Any) { if (verboseMode) System.out.println(x) }
-  final def report(x: => Any) { System.out.println(x) }
+  final def report(x: => Any) { if (reportMode) System.out.println(x) }
 
   def preprocess[A:Manifest](b: Block[A]): Block[A] = { b }
   def postprocess[A:Manifest](b: Block[A]): Block[A] = { b }
