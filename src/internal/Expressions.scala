@@ -59,7 +59,7 @@ trait Expressions extends Utils {
     override def pos = sourceContexts
     def withPos(pos: SourceContext) = { sourceContexts ::= pos; this }
 
-    override def toString = "P#" + id + pos.headOption.flatMap{ctx => allContexts(ctx).last.assignedVariable}.map(name => s" ($name)").getOrElse("")
+    override def toString = "p" + pos.headOption.flatMap{ctx => allContexts(ctx).last.assignedVariable}.map(name => s"$name").getOrElse(id.toString) + s"($x)"
     override def hashCode = id
   }
 
