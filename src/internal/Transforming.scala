@@ -44,7 +44,7 @@ trait AbstractTransformer {
 trait AbstractSubstTransformer extends AbstractTransformer {
   import IR._
   private var _subst: Map[Exp[Any],Exp[Any]] = Map.empty
-  private var allSubst: Map[Exp[Any], Exp[Any]] = Map.empty
+  protected var allSubst: Map[Exp[Any], Exp[Any]] = Map.empty
   protected var blockSubst: Map[Block[Any], Block[Any]] = Map.empty
   protected var copyingBlocks: Boolean = true // Default behavior: never use block substitution method
 
