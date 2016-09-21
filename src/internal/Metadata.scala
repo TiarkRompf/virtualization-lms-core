@@ -7,6 +7,11 @@ import scala.reflect._
 
 trait MeetFunc
 
+// Defs use underscore prefix since some implementations require calling other forms of the
+// overloaded method, which is more annoying (need to directly call implicitly[Meetable[...]].func)
+// if both the type class definition and the templated function have the same name
+// This effectively does the same thing as using implicitly[...] but with less code
+// TODO: Incompatibilities currently isn't used. Is it useful?
 trait Meetable[T] {
   // Tests whether a and b are identical
   def _matches(a: T, b: T): Boolean
@@ -21,41 +26,37 @@ trait Meetable[T] {
   // Debugging / pretty printing
   def _makeString(a: T, prefix: String): String
   def _multiLine(a: T): Boolean
+  // In aliasing Option[T]: If true, existing metadata is met and undefineds are ignored (None is top)
+  // If false, all metadata must be defined for information to propagate (None is bottom)
+  // NOTE: This is for MetaAlias only, not for type initialization or overwriting
+  def _isExistential(a: T): Boolean
 }
 
 trait MeetableOps {
-  class IllegalMeetException extends Exception("Attempted to meet incompatible metadata instances")
+  case class IllegalMeetException[T:Meetable](a: T, b: T) extends Exception({
+    s"Attempted to meet incompatible metadata instances:\n" +
+     "\tLHS metadata: " + makeString(a) + "\n" +
+     "\tRHS metadata: " + makeString(b) + "\n"
+  })
 
-  // TODO: This might be going a bit overboard.. How to narrow these down?
+  // TODO: Are these useful? Better way to handle different cases?
   case object MetaAlias extends MeetFunc          // General aliasing of metadata
   case object MetaTypeInit extends MeetFunc       // Metadata meeting with initial type metadata
-  case object MetaOverwrite extends MeetFunc      // Metadata overwrite
+  case object MetaOverwrite extends MeetFunc      // Metadata overwrite (direct setting)
 
-  // Defs use underscore prefix since some implementations require calling other forms of the
-  // overloaded method, which is more annoying (need to directly call implicitly[Meetable[...]].func)
-  // if both the type class definition and the templated function have the same name
-  // This effectively does the same thing as using implicitly[...] but with less code
   // Internal API for metadata
   def matches[T: Meetable](a: T, b: T): Boolean = implicitly[Meetable[T]]._matches(a,b)
   def incompatibilities[T:Meetable](a: T, b: T)(implicit t: MeetFunc): List[String] = implicitly[Meetable[T]]._incompatibilities(a,b)(t)
   def canMeet[T: Meetable](a: T, b: T)(implicit t: MeetFunc): Boolean = { implicitly[Meetable[T]]._canMeet(a,b)(t) }
-  def meet[T:Meetable](ts: T*)(implicit t: MeetFunc = MetaAlias): T = ts.reduce{(a,b) => tryMeet(a,b) }
+  def meet[T:Meetable](ts: T*)(implicit t: MeetFunc = MetaAlias): T = ts.reduce{(a,b) =>
+    if (canMeet(a,b)) implicitly[Meetable[T]]._meet(a,b)
+    else throw IllegalMeetException(a, b)
+  }
   def meet[T:Meetable](t: MeetFunc, ts: T*): T = { implicit val func = t; meet(ts:_*) }
   def isComplete[T: Meetable](a: T): Boolean = implicitly[Meetable[T]]._isComplete(a)
   def makeString[T: Meetable](a: T, prefix: String = "") = implicitly[Meetable[T]]._makeString(a,prefix)
   def multiLine[T: Meetable](a: T) = implicitly[Meetable[T]]._multiLine(a)
-
-  // Meet with error reporting for incompatible metadata
-  private def tryMeet[T: Meetable](a: T, b: T)(implicit func: MeetFunc, ctx: SourceContext): T = {
-    if (canMeet(a,b)) { implicitly[Meetable[T]]._meet(a,b) }
-    else {
-      //val inc = incompatibilities(a,b,func)
-      sys.error("Attempted to meet incompatible metadata for symbol used here:\n" +
-                "\tLHS metadata: " + makeString(a) + "\n" +
-                "\tRHS metadata: " + makeString(b) + "\n"
-               )
-    }
-  }
+  def isExistential[T:Meetable](a: T) = implicitly[Meetable[T]]._isExistential(a)
 }
 
 
@@ -63,7 +64,6 @@ trait MeetableOps {
 trait SymbolMetadata extends MeetableOps {
   // TODO: Better way to reference metadata?
   // Bonus points for being able to represent hierarchy (subclasses of Metadata)
-  // TODO: Should T be required to be subclass of Metadata? This makes things somewhat annoying..
   type Datakey[T] = Class[T]
 
   def keyOf[T](implicit ct: ClassTag[T]): Datakey[T] = ct.runtimeClass.asInstanceOf[Class[T]]
@@ -85,10 +85,10 @@ trait SymbolMetadata extends MeetableOps {
     }
     def _meet(a: Option[T], b: Option[T])(implicit t: MeetFunc): Option[T] = (a,b) match {
       case (Some(am), Some(bm)) if canMeet(am,bm) => Some(meet(am,bm))
-      case (Some(am), None) => Some(am)
-      case (None, Some(bm)) => Some(bm)
+      case (Some(am), None) => if (isExistential(am) || t != MetaAlias) Some(am) else None
+      case (None, Some(bm)) => if (isExistential(bm) || t != MetaAlias) Some(bm) else None
       case (None, None) => None
-      case _ => throw new IllegalMeetException
+      case _ => throw new IllegalMeetException(a,b)
     }
     def _isComplete(a: Option[T]): Boolean = a match {
       case Some(am) => isComplete(am)
@@ -102,6 +102,7 @@ trait SymbolMetadata extends MeetableOps {
       case Some(am) => multiLine(am)
       case None => false
     }
+    def _isExistential(a: Option[T]) = a.map{x => isExistential(x)}.getOrElse(true)
   }
 
   /**
@@ -114,27 +115,30 @@ trait SymbolMetadata extends MeetableOps {
     // Test if this metadata instance has been sufficiently filled in
     def isComplete: Boolean = true
 
-    // Tests if this and that are identical
+    // Tests  afadf this and that are identical
     def _matches(that: self.type): Boolean = {this == that}
-    def metaMatches(that: Metadata) = this.getClass == that.getClass && _matches(that.asInstanceOf[self.type])
+    final def metaMatches(that: Metadata) = this.getClass == that.getClass && _matches(that.asInstanceOf[self.type])
 
     // Test if this and that can be met to produce valid metadata
     // TODO: Probably don't need both canMeet and incompatibilities, can just have latter
     def _canMeet(that: self.type)(implicit t: MeetFunc): Boolean = _incompatibilities(that).isEmpty
-    def metaCanMeet(that: Metadata)(implicit t: MeetFunc) = this.getClass == that.getClass && _canMeet(that.asInstanceOf[self.type])
+    final def metaCanMeet(that: Metadata)(implicit t: MeetFunc) = this.getClass == that.getClass && _canMeet(that.asInstanceOf[self.type])
 
     def _incompatibilities(that: self.type)(implicit t: MeetFunc): List[String] = Nil
-    def metaIncompatibilities(that: Metadata)(implicit t: MeetFunc) = if (this.getClass == that.getClass) _incompatibilities(that.asInstanceOf[self.type]) else List("Cannot meet metadata of different types")
+    final def metaIncompatibilities(that: Metadata)(implicit t: MeetFunc) = if (this.getClass == that.getClass) _incompatibilities(that.asInstanceOf[self.type]) else List("Cannot meet metadata of different types")
 
     // this: always preserve newest value
     // that: always preserve oldest value
     // or something else entirely, depends on metadata!
     def _meet(that: self.type)(implicit t: MeetFunc): Metadata = this
-    def metaMeet(that: Metadata)(implicit t: MeetFunc) = if (this.getClass == that.getClass) _meet(that.asInstanceOf[self.type])(t) else throw new IllegalMeetException
+    final def metaMeet(that: Metadata)(implicit t: MeetFunc) = if (this.getClass == that.getClass) _meet(that.asInstanceOf[self.type])(t) else throw new IllegalMeetException(this,that)
 
     // Pretty printing metadata (mostly for debugging)
     def makeString(prefix: String): String = this.toString()
     def multiLine = false
+
+    // Ignore undefined metadata by default
+    def isExistential = true
   }
 
   // All concrete classes (T) that extend Metadata should be meetable
@@ -150,6 +154,7 @@ trait SymbolMetadata extends MeetableOps {
     def _isComplete(a: T) = a.isComplete
     def _makeString(a: T, prefix: String) = " = " + a.makeString(prefix)
     def _multiLine(a: T) = a.multiLine
+    def _isExistential(a: T) = a.isExistential
   }
 
   /**
@@ -213,6 +218,8 @@ trait SymbolMetadata extends MeetableOps {
       a.toList.sortBy{x => x._1.toString}.map{case (k,v) => prefix + "." + k + makeString(v, prefix)}.mkString("\n")
     }
     def _multiLine(a: PropMap[K,V]): Boolean = a.size > 0
+
+    def _isExistential(a: PropMap[K,V]) = true
   }
 
   /**
@@ -262,7 +269,7 @@ trait SymbolMetadata extends MeetableOps {
       case (a: ScalarProperties, b: ScalarProperties) if _canMeet(a,b) => ScalarProperties(meet(a.data, b.data))
       case (a: StructProperties, b: StructProperties) if _canMeet(a,b)=> StructProperties(meet(a.children, b.children), meet(a.data, b.data))
       case (a: ArrayProperties, b: ArrayProperties) if _canMeet(a,b) => ArrayProperties(meet(a.child, b.child), meet(a.data, b.data))
-      case _ => throw new IllegalMeetException
+      case _ => throw new IllegalMeetException(a,b)
     }
     def _isComplete(a: SymbolProperties): Boolean = a match {
       case a: ScalarProperties => isComplete(a.data)
@@ -284,6 +291,8 @@ trait SymbolMetadata extends MeetableOps {
       case a: ScalarProperties => multiLine(a.data)
       case _ => true
     }
+
+    def _isExistential(a: SymbolProperties): Boolean = true
   }
 
   object NoData extends PropMap[Datakey[_], Metadata](Nil)
