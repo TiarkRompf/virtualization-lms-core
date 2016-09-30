@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package common
 
-import internal.{SymbolMetadata, Expressions, Blocks, Analyzing}
+import internal.{SymbolMetadata, Expressions, Effects, Analyzing}
 
 import scala.reflect._
 
@@ -52,7 +52,7 @@ trait MetadataOps extends Base with SymbolMetadata {
   def child(e: Rep[Any], index: String): SymbolProperties = getField(e, index).get
 }
 
-trait MetadataExp extends MetadataOps with Expressions with Blocks { this: BaseExp =>
+trait MetadataExp extends MetadataOps with Expressions with Effects { this: BaseExp =>
 
   private var metadataUpdateFlag: Boolean = false
   private def setMetadataUpdateFlag() { metadataUpdateFlag = true }
@@ -66,9 +66,20 @@ trait MetadataExp extends MetadataOps with Expressions with Blocks { this: BaseE
    */
   def setProps(e: Rep[Any], p: SymbolProperties)(implicit ctx: SourceContext) {
     val prevProps = metadata.get(e)
-    val newProps = meet(MetaOverwrite, Some(p), prevProps)
-    metadata += e -> newProps.get
-    if (!matches(prevProps, newProps)) setMetadataUpdateFlag()
+    try {
+      val newProps = meet(MetaOverwrite, Some(p), prevProps)
+      if (!matches(prevProps, newProps)) setMetadataUpdateFlag()
+
+      metadata += e -> newProps.get
+    }
+    catch { case t: Throwable =>
+      printerr(s"Error while setting metadata for $e")
+      printerr(s"Previous metadata ${makeString(prevProps)}")
+      printerr(s"Setting  metadata ${makeString(p)}")
+      printerr(t.toString)
+      t.printStackTrace()
+      sys.exit()
+    }
   }
 
   // Getters
@@ -106,8 +117,18 @@ trait MetadataExp extends MetadataOps with Expressions with Blocks { this: BaseE
   def initProps[A](tp: Manifest[A], symData: PropMap[Datakey[_],Metadata], child: Option[SymbolProperties], index: Option[String])(implicit ctx: SourceContext): SymbolProperties = tp match {
     case ArrayLike(childtp) =>
       val typeChild = initType(childtp)
-      val symChild = meet(MetaTypeInit, child, Some(typeChild))
-      ArrayProperties(symChild, symData)
+      try {
+        val symChild = meet(MetaTypeInit, child, Some(typeChild))
+        ArrayProperties(symChild, symData)
+      }
+      catch {case e: Throwable =>
+        Console.println(s"Error while initializing props structure for array ($tp)")
+        Console.println(s"  Child type: $childtp")
+        Console.println(s"  LHS is initType(child), RHS is given child metadata")
+        Console.println(e.toString)
+        e.printStackTrace()
+        sys.exit()
+      }
 
     case StructLike(elems) =>
       val typeFields = PropMap(elems.map{case (index,tp) => index -> initType(tp) })

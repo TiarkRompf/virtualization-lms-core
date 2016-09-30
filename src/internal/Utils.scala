@@ -59,4 +59,11 @@ trait Utils extends Config {
     else None
   }
 
+
+  // TODO: More correct spot for this?
+  def readable(x: Any) = x match {
+    case x: Class[_] => x.toString.split('$').last.replace("class ", "")
+    case _ => x.toString
+  }
+
 }

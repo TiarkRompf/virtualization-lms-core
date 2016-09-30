@@ -174,6 +174,7 @@ trait SymbolMetadata extends MeetableOps {
     def values: List[V] = data.values.toList
 
     def map(func: V => V) = PropMap( data.toList.map(kv => (kv._1, func(kv._2))) )
+    def foreach(func: (K,V) => Unit) = data.foreach{case (k,v) => func(k,v) }
 
     /**
      * Combine two property maps by key, merging value entries using function f
