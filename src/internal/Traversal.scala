@@ -19,6 +19,13 @@ trait Traversal extends FatBlockTraversal { self =>
   var reportMode: Boolean = true
   val recurse: RecurseCondition = AsDefault   // Recursive traversal of IR hierarchy
   val eatReflect: Boolean = false             // Ignore reflect nodes when matching?
+  var tab = 0
+
+  override def traverseBlock[A](block: Block[A]) {
+    tab += 1
+    super.traverseBlock(block)
+    tab -= 1
+  }
 
   def silence() {
     verboseMode = false
@@ -36,8 +43,11 @@ trait Traversal extends FatBlockTraversal { self =>
     }
     else x
   }
+
   final def debug(x: => Any) = withDebugging{ printdbg(x) }
+  final def debugs(x: => Any) = withDebugging{ printdbg("  "*tab + x) }
   final def msg(x: => Any) { if (verboseMode) System.out.println(x) }
+  final def msgs(x: => Any) { if (verboseMode) System.out.println("  "*tab + x) }
   final def report(x: => Any) { if (reportMode) System.out.println(x) }
 
   def preprocess[A:Manifest](b: Block[A]): Block[A] = { b }
@@ -47,10 +57,14 @@ trait Traversal extends FatBlockTraversal { self =>
   def runOnce[A:Manifest](b: Block[A]): Block[A] = processBlock(b)
 
   def run[A:Manifest](b: Block[A]): Block[A] = {
-    debug("Starting traversal " + name)
+    msg("Starting traversal " + name)
+    val start = System.currentTimeMillis
     val curBlock = preprocess(b)
     val resultBlock = runOnce(curBlock)
-    postprocess(resultBlock)
+    val result = postprocess(resultBlock)
+    val time = (System.currentTimeMillis - start).toFloat
+    msg(s"Completed traversal $name in " + "%.4f".format(time/1000) + " seconds")
+    result
   }
 
   override def traverseStm(stm: Stm) = stm match {
@@ -101,6 +115,8 @@ trait IterativeTraversal extends Traversal { self =>
    */
   override def run[A:Manifest](b: Block[A]): Block[A] = {
     msg("Starting traversal " + name)
+    val start = System.currentTimeMillis
+
     var curBlock = preprocess(b)
     do {
       runs = 0
@@ -116,6 +132,9 @@ trait IterativeTraversal extends Traversal { self =>
     if (!hasCompleted || !hasConverged) { IR.hadErrors = true }
     if (!hasCompleted) { failedToComplete() }
     else if (!hasConverged) { failedToConverge() }
+
+    val time = (System.currentTimeMillis - start).toFloat
+    msg(s"Completed traversal $name in " + "%.4f".format(time/1000) + " seconds")
 
     (curBlock)
   }
