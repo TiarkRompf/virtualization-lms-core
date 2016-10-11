@@ -68,8 +68,17 @@ trait ForwardTransformer extends AbstractSubstTransformer with Traversal { self 
   def self_mirror[A](sym: Sym[A], rhs : Def[A]): Exp[A] = {
     //TODO: HACK -- should not catch errors
     try {
+      val prevVars = IR.nVars
+
       val sym2 = mirror(rhs, self.asInstanceOf[Transformer])(mtype(sym.tp),mpos(sym.pos))
-      setProps(sym2, mirror(getProps(sym), self.asInstanceOf[Transformer]))
+
+      // HACK: Only mirror metadata from old symbol if this is a NEW symbol
+      // (do not mirror metadata onto symbols re-referenced due to rewrite rules)
+      sym2 match {
+        case s: Sym[_] if s.id >= prevVars =>
+          setProps(sym2, mirror(getProps(sym), self.asInstanceOf[Transformer]))
+        case _ =>
+      }
       (sym2)
     }
     catch {
