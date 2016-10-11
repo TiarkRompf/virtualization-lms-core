@@ -75,7 +75,7 @@ trait AbstractSubstTransformer extends AbstractTransformer {
   }
   def withSubstRules[A](rules: Map[Exp[Any],Exp[Any]])(block: => A): A = {
     val save = subst
-    _subst = rules
+    _subst ++= rules
     val r = block
     _subst = save
     r
