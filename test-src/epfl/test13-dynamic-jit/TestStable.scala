@@ -217,7 +217,7 @@ class TestStable extends FileDiffSuite {
     with EqualExpOpt with IfThenElseFatExp with LoopsFatExp with WhileExp
     with RangeOpsExp with PrintExp with FatExpressions with CompileScala
     with SeqOpsExp with StringOpsExp
-    with PrimitiveOpsExp with ArrayOpsExp with CastingOpsExp with StaticDataExp 
+    with PrimitiveOpsExpOpt with ArrayOpsExp with CastingOpsExp with StaticDataExp
     with StableVarsExp { self =>
     override val verbosity = 1
     dumpGeneratedCode = true
