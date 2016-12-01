@@ -95,14 +95,14 @@ trait ArrayLoopsExp extends LoopsExp { this: PrimitiveOpsExp =>
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case SimpleLoop(s,i, ArrayElem(y)) if f.hasContext => 
-      implicit def anyTyp: Typ[Any] = ManifestTyp(implicitly) // FIXME: wrong type
+      implicit def anyTyp: Typ[Any] = manifestTyp // FIXME: wrong type
       array(f(s)) { j => 
         f.asInstanceOf[AbstractSubstTransformer{val IR:ArrayLoopsExp.this.type}].withSubstScope(i -> j) { 
           f.reflectBlock(y)
         } 
       }
-    case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtype(manifest[A]))
-    case ArrayLen(a) => infix_length(f(a))(mtype(manifest[A]))
+    case ArrayIndex(a,i) => infix_at(f(a), f(i))(mtyp1[A])
+    case ArrayLen(a) => infix_length(f(a))(mtyp1[A])
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 

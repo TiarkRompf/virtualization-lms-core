@@ -14,13 +14,13 @@ trait FunctionsExp extends Functions with BaseExp { // shadow trait with same na
   implicit def funTyp[A:Typ,B:Typ]: Typ[A => B] = {
     implicit val ManifestTyp(mA) = typ[A]
     implicit val ManifestTyp(mB) = typ[B]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
   implicit def fun2Typ[A1:Typ,A2:Typ,B:Typ]: Typ[(A1,A2)=>B] = {
     implicit val ManifestTyp(mA1) = typ[A1]
     implicit val ManifestTyp(mA2) = typ[A2]
     implicit val ManifestTyp(mB) = typ[B]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
   // FIXME: there might be a conflict since this pulls in internal.Effects which is different from test1.Effects
   case class Lambda[A:Typ,B:Typ](fun: Exp[A] => Exp[B]) extends Def[A => B]

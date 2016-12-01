@@ -43,8 +43,8 @@ trait ArithExp extends Arith with BaseExp {
   //todo removed below as now handled in Base traits
   //implicit def unit(x: Double) = Const(x)
 
-  implicit def intTyp: Typ[Int] = ManifestTyp(implicitly)
-  implicit def doubleTyp: Typ[Double] = ManifestTyp(implicitly)
+  implicit def intTyp: Typ[Int] = manifestTyp
+  implicit def doubleTyp: Typ[Double] = manifestTyp
   
   case class Plus(x: Exp[Double], y: Exp[Double]) extends Def[Double]
   case class Minus(x: Exp[Double], y: Exp[Double]) extends Def[Double]

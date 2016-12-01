@@ -43,8 +43,9 @@ trait Base extends EmbeddedControls {
 trait BaseExp extends Base with Expressions with Blocks with Transforming {
   type Rep[+T] = Exp[T]
   //type Typ[T] = TypeExp[T] defined in Expressions
-  protected def manifest[T:Typ] = implicitly[Typ[T]] // TODO: change
-  protected def manifestTyp[T:Manifest]: Typ[T] = ManifestTyp(implicitly)
+  @deprecated("Use typ instead; will be removed in 1.1.0", "1.0.0")
+  protected def manifest[T:Typ] = implicitly[Typ[T]]
+  protected def manifestTyp[T:Manifest]: Typ[T] = ManifestTyp(implicitly[Manifest[T]])
 
   implicit def unitTyp: Typ[Unit] = manifestTyp
   implicit def nullTyp: Typ[Null] = manifestTyp

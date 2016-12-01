@@ -44,7 +44,7 @@ trait OrderingOps extends Base with Variables with BooleanOps with PrimitiveOps 
 
 trait OrderingOpsExp extends OrderingOps with VariablesExp {
   abstract class DefMN[T:Ordering:Typ,A] extends Def[A] {
-    def mev = manifest[T]
+    def mev = typ[T]
     def aev = implicitly[Ordering[T]]
   }
   case class OrderingLT      [T:Ordering:Typ](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T,Boolean]
@@ -74,14 +74,14 @@ trait OrderingOpsExp extends OrderingOps with VariablesExp {
     case e@OrderingMax(a,b)                     => ordering_max(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev),pos)
     case e@OrderingMin(a,b)                     => ordering_min(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev),pos)
     case e@OrderingCompare(a,b)                 => ordering_compare(f(a),f(b))(e.aev,e.mev,pos)
-    case Reflect(e@OrderingLT(a,b), u, es)      => reflectMirrored(Reflect(OrderingLT(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingLTEQ(a,b), u, es)    => reflectMirrored(Reflect(OrderingLTEQ(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingGT(a,b), u, es)      => reflectMirrored(Reflect(OrderingGT(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingGTEQ(a,b), u, es)    => reflectMirrored(Reflect(OrderingGTEQ(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingEquiv(a,b), u, es)   => reflectMirrored(Reflect(OrderingEquiv(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingMax(a,b), u, es)     => reflectMirrored(Reflect(OrderingMax(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingMin(a,b), u, es)     => reflectMirrored(Reflect(OrderingMin(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingCompare(a,b), u, es) => reflectMirrored(Reflect(OrderingCompare(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@OrderingLT(a,b), u, es)      => reflectMirrored(Reflect(OrderingLT(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingLTEQ(a,b), u, es)    => reflectMirrored(Reflect(OrderingLTEQ(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingGT(a,b), u, es)      => reflectMirrored(Reflect(OrderingGT(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingGTEQ(a,b), u, es)    => reflectMirrored(Reflect(OrderingGTEQ(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingEquiv(a,b), u, es)   => reflectMirrored(Reflect(OrderingEquiv(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingMax(a,b), u, es)     => reflectMirrored(Reflect(OrderingMax(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev)), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingMin(a,b), u, es)     => reflectMirrored(Reflect(OrderingMin(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev)), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingCompare(a,b), u, es) => reflectMirrored(Reflect(OrderingCompare(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
     case _ => super.mirror(e, f)
   }).asInstanceOf[Exp[A]]
 }

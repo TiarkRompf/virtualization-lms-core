@@ -17,7 +17,7 @@ trait CudaDeviceTransfer extends AbstractDeviceTransfer {
       out.append("}\n")
       (signature+";\n", out.toString)
     }
-    else if (tp.erasure == classOf[List[Any]]) {
+    else if (isListType(tp)) {
       val out = new StringBuilder
       val signature = "%s *sendCuda_%s(%s *sym)".format(remap(tp),mangledName(remap(tp)),remapHost(tp))
       out.append(signature + " {\n")
@@ -43,7 +43,7 @@ trait CudaDeviceTransfer extends AbstractDeviceTransfer {
       out.append("}\n")
       (signature+";\n", out.toString)
     }
-    else if (tp.erasure == classOf[List[Any]]) {
+    else if (isListType(tp)) {
       val out = new StringBuilder
       val signature = "%s *recvCuda_%s(%s *sym_dev)".format(remapHost(tp),mangledName(remap(tp)),remap(tp))
       out.append(signature + " {\n")
@@ -96,7 +96,7 @@ trait CudaDeviceTransfer extends AbstractDeviceTransfer {
       out.append("}\n")
       (signature+";\n", out.toString)
     }
-    else if (tp.erasure == classOf[List[Any]]) {
+    else if (isListType(tp)) {
       val out = new StringBuilder
       val signature = "void sendUpdateCuda_%s(%s *sym_dev, %s *sym)".format(mangledName(remap(tp)),remap(tp),remapHost(tp))
       out.append(signature + " {\n")
@@ -118,7 +118,7 @@ trait CudaDeviceTransfer extends AbstractDeviceTransfer {
       out.append("}\n")
       (signature+";\n", out.toString)
     }
-    else if (tp.erasure == classOf[List[Any]]) {
+    else if (isListType(tp)) {
       val out = new StringBuilder
       val signature = "void recvUpdateCuda_%s(%s *sym_dev, %s *sym)".format(mangledName(remap(tp)),remap(tp),remapHost(tp))
       out.append(signature + " {\n")

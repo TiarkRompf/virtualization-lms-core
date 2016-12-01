@@ -32,7 +32,7 @@ trait CellOps extends Base {
 trait CellOpsExp extends CellOps with BaseExp with StaticDataExp {
   implicit def cellTyp[T:Typ]: Typ[RCell[T]] = {
     implicit val ManifestTyp(m) = typ[T]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
 
   case class CellInit[T](tag: String, x: Rep[T]) extends Def[RCell[T]]
@@ -123,8 +123,8 @@ trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with Unch
 
     implicit val ManifestTyp(mA) = typ[U]
     implicit val ManifestTyp(mB) = typ[B]
-    implicit val cbTyp: Typ[List[Any] => (U=>B)] = ManifestTyp(implicitly)
-    implicit val resTyp: Typ[U=>B] = ManifestTyp(implicitly)
+    implicit val cbTyp: Typ[List[Any] => (U=>B)] = manifestTyp
+    implicit val resTyp: Typ[U=>B] = manifestTyp
 
     unchecked[U=>B](staticData(callback),".apply("+fvIds.map(i=>"x"+i)+")","// compile dynamic: fv = ",fv)
 

@@ -66,26 +66,26 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   }
 
   case class ArrayNew[T:Typ](n: Exp[Int]) extends Def[Array[T]] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayFromSeq[T:Typ](xs: Seq[Exp[T]]) extends Def[Array[T]] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayApply[T:Typ](a: Exp[Array[T]], n: Exp[Int]) extends Def[T] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayUpdate[T:Typ](a: Exp[Array[T]], n: Exp[Int], y: Exp[T]) extends Def[Unit] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayLength[T:Typ](a: Exp[Array[T]]) extends Def[Int] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayForeach[T](a: Exp[Array[T]], x: Sym[T], block: Block[Unit]) extends Def[Unit]
   case class ArrayCopy[T:Typ](src: Exp[Array[T]], srcPos: Exp[Int], dest: Exp[Array[T]], destPos: Exp[Int], len: Exp[Int]) extends Def[Unit] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArraySort[T:Typ](x: Exp[Array[T]]) extends Def[Array[T]] {
-    val m = manifest[T]
+    def m = typ[T]
   }
   case class ArrayMap[A:Typ,B:Typ](a: Exp[Array[A]], x: Sym[A], block: Block[B]) extends Def[Array[B]] {
     val array = NewArray[B](a.length)
@@ -110,7 +110,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   def array_map[A:Typ,B:Typ](a: Exp[Array[A]], f: Exp[A] => Exp[B]) = {
     val x = fresh[A]
     val b = reifyEffects(f(x))
-    reflectEffect(ArrayMap(a, x, b), summarizeEffects(b))
+    reflectEffect(ArrayMap(a, x, b), summarizeEffects(b).star)
   }
   def array_toseq[A:Typ](a: Exp[Array[A]]) = ArrayToSeq(a)
   def array_slice[A:Typ](a: Rep[Array[A]], start:Rep[Int], end:Rep[Int]) = ArraySlice(a,start,end)
@@ -119,16 +119,16 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp {
   // mirroring
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case ArrayApply(a,x) => array_apply(f(a),f(x))(mtype(manifest[A]),pos)
-    case ArrayLength(x) => array_length(f(x))(mtype(manifest[A]),pos)
-    case e@ArraySort(x) => array_sort(f(x))(mtype(manifest[A]),pos)
-    case e@ArrayCopy(a,ap,d,dp,l) => array_copy(f(a),f(ap),f(d),f(dp),f(l))(mtype(manifest[A]),pos)
-    case Reflect(e@ArrayNew(n), u, es) => reflectMirrored(Reflect(ArrayNew(f(n))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
-    case Reflect(e@ArrayLength(x), u, es) => reflectMirrored(Reflect(ArrayLength(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
-    case Reflect(e@ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@ArraySort(x), u, es) => reflectMirrored(Reflect(ArraySort(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@ArrayUpdate(l,i,r), u, es) => reflectMirrored(Reflect(ArrayUpdate(f(l),f(i),f(r))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)   
-    case Reflect(e@ArrayCopy(a,ap,d,dp,l), u, es) => reflectMirrored(Reflect(ArrayCopy(f(a),f(ap),f(d),f(dp),f(l))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)     
+    case ArrayApply(a,x) => array_apply(f(a),f(x))(mtyp1[A],pos)
+    case ArrayLength(x) => array_length(f(x))(mtyp1[A],pos)
+    case e@ArraySort(x) => array_sort(f(x))(mtyp1[A],pos)
+    case e@ArrayCopy(a,ap,d,dp,l) => array_copy(f(a),f(ap),f(d),f(dp),f(l))(mtyp1[A],pos)
+    case Reflect(e@ArrayNew(n), u, es) => reflectMirrored(Reflect(ArrayNew(f(n))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@ArrayLength(x), u, es) => reflectMirrored(Reflect(ArrayLength(f(x))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@ArraySort(x), u, es) => reflectMirrored(Reflect(ArraySort(f(x))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@ArrayUpdate(l,i,r), u, es) => reflectMirrored(Reflect(ArrayUpdate(f(l),f(i),f(r))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@ArrayCopy(a,ap,d,dp,l), u, es) => reflectMirrored(Reflect(ArrayCopy(f(a),f(ap),f(d),f(dp),f(l))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
 

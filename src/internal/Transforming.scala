@@ -76,9 +76,15 @@ trait Transforming extends Expressions with Blocks with OverloadHack {
 
   // FIXME: mirroring for effects!
 
+  /** Used to pass a `Typ[A]` when `Typ[B]` is expected, either because the Scala compiler can't figure out
+    * they are the same (e.g. in GADTs) or because we can't obtain the correct instance of `Typ[B]`
+    */
   def mtype[A,B](m:Typ[A]): Typ[B] = m.asInstanceOf[Typ[B]] // hack: need to pass explicit manifest during mirroring
   def mpos(s: List[SourceContext]): SourceContext = if (s.nonEmpty) s.head else implicitly[SourceContext] // hack: got list of pos but need to pass single pos to mirror
-
+  /** Equivalent to `mtype(typ[A])` */
+  def mtyp1[A:Typ] = new MTyp1[A]
+  class MTyp1[A](implicit val m:Typ[A])
+  implicit def castMTyp[B](m: MTyp1[_]): Typ[B] = mtype(m.m)
   
   
   def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = mirrorDef(e,f)
@@ -93,7 +99,7 @@ trait Transforming extends Expressions with Blocks with OverloadHack {
 trait FatTransforming extends Transforming with FatExpressions {
   
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case Forward(x) => toAtom(Forward(f(x)))(mtype(typ[A]),pos)
+    case Forward(x) => toAtom(Forward(f(x)))(mtyp1[A],pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] 
   

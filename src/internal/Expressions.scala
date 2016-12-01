@@ -20,22 +20,35 @@ trait Expressions extends Utils {
     def arrayTyp: Typ[Array[T]]
     def runtimeClass: java.lang.Class[_]
     def <:<(that: Typ[_]): Boolean
-    def erasure: java.lang.Class[_]
+    @deprecated("Use runtimeClass instead; will be removed in 1.1.0", "1.0.0")
+    def erasure: java.lang.Class[_] = runtimeClass
+    def isArray = runtimeClass.isArray
   }
 
   case class ManifestTyp[T](mf: Manifest[T]) extends Typ[T] {
-    def typeArguments: List[Typ[_]]   = mf.typeArguments.map(ManifestTyp(_))
+    def typeArguments: List[Typ[_]] = mf.typeArguments.map(ManifestTyp(_))
     def arrayTyp: Typ[Array[T]] = ManifestTyp(mf.arrayManifest)
     def runtimeClass: java.lang.Class[_] = mf.runtimeClass
     def <:<(that: Typ[_]): Boolean = that match { 
       case ManifestTyp(mf1) => mf.<:<(mf1) 
-      case _ => false 
+      case _ => false
     }
-    def erasure: java.lang.Class[_] = mf.erasure
     //override def canEqual(that: Any): Boolean = mf.canEqual(that) // TEMP
     //override def equals(that: Any): Boolean = mf.equals(that) // TEMP
     //override def hashCode = mf.hashCode
     override def toString = mf.toString
+  }
+
+  object ClassTyp {
+    def unapply(t: Typ[_]): Option[(Class[_], List[Typ[_]])] = Some(t.runtimeClass, t.typeArguments)
+  }
+
+  object ArrayTyp {
+    def unapply(t: Typ[_]) =
+      if (t.isArray)
+        Some(t.typeArguments.head)
+      else
+        None
   }
 
   def typ[T:Typ]: Typ[T] = implicitly[Typ[T]]
@@ -66,6 +79,14 @@ trait Expressions extends Utils {
   }
 
   case class Variable[+T](val e: Exp[Variable[T]]) // TODO: decide whether it should stay here ... FIXME: should be invariant
+
+  object VariableTyp {
+    def unapply(t: Typ[_]): Option[Typ[_]] =
+      if (t.runtimeClass == classOf[Variable[_]])
+        Some(t.typeArguments.head)
+      else
+        None
+  }
 
   var nVars = 0
   def fresh[T:Typ]: Sym[T] = Sym[T] { nVars += 1;  if (nVars%1000 == 0) printlog("nVars="+nVars);  nVars -1 }

@@ -50,17 +50,17 @@ trait MatchProg { this: Matching with Extractors =>
 }
 
 trait MatchProgExp0 extends common.BaseExp with MatchProg { this: Matching with Extractors =>
-  implicit def successTyp: Typ[Success] = ManifestTyp(implicitly)
+  implicit def successTyp: Typ[Success] = manifestTyp
 
-  implicit def intTyp: Typ[Int] = ManifestTyp(implicitly)
-  implicit def stringTyp: Typ[String] = ManifestTyp(implicitly)
+  implicit def intTyp: Typ[Int] = manifestTyp
+  implicit def stringTyp: Typ[String] = manifestTyp
   implicit def listTyp[T:Typ]: Typ[List[T]] = {
     implicit val ManifestTyp(m) = typ[T]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
   implicit def consTyp[T:Typ]: Typ[::[T]] = {
     implicit val ManifestTyp(m) = typ[T]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
   
 }

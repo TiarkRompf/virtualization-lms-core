@@ -28,17 +28,17 @@ trait ParsersProg extends Parsers { this: Matching with Extractors =>
 trait ParsersProgExp0 extends common.BaseExp with ParsersProg { this: Matching with Extractors =>
 
   implicit def inputTyp: Typ[Input] = listTyp
-  implicit def resultTyp: Typ[ParseResult] = ManifestTyp(implicitly)
-  implicit def successTyp: Typ[Success] = ManifestTyp(implicitly)
-  implicit def failureTyp: Typ[Failure] = ManifestTyp(implicitly)
+  implicit def resultTyp: Typ[ParseResult] = manifestTyp
+  implicit def successTyp: Typ[Success] = manifestTyp
+  implicit def failureTyp: Typ[Failure] = manifestTyp
 
   implicit def listTyp[T:Typ]: Typ[List[T]] = {
     implicit val ManifestTyp(m) = typ[T]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
   implicit def consTyp[T:Typ]: Typ[::[T]] = {
     implicit val ManifestTyp(m) = typ[T]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
 }
 
@@ -52,7 +52,7 @@ class TestParsers extends FileDiffSuite {
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll with FlatResult // with ControlOpt
         with DisableCSE {
           type Elem = Char
-          implicit val mE: Typ[Char] = ManifestTyp(implicitly)
+          implicit val mE: Typ[Char] = manifestTyp
           def toElem(c: Char) = c
         }
       import ParsersProgExp._
@@ -73,7 +73,7 @@ class TestParsers extends FileDiffSuite {
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll with FlatResult // with ControlOpt
         {
           type Elem = Char
-          implicit val mE: Typ[Char] = ManifestTyp(implicitly)
+          implicit val mE: Typ[Char] = manifestTyp
           def toElem(c: Char) = c
         }
       import ParsersProgExp._
