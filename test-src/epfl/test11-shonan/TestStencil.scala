@@ -27,7 +27,7 @@ class TestStencil extends FileDiffSuite {
       with OrderingOpsExpOpt with BooleanOpsExp
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp with StaticDataExp
       with StringOpsExp with SeqOpsExp
-      with IfThenElseExpOpt with PrintExp with PrimitiveOpsExp
+      with IfThenElseExpOpt with PrintExp with PrimitiveOpsExpOpt
       with CompileScala { self => 
     //override val verbosity = 1
     def infix_toDouble(x: Rep[Int]): Rep[Double] = int_double_value(x)
