@@ -20,7 +20,12 @@ trait Expressions extends Utils {
     def pos: List[SourceContext] = Nil
   }
 
-  case class Const[+T:Manifest](x: T) extends Exp[T]
+  case class Const[+T:Manifest](x: T) extends Exp[T] {
+    override def equals(other: Any) = other match {
+      case c: Const[_] => x == c.x && tp == c.tp
+      case _ => false
+    }
+  }
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     var sourceContexts: List[SourceContext] = Nil
@@ -65,11 +70,11 @@ trait Expressions extends Utils {
     case _ => None
   }
 
-  def infix_defines[A](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
-    case TP(sym: Sym[A], `rhs`) => Some(sym)
+  def infix_defines[A: Manifest](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
+    case TP(sym: Sym[A], `rhs`) if sym.tp <:< manifest[A] => Some(sym)
     case _ => None
   }
-  
+
   case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
 
   // graph construction state
@@ -108,7 +113,7 @@ trait Expressions extends Utils {
     globalDefsCache.get(s)
     //globalDefs.find(x => x.defines(s).nonEmpty)
 
-  def findDefinition[T](d: Def[T]): Option[Stm] =
+  def findDefinition[T: Manifest](d: Def[T]): Option[Stm] =
     globalDefs.find(x => x.defines(d).nonEmpty)
 
   def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): Stm =
@@ -116,8 +121,11 @@ trait Expressions extends Utils {
       createDefinition(fresh[T](pos), d)
     }
 
-  def findOrCreateDefinitionExp[T:Manifest](d: Def[T], pos: List[SourceContext]): Exp[T] =
-    findOrCreateDefinition(d, pos).defines(d).get
+  def findOrCreateDefinitionExp[T:Manifest](d: Def[T], pos: List[SourceContext]): Exp[T] = {
+    val stm = findOrCreateDefinition(d, pos)
+    val optExp = stm.defines(d)
+    optExp.get
+  }
 
   def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
     val f = TP(s, d)

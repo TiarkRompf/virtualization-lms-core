@@ -6,9 +6,9 @@ trait Parsers { this: Matching with Extractors =>
   
   type Elem
   type Input = List[Elem]
+  // Don't declare as implicit val in children, it gives problems with initialization order!
   implicit val mE: Manifest[Elem]
-  //implicit val mI: Manifest[List[Elem]]
-  
+
   abstract class Parser {
     def apply(in: Rep[Input]): Rep[ParseResult]
   }
