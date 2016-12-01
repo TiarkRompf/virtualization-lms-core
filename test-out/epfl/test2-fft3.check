@@ -27,7 +27,7 @@ val x15 = x3-x7
 val x24 = x12-x15
 val x25 = x11-x16
 val x26 = x12+x15
-val x27 = Array(x17,x18,x23,x24,x19,x20,x25,x26)
+val x27 = Array[Double](x17,x18,x23,x24,x19,x20,x25,x26)
 x27
 }
 }
