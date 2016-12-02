@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import internal._
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait IterableOps extends Variables {
 

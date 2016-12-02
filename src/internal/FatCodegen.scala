@@ -32,3 +32,4 @@ trait GenericFatCodegen extends GenericNestedCodegen with FatBlockTraversal {
   }
 
 }
+

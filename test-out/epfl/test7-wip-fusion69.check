@@ -51,10 +51,10 @@ val x24 = println(x21)
 -- vertical transformation
 
 (VFT) Fusing prod Sym(1) with cons Sym(13). Type: Single_McFor(Sym(8),(Sym(1),Sym(8)),Const(100),Sym(12),Sym(1),Sym(13))
-(VFT) Fused prod Sym(1) with cons Sym(13), fused sym: Sym(26)
+(VFT) Fused prod Sym(1) with cons Sym(13), fused sym: Sym(27)
 
 (VFT) Fusing prod Sym(1) with cons Sym(7). Type: Single_McFor(Sym(3),(Sym(1),Sym(3)),Const(100),Sym(6),Sym(1),Sym(7))
-(VFT) Fused prod Sym(1) with cons Sym(7), fused sym: Sym(28)
+(VFT) Fused prod Sym(1) with cons Sym(7), fused sym: Sym(29)
 
 (VFT) Not fused prod Sym(1) with cons Sym(21) because singleton producer not fused with reduce because need to maintain implementation-specific behavior
 (VFT) No producers found for cons Sym(21)
@@ -62,10 +62,11 @@ val x24 = println(x21)
 (VFT) all vertically fused: 
 
 -- after vertical transformation
-val x26 = println(101)
-val x28 = Array(101)
-val x29 = x28.apply(0)
-val x30 = println(x29)
+val x26 = 100 + 1
+val x27 = println(x26)
+val x29 = Array(x26)
+val x30 = x29.apply(0)
+val x31 = println(x30)
 val x1 = Array(100)
 val x2 = x1.length
 var x18 = 0
@@ -77,7 +78,7 @@ val x20 = x19 + x18
 x18 = x20
 }
 val x21 = x18
-val x31 = println(x21)
+val x32 = println(x21)
 
 -- horizontal transformation
 (HFT) Recording Sym(21), no fusion
@@ -85,10 +86,11 @@ val x31 = println(x21)
 (HFT) all horizontally fused: 
 
 -- after horizontal transformation
-val x33 = println(101)
-val x28 = Array(101)
-val x29 = x28.apply(0)
-val x34 = println(x29)
+val x26 = 100 + 1
+val x34 = println(x26)
+val x29 = Array(x26)
+val x30 = x29.apply(0)
+val x35 = println(x30)
 val x1 = Array(100)
 val x2 = x1.length
 var x18 = 0
@@ -100,13 +102,14 @@ val x20 = x19 + x18
 x18 = x20
 }
 val x21 = x18
-val x35 = println(x21)
+val x36 = println(x21)
 
 -- fusion
-val x33 = println(101)
-val x28 = Array(101)
-val x29 = x28.apply(0)
-val x34 = println(x29)
+val x26 = 100 + 1
+val x34 = println(x26)
+val x29 = Array(x26)
+val x30 = x29.apply(0)
+val x35 = println(x30)
 val x1 = Array(100)
 val x2 = x1.length
 var x18 = 0
@@ -118,5 +121,5 @@ val x20 = x19 + x18
 x18 = x20
 }
 val x21 = x18
-val x35 = println(x21)
+val x36 = println(x21)
 -- done

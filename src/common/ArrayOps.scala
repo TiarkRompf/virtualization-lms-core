@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import internal._
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait ArrayOps extends Variables {
 
@@ -297,4 +297,3 @@ trait CGenArrayOps extends CGenBase with BaseGenArrayOps {
       }
     }
 }
-

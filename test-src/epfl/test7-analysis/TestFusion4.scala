@@ -6,7 +6,7 @@ import common._
 import test1._
 
 import util.{OverloadHack, GraphUtil}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
@@ -104,7 +104,7 @@ class TestFusion4 extends FileDiffSuite {
 /* 
   // Commented out, need to recheck with MultiCollect-based IR, adding specialized codegen to recreate filter
   // code might not be worth the effort for this test DSL.
-  val prefix = "test-out/epfl/test7-wip2-"
+  val prefix = home + "test-out/epfl/test7-wip2-"
 
   def testFusionTransform00 = withOutFileChecked(prefix+"fusion00") {
     trait Prog extends MyFusionProgArith with ImplArith {

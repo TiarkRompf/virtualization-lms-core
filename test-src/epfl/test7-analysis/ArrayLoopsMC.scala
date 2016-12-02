@@ -9,11 +9,10 @@ import internal.AbstractSubstTransformer
 
 
 import util.OverloadHack
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 import scala.collection.mutable.HashMap
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-
-
 
 trait ArrayLoopsMC extends Loops with OverloadHack {
   def emptyArray[T:Manifest](): Rep[Array[T]]
@@ -27,12 +26,23 @@ trait ArrayLoopsMC extends Loops with OverloadHack {
   def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
   def foreach2[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Unit]): Rep[Unit]
 
+  //implicit def varToArrayOps[T:Manifest](x: Var[Array[T]]) = new ArrayLoopsMCOpsCls(readVar(x))
+  implicit def repArrayToArrayOps[T:Manifest](a: Rep[Array[T]]) = new ArrayLoopsMCOpsCls(a)
+  //implicit def arrayToArrayOps[T:Manifest](a: Array[T]) = new ArrayLoopsMCOpsCls(unit(a))
+
+  class ArrayLoopsMCOpsCls[T:Manifest](a: Rep[Array[T]]) {
+    def at(i: Rep[Int]): Rep[T] = infix_at(a, i)
+    def length(): Rep[Int] = infix_length(a)
+    def foreach(f: Rep[T] => Rep[Unit]): Rep[Unit] = infix_foreach(a, f)
+  }
+
+  //should we change the name so we son't get confused?
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T]
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int]
   def infix_foreach[T:Manifest](a: Rep[Array[T]], f: Rep[T] => Rep[Unit]): Rep[Unit]
 }
 
-
+@virtualize
 trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with NumericOpsExp with PrimitiveOpsExp {
 
   // Keep generated arrays from being lifted out of loop when used in MultiCollect(IfThenElse(cond, thenp, empty))
@@ -105,7 +115,7 @@ trait ArrayLoopsMCExp extends LoopsExp with EffectExp with IfThenElseExp with Nu
     val yEff = summarizeEffects(y)
     val accSym = fresh[Double]
     val valSym = fresh[Double]
-    val reduceFun = reifyEffectsHere(infix_+(valSym, accSym))
+    val reduceFun = reifyEffectsHere(double_plus(valSym, accSym))
     val rEff = summarizeEffects(reduceFun)
     reflectEffect(SimpleLoop(shape, x, MultiReduceElem[Double](y, reduceFun, unit(0.0), accSym, valSym)), (yEff.star andThen (rEff.star)).star)
   }

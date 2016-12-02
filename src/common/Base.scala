@@ -2,7 +2,8 @@ package scala.virtualization.lms
 package common
 
 import internal._
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.EmbeddedControls
 
 /**
  * This trait automatically lifts any concrete instance to a representation.
@@ -19,7 +20,6 @@ trait LiftAll extends Base {
  */
 trait Base extends EmbeddedControls {
   type API <: Base
-
   type Rep[+T]
 
   protected def unit[T:Manifest](x: T): Rep[T]

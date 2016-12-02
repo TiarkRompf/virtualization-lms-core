@@ -9,24 +9,30 @@ import internal.{FatExpressions,GenericFatCodegen}
 import test1._
 import test7.{Print,PrintExp,ScalaGenPrint}
 import test7.{ArrayLoops,ArrayLoopsExp,ArrayLoopsFatExp,ScalaGenArrayLoops,ScalaGenFatArrayLoopsFusionOpt}
-import scala.reflect.SourceContext
+
+import org.scala_lang.virtualized.virtualize
+import org.scala_lang.virtualized.SourceContext
 
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
-
-trait ComplexArith extends Arith with ComplexBase with OverloadHack {
+@virtualize
+trait ComplexArith extends Variables with Arith with ComplexBase with OverloadHack {
   
-  def infix_+(x: Rep[Complex], y: Rep[Complex])(implicit o: Overloaded1): Rep[Complex] = Complex(x.re + y.re, x.im + y.im)
-  def infix_-(x: Rep[Complex], y: Rep[Complex])(implicit o: Overloaded1): Rep[Complex] = Complex(x.re - y.re, x.im - y.im)
-  //def infix_*(x: Rep[Complex], y: Rep[Complex]): Rep[Complex] = Complex(x.re + y.re, x.im + y.im)
+  //no lifting?
+  implicit def var2ComplexOps(x: Var[Complex]) = new ComplexOps(readVar(x))
+  implicit class ComplexOps(x: Rep[Complex]) {
+    def +(y: Rep[Complex]): Rep[Complex] = Complex(x.re + y.re, x.im + y.im)
+    def -(y: Rep[Complex]): Rep[Complex] = Complex(x.re - y.re, x.im - y.im)
+  }
   
 }
 
-trait ComplexBase extends Arith with StructOps {
+@virtualize
+trait ComplexBase extends Arith with StructOps with RecordOps {
   type Complex = Record { val re: Double; val im: Double }
-  def Complex(r: Rep[Double], i: Rep[Double]): Rep[Complex] = new Record { val re = r; val im = i }
+  def Complex(r: Rep[Double], i: Rep[Double]): Rep[Complex] = Record(re = r, im = i)
 }
 
 // ------ struct impl follows, will move to common once stable
@@ -122,6 +128,7 @@ class TestStruct extends FileDiffSuite {
   def testStruct1 = {
     withOutFile(prefix+"struct1") {
       // test variable splitting
+      @virtualize
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var c = Complex(x.toDouble, 0)
@@ -138,6 +145,7 @@ class TestStruct extends FileDiffSuite {
     withOutFile(prefix+"struct2") {
       // test basic struct flattening (loops, variables, conditionals)
       println("REMARK: this makes only sense with fat codegen (computation duplicated and some structs not removed otherwise)")
+      @virtualize
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           // split loops (rely on fusion, don't want to duplicate computation!)
@@ -167,6 +175,7 @@ class TestStruct extends FileDiffSuite {
   def testStruct2b = {
     withOutFile(prefix+"struct2b") {
       // test basic struct flattening (loops, variables, conditionals)
+      @virtualize
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           // split loops (rely on fusion, don't want to duplicate computation!)
@@ -200,14 +209,16 @@ class TestStruct extends FileDiffSuite {
   def testStruct3 = {
     withOutFile(prefix+"struct3") {
       // fuse conjugate computation with construction, essentially a no-op
+      @virtualize
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
 
           val vector1 = array(100) { i => Complex(i.toDouble, 0.0 - i.toDouble) }
 
           def conj(c: Rep[Complex]) = Complex(c.re, 0.0 - c.im)
-          def infix_map[A:Manifest,B:Manifest](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
-
+          implicit class ArrayOps[A:Manifest](c: Rep[Array[A]]) {
+            def map[B:Manifest](f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
+          }
           val vector3 = vector1.map(conj)
 
           print(vector3)
@@ -230,6 +241,7 @@ class TestStruct extends FileDiffSuite {
 
   def testStruct4 = {
     withOutFile(prefix+"struct4") {
+      @virtualize
       trait Prog extends DSL {
         // recognize that only imaginary part is modified, real part untouched
         def test(x: Rep[Int]) = {
@@ -238,7 +250,9 @@ class TestStruct extends FileDiffSuite {
           val vector2 = array(100) { i => Complex(0.0 - i.toDouble, i.toDouble) }
 
           def conj(c: Rep[Complex]) = Complex(c.re, 0.0 - c.im)
-          def infix_map[A:Manifest,B:Manifest](c: Rep[Array[A]], f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
+          implicit class ArrayOps[A:Manifest](c: Rep[Array[A]]) {
+            def map[B:Manifest](f: Rep[A] => Rep[B]) = array(c.length) { i => f(c.at(i)) }
+          }
 
           var vvar = vector1 // force access outside conditional, otherwise construction will be moved inside, defeating purpose of test
 
@@ -263,9 +277,10 @@ class TestStruct extends FileDiffSuite {
   def testStruct5 = {
     withOutFile(prefix+"struct5") {
 
-      trait Vectors extends StructOps {
+      trait Vectors extends RecordOps {
         type Vector2D = Record { val x: Double; val y: Double }
-        def Vector2D(px: Rep[Double], py: Rep[Double]): Rep[Vector2D] = new Record { val x = px; val y = py }
+        def Vector2D(px: Rep[Double], py: Rep[Double]): Rep[Vector2D] = 
+          Record(x = px, y = py)
       }
 
       trait Prog extends DSL with Vectors {
@@ -284,9 +299,10 @@ class TestStruct extends FileDiffSuite {
   def testStruct6 = {
     withOutFile(prefix+"struct6") {
 
-      trait Complex2 extends Arith with StructOps {
+      trait Complex2 extends Arith with RecordOps {
         type Complex2 = Record { val re: Double; val im: Double }
-        def Complex2(r: Rep[Double], i: Rep[Double]): Rep[Complex2] = new Record { val re = r; val im = i }
+        def Complex2(r: Rep[Double], i: Rep[Double]): Rep[Complex2] = 
+          Record(re = r, im = i)
       }
 
       trait Prog extends DSL with Complex2 {
@@ -301,3 +317,4 @@ class TestStruct extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"struct6")
   }
 }
+

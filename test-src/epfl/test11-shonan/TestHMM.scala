@@ -8,10 +8,10 @@ import test7._
 import test8.{ArrayMutation,ArrayMutationExp,ScalaGenArrayMutation}
 
 import util.OverloadHack
-import scala.reflect.SourceContext
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 
 
 class TestHMM extends FileDiffSuite {
@@ -23,7 +23,7 @@ class TestHMM extends FileDiffSuite {
     def staticData[T:Manifest](x: T): Rep[T]
     def test(x: Rep[Array[Int]]): Rep[Array[Int]]
   }
-  trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp 
+  trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt with PrimitiveOpsExpOpt with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp with StaticDataExp
       with IfThenElseExpOpt with PrintExp 
       with CompileScala { self => 
@@ -54,7 +54,7 @@ class TestHMM extends FileDiffSuite {
   
   def testHmm1 = {
     withOutFileChecked(prefix+"hmm1") {
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(v: Rep[Array[Int]]) = {
 
           val A = scala.Array
@@ -97,7 +97,7 @@ class TestHMM extends FileDiffSuite {
 
   def testHmm2 = {
     withOutFileChecked(prefix+"hmm2") {
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(v: Rep[Array[Int]]) = {
 
           // generate a loop or unroll fully, depending on condition

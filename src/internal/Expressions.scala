@@ -5,13 +5,13 @@ import java.lang.{StackTraceElement,Thread}
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.Queue
 import scala.collection.mutable.ListBuffer
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 
 /**
  * The Expressions trait houses common AST nodes. It also manages a list of encountered Definitions which
- * allows for common sub-expression elimination (CSE).  
- * 
+ * allows for common sub-expression elimination (CSE).
+ *
  * @since 0.1
  */
 trait Expressions extends Utils {
@@ -19,6 +19,7 @@ trait Expressions extends Utils {
   abstract class Exp[+T:Manifest] { // constants/symbols (atomic)
     def tp: Manifest[T @uncheckedVariance] = manifest[T] //invariant position! but hey...
     def pos: List[SourceContext] = Nil
+    //TODO(macrotrans) def +(s: Rep[String]/String) ??
   }
 
   case class Const[+T:Manifest](x: T) extends Exp[T]
@@ -38,7 +39,7 @@ trait Expressions extends Utils {
 
   def quotePos(e: Exp[Any]): String = e.pos match {
     case Nil => "<unknown>"
-    case cs => 
+    case cs =>
       def all(cs: SourceContext): List[SourceContext] = cs.parent match {
         case None => List(cs)
         case Some(p) => cs::all(p)
@@ -51,12 +52,18 @@ trait Expressions extends Utils {
     override final lazy val hashCode = scala.runtime.ScalaRunTime._hashCode(this.asInstanceOf[Product])
   }
 
-  abstract class Stm // statement (links syms and definitions)
-  
+  // statement (links syms and definitions)
+  abstract class Stm {
+    def lhs: List[Sym[Any]] = infix_lhs(this)
+    def rhs: Any = infix_rhs(this)
+    def defines[A](sym: Sym[A]): Option[Def[A]] = infix_defines(this, sym)
+    def defines[A](rhs: Def[A]): Option[Sym[A]] = infix_defines(this, rhs)
+  }
+
   def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {
     case TP(sym, rhs) => sym::Nil
   }
-  
+
   def infix_rhs(stm: Stm): Any = stm match { // clients use syms(e.rhs), boundSyms(e.rhs) etc.
     case TP(sym, rhs) => rhs
   }
@@ -70,11 +77,11 @@ trait Expressions extends Utils {
     case TP(sym: Sym[A], `rhs`) => Some(sym)
     case _ => None
   }
-  
-  case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
+
+  case class TP[+T](sym: Sym[T], override val rhs: Def[T]) extends Stm
 
   // graph construction state
-  
+
   var globalDefs: Seq[Stm] = Queue.empty
   var localDefs: Seq[Stm] = Queue.empty
   var globalSymsCache: Map[Sym[Any],Stm] = Map.empty
@@ -130,7 +137,7 @@ trait Expressions extends Utils {
     reflectSubGraph(List(f))
     f
   }
-  
+
 
   protected implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
     findOrCreateDefinitionExp(d, List(pos)) // TBD: return Const(()) if type is Unit??
@@ -153,7 +160,7 @@ trait Expressions extends Utils {
     case s: Sym[Any] => List(s)
     case ss: Iterable[Any] => ss.toList.flatMap(syms(_))
     // All case classes extend Product!
-    case p: Product => 
+    case p: Product =>
       // performance hotspot: this is the same as
       // p.productIterator.toList.flatMap(syms(_))
       // but faster
@@ -188,7 +195,7 @@ trait Expressions extends Utils {
     case _ => Nil
   }
 
-  // soft dependencies: they are not required but if they occur, 
+  // soft dependencies: they are not required but if they occur,
   // they must be scheduled before
   def softSyms(e: Any): List[Sym[Any]] = e match {
     // empty by default

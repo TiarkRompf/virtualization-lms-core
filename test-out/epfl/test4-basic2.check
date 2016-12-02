@@ -1,0 +1,18 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Basic2 extends ((Double)=>(Double)) {
+def apply(x0:Double): Double = {
+val x1 = x0 == 0
+val x3 = if (x1) {
+val x2 = x0+1.0
+x2
+} else {
+x0
+}
+x3
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

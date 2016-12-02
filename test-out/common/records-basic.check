@@ -1,0 +1,15 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class RecordsBasic extends ((java.lang.String)=>(java.lang.String)) {
+def apply(x0:java.lang.String): java.lang.String = {
+val x1 = new Anon934292886(x0,x0)
+val x2 = x1.lastName
+x2
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+case class Anon934292886(name: java.lang.String, lastName: java.lang.String)

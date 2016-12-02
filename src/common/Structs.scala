@@ -1,9 +1,10 @@
 package scala.virtualization.lms
 package common
-
 import internal.{GenericNestedCodegen, GenericFatCodegen}
 import java.io.PrintWriter
-import scala.reflect.{SourceContext, RefinedManifest}
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.Struct
+import org.scala_lang.virtualized.RefinedManifest
 import util.OverloadHack
 
 abstract class Record extends Struct
@@ -433,6 +434,7 @@ trait ScalaGenStruct extends ScalaGenBase with BaseGenStruct with ScalaGenAtomic
   }
 
   override def remap[A](m: Manifest[A]) = m match {
+
     case s if s <:< manifest[Record] => structName(m)
     case _ => super.remap(m)
   }

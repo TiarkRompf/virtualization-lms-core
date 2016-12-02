@@ -3,21 +3,35 @@ package common
 
 import java.io.PrintWriter
 
+import scala.virtualization.lms.util.OverloadHack
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
-trait RangeOps extends Base {
+trait RangeOps extends Base with OverloadHack {
   // workaround for infix not working with manifests
   implicit def repRangeToRangeOps(r: Rep[Range]) = new rangeOpsCls(r)
   class rangeOpsCls(r: Rep[Range]){
     def foreach(f: Rep[Int] => Rep[Unit])(implicit pos: SourceContext) = range_foreach(r, f)
+    def start(implicit pos: SourceContext) = range_start(r)
+    def step(implicit pos: SourceContext) = range_step(r)
+    def end(implicit pos: SourceContext) = range_end(r)
+  }
+  // NOTE(trans): it has to be called 'intWrapper' to shadow the standard Range constructor
+  implicit class intWrapper(start: Int) {
+    def until(end: Rep[Int])(implicit pos: SourceContext) = range_until(unit(start),end)
+    def until(end: Int)(implicit pos: SourceContext): Rep[Range] = range_until(unit(start),unit(end))
+    def until(end: Int)(implicit pos: SourceContext, o: Overloaded1): Range = new Range(start,end,1)
+  }
+  implicit class RangeOpsInfixRepInt(start: Rep[Int]) {
+    def until(end: Rep[Int])(implicit pos: SourceContext) = range_until(start,end)
+    def until(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = range_until(start,end)
+    def start(r: Rep[Range])(implicit pos: SourceContext) = range_start(r)
+    def step(r: Rep[Range])(implicit pos: SourceContext) = range_step(r)
+    def end(r: Rep[Range])(implicit pos: SourceContext) = range_end(r)
+    def foreach(r: Rep[Range], f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
   }
 
-  def infix_until(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext) = range_until(start,end)
-  def infix_start(r: Rep[Range])(implicit pos: SourceContext) = range_start(r)
-  def infix_step(r: Rep[Range])(implicit pos: SourceContext) = range_step(r)
-  def infix_end(r: Rep[Range])(implicit pos: SourceContext) = range_end(r)
-  //def infix_foreach(r: Rep[Range], f: Rep[Int] => Rep[Unit]) = range_foreach(r, f)
+
 
   def range_until(start: Rep[Int], end: Rep[Int])(implicit pos: SourceContext): Rep[Range]
   def range_start(r: Rep[Range])(implicit pos: SourceContext) : Rep[Int]

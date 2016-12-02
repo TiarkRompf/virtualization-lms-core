@@ -104,6 +104,105 @@ trait OverloadHack {
   class Overloaded98
   class Overloaded99
   class Overloaded100
+  class Overloaded101
+  class Overloaded102
+  class Overloaded103
+  class Overloaded104
+  class Overloaded105
+  class Overloaded106
+  class Overloaded107
+  class Overloaded108
+  class Overloaded109
+  class Overloaded110
+  class Overloaded111
+  class Overloaded112
+  class Overloaded113
+  class Overloaded114
+  class Overloaded115
+  class Overloaded116
+  class Overloaded117
+  class Overloaded118
+  class Overloaded119
+  class Overloaded120
+  class Overloaded121
+  class Overloaded122
+  class Overloaded123  
+  class Overloaded124
+  class Overloaded125
+  class Overloaded126
+  class Overloaded127
+  class Overloaded128
+  class Overloaded129
+  class Overloaded130
+  class Overloaded131
+  class Overloaded132
+  class Overloaded133
+  class Overloaded134
+  class Overloaded135
+  class Overloaded136
+  class Overloaded137
+  class Overloaded138
+  class Overloaded139
+  class Overloaded140
+  class Overloaded141
+  class Overloaded142
+  class Overloaded143
+  class Overloaded144
+  class Overloaded145
+  class Overloaded146
+  class Overloaded147  
+  class Overloaded148
+  class Overloaded149
+  class Overloaded150
+  class Overloaded151
+  class Overloaded152
+  class Overloaded153
+  class Overloaded154
+  class Overloaded155
+  class Overloaded156
+  class Overloaded157
+  class Overloaded158
+  class Overloaded159
+  class Overloaded160
+  class Overloaded161
+  class Overloaded162
+  class Overloaded163
+  class Overloaded164
+  class Overloaded165
+  class Overloaded166
+  class Overloaded167
+  class Overloaded168
+  class Overloaded169
+  class Overloaded170
+  class Overloaded171
+  class Overloaded172
+  class Overloaded173  
+  class Overloaded174
+  class Overloaded175
+  class Overloaded176
+  class Overloaded177
+  class Overloaded178
+  class Overloaded179
+  class Overloaded180
+  class Overloaded181
+  class Overloaded182
+  class Overloaded183
+  class Overloaded184
+  class Overloaded185
+  class Overloaded186
+  class Overloaded187
+  class Overloaded188
+  class Overloaded189
+  class Overloaded190
+  class Overloaded191
+  class Overloaded192
+  class Overloaded193
+  class Overloaded194
+  class Overloaded195
+  class Overloaded196
+  class Overloaded197  
+  class Overloaded198
+  class Overloaded199
   
   implicit val overloaded1 = new Overloaded1
   implicit val overloaded2 = new Overloaded2
@@ -205,5 +304,103 @@ trait OverloadHack {
   implicit val overloaded98 = new Overloaded98
   implicit val overloaded99 = new Overloaded99
   implicit val overloaded100 = new Overloaded100  
-  
+  implicit val overloaded101 = new Overloaded101
+  implicit val overloaded102 = new Overloaded102
+  implicit val overloaded103 = new Overloaded103
+  implicit val overloaded104 = new Overloaded104
+  implicit val overloaded105 = new Overloaded105
+  implicit val overloaded106 = new Overloaded106
+  implicit val overloaded107 = new Overloaded107
+  implicit val overloaded108 = new Overloaded108
+  implicit val overloaded109 = new Overloaded109
+  implicit val overloaded110 = new Overloaded110
+  implicit val overloaded111 = new Overloaded111
+  implicit val overloaded112 = new Overloaded112
+  implicit val overloaded113 = new Overloaded113
+  implicit val overloaded114 = new Overloaded114
+  implicit val overloaded115 = new Overloaded115
+  implicit val overloaded116 = new Overloaded116
+  implicit val overloaded117 = new Overloaded117
+  implicit val overloaded118 = new Overloaded118
+  implicit val overloaded119 = new Overloaded119  
+  implicit val overloaded120 = new Overloaded120
+  implicit val overloaded121 = new Overloaded121  
+  implicit val overloaded122 = new Overloaded122  
+  implicit val overloaded123 = new Overloaded123
+  implicit val overloaded124 = new Overloaded124
+  implicit val overloaded125 = new Overloaded125
+  implicit val overloaded126 = new Overloaded126
+  implicit val overloaded127 = new Overloaded127
+  implicit val overloaded128 = new Overloaded128
+  implicit val overloaded129 = new Overloaded129
+  implicit val overloaded130 = new Overloaded130
+  implicit val overloaded131 = new Overloaded131
+  implicit val overloaded132 = new Overloaded132
+  implicit val overloaded133 = new Overloaded133
+  implicit val overloaded134 = new Overloaded134
+  implicit val overloaded135 = new Overloaded135
+  implicit val overloaded136 = new Overloaded136
+  implicit val overloaded137 = new Overloaded137
+  implicit val overloaded138 = new Overloaded138
+  implicit val overloaded139 = new Overloaded139
+  implicit val overloaded140 = new Overloaded140
+  implicit val overloaded141 = new Overloaded141
+  implicit val overloaded142 = new Overloaded142
+  implicit val overloaded143 = new Overloaded143  
+  implicit val overloaded144 = new Overloaded144
+  implicit val overloaded145 = new Overloaded145  
+  implicit val overloaded146 = new Overloaded146  
+  implicit val overloaded147 = new Overloaded147
+  implicit val overloaded148 = new Overloaded148
+  implicit val overloaded149 = new Overloaded149
+  implicit val overloaded150 = new Overloaded150  
+  implicit val overloaded151 = new Overloaded151
+  implicit val overloaded152 = new Overloaded152
+  implicit val overloaded153 = new Overloaded153
+  implicit val overloaded154 = new Overloaded154
+  implicit val overloaded155 = new Overloaded155
+  implicit val overloaded156 = new Overloaded156
+  implicit val overloaded157 = new Overloaded157
+  implicit val overloaded158 = new Overloaded158
+  implicit val overloaded159 = new Overloaded159
+  implicit val overloaded160 = new Overloaded160
+  implicit val overloaded161 = new Overloaded161
+  implicit val overloaded162 = new Overloaded162
+  implicit val overloaded163 = new Overloaded163
+  implicit val overloaded164 = new Overloaded164
+  implicit val overloaded165 = new Overloaded165
+  implicit val overloaded166 = new Overloaded166
+  implicit val overloaded167 = new Overloaded167
+  implicit val overloaded168 = new Overloaded168
+  implicit val overloaded169 = new Overloaded169  
+  implicit val overloaded170 = new Overloaded170
+  implicit val overloaded171 = new Overloaded171  
+  implicit val overloaded172 = new Overloaded172  
+  implicit val overloaded173 = new Overloaded173
+  implicit val overloaded174 = new Overloaded174
+  implicit val overloaded175 = new Overloaded175
+  implicit val overloaded176 = new Overloaded176
+  implicit val overloaded177 = new Overloaded177
+  implicit val overloaded178 = new Overloaded178
+  implicit val overloaded179 = new Overloaded179
+  implicit val overloaded180 = new Overloaded180
+  implicit val overloaded181 = new Overloaded181
+  implicit val overloaded182 = new Overloaded182
+  implicit val overloaded183 = new Overloaded183
+  implicit val overloaded184 = new Overloaded184
+  implicit val overloaded185 = new Overloaded185
+  implicit val overloaded186 = new Overloaded186
+  implicit val overloaded187 = new Overloaded187
+  implicit val overloaded188 = new Overloaded188
+  implicit val overloaded189 = new Overloaded189
+  implicit val overloaded190 = new Overloaded190
+  implicit val overloaded191 = new Overloaded191
+  implicit val overloaded192 = new Overloaded192
+  implicit val overloaded193 = new Overloaded193  
+  implicit val overloaded194 = new Overloaded194
+  implicit val overloaded195 = new Overloaded195  
+  implicit val overloaded196 = new Overloaded196  
+  implicit val overloaded197 = new Overloaded197
+  implicit val overloaded198 = new Overloaded198
+  implicit val overloaded199 = new Overloaded199  
 }

@@ -5,8 +5,7 @@ import java.io.PrintWriter
 
 import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
 import scala.virtualization.lms.util.ClosureCompare
-
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait Functions extends Base {
 

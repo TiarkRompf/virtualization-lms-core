@@ -3,7 +3,7 @@ package internal
 
 import util.OverloadHack
 import scala.collection.{immutable,mutable}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait AbstractTransformer {
   val IR: Expressions with Blocks with OverloadHack

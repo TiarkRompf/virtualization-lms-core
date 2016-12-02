@@ -4,8 +4,10 @@ package test1
 
 import common._
 
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 import java.io.PrintWriter
+
+// NOTE(trans) this is getting hacky -- remove and just use PrimitiveOps?
 
 trait LiftArith {
   this: Arith =>
@@ -18,11 +20,21 @@ trait Arith extends Base with LiftArith {
   //types that are allowed to be lifted more explicitly
   //implicit def unit(x: Double): Rep[Double]
 
+  implicit def int2Double(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
+
   // aks: this is a workaround for the infix methods not intercepting after Manifests were added everywhere
-  implicit def intToArithOps(i: Int) = new arithOps(unit(i))
+  implicit def intToDoubleArithOps(i: Int) = new doubleArithOps(unit(i))
+  implicit def doubleToArithOps(i: Double) = new doubleArithOps(unit(i))
   implicit def intToRepDbl(i: Int) : Rep[Double] = unit(i)
 
-  class arithOps(x: Rep[Double]){
+  // NOTE: the results of int operations are still doubles. 
+  // a realistic implementation (such as the one in core)
+  // needs specialized arithmetic for each primitive type.
+  implicit class intArithOps(x: Rep[Int]) {
+    def toDouble = x.asInstanceOf[Rep[Double]]
+  }
+
+  implicit class doubleArithOps(x: Rep[Double]) {
     def +(y: Rep[Double]) = infix_+(x,y)
     def -(y: Rep[Double]) = infix_-(x,y)
     def *(y: Rep[Double]) = infix_*(x,y)
@@ -35,6 +47,9 @@ trait Arith extends Base with LiftArith {
   def infix_/(x: Rep[Double], y: Rep[Double])(implicit pos: SourceContext): Rep[Double]
 }
 
+trait VarArith extends Arith with Variables {
+  implicit def doubleArithVOps(x: Var[Double]) = new doubleArithOps(readVar(x))
+}
 
 trait ArithExp extends Arith with BaseExp {
   //todo removed below as now handled in Base traits

@@ -6,7 +6,7 @@ import common._
 import test1._
 import test2._
 
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 
 
@@ -36,5 +36,3 @@ trait FunctionsExpUnfoldAll extends FunctionsExp {
   }
 
 }
-
-

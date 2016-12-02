@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait LiftNumeric {
   this: Base =>
@@ -128,4 +128,3 @@ trait CLikeGenNumericOps extends CLikeGenBase {
 trait CudaGenNumericOps extends CudaGenBase with CLikeGenNumericOps
 trait OpenCLGenNumericOps extends OpenCLGenBase with CLikeGenNumericOps
 trait CGenNumericOps extends CGenBase with CLikeGenNumericOps
-

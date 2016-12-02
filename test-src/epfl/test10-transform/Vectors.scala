@@ -12,7 +12,7 @@ import test8._
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 /*
 
@@ -38,7 +38,7 @@ trait VectorOps extends Base {
 }
 
 trait VectorExp extends VectorOps with EffectExp {
-  
+
   case class VectorZeros(n: Rep[Int]) extends Def[Vector[Double]]
   case class VectorLiteral[T](a: List[Rep[T]]) extends Def[Vector[T]]
   case class VectorApply[T](a: Rep[Vector[T]], x: Rep[Int]) extends Def[T]

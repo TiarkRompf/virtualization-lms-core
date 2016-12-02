@@ -12,3 +12,4 @@ trait Compile extends Base {
 trait CompileScala extends Compile with BaseExp with ScalaCompile {
   
 }
+

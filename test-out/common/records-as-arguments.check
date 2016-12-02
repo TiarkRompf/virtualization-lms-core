@@ -1,0 +1,20 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class AsArguments extends ((java.lang.String)=>(java.lang.String)) {
+def apply(x0:java.lang.String): java.lang.String = {
+val x1 = new Anon1198633200(x0)
+val x2 = if (true) {
+x1
+} else {
+x1
+}
+val x3 = x2.name
+x3
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+
+case class Anon1198633200(name: java.lang.String)

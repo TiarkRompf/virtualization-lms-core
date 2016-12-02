@@ -2,7 +2,7 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait LiftBoolean {
   this: Base =>
@@ -11,11 +11,12 @@ trait LiftBoolean {
 }
 
 trait BooleanOps extends Variables {
-  def infix_unary_!(x: Rep[Boolean])(implicit pos: SourceContext) = boolean_negate(x)
-  def infix_&&(lhs: Rep[Boolean], rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_and(lhs,rhs)
-  def infix_||(lhs: Rep[Boolean], rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_or(lhs,rhs)
-
-  // TODO: short-circuit by default
+  implicit def var2BooleanOps(x: Var[Boolean]) = new BooleanOps(readVar(x))
+  implicit class BooleanOps(x: Rep[Boolean]) {
+    def unary_!(implicit pos: SourceContext) = boolean_negate(x)
+    def &&(rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_and(x,rhs)
+    def ||(rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_or(x,rhs)
+  }
 
   def boolean_negate(lhs: Rep[Boolean])(implicit pos: SourceContext): Rep[Boolean]
   def boolean_and(lhs: Rep[Boolean], rhs: Rep[Boolean])(implicit pos: SourceContext): Rep[Boolean]
@@ -42,7 +43,6 @@ trait BooleanOpsExp extends BooleanOps with EffectExp {
     case _ => super.mirror(e, f)
   }).asInstanceOf[Exp[A]] // why??
 }
-
 
 /**
  * @author  Alen Stojanov (astojanov@inf.ethz.ch)

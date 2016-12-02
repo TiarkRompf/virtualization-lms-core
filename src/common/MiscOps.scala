@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal._
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait MiscOps extends Base {
   /**
@@ -65,7 +65,7 @@ trait ScalaGenMiscOps extends ScalaGenEffect {
     case Print(s) => emitValDef(sym, src"print($s)")
     case Exit(a) => emitValDef(sym, src"sys.exit($a)")
     case Return(x) => emitValDef(sym, src"return $x")
-    case Error(s) => emitValDef(sym, src"error($s)")
+    case Error(s) => emitValDef(sym, src"sys.error($s)")
     case _ => super.emitNode(sym, rhs)
   }
 }
@@ -97,9 +97,9 @@ trait CGenMiscOps extends CGenEffect {
     case PrintF(f,x) => stream.println("printf(" + ((Const(f:String)::x).map(quoteRawString)).mkString(",") + ");")
     case PrintLn(s) => stream.println("printf(\"" + format(s) + "\\n\"," + quoteRawString(s) + ");")
     case Print(s) => stream.println("printf(\"" + format(s) + "\"," + quoteRawString(s) + ");")
-    case Exit(a) => stream.println("exit(" + quote(a) + ");")
+    case Exit(a) => stream.println("sys.exit(" + quote(a) + ");")
     case Return(x) => stream.println("return " + quote(x) + ";")
-    case Error(s) => stream.println("error(-1,0,\"%s\"," + quote(s) + ");")
+    case Error(s) => stream.println("sys.error(-1,0,\"%s\"," + quote(s) + ");")
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -1,0 +1,7 @@
+language: scala
+scala:
+   - 2.11.2
+
+before_install:
+    - git clone https://github.com/scala-lms/summer-of-lms-2014.git
+    - (cd summer-of-lms-2014; git checkout scala-virtualized; sbt publish-local)

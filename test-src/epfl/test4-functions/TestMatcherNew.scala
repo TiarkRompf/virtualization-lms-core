@@ -7,6 +7,10 @@ import test1._
 import test2._
 import test3._
 
+import org.scala_lang.virtualized.virtualize
+import org.scala_lang.virtualized.EmbeddedControls
+import org.scala_lang.virtualized.SourceContext
+
 /*
 TODO:
 +implement dfa_trans
@@ -447,6 +451,7 @@ trait MatcherNewProgTrivialC {
 
 
 
+@virtualize
 trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with IfThenElse =>
 
   type IO = Rep[Unit]
@@ -534,6 +539,7 @@ trait MatcherNewProgA extends Util { this: Arith with Functions with Equal with 
 }
 
 
+@virtualize
 trait MatcherNewProgB extends Util { this: Arith with Functions with Equal with IfThenElse =>
 
   abstract class EX
@@ -667,23 +673,7 @@ trait MemoUtils extends util.ClosureCompare {
 
 
 
-
-trait Util extends Base with Arith with Functions {
-  
-  class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
-    def apply(x:Rep[A]): Rep[B] = doApply(f, x)
-  }
-  implicit def lam[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
-  //implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
-
-  implicit def toDouble(f: Rep[Int]): Rep[Double] = f.asInstanceOf[Rep[Double]]
-  
-  def collectall(in: List[Rep[Any]]): Rep[Unit]
-  def protect[A:Manifest](x: Rep[A], in: List[Rep[Any]]): Rep[A]
-}
-
-
-
+@virtualize
 trait MatcherNewProg extends DFAOps with GAOps with NFAtoDFA with GAtoDA with Util { this: Arith with Functions with Equal with IfThenElse =>
 
   // -- begin general automaton
@@ -727,8 +717,8 @@ trait MatcherNewProg extends DFAOps with GAOps with NFAtoDFA with GAtoDA with Ut
 
 
 
-
-class TestMatcherNew extends FileDiffSuite {
+@virtualize
+class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
   
   val prefix = home + "test-out/epfl/test4-"
   
@@ -824,10 +814,9 @@ class TestMatcherNew extends FileDiffSuite {
   }
 
 
-  // William Cook's test case: (a | b)∗ (abb | (a + b))     [sic! + vs |]
+  // William Cook's test case: (a | b)* (abb | (a + b))     [sic! + vs |]
   // compare with dk.brics.automaton, input size 10^7
   // civet 573 ms, dk.brics.automaton 816 ms
-
 
   def testMatcherNew1 = withOutFileChecked(prefix+"matchernew1") {
     trait Prog extends DSL {
@@ -870,7 +859,6 @@ class TestMatcherNew extends FileDiffSuite {
     }
     new Prog with Impl
   }
-
 
   def testMatcherNew2 = withOutFileChecked(prefix+"matchernew2") {
     trait Prog extends DSL {

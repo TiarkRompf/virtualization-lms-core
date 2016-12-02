@@ -14,7 +14,10 @@ import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
+import org.scala_lang.virtualized.virtualize
+import org.scala_lang.virtualized.SourceContext
 
+@virtualize
 trait CpsProg1 extends Arith with IfThenElse with Equal with Print with Compile {
   
   def choose[A:Manifest](x: Rep[Boolean]): Boolean @cps[Rep[A]] = shift { k: (Boolean => Rep[A]) =>
@@ -37,6 +40,7 @@ trait CpsProg1 extends Arith with IfThenElse with Equal with Print with Compile 
   
 }
 
+@virtualize
 trait CpsProg2 extends Arith with IfThenElse with Equal with Print with Compile {
   
   def choose[A:Manifest](x: Rep[Boolean]): Boolean @cps[Rep[A]] = shift { k: (Boolean => Rep[A]) =>
@@ -64,7 +68,7 @@ trait CpsProg2 extends Arith with IfThenElse with Equal with Print with Compile 
   
 }
 
-
+@virtualize
 trait AmbProg1 extends Arith with IfThenElse with Equal with Print with Compile {
   
   //def __ifThenElse[T:Manifest,U](cond: Rep[Boolean], thenp: => Rep[T]@cps[U], elsep: => Rep[T]@cps[U]): Rep[T]@cps[U] = cond match { case true => thenp case false => elsep }
@@ -128,6 +132,7 @@ yld((i,j,k))
 }
 
 
+@virtualize
 trait AmbProg2 extends AmbProg1 {
   
   override def test(x: Rep[Int]): Rep[Unit] = {

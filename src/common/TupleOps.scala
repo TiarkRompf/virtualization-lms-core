@@ -3,7 +3,7 @@ package common
 
 import scala.virtualization.lms.internal.GenericCodegen
 import java.io.PrintWriter
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait TupleOps extends Base {
   implicit def make_tuple2[A:Manifest,B:Manifest](t: (Rep[A], Rep[B]))(implicit pos: SourceContext) : Rep[(A,B)]

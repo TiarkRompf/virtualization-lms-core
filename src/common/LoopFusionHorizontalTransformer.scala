@@ -5,7 +5,7 @@ import util.GraphUtil
 import scala.collection.mutable.{HashMap, HashSet}
 
 // TODO document interface
-trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer { 
+trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
   val IR: LoopFusionCore
   import IR.{__newVar => _, _}
 
@@ -259,14 +259,15 @@ trait LoopFusionHorizontalTransformer extends PreservingFixpointTransformer {
     *
     * If neighboring loops with the same index aren't a problem for your DSL,
     * override LoopFusionExtractors.shouldReuniquifyIndices with false. */
-  def remapIndexIfFixedLength(loopSym: Sym[Any], loop: AbstractLoop[_]): Option[Sym[Int]] = {
+
+   def remapIndexIfFixedLength(loopSym: Sym[Any], loop: AbstractLoop[_]): Option[Sym[Int]] = {
     if (!shouldReuniquifyIndices)
       return None
     val oldIndex = loop.v
     (hasFixedOutLength(loop), current.fixedLengthIndices) match {
       case (false, _) => None
       case (true, None) =>
-        current.fixedLengthIndices = Some(new HashMap[Sym[Int], FusedLoopSet])
+        current.fixedLengthIndices = Some(new HashMap[Sym[Int], Sym[Any]])
         current.fixedLengthIndices.get += (oldIndex -> loopSym)
         None
       case (true, Some(fixedLengthIndicesVal)) => fixedLengthIndicesVal.get(oldIndex) match {

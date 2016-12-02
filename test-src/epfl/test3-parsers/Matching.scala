@@ -5,6 +5,7 @@ package test3
 import common._
 import test1._
 import test2._
+import org.scala_lang.virtualized.SourceContext
 
 trait Extractors extends Base {
   
@@ -165,6 +166,8 @@ trait MatchingExtractorsExpOpt extends MatchingExtractorsExp {
     case _ => super.test(x, y)
   }
 
+// TODO(cleanup)
+
 /*  
   override def andAlso[A](x: Rep[A], effects: List[Rep[Any]]): Rep[A] = effects match {
     case Nil => x
@@ -193,5 +196,3 @@ trait MatchingExtractorsExpOpt2 extends MatchingExtractorsExpOpt {
 
 }
 */
-
-

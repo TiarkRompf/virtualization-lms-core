@@ -158,3 +158,4 @@ trait CLikeFatCodegen extends GenericFatCodegen with CLikeCodegen {
   val IR: Expressions with Effects with FatExpressions
   import IR._
 }
+

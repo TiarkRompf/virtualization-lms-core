@@ -12,9 +12,8 @@ import test8._
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
-
-
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 
 class TestTransform extends FileDiffSuite {
   
@@ -108,6 +107,7 @@ class TestTransform extends FileDiffSuite {
   
   // test simple block transform
   def testTransform1 = withOutFileChecked(prefix+"transform1") {
+    @virtualize
     trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val z = vzeros(100)
@@ -121,6 +121,7 @@ class TestTransform extends FileDiffSuite {
   }
 
   def testTransform2 = withOutFileChecked(prefix+"transform2") {
+    @virtualize
     trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val a = vzeros(100) // will be moved into branches
@@ -137,6 +138,7 @@ class TestTransform extends FileDiffSuite {
   }
 
   def testTransform3 = withOutFileChecked(prefix+"transform3") {
+    @virtualize
     trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
         val a = vzeros(100) // will be moved into branches
@@ -158,3 +160,4 @@ class TestTransform extends FileDiffSuite {
   }
 
 }
+

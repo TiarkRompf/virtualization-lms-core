@@ -7,8 +7,11 @@ import common._
 import test1._
 import test2._
 import test3._
+import org.scala_lang.virtualized.SourceContext
 
+import org.scala_lang.virtualized.virtualize
 
+@virtualize
 trait AckProg { this: Arith with Functions with Equal with IfThenElse =>
 
   class LambdaOps[A:Manifest,B:Manifest](f: Rep[A=>B]) {
@@ -18,7 +21,6 @@ trait AckProg { this: Arith with Functions with Equal with IfThenElse =>
   //implicit def toLambdaOps[A,B](f: Rep[A=>B]) = new LambdaOps(f)
 
   implicit def toDouble(f: Rep[Int]): Rep[Double] = f.asInstanceOf[Rep[Double]]
-
 
   def ack(m: Double): Rep[Double=>Double] = lam { n =>
     if (m == 0) n+1 else

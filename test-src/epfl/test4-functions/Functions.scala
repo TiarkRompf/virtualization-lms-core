@@ -7,7 +7,7 @@ import common.ScalaGenEffect // don't import FunctionsExp
 import test2._
 import test3._
 import util.ClosureCompare
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 import scala.collection.{immutable, mutable}
 

@@ -3,6 +3,7 @@ package epfl
 package test1
 
 import common._
+import org.scala_lang.virtualized.SourceContext
 
 trait Relat extends Base {
 

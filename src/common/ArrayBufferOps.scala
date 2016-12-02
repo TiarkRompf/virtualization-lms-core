@@ -2,11 +2,11 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 import scala.collection.mutable.ArrayBuffer
 import scala.virtualization.lms.internal.GenericNestedCodegen
 import collection.mutable.ArrayBuffer
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait ArrayBufferOps extends Base {
 
@@ -25,7 +25,7 @@ trait ArrayBufferOps extends Base {
     def toSeq(implicit pos: SourceContext) = arraybuffer_toseq(l)
   }
   
-  def infix_+=[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A])(implicit pos: SourceContext) = arraybuffer_append(l, e)
+  //def infix_+=[A:Manifest](l: Rep[ArrayBuffer[A]], e: Rep[A])(implicit pos: SourceContext) = arraybuffer_append(l, e)
 
   /* when mixed in with OptiML, one of these infix operations causes an NPE in the scala-virtualized compiler */ //TR: still the case?
   /*

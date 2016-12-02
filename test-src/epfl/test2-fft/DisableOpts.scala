@@ -14,4 +14,3 @@ trait DisableDCE extends GraphTraversal {
   override def buildScheduleForResult(start: Any, sort: Boolean = true): List[Stm] =
     globalDefs.toList
 }
-

@@ -2,17 +2,19 @@ package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 import scala.virtualization.lms.internal.{FatBlockTraversal, GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
 
 trait IfThenElse extends Base {
   def __ifThenElse[T:Manifest](cond: Rep[Boolean], thenp: => Rep[T], elsep: => Rep[T])(implicit pos: SourceContext): Rep[T]
 
+  /* NOTE(trans): this hack might not be necessary anymore...
   // HACK -- bug in scala-virtualized
   override def __ifThenElse[T](cond: =>Boolean, thenp: => T, elsep: => T) = cond match {
     case true => thenp
     case false => elsep
   }
+  */
 }
 
 // TODO: it would be nice if IfThenElseExp would extend IfThenElsePureExp
@@ -478,4 +480,3 @@ trait CGenIfThenElseFat extends CGenIfThenElse with CGenFat with BaseGenIfThenEl
     case _ => super.emitFatNode(symList, rhs)
   }
 }
-

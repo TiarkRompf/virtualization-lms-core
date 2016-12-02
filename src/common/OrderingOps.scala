@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.util.OverloadHack
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait OrderingOps extends Base with Variables with OverloadHack {
   // workaround for infix not working with implicits in PrimitiveOps
@@ -89,6 +89,7 @@ trait OrderingOpsExp extends OrderingOps with VariablesExp {
 /**
  * @author  Alen Stojanov (astojanov@inf.ethz.ch)
  */
+
 trait OrderingOpsExpOpt extends OrderingOpsExp {
 
   override def ordering_lt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs, rhs) match {
@@ -200,4 +201,3 @@ trait CLikeGenOrderingOps extends CLikeGenBase {
 trait CudaGenOrderingOps extends CudaGenBase with CLikeGenOrderingOps
 trait OpenCLGenOrderingOps extends OpenCLGenBase with CLikeGenOrderingOps
 trait CGenOrderingOps extends CGenBase with CLikeGenOrderingOps
-

@@ -9,7 +9,7 @@ import internal.AbstractSubstTransformer
 
 
 import util.OverloadHack
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
 
@@ -21,12 +21,18 @@ trait ArrayLoops extends Loops with OverloadHack {
   def sumIf(shape: Rep[Int])(f: Rep[Int] => (Rep[Boolean],Rep[Double])): Rep[Double] // TODO: make reduce operation configurable!
   def flatten[T:Manifest](shape: Rep[Int])(f: Rep[Int] => Rep[Array[T]]): Rep[Array[T]]
 
+  implicit def repArrayOps[T:Manifest](a: Rep[Array[T]]) = new clsRepArrayOps(a)
+  class clsRepArrayOps[T:Manifest](a: Rep[Array[T]]) {
+    def at(i: Rep[Int]): Rep[T] = infix_at(a, i)
+    def length: Rep[Int] = infix_length(a)
+  }
+
   def infix_at[T:Manifest](a: Rep[Array[T]], i: Rep[Int]): Rep[T]
   def infix_length[T:Manifest](a: Rep[Array[T]]): Rep[Int]
 }
 
 
-trait ArrayLoopsExp extends LoopsExp {
+trait ArrayLoopsExp extends ArrayLoops with LoopsExp {
   
   case class ArrayElem[T](y: Block[T]) extends Def[Array[T]]
   case class ReduceElem(y: Block[Double]) extends Def[Double]
@@ -200,6 +206,10 @@ trait ScalaGenArrayLoopsFat extends ScalaGenArrayLoops with ScalaGenLoopsFat {
 
 trait Arrays extends Base with OverloadHack {
   def zeroes(n: Rep[Int]): Rep[Array[Int]]
+  implicit class ArraysInfixRepArrayInt(a: Rep[Array[Int]]) {
+    def update(x: Rep[Int], v: Rep[Int]): Rep[Array[Int]] = infix_update(a, x, v)
+    def +(b: Rep[Array[Int]]): Rep[Array[Int]] = infix_+(a, b)
+  }
   def infix_update(a: Rep[Array[Int]], x: Rep[Int], v: Rep[Int]): Rep[Array[Int]]
   def infix_+(a: Rep[Array[Int]], b: Rep[Array[Int]])(implicit o: Overloaded1): Rep[Array[Int]]
 }
@@ -229,4 +239,3 @@ trait ScalaGenArrays extends ScalaGenEffect {
     case _ => super.emitNode(sym, rhs)
   }
 }
-

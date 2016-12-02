@@ -3,7 +3,7 @@ package common
 
 import java.io.PrintWriter
 import scala.virtualization.lms.internal.GenericNestedCodegen
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 trait ListOps extends Variables {
 
@@ -21,7 +21,7 @@ trait ListOps extends Variables {
     def filter(f: Rep[A] => Rep[Boolean]) = list_filter(l, f)
     def sortBy[B:Manifest:Ordering](f: Rep[A] => Rep[B]) = list_sortby(l,f)
     def ::(e: Rep[A]) = list_prepend(l,e)
-    def ++ (l2: Rep[List[A]]) = list_concat(l, l2)
+    def ++[B>:A:Manifest] (l2: Rep[List[B]]) = list_concat(l, l2)
     def mkString = list_mkString(l)
     def mkString(s:Rep[String]) = list_mkString2(l,s)
     def head = list_head(l)
@@ -204,4 +204,3 @@ trait CLikeGenListOps extends BaseGenListOps with CLikeGenBase {
 trait CudaGenListOps extends CudaGenEffect with CLikeGenListOps
 trait OpenCLGenListOps extends OpenCLGenEffect with CLikeGenListOps
 trait CGenListOps extends CGenEffect with CLikeGenListOps
-

@@ -1,7 +1,7 @@
 package scala.virtualization.lms
 package common
 
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 
 trait SimplifyTransform extends internal.FatScheduling {
@@ -127,11 +127,11 @@ trait SimplifyTransform extends internal.FatScheduling {
           case l: AbstractIfThenElse[_] => l
           case Reflect(l: AbstractIfThenElse[_], _, _) => l
         }
-        val cond2 = if (lhs != lhs2) mhs2.map (_.toIf.cond) reduceLeft { (s1,s2) => assert(s1==s2,"conditions don't agree: "+s1+","+s2); s1 }
+        val cond2 = if (lhs != lhs2) mhs2.map (infix_toIf(_).cond) reduceLeft { (s1,s2) => assert(s1==s2,"conditions don't agree: "+s1+","+s2); s1 }
                     else t(c)
-        val as2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toIf.thenp)))
+        val as2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (infix_toIf(_).thenp)))
                    else (lhs zip as)) map { case (s,r) => transformIfBody(s,r,t) }
-        val bs2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toIf.elsep)))
+        val bs2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (infix_toIf(_).elsep)))
                    else (lhs zip bs)) map { case (s,r) => transformIfBody(s,r,t) }
       
         printdbg("came up with: " + lhs2 + ", if " + cond2 + " then " + as2 + " else " + bs2 + " with subst " + t.subst.mkString(","))
@@ -152,9 +152,9 @@ trait SimplifyTransform extends internal.FatScheduling {
           case l: AbstractLoop[_] => l
           case Reflect(l: AbstractLoop[_], _, _) => l
         }
-        val shape2 = if (lhs != lhs2) mhs2.map (_.toLoop.size) reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
+        val shape2 = if (lhs != lhs2) mhs2.map (infix_toLoop(_).size) reduceLeft { (s1,s2) => assert(s1==s2,"shapes don't agree: "+s1+","+s2); s1 }
                      else t(s)
-        val rhs2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (_.toLoop.body)))
+        val rhs2 = (if (lhs != lhs2) (lhs2 zip (mhs2 map (infix_toLoop(_).body)))
                     else (lhs zip rhs)) map { case (s,r) => transformLoopBody(s,r,t) }
         
   /*      //update innerScope -- change definition of lhs2 in place (necessary?)

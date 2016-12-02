@@ -8,10 +8,10 @@ import test7._
 import test8.{ArrayMutation,ArrayMutationExp,ScalaGenArrayMutation}
 
 import util.OverloadHack
-import scala.reflect.SourceContext
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 
 
 class TestStencil extends FileDiffSuite {
@@ -20,16 +20,14 @@ class TestStencil extends FileDiffSuite {
     with BooleanOps with OrderingOps
     with LiftVariables with IfThenElse with Print {
     def staticData[T:Manifest](x: T): Rep[T]
-    def infix_toDouble(x: Rep[Int]): Rep[Double]
     def test(x: Rep[Array[Double]]): Rep[Array[Double]]
   }
   trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt
       with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp with StaticDataExp
-      with IfThenElseExpOpt with PrintExp with PrimitiveOpsExp
+      with IfThenElseExpOpt with PrintExp with PrimitiveOpsExpOpt
       with CompileScala { self => 
     //override val verbosity = 1
-    def infix_toDouble(x: Rep[Int]): Rep[Double] = int_double_value(x)
     
     val codegen = new ScalaGenNumericOps with ScalaGenStaticData with ScalaGenOrderingOps 
       with ScalaGenArrayOps with ScalaGenRangeOps with ScalaGenBooleanOps
@@ -38,7 +36,7 @@ class TestStencil extends FileDiffSuite {
     dumpGeneratedCode = true
     run()
   }
-  trait Runner extends Compile {
+  @virtualize trait Runner extends Compile {
     def test(x: Rep[Array[Double]]): Rep[Array[Double]]
     def run() {
       val f = compile(test)
@@ -48,17 +46,22 @@ class TestStencil extends FileDiffSuite {
     }
   }
 
-  trait Sliding extends DSL {
+  trait Sliding extends DSL { IR =>
     
-    def infix_sliding[T:Manifest](n: Rep[Int], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
-      val a = NewArray[T](n)
-      sliding(0,n)(i => a(i) = f(i))
-      a
+    implicit def int2SlidingOps1(n: Int) = int2SlidingOps(unit(n))
+    implicit class int2SlidingOps(n: Rep[Int]) {
+      def sliding[T:Manifest](f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
+        val a = NewArray[T](n)
+        IR.sliding(0,n)(i => a(i) = f(i))
+        a
+      }
     }
 
-    def infix_sliding(r: Rep[Range]) = new {
-      def foreach(f: Rep[Int] => Rep[Unit]): Rep[Unit] =
-        sliding(r.start, r.end)(f)
+    implicit class range2SlidingOps(r: Rep[Range]) {
+      def sliding = new {
+        def foreach(f: Rep[Int] => Rep[Unit]): Rep[Unit] =
+          IR.sliding(r.start, r.end)(f)
+      }
     }
 
     def sliding(start: Rep[Int], end: Rep[Int])(f: Rep[Int] => Rep[Unit]): Rep[Unit]
@@ -66,6 +69,7 @@ class TestStencil extends FileDiffSuite {
   }
   
   //trait SlidingExp extends Impl with Sliding {
+  @virtualize
   trait SlidingExp extends ArrayOpsExpOpt with NumericOpsExpOpt with PrimitiveOpsExpOpt
       with OrderingOpsExpOpt with BooleanOpsExp 
       with EqualExpOpt with VariablesExpOpt with RangeOpsExp
@@ -236,14 +240,16 @@ class TestStencil extends FileDiffSuite {
     trait Prog extends DSL {
       
       // not actually sliding -- just to have a baseline reference
-      def infix_sliding[T:Manifest](n: Rep[Int], f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
-        val a = NewArray[T](n)
-        (0 until n) foreach { i =>
-          a(i) = f(i)
+      implicit class intSliding[T<%Rep[Int]](n: T) {
+        def sliding[T:Manifest](f: Rep[Int] => Rep[T]): Rep[Array[T]] = {
+          val a = NewArray[T](n)
+          (0 until n) foreach { i =>
+            a(i) = f(i)
+          }
+          a
         }
-        a
       }
-      
+
       def test(v: Rep[Array[Double]]) = {
 
         val n = 20

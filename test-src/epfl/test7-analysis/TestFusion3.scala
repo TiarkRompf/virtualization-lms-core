@@ -6,7 +6,8 @@ import common._
 import test1._
 
 import util.{OverloadHack, GraphUtil}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
 
@@ -144,7 +145,7 @@ trait ScalaGenPrintX extends ScalaGenEffect {
 //                  Tests
 // =========================================
 
-
+@virtualize
 class TestFusion3 extends FileDiffSuite {
 
   val prefix = home + "test-out/epfl/test7-wip-"

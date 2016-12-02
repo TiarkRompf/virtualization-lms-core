@@ -4,7 +4,7 @@ package test2
 
 import common._
 import test1._
-import reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 import java.io.PrintWriter
 

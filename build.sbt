@@ -1,38 +1,28 @@
-name := "LMS"
+name := "macro-LMS"
 
-version := "0.3-SNAPSHOT"
+version := "1.0.0-wip-macro"
+
+isSnapshot := true //allows to overwrites old local published version 
 
 organization := "EPFL"
 
-scalaOrganization := "org.scala-lang.virtualized"
-
-scalaVersion := virtScala
+scalaVersion := "2.11.2"
 
 scalaSource in Compile <<= baseDirectory(_ / "src")
 
 scalaSource in Test <<= baseDirectory(_ / "test-src")
 
-scalacOptions += "-Yvirtualize"
+libraryDependencies += "org.scala-lang" % "scala-library" % scalaVersion.value % "compile"
 
-//scalacOptions += "-Yvirtpatmat"
+libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "compile"
 
-//scalacOptions in Compile ++= Seq(/*Unchecked, */Deprecation)
+libraryDependencies ++= Seq(
+  "org.scala-lang.virtualized" %% "scala-virtualized" % "1.0.0-macrovirt"
+)
 
-libraryDependencies += ("org.scala-lang.virtualized" % "scala-library" % virtScala)
-
-// Transitive dependency through scala-continuations-library
-libraryDependencies += ("org.scala-lang.virtualized" % "scala-compiler" % virtScala).
-  exclude ("org.scala-lang", "scala-library").
-  exclude ("org.scala-lang", "scala-compiler")
-
-libraryDependencies += ("org.scala-lang.plugins" % "scala-continuations-library_2.11" % "1.0.2").
-  exclude ("org.scala-lang", "scala-library").
-  exclude ("org.scala-lang", "scala-compiler")
-
-libraryDependencies += ("org.scalatest" % "scalatest_2.11" % "2.2.2").
-  exclude ("org.scala-lang", "scala-library").
-  exclude ("org.scala-lang", "scala-compiler").
-  exclude ("org.scala-lang", "scala-reflect")
+libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "2.2.0" % "test"
+)
 
 // tests are not thread safe
 parallelExecution in Test := false
@@ -41,9 +31,34 @@ parallelExecution in Test := false
 publishArtifact in (Compile, packageDoc) := false
 
 
+publishArtifact in (Test, packageBin) := true
+
 // continuations
+val contVersion = "1.0.2"
+
 autoCompilerPlugins := true
 
-addCompilerPlugin("org.scala-lang.plugins" % "scala-continuations-plugin_2.11.2" % "1.0.2")
+libraryDependencies ++= Seq(
+  "org.scala-lang.plugins" %% "scala-continuations-library" % contVersion % "compile"
+)
+
+libraryDependencies <<= (scalaVersion, libraryDependencies) { (ver, deps) =>
+     deps :+ compilerPlugin("org.scala-lang.plugins" % "scala-continuations-plugin" % contVersion cross CrossVersion.full)
+}
+
+//fork := true
+//connectInput := true
+//outputStrategy := Some(StdoutOutput)
 
 scalacOptions += "-P:continuations:enable"
+
+val paradiseVersion = "2.0.1"
+
+libraryDependencies ++= (
+  if (scalaVersion.value.startsWith("2.10")) List("org.scalamacros" %% "quasiquotes" % paradiseVersion)
+  else Nil
+)
+
+libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile"
+
+addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full)

@@ -1,0 +1,16 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class Basic extends ((Boolean)=>(Double)) {
+def apply(x0:Boolean): Double = {
+val x1 = if (x0) {
+1.0
+} else {
+2.0
+}
+x1
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/

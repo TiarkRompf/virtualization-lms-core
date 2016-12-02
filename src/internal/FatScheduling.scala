@@ -6,8 +6,8 @@ import scala.collection.mutable.HashMap
 
 trait FatScheduling extends Scheduling {
   val IR: FatExpressions
-  import IR._  
-  
+  import IR._
+
   def fatten(e: Stm): Stm = e
 
   def fattenAll(e: Seq[Stm]): Seq[Stm] = e.map(fatten)
@@ -19,7 +19,7 @@ trait FatScheduling extends Scheduling {
   // ifs get fattened.
   def shouldFattenEffectfulLoops() = true
 
-  //  ------------------- 
+  //  -------------------
   // These are needed by the old loop fusion. they should live elsewhere.
   // The new loop fusion extractors are in trait LoopFusionExtractors.
   def unapplySimpleIndex(e: Def[Any]): Option[(Exp[Any], Exp[Int])] = None
@@ -30,5 +30,5 @@ trait FatScheduling extends Scheduling {
   def canApplyAddCondition(e: Def[Any]): Boolean = true
   def applyAddCondition(e: Def[Any], c: List[Exp[Boolean]]): Def[Any] = sys.error("not implemented")
   def shouldApplyFusion(currentScope: Seq[Stm])(result: List[Exp[Any]]): Boolean = true
-  // -------------------   
+  // -------------------
 }

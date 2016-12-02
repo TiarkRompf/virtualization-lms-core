@@ -475,7 +475,7 @@ trait LoopFusionVerticalTransformer extends PreservingFixpointTransformer {
 
     // Debugging output
     if (printAllTransformations) {
-      if (transformedSym == stm.lhs()(0)) {
+      if (transformedSym == stm.lhs(0)) {
         println("--identical " + transformedSym)
       } else {
         transformedSym match {

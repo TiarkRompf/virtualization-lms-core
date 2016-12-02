@@ -3,7 +3,7 @@ package internal
 
 import java.io.{StringWriter, PrintWriter, File}
 import collection.immutable.List._
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 import collection.mutable.{HashMap, HashSet, ArrayBuffer, ListMap, ListBuffer}
 
 trait GPUCodegen extends CLikeCodegen with AbstractHostTransfer with AbstractDeviceTransfer {

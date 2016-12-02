@@ -6,11 +6,11 @@ import common._
 import test1._
 
 import util.OverloadHack
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
 
+import org.scala_lang.virtualized.virtualize
 
 trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGenIfThenElseFat with LoopFusionOpt {
   val IR: ArrayLoopsFatExp with IfThenElseFatExp
@@ -49,15 +49,14 @@ trait ScalaGenFatArrayLoopsFusionOpt extends ScalaGenArrayLoopsFat with ScalaGen
 // trait NestLambdaProg extends Arith with Functions with Print 
 // --> from TestCodeMotion.scala
 
+@virtualize // for +
 trait FusionProg extends Arith with ArrayLoops with Print {
-  
-  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
   
   def test(x: Rep[Unit]) = {
     
     val constant = array(100) { i => 1 }
 
-    val linear = array(100) { i => 2*i }
+    val linear = array(100) { i => 2*i.toDouble } //NOTE(trans): previously, we could just use 2*i
 
     val affine = array(100) { i => constant.at(i) + linear.at(i) }
     
@@ -77,8 +76,6 @@ trait FusionProg extends Arith with ArrayLoops with Print {
 }
 
 trait FusionProg2 extends Arith with ArrayLoops with Print with OrderingOps {
-  
-  implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
   
   def test(x: Rep[Unit]) = {
     

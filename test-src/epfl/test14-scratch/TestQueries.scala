@@ -8,7 +8,8 @@ import internal._
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized.virtualize
 
 /*
 Staged SQL-like queries, inspired by "the essence of LINQ":
@@ -323,13 +324,14 @@ trait Shallow extends Util {
 
 }
 
-
 // a staged implementation
-trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with StructOps {
+@virtualize
+trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with RecordOps {
   
   def database[T:Manifest](s: String): Rep[T]
   //trait Record extends Struct
-  implicit def recordToRecordOps2(record: Rep[Record]) = new RecordOps(record.asInstanceOf[Rep[Record]])
+  //TODO(trans): check if this is still needed with the new virtualized records
+  //implicit def recordToRecordOps2(record: Rep[Record]) = new RecordOps(record.asInstanceOf[Rep[Record]])
 
   trait Inner {
 
@@ -352,6 +354,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
 
   //val db = staticData//database[PeopleDB]("PeopleDB")
   val db = database[PeopleDB]("db")
+
   /*PeopleDB(
     people = List(
       Person("Alex", 60),
@@ -366,27 +369,28 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
 
   // 2.1 Comprehensions and queries / 2.2 Query via quotation
 
-  val differences: Rep[List[{ val name: String; val diff: Int }]] =
+  val differences: Rep[List[Record { val name: String; val diff: Int }]] =
     for {
       c <- db.couples
       w <- db.people
       m <- db.people
       if c.her == w.name && c.him == m.name && w.age > m.age
-    } yield new Record { 
-      val name = w.name
-      val diff = w.age - m.age
-    }
+    } yield Record (
+      name = w.name,
+      diff = w.age - m.age
+    )
 
   // 2.3 Abstracting over values
 
-  type Names = List[{ val name: String}]
+  type Names = List[Record { val name: String }]
+
   def range(a: Rep[Int], b: Rep[Int]): Rep[Names] =
     for {
       w <- db.people
       if a <= w.age && w.age < b
-    } yield new Record {
-      val name = w.name
-    }
+    } yield Record (
+      name = w.name
+    )
 
   val thirtySomethings = range(30,40)
 
@@ -396,9 +400,9 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
     for {
       w <- db.people
       if p(w.age)
-    } yield new Record {
-      val name = w.name
-    }
+    } yield Record (
+      name = w.name
+    )
 
   val thirtySomethings2 = satisfies(x => 30 <= x && x < 40)
   val evenAge = satisfies(_ % 2 == 0)
@@ -485,7 +489,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
 
   def exists(xs: Rep[List[Record]]) = !xs.isEmpty // helper method
 
-  val empty = new Record { val ignore = () }
+  val empty = Record(ignore = ())
 
   def expertise(u: Rep[String]): Rep[List[Record { val dpt: String }]] =
     for {
@@ -499,7 +503,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
               if e.emp == t.emp && t.tsk == u 
             } yield empty)
         } yield empty )
-    } yield new Record { val dpt = d.dpt }
+    } yield Record(dpt = d.dpt)
 
   val departmentsFullOfAbstracters = expertise("abstract")
 
@@ -520,17 +524,17 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
       val employees1 = for {
         e <- org.employees
         if d.dpt == e.dpt
-      } yield new Record {
-        val emp = e.emp 
-        val tasks = for {
+      } yield Record(
+        emp = e.emp,
+        tasks = for {
           t <- org.tasks 
           if e.emp == t.emp
         } yield t.tsk
-      }
-      new Record {
-        val dpt = d.dpt
-        val employees = employees1  // FIXME: scalac crash with outer field if records are nested
-      }
+      )
+      Record(
+        dpt = d.dpt,
+        employees = employees1  // FIXME: scalac crash with outer field if records are nested
+      )
     }
 
   // 3.2 Higher-order queries
@@ -544,11 +548,11 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   def contains[A:Manifest](xs: Rep[List[A]], u: Rep[A]): Rep[Boolean] =
     any(xs)(x => x == u)
 
-  def expertise2(u: Rep[String]): Rep[List[{ val dpt: String }]] =
+  def expertise2(u: Rep[String]): Rep[List[Record { val dpt: String }]] =
     for {
       d <- nestedOrg
       if all(d.employees)(e => contains(e.tasks, u)) 
-    } yield new Record { val dpt = d.dpt }
+    } yield Record(dpt = d.dpt)
 
   val departmentsFullOfAbstracters2 = expertise2("abstract")
 
@@ -577,7 +581,7 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
     val post: Int 
   }
 
-  val db_xml = database[Record { val nodes: List[Node]}]("xml").nodes
+  val db_xml = database[Record { val nodes: List[Node] }]("xml").nodes
 
   /*val db_xml = List(
     Node(0, -1, "#doc", 0, 13),
@@ -640,16 +644,15 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
     if (root.parent == -1) && path(p)(root, s)
   } yield s.id
 
-
-  //  /*/*
+  //  /-*-/-*
   val xp0 = PSeq(PAxis(Child), PAxis(Child))
-  //  //*/parent::*
+  //  //-*-/parent::*
   val xp1 = PSeq(PAxis(Descendant), parent)
   // Q: this produces 0,1,2,4 but the paper says 1,2,4 (?)
 
-  //  //*[following-sibling::d]
+  //  //-*[following-sibling::d]
   val xp2 = PSeq(PAxis(Descendant), Filter(PSeq(PAxis(FollowingSibling),NameTest("d"))))
-  //  //f[ancestor::*/preceding::b]()
+  //  //f[ancestor::*-/preceding::b]()
   val xp3 = PSeq(PSeq(PAxis(Descendant), NameTest("f")), Filter(PSeq(ancestor,PSeq(preceding, NameTest("b")))))
 
   val xr0 = xpath(xp0)
@@ -660,10 +663,8 @@ trait Staged extends ScalaOpsPkg with LiftPrimitives with LiftString with Struct
   }
 }
 
-
-
-
 // internal staged implementation: IR node classes, rewrites for normalization
+@virtualize
 trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with StructExpOpt {
 
   // IR node representing database("name")
@@ -797,11 +798,18 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
             if P then (if Q then R) --> if (P && Q) then R
         if P then (for x in Q do R) --> for x in Q do (if P then R)
 */
+    // NOTE(trans): we need to use List[T]() instead of List().
+    // This is an artifact of if/else being typechecked as regular method call.
+    // We also need an explicit type argument on `map` below.
+
     case (Empty(),Empty())       => List()
-    case (IfThen(c,a),Empty())   => if (cond && c) a else List()
-    case (For(l,f),Empty())      => implicit def unsafe[T] = manifest[Any].asInstanceOf[Manifest[T]] // FIXME: get manifest (for result type) from somewhere else
-                                    for (x <- l if cond; y <- f(x)) yield y
-    case (Concat(a,b),Empty())   => (if (cond) a else List()) ++ (if (cond) b else List())
+    case (IfThen(c,a),Empty())   => if (cond && c) a else List[T]()
+    //case (For(l,f),Empty())      => for (x <- l if cond; y <- f(x)) yield y // FIXME(trans)
+    case (For(l,f),Empty())      =>
+      l.flatMap(x => if (cond) f(x) else List[Any]())
+      // implicit def unsafe[T] = manifest[Any].asInstanceOf[Manifest[T]] // FIXME: get manifest (for result type) from somewhere else
+      // for (x <- l if cond; y <- f(x)) yield y
+    case (Concat(a,b),Empty())   => (if (cond) a else List[T]()) ++ (if (cond) b else List[T]())
     case _                       => super.ifThenElse(cond,thenp,elsep)
   }).asInstanceOf[Exp[T]]
 
@@ -886,7 +894,6 @@ trait Util {
     override def toString = elems.map(e => s"${e._1}:${e._2}").mkString("{",",","}")
   }
 }
-
 
 // test cases
 class TestQueries extends FileDiffSuite {
@@ -1052,5 +1059,4 @@ class TestQueries extends FileDiffSuite {
     val o = new Prog with Impl
     //println(o.)
   }
-
 }

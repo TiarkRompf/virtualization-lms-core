@@ -5,7 +5,9 @@ package test4
 import test2._
 import test3._
 
+import org.scala_lang.virtualized.virtualize
 
+@virtualize
 trait ListMatch extends Extractors {
   
   object :!: {
@@ -17,6 +19,7 @@ trait ListMatch extends Extractors {
 }
 
 
+@virtualize
 trait MatcherProg { this: Matching with ListMatch =>
   
   type Input = List[Char]

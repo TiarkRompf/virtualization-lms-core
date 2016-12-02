@@ -12,7 +12,7 @@ import test8._
 import util.OverloadHack
 
 import java.io.{PrintWriter,StringWriter,FileOutputStream}
-import scala.reflect.SourceContext
+import org.scala_lang.virtualized.SourceContext
 
 
 // investigate modified mutation tracking similar to SSA form.

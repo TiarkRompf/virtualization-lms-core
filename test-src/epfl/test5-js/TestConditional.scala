@@ -8,6 +8,9 @@ import test1._
 import java.io.PrintWriter
 import java.io.FileOutputStream
 
+import org.scala_lang.virtualized.virtualize
+import org.scala_lang.virtualized.SourceContext
+
 trait JSGenEqual extends JSGenBase {
   val IR: EqualExp
   import IR._
@@ -67,6 +70,7 @@ trait Dom extends Base {
 
 
 
+@virtualize
 trait ConditionalProg { this: Arith with Equal with Print with IfThenElse =>
   
   def test(x: Rep[Double]): Rep[Double] = {

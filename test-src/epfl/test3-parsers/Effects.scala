@@ -5,6 +5,7 @@ package test3
 import common._
 import test1._
 import test2._
+import org.scala_lang.virtualized.SourceContext
 
 
 trait Effects extends Base {
@@ -93,6 +94,7 @@ trait Control extends Effects with BaseExp {
   }
 }
 
+// TODO(cleanup)
 /*
 trait ControlOpt extends Control {
   
