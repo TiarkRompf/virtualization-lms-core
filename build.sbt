@@ -2,7 +2,7 @@ name := "macro-LMS"
 
 version := "1.0.0-wip-macro"
 
-isSnapshot := true //allows to overwrites old local published version 
+isSnapshot := true //allows to overwrites old local published version
 
 organization := "EPFL"
 
@@ -17,7 +17,7 @@ libraryDependencies += "org.scala-lang" % "scala-library" % scalaVersion.value %
 libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "compile"
 
 libraryDependencies ++= Seq(
-  "org.scala-lang.virtualized" %% "scala-virtualized" % "1.0.0-macrovirt"
+  "org.scala-lang.virtualized" %% "scala-virtualized" % "0.1"
 )
 
 libraryDependencies ++= Seq(
@@ -60,5 +60,6 @@ libraryDependencies ++= (
 )
 
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile"
+libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.3.2"
 
 addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full)

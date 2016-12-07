@@ -16,29 +16,29 @@ import org.scala_lang.virtualized.SourceContext
 import org.scala_lang.virtualized.virtualize
 
 class TestTransform extends FileDiffSuite {
-  
+
   val prefix = home + "test-out/epfl/test10-"
-  
-  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables 
+
+  trait DSL extends VectorOps with Arith with OrderingOps with BooleanOps with LiftVariables
     with IfThenElse with While with RangeOps with Print {
     def test(x: Rep[Int]): Rep[Unit]
   }
-  
-  trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
-    with EqualExpOpt with ArrayMutationExp with IfThenElseFatExp with LoopsFatExp with WhileExpOptSpeculative 
+
+  trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp
+    with EqualExpOpt with ArrayMutationExp with IfThenElseFatExp with LoopsFatExp with WhileExpOptSpeculative
     with RangeOpsExp with PrintExp with FatExpressions { self =>
     override val verbosity = 1
     val runner = new Runner { val p: self.type = self }
     runner.run()
   }
-  
-  trait Codegen extends ScalaGenVector with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
-    with ScalaGenVariables with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative 
+
+  trait Codegen extends ScalaGenVector with ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps
+    with ScalaGenVariables with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenWhileOptSpeculative
     with ScalaGenRangeOps with ScalaGenPrint {
     val IR: Impl
   }
-  
-  
+
+
   trait Runner {
     val p: Impl
     def run() = {
@@ -67,22 +67,22 @@ class TestTransform extends FileDiffSuite {
           codegen.emitBlock(z)
         }
       } catch {
-        case ex =>
+        case ex: Throwable =>
         println("error: " + ex)
       }
-      println("-- done")      
+      println("-- done")
     }
   }
-  
-  
-  trait MyTransformer extends ForwardTransformer { 
+
+
+  trait MyTransformer extends ForwardTransformer {
     val IR: Impl
     import IR.{__newVar => _, _}
-    
+
     // a + b --> b + a, but only in then-branches of an if-then-else
-    
+
     var isInThenBranch = false
-    
+
     override def transformStm(stm: Stm): Exp[Any] = stm match {
       case TP(s,VectorPlus(a,b)) if isInThenBranch =>
         println("replacing " + stm)
@@ -101,10 +101,10 @@ class TestTransform extends FileDiffSuite {
       case _ => super.transformStm(stm)
     }
   }
-  
-  
-  
-  
+
+
+
+
   // test simple block transform
   def testTransform1 = withOutFileChecked(prefix+"transform1") {
     @virtualize

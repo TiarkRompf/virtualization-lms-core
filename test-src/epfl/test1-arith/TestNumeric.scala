@@ -5,13 +5,13 @@ package test1
 import common._
 import internal._
 
-import org.scala_lang.virtualized.SourceContext
+import org.scala_lang.virtualized._
 
 
 class TestNumeric extends FileDiffSuite {
-  
+
   val prefix = home + "test-out/epfl/test1-"
-  
+
 
   // this seems to be a bug in Scala-Virtualized related to reified __new
 
@@ -19,7 +19,7 @@ class TestNumeric extends FileDiffSuite {
     withOutFile(prefix+"numeric1") {
       trait Prog extends Base with NumericOps with PrimitiveOps with StructOps with LiftNumeric {
         def test(x: Rep[Int]) = {
-          
+
           val a = unit(2.0)
           val f1 = (1.0 + a) // this one is ok
 

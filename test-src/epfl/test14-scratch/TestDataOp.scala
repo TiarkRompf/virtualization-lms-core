@@ -12,9 +12,9 @@ import org.scala_lang.virtualized.virtualize
 import org.scala_lang.virtualized.SourceContext
 
 class TestDataOp extends FileDiffSuite {
-  
+
   val prefix = home + "test-out/epfl/test14-"
-  
+
   @virtualize
   trait DSL extends ScalaOpsPkg with TupledFunctions with UncheckedOps with LiftPrimitives with LiftString with LiftVariables {
     // keep track of top level functions
@@ -73,7 +73,7 @@ class TestDataOp extends FileDiffSuite {
 
     case class ScanOp(table: Table) extends Operator {
 
-      private val pos = var_new(0)
+      private var pos = 0
 
       def open() = { pos = 0 } // first elem?
       def next() = {
@@ -109,7 +109,7 @@ class TestDataOp extends FileDiffSuite {
 
     case class JoinOp(k1: Record => Rep[Int], k2: Record => Rep[Int])(up1: Operator, up2: Operator) extends Operator {
       // **** preliminary ****
-      val more1 = var_new(unit(false))
+      var more1 = unit(false)
 
       def open() = { up1.open(); more1 = up1.next(); up2.open() }
       def next() = {
@@ -157,10 +157,10 @@ class TestDataOp extends FileDiffSuite {
   }
 
   @virtualize
-  trait Impl extends DSL with ScalaOpsPkgExp with VariablesExpOpt with PrimitiveOpsExpOpt with TupledFunctionsRecursiveExp with UncheckedOpsExp { self => 
-    val codegen = new CCodeGenPkg with CGenVariables with CGenTupledFunctions with CGenUncheckedOps { 
-      val IR: self.type = self 
-      override def remap[A](a: Manifest[A]) = 
+  trait Impl extends DSL with ScalaOpsPkgExp with VariablesExpOpt with PrimitiveOpsExpOpt with TupledFunctionsRecursiveExp with UncheckedOpsExp { self =>
+    val codegen = new CCodeGenPkg with CGenVariables with CGenTupledFunctions with CGenUncheckedOps {
+      val IR: self.type = self
+      override def remap[A](a: Manifest[A]) =
         if (a == manifest[Array[Int]]) "int*"
         else super.remap(a)
       override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
@@ -187,7 +187,7 @@ class TestDataOp extends FileDiffSuite {
     emitAll()
   }
 
-  
+
   def testDataOp1 = {
     withOutFile(prefix+"dataop1") {
       @virtualize
@@ -196,7 +196,7 @@ class TestDataOp extends FileDiffSuite {
 
           val table = ColBasedTable("table",Schema("field1","field2","field3"))
 
-          val plan = 
+          val plan =
             PrintOp(
               MapOp(rec => Record("foo" -> rec("field2"), "bar" -> 2 * rec("field1")))(
                 ScanOp(table)))
@@ -219,7 +219,7 @@ class TestDataOp extends FileDiffSuite {
 
           val table = RowBasedTable("table",Schema("field1","field2","field3"))
 
-          val plan = 
+          val plan =
             PrintOp(
               MapOp(rec => Record("foo" -> rec("field2"), "bar" -> 2 * rec("field1")))(
                 FilterOp(rec => rec("field2") > 0)(
@@ -245,7 +245,7 @@ class TestDataOp extends FileDiffSuite {
           val tableB = RowBasedTable("B",Schema("b1","b2"))
           val tableC = RowBasedTable("C",Schema("c1","c2"))
 
-          val plan = 
+          val plan =
             PrintOp(
               JoinOp(_ apply "a2", _ apply "b1")(
                 ScanOp(tableA),

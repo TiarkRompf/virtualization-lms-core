@@ -27,9 +27,9 @@ import org.scala_lang.virtualized.virtualize
 //}
 
 class TestSpeculative extends FileDiffSuite {
-  
+
   val prefix = home + "test-out/epfl/test8-"
-  
+
   trait DSL extends ArrayMutation with VarArith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
     def mzeros(l: Rep[Int]) = zeros(l).mutable
@@ -39,26 +39,26 @@ class TestSpeculative extends FileDiffSuite {
 
     def test(x: Rep[Int]): Rep[Unit]
   }
-  trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
-      with EqualExpOpt with VariablesExpOpt 
-      with IfThenElseExpOpt with WhileExpOptSpeculative with SplitEffectsExpFat with RangeOpsExp with PrintExp 
-      with CompileScala { self => 
+  trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp
+      with EqualExpOpt with VariablesExpOpt
+      with IfThenElseExpOpt with WhileExpOptSpeculative with SplitEffectsExpFat with RangeOpsExp with PrintExp
+      with CompileScala { self =>
     override val verbosity = 1
-    val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps
       with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenWhileOptSpeculative with ScalaGenSplitEffects
       with ScalaGenRangeOps with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
     val f = compile(test)
     f(7)
   }
-  
+
   def testSpeculative1 = {
     withOutFile(prefix+"speculative1") {
      // test simple copy propagation through variable
       @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var x = 7
-          
+
           if (x > 3) // should remove conditional
             print(x)
           else
@@ -77,12 +77,12 @@ class TestSpeculative extends FileDiffSuite {
       @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var x = 7
-          
+
           if (x > 3) // should remove conditional
             x = 5
           else
             print("no")
-          
+
           print(x) // should be const 5
         }
       }
@@ -97,12 +97,12 @@ class TestSpeculative extends FileDiffSuite {
       @virtualize trait Prog extends DSL {
         def test(y: Rep[Int]) = {
           var x = 7
-          
+
           if (x > y) // cannot remove conditional
             x = 5
           else
             print("no")
-          
+
           print(x) // should be var read
         }
       }
@@ -118,14 +118,14 @@ class TestSpeculative extends FileDiffSuite {
         def test(y: Rep[Int]) = {
           var x = 7
           var z = 9 // should remove z because it is never read
-          
+
           if (x > y) { // cannot remove conditional
             x = 5
             z = 12 // assignment should be removed, too
           } else
             print("no")
-          
-          print(x) // should be var read          
+
+          print(x) // should be var read
         }
       }
       new Prog with Impl
@@ -133,7 +133,7 @@ class TestSpeculative extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"speculative1d")
   }
 
-  
+
   def testSpeculative3 = {
     withOutFile(prefix+"speculative3") {
      // test simple copy propagation through variable
@@ -147,7 +147,7 @@ class TestSpeculative extends FileDiffSuite {
             var z = 2 // should remove var
             c = c + 1
             print(z) // should be const 2
-          }          
+          }
           print(x) // should be const 7
           print(c)
         }
@@ -172,7 +172,7 @@ class TestSpeculative extends FileDiffSuite {
             c = c + 1
             print(z) // should be const 2
             y = y + 2 // should remove
-          }          
+          }
           print(x) // should be const 7
           print(c)
         }
@@ -198,7 +198,7 @@ class TestSpeculative extends FileDiffSuite {
     }
     assertFileEqualsCheck(prefix+"speculative4")
   }
-  
+
   def testSpeculative5 = {
     withOutFile(prefix+"speculative5") {
      // test simple copy propagation through variable
@@ -228,7 +228,7 @@ class TestSpeculative extends FileDiffSuite {
   def testSpeculative6 = {
     withOutFile(prefix+"speculative6") {
      // test simple copy propagation through variable
-      trait Prog extends DSL {
+      @virtualize trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           print("FIXME -- WRONG RESULT")
           var i = 0

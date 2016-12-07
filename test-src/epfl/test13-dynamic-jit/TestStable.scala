@@ -37,7 +37,7 @@ case class RCell[T](tag: String) {
   case class CellInit[T](tag: String, x: Rep[T]) extends Def[RCell[T]]
   case class CellSet[T](c: Cell[T], x: Rep[T]) extends Def[Unit]
   case class CellGet[T](c: Cell[T]) extends Def[T]
-  
+
   def cell[T:Manifest](tag: String): Cell[T] = staticData(new RCell[T](tag))//reflectMutable(CellInit(tag, x))
   def infix_set[T:Manifest](c: Cell[T], x: Rep[T]): Rep[Unit] = reflectWrite(c)(CellSet(c,x))
   def infix_get[T:Manifest](c: Cell[T]): Rep[T] = CellGet(c)
@@ -57,7 +57,7 @@ trait ScalaGenCellOps extends ScalaGenBase {
 
 
 @virtualize trait CompileDyn extends Base with Compile {
-  
+
   def dcompile[A:Manifest,B:Manifest](fv: List[Rep[Any]])(f: Rep[A] => Rep[B]): Rep[A=>B]
 
   def dcompile[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = dcompile(freesyms(f))(f)
@@ -78,7 +78,7 @@ trait ScalaGenCellOps extends ScalaGenBase {
 @virtualize trait CompileDynExp extends CompileDyn with BaseExp with StaticDataExp with UncheckedOpsExp {
 
   override def toString = "IR:" + getClass.getName
-    
+
   def freesyms(x:Any): List[Sym[Any]] = { // switch to syms again ...
     val fields = x.getClass.getDeclaredFields
     fields.foreach(_.setAccessible(true))
@@ -89,18 +89,18 @@ trait ScalaGenCellOps extends ScalaGenBase {
 
 
   def dcompile[A:Manifest,B:Manifest](fv: List[Exp[Any]])(f: Rep[A] => Rep[B]): Rep[A=>B] = {
-    
+
     // compile { u: Rep[A] => f(u) }
 
     dcompileInternal[A,Rep[A],B](fv, (u,v) => u)(f)
   }
-  
+
   def dlet[A:Manifest,B:Manifest](x:Exp[A], fv: List[Exp[Any]])(f: A => Rep[B]): Rep[B] = {
-    
+
     // compile { u: Rep[Unit] => f(x) }  <--- x is runtime value
 
     val fc = dcompileInternal[Unit,A,B](x::fv, (u,v) => v.head.asInstanceOf[A])(f) // don't really want x as free var but need lower bound on sym id for fresh ones
-    unchecked(fc,".apply(())")    
+    unchecked(fc,".apply(())")
   }
 
   def dcompileInternal[U:Manifest,A,B:Manifest](fv: List[Exp[Any]], g: (Rep[U],List[Any]) => A)(f: A => Rep[B]): Rep[U=>B] = {
@@ -111,7 +111,7 @@ trait ScalaGenCellOps extends ScalaGenBase {
     val fvIds = fv map { case Sym(i) =>  i }
     val maxid = (0::fvIds).max + 1
 
-    val callback = { (fvVals: List[Any]) => 
+    val callback = { (fvVals: List[Any]) =>
       this.reset
       this.nVars = maxid
       compile { x: Rep[U] =>
@@ -137,7 +137,7 @@ trait ScalaGenCellOps extends ScalaGenBase {
 
   @virtualize
   trait StableVars extends CellOps with CompileDyn with Equal with PrimitiveOps with HashMapOps with ArrayOps with Compile { self =>
-    
+
     abstract class Continue[A]
     case class Done[A](x: Rep[A]) extends Continue[A]
     case class ReadValue[A:Manifest,B](s: RCell[A], f: A => Continue[B], fv: List[Rep[Any]]) extends Continue[B] { val m = manifest[A] }
@@ -149,21 +149,21 @@ trait ScalaGenCellOps extends ScalaGenBase {
   }
 
   @virtualize trait StableVarsExp extends CellOpsExp with CompileDynExp with EffectExp with StaticDataExp with FunctionsExp with StableVars with EqualExpOpt with IfThenElseFatExp with UncheckedOpsExp {
-    
+
     import scala.collection.mutable.HashMap
-      
-    
+
+
     def compileStable[A:Manifest,B:Manifest](f: Rep[A] => Continue[B]): A=>B = {
 
       val codeHolder = RCell[A=>B]("code")
 
       def compPart[A:Manifest](m: Continue[A]): Rep[A] = m match {
-        case e@ReadValue(s,f:((a)=>Continue[A]), fv) => 
-          implicit val m = e.m 
+        case e@ReadValue(s,f:((a)=>Continue[A]), fv) =>
+          implicit val m = e.m
 
           val s2 = staticData(s)
           println("read value " + s + " sym " + s2)
-          
+
           val s2val = s2.get
           if (s2val == staticData(s.value)) {
             compPart(f(s.value))
@@ -180,8 +180,8 @@ trait ScalaGenCellOps extends ScalaGenBase {
 
         case Done(c) => c
       }
-      
-      { x: A => 
+
+      { x: A =>
         println("call with arg " + x)
         if (codeHolder.value eq null) {
           println("(re) compiling")
@@ -190,7 +190,7 @@ trait ScalaGenCellOps extends ScalaGenBase {
         val g = codeHolder.value
         g(x)
       }
-        
+
 
     }
 
@@ -199,19 +199,17 @@ trait ScalaGenCellOps extends ScalaGenBase {
 
 
 class TestStable extends FileDiffSuite {
-  
+
   val prefix = home + "test-out/epfl/test13-"
-  
-  @virtualize
+
   trait DSL extends VectorOps with   Arith with OrderingOps with BooleanOps with LiftVariables
     with IfThenElse with While with RangeOps with Print with Compile with PrimitiveOps
     with ArrayOps with HashMapOps with CastingOps with StableVars {
-    
+
     def test(): Unit
   }
-  
-  @virtualize
-  trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
+
+  trait Impl extends DSL with VectorExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp
     with EqualExpOpt with IfThenElseFatExp with LoopsFatExp with WhileExp
     with RangeOpsExp with PrintExp with FatExpressions with CompileScala
     with PrimitiveOpsExpOpt with ArrayOpsExp with HashMapOpsExp with CastingOpsExp with StaticDataExp
@@ -222,23 +220,23 @@ class TestStable extends FileDiffSuite {
     val runner = new Runner { val p: self.type = self }
     runner.run()
   }
-  
+
   trait Codegen extends ScalaGenVector with ScalaGenArith with ScalaGenOrderingOps with ScalaGenBooleanOps
     with ScalaGenVariables with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenWhile
     with ScalaGenRangeOps with ScalaGenPrint with ScalaGenFunctions
-    with ScalaGenPrimitiveOps with ScalaGenArrayOps with ScalaGenHashMapOps with ScalaGenCastingOps with ScalaGenStaticData 
+    with ScalaGenPrimitiveOps with ScalaGenArrayOps with ScalaGenHashMapOps with ScalaGenCastingOps with ScalaGenStaticData
     with ScalaGenCellOps with ScalaGenUncheckedOps {
     val IR: Impl
   }
-  
-  
+
+
   trait Runner {
     val p: Impl
     def run() = {
       p.test()
     }
   }
-  
+
 
 
   def testUnstage = withOutFileChecked(prefix+"unstage1") {
@@ -272,7 +270,7 @@ class TestStable extends FileDiffSuite {
   }
 
 
-  
+
   def testStable1 = withOutFileChecked(prefix+"stable1") {
     @virtualize trait Prog extends DSL with Functions with StaticData {
       def test() = {

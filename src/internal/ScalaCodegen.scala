@@ -111,9 +111,22 @@ trait ScalaCodegen extends GenericCodegen with Config {
     stream.println(quote(sym) + " = " + rhs)
   }
 
+  def quoteFloat(x: Float): String = {
+    if (x.isNaN) "Float.NaN"
+    else if (x.isInfinite && x > 0) "Float.PositiveInfinity"
+    else if (x.isInfinite && x < 0) "Float.NegativeInfinity"
+    else x.toString + "f"
+  }
+  def quoteDouble(x: Double): String = {
+    if (x.isNaN) "Double.NaN"
+    else if (x.isInfinite && x > 0) "Double.PositiveInfinity"
+    else if (x.isInfinite && x < 0) "Double.NegativeInfinity"
+    else x.toString
+  }
+
   override def quote(x: Exp[Any]) = x match {
     case Const(l: Long) => l.toString + "L"
-    case Const(null) => "null.asInstanceOf["+x.tp+"]"
+    case Const(null) => "null.asInstanceOf["+remap(x.tp)+"]"
     case _ => super.quote(x)
   }
 }

@@ -3,11 +3,11 @@ package common
 import internal.{GenericNestedCodegen, GenericFatCodegen}
 import java.io.PrintWriter
 import org.scala_lang.virtualized.SourceContext
-import org.scala_lang.virtualized.Struct
+import org.scala_lang.virtualized.Record
 import org.scala_lang.virtualized.RefinedManifest
 import util.OverloadHack
 
-abstract class Record extends Struct
+//abstract class Record extends Struct
 
 trait StructOps extends Base {
 
@@ -15,14 +15,17 @@ trait StructOps extends Base {
    * Allows to write things like “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
    */
 
-  def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
+  //def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
 
+  // TODO: Is this ever still used?
   class RecordOps(record: Rep[Record]) {
     def selectDynamic[T : Manifest](field: String): Rep[T] = record_select[T](record, field)
   }
   implicit def recordToRecordOps(record: Rep[Record]) = new RecordOps(record)
 
-  def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T]
+  //def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T]
+
+  def record_new[T:Manifest](fields:(String, Rep[_])*): Rep[T]
   def record_select[T : Manifest](record: Rep[Record], field: String): Rep[T]
   def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T]
 }
@@ -106,13 +109,16 @@ trait StructExp extends StructOps with StructTags with AtomicWrites with EffectE
   def field_update[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]): Exp[Unit]
     = reflectAtomicWrite(struct)(FieldUpdate(struct, index, rhs))
 
-  def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]) = {
-    val x: Sym[T] = Sym[T](-99) // self symbol -- not defined anywhere, so make it obvious!! (TODO)
-    val fieldSyms = fields map {
+  def record_new[T : Manifest](fields: (String, Rep[_])*) = {
+    // Self symbol currently unsupported
+    // val x: Sym[T] = Sym[T](-99) // self symbol -- not defined anywhere, so make it obvious!! (TODO)
+
+    // var fields currently unsupported
+    /*val fieldSyms = fields map {
       case (index, false, rhs) => (index, rhs(x))
       case (index, true, rhs) => (index, var_new(rhs(x)).e)
-    }
-    struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fieldSyms)
+    }*/
+    struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fields)
   }
 
   def record_select[T : Manifest](record: Rep[Record], fieldName: String) = {

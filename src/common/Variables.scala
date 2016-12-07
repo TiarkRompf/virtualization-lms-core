@@ -60,9 +60,13 @@ trait Variables extends Base with OverloadHack with VariableImplicits with ReadV
   def var_timesequals[T:Manifest:Numeric](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
   def var_divideequals[T:Manifest:Numeric](lhs: Var[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[Unit]
 
+  def __readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext): Rep[T] = readVar(v)
+
   def __assign[T:Manifest](lhs: Var[T], rhs: T)(implicit pos: SourceContext) = var_assign(lhs, unit(rhs))
   def __assign[T](lhs: Var[T], rhs: Rep[T])(implicit o: Overloaded1, mT: Manifest[T], pos: SourceContext) = var_assign(lhs, rhs)
   def __assign[T](lhs: Var[T], rhs: Var[T])(implicit o: Overloaded2, mT: Manifest[T], pos: SourceContext) = var_assign(lhs, readVar(rhs))
+
+
 /*
   def __assign[T,U](lhs: Var[T], rhs: Rep[U])(implicit o: Overloaded2, mT: Manifest[T], mU: Manifest[U], conv: Rep[U]=>Rep[T]) = var_assign(lhs, conv(rhs))
 */
@@ -221,7 +225,7 @@ trait VariablesExpOpt extends VariablesExp {
       super.readVar(v)
     }
   }
-  
+
   // eliminate (some) redundant stores
   // TODO: strong updates. overwriting a var makes previous stores unnecessary
   override implicit def var_assign[T:Manifest](v: Var[T], e: Exp[T])(implicit pos: SourceContext) : Exp[Unit] = {
@@ -230,8 +234,8 @@ trait VariablesExpOpt extends VariablesExp {
       // if it is an assigment with the same value, we don't need to do anything
       val vs = v.e.asInstanceOf[Sym[Variable[T]]]
       //TODO: could use calculateDependencies(Read(v))
-      
-      context.reverse.foreach { 
+
+      context.reverse.foreach {
         case w @ Def(Reflect(NewVar(rhs: Exp[T]), _, _)) if w == vs => if (rhs == e) return ()
         case Def(Reflect(Assign(`v`, rhs: Exp[T]), _, _)) => if (rhs == e) return ()
         case Def(Reflect(_, u, _)) if mayWrite(u, List(vs)) =>  // not a simple assignment

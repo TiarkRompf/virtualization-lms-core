@@ -28,39 +28,32 @@ overlap1:
 (Sym(9),Sym(15))
 (Sym(6),Sym(12))
 overlap2:
-var inits: Queue(Sym(9), Sym(6)) -> Queue(Variable(Sym(32)), Variable(Sym(33)))
+var inits: Queue(Sym(9), Sym(6)) -> Queue(Variable(Sym(25)), Variable(Sym(26)))
 will become var reads: Queue(Sym(9), Sym(6))
 will become var writes: Queue(Sym(15), Sym(12))
-var reads: Queue((Sym(9),Sym(36)), (Sym(6),Sym(37)))
+var reads: Queue((Sym(9),Sym(29)), (Sym(6),Sym(30)))
 var writes: Queue((Sym(15),Const(())), (Sym(12),Const(())))
 /*****************************************
-  Emitting Generated Code
+  Emitting Generated Code                  
 *******************************************/
 class staged$0 extends ((Array[Double])=>(Array[Double])) {
 def apply(x0:Array[Double]): Array[Double] = {
 val x1 = new Array[Double](20)
-val x24 = 0.doubleValue()
-val x25 = 2.0 * x24
-val x26 = x25 + 3.0
-val x27 = 1.doubleValue()
-val x28 = 2.0 * x27
-val x29 = x28 + 3.0
-val x30 = x26 + x29
-val x31 = x1(0) = x30
-var x32: Double = x29
-var x33: Int = 1
-var x35 : Int = 1
-val x48 = while (x35 < 20) {
-val x36 = x32
-val x37 = x33
-val x39 = x35 + 1
-val x40 = x39.doubleValue()
-val x41 = 2.0 * x40
-val x42 = x41 + 3.0
-val x43 = x36 + x42
-val x44 = x1(x37) = x43
-val x45 = x32 = x42
-val x46 = x33 = x39
+val x24 = x1(0) = 8.0
+var x25: Double = 5.0
+var x26: Int = 1
+var x28 : Int = 1
+val x41 = while (x28 < 20) {
+val x29 = x25
+val x30 = x26
+val x32 = x28 + 1
+val x33 = x32.toDouble
+val x34 = 2.0 * x33
+val x35 = x34 + 3.0
+val x36 = x29 + x35
+val x37 = x1(x30) = x36
+val x38 = x25 = x35
+val x39 = x26 = x32
 
 x28 = x28 + 1
 }
@@ -68,7 +61,7 @@ x1
 }
 }
 /*****************************************
-  End of Generated Code
+  End of Generated Code                  
 *******************************************/
 
 compilation: ok

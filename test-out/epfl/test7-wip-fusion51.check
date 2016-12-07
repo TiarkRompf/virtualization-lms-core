@@ -27,7 +27,7 @@ x6(x3) = x4
 val x13 = x6.length
 for (x7 <- 0 until x13) {
 val x8 = x6.apply(x7)
-x2 = x8
+val x9 = x2 = x8
 val x10 = x8 + 3
 val x11 = println(x10)
 }
@@ -51,7 +51,7 @@ val x19 = println(1)
 var x20: Int = 0
 for (x3 <- 0 until 100) {
 val x4 = x3 + 2
-x20 = x4
+val x21 = x20 = x4
 val x22 = x4 + 3
 val x23 = println(x22)
 }
@@ -71,7 +71,7 @@ val x30 = println(1)
 var x31: Int = 0
 for (x3 <- 0 until 100) {
 val x4 = x3 + 2
-x31 = x4
+val x32 = x31 = x4
 val x22 = x4 + 3
 val x33 = println(x22)
 }
@@ -85,7 +85,7 @@ val x30 = println(1)
 var x31: Int = 0
 for (x3 <- 0 until 100) {
 val x4 = x3 + 2
-x31 = x4
+val x32 = x31 = x4
 val x22 = x4 + 3
 val x33 = println(x22)
 }

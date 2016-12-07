@@ -3,12 +3,14 @@ package internal
 
 import util.GraphUtil
 import java.io.{File, PrintWriter}
-//import scala.reflect.RefinedManifest TODO(trans)
+import org.scala_lang.virtualized.RefinedManifest
+import org.apache.commons.lang3.StringEscapeUtils.escapeJava
+
 
 trait GenericCodegen extends BlockTraversal {
   val IR: Expressions
   import IR._
-  
+
   /** these methods support a kernel model of execution and are only used by Delite, should be moved into Delite only? **/
   def deviceTarget: Targets.Value = throw new Exception("deviceTarget is not defined for this codegen.")
   def hostTarget: Targets.Value = Targets.getHostTarget(deviceTarget)
@@ -23,7 +25,7 @@ trait GenericCodegen extends BlockTraversal {
 
   def resourceInfoType = ""
   def resourceInfoSym = ""
-  
+
   /******/
 
   def fileExtension = ""
@@ -63,8 +65,7 @@ trait GenericCodegen extends BlockTraversal {
   def remap[A](s: String, method: String, t: Manifest[A]) : String = remap(s, method, t.toString)
   def remap(s: String, method: String, t: String) : String = s + method + "[" + remap(t) + "]"
   def remap[A](m: Manifest[A]): String = m match {
-    // TODO(trans)
-    //case rm: RefinedManifest[A] =>  "AnyRef{" + rm.fields.foldLeft(""){(acc, f) => {val (n,mnf) = f; acc + "val " + n + ": " + remap(mnf) + ";"}} + "}"
+    case rm: RefinedManifest[A] =>  "AnyRef{" + rm.fields.foldLeft(""){(acc, f) => {val (n,mnf) = f; acc + "val " + n + ": " + remap(mnf) + ";"}} + "}"
     case _ if m.erasure == classOf[Variable[Any]] =>
         remap(m.typeArguments.head)
     case _ =>
@@ -108,7 +109,7 @@ trait GenericCodegen extends BlockTraversal {
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit
-  
+
   def emitSource[T : Manifest, R : Manifest](f: Exp[T] => Exp[R], className: String, stream: PrintWriter): List[(Sym[Any], Any)] = {
     val s = fresh[T]
     val body = reifyBlock(f(s))
@@ -157,10 +158,18 @@ trait GenericCodegen extends BlockTraversal {
    */
   def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, stream: PrintWriter): List[(Sym[Any], Any)] // return free static data in block
 
+  def quoteString(x: String): String = "\"" + escapeJava(x) + "\""
+  def quoteChar(x: Char): String = "'" + escapeJava(x.toString) + "'"
+
+  // These are target specific
+  def quoteFloat(x: Float): String
+  def quoteDouble(x: Double): String
+
   def quote(x: Exp[Any]) : String = x match {
-    case Const(s: String) => "\""+s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
-    case Const(c: Char) => "'"+(""+c).replace("'", "\\'").replace("\n", "\\n")+"'"
-    case Const(f: Float) => "%1.10f".format(f) + "f"
+    case Const(s: String) => quoteString(s)
+    case Const(c: Char) => quoteChar(c)
+    case Const(f: Float) => quoteFloat(f)
+    case Const(d: Double) => quoteDouble(d)
     case Const(l: Long) => l.toString + "L"
     case Const(null) => "null"
     case Const(z) => z.toString

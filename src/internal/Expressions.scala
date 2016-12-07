@@ -40,11 +40,15 @@ trait Expressions extends Utils {
   def quotePos(e: Exp[Any]): String = e.pos match {
     case Nil => "<unknown>"
     case cs =>
-      def all(cs: SourceContext): List[SourceContext] = cs.parent match {
+      // [macrovirt] Get the topmost SourceContext - unsupported with current SourceContext
+      /*def all(cs: SourceContext): List[SourceContext] = cs.parent match {
         case None => List(cs)
         case Some(p) => cs::all(p)
-      }
-    cs.map(c => all(c).reverse.map(c => c.fileName.split("/").last + ":" + c.line).mkString("//")).mkString(";")
+      }*/
+      //cs.map(c => all(c).reverse.map(c => stringify(c)).mkString("//")).mkString(";")
+
+      def stringify(c: SourceContext) = c.fileName.split("/").last + ":" + c.line
+      cs.map{c => stringify(c) }.mkString(";")
   }
 
 
@@ -54,31 +58,17 @@ trait Expressions extends Utils {
 
   // statement (links syms and definitions)
   abstract class Stm {
-    def lhs: List[Sym[Any]] = infix_lhs(this)
-    def rhs: Any = infix_rhs(this)
-    def defines[A](sym: Sym[A]): Option[Def[A]] = infix_defines(this, sym)
-    def defines[A](rhs: Def[A]): Option[Sym[A]] = infix_defines(this, rhs)
+    def lhs: List[Sym[Any]]
+    def rhs: Any
+    def defines[A](s: Sym[A]): Option[Def[A]]
+    def defines[A](d: Def[A]): Option[Sym[A]]
   }
 
-  def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {
-    case TP(sym, rhs) => sym::Nil
+  case class TP[+T](sym: Sym[T], override val rhs: Def[T]) extends Stm {
+    def lhs: List[Sym[Any]] = List(sym)
+    def defines[A](s: Sym[A]): Option[Def[A]] = if (s == sym) Some(rhs.asInstanceOf[Def[A]]) else None
+    def defines[A](d: Def[A]): Option[Sym[A]] = if (d == rhs) Some(sym.asInstanceOf[Sym[A]]) else None
   }
-
-  def infix_rhs(stm: Stm): Any = stm match { // clients use syms(e.rhs), boundSyms(e.rhs) etc.
-    case TP(sym, rhs) => rhs
-  }
-
-  def infix_defines[A](stm: Stm, sym: Sym[A]): Option[Def[A]] = stm match {
-    case TP(`sym`, rhs: Def[A]) => Some(rhs)
-    case _ => None
-  }
-
-  def infix_defines[A](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
-    case TP(sym: Sym[A], `rhs`) => Some(sym)
-    case _ => None
-  }
-
-  case class TP[+T](sym: Sym[T], override val rhs: Def[T]) extends Stm
 
   // graph construction state
 

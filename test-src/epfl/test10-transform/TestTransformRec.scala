@@ -68,7 +68,7 @@ class TestTransformRec extends FileDiffSuite {
           codegen.emitBlock(z0)
         }
       } catch {
-        case ex =>
+        case ex: Throwable =>
         println("error: " + ex)
       }
       val trans = new MyTransformer {
@@ -82,7 +82,7 @@ class TestTransformRec extends FileDiffSuite {
           codegen.emitBlock(z)
         }
       } catch {
-        case ex =>
+        case ex: Throwable =>
         println("error: " + ex)
       }
       println("-- done")

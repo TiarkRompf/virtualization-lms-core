@@ -13,19 +13,19 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
   override def fileExtension = "cu"
   override def toString = "cuda"
   override def devFuncPrefix = "__device__"
-  
+
   override def initializeGenerator(buildDir:String): Unit = {
     val outDir = new File(buildDir)
     outDir.mkdirs
 
     actRecordStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "actRecords.h"))
-    
+
     helperFuncStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.cu"))
-    helperFuncStream.print("#include \"" + deviceTarget + "helperFuncs.h\"\n")    
-    
+    helperFuncStream.print("#include \"" + deviceTarget + "helperFuncs.h\"\n")
+
     typesStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "types.h"))
     typesStream.flush
-    
+
     //TODO: Put all the DELITE APIs declarations somewhere
     headerStream = new PrintWriter(new FileWriter(buildDir + deviceTarget + "helperFuncs.h"))
     headerStream.println("#include <iostream>")
@@ -63,6 +63,20 @@ trait CudaCodegen extends GPUCodegen with CppHostTransfer with CudaDeviceTransfe
                      "*******************************************/")
     }
     Nil
+  }
+
+  // From CUDA's math_constants.h
+  override def quoteFloat(x: Float): String = {
+    if (x.isNaN) s"__int_as_float(0x7f800000)"
+    else if (x.isInfinite && x > 0) s"__int_as_float(0x7f800000)"
+    else if (x.isInfinite && x < 0) s"__int_as_float(0xff800000)"
+    else x.toString + "f"
+  }
+  override def quoteDouble(x: Double): String = {
+    if (x.isNaN) s"__longlong_as_double(0xfff8000000000000ULL)"
+    else if (x.isInfinite && x > 0) s"__longlong_as_double(0x7ff0000000000000ULL)"
+    else if (x.isInfinite && x < 0) s"__longlong_as_double(0xfff0000000000000ULL)"
+    else x.toString
   }
 
 }
