@@ -22,7 +22,7 @@ trait ChiselCodegen extends GenericCodegen with Config {
   }
 
   override def deviceTarget: Targets.Value = Targets.Chisel
-  override def fileExtension = "chisel"
+  override def fileExtension = "scala"
   override def toString = "chisel"
   override def resourceInfoType = ""
   override def resourceInfoSym = ""
@@ -40,19 +40,23 @@ trait ChiselCodegen extends GenericCodegen with Config {
   def baseStream = _baseStream
   def baseStream_=(s: PrintWriter) { _baseStream = s }
 
+  private var _baseConnectStream: PrintWriter = _
+  def baseConnectStream = _baseConnectStream
+  def baseConnectStream_=(s: PrintWriter) { _baseConnectStream = s }
 
 
   override def emitSource[A : Manifest](args: List[Sym[_]], body: Block[A], className: String, out: PrintWriter) = {
     val staticData = getFreeDataBlock(body)
 
-
+      //println(Console.CYAN_B + "HELLO")
     withStream(out) {
       alwaysGen {
         emitFileHeader()
       }
+
       emitBlock(body)
       alwaysGen {
-				emitFileFooter()
+        emitFileFooter()
       }
     }
 
@@ -71,6 +75,9 @@ trait ChiselCodegen extends GenericCodegen with Config {
     withStream(baseStream) {
       alwaysGen { emitBaseFileHeader() }
     }
+    withStream(baseConnectStream) {
+      alwaysGen { emitBaseConnectFileHeader() }
+    }
   }
 
   override def postProcess[A: Manifest](body: Block[A]) = {
@@ -82,6 +89,9 @@ trait ChiselCodegen extends GenericCodegen with Config {
     }
     withStream(baseStream) {
       alwaysGen { emitBaseFileFooter() }
+    }
+    withStream(baseConnectStream) {
+      alwaysGen { emitBaseConnectFileFooter() }
     }
   }
 
@@ -96,8 +106,11 @@ trait ChiselCodegen extends GenericCodegen with Config {
     val sep = java.io.File.separator
     val outDir = new File(buildDir); outDir.mkdirs()
 
-    val baseFilePath = s"""${bd}/BaseLib.$fileExtension"""
+    val baseFilePath = s"""${bd}/BaseModule.$fileExtension"""
     baseStream = new PrintWriter(new File(baseFilePath))
+
+    val baseConnectFilePath = s"""${bd}/BaseConnectModule.$fileExtension"""
+    baseConnectStream = new PrintWriter(new File(baseConnectFilePath))
   }
 
   override def finalizeGenerator() = {
@@ -106,15 +119,29 @@ trait ChiselCodegen extends GenericCodegen with Config {
     stream.close
     baseStream.flush
     baseStream.close
+    baseConnectStream.flush
+    baseConnectStream.close
+
   }
 
+  private def emitBaseConnectFileHeader() = {
+      //emit(s"""package engine""")
+      //emit("import Chisel._")
+      //emit(s"""class BaseConnect extends BaseIO{""")
+      //emit(s"""val top = Module(new TopModule)""")
+  }
+
+  private def emitBaseConnectFileFooter() = {
+    //emit("}")
+  }
   private def emitBaseFileHeader() = {
-    emit(s"""package engine;""")
-    imports.map(x => emit(s"""import ${importPrefix}.${x};"""))
-    emit(s"""import java.util.Arrays;""")
-    emit(s"""class BaseLib extends KernelLib {""")
-    emit(s"""BaseLib(KernelLib owner) { super(owner); }
-      SpatialUtils spatialUtils = new SpatialUtils(this);""")
+      //emit(s"""package engine""")
+      emit("import Chisel._")
+      emit(s"""class BaseIO extends Module{""")
+      emit("var io = new Bundle {")
+	emit("")
+	emit(s"""val top_en = Bool(INPUT)""")
+	emit(s"""val top_done = Bool(OUTPUT)""")
   }
 
   private def emitBaseFileFooter() = {
@@ -123,24 +150,20 @@ trait ChiselCodegen extends GenericCodegen with Config {
 
   override def emitFileHeader() = {
     // empty by default. override to emit package or import declarations.
-    emit("/*****************************************\n"+
-         "  Chisel BACKEND: emitSource \n"+
-         "*******************************************/")
-    emit(s"""package engine;""")
-    imports.map(x => emit(s"""import ${importPrefix}.${x};"""))
-    emit(s"""import java.util.Arrays;""")
-    emit(s"""class TopKernelLib extends BaseLib {""")
-    emit(s"""TopKernelLib(KernelLib owner, DFEVar top_en, DFEVar top_done) {""")
-    emit(s"""super(owner);""")
+    //emit("/*****************************************\n"+
+         //"  Chisel Header \n"+
+         //"*******************************************/")
+      //emit(s"""package engine""")
+      emit("import Chisel._")
+    emit(s"""class TopModule extends BaseIO {""")
   }
 
-	override def emitFileFooter() = {
-		emit("	}")
-		emit("}")
+    override def emitFileFooter() = {
+        emit("}")
     emit("/*****************************************\n"+
          "  End of Chisel BACKEND \n"+
          "*******************************************/")
-	}
+    }
 
   override def emitKernelHeader(syms: List[Sym[Any]], vals: List[Sym[Any]], vars: List[Sym[Any]], resultType: String, resultIsVar: Boolean, external: Boolean, isMultiLoop: Boolean): Unit = {
     val kernelName = syms.map(quote).mkString("")
@@ -187,7 +210,7 @@ trait ChiselCodegen extends GenericCodegen with Config {
       val context = sym.pos(0)
       "      // " + relativePath(context.fileName) + ":" + context.line
     }
-    stream.println("val " + quote(sym) + " = " + rhs + extra)
+    stream.println("var " + quote(sym) + " = " + rhs + extra)
   }
 
   def emitVarDef(sym: Sym[Variable[Any]], rhs: String): Unit = {
@@ -196,11 +219,11 @@ trait ChiselCodegen extends GenericCodegen with Config {
 
   // TODO: Unused?
   def emitVarDecl(sym: Sym[Any]): Unit = {
-    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = null.asInstanceOf[" + remap(sym.tp) + "];")
+    stream.println("var " + quote(sym) + ": " + remap(sym.tp) + " = null.asInstanceOf[" + remap(sym.tp) + "]")
   }
 
   def emitAssignment(sym: Sym[Any], rhs: String): Unit = {
-    stream.println(quote(sym) + " = " + rhs + ";")
+    stream.println(quote(sym) + " = " + rhs)
 
   }
 
@@ -210,49 +233,26 @@ trait ChiselCodegen extends GenericCodegen with Config {
     case _ => super.quote(x)
   }
 
-	def emit(str: String):Unit = {
-		stream.println(str)
-	}
+    def emit(str: String):Unit = {
+        stream.println(str)
+    }
 
-	def emitGlobal(str: String):Unit = {
-		baseStream.println(str)
-	}
+    def emitGlobal(str: String):Unit = {
+        baseStream.println(str)
+    }
+
+    //def emit(str: String):Unit = {
+        //baseConnectStream.println(str)
+    //}
 
   def emitGlobalWire(str: String): Unit = {
-    emitGlobal(s"""DFEVar $str = dfeBool().newInstance(this);""")
+    emit(s"""val $str = Bool();""")
   }
 
-	def emitComment(str: String):Unit = {
-		stream.println(s"""/* $str */""")
-	}
+    def emitComment(str: String):Unit = {
+        stream.println(s"""/* $str */""")
+    }
 
-  // Still needed ???
-  val importPrefix = "com.maxeler.maxcompiler.v2"
-
-  val imports = List(
-    "kernelcompiler.stdlib.core.Count.Counter",
-    "kernelcompiler.stdlib.core.CounterChain",
-    "kernelcompiler.stdlib.core.Count",
-    "kernelcompiler.stdlib.core.Count.WrapMode",
-    "kernelcompiler.stdlib.core.Count.Params",
-    "kernelcompiler.stdlib.memory.Memory",
-    "kernelcompiler.Kernel",
-    "kernelcompiler.KernelParameters",
-    "kernelcompiler.types.base.DFEVar",
-    "utils.MathUtils",
-    "utils.Bits",
-    "kernelcompiler.KernelLib",
-    "kernelcompiler.stdlib.KernelMath",
-    "kernelcompiler.types.base.DFEType",
-    "kernelcompiler.stdlib.core.Stream.OffsetExpr",
-    "kernelcompiler.stdlib.Reductions",
-    "kernelcompiler.SMIO",
-    "kernelcompiler.stdlib.Accumulator",
-    "kernelcompiler.types.base.DFEType",
-    "kernelcompiler.types.composite.DFEVector",
-    "kernelcompiler.types.composite.DFEVectorType",
-    "kernelcompiler.types.base.DFEFix.SignMode"
-  )
 
 }
 
