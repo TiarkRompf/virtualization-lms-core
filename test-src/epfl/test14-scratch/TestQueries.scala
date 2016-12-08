@@ -799,16 +799,17 @@ trait StagedExp extends Staged with ScalaOpsPkgExp with BooleanOpsExpOpt with St
             if P then (if Q then R) --> if (P && Q) then R
         if P then (for x in Q do R) --> for x in Q do (if P then R)
 */
+    
+    case (Empty(),Empty())       => List()
+    case (IfThen(c,a),Empty())   => if (cond && c) a else List()
+    
     // NOTE(trans): we need to use List[T]() instead of List().
     // This is an artifact of if/else being typechecked as regular method call.
     // We also need an explicit type argument on `map` below.
-
-    case (Empty(),Empty())       => List()
-    case (IfThen(c,a),Empty())   => if (cond && c) a else List()
     //case (For(l,f),Empty())      => for (x <- l if cond; y <- f(x)) yield y // FIXME(trans)
     case (For(l,f),Empty())      =>
-      l.flatMap(x => if (cond) f(x) else List[Any]())
-      // implicit def unsafe[T] = manifest[Any].asInstanceOf[Manifest[T]] // FIXME: get manifest (for result type) from somewhere else
+      implicit def unsafe[T] = manifest[Any].asInstanceOf[Manifest[T]] // FIXME: get manifest (for result type) from somewhere else
+      l.flatMap(x => if (cond) f(x) else List())
       // for (x <- l if cond; y <- f(x)) yield y
     case (Concat(a,b),Empty())   => (if (cond) a else List[T]()) ++ (if (cond) b else List[T]())
     case _                       => super.ifThenElse(cond,thenp,elsep)
