@@ -8,15 +8,6 @@ trait AbstractTransformer {
   val IR: Transforming
   import IR._
 
-  protected var globalMode = false
-  def inGlobalMode[A:Manifest](block: => A): A = {
-    var prevMode = globalMode
-    globalMode = true
-    val r = block
-    globalMode = prevMode
-    r
-  }
-
   def hasContext = false
   def reflectBlock[A](xs: Block[A]): Exp[A] = sys.error("reflectBlock not supported by context-free transformers")
 
@@ -44,7 +35,6 @@ trait AbstractTransformer {
 trait AbstractSubstTransformer extends AbstractTransformer {
   import IR._
   private var _subst: Map[Exp[Any],Exp[Any]] = Map.empty
-  protected var allSubst: Map[Exp[Any], Exp[Any]] = Map.empty
   protected var blockSubst: Map[Block[Any], Block[Any]] = Map.empty
   protected var copyingBlocks: Boolean = true // Default behavior: never use block substitution method
 
@@ -66,11 +56,9 @@ trait AbstractSubstTransformer extends AbstractTransformer {
 
   def register(x: Exp[Any], y: Exp[Any]) {
     _subst += x -> y
-    allSubst += x -> y
   }
   def register(extend: (Exp[Any], Exp[Any])*) {
     _subst ++= extend
-    allSubst ++= extend
   }
 
   def withSubstScope[A](extend: (Exp[Any],Exp[Any])*)(block: => A): A =
@@ -87,7 +75,7 @@ trait AbstractSubstTransformer extends AbstractTransformer {
   }
   def withSubstRules[A](rules: Map[Exp[Any],Exp[Any]])(block: => A): A = {
     val save = subst
-    _subst = rules
+    _subst ++= rules
     val r = block
     _subst = save
     r
@@ -111,10 +99,6 @@ trait AbstractSubstTransformer extends AbstractTransformer {
   // Attempt to use closest substitution rule. If none exists, use global rule if global is enabled
   def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match {
     case Some(y) => y.asInstanceOf[Exp[A]]
-    case None if globalMode => allSubst.get(x) match {
-      case Some(y) => y.asInstanceOf[Exp[A]]
-      case None => x
-    }
     case None => x
   }
 }
@@ -152,11 +136,11 @@ trait FatTransforming extends Transforming with FatExpressions {
 
 trait MetaTransforming extends Transforming with SymbolMetadata {
   // Mirroring metadata
-  final def mirror(p: SymbolProperties, f: Transformer): SymbolProperties = f.inGlobalMode{ p match {
+  final def mirror(p: SymbolProperties, f: Transformer): SymbolProperties = p match {
     case ScalarProperties(data) => ScalarProperties(mirror(data,f))
     case StructProperties(children,data) => StructProperties(mirror(children,f),mirror(data,f))
     case ArrayProperties(child,data) => ArrayProperties(mirror(child,f),mirror(data,f))
-  }}
+  }
 
   final def mirror[K,V](p: PropMap[K,V], f: Transformer): PropMap[K,V] = {
     PropMap(p.toList.map{case (k,v) => metaMirror(k,f) -> metaMirror(v,f) })

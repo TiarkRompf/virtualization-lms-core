@@ -62,7 +62,7 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // Syntax TBD: Def + EatReflect unapplies
   object Deff {
-    def unapply(e: Exp[Any]): Option[Def[Any]] = e match {
+    def unapply[T](e: Exp[T]): Option[Def[T]] = e match {
       case Def(Reflect(inner, _, _)) => Some(inner)
       case Def(d) => Some(d)
       case _ => None
