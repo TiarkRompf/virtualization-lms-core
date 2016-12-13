@@ -125,3 +125,7 @@ trait MaxJGenBase extends MaxJCodegen
 trait MaxJGenEffect extends MaxJNestedCodegen with MaxJGenBase
 trait MaxJGenFat extends MaxJFatCodegen with MaxJGenBase
 
+trait ChiselGenBase extends ChiselCodegen
+trait ChiselGenEffect extends ChiselNestedCodegen with ChiselGenBase
+trait ChiselGenFat extends ChiselFatCodegen with ChiselGenBase
+
