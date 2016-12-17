@@ -96,8 +96,8 @@ trait Expressions extends Utils {
     case _ => None
   }
 
-  def infix_defines[A: Manifest](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
-    case TP(sym: Sym[A], `rhs`) if sym.tp <:< manifest[A] => Some(sym)
+  def infix_defines[A: Typ](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
+    case TP(sym: Sym[A], `rhs`) if sym.tp <:< typ[A] => Some(sym)
     case _ => None
   }
 
@@ -139,7 +139,7 @@ trait Expressions extends Utils {
     globalDefsCache.get(s)
     //globalDefs.find(x => x.defines(s).nonEmpty)
 
-  def findDefinition[T: Manifest](d: Def[T]): Option[Stm] =
+  def findDefinition[T: Typ](d: Def[T]): Option[Stm] =
     globalDefs.find(x => x.defines(d).nonEmpty)
 
   def findOrCreateDefinition[T:Typ](d: Def[T], pos: List[SourceContext]): Stm =

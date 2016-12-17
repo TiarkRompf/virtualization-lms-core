@@ -24,11 +24,11 @@ trait FatExpressions extends Expressions {
     case _ => super.infix_defines(stm, sym)
   }
 
-  override def infix_defines[A: Manifest](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
+  override def infix_defines[A: Typ](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
     case TTP(lhs, mhs, rhs) => mhs.indexOf(rhs) match {
       case idx if idx >= 0 =>
         val sym = lhs(idx)
-        if (sym.tp <:< manifest[A])
+        if (sym.tp <:< typ[A])
           Some(sym.asInstanceOf[Sym[A]])
         else
           None

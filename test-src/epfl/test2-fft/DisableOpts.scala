@@ -5,7 +5,7 @@ package test2
 import internal._
 
 trait DisableCSE extends Expressions {
-  override def findDefinition[T: Manifest](d: Def[T]) = None
+  override def findDefinition[T: Typ](d: Def[T]) = None
 }
 
 
