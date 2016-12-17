@@ -1,10 +1,11 @@
 lib_managed
 *.iml
+.idea/
 .DS_Store
 local.properties
 project/boot
 project/build/target
-target
-virtualization-lms-core.iml
-.gitingore
-#test-out
+target/
+test-out/
+!test-out/**/*.check
+data/

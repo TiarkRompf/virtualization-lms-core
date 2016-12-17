@@ -70,7 +70,12 @@ trait Expressions extends Utils {
     def pos: List[SourceContext] = Nil
   }
 
-  case class Const[+T:Typ](x: T) extends Exp[T]
+  case class Const[+T:Typ](x: T) extends Exp[T] {
+    override def equals(other: Any) = other match {
+      case c: Const[_] => x == c.x && tp == c.tp
+      case _ => false
+    }
+  }
 
   case class Sym[+T:Typ](val id: Int) extends Exp[T] {
     var sourceContexts: List[SourceContext] = Nil
@@ -123,11 +128,11 @@ trait Expressions extends Utils {
     case _ => None
   }
 
-  def infix_defines[A](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
-    case TP(sym: Sym[A], `rhs`) => Some(sym)
+  def infix_defines[A: Typ](stm: Stm, rhs: Def[A]): Option[Sym[A]] = stm match {
+    case TP(sym: Sym[A], `rhs`) if sym.tp <:< typ[A] => Some(sym)
     case _ => None
   }
-  
+
   case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
 
   // graph construction state
@@ -166,7 +171,7 @@ trait Expressions extends Utils {
     globalDefsCache.get(s)
     //globalDefs.find(x => x.defines(s).nonEmpty)
 
-  def findDefinition[T](d: Def[T]): Option[Stm] =
+  def findDefinition[T: Typ](d: Def[T]): Option[Stm] =
     globalDefs.find(x => x.defines(d).nonEmpty)
 
   def findOrCreateDefinition[T:Typ](d: Def[T], pos: List[SourceContext]): Stm =
