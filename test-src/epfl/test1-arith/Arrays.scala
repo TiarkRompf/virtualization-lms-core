@@ -24,7 +24,7 @@ trait ArraysExp extends Arrays with BaseExp {
 
   case class ArrayApply[T:Typ](x:Rep[Array[T]], i:Int) extends Def[T]
   //case class ArrayUpdate[T](x:Rep[Array[T]], i:Int) extends Def[T]
-  case class MakeArray[T:Typ](x:List[Rep[T]]) extends Def[Array[T]]
+  case class MakeArray[T](x:List[Rep[T]])(implicit val m: Typ[T]) extends Def[Array[T]]
 
   def arrayApply[T:Typ](x: Rep[Array[T]], i:Int) = ArrayApply(x, i)
   //def arrayUpdate(x: Rep[Double]) = ArrayUpdate(x)
@@ -36,8 +36,8 @@ trait ScalaGenArrays extends ScalaGenBase {
   import IR._
   
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case ArrayApply(x,i) =>  emitValDef(sym, "" + quote(x) + ".apply(" + i + ")")
-    case MakeArray(x) =>  emitValDef(sym, "Array(" + x.map(quote).mkString(",") + ")")
+    case ArrayApply(x,i) => emitValDef(sym, src"$x.apply(${i.toString})")
+    case a @ MakeArray(x) => emitValDef(sym, src"Array[${a.m}]($x)")
     case _ => super.emitNode(sym, rhs)
   }
 }
