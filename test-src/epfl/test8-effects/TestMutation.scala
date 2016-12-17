@@ -16,26 +16,26 @@ import java.io.{PrintWriter,StringWriter,FileOutputStream}
   if there's a crash here during compilation, it's likely due to #4363 (need latest scala-virtualized for fix)
 */
 
-trait ArrayMutation extends ArrayLoops {
+trait ArrayMutation extends ArrayLoops with PrimitiveOps {
   
-  def infix_update[T:Manifest](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]): Rep[Unit]
+  def infix_update[T:Typ](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]): Rep[Unit]
 
-  def infix_mutable[T:Manifest](a: Rep[Array[T]]): Rep[Array[T]]
-  def infix_clone[T:Manifest](a: Rep[Array[T]]): Rep[Array[T]]
+  def infix_mutable[T:Typ](a: Rep[Array[T]]): Rep[Array[T]]
+  def infix_clone[T:Typ](a: Rep[Array[T]]): Rep[Array[T]]
   
 }
 
 
-trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
+trait ArrayMutationExp extends ArrayMutation with PrimitiveOpsExp with ArrayLoopsExp {
   
   case class ArrayUpdate[T](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]) extends Def[Unit]
   case class ArrayMutable[T](a: Rep[Array[T]]) extends Def[Array[T]]
   case class ArrayClone[T](a: Rep[Array[T]]) extends Def[Array[T]]
   
-  def infix_update[T:Manifest](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]) = reflectWrite(a)(ArrayUpdate(a,i,x))
+  def infix_update[T:Typ](a: Rep[Array[T]], i: Rep[Int], x: Rep[T]) = reflectWrite(a)(ArrayUpdate(a,i,x))
 
-  def infix_mutable[T:Manifest](a: Rep[Array[T]]) = reflectMutable(ArrayMutable(a))
-  def infix_clone[T:Manifest](a: Rep[Array[T]]) = ArrayClone(a)
+  def infix_mutable[T:Typ](a: Rep[Array[T]]) = reflectMutable(ArrayMutable(a))
+  def infix_clone[T:Typ](a: Rep[Array[T]]) = ArrayClone(a)
   
   override def aliasSyms(e: Any): List[Sym[Any]] = e match {
     case SimpleLoop(s,i, ArrayElem(y)) => Nil
@@ -43,7 +43,7 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
     case SimpleLoop(s,i, ArrayIfElem(c,y)) => Nil
     case SimpleLoop(s,i, ReduceIfElem(c,y)) => syms(y) // could also return zero value
     case ArrayIndex(a,i) => Nil
-    case ArrayLength(a) => Nil
+    case ArrayLen(a) => Nil
     case ArrayUpdate(a,i,x) => Nil // syms(a) <-- any use to return a?
     case ArrayMutable(a) => Nil
     case ArrayClone(a) => Nil
@@ -56,7 +56,7 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
     case SimpleLoop(s,i, ArrayIfElem(c,y)) => syms(y)
     case SimpleLoop(s,i, ReduceIfElem(c,y)) => Nil
     case ArrayIndex(a,i) => Nil
-    case ArrayLength(a) => Nil
+    case ArrayLen(a) => Nil
     case ArrayUpdate(a,i,x) => syms(x)
     case ArrayMutable(a) => Nil
     case ArrayClone(a) => Nil
@@ -69,7 +69,7 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
     case SimpleLoop(s,i, ArrayIfElem(c,y)) => Nil
     case SimpleLoop(s,i, ReduceIfElem(c,y)) => Nil
     case ArrayIndex(a,i) => syms(a)
-    case ArrayLength(a) => Nil
+    case ArrayLen(a) => Nil
     case ArrayUpdate(a,i,x) => Nil
     case ArrayMutable(a) => Nil
     case ArrayClone(a) => Nil
@@ -82,7 +82,7 @@ trait ArrayMutationExp extends ArrayMutation with ArrayLoopsExp {
     case SimpleLoop(s,i, ArrayIfElem(c,y)) => Nil
     case SimpleLoop(s,i, ReduceIfElem(c,y)) => Nil
     case ArrayIndex(a,i) => Nil
-    case ArrayLength(a) => Nil
+    case ArrayLen(a) => Nil
     case ArrayUpdate(a,i,x) => syms(a)
     case ArrayMutable(a) => syms(a)
     case ArrayClone(a) => syms(a)
@@ -115,17 +115,18 @@ class TestMutation extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test8-"
   
-  trait DSL extends ArrayMutation with Arith with OrderingOps with Variables with IfThenElse with While with RangeOps with Print {
+  trait DSL extends ArrayMutation with PrimitiveOps with LiftPrimitives with OrderingOps with Variables with IfThenElse with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
     def mzeros(l: Rep[Int]) = zeros(l).mutable
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
     def test(x: Rep[Int]): Rep[Unit]
   }
-  trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExp with VariablesExp 
+  trait Impl extends DSL with ArrayMutationExp with PrimitiveOpsExp with OrderingOpsExp with VariablesExp 
+      with BooleanOpsExp with StringOpsExp
       with IfThenElseExp with WhileExp with RangeOpsExp with PrintExp { self => 
     override val verbosity = 2
-    val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenArrayMutation with ScalaGenPrimitiveOps with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenWhile with ScalaGenRangeOps 
       with ScalaGenPrint { val IR: self.type = self }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
@@ -348,7 +349,7 @@ class TestMutation extends FileDiffSuite {
             c = c + 1
           }
           if (c < x)
-            c = 8
+            c = 8.0
           print(c)
         }
       }

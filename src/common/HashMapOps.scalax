@@ -8,13 +8,15 @@ import java.util.HashMap
 import scala.reflect.SourceContext
 
 trait HashMapOps extends Base {
+  implicit def hashMapTyp[K:Typ,V:Typ]: Typ[HashMap[K,V]]
+
   object HashMap {
-    def apply[K:Manifest,V:Manifest]()(implicit pos: SourceContext) = hashmap_new[K,V]()
+    def apply[K:Typ,V:Typ]()(implicit pos: SourceContext) = hashmap_new[K,V]()
   }
 
-  implicit def repHashMapToHashMapOps[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]]) = new hashmapOpsCls(m)
+  implicit def repHashMapToHashMapOps[K:Typ,V:Typ](m: Rep[HashMap[K,V]]) = new hashmapOpsCls(m)
 
-  class hashmapOpsCls[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]]) {
+  class hashmapOpsCls[K:Typ,V:Typ](m: Rep[HashMap[K,V]]) {
     def apply(k: Rep[K])(implicit pos: SourceContext) = hashmap_apply(m, k)
     def update(k: Rep[K], v: Rep[V])(implicit pos: SourceContext) = hashmap_update(m,k,v)
     def contains(k: Rep[K])(implicit pos: SourceContext) = hashmap_contains(m, k)
@@ -25,45 +27,45 @@ trait HashMapOps extends Base {
     def keys(implicit pos: SourceContext) = hashmap_keys(m)
   }
 
-  def hashmap_new[K:Manifest,V:Manifest]()(implicit pos: SourceContext) : Rep[HashMap[K,V]]
-  def hashmap_apply[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K])(implicit pos: SourceContext): Rep[V]
-  def hashmap_update[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K], v: Rep[V])(implicit pos: SourceContext): Rep[Unit]
-  def hashmap_unsafe_update[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], k: Rep[K], v: Rep[V])(implicit pos: SourceContext): Rep[Unit]
-  def hashmap_contains[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]], i: Rep[K])(implicit pos: SourceContext): Rep[Boolean]
-  def hashmap_size[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Int]
-  def hashmap_values[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Iterable[V]]
-  def hashmap_clear[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Unit]
-  def hashmap_keyset[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Set[K]]
-  def hashmap_keys[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Iterable[K]]
+  def hashmap_new[K:Typ,V:Typ]()(implicit pos: SourceContext) : Rep[HashMap[K,V]]
+  def hashmap_apply[K:Typ,V:Typ](m: Rep[HashMap[K,V]], k: Rep[K])(implicit pos: SourceContext): Rep[V]
+  def hashmap_update[K:Typ,V:Typ](m: Rep[HashMap[K,V]], k: Rep[K], v: Rep[V])(implicit pos: SourceContext): Rep[Unit]
+  def hashmap_unsafe_update[K:Typ,V:Typ](m: Rep[HashMap[K,V]], k: Rep[K], v: Rep[V])(implicit pos: SourceContext): Rep[Unit]
+  def hashmap_contains[K:Typ,V:Typ](m: Rep[HashMap[K,V]], i: Rep[K])(implicit pos: SourceContext): Rep[Boolean]
+  def hashmap_size[K:Typ,V:Typ](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Int]
+  def hashmap_values[K:Typ,V:Typ](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Iterable[V]]
+  def hashmap_clear[K:Typ,V:Typ](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Unit]
+  def hashmap_keyset[K:Typ,V:Typ](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Set[K]]
+  def hashmap_keys[K:Typ,V:Typ](m: Rep[HashMap[K,V]])(implicit pos: SourceContext): Rep[Iterable[K]]
 }
 
 trait HashMapOpsExp extends HashMapOps with EffectExp {
-  abstract class HashMapDef[K:Manifest,V:Manifest,R:Manifest] extends Def[R] {
+  abstract class HashMapDef[K:Typ,V:Typ,R:Typ] extends Def[R] {
     val mK = manifest[K]
     val mV = manifest[V]
   }
-  case class HashMapNew[K:Manifest,V:Manifest]() extends HashMapDef[K,V,HashMap[K,V]] 
-  case class HashMapApply[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K]) extends HashMapDef[K,V,V]
-  case class HashMapUpdate[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K], v: Exp[V]) extends HashMapDef[K,V,Unit]
-  case class HashMapContains[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], i: Exp[K]) extends HashMapDef[K,V,Boolean]
-  case class HashMapSize[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Int]
-  case class HashMapValues[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Iterable[V]]
-  case class HashMapClear[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Unit]
-  case class HashMapKeySet[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Set[K]]
-  case class HashMapKeys[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Iterable[K]]
+  case class HashMapNew[K:Typ,V:Typ]() extends HashMapDef[K,V,HashMap[K,V]] 
+  case class HashMapApply[K:Typ,V:Typ](m: Exp[HashMap[K,V]], k: Exp[K]) extends HashMapDef[K,V,V]
+  case class HashMapUpdate[K:Typ,V:Typ](m: Exp[HashMap[K,V]], k: Exp[K], v: Exp[V]) extends HashMapDef[K,V,Unit]
+  case class HashMapContains[K:Typ,V:Typ](m: Exp[HashMap[K,V]], i: Exp[K]) extends HashMapDef[K,V,Boolean]
+  case class HashMapSize[K:Typ,V:Typ](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Int]
+  case class HashMapValues[K:Typ,V:Typ](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Iterable[V]]
+  case class HashMapClear[K:Typ,V:Typ](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Unit]
+  case class HashMapKeySet[K:Typ,V:Typ](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Set[K]]
+  case class HashMapKeys[K:Typ,V:Typ](m: Exp[HashMap[K,V]]) extends HashMapDef[K,V,Iterable[K]]
 
-  def hashmap_new[K:Manifest,V:Manifest]()(implicit pos: SourceContext) = reflectMutable(HashMapNew[K,V]())
-  def hashmap_apply[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K])(implicit pos: SourceContext) = HashMapApply(m,k)
-  def hashmap_update[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K], v: Exp[V])(implicit pos: SourceContext) = reflectWrite(m)(HashMapUpdate(m,k,v))
-  def hashmap_unsafe_update[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], k: Exp[K], v: Exp[V])(implicit pos: SourceContext) = reflectEffect(HashMapUpdate(m,k,v))
-  def hashmap_contains[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]], i: Exp[K])(implicit pos: SourceContext) = HashMapContains(m, i)
-  def hashmap_size[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]])(implicit pos: SourceContext) = HashMapSize(m)
-  def hashmap_values[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]])(implicit pos: SourceContext) = HashMapValues(m)
-  def hashmap_clear[K:Manifest,V:Manifest](m: Exp[HashMap[K,V]])(implicit pos: SourceContext) = reflectWrite(m)(HashMapClear(m))
-  def hashmap_keyset[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext) = HashMapKeySet(m)
-  def hashmap_keys[K:Manifest,V:Manifest](m: Rep[HashMap[K,V]])(implicit pos: SourceContext) = HashMapKeys(m)
+  def hashmap_new[K:Typ,V:Typ]()(implicit pos: SourceContext) = reflectMutable(HashMapNew[K,V]())
+  def hashmap_apply[K:Typ,V:Typ](m: Exp[HashMap[K,V]], k: Exp[K])(implicit pos: SourceContext) = HashMapApply(m,k)
+  def hashmap_update[K:Typ,V:Typ](m: Exp[HashMap[K,V]], k: Exp[K], v: Exp[V])(implicit pos: SourceContext) = reflectWrite(m)(HashMapUpdate(m,k,v))
+  def hashmap_unsafe_update[K:Typ,V:Typ](m: Exp[HashMap[K,V]], k: Exp[K], v: Exp[V])(implicit pos: SourceContext) = reflectEffect(HashMapUpdate(m,k,v))
+  def hashmap_contains[K:Typ,V:Typ](m: Exp[HashMap[K,V]], i: Exp[K])(implicit pos: SourceContext) = HashMapContains(m, i)
+  def hashmap_size[K:Typ,V:Typ](m: Exp[HashMap[K,V]])(implicit pos: SourceContext) = HashMapSize(m)
+  def hashmap_values[K:Typ,V:Typ](m: Exp[HashMap[K,V]])(implicit pos: SourceContext) = HashMapValues(m)
+  def hashmap_clear[K:Typ,V:Typ](m: Exp[HashMap[K,V]])(implicit pos: SourceContext) = reflectWrite(m)(HashMapClear(m))
+  def hashmap_keyset[K:Typ,V:Typ](m: Rep[HashMap[K,V]])(implicit pos: SourceContext) = HashMapKeySet(m)
+  def hashmap_keys[K:Typ,V:Typ](m: Rep[HashMap[K,V]])(implicit pos: SourceContext) = HashMapKeys(m)
   
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
     (e match {
       case e@HashMapApply(m,k) => hashmap_apply(f(m),f(k))(e.mK,e.mV,pos)
       case e@HashMapKeys(m) => hashmap_keys(f(m))(e.mK,e.mV,pos)

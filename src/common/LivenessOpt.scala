@@ -60,7 +60,6 @@ trait DefUseAnalysis extends NestedBlockTraversal {
   override def focusBlock[A](result: Block[Any])(body: => A): A = {
     super.focusBlock(result) {
       val saveDefUseMap = defUseMap
-      defUseMap 
     
       printlog("gathering def-use info for block " + result)
       

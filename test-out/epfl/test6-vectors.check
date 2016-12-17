@@ -19,8 +19,8 @@ compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Test extends ((Any)=>(Any)) {
-def apply(x0:Any): Any = {
+class Test extends ((Int)=>(java.lang.String)) {
+def apply(x0:Int): java.lang.String = {
 val x1 = "hi yo ".toString + x0.toString
 val x2 = x1.toString + " done".toString
 x2

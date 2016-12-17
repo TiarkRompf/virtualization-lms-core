@@ -39,7 +39,7 @@ trait FatExpressions extends Expressions {
 
 
 
-  case class Combine(a: List[Exp[Any]]) extends Exp[Any] //TODO: get rid of. used by emitFatBlock
+  case class Combine(a: List[Exp[Any]]) extends Exp[Any]()(ManifestTyp(manifest[Any])) //TODO: get rid of. used by emitFatBlock
 
   case class Forward[A](x: Exp[A]) extends Def[A] // TODO: get rid of. used by SimplifyTransform
   

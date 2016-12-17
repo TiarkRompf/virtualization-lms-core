@@ -8,19 +8,19 @@ depends on  Sym(5)
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
 val x2 = LoopArray(100) { x1 => 
-0.0
+0
 }
 val x4 = LoopArray(10) { x3 => 
 x2
 }
 val x5 = x4.clone // mutable
 val x7 = LoopArray(20) { x6 => 
-0.0
+0
 }
 val x8 = x7.clone // mutable
 val x9 = x5.update(4, x2)
 val x10 = x5.update(5, x8)
-val x11 = x8.update(50, 50.0)
+val x11 = x8.update(50, 50)
 val x12 = x5.apply(5)
 val x13 = x12.apply(50)
 val x14 = println(x13)

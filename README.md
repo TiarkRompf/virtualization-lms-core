@@ -33,4 +33,4 @@ more seamless.
 
 ### License:
 
-Copyright 2010-2014, EPFL. Licensed under the revised BSD License.
+Copyright 2010-2016, EPFL and collaborators. Licensed under the revised BSD License.

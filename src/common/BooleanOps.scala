@@ -7,10 +7,13 @@ import scala.reflect.SourceContext
 trait LiftBoolean {
   this: Base =>
 
+  implicit def boolTyp: Typ[Boolean]
   implicit def boolToBoolRep(b: Boolean) = unit(b)
 }
 
 trait BooleanOps extends Variables {
+  implicit def boolTyp: Typ[Boolean]
+
   def infix_unary_!(x: Rep[Boolean])(implicit pos: SourceContext) = boolean_negate(x)
   def infix_&&(lhs: Rep[Boolean], rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_and(lhs,rhs)
   def infix_||(lhs: Rep[Boolean], rhs: =>Rep[Boolean])(implicit pos: SourceContext) = boolean_or(lhs,rhs)
@@ -23,6 +26,8 @@ trait BooleanOps extends Variables {
 }
 
 trait BooleanOpsExp extends BooleanOps with EffectExp {
+  implicit def boolTyp: Typ[Boolean] = manifestTyp
+
   case class BooleanNegate(lhs: Exp[Boolean]) extends Def[Boolean]
   case class BooleanAnd(lhs: Exp[Boolean], rhs: Exp[Boolean]) extends Def[Boolean]
   case class BooleanOr(lhs: Exp[Boolean], rhs: Exp[Boolean]) extends Def[Boolean]
@@ -31,7 +36,7 @@ trait BooleanOpsExp extends BooleanOps with EffectExp {
   def boolean_and(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = BooleanAnd(lhs,rhs)
   def boolean_or(lhs: Exp[Boolean], rhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = BooleanOr(lhs,rhs)
 
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case BooleanNegate(x) => boolean_negate(f(x))
     case BooleanAnd(x,y) => boolean_and(f(x),f(y))
     case BooleanOr(x,y) => boolean_or(f(x),f(y))

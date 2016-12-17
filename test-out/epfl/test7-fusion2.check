@@ -31,17 +31,17 @@ def apply(x0:Unit): Unit = {
 var x45: Double = 0
 var x46: Double = 0
 for (x1 <- 0 until 100) {
-val x29 = 2.0*x1
-val x31 = 1.0+x29
-val x44 = x31*x31
+val x29 = 2.0 * x1
+val x31 = 1.0 + x29
+val x44 = x31 * x31
 x45 += x31
 x46 += x44
 }
-val x47 = x45/100
+val x47 = x45 / 100
 val x48 = println(x47)
-val x49 = x46/100
-val x50 = x47*x47
-val x51 = x49-x50
+val x49 = x46 / 100
+val x50 = x47 * x47
+val x51 = x49 - x50
 val x52 = println(x51)
 val x27 = x52
 x27

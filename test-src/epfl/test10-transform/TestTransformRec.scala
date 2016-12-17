@@ -15,14 +15,14 @@ class TestTransformRec extends FileDiffSuite {
 
   val prefix = home + "test-out/epfl/test10-"
 
-  trait DSL extends Arith with Functions with Equal with IfThenElse {
+  trait DSL extends LiftPrimitives with PrimitiveOps with Functions with Equal with IfThenElse {
     def testFun: Rep[Double => Double]
     def test(x: Rep[Double]): Rep[Double] = testFun(x)
   }
 
-  trait Impl extends DSL with ArithExpOpt with EqualExp with IfThenElseFatExp with LoopsFatExp with FunctionsExternalDef1 { self =>
+  trait Impl extends DSL with PrimitiveOpsExpOpt with EqualExp with IfThenElseFatExp with LoopsFatExp with FunctionsExternalDef1 { self =>
     override val verbosity = 1
-
+    
     case class DefineFun2[A,B](res: Block[B])(val arg1: Sym[A], val arg2: Sym[Int]) extends Def[A=>B]
 
     override def boundSyms(e: Any): List[Sym[Any]] = e match {
@@ -35,9 +35,9 @@ class TestTransformRec extends FileDiffSuite {
       case _ => super.symsFreq(e)
     }
 
-    override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-      case Apply(x,y) => toAtom(Apply(f(x),f(y)))
-      case g@DefineFun(y) => toAtom(DefineFun(f(y))(g.arg))
+    override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+      case g@Apply(x,y) => toAtom(Apply(f(x),f(y))(mtype(g.mA),mtype(g.mB)))
+      case g@DefineFun(y) => toAtom(DefineFun(f(y))(g.arg))(mtype(typ[A]),pos)
       case _ => super.mirror(e,f)
     }).asInstanceOf[Exp[A]]
 
@@ -48,6 +48,7 @@ class TestTransformRec extends FileDiffSuite {
   trait Runner {
     val p: Impl
     def run() = {
+      import p.{intTyp,doubleTyp,unitTyp}
       val x = p.fresh[Double]
       val y = p.reifyEffects(p.test(x))
 
@@ -98,7 +99,7 @@ class TestTransformRec extends FileDiffSuite {
     }).asInstanceOf[Option[() => Def[A]]]
   }
 
-  trait Codegen extends ScalaGenArith with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenFunctionsExternal {
+  trait Codegen extends ScalaGenPrimitiveOps with ScalaGenEqual with ScalaGenIfThenElse with ScalaGenFunctionsExternal {
     val IR: Impl
     import IR._
 

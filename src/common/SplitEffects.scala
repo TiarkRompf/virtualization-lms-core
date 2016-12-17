@@ -6,7 +6,7 @@ import scala.reflect.SourceContext
 import scala.lms.internal.{GenericNestedCodegen, GenericFatCodegen, GenerationFailedException}
 
 
-trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIterationDummyExp { this: BooleanOpsExp with EqualExpBridge =>
+trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIterationDummyExp { thisIR: BooleanOpsExp with EqualExpBridge =>
   
   // split effectful statements: one piece for each affected mutable object.
   // this provides for simple dce: pieces not referenced are eliminated.
@@ -20,7 +20,7 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
   // FIXME: wo do not account for mutable objectes allocated in a loop
   // (see test8-speculative6)
 
-  override def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = x match {
+  override def reflectEffectInternal[A:Typ](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = x match {
     case IfThenElse(cond, thenp, elsep) =>
       val affected = (u.mayRead ++ u.mayWrite).distinct
 
@@ -64,8 +64,8 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
             TP(s1, Reflect(PreviousIteration(k),u,es:+loopSym))
           case t => t
         }
-        (this: EmbeddedControls).__assign(globalDefs, globalDefs map xform) // FIXME: SI-6100
-        (this: EmbeddedControls).__assign(localDefs, localDefs map xform) // FIXME: SI-6100
+        (thisIR: EmbeddedControls).__assign(globalDefs, globalDefs map xform) // FIXME: SI-6100
+        (thisIR: EmbeddedControls).__assign(localDefs, localDefs map xform) // FIXME: SI-6100
       }
 
       if (u.maySimple)
@@ -119,13 +119,13 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
     case _ => b
   }
 
-  def projectPureWithB[A:Manifest](b: Block[A], s: List[Sym[Any]]): Block[A] = {
+  def projectPureWithB[A:Typ](b: Block[A], s: List[Sym[Any]]): Block[A] = {
     (projectPureB(b), projectB(b,s)) match {
       case (Block(x), Block(Def(Reify(Const(()), u, es)))) => Block(Reify(x, u, es))
       case (a,_) => a
     }
   }
-  def projectPureWithSimpleB[A:Manifest](b: Block[A]): Block[A] = {
+  def projectPureWithSimpleB[A:Typ](b: Block[A]): Block[A] = {
     (projectPureB(b), projectSimpleB(b)) match {
       case (Block(x), Block(Def(Reify(Const(()), u, es)))) => Block(Reify(x, u, es))
       case (a,_) => a
@@ -137,10 +137,15 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
 
 case class SimpleFatWhile(cond: Block[Boolean], body: List[Block[Any]]) extends FatDef {
   var extradeps: List[Sym[Any]] = Nil //HACK
+  def setExtraDeps(es: List[Sym[Any]]) = {
+    // need to do it this way. otherwise we get compiler errors, but strangely
+    // only when instrumenting code for coverage.
+    (thisIR: EmbeddedControls).__assign(extradeps, es)
+  }
 }
 
 override def syms(e: Any): List[Sym[Any]] = e match {
-  case x@SimpleFatWhile(c, b) => syms(c) ++ syms(b)     ++ syms(x.extradeps)
+  case x@SimpleFatWhile(c, b) => syms(c) ++ syms(b) ++ syms(x.extradeps)
   case _ => super.syms(e)
 }
 
@@ -159,11 +164,11 @@ override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
 
 trait PreviousIterationDummyExp extends BaseFatExp with EffectExp {
   
-  case class PreviousIteration(k: Exp[Nothing]) extends Def[Unit]
+  case class PreviousIteration(k: Exp[Unit]) extends Def[Unit]
   
-  case class SimpleFatPrevious(k: Exp[Nothing], extra: List[Exp[Any]]) extends FatDef
+  case class SimpleFatPrevious(k: Exp[Unit], extra: List[Exp[Any]]) extends FatDef
   
-  def reflectPreviousDummy(k: Exp[Nothing], u: Summary) = reflectEffect(PreviousIteration(k), u)
+  def reflectPreviousDummy(k: Exp[Unit], u: Summary) = reflectEffect(PreviousIteration(k), u)
   // TBD: does previousIteration need to reference the loop?
   // what if we split the loop?
 
@@ -176,7 +181,7 @@ trait BaseGenSplitEffects extends BaseGenIfThenElseFat with GenericFatCodegen {
   val IR: SplitEffectsExpFat
   import IR._
 
-  override def reifyBlock[T: Manifest](x: => Exp[T]): Block[T] = {
+  override def reifyBlock[T: Typ](x: => Exp[T]): Block[T] = {
     val sup = super.reifyBlock(x)
     projectPureWithSimpleB(sup)
   }
@@ -186,7 +191,7 @@ trait BaseGenSplitEffects extends BaseGenIfThenElseFat with GenericFatCodegen {
     case TP(s,d@While(c,b)) => TTP(List(s),List(d),SimpleFatWhile(c,List(b)))
     case TP(s,d@Reflect(While(c,b),u,es)) => 
       val x = SimpleFatWhile(c,List(b))
-      x.extradeps = es.asInstanceOf[List[Sym[Any]]]
+      x.setExtraDeps(es.asInstanceOf[List[Sym[Any]]])
       TTP(List(s),List(d),x)
     case TP(s,d@Reflect(PreviousIteration(k),u,es)) => 
       val x = SimpleFatPrevious(k,es.asInstanceOf[List[Sym[Any]]])
@@ -225,7 +230,7 @@ trait BaseGenSplitEffects extends BaseGenIfThenElseFat with GenericFatCodegen {
       case ((c, "while"), wls: List[TTP]) => 
         val x = SimpleFatWhile(wls.map(_.rhs.asInstanceOf[SimpleFatWhile].cond).apply(0), //FIXME: merge cond!!!
           wls.flatMap(_.rhs.asInstanceOf[SimpleFatWhile].body))
-        x.extradeps = wls.flatMap(_.rhs.asInstanceOf[SimpleFatWhile].extradeps) diff wls.flatMap(_.lhs)
+        x.setExtraDeps(wls.flatMap(_.rhs.asInstanceOf[SimpleFatWhile].extradeps) diff wls.flatMap(_.lhs))
         TTP(wls.flatMap(_.lhs), wls.flatMap(_.mhs), // TODO: merge cond blocks!
         x)
       case ((k:Exp[Nothing],"prev"), pvs: List[TTP]) => 

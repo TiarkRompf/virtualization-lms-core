@@ -8,7 +8,7 @@ depends on  Sym(8)
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
 val x2 = LoopArray(100) { x1 => 
-0.0
+0
 }
 val x3 = x2.clone // mutable
 val x7 = LoopArray(10) { x4 => 

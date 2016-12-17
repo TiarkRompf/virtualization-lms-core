@@ -5,7 +5,7 @@ import java.io.PrintWriter
 import scala.lms.internal._
 import scala.reflect.SourceContext
 
-trait MiscOps extends Base {
+trait MiscOps extends Base with PrimitiveOps with StringOps {
   /**
    * Other things that need to get lifted like exit, there should be
    * a better way to do this
@@ -16,21 +16,21 @@ trait MiscOps extends Base {
   def printf(f: String, x: Rep[Any]*)(implicit pos: SourceContext): Rep[Unit]
 
   // TODO: there is no way to override this behavior
-  def exit(status: Int)(implicit pos: SourceContext): Rep[Nothing] = exit(unit(status))
-  def exit()(implicit pos: SourceContext): Rep[Nothing] = exit(0)
-  def exit(status: Rep[Int])(implicit pos: SourceContext): Rep[Nothing]
-  def error(s: Rep[String])(implicit pos: SourceContext): Rep[Nothing]
+  def exit(status: Int)(implicit pos: SourceContext): Rep[Unit] = exit(unit(status))
+  def exit()(implicit pos: SourceContext): Rep[Unit] = exit(0)
+  def exit(status: Rep[Int])(implicit pos: SourceContext): Rep[Unit]
+  def error(s: Rep[String])(implicit pos: SourceContext): Rep[Unit]
   def returnL(x: Rep[Any])(implicit pos: SourceContext): Rep[Unit]
 }
 
 
 
-trait MiscOpsExp extends MiscOps with EffectExp {
+trait MiscOpsExp extends MiscOps with EffectExp with PrimitiveOpsExp with StringOpsExp {
   case class Print(x: Exp[Any]) extends Def[Unit]
   case class PrintLn(x: Exp[Any]) extends Def[Unit]
   case class PrintF(f: String, x: List[Exp[Any]]) extends Def[Unit]
-  case class Exit(s: Exp[Int]) extends Def[Nothing]
-  case class Error(s: Exp[String]) extends Def[Nothing]
+  case class Exit(s: Exp[Int]) extends Def[Unit]
+  case class Error(s: Exp[String]) extends Def[Unit]
   case class Return(x: Exp[Any]) extends Def[Unit]
 
   def print(x: Exp[Any])(implicit pos: SourceContext) = reflectEffect(Print(x)) // TODO: simple effect
@@ -44,7 +44,7 @@ trait MiscOpsExp extends MiscOps with EffectExp {
     reflectEffect(Return(x))
   }
   
-  override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
+  override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case Reflect(Error(x), u, es) => reflectMirrored(Reflect(Error(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case Reflect(Print(x), u, es) => reflectMirrored(Reflect(Print(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
     case Reflect(PrintLn(x), u, es) => reflectMirrored(Reflect(PrintLn(f(x)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)

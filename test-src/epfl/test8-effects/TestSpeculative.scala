@@ -17,19 +17,21 @@ class TestSpeculative extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test8-"
   
-  trait DSL extends ArrayMutation with Arith with OrderingOps with BooleanOps with LiftVariables with IfThenElse with While with RangeOps with Print {
+  trait DSL extends ArrayMutation with PrimitiveOps with LiftPrimitives
+    with OrderingOps with BooleanOps with LiftVariables with IfThenElse 
+    with While with RangeOps with Print {
     def zeros(l: Rep[Int]) = array(l) { i => 0 }
     def mzeros(l: Rep[Int]) = zeros(l).mutable
     def infix_toDouble(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
 
     def test(x: Rep[Int]): Rep[Unit]
   }
-  trait Impl extends DSL with ArrayMutationExp with ArithExp with OrderingOpsExpOpt with BooleanOpsExp 
-      with EqualExpOpt with VariablesExpOpt 
+  trait Impl extends DSL with ArrayMutationExp with PrimitiveOpsExp with OrderingOpsExpOpt with BooleanOpsExp 
+      with EqualExpOpt with VariablesExpOpt with StringOpsExp
       with IfThenElseExpOpt with WhileExpOptSpeculative with SplitEffectsExpFat with RangeOpsExp with PrintExp 
       with CompileScala { self => 
     override val verbosity = 1
-    val codegen = new ScalaGenArrayMutation with ScalaGenArith with ScalaGenOrderingOps 
+    val codegen = new ScalaGenArrayMutation with ScalaGenPrimitiveOps with ScalaGenOrderingOps 
       with ScalaGenVariables with ScalaGenIfThenElseFat with ScalaGenWhileOptSpeculative with ScalaGenSplitEffects
       with ScalaGenRangeOps with ScalaGenPrint /*with LivenessOpt*/ { val IR: self.type = self }
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
@@ -126,7 +128,7 @@ class TestSpeculative extends FileDiffSuite {
         def test(x: Rep[Int]) = {
           var x = 7
           var c = 0.0
-          while (c < 10) {
+          while (c < 10.0) {
             print(x) // should be const 7
             print(c)
             var z = 2 // should remove var
@@ -150,7 +152,7 @@ class TestSpeculative extends FileDiffSuite {
           var x = 7
           var y = 4.0 // should remove
           var c = 0.0
-          while (c < 10) {
+          while (c < 10.0) {
             print(x) // should be const 7
             print(c)
             var z = 2 // should remove var
@@ -173,7 +175,7 @@ class TestSpeculative extends FileDiffSuite {
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
           var c = 0.0
-          while (c > 10) {
+          while (c > 10.0) {
             print("booooring!")
           }
           print("done")
@@ -189,15 +191,15 @@ class TestSpeculative extends FileDiffSuite {
      // test simple copy propagation through variable
       trait Prog extends DSL {
         def test(x: Rep[Int]) = {
-          var x = 7
+          var x = 7.0
           var c = 0.0
-          while (c < 10) {
-            if (x < 10)
+          while (c < 10.0) {
+            if (x < 10.0)
               print("test")
             else
               x = c
             print(x)
-            c += 1
+            c += 1.0
           }
           print(x)
         }
