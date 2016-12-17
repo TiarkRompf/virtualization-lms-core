@@ -99,22 +99,22 @@ trait VariablesExp extends Variables with PrimitiveOps with ImplicitOpsExp with 
 
   case class ReadVar[T:Typ](v: Var[T]) extends Def[T]
   case class NewVar[T:Typ](init: Exp[T]) extends Def[Variable[T]] {
-    def m = manifest[T]
+    def m = typ[T]
   }
   case class Assign[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
-    def m = manifest[T]
+    def m = typ[T]
   }
   case class VarPlusEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
-    def m = manifest[T]
+    def m = typ[T]
   }
   case class VarMinusEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
-    def m = manifest[T]
+    def m = typ[T]
   }
   case class VarTimesEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
-    def m = manifest[T]
+    def m = typ[T]
   }
   case class VarDivideEquals[T:Typ](lhs: Var[T], rhs: Exp[T]) extends Def[Unit] {
-    def m = manifest[T]
+    def m = typ[T]
   }
 
   def var_new[T:Typ](init: Exp[T])(implicit pos: SourceContext): Var[T] = {
@@ -195,13 +195,13 @@ trait VariablesExp extends Variables with PrimitiveOps with ImplicitOpsExp with 
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case ReadVar(Variable(a)) => readVar(Variable(f(a)))
-    case Reflect(e@NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@Assign(Variable(a),b), u, es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@VarPlusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@VarMinusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarMinusEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@VarTimesEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarTimesEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@VarDivideEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarDivideEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@NewVar(a), u, es) => reflectMirrored(Reflect(NewVar(f(a))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(ReadVar(Variable(a)), u, es) => reflectMirrored(Reflect(ReadVar(Variable(f(a))), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@Assign(Variable(a),b), u, es) => reflectMirrored(Reflect(Assign(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@VarPlusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarPlusEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@VarMinusEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarMinusEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@VarTimesEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarTimesEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@VarDivideEquals(Variable(a),b), u, es) => reflectMirrored(Reflect(VarDivideEquals(Variable(f(a)), f(b))(e.m), mapOver(f,u), f(es)))(mtyp1[A], pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 

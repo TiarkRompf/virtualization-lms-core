@@ -36,7 +36,7 @@ trait NumericOpsExp extends NumericOps with VariablesExp with BaseFatExp {
   this: PrimitiveOpsExp =>
   
   abstract class DefMN[A:Typ:Numeric] extends Def[A] {
-    def mev = manifest[A]
+    def mev = typ[A]
     def aev = implicitly[Numeric[A]]
   }
 
@@ -62,31 +62,44 @@ trait NumericOpsExp extends NumericOps with VariablesExp with BaseFatExp {
 trait NumericOpsExpOpt extends NumericOpsExp {
   this: PrimitiveOpsExp =>
   
-  override def numeric_plus[T:Numeric:Typ](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = (lhs,rhs) match {
-    case (Const(x), Const(y)) => Const(implicitly[Numeric[T]].plus(x,y))
-    case (Const(x), y) if x == implicitly[Numeric[T]].zero => y
-    case (x, Const(y)) if y == implicitly[Numeric[T]].zero => x
-    case _ => super.numeric_plus(lhs,rhs)
+  override def numeric_plus[T:Numeric:Typ](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = {
+    val num = implicitly[Numeric[T]]
+    (lhs,rhs) match {
+      case (Const(x), Const(y)) => Const(num.plus(x,y))
+      case (Const(x), y) if x == num.zero => y
+      case (x, Const(y)) if y == num.zero => x
+      case _ => super.numeric_plus(lhs,rhs)
+    }
   }
   override def numeric_minus[T:Numeric:Typ](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = (lhs,rhs) match {
     case (Const(x), Const(y)) => Const(implicitly[Numeric[T]].minus(x,y))
     case (x, Const(y)) if y == implicitly[Numeric[T]].zero => x
     case _ => super.numeric_minus(lhs,rhs)
   }
-  override def numeric_times[T:Numeric:Typ](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = (lhs,rhs) match {
-    case (Const(x), Const(y)) => Const(implicitly[Numeric[T]].times(x,y))
-    case (Const(x), y) if x == implicitly[Numeric[T]].zero => Const(x)
-    case (x, Const(y)) if y == implicitly[Numeric[T]].zero => Const(y)
-    case (Const(x), y) if x == implicitly[Numeric[T]].one => y
-    case (x, Const(y)) if y == implicitly[Numeric[T]].one => x
-    case _ => super.numeric_times(lhs,rhs)
+  override def numeric_times[T:Numeric:Typ](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = {
+    val num = implicitly[Numeric[T]]
+    (lhs,rhs) match {
+      case (Const(x), Const(y)) => Const(num.times(x,y))
+      case (Const(x), y) if x == num.zero => Const(x)
+      case (x, Const(y)) if y == num.zero => Const(y)
+      case (Const(x), y) if x == num.one => y
+      case (x, Const(y)) if y == num.one => x
+      case _ => super.numeric_times(lhs,rhs)
+    }
   }
-  override def numeric_divide[T:Numeric:Typ](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = (lhs,rhs) match {
-    // CAVEAT: Numeric doesn't have .div, Fractional has
-    case (Const(x), Const(y)) => Const(implicitly[Numeric[T]].asInstanceOf[Fractional[T]].div(x,y))
-    case (Const(x), y) if x == implicitly[Numeric[T]].zero => Const(x)
-    case (x, Const(y)) if y == implicitly[Numeric[T]].one => x
-    case _ => super.numeric_divide(lhs,rhs)
+  override def numeric_divide[T:Numeric:Typ](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = {
+    val num = implicitly[Numeric[T]]
+    (lhs,rhs) match {
+      // Avoid exception if y == n.zero, this may still not be ultimately used
+      case (Const(x), Const(y)) if y != num.zero =>
+        num match {
+          case f: Fractional[T @unchecked] => Const(f.div(x, y))
+          case i: Integral[T @unchecked] => Const(i.quot(x, y))
+        }
+      case (Const(x), y) if x == implicitly[Numeric[T]].zero => Const(x)
+      case (x, Const(y)) if y == implicitly[Numeric[T]].one => x
+      case _ => super.numeric_divide(lhs,rhs)
+    }
   }
 }
 

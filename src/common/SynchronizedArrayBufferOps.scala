@@ -18,7 +18,7 @@ trait SynchronizedArrayBufferOps extends ArrayBufferOps {
 
 trait SynchronizedArrayBufferOpsExp extends SynchronizedArrayBufferOps with ArrayBufferOpsExp {
   case class SyncArrayBufferNew[A:Typ](xs: Seq[Exp[A]]) extends Def[ArrayBuffer[A]]  {
-    val mA = manifest[A]
+    def mA = typ[A]
   }
 
   // all array buffers are synchronized (nackward compat). TODO: separate constructor

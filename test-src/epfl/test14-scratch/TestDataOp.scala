@@ -159,7 +159,7 @@ class TestDataOp extends FileDiffSuite {
     val codegen = new CCodeGenPkg with CGenVariables with CGenTupledFunctions with CGenUncheckedOps { 
       val IR: self.type = self 
       override def remap[A](a: Typ[A]) = 
-        if (a == manifest[Array[Int]]) "int*"
+        if (a == typ[Array[Int]]) "int*"
         else super.remap(a)
       override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
         case LoadData(x)      => emitValDef(sym, s"mmap('$x') // XX TODO ")

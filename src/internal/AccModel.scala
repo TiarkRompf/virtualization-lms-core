@@ -12,6 +12,10 @@ trait AbstractHostTransfer {
   def emitRecvView(tp: Typ[_], peer: Targets.Value): (String,String)
   def emitSendUpdate(tp: Typ[_], peer: Targets.Value): (String,String)
   def emitRecvUpdate(tp: Typ[_], peer: Targets.Value): (String,String)
+
+  def isListType(tp: Typ[_]): Boolean = {
+    tp.runtimeClass == classOf[List[_]]
+  }
 }
 
 trait AbstractDeviceTransfer {

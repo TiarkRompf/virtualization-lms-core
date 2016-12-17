@@ -63,8 +63,8 @@ trait GenericCodegen extends BlockTraversal {
   def remap(s: String, method: String, t: String) : String = s + method + "[" + remap(t) + "]"    
   def remap[A](m: Typ[A]): String = m match {
     case ManifestTyp(rm: RefinedManifest[A]) =>  "AnyRef{" + rm.fields.foldLeft(""){(acc, f) => {val (n,mnf) = f; acc + "val " + n + ": " + remap(ManifestTyp(mnf)) + ";"}} + "}"
-    case _ if m.erasure == classOf[Variable[Any]] =>
-        remap(m.typeArguments.head)
+    case VariableTyp(tp) =>
+        remap(tp)
     case _ =>
       // call remap on all type arguments
       val targs = m.typeArguments
@@ -74,6 +74,7 @@ trait GenericCodegen extends BlockTraversal {
       }
       else m.toString    
   }
+
   def remapImpl[A](m: Typ[A]): String = remap(m)
   //def remapVar[A](m: Typ[Variable[A]]) : String = remap(m.typeArguments.head)
  
@@ -187,11 +188,6 @@ trait GenericCodegen extends BlockTraversal {
       case "Unit" => true
       case _ => false
     }
-  }
-
-  def isVariableType[A](m: Typ[A]) : Boolean = {
-    if(m.erasure == classOf[Variable[AnyVal]]) true
-    else false
   }
 
   // Provides automatic quoting and remapping in the gen string interpolater

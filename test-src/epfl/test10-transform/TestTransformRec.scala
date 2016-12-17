@@ -37,7 +37,7 @@ class TestTransformRec extends FileDiffSuite {
 
     override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
       case g@Apply(x,y) => toAtom(Apply(f(x),f(y))(mtype(g.mA),mtype(g.mB)))
-      case g@DefineFun(y) => toAtom(DefineFun(f(y))(g.arg))(mtype(typ[A]),pos)
+      case g@DefineFun(y) => toAtom(DefineFun(f(y))(g.arg))(mtyp1[A],pos)
       case _ => super.mirror(e,f)
     }).asInstanceOf[Exp[A]]
 

@@ -13,7 +13,8 @@ trait JSCodegen extends GenericCodegen {
   
   def emitHTMLPage[B](f: () => Exp[B], stream: PrintWriter)(implicit mB: Typ[B]): Unit = {
     stream.println("<html><head><title>Scala2JS</title><script type=\"text/JavaScript\">")
-    
+
+    // FIXME move unitTyp from BaseExp to Expressions or change IR required type to BaseExp
     implicit val unitTyp: Typ[Unit] = ManifestTyp(implicitly)
 
     emitSource((x:Exp[Unit]) => f(), "main", stream)

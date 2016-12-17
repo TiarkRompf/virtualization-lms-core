@@ -102,7 +102,7 @@ trait TupleGenBase extends GenericCodegen with BaseGenStruct {
   val IR: TupleOpsExp
   import IR._
 
-  override def remap[A](m: Typ[A]) = m.erasure.getSimpleName match {
+  override def remap[A](m: Typ[A]) = m.runtimeClass.getSimpleName match {
     case "Tuple2" => IR.structName(m)
     case "Tuple3" => IR.structName(m)
     case "Tuple4" => IR.structName(m)

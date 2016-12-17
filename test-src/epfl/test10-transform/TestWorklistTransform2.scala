@@ -80,8 +80,8 @@ trait VectorExpTrans2 extends FWTransform2 with VectorExp with ArrayLoopsExp wit
   // FIXME: manifests are wrong -- need to take from Def
   override def onCreate[A:Typ](s: Sym[A], d: Def[A]) = (d match {
     case VectorZeros(n)   => s.atPhase(xform) { vzeros_xform(xform(n)).asInstanceOf[Exp[A]] }
-    case VectorApply(a,x) => s.atPhase(xform) { vapply_xform(xform(a), xform(x))(mtype(manifest[A])).asInstanceOf[Exp[A]] }
-    case VectorLength(x)  => s.atPhase(xform) { vlength_xform(xform(x))(mtype(manifest[A])).asInstanceOf[Exp[A]] }
+    case VectorApply(a,x) => s.atPhase(xform) { vapply_xform(xform(a), xform(x))(mtyp1[A]).asInstanceOf[Exp[A]] }
+    case VectorLength(x)  => s.atPhase(xform) { vlength_xform(xform(x))(mtyp1[A]).asInstanceOf[Exp[A]] }
     case VectorPlus(a,b)  => s.atPhase(xform) { vplus_xform(xform(a),xform(b)).asInstanceOf[Exp[A]] }
     case _ => super.onCreate(s,d)
   }).asInstanceOf[Exp[A]]

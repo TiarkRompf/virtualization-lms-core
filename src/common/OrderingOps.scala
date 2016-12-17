@@ -44,7 +44,7 @@ trait OrderingOps extends Base with Variables with BooleanOps with PrimitiveOps 
 
 trait OrderingOpsExp extends OrderingOps with VariablesExp {
   abstract class DefMN[T:Ordering:Typ,A] extends Def[A] {
-    def mev = manifest[T]
+    def mev = typ[T]
     def aev = implicitly[Ordering[T]]
   }
   case class OrderingLT      [T:Ordering:Typ](lhs: Exp[T], rhs: Exp[T]) extends DefMN[T,Boolean]
@@ -74,14 +74,14 @@ trait OrderingOpsExp extends OrderingOps with VariablesExp {
     case e@OrderingMax(a,b)                     => ordering_max(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev),pos)
     case e@OrderingMin(a,b)                     => ordering_min(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev),pos)
     case e@OrderingCompare(a,b)                 => ordering_compare(f(a),f(b))(e.aev,e.mev,pos)
-    case Reflect(e@OrderingLT(a,b), u, es)      => reflectMirrored(Reflect(OrderingLT(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingLTEQ(a,b), u, es)    => reflectMirrored(Reflect(OrderingLTEQ(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingGT(a,b), u, es)      => reflectMirrored(Reflect(OrderingGT(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingGTEQ(a,b), u, es)    => reflectMirrored(Reflect(OrderingGTEQ(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingEquiv(a,b), u, es)   => reflectMirrored(Reflect(OrderingEquiv(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingMax(a,b), u, es)     => reflectMirrored(Reflect(OrderingMax(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingMin(a,b), u, es)     => reflectMirrored(Reflect(OrderingMin(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
-    case Reflect(e@OrderingCompare(a,b), u, es) => reflectMirrored(Reflect(OrderingCompare(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@OrderingLT(a,b), u, es)      => reflectMirrored(Reflect(OrderingLT(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingLTEQ(a,b), u, es)    => reflectMirrored(Reflect(OrderingLTEQ(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingGT(a,b), u, es)      => reflectMirrored(Reflect(OrderingGT(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingGTEQ(a,b), u, es)    => reflectMirrored(Reflect(OrderingGTEQ(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingEquiv(a,b), u, es)   => reflectMirrored(Reflect(OrderingEquiv(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingMax(a,b), u, es)     => reflectMirrored(Reflect(OrderingMax(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev)), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingMin(a,b), u, es)     => reflectMirrored(Reflect(OrderingMin(f(a),f(b))(e.aev.asInstanceOf[Ordering[A]],mtype(e.mev)), mapOver(f,u), f(es)))(mtyp1[A], pos)
+    case Reflect(e@OrderingCompare(a,b), u, es) => reflectMirrored(Reflect(OrderingCompare(f(a),f(b))(e.aev,e.mev), mapOver(f,u), f(es)))(mtyp1[A], pos)
     case _ => super.mirror(e, f)
   }).asInstanceOf[Exp[A]]
 }
@@ -152,8 +152,20 @@ trait ScalaGenOrderingOps extends ScalaGenBase {
     case OrderingGT(a,b) => emitValDef(sym, src"$a > $b")
     case OrderingGTEQ(a,b) => emitValDef(sym, src"$a >= $b")
     case OrderingEquiv(a,b) => emitValDef(sym, src"$a equiv $b")
-    case OrderingMax(a,b) => emitValDef(sym, src"$a max $b")
-    case OrderingMin(a,b) => emitValDef(sym, src"$a min $b")
+    // "$a max $b" is wrong for Strings because it tries to use `StringLike.max(Ordering)`
+    // can't compare with typ[String] without extending StringOps
+    case c@OrderingMax(a,b) =>
+      val rhs = if (c.mev.runtimeClass == classOf[String])
+        src"scala.math.Ordering.String.max($a, $b)"
+      else
+        src"$a max $b"
+      emitValDef(sym, rhs)
+    case c@OrderingMin(a,b) =>
+      val rhs = if (c.mev.runtimeClass == classOf[String])
+        src"scala.math.Ordering.String.min($a, $b)"
+      else
+        src"$a min $b"
+      emitValDef(sym, rhs)
     case c@OrderingCompare(a,b) => c.mev match {
       case m if m == typ[Int] => emitValDef(sym, "java.lang.Integer.compare("+quote(a)+","+quote(b)+")")
       case m if m == typ[Long] => emitValDef(sym, "java.lang.Long.compare("+quote(a)+","+quote(b)+")")
@@ -192,6 +204,8 @@ trait CLikeGenOrderingOps extends CLikeGenBase {
         case OrderingMin(a,b) =>
           //emitValDef(sym, quote(a) + "<" + quote(b) + "?" + quote(a) + ":" + quote(b))
           emitValDef(sym, src"MIN($a, $b)")
+        case OrderingCompare(a,b) =>
+          emitValDef(sym, src"($a < $b) ? -1 : ($a == $b) ? 0 : 1")
         case _ => super.emitNode(sym, rhs)
       }
     }

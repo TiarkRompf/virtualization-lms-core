@@ -41,7 +41,7 @@ trait VectorOps extends Base {
 trait VectorExp extends VectorOps with EffectExp {
   implicit def vectorTyp[T:Typ]: Typ[Vector[T]] = { 
     implicit val ManifestTyp(m) = typ[T]
-    ManifestTyp(implicitly)
+    manifestTyp
   }
   implicit def intTyp: Typ[Int]
   implicit def doubleTyp: Typ[Double]
@@ -63,10 +63,10 @@ trait VectorExp extends VectorOps with EffectExp {
   // FIXME: wrong manifests -- need to take from Def
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case VectorZeros(n) => vzeros(f(n))
-    case VectorLiteral(a) => vliteral(f(a))(mtype(manifest[A]))
-    case VectorApply(a,x) => vapply(f(a),f(x))(mtype(manifest[A]))
-    case VectorUpdate(a,x,y) => vupdate(f(a),f(x),f(y))(mtype(manifest[A]))
-    case VectorLength(a) => vlength(f(a))(mtype(manifest[A]))
+    case VectorLiteral(a) => vliteral(f(a))(mtyp1[A])
+    case VectorApply(a,x) => vapply(f(a),f(x))(mtyp1[A])
+    case VectorUpdate(a,x,y) => vupdate(f(a),f(x),f(y))(mtyp1[A])
+    case VectorLength(a) => vlength(f(a))(mtyp1[A])
     case VectorPlus(a, b) => vplus(f(a),f(b))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??

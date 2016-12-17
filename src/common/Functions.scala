@@ -71,8 +71,8 @@ trait FunctionsExp extends Functions with EffectExp {
     manifestTyp
   }
 
-  case class Lambda[A:Typ,B:Typ](f: Exp[A] => Exp[B], x: Exp[A], y: Block[B]) extends Def[A => B] { val mA = manifest[A]; val mB = manifest[B] }
-  case class Apply[A:Typ,B:Typ](f: Exp[A => B], arg: Exp[A]) extends Def[B] { val mA = manifest[A]; val mB = manifest[B] }
+  case class Lambda[A:Typ,B:Typ](f: Exp[A] => Exp[B], x: Exp[A], y: Block[B]) extends Def[A => B] { def mA = typ[A]; def mB = typ[B] }
+  case class Apply[A:Typ,B:Typ](f: Exp[A => B], arg: Exp[A]) extends Def[B] { def mA = typ[A]; def mB = typ[B] }
 
   // unboxedFresh and unbox are hooks that can be overridden to
   // implement multiple-arity functions with tuples. These two methods
@@ -107,11 +107,17 @@ trait FunctionsExp extends Functions with EffectExp {
   }
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case e@Lambda(g,x:Exp[Any],y:Block[b]) => toAtom(Lambda(f(g),f(x),f(y))(e.mA,e.mB))(mtype(manifest[A]),pos)
+    case e@Lambda(g,x:Exp[Any],y:Block[b]) => toAtom(Lambda(f(g),f(x),f(y))(e.mA,e.mB))(mtyp1[A],pos)
     case e@Apply(g,arg) => doApply(f(g), f(arg))(e.mA,mtype(e.mB),pos)
-    case Reflect(e@Apply(g,arg), u, es) => reflectMirrored(Reflect(Apply(f(g),f(arg))(e.mA,mtype(e.mB)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case Reflect(e@Apply(g,arg), u, es) => reflectMirrored(Reflect(Apply(f(g),f(arg))(e.mA,mtype(e.mB)), mapOver(f,u), f(es)))(mtyp1[A], pos)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
+
+  override def mirrorDef[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = (e match {
+    case e@Lambda(g, x, y) => Lambda(f(g), f(x), f(y))(e.mA,e.mB)
+    case e@Apply(g, arg) => Apply(f(g), f(arg))(e.mA, mtype(e.mB))
+    case _ => super.mirrorDef(e, f)
+  }).asInstanceOf[Def[A]]
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case Lambda(f, x, y) => syms(y)
@@ -146,21 +152,21 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
   // T will be a tuple of a specified arity
   case class UnboxedTuple[T: Typ](val vars: List[Exp[Any]]) extends Exp[T]
 
-  private def tupledTyp[T](m: Typ[T]): Boolean = m.erasure.getName startsWith "scala.Tuple"
-  private def tupledTypOf[T](m: Typ[T], arity: Int): Boolean = m.erasure.getName == "scala.Tuple" + arity
+  private def tupledTyp[T](m: Typ[T]): Boolean = m.runtimeClass.getName startsWith "scala.Tuple"
+  private def tupledTypOf[T](m: Typ[T], arity: Int): Boolean = m.runtimeClass.getName == "scala.Tuple" + arity
 
   override def unboxedFresh[A:Typ] : Exp[A] = {
-    val mA = implicitly[Typ[A]]
-    if (mA == implicitly[Typ[Unit]] || tupledTyp(mA))
+    val mA = typ[A]
+    if (mA == typ[Unit] || tupledTyp(mA))
       UnboxedTuple[A](mA.typeArguments.map(fresh(_)))
     else fresh[A]
   }
 
   override def unbox[A:Typ](x : Exp[A])(implicit pos: SourceContext) : Exp[A] = {
-    val mA = implicitly[Typ[A]]
+    val mA = typ[A]
     x match {
       case _ : UnboxedTuple[A] => x
-      case _ if mA == implicitly[Typ[Unit]] =>
+      case _ if mA == typ[Unit] =>
         UnboxedTuple[A](List())
       case _ if tupledTypOf(mA, 2) =>
         x match { case t : Rep[(a1,a2)] =>
@@ -202,7 +208,7 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
   }
 
   override def mirror[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case e@Lambda(g,UnboxedTuple(xs),y:Block[b]) => toAtom(Lambda(f(g),UnboxedTuple(f(xs))(e.mA),f(y))(e.mA,e.mB))(mtype(manifest[A]),implicitly[SourceContext])
+    case e@Lambda(g,UnboxedTuple(xs),y:Block[b]) => toAtom(Lambda(f(g),UnboxedTuple(f(xs))(e.mA),f(y))(e.mA,e.mB))(mtyp1[A],implicitly[SourceContext])
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }

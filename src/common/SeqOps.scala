@@ -34,7 +34,7 @@ trait SeqOpsExp extends SeqOps with PrimitiveOps with EffectExp {
   }
 
   case class SeqNew[A:Typ](xs: List[Rep[A]]) extends Def[Seq[A]] {
-    def mA = manifest[A]
+    def mA = typ[A]
   }
   case class SeqLength[T:Typ](a: Exp[Seq[T]]) extends Def[Int]
   case class SeqApply[T:Typ](x: Exp[Seq[T]], n: Exp[Int]) extends Def[T]

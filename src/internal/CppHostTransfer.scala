@@ -27,7 +27,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
-      else if (tp.erasure == classOf[List[Any]]) {
+      else if (isListType(tp)) {
         val out = new StringBuilder
         val signature = "jobject sendCPPtoJVM_%s(JNIEnv *env, %s *sym)".format(mangledName(remapHost(tp)),remap(tp))
         out.append(signature + " {\n")
@@ -72,7 +72,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
-      else if (tp.erasure == classOf[List[Any]]) {
+      else if (isListType(tp)) {
         val out = new StringBuilder
         val signature = "%s *recvCPPfromJVM_%s(JNIEnv *env, jobject obj)".format(remapHost(tp),mangledName(remapHost(tp)))
         out.append(signature + " {\n")
@@ -113,7 +113,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
-      else if (tp.erasure == classOf[List[Any]]) {
+      else if (isListType(tp)) {
         val out = new StringBuilder
         val signature = "jobject sendViewCPPtoJVM_%s(JNIEnv *env, %s *sym)".format(mangledName(remapHost(tp)),remapHost(tp))
         out.append(signature + " {\n")
@@ -154,7 +154,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
-      else if (tp.erasure == classOf[List[Any]]) {
+      else if (isListType(tp)) {
         val out = new StringBuilder
         val signature = "%s *recvViewCPPfromJVM_%s(JNIEnv *env, jobject *obj)".format(remapHost(tp),mangledName(remapHost(tp)))
         out.append(signature + " {\n")
@@ -185,7 +185,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
-      else if (tp.erasure == classOf[List[Any]]) {
+      else if (isListType(tp)) {
         val out = new StringBuilder
         val signature = "void sendUpdateCPPtoJVM_%s(JNIEnv *env, jobject obj, %s *sym)".format(mangledName(remapHost(tp)),remapHost(tp))
         out.append(signature + " {\n")
@@ -231,7 +231,7 @@ trait CppHostTransfer extends AbstractHostTransfer {
         out.append("}\n")
         (signature+";\n", out.toString)
       }
-      else if (tp.erasure == classOf[List[Any]]) {
+      else if (isListType(tp)) {
         val out = new StringBuilder
         val signature = "void recvUpdateCPPfromJVM_%s(JNIEnv *env, jobject obj, %s *sym)".format(mangledName(remapHost(tp)),remapHost(tp))
         out.append(signature + " {\n")
