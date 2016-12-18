@@ -37,6 +37,15 @@ trait CastingOpsExp extends CastingOps with BaseExp with EffectExp {
   }).asInstanceOf[Exp[A]]
 }
 
+trait CastingOpsExpOpt extends CastingOpsExp {
+  this: ImplicitOps =>
+
+  override def rep_isinstanceof[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) =
+    if (mA <:< mB) unit(true) else super.rep_isinstanceof(lhs, mA, mB)
+  override def rep_asinstanceof[A,B:Manifest](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) : Exp[B] =
+    if (mA == mB) lhs.asInstanceOf[Exp[B]] else super.rep_asinstanceof(lhs, mA, mB)
+}
+
 trait ScalaGenCastingOps extends ScalaGenBase {
   val IR: CastingOpsExp
   import IR._

@@ -20,7 +20,6 @@ class TestStencil extends FileDiffSuite {
     with BooleanOps with OrderingOps
     with LiftVariables with IfThenElse with Print {
     def staticData[T:Manifest](x: T): Rep[T]
-    def infix_toDouble(x: Rep[Int]): Rep[Double]
     def test(x: Rep[Array[Double]]): Rep[Array[Double]]
   }
   trait Impl extends DSL with Runner with ArrayOpsExpOpt with NumericOpsExpOpt
@@ -29,8 +28,7 @@ class TestStencil extends FileDiffSuite {
       with IfThenElseExpOpt with PrintExp with PrimitiveOpsExp
       with CompileScala { self => 
     //override val verbosity = 1
-    def infix_toDouble(x: Rep[Int]): Rep[Double] = int_double_value(x)
-    
+
     val codegen = new ScalaGenNumericOps with ScalaGenStaticData with ScalaGenOrderingOps 
       with ScalaGenArrayOps with ScalaGenRangeOps with ScalaGenBooleanOps
       with ScalaGenVariables with ScalaGenIfThenElse with ScalaGenPrimitiveOps
