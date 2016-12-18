@@ -230,7 +230,7 @@ trait CGenStringOps extends CGenBase with CNestedCodegen {
 		stream.println("if (" + quote(sym) + " < 0) " + quote(sym) + " = -1;")
     case StringSubstringWithEndIndex(s, beginIndex, endIndex) =>
       emitValDef(sym, src"malloc($endIndex - $beginIndex + 1); memcpy(" + quote(sym) + "," + quote(s) + src", $endIndex - $beginIndex);" )
-      //stream.println(src"char " + quote(sym) + src"[$endIndex - $beginIndex + 1]; memcpy(" + quote(sym) + "," + quote(s) + src", $endIndex - $beginIndex);")
+      // stream.println(src"char " + quote(sym) + src"[$endIndex - $beginIndex + 1]; memcpy(" + quote(sym) + "," + quote(s) + src", $endIndex - $beginIndex);") UNSAFE
     case StringTrim(s) => throw new GenerationFailedException("CGenStringOps: StringTrim not implemented yet")
     case StringSplit(s, sep) => throw new GenerationFailedException("CGenStringOps: StringSplit not implemented yet")
     case _ => super.emitNode(sym, rhs)

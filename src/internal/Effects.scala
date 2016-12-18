@@ -401,15 +401,15 @@ trait Effects extends Expressions with Blocks with Utils {
      * system!). Initial solution was to override the case where context ==
      * null, however this breaks test4-fac4 (reflectEffect when not needed). 
      */
-    if (context == null) {
+    /*if (context == null) {
         context = Nil
-	if (mustPure(u)) super.toAtom(x)
-	else {
-        	val z = fresh[A]
-	        val zd = Reflect(x,u,null)
-	        createReflectDefinition(z, zd)
-	}
-    } else if (mustPure(u)) super.toAtom(x) else {
+  if (mustPure(u)) super.toAtom(x)
+  else {
+          val z = fresh[A]
+          val zd = Reflect(x,u,null)
+          createReflectDefinition(z, zd)
+  }
+    } else*/ if (mustPure(u)) super.toAtom(x) else {
       checkContext()
       // NOTE: reflecting mutable stuff *during mirroring* doesn't work right now.
       
@@ -429,13 +429,13 @@ trait Effects extends Expressions with Blocks with Utils {
       } else {
         val z = fresh[A](List(pos))
         // make sure all writes go to allocs
-		if (Config.verbosity >= 1) {
-	        for (w <- u.mayWrite if !isWritableSym(w)) {
-    	      printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
-        	  printerr("at " + z + "=" + zd)
-	          printsrc("in " + quotePos(z))
-    	    }
-		}
+    if (Config.verbosity >= 1) {
+          for (w <- u.mayWrite if !isWritableSym(w)) {
+            printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
+            printerr("at " + z + "=" + zd)
+            printsrc("in " + quotePos(z))
+          }
+    }
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
         // make sure no mutable object becomes part of mutable result (in case of allocation)
         // or is written to another mutable object (in case of write)

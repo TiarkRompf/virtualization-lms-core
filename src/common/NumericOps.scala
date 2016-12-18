@@ -86,6 +86,8 @@ trait NumericOpsExpOpt extends NumericOpsExp {
   }
   override def numeric_divide[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = (lhs,rhs) match {
     // CAVEAT: Numeric doesn't have .div, Fractional has
+    case (Const(x), Const(y)) if manifest[T] == manifest[Int] => super.numeric_divide(lhs, rhs)
+    case (Const(x), Const(y)) if manifest[T] == manifest[Long] => super.numeric_divide(lhs, rhs)
     case (Const(x), Const(y)) => Const(implicitly[Numeric[T]].asInstanceOf[Fractional[T]].div(x,y))
     case _ => super.numeric_divide(lhs,rhs)
   }
