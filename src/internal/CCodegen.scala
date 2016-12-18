@@ -1,7 +1,7 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
-import scala.virtualization.lms.common.{Base,BaseExp}
+import scala.lms.common.{Base,BaseExp}
 import java.io.{FileWriter, StringWriter, PrintWriter, File}
 import java.util.ArrayList
 import collection.mutable.{ListBuffer, ArrayBuffer, LinkedList, HashMap, ListMap, HashSet, Map => MMap}

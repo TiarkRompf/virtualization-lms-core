@@ -1,4 +1,4 @@
-package scala.virtualization.lms.util
+package scala.lms.util
 
 import java.util.regex.Pattern
 import scala.collection.mutable.ListBuffer

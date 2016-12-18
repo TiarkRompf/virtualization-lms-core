@@ -1,10 +1,10 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import util.OverloadHack
 import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
-import scala.virtualization.lms.common.WorklistTransformer
+import scala.lms.common.WorklistTransformer
 
 trait AbstractTransformer {
   val IR: Expressions with Blocks with OverloadHack

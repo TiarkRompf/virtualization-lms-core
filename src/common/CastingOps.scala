@@ -1,8 +1,8 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.util.OverloadHack
+import scala.lms.util.OverloadHack
 import scala.reflect.SourceContext
 
 trait CastingOps extends Variables with OverloadHack {

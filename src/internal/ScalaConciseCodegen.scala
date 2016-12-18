@@ -1,8 +1,8 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import java.io.{File, FileWriter, PrintWriter}
-import scala.virtualization.lms.util.ReflectionUtil
+import scala.lms.util.ReflectionUtil
 import scala.reflect.SourceContext
 
 /**

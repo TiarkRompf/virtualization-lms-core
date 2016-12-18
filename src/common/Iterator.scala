@@ -1,6 +1,6 @@
-package scala.virtualization.lms.common
+package scala.lms.common
 
-import scala.virtualization.lms.internal._
+import scala.lms.internal._
 
 trait Iterator extends Base with Variables {
 	class IteratorOps[A: Manifest](x: Rep[scala.Iterator[A]]) {

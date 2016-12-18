@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package util
 
 import scala.collection.mutable.Map

@@ -1,7 +1,7 @@
-package scala.virtualization.lms.common
+package scala.lms.common
 
 import scala.collection.mutable
-import scala.virtualization.lms.internal._
+import scala.lms.internal._
 
 trait ListBuffer extends Base with Expressions with Variables {
 	class ListBufferOps[A:Manifest](x: Rep[mutable.ListBuffer[A]]) {

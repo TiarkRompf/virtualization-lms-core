@@ -1,9 +1,9 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
 import java.io.StringWriter
-import scala.virtualization.lms.internal._
+import scala.lms.internal._
 import scala.collection.mutable.{HashMap,Set}
 import scala.reflect.SourceContext
 

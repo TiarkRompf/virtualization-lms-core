@@ -1,4 +1,4 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 trait DSLBase extends BaseExp with UncheckedOps {

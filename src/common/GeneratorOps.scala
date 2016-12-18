@@ -1,8 +1,8 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
-import scala.virtualization.lms.common._
+import scala.lms.common._
 import scala.collection.mutable
 import scala.collection.mutable.Set
 import scala.reflect.SourceContext

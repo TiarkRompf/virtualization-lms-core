@@ -1,10 +1,10 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
-import scala.virtualization.lms.common._
+import scala.lms.common._
 
-import scala.virtualization.lms.util.OverloadHack
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenericFatCodegen}
+import scala.lms.util.OverloadHack
+import scala.lms.internal.{GenericNestedCodegen, GenericFatCodegen}
 import scala.reflect.{SourceContext, RefinedManifest}
 import java.io.{StringWriter,PrintWriter}
 import scala.language.dynamics

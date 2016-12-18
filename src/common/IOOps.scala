@@ -1,8 +1,8 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.{File, FileReader, FileWriter, BufferedReader, BufferedWriter, PrintWriter, FileOutputStream, ObjectOutputStream, FileInputStream, ObjectInputStream}
-import scala.virtualization.lms.internal.{GenerationFailedException, GenericNestedCodegen}
+import scala.lms.internal.{GenerationFailedException, GenericNestedCodegen}
 import util.OverloadHack
 import scala.reflect.SourceContext
 

@@ -1,7 +1,7 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
-import scala.virtualization.lms.common._
+import scala.lms.common._
 
 /**
  * IR: this is the front-end that defines what operations are available in user applications. Backends can share

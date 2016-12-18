@@ -1,10 +1,10 @@
-/*package scala.virtualization.lms
+/*package scala.lms
 package common
 
 import java.io.PrintWriter
 import java.io.StringWriter
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
-import scala.virtualization.lms.util.ClosureCompare
+import scala.lms.internal.{GenericNestedCodegen, GenerationFailedException}
+import scala.lms.util.ClosureCompare
 
 import scala.reflect.SourceContext
 

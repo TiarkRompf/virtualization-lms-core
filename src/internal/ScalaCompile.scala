@@ -1,8 +1,8 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
 import java.io.{StringWriter, PrintWriter}
-import scala.virtualization.lms.util._
+import scala.lms.util._
 
 import scala.sys.process._
 import scala.tools.nsc._

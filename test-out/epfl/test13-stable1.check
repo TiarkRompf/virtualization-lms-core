@@ -1,7 +1,7 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged0(px3:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Int, Int]],px5:scala.virtualization.lms.epfl.test13.RCell[Int]) extends ((Int)=>(Int)) {
+class staged0(px3:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Int, Int]],px5:scala.lms.epfl.test13.RCell[Int]) extends ((Int)=>(Int)) {
 def apply(x0:Int): Int = {
 val x1 = x0 + 1
 val x2 = x0 * 2

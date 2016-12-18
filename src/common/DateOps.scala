@@ -1,8 +1,8 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
-import scala.virtualization.lms.common._
-import scala.virtualization.lms.internal.CNestedCodegen
+import scala.lms.common._
+import scala.lms.internal.CNestedCodegen
 import scala.reflect.SourceContext
 import java.util.Date
 

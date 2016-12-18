@@ -1,8 +1,8 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
-import scala.virtualization.lms.util._
-import scala.virtualization.lms.internal._
+import scala.lms.util._
+import scala.lms.internal._
 
 trait HashCodeOps extends Base {
     def __hashCode(x: Rep[Any]): Rep[Int]

@@ -1,7 +1,7 @@
-package scala.virtualization.lms
+package scala.lms
 package internal
 
-import scala.virtualization.lms.util.ReflectionUtil
+import scala.lms.util.ReflectionUtil
 
 /**
  * There are some meta-data added to Sym using infix

@@ -1,7 +1,7 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
-import scala.virtualization.lms.common._
+import scala.lms.common._
 import scala.reflect.SourceContext
 import java.util.Date
 import java.util.GregorianCalendar

@@ -1,9 +1,9 @@
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
-import scala.virtualization.lms.internal.{Effects, FatTransforming, AbstractSubstTransformer, FatBlockTraversal}
+import scala.lms.internal.{Effects, FatTransforming, AbstractSubstTransformer, FatBlockTraversal}
 
 trait ForwardTransformer extends internal.AbstractSubstTransformer with internal.FatBlockTraversal { self =>
   val IR: FatTransforming with Effects //LoopsFatExp with IfThenElseFatExp

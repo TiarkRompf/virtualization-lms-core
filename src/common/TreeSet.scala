@@ -1,8 +1,8 @@
-package scala.virtualization.lms.common
+package scala.lms.common
 
 import scala.collection.mutable
 import scala.reflect.SourceContext
-import scala.virtualization.lms.internal._
+import scala.lms.internal._
 
 trait TreeSet extends Base with Variables with Pointer {
 

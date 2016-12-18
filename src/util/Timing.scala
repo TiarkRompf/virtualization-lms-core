@@ -1,9 +1,9 @@
-package scala.virtualization.lms
+package scala.lms
 package util
 
 import scala.reflect.{SourceContext, RefinedManifest}
-import scala.virtualization.lms.common._
-import scala.virtualization.lms.internal._
+import scala.lms.common._
+import scala.lms.internal._
 
 trait Timing extends Base {
     def timeGeneratedCode[A: Manifest](f: => Rep[A], msg: Rep[String] = unit("")): Rep[A]
