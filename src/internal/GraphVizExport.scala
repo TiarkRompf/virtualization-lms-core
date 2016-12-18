@@ -1,4 +1,4 @@
-package scala.lms
+package scala.virtualization.lms
 package internal
 
 import java.io.{PrintWriter, FileOutputStream}

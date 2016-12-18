@@ -2,7 +2,7 @@ function main(x0) {
 var x6 = function(x1,x2) {
 var x3 = x1
 var x4 = x2
-var x5 = {__structName:Tuple2DoubleDouble,_1:x4,_2:x3}
+var x5 = {_1:x4,_2:x3}
 return x5
 }
 var x8 = x6(x0,x0)

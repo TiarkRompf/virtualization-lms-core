@@ -1,4 +1,4 @@
-package scala.lms
+package scala.virtualization.lms
 package util
 
 import java.io._

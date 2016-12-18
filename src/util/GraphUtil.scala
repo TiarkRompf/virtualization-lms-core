@@ -1,7 +1,11 @@
-package scala.lms
+package scala.virtualization.lms
 package util
 
-import java.util.{ArrayDeque, HashMap}
+import scala.collection.mutable.Map
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.Stack
+import scala.collection.mutable.Buffer
+import scala.collection.mutable.ArrayBuffer
 
 
 object GraphUtil {
@@ -29,27 +33,27 @@ object GraphUtil {
   def stronglyConnectedComponents[T](start: List[T], succ: T=>List[T]): List[List[T]] = {
 
     val id: Ref[Int] = new Ref(0)
-    val stack = new ArrayDeque[T]
-    val mark = new HashMap[T,Int]
+    val stack: Stack[T] = new Stack()
+    val mark: Map[T,Int] = new HashMap()
 
-    val res = new Ref[List[List[T]]](Nil)
+    val res: Buffer[Buffer[T]] = new ArrayBuffer()
     for (node <- start)
       visit(node,succ,id,stack,mark,res)
 
-    res.value
+    // TODO: get rid of reverse
+
+    (for (scc <- res) yield scc.toList.reverse).toList.reverse
   }
 
-  def visit[T](node: T, succ: T=>List[T], id: Ref[Int], stack: ArrayDeque[T], 
-            mark: HashMap[T,Int], res: Ref[List[List[T]]]): Int = {
+  def visit[T](node: T, succ: T=>List[T], id: Ref[Int], stack: Stack[T], 
+            mark: Map[T,Int], res: Buffer[Buffer[T]]): Int = {
 
-    
-    if (mark.containsKey(node)) 
-      mark.get(node)
-    else {
+    mark.getOrElse(node, {
+
       id.value = id.value + 1
 
       mark.put(node, id.value)
-      stack.addFirst(node)
+      stack.push(node)
 //    println("push " + node)
 
       var min: Int = id.value
@@ -60,20 +64,23 @@ object GraphUtil {
           min = m
       }
 
-      if (min == mark.get(node)) {
-        var scc: List[T] = Nil
+      if (min == mark(node)) {
+
+        val scc: Buffer[T] = new ArrayBuffer()
         var loop: Boolean = true
         do {
-          val element = stack.removeFirst()
+          val element = stack.pop()
 //        println("appending " + element)
-          scc ::= element
+          scc.append(element)
           mark.put(element, Integer.MAX_VALUE)
           loop = element != node
         } while (loop)
-        res.value ::= scc
+        res.append(scc)
       }
       min
-    }
+      
+    })
   }
+  
   
 }

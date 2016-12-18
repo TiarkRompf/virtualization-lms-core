@@ -12,7 +12,7 @@ val x2 = VectorZeros(Const(50))
 x2
 }
 val x5 = VectorPlus(Sym(4),Sym(1))
-val x6 = println(x5)
+println(x5)
 
 ### next
 install replacement for Sym(1)
@@ -35,17 +35,17 @@ val x12 = LoopArray(50) { x11 =>
 }
 (x12,50)
 }
-val x17 = new VectorDouble(x15,x16)
+val x17 = new { val data = x15; val length = x16 }
 val x18 = VectorLength(Sym(17))
-val x10 = new VectorDouble(x9,100)
+val x10 = new { val data = x9; val length = 100 }
 val x23 = LoopArray(x18) { x19 => 
 val x20 = VectorApply(Sym(17),Sym(19))
 val x21 = VectorApply(Sym(10),Sym(19))
 val x22 = x20+x21
 x22
 }
-val x24 = new VectorDouble(x23,x18)
-val x25 = println(x24)
+val x24 = new { val data = x23; val length = x18 }
+println(x24)
 
 ### next
 install replacement for Sym(18)
@@ -71,5 +71,5 @@ val x36 = x28.apply(x34)
 val x37 = x35+x36
 x37
 }
-val x39 = new VectorDouble(x38,x16)
-val x40 = println(x39)
+val x39 = new { val data = x38; val length = x16 }
+println(x39)

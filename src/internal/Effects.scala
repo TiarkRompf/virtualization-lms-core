@@ -1,4 +1,4 @@
-package scala.lms
+package scala.virtualization.lms
 package internal
 
 import scala.reflect.SourceContext
@@ -28,8 +28,6 @@ trait Effects extends Expressions with Blocks with Utils {
   
   var context: State = _
 
-  var conditionalScope = false // used to construct Control nodes
-
   // --- class defs
 
   case class Reflect[+A](x:Def[A], summary: Summary, deps: List[Exp[Any]]) extends Def[A]
@@ -43,27 +41,26 @@ trait Effects extends Expressions with Blocks with Utils {
     val mayGlobal: Boolean,
     val mstGlobal: Boolean,
     val resAlloc: Boolean,
-    val control: Boolean,
     val mayRead: List[Sym[Any]],
     val mstRead: List[Sym[Any]],
     val mayWrite: List[Sym[Any]],
     val mstWrite: List[Sym[Any]])
   
-  def Pure() = new Summary(false,false,false,false,false,false,Nil,Nil,Nil,Nil)
-  def Simple() = new Summary(true,true,false,false,false,false,Nil,Nil,Nil,Nil)  
-  def Global() = new Summary(false,false,true,true,false,false,Nil,Nil,Nil,Nil)
-  def Alloc() = new Summary(false,false,false,false,true,false,Nil,Nil,Nil,Nil)
-  def Control() = new Summary(false,false,false,false,false,true,Nil,Nil,Nil,Nil)
+  def Pure() = new Summary(false,false,false,false,false,Nil,Nil,Nil,Nil)
+  def Simple() = new Summary(true,true,false,false,false,Nil,Nil,Nil,Nil)
+  def Global() = new Summary(false,false,true,true,false,Nil,Nil,Nil,Nil)
+  def Alloc() = new Summary(false,false,false,false,true,Nil,Nil,Nil,Nil)
   
-  def Read(v: List[Sym[Any]]) = new Summary(false,false,false,false,false,false,v.distinct,v.distinct,Nil,Nil)
-  def Write(v: List[Sym[Any]]) = new Summary(false,false,false,false,false,false,Nil,Nil,v.distinct,v.distinct)
+  def Read(v: List[Sym[Any]]) = new Summary(false,false,false,false,false,v.distinct,v.distinct,Nil,Nil)
+  def Write(v: List[Sym[Any]]) = new Summary(false,false,false,false,false,Nil,Nil,v.distinct,v.distinct)
 
   def mayRead(u: Summary, a: List[Sym[Any]]): Boolean = u.mayGlobal || a.exists(u.mayRead contains _)
   def mayWrite(u: Summary, a: List[Sym[Any]]): Boolean = u.mayGlobal || a.exists(u.mayWrite contains _)
-  def maySimple(u: Summary): Boolean = u.mayGlobal || u.maySimple  
+  def maySimple(u: Summary): Boolean = u.mayGlobal || u.maySimple
 
   def mustMutable(u: Summary): Boolean = u.resAlloc
   def mustPure(u: Summary): Boolean = u == Pure()
+  def mustOnlyAlloc(u: Summary): Boolean = u == Alloc() // only has a resource allocation
   def mustOnlyRead(u: Summary): Boolean = u == Pure().copy(mayRead=u.mayRead, mstRead=u.mstRead) // only reads allowed
   def mustIdempotent(u: Summary): Boolean = mustOnlyRead(u) // currently only reads are treated as idempotent
 
@@ -73,7 +70,6 @@ trait Effects extends Expressions with Blocks with Utils {
     u.maySimple || v.maySimple, u.mstSimple && v.mstSimple,
     u.mayGlobal || v.mayGlobal, u.mstGlobal && v.mstGlobal,
     false, //u.resAlloc && v.resAlloc, <--- if/then/else will not be mutable!
-    u.control || v.control,
     (u.mayRead ++ v.mayRead).distinct, (u.mstRead intersect v.mstRead),
     (u.mayWrite ++ v.mayWrite).distinct, (u.mstWrite intersect v.mstWrite)
   )
@@ -82,30 +78,20 @@ trait Effects extends Expressions with Blocks with Utils {
     u.maySimple || v.maySimple, u.mstSimple || v.mstSimple,
     u.mayGlobal || v.mayGlobal, u.mstGlobal || v.mstGlobal,
     u.resAlloc || v.resAlloc,
-    u.control || v.control,
     (u.mayRead ++ v.mayRead).distinct, (u.mstRead ++ v.mstRead).distinct,
     (u.mayWrite ++ v.mayWrite).distinct, (u.mstWrite ++ v.mstWrite).distinct
   )
   
   def infix_andThen(u: Summary, v: Summary) = new Summary(
     u.maySimple || v.maySimple, u.mstSimple || v.mstSimple,
-    u.mayGlobal || v.mayGlobal, u.mstGlobal || v.mstGlobal,    
+    u.mayGlobal || v.mayGlobal, u.mstGlobal || v.mstGlobal,
     v.resAlloc,
-    u.control || v.control,
     (u.mayRead ++ v.mayRead).distinct, (u.mstRead ++ v.mstRead).distinct,
     (u.mayWrite ++ v.mayWrite).distinct, (u.mstWrite ++ v.mstWrite).distinct
   )
 
   def infix_star(u: Summary) = Pure() orElse u // any number of repetitions, including 0
 
-  def infix_withoutControl(u: Summary) = new Summary(
-    u.maySimple, u.mstSimple,
-    u.mayGlobal, u.mstGlobal,    
-    u.resAlloc,
-    false,
-    u.mayRead, u.mstRead,
-    u.mayWrite, u.mstWrite
-  )
 
   def summarizeEffects(e: Block[Any]) = e match {
     case Block(Def(Reify(_,u,_))) => u
@@ -117,29 +103,8 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // --- reflect helpers
 
-  def controlDep(x: Exp[Any]) = x match {
-    case Def(Reflect(y,u,es)) if u == Control() => true
-    case _ => false
-  }
-
-  // performance hotspot
-  def nonControlSyms[R](es: List[Exp[Any]], ss: Any => List[R]): List[R] = {
-    // es.filterNot(controlDep).flatMap(syms)      
-    val out = new mutable.ListBuffer[R]
-    var it = es.iterator
-    while (it.hasNext) {
-      val e = it.next()
-      if (!controlDep(e)) out ++= ss(e)
-    }
-    out.result
-  }
-
   override def syms(e: Any): List[Sym[Any]] = e match {
     case s: Summary => Nil // don't count effect summaries as dependencies!
-
-    // enable DCE of reflect nodes if they are only control dependencies
-    case Reflect(x,u,es) if addControlDeps => syms(x) ::: nonControlSyms(es, syms)
-    case Reify(x,u,es) if addControlDeps => syms(x) ::: nonControlSyms(es, syms)
     case _ => super.syms(e)
   }
 
@@ -150,10 +115,6 @@ trait Effects extends Expressions with Blocks with Utils {
 
   override def symsFreq(e: Any): List[(Sym[Any], Double)] = e match {
     case s: Summary => Nil // don't count effect summaries as dependencies!
-
-    // enable DCE of reflect nodes if they are only control dependencies
-    case Reflect(x,u,es) if addControlDeps => symsFreq(x) ::: nonControlSyms(es, symsFreq)
-    case Reify(x,u,es) if addControlDeps => symsFreq(x) ::: nonControlSyms(es, symsFreq)
     case _ => super.symsFreq(e)
   }
 
@@ -353,7 +314,8 @@ trait Effects extends Expressions with Blocks with Utils {
         createReflectDefinition  // if summary is not pure
 */    
     // warn if type is Any. TODO: make optional, sometimes Exp[Any] is fine
-    if (manifest[T] == manifest[Any]) printlog("warning: possible missing mtype call - toAtom with Def of type Any " + d)
+    if (Config.verbosity == 2 && manifest[T] == manifest[Any]) 
+      printlog("warning: possible missing mtype call - toAtom with Def of type Any " + d)
     
     // AKS NOTE: this was removed on 6/27/12, but it is still a problem in OptiML apps without it,
     // so I'm putting it back until we can get it resolved properly.
@@ -363,24 +325,23 @@ trait Effects extends Expressions with Blocks with Utils {
         // specifically, if we return the reified version of a mutable bound var, we get a Reflect(Reify(..)) error, e.g. mutable Sum 
         // printlog("ignoring read of Reify(): " + d)
         super.toAtom(d)
-      case _ if conditionalScope && addControlDeps => reflectEffect(d, Control())
       case _ => reflectEffect(d, Pure())
     }
     // reflectEffect(d, Pure())
   }
 
-  def reflectMirrored[A:Manifest](zd: Reflect[A])(implicit pos: SourceContext): Exp[A] = {
+  def reflectMirrored[A:Manifest](zd: Reflect[A]): Exp[A] = {
     checkContext()
     // warn if type is Any. TODO: make optional, sometimes Exp[Any] is fine
     if (manifest[A] == manifest[Any]) printlog("warning: possible missing mtype call - reflectMirrored with Def of type Any: " + zd)
     context.filter { case Def(d) if d == zd => true case _ => false }.reverse match {
       //case z::_ => z.asInstanceOf[Exp[A]]  -- unsafe: we don't have a tight context, so we might pick one from a flattened subcontext
-      case _ => createReflectDefinition(fresh[A].withPos(List(pos)), zd)
+      case _ => createReflectDefinition(fresh[A], zd)
     }
   }
 
   def checkIllegalSharing(z: Exp[Any], mutableAliases: List[Sym[Any]]) {
-    if (mutableAliases.nonEmpty) {
+    if (mutableAliases.nonEmpty && Config.verbosity >= 1) {
       val zd = z match { case Def(zd) => zd }
       printerr("error: illegal sharing of mutable objects " + mutableAliases.mkString(", "))
       printerr("at " + z + "=" + zd)
@@ -429,21 +390,35 @@ trait Effects extends Expressions with Blocks with Utils {
     val mutableInputs = readMutableData(d)
     reflectEffectInternal(d, u andAlso Read(mutableInputs)) // will call super.toAtom if mutableInput.isEmpty
   }
-  
+
   def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = {
-    if (mustPure(u)) super.toAtom(x) else {
+    /* 
+     * We want to handle the case where a variable is first initialized to null,
+     * and later initialized to its actual value (also see variables.scala).
+     * This is the case with local state in the DBMS system of DATA lab. There,
+     * when the var is initialized to null, the context is null, since it is
+     * _outside_ any compiled method (we do not lift everything in this
+     * system!). Initial solution was to override the case where context ==
+     * null, however this breaks test4-fac4 (reflectEffect when not needed). 
+     */
+    if (context == null) {
+        context = Nil
+	if (mustPure(u)) super.toAtom(x)
+	else {
+        	val z = fresh[A]
+	        val zd = Reflect(x,u,null)
+	        createReflectDefinition(z, zd)
+	}
+    } else if (mustPure(u)) super.toAtom(x) else {
       checkContext()
       // NOTE: reflecting mutable stuff *during mirroring* doesn't work right now.
       
-      // FIXME: Reflect(Reflect(ObjectUnsafeImmutable(..))) on delite
-      assert(!x.isInstanceOf[Reflect[_]], x)
-
       val deps = calculateDependencies(u)
       val zd = Reflect(x,u,deps)
       if (mustIdempotent(u)) {
         context find { case Def(d) => d == zd } map { _.asInstanceOf[Exp[A]] } getOrElse {
 //        findDefinition(zd) map (_.sym) filter (context contains _) getOrElse { // local cse TODO: turn around and look at context first??
-          val z = fresh[A](List(pos))
+          val z = fresh[A]
           if (!x.toString.startsWith("ReadVar")) { // supress output for ReadVar
             printlog("promoting to effect: " + z + "=" + zd)
             for (w <- u.mayRead)
@@ -454,11 +429,13 @@ trait Effects extends Expressions with Blocks with Utils {
       } else {
         val z = fresh[A](List(pos))
         // make sure all writes go to allocs
-        for (w <- u.mayWrite if !isWritableSym(w)) {
-          printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
-          printerr("at " + z + "=" + zd)
-          printsrc("in " + quotePos(z))
-        }
+		if (Config.verbosity >= 1) {
+	        for (w <- u.mayWrite if !isWritableSym(w)) {
+    	      printerr("error: write to non-mutable " + w + " -> " + findDefinition(w))
+        	  printerr("at " + z + "=" + zd)
+	          printsrc("in " + quotePos(z))
+    	    }
+		}
         // prevent sharing between mutable objects / disallow mutable escape for non read-only operations
         // make sure no mutable object becomes part of mutable result (in case of allocation)
         // or is written to another mutable object (in case of write)
@@ -509,12 +486,11 @@ trait Effects extends Expressions with Blocks with Utils {
       val softWriteDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayRead(u, write) }
       val writeDeps = if (write.isEmpty) Nil else scope filter { case e@Def(Reflect(_, u, _)) => mayWrite(u, write) || write.contains(e) }
       val simpleDeps = if (!u.maySimple) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.maySimple }
-      val controlDeps = if (!u.control) Nil else scope filter { case e@Def(Reflect(_, u, _)) => u.control }
       val globalDeps = scope filter { case e@Def(Reflect(_, u, _)) => u.mayGlobal }
 
       // TODO: write-on-read deps should be weak
       // TODO: optimize!!
-      val allDeps = canonic(readDeps ++ softWriteDeps ++ writeDeps ++ canonicLinear(simpleDeps) ++ canonicLinear(controlDeps) ++ canonicLinear(globalDeps))
+      val allDeps = canonic(readDeps ++ softWriteDeps ++ writeDeps ++ canonicLinear(simpleDeps) ++ canonicLinear(globalDeps))
       scope filter (allDeps contains _)
     }
   }
@@ -561,18 +537,12 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // reify the effects of an isolated block.
   // no assumptions about the current context remain valid.
-  def reifyEffects[A:Manifest](block: => Exp[A], controlScope: Boolean = false): Block[A] = {
+  def reifyEffects[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     context = Nil
     
-    // only add control dependencies scopes where controlScope is explicitly true (i.e., the first-level of an IfThenElse)
-    val saveControl = conditionalScope
-    conditionalScope = controlScope
-
     val (result, defs) = reifySubGraph(block)
-    reflectSubGraph(defs)    
-
-    conditionalScope = saveControl
+    reflectSubGraph(defs)
     
     val deps = context
     val summary = summarizeAll(deps)
@@ -583,18 +553,13 @@ trait Effects extends Expressions with Blocks with Utils {
 
   // reify the effects of a block that is executed 'here' (if it is executed at all).
   // all assumptions about the current context carry over unchanged.
-  def reifyEffectsHere[A:Manifest](block: => Exp[A], controlScope: Boolean = false): Block[A] = {
+  def reifyEffectsHere[A:Manifest](block: => Exp[A]): Block[A] = {
     val save = context
     if (save eq null)
       context = Nil
     
-    val saveControl = conditionalScope
-    conditionalScope = controlScope
-
     val (result, defs) = reifySubGraph(block)
     reflectSubGraph(defs)
-
-    conditionalScope = saveControl
 
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
       printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)

@@ -3,24 +3,22 @@
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
-var x1: Int = 7
 val x2 = 7 > x0
+var x1 = 7
 // TODO: use vars instead of tuples to return multiple values
 val (x10,x8) = if (x2) {
 x1 = 5
 ((),())
 } else {
-val x5 = println("no")
+println("no")
 ((),())
 }
 val x12 = x1
-val x13 = println(x12)
-x13
+println(x12)
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 no
 7

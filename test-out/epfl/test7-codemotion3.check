@@ -30,12 +30,12 @@ x17: Double
 x18
 }
 val x23 = {x8: (Boolean) => 
-val x9 = println("yo")
+println("yo")
 val x21 = if (x8) {
-val x10 = println("then")
+println("then")
 x7
 } else {
-val x12 = println("else")
+println("else")
 x19
 }
 x21: scala.Function1[Double, Double]

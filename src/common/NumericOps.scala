@@ -1,4 +1,4 @@
-package scala.lms
+package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
@@ -11,7 +11,6 @@ trait LiftNumeric {
 }
 
 trait NumericOps extends Variables {
-  this: PrimitiveOps =>
 
   // workaround for infix not working with manifests
   implicit def numericToNumericOps[T:Numeric:Manifest](n: T) = new NumericOpsCls(unit(n))
@@ -26,6 +25,9 @@ trait NumericOps extends Variables {
     def /(rhs: Rep[T])(implicit pos: SourceContext) = numeric_divide(lhs,rhs)
   }
 
+  //def infix_+[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_plus(lhs,rhs)
+  //def infix_-[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_minus(lhs,rhs)
+  //def infix_*[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T]) = numeric_times(lhs,rhs)
   def numeric_plus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[T]
   def numeric_minus[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[T]
   def numeric_times[T:Numeric:Manifest](lhs: Rep[T], rhs: Rep[T])(implicit pos: SourceContext): Rep[T]
@@ -36,8 +38,6 @@ trait NumericOps extends Variables {
 }
 
 trait NumericOpsExp extends NumericOps with VariablesExp with BaseFatExp {
-  this: PrimitiveOpsExp =>
-  
   abstract class DefMN[A:Manifest:Numeric] extends Def[A] {
     def mev = manifest[A]
     def aev = implicitly[Numeric[A]]
@@ -65,7 +65,6 @@ trait NumericOpsExp extends NumericOps with VariablesExp with BaseFatExp {
 
 
 trait NumericOpsExpOpt extends NumericOpsExp {
-  this: PrimitiveOpsExp =>
   
   override def numeric_plus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = (lhs,rhs) match {
     case (Const(x), Const(y)) => Const(implicitly[Numeric[T]].plus(x,y))

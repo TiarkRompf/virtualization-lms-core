@@ -1,4 +1,4 @@
-package scala.lms
+package scala.virtualization.lms
 package internal
 
 class GenerationFailedException(msg: String) extends Exception(msg)

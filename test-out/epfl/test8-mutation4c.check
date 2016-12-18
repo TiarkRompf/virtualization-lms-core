@@ -1,6 +1,6 @@
-promoting to effect: Sym(5)=Reflect(ArrayClone(Sym(3)),Summary(false,false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List())
+promoting to effect: Sym(5)=Reflect(ArrayClone(Sym(3)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List())
 depends on  Sym(3)
-promoting to effect: Sym(9)=Reflect(ArrayIndex(Sym(8),Const(5)),Summary(false,false,false,false,false,false,List(Sym(8)),List(Sym(8)),List(),List()),List(Sym(8)))
+promoting to effect: Sym(9)=Reflect(ArrayIndex(Sym(8),Const(5)),Summary(false,false,false,false,false,List(Sym(8)),List(Sym(8)),List(),List()),List(Sym(8)))
 depends on  Sym(8)
 /*****************************************
   Emitting Generated Code                  
@@ -18,8 +18,7 @@ x5
 val x8 = x7.clone // mutable
 val x9 = x8.apply(5)
 val x10 = x9.apply(50)
-val x11 = println(x10)
-x11
+println(x10)
 }
 }
 /*****************************************

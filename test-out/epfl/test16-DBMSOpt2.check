@@ -1,0 +1,69 @@
+/*****************************************
+  Emitting Generated Code                  
+*******************************************/
+class lala extends (()=>(Array[Array[Int]])) {
+def apply(): Array[Array[Int]] = {
+val x0 = new Array[Array[Int]](3)
+var x1 = x0
+val x2 = x1
+val x3 = new Array[Int](3)
+x2(0) = x3
+val x5 = new Array[Int](3)
+x2(1) = x5
+val x7 = new Array[Int](3)
+x2(2) = x7
+val x9 = x2(0)
+var x10 = x9
+val x11 = x10
+x11(0) = 2
+val x13 = x11.mkString(",")
+println(x13)
+val x15 = new Array[Int](7)
+x10 = x15
+val x17 = x10
+x17(6) = 1
+val x19 = x17.mkString(",")
+println(x19)
+x2(0) = x17
+val x22 = x2(1)
+var x23 = x22
+val x24 = x23
+x24(1) = 2
+val x26 = x24.mkString(",")
+println(x26)
+val x28 = new Array[Int](7)
+x23 = x28
+val x30 = x23
+x30(5) = 1
+val x32 = x30.mkString(",")
+println(x32)
+x2(1) = x30
+val x35 = x2(2)
+var x36 = x35
+val x37 = x36
+x37(2) = 2
+val x39 = x37.mkString(",")
+println(x39)
+val x41 = new Array[Int](7)
+x36 = x41
+val x43 = x36
+x43(4) = 1
+val x45 = x43.mkString(",")
+println(x45)
+x2(2) = x43
+x2
+}
+}
+/*****************************************
+  End of Generated Code                  
+*******************************************/
+2,0,0
+0,0,0,0,0,0,1
+0,2,0
+0,0,0,0,0,1,0
+0,0,2
+0,0,0,0,1,0,0
+3
+0,0,0,0,0,0,1
+0,0,0,0,0,1,0
+0,0,0,0,1,0,0

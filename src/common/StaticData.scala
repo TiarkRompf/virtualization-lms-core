@@ -1,8 +1,8 @@
-package scala.lms
+package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.lms.internal.GenericNestedCodegen
+import scala.virtualization.lms.internal.GenericNestedCodegen
 import scala.reflect.SourceContext
 
 trait StaticData extends Base {
@@ -13,24 +13,13 @@ trait StaticDataExp extends EffectExp {
   case class StaticData[T](x: T) extends Def[T]
   def staticData[T:Manifest](x: T): Exp[T] = StaticData(x)
 
-  // StaticData doesn't play well with control dependencies.. looks like we somehow lose updates
-  override implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext) = d match {
-    case StaticData(x) if addControlDeps =>
-      val save = conditionalScope
-      conditionalScope = false
-      val z = super.toAtom(d)
-      conditionalScope = save
-      z      
-    case _ => super.toAtom(d)
-  }
-
   override def isWritableSym[A](w: Sym[A]): Boolean = findDefinition(w) match {
     case Some(TP(_, StaticData(_))) => true
     case _ => super.isWritableSym(w)
   }
   
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case StaticData(x) => staticData(x)(mtype(manifest[A]))        
+    case StaticData(x) => staticData(x)(mtype(manifest[A]))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]   
 }
@@ -66,21 +55,12 @@ trait BaseGenStaticData extends GenericNestedCodegen {
 trait ScalaGenStaticData extends ScalaGenEffect with BaseGenStaticData {
   val IR: StaticDataExp
   import IR._
-
+  
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StaticData(x) =>
+    case StaticData(x) => 
       emitValDef(sym, "p"+quote(sym) + " // static data: " + (x match { case x: Array[_] => "Array("+x.mkString(",")+")" case _ => x }))
     case _ => super.emitNode(sym, rhs)
   }
+  
 }
 
-trait CGenStaticData extends CGenEffect with BaseGenStaticData {
-  val IR: StaticDataExp
-  import IR._
-
-  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case StaticData(x) =>
-      emitValDef(sym, /*"p"+quote(sym)*/ (x match { case x: Array[_] => "("+remap(sym.tp.typeArguments(0))+"[]){"+x.map(v=>quote(Const[Any](v))).mkString(",")+"}" case _ => quote(Const(x)) }))
-    case _ => super.emitNode(sym, rhs)
-  }
-}

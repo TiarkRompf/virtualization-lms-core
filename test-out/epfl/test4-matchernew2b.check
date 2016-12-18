@@ -1,21 +1,21 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class Match extends ((Unit)=>(scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
-def apply(x0:Unit): scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
-var x23 = null.asInstanceOf[scala.collection.immutable.List[scala.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]]
-var x22 = null.asInstanceOf[scala.collection.immutable.List[scala.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]]
-var x20 = null.asInstanceOf[scala.Function1[Char, scala.collection.immutable.List[scala.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]]]
-var x24 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[scala.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]], scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+class Match extends ((Unit)=>(scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]])) {
+def apply(x0:Unit): scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
+var x23 = null.asInstanceOf[scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]]
+var x22 = null.asInstanceOf[scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]]
+var x20 = null.asInstanceOf[scala.Function1[Char, scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]]]
+var x24 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]], scala.virtualization.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
 x20 = {x21: (Char) => 
 x23
 }
-x22 = List(scala.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]](List(),x20))
+x22 = List(scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]](List(),x20))
 val x12 = List()
 val x10 = {x11: (Char) => 
 x12
 }
-val x13 = List(scala.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]](List(1),x10))
+val x13 = List(scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]](List(1),x10))
 val x7 = {x8: (Char) => 
 val x9 = x8 == 'B'
 val x14 = if (x9) {
@@ -25,7 +25,7 @@ x12
 }
 x14
 }
-val x15 = List(scala.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]](List(),x7))
+val x15 = List(scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]](List(),x7))
 val x1 = {x2: (Char) => 
 val x3 = x2 == 'A'
 val x18 = if (x3) {
@@ -38,23 +38,23 @@ x12
 }
 x16
 }
-val x17 = List(scala.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]](List(),x4))
+val x17 = List(scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]](List(),x4))
 x17
 } else {
 x12
 }
 x18
 }
-val x19 = List(scala.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]](List(),x1))
+val x19 = List(scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]](List(),x1))
 x23 = x22 ::: x19
-x24 = {x25: (scala.collection.immutable.List[scala.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]) => 
+x24 = {x25: (scala.collection.immutable.List[scala.virtualization.lms.epfl.test4.NAutomaton[Char, scala.collection.immutable.List[Any]]]) => 
 val x26 = x25.flatMap(_.out)
 val x27 = {x28: (Char) => 
 val x29 = x25.flatMap(_.next.apply(x28))
 val x30 = x24(x29)
 x30
 }
-val x31 = scala.lms.epfl.test4.Automaton(x26,x27)
+val x31 = scala.virtualization.lms.epfl.test4.Automaton(x26,x27)
 x31
 }
 val x32 = x24(x23)
@@ -64,7 +64,6 @@ x32
 /*****************************************
   End of Generated Code                  
 *******************************************/
-compilation: ok
 idx:   0
 out:   List()
 char:  X

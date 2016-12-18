@@ -1,4 +1,4 @@
-package scala.lms
+package scala.virtualization.lms
 package common
 
 import internal.GraphVizExport

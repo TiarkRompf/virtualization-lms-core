@@ -1,9 +1,9 @@
-package scala.lms
+package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
 
-import scala.lms.internal.{GenericNestedCodegen, GenerationFailedException}
+import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
 
 //TODO: is this used at all? should it be merge with DeliteOps?
 
@@ -27,10 +27,15 @@ trait ScalaGenDSLOps extends ScalaGenEffect with BaseGenDSLOps {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case op: DSLOp[_] =>
       val b = op.representation
-      gen"""val $sym = {
-           |${nestedBlock(b)}
-           |$b
-           |}"""
+      val strWriter = new java.io.StringWriter
+      val localStream = new PrintWriter(strWriter);
+      withStream(localStream) {
+        gen"""{ 
+             |${nestedBlock(b)}
+             |$b
+             |}"""
+      }
+      emitValDef(sym, strWriter.toString)
 
     case _ => super.emitNode(sym, rhs)
   }

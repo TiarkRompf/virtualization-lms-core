@@ -1,12 +1,10 @@
-nVars=1000
-nVars=2000
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-import scala.lms.epfl.test14.Schema
-class staged$0 extends ((Unit)=>(Unit)) {
+import scala.virtualization.lms.epfl.test14.Schema
+class staged1 extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-val x2550 = println("expertise(\"abstract\"):")
+println("expertise(\"abstract\"):")
 val x800 = Schema.org.departments.flatMap { x732 => 
 val x792 = Schema.org.employees.flatMap { x763 => 
 val x734 = x732.dpt
@@ -18,7 +16,11 @@ val x777 = x776.emp
 val x778 = x767 == x777
 val x779 = x776.tsk
 val x780 = x779 == "abstract"
-val x781 = x778 && x780
+val x781 = if (x778 == true) {
+
+x780
+} else false
+
 val x784 = if (x781) {
 val x661 = new Schema.Record { val ignore = () }
 val x688 = List(x661)
@@ -30,7 +32,11 @@ x19
 x784
 }
 val x786 = x785.isEmpty
-val x788 = x765 && x786
+val x788 = if (x765 == true) {
+
+x786
+} else false
+
 val x791 = if (x788) {
 val x661 = new Schema.Record { val ignore = () }
 val x688 = List(x661)
@@ -53,16 +59,12 @@ x19
 }
 x799
 }
-val x2551 = println(x800)
-x2551
+println(x800)
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
 
-warning: there were 9 feature warnings; re-run with -feature for details
-one warning found
-compilation: ok
 expertise("abstract"):
 List({dpt:Quality}, {dpt:Research})

@@ -1,4 +1,4 @@
-package scala.lms
+package scala.virtualization.lms
 package epfl
 package test2
 

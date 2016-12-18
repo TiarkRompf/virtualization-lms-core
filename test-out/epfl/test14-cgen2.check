@@ -1,30 +1,29 @@
 /* FILE: main.c */
-int32_t main(int32_t);
+int main(int);
 /*****************************************
   Emitting C Generated Code                  
 *******************************************/
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
-int32_t main(int32_t  x0) {
-function<int32_t(int32_t,int32_t)> x1 = [&](int32_t x2,int32_t x3) {
-int32_t x4 = x2;
+int main(int x0) {
+int x1(int x2,int x3) {
+int x4 = x2;
 bool x6 = x4 == 0;
-int32_t x12;
+int x12;
 if (x6) {
 x12 = 1;
 } else {
-int32_t x5 = x3;
-int32_t x7 = x4 - 1;
-int32_t x9 = x1(x7,x5);
-int32_t x10 = x4 * x9;
+int x5 = x3;
+int x7 = x4 - 1;
+int x9 = x1(x7,x5);
+int x10 = x4 * x9;
 x12 = x10;
 }
 return x12;
-};
-int32_t x15 = x1(4,0);
-printf(string("Hello, world! %d\n").c_str(),x15);
+}
+int x15 = x1(4,0);
+printf("Hello, world! %d\n",x15); // x16
 return 0;
 }
 /*****************************************

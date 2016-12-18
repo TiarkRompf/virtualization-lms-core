@@ -12,7 +12,7 @@ val x7 = x6+1.0
 x7: Double
 }
 val x11 = {x4: (Boolean) => 
-val x5 = println("yo")
+println("yo")
 val x9 = if (x4) {
 x3
 } else {

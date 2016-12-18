@@ -1,9 +1,10 @@
-package scala.lms
+package scala.virtualization.lms
 package internal
 
 import util.OverloadHack
 import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
+import scala.virtualization.lms.common.WorklistTransformer
 
 trait AbstractTransformer {
   val IR: Expressions with Blocks with OverloadHack
@@ -22,9 +23,6 @@ trait AbstractTransformer {
   def apply[A](xs: Seq[Exp[A]]): Seq[Exp[A]] = xs map (e => apply(e))
   def apply[X,A](f: X=>Exp[A]): X=>Exp[A] = (z:X) => apply(f(z))
   def apply[X,Y,A](f: (X,Y)=>Exp[A]): (X,Y)=>Exp[A] = (z1:X,z2:Y) => apply(f(z1,z2))
-  def apply[X,Y,Z,A](f: (X,Y,Z)=>Exp[A]): (X,Y,Z)=>Exp[A] = (z1:X,z2:Y,z3:Z) => apply(f(z1,z2,z3))
-  def apply[W,X,Y,Z,A](f: (W,X,Y,Z)=>Exp[A]): (W,X,Y,Z)=>Exp[A] = (z1:W,z2:X,z3:Y,z4:Z) => apply(f(z1,z2,z3,z4))
-  def apply[V,W,X,Y,Z,A](f: (V,W,X,Y,Z)=>Exp[A]): (V,W,X,Y,Z)=>Exp[A] = (z1:V,z2:W,z3:X,z4:Y,z5:Z) => apply(f(z1,z2,z3,z4,z5))
   //def apply[A](xs: Summary): Summary = xs //TODO
   def onlySyms[A](xs: List[Sym[A]]): List[Sym[A]] = xs map (e => apply(e)) collect { case e: Sym[A] => e }
   
@@ -99,4 +97,28 @@ trait FatTransforming extends Transforming with FatExpressions {
   
   //def mirror[A:Manifest](e: FatDef, f: Transformer): Exp[A] = sys.error("don't know how to mirror " + e)  
   
+}
+
+/* Lewis: adapted from LMS TestWorklistTransform2.scala */
+trait LoweringTransform extends FatTransforming with Effects { self =>  
+  trait LoweringTransformer extends WorklistTransformer { val IR: self.type = self }
+
+  // ---------- Exp api
+  implicit def toAfter[A:Manifest](x: Def[A]) = new { def atPhase(t: LoweringTransformer)(y: => Exp[A]) = transformAtPhase(x)(t)(y) }
+  implicit def toAfter[A](x: Exp[A]) = new { def atPhase(t: LoweringTransformer)(y: => Exp[A]) = transformAtPhase(x)(t)(y) }
+
+  // transform x to y at the *next* iteration of t. 
+  // note: if t is currently active, it will continue the current pass with x = x.
+  // do we need a variant that replaces x -> y immediately if t is active?
+  def transformAtPhase[A](x: Exp[A])(t: LoweringTransformer)(y: => Exp[A]): Exp[A] = {
+    t.register(x)(y)
+    x
+  }
+    
+  def onCreate[A:Manifest](s: Sym[A], d: Def[A]): Exp[A] = s
+  
+  override def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
+    onCreate(s,d)(s.tp)
+    super.createDefinition(s,d)
+  }
 }

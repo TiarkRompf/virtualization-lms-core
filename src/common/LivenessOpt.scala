@@ -1,8 +1,8 @@
-package scala.lms
+package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.lms.internal.NestedBlockTraversal
+import scala.virtualization.lms.internal.NestedBlockTraversal
 
 import scala.collection.mutable
 
@@ -62,8 +62,6 @@ trait DefUseAnalysis extends NestedBlockTraversal {
       val saveDefUseMap = defUseMap
       defUseMap 
     
-      printlog("gathering def-use info for block " + result)
-      
       var pairs = List[(Exp[Any],Exp[Any])]()
     
       for (TP(sym, rhs) <- innerScope) {
@@ -72,12 +70,9 @@ trait DefUseAnalysis extends NestedBlockTraversal {
         }
       }
     
-      if (saveDefUseMap ne null) {
-        defUseMap = pairs.groupBy(_._1).map(p => (p._1, p._2.map(_._2).toSet))
-        for ((k,vs) <- saveDefUseMap) {
-          defUseMap += (k -> (saveDefUseMap(k) ++ defUseMap.getOrElse(k, Set())))
-        }        
-      } else
+      if (saveDefUseMap ne null)
+        defUseMap = pairs.groupBy(_._1).map(p => (p._1, saveDefUseMap.getOrElse(p._1, Set()) ++ p._2.map(_._2)))
+      else
         defUseMap = pairs.groupBy(_._1).map(p => (p._1, p._2.map(_._2).toSet))
 
       body

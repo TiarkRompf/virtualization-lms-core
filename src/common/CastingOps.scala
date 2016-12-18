@@ -1,8 +1,8 @@
-package scala.lms
+package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.lms.util.OverloadHack
+import scala.virtualization.lms.util.OverloadHack
 import scala.reflect.SourceContext
 
 trait CastingOps extends Variables with OverloadHack {
@@ -18,21 +18,20 @@ trait CastingOps extends Variables with OverloadHack {
   }
 
   def rep_isinstanceof[A,B](lhs: Rep[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) : Rep[Boolean]
-  def rep_asinstanceof[A,B:Manifest](lhs: Rep[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) : Rep[B]
+  def rep_asinstanceof[A,B](lhs: Rep[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) : Rep[B]
 }
 
-trait CastingOpsExp extends CastingOps with BaseExp with EffectExp {
+trait CastingOpsExp extends CastingOps with BaseExp {
   this: ImplicitOps =>
 
   case class RepIsInstanceOf[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B]) extends Def[Boolean]
-  case class RepAsInstanceOf[A,B:Manifest](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B]) extends Def[B]
+  case class RepAsInstanceOf[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B]) extends Def[B]
 
   def rep_isinstanceof[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) = RepIsInstanceOf(lhs,mA,mB)
-  def rep_asinstanceof[A,B:Manifest](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) : Exp[B] = toAtom(RepAsInstanceOf(lhs,mA,mB))(mB,pos)
+  def rep_asinstanceof[A,B](lhs: Exp[A], mA: Manifest[A], mB: Manifest[B])(implicit pos: SourceContext) : Exp[B] = toAtom(RepAsInstanceOf(lhs,mA,mB))(mB,pos)
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
-    case RepAsInstanceOf(lhs, mA, mB) => rep_asinstanceof(f(lhs),mA,mB)(mtype(mB),pos)
-    case Reflect(e@RepAsInstanceOf(lhs, mA, mB), u, es) => reflectMirrored(Reflect(RepAsInstanceOf(f(lhs),mA,mB)(mtype(mB)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case RepAsInstanceOf(lhs, mA, mB) => rep_asinstanceof(f(lhs), mA,mB)
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]]
 }
@@ -55,7 +54,7 @@ trait CLikeGenCastingOps extends CLikeGenBase {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         //case RepIsInstanceOf(x,mA,mB) => //TODO: How?
-        case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, "(%s) %s".format(remapWithRef(mB),quote(x)))
+        case RepAsInstanceOf(x,mA,mB) => emitValDef(sym, src"($mB) $x")
         case _ => super.emitNode(sym, rhs)
       }
     }

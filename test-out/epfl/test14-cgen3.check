@@ -1,54 +1,51 @@
 /* FILE: test2.c */
-int32_t test2(int32_t);
-int32_t test1(int32_t);
-int32_t main(int32_t);
+int test2(int);
+int test1(int);
+int main(int);
 /*****************************************
   Emitting C Generated Code                  
 *******************************************/
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
-int32_t test2(int32_t  x0) {
-printf(string("Hello, world: test2\n").c_str());
+int test2(int x0) {
+printf("Hello, world: test2\n"); // x1
 return x0;
 }
 /*****************************************
   End of C Generated Code                  
 *******************************************/
 /* FILE: test1.c */
-int32_t test2(int32_t);
-int32_t test1(int32_t);
-int32_t main(int32_t);
+int test2(int);
+int test1(int);
+int main(int);
 /*****************************************
   Emitting C Generated Code                  
 *******************************************/
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
-int32_t test1(int32_t  x3) {
-printf(string("Hello, world: test1\n").c_str());
-int32_t x5 = test2(x3);
+int test1(int x3) {
+printf("Hello, world: test1\n"); // x4
+int x5 = test2(x3);
 return x5;
 }
 /*****************************************
   End of C Generated Code                  
 *******************************************/
 /* FILE: main.c */
-int32_t test2(int32_t);
-int32_t test1(int32_t);
-int32_t main(int32_t);
+int test2(int);
+int test1(int);
+int main(int);
 /*****************************************
   Emitting C Generated Code                  
 *******************************************/
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
-int32_t main(int32_t  x7) {
-printf(string("Hello, world: main\n").c_str());
-int32_t x9 = test1(x7);
+int main(int x7) {
+printf("Hello, world: main\n"); // x8
+int x9 = test1(x7);
 return x9;
 }
 /*****************************************

@@ -1,8 +1,8 @@
-package scala.lms
+package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
-import scala.lms.internal.GenericNestedCodegen
+import scala.virtualization.lms.internal.GenericNestedCodegen
 import collection.mutable.ArrayBuffer
 import scala.reflect.SourceContext
 

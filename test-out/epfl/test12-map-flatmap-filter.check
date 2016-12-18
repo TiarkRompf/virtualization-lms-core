@@ -9,6 +9,7 @@ val x4 = x3 < 3
 
 x4
 }
+
 val x9 = x0.flatMap { x1 => 
 val x8 = x5.map { x6 => 
 val x7 = x1 * x6
@@ -16,8 +17,10 @@ val x7 = x1 * x6
 x7
 }
 
+
 x8
 }
+
 x9
 }
 }

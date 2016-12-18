@@ -1,4 +1,4 @@
-package scala.lms
+package scala.virtualization.lms
 package common
 
 import java.io.PrintWriter
@@ -39,8 +39,8 @@ trait IterableOpsExp extends IterableOps with EffectExp with VariablesExp {
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = {
     (e match {
       case e@IterableToArray(x) => iterable_toarray(f(x))(e.m,pos)
-      case Reflect(e@IterableForeach(x,y,b), u, es) => reflectMirrored(Reflect(IterableForeach(f(x),f(y).asInstanceOf[Sym[_]],f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
-      case Reflect(e@IterableToArray(x), u, es) => reflectMirrored(Reflect(IterableToArray(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)    
+      case Reflect(e@IterableForeach(x,y,b), u, es) => reflectMirrored(Reflect(IterableForeach(f(x),f(y).asInstanceOf[Sym[_]],f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]))    
+      case Reflect(e@IterableToArray(x), u, es) => reflectMirrored(Reflect(IterableToArray(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))    
       case _ => super.mirror(e,f)
     }).asInstanceOf[Exp[A]] // why??
   }
@@ -73,11 +73,11 @@ trait ScalaGenIterableOps extends BaseGenIterableOps with ScalaGenBase {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case IterableForeach(a,x,block) =>
-      gen"""val $sym=$a.foreach{
-            |$x =>
-            |${nestedBlock(block)}
-            |$block
-            |}"""
+      gen"""$a.foreach{
+           |$x => 
+           |${nestedBlock(block)}
+           |$block
+           |}"""
     case IterableToArray(a) => emitValDef(sym, src"$a.toArray")
     case _ => super.emitNode(sym, rhs)
   }
