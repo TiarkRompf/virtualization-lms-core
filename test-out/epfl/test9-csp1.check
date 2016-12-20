@@ -4,11 +4,13 @@
 class Test(px1:scala.Function1[Int, Unit]) extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
 val x1 = px1 // static data: <function1>
-x1(x0)
+val x2 = x1(x0)
+x2
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
 -- running program
+compilation: ok
 this is external non-DSL code: 42

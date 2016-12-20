@@ -1,4 +1,4 @@
-promoting to effect: Sym(11)=Reflect(ArrayIndex(Sym(9),Const(50)),Summary(false,false,false,false,false,List(Sym(9)),List(Sym(9)),List(),List()),List(Sym(9), Sym(10)))
+promoting to effect: Sym(11)=Reflect(ArrayIndex(Sym(9),Const(50)),Summary(false,false,false,false,false,false,List(Sym(9)),List(Sym(9)),List(),List()),List(Sym(9), Sym(10)))
 depends on  Sym(9)
 /*****************************************
   Emitting Generated Code                  
@@ -20,9 +20,10 @@ x3
 x6
 }
 val x9 = x8.clone // mutable
-x9.update(40, 40.0)
+val x10 = x9.update(40, 40.0)
 val x11 = x9.apply(50)
-println(x11)
+val x12 = println(x11)
+x12
 }
 }
 /*****************************************

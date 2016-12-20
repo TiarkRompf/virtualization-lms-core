@@ -20,8 +20,8 @@ val x2 = 0.0-x1
 x4(x1) = x1
 x5(x1) = x2
 }
-var x13 = x4
-var x14 = x5
+var x13: Array[Int] = x4
+var x14: Array[Double] = x5
 val x16 = x0 > 7
 val x26 = if (x16) {
 var x23 = new Array[Double](100)
@@ -34,10 +34,13 @@ x23
 } else {
 x5
 }
-val x27 = new { val re = x4; val im = x26 }
-println(x27)
+val x27 = new ArrayOfAnon189207751(x4,x26)
+val x28 = println(x27)
+x28
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
+
+case class ArrayOfAnon189207751(re: Array[Int], im: Array[Double])

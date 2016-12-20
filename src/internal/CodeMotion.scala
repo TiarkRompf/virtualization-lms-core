@@ -98,11 +98,12 @@ trait CodeMotion extends Scheduling {
 
     // sanity check to make sure all effects are accounted for
     result foreach {
-      case LocalDef(TP(_, Reify(x, u, effects))) =>
-        val acteffects = levelScope.flatMap(_.lhs) filter (effects contains _)
-        if (effects.toSet != acteffects.toSet) {
-          val actual = levelScope.filter(_.lhs exists (effects contains _))
-          val expected = effects.map(d=>/*fatten*/(findDefinition(d.asInstanceOf[Sym[Any]]).get))
+      case LocalDef(TP(_, Reify(x, u, effects))) =>        
+        val observable = if (addControlDeps) effects.filterNot(controlDep) else effects
+        val acteffects = levelScope.flatMap(_.lhs) filter (observable contains _)
+        if (observable.toSet != acteffects.toSet) {
+          val actual = levelScope.filter(_.lhs exists (observable contains _))
+          val expected = observable.map(d=>/*fatten*/(findDefinition(d.asInstanceOf[Sym[Any]]).get)) 
           val missing = expected filterNot (actual contains _)
           val printfn = if (missing.isEmpty) printlog _ else printerr _
           printfn("error: violated ordering of effects")

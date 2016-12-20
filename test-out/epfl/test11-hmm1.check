@@ -7,42 +7,43 @@ val x1 = new Array[Int](5)
 val x2 = x1(0)
 val x3 = x0(0)
 val x4 = x2 + x3
-x1(0) = x4
+val x5 = x1(0) = x4
 val x6 = x0(3)
 val x7 = x4 + x6
-x1(0) = x7
+val x8 = x1(0) = x7
 val x9 = x1(1)
 val x10 = x0(2)
 val x11 = x9 + x10
-x1(1) = x11
+val x12 = x1(1) = x11
 val x13 = x1(2)
 val x14 = x0(1)
 val x15 = x13 + x14
-x1(2) = x15
+val x16 = x1(2) = x15
 val x20 = px20 // static data: Array(0,0,1,1,1)
 var x18 : Int = 0
-while (x18 < 5) {
+val x27 = while (x18 < 5) {
 val x19 = x1(3)
 val x21 = x20(x18)
 val x22 = x0(x18)
 val x23 = x21 * x22
 val x24 = x19 + x23
-x1(3) = x24
+val x25 = x1(3) = x24
 
 x18 = x18 + 1
 }
 val x28 = x1(4)
 val x29 = x28 + x10
-x1(4) = x29
+val x30 = x1(4) = x29
 val x31 = x0(4)
 val x32 = x29 + x31
-x1(4) = x32
+val x33 = x1(4) = x32
 x1
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
+compilation: ok
 1
 5
 1

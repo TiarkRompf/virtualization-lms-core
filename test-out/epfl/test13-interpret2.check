@@ -1,15 +1,15 @@
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(85),Summary(true,true,false,false,false,List(),List(),List(Sym(1), Sym(7), Sym(12), Sym(21), Sym(26), Sym(31), Sym(36), Sym(41), Sym(50), Sym(55), Sym(60), Sym(65), Sym(70), Sym(79)),List(Sym(1), Sym(7), Sym(12), Sym(21), Sym(26), Sym(31), Sym(36), Sym(41), Sym(50), Sym(55), Sym(60), Sym(65), Sym(70), Sym(79))),List(Sym(5), Sym(6), Sym(10), Sym(11), Sym(15), Sym(16), Sym(19), Sym(20), Sym(24), Sym(25), Sym(29), Sym(30), Sym(34), Sym(35), Sym(39), Sym(40), Sym(44), Sym(45), Sym(48), Sym(49), Sym(53), Sym(54), Sym(58), Sym(59), Sym(63), Sym(64), Sym(68), Sym(69), Sym(73), Sym(74), Sym(77), Sym(78), Sym(82), Sym(83), Sym(85)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(85),Summary(true,true,false,false,false,false,List(),List(),List(Sym(1), Sym(7), Sym(12), Sym(21), Sym(26), Sym(31), Sym(36), Sym(41), Sym(50), Sym(55), Sym(60), Sym(65), Sym(70), Sym(79)),List(Sym(1), Sym(7), Sym(12), Sym(21), Sym(26), Sym(31), Sym(36), Sym(41), Sym(50), Sym(55), Sym(60), Sym(65), Sym(70), Sym(79))),List(Sym(5), Sym(6), Sym(10), Sym(11), Sym(15), Sym(16), Sym(19), Sym(20), Sym(24), Sym(25), Sym(29), Sym(30), Sym(34), Sym(35), Sym(39), Sym(40), Sym(44), Sym(45), Sym(48), Sym(49), Sym(53), Sym(54), Sym(58), Sym(59), Sym(63), Sym(64), Sym(68), Sym(69), Sym(73), Sym(74), Sym(77), Sym(78), Sym(82), Sym(83), Sym(85)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged0(px2:scala.lms.common.Compile,px3:Object,px4:Object,px1:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px8:Object,px9:Object,px7:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px13:Object,px14:Object,px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px17:Object,px18:Object,px22:Object,px23:Object,px21:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px27:Object,px28:Object,px26:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px32:Object,px33:Object,px31:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px37:Object,px38:Object,px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px42:Object,px43:Object,px41:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px46:Object,px47:Object,px51:Object,px52:Object,px50:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px56:Object,px57:Object,px55:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px61:Object,px62:Object,px60:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px66:Object,px67:Object,px65:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px71:Object,px72:Object,px70:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px75:Object,px76:Object,px80:Object,px81:Object,px79:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x0:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$0(px2:scala.lms.common.Compile,px3:Object,px4:Object,px1:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px8:Object,px9:Object,px7:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px13:Object,px14:Object,px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px17:Object,px18:Object,px22:Object,px23:Object,px21:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px27:Object,px28:Object,px26:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px32:Object,px33:Object,px31:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px37:Object,px38:Object,px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px42:Object,px43:Object,px41:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px46:Object,px47:Object,px51:Object,px52:Object,px50:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px56:Object,px57:Object,px55:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px61:Object,px62:Object,px60:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px66:Object,px67:Object,px65:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px71:Object,px72:Object,px70:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px75:Object,px76:Object,px80:Object,px81:Object,px79:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x0:java.util.HashMap[java.lang.String, Any]): Any = {
 val x2 = px2 // static data: IR:scala.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
 val x3 = px3 // static data: <function1>
 val x4 = px4 // static data: <function1>
 val x5 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x3.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x4.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -21,7 +21,7 @@ val x8 = px8 // static data: <function1>
 val x9 = px9 // static data: <function1>
 val x10 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x8.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x9.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -33,7 +33,7 @@ val x13 = px13 // static data: <function1>
 val x14 = px14 // static data: <function1>
 val x15 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x13.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x14.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -45,7 +45,7 @@ val x17 = px17 // static data: <function1>
 val x18 = px18 // static data: <function1>
 val x19 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x17.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x18.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -56,7 +56,7 @@ val x22 = px22 // static data: <function1>
 val x23 = px23 // static data: <function1>
 val x24 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x22.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x23.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -68,7 +68,7 @@ val x27 = px27 // static data: <function1>
 val x28 = px28 // static data: <function1>
 val x29 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x27.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x28.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -80,7 +80,7 @@ val x32 = px32 // static data: <function1>
 val x33 = px33 // static data: <function1>
 val x34 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x32.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x33.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -92,7 +92,7 @@ val x37 = px37 // static data: <function1>
 val x38 = px38 // static data: <function1>
 val x39 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x37.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x38.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -104,7 +104,7 @@ val x42 = px42 // static data: <function1>
 val x43 = px43 // static data: <function1>
 val x44 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x42.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x43.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -116,7 +116,7 @@ val x46 = px46 // static data: <function1>
 val x47 = px47 // static data: <function1>
 val x48 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x46.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x47.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -127,7 +127,7 @@ val x51 = px51 // static data: <function1>
 val x52 = px52 // static data: <function1>
 val x53 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x51.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x52.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -139,7 +139,7 @@ val x56 = px56 // static data: <function1>
 val x57 = px57 // static data: <function1>
 val x58 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x56.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x57.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -151,7 +151,7 @@ val x61 = px61 // static data: <function1>
 val x62 = px62 // static data: <function1>
 val x63 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x61.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x62.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -163,7 +163,7 @@ val x66 = px66 // static data: <function1>
 val x67 = px67 // static data: <function1>
 val x68 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x66.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x67.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -175,7 +175,7 @@ val x71 = px71 // static data: <function1>
 val x72 = px72 // static data: <function1>
 val x73 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x71.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x72.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -187,7 +187,7 @@ val x75 = px75 // static data: <function1>
 val x76 = px76 // static data: <function1>
 val x77 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x75.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x76.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -198,7 +198,7 @@ val x80 = px80 // static data: <function1>
 val x81 = px81 // static data: <function1>
 val x82 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x80.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x81.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -215,12 +215,13 @@ x85
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any StaticData(0)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged1(px88:Any) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x87:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$1(px88:Any) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x87:java.util.HashMap[java.lang.String, Any]): Any = {
 val x88 = px88 // static data: 0
 x88
 }
@@ -229,12 +230,13 @@ x88
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any StaticData(0)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged2(px88:Any) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x89:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$2(px88:Any) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x89:java.util.HashMap[java.lang.String, Any]): Int = {
 val x88 = px88 // static data: 0
 val x90 = x88.asInstanceOf[Int]
 x90
@@ -244,18 +246,19 @@ x90
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 error: write to non-mutable Sym(91) -> None
-at Sym(94)=Reflect(HashMapUpdate(Sym(91),Const(x),Sym(93)),Summary(false,false,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List())
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(94),Summary(true,true,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List(Sym(93), Sym(94)))
+at Sym(94)=Reflect(HashMapUpdate(Sym(91),Const(x),Sym(93)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List())
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(94),Summary(true,true,false,false,false,false,List(),List(),List(Sym(91)),List(Sym(91))),List(Sym(93), Sym(94)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged3(px1:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x91:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$3(px1:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x91:java.util.HashMap[java.lang.String, Any]): Any = {
 val x1 = px1 // static data: RCell(dyn - ConstN(0))
 val x92 = x1.value
 val x93 = x92.exec(x91)
-val x94 = x91("x") = x93
+val x94 = x91.put("x", x93)
 x94
 }
 }
@@ -263,17 +266,18 @@ x94
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 error: write to non-mutable Sym(96) -> None
-at Sym(98)=Reflect(HashMapUpdate(Sym(96),Const(x),Sym(97)),Summary(false,false,false,false,false,List(),List(),List(Sym(96)),List(Sym(96))),List())
+at Sym(98)=Reflect(HashMapUpdate(Sym(96),Const(x),Sym(97)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(96)),List(Sym(96))),List())
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged4(px1:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x96:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$4(px1:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x96:java.util.HashMap[java.lang.String, Any]): Int = {
 val x1 = px1 // static data: RCell(dyn - ConstN(0))
 val x92 = x1.value
 val x97 = x92.exec(x96)
-val x98 = x96("x") = x97
+val x98 = x96.put("x", x97)
 val x99 = x98.asInstanceOf[Int]
 x99
 }
@@ -282,13 +286,14 @@ x99
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(101),Const(n))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged5 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x101:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
-val x102 = x101("n")
+class staged$5 extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x101:java.util.HashMap[java.lang.String, Any]): Any = {
+val x102 = x101.get("n")
 x102
 }
 }
@@ -296,13 +301,14 @@ x102
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(103),Const(n))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged6 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x103:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
-val x104 = x103("n")
+class staged$6 extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x103:java.util.HashMap[java.lang.String, Any]): Int = {
+val x104 = x103.get("n")
 val x105 = x104.asInstanceOf[Int]
 x105
 }
@@ -311,13 +317,14 @@ x105
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(106),Const(n))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged7 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x106:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
-val x107 = x106("n")
+class staged$7 extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x106:java.util.HashMap[java.lang.String, Any]): Any = {
+val x107 = x106.get("n")
 x107
 }
 }
@@ -325,13 +332,14 @@ x107
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(108),Const(n))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged8 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x108:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
-val x109 = x108("n")
+class staged$8 extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x108:java.util.HashMap[java.lang.String, Any]): Int = {
+val x109 = x108.get("n")
 val x110 = x109.asInstanceOf[Int]
 x110
 }
@@ -340,12 +348,13 @@ x110
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any StaticData(-1)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged9(px112:Any) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x111:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$9(px112:Any) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x111:java.util.HashMap[java.lang.String, Any]): Any = {
 val x112 = px112 // static data: -1
 x112
 }
@@ -354,12 +363,13 @@ x112
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any StaticData(-1)
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged10(px112:Any) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x113:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$10(px112:Any) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x113:java.util.HashMap[java.lang.String, Any]): Int = {
 val x112 = px112 // static data: -1
 val x114 = x112.asInstanceOf[Int]
 x114
@@ -369,12 +379,13 @@ x114
   End of Generated Code                  
 *******************************************/
 
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(134),Summary(true,true,false,false,false,List(),List(),List(Sym(26)),List()),List(Sym(117), Sym(119), Sym(134)))
+compilation: ok
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(134),Summary(true,true,false,false,false,false,List(),List(),List(Sym(26)),List()),List(Sym(117), Sym(119), Sym(134)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged11(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px21:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px2:scala.lms.common.Compile,px124:Object,px125:Object,px26:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x115:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$11(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px21:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px2:scala.lms.common.Compile,px124:Object,px125:Object,px26:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x115:java.util.HashMap[java.lang.String, Any]): Any = {
 val x12 = px12 // static data: RCell(dyn - LookupN(n))
 val x116 = x12.value
 val x117 = x116.exec(x115)
@@ -383,11 +394,7 @@ val x118 = x21.value
 val x119 = x118.exec(x115)
 val x120 = x117.isInstanceOf[Int]
 val x121 = x119.isInstanceOf[Int]
-val x122 = if (x120 == true) {
-
-x121
-} else false
-
+val x122 = x120 && x121
 val x134 = if (x122) {
 val x123 = println("spec-add-int: AddN(LookupN(n),ConstN(-1))")
 val x2 = px2 // static data: IR:scala.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
@@ -395,7 +402,7 @@ val x124 = px124 // static data: <function1>
 val x125 = px125 // static data: <function1>
 val x126 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x124.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x125.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -418,11 +425,12 @@ x134
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged12(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px21:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px2:scala.lms.common.Compile,px143:Object,px144:Object,px26:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x136:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$12(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px21:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px2:scala.lms.common.Compile,px143:Object,px144:Object,px26:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x136:java.util.HashMap[java.lang.String, Any]): Int = {
 val x12 = px12 // static data: RCell(dyn - LookupN(n))
 val x116 = x12.value
 val x137 = x116.exec(x136)
@@ -431,11 +439,7 @@ val x118 = x21.value
 val x138 = x118.exec(x136)
 val x139 = x137.isInstanceOf[Int]
 val x140 = x138.isInstanceOf[Int]
-val x141 = if (x139 == true) {
-
-x140
-} else false
-
+val x141 = x139 && x140
 val x153 = if (x141) {
 val x142 = println("spec-add-int: AddN(LookupN(n),ConstN(-1))")
 val x2 = px2 // static data: IR:scala.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
@@ -443,7 +447,7 @@ val x143 = px143 // static data: <function1>
 val x144 = px144 // static data: <function1>
 val x145 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x143.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x144.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -467,18 +471,19 @@ x154
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 error: write to non-mutable Sym(156) -> None
-at Sym(159)=Reflect(HashMapUpdate(Sym(156),Const(n),Sym(158)),Summary(false,false,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List())
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(159),Summary(true,true,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List(Sym(158), Sym(159)))
+at Sym(159)=Reflect(HashMapUpdate(Sym(156),Const(n),Sym(158)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List())
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(159),Summary(true,true,false,false,false,false,List(),List(),List(Sym(156)),List(Sym(156))),List(Sym(158), Sym(159)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged13(px26:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x156:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$13(px26:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x156:java.util.HashMap[java.lang.String, Any]): Any = {
 val x26 = px26 // static data: RCell(dyn - AddN(LookupN(n),ConstN(-1)))
 val x157 = x26.value
 val x158 = x157.exec(x156)
-val x159 = x156("n") = x158
+val x159 = x156.put("n", x158)
 x159
 }
 }
@@ -486,17 +491,18 @@ x159
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 error: write to non-mutable Sym(161) -> None
-at Sym(163)=Reflect(HashMapUpdate(Sym(161),Const(n),Sym(162)),Summary(false,false,false,false,false,List(),List(),List(Sym(161)),List(Sym(161))),List())
+at Sym(163)=Reflect(HashMapUpdate(Sym(161),Const(n),Sym(162)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(161)),List(Sym(161))),List())
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged14(px26:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x161:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$14(px26:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x161:java.util.HashMap[java.lang.String, Any]): Int = {
 val x26 = px26 // static data: RCell(dyn - AddN(LookupN(n),ConstN(-1)))
 val x157 = x26.value
 val x162 = x157.exec(x161)
-val x163 = x161("n") = x162
+val x163 = x161.put("n", x162)
 val x164 = x163.asInstanceOf[Int]
 x164
 }
@@ -505,13 +511,14 @@ x164
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(166),Const(x))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged15 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x166:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
-val x167 = x166("x")
+class staged$15 extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x166:java.util.HashMap[java.lang.String, Any]): Any = {
+val x167 = x166.get("x")
 x167
 }
 }
@@ -519,13 +526,14 @@ x167
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(168),Const(x))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged16 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x168:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
-val x169 = x168("x")
+class staged$16 extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x168:java.util.HashMap[java.lang.String, Any]): Int = {
+val x169 = x168.get("x")
 val x170 = x169.asInstanceOf[Int]
 x170
 }
@@ -534,13 +542,14 @@ x170
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(171),Const(a))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged17 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x171:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
-val x172 = x171("a")
+class staged$17 extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x171:java.util.HashMap[java.lang.String, Any]): Any = {
+val x172 = x171.get("a")
 x172
 }
 }
@@ -548,13 +557,14 @@ x172
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(173),Const(a))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged18 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x173:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
-val x174 = x173("a")
+class staged$18 extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x173:java.util.HashMap[java.lang.String, Any]): Int = {
+val x174 = x173.get("a")
 val x175 = x174.asInstanceOf[Int]
 x175
 }
@@ -563,13 +573,14 @@ x175
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(176),Const(n))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged19 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x176:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
-val x177 = x176("n")
+class staged$19 extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x176:java.util.HashMap[java.lang.String, Any]): Any = {
+val x177 = x176.get("n")
 x177
 }
 }
@@ -577,13 +588,14 @@ x177
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(178),Const(n))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged20 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x178:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
-val x179 = x178("n")
+class staged$20 extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x178:java.util.HashMap[java.lang.String, Any]): Int = {
+val x179 = x178.get("n")
 val x180 = x179.asInstanceOf[Int]
 x180
 }
@@ -592,12 +604,13 @@ x180
   End of Generated Code                  
 *******************************************/
 
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(186),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(183), Sym(184)))
+compilation: ok
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(186),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(183), Sym(184)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged21(px41:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x181:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$21(px41:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x181:java.util.HashMap[java.lang.String, Any]): Any = {
 val x41 = px41 // static data: RCell(dyn - LookupN(a))
 val x182 = x41.value
 val x183 = x182.exec(x181)
@@ -613,11 +626,12 @@ x186
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged22(px41:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x188:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$22(px41:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x188:java.util.HashMap[java.lang.String, Any]): Int = {
 val x41 = px41 // static data: RCell(dyn - LookupN(a))
 val x182 = x41.value
 val x189 = x182.exec(x188)
@@ -634,12 +648,13 @@ x193
   End of Generated Code                  
 *******************************************/
 
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(214),Summary(true,true,false,false,false,List(),List(),List(Sym(55)),List()),List(Sym(197), Sym(199), Sym(214)))
+compilation: ok
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(214),Summary(true,true,false,false,false,false,List(),List(),List(Sym(55)),List()),List(Sym(197), Sym(199), Sym(214)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged23(px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px50:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px2:scala.lms.common.Compile,px204:Object,px205:Object,px55:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x195:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$23(px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px50:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px2:scala.lms.common.Compile,px204:Object,px205:Object,px55:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x195:java.util.HashMap[java.lang.String, Any]): Any = {
 val x36 = px36 // static data: RCell(dyn - LookupN(x))
 val x196 = x36.value
 val x197 = x196.exec(x195)
@@ -648,11 +663,7 @@ val x198 = x50.value
 val x199 = x198.exec(x195)
 val x200 = x197.isInstanceOf[Int]
 val x201 = x199.isInstanceOf[Int]
-val x202 = if (x200 == true) {
-
-x201
-} else false
-
+val x202 = x200 && x201
 val x214 = if (x202) {
 val x203 = println("spec-add-int: AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))")
 val x2 = px2 // static data: IR:scala.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
@@ -660,7 +671,7 @@ val x204 = px204 // static data: <function1>
 val x205 = px205 // static data: <function1>
 val x206 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x204.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x205.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -683,11 +694,12 @@ x214
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged24(px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px50:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px2:scala.lms.common.Compile,px223:Object,px224:Object,px55:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x216:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$24(px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px50:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px2:scala.lms.common.Compile,px223:Object,px224:Object,px55:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x216:java.util.HashMap[java.lang.String, Any]): Int = {
 val x36 = px36 // static data: RCell(dyn - LookupN(x))
 val x196 = x36.value
 val x217 = x196.exec(x216)
@@ -696,11 +708,7 @@ val x198 = x50.value
 val x218 = x198.exec(x216)
 val x219 = x217.isInstanceOf[Int]
 val x220 = x218.isInstanceOf[Int]
-val x221 = if (x219 == true) {
-
-x220
-} else false
-
+val x221 = x219 && x220
 val x233 = if (x221) {
 val x222 = println("spec-add-int: AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))")
 val x2 = px2 // static data: IR:scala.lms.epfl.test13.TestInterpret$$anonfun$testInterpret2$1$$anon$2
@@ -708,7 +716,7 @@ val x223 = px223 // static data: <function1>
 val x224 = px224 // static data: <function1>
 val x225 = new scala.lms.epfl.test13.RFun {
 type Rep[T] = x2.Rep[T]
-type HM = scala.collection.mutable.HashMap[String,Any]
+type HM = java.util.HashMap[String,Any]
 val fAny = x2.compile(x223.asInstanceOf[Rep[HM]=>Rep[Any]])
 val fInt = x2.compile(x224.asInstanceOf[Rep[HM]=>Rep[Int]])
 def exec(f: HM): Any = fAny(f)
@@ -732,18 +740,19 @@ x234
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 error: write to non-mutable Sym(236) -> None
-at Sym(239)=Reflect(HashMapUpdate(Sym(236),Const(x),Sym(238)),Summary(false,false,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List())
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(239),Summary(true,true,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List(Sym(238), Sym(239)))
+at Sym(239)=Reflect(HashMapUpdate(Sym(236),Const(x),Sym(238)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List())
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(239),Summary(true,true,false,false,false,false,List(),List(),List(Sym(236)),List(Sym(236))),List(Sym(238), Sym(239)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged25(px55:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x236:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$25(px55:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x236:java.util.HashMap[java.lang.String, Any]): Any = {
 val x55 = px55 // static data: RCell(dyn - AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))
 val x237 = x55.value
 val x238 = x237.exec(x236)
-val x239 = x236("x") = x238
+val x239 = x236.put("x", x238)
 x239
 }
 }
@@ -751,17 +760,18 @@ x239
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 error: write to non-mutable Sym(241) -> None
-at Sym(243)=Reflect(HashMapUpdate(Sym(241),Const(x),Sym(242)),Summary(false,false,false,false,false,List(),List(),List(Sym(241)),List(Sym(241))),List())
+at Sym(243)=Reflect(HashMapUpdate(Sym(241),Const(x),Sym(242)),Summary(false,false,false,false,false,false,List(),List(),List(Sym(241)),List(Sym(241))),List())
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged26(px55:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x241:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$26(px55:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x241:java.util.HashMap[java.lang.String, Any]): Int = {
 val x55 = px55 // static data: RCell(dyn - AddN(LookupN(x),AppN(LookupN(a),LookupN(n))))
 val x237 = x55.value
 val x242 = x237.exec(x241)
-val x243 = x241("x") = x242
+val x243 = x241.put("x", x242)
 val x244 = x243.asInstanceOf[Int]
 x244
 }
@@ -770,12 +780,13 @@ x244
   End of Generated Code                  
 *******************************************/
 
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(250),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(248), Sym(250)))
+compilation: ok
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(250),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(248), Sym(250)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged27(px31:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px60:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x246:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$27(px31:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px60:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x246:java.util.HashMap[java.lang.String, Any]): Any = {
 val x31 = px31 // static data: RCell(dyn - AssignN(n,AddN(LookupN(n),ConstN(-1))))
 val x247 = x31.value
 val x248 = x247.exec(x246)
@@ -789,11 +800,12 @@ x250
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged28(px31:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px60:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x252:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$28(px31:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px60:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x252:java.util.HashMap[java.lang.String, Any]): Int = {
 val x31 = px31 // static data: RCell(dyn - AssignN(n,AddN(LookupN(n),ConstN(-1))))
 val x247 = x31.value
 val x253 = x247.exec(x252)
@@ -808,21 +820,20 @@ x255
   End of Generated Code                  
 *******************************************/
 
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(264),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(264)))
+compilation: ok
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(264),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(264)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged29(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px65:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x257:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$29(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px65:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x257:java.util.HashMap[java.lang.String, Any]): Any = {
 val x12 = px12 // static data: RCell(dyn - LookupN(n))
 val x116 = x12.value
 val x65 = px65 // static data: RCell(dyn - SeqN(List(AssignN(n,AddN(LookupN(n),ConstN(-1))), AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))))))
 val x261 = x65.value
-val x264 = while ({
-val x258 = x116.execInt(x257)
+val x264 = while ({val x258 = x116.execInt(x257)
 val x259 = x258 != 0
-x259
-}) {
+x259}) {
 val x262 = x261.exec(x257)
 ()
 }
@@ -833,20 +844,19 @@ x264
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged30(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px65:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x266:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$30(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px65:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x266:java.util.HashMap[java.lang.String, Any]): Int = {
 val x12 = px12 // static data: RCell(dyn - LookupN(n))
 val x116 = x12.value
 val x65 = px65 // static data: RCell(dyn - SeqN(List(AssignN(n,AddN(LookupN(n),ConstN(-1))), AssignN(x,AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))))))
 val x261 = x65.value
-val x272 = while ({
-val x267 = x116.execInt(x266)
+val x272 = while ({val x267 = x116.execInt(x266)
 val x268 = x267 != 0
-x268
-}) {
+x268}) {
 val x270 = x261.exec(x266)
 ()
 }
@@ -858,13 +868,14 @@ x273
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(275),Const(x))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged31 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x275:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
-val x276 = x275("x")
+class staged$31 extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x275:java.util.HashMap[java.lang.String, Any]): Any = {
+val x276 = x275.get("x")
 x276
 }
 }
@@ -872,13 +883,14 @@ x276
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 warning: possible missing mtype call - toAtom with Def of type Any HashMapApply(Sym(277),Const(x))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged32 extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x277:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
-val x278 = x277("x")
+class staged$32 extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x277:java.util.HashMap[java.lang.String, Any]): Int = {
+val x278 = x277.get("x")
 val x279 = x278.asInstanceOf[Int]
 x279
 }
@@ -887,12 +899,13 @@ x279
   End of Generated Code                  
 *******************************************/
 
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(285),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(282), Sym(284), Sym(285)))
+compilation: ok
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(285),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(282), Sym(284), Sym(285)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged33(px7:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px70:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x280:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$33(px7:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px70:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x280:java.util.HashMap[java.lang.String, Any]): Any = {
 val x7 = px7 // static data: RCell(dyn - AssignN(x,ConstN(0)))
 val x281 = x7.value
 val x282 = x281.exec(x280)
@@ -909,11 +922,12 @@ x285
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged34(px7:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px70:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x287:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$34(px7:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px70:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x287:java.util.HashMap[java.lang.String, Any]): Int = {
 val x7 = px7 // static data: RCell(dyn - AssignN(x,ConstN(0)))
 val x281 = x7.value
 val x288 = x281.exec(x287)
@@ -931,13 +945,14 @@ x291
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 spec-add-int: AddN(LookupN(n),ConstN(-1))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(296),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(294), Sym(295)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(296),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(294), Sym(295)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged35(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px21:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x293:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$35(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px21:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x293:java.util.HashMap[java.lang.String, Any]): Any = {
 val x12 = px12 // static data: RCell(dyn - LookupN(n))
 val x116 = x12.value
 val x294 = x116.execInt(x293)
@@ -952,11 +967,12 @@ x296
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged36(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px21:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x298:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$36(px12:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px21:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x298:java.util.HashMap[java.lang.String, Any]): Int = {
 val x12 = px12 // static data: RCell(dyn - LookupN(n))
 val x116 = x12.value
 val x299 = x116.execInt(x298)
@@ -971,13 +987,14 @@ x301
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 spec-add-int: AddN(LookupN(x),AppN(LookupN(a),LookupN(n)))
-warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(306),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(304), Sym(305)))
+warning: possible missing mtype call - toAtom with Def of type Any Reify(Sym(306),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(304), Sym(305)))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged37(px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px50:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Any)) {
-def apply(x303:scala.collection.mutable.HashMap[java.lang.String, Any]): Any = {
+class staged$37(px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px50:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Any)) {
+def apply(x303:java.util.HashMap[java.lang.String, Any]): Any = {
 val x36 = px36 // static data: RCell(dyn - LookupN(x))
 val x196 = x36.value
 val x304 = x196.execInt(x303)
@@ -992,11 +1009,12 @@ x306
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged38(px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px50:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((scala.collection.mutable.HashMap[java.lang.String, Any])=>(Int)) {
-def apply(x308:scala.collection.mutable.HashMap[java.lang.String, Any]): Int = {
+class staged$38(px36:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun],px50:scala.lms.epfl.test13.RCell[scala.lms.epfl.test13.RFun]) extends ((java.util.HashMap[java.lang.String, Any])=>(Int)) {
+def apply(x308:java.util.HashMap[java.lang.String, Any]): Int = {
 val x36 = px36 // static data: RCell(dyn - LookupN(x))
 val x196 = x36.value
 val x309 = x196.execInt(x308)
@@ -1011,4 +1029,5 @@ x311
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 65280

@@ -1,18 +1,18 @@
 <html><head><title>Scala2JS</title><script type="text/JavaScript">
 function main(x14) {
-document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
+var x15 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
 var x16 = 7.0==7.0
 var x21
 if (x16) {
-document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
-document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("xxx"))
-document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
+var x17 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
+var x18 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("xxx"))
+var x19 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
 x21=11.0
 } else {
 x21=13.0
 }
-document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yyy"))
-document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
+var x22 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yyy"))
+var x23 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("yoyo"))
 var x24 = x21+11.0
 return x24
 }

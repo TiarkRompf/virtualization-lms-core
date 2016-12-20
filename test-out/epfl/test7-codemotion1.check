@@ -5,7 +5,7 @@ class Test extends ((Unit)=>(scala.Function1[Double, scala.Function1[Double, Dou
 def apply(x0:Unit): scala.Function1[Double, scala.Function1[Double, Double]] = {
 val x4 = 4.0*3.0
 val x7 = {x2: (Double) => 
-println("yo")
+val x3 = println("yo")
 val x5 = x2+x4
 x5: Double
 }

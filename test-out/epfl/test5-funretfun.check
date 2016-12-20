@@ -5,7 +5,7 @@
 class Test extends ((Double)=>(scala.Function1[Int, Any])) {
 def apply(x0:Double): scala.Function1[Int, Any] = {
 val x5 = {x2: (Any) => 
-println("foo")
+val x3 = println("foo")
 x2: Any
 }
 val x9 = {x1: (Int) => 
@@ -21,7 +21,7 @@ x9
 *******************************************/
 function main(x0) {
 var x5 = function(x2) {
-document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("foo"))
+var x3 = document.body.appendChild(document.createElement("div")).appendChild(document.createTextNode("foo"))
 return x2
 }
 var x9 = function(x1) {

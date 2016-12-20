@@ -1,7 +1,7 @@
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged0(px3:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Int, Int]],px5:scala.lms.epfl.test13.RCell[Int]) extends ((Int)=>(Int)) {
+class staged$0(px3:scala.Function1[scala.collection.immutable.List[Any], scala.Function1[Int, Int]],px5:scala.lms.epfl.test13.RCell[Int]) extends ((Int)=>(Int)) {
 def apply(x0:Int): Int = {
 val x1 = x0 + 1
 val x2 = x0 * 2
@@ -17,10 +17,11 @@ x7
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged1(px1:Int,px2:Int) extends ((Int)=>(Int)) {
+class staged$1(px1:Int,px2:Int) extends ((Int)=>(Int)) {
 def apply(x3:Int): Int = {
 val x1 = px1 // static data: 10
 val x2 = px2 // static data: 18
@@ -33,11 +34,12 @@ x5
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 28
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged2(px1:Int,px2:Int) extends ((Int)=>(Int)) {
+class staged$2(px1:Int,px2:Int) extends ((Int)=>(Int)) {
 def apply(x3:Int): Int = {
 val x1 = px1 // static data: 10
 val x2 = px2 // static data: 18
@@ -50,11 +52,12 @@ x5
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 140
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged3(px1:Int,px2:Int) extends ((Int)=>(Int)) {
+class staged$3(px1:Int,px2:Int) extends ((Int)=>(Int)) {
 def apply(x3:Int): Int = {
 val x1 = px1 // static data: 10
 val x2 = px2 // static data: 18
@@ -67,4 +70,5 @@ x5
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 56

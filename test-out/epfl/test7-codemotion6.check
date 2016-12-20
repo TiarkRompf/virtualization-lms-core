@@ -3,14 +3,16 @@
 *******************************************/
 class Test extends ((Unit)=>(scala.Function1[Boolean, Unit])) {
 def apply(x0:Unit): scala.Function1[Boolean, Unit] = {
-if (true) {
+val x4 = if (true) {
 val x1 = 7.0+9.0
-println(x1)
+val x2 = println(x1)
+x2
 } else {
 ()
 }
 val x8 = {x5: (Boolean) => 
-println(x4)
+val x6 = println(x4)
+x6: Unit
 }
 x8
 }

@@ -1,10 +1,12 @@
+nVars=1000
+nVars=2000
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 import scala.lms.epfl.test14.Schema
-class staged0 extends ((Unit)=>(Unit)) {
+class staged$0 extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-println("rangeFromNames(\"Edna\",\"Bert\"):")
+val x2550 = println("rangeFromNames(\"Edna\",\"Bert\"):")
 val x617 = Schema.db.people.flatMap { x111 => 
 val x616 = Schema.db.people.flatMap { x435 => 
 val x615 = Schema.db.people.flatMap { x598 => 
@@ -17,25 +19,13 @@ val x602 = x598.age
 val x603 = x116 <= x602
 val x441 = x435.age
 val x604 = x602 < x441
-val x605 = if (x603 == true) {
-
-x604
-} else false
-
-val x611 = if (x439 == true) {
-
-x605
-} else false
-
-val x613 = if (x113 == true) {
-
-x611
-} else false
-
+val x605 = x603 && x604
+val x611 = x439 && x605
+val x613 = x113 && x611
 val x614 = if (x613) {
-val x608 = x598.name
-val x607 = new Schema.Record { val name = x608 }
-val x609 = List(x607)
+val x607 = x598.name
+val x608 = new Schema.Record { val name = x607 }
+val x609 = List(x608)
 x609
 } else {
 val x19 = List()
@@ -47,12 +37,14 @@ x615
 }
 x616
 }
-println(x617)
+val x2551 = println(x617)
+x2551
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 rangeFromNames("Edna","Bert"):
 List({name:Cora}, {name:Drew}, {name:Edna})

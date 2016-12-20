@@ -130,3 +130,4 @@ trait NestedBlockTraversal extends BlockTraversal with NestedGraphTraversal {
     super.reset
   }
 }
+

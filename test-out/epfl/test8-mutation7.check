@@ -3,12 +3,10 @@
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
-var x1 = 0.0
-while ({
-val x2 = x1
+var x1: Double = 0.0
+val x9 = while ({val x2 = x1
 val x3 = x2 < x0
-x3
-}) {
+x3}) {
 val x5 = x1
 val x6 = x5+1.0
 x1 = x6
@@ -16,14 +14,15 @@ x1 = x6
 }
 val x10 = x1
 val x11 = x10 < x0
-if (x11) {
+val x14 = if (x11) {
 x1 = 8
 ()
 } else {
 ()
 }
 val x15 = x1
-println(x15)
+val x16 = println(x15)
+x16
 }
 }
 /*****************************************

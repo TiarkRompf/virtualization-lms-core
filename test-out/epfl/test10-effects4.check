@@ -1,6 +1,6 @@
 cse: Sym(3) -> Sym(2)
 killing: List(Sym(1))/List(Sym(1), Sym(2), Sym(3)) by VectorUpdate(Sym(1),Const(5),Const(7.0))
-**fatten List(TP(Sym(1),VectorZeros(Const(100))), TP(Sym(2),VectorLiteral(List(Sym(1)))), TP(Sym(4),ReflectSoft(VectorUpdate(Sym(1),Const(5),Const(7.0)),List(Sym(1), Sym(2), Sym(3)))), TP(Sym(6),Mutate(Sym(2),Sym(4))), TP(Sym(8),VectorApply(Sym(6),Const(0))), TP(Sym(10),Reflect(Print(Sym(8)),Summary(true,true,false,false,false,List(),List(),List(),List()),List())), TP(Sym(11),Reify(Sym(10),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(10)))))
+**fatten List(TP(Sym(1),VectorZeros(Const(100))), TP(Sym(2),VectorLiteral(List(Sym(1)))), TP(Sym(4),ReflectSoft(VectorUpdate(Sym(1),Const(5),Const(7.0)),List(Sym(1), Sym(2), Sym(3)))), TP(Sym(6),Mutate(Sym(2),Sym(4))), TP(Sym(8),VectorApply(Sym(6),Const(0))), TP(Sym(10),Reflect(Print(Sym(8)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List())), TP(Sym(11),Reify(Sym(10),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10)))))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -10,11 +10,12 @@ val x1 = VectorZeros(Const(100))
 val x2 = VectorLiteral(List(Sym(1)))
 // begin multi
 // soft deps: x1,x2,x3
-VectorUpdate(Sym(1),Const(5),Const(7.0))
+val x4 = VectorUpdate(Sym(1),Const(5),Const(7.0))
 val x6 = x2 // mutated by x4
 // end multi
 val x8 = VectorApply(Sym(6),Const(0))
-println(x8)
+val x10 = println(x8)
+x10
 }
 }
 /*****************************************

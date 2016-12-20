@@ -1,12 +1,12 @@
-promoting to effect: Sym(5)=Reflect(SimpleLoop(Const(10),Sym(4),ArrayElem(Block(Sym(3)))),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
+promoting to effect: Sym(5)=Reflect(SimpleLoop(Const(10),Sym(4),ArrayElem(Block(Sym(3)))),Summary(false,false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
 depends on  Sym(3)
-promoting to effect: Sym(12)=Reflect(ArrayIndex(Sym(11),Const(5)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
+promoting to effect: Sym(12)=Reflect(ArrayIndex(Sym(11),Const(5)),Summary(false,false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
 depends on  Sym(3)
-promoting to effect: Sym(13)=Reflect(ArrayIndex(Sym(12),Const(50)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
+promoting to effect: Sym(13)=Reflect(ArrayIndex(Sym(12),Const(50)),Summary(false,false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3)))
 depends on  Sym(3)
-promoting to effect: Sym(15)=Reflect(ArrayIndex(Sym(11),Const(5)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3), Sym(14)))
+promoting to effect: Sym(15)=Reflect(ArrayIndex(Sym(11),Const(5)),Summary(false,false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3), Sym(14)))
 depends on  Sym(3)
-promoting to effect: Sym(16)=Reflect(ArrayIndex(Sym(15),Const(50)),Summary(false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3), Sym(14)))
+promoting to effect: Sym(16)=Reflect(ArrayIndex(Sym(15),Const(50)),Summary(false,false,false,false,false,false,List(Sym(3)),List(Sym(3)),List(),List()),List(Sym(3), Sym(14)))
 depends on  Sym(3)
 /*****************************************
   Emitting Generated Code                  
@@ -34,11 +34,12 @@ x9
 }
 val x12 = x11.apply(5)
 val x13 = x12.apply(50)
-x3.update(50, 50.0)
+val x14 = x3.update(50, 50.0)
 val x15 = x11.apply(5)
 val x16 = x15.apply(50)
 val x17 = x16-x13
-println(x17)
+val x18 = println(x17)
+x18
 }
 }
 /*****************************************

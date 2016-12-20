@@ -1,49 +1,49 @@
 Map(Sym(14) -> Sym(19), Sym(10) -> Sym(18), Sym(17) -> Sym(32), Sym(24) -> Sym(12), Sym(6) -> Sym(8), Sym(20) -> Sym(35), Sym(7) -> Sym(15), Sym(27) -> Sym(20), Sym(13) -> Sym(9), Sym(11) -> Sym(5), Sym(12) -> Sym(6), Sym(5) -> Sym(7), Sym(19) -> Sym(34), Sym(23) -> Sym(11), Sym(15) -> Sym(30), Sym(8) -> Sym(16), Sym(9) -> Sym(17), Sym(21) -> Sym(36), Sym(28) -> Sym(37), Sym(16) -> Sym(31), Sym(18) -> Sym(33), Sym(26) -> Sym(14), Sym(29) -> Sym(38), Sym(25) -> Sym(13), Sym(22) -> Sym(10))
 r0:
 TP(Sym(6),ArrayApply(Sym(0),Sym(5)))
-TP(Sym(7),NumericPlus(Sym(5),Const(1)))
+TP(Sym(7),IntPlus(Sym(5),Const(1)))
 TP(Sym(8),ArrayApply(Sym(0),Sym(7)))
-TP(Sym(9),NumericTimes(Sym(6),Sym(8)))
-TP(Sym(10),NumericMinus(Sym(6),Sym(9)))
-TP(Sym(11),NumericMinus(Sym(5),Const(1)))
+TP(Sym(9),DoubleTimes(Sym(6),Sym(8)))
+TP(Sym(10),DoubleMinus(Sym(6),Sym(9)))
+TP(Sym(11),IntMinus(Sym(5),Const(1)))
 TP(Sym(12),ArrayApply(Sym(0),Sym(11)))
-TP(Sym(13),NumericTimes(Sym(12),Sym(6)))
-TP(Sym(14),NumericPlus(Sym(10),Sym(13)))
-TP(Sym(15),NumericPlus(Sym(5),Const(2)))
+TP(Sym(13),DoubleTimes(Sym(12),Sym(6)))
+TP(Sym(14),DoublePlus(Sym(10),Sym(13)))
+TP(Sym(15),IntPlus(Sym(5),Const(2)))
 TP(Sym(16),ArrayApply(Sym(0),Sym(15)))
-TP(Sym(17),NumericTimes(Sym(8),Sym(16)))
-TP(Sym(18),NumericMinus(Sym(8),Sym(17)))
-TP(Sym(19),NumericPlus(Sym(18),Sym(9)))
-TP(Sym(20),NumericTimes(Sym(14),Sym(19)))
-TP(Sym(21),NumericMinus(Sym(14),Sym(20)))
-TP(Sym(22),NumericMinus(Sym(12),Sym(13)))
-TP(Sym(23),NumericMinus(Sym(5),Const(2)))
+TP(Sym(17),DoubleTimes(Sym(8),Sym(16)))
+TP(Sym(18),DoubleMinus(Sym(8),Sym(17)))
+TP(Sym(19),DoublePlus(Sym(18),Sym(9)))
+TP(Sym(20),DoubleTimes(Sym(14),Sym(19)))
+TP(Sym(21),DoubleMinus(Sym(14),Sym(20)))
+TP(Sym(22),DoubleMinus(Sym(12),Sym(13)))
+TP(Sym(23),IntMinus(Sym(5),Const(2)))
 TP(Sym(24),ArrayApply(Sym(0),Sym(23)))
-TP(Sym(25),NumericTimes(Sym(24),Sym(12)))
-TP(Sym(26),NumericPlus(Sym(22),Sym(25)))
-TP(Sym(27),NumericTimes(Sym(26),Sym(14)))
-TP(Sym(28),NumericPlus(Sym(21),Sym(27)))
-TP(Sym(29),Reflect(ArrayUpdate(Sym(2),Sym(5),Sym(28)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
+TP(Sym(25),DoubleTimes(Sym(24),Sym(12)))
+TP(Sym(26),DoublePlus(Sym(22),Sym(25)))
+TP(Sym(27),DoubleTimes(Sym(26),Sym(14)))
+TP(Sym(28),DoublePlus(Sym(21),Sym(27)))
+TP(Sym(29),Reflect(ArrayUpdate(Sym(2),Sym(5),Sym(28)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
 r1:
-TP(Sym(30),NumericPlus(Sym(5),Const(3)))
+TP(Sym(30),IntPlus(Sym(5),Const(3)))
 TP(Sym(31),ArrayApply(Sym(0),Sym(30)))
-TP(Sym(32),NumericTimes(Sym(16),Sym(31)))
-TP(Sym(33),NumericMinus(Sym(16),Sym(32)))
-TP(Sym(34),NumericPlus(Sym(33),Sym(17)))
-TP(Sym(35),NumericTimes(Sym(19),Sym(34)))
-TP(Sym(36),NumericMinus(Sym(19),Sym(35)))
-TP(Sym(37),NumericPlus(Sym(36),Sym(20)))
-TP(Sym(38),Reflect(ArrayUpdate(Sym(2),Sym(7),Sym(37)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
+TP(Sym(32),DoubleTimes(Sym(16),Sym(31)))
+TP(Sym(33),DoubleMinus(Sym(16),Sym(32)))
+TP(Sym(34),DoublePlus(Sym(33),Sym(17)))
+TP(Sym(35),DoubleTimes(Sym(19),Sym(34)))
+TP(Sym(36),DoubleMinus(Sym(19),Sym(35)))
+TP(Sym(37),DoublePlus(Sym(36),Sym(20)))
+TP(Sym(38),Reflect(ArrayUpdate(Sym(2),Sym(7),Sym(37)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
 r2:
-TP(Sym(39),NumericPlus(Sym(5),Const(4)))
+TP(Sym(39),IntPlus(Sym(5),Const(4)))
 TP(Sym(40),ArrayApply(Sym(0),Sym(39)))
-TP(Sym(41),NumericTimes(Sym(31),Sym(40)))
-TP(Sym(42),NumericMinus(Sym(31),Sym(41)))
-TP(Sym(43),NumericPlus(Sym(42),Sym(32)))
-TP(Sym(44),NumericTimes(Sym(34),Sym(43)))
-TP(Sym(45),NumericMinus(Sym(34),Sym(44)))
-TP(Sym(46),NumericPlus(Sym(45),Sym(35)))
-TP(Sym(47),Reflect(ArrayUpdate(Sym(2),Sym(15),Sym(46)),Summary(false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
+TP(Sym(41),DoubleTimes(Sym(31),Sym(40)))
+TP(Sym(42),DoubleMinus(Sym(31),Sym(41)))
+TP(Sym(43),DoublePlus(Sym(42),Sym(32)))
+TP(Sym(44),DoubleTimes(Sym(34),Sym(43)))
+TP(Sym(45),DoubleMinus(Sym(34),Sym(44)))
+TP(Sym(46),DoublePlus(Sym(45),Sym(35)))
+TP(Sym(47),Reflect(ArrayUpdate(Sym(2),Sym(15),Sym(46)),Summary(false,false,false,false,false,false,List(Sym(2)),List(Sym(2)),List(Sym(2)),List(Sym(2))),List(Sym(2))))
 Map(Sym(14) -> Sym(19), Sym(10) -> Sym(18), Sym(17) -> Sym(32), Sym(24) -> Sym(12), Sym(6) -> Sym(8), Sym(20) -> Sym(35), Sym(7) -> Sym(15), Sym(27) -> Sym(20), Sym(13) -> Sym(9), Sym(11) -> Sym(5), Sym(12) -> Sym(6), Sym(5) -> Sym(7), Sym(19) -> Sym(34), Sym(23) -> Sym(11), Sym(15) -> Sym(30), Sym(8) -> Sym(16), Sym(9) -> Sym(17), Sym(21) -> Sym(36), Sym(28) -> Sym(37), Sym(16) -> Sym(31), Sym(18) -> Sym(33), Sym(26) -> Sym(14), Sym(29) -> Sym(38), Sym(25) -> Sym(13), Sym(22) -> Sym(10))
 overlap1:
 (Sym(16),Sym(31))
@@ -62,13 +62,13 @@ var writes: List((Sym(31),Const(())), (Sym(32),Const(())), (Sym(34),Const(())), 
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
-class staged5 extends ((Array[Double])=>(Array[Double])) {
+class staged$0 extends ((Array[Double])=>(Array[Double])) {
 def apply(x0:Array[Double]): Array[Double] = {
 val x1 = x0.length
 val x2 = new Array[Double](x1)
 val x3 = x1 - 2
 val x48 = x3 > 2
-if (x48) {
+val x102 = if (x48) {
 val x49 = x0(2)
 val x50 = x0(3)
 val x51 = x49 * x50
@@ -88,15 +88,15 @@ val x64 = x63 * x53
 val x65 = x62 + x64
 val x66 = x65 * x55
 val x67 = x61 + x66
-x2(2) = x67
-var x69 = x56
-var x70 = x57
-var x71 = x59
-var x72 = x60
-var x73 = 3
-var x74 = 4
+val x68 = x2(2) = x67
+var x69: Double = x56
+var x70: Double = x57
+var x71: Double = x59
+var x72: Double = x60
+var x73: Int = 3
+var x74: Int = 4
 var x76 : Int = 3
-while (x76 < x3) {
+val x100 = while (x76 < x3) {
 val x77 = x69
 val x78 = x70
 val x79 = x71
@@ -111,7 +111,7 @@ val x88 = x87 + x78
 val x89 = x79 * x88
 val x90 = x79 - x89
 val x91 = x90 + x80
-x2(x81) = x91
+val x92 = x2(x81) = x91
 x69 = x85
 x70 = x86
 x71 = x88
@@ -121,7 +121,7 @@ x74 = x84
 
 x76 = x76 + 1
 }
-
+x100
 } else {
 ()
 }
@@ -132,6 +132,7 @@ x2
   End of Generated Code                  
 *******************************************/
 
+compilation: ok
 0.0
 0.0
 0.8063999999999999

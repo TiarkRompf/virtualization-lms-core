@@ -1,6 +1,6 @@
-promoting to effect: Sym(7)=Reflect(ArrayLength(Sym(6)),Summary(false,false,false,false,false,List(Sym(6)),List(Sym(6)),List(),List()),List(Sym(6)))
+promoting to effect: Sym(7)=Reflect(ArrayLength(Sym(6)),Summary(false,false,false,false,false,false,List(Sym(6)),List(Sym(6)),List(),List()),List(Sym(6)))
 depends on  Sym(6)
-promoting to effect: Sym(13)=Reflect(ArrayClone(Sym(6)),Summary(false,false,false,false,false,List(Sym(6)),List(Sym(6)),List(),List()),List(Sym(12)))
+promoting to effect: Sym(13)=Reflect(ArrayClone(Sym(6)),Summary(false,false,false,false,false,false,List(Sym(6)),List(Sym(6)),List(),List()),List(Sym(12)))
 depends on  Sym(6)
 /*****************************************
   Emitting Generated Code                  
@@ -10,21 +10,22 @@ def apply(x0:Int): Unit = {
 val x2 = LoopArray(100) { x1 => 
 0.0
 }
-var x3 = x2
+var x3: Array[Double] = x2
 val x5 = LoopArray(100) { x4 => 
 0.0
 }
 val x6 = x5.clone // mutable
 val x7 = x6.length
 var x9 : Int = 0
-while (x9 < x7) {
+val x16 = while (x9 < x7) {
 val x10 = x3
-x6.update(x9, 8.0)
+val x12 = x6.update(x9, 8.0)
 val x13 = x6.clone
 x3 = x13
 
 x9 = x9 + 1
 }
+x16
 }
 }
 /*****************************************

@@ -3,10 +3,12 @@
 *******************************************/
 class Test extends ((Int)=>(Unit)) {
 def apply(x0:Int): Unit = {
-println(5)
+val x3 = println(5)
+x3
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
+compilation: ok
 5

@@ -19,15 +19,8 @@ x10
 }
 x18
 }
-x4 = {x5: (Char) => 
-val x6 = x5 == 'A'
-val x16 = if (x6) {
-x13
-} else {
-x10
-}
-x16
-}
+x10 = scala.lms.epfl.test4.Automaton(List(),x1)
+x11 = x10.copy(out = "found"::x10.out)
 x7 = {x8: (Char) => 
 val x9 = x8 == 'B'
 val x15 = if (x9) {
@@ -43,9 +36,16 @@ x14
 }
 x15
 }
-x10 = scala.lms.epfl.test4.Automaton(List(),x1)
-x11 = x10.copy(out = "found"::x10.out)
 x13 = scala.lms.epfl.test4.Automaton(List(),x7)
+x4 = {x5: (Char) => 
+val x6 = x5 == 'A'
+val x16 = if (x6) {
+x13
+} else {
+x10
+}
+x16
+}
 x17 = scala.lms.epfl.test4.Automaton(List(),x4)
 x10
 }
@@ -53,6 +53,7 @@ x10
 /*****************************************
   End of Generated Code                  
 *******************************************/
+compilation: ok
 idx:   0
 out:   List()
 char:  X

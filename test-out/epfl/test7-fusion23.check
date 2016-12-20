@@ -10,20 +10,20 @@ considering TP(Sym(21),ArrayIndex(Sym(12),Sym(13)))
 replace TP(Sym(21),ArrayIndex(Sym(12),Sym(13))) at 2 within TTP(List(Sym(4), Sym(8), Sym(12), Sym(23)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))), SimpleLoop(Const(100),Sym(5),ArrayElem(Block(Sym(7)))), SimpleLoop(Const(100),Sym(9),ArrayElem(Block(Sym(11)))), SimpleLoop(Const(100),Sym(13),ArrayElem(Block(Sym(22))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(3))), ArrayElem(Block(Sym(7))), ArrayElem(Block(Sym(11))), ArrayElem(Block(Sym(22))))))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(4), Sym(30), Sym(32), Sym(38)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(29)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(31)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(37))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(3))), ArrayElem(Block(Sym(29))), ArrayElem(Block(Sym(31))), ArrayElem(Block(Sym(37)))))))
+partitions: List(TTP(List(Sym(4), Sym(30), Sym(33), Sym(40)),List(SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(3)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(29)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(32)))), SimpleLoop(Const(100),Sym(1),ArrayElem(Block(Sym(39))))),SimpleFatLoop(Const(100),Sym(1),List(ArrayElem(Block(Sym(3))), ArrayElem(Block(Sym(29))), ArrayElem(Block(Sym(32))), ArrayElem(Block(Sym(39)))))))
 no changes, we're done
 super.focusExactScopeFat with result changed from List(Sym(28)) to List(Sym(42))
 wtableneg: List()
-partitions: List(TTP(List(Sym(3), Sym(29), Sym(31), Sym(36)),List(SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1.0)))), SimpleLoop(Sym(1),Sym(6),ArrayElem(Block(Const(2.0)))), SimpleLoop(Sym(1),Sym(10),ReduceElem(Block(Const(4.0)))), SimpleLoop(Sym(1),Sym(14),ReduceElem(Block(Sym(35))))),SimpleFatLoop(Sym(1),Sym(2),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Const(2.0))), ReduceElem(Block(Const(4.0))), ReduceElem(Block(Sym(35)))))))
-considering TP(Sym(33),ArrayIndex(Sym(3),Sym(14)))
-replace TP(Sym(33),ArrayIndex(Sym(3),Sym(14))) at 0 within TTP(List(Sym(3), Sym(29), Sym(31), Sym(36)),List(SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1.0)))), SimpleLoop(Sym(1),Sym(6),ArrayElem(Block(Const(2.0)))), SimpleLoop(Sym(1),Sym(10),ReduceElem(Block(Const(4.0)))), SimpleLoop(Sym(1),Sym(14),ReduceElem(Block(Sym(35))))),SimpleFatLoop(Sym(1),Sym(2),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Const(2.0))), ReduceElem(Block(Const(4.0))), ReduceElem(Block(Sym(35))))))
-considering TP(Sym(34),ArrayIndex(Sym(29),Sym(14)))
-replace TP(Sym(34),ArrayIndex(Sym(29),Sym(14))) at 1 within TTP(List(Sym(3), Sym(29), Sym(31), Sym(36)),List(SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1.0)))), SimpleLoop(Sym(1),Sym(6),ArrayElem(Block(Const(2.0)))), SimpleLoop(Sym(1),Sym(10),ReduceElem(Block(Const(4.0)))), SimpleLoop(Sym(1),Sym(14),ReduceElem(Block(Sym(35))))),SimpleFatLoop(Sym(1),Sym(2),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Const(2.0))), ReduceElem(Block(Const(4.0))), ReduceElem(Block(Sym(35))))))
+partitions: List(TTP(List(Sym(3), Sym(29), Sym(32), Sym(38)),List(SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1.0)))), SimpleLoop(Sym(1),Sym(6),ArrayElem(Block(Const(2.0)))), SimpleLoop(Sym(1),Sym(10),ReduceElem(Block(Const(4.0)))), SimpleLoop(Sym(1),Sym(14),ReduceElem(Block(Sym(37))))),SimpleFatLoop(Sym(1),Sym(2),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Const(2.0))), ReduceElem(Block(Const(4.0))), ReduceElem(Block(Sym(37)))))))
+considering TP(Sym(35),ArrayIndex(Sym(3),Sym(14)))
+replace TP(Sym(35),ArrayIndex(Sym(3),Sym(14))) at 0 within TTP(List(Sym(3), Sym(29), Sym(32), Sym(38)),List(SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1.0)))), SimpleLoop(Sym(1),Sym(6),ArrayElem(Block(Const(2.0)))), SimpleLoop(Sym(1),Sym(10),ReduceElem(Block(Const(4.0)))), SimpleLoop(Sym(1),Sym(14),ReduceElem(Block(Sym(37))))),SimpleFatLoop(Sym(1),Sym(2),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Const(2.0))), ReduceElem(Block(Const(4.0))), ReduceElem(Block(Sym(37))))))
+considering TP(Sym(36),ArrayIndex(Sym(29),Sym(14)))
+replace TP(Sym(36),ArrayIndex(Sym(29),Sym(14))) at 1 within TTP(List(Sym(3), Sym(29), Sym(32), Sym(38)),List(SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1.0)))), SimpleLoop(Sym(1),Sym(6),ArrayElem(Block(Const(2.0)))), SimpleLoop(Sym(1),Sym(10),ReduceElem(Block(Const(4.0)))), SimpleLoop(Sym(1),Sym(14),ReduceElem(Block(Sym(37))))),SimpleFatLoop(Sym(1),Sym(2),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Const(2.0))), ReduceElem(Block(Const(4.0))), ReduceElem(Block(Sym(37))))))
 try once more ...
 wtableneg: List()
-partitions: List(TTP(List(Sym(3), Sym(29), Sym(31), Sym(44)),List(SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1.0)))), SimpleLoop(Sym(1),Sym(6),ArrayElem(Block(Const(2.0)))), SimpleLoop(Sym(1),Sym(10),ReduceElem(Block(Const(4.0)))), SimpleLoop(Sym(1),Sym(2),ReduceElem(Block(Sym(43))))),SimpleFatLoop(Sym(1),Sym(2),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Const(2.0))), ReduceElem(Block(Const(4.0))), ReduceElem(Block(Sym(43)))))))
+partitions: List(TTP(List(Sym(3), Sym(29), Sym(32), Sym(44)),List(SimpleLoop(Sym(1),Sym(2),ArrayElem(Block(Const(1.0)))), SimpleLoop(Sym(1),Sym(6),ArrayElem(Block(Const(2.0)))), SimpleLoop(Sym(1),Sym(10),ReduceElem(Block(Const(4.0)))), SimpleLoop(Sym(1),Sym(2),ReduceElem(Block(Sym(43))))),SimpleFatLoop(Sym(1),Sym(2),List(ArrayElem(Block(Const(1.0))), ArrayElem(Block(Const(2.0))), ReduceElem(Block(Const(4.0))), ReduceElem(Block(Sym(43)))))))
 no changes, we're done
-super.focusExactScopeFat with result changed from List(Sym(3), Sym(29), Sym(31), Sym(37)) to List(Sym(3), Sym(29), Sym(31), Sym(45))
+super.focusExactScopeFat with result changed from List(Sym(3), Sym(29), Sym(32), Sym(39)) to List(Sym(3), Sym(29), Sym(32), Sym(45))
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
@@ -31,32 +31,33 @@ class Test extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
 var x4 = new Array[Array[Double]](100)
 var x30 = new Array[Array[Double]](100)
-var x32 = new Array[Double](100)
-var x38 = new Array[Double](100)
+var x33 = new Array[Double](100)
+var x40 = new Array[Double](100)
 for (x1 <- 0 until 100) {
 val x43 = 1.0+2.0
 var x3 = new Array[Double](x1)
 var x29 = new Array[Double](x1)
-var x31 = 0
-var x44 = 0
+var x32: Double = 0
+var x44: Double = 0
 for (x2 <- 0 until x1) {
 x3(x2) = 1.0
 x29(x2) = 2.0
-x31 += 4.0
+x32 += 4.0
 x44 += x43
 }
-val x45 = x44+x31
-val x37 = x45
+val x45 = x44+x32
+val x39 = x45
 x4(x1) = x3
 x30(x1) = x29
-x32(x1) = x31
-x38(x1) = x37
+x33(x1) = x32
+x40(x1) = x39
 }
-println(x4)
-println(x30)
-println(x32)
-println(x38)
-
+val x24 = println(x4)
+val x31 = println(x30)
+val x34 = println(x33)
+val x41 = println(x40)
+val x27 = x41
+x27
 }
 }
 /*****************************************

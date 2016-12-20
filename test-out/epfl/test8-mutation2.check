@@ -1,7 +1,7 @@
-promoting to effect: Sym(9)=Reflect(ArrayIndex(Sym(8),Const(10)),Summary(false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(),List()),List(Sym(3), Sym(6)))
+promoting to effect: Sym(9)=Reflect(ArrayIndex(Sym(8),Const(10)),Summary(false,false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(),List()),List(Sym(3), Sym(6)))
 depends on  Sym(3)
 depends on  Sym(6)
-promoting to effect: Sym(12)=Reflect(ArrayIndex(Sym(8),Const(10)),Summary(false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(),List()),List(Sym(3), Sym(6), Sym(10), Sym(11)))
+promoting to effect: Sym(12)=Reflect(ArrayIndex(Sym(8),Const(10)),Summary(false,false,false,false,false,false,List(Sym(3), Sym(6)),List(Sym(3), Sym(6)),List(),List()),List(Sym(3), Sym(6), Sym(10), Sym(11)))
 depends on  Sym(3)
 depends on  Sym(6)
 /*****************************************
@@ -24,11 +24,12 @@ x3
 x6
 }
 val x9 = x8.apply(10)
-x3.update(10, 10.0)
-x6.update(10, 20.0)
+val x10 = x3.update(10, 10.0)
+val x11 = x6.update(10, 20.0)
 val x12 = x8.apply(10)
 val x13 = x12-x9
-println(x13)
+val x14 = println(x13)
+x14
 }
 }
 /*****************************************

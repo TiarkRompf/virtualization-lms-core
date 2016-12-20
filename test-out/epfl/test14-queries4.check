@@ -1,26 +1,24 @@
+nVars=1000
+nVars=2000
 /*****************************************
   Emitting Generated Code                  
 *******************************************/
 import scala.lms.epfl.test14.Schema
-class staged2 extends ((Unit)=>(Unit)) {
+class staged$0 extends ((Unit)=>(Unit)) {
 def apply(x0:Unit): Unit = {
-println("expertise2(\"abstract\"):")
+val x2550 = println("expertise2(\"abstract\"):")
 val x1147 = Schema.org.departments.flatMap { x991 => 
 val x1140 = Schema.org.employees.flatMap { x1083 => 
 val x993 = x991.dpt
 val x1084 = x1083.dpt
 val x1085 = x993 == x1084
 val x1133 = Schema.org.tasks.flatMap { x1120 => 
-val x1089 = x1083.emp
+val x1088 = x1083.emp
 val x1121 = x1120.emp
-val x1122 = x1089 == x1121
+val x1122 = x1088 == x1121
 val x1125 = x1120.tsk
 val x1128 = x1125 == "abstract"
-val x1130 = if (x1122 == true) {
-
-x1128
-} else false
-
+val x1130 = x1122 && x1128
 val x1132 = if (x1130) {
 val x661 = new Schema.Record { val ignore = () }
 val x688 = List(x661)
@@ -32,11 +30,7 @@ x19
 x1132
 }
 val x1134 = x1133.isEmpty
-val x1137 = if (x1085 == true) {
-
-x1134
-} else false
-
+val x1137 = x1085 && x1134
 val x1139 = if (x1137) {
 val x661 = new Schema.Record { val ignore = () }
 val x688 = List(x661)
@@ -59,12 +53,16 @@ x19
 }
 x1146
 }
-println(x1147)
+val x2551 = println(x1147)
+x2551
 }
 }
 /*****************************************
   End of Generated Code                  
 *******************************************/
 
+warning: there were 9 feature warnings; re-run with -feature for details
+one warning found
+compilation: ok
 expertise2("abstract"):
 List({dpt:Quality}, {dpt:Research})

@@ -15,8 +15,9 @@ x4(4) = 42
 val x5 = new Array[Int](x3.length)
 arrayPlus(x5,x3,x4)
 // kill: x3, x4
-println(x5)
+val x6 = println(x5)
 // kill: x5
+x6
 }
 }
 /*****************************************

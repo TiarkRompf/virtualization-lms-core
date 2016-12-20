@@ -5,8 +5,8 @@ class Match extends ((Unit)=>(scala.lms.epfl.test4.Automaton[Char, scala.collect
 def apply(x0:Unit): scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]] = {
 var x1 = null.asInstanceOf[scala.Function1[Double, Double]]
 var x33 = null.asInstanceOf[scala.Function1[Double, Double]]
-var x19 = null.asInstanceOf[scala.Function1[scala.Tuple2[scala.Tuple2[Double, Double], scala.collection.immutable.List[scala.Tuple2[Double, Double]]], scala.Tuple2[scala.Tuple2[Double, Double], scala.collection.immutable.List[scala.Tuple2[Double, Double]]]]]
-var x12 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[scala.Tuple2[Double, Double]], scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
+var x19 = null.asInstanceOf[scala.Function1[Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble, Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble]]
+var x12 = null.asInstanceOf[scala.Function1[scala.collection.immutable.List[Tuple2DoubleDouble], scala.lms.epfl.test4.Automaton[Char, scala.collection.immutable.List[Any]]]]
 x1 = {x2: (Double) => 
 val x4 = x2%2 == 0
 val x5 = if (x4) {
@@ -24,8 +24,6 @@ x2
 }
 x8
 }
-val x9 = x1(0.0)
-val x10 = (0.0,x9)
 x33 = {x34: (Double) => 
 val x36 = x34%2 == 0
 val x37 = if (x36) {
@@ -43,7 +41,7 @@ x34
 }
 x40
 }
-x19 = {x20: (scala.Tuple2[scala.Tuple2[Double, Double], scala.collection.immutable.List[scala.Tuple2[Double, Double]]]) => 
+x19 = {x20: (Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble) => 
 val x21 = x20._1
 val x23 = x21._1
 val x25 = x23 < 8.0
@@ -70,12 +68,12 @@ val x31 = x23+1.0
 val x24 = x21._2
 val x32 = x24+1.0
 val x41 = x33(x32)
-val x42 = (x31,x41)
+val x42 = new Tuple2DoubleDouble(x31,x41)
 val x22 = x20._2
-val x43 = (x23,x24)
+val x43 = new Tuple2DoubleDouble(x23,x24)
 val x44 = List(x43)
 val x45 = x22 ::: x44
-val x46 = (x42,x45)
+val x46 = new Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble(x42,x45)
 val x47 = x19(x46)
 x47
 } else {
@@ -83,11 +81,13 @@ x20
 }
 x48
 }
-x12 = {x13: (scala.collection.immutable.List[scala.Tuple2[Double, Double]]) => 
+val x9 = x1(0.0)
+val x10 = new Tuple2DoubleDouble(0.0,x9)
+x12 = {x13: (scala.collection.immutable.List[Tuple2DoubleDouble]) => 
 val x14 = List(x13)
 val x15 = {x16: (Char) => 
 val x17 = x13 // x16
-val x18 = (x10,x17)
+val x18 = new Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble(x10,x17)
 val x49 = x19(x18)
 val x51 = x49._2
 val x52 = x12(x51)
@@ -104,47 +104,52 @@ x54
 /*****************************************
   End of Generated Code                  
 *******************************************/
+
+case class Tuple2Tuple2DoubleDoubleListTuple2DoubleDouble(_1: Tuple2DoubleDouble, _2: scala.collection.immutable.List[Tuple2DoubleDouble])
+
+case class Tuple2DoubleDouble(_1: Double, _2: Double)
+compilation: ok
 idx:   0
 out:   List(List())
 char:  X
 idx:   1
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  A
 idx:   2
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  B
 idx:   3
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  Z
 idx:   4
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  A
 idx:   5
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  A
 idx:   6
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  B
 idx:   7
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  W
 idx:   8
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  A
 idx:   9
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  A
 idx:   10
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  A
 idx:   11
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  A
 idx:   12
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  B
 idx:   13
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))
 char:  Q
 idx:   14
-out:   List(List((0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0), (0.0,0.0), (1.0,2.0), (2.0,4.0), (3.0,6.0)))
+out:   List(List(Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0), Tuple2DoubleDouble(0.0,0.0), Tuple2DoubleDouble(1.0,2.0), Tuple2DoubleDouble(2.0,4.0), Tuple2DoubleDouble(3.0,6.0)))

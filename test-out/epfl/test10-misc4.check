@@ -4,87 +4,87 @@ TP(Sym(2),VectorZeros(Const(50)))
 TP(Sym(3),VectorPlus(Sym(1),Sym(2)))
 TP(Sym(4),Equal(Sym(0),Const(0)))
 TP(Sym(5),VectorLength(Sym(3)))
-TP(Sym(6),Reflect(Print(Sym(5)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
-TP(Sym(7),Reify(Sym(6),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(6))))
-TP(Sym(8),Reflect(Print(Sym(5)),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
-TP(Sym(9),Reify(Sym(8),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(8))))
-TP(Sym(10),Reflect(IfThenElse(Sym(4),Block(Sym(7)),Block(Sym(9))),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(6),Reflect(Print(Sym(5)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(7),Reify(Sym(6),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(6))))
+TP(Sym(8),Reflect(Print(Sym(5)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
+TP(Sym(9),Reify(Sym(8),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(8))))
+TP(Sym(10),Reflect(IfThenElse(Sym(4),Block(Sym(7)),Block(Sym(9))),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
 TP(Sym(11),Equal(Sym(0),Const(1)))
-TP(Sym(12),Reflect(Print(Sym(5)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(10))))
-TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(12))))
-TP(Sym(14),Reflect(Print(Sym(5)),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(10))))
-TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(14))))
-TP(Sym(16),Reflect(IfThenElse(Sym(11),Block(Sym(13)),Block(Sym(15))),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(10))))
-TP(Sym(17),Reify(Sym(16),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(10), Sym(16))))
+TP(Sym(12),Reflect(Print(Sym(5)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10))))
+TP(Sym(13),Reify(Sym(12),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(12))))
+TP(Sym(14),Reflect(Print(Sym(5)),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10))))
+TP(Sym(15),Reify(Sym(14),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(14))))
+TP(Sym(16),Reflect(IfThenElse(Sym(11),Block(Sym(13)),Block(Sym(15))),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10))))
+TP(Sym(17),Reify(Sym(16),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10), Sym(16))))
 -- before transformation
 val x4 = x0 == 0
-if (x4) {
+val x10 = if (x4) {
 val x1 = VectorZeros(Const(100))
 val x2 = VectorZeros(Const(50))
 val x3 = VectorPlus(Sym(1),Sym(2))
 val x5 = VectorLength(Sym(3))
-println(x5)
-
+val x6 = println(x5)
+x6
 } else {
 val x1 = VectorZeros(Const(100))
 val x2 = VectorZeros(Const(50))
 val x3 = VectorPlus(Sym(1),Sym(2))
 val x5 = VectorLength(Sym(3))
-println(x5)
-
+val x8 = println(x5)
+x8
 }
 val x11 = x0 == 1
-if (x11) {
+val x16 = if (x11) {
 val x1 = VectorZeros(Const(100))
 val x2 = VectorZeros(Const(50))
 val x3 = VectorPlus(Sym(1),Sym(2))
 val x5 = VectorLength(Sym(3))
-println(x5)
-
+val x12 = println(x5)
+x12
 } else {
 val x1 = VectorZeros(Const(100))
 val x2 = VectorZeros(Const(50))
 val x3 = VectorPlus(Sym(1),Sym(2))
 val x5 = VectorLength(Sym(3))
-println(x5)
-
+val x14 = println(x5)
+x14
 }
-encountering if then else TP(Sym(10),Reflect(IfThenElse(Sym(4),Block(Sym(7)),Block(Sym(9))),Summary(true,true,false,false,false,List(),List(),List(),List()),List()))
+encountering if then else TP(Sym(10),Reflect(IfThenElse(Sym(4),Block(Sym(7)),Block(Sym(9))),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List()))
 replacing TP(Sym(3),VectorPlus(Sym(1),Sym(2)))
-encountering if then else TP(Sym(16),Reflect(IfThenElse(Sym(11),Block(Sym(13)),Block(Sym(15))),Summary(true,true,false,false,false,List(),List(),List(),List()),List(Sym(10))))
+encountering if then else TP(Sym(16),Reflect(IfThenElse(Sym(11),Block(Sym(13)),Block(Sym(15))),Summary(true,true,false,false,false,false,List(),List(),List(),List()),List(Sym(10))))
 replacing TP(Sym(3),VectorPlus(Sym(1),Sym(2)))
 -- after transformation
 val x18 = x0 == 0
-if (x18) {
+val x29 = if (x18) {
 val x19 = VectorZeros(Const(100))
 val x20 = VectorZeros(Const(50))
 val x21 = VectorPlus(Sym(20),Sym(19))
 val x22 = VectorLength(Sym(21))
-println(x22)
-
+val x23 = println(x22)
+x23
 } else {
 val x19 = VectorZeros(Const(100))
 val x20 = VectorZeros(Const(50))
 val x25 = VectorPlus(Sym(19),Sym(20))
 val x26 = VectorLength(Sym(25))
-println(x26)
-
+val x27 = println(x26)
+x27
 }
 val x30 = x0 == 1
-if (x30) {
+val x35 = if (x30) {
 val x19 = VectorZeros(Const(100))
 val x20 = VectorZeros(Const(50))
 val x21 = VectorPlus(Sym(20),Sym(19))
 val x22 = VectorLength(Sym(21))
-println(x22)
-
+val x31 = println(x22)
+x31
 } else {
 val x19 = VectorZeros(Const(100))
 val x20 = VectorZeros(Const(50))
 val x25 = VectorPlus(Sym(19),Sym(20))
 val x26 = VectorLength(Sym(25))
-println(x26)
-
+val x33 = println(x26)
+x33
 }
 // note how the else branches share symbols for expressions again (cf misc3)
 // but we have created new identifiers for everything.
