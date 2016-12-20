@@ -7,7 +7,6 @@ import test1._
 import reflect.SourceContext
 
 import java.io.PrintWriter
-import internal.ScalaCompile
 
 trait Power1 { this: Arith =>
   def power(b: Rep[Double], x: Int): Rep[Double] = 
@@ -43,8 +42,7 @@ trait ArithStr extends Arith with BaseStr {
 
 class TestPower extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test2-"
-  ScalaCompile.dumpGeneratedCode = false
+  val prefix = home + "test-out/epfl/test2-"
 
   def testPower = {
     withOutFile(prefix+"power") {
@@ -113,7 +111,7 @@ class TestPower extends FileDiffSuite {
       import o._
       val f = (x: Rep[Double]) => power(x + x, 4)
       val p = new ScalaGenFlat with ScalaGenArith { val IR: o.type = o }
-      p.emitSource1(f, "Power2", new PrintWriter(System.out))
+      p.emitSource(f, "Power2", new PrintWriter(System.out))
     }
 
     {
@@ -131,7 +129,7 @@ class TestPower extends FileDiffSuite {
       import o._
       val f = (x: Rep[Double]) => power(x + x, 4)
       val p = new ScalaGenFlat with ScalaGenArith { val IR: o.type = o }
-      p.emitSource1(f, "Power3", new PrintWriter(System.out))
+      p.emitSource(f, "Power3", new PrintWriter(System.out))
     }
 
 
@@ -142,8 +140,8 @@ class TestPower extends FileDiffSuite {
       import o._
 
       val power4 = (x:Rep[Double]) => power(x,4)
-      codegen.emitSource1(power4, "Power4", new PrintWriter(System.out))
-      val power4c = compile1(power4)
+      codegen.emitSource(power4, "Power4", new PrintWriter(System.out))
+      val power4c = compile(power4)
       println(power4c(2))
     }
     }

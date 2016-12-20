@@ -9,7 +9,7 @@ import reflect.SourceContext
 import java.io.PrintWriter
 
 import org.scalatest._
-import internal.ScalaCompile
+
 
 trait FFT { this: Arith with Trig =>
   
@@ -111,8 +111,7 @@ trait ScalaGenFlat extends ScalaGenBase {
 
 class TestFFT extends FileDiffSuite {
   
-  val prefix = "test-out/epfl/test2-"
-  ScalaCompile.dumpGeneratedCode = false
+  val prefix = home + "test-out/epfl/test2-"
   
   def testFFT1 = {
     withOutFile(prefix+"fft1") {
@@ -167,8 +166,8 @@ class TestFFT extends FileDiffSuite {
       import o._
     
       val fft4 = (input: Rep[Array[Double]]) => ffts(input, 4)
-      codegen.emitSource1(fft4, "FFT4", new PrintWriter(System.out))
-      val fft4c = compile1(fft4)
+      codegen.emitSource(fft4, "FFT4", new PrintWriter(System.out))
+      val fft4c = compile(fft4)
       println(fft4c(Array(1.0,0.0, 1.0,0.0, 2.0,0.0, 2.0,0.0, 1.0,0.0, 1.0,0.0, 0.0,0.0, 0.0,0.0)).mkString(","))
     }
     assertFileEqualsCheck(prefix+"fft3")

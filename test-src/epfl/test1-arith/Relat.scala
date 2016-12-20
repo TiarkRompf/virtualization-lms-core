@@ -6,7 +6,6 @@ import common._
 
 trait Relat extends Base {
 
-  implicit def unit(x: Double): Rep[Double]
 
 /*
   implicit def doubleRepRelat(x: Rep[Double]) = new {
@@ -41,7 +40,7 @@ trait RelatExp extends Relat with BaseExp {
   def max(x: Rep[Double], y: Rep[Double]) = Max(x,y)
 }
 
-trait RelatExpOpt extends RelatExp {
+trait RelatExpOpt extends RelatExp with LiftAll {
   
   override def min(x: Rep[Double], y: Rep[Double]) = (x,y) match {
     case (Const(x), Const(y)) => math.min(x,y)
