@@ -202,15 +202,6 @@ trait CGenStringOps extends CGenBase with CNestedCodegen {
   val IR: StringOpsExp
   import IR._
 
-  override def lowerNode[A:Manifest](sym: Sym[A], rhs: Def[A]) = rhs match {
-	case StringNew(s) => sym.atPhase(LIRLowering) {
-		// TODO: Find a better way than this. It assumes that the argument is an array of byte and it also assumes its implicit lowering
-        val ar = field[Array[Byte]](LIRLowering(s), "array")
-		ar.asInstanceOf[Exp[A]]
-	}
-	case _ => super.lowerNode(sym,rhs)
-  }
-
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case StringNew(s1) => emitValDef(sym, src"$s1")
     case StringLength(s1) => emitValDef(sym, src"tpch_strlen($s1)")

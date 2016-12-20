@@ -18,7 +18,7 @@ trait ScalaOpsPkg extends Base
     with PrimitiveOps with MiscOps with Functions with Equal with IfThenElse 
     with Variables with While with TupleOps with ListOps with SeqOps with MathOps 
     with CastingOps with SetOps with ObjectOps with ArrayBufferOps
-    with DateOps with GregorianCalendarOps with SimpleDateFormatOps with UncheckedOps
+    with UncheckedOps
 
 trait ScalaOpsPkgExp extends ScalaOpsPkg 
     with StructExp with ImplicitOpsExp with NumericOpsExp with FractionalOpsExp with OrderingOpsExp 
@@ -26,13 +26,13 @@ trait ScalaOpsPkgExp extends ScalaOpsPkg
     with PrimitiveOpsExp with MiscOpsExp with FunctionsExp with EqualExp with IfThenElseExp 
     with VariablesExp with WhileExp with TupleOpsExp with ListOpsExp with SeqOpsExp with MathOpsExp 
     with CastingOpsExp with SetOpsExp with ObjectOpsExp with ArrayBufferOpsExp
-    with DateExp with GregorianCalendarExp with SimpleDateFormatExp with UncheckedOpsExp
+    with UncheckedOpsExp
 
 trait ScalaOpsPkgExpOpt extends ScalaOpsPkgExp
     with StructExpOptCommon with NumericOpsExpOpt
     with ArrayOpsExpOpt with ListOpsExpOpt
     with EqualExpOpt with IfThenElseExpOpt with VariablesExpOpt with WhileExpOpt
-    with DateExpOpt with GregorianCalendarExpOpt with SimpleDateFormatExpOpt with ObjectOpsExpOpt
+    with ObjectOpsExpOpt
 
 /** Code gen: each target must define a code generator package. */
 trait ScalaCodeGenPkg extends ScalaGenImplicitOps with ScalaGenNumericOps with ScalaGenFractionalOps with ScalaGenOrderingOps
@@ -40,8 +40,7 @@ trait ScalaCodeGenPkg extends ScalaGenImplicitOps with ScalaGenNumericOps with S
     with ScalaGenPrimitiveOps with ScalaGenMiscOps with ScalaGenFunctions with ScalaGenEqual with ScalaGenIfThenElse
     with ScalaGenVariables with ScalaGenWhile with ScalaGenTupleOps with ScalaGenListOps
     with ScalaGenSeqOps with ScalaGenDSLOps with ScalaGenMathOps with ScalaGenCastingOps with ScalaGenSetOps
-    with ScalaGenObjectOps with ScalaGenArrayBufferOps with ScalaGenDate with ScalaGenGregorianCalendar
-    with ScalaGenSimpleDateFormat with ScalaGenUncheckedOps
+    with ScalaGenObjectOps with ScalaGenArrayBufferOps 
   { val IR: ScalaOpsPkgExp  }
 
 

@@ -383,20 +383,6 @@ trait OpenCLGenIfThenElseFat extends OpenCLGenIfThenElse with OpenCLGenFat with 
 trait CGenIfThenElse extends CGenEffect with BaseGenIfThenElse {
   import IR._
 
-  override def lowerNode[T:Manifest](sym: Sym[T], rhs: Def[T]) = rhs match {
-    case IfThenElse(c,a,b) => {
-        LIRTraversal(a)
-        LIRTraversal(b)
-        sym.atPhase(LIRLowering) {
-			val tc = LIRLowering(c)
-            val ta = LIRLowering(a)
-            val tb = LIRLowering(b)
-            reflectEffect(IfThenElse(tc, ta, tb)(tb.tp.asInstanceOf[Manifest[T]])).asInstanceOf[Exp[T]]
-        }
-    }
-    case _ => super.lowerNode(sym, rhs)
-  }
-
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case IfThenElse(c,a,b) =>

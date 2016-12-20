@@ -1,10 +1,9 @@
-
-package scala.virtualization.lms
+package scala.lms
 package common
 
 import java.io.PrintWriter
 
-import scala.virtualization.lms.internal.{GenericNestedCodegen, GenerationFailedException}
+import scala.lms.internal.{GenericNestedCodegen, GenerationFailedException}
 import scala.reflect.SourceContext
 
 trait OMPOps extends Base {
@@ -12,7 +11,7 @@ trait OMPOps extends Base {
   def critical_region(b: => Rep[Unit]): Rep[Unit]
 }
 
-trait OMPOpsExp extends OMPOps {
+trait OMPOpsExp extends OMPOps with BaseExp with EffectExp {
 
   case class ParallelRegion(b: Block[Unit]) extends Def[Unit]
   def parallel_region(b: => Exp[Unit]): Exp[Unit] = {

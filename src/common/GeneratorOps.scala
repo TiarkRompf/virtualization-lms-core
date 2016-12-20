@@ -16,7 +16,7 @@ trait MapOps extends Base {
   def updateValue[K, V](x: Rep[MapType[K, V]], key: Rep[K], value: Rep[V]): Rep[Unit]
 }
 
-trait GeneratorOps extends Base with Variables with LiftVariables with IfThenElse with Equal with TupleOps with ListOps with MapOps with ObjectOps with StringOps with HashMapOps with ListBuffer with HashMultiMapOps with SetOps with LiftNumeric with NumericOps with ArrayOps {
+trait GeneratorOps extends Base with Variables with LiftVariables with IfThenElse with Equal with TupleOps with ListOps with MapOps with ObjectOps with StringOps with HashMapOps with SetOps with LiftNumeric with NumericOps with ArrayOps {
   def materializeGenerator[T:Manifest,U:Manifest](gen: Generator[U]): Rep[T]
   def dematerializeGenerator[T:Manifest,U:Manifest](genCon: Rep[T]): Generator[U]
 

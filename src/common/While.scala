@@ -194,24 +194,4 @@ trait CudaGenWhile extends CudaGenEffect with CLikeGenWhile
 
 trait OpenCLGenWhile extends OpenCLGenEffect with CLikeGenWhile
 
-trait CGenWhile extends CGenEffect with CLikeGenWhile {
-  val IR: WhileExp
-  import IR._
-
-  override def lowerNode[T:Manifest](sym: Sym[T], rhs: Def[T]) = rhs match {
-    case While(cond,b) => {
-        LIRTraversal(cond)
-        LIRTraversal(b)
-        sym.atPhase(LIRLowering) {
-			val tc = LIRLowering(cond)
-            val ce = summarizeEffects(tc)
-            val tb = LIRLowering(b)
-            val ae = summarizeEffects(tb)
-            reflectEffect(While(tc, tb), ce andThen ((ae andThen ce).star)).asInstanceOf[Exp[T]]
-        }
-    }
-    case DoWhile(b,c) =>
-        sym.atPhase(LIRLowering) { reflectEffect(DoWhile(runTransformations(b),c)).asInstanceOf[Exp[T]] }
-    case _ => super.lowerNode(sym, rhs)
-  }
-}
+trait CGenWhile extends CGenEffect with CLikeGenWhile

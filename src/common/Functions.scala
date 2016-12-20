@@ -475,51 +475,6 @@ trait CGenFunctions extends CNestedCodegen with CGenEffect with BaseGenFunctions
   val IR: FunctionsExp
   import IR._
 
-  override def lowerNode[T:Manifest](sym: Sym[T], rhs: Def[T]) = rhs match {
-	case UninlinedFunc0(f) => {
-	  LIRTraversal(f)
-      sym.atPhase(LIRLowering) {
-        functionList0 -= sym
-        functionList0 += (sym -> LIRLowering(f))
-        sym
-      }
-    }
-	case UninlinedFunc1(s,f) => {
-	  LIRTraversal(f)
-      sym.atPhase(LIRLowering) {
-        functionList1 -= sym
-        functionList1 += (sym -> (s,LIRLowering(f)))
-        sym
-      }
-    }
-	case UninlinedFunc2(s1,s2,f) => {
-	  LIRTraversal(f)
-      sym.atPhase(LIRLowering) {
-        functionList2 -= sym
-        functionList2 += (sym -> (s1,s2,LIRLowering(f)))
-        sym
-      }
-    }
-	case UninlinedFunc3(s1,s2,s3,f) => {
-	  LIRTraversal(f)
-      sym.atPhase(LIRLowering) {
-        functionList3 -= sym
-        functionList3 += (sym -> (s1,s2,s3,LIRLowering(f)))
-        sym
-      }
-    }
-	case a@Apply(fun, arg) => 
-		sym.atPhase(LIRLowering) {
-            val funSym = fun.asInstanceOf[Sym[_]]
-            val rM = (fun match {
-                case s if functionList0.contains(funSym) => getBlockResult(functionList0(funSym)).tp
-                case _ => a.mB
-            }).asInstanceOf[Manifest[T]]
-			doApply(fun, arg)(a.mA, rM, implicitly[SourceContext]).asInstanceOf[Exp[T]] 
-		}
-	case _ => super.lowerNode(sym, rhs)
-  }
-
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case e@Lambda(fun, x, y) =>
       stream.println(remap(y.tp)+" "+quote(sym)+"("+remap(x.tp)+" "+quote(x)+") {")

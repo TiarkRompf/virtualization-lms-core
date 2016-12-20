@@ -231,18 +231,6 @@ trait CGenRangeOps extends CGenEffect with BaseGenRangeOps {
   val IR: RangeOpsExp
   import IR._
 
-  override def lowerNode[T:Manifest](sym: Sym[T], rhs: Def[T]) = rhs match {
-    case RangeForeach(start, end, i, body) => {
-      LIRTraversal(body)
-      sym.atPhase(LIRLowering) {
-        val b = LIRLowering(body)
-        val be = summarizeEffects(b)
-        reflectEffect(RangeForeach(LIRLowering(start), LIRLowering(end), i, b), be.star).asInstanceOf[Exp[T]]
-      }
-    }
-    case _ => super.lowerNode(sym, rhs)
-  }
-
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case Until(start, end) =>
       throw new GenerationFailedException("CGenRangeOps: Range vector is not supported")

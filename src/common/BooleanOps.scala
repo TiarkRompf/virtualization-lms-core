@@ -155,23 +155,4 @@ trait CLikeGenBooleanOps extends CLikeGenBase with GenericNestedCodegen {
 
 trait CudaGenBooleanOps extends CudaGenBase with CLikeGenBooleanOps
 trait OpenCLGenBooleanOps extends OpenCLGenBase with CLikeGenBooleanOps
-trait CGenBooleanOps extends CGenBase with CLikeGenBooleanOps {
-  val IR: BooleanOpsExp
-  import IR._
-  
-  override def lowerNode[A:Manifest](sym: Sym[A], rhs: Def[A]) = rhs match {
-	case BooleanAnd(lhs,rhs) => {
-		LIRTraversal(rhs)
-		sym.atPhase(LIRLowering) {
-			reflectEffect(BooleanAnd(LIRLowering(lhs),LIRLowering(rhs))).asInstanceOf[Exp[A]]
-		}
-	}
-	case BooleanOr(lhs,rhs) => {
-		LIRTraversal(rhs)
-		sym.atPhase(LIRLowering) {
-			reflectEffect(BooleanOr(LIRLowering(lhs),LIRLowering(rhs))).asInstanceOf[Exp[A]]
-		}
-	}
-	case _ => super.lowerNode(sym,rhs)
-  }
-}
+trait CGenBooleanOps extends CGenBase with CLikeGenBooleanOps
