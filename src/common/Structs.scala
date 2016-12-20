@@ -3,7 +3,7 @@ package common
 import internal.{GenericNestedCodegen, GenericFatCodegen}
 import java.io.PrintWriter
 import org.scala_lang.virtualized.SourceContext
-import org.scala_lang.virtualized.Record
+import org.scala_lang.virtualized.{Record, RecordOps}
 import org.scala_lang.virtualized.RefinedManifest
 import util.OverloadHack
 
@@ -25,7 +25,7 @@ trait StructOps extends Base {
 
   //def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T]
 
-  def record_new[T:Manifest](fields:(String, Rep[_])*): Rep[T]
+  def record_new[T:RefinedManifest](fields:(String, Rep[_])*): Rep[T]
   def record_select[T : Manifest](record: Rep[Record], field: String): Rep[T]
   def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T]
 }
@@ -109,7 +109,7 @@ trait StructExp extends StructOps with StructTags with AtomicWrites with EffectE
   def field_update[T:Manifest](struct: Exp[Any], index: String, rhs: Exp[T]): Exp[Unit]
     = reflectAtomicWrite(struct)(FieldUpdate(struct, index, rhs))
 
-  def record_new[T : Manifest](fields: (String, Rep[_])*) = {
+  def record_new[T : RefinedManifest](fields: (String, Rep[_])*) = {
     // Self symbol currently unsupported
     // val x: Sym[T] = Sym[T](-99) // self symbol -- not defined anywhere, so make it obvious!! (TODO)
 
@@ -118,7 +118,7 @@ trait StructExp extends StructOps with StructTags with AtomicWrites with EffectE
       case (index, false, rhs) => (index, rhs(x))
       case (index, true, rhs) => (index, var_new(rhs(x)).e)
     }*/
-    struct(AnonTag(manifest.asInstanceOf[RefinedManifest[T]]), fields)
+    struct(AnonTag(manifest[T].asInstanceOf[RefinedManifest[T]]), fields)
   }
 
   def record_select[T : Manifest](record: Rep[Record], fieldName: String) = {

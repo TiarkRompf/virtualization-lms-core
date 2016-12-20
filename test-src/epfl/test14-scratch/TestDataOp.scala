@@ -27,11 +27,15 @@ class TestDataOp extends FileDiffSuite {
     }
     val L = scala.List
 
-    case class Record(fields: (String, Rep[Int])*) {
+    // [macro-virt] Previously called "Record", but this now conflicts with virtualized Record
+    // construction of "Records" was never being staged anyway
+    case class MyRecord(fields: (String, Rep[Int])*) {
       def apply(k: String) = fields.toMap.apply(k)
       def toStrings: Seq[Rep[Any]] =
         fields.flatMap { case (f,x) => unit(f)::x::Nil }
     }
+    type Record = MyRecord
+
 
     case class Schema(fields: String*)
 
@@ -48,7 +52,7 @@ class TestDataOp extends FileDiffSuite {
       val data = loadData(name + ".dat")
       val size = data.length
       val incr = schema.fields.length: Rep[Int]
-      def get(pos: Rep[Int]) = Record(
+      def get(pos: Rep[Int]) = MyRecord(
         schema.fields.zipWithIndex map { case (f,i) => (f, data(pos+i)) }: _*
       )
     }
@@ -57,7 +61,7 @@ class TestDataOp extends FileDiffSuite {
       val data = schema.fields.map(f => (f,loadData(name + "_" + f + ".dat")))
       val size = data.head._2.length
       val incr = unit(1)
-      def get(pos: Rep[Int]) = Record(
+      def get(pos: Rep[Int]) = MyRecord(
         schema.fields.map(f => (f, data.toMap.apply(f)(pos))): _*
       )
     }
@@ -132,7 +136,7 @@ class TestDataOp extends FileDiffSuite {
         more1
       }
       def elem() = {
-        Record((up1.elem().fields ++ up2.elem.fields): _*)
+        MyRecord((up1.elem().fields ++ up2.elem.fields): _*)
       }
 
     }
@@ -150,7 +154,7 @@ class TestDataOp extends FileDiffSuite {
         }
       }
       def next() = unit(false)
-      def elem() = Record()
+      def elem() = MyRecord()
     }
 
 
@@ -198,7 +202,7 @@ class TestDataOp extends FileDiffSuite {
 
           val plan =
             PrintOp(
-              MapOp(rec => Record("foo" -> rec("field2"), "bar" -> 2 * rec("field1")))(
+              MapOp(rec => MyRecord("foo" -> rec("field2"), "bar" -> 2 * rec("field1")))(
                 ScanOp(table)))
 
           plan.open()
@@ -221,7 +225,7 @@ class TestDataOp extends FileDiffSuite {
 
           val plan =
             PrintOp(
-              MapOp(rec => Record("foo" -> rec("field2"), "bar" -> 2 * rec("field1")))(
+              MapOp(rec => MyRecord("foo" -> rec("field2"), "bar" -> 2 * rec("field1")))(
                 FilterOp(rec => rec("field2") > 0)(
                   ScanOp(table))))
 

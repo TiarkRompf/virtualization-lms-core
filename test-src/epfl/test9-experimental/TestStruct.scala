@@ -278,7 +278,7 @@ class TestStruct extends FileDiffSuite {
   def testStruct5 = {
     withOutFile(prefix+"struct5") {
 
-      trait Vectors extends RecordOps {
+      trait Vectors extends StructOps with RecordOps {
         type Vector2D = Record { val x: Double; val y: Double }
         def Vector2D(px: Rep[Double], py: Rep[Double]): Rep[Vector2D] =
           Record(x = px, y = py)
@@ -300,7 +300,7 @@ class TestStruct extends FileDiffSuite {
   def testStruct6 = {
     withOutFile(prefix+"struct6") {
 
-      trait Complex2 extends Arith with RecordOps {
+      trait Complex2 extends Arith with StructOps with RecordOps {
         type Complex2 = Record { val re: Double; val im: Double }
         def Complex2(r: Rep[Double], i: Rep[Double]): Rep[Complex2] =
           Record(re = r, im = i)

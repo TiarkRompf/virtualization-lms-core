@@ -236,8 +236,8 @@ trait VariablesExpOpt extends VariablesExp {
       //TODO: could use calculateDependencies(Read(v))
 
       context.reverse.foreach {
-        case w @ Def(Reflect(NewVar(rhs: Exp[T]), _, _)) if w == vs => if (rhs == e) return ()
-        case Def(Reflect(Assign(`v`, rhs: Exp[T]), _, _)) => if (rhs == e) return ()
+        case w @ Def(Reflect(NewVar(rhs: Exp[T]), _, _)) if w == vs => if (rhs == e) return unit(())
+        case Def(Reflect(Assign(`v`, rhs: Exp[T]), _, _)) => if (rhs == e) return unit(())
         case Def(Reflect(_, u, _)) if mayWrite(u, List(vs)) =>  // not a simple assignment
         case _ => // ...
       }
