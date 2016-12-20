@@ -12,17 +12,17 @@ more seamless.
 
 ### NOTE:
 
-This is branch `macro-trans`. It uses an unmodified Scala 2.11 compiler and
+This is branch `macrovirt`. It uses an unmodified Scala 2.11 compiler and
 a set of macros to virtualize conditionals, variables, etc.
 
 All of this is still experimental.
 
 - Get and install the Scala-Virtualized macros:
-  - `git clone -b scala-virtualized https://github.com/scala-lms/summer-of-lms-2014.git scala-virtualized`
+  - `git clone -b scala-virtualized https://github.com/stanford-ppl/scala-virtualized.git scala-virtualized`
   - `cd scala-virtualized; sbt publish-local`
 
 - See here for the diff to `develop`:
-  - [compare/develop...macro-trans](https://github.com/TiarkRompf/virtualization-lms-core/compare/develop...macro-trans)
+  - [compare/develop...macrovirt](https://github.com/TiarkRompf/virtualization-lms-core/compare/develop...macrovirt)
 
 
 ### Background:
