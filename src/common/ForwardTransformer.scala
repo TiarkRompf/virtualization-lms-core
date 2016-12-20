@@ -3,10 +3,9 @@ package common
 
 import scala.collection.{immutable,mutable}
 import scala.reflect.SourceContext
-import scala.lms.internal.{Effects, FatTransforming, AbstractSubstTransformer, FatBlockTraversal}
 
 trait ForwardTransformer extends internal.AbstractSubstTransformer with internal.FatBlockTraversal { self =>
-  val IR: FatTransforming with Effects //LoopsFatExp with IfThenElseFatExp
+  val IR: BaseFatExp with EffectExp //LoopsFatExp with IfThenElseFatExp
   import IR._
   
   def transformBlock[A:Manifest](block: Block[A]): Block[A] = {
@@ -32,8 +31,7 @@ trait ForwardTransformer extends internal.AbstractSubstTransformer with internal
   //                                                      // but we'd rather have x15 = x9 + x14
   
   override def apply[A](x: Exp[A]): Exp[A] = subst.get(x) match { 
-    case Some(y) => y.asInstanceOf[Exp[A]]
-    case _ => x
+    case Some(y) => y.asInstanceOf[Exp[A]] case _ => x 
   }
   
   override def reflectBlock[A](block: Block[A]): Exp[A] = {
@@ -136,6 +134,7 @@ trait RecursiveTransformer extends ForwardTransformer { self =>
 
 
 trait WorklistTransformer extends ForwardTransformer { // need backward version, too?
+  val IR: LoopsFatExp with IfThenElseFatExp
   import IR._
   var curSubst: Map[Sym[Any],() => Exp[Any]] = Map.empty
   var nextSubst: Map[Sym[Any],() => Exp[Any]] = Map.empty
@@ -169,4 +168,5 @@ trait WorklistTransformer extends ForwardTransformer { // need backward version,
           super.transformStm(stm)
       }
   }
+
 }

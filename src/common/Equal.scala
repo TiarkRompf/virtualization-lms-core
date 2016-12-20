@@ -4,7 +4,6 @@ package common
 import java.io.PrintWriter
 import scala.lms.util.OverloadHack
 import scala.reflect.SourceContext
-import scala.lms.internal.CNestedCodegen
 
 trait LiftEquals extends Base {
   this: Equal =>
@@ -64,7 +63,7 @@ trait EqualExpBridge extends BaseExp  {
 
 trait EqualExp extends Equal with EqualExpBridge with VariablesExp
 
-trait EqualExpBridgeOpt extends EqualExp {
+trait EqualExpBridgeOpt extends EqualExpBridge {
   override def equals[A:Manifest,B:Manifest](a: Rep[A], b: Rep[B])(implicit pos: SourceContext): Rep[Boolean] = if (a == b) Const(true) else (a,b) match {
     case (Const(a),Const(b)) => Const(a == b)
     case _ => super.equals(a,b)
@@ -80,41 +79,26 @@ trait EqualExpOpt extends EqualExp with EqualExpBridgeOpt
 
 
 trait ScalaGenEqual extends ScalaGenBase {
-  val IR: EqualExp
+  val IR: EqualExpBridge
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case Equal(a,b) =>
-		if (a.tp == manifest[Array[Byte]] || b.tp == manifest[Array[Byte]])
-			emitValDef(sym, src"java.util.Arrays.equals($a,$b)")
-		else emitValDef(sym, src"$a == $b")
-    case NotEqual(a,b) =>
-		if (a.tp == manifest[Array[Byte]] || b.tp == manifest[Array[Byte]])
-			emitValDef(sym, src"!java.util.Arrays.equals($a,$b)")
-		else emitValDef(sym, src"$a != $b")
+    case Equal(a,b) =>  emitValDef(sym, src"$a == $b")
+    case NotEqual(a,b) =>  emitValDef(sym, src"$a != $b")
     case _ => super.emitNode(sym, rhs)
   }
 }
 
 trait CLikeGenEqual extends CLikeGenBase {
-  val IR: EqualExp
+  val IR: EqualExpBridge
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
         case Equal(a,b) =>
-		  if (b.tp == manifest[Array[Byte]] || b.tp == manifest[String])
-			// Hm... is this generic enough? it implicitly introduces a "lowering" for accessing
-			// the array field of the implicitly lowered array.
-      // TR: disabled!
-			//emitValDef(sym, "strcmp(" + quote(a) + "->array," + quote(b) + ") == 0;")
-      emitValDef(sym, "tpch_strcmp(" + quote(a) + "," + quote(b) + ") == 0;")
-          else emitValDef(sym, src"$a == $b")
+          emitValDef(sym, src"$a == $b")
         case NotEqual(a,b) =>
-		  if (b.tp == manifest[Array[Byte]] || b.tp == manifest[String])
-      //emitValDef(sym, "strcmp(" + quote(a) + "->array," + quote(b) + ") != 0;")
-			emitValDef(sym, "tpch_strcmp(" + quote(a) + "," + quote(b) + ") != 0;")
-          else emitValDef(sym, src"$a != $b")
+          emitValDef(sym, src"$a != $b")
         case _ => super.emitNode(sym, rhs)
       }
     }
@@ -122,14 +106,22 @@ trait CLikeGenEqual extends CLikeGenBase {
 
 trait CudaGenEqual extends CudaGenBase with CLikeGenEqual
 trait OpenCLGenEqual extends OpenCLGenBase with CLikeGenEqual
-trait CGenEqual extends CGenBase with CLikeGenEqual with CNestedCodegen {
-  val IR: EqualExp
+
+trait CGenEqual extends CGenBase with CLikeGenEqual {
+  val IR: EqualExpBridge
   import IR._
 
-  override def lowerNode[A:Manifest](sym: Sym[A], rhs: Def[A]) = rhs match {
-	case Equal(lhs,rhs) => sym.atPhase(LIRLowering) {
-		reflectEffect(Equal(LIRLowering(lhs),LIRLowering(rhs))).asInstanceOf[Exp[A]]
-	}
-	case _ => super.lowerNode(sym,rhs)
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
+    rhs match {
+      case Equal(a,b) if(remap(a.tp) == "string" && remap(b.tp) == "string") =>
+        emitValDef(sym, quote(a) + ".compare(" + quote(b) + ") == 0")
+      case Equal(a,b) if (!isPrimitiveType(a.tp) && !isPrimitiveType(b.tp) && (remap(a.tp) == remap(b.tp))) =>
+        emitValDef(sym, quote(a) + "->equals(" + quote(b) + ")")
+      case NotEqual(a,b) if(remap(a.tp) == "string" && remap(b.tp) == "string") =>
+        emitValDef(sym, quote(a) + ".compare(" + quote(b) + ") != 0")
+      case NotEqual(a,b) if (!isPrimitiveType(a.tp) && !isPrimitiveType(b.tp) && (remap(a.tp) == remap(b.tp))) =>
+        emitValDef(sym, "!" + quote(a) + "->equals(" + quote(b) + ")")
+      case _ => super.emitNode(sym, rhs)
+    }
   }
 }
