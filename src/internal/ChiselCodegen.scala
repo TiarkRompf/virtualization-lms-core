@@ -27,7 +27,7 @@ trait ChiselCodegen extends GenericCodegen with Config {
   override def resourceInfoType = ""
   override def resourceInfoSym = ""
 
-  override def singleFileName = s"TopKernelLib.$fileExtension"
+  override def singleFileName = s"TopModule.$fileExtension"
 
   // Generate all code into one file
   override def emitSingleFile() = true
@@ -136,12 +136,21 @@ trait ChiselCodegen extends GenericCodegen with Config {
   }
   private def emitBaseFileHeader() = {
       //emit(s"""package engine""")
-      emit("import Chisel._")
-      emit(s"""class BaseIO extends Module{""")
-      emit("var io = new Bundle {")
-	emit("")
-	emit(s"""val top_en = Bool(INPUT)""")
-	emit(s"""val top_done = Bool(OUTPUT)""")
+      emit("package app")
+      emit("import templates._")
+      emit("import interfaces._")
+      emit("import chisel3._")
+      emit(s"""abstract class BaseModule() extends Module{
+  val io = IO(new Bundle{
+    val top_en = Input(Bool())
+    val top_done = Output(Bool())
+    val ArgIn = new ArgInBundle()
+    val ArgOut = new ArgOutBundle()
+    // val MemIn = new MemInBundle()
+    // val MemOut = new MemOutBundle()
+  })
+
+""")
   }
 
   private def emitBaseFileFooter() = {
@@ -154,8 +163,11 @@ trait ChiselCodegen extends GenericCodegen with Config {
          //"  Chisel Header \n"+
          //"*******************************************/")
       //emit(s"""package engine""")
-      emit("import Chisel._")
-    emit(s"""class TopModule extends BaseIO {""")
+      emit("package app")
+      emit("import templates._")
+      emit("import chisel3._")
+      emit(s"""class TopModule() extends BaseModule{
+""")
   }
 
     override def emitFileFooter() = {
@@ -246,7 +258,9 @@ trait ChiselCodegen extends GenericCodegen with Config {
     //}
 
   def emitGlobalWire(str: String): Unit = {
-    emit(s"""val $str = Bool();""")
+    withStream(baseStream) {
+      emit(s"""val $str = Wire(Bool());""")
+    }
   }
 
     def emitComment(str: String):Unit = {
