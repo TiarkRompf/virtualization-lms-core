@@ -146,8 +146,7 @@ trait ChiselCodegen extends GenericCodegen with Config {
     val top_done = Output(Bool())
     val ArgIn = new ArgInBundle()
     val ArgOut = new ArgOutBundle()
-    // val MemIn = new MemInBundle()
-    // val MemOut = new MemOutBundle()
+    val MemStreams = new MemStreamsBundle()
   })
 
 """)
