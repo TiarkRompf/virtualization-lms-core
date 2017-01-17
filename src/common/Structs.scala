@@ -9,7 +9,8 @@ import util.OverloadHack
 
 //abstract class Record extends Struct
 
-trait StructOps extends Base {
+trait StructOps extends Base with RecordOps {
+  
 
   /**
    * Allows to write things like “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
