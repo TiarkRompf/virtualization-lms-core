@@ -12,22 +12,20 @@ import util.OverloadHack
 trait StructOps extends Base with RecordOps {
   
 
-  /**
-   * Allows to write things like “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
-   */
+  // /**
+  //  * Allows to write things like “val z = new Record { val re = 1.0; val im = -1.0 }; print(z.re)”
+  //  */
 
-  //def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
+  // //def __new[T : Manifest](args: (String, Boolean, Rep[T] => Rep[_])*): Rep[T] = record_new(args)
 
-  // TODO: Is this ever still used?
-  class RecordOps(record: Rep[Record]) {
-    def selectDynamic[T : Manifest](field: String): Rep[T] = record_select[T](record, field)
-  }
-  implicit def recordToRecordOps(record: Rep[Record]) = new RecordOps(record)
+  // // TODO: Is this ever still used?
+  // class RecordOps(record: Rep[Record]) {
+  //   def selectDynamic[T : Manifest](field: String): Rep[T] = record_select[T](record, field)
+  // }
+  // implicit def recordToRecordOps(record: Rep[Record]) = new RecordOps(record)
 
-  //def record_new[T : Manifest](fields: Seq[(String, Boolean, Rep[T] => Rep[_])]): Rep[T]
-
-  def record_new[T:RefinedManifest](fields:(String, Rep[_])*): Rep[T]
-  def record_select[T : Manifest](record: Rep[Record], field: String): Rep[T]
+  // def record_new[T:RefinedManifest](fields:(String, Rep[_])*): Rep[T]
+  // def record_select[T : Manifest](record: Rep[Record], field: String): Rep[T]
   def field[T:Manifest](struct: Rep[Any], index: String)(implicit pos: SourceContext): Rep[T]
 }
 
