@@ -27,7 +27,7 @@ trait ChiselCodegen extends GenericCodegen with Config {
   override def resourceInfoType = ""
   override def resourceInfoSym = ""
 
-  override def singleFileName = s"TopModule.$fileExtension"
+  override def singleFileName = s"TopModuleTrait.$fileExtension"
 
   // Generate all code into one file
   override def emitSingleFile() = true
@@ -162,11 +162,11 @@ trait ChiselCodegen extends GenericCodegen with Config {
          //"  Chisel Header \n"+
          //"*******************************************/")
       //emit(s"""package engine""")
-      emit("package app")
-      emit("import templates._")
-      emit("import chisel3._")
-      emit(s"""class TopModule() extends BaseModule{
-""")
+      // emit("package app")
+      // emit("import templates._")
+      // emit("import chisel3._")
+//       emit(s"""class TopModuleTrait() extends BaseModule{
+// """)
   }
 
     override def emitFileFooter() = {
