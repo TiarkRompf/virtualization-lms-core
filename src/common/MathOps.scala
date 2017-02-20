@@ -201,7 +201,7 @@ trait CudaGenMathOps extends BaseGenMathOps with CudaGenEffect {
     case MathPi() => emitValDef(sym, "CUDART_PI_F")
     case MathE() => emitValDef(sym, "2.7182818284f")
     case _ => super.emitNode(sym, rhs)
-  }        
+  }
 }
 
 trait OpenCLGenMathOps extends BaseGenMathOps with OpenCLGenEffect {
@@ -224,10 +224,12 @@ trait OpenCLGenMathOps extends BaseGenMathOps with OpenCLGenEffect {
 trait CGenMathOps extends BaseGenMathOps with CGenEffect {
   val IR: MathOpsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case MathSin(x) if(remap(sym.tp)=="double") => emitValDef(sym, src"sin($x)")
     case MathPi() if(remap(sym.tp)=="double") => emitValDef(sym, "M_PI")
+    case MathSqrt(x) if(remap(sym.tp)=="double") => emitValDef(sym, src"sqrt($x)")
+    case MathAbs(x) => emitValDef(sym, src"$x < 0 ? -$x : $x")
     case _ => super.emitNode(sym, rhs)
   }
 
