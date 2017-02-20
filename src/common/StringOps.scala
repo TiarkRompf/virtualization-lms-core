@@ -233,6 +233,7 @@ trait CGenStringOps extends CGenBase with CNestedCodegen {
       // stream.println(src"char " + quote(sym) + src"[$endIndex - $beginIndex + 1]; memcpy(" + quote(sym) + "," + quote(s) + src", $endIndex - $beginIndex);") UNSAFE
     case StringTrim(s) => throw new GenerationFailedException("CGenStringOps: StringTrim not implemented yet")
     case StringSplit(s, sep) => throw new GenerationFailedException("CGenStringOps: StringSplit not implemented yet")
+    case StringGetBytes(s) => emitValDef(sym, src"$s")
     case _ => super.emitNode(sym, rhs)
   }
 }
