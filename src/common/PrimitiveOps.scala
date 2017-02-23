@@ -313,7 +313,7 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
 	    case CharMinus(lhs,rhs) => emitValDef(sym, src"$lhs - $rhs")
       case LongShiftLeft(lhs,rhs) => emitValDef(sym, src"$lhs << $rhs")
       case LongShiftRight(lhs,rhs) => emitValDef(sym, src"$lhs >> $rhs")
-      case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, src"$lhs >>> $rhs")
+      case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, src"(unsigned long)$lhs >> $rhs")
       case _ => super.emitNode(sym, rhs)
     }
   }
