@@ -27,7 +27,17 @@ trait DateOps extends Base {
 trait DateExp extends DateOps with BaseExp {
 
   case class DtGetTime(x: Exp[Date]) extends Def[Long]
-  case class DtGetYear(x: Exp[Date]) extends Def[Long]
+  case class DtGetYear(x: Exp[Date]) extends Def[Long] {
+    val z   = fresh[Int]
+    val era = fresh[Int]
+    val doe = fresh[Int]
+    val yoe = fresh[Int]
+    val y   = fresh[Int]
+    val doy = fresh[Int]
+    val mp  = fresh[Int]
+    val d   = fresh[Int]
+    val m   = fresh[Int]
+  }
   case class NewDate(x: Exp[Long]) extends Def[Date]
   case class GetDateAsString(x: Exp[Long]) extends Def[String]
 
@@ -79,8 +89,18 @@ trait CGenDate extends CGenBase with CNestedCodegen {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case NewDate(x) => stream.println("long " + quote(sym) + " = " + quote(x) + "; // date")
-  	case DtGetYear(x) =>
-		emitValDef(sym, quote(x) + "/10000")
+    case dgy@DtGetYear(x) =>
+      emitValDef(dgy.z, src"$x + 719468")
+      emitValDef(dgy.era, src"(${dgy.z} >= 0 ? ${dgy.z} : ${dgy.z} - 146096) / 146097")
+      stream.println(src"unsigned int ${dgy.doe} = (unsigned)(${dgy.z} - ${dgy.era} * 146097);")
+      stream.println(src"unsigned int ${dgy.yoe} = (${dgy.doe} - ${dgy.doe} / 1460 + ${dgy.doe} / 36524 - ${dgy.doe} / 146096) / 365;")
+      emitValDef(dgy.y, src"(int)(${dgy.yoe}) + ${dgy.era} * 400")
+      stream.println(src"unsigned int ${dgy.doy} = ${dgy.doe} - (365 * ${dgy.yoe} + ${dgy.yoe} / 4 - ${dgy.yoe} / 100);")
+      stream.println(src"unsigned int ${dgy.mp} = (5 * ${dgy.doy} + 2) / 153;")
+      stream.println(src"unsigned int ${dgy.d} = ${dgy.doy} - (153 * ${dgy.mp} + 2) / 5 + 1;")
+      stream.println(src"unsigned int ${dgy.m} = ${dgy.mp} + (${dgy.mp} < 10 ? 3 : -9);")
+
+      emitValDef(sym, src"${dgy.y} + (${dgy.m} <= 2)")
     case gd@GetDateAsString(x) =>  
 		emitValDef(sym, getMemoryAllocString("9", "char"))
 		stream.println("snprintf(" + quote(sym) + ", 9, \"%lu\", " + quote(x) + ");")

@@ -322,4 +322,3 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
 trait CudaGenPrimitiveOps extends CudaGenBase with CLikeGenPrimitiveOps
 trait OpenCLGenPrimitiveOps extends OpenCLGenBase with CLikeGenPrimitiveOps
 trait CGenPrimitiveOps extends CGenBase with CLikeGenPrimitiveOps
-
