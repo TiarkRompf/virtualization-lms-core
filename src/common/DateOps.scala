@@ -21,13 +21,15 @@ trait DateOps extends Base {
   def newDate(x: Rep[Long]): Rep[Date]
   def dtGetTime(x: Rep[Date]): Rep[Long]
   def dtGetYear(x: Rep[Date]): Rep[Long]
+  def epochGetYear(x: Rep[Date]): Rep[Long]
   def getDateAsString(x: Rep[Long]): Rep[String]
 }
 
 trait DateExp extends DateOps with BaseExp {
 
   case class DtGetTime(x: Exp[Date]) extends Def[Long]
-  case class DtGetYear(x: Exp[Date]) extends Def[Long] {
+  case class DtGetYear(x: Exp[Date]) extends Def[Long]
+  case class EpochGetYear(x: Exp[Date]) extends Def[Long] {
     val z   = fresh[Int]
     val era = fresh[Int]
     val doe = fresh[Int]
@@ -45,14 +47,16 @@ trait DateExp extends DateOps with BaseExp {
   def newDate(x: Rep[Long]): Exp[Date] = NewDate(x)
   def dtGetTime(x: Exp[Date]): Exp[Long] = DtGetTime(x)
   def dtGetYear(x: Exp[Date]): Exp[Long] = DtGetYear(x)
+  def epochGetYear(x: Exp[Date]): Exp[Long] = EpochGetYear(x)
   def getDateAsString(x: Rep[Long]) = GetDateAsString(x)
- 
+
   //////////////
   // mirroring
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case NewDate(x) => newDate(x)
     case DtGetTime(x) => dtGetTime(f(x))
-	case DtGetYear(x) => dtGetYear(f(x))
+    case DtGetYear(x) => dtGetYear(f(x))
+    case EpochGetYear(x) => epochGetYear(f(x))
     case GetDateAsString(x) => getDateAsString(f(x))
     case _ => super.mirror(e,f)
   }).asInstanceOf[Exp[A]] // why??
@@ -89,7 +93,8 @@ trait CGenDate extends CGenBase with CNestedCodegen {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case NewDate(x) => stream.println("long " + quote(sym) + " = " + quote(x) + "; // date")
-    case dgy@DtGetYear(x) =>
+    case dgy@DtGetYear(x) => emitValDef(sym, src"$x / 10000")
+    case dgy@EpochGetYear(x) =>
       emitValDef(dgy.z, src"$x + 719468")
       emitValDef(dgy.era, src"(${dgy.z} >= 0 ? ${dgy.z} : ${dgy.z} - 146096) / 146097")
       stream.println(src"unsigned int ${dgy.doe} = (unsigned)(${dgy.z} - ${dgy.era} * 146097);")
@@ -101,7 +106,7 @@ trait CGenDate extends CGenBase with CNestedCodegen {
       stream.println(src"unsigned int ${dgy.m} = ${dgy.mp} + (${dgy.mp} < 10 ? 3 : -9);")
 
       emitValDef(sym, src"${dgy.y} + (${dgy.m} <= 2)")
-    case gd@GetDateAsString(x) =>  
+    case gd@GetDateAsString(x) =>
 		emitValDef(sym, getMemoryAllocString("9", "char"))
 		stream.println("snprintf(" + quote(sym) + ", 9, \"%lu\", " + quote(x) + ");")
     case _ => super.emitNode(sym, rhs)
