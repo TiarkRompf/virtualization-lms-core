@@ -9,6 +9,9 @@ import scala.reflect.SourceContext
 trait OMPOps extends Base {
   def parallel_region(b: => Rep[Unit]): Rep[Unit]
   def critical_region(b: => Rep[Unit]): Rep[Unit]
+
+  def ompGetThreadId(): Exp[Long]
+  def ompSetNumThreads(n: Rep[Long]): Rep[Unit]
 }
 
 trait OMPOpsExp extends OMPOps {
@@ -24,6 +27,12 @@ trait OMPOpsExp extends OMPOps {
     val br = reifyEffects(b)
     reflectEffect(CriticalRegion(br))
   }
+
+  case class GetThreadId() extends Def[Long]
+  def ompGetThreadId() = GetThreadId()
+
+  case class SetNumThreads(nbThreads: Exp[Long]) extends Def[Unit]
+  def ompSetNumThreads(n: Exp[Long]): Exp[Unit] = SetNumThreads(n)
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case ParallelRegion(b) => effectSyms(b)
@@ -47,14 +56,9 @@ trait OMPOpsExp extends OMPOps {
 
 trait BaseGenOMPOps extends GenericNestedCodegen {
   val IR: OMPOpsExp
-  import IR._
 }
 
-trait ScalaGenOMPOps extends ScalaGenEffect with BaseGenOMPOps {
-
-}
-
-trait CGenOMPOps extends CGenEffect with BaseGenOMPOps{
+trait CGenOMPOps extends CGenEffect with BaseGenOMPOps {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
@@ -68,6 +72,8 @@ trait CGenOMPOps extends CGenEffect with BaseGenOMPOps{
       |{
       |${nestedBlock(body)}
       |}"""
+    case GetThreadId() => emitValDef(sym, "omp_get_thread_num()")
+    case SetNumThreads(threads) => emitValDef(sym, src"omp_set_num_threads($threads)")
     case _ => super.emitNode(sym, rhs)
   }
 }
