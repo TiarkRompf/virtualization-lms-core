@@ -29,7 +29,7 @@ trait OMPOpsExp extends OMPOps {
   }
 
   case class GetThreadId() extends Def[Long]
-  def ompGetThreadId() = GetThreadId()
+  // def ompGetThreadId() = GetThreadId()
 
   case class SetNumThreads(nbThreads: Exp[Long]) extends Def[Unit]
   def ompSetNumThreads(n: Exp[Long]): Exp[Unit] = SetNumThreads(n)
