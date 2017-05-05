@@ -1,37 +1,42 @@
-name := "macro-LMS"
+// --- project info ---
+lazy val lms = Project("LMS", file("."))
 
-version := "1.0.0-wip-macro"
+envVars := Map("showSuppressedErrors" -> "false", "showTimings" -> "false")
 
-isSnapshot := true //allows to overwrites old local published version
+name := "lms-core-macrovirt"
 
-organization := "EPFL"
+organization := "org.scala-lang.lms"
 
-scalaVersion := "2.11.2"
+description := "Lightweight Modular Staging"
 
-scalaSource in Compile <<= baseDirectory(_ / "src")
+homepage := Some(url("https://scala-lms.github.io"))
 
-scalaSource in Test <<= baseDirectory(_ / "test-src")
+licenses := List("BSD-like" -> url("https://github.com/TiarkRompf/virtualization-lms-core/blob/develop/LICENSE"))
+
+scmInfo := Some(ScmInfo(url("https://github.com/TiarkRompf/virtualization-lms-core"), "git@github.com:TiarkRompf/virtualization-lms-core.git"))
+
+// developers := List(Developer("tiarkrompf", "Tiark Rompf", "@tiarkrompf", url("http://github.com/tiarkrompf")))
+
+
+// --- scala settings ---
+
+scalaVersion := "2.11.8"
+
+scalaOrganization := "org.scala-lang"
+
+scalaSource in Compile := baseDirectory.value / "src"
+
+scalaSource in Test := baseDirectory.value / "test-src"
+
+
+// --- dependencies ---
 
 libraryDependencies += "org.scala-lang" % "scala-library" % scalaVersion.value % "compile"
 
 libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "compile"
 
-libraryDependencies ++= Seq(
-  "org.scala-lang.virtualized" %% "scala-virtualized" % "0.1"
-)
+libraryDependencies += ("org.scalatest" %% "scalatest" % "2.2.2" % "test")
 
-libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "2.2.0" % "test"
-)
-
-// tests are not thread safe
-parallelExecution in Test := false
-
-// disable publishing of main docs
-publishArtifact in (Compile, packageDoc) := false
-
-
-publishArtifact in (Test, packageBin) := true
 
 // continuations
 val contVersion = "1.0.2"
@@ -46,12 +51,10 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (ver, deps) =>
      deps :+ compilerPlugin("org.scala-lang.plugins" % "scala-continuations-plugin" % contVersion cross CrossVersion.full)
 }
 
-//fork := true
-//connectInput := true
-//outputStrategy := Some(StdoutOutput)
-
 scalacOptions += "-P:continuations:enable"
 
+
+// macro paradise
 val paradiseVersion = "2.0.1"
 
 libraryDependencies ++= (
@@ -63,3 +66,12 @@ libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value %
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.3.2"
 
 addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full)
+
+
+// --- testing ---
+
+// tests are not thread safe
+parallelExecution in Test := false
+
+// code coverage
+scoverage.ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := false

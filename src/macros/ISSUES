@@ -1,0 +1,38 @@
+## Issues
+
+- infix chain more nicely with implicits, than implicits with
+  implicits. hurdle e.g.:
+  https://github.com/TiarkRompf/virtualization-lms-core/commit/d92799fdcda352fd7bf9887990844e15550c3516#diff-4c255b088661c91c9d0a1d444e7df7b9R42
+
+  arithmetic with numeric widening is another example: both
+  int * double and double * int need to be handled.
+  variables will add further complication, so we have: (Var + Rep + T) x (Int, Double, ...).
+
+  for systems-level code, a possible option is to just not support
+  widening (i.e. require x.toDouble), but for Delite this doesn't look 
+  like an option.
+
+  https://github.com/TiarkRompf/virtualization-lms-core/commit/c6c77f8e6325c5dff26eb0fac6a61087eed7637f
+
+- the new scala-virtualized has some anyref-specific virtualization
+  (such as clone), and these seem to not mesh well with rep types. seems
+  like this triggers an error in type-checking after macro-expansion.
+  hurdle e.g.:
+  https://github.com/TiarkRompf/virtualization-lms-core/commit/d92799fdcda352fd7bf9887990844e15550c3516#diff-4c255b088661c91c9d0a1d444e7df7b9R32
+
+- in the new scala-virtualized, scala.Predef does not mix in EmbeddedControls,
+  so adding @virtualize to a trait that does not inherit from EmbeddedControls
+  caused method not found errors.
+
+
+
+
+## General todo items
+
+- core functionality
+- performance
+- pattern matching
+- refined manifests
+- source context
+- structs
+- scopes
