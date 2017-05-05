@@ -15,6 +15,15 @@ publishTo := {
   Some(repo)
 }
 
+
+// include the macro classes and resources in the main jar
+mappings in (Compile, packageBin) ++= mappings.in(macros, Compile, packageBin).value,
+// include the macro docs in the main dpcs jar
+mappings in (Compile, packageDoc) ++= mappings.in(macros, Compile, packageDoc).value
+// include the macro sources in the main source jar
+mappings in (Compile, packageSrc) ++= mappings.in(macros, Compile, packageSrc).value
+
+
 // do not publish docs for snapshot releases
 publishArtifact in (Compile, packageDoc) := !version.value.trim.endsWith("SNAPSHOT")
 

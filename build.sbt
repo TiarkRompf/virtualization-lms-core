@@ -1,5 +1,7 @@
 // --- project info ---
-lazy val lms = Project("LMS", file("."))
+lazy val macros = (project in file("macros"))
+
+lazy val lms = Project("LMS", file(".")) dependsOn(macros)
 
 envVars := Map("showSuppressedErrors" -> "false", "showTimings" -> "false")
 
@@ -47,9 +49,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang.plugins" %% "scala-continuations-library" % contVersion % "compile"
 )
 
-libraryDependencies <<= (scalaVersion, libraryDependencies) { (ver, deps) =>
-     deps :+ compilerPlugin("org.scala-lang.plugins" % "scala-continuations-plugin" % contVersion cross CrossVersion.full)
-}
+addCompilerPlugin("org.scala-lang.plugins" % "scala-continuations-plugin_2.11.2" % "1.0.2")
 
 scalacOptions += "-P:continuations:enable"
 

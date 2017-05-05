@@ -133,7 +133,7 @@ class RecordMacros(val c: Context) {
           ..$dstMembers
         }
       }"""
-      c.info(c.enclosingPosition, showCode(accessor), true)
+      //c.info(c.enclosingPosition, showCode(accessor), true)
       accessor
     }
 
