@@ -1,4 +1,9 @@
 // --- project info ---
+val virtScala = Option(System.getenv("SCALA_VIRTUALIZED_VERSION")).getOrElse("2.11.2")
+
+lazy val lms = Project("LMS", file("."))
+
+envVars := Map("showSuppressedErrors" -> "false", "showTimings" -> "false")
 
 name := "lms-core"
 
@@ -21,9 +26,9 @@ scalaVersion := virtScala
 
 scalaOrganization := "org.scala-lang.virtualized"
 
-scalaSource in Compile <<= baseDirectory(_ / "src")
+scalaSource in Compile := baseDirectory.value / "src"
 
-scalaSource in Test <<= baseDirectory(_ / "test-src")
+scalaSource in Test := baseDirectory.value / "test-src"
 
 scalacOptions += "-Yvirtualize"
 
