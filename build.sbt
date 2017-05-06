@@ -1,15 +1,26 @@
 // --- project info ---
 lazy val macros = (project in file("macros"))
+    .settings(
+        scalaVersion := "2.11.8",
+        organization := "org.scala-lang.virtualized",
+        libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile",
+        addCompilerPlugin("org.scalamacros" % "paradise_2.11.8" % "2.1.0"),
+        publish := {},
+        publishLocal := {},
+        publishArtifact := false
+    )
 
 lazy val lms = Project("LMS", file("."))
-	.dependsOn(macros)
-	.settings(
-		// include the macro classes and resources in the main jar
-		mappings in (Compile, packageBin) ++= mappings.in(macros, Compile, packageBin).value,
-		// include the macro docs in the main dpcs jar
-		mappings in (Compile, packageDoc) ++= mappings.in(macros, Compile, packageDoc).value,
-		// include the macro sources in the main source jar
-		mappings in (Compile, packageSrc) ++= mappings.in(macros, Compile, packageSrc).value)
+    .dependsOn(macros)
+    .settings(
+        // exclude macros from dependency list (mainly for clients)
+        allDependencies ~= (deps => deps.filter(_.name != "scala-virtualized")),
+        // include the macro classes and resources in the main jar
+        mappings in (Compile, packageBin) ++=  mappings.in(macros, Compile, packageBin).value,
+        // include the macro docs in the main dpcs jar
+        mappings in (Compile, packageDoc) ++= mappings.in(macros, Compile, packageDoc).value,
+        // include the macro sources in the main source jar
+        mappings in (Compile, packageSrc) ++= mappings.in(macros, Compile, packageSrc).value)
 
 
 
