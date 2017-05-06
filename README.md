@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/TiarkRompf/virtualization-lms-core.svg?branch=develop-macrovirt-0.9.x)](https://travis-ci.org/TiarkRompf/virtualization-lms-core)
-[![Maven Central](https://img.shields.io/maven-central/v/org.scala-lang.lms/lms-core-macrovirt_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/org.scala-lang.lms/lms-core-macrovirt_2.11)
+[![Maven Central](https://img.shields.io/maven-central/v/org.scala-lang.lms/lms-core_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/org.scala-lang.lms/lms-core_2.11)
 
 Lightweight Modular Staging (LMS) is a runtime code generation approach. 
 This framework, LMS-Core, provides a library of core components for building 
