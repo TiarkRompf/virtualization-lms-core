@@ -249,6 +249,9 @@ case _ => super.fresh
   }
 
   def registerStruct[T<:Record:Manifest](name: String, elems: Seq[(String, Manifest[_])]) = {
+    if (elems.exists(_._2 == manifest[Any])) {
+      throw new RuntimeException(s"Any found in Record $name, $elems")
+    }
   	encounteredStructs += name -> elems
   }
   val encounteredStructs = new scala.collection.mutable.HashMap[String, Seq[(String, Manifest[_])]]
