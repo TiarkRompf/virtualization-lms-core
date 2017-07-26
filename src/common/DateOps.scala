@@ -21,6 +21,7 @@ trait DateOps extends Base {
   def newDate(x: Rep[Long]): Rep[Date]
   def dtGetTime(x: Rep[Date]): Rep[Long]
   def dtGetYear(x: Rep[Date]): Rep[Long]
+  def dtGetMonth(x: Rep[Date]): Rep[Long]
   def epochGetYear(x: Rep[Date]): Rep[Long]
   def getDateAsString(x: Rep[Long]): Rep[String]
 }
@@ -29,6 +30,7 @@ trait DateExp extends DateOps with BaseExp {
 
   case class DtGetTime(x: Exp[Date]) extends Def[Long]
   case class DtGetYear(x: Exp[Date]) extends Def[Long]
+  case class DtGetMonth(x: Exp[Date]) extends Def[Long]
   case class EpochGetYear(x: Exp[Date]) extends Def[Long] {
     val z   = fresh[Int]
     val era = fresh[Int]
@@ -47,6 +49,7 @@ trait DateExp extends DateOps with BaseExp {
   def newDate(x: Rep[Long]): Exp[Date] = NewDate(x)
   def dtGetTime(x: Exp[Date]): Exp[Long] = DtGetTime(x)
   def dtGetYear(x: Exp[Date]): Exp[Long] = DtGetYear(x)
+  def dtGetMonth(x: Exp[Date]): Exp[Long] = DtGetMonth(x)
   def epochGetYear(x: Exp[Date]): Exp[Long] = EpochGetYear(x)
   def getDateAsString(x: Rep[Long]) = GetDateAsString(x)
 
@@ -56,6 +59,7 @@ trait DateExp extends DateOps with BaseExp {
     case NewDate(x) => newDate(x)
     case DtGetTime(x) => dtGetTime(f(x))
     case DtGetYear(x) => dtGetYear(f(x))
+    case DtGetMonth(x) => dtGetMonth(f(x))
     case EpochGetYear(x) => epochGetYear(f(x))
     case GetDateAsString(x) => getDateAsString(f(x))
     case _ => super.mirror(e,f)
@@ -93,7 +97,8 @@ trait CGenDate extends CGenBase with CNestedCodegen {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case NewDate(x) => stream.println("long " + quote(sym) + " = " + quote(x) + "; // date")
-    case dgy@DtGetYear(x) => emitValDef(sym, src"$x / 10000")
+    case DtGetYear(x) => emitValDef(sym, src"$x / 10000L")
+    case DtGetMonth(x) => emitValDef(sym, src"($x / 100L) % 100L")
     case dgy@EpochGetYear(x) =>
       emitValDef(dgy.z, src"$x + 719468")
       emitValDef(dgy.era, src"(${dgy.z} >= 0 ? ${dgy.z} : ${dgy.z} - 146096) / 146097")
