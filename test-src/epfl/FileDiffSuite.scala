@@ -33,6 +33,12 @@ trait FileDiffSuite extends RefSpec {
     }
   }
   
+  def sanitize(s: String): String = {
+    s.replaceAll("""scala\.virtualization\.lms\.epfl\..+\$\$Lambda\$\d+/\d+""","<function>")
+     .replaceAll("""<function\d>""","<function>")
+     .replaceAll("""@[0-9a-f]+""","")
+  }
+
   def readFile(name: String): String = {
     val source = scala.io.Source.fromFile(name)
     val lines = source.getLines.mkString("\n")
@@ -40,7 +46,7 @@ trait FileDiffSuite extends RefSpec {
     lines
   }
   def assertFileCheck(name: String, expected: String): Unit = {
-    assert(readFile(name) == expected, name) // TODO: diff output
+    assert(sanitize(readFile(name)) == sanitize(expected), name) // TODO: diff output
     new File(name) delete ()
   }
   def assertFileEqualsCheck(name: String): Unit = {

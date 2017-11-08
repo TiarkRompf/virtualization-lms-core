@@ -1,4 +1,4 @@
--- hit recursion: class scala.virtualization.lms.epfl.test3.MatchingExtractorsExp$$anonfun$liftAlt$1$1 Sym(5) <- Sym(0)
+-- hit recursion: class scala.virtualization.lms.epfl.test3.MatchingExtractorsExp$$Lambda$4469/43024861 Sym(5) <- Sym(0)
 TP(Sym(1),Lambda(<function1>))
 TP(Sym(2),Test(Sym(0),0.0))
 TP(Sym(3),Reify(Const(1.0),List(Sym(2))))

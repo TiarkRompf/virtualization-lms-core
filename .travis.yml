@@ -14,7 +14,7 @@ cache:
 # Q: should we use sbt ++$TRAVIS_SCALA_VERSION test?
 
 script:
-  - sbt clean # coverage test && sbt coverageAggregate
+  - sbt clean test # coverage test && sbt coverageAggregate
   # Tricks to avoid unnecessary cache updates
   - find $HOME/.sbt -name "*.lock" | xargs rm
   - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
