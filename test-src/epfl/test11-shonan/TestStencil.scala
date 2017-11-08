@@ -239,7 +239,7 @@ class TestStencil extends FileDiffSuite {
 
   val prefix = home + "test-out/epfl/test11-"
 
-  def testStencil0 = withOutFileChecked(prefix+"stencil0") {
+  def `testStencil0 ` = withOutFileChecked(prefix+"stencil0") {
     trait Prog extends DSL {
 
       // not actually sliding -- just to have a baseline reference
@@ -270,7 +270,7 @@ class TestStencil extends FileDiffSuite {
   }
 
 
-  def testStencil1 = withOutFileChecked(prefix+"stencil1") {
+  def `testStencil1 ` = withOutFileChecked(prefix+"stencil1") {
     trait Prog extends DSL with Sliding {
       def test(v: Rep[Array[Double]]) = {
 
@@ -307,7 +307,7 @@ class TestStencil extends FileDiffSuite {
   }
   */
 
-  def testStencil2a = withOutFileChecked(prefix+"stencil2a") {
+  def `testStencil2a ` = withOutFileChecked(prefix+"stencil2a") {
     trait Prog extends DSL with Sliding {
       def test(v: Rep[Array[Double]]) = {
 
@@ -335,7 +335,7 @@ class TestStencil extends FileDiffSuite {
     new Prog with Impl with SlidingExp
   }
 
-  def testStencil2b = withOutFileChecked(prefix+"stencil2b") {
+  def `testStencil2b ` = withOutFileChecked(prefix+"stencil2b") {
     trait Prog extends DSL with Sliding {
       def test(v: Rep[Array[Double]]) = {
 
@@ -364,7 +364,7 @@ class TestStencil extends FileDiffSuite {
   }
 
 
-  def testStencil3a = withOutFileChecked(prefix+"stencil3a") {
+  def `testStencil3a ` = withOutFileChecked(prefix+"stencil3a") {
     trait Prog extends DSL with Sliding {
       def test(v: Rep[Array[Double]]) = {
 
@@ -397,7 +397,7 @@ class TestStencil extends FileDiffSuite {
     new Prog with Impl with SlidingExp
   }
 
-  def testStencil3b = withOutFileChecked(prefix+"stencil3b") {
+  def `testStencil3b ` = withOutFileChecked(prefix+"stencil3b") {
     trait Prog extends DSL with Sliding {
       def test(v: Rep[Array[Double]]) = {
 

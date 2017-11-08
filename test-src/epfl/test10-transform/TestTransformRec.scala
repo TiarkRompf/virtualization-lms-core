@@ -113,14 +113,14 @@ class TestTransformRec extends FileDiffSuite {
     }
   }
 
-  def testSimple = withOutFileChecked(prefix+"transformrec1") {
+  def `testSimple ` = withOutFileChecked(prefix+"transformrec1") {
     @virtualize trait Prog extends DSL {
       def testFun = doLambda { n => n + 1.0 }
     }
     new Prog with Impl
   }
 
-  def testRec = withOutFileChecked(prefix+"transformrec2") {
+  def `testRec ` = withOutFileChecked(prefix+"transformrec2") {
     @virtualize trait Prog extends DSL {
       def testFun = doLambda { n =>
         if (n == 0) 1.0 else n * testFun(n - 1.0)
@@ -129,7 +129,7 @@ class TestTransformRec extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testMutuallyRec = withOutFileChecked(prefix+"transformrec3") {
+  def `testMutuallyRec ` = withOutFileChecked(prefix+"transformrec3") {
     @virtualize trait Prog extends DSL {
       def testFun = doLambda { n =>
         if (n == 0) 1.0 else n * other(n)

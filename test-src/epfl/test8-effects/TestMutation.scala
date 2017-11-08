@@ -155,7 +155,7 @@ class TestMutation extends FileDiffSuite {
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
   
-  def testMutation1 = {
+  def `testMutation1 ` = {
     withOutFile(prefix+"mutation1") {
      // a write operation must unambigously identify the object being mutated
      @virtualize trait Prog extends DSL {
@@ -174,7 +174,7 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation1")
   }
 
-  def testMutation1b = {
+  def `testMutation1b ` = {
     withOutFile(prefix+"mutation1b") {
      // a write operation must unambigously identify the object being mutated
       @virtualize trait Prog extends DSL {
@@ -194,7 +194,7 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation1b")
   }
 
-  def testMutation2 = {
+  def `testMutation2 ` = {
     withOutFile(prefix+"mutation2") {
       // an operation that might read from mutable data v will be serialized with all writes to v
       @virtualize trait Prog extends DSL {
@@ -219,7 +219,7 @@ class TestMutation extends FileDiffSuite {
   }
 
 
-  def testMutation3 = {
+  def `testMutation3 ` = {
     withOutFile(prefix+"mutation3") {
       // vars may not reference mutable objects
       @virtualize trait Prog extends DSL with LiftVariables with LiftArrayReads {
@@ -239,7 +239,7 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation3")
   }
 
-  def testMutation3b = {
+  def `testMutation3b ` = {
     withOutFile(prefix+"mutation3b") {
       // vars may not reference mutable objects
       @virtualize trait Prog extends DSL with LiftVariables with LiftArrayReads {
@@ -259,7 +259,7 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation3b")
   }
 
-  def testMutation4 = {
+  def `testMutation4 ` = {
     withOutFile(prefix+"mutation4") {
       // mutable objects cannot be nested
       @virtualize trait Prog extends DSL {
@@ -276,7 +276,7 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation4")
   }
 
-  def testMutation4b = {
+  def `testMutation4b ` = {
     withOutFile(prefix+"mutation4b") {
       // mutable objects cannot be nested
       @virtualize trait Prog extends DSL {
@@ -294,7 +294,7 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation4b")
   }
 
-  def testMutation4c = {
+  def `testMutation4c ` = {
     withOutFile(prefix+"mutation4c") {
       // mutable objects cannot be nested
       @virtualize trait Prog extends DSL {
@@ -312,7 +312,7 @@ class TestMutation extends FileDiffSuite {
   }
 
 
-  def testMutation5 = {
+  def `testMutation5 ` = {
     withOutFile(prefix+"mutation5") {
       // mutable objects cannot be nested
       @virtualize trait Prog extends DSL {
@@ -336,7 +336,7 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation5")
   }
 
-  def testMutation6 = {
+  def `testMutation6 ` = {
     withOutFile(prefix+"mutation6") {
       // mutate nested object (within an immutable one)
       @virtualize trait Prog extends DSL {
@@ -361,7 +361,7 @@ class TestMutation extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"mutation6")
   }
 
-  def testMutation7 = {
+  def `testMutation7 ` = {
     withOutFile(prefix+"mutation7") {
       // local variables of primitive type
       @virtualize trait Prog extends DSL with LiftVariables with LiftArrayReads {

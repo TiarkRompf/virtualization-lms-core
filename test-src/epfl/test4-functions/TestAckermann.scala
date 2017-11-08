@@ -48,7 +48,7 @@ class TestAck extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test4-"
 
-  def testAck1 = {
+  def `testAck1 ` = {
     withOutFile(prefix+"ack1") {
       object AckProgExp extends AckProg
         with ArithExpOpt with EqualExp with IfThenElseExp 

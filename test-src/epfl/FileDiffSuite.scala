@@ -2,10 +2,10 @@ package scala.virtualization.lms
 package epfl
 
 import java.io.{PrintStream,File,FileInputStream,FileOutputStream,ByteArrayOutputStream}
-import org.scalatest._
+import org.scalatest.refspec._
 
 
-trait FileDiffSuite extends Suite {
+trait FileDiffSuite extends RefSpec {
   val home = sys.env.get("LMS_HOME").map(_ + "/").getOrElse("")
 
   def withOutFile(name: String)(func: => Unit): Unit = {

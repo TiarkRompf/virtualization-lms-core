@@ -239,7 +239,7 @@ class TestStable extends FileDiffSuite {
 
 
 
-  def testUnstage = withOutFileChecked(prefix+"unstage1") {
+  def `testUnstage ` = withOutFileChecked(prefix+"unstage1") {
     @virtualize trait Prog extends DSL with Functions with StaticData {
       def test() = {
 
@@ -271,7 +271,7 @@ class TestStable extends FileDiffSuite {
 
 
 
-  def testStable1 = withOutFileChecked(prefix+"stable1") {
+  def `testStable1 ` = withOutFileChecked(prefix+"stable1") {
     @virtualize trait Prog extends DSL with Functions with StaticData {
       def test() = {
 
@@ -318,7 +318,7 @@ class TestStable extends FileDiffSuite {
 
 
 
-  def testStable2 = withOutFileChecked(prefix+"stable2") {
+  def `testStable2 ` = withOutFileChecked(prefix+"stable2") {
     @virtualize trait Prog extends DSL {
       def test() = {
 

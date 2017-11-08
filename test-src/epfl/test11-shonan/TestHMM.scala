@@ -52,7 +52,7 @@ class TestHMM extends FileDiffSuite {
 
   val prefix = home + "test-out/epfl/test11-"
   
-  def testHmm1 = {
+  def `testHmm1 ` = {
     withOutFileChecked(prefix+"hmm1") {
       @virtualize trait Prog extends DSL {
         def test(v: Rep[Array[Int]]) = {
@@ -95,7 +95,7 @@ class TestHMM extends FileDiffSuite {
     }
   }
 
-  def testHmm2 = {
+  def `testHmm2 ` = {
     withOutFileChecked(prefix+"hmm2") {
       @virtualize trait Prog extends DSL {
         def test(v: Rep[Array[Int]]) = {

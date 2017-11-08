@@ -169,7 +169,7 @@ class TestFunctions extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test5-"
   
-  def testFunctions = {
+  def `testFunctions ` = {
     withOutFile(prefix+"functions") {
 
       println("-- begin")
@@ -199,7 +199,7 @@ class TestFunctions extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"functions")
   }
 
-  def testFunRetFun = {
+  def `testFunRetFun ` = {
     withOutFile(prefix+"funretfun") {
 
       println("-- begin")
@@ -225,7 +225,7 @@ class TestFunctions extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"funretfun")
   }
 
-  def testFunctionsRecursive = {
+  def `testFunctionsRecursive ` = {
     withOutFile(prefix+"functionsrecursive") {
 
       println("-- begin")
@@ -249,7 +249,7 @@ class TestFunctions extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"functionsrecursive")
   }
 
-  def testTwoArgsFun = {
+  def `testTwoArgsFun ` = {
     withOutFile(prefix+"twoargsfun") {
       new TwoArgsFunProg with TupledFunctionsExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
@@ -259,7 +259,7 @@ class TestFunctions extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"twoargsfun")
   }
 
-  def testTupleFun = {
+  def `testTupleFun ` = {
     withOutFile(prefix+"tuplefun") {
       new TupleFunProg with ArithExp with TupledFunctionsExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
@@ -269,7 +269,7 @@ class TestFunctions extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"tuplefun")
   }
 
-  def testNoArgFun = {
+  def `testNoArgFun ` = {
     withOutFile(prefix+"noargfun") {
       new NoArgFunProg with TupledFunctionsRecursiveExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
@@ -279,7 +279,7 @@ class TestFunctions extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"noargfun")
   }
 
-  def testTwoArgsRecursiveFun = {
+  def `testTwoArgsRecursiveFun ` = {
     withOutFile(prefix+"twoargsrecfun") {
       new TwoArgsRecursiveFunProg with TupledFunctionsRecursiveExp with ArithExpOpt with EqualExp with IfThenElseExp { self =>
         val codegen = new JSGenTupledFunctions with JSGenArith with JSGenEqual with JSGenIfThenElse with JSGenTupleOps with GenericGenUnboxedTupleAccess { val IR: self.type = self }
@@ -289,7 +289,7 @@ class TestFunctions extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"twoargsrecfun")
   }
 
-  def testSchedFun = {
+  def `testSchedFun ` = {
     withOutFile(prefix+"schedfun") {
       new SchedFunProg with FunctionsRecursiveExp with ArithExpOpt with EqualExp with IfThenElseExp { self =>
         val codegen = new JSGenFunctions with JSGenArith with JSGenEqual with JSGenIfThenElse { val IR: self.type = self }

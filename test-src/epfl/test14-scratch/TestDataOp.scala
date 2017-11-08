@@ -192,7 +192,7 @@ class TestDataOp extends FileDiffSuite {
   }
 
 
-  def testDataOp1 = {
+  def `testDataOp1 ` = {
     withOutFile(prefix+"dataop1") {
       @virtualize
       trait Prog extends DSL {
@@ -215,7 +215,7 @@ class TestDataOp extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"dataop1")
   }
 
-  def testDataOp2 = {
+  def `testDataOp2 ` = {
     withOutFile(prefix+"dataop2") {
       @virtualize
       trait Prog extends DSL {
@@ -239,7 +239,7 @@ class TestDataOp extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"dataop2")
   }
 
-  def testDataOp3 = {
+  def `testDataOp3 ` = {
     withOutFile(prefix+"dataop3") {
       @virtualize
       trait Prog extends DSL {

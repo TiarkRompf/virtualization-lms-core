@@ -927,7 +927,7 @@ class TestQueries extends FileDiffSuite {
 
 
 
-  def testQueries1 = withOutFileChecked(prefix+"queries1") {
+  def `testQueries1 ` = withOutFileChecked(prefix+"queries1") {
     trait Prog extends Shallow {
       def test() = {
         println("db")
@@ -952,7 +952,7 @@ class TestQueries extends FileDiffSuite {
     new Prog {} test
   }
 
-  def testQueries2 = withOutFileChecked(prefix+"queries2") {
+  def `testQueries2 ` = withOutFileChecked(prefix+"queries2") {
     trait Prog extends DSL with Staged {
       def test() = {
 
@@ -989,7 +989,7 @@ class TestQueries extends FileDiffSuite {
     //println(o.)
   }
 
-  def testQueries3 = withOutFileChecked(prefix+"queries3") {
+  def `testQueries3 ` = withOutFileChecked(prefix+"queries3") {
     trait Prog extends DSL with Staged {
       def test() = {
 
@@ -1025,7 +1025,7 @@ class TestQueries extends FileDiffSuite {
     val o = new Prog with Impl
     //println(o.)
   }
-  def testQueries4 = withOutFileChecked(prefix+"queries4") {
+  def `testQueries4 ` = withOutFileChecked(prefix+"queries4") {
     trait Prog extends DSL with Staged {
       def test() = {
 

@@ -106,7 +106,7 @@ class TestFusion4 extends FileDiffSuite {
   // code might not be worth the effort for this test DSL.
   val prefix = home + "test-out/epfl/test7-wip2-"
 
-  def testFusionTransform00 = withOutFileChecked(prefix+"fusion00") {
+  def `testFusionTransform00 ` = withOutFileChecked(prefix+"fusion00") {
     trait Prog extends MyFusionProgArith with ImplArith {
       implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
       def test(x: Rep[Int]) = {
@@ -129,7 +129,7 @@ class TestFusion4 extends FileDiffSuite {
     new Prog with ImplArith
   }
 
-  def testFusionTransform01 = withOutFileChecked(prefix+"fusion01") {
+  def `testFusionTransform01 ` = withOutFileChecked(prefix+"fusion01") {
     trait Prog extends MyFusionProgArith with ImplArith {
       implicit def bla(x: Rep[Int]): Rep[Double] = x.asInstanceOf[Rep[Double]]
       def test(x: Rep[Int]) = {
@@ -146,7 +146,7 @@ class TestFusion4 extends FileDiffSuite {
     new Prog with ImplArith
   }
   
-  def testFusionTransform02 = withOutFileChecked(prefix+"fusion02") {
+  def `testFusionTransform02 ` = withOutFileChecked(prefix+"fusion02") {
     trait Prog extends MyFusionProgArith with ImplArith {
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
       def test(x: Rep[Int]) = {
@@ -169,7 +169,7 @@ class TestFusion4 extends FileDiffSuite {
     new Prog with ImplArith
   }
 
-  def testFusionTransform03 = withOutFileChecked(prefix+"fusion03") {
+  def `testFusionTransform03 ` = withOutFileChecked(prefix+"fusion03") {
     trait Prog extends MyFusionProgArith with ImplArith {
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
       def test(x: Rep[Int]) = {
@@ -206,7 +206,7 @@ class TestFusion4 extends FileDiffSuite {
     new Prog with ImplArith
   }
 
-  def testFusionTransform04 = withOutFileChecked(prefix+"fusion04") {
+  def `testFusionTransform04 ` = withOutFileChecked(prefix+"fusion04") {
     trait Prog extends MyFusionProgArith with ImplArith {
       def infix_foo(x: Rep[Array[Double]]): Rep[Double] = x.at(0)
       def test(x: Rep[Int]) = {
@@ -240,7 +240,7 @@ class TestFusion4 extends FileDiffSuite {
     new Prog with ImplArith
   }
 
-  def testFusionTransform05 = withOutFileChecked(prefix+"fusion05") {
+  def `testFusionTransform05 ` = withOutFileChecked(prefix+"fusion05") {
     trait Prog extends MyFusionProgArith with ImplArith {
       // override def infix_-(x: Exp[Double], y: Exp[Double])(implicit pos: SourceContext) = if (x == y) {
       //   println("*** removing self subtraction " + x + " - " + y)

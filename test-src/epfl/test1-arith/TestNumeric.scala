@@ -15,7 +15,7 @@ class TestNumeric extends FileDiffSuite {
 
   // this seems to be a bug in Scala-Virtualized related to reified __new
 
-  def testBugNumeric1 = {
+  def `testBugNumeric1 ` = {
     withOutFile(prefix+"numeric1") {
       trait Prog extends Base with NumericOps with PrimitiveOps with StructOps with LiftNumeric {
         def test(x: Rep[Int]) = {
@@ -64,7 +64,7 @@ class TestNumeric extends FileDiffSuite {
     def unit(x:Double): Rep[Double]
   }
 
-  def testBugNumeric2 = {
+  def `testBugNumeric2 ` = {
     withOutFile(prefix+"numeric2") {
       trait Prog extends MinimalIntf {
         def test = {
@@ -80,7 +80,7 @@ class TestNumeric extends FileDiffSuite {
 
   // this one may be slightly simpler to debug
 
-  def testBugNumeric2b = {
+  def `testBugNumeric2b ` = {
     withOutFile(prefix+"numeric2b") {
       trait Prog extends MinimalIntf {
         def test = {
@@ -94,7 +94,7 @@ class TestNumeric extends FileDiffSuite {
   }
 
 
-  def testBugNumeric3 = {
+  def `testBugNumeric3 ` = {
     withOutFile(prefix+"numeric3") {
       trait Prog extends Base with NumericOps with PrimitiveOps with LiftNumeric with StringOps {
 

@@ -29,7 +29,7 @@ class TestParsers extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test3-"
   
-  def testParse1 = {
+  def `testParse1 ` = {
     withOutFile(prefix+"parse1") {
       object ParsersProgExp extends ParsersProg with Matching with Extractors
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll with FlatResult // with ControlOpt
@@ -51,7 +51,7 @@ class TestParsers extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"parse1-dot")
   }
 
-  def testParse2 = {
+  def `testParse2 ` = {
     withOutFile(prefix+"parse2") {
       object ParsersProgExp extends ParsersProg with Matching with Extractors 
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll with FlatResult // with ControlOpt

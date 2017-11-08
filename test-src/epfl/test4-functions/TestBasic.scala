@@ -29,7 +29,7 @@ class TestBasic extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test4-"
 
-  def testBasic1 = {
+  def `testBasic1 ` = {
     withOutFile(prefix+"basic1") {
       object BasicProgExp extends BasicProg
         with ArithExpOpt with EqualExp with IfThenElseExp 
@@ -42,7 +42,7 @@ class TestBasic extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"basic1")
   }
 
-  def testBasic2 = {
+  def `testBasic2 ` = {
     withOutFile(prefix+"basic2") {
       object BasicProgExp extends BasicProg2
         with ArithExpOpt with EqualExp with IfThenElseExp 

@@ -151,7 +151,7 @@ class TestFusion3 extends FileDiffSuite {
   val prefix = home + "test-out/epfl/test7-wip-"
   val suffix = ""//".check"
 
-  def testFusionTransform00 = withOutFileChecked(prefix+"fusion00"+suffix) {
+  def `testFusionTransform00 ` = withOutFileChecked(prefix+"fusion00"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // range is producer, odds is consumer, range fused into odds
@@ -165,7 +165,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform01 = withOutFileChecked(prefix+"fusion01"+suffix) {
+  def `testFusionTransform01 ` = withOutFileChecked(prefix+"fusion01"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {  
         // range is producer, odds is consumer, range fused into odds
@@ -184,7 +184,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform02 = withOutFileChecked(prefix+"fusion02"+suffix) {
+  def `testFusionTransform02 ` = withOutFileChecked(prefix+"fusion02"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // odds not consumer because not full length of range
@@ -203,7 +203,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform03 = withOutFileChecked(prefix+"fusion03"+suffix) {
+  def `testFusionTransform03 ` = withOutFileChecked(prefix+"fusion03"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // not consumer, shape replaced so range is dce'd
@@ -219,7 +219,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform04 = withOutFileChecked(prefix+"fusion04"+suffix) {
+  def `testFusionTransform04 ` = withOutFileChecked(prefix+"fusion04"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // length moved out and replaced with constant, so is consumer, hor.
@@ -235,7 +235,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform05 = withOutFileChecked(prefix+"fusion05"+suffix) {
+  def `testFusionTransform05 ` = withOutFileChecked(prefix+"fusion05"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // not consumer, constant replaced
@@ -251,7 +251,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform06 = withOutFileChecked(prefix+"fusion06"+suffix) {
+  def `testFusionTransform06 ` = withOutFileChecked(prefix+"fusion06"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // range is producer, arr1 is consumer and arr2 is also consumer of range
@@ -272,7 +272,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform07 = withOutFileChecked(prefix+"fusion07"+suffix) {
+  def `testFusionTransform07 ` = withOutFileChecked(prefix+"fusion07"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // range is producer, arr1 is consumer and arr2 is also consumer of range
@@ -293,7 +293,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }  
 
-  def testFusionTransform08 = withOutFileChecked(prefix+"fusion08"+suffix) {
+  def `testFusionTransform08 ` = withOutFileChecked(prefix+"fusion08"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // successive consumers fused     
@@ -311,7 +311,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform09 = withOutFileChecked(prefix+"fusion09"+suffix) {
+  def `testFusionTransform09 ` = withOutFileChecked(prefix+"fusion09"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // SimpleCollect + MultiCollect: inner loop not fused
@@ -323,7 +323,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform10 = withOutFileChecked(prefix+"fusion10"+suffix) {
+  def `testFusionTransform10 ` = withOutFileChecked(prefix+"fusion10"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {     
         // nested array arrI not fused with range
@@ -349,7 +349,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform11 = withOutFileChecked(prefix+"fusion11"+suffix) {
+  def `testFusionTransform11 ` = withOutFileChecked(prefix+"fusion11"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // no horizontal fusion across levels
@@ -369,7 +369,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform12 = withOutFileChecked(prefix+"fusion12"+suffix) {
+  def `testFusionTransform12 ` = withOutFileChecked(prefix+"fusion12"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {    
         // horizontal fusion in nested loop (not vertical since not consumer)
@@ -388,7 +388,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform13 = withOutFileChecked(prefix+"fusion13"+suffix) {
+  def `testFusionTransform13 ` = withOutFileChecked(prefix+"fusion13"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // reconstructed consumers fused, no hor.
@@ -407,7 +407,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform14 = withOutFileChecked(prefix+"fusion14"+suffix) {
+  def `testFusionTransform14 ` = withOutFileChecked(prefix+"fusion14"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // multiple producers (zip): fuse with real and then 1st reconstructed
@@ -420,7 +420,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform15 = withOutFileChecked(prefix+"fusion15"+suffix) {
+  def `testFusionTransform15 ` = withOutFileChecked(prefix+"fusion15"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // multiple producers (zip): fuse with first reconstr. and then others
@@ -433,7 +433,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform16 = withOutFileChecked(prefix+"fusion16"+suffix) {
+  def `testFusionTransform16 ` = withOutFileChecked(prefix+"fusion16"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // Test all branches of consumerGoesOverRangeOfProducer
@@ -459,7 +459,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform17 = withOutFileChecked(prefix+"fusion17"+suffix) {
+  def `testFusionTransform17 ` = withOutFileChecked(prefix+"fusion17"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         val range = array(x) { i => i + 1 }
@@ -480,7 +480,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform18 = withOutFileChecked(prefix+"fusion18"+suffix) {
+  def `testFusionTransform18 ` = withOutFileChecked(prefix+"fusion18"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {    
         // no  vertical (or hor.) fusion of range2 and range because
@@ -497,7 +497,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform19 = withOutFileChecked(prefix+"fusion19"+suffix) {
+  def `testFusionTransform19 ` = withOutFileChecked(prefix+"fusion19"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {   
         // no hor. fusion because of effect dependencies     
@@ -510,7 +510,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform20 = withOutFileChecked(prefix+"fusion20"+suffix) {
+  def `testFusionTransform20 ` = withOutFileChecked(prefix+"fusion20"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // don't reorder loops, no fusion
@@ -525,7 +525,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform21 = withOutFileChecked(prefix+"fusion21"+suffix) {
+  def `testFusionTransform21 ` = withOutFileChecked(prefix+"fusion21"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // multiple consumers all fused, range dce'd, 3 remaining hor. fused
@@ -541,7 +541,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform22 = withOutFileChecked(prefix+"fusion22"+suffix) {
+  def `testFusionTransform22 ` = withOutFileChecked(prefix+"fusion22"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // multiple consumers not fused:
@@ -564,7 +564,7 @@ class TestFusion3 extends FileDiffSuite {
 
   // Test Vertical Fusion: loop type combinations
 
-  def testFusionTransform23 = withOutFileChecked(prefix+"fusion23"+suffix) {
+  def `testFusionTransform23 ` = withOutFileChecked(prefix+"fusion23"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // SimpleCollect + Any fusion
@@ -589,7 +589,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform24 = withOutFileChecked(prefix+"fusion24"+suffix) {
+  def `testFusionTransform24 ` = withOutFileChecked(prefix+"fusion24"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // SimpleCollectIf + Any fusion
@@ -615,7 +615,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform25 = withOutFileChecked(prefix+"fusion25"+suffix) {
+  def `testFusionTransform25 ` = withOutFileChecked(prefix+"fusion25"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // MultiCollect(SC) + Any fusion
@@ -640,7 +640,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform26 = withOutFileChecked(prefix+"fusion26"+suffix) {
+  def `testFusionTransform26 ` = withOutFileChecked(prefix+"fusion26"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // SCIf + SC with common subexpression between condition&body
@@ -655,7 +655,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform27 = withOutFileChecked(prefix+"fusion27"+suffix) {
+  def `testFusionTransform27 ` = withOutFileChecked(prefix+"fusion27"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // MultiCollect(SCIf) + Any fusion
@@ -682,7 +682,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform28 = withOutFileChecked(prefix+"fusion28"+suffix) {
+  def `testFusionTransform28 ` = withOutFileChecked(prefix+"fusion28"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // MultiCollect(MC) + Any fusion
@@ -708,7 +708,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   // TODO no array out of bounds exception
-  def testFusionTransform29 = withOutFileChecked(prefix+"fusion29"+suffix) {
+  def `testFusionTransform29 ` = withOutFileChecked(prefix+"fusion29"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // MultiCollect(constant array SCIf) + Any fusion
@@ -737,7 +737,7 @@ class TestFusion3 extends FileDiffSuite {
 
   // Test Horizontal Fusion Prep Pass
 
-  def testFusionTransform30 = withOutFileChecked(prefix+"fusion30"+suffix) {
+  def `testFusionTransform30 ` = withOutFileChecked(prefix+"fusion30"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // range is producer, odds is consumer, range fused into odds
@@ -756,7 +756,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform31 = withOutFileChecked(prefix+"fusion31"+suffix) {
+  def `testFusionTransform31 ` = withOutFileChecked(prefix+"fusion31"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         val range = array(x) { i => i + 1 }
@@ -781,7 +781,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform32 = withOutFileChecked(prefix+"fusion32"+suffix) {
+  def `testFusionTransform32 ` = withOutFileChecked(prefix+"fusion32"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // regression test for bug when pBody is index, 
@@ -799,7 +799,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
   // TODO no array out of bounds exception
-  def testFusionTransform33 = withOutFileChecked(prefix+"fusion33"+suffix) {
+  def `testFusionTransform33 ` = withOutFileChecked(prefix+"fusion33"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // Constant array, successive works, but would like to yield directly to output
@@ -818,7 +818,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform34 = withOutFileChecked(prefix+"fusion34"+suffix) {
+  def `testFusionTransform34 ` = withOutFileChecked(prefix+"fusion34"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // fuse two MC and then successive SC consumer, vert. & hor.
@@ -833,7 +833,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform35 = withOutFileChecked(prefix+"fusion35"+suffix) {
+  def `testFusionTransform35 ` = withOutFileChecked(prefix+"fusion35"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // Fusion happens correctly inside of MC, even when loop is
@@ -853,7 +853,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform36 = withOutFileChecked(prefix+"fusion36"+suffix) {
+  def `testFusionTransform36 ` = withOutFileChecked(prefix+"fusion36"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // No vert., fuse outer horizontally and then fuse inner horizontally
@@ -869,7 +869,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform37 = withOutFileChecked(prefix+"fusion37"+suffix) {
+  def `testFusionTransform37 ` = withOutFileChecked(prefix+"fusion37"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // No vert., fuse outer horizontally and then fuse inner horizontally
@@ -894,7 +894,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform38 = withOutFileChecked(prefix+"fusion38"+suffix) {
+  def `testFusionTransform38 ` = withOutFileChecked(prefix+"fusion38"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {        
         // indirect dependency
@@ -914,7 +914,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform39 = withOutFileChecked(prefix+"fusion39"+suffix) {
+  def `testFusionTransform39 ` = withOutFileChecked(prefix+"fusion39"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // vert. fuse range4 with multiple producers range and range2
@@ -935,7 +935,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform40 = withOutFileChecked(prefix+"fusion40"+suffix) {
+  def `testFusionTransform40 ` = withOutFileChecked(prefix+"fusion40"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // multiple producers (zip): no problem fusing others of same shape
@@ -955,7 +955,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform41 = withOutFileChecked(prefix+"fusion41"+suffix) {
+  def `testFusionTransform41 ` = withOutFileChecked(prefix+"fusion41"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // multiple producers (zip): combination of existing fusion sets works
@@ -976,7 +976,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform42 = withOutFileChecked(prefix+"fusion42"+suffix) {
+  def `testFusionTransform42 ` = withOutFileChecked(prefix+"fusion42"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // multiple producers (zip): combination of existing fusion sets works.
@@ -1001,7 +1001,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform43 = withOutFileChecked(prefix+"fusion43"+suffix) {
+  def `testFusionTransform43 ` = withOutFileChecked(prefix+"fusion43"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // vert. fuse prod2 with range, cons with prod1&prod2
@@ -1019,7 +1019,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform44 = withOutFileChecked(prefix+"fusion44"+suffix) {
+  def `testFusionTransform44 ` = withOutFileChecked(prefix+"fusion44"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // vert. fuse prod2 with range, conflict with range
@@ -1038,7 +1038,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform45 = withOutFileChecked(prefix+"fusion45"+suffix) {
+  def `testFusionTransform45 ` = withOutFileChecked(prefix+"fusion45"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // fuse with remapped on lower level
@@ -1054,7 +1054,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform46 = withOutFileChecked(prefix+"fusion46"+suffix) {
+  def `testFusionTransform46 ` = withOutFileChecked(prefix+"fusion46"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // range's inner is fused into range2, was emitted twice from
@@ -1071,7 +1071,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
 /* // TODO simulated fusion
-  def testFusionTransform47 = withOutFileChecked(prefix+"fusion47") {
+  def `testFusionTransform47 ` = withOutFileChecked(prefix+"fusion47") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // successive arrayIndex
@@ -1090,7 +1090,7 @@ class TestFusion3 extends FileDiffSuite {
   }
   */
 
-  def testFusionTransform48 = withOutFileChecked(prefix+"fusion48"+suffix) {
+  def `testFusionTransform48 ` = withOutFileChecked(prefix+"fusion48"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // vert. fuse range2 & range3, range & range4, but cannot fuse range4 with range2
@@ -1107,7 +1107,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 /*// TODO MC inserts SI on inner loop, problem with successive detection?
 
-  def testFusionTransform49 = withOutFileChecked(prefix+"fusion49") {
+  def `testFusionTransform49 ` = withOutFileChecked(prefix+"fusion49") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // TODO
@@ -1126,7 +1126,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform50 = withOutFileChecked(prefix+"fusion50") {
+  def `testFusionTransform50 ` = withOutFileChecked(prefix+"fusion50") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // TODO
@@ -1141,7 +1141,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 */
 
-  def testFusionTransform51 = withOutFileChecked(prefix+"fusion51"+suffix) {
+  def `testFusionTransform51 ` = withOutFileChecked(prefix+"fusion51"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       // Fuse effectful foreach, removes intermediate array allocation
       def test(x: Rep[Int]) = {
@@ -1157,7 +1157,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 
 /* // TODO MC has Reflect(Singleton)  
-  def testFusionTransform52 = withOutFileChecked(prefix+"fusion52") {
+  def `testFusionTransform52 ` = withOutFileChecked(prefix+"fusion52") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // Fuse effectful producer and pure consumer
@@ -1171,7 +1171,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }*/
 
-  def testFusionTransform53 = withOutFileChecked(prefix+"fusion53"+suffix) {
+  def `testFusionTransform53 ` = withOutFileChecked(prefix+"fusion53"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // fuse pure producer and effectful consumer
@@ -1186,7 +1186,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform54 = withOutFileChecked(prefix+"fusion54"+suffix) {
+  def `testFusionTransform54 ` = withOutFileChecked(prefix+"fusion54"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // both effectful, but non-overlapping, still no fusion
@@ -1199,7 +1199,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform55 = withOutFileChecked(prefix+"fusion55"+suffix) {
+  def `testFusionTransform55 ` = withOutFileChecked(prefix+"fusion55"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // both effectful, but non-overlapping, still no hor. fusion
@@ -1212,7 +1212,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform56 = withOutFileChecked(prefix+"fusion56"+suffix) {
+  def `testFusionTransform56 ` = withOutFileChecked(prefix+"fusion56"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // range and range3 vertically fused, effectful
@@ -1233,7 +1233,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform57 = withOutFileChecked(prefix+"fusion57"+suffix) {
+  def `testFusionTransform57 ` = withOutFileChecked(prefix+"fusion57"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // multiple consumers, only range & range2 fused because of
@@ -1250,7 +1250,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 /* // TODO effectful producers?
-  def testFusionTransform58 = withOutFileChecked(prefix+"fusion58") {
+  def `testFusionTransform58 ` = withOutFileChecked(prefix+"fusion58") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // multiple producers (zip): fuse range&range2 (effectful),
@@ -1274,7 +1274,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform59 = withOutFileChecked(prefix+"fusion59") {
+  def `testFusionTransform59 ` = withOutFileChecked(prefix+"fusion59") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // fuse range&range2 (effectful), range3 not fused because fusion set
@@ -1289,7 +1289,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }  
 
-  def testFusionTransform60 = withOutFileChecked(prefix+"fusion60") {
+  def `testFusionTransform60 ` = withOutFileChecked(prefix+"fusion60") {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // no fusion because printX has both effect and returns value, so
@@ -1304,7 +1304,7 @@ class TestFusion3 extends FileDiffSuite {
   }
 */
 
-  def testFusionTransform61 = withOutFileChecked(prefix+"fusion61"+suffix) {
+  def `testFusionTransform61 ` = withOutFileChecked(prefix+"fusion61"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       // Fuse MC with effectful foreach, removes intermediate array allocation
       def test(x: Rep[Int]) = {
@@ -1315,7 +1315,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform62 = withOutFileChecked(prefix+"fusion62"+suffix) {
+  def `testFusionTransform62 ` = withOutFileChecked(prefix+"fusion62"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // fuse pure producer and effectful consumer
@@ -1329,7 +1329,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform63 = withOutFileChecked(prefix+"fusion63"+suffix) {
+  def `testFusionTransform63 ` = withOutFileChecked(prefix+"fusion63"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // fuse empty and foreach -> Unit left
@@ -1345,7 +1345,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform64 = withOutFileChecked(prefix+"fusion64"+suffix) {
+  def `testFusionTransform64 ` = withOutFileChecked(prefix+"fusion64"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // fuse MC(if-then empty else any) with foreach
@@ -1357,7 +1357,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform65 = withOutFileChecked(prefix+"fusion65"+suffix) {
+  def `testFusionTransform65 ` = withOutFileChecked(prefix+"fusion65"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // fuse MC(if-then any else empty) with foreach
@@ -1369,7 +1369,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform66 = withOutFileChecked(prefix+"fusion66"+suffix) {
+  def `testFusionTransform66 ` = withOutFileChecked(prefix+"fusion66"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // don't fuse if-then-else because no branch empty
@@ -1381,7 +1381,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform67 = withOutFileChecked(prefix+"fusion67"+suffix) {
+  def `testFusionTransform67 ` = withOutFileChecked(prefix+"fusion67"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // ManyMcsingle_For
@@ -1393,7 +1393,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform68 = withOutFileChecked(prefix+"fusion68"+suffix) {
+  def `testFusionTransform68 ` = withOutFileChecked(prefix+"fusion68"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // Fuse empty producer with all consumers. Reduce not fused.
@@ -1409,7 +1409,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform69 = withOutFileChecked(prefix+"fusion69"+suffix) {
+  def `testFusionTransform69 ` = withOutFileChecked(prefix+"fusion69"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // Fuse singleton producer with all consumers. Reduce not fused.
@@ -1425,7 +1425,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform70 = withOutFileChecked(prefix+"fusion70"+suffix) {
+  def `testFusionTransform70 ` = withOutFileChecked(prefix+"fusion70"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // Fuse if-then-else producer with all consumers. Reduce not fused.
@@ -1441,7 +1441,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
         
-  def testFusionTransform71 = withOutFileChecked(prefix+"fusion71"+suffix) {
+  def `testFusionTransform71 ` = withOutFileChecked(prefix+"fusion71"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         // in general don't fuse empty with reduce -> but here inner of MC fused with MC of
@@ -1456,7 +1456,7 @@ class TestFusion3 extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testFusionTransform72 = withOutFileChecked(prefix+"fusion72"+suffix) {
+  def `testFusionTransform72 ` = withOutFileChecked(prefix+"fusion72"+suffix) {
     trait Prog extends MyFusionProg with Impl {
       def test(x: Rep[Int]) = {
         val outer = array(1) { e =>

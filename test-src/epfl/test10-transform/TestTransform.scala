@@ -106,7 +106,7 @@ class TestTransform extends FileDiffSuite {
 
 
   // test simple block transform
-  def testTransform1 = withOutFileChecked(prefix+"transform1") {
+  def `testTransform1 ` = withOutFileChecked(prefix+"transform1") {
     @virtualize
     trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
@@ -120,7 +120,7 @@ class TestTransform extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testTransform2 = withOutFileChecked(prefix+"transform2") {
+  def `testTransform2 ` = withOutFileChecked(prefix+"transform2") {
     @virtualize
     trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {
@@ -137,7 +137,7 @@ class TestTransform extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testTransform3 = withOutFileChecked(prefix+"transform3") {
+  def `testTransform3 ` = withOutFileChecked(prefix+"transform3") {
     @virtualize
     trait Prog extends DSL with Impl {
       def test(x: Rep[Int]) = {

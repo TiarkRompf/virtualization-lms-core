@@ -127,7 +127,7 @@ class TestLiveness extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test7-"
   
-  def testLiveness1 = {
+  def `testLiveness1 ` = {
     withOutFile(prefix+"liveness1") {
       new LiveProg with ArithExp with ArraysExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenArrays with ScalaGenPrint with Liveness { val IR: self.type = self }
@@ -137,7 +137,7 @@ class TestLiveness extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"liveness1")
   }
 
-  def testLiveness2 = {
+  def `testLiveness2 ` = {
     withOutFile(prefix+"liveness2") {
       new LiveProg with ArithExp with ArraysExp with PrintExp { self =>
         val codegen = new ScalaGenArith with ScalaGenArraysLiveOpt with ScalaGenPrint with Liveness { val IR: self.type = self }

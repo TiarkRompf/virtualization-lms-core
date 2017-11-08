@@ -56,7 +56,7 @@ class TestSort extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test2-"
 
-  def testSort = {
+  def `testSort ` = {
     withOutFile(prefix+"sort1") {
       val o = new MergeSort with RelatExpOpt with FlatResult
       import o._

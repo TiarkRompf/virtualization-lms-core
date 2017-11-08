@@ -113,7 +113,7 @@ class TestFFT extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test2-"
   
-  def testFFT1 = {
+  def `testFFT1 ` = {
     withOutFile(prefix+"fft1") {
       val o = new FFT with ArithExp with TrigExpOpt with FlatResult with DisableCSE //with DisableDCE
       import o._
@@ -129,7 +129,7 @@ class TestFFT extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"fft1-dot")
   }
 
-  def testFFT2 = {
+  def `testFFT2 ` = {
     withOutFile(prefix+"fft2") {
       val o = new FFT with ArithExpOptFFT with TrigExpOptFFT with FlatResult
       import o._
@@ -147,7 +147,7 @@ class TestFFT extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"fft2-dot")
   }
 
-  def testFFT3 = {
+  def `testFFT3 ` = {
     withOutFile(prefix+"fft3") {
       class FooBar extends FFT
         with ArithExpOptFFT with TrigExpOptFFT with ArraysExp

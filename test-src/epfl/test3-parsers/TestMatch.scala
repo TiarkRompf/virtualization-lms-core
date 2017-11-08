@@ -32,7 +32,7 @@ trait MatchProg { this: Matching with Extractors =>
     case _ => unit("no")
   }
   
-  def testXX(x: Rep[Success]): Rep[String] = _match(x)({
+  def `testXX `(x: Rep[Success]): Rep[String] = _match(x)({
     case SuccessR(x) if x guard 7 => unit("yes")
   },{
     case SuccessR(x) => unit("maybe")
@@ -55,7 +55,7 @@ class TestMatch extends FileDiffSuite {
       }
   */    
 
-  def testMatch1 = {
+  def `testMatch1 ` = {
     withOutFile(prefix+"match1") {
       object MatchProgExp extends MatchProg with Matching with Extractors
         with MatchingExtractorsExp with FunctionsExpUnfoldAll
@@ -72,7 +72,7 @@ class TestMatch extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"match1-dot")
   }
   
-  def testMatch2 = { 
+  def `testMatch2 ` = { 
     withOutFile(prefix+"match2") {
       object MatchProgExp extends MatchProg with Matching with Extractors
         with MatchingExtractorsExpOpt with FunctionsExpUnfoldAll

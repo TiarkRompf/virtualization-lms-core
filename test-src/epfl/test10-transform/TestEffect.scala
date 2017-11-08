@@ -228,7 +228,7 @@ class TestEffects extends FileDiffSuite {
     codegen.emitSource(test, "Test", new PrintWriter(System.out))
   }
   
-  def testEffects1 = withOutFileChecked(prefix+"effects1") { // test ordering
+  def `testEffects1 ` = withOutFileChecked(prefix+"effects1") { // test ordering
     trait Prog extends DSL {
       def test(x: Rep[Int]) = {
         val x = vzeros(100)
@@ -241,7 +241,7 @@ class TestEffects extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testEffects2 = withOutFileChecked(prefix+"effects2") { // test cse
+  def `testEffects2 ` = withOutFileChecked(prefix+"effects2") { // test cse
     trait Prog extends DSL {
       def test(x: Rep[Int]) = {
         val x = vzeros(100)
@@ -258,7 +258,7 @@ class TestEffects extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testEffects3 = withOutFileChecked(prefix+"effects3") { // test cse
+  def `testEffects3 ` = withOutFileChecked(prefix+"effects3") { // test cse
     trait Prog extends DSL {
       def test(x: Rep[Int]) = {
         val x = vzeros(100)
@@ -272,7 +272,7 @@ class TestEffects extends FileDiffSuite {
     new Prog with Impl
   }
 
-  def testEffects4 = withOutFileChecked(prefix+"effects4") { // test mutable dce
+  def `testEffects4 ` = withOutFileChecked(prefix+"effects4") { // test mutable dce
     trait Prog extends DSL {
       def test(x: Rep[Int]) = {
         val x = vzeros(100)

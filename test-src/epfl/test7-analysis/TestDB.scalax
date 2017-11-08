@@ -91,7 +91,7 @@ class TestDB extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test7-"
   
-  def testDB1 = {
+  def `testDB1 ` = {
     withOutFile(prefix+"db1") {
       new DBProg with DBExp with ArithExp with LoopsExp with PrintExp { self =>
         //val codegen = new ScalaGenArith with ScalaGenPrint  { val IR: self.type = self }
@@ -101,7 +101,7 @@ class TestDB extends FileDiffSuite {
     assertFileEqualsCheck(prefix+"db1")
   }
 
-  def testDB2 = {
+  def `testDB2 ` = {
     withOutFile(prefix+"db2") {
       new DBProg with DBExp with ArithExp with LoopsExp with PrintExp { self =>
         //val codegen = new ScalaGenArith with ScalaGenPrint  { val IR: self.type = self }

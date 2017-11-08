@@ -189,7 +189,7 @@ class TestBackwards extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test10-"
   
-  def testBwd1 = {
+  def `testBwd1 ` = {
     withOutFile(prefix+"bwd1") {
       object Prog extends TestDSL {
         def test(x: Rep[Int]) = {

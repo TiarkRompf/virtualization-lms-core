@@ -66,7 +66,7 @@ class TestLambdalift extends FileDiffSuite {
   
   val prefix = home + "test-out/epfl/test7-"
   
-  def testLambdalift1 = {
+  def `testLambdalift1 ` = {
     // test lambda lifting
     withOutFile(prefix+"lambdalift1") {
       var classes: List[String] = Nil

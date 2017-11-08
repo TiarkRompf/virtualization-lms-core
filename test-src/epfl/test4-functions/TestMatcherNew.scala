@@ -788,7 +788,7 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
 
 
 
-  def testMatcherTriv1 = {
+  def `testMatcherTriv1 ` = {
     withOutFile(prefix+"matchertriv1") {
       object MatcherProgExp extends MatcherNewProgTrivialA
       MatcherProgExp.testMatching()
@@ -796,7 +796,7 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
     assertFileEqualsCheck(prefix+"matchertriv1")
   }
 
-  def testMatcherTriv2 = {
+  def `testMatcherTriv2 ` = {
     withOutFile(prefix+"matchertriv2") {
       object MatcherProgExp extends MatcherNewProgTrivialB
       MatcherProgExp.testMatching()
@@ -804,7 +804,7 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
     assertFileEqualsCheck(prefix+"matchertriv2")
   }
 
-  def testMatcherTriv3 = {
+  def `testMatcherTriv3 ` = {
     withOutFile(prefix+"matchertriv3") {
       object MatcherProgExp extends MatcherNewProgTrivialC
       MatcherProgExp.testMatching()
@@ -817,7 +817,7 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
   // compare with dk.brics.automaton, input size 10^7
   // civet 573 ms, dk.brics.automaton 816 ms
 
-  def testMatcherNew1 = withOutFileChecked(prefix+"matchernew1") {
+  def `testMatcherNew1 ` = withOutFileChecked(prefix+"matchernew1") {
     trait Prog extends DSL {
       def test(x: Rep[Unit]) = {
 
@@ -836,7 +836,7 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
     new Prog with Impl
   }
 
-  def testMatcherNew1b = withOutFileChecked(prefix+"matchernew1b") {
+  def `testMatcherNew1b ` = withOutFileChecked(prefix+"matchernew1b") {
     trait Prog extends DSL {
       def test(x: Rep[Unit]) = {
 
@@ -860,7 +860,7 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
   }
 
   @virtualize
-  def testMatcherNew2 = withOutFileChecked(prefix+"matchernew2") {
+  def `testMatcherNew2 ` = withOutFileChecked(prefix+"matchernew2") {
     trait Prog extends DSL {
       def test(x: Rep[Unit]) = {
 
@@ -884,7 +884,7 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
   }
 
   @virtualize
-  def testMatcherNew2b = withOutFileChecked(prefix+"matchernew2b") {
+  def `testMatcherNew2b ` = withOutFileChecked(prefix+"matchernew2b") {
     trait Prog extends DSL {
       def test(x: Rep[Unit]) = {
 
@@ -912,7 +912,7 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
   }
 
 
-  def testCounter1 = withOutFileChecked(prefix+"counter1") {
+  def `testCounter1 ` = withOutFileChecked(prefix+"counter1") {
     trait Prog extends DSL with ListOps with Arith {
 
       def protect[A:Manifest](a:Rep[A],b:Rep[Any]): Rep[A] = protect(a, Seq(b).toList)
@@ -950,7 +950,7 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
   }
 
   @virtualize
-  def testCounter2 = withOutFileChecked(prefix+"counter2") {
+  def `testCounter2 ` = withOutFileChecked(prefix+"counter2") {
     trait Prog extends DSL with StreamHelpers {
 
       def test(x: Rep[Unit]): DIO = {
@@ -971,7 +971,7 @@ class TestMatcherNew extends FileDiffSuite with EmbeddedControls {
     new Prog with Impl
   }
 
-  def testStream1 = withOutFileChecked(prefix+"stream1") {
+  def `testStream1 ` = withOutFileChecked(prefix+"stream1") {
     trait Prog extends DSL with StreamHelpers {
 
       def iseven(n: Rep[Double]) = bare[Boolean](n,s=>s+"%2 == 0")
