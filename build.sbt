@@ -1,10 +1,10 @@
 // --- project info ---
 lazy val macros = (project in file("macros"))
     .settings(
-        scalaVersion := "2.11.8",
+        scalaVersion := "2.12.4",
         organization := "org.scala-lang.virtualized",
         libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile",
-        addCompilerPlugin("org.scalamacros" % "paradise_2.11.8" % "2.1.0"),
+        addCompilerPlugin("org.scalamacros" % "paradise_2.12.4" % "2.1.0"),
         publish := {},
         publishLocal := {},
         publishArtifact := false
@@ -43,7 +43,7 @@ scmInfo := Some(ScmInfo(url("https://github.com/TiarkRompf/virtualization-lms-co
 
 // --- scala settings ---
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.4"
 
 scalaOrganization := "org.scala-lang"
 
@@ -58,11 +58,11 @@ libraryDependencies += "org.scala-lang" % "scala-library" % scalaVersion.value %
 
 libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "compile"
 
-libraryDependencies += ("org.scalatest" %% "scalatest" % "2.2.2" % "test")
+libraryDependencies += ("org.scalatest" %% "scalatest" % "3.0.4" % "test")
 
 
 // continuations
-val contVersion = "1.0.2"
+val contVersion = "1.0.3"
 
 autoCompilerPlugins := true
 
@@ -70,18 +70,13 @@ libraryDependencies ++= Seq(
   "org.scala-lang.plugins" %% "scala-continuations-library" % contVersion % "compile"
 )
 
-addCompilerPlugin("org.scala-lang.plugins" % "scala-continuations-plugin_2.11.2" % "1.0.2")
+addCompilerPlugin("org.scala-lang.plugins" % "scala-continuations-plugin_2.12.2" % contVersion)
 
 scalacOptions += "-P:continuations:enable"
 
 
 // macro paradise
-val paradiseVersion = "2.0.1"
-
-libraryDependencies ++= (
-  if (scalaVersion.value.startsWith("2.10")) List("org.scalamacros" %% "quasiquotes" % paradiseVersion)
-  else Nil
-)
+val paradiseVersion = "2.1.0"
 
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile"
 libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.3.2"
@@ -95,4 +90,4 @@ addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVe
 parallelExecution in Test := false
 
 // code coverage
-scoverage.ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := false
+// scoverage.ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := false

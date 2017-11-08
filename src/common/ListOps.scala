@@ -18,6 +18,7 @@ trait ListOps extends Variables {
   class ListOpsCls[A:Manifest](l: Rep[List[A]]) {
     def map[B:Manifest](f: Rep[A] => Rep[B]) = list_map(l,f)
     def flatMap[B : Manifest](f: Rep[A] => Rep[List[B]]) = list_flatMap(l,f)
+    def withFilter(f: Rep[A] => Rep[Boolean]) = list_filter(l, f)
     def filter(f: Rep[A] => Rep[Boolean]) = list_filter(l, f)
     def sortBy[B:Manifest:Ordering](f: Rep[A] => Rep[B]) = list_sortby(l,f)
     def ::(e: Rep[A]) = list_prepend(l,e)
