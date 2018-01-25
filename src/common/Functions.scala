@@ -291,19 +291,29 @@ trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTu
     case _ => super.emitNode(sym,rhs)
   }
   
-  def unwrapTupleStr[A](m: Typ[A]): Array[String] = {
+  def unwrapTupleStr[A](m: Typ[A]): String = {
     val s = m.toString
-    if (s.startsWith("scala.Tuple")) s.slice(s.indexOf("[")+1,s.length-1).filter(c => c != ' ').split(",")
-    else Array(remap(m))
+    if (s.startsWith("scala.Tuple")) s.slice(s.indexOf("[")+1, s.length-1).filter(c => c != ' ')
+    else remap(m)
   } 
+
+  def topLevelTupleSize[A](m: Typ[A]): Int = {
+    val s = m.toString
+    val tupleStr = "scala.Tuple"
+    if (s.startsWith(tupleStr)) {
+      s.slice(s.indexOf(tupleStr)+tupleStr.size, s.indexOf("[")).toInt
+    }
+    else 1
+  }
   
   override def remap[A](m: Typ[A]): String = m.toString match {    
     case f if f.startsWith("scala.Function") =>
       val targs = m.typeArguments.dropRight(1)
       val res = remap(m.typeArguments.last)
-      val targsUnboxed = targs.flatMap(t => unwrapTupleStr(t))
+      val targsUnboxed = targs.map(t => unwrapTupleStr(t))
+      val size = targs.map(s => topLevelTupleSize(s)).foldLeft(0)(_ + _)
       val sep = if (targsUnboxed.length > 0) "," else ""
-      "scala.Function" + (targsUnboxed.length) + "[" + targsUnboxed.mkString(",") + sep + res + "]"
+      "scala.Function" + size + "[" + targsUnboxed.mkString(",") + sep + res + "]"
 
     case _ => super.remap(m)
   }
