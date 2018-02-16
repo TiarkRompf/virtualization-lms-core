@@ -17,6 +17,7 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
   
   // TODO: SimpleLoops
   
+/*  
   override def reflectEffectInternal[A:Manifest](x: Def[A], u: Summary)(implicit pos: SourceContext): Exp[A] = x match {
     case IfThenElse(cond, thenp, elsep) =>
       val affected = (u.mayRead ++ u.mayWrite).distinct
@@ -43,7 +44,7 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
         // find PreviousIteration nodes that write to s
         // for each one, add a reflect dep to the loop
     
-        val TP(loopSym, Reflect(While(_,_),_,_)) = globalDefs.last
+        val TP(loopSym, Reflect(While(_,_),_,_)) = globalDefs.toList.last
     
         def xtract(b:Block[Any]) = b match { 
           case Block(Def(Reify(_,_,es: List[Sym[Any]]))) => 
@@ -86,7 +87,7 @@ trait SplitEffectsExpFat extends IfThenElseFatExp with WhileExp with PreviousIte
     case _ => super.reflectEffectInternal(x,u)
   }
 
-
+*/
 
 
   def projectL(a: List[Sym[Any]], s: List[Sym[Any]]): List[Sym[Any]] = a filter (s contains _)

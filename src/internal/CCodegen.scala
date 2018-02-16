@@ -121,15 +121,15 @@ trait CCodegen extends CLikeCodegen {
 
   def allocStruct(sym: Sym[Any], structName: String, out: PrintWriter) {
     out.println(structName + " " + quote(sym)+ ";")
-		//out.println(structName + "* " + quote(sym) + " = (" + structName + "*)malloc(sizeof(" + structName + "));")
+    //out.println(structName + "* " + quote(sym) + " = (" + structName + "*)malloc(sizeof(" + structName + "));")
   }
 
   def getMemoryAllocString(count: String, memType: String): String = {
-  		"(" + memType + "*)malloc(" + count + " * sizeof(" + memType + "));"
+      "(" + memType + "*)malloc(" + count + " * sizeof(" + memType + "));"
   }
 
   def emitSource[A:Manifest](args: List[Sym[_]], b: Block[A], functionName: String, out: PrintWriter, dynamicReturnType: String = null, serializable: Boolean = false) = {
-	val body = runTransformations(b)
+  val body = time("runTransformations") { runTransformations(b) }
     val sA = if (dynamicReturnType != null) dynamicReturnType else remap(getBlockResult(body).tp)
     withStream(out) {
       stream.println("/*****************************************\n"+
@@ -138,47 +138,50 @@ trait CCodegen extends CLikeCodegen {
                      "#include <stdio.h>\n" +
                      "#include <stdlib.h>\n" +
                      "#include <stdbool.h>\n" +
-					 "#include <sys/time.h>")
+           "#include <sys/time.h>")
 
-	  stream.println("int tpch_strcmp(const char *s1, const char *s2);")
+    stream.println("int tpch_strcmp(const char *s1, const char *s2);")
 
-	  stream.println("int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval *t1) {\n" +
-    				 "\tlong int diff = (t2->tv_usec + 1000000 * t2->tv_sec) - (t1->tv_usec + 1000000 * t1->tv_sec);\n" +
-					 "\tresult->tv_sec = diff / 1000000;\n" +
-				     "\tresult->tv_usec = diff % 1000000;\n" +
-					 "\treturn (diff<0);\n" +
-					 "}\n")
+    stream.println("int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval *t1) {\n" +
+             "\tlong int diff = (t2->tv_usec + 1000000 * t2->tv_sec) - (t1->tv_usec + 1000000 * t1->tv_sec);\n" +
+           "\tresult->tv_sec = diff / 1000000;\n" +
+             "\tresult->tv_usec = diff % 1000000;\n" +
+           "\treturn (diff<0);\n" +
+           "}\n")
 
       // TODO: static data
-	  val sw = new StringWriter()
-	  val tempWriter = new PrintWriter(sw)
-      tempWriter.println(sA+" "+functionName+"("+args.map(a => remap(a.tp)+" "+quote(a)).mkString(", ")+") {")
-      withStream(tempWriter) { emitBlock(body) }
-	  val y = getBlockResult(body)
+    val sw = new StringWriter()
+    val tempWriter = new PrintWriter(sw)
+    tempWriter.println(sA+" "+functionName+"("+args.map(a => remap(a.tp)+" "+quote(a)).mkString(", ")+") {")
+    time("emitBlock") { withStream(tempWriter) { emitBlock(body) } }
+
+    time("rest") {
+    val y = getBlockResult(body)
       if (remap(y.tp) != "void")
         tempWriter.println("return " + quote(y) + ";")
-	  tempWriter.println("}")
+    tempWriter.println("}")
 
-	  var code = sw.toString
-	  sw.getBuffer().setLength(0)
-	  withStream(tempWriter) { emitFileHeader() }
-	  code = sw.toString + code
-
-	  stream.println("/********************* DATA STRUCTURES ***********************/")
-	  emitDataStructures(stream)
-	  stream.println("")
-	  stream.println("/************************ FUNCTIONS **************************/")
+    var code = sw.toString
     sw.getBuffer().setLength(0)
-	  withStream(tempWriter) { emitFunctions() }
+    withStream(tempWriter) { emitFileHeader() }
+    code = sw.toString + code
+
+    stream.println("/********************* DATA STRUCTURES ***********************/")
+    emitDataStructures(stream)
+    stream.println("")
+    stream.println("/************************ FUNCTIONS **************************/")
+    sw.getBuffer().setLength(0)
+    withStream(tempWriter) { emitFunctions() }
     val funs = sw.toString
     printIndented(funs)(stream)
-	  stream.println("")
-	  stream.println("/************************ MAIN BODY **************************/")
-	  //stream.println(code)
+    stream.println("")
+    stream.println("/************************ MAIN BODY **************************/")
+    //stream.println(code)
     printIndented(code)(stream)
       stream.println("/*****************************************\n"+
                      " *  End of C Generated Code              *\n"+
                      " *****************************************/")
+    }
     }
     Nil
   }
@@ -309,30 +312,30 @@ trait CCodegen extends CLikeCodegen {
   }
 
   override def quote(x: Exp[Any]) : String = {
-	x match {
-		case Const(y: java.lang.Character) =>
-			if (y == '\0') "'\\0'"
-			else "'" + y.toString + "'"
-		case Const(null) => "NULL"
-		case Const(()) => ";"
-		case _ => super.quote(x)
-	}
+  x match {
+    case Const(y: java.lang.Character) =>
+      if (y == '\0') "'\\0'"
+      else "'" + y.toString + "'"
+    case Const(null) => "NULL"
+    case Const(()) => ";"
+    case _ => super.quote(x)
+  }
   }
 
   override def remap[A](m: Manifest[A]) = {
-	m match {
+  m match {
         case s if m == manifest[Int] => "int"
         case s if m == manifest[Double] => "double"
-		case s if m == manifest[Long] => "long"
-		case s if m == manifest[Character] => "char"
-		case s if m == manifest[Byte] => "char"
-		case s if m == manifest[Boolean] => "bool"
-		case s if m == manifest[String] => "char*"
-		case s if m == manifest[Float] => "float"
-		case s if m == manifest[Unit] => "void"
+    case s if m == manifest[Long] => "long"
+    case s if m == manifest[Character] => "char"
+    case s if m == manifest[Byte] => "char"
+    case s if m == manifest[Boolean] => "bool"
+    case s if m == manifest[String] => "char*"
+    case s if m == manifest[Float] => "float"
+    case s if m == manifest[Unit] => "void"
     case s if m == manifest[java.util.Date] => "long"
-		case _ => super.remap(m)
-	}
+    case _ => super.remap(m)
+  }
   }
 
   /*******************************************************
@@ -418,26 +421,26 @@ trait CFatCodegen extends GenericFatCodegen with CCodegen {
 }
 
 trait Pointer extends Base {
-	class PointerManifest[A:Manifest]
+  class PointerManifest[A:Manifest]
     def pointer_assign[A:Manifest](s: Rep[A], vl: Rep[A]): Rep[Unit]
-	def getPointerManifest[A:Manifest] = manifest[PointerManifest[A]]
+  def getPointerManifest[A:Manifest] = manifest[PointerManifest[A]]
 }
 
 trait PointerExp extends Pointer with BaseExp with Effects {
-	case class PointerAssign[A:Manifest](s: Exp[A], vl: Exp[A]) extends Def[Unit]
+  case class PointerAssign[A:Manifest](s: Exp[A], vl: Exp[A]) extends Def[Unit]
     def pointer_assign[A:Manifest](s: Exp[A], vl: Exp[A]) = reflectEffect(PointerAssign(s,vl))
 }
 
 trait CGenPointer extends GenericNestedCodegen {
-	val IR: PointerExp
-	import IR._
+  val IR: PointerExp
+  import IR._
 
     override def remap[A](m: Manifest[A]) = m match {
-		case s if m <:< manifest[PointerManifest[Any]] => remap(m.typeArguments.head) + "*"
+    case s if m <:< manifest[PointerManifest[Any]] => remap(m.typeArguments.head) + "*"
         case _ => super.remap(m)
     }
-	override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-		case PointerAssign(s,vl) => stream.println("*" + quote(s) + " = " + quote(vl) + ";")
-		case _ => super.emitNode(sym, rhs)
-  	}
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case PointerAssign(s,vl) => stream.println("*" + quote(s) + " = " + quote(vl) + ";")
+    case _ => super.emitNode(sym, rhs)
+    }
 }

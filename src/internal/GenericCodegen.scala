@@ -143,10 +143,20 @@ trait GenericCodegen extends BlockTraversal {
     emitSource(List(s1), body, className, stream)
   }
 
+
+  def time[A](msg: String)(a: => A) = {
+    val start = System.nanoTime
+    val result = a
+    val end = (System.nanoTime - start) / (1000 * 1000)
+    System.err.println("Operation " + msg + " completed in %d milliseconds".format(end))
+    result
+  }
+
+
   def emitSource2[T1: Manifest, T2: Manifest, R : Manifest](f: (Exp[T1], Exp[T2]) => Exp[R], className: String, stream: PrintWriter, dynamicReturnType: String = null): List[(Sym[Any], Any)] = {
     val s1 = fresh[T1]
     val s2 = fresh[T2]
-    val body = reifyBlock(f(s1, s2))
+    val body = time("reify") { reifyBlock(f(s1, s2)) }
     emitSource(List(s1, s2), body, className, stream, dynamicReturnType)
   }
 

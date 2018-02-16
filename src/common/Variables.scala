@@ -244,7 +244,8 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
 
 trait VariablesExpOpt extends VariablesExp {
 
-  override implicit def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext) : Exp[T] = {
+  // XXXPERF
+  /*override implicit def readVar[T:Manifest](v: Var[T])(implicit pos: SourceContext) : Exp[T] = {
     if (context ne null) {
       // find the last modification of variable v
       // if it is an assigment, just return the last value assigned 
@@ -260,7 +261,7 @@ trait VariablesExpOpt extends VariablesExp {
     } else {
       super.readVar(v)
     }
-  }
+  }*/
   
   // TODO: could eliminate redundant stores, too
   // by overriding assign ...

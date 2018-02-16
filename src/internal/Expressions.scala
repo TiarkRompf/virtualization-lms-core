@@ -3,7 +3,7 @@ package internal
 
 import scala.reflect.SourceContext
 import scala.annotation.unchecked.uncheckedVariance
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ListBuffer,ArrayBuffer}
 import java.lang.{StackTraceElement,Thread}
 
 
@@ -224,11 +224,12 @@ trait Expressions extends Utils {
 
   // graph construction state
   
-  var globalDefs: List[Stm] = Nil
-  var localDefs: List[Stm] = Nil
+  val globalDefs: ListBuffer[Stm] = new ListBuffer()
+  //var globalDefs: List[Stm] = Nil
+  //var localDefs: List[Stm] = Nil
   var globalDefsCache: Map[Sym[Any],Stm] = Map.empty
 
-  def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
+  def reifySubGraph[T](b: =>T): (T, List[Stm]) = ??? /*{
     val saveLocal = localDefs
     val saveGlobal = globalDefs
     val saveGlobalCache = globalDefsCache
@@ -239,9 +240,9 @@ trait Expressions extends Utils {
     globalDefs = saveGlobal
     globalDefsCache = saveGlobalCache
     (r, defs)
-  }
+  }*/
 
-  def reflectSubGraph(ds: List[Stm]): Unit = {
+  def reflectSubGraph(ds: List[Stm]): Unit = ??? /*{
     val lhs = ds.flatMap(_.lhs)
     assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
     val existing = lhs flatMap (globalDefsCache get _)//globalDefs filter (_.lhs exists (lhs contains _))
@@ -251,26 +252,28 @@ trait Expressions extends Utils {
     for (stm <- ds; s <- stm.lhs) {      
       globalDefsCache += (s->stm)
     }
-  }
+  }*/
 
   def findDefinition[T](s: Sym[T]): Option[Stm] =
     globalDefsCache.get(s)
     //globalDefs.find(x => x.defines(s).nonEmpty)
 
   def findDefinition[T](d: Def[T]): Option[Stm] =
-    globalDefs.find(x => x.defines(d).nonEmpty)
+    ??? //globalDefs.find(x => x.defines(d).nonEmpty)
 
   def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): Stm =
-    findDefinition[T](d) map { x => x.defines(d).foreach(_.withPos(pos)); x } getOrElse {
+    //findDefinition[T](d) map { x => x.defines(d).foreach(_.withPos(pos)); x } getOrElse {
       createDefinition(fresh[T](pos), d)
-    }
+    //}
 
   def findOrCreateDefinitionExp[T:Manifest](d: Def[T], pos: List[SourceContext]): Exp[T] =
     findOrCreateDefinition(d, pos).defines(d).get
 
   def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
     val f = TP(s, d)
-    reflectSubGraph(List(f))
+    //reflectSubGraph(List(f))
+    globalDefs += f
+    globalDefsCache += (s->f)
     f
   }
   
@@ -386,8 +389,8 @@ trait Expressions extends Utils {
 
   def reset { // used by delite?
     nVars = 0
-    globalDefs = Nil
-    localDefs = Nil
+    globalDefs.clear()
+    //localDefs = Nil
     globalDefsCache = Map.empty
   }
 

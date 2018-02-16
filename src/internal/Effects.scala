@@ -541,8 +541,10 @@ trait Effects extends Expressions with Blocks with Utils {
     val save = context
     context = Nil
     
-    val (result, defs) = reifySubGraph(block)
-    reflectSubGraph(defs)
+    // val (result, defs) = reifySubGraph(block)
+    // reflectSubGraph(defs)
+
+    val result = block
     
     val deps = context
     val summary = summarizeAll(deps)
@@ -558,8 +560,10 @@ trait Effects extends Expressions with Blocks with Utils {
     if (save eq null)
       context = Nil
     
-    val (result, defs) = reifySubGraph(block)
-    reflectSubGraph(defs)
+    // val (result, defs) = reifySubGraph(block)
+    // reflectSubGraph(defs)
+
+    val result = block
 
     if ((save ne null) && context.take(save.length) != save) // TODO: use splitAt
       printerr("error: 'here' effects must leave outer information intact: " + save + " is not a prefix of " + context)
