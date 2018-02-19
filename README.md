@@ -14,6 +14,16 @@ high performance code generators and embedded compilers in Scala.
 - [Delite website](http://stanford-ppl.github.com/Delite/)
 
 
+### How to use:
+
+With [SBT](http://www.scala-sbt.org/), add the following to your `build.sbt`:
+
+    resolvers += Resolver.sonatypeRepo("snapshots")
+    
+    libraryDependencies += "org.scala-lang.lms" %% "lms-core-macrovirt" % "0.9.0-SNAPSHOT"
+
+See the [LMS tutorials repo](https://github.com/scala-lms/tutorials/tree/macro-lms-0.9.x) for code examples.
+
 ### How to build:
 
 1. Install the [SBT](http://www.scala-sbt.org/) build tool.
