@@ -10,14 +10,14 @@ import java.io.{File, PrintWriter}
 trait GraphTraversal extends Scheduling {
   val IR: Expressions
   import IR._
-  
-  def availableDefs: List[Stm] = globalDefs
-  
-  def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] = 
+
+  def availableDefs: List[Stm] = globalDefs.toList
+
+  def buildScheduleForResult(result: Any, sort: Boolean = true): List[Stm] =
     getSchedule(availableDefs)(result, sort)
 
   def getDependentStuff(st: List[Sym[Any]]): List[Stm] = {
-    getFatDependentStuff(availableDefs)(st)
+    getFatDependentStuff(availableDefs)(st).toList
   }
 
   def getDependentStuff(st: Sym[Any]): List[Stm] = {

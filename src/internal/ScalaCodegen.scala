@@ -88,7 +88,7 @@ trait ScalaCodegen extends GenericCodegen {
   }
 
   def emitValDef(sym: Sym[Any], rhs: String): Unit = {
-    val extra = if ((Config.sourceinfo < 2) || sym.pos.isEmpty) "" else {
+    val extra = if ((sourceinfo < 2) || sym.pos.isEmpty) "" else {
       val context = sym.pos(0)
       "      // " + relativePath(context.fileName) + ":" + context.line
     }

@@ -219,26 +219,49 @@ trait Expressions extends Utils {
     case TP(sym: Sym[A], `rhs`) => Some(sym)
     case _ => None
   }
-  
+
   case class TP[+T](sym: Sym[T], rhs: Def[T]) extends Stm
 
   // graph construction state
-  
-  var globalDefs: List[Stm] = Nil
-  var localDefs: List[Stm] = Nil
+
+  // var globalDefs: List[Stm] = Nil
+  // var localDefs: List[Stm] = Nil
+  // var globalDefsCache: Map[Sym[Any],Stm] = Map.empty
+  // val sGD = 20000
+  // var globalDefs: Array[Stm] = new Array[Stm](sGD)
+  // var nGD = 0
+  // var localDefs: Array[Stm] = new Array[Stm](sGD * 3/4)
+  // var nLD = 0
+  var globalDefs: Vector[Stm] = Vector.empty
+  var localDefs: Vector[Stm] = Vector.empty
   var globalDefsCache: Map[Sym[Any],Stm] = Map.empty
+  var localDefsCache: Map[Sym[Any],Stm] = Map.empty
+  var globalDefsInvCache: Map[Any,Stm] = Map.empty
+  var localDefsInvCache: Map[Any,Stm] = Map.empty
 
   def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
     val saveLocal = localDefs
     val saveGlobal = globalDefs
     val saveGlobalCache = globalDefsCache
-    localDefs = Nil
+    val saveLocalCache = localDefsCache
+    val saveGlobalInvCache = globalDefsInvCache
+    val saveLocalInvCache = localDefsInvCache
+
+    localDefs = Vector.empty
+    localDefsCache = Map.empty
+    localDefsInvCache = Map.empty
+
     val r = b
     val defs = localDefs
+
     localDefs = saveLocal
     globalDefs = saveGlobal
     globalDefsCache = saveGlobalCache
-    (r, defs)
+    localDefsCache = saveLocalCache
+    globalDefsInvCache = saveGlobalInvCache
+    localDefsInvCache = saveLocalInvCache
+
+    (r, defs.toList)
   }
 
   def reflectSubGraph(ds: List[Stm]): Unit = {
@@ -246,10 +269,14 @@ trait Expressions extends Utils {
     assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
     val existing = lhs flatMap (globalDefsCache get _)//globalDefs filter (_.lhs exists (lhs contains _))
     assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
-    localDefs = localDefs ::: ds
-    globalDefs = globalDefs ::: ds
-    for (stm <- ds; s <- stm.lhs) {      
+    localDefs = localDefs ++ ds
+    globalDefs = globalDefs ++ ds
+    for (stm <- ds; s <- stm.lhs) {
       globalDefsCache += (s->stm)
+      localDefsCache += (s->stm)
+      globalDefsInvCache += (stm.rhs->stm)
+      localDefsInvCache += (stm.rhs->stm)
+
     }
   }
 
@@ -257,8 +284,21 @@ trait Expressions extends Utils {
     globalDefsCache.get(s)
     //globalDefs.find(x => x.defines(s).nonEmpty)
 
-  def findDefinition[T](d: Def[T]): Option[Stm] =
-    globalDefs.find(x => x.defines(d).nonEmpty)
+  def findDefinition[T](d: Def[T]): Option[Stm] = {
+    // var idx = 0;
+    // while (idx < nGD && !globalDefs(idx).defines(d).nonEmpty) idx += 1
+
+    // if (idx == nGD) None else Some(globalDefs(idx))
+    globalDefsInvCache.get(d)
+  }
+
+  def findLocalDefinition[T](s: Sym[T]): Option[Stm] =
+    localDefsCache.get(s)
+    //globalDefs.find(x => x.defines(s).nonEmpty)
+
+  def findLocalDefinition[T](d: Def[T]): Option[Stm] = {
+    localDefsInvCache.get(d)
+  }
 
   def findOrCreateDefinition[T:Manifest](d: Def[T], pos: List[SourceContext]): Stm =
     findDefinition[T](d) map { x => x.defines(d).foreach(_.withPos(pos)); x } getOrElse {
@@ -386,9 +426,16 @@ trait Expressions extends Utils {
 
   def reset { // used by delite?
     nVars = 0
-    globalDefs = Nil
-    localDefs = Nil
+    // globalDefs = new Array[Stm](sGD)
+    // nGD = 0
+    // localDefs = new Array[Stm](sGD * 3 / 4)
+    // nLD = 0
+    globalDefs = Vector.empty
+    localDefs = Vector.empty
     globalDefsCache = Map.empty
+    localDefsCache = Map.empty
+    globalDefsInvCache = Map.empty
+    localDefsInvCache = Map.empty
   }
 
 }
