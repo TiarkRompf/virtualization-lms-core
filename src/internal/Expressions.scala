@@ -9,8 +9,8 @@ import java.lang.{StackTraceElement,Thread}
 
 /**
  * The Expressions trait houses common AST nodes. It also manages a list of encountered Definitions which
- * allows for common sub-expression elimination (CSE).  
- * 
+ * allows for common sub-expression elimination (CSE).
+ *
  * @since 0.1
  */
 trait Expressions extends Utils {
@@ -24,13 +24,13 @@ trait Expressions extends Utils {
   case class Const[+T:Manifest](x: T) extends Exp[T] {
     /**
     * equals implementation in Const can not simply rely on default
-    * implementation for a case class, because we should check the 
+    * implementation for a case class, because we should check the
     * type of Const for equality test.
     * Otherwise, we might end-up generating code with wrong typing,
     * specially upon CSE.
     *
     * For example, have a look at test1-arith/TestConstCSE:
-    * 
+    *
     * trait Prog extends ScalaOpsPkg {
     *   def test1(test_param: Rep[Boolean], acc: Rep[Long]): Rep[Long] = {
     *     val dblVal = if(test_param) unit(1.0) else unit(0.0)
@@ -44,7 +44,7 @@ trait Expressions extends Utils {
     * }
     *
     * That would generate a code containing a compile error:
-    * 
+    *
     *       class test1 extends ((Boolean, Long)=>(Long)) {
     *         def apply(x0:Boolean, x1:Long): Long = {
     *           val x2 = if (x0) {
@@ -102,7 +102,7 @@ trait Expressions extends Utils {
         else
           true
       } else false
-      case _ => false 
+      case _ => false
     }
   }
 
@@ -124,7 +124,7 @@ trait Expressions extends Utils {
 
   case class Sym[+T:Manifest](val id: Int) extends Exp[T] {
     val attributes: scala.collection.mutable.Map[Any,Any] = scala.collection.mutable.ListMap.empty
-    var sourceInfo = Thread.currentThread.getStackTrace // will go away
+    // var sourceInfo = Thread.currentThread.getStackTrace // will go away
     var sourceContexts: List[SourceContext] = Nil
     override def pos = sourceContexts
     def withPos(pos: List[SourceContext]) = { sourceContexts :::= pos; this }
@@ -134,18 +134,18 @@ trait Expressions extends Utils {
   } // TODO: decide whether it should stay here ... FIXME: should be invariant
 
   var nVars = 0
-  def fresh[T:Manifest]: Sym[T] = Sym[T] { 
-    nVars += 1;  
-    //if (nVars%1000 == 0) println("nVars="+nVars);  
-    nVars - 1 
+  def fresh[T:Manifest]: Sym[T] = Sym[T] {
+    nVars += 1;
+    //if (nVars%1000 == 0) println("nVars="+nVars);
+    nVars - 1
   }
-  def fresh[T:Manifest](id: Int): Sym[T] = Sym[T] { id } 
+  def fresh[T:Manifest](id: Int): Sym[T] = Sym[T] { id }
 
   def fresh[T:Manifest](pos: List[SourceContext]): Sym[T] = fresh[T].withPos(pos)
 
   def quotePos(e: Exp[Any]): String = e.pos match {
     case Nil => "<unknown>"
-    case cs => 
+    case cs =>
       def all(cs: SourceContext): List[SourceContext] = cs.parent match {
         case None => List(cs)
         case Some(p) => cs::all(p)
@@ -201,11 +201,11 @@ trait Expressions extends Utils {
   }
 
   abstract class Stm // statement (links syms and definitions)
-  
+
   def infix_lhs(stm: Stm): List[Sym[Any]] = stm match {
     case TP(sym, rhs) => sym::Nil
   }
-  
+
   def infix_rhs(stm: Stm): Any = stm match { // clients use syms(e.rhs), boundSyms(e.rhs) etc.
     case TP(sym, rhs) => rhs
   }
@@ -241,6 +241,7 @@ trait Expressions extends Utils {
 
   def reifySubGraph[T](b: =>T): (T, List[Stm]) = {
     val saveLocal = localDefs
+    // val savedNLD = nLD
     val saveGlobal = globalDefs
     val saveGlobalCache = globalDefsCache
     val saveLocalCache = localDefsCache
@@ -255,6 +256,8 @@ trait Expressions extends Utils {
     val defs = localDefs
 
     localDefs = saveLocal
+    // val length = nLD
+    // nLD = savedNLD
     globalDefs = saveGlobal
     globalDefsCache = saveGlobalCache
     localDefsCache = saveLocalCache
@@ -264,20 +267,45 @@ trait Expressions extends Utils {
     (r, defs.toList)
   }
 
-  def reflectSubGraph(ds: List[Stm]): Unit = {
-    val lhs = ds.flatMap(_.lhs)
-    assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
-    val existing = lhs flatMap (globalDefsCache get _)//globalDefs filter (_.lhs exists (lhs contains _))
-    assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
-    localDefs = localDefs ++ ds
-    globalDefs = globalDefs ++ ds
-    for (stm <- ds; s <- stm.lhs) {
-      globalDefsCache += (s->stm)
-      localDefsCache += (s->stm)
-      globalDefsInvCache += (stm.rhs->stm)
-      localDefsInvCache += (stm.rhs->stm)
-
-    }
+  def reflectSubGraph(ds: List[Stm]): Unit = ds match {
+    case d::Nil =>
+      val lhs = d.lhs
+      assert(lhs.length == lhs.distinct.length, "multiple defs: " + d)
+      val existing = lhs flatMap (globalDefsCache get _)//globalDefs filter (_.lhs exists (lhs contains _))
+      assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
+      localDefs = localDefs :+ d
+      globalDefs = globalDefs :+ d
+      for (s <- lhs) {
+        globalDefsCache += (s->d)
+        localDefsCache += (s->d)
+        globalDefsInvCache += (d.rhs->d)
+        localDefsInvCache += (d.rhs->d)
+      }
+    case _ =>
+      // val lhs = ds.slice(0, length).flatMap(_.lhs)
+      val lhs = ds.flatMap(_.lhs)
+      assert(lhs.length == lhs.distinct.length, "multiple defs: " + ds)
+      val existing = lhs flatMap (globalDefsCache get _)//globalDefs filter (_.lhs exists (lhs contains _))
+      assert(existing.isEmpty, "already defined: " + existing + " for " + ds)
+      // for (idx <- 0 until length) {
+      //   localDefs(nLD) = ds(idx)
+      //   nLD += 1
+      //   globalDefs(nGD) = ds(idx)
+      //   nGD += 1
+      // }
+      // for (idx <- 0 until length) {
+      //   val stm = ds(idx)
+      //   for (s <- stm.lhs)
+      //     globalDefsCache += (s->stm)
+      // }
+      localDefs = localDefs ++ ds // TODO: opt?
+      globalDefs = globalDefs ++ ds
+      for (stm <- ds; s <- stm.lhs) {
+        globalDefsCache += (s->stm)
+        localDefsCache += (s->stm)
+        globalDefsInvCache += (stm.rhs->stm)
+        localDefsInvCache += (stm.rhs->stm)
+      }
   }
 
   def findDefinition[T](s: Sym[T]): Option[Stm] =
@@ -310,10 +338,13 @@ trait Expressions extends Utils {
 
   def createDefinition[T](s: Sym[T], d: Def[T]): Stm = {
     val f = TP(s, d)
+    //val arr = new Array[Stm](1)
+    //arr(0) = f
+    //reflectSubGraph(arr, 1)
     reflectSubGraph(List(f))
     f
   }
-  
+
 
   protected implicit def toAtom[T:Manifest](d: Def[T])(implicit pos: SourceContext): Exp[T] = {
     findOrCreateDefinitionExp(d, List(pos)) // TBD: return Const(()) if type is Unit??
@@ -336,7 +367,7 @@ trait Expressions extends Utils {
     case s: Sym[Any] => List(s)
     case ss: Iterable[Any] => ss.toList.flatMap(syms(_))
     // All case classes extend Product!
-    case p: Product => 
+    case p: Product =>
       //return p.productIterator.toList.flatMap(syms(_))
       /* performance hotspot */
       val iter = p.productIterator
@@ -370,7 +401,7 @@ trait Expressions extends Utils {
     case _ => Nil
   }
 
-  // soft dependencies: they are not required but if they occur, 
+  // soft dependencies: they are not required but if they occur,
   // they must be scheduled before
   def softSyms(e: Any): List[Sym[Any]] = e match {
     // empty by default

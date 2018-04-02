@@ -213,16 +213,19 @@ trait VariablesExp extends Variables with ImplicitOpsExp with VariableImplicits 
 			else {
 				var sym : Option[Exp[_]] = None
 				globalDefs.find { x => x match {
-					case TP(_,Reflect(Assign(Variable(v1),v2),_,_)) => {
-						if (v1 == s) {sym = Some(v2); true}
-						else false;
-					}
-					case _ => false
-				} }
+        // var idx = 0
+        // var stop = false
+        // while (idx < nGD && sym == None) {
+        //   globalDefs(idx) match {
+					  case TP(_,Reflect(Assign(Variable(v1),v2),_,_)) =>
+						  if (v1 == s) { sym = Some(v2); true } else false
+					  case _ => false
+          }
+        }
 				if (sym != None) findInitSymbol(sym.get)
 				else throw new RuntimeException("findInitSymbol failed (1) during lookup in DynamicRecords while looking for " + sym + ".")
 			}
-		} 
+		}
 		case TP(sym, _) => sym
 		case sy@_ => throw new RuntimeException("findInitSymbol failed (2) during lookup in DynamicRecords while looking for " + sy + ".")
     }
