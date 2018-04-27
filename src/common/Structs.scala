@@ -100,8 +100,16 @@ case _ => super.fresh
   case class DefaultRecordDef[T:Manifest]() extends Def[T] {
 	val m = manifest[T]
   }
+  def recordFieldTypes2[T:Manifest]: List[(String,Manifest[_])] = manifest[T] match {
+    case m: RefinedManifest[T] => m.fields
+    case m if m.toString.contains("CompositeRecord") =>
+      val (mA:Manifest[Record])::(mB:Manifest[Record])::Nil = m.typeArguments
+      recordFieldTypes2(mA) ++ recordFieldTypes2(mB)
+    case m => throw new RuntimeException(">> " + m.toString)
+  }
+
   case class SimpleStruct[T:Manifest](tag: StructTag[T], elems: Seq[(String, Rep[Any])]) extends AbstractStruct[T] {
-	if (tag.isInstanceOf[ClassTag[_]]) registerStruct(tag.asInstanceOf[ClassTag[_]].name, elems.map(e => (e._1, e._2.tp)))
+	if (tag.isInstanceOf[ClassTag[_]]) registerStruct(tag.asInstanceOf[ClassTag[_]].name, recordFieldTypes2[T])
   }
   case class ConcatenateRecords[T1:Manifest, T2:Manifest](x: Rep[T1], y: Rep[T2], leftAlias: String, rightAlias: String) extends Def[CompositeRecord[T1,T2]] {
 	val m1 = manifest[T1]
@@ -250,7 +258,7 @@ case _ => super.fresh
 
   def registerStruct[T<:Record:Manifest](name: String, elems: Seq[(String, Manifest[_])]) = {
     if (elems.exists(_._2 == manifest[Any])) {
-      throw new RuntimeException(s"Any found in Record $name, $elems")
+      System.out.println(s"Any found in Record $name, $elems")
     }
   	encounteredStructs += name -> elems
   }
@@ -272,7 +280,7 @@ trait StructExpOpt extends StructExp {
     }
   }
 
-  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = fieldLookup[T](struct, index) match {
+  override def field[T:Manifest](struct: Exp[Any], index: String)(implicit pos: SourceContext): Exp[T] = { if (manifest[T] == manifest[Any]) ???; fieldLookup[T](struct, index) } match {
     // the two variable pattern matches each seem to miss certain cases, so both are needed. why?
     case Some(Def(Reflect(NewVar(x),u,es))) => super.field(struct, index)
     case Some(x: Exp[Var[T]]) if x.tp == manifest[Var[T]] => super.field(struct, index) //readVar(Variable(x))
