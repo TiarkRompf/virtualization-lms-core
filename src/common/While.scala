@@ -36,6 +36,24 @@ trait WhileExp extends While with BooleanOps with EffectExp {
     case _ => super.symsFreq(e)
   }
 
+  override def mirrorDef[A:Typ](e: Def[A], f: Transformer)(implicit pos: SourceContext): Def[A] = e match {
+    case While(a,b) => While(f(a), f(b))
+    case _ => super.mirrorDef(e,f)
+  }
+
+  override def mirror[A:Typ](d: Def[A], f: Transformer) (implicit pos: SourceContext): Exp[A] = (d match {
+    case Reflect(While(a, b), u, es) =>
+      if (f.hasContext)
+        __whileDo(f.reflectBlock(a), f.reflectBlock(b))
+      else
+        reflectMirrored(Reflect(While(f(a), f(b)), mapOver(f,u), f(es)))(mtype(manifest[A]), pos)
+    case While(a, b) =>
+      if (f.hasContext)
+        __whileDo(f.reflectBlock(a), f.reflectBlock(b))
+      else
+        While(f(a), f(b))
+    case _ => super.mirror(d, f)
+  }).asInstanceOf[Exp[A]]
 
 }
 
@@ -128,4 +146,17 @@ trait CudaGenWhile extends CudaGenEffect with CLikeGenWhile
 
 trait OpenCLGenWhile extends OpenCLGenEffect with CLikeGenWhile
 
-trait CGenWhile extends CGenEffect with CLikeGenWhile
+trait CGenWhile extends CGenEffect with CLikeGenWhile {
+
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
+    case While(c,b) =>
+      stream.println("while (1) {")
+      emitBlock(c)
+      stream.println("if (!"+quote(getBlockResult(c))+") break;")
+      emitBlock(b)
+      stream.println("}")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
