@@ -5,6 +5,8 @@ import scala.reflect.{SourceContext, RefinedManifest}
 import scala.lms.common._
 import scala.lms.internal._
 
+import java.io.PrintWriter
+
 trait Timing extends Base {
     def timeGeneratedCode[A: Manifest](f: => Rep[A], msg: Rep[String] = unit("")): Rep[A]
 }
@@ -79,6 +81,16 @@ trait CGenTiming extends CGenBase with GenericNestedCodegen {
           }
         }
         case _ => super.lowerNode(sym, rhs)
+    }
+
+    override def emitFunctions(out: PrintWriter) = {
+      out.println("int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval *t1) {\n" +
+        "\tlong int diff = (t2->tv_usec + 1000000 * t2->tv_sec) - (t1->tv_usec + 1000000 * t1->tv_sec);\n" +
+        "\tresult->tv_sec = diff / 1000000;\n" +
+        "\tresult->tv_usec = diff % 1000000;\n" +
+        "\treturn (diff<0);\n" +
+        "}\n")
+      super.emitFunctions(out)
     }
 
     override def emitNode(sym: Sym[Any], rhs: Def[Any]) =  {

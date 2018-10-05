@@ -9,7 +9,7 @@ import scala.lms.util.ClosureCompare
 import scala.reflect.SourceContext
 
 trait Functions extends Base {
- 
+
   def doLambda[A:Manifest,B:Manifest](fun: Rep[A] => Rep[B])(implicit pos: SourceContext): Rep[A => B]
   implicit def fun[A:Manifest,B:Manifest](f: Rep[A] => Rep[B]): Rep[A=>B] = doLambda(f)
 
@@ -142,8 +142,8 @@ trait FunctionsExp extends Functions with EffectExp {
     val l = reflectEffect(UninlinedFunc0(b), Pure())
     functionList0 += (l.asInstanceOf[Sym[Any]] -> b)
 	l
-  } 
-  
+  }
+
   def uninlinedFunc1[A:Manifest,B:Manifest](f: Function1[Rep[A],Rep[B]]) = {
     val s = fresh[A]
 	val b = reifyEffects(f(s))
@@ -154,7 +154,7 @@ trait FunctionsExp extends Functions with EffectExp {
     functionList1 += (l.asInstanceOf[Sym[Any]] -> (s,b))
 	l
   }
-  
+
   def uninlinedFunc2[A1:Manifest,A2:Manifest,B:Manifest](f: Function2[Rep[A1],Rep[A2],Rep[B]]) = {
     val s1 = fresh[A1]
     val s2 = fresh[A2]
@@ -165,8 +165,8 @@ trait FunctionsExp extends Functions with EffectExp {
     val l = reflectEffect(UninlinedFunc2(s1,s2,b), Pure())
     functionList2 += (l.asInstanceOf[Sym[Any]] -> (s1,s2,b))
 	l
-  } 
-  
+  }
+
   def uninlinedFunc3[A1:Manifest,A2:Manifest,A3:Manifest,B:Manifest](f: Function3[Rep[A1],Rep[A2],Rep[A3],Rep[B]]) = {
     val s1 = fresh[A1]
     val s2 = fresh[A2]
@@ -178,7 +178,7 @@ trait FunctionsExp extends Functions with EffectExp {
     val l = reflectEffect(UninlinedFunc3(s1,s2,s3,b), Pure())
     functionList3 += (l.asInstanceOf[Sym[Any]] -> (s1,s2,s3,b))
 	l
-  } 
+  }
   /* END OF UNINLINED FUNCTIONS */
 
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
@@ -190,7 +190,7 @@ trait FunctionsExp extends Functions with EffectExp {
     case Lambda(f, x, y) => syms(y)
     case _ => super.syms(e)
   }
-  
+
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
 	case UninlinedFunc0(f) => effectSyms(f)
 	case UninlinedFunc1(s,f) => s :: effectSyms(f)
@@ -280,7 +280,7 @@ trait TupledFunctionsExp extends TupledFunctions with FunctionsExp with TupleOps
 	case UninlinedFunc3(s1,s2,s3,f) => s1 :: s2 :: s3 :: effectSyms(f)
 	case _ => super.aliasSyms(e)
   }
-  
+
   override def containSyms(e: Any): List[Sym[Any]] = e match {
 	case UninlinedFunc0(f) => effectSyms(f)
 	case UninlinedFunc1(s,f) => s :: effectSyms(f)
@@ -375,7 +375,7 @@ trait ScalaGenFunctions extends ScalaGenEffect with BaseGenFunctions {
     case _ => super.emitNode(sym, rhs)
   }
 
-  override def emitFunctions() = {
+  override def emitFunctions(out: PrintWriter) = {
 	functionList0.foreach(func => {
 		stream.println("def " + quote(func._1) + "() = {")
 		emitBlock(func._2)
@@ -406,7 +406,7 @@ trait ScalaGenTupledFunctions extends ScalaGenFunctions with GenericGenUnboxedTu
       emitValDef(sym, quote(fun) + args.map(quote).mkString("(", ",", ")"))
     case _ => super.emitNode(sym,rhs)
   }
- 
+
   def unwrapTupleStr(s: String): Array[String] = {
     if (s.startsWith("scala.Tuple")) s.slice(s.indexOf("[")+1,s.length-1).filter(c => c != ' ').split(",")
     else scala.Array(s)
@@ -508,14 +508,14 @@ trait CGenFunctions extends CNestedCodegen with CGenEffect with BaseGenFunctions
         sym
       }
     }
-	case a@Apply(fun, arg) => 
+	case a@Apply(fun, arg) =>
 		sym.atPhase(LIRLowering) {
             val funSym = fun.asInstanceOf[Sym[_]]
             val rM = (fun match {
                 case s if functionList0.contains(funSym) => getBlockResult(functionList0(funSym)).tp
                 case _ => a.mB
             }).asInstanceOf[Manifest[T]]
-			doApply(fun, arg)(a.mA, rM, implicitly[SourceContext]).asInstanceOf[Exp[T]] 
+			doApply(fun, arg)(a.mA, rM, implicitly[SourceContext]).asInstanceOf[Exp[T]]
 		}
 	case _ => super.lowerNode(sym, rhs)
   }
@@ -535,16 +535,16 @@ trait CGenFunctions extends CNestedCodegen with CGenEffect with BaseGenFunctions
     case a@Apply(fun, arg) =>
       arg match {
         case Const(x) => x match {
-          case t: scala.Tuple2[Exp[_],Exp[_]] => 
+          case t: scala.Tuple2[Exp[_],Exp[_]] =>
 			emitValDef(sym, quote(fun) + "(" + quote(t._1) + "," + quote(t._2) + ")")
 		  case () => emitValDef(sym, quote(fun) + "()")
           case _ => emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
-        } 
+        }
         case _ => emitValDef(sym, quote(fun) + "(" + quote(arg) + ")")
       }
     case _ => super.emitNode(sym, rhs)
   }
-  override def emitFunctions() = {
+  override def emitFunctions(out: PrintWriter) = {
     // Output prototypes to resolve dependencies
 	functionList0.foreach(f=>stream.println(remap(getBlockResult(f._2).tp) + " " + quote(f._1) + "();"))
 	functionList1.foreach(f=>stream.println(remap(getBlockResult(f._2._2).tp) + " " + quote(f._1) + "(" + remap(f._2._1.tp) + " " + quote(f._2._1) + ");"))

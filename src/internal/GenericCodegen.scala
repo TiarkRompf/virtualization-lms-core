@@ -32,7 +32,7 @@ trait GenericCodegen extends BlockTraversal {
   }
 
   def emitFileHeader(): Unit = {}
-  def emitFunctions(): Unit = {}
+  def emitFunctions(out: PrintWriter): Unit = {}
 
   // Initializer
   def initializeGenerator(buildDir:String, args: Array[String], _analysisResults: MMap[String,Any]): Unit = { analysisResults = _analysisResults }

@@ -108,12 +108,12 @@ trait CLikeGenEqual extends CLikeGenBase {
 			// the array field of the implicitly lowered array.
       // TR: disabled!
 			//emitValDef(sym, "strcmp(" + quote(a) + "->array," + quote(b) + ") == 0;")
-      emitValDef(sym, "tpch_strcmp(" + quote(a) + "," + quote(b) + ") == 0;")
+            ???
           else emitValDef(sym, src"$a == $b")
         case NotEqual(a,b) =>
 		  if (b.tp == manifest[Array[Byte]] || b.tp == manifest[String])
       //emitValDef(sym, "strcmp(" + quote(a) + "->array," + quote(b) + ") != 0;")
-			emitValDef(sym, "tpch_strcmp(" + quote(a) + "," + quote(b) + ") != 0;")
+            ???
           else emitValDef(sym, src"$a != $b")
         case _ => super.emitNode(sym, rhs)
       }
