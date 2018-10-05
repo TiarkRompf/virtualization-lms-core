@@ -218,15 +218,18 @@ trait CGenStringOps extends CGenBase with CNestedCodegen {
     case StringPlus(s1,s2) => emitValDef(sym,src"strcat($s1,$s2);")
     case StringStartsWith(s1,s2) => emitValDef(sym, "strncmp(" + quote(s1) + "," + quote(s2) + ", tpch_strlen(" + quote(s2) + ")) == 0;")
     case sew@StringEndsWith(s1,s2) => {
+      ???
       emitValDef(sew.lenstr,"tpch_strlen("+quote(s1)+")")
       emitValDef(sew.lensuf,"tpch_strlen("+quote(s2)+")")
       emitValDef(sym, "strncmp(" + quote(s1) + "+" + quote(sew.lenstr) + "-" + quote(sew.lensuf) + "," + quote(s2) + ", " + quote(sew.lensuf) + ") == 0;")
     }
     case StringContainsSlice(s1,s2) =>
+      ???
       emitValDef(sym, "tpch_strstr(" + quote(s1) + "," + quote(s2) + ") >= " + quote(s1))
     case StringCompareTo(s1,s2) =>
       emitValDef(sym, "strcmp(" + quote(s1) + "," + quote(s2) + ")")
     case StringIndexOfSlice(s1,s2,idx) =>
+      ???
 		emitValDef(sym, "tpch_strstr(&(" + quote(s1) + "[" + quote(idx) + "])," + quote(s2) + ") - " + quote(s1))
 		stream.println("if (" + quote(sym) + " < 0) " + quote(sym) + " = -1;")
     case StringSubstringWithEndIndex(s, beginIndex, endIndex) =>

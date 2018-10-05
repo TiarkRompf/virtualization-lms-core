@@ -79,21 +79,6 @@ trait CCodegen extends CLikeCodegen {
     headerStream = new PrintWriter(new FileWriter(buildDir + "dsl.hpp"))
     headerStream.println("#include \"helperFuncs.cpp\"")
 
-    /*
-    //TODO: Put all the DELITE APIs declarations somewhere
-    hstream.print(getDSLHeaders)
-    hstream.print("#include <iostream>\n")
-    hstream.print("#include <limits>\n")
-    hstream.print("#include <jni.h>\n\n")
-    hstream.print("//Delite Runtime APIs\n")
-    hstream.print("extern void DeliteCudaMallocHost(void **ptr, size_t size);\n")
-    hstream.print("extern void DeliteCudaMalloc(void **ptr, size_t size);\n")
-    hstream.print("extern void DeliteCudaMemcpyHtoDAsync(void *dptr, void *sptr, size_t size);\n")
-    hstream.print("extern void DeliteCudaMemcpyDtoHAsync(void *dptr, void *sptr, size_t size);\n")
-    hstream.print("typedef jboolean jbool;\n")              // TODO: Fix this
-    hstream.print("typedef jbooleanArray jboolArray;\n\n")  // TODO: Fix this
-    */
-
     super.initializeGenerator(buildDir, args, _analysisResults)
   }
 
@@ -128,24 +113,22 @@ trait CCodegen extends CLikeCodegen {
     "(" + memType + "*)malloc(" + count + " * sizeof(" + memType + "));"
   }
 
+  def headerSet = scala.collection.Set("stdio.h", "stdlib.h", "stdbool.h", "sys/time.h")
+
+  def emitFileHeader(out: PrintWriter) = {
+    headerSet.foreach { h => out.println(s"#include <$h>") }
+    out.println()
+  }
+
   def emitSource[A:Manifest](args: List[Sym[_]], b: Block[A], functionName: String, out: PrintWriter, dynamicReturnType: String = null, serializable: Boolean = false) = {
     val body = runTransformations(b)
     val sA = if (dynamicReturnType != null) dynamicReturnType else remap(getBlockResult(body).tp)
     withStream(out) {
       stream.println("/*****************************************\n"+
-        "  Emitting C Generated Code                  \n"+
-        "*******************************************/\n" +
-        "#include <stdio.h>\n" +
-        "#include <stdlib.h>\n" +
-        "#include <stdbool.h>\n" +
-        "#include <sys/time.h>")
+        "  Emitting C Generated Code\n"+
+        "*******************************************/\n")
 
-      stream.println("int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval *t1) {\n" +
-        "\tlong int diff = (t2->tv_usec + 1000000 * t2->tv_sec) - (t1->tv_usec + 1000000 * t1->tv_sec);\n" +
-        "\tresult->tv_sec = diff / 1000000;\n" +
-        "\tresult->tv_usec = diff % 1000000;\n" +
-        "\treturn (diff<0);\n" +
-        "}\n")
+      emitFileHeader(stream)
 
       // TODO: static data
       // val sw = new StringWriter()
@@ -171,11 +154,10 @@ trait CCodegen extends CLikeCodegen {
       // val funs = sw.toString
       // printIndented(funs)(stream)
       // stream.println("")
-      emitFunctions()
+      emitFunctions(stream)
       stream.println("/************************ MAIN BODY **************************/")
       //stream.println(code)
       // printIndented(code)(stream)
-      emitFileHeader()
       stream.println(sA+" "+functionName+"("+args.map(a => remap(a.tp)+" "+quote(a)).mkString(", ")+") {")
       emitBlock(body)
       val y = getBlockResult(body)
