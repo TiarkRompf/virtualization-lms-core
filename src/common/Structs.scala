@@ -745,7 +745,12 @@ trait CGenStruct extends CGenBase with BaseGenStruct {
     case _ =>  super.remap(m)
   }
 
+  val dataName = "default"
+  override def headerSet = super.headerSet + s"""\"${dataName}_datastructure.h\""""
   override def emitDataStructures(stream: PrintWriter) {
+
+
+    val data = new PrintWriter(s"cqueries/${dataName}_datastructure.h")
 	// Forward references to resolve dependencies
     val hs = new scala.collection.mutable.LinkedHashMap[String,Seq[(String, Manifest[_])]]
     def hit(name: String, xs: Seq[(String,Manifest[_])]): Unit = {
@@ -757,13 +762,22 @@ trait CGenStruct extends CGenBase with BaseGenStruct {
     }
     encounteredStructs.foreach((hit _).tupled)
 
+    data.println(
+        s"""|#ifndef ${dataName.toUpperCase}_DATASTRUCT
+        |#define ${dataName.toUpperCase}_DATASTRUCT
+        |#include <stdbool.h>
+        |""".stripMargin)
+
     for ((name, elems) <- hs) {
-      stream.println()
-      stream.println("struct " + name + " {")
-      for(e <- elems) stream.println(remap(e._2) + " " + e._1 + ";")
-      stream.println("};")
+      data.println()
+      data.println("struct " + name + " {")
+      for(e <- elems) data.println(remap(e._2) + " " + e._1 + ";")
+      data.println("};")
     }
-    stream.flush()
+
+    data.println("#endif")
+    data.flush
+    data.close
     super.emitDataStructures(stream)
   }
 }
