@@ -61,6 +61,7 @@ trait StructTags {
 trait StructExp extends Structs with StructTags with EffectExp with WhileExp with VariablesExp with ObjectOpsExp with StringOpsExp with FunctionsExp with MiscOpsExp with RangeOpsExp with ArrayOps with BooleanOps with Equal with PrimitiveOps with NumericOps with OrderingOps {
 
   // TODO: structs should take Def parameters that define how to generate constructor and accessor calls
+  val structHeaderFile = "default"
 
   abstract class AbstractStruct[T] extends Def[T] {
     val tag: StructTag[T]
@@ -745,12 +746,11 @@ trait CGenStruct extends CGenBase with BaseGenStruct {
     case _ =>  super.remap(m)
   }
 
-  val dataName = "default"
-  override def headerSet = super.headerSet + s"""\"${dataName}_datastructure.h\""""
+  override def headerSet = super.headerSet + s"""\"${structHeaderFile}_datastructure.h\""""
   override def emitDataStructures(stream: PrintWriter) {
 
 
-    val data = new PrintWriter(s"cqueries/${dataName}_datastructure.h")
+    val data = new PrintWriter(s"cqueries/${structHeaderFile}_datastructure.h")
 	// Forward references to resolve dependencies
     val hs = new scala.collection.mutable.LinkedHashMap[String,Seq[(String, Manifest[_])]]
     def hit(name: String, xs: Seq[(String,Manifest[_])]): Unit = {
@@ -763,8 +763,8 @@ trait CGenStruct extends CGenBase with BaseGenStruct {
     encounteredStructs.foreach((hit _).tupled)
 
     data.println(
-        s"""|#ifndef ${dataName.toUpperCase}_DATASTRUCT
-        |#define ${dataName.toUpperCase}_DATASTRUCT
+        s"""|#ifndef ${structHeaderFile.toUpperCase}_DATASTRUCT
+        |#define ${structHeaderFile.toUpperCase}_DATASTRUCT
         |#include <stdbool.h>
         |""".stripMargin)
 
