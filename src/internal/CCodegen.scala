@@ -113,7 +113,7 @@ trait CCodegen extends CLikeCodegen {
     "(" + memType + "*)malloc(" + count + " * sizeof(" + memType + "));"
   }
 
-  def headerSet = scala.collection.Set("<stdio.h>", "<stdlib.h>", "<stdbool.h>", "<sys/time.h>")
+  def headerSet = scala.collection.Set("<stdio.h>", "<stdlib.h>", "<stdbool.h>")
 
   def emitFileHeader(out: PrintWriter) = {
     headerSet.foreach { h => out.println(s"#include $h") }
