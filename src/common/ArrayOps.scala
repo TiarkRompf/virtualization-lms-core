@@ -20,7 +20,7 @@ trait ArrayOps extends Variables {
   // substitution for "new Array[T](...)"
   // TODO: look into overriding __new for arrays
   object NewArray {
-    def apply[T:Manifest](n: Rep[Size], specializedType: Rep[String] = unit("")) = array_obj_new(n, specializedType)
+    def apply[T:Manifest](n: Rep[Size], init: Option[Int] = None, specializedType: Rep[String] = unit("")) = array_obj_new(n, init, specializedType)
   }
 
   object Array {
@@ -50,7 +50,7 @@ trait ArrayOps extends Variables {
     def compare(a2: Rep[Array[T]]) = array_compare(a,a2)
   }
 
-  def array_obj_new[T:Manifest](n: Rep[Size], specializedType: Rep[String] = unit("")): Rep[Array[T]]
+  def array_obj_new[T:Manifest](n: Rep[Size], init: Option[Int] = None, specializedType: Rep[String] = unit("")): Rep[Array[T]]
   def array_obj_fromseq[T:Manifest](xs: Seq[T]): Rep[Array[T]]
   def array_apply[T:Manifest](x: Rep[Array[T]], n: Rep[Size])(implicit pos: SourceContext): Rep[T]
   def array_update[T:Manifest](x: Rep[Array[T]], n: Rep[Size], y: Rep[T])(implicit pos: SourceContext): Rep[Unit]
@@ -78,7 +78,7 @@ trait ArrayOps extends Variables {
 }
 
 trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp with StructExp with WhileExp with OrderingOps with PrimitiveOps   with NumericOps {
-  case class ArrayNew[T:Manifest](n: Exp[Size], specializedType: Rep[String] = unit("")) extends Def[Array[T]] {
+  case class ArrayNew[T:Manifest](n: Exp[Size], init: Option[Int], specializedType: Exp[String] = unit("")) extends Def[Array[T]] {
     val m = manifest[T]
   }
   case class ArrayFromSeq[T:Manifest](xs: Seq[T]) extends Def[Array[T]] {
@@ -120,7 +120,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp with StructE
     val m = manifest[T]
   }
 
-  def array_obj_new[T:Manifest](n: Exp[Size], specializedType: Rep[String] = unit("")) = reflectMutable(ArrayNew(n, specializedType))
+  def array_obj_new[T:Manifest](n: Exp[Size], init: Option[Int], specializedType: Rep[String] = unit("")) = reflectMutable(ArrayNew(n, init, specializedType))
   def array_obj_fromseq[T:Manifest](xs: Seq[T]) = /*reflectMutable(*/ ArrayFromSeq(xs) /*)*/
  def array_apply[T:Manifest](x: Exp[Array[T]], n: Exp[Size])(implicit pos: SourceContext): Exp[T] = ArrayApply(x, n)
  def array_update[T:Manifest](x: Exp[Array[T]], n: Exp[Size], y: Exp[T])(implicit pos: SourceContext) = reflectWrite(x)(ArrayUpdate(x,n,y))
@@ -177,7 +177,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp with StructE
    case ArrayContainsSlice(a1, a2) => array_startsWith(f(a1), f(a2))
    case Reflect(e@ArraySlice(arr,idx1,idx2), u, es) => reflectMirrored(Reflect(ArraySlice(f(arr), f(idx1), f(idx2))(e.m), mapOver(f,u),f(es)))(mtype(manifest[A]))
    case Reflect(e@ArrayIndexOfSlice(arr1,arr2,idx), u, es) => reflectMirrored(Reflect(ArrayIndexOfSlice(f(arr1), f(arr2), f(idx))(e.m), mapOver(f,u),f(es)))(mtype(manifest[A]))
-   case Reflect(e@ArrayNew(n, sType), u, es) => reflectMirrored(Reflect(ArrayNew(f(n), sType)(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
+   case Reflect(e@ArrayNew(n, init, sType), u, es) => reflectMirrored(Reflect(ArrayNew(f(n), init, sType)(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
    case Reflect(e@ArrayLength(x), u, es) => reflectMirrored(Reflect(ArrayLength(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
    case Reflect(ArrayApply(l,r), u, es) => reflectMirrored(Reflect(ArrayApply(f(l),f(r))(mtype(manifest[A])), mapOver(f,u), f(es)))(mtype(manifest[A]))
    case Reflect(e@ArraySort(x), u, es) => reflectMirrored(Reflect(ArraySort(f(x))(e.m), mapOver(f,u), f(es)))(mtype(manifest[A]))
@@ -273,7 +273,7 @@ trait ScalaGenArrayOps extends BaseGenArrayOps with ScalaGenBase {
   val ARRAY_LITERAL_MAX_SIZE = 1000
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
-    case a@ArrayNew(n, sType) => {
+    case a@ArrayNew(n, init, sType) => {
       val arrType = if (quote(sType) != "\"\"") quote(sType).replaceAll("\"","") else remap(a.m)
       emitValDef(sym, src"new Array[$arrType]($n)")
     }
@@ -513,7 +513,7 @@ trait CGenArrayOps extends CGenEffect with CGenStruct {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
-      case a@ArrayNew(n, sType) => {
+      case a@ArrayNew(n, init, sType) => {
         val arrType = if (quote(sType) != "\"\"") quote(sType) else remap(a.m)
         stream.println(arrType + "* " + quote(sym) + " = " + getMemoryAllocString(quote(n), arrType))
       }

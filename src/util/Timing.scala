@@ -11,6 +11,7 @@ import java.io.PrintWriter
 
 trait Timing extends Base {
   def timeGeneratedCode[A: Manifest](f: => Rep[A], msg: Rep[String] = unit("")): Rep[A]
+  def timestamp: Rep[Long]
 }
 
 trait TimingExp extends BaseExp with EffectExp {
@@ -22,12 +23,18 @@ trait TimingExp extends BaseExp with EffectExp {
     val diff = fresh[Long]
   }
 
+  case class Timestamp() extends Def[Long] {
+    localSet += "<sys/time.h>"
+    val t = fresh[Long]
+  }
+
   def timeGeneratedCode[A: Manifest](f: => Rep[A], msg: Rep[String] = unit("")) = {
     val b = reifyEffects(f)
     val start = fresh[Long]
     val end = fresh[Long]
     reflectEffect(TimeGeneratedCode[A](start, end, b, msg), summarizeEffects(b).star)
   }
+  def timestamp = reflectEffect(Timestamp())
 
   override def syms(e: Any): List[Sym[Any]] = e match {
     case TimeGeneratedCode(a, x, body, msg) => syms(body)
@@ -108,6 +115,10 @@ trait CGenTiming extends CGenBase with GenericNestedCodegen {
         gen"gettimeofday(&t_$end, NULL);"
         emitValDef(t.diff, src"t_$end.tv_usec + 1000000L * t_$end.tv_sec - (t_$start.tv_usec + 1000000L * t_$start.tv_sec)")
         gen"""fprintf(stderr,"$msg: Generated Code Profiling Info: Operation completed in %ld milliseconds\n", ${t.diff}/1000L);"""
+      case t@Timestamp() =>
+        gen"struct timeval ${t.t};"
+        gen"gettimeofday(&${t.t}, NULL);"
+        emitValDef(sym, src"${t.t}.tv_usec + 1000000L * ${t.t}.tv_sec")
       case _ => super.emitNode(sym, rhs)
     }
   }
