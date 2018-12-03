@@ -383,7 +383,7 @@ trait CLikeGenArrayOps extends BaseGenArrayOps with CLikeGenBase {
 
 trait CudaGenArrayOps extends CudaGenBase with CLikeGenArrayOps
 trait OpenCLGenArrayOps extends OpenCLGenBase with CLikeGenArrayOps
-trait CGenArrayOps extends CGenEffect with CGenStruct {
+trait CGenArrayOps extends CGenEffect {
   val IR: ArrayOpsExp
   import IR._
 
@@ -514,7 +514,7 @@ trait CGenArrayOps extends CGenEffect with CGenStruct {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
       case a@ArrayNew(n, init, sType) => {
-        val arrType = if (quote(sType) != "\"\"") quote(sType) else remap(a.m)
+        val arrType = if (quote(sType) != "\"\"") quote(sType).replace("\"","") else remap(a.m)
         stream.println(arrType + "* " + quote(sym) + " = " + getMemoryAllocString(quote(n), arrType))
       }
       case ArrayForeach(a,x,blk) => {
