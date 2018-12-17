@@ -522,11 +522,11 @@ trait GenericNestedCodegen extends NestedBlockTraversal with GenericCodegen { se
 
   def remapManifest[A:Manifest](m: Sym[A]): Manifest[_] = manifest[A]
 
-  override def runTransformations[A:Manifest](body: Block[A]): Block[A] = {
-    val b = HIRLowering.run(body)
-	LIRTraversal(b)
-    LIRLowering.run(b)
-  }
+  // override def runTransformations[A:Manifest](body: Block[A]): Block[A] = {
+  //   val b = HIRLowering.run(body)
+  //       LIRTraversal(b)
+  //   LIRLowering.run(b)
+  // }
 
   override def traverseStm(stm: Stm) = super[GenericCodegen].traverseStm(stm)
 
