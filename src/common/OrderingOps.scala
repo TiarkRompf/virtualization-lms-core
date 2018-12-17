@@ -94,6 +94,56 @@ trait OrderingOpsExp extends OrderingOps with VariablesExp {
   }
 }
 
+/**
+ * @author  Alen Stojanov (astojanov@inf.ethz.ch)
+ */
+trait OrderingOpsExpOpt extends OrderingOpsExp {
+
+  override def ordering_lt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs, rhs) match {
+    case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].lt(a, b))
+    case (a, b) if a.equals(b) => Const(false)
+    case _ => super.ordering_lt(lhs, rhs)
+  }
+
+  override def ordering_lteq[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs, rhs) match {
+    case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].lteq(a, b))
+    case (a, b) if a.equals(b) => Const(true)
+    case _ => super.ordering_lteq(lhs, rhs)
+  }
+
+  override def ordering_gt[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs, rhs) match {
+    case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].gt(a, b))
+    case (a, b) if a.equals(b) => Const(false)
+    case _ => super.ordering_gt(lhs, rhs)
+  }
+
+  override def ordering_gteq[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs, rhs) match {
+    case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].gteq(a, b))
+    case (a, b) if a.equals(b) => Const(true)
+    case _ => super.ordering_gteq(lhs, rhs)
+  }
+
+  override def ordering_equiv[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[Boolean] = (lhs, rhs) match {
+    case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].equiv(a, b))
+    case (a, b) if a.equals(b) => Const(true)
+    case _ => super.ordering_equiv(lhs, rhs)
+  }
+
+  override def ordering_max[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[T] = (lhs, rhs) match {
+    case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].max(a, b))
+    case (a, b) if a.equals(b) => a
+    case _ => super.ordering_max(lhs, rhs)
+  }
+
+  override def ordering_min[T:Ordering:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Rep[T] = (lhs, rhs) match {
+    case (Const(a), Const(b)) => Const(implicitly[Ordering[T]].min(a, b))
+    case (a, b) if a.equals(b) => a
+    case _ => super.ordering_min(lhs, rhs)
+  }
+
+}
+
+
 trait ScalaGenOrderingOps extends ScalaGenBase {
   val IR: OrderingOpsExp
   import IR._
@@ -113,7 +163,7 @@ trait ScalaGenOrderingOps extends ScalaGenBase {
 trait CLikeGenOrderingOps extends CLikeGenBase {
   val IR: OrderingOpsExp
   import IR._
-  
+
   // TODO: Add MIN/MAX macro needs to C-like header file
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
       rhs match {
