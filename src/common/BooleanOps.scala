@@ -51,7 +51,7 @@ trait BooleanOpsExp extends BooleanOps with BaseExp with EffectExp {
   }
   def boolean_or(lhs: Exp[Boolean], frhs: => Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = {
     lhs match {
-        case x@Const(true) => x 
+        case x@Const(true) => x
         case x@Const(false) => frhs
         case _ => {
 			val rhs = reifyEffects(frhs)
@@ -66,7 +66,7 @@ trait BooleanOpsExp extends BooleanOps with BaseExp with EffectExp {
     case BooleanOr(x,y) => toAtom(BooleanOr(f(x),f(y)))
     case _ => super.mirror(e, f)
   }).asInstanceOf[Exp[A]] // why??
-  
+
   override def syms(e: Any): List[Sym[Any]] = e match {
     case BooleanAnd(lhs,rhs) => syms(lhs):::syms(rhs)
     case BooleanOr(lhs,rhs) => syms(lhs):::syms(rhs)
@@ -93,6 +93,14 @@ trait BooleanOpsExpOpt extends BooleanOpsExp {
     case Def(BooleanNegate(x)) => x
     case _ => super.boolean_negate(lhs)
   }
+  override def boolean_and(lhs: Rep[Boolean], rhs: => Rep[Boolean])(implicit pos: SourceContext) = lhs match {
+    case Const(cond) => if (cond) rhs else unit(false)
+    case _ => super.boolean_and(lhs, rhs)
+  }
+  override def boolean_or(lhs: Rep[Boolean], rhs: => Rep[Boolean])(implicit pos: SourceContext) = lhs match {
+    case Const(cond) => if (cond) unit(true) else rhs
+    case _ => super.boolean_or(lhs, rhs)
+  }
 }
 
 trait ScalaGenBooleanOps extends ScalaGenBase with GenericNestedCodegen {
@@ -101,7 +109,7 @@ trait ScalaGenBooleanOps extends ScalaGenBase with GenericNestedCodegen {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case BooleanNegate(b) => emitValDef(sym, src"!$b")
-    case BooleanAnd(lhs,rhs) => 
+    case BooleanAnd(lhs,rhs) =>
 		val strWriter = new java.io.StringWriter
 		val localStream = new PrintWriter(strWriter);
       	withStream(localStream) {
@@ -111,7 +119,7 @@ trait ScalaGenBooleanOps extends ScalaGenBase with GenericNestedCodegen {
       	       |} else false"""
       	}
       	emitValDef(sym, strWriter.toString)
-    case BooleanOr(lhs,rhs) => 
+    case BooleanOr(lhs,rhs) =>
 		val strWriter = new java.io.StringWriter
 		val localStream = new PrintWriter(strWriter);
       	withStream(localStream) {
@@ -158,7 +166,7 @@ trait OpenCLGenBooleanOps extends OpenCLGenBase with CLikeGenBooleanOps
 trait CGenBooleanOps extends CGenBase with CLikeGenBooleanOps {
   val IR: BooleanOpsExp
   import IR._
-  
+
   override def lowerNode[A:Manifest](sym: Sym[A], rhs: Def[A]) = rhs match {
 	case BooleanAnd(lhs,rhs) => {
 		LIRTraversal(rhs)
