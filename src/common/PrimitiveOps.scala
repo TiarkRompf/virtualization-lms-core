@@ -251,6 +251,12 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
   }).asInstanceOf[Exp[A]]
 }
 
+trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
+  override def long_shiftleft(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = (lhs, rhs) match {
+    case (Const(0L), _) => Const(0L)
+    case _ => super.long_shiftleft(lhs, rhs)
+  }
+}
 trait ScalaGenPrimitiveOps extends ScalaGenBase {
   val IR: PrimitiveOpsExp
   import IR._
