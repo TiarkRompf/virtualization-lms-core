@@ -91,6 +91,7 @@ trait BooleanOpsExp extends BooleanOps with BaseExp with EffectExp {
 trait BooleanOpsExpOpt extends BooleanOpsExp {
   override def boolean_negate(lhs: Exp[Boolean])(implicit pos: SourceContext) = lhs match {
     case Def(BooleanNegate(x)) => x
+    case Const(x) => Const(!x)
     case _ => super.boolean_negate(lhs)
   }
   override def boolean_and(lhs: Rep[Boolean], rhs: => Rep[Boolean])(implicit pos: SourceContext) = lhs match {
