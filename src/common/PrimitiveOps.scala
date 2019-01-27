@@ -252,9 +252,16 @@ trait PrimitiveOpsExp extends PrimitiveOps with BaseExp {
 }
 
 trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
+  // FIXME: useless?
   override def long_shiftleft(lhs: Exp[Long], rhs: Exp[Int])(implicit pos: SourceContext) = (lhs, rhs) match {
     case (Const(0L), _) => Const(0L)
     case _ => super.long_shiftleft(lhs, rhs)
+  }
+
+  override def long_binaryor(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext) = (lhs, rhs) match {
+    case (Const(0L), _) => rhs
+    case (_, Const(0L)) => lhs
+    case _ => super.long_binaryor(lhs, rhs)
   }
 }
 trait ScalaGenPrimitiveOps extends ScalaGenBase {
@@ -317,7 +324,7 @@ trait CLikeGenPrimitiveOps extends CLikeGenBase {
       case IntToLong(lhs) => emitValDef(sym, src"(long)$lhs")
       case LongBinaryOr(lhs,rhs) => emitValDef(sym, src"$lhs | $rhs")
       case LongBinaryAnd(lhs,rhs) => emitValDef(sym, src"$lhs & $rhs")
-	    case CharMinus(lhs,rhs) => emitValDef(sym, src"$lhs - $rhs")
+      case CharMinus(lhs,rhs) => emitValDef(sym, src"$lhs - $rhs")
       case LongShiftLeft(lhs,rhs) => emitValDef(sym, src"$lhs << $rhs")
       case LongShiftRight(lhs,rhs) => emitValDef(sym, src"$lhs >> $rhs")
       case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, src"(unsigned long)$lhs >> $rhs")
