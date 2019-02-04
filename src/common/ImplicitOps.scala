@@ -28,6 +28,13 @@ trait ImplicitOpsExp extends ImplicitOps with BaseExp {
 
 }
 
+trait ImplicitOpsExpOpt extends ImplicitOpsExp {
+  override def implicit_convert[X,Y](x: Exp[X])(implicit c: X => Y, mX: Manifest[X], mY: Manifest[Y], pos: SourceContext) : Rep[Y] = x match {
+    case Const(x: X) => unit(c(x))
+    case _ => super.implicit_convert[X,Y](x)
+  }
+}
+
 trait ScalaGenImplicitOps extends ScalaGenBase {
   val IR: ImplicitOpsExp
   import IR._

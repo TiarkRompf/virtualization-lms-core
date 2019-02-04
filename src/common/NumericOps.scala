@@ -16,7 +16,7 @@ trait NumericOps extends Variables {
   implicit def numericToNumericOps[T:Numeric:Manifest](n: T) = new NumericOpsCls(unit(n))
   implicit def repNumericToNumericOps[T:Numeric:Manifest](n: Rep[T]) = new NumericOpsCls(n)
   implicit def varNumericToNumericOps[T:Numeric:Manifest](n: Var[T]) = new NumericOpsCls(readVar(n))
-  
+
   class NumericOpsCls[T:Numeric:Manifest](lhs: Rep[T]){
     def +[A](rhs: A)(implicit c: A => T, pos: SourceContext) = numeric_plus(lhs,unit(c(rhs)))
     def +(rhs: Rep[T])(implicit pos: SourceContext) = numeric_plus(lhs,rhs)
@@ -52,7 +52,7 @@ trait NumericOpsExp extends NumericOps with VariablesExp with BaseFatExp {
   def numeric_minus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext) : Exp[T] = NumericMinus(lhs, rhs)
   def numeric_times[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext) : Exp[T] = NumericTimes(lhs, rhs)
   def numeric_divide[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext) : Exp[T] = NumericDivide(lhs, rhs)
-  
+
   override def mirror[A:Manifest](e: Def[A], f: Transformer)(implicit pos: SourceContext): Exp[A] = (e match {
     case e@NumericPlus(l,r) => numeric_plus(f(l), f(r))(e.aev.asInstanceOf[Numeric[A]], mtype(e.mev), pos)
     case e@NumericMinus(l,r) => numeric_minus(f(l), f(r))(e.aev.asInstanceOf[Numeric[A]], mtype(e.mev), pos)
@@ -65,7 +65,7 @@ trait NumericOpsExp extends NumericOps with VariablesExp with BaseFatExp {
 
 
 trait NumericOpsExpOpt extends NumericOpsExp {
-  
+
   override def numeric_plus[T:Numeric:Manifest](lhs: Exp[T], rhs: Exp[T])(implicit pos: SourceContext): Exp[T] = (lhs,rhs) match {
     case (Const(x), Const(y)) => Const(implicitly[Numeric[T]].plus(x,y))
     case (Const(x), y) if x == implicitly[Numeric[T]].zero => y
@@ -97,7 +97,7 @@ trait NumericOpsExpOpt extends NumericOpsExp {
 trait ScalaGenNumericOps extends ScalaGenFat {
   val IR: NumericOpsExp
   import IR._
-  
+
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = rhs match {
     case NumericPlus(a,b) => emitValDef(sym, src"$a + $b")
     case NumericMinus(a,b) => emitValDef(sym, src"$a - $b")
