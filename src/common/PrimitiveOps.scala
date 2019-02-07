@@ -261,7 +261,21 @@ trait PrimitiveOpsExpOpt extends PrimitiveOpsExp {
   override def long_binaryor(lhs: Rep[Long], rhs: Rep[Long])(implicit pos: SourceContext) = (lhs, rhs) match {
     case (Const(0L), _) => rhs
     case (_, Const(0L)) => lhs
+    case (Const(x), Const(y)) => Const(x | y)
     case _ => super.long_binaryor(lhs, rhs)
+  }
+  override def long_binaryand(lhs: Exp[Long], rhs: Exp[Long])(implicit pos: SourceContext) = (lhs, rhs) match {
+    case (Const(0L), _) => Const(0L)
+    case (_, Const(0L)) => Const(0L)
+    case (Const(x), Const(y)) => Const(x & y)
+    case _ => super.long_binaryand(lhs, rhs)
+  }
+
+  override def int_binaryand(lhs: Exp[Int], rhs: Exp[Int])(implicit pos: SourceContext) = (lhs, rhs) match {
+    case (Const(0), _) => Const(0)
+    case (_, Const(0)) => Const(0)
+    case (Const(x), Const(y)) => Const(x & y)
+    case _ => super.int_binaryand(lhs, rhs)
   }
 }
 trait ScalaGenPrimitiveOps extends ScalaGenBase {
@@ -295,7 +309,7 @@ trait ScalaGenPrimitiveOps extends ScalaGenBase {
     case LongShiftRight(lhs,rhs) => emitValDef(sym, src"$lhs >> $rhs")
     case LongShiftRightUnsigned(lhs,rhs) => emitValDef(sym, src"$lhs >>> $rhs")
     case LongToInt(lhs) => emitValDef(sym, src"$lhs.toInt")
-	  case CharMinus(lhs,rhs) => emitValDef(sym, src"$lhs - $rhs")
+    case CharMinus(lhs,rhs) => emitValDef(sym, src"$lhs - $rhs")
     case _ => super.emitNode(sym, rhs)
   }
 }

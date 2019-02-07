@@ -276,30 +276,31 @@ trait CCodegen extends CLikeCodegen {
   }
 
   override def quote(x: Exp[Any]) : String = {
-	x match {
-		case Const(y: java.lang.Character) =>
-			if (y == '\0') "'\\0'"
-			else "'" + y.toString + "'"
-		case Const(null) => "NULL"
-		case Const(()) => ";"
-		case _ => super.quote(x)
-	}
+    x match {
+      case Const(y: java.lang.Character) =>
+        if (y == '\0') "'\\0'"
+        else "'" + y.toString + "'"
+      case Const(null) => "NULL"
+      case Const(()) => ";"
+      case _ => super.quote(x)
+    }
   }
 
   override def remap[A](m: Manifest[A]) = {
-	m match {
-        case s if m == manifest[Int] => "int"
-        case s if m == manifest[Double] => "double"
-		case s if m == manifest[Long] => "long"
-		case s if m == manifest[Character] => "char"
-		case s if m == manifest[Byte] => "char"
-		case s if m == manifest[Boolean] => "bool"
-		case s if m == manifest[String] => "char*"
-		case s if m == manifest[Float] => "float"
-		case s if m == manifest[Unit] => "void"
-    case s if m == manifest[java.util.Date] => "long"
-		case _ => super.remap(m)
-	}
+    m match {
+      case s if m == manifest[Int] => "int"
+      case s if m == manifest[Short] => "short"
+      case s if m == manifest[Double] => "double"
+      case s if m == manifest[Long] => "long"
+      case s if m == manifest[Character] => "char"
+      case s if m == manifest[Byte] => "char"
+      case s if m == manifest[Boolean] => "bool"
+      case s if m == manifest[String] => "char*"
+      case s if m == manifest[Float] => "float"
+      case s if m == manifest[Unit] => "void"
+      case s if m == manifest[java.util.Date] => "long"
+      case _ => super.remap(m)
+    }
   }
 
   /*******************************************************
