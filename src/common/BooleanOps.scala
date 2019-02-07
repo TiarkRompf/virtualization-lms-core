@@ -41,22 +41,22 @@ trait BooleanOpsExp extends BooleanOps with BaseExp with EffectExp {
   def boolean_negate(lhs: Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = BooleanNegate(lhs)
   def boolean_and(lhs: Exp[Boolean], frhs: => Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = {
     lhs match {
-        case x@Const(false) => x
-        case x@Const(true) => frhs
-        case _ => {
-            val rhs = reifyEffects(frhs)
-            BooleanAnd(lhs,rhs)
-        }
+      case x@Const(false) => x
+      case x@Const(true) => frhs
+      case _ => {
+        val rhs = reifyEffects(frhs)
+        BooleanAnd(lhs,rhs)
+      }
     }
   }
   def boolean_or(lhs: Exp[Boolean], frhs: => Exp[Boolean])(implicit pos: SourceContext) : Exp[Boolean] = {
     lhs match {
-        case x@Const(true) => x
-        case x@Const(false) => frhs
-        case _ => {
-			val rhs = reifyEffects(frhs)
-			BooleanOr(lhs,rhs)
-		}
+      case x@Const(true) => x
+      case x@Const(false) => frhs
+      case _ => {
+        val rhs = reifyEffects(frhs)
+        BooleanOr(lhs,rhs)
+      }
     }
   }
 
@@ -93,14 +93,6 @@ trait BooleanOpsExpOpt extends BooleanOpsExp {
     case Def(BooleanNegate(x)) => x
     case Const(x) => Const(!x)
     case _ => super.boolean_negate(lhs)
-  }
-  override def boolean_and(lhs: Rep[Boolean], rhs: => Rep[Boolean])(implicit pos: SourceContext) = lhs match {
-    case Const(cond) => if (cond) rhs else unit(false)
-    case _ => super.boolean_and(lhs, rhs)
-  }
-  override def boolean_or(lhs: Rep[Boolean], rhs: => Rep[Boolean])(implicit pos: SourceContext) = lhs match {
-    case Const(cond) => if (cond) unit(true) else rhs
-    case _ => super.boolean_or(lhs, rhs)
   }
 }
 
@@ -140,23 +132,34 @@ trait CLikeGenBooleanOps extends CLikeGenBase with GenericNestedCodegen {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]) = {
     rhs match {
-  	  case BooleanNegate(b) => emitValDef(sym, src"!$b")
-      case b@BooleanAnd(lhs,rhs) => {
-			emitValDef(b.c, quote(lhs))
-        	stream.println("if (" + quote(lhs) + ") {")
-			emitBlock(rhs)
-    	    stream.println(quote(b.c) + " = " + quote(getBlockResult(rhs)) + ";")
-        	stream.println("}")
-			emitValDef(sym, quote(b.c))
-	  }
+      case BooleanNegate(b) => emitValDef(sym, src"!$b")
+      case b@BooleanAnd(lhs,rhs) => { // getBlockResult(rhs) match {
+        // case Const(true) =>
+        //   emitValDef(sym, quote(lhs))
+        //   stream.println("if (" + quote(lhs) + ") {")
+        //   emitBlock(rhs)
+        //   stream.println("}")
+        // case x@Const(false) =>
+        //   stream.println("if (" + quote(lhs) + ") {")
+        //   emitBlock(rhs)
+        //   stream.println("}")
+        //   emitValDef(sym, quote(x))
+        // case _ =>
+          emitValDef(b.c, quote(lhs))
+          stream.println("if (" + quote(lhs) + ") {")
+          emitBlock(rhs)
+          stream.println(quote(b.c) + " = " + quote(getBlockResult(rhs)) + ";")
+          stream.println("}")
+          emitValDef(sym, quote(b.c))
+      }
       case b@BooleanOr(lhs,rhs) => {
-			emitValDef(b.c, quote(lhs))
-			stream.println("if (" + quote(lhs) + " == false) {")
-			emitBlock(rhs)
-			stream.println(quote(b.c) + " = " + quote(getBlockResult(rhs)) + ";")
-        	stream.println("}")
-			emitValDef(sym, quote(b.c))
-	  }
+        emitValDef(b.c, quote(lhs))
+        stream.println("if (" + quote(lhs) + " == false) {")
+        emitBlock(rhs)
+        stream.println(quote(b.c) + " = " + quote(getBlockResult(rhs)) + ";")
+        stream.println("}")
+        emitValDef(sym, quote(b.c))
+      }
       case _ => super.emitNode(sym,rhs)
     }
   }

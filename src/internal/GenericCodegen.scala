@@ -423,7 +423,18 @@ trait GenericCodegen extends BlockTraversal {
     case Const(s: String) => "\""+s.replace("\"", "\\\"").replace("\n", "\\n")+"\"" // TODO: more escapes?
     case Const(c: Char) => "'"+c+"'"
     case Const(f: Float) => "%1.10f".format(f) + "f"
-    case Const(l: Long) => l.toString + "L"
+    case Const(l: Int) =>
+      val hex = f"$l%08x"
+      if (l > 0L && (hex forall { c => c == 'f' || c == '0' })) // mask
+        s"0x${hex.toUpperCase}"
+      else
+        l.toString
+    case Const(l: Long) =>
+      val hex = f"$l%016x"
+      if (l > 0 && (hex forall { c => c == 'f' || c == '0' })) // mask
+        s"0x${hex.toUpperCase}L"
+      else
+        l.toString + "L"
     case Const(null) => "null"
     case Const(z) => z.toString
     case s@Sym(n) => {
