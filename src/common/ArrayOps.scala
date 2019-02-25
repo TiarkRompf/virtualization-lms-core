@@ -191,7 +191,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp /* with Stru
    case ArrayMap(a, x, body) => syms(a):::syms(body)
    case ArrayFilter(a, x, body) => syms(a):::syms(body)
    case ArrayGroupBy(a, x, body) => syms(a):::syms(body)
-   case ArraySlice(a,idx1,idx2) => syms(a)
+   case ArraySlice(a,idx1,idx2) => syms(a):::syms(idx1):::syms(idx2)
    case _ => super.syms(e)
  }
 
@@ -200,7 +200,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp /* with Stru
    case ArrayMap(a, x, body) => x :: effectSyms(body)
    case ArrayFilter(a, x, body) => x :: effectSyms(body)
    case ArrayGroupBy(a, x, body) => x::effectSyms(body)
-   case ArraySlice(a,idx1,idx2) => effectSyms(a)
+   case ArraySlice(a,idx1,idx2) => effectSyms(a):::effectSyms(idx1):::effectSyms(idx2)
    case _ => super.boundSyms(e)
  }
 
@@ -209,6 +209,7 @@ trait ArrayOpsExp extends ArrayOps with EffectExp with VariablesExp /* with Stru
    case ArrayMap(a, x, body) => freqNormal(a):::freqHot(body)
    case ArrayFilter(a, x, body) => freqNormal(a):::freqHot(body)
    case ArrayGroupBy(a, x, body) => freqNormal(a):::freqHot(body)
+   case ArraySlice(a,idx1,idx2) => freqNormal(a):::freqHot(idx1):::freqHot(idx2)
    case _ => super.symsFreq(e)
  }
 
@@ -522,6 +523,9 @@ trait CGenArrayOps extends CGenEffect {
         stream.println("}")
         stream.println("};")
       }
+      case ArraySlice(a@Def(Reflect(ar@ArrayNew(_, _, Const(tp)), _, _)), s, e) =>
+        val arrType = if (tp != "") tp else remap(ar.m)
+        stream.println(s"$arrType* ${quote(sym)} = ${quote(a)} + ${quote(s)};")
       case ArrayApply(x,n) => emitValDef(sym, quote(x) + "[" + quote(n) + "]")
       case ArrayUpdate(x,n,y) => stream.println(quote(x) + "[" + quote(n) + "] = " + quote(y) + ";")
       case ArrayCopy(src,s1,dest,s2,len) =>
