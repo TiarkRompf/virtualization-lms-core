@@ -525,7 +525,9 @@ trait CGenArrayOps extends CGenEffect {
       }
       case ArraySlice(a@Def(Reflect(ar@ArrayNew(_, _, Const(tp)), _, _)), s, e) =>
         val arrType = if (tp != "") tp else remap(ar.m)
-        stream.println(s"$arrType* ${quote(sym)} = ${quote(a)} + ${quote(s)};")
+        stream.println(s"$arrType* ${quote(sym)} = ${quote(a)} + ${quote(s)}; // end ${quote(e)}")
+      case ArraySlice(a, s, e) =>
+        emitValDef(sym, src"$a + $s; // end $e")
       case ArrayApply(x,n) => emitValDef(sym, quote(x) + "[" + quote(n) + "]")
       case ArrayUpdate(x,n,y) => stream.println(quote(x) + "[" + quote(n) + "] = " + quote(y) + ";")
       case ArrayCopy(src,s1,dest,s2,len) =>
